@@ -22,6 +22,7 @@ from ....core.operations import (
     profile_operation_subject,
 )
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.transactions.classification_origin import ClassificationOrigin
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.models import BucketTransactionRef, Transaction, TransactionCatalogue
@@ -33,7 +34,7 @@ from ...operations.models import OperationIdentity, OperationRequest, OperationT
 from ...operations.owner import OperationExecutorContext, OperationResumeCheckpoint
 from ...operations.persistence.journal import serialize_operation_operand
 from ...operations.registry import OperationFrontendProjection, OperationRegistry, operation_public_schema_reference
-from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability, SessionKind
+from ...user_profile.access_contracts import AccessAction, Availability, SessionKind
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import llm_review_execution as review_runtime
 from .. import llm_review_operation as operation
@@ -902,96 +903,116 @@ def _session_host_for(frontend: OperationFrontendProjection) -> OperationExecuti
     return read
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize("mode", ["classification", "saturated", "auto_split", "split"])
-@pytest.mark.parametrize("preview", [False, True], ids=["review", "preview"])
-async def test_an_agents_review_is_refused_before_the_model_when_the_reader_is_on_another_host(
-    monkeypatch: pytest.MonkeyPatch,
-    authority_operation: PinnedAuthorityOperation,
-    mode: _Mode,
-    preview: bool,
-) -> None:
-    case = _Case(authority_operation, mode)
-    case.payload = LedgerLlmReviewRequest.model_validate({**case.payload.model_dump(), "preview": preview})
-    case.request = case.request.model_copy(update={"payload": case.payload})
-    _reader_endpoint(case, _ANOTHER_MACHINE)
-    calls = _model_calls(monkeypatch, case, mode)
-    executor = LedgerLlmReviewExecutor(
-        case.factory, execution_caller_reader=_session_host_for(OperationFrontendProjection.MCP)
-    )
-
-    with pytest.raises(ProfileAccessRefusedError) as refused:
-        await executor.execute(case.request, case.context)
-
-    assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED
-    assert calls == []
-    assert case.repository.loads == 0
-    assert case.events.phases == [] and case.events.effects == []
-    assert case.operands.published is None and case.interactions.published is None
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize("endpoint", [_THIS_MACHINE, "http://localhost:11434/api/chat", "http://[::1]:11434/api/chat"])
-@pytest.mark.parametrize("mode", ["classification", "auto_split"])
-async def test_an_agents_review_proceeds_when_the_reader_is_on_this_machine(
-    monkeypatch: pytest.MonkeyPatch,
-    authority_operation: PinnedAuthorityOperation,
-    endpoint: str,
-    mode: _Mode,
-) -> None:
-    case = _Case(authority_operation, mode)
-    _reader_endpoint(case, endpoint)
-    calls = _model_calls(monkeypatch, case, mode)
-    executor = LedgerLlmReviewExecutor(
-        case.factory, execution_caller_reader=_session_host_for(OperationFrontendProjection.MCP)
-    )
-
-    await executor.execute(case.request, case.context)
-
-    assert len(calls) == 1 and calls[0]["reviewed_transaction"] is case.baseline
-    assert case.events.phases == [_FIRST_PHASE, "ledger.llm.review"]
-    assert case.interactions.published is not None
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "frontend", [OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, None], ids=["cli", "tui", "unhosted"]
+_EVERY_FRONTEND = pytest.mark.parametrize(
+    "frontend",
+    [OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP, None],
+    ids=["cli", "tui", "mcp", "unhosted"],
 )
-@pytest.mark.parametrize("endpoint", [_THIS_MACHINE, _ANOTHER_MACHINE], ids=["this-machine", "another-host"])
-async def test_a_persons_review_goes_to_the_configured_reader_wherever_it_is(
-    monkeypatch: pytest.MonkeyPatch,
-    authority_operation: PinnedAuthorityOperation,
-    frontend: OperationFrontendProjection | None,
-    endpoint: str,
-) -> None:
-    case = _Case(authority_operation)
-    _reader_endpoint(case, endpoint)
-    calls = _model_calls(monkeypatch, case, "classification")
-    executor = LedgerLlmReviewExecutor(
+
+
+def _worked_on_by_the_person(case: _Case) -> None:
+    """Store the case's row as one the person classified by hand and attached a document to."""
+    case.baseline = case.baseline.model_copy(
+        update={
+            "business_classification": BusinessClassification.PERSONAL,
+            "classified_by": "manual",
+            "classification_origin": ClassificationOrigin.PERSON,
+            "attachment_ids": ("c" * 64,),
+        }
+    )
+    case.repository.catalogue = TransactionCatalogue.from_transactions((case.baseline,))
+
+
+def _executor_on(case: _Case, frontend: OperationFrontendProjection | None) -> LedgerLlmReviewExecutor:
+    return LedgerLlmReviewExecutor(
         case.factory, execution_caller_reader=None if frontend is None else _session_host_for(frontend)
     )
 
-    await executor.execute(case.request, case.context)
 
-    assert len(calls) == 1
-    assert case.events.phases == [_FIRST_PHASE, "ledger.llm.review"]
-    assert case.interactions.published is not None
+@pytest.mark.asyncio
+@_EVERY_FRONTEND
+@pytest.mark.parametrize("mode", ["classification", "saturated", "auto_split", "split"])
+@pytest.mark.parametrize("preview", [False, True], ids=["review", "preview"])
+@pytest.mark.parametrize("endpoint", [_THIS_MACHINE, _ANOTHER_MACHINE], ids=["this-machine", "another-host"])
+async def test_a_review_asks_the_configured_reader_once_whichever_frontend_submits_it(
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+    frontend: OperationFrontendProjection | None,
+    mode: _Mode,
+    preview: bool,
+    endpoint: str,
+) -> None:
+    """The row the person worked on, the reader's address and the mode decide nothing by frontend."""
+    case = _Case(authority_operation, mode)
+    case.payload = LedgerLlmReviewRequest.model_validate({**case.payload.model_dump(), "preview": preview})
+    case.request = case.request.model_copy(update={"payload": case.payload})
+    _worked_on_by_the_person(case)
+    _reader_endpoint(case, endpoint)
+    calls = _model_calls(monkeypatch, case, mode)
+
+    await _executor_on(case, frontend).execute(case.request, case.context)
+
+    assert len(calls) == 1 and calls[0]["reviewed_transaction"] is case.baseline
+    assert case.repository.loads == 1
+    if preview:
+        assert case.events.phases == [_FIRST_PHASE] and case.events.effects == [OperationEffect.NONE]
+        assert case.interactions.published is None
+    else:
+        assert case.events.phases == [_FIRST_PHASE, "ledger.llm.review"] and case.events.effects == []
+        assert case.interactions.published is not None
 
 
 @pytest.mark.asyncio
-async def test_an_agents_resume_commits_without_asking_where_the_reader_is(
+@_EVERY_FRONTEND
+@pytest.mark.parametrize(
+    ("mode", "children", "action", "decision"),
+    [
+        ("classification", 2, "apply", LlmReviewDecision.APPLY),
+        ("saturated", 2, "apply", LlmReviewDecision.APPLY),
+        ("auto_split", 1, "apply", LlmReviewDecision.APPLY),
+        ("auto_split", 2, "apply", LlmReviewDecision.SPLIT),
+        ("split", 2, "apply", LlmReviewDecision.SPLIT),
+        ("classification", 2, "reject", LlmReviewDecision.REJECT),
+    ],
+    ids=["classification", "saturated", "single-line", "auto-split", "split", "rejection"],
+)
+async def test_a_response_commits_the_reviewed_decision_whichever_frontend_submits_it(
     monkeypatch: pytest.MonkeyPatch,
     authority_operation: PinnedAuthorityOperation,
+    frontend: OperationFrontendProjection | None,
+    mode: _Mode,
+    children: int,
+    action: Literal["apply", "reject"],
+    decision: LlmReviewDecision,
 ) -> None:
-    """Resume holds a reviewed decision and contacts no reader, so the endpoint does not bear on it."""
-    case = _Case(authority_operation, "auto_split")
+    """The writer is reached with the same decision and the same reviewed row, after no further read."""
+    case = _Case(authority_operation, mode)
+    _worked_on_by_the_person(case)
     _reader_endpoint(case, _ANOTHER_MACHINE)
-    operand = case.operand("auto_split", children=1)
-    checkpoint = case.checkpoint(operand, "apply")
-    written: list[object] = []
+    checkpoint = case.checkpoint(case.operand(mode, children=children), action)
+    loads_before = case.repository.loads
+    written: list[tuple[object, object]] = []
 
     def writer(_suggestion: object, **kwargs: object) -> BaseModel:
-        written.append(kwargs["actor"])
+        written.append((kwargs["decision"], kwargs["expected_current"]))
+        if decision is LlmReviewDecision.REJECT:
+            return LLMSuggestionRejectionResult(
+                bucket_id=str(_PROFILE),
+                transaction_id=case.baseline.transaction_id,
+                bucket_event_id="e" * 64,
+                suggestion_kind="classification",
+                provenance="llm:local-text:test",
+                operator_reason=case.payload.reason,
+            )
+        if decision is LlmReviewDecision.SPLIT:
+            return LLMSplitApplyResult(
+                bucket_id=str(_PROFILE),
+                parent_transaction_id=case.baseline.transaction_id,
+                split_group_id="synthetic-group",
+                child_transaction_ids=("d" * 64, "e" * 64),
+                classified_child_count=2,
+                provenance="llm:local-text:test",
+            )
         return ManualLedgerTransactionResult(
             ref=BucketTransactionRef(bucket_id=str(_PROFILE), transaction_id=case.baseline.transaction_id),
             transaction=case.baseline,
@@ -1000,12 +1021,13 @@ async def test_an_agents_resume_commits_without_asking_where_the_reader_is(
 
     monkeypatch.setattr(review_runtime, "require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(review_runtime, "execute_reviewed_decision", writer)
-    executor = LedgerLlmReviewExecutor(
-        case.factory, execution_caller_reader=_session_host_for(OperationFrontendProjection.MCP)
-    )
 
-    assert await executor.resume(case.request, checkpoint, case.context)
-    assert written == [f"agent:mcp.human.{_SESSION_CLIENT}"]
+    assert await _executor_on(case, frontend).resume(case.request, checkpoint, case.context)
+
+    assert written == [(decision, case.baseline)]
+    assert case.repository.loads == loads_before
+    assert case.events.phases == ["ledger.llm.commit"]
+    assert case.events.effects == [OperationEffect.UNKNOWN, OperationEffect.UPDATED]
 
 
 @pytest.mark.parametrize(("share", "accepted"), [("0.333", True), ("0.0175", True), ("1.01", False)])

@@ -46,7 +46,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
     OperationSubmissionReceiptV1,
 )
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
 from cadrumo.application.user_profile.access_contracts import (
     AccessAction,
     AccessScope,
@@ -395,7 +395,6 @@ async def test_installed_mcp_releases_only_safe_m036_query_rows(tmp_path: Path) 
                     assert contract.request_schema.schema_id == _QUERY + ".request"
                     assert contract.result_schema is not None
                     assert contract.result_schema.schema_id == _QUERY + ".result"
-                    assert OperationFrontendProjection.MCP in contract.permitted_frontends
                     assert OperationEffect.NONE in contract.permitted_effects
                     assert "note" not in M036QueryDeclaration.model_fields
                     assert "sede_justificante" not in M036QueryDeclaration.model_fields

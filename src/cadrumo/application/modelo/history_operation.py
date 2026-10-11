@@ -30,7 +30,7 @@ from ..operations.profile_guard import (
     require_operation_profile,
 )
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
@@ -171,7 +171,6 @@ def build_modelo_work_history_definition(factory: ModeloHistoryPortsFactory) -> 
         executor_type=ModeloWorkHistoryExecutor,
         build=lambda: ModeloWorkHistoryExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
 

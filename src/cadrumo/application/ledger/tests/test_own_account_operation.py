@@ -38,8 +38,7 @@ from ...operations.access_resolution import (
 )
 from ...operations.models import OperationRequest
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
-from ...user_profile.access_errors import ProfileAccessRefusedError
+from ...user_profile.access_contracts import AccessAction, Availability
 from ..own_account_operation import (
     LedgerOwnAccountRequest,
     LedgerOwnAccountResult,
@@ -335,36 +334,20 @@ def test_the_access_cases_cover_every_declared_action() -> None:
     assert _CHANGES
 
 
-@pytest.mark.parametrize("frontend", [OperationFrontendProjection.CLI, OperationFrontendProjection.TUI])
-@pytest.mark.parametrize("action", sorted(_ACTION_FIELDS))
-def test_a_persons_frontend_is_admitted_to_every_action_and_commits_only_a_change(
-    action: str, frontend: OperationFrontendProjection
-) -> None:
-    resolved = _resolve(action, frontend)
-
-    assert resolved.request.frontend is frontend
-    assert resolved.request.profile_id == _PROFILE
-    assert (AccessAction.COMMIT in resolved.policy.actions) is (action in _CHANGES)
-
-
 @pytest.mark.parametrize(
     "access",
     [AccessAction.SUBMIT, AccessAction.START, AccessAction.COMMIT, AccessAction.OBSERVE, AccessAction.RESULT],
 )
-@pytest.mark.parametrize("action", _CHANGES)
-def test_an_mcp_client_is_refused_every_change_at_every_access(action: str, access: AccessAction) -> None:
-    assert _resolve(action, OperationFrontendProjection.CLI, access).request.action is access
+@pytest.mark.parametrize("action", sorted(_ACTION_FIELDS))
+def test_every_action_is_granted_the_same_policy_on_every_frontend_and_commits_only_a_change(
+    action: str, access: AccessAction
+) -> None:
+    resolved = {frontend: _resolve(action, frontend, access) for frontend in OperationFrontendProjection}
 
-    with pytest.raises(ProfileAccessRefusedError) as refused:
-        _resolve(action, OperationFrontendProjection.MCP, access)
-
-    assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED
-
-
-@pytest.mark.parametrize("action", _READS)
-def test_an_mcp_client_keeps_the_reads_under_the_policy_a_person_gets(action: str) -> None:
-    resolved = _resolve(action, OperationFrontendProjection.MCP)
-
-    assert resolved.request.frontend is OperationFrontendProjection.MCP
-    assert resolved.policy == _resolve(action, OperationFrontendProjection.CLI).policy
-    assert AccessAction.COMMIT not in resolved.policy.actions
+    assert len(resolved) == len(OperationFrontendProjection)
+    assert len({answer.policy for answer in resolved.values()}) == 1
+    for frontend, answer in resolved.items():
+        assert answer.request.frontend is frontend
+        assert answer.request.action is access
+        assert answer.request.profile_id == _PROFILE
+        assert (AccessAction.COMMIT in answer.policy.actions) is (action in _CHANGES)

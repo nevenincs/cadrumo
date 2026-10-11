@@ -45,23 +45,7 @@ _RESOLVED = "resolved"
 _DESTINATION = UUID("5aa00000-0000-4000-8000-0000000000bb")
 _ANOTHER_PROFILE = UUID("5aa00000-0000-4000-8000-0000000000cc")
 _ANOTHER_RECORD = "f" * 64
-#: A person's frontends first: a resolver may reserve one act of an operation for a person.
-_FRONTEND_PREFERENCE = (
-    OperationFrontendProjection.CLI,
-    OperationFrontendProjection.TUI,
-    OperationFrontendProjection.MCP,
-)
-
-_SUBJECT_CHECKED_BY_THE_EXECUTOR: frozenset[str] = frozenset(
-    {
-        "export.google-sheets",
-        "local-reader.provision",
-        "user-profile.automation-renew",
-        "user-profile.automation-request",
-        "user-profile.automation-rotate",
-        "user-profile.automation-scope",
-    }
-)
+_SUBJECT_CHECKED_BY_THE_EXECUTOR: frozenset[str] = frozenset({"export.google-sheets"})
 """Definitions registered without an access resolver.
 
 No resolver reads their subject, so their executor's own first check is the
@@ -110,14 +94,12 @@ def _other_subjects(declared: str, profile_id: UUID) -> tuple[str, ...]:
 def _submission_context(
     registry: OperationRegistry, definition_id: str, *, profile_id: UUID, operation: PinnedAuthorityOperation
 ) -> OperationAccessContext:
-    contract = registry.lookup_public_contract(definition_id)
-    frontend = next(item for item in _FRONTEND_PREFERENCE if item in contract.permitted_frontends)
     return OperationAccessContext(
         profile_id=profile_id,
         destination_id=_DESTINATION,
         action=AccessAction.SUBMIT,
-        frontend=frontend,
-        contract=contract,
+        frontend=OperationFrontendProjection.CLI,
+        contract=registry.lookup_public_contract(definition_id),
         published_authority=Availability.AVAILABLE,
         authority_operation=operation,
     )

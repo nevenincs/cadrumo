@@ -11,7 +11,6 @@ import pytest
 from pydantic import BaseModel, ConfigDict
 
 from cadrumo.adapters.local_runtime.runtime_frame_io import decode_document, document_frame
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.contracts import (
     RuntimeByteChannel,
     RuntimeClientHello,
@@ -82,19 +81,14 @@ def test_only_exact_successful_write_acknowledges_notice_and_retries_coalesce() 
 
 
 @pytest.mark.parametrize(
-    "frontend,unlocked",
-    [
-        (OperationFrontendProjection.TUI, True),
-        (OperationFrontendProjection.CLI, True),
-        (OperationFrontendProjection.MCP, True),
-        (OperationFrontendProjection.TUI, False),
-    ],
+    ("opted_in", "unlocked"),
+    [(True, True), (False, True), (True, False)],
+    ids=["opted-in-attended", "not-opted-in", "opted-in-locked"],
 )
-def test_idle_stop_waits_only_for_attended_opted_in_connections(
-    tmp_path: Path, frontend: OperationFrontendProjection, unlocked: bool
-) -> None:
+def test_idle_stop_waits_only_for_attended_opted_in_connections(tmp_path: Path, opted_in: bool, unlocked: bool) -> None:
+    # A connection carries no frontend here: every frontend's client opts in, and only the offer counts.
     stop = RuntimeStop()
-    context = _context(capable=frontend is not OperationFrontendProjection.MCP)
+    context = _context(capable=opted_in)
     profiles = RuntimeProfileConnections(
         storage_root=tmp_path, storage_identity="a" * 64, runtime_boot_id=context.runtime_boot_id, stop=stop
     )
@@ -107,7 +101,7 @@ def test_idle_stop_waits_only_for_attended_opted_in_connections(
     profiles._capture = lambda _: login
     profiles.connect_events(context, cast(RuntimeByteChannel, SimpleNamespace(peer=context.peer)))
     assert not profiles._connections  # No profile login or session is required for presentation.
-    attended = frontend is not OperationFrontendProjection.MCP and unlocked
+    attended = opted_in and unlocked
     began = time.monotonic()
     assert profiles.stop_if_idle(RuntimeExitReason.SUPERVISOR_STOP, timeout=0.02) is (not attended)
     assert time.monotonic() - began < 0.5

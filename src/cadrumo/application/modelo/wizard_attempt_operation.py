@@ -25,11 +25,12 @@ from ..operations.access_resolution import (
     require_single_period_admission,
 )
 from ..operations.capabilities import RECORDED_COOPERATIVE_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessAction,
@@ -58,7 +59,11 @@ _BINDING_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(BindingId)
 
 
 class ModeloWorkWizardAttemptRequest(BaseModel):
-    """Bind one exact profile and language to the canonical calculate request."""
+    """Bind one exact profile and language to the canonical calculate request.
+
+    ``calculation.actor`` is recorded as sent for a person's session. An agent's
+    session is recorded under its own session label, whatever the request carries.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -129,10 +134,12 @@ class ModeloWorkWizardAttemptExecutor:
         *,
         calculation_action_ports_factory: CalculationActionPortsFactory,
         attachment_store_factory: Callable[[str], AttachmentStoreProtocol],
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
     ) -> None:
         """Retain the same composition-owned factories as ordinary calculation."""
         self._calculation_action_ports_factory = calculation_action_ports_factory
         self._attachment_store_factory = attachment_store_factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(
         self,
@@ -146,6 +153,7 @@ class ModeloWorkWizardAttemptExecutor:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         require_operation_profile(request, context, payload.profile_id, expected_subject_ref=work_unit_id)
         await context.events.phase(MODELO_WORK_WIZARD_ATTEMPT_OPERATION_DEFINITION_ID)
+        actor = execution_actor_label(self._execution_caller_reader, context, supplied=payload.calculation.actor)
         prepared = await prepare_modelo_work_calculation(
             payload.calculation,
             operation=context.authority_operation,
@@ -164,7 +172,7 @@ class ModeloWorkWizardAttemptExecutor:
                     result = await asyncio.to_thread(
                         calculate_prepared_modelo_work,
                         prepared,
-                        actor=payload.calculation.actor,
+                        actor=actor,
                     )
                 except ModeloWorkMissingInputError as error:
                     missing_error = error
@@ -220,6 +228,7 @@ def build_modelo_work_wizard_attempt_definition(
     *,
     calculation_action_ports_factory: CalculationActionPortsFactory,
     attachment_store_factory: Callable[[str], AttachmentStoreProtocol],
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
 ) -> OperationDefinition:
     """Record one secure calculation attempt with a typed interactive result."""
     return build_single_phase_definition(
@@ -231,9 +240,9 @@ def build_modelo_work_wizard_attempt_definition(
         build=lambda: ModeloWorkWizardAttemptExecutor(
             calculation_action_ports_factory=calculation_action_ports_factory,
             attachment_store_factory=attachment_store_factory,
+            execution_caller_reader=execution_caller_reader,
         ),
         capabilities=RECORDED_COOPERATIVE_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_UPDATE_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
 

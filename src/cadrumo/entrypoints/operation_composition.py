@@ -1166,9 +1166,7 @@ def build_production_operation_registry(
     inventory_closing_authority_record_definition = build_inventory_closing_authority_record_definition(
         build_inventory_service_ports, execution_caller_reader=execution_caller_reader
     )
-    auth_read_definition = build_auth_read_definition(
-        compose_auth_read_ports, execution_caller_reader=execution_caller_reader
-    )
+    auth_read_definition = build_auth_read_definition(compose_auth_read_ports)
     apoderado_definitions = build_apoderado_operation_definitions(build_apoderado_operation_ports)
     auth_diagnostic_report_definition = build_auth_diagnostic_report_definition(build_auth_diagnostic_report_ports)
     diagnostics_read_definition = build_diagnostics_read_definition(build_diagnostics_read_ports)
@@ -1176,7 +1174,9 @@ def build_production_operation_registry(
     google_configuration_definitions = build_google_configuration_definitions(
         build_google_configuration_operation_ports
     )
-    quickfile_definition = build_quickfile_definition(build_quickfile_operation_ports)
+    quickfile_definition = build_quickfile_definition(
+        build_quickfile_operation_ports, execution_caller_reader=execution_caller_reader
+    )
     evidence_ingestion_definitions = build_ledger_evidence_ingestion_definitions(
         build_ledger_evidence_ingestion_operation_ports
     )
@@ -1189,7 +1189,7 @@ def build_production_operation_registry(
     modelo_maritime_preview_definition = build_modelo_maritime_preview_definition(build_modelo_maritime_preview_ports)
     modelo_spreadsheet_definitions = build_modelo_spreadsheet_definitions(build_modelo_spreadsheet_operation_ports)
     review_package_exchange_definitions = build_review_package_exchange_operation_definitions(
-        build_review_package_exchange_operation_ports
+        build_review_package_exchange_operation_ports, execution_caller_reader=execution_caller_reader
     )
     profile_archive_definitions = build_profile_archive_operation_definitions(build_profile_archive_operation_ports)
     recovery_status_definition = build_recovery_status_definition()
@@ -1403,9 +1403,7 @@ def build_production_operation_registry(
         load_reconciliation_filed_observation,
         execution_caller_reader=execution_caller_reader,
     )
-    reconciliation_list_definition = build_modelo_reconciliation_list_definition(
-        execution_caller_reader=execution_caller_reader
-    )
+    reconciliation_list_definition = build_modelo_reconciliation_list_definition()
     work_list_definition = build_modelo_work_list_definition(work_lifecycle_ports_factory)
     work_create_definition = build_modelo_work_create_definition(
         work_lifecycle_ports_factory, execution_caller_reader=execution_caller_reader
@@ -1442,6 +1440,7 @@ def build_production_operation_registry(
     wizard_attempt_definition = build_modelo_work_wizard_attempt_definition(
         calculation_action_ports_factory=calculation_action_ports_factory,
         attachment_store_factory=attachment_store_factory,
+        execution_caller_reader=execution_caller_reader,
     )
     revision_definition = build_modelo_work_revision_definition(verification_repository_bundle_factory)
     revisions_definition = build_modelo_work_revisions_definition(verification_repository_bundle_factory)
@@ -1450,7 +1449,9 @@ def build_production_operation_registry(
     )
     ledger_history_definition = build_ledger_history_definition(ledger_action_ports_factory)
     ledger_history_typed_definition = build_ledger_history_typed_definition(ledger_action_ports_factory)
-    ledger_export_definition = build_ledger_export_definition(build_ledger_export_link_operation_ports)
+    ledger_export_definition = build_ledger_export_definition(
+        build_ledger_export_link_operation_ports, execution_caller_reader=execution_caller_reader
+    )
     ledger_link_definition = build_ledger_link_definition(
         build_ledger_export_link_operation_ports, execution_caller_reader=execution_caller_reader
     )
@@ -1473,14 +1474,21 @@ def build_production_operation_registry(
             own_accounts=own_account_repository_factory(bucket_id=bucket_id),
         )
 
-    ledger_import_definition = build_ledger_import_definition(ledger_import_ports_factory)
+    ledger_import_definition = build_ledger_import_definition(
+        ledger_import_ports_factory, execution_caller_reader=execution_caller_reader
+    )
     ledger_add_definition = build_ledger_add_definition(
         ledger_action_ports_factory,
         build_prorrata_register_repository,
         own_account_repository_factory,
+        execution_caller_reader=execution_caller_reader,
     )
-    ledger_allocate_definition = build_ledger_allocate_definition(ledger_action_ports_factory)
-    ledger_classify_definition = build_ledger_classify_definition(ledger_action_ports_factory)
+    ledger_allocate_definition = build_ledger_allocate_definition(
+        ledger_action_ports_factory, execution_caller_reader=execution_caller_reader
+    )
+    ledger_classify_definition = build_ledger_classify_definition(
+        ledger_action_ports_factory, execution_caller_reader=execution_caller_reader
+    )
     ledger_operator_iva_definition = build_ledger_operator_iva_definition(
         ledger_action_ports_factory, execution_caller_reader=execution_caller_reader
     )
@@ -1516,19 +1524,23 @@ def build_production_operation_registry(
     ledger_rule_apply_definition = build_ledger_rule_apply_definition(
         ledger_action_ports_factory, ledger_rule_repository_factory, execution_caller_reader=execution_caller_reader
     )
-    ledger_evidence_add_definition = build_ledger_evidence_add_definition(build_ledger_evidence_ports)
+    ledger_evidence_add_definition = build_ledger_evidence_add_definition(
+        build_ledger_evidence_ports, execution_caller_reader=execution_caller_reader
+    )
     ledger_evidence_list_definition = build_ledger_evidence_list_definition(build_ledger_evidence_ports)
     ledger_evidence_view_definition = build_ledger_evidence_view_definition(build_ledger_evidence_ports)
     ledger_evidence_query_definition = build_ledger_evidence_query_definition(build_ledger_evidence_ports)
     ledger_evidence_update_definition = build_ledger_evidence_update_definition(
         build_ledger_evidence_ports, execution_caller_reader=execution_caller_reader
     )
-    ledger_evidence_remove_definition = build_ledger_evidence_remove_definition(build_ledger_evidence_ports)
+    ledger_evidence_remove_definition = build_ledger_evidence_remove_definition(
+        build_ledger_evidence_ports, execution_caller_reader=execution_caller_reader
+    )
     ledger_evidence_reader_readiness_definition = build_ledger_evidence_reader_readiness_definition(
         read_local_reader_status
     )
     ledger_evidence_extract_definition = build_ledger_evidence_extract_definition(
-        build_invoice_evidence_operation_ports, execution_caller_reader=execution_caller_reader
+        build_invoice_evidence_operation_ports
     )
     ledger_evidence_confirm_definition = build_ledger_evidence_confirm_definition(
         build_invoice_evidence_operation_ports
@@ -1536,9 +1548,11 @@ def build_production_operation_registry(
     ledger_split_definition = build_ledger_split_definition(
         ledger_action_ports_factory, execution_caller_reader=execution_caller_reader
     )
-    ledger_merge_definition = build_ledger_merge_definition(ledger_action_ports_factory)
+    ledger_merge_definition = build_ledger_merge_definition(
+        ledger_action_ports_factory, execution_caller_reader=execution_caller_reader
+    )
     ledger_update_definition = build_ledger_update_definition(
-        ledger_action_ports_factory, own_account_repository_factory
+        ledger_action_ports_factory, own_account_repository_factory, execution_caller_reader=execution_caller_reader
     )
     ledger_attach_definition = build_ledger_attach_definition(
         ledger_action_ports_factory, execution_caller_reader=execution_caller_reader
@@ -1558,8 +1572,12 @@ def build_production_operation_registry(
     ledger_exclude_definition = build_ledger_exclude_definition(
         ledger_action_ports_factory, execution_caller_reader=execution_caller_reader
     )
-    ledger_remove_definition = build_ledger_remove_definition(ledger_action_ports_factory)
-    ledger_reset_definition = build_ledger_reset_definition(ledger_action_ports_factory)
+    ledger_remove_definition = build_ledger_remove_definition(
+        ledger_action_ports_factory, execution_caller_reader=execution_caller_reader
+    )
+    ledger_reset_definition = build_ledger_reset_definition(
+        ledger_action_ports_factory, execution_caller_reader=execution_caller_reader
+    )
     if counterparty_repository_factory is None:
         from ..adapters.persistence.profile.counterparty_establishment import (
             build_counterparty_establishment_repository,
@@ -1594,7 +1612,9 @@ def build_production_operation_registry(
     )
     filing_record_definition = build_modelo_work_filing_record_definition(verification_repository_bundle_factory)
     filing_record_list_definition = build_modelo_filing_record_list_definition(verification_repository_bundle_factory)
-    filing_record_import_definition = build_modelo_filing_record_import_definition(calculation_action_ports_factory)
+    filing_record_import_definition = build_modelo_filing_record_import_definition(
+        calculation_action_ports_factory, execution_caller_reader=execution_caller_reader
+    )
     filing_record_view_definition = build_modelo_filing_record_view_definition(verification_repository_bundle_factory)
     taxation_comparison_definition = build_modelo_taxation_comparison_definition(build_taxation_comparison_ports)
     local_observation_definition = build_modelo_local_observation_definition(
@@ -1612,6 +1632,7 @@ def build_production_operation_registry(
     m303_attestation_definition = build_modelo_work_m303_attestation_definition(
         work_lifecycle_ports_factory=work_lifecycle_ports_factory,
         attachment_store_factory=attachment_store_factory,
+        execution_caller_reader=execution_caller_reader,
     )
     iva_wallet_correction_definition = build_modelo_iva_wallet_correction_definition(build_modelo_iva_wallet_seed_ports)
     iva_wallet_balance_definition = build_modelo_iva_wallet_balance_definition(build_modelo_iva_wallet_seed_ports)
@@ -1621,6 +1642,7 @@ def build_production_operation_registry(
         profile_resolver=modelo_profile_resolver,
         export_ports_factory=modelo_export_ports_factory,
         repositories=verification_repository_bundle_factory,
+        execution_caller_reader=execution_caller_reader,
     )
     definitions = tuple(
         sorted(

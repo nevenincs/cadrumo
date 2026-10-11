@@ -119,9 +119,7 @@ def run_registered_operation[ResultT: BaseModel, ReviewT: BaseModel](
         expected_result = OperationSchemaIdentityV1.from_model(
             schema_id=definition_id + ".result", schema_version=result_version, model_type=result_type
         )
-        require_registered_definition_contract(
-            contract, definition_id, expected_request, expected_result, frontend, secret
-        )
+        require_registered_definition_contract(contract, definition_id, expected_request, expected_result, secret)
         require_registered_review_contract(contract, review)
 
         progress = RegisteredOperationProgress()

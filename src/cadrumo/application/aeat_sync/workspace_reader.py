@@ -26,7 +26,6 @@ from ...core.errors.hierarchy import InternalInvariantError
 from ...domain.modelos.codes import ModeloCode
 from ..modelo.reconciliation_records import ModeloReconciliationRecord
 from ..operations.models import OperationDefinitionId
-from ..operations.registry import OperationFrontendProjection
 from ..operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
 from ..operator_actions.models import ActionReference
 from ..overview.calendar_models import OverviewAeatSubmissionState
@@ -264,21 +263,10 @@ def _admitted_capabilities(
     contracts: OperationPublicContractSetV1,
 ) -> tuple[tuple[ActionReference, ...], tuple[OperationDefinitionId, ...]]:
     """Offer only the actions whose operations this session actually composed."""
-    admitted = _tui_contracts(contracts)
+    admitted = {contract.definition_id: contract for contract in contracts.definitions}
     operations = _area_operations(area, admitted)
     joined_actions = _joined_action_references(operations, admitted)
     return _area_actions(area, joined_actions), operations
-
-
-def _tui_contracts(
-    contracts: OperationPublicContractSetV1,
-) -> dict[OperationDefinitionId, OperationPublicDefinitionContractV1]:
-    """Index the operation contracts this session can render in the TUI."""
-    return {
-        contract.definition_id: contract
-        for contract in contracts.definitions
-        if OperationFrontendProjection.TUI in contract.permitted_frontends
-    }
 
 
 def _area_operations(

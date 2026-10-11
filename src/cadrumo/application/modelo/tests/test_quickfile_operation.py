@@ -114,7 +114,6 @@ def test_real_registry_compiles_complete_secure_human_schema() -> None:
     assert contract.result_schema is not None and contract.result_schema.schema_id == "modelo.quickfile.result"
     assert definition.result_type is module.QuickfileExecutionResult
     assert definition.result_type is not QuickfileProjection
-    assert definition.permitted_frontends == frozenset({OperationFrontendProjection.CLI})
     assert definition.capabilities.permitted_effects == frozenset(OperationEffect)
     assert "ordinary_m303_filing_evidence" in QuickfileRequest.model_fields
     assert "detail_rows" in QuickfileRequest.model_fields
@@ -159,9 +158,11 @@ def test_result_actual_policy_requires_human_exact_destination_and_both_categori
         assert isinstance(policy_decision(resolved, registry, disclosures=wrong_destination, human=True), AccessDenied)
 
 
-def test_agent_frontend_has_typed_unavailable_purpose(
+@pytest.mark.parametrize("action", [AccessAction.SUBMIT, AccessAction.COMMIT, AccessAction.RESULT])
+def test_every_frontend_resolves_the_same_request_to_the_same_access(
     authority_operation: PinnedAuthorityOperation,
     tmp_path: Path,
+    action: AccessAction,
 ) -> None:
     registry = _registry()
     registration = registry.lookup_public_registration(module.QUICKFILE_OPERATION_DEFINITION_ID)
@@ -171,19 +172,27 @@ def test_agent_frontend_has_typed_unavailable_purpose(
         subject_ref=profile_operation_subject(str(PROFILE_ID)),
         payload=_request(tmp_path),
     )
-    with pytest.raises(ProfileAccessRefusedError):
-        registration.access_resolver(
+    destination_id = uuid4()
+    resolved = {
+        frontend: registration.access_resolver(
             request,
             OperationAccessContext(
                 profile_id=PROFILE_ID,
-                destination_id=uuid4(),
-                action=AccessAction.SUBMIT,
-                frontend=OperationFrontendProjection.MCP,
+                destination_id=destination_id,
+                action=action,
+                frontend=frontend,
                 contract=registration.contract,
                 published_authority=Availability.AVAILABLE,
                 authority_operation=authority_operation,
             ),
         )
+        for frontend in OperationFrontendProjection
+    }
+    on_cli = resolved[OperationFrontendProjection.CLI]
+    assert AccessAction.COMMIT in on_cli.policy.actions
+    for frontend, access in resolved.items():
+        assert access.policy == on_cli.policy, frontend
+        assert access.request == on_cli.request.model_copy(update={"frontend": frontend}), frontend
 
 
 @pytest.mark.parametrize("action", [AccessAction.START, AccessAction.RESUME, AccessAction.COMMIT])

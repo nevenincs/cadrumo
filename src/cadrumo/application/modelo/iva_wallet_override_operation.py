@@ -34,7 +34,6 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.public_period import PublicPeriod
 from ..operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
@@ -273,7 +272,6 @@ def build_modelo_iva_wallet_override_definition(factory: ModeloIvaWalletSeedPort
         interaction_kinds=frozenset(),
         capabilities=RECORDED_NON_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
 
 

@@ -83,7 +83,7 @@ class OperationPublicDefinitionContractV1(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    manifest_version: Literal[3] = 3
+    manifest_version: Literal[4] = 4
     definition_id: OperationDefinitionId
     action_reference: ActionReference | None
     request_schema: OperationSchemaIdentityV1
@@ -106,7 +106,6 @@ class OperationPublicDefinitionContractV1(BaseModel):
     permitted_effects: frozenset[OperationEffect]
     close_policy: OperationClosePolicy
     reconciliation_policy: OperationReconciliationPolicy
-    permitted_frontends: frozenset[OperationFrontendProjection]
     ephemeral_secret_required: bool
     transient_financial_operand: OperationTransientFinancialOperandPublicDeclarationV1 | None = None
     definition_contract_digest: ContentDigest
@@ -189,27 +188,21 @@ class OperationReconciliationPolicy(StrEnum):
 
 
 class OperationFrontendProjection(StrEnum):
-    """Product-owned identities of permitted operation projections."""
+    """Product-owned identities of the frontends an operation is submitted from.
+
+    Every registered operation is open to every frontend, so a definition
+    declares none. The identity names where one submission came from.
+    """
 
     CLI = "cli"
     MCP = "mcp"
     TUI = "tui"
 
 
-#: Every product frontend, for operations offered on all of them. Membership is
-#: explicit so a new frontend is never granted to existing operations silently.
-ALL_OPERATION_FRONTENDS: frozenset[OperationFrontendProjection] = frozenset(
-    {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-)
-
-
-from . import operation_definition as _operation_definition  # noqa: E402 — enums must exist before model binding
+from . import operation_definition as _operation_definition  # noqa: E402 — the enum must exist before model binding
 
 _operation_definition.OperationDefinition.model_rebuild(
-    _types_namespace={
-        "OperationFrontendProjection": OperationFrontendProjection,
-        "OperationReconciliationPolicy": OperationReconciliationPolicy,
-    }
+    _types_namespace={"OperationReconciliationPolicy": OperationReconciliationPolicy}
 )
 
 
@@ -673,7 +666,6 @@ OperationPublicDefinitionContractV1.model_rebuild()
 
 
 __all__ = [
-    "ALL_OPERATION_FRONTENDS",
     "OperationEffectReceipt",
     "OperationFrontendProjection",
     "OperationPublicContractSetV1",

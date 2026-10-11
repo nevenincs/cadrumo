@@ -82,7 +82,6 @@ def _contract_matches(
     return (
         contract.definition_id == definition_id
         and contract.action_reference == action
-        and OperationFrontendProjection.TUI in contract.permitted_frontends
         and contract.request_schema
         == OperationSchemaIdentityV1.from_model(
             schema_id=definition_id + ".request",

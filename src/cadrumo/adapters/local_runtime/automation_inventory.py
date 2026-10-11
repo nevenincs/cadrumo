@@ -13,10 +13,9 @@ from ...application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
 from ...application.operations.models import OperationId
-from ...application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from ...application.operations.registry import OperationPublicDefinitionContractV1
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.deadline_budget import bounded_deadline_after
-from ...application.user_profile.access_contracts import AccessDenialCode
 from ...application.user_profile.automation_enrollment import AutomationInventoryProjection
 from ...application.user_profile.automation_operations import (
     AUTOMATION_INVENTORY_OPERATION_DEFINITION_ID,
@@ -31,7 +30,7 @@ from ...core.operations import (
     profile_operation_subject,
 )
 from .frontend_client import RuntimeFrontendClient
-from .frontend_client_contracts import RuntimeFrontendRefusedError, frontend_failure_code
+from .frontend_client_contracts import frontend_failure_code
 from .operation_run_error_context import operation_run_error_context
 from .operation_settlement import (
     PinnedConnection,
@@ -167,9 +166,7 @@ __all__ = ["AutomationInventoryCompletion", "AutomationInventoryReadError", "rea
 def _automation_inventory_contract(
     client: RuntimeFrontendClient, timeout: float
 ) -> tuple[float, PinnedConnection, OperationPublicDefinitionContractV1, str]:
-    """Pin the human frontend and exact automation inventory contract before submission."""
-    if client.frontend not in {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}:
-        raise RuntimeFrontendRefusedError(AccessDenialCode.FRONTEND_DENIED.value)
+    """Pin the connection and exact automation inventory contract before submission."""
     deadline = bounded_deadline_after(timeout, subject="automation inventory")
     pinned = PinnedConnection.of(client)
     profile_id = pinned.profile_id

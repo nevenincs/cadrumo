@@ -412,8 +412,6 @@ def test_supervisor_captures_iva_remote_state_for_exact_mcp_profile(tmp_path: Pa
                 context=access_context,
             )
         assert refusal.value.reason is AccessDenialCode.PROFILE_MISMATCH
-
-        assert OperationFrontendProjection.MCP in definition.permitted_frontends
         assert definition.capabilities.owned_resources == frozenset({OperationOwnedResource.PROCESS})
 
         durable_root = tmp_path / "operations"

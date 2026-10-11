@@ -21,11 +21,7 @@ from ...core.time.clock import now
 from ...domain.buckets.event import BucketEventHistoryCatalogue
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ..operations.execution_actor import (
-    OperationExecutionCallerReader,
-    execution_actor_label,
-    execution_admitted_on_mcp,
-)
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
 from ..operations.refusal_evidence import OperationRefusalEvidence
@@ -230,14 +226,6 @@ class M145CommunicationExecutor:
         bucket_id = str(payload.profile_id)
         if await asyncio.to_thread(require_active_bucket_id) != bucket_id:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-        if (
-            isinstance(payload, M145CommunicationCreateRequest)
-            and payload.fills_a_signed_block()
-            and execution_admitted_on_mcp(self._execution_caller_reader, context)
-        ):
-            # The access resolver refuses this first; the record itself must
-            # not depend on that having happened.
-            raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
         actor = (
             None
             if isinstance(payload, M145CommunicationValidateRequest)

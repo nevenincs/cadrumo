@@ -26,7 +26,7 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.public_period import PublicPeriod
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
@@ -259,9 +259,6 @@ def build_workflow_run_read_definition(factory: WorkflowRunReadPortsFactory) -> 
         executor_type=WorkflowRunReadExecutor,
         build=lambda: WorkflowRunReadExecutor(factory),
         capabilities=_capabilities(),
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
     )
 
 
@@ -275,9 +272,6 @@ def build_workflow_run_list_definition(factory: WorkflowRunReadPortsFactory) -> 
         executor_type=WorkflowRunListExecutor,
         build=lambda: WorkflowRunListExecutor(factory),
         capabilities=_capabilities(),
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
     )
 
 

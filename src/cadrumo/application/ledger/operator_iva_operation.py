@@ -18,24 +18,19 @@ from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.models import Transaction
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
-from ..operations.execution_actor import (
-    OperationExecutionCallerReader,
-    execution_actor_label,
-    execution_admitted_on_mcp,
-)
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.refusal_evidence import OperationRefusalEvidence
-from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory, require_exact_ledger_action_ports
-from .agent_row_guard import require_agent_may_reclassify
 from .classify_result_contracts import (
     LEDGER_CLASSIFY_VALIDATION_REFUSAL_CODE,
 )
@@ -81,7 +76,6 @@ class LedgerOperatorIvaExecutor:
         require_exact_ledger_action_ports(ports, bucket_id=bucket_id, operation=context.authority_operation)
         await context.events.phase(LEDGER_OPERATOR_IVA_DEFINITION_ID)
         actor = execution_actor_label(self._execution_caller_reader, context, supplied=payload.actor or bucket_id)
-        for_agent = execution_admitted_on_mcp(self._execution_caller_reader, context)
 
         async def refuse(error: Exception, transaction_id: str) -> OperationRefusalEvidence:
             result = LedgerOperatorIvaResult(
@@ -105,10 +99,6 @@ class LedgerOperatorIvaExecutor:
                         catalogue = ports.transaction_repository.load()
                         transaction_id = resolve_transaction_id(payload.transaction_id, catalogue.transactions)
                         baseline = catalogue.transactions[transaction_id]
-                        if for_agent:
-                            # A derivation replaces the row's IVA category, rate, base and cuota.
-                            # Refused here, before any effect is declared.
-                            require_agent_may_reclassify(baseline)
                         category = require_iva_category(
                             payload.iva_category,
                             effective_date=baseline.raw.value_date or baseline.raw.booked_date,
@@ -194,7 +184,6 @@ def build_ledger_operator_iva_definition(
         executor_type=LedgerOperatorIvaExecutor,
         build=lambda: LedgerOperatorIvaExecutor(ports_factory, execution_caller_reader=execution_caller_reader),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
         refusal_detail_codes=frozenset({LEDGER_CLASSIFY_VALIDATION_REFUSAL_CODE}),
     )
 

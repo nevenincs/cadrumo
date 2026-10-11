@@ -84,13 +84,15 @@ def test_login_registration_requires_human_authority_and_exact_profile(action: A
     if action is AccessAction.RESULT:
         assert {item.projection_id for item in resolved.policy.disclosures} == {AUTH_SESSION_ACQUIRE_RESULT_SCHEMA_ID}
 
-    for changed, reason in (
-        (replace(context, profile_id=uuid4()), AccessDenialCode.PROFILE_MISMATCH),
-        (replace(context, frontend=OperationFrontendProjection.MCP), AccessDenialCode.FRONTEND_DENIED),
-    ):
-        with pytest.raises(ProfileAccessRefusedError) as refused:
-            resolve_operation_access(registry=registry, request=request, context=changed)
-        assert refused.value.reason is reason
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        resolve_operation_access(registry=registry, request=request, context=replace(context, profile_id=uuid4()))
+    assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+    for frontend in OperationFrontendProjection:
+        elsewhere = resolve_operation_access(
+            registry=registry, request=request, context=replace(context, frontend=frontend)
+        )
+        assert elsewhere.request.frontend is frontend
+        assert elsewhere.policy == resolved.policy
 
 
 def _result() -> AuthLoginResult:

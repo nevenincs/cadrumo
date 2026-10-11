@@ -44,7 +44,6 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.read_capture import capture_read_result
 from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationResultProjector,
 )
@@ -83,7 +82,6 @@ from .ratios_contracts import (
 from .read_access import resolve_ledger_commit_access, resolve_ledger_read_access
 from .usage_ratio_repository import load_usage_ratio_profile, usage_ratio_profile_with_censo_guard
 
-_FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.MCP})
 _PERSON_ACTOR = "operator"
 """The label the ratio audit events carry for a person's session."""
 
@@ -414,7 +412,6 @@ def _definition(
     build: Callable[[], object] | None = None,
     sensitive_input: bool,
     mutation: bool,
-    permitted_frontends: frozenset[OperationFrontendProjection],
     refusal_detail_codes: frozenset[str] = frozenset(),
 ) -> OperationDefinition:
     """Declare one ratio verb with only the capabilities its service needs."""
@@ -450,7 +447,6 @@ def _definition(
             permitted_effects=effects,
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
-        permitted_frontends=permitted_frontends,
         refusal_detail_codes=refusal_detail_codes,
     )
 
@@ -618,7 +614,6 @@ def build_ledger_ratios_list_definition() -> OperationDefinition:
         LedgerRatiosListExecutor,
         sensitive_input=False,
         mutation=False,
-        permitted_frontends=_FRONTENDS,
         refusal_detail_codes=frozenset({LEDGER_RATIOS_CENSO_MISMATCH_REFUSAL_CODE}),
     )
 
@@ -645,7 +640,6 @@ def build_ledger_ratios_set_definition(
         build=lambda: LedgerRatiosSetExecutor(execution_caller_reader=execution_caller_reader),
         sensitive_input=True,
         mutation=True,
-        permitted_frontends=_FRONTENDS,
     )
 
 
@@ -671,7 +665,6 @@ def build_ledger_ratios_unset_definition(
         build=lambda: LedgerRatiosUnsetExecutor(execution_caller_reader=execution_caller_reader),
         sensitive_input=True,
         mutation=True,
-        permitted_frontends=_FRONTENDS,
         refusal_detail_codes=frozenset({LEDGER_RATIOS_NO_OVERRIDE_REFUSAL_CODE}),
     )
 
@@ -697,7 +690,6 @@ def build_ledger_ratios_eligible_definition() -> OperationDefinition:
         LedgerRatiosEligibleExecutor,
         sensitive_input=False,
         mutation=False,
-        permitted_frontends=_FRONTENDS,
     )
 
 
@@ -722,7 +714,6 @@ def build_ledger_ratios_validate_definition() -> OperationDefinition:
         LedgerRatiosValidateExecutor,
         sensitive_input=False,
         mutation=False,
-        permitted_frontends=_FRONTENDS,
     )
 
 

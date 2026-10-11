@@ -49,8 +49,6 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationSchemaBindingV1,
 )
@@ -452,9 +450,6 @@ def _read_definition(
     *,
     sensitive: bool = False,
     public_error_detail: bool = False,
-    permitted_frontends: frozenset[OperationFrontendProjection] = frozenset(
-        {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}
-    ),
 ) -> OperationDefinition:
     return build_single_phase_definition(
         definition_id=definition_id,
@@ -464,7 +459,6 @@ def _read_definition(
         executor_type=executor_type,
         build=build_executor,
         capabilities=modelo_query_read_capabilities(sensitive=sensitive),
-        permitted_frontends=permitted_frontends,
         public_error_detail=public_error_detail,
     )
 
@@ -477,7 +471,6 @@ def build_modelo_bindings_list_definition() -> OperationDefinition:
         ModeloBindingsListProjection,
         ModeloBindingsListExecutor,
         ModeloBindingsListExecutor,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 
@@ -501,7 +494,6 @@ def build_modelo_requires_definition() -> OperationDefinition:
         ModeloRequiresProjection,
         ModeloRequiresExecutor,
         ModeloRequiresExecutor,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

@@ -101,9 +101,8 @@ def test_a_folder_of_good_files_still_imports_every_one(tmp_path: Path) -> None:
 def test_a_single_unreadable_file_is_still_a_hard_refusal(tmp_path: Path) -> None:
     """Guarding the folder must not downgrade the single-file error to a warning.
 
-    ``_resolve_import_paths`` returns a one-element list for a plain file, so a
-    naive per-item guard would catch that failure too and report an import that
-    imported nothing as a success.
+    A plain file is a plan of one, so a naive per-item guard would catch that
+    failure too and report an import that imported nothing as a success.
     """
     lone = tmp_path / "poisoned.csv"
     lone.write_text(_POISONED_STATEMENT, encoding="utf-8")
@@ -118,6 +117,19 @@ def test_a_single_unreadable_file_is_still_a_hard_refusal(tmp_path: Path) -> Non
     # while this was being written. The name is data rather than localised
     # text, so this does not break under a different catalogue either.
     assert "poisoned.csv" in result.output, result.output
+
+
+def test_a_folder_holding_no_statement_is_a_hard_refusal_that_names_the_folder(tmp_path: Path) -> None:
+    """The operation plans the folder now; the refusal the operator reads still names what they typed."""
+    folder = _folder(tmp_path, {"notes.txt": "not a statement"})
+
+    result = invoke_cached_cli(
+        ["app", "ledger", "import", "--file", str(folder), "--provider", "auto", "--dry-run"],
+    )
+
+    assert result.exit_code != 0, result.output
+    assert folder.name in result.output, result.output
+    assert "notes.txt" not in result.output, result.output
 
 
 def test_a_folder_where_every_file_fails_is_a_hard_refusal(tmp_path: Path) -> None:

@@ -98,9 +98,6 @@ def test_maritime_schema_compiles_and_only_admits_its_period_independent_profile
     registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
     assert definition.capabilities.request_storage is OperationRequestStoragePolicy.SECURE_REFERENCE
     assert definition.capabilities.permitted_effects == frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
-    assert definition.permitted_frontends == frozenset(
-        {OperationFrontendProjection.CLI, OperationFrontendProjection.MCP}
-    )
     assert len(registry.lookup_public_registration(definition.definition_id).schema_bindings) == 2
     request = _request(ModeloMaritimePreviewRequest(profile_id=_PROFILE))
     context = OperationAccessContext(
@@ -143,9 +140,6 @@ def test_maritime_preview_is_admitted_on_the_mcp_frontend_without_a_commit_door(
             authority_operation=authority_operation,
         ),
     )
-
-    assert OperationFrontendProjection.MCP in definition.permitted_frontends
-    assert OperationFrontendProjection.MCP in registration.contract.permitted_frontends
     assert resolved.request.frontend is OperationFrontendProjection.MCP
     assert resolved.request.profile_id == _PROFILE
     assert resolved.request.period_independent is True

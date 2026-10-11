@@ -299,7 +299,6 @@ def _pending_superseded_invocation(
             }
         ),
         reconciliation_policy=current.reconciliation_policy,
-        permitted_frontends=current.permitted_frontends,
     )
     legacy_registration = OperationPublicDefinitionRegistrationV1.compose(
         definition=legacy_definition,

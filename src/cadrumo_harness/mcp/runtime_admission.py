@@ -27,6 +27,8 @@ class McpAdmission(StrEnum):
     """Resumed from the person's sign-in; it ends when that sign-in ends."""
     KEY = "key"
     """Authenticated by an enrolled key, under the grant approved for it."""
+    TYPED_SIGN_IN = "typed_sign_in"
+    """Signed in with the profile password given to this connection; it is the person's session."""
 
 
 _UNPRESENTED_SIGN_IN_REFUSALS: Final[dict[ProfileSessionRefusalReason, AccessDenialCode]] = {

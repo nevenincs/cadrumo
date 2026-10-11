@@ -35,7 +35,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
     OperationSubmissionReceiptV1,
 )
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
 from cadrumo.application.runtime.projection_pages import ProjectionPage, ProjectionPageRequest
 from cadrumo.application.user_profile.access_contracts import (
     AccessAction,
@@ -180,10 +180,6 @@ async def test_authorized_mcp_modelo_projection_results_and_history_disclosure_d
                 assert authenticated.is_error is False, _structured(authenticated)
                 assert _structured(authenticated)["outcome"] == "authenticated"
 
-                unsafe = await sdk.call_tool("describe", {"definition_id": "modelo.history"})
-                assert unsafe.is_error is True
-                assert _structured(unsafe) == {"outcome": "refused", "code": "frontend_denied"}
-
                 requests = (
                     ModeloProjectOperationRequest(profile_id=enrolled.profile_id, year=2025, ccaa="madrid"),
                     ModeloCompareOperationRequest(profile_id=enrolled.profile_id, modelo="130", years=(2025, 2026)),
@@ -199,7 +195,6 @@ async def test_authorized_mcp_modelo_projection_results_and_history_disclosure_d
                     )
                     assert contract.definition_id == definition_id
                     assert contract.result_schema is not None
-                    assert OperationFrontendProjection.MCP in contract.permitted_frontends
                     submitted = await sdk.call_tool(
                         "execute",
                         {

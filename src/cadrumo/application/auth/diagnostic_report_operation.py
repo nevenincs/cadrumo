@@ -20,7 +20,7 @@ from ..operations.access_resolution import (
     ResolvedOperationAccess,
     bind_operation_access,
     operation_disclosures,
-    require_declared_frontend_and_action,
+    require_declared_action,
     require_period_independent_replay_or_authority,
 )
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
@@ -32,7 +32,7 @@ from ..operations.profile_guard import (
     require_profile_operation_identity,
 )
 from ..operations.refusal_evidence import OperationRefusalEvidence
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessAction,
@@ -51,7 +51,6 @@ from .diagnostics_ports import AuthDiagnosticPersistencePort
 
 AUTH_DIAGNOSTIC_REPORT_OPERATION_DEFINITION_ID = "auth.diagnostics.phone-state-report"
 AUTH_DIAGNOSTIC_NOT_FOUND_REFUSAL_CODE = "REFUSED_AUTH_DIAGNOSTIC_NOT_FOUND"
-_FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
 _ACTIONS = frozenset(
     {AccessAction.SUBMIT, AccessAction.START, AccessAction.COMMIT, AccessAction.OBSERVE, AccessAction.RESULT}
 )
@@ -226,7 +225,7 @@ def resolve_auth_diagnostic_report_access(
 ) -> ResolvedOperationAccess:
     """Require exact human profile/all periods at mutation and result release."""
     payload = _require_auth_diagnostic_report_request(request, context)
-    require_declared_frontend_and_action(context, frontends=_FRONTENDS, actions=_ACTIONS)
+    require_declared_action(context, actions=_ACTIONS)
     require_period_independent_replay_or_authority(
         context, profile_id=payload.profile_id, definition_id=request.definition_id
     )
@@ -271,7 +270,6 @@ def build_auth_diagnostic_report_definition(factory: AuthDiagnosticReportPortsFa
         executor_type=AuthDiagnosticReportExecutor,
         build=lambda: AuthDiagnosticReportExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        permitted_frontends=_FRONTENDS,
         refusal_detail_codes=frozenset({AUTH_DIAGNOSTIC_NOT_FOUND_REFUSAL_CODE}),
     )
 

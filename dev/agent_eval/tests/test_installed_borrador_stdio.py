@@ -44,7 +44,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationSubmissionReceiptV1,
 )
 from cadrumo.application.operations.public_period import PublicPeriod
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
 from cadrumo.application.user_profile.access_contracts import (
     AccessAction,
     AccessScope,
@@ -355,7 +355,6 @@ async def test_installed_mcp_queries_borrador_without_releasing_source_provenanc
                     assert contract.definition_id == _QUERY
                     assert contract.result_schema is not None
                     assert contract.result_schema.schema_id == _QUERY + ".result"
-                    assert OperationFrontendProjection.MCP in contract.permitted_frontends
                     query_schema = canonical_json_bytes(Borrador100QueryProjection.model_json_schema()).decode("utf-8")
                     assert '"source_url"' not in query_schema
                     assert '"warnings"' not in query_schema

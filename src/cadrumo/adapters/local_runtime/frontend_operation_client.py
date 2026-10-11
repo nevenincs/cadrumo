@@ -118,7 +118,7 @@ class RuntimeOperationFrontend:
             ),
             RuntimeOperationContractReply,
         )
-        if reply.contract.definition_id != definition_id or self.frontend not in reply.contract.permitted_frontends:
+        if reply.contract.definition_id != definition_id:
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         try:
             return OperationPublicDefinitionDescriptionV1(

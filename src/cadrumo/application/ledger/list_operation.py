@@ -15,7 +15,7 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_profile_operation_identity
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..review.errors import FilterParseError
 from ..review.filter import LedgerReviewFilterSpec
@@ -157,7 +157,6 @@ def build_ledger_list_definition(ports: LedgerActionPortsFactory) -> OperationDe
         executor_type=LedgerListExecutor,
         build=lambda: LedgerListExecutor(ports),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

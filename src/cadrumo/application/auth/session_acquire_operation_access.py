@@ -12,10 +12,9 @@ from ..operations.access_resolution import (
     OperationAccessContext,
     ResolvedOperationAccess,
     bind_operation_access_profile,
-    require_declared_frontend_and_action,
+    require_declared_action,
 )
 from ..operations.models import OperationRequest, OperationTerminalReceipt
-from ..operations.registry import OperationFrontendProjection
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -24,7 +23,6 @@ from .operation_definitions import AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID,
 from .operator_results import AuthLoginResult
 
 AUTH_SESSION_ACQUIRE_RESULT_SCHEMA_ID = AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID + ".result"
-_FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
 
 
 class AuthSessionAcquireOperationProjection(BaseModel):
@@ -48,7 +46,7 @@ def resolve_auth_session_acquire_access(
     if request.subject_ref != profile_operation_subject(str(context.profile_id)):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     access_profile = HUMAN_SINGLE_RUN_COMMITTING_PERIOD_INDEPENDENT_DEFINITION_RESULT_PROFILE_VALUES_ACCESS
-    require_declared_frontend_and_action(context, frontends=_FRONTENDS, actions=access_profile.actions)
+    require_declared_action(context, actions=access_profile.actions)
     return bind_operation_access_profile(
         context, access_profile, profile_id=context.profile_id, definition_id=request.definition_id, periods=frozenset()
     )

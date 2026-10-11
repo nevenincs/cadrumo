@@ -23,12 +23,13 @@ from ...domain.transactions.irpf_categories import require_ledger_irpf_category
 from ...domain.transactions.models import BucketTransactionRef, Transaction, TransactionCatalogue
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.refusal_evidence import OperationRefusalEvidence
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
@@ -70,10 +71,13 @@ class LedgerUpdateExecutor:
         self,
         ports_factory: LedgerActionPortsFactory,
         own_account_repository_factory: OwnAccountRepositoryFactory,
+        *,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
     ) -> None:
         """Retain the exact-profile service and own-account register capabilities."""
         self._ports_factory = ports_factory
         self._own_account_repository_factory = own_account_repository_factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(
         self,
@@ -90,6 +94,9 @@ class LedgerUpdateExecutor:
         commit = _commit_update(
             payload,
             bucket_id=bucket_id,
+            actor=execution_actor_label(
+                self._execution_caller_reader, context, supplied=payload.actor or bucket_id or "operator"
+            ),
             operation=context.authority_operation,
             ports_factory=self._ports_factory,
             own_account_repository_factory=self._own_account_repository_factory,
@@ -165,6 +172,7 @@ async def _commit_update(
     payload: LedgerUpdateRequest,
     *,
     bucket_id: str,
+    actor: str,
     operation: PinnedAuthorityOperation,
     ports_factory: LedgerActionPortsFactory,
     own_account_repository_factory: OwnAccountRepositoryFactory,
@@ -198,7 +206,7 @@ async def _commit_update(
                 bucket_id=bucket_id,
                 transaction_id=transaction_id,
                 patch=patch,
-                actor=payload.actor or bucket_id or "operator",
+                actor=actor,
                 source_command="aeat app ledger update",
                 ports=ports,
                 catalogue=catalogue,
@@ -353,6 +361,8 @@ def _require_update_refusal_receipt(receipt: OperationTerminalReceipt) -> None:
 def build_ledger_update_definition(
     ports_factory: LedgerActionPortsFactory,
     own_account_repository_factory: OwnAccountRepositoryFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
 ) -> OperationDefinition:
     """Declare durable, exact-profile update with a bounded encrypted result."""
     return build_single_phase_definition(
@@ -361,9 +371,10 @@ def build_ledger_update_definition(
         subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerUpdateExecutionResult,
         executor_type=LedgerUpdateExecutor,
-        build=lambda: LedgerUpdateExecutor(ports_factory, own_account_repository_factory),
+        build=lambda: LedgerUpdateExecutor(
+            ports_factory, own_account_repository_factory, execution_caller_reader=execution_caller_reader
+        ),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
         refusal_detail_codes=frozenset({LEDGER_UPDATE_VALIDATION_REFUSAL_CODE}),
     )
 

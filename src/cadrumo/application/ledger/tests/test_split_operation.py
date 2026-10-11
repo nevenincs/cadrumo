@@ -35,11 +35,10 @@ from ...operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
-from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
+from ...user_profile.access_contracts import AccessAction, Availability
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import split_operation as operation
 from ..action_ports import LedgerActionPorts
-from ..agent_row_guard import require_agent_may_set_aside
 from ..models import SplitChildCommand, SplitTransactionResult
 from ..persistence_ports import LedgerPersistenceConflictError
 from ..protocols import RevisionGuardedTransactionCatalogueCoCommitWriterProtocol
@@ -191,12 +190,11 @@ def test_request_wire_round_trip_and_bounded_child_list() -> None:
 def test_registration_is_secure_and_requires_exact_profile_commit() -> None:
     registry, registration = _registry()
     request = operation.LedgerSplitRequest.model_validate(_request().model_dump(mode="python"))
-    listed = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.MCP})
+    listed = frozenset(OperationFrontendProjection)
 
     definition = registry.lookup(operation.LEDGER_SPLIT_OPERATION_DEFINITION_ID)
     assert definition.capabilities.request_storage.value == "secure_reference"
     assert definition.capabilities.sensitive_input.value == "secure_reference"
-    assert definition.permitted_frontends == listed
     for frontend in sorted(listed):
         resolved = resolve_operation_access(
             registry=registry,
@@ -468,44 +466,6 @@ async def test_executor_resolves_and_writes_against_the_same_fresh_revision(
     assert operands.value.result.parent_business_classification is BusinessClassification.PERSONAL
     assert operands.value.result.child_business_classification is BusinessClassification.NOT_YET_PROCESSED
     assert operands.value.result.remerged_by == ("ledger.merge",)
-
-
-_CLASSIFIED_AT = datetime(2026, 5, 5, 8, 0, tzinfo=UTC)
-_BY_HAND = {"classified_by": "manual", "classified_at": _CLASSIFIED_AT}
-
-
-@pytest.mark.parametrize(
-    "update",
-    [
-        pytest.param(_BY_HAND, id="classified-by-hand"),
-        pytest.param(
-            {**_BY_HAND, "business_classification": BusinessClassification.REVIEWED_EXCLUDED}, id="excluded-by-hand"
-        ),
-        pytest.param({"purchase_invoice_evidence_id": "b" * 64}, id="purchase-invoice-evidence"),
-        pytest.param({"invoice_id": "invoice-1"}, id="linked-invoice"),
-        pytest.param({"attachment_ids": ("a" * 64,)}, id="attachment"),
-    ],
-)
-def test_a_parent_carrying_the_persons_work_is_refused_to_an_agent(update: dict[str, object]) -> None:
-    parent = _parent_transaction().model_copy(update=update)
-
-    with pytest.raises(ProfileAccessRefusedError) as refused:
-        require_agent_may_set_aside(parent)
-
-    assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED
-
-
-@pytest.mark.parametrize(
-    "update",
-    [
-        pytest.param({"business_classification": BusinessClassification.NOT_YET_PROCESSED}, id="unprocessed"),
-        pytest.param({"classified_by": "rule:synthetic", "classified_at": _CLASSIFIED_AT}, id="classified-by-a-rule"),
-        pytest.param({"classified_by": "auto", "classified_at": _CLASSIFIED_AT}, id="classified-by-the-pipeline"),
-        pytest.param({}, id="no-stamp"),
-    ],
-)
-def test_a_parent_without_the_persons_work_is_not_refused_to_an_agent(update: dict[str, object]) -> None:
-    require_agent_may_set_aside(_parent_transaction().model_copy(update=update))
 
 
 def test_result_projector_requires_matching_success_receipt() -> None:

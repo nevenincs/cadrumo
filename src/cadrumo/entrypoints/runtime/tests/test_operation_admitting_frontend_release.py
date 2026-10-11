@@ -1,12 +1,11 @@
-"""An agent is released what an execution sealed only for an operation an agent's session submitted.
+"""A session reads what an execution stored on every frontend alike, whichever frontend admitted it.
 
 The production worker host and its authority run over one stored synthetic
 profile: the real journal, leases and encrypted operand store hold every
 invocation and the admission the worker recorded for it. The host registers the
-one operation these cases submit, which seals a host path for a person and the
-file name alone for an agent, as executors do. Custody and the native permit
-are explicit witnesses: the permit applies each reader's own scope ceiling and
-claims no native authorization.
+one operation these cases submit, which stores a host path. Custody and the
+native permit are explicit witnesses: the permit applies each reader's own
+scope ceiling and claims no native authorization.
 """
 
 from __future__ import annotations
@@ -38,12 +37,11 @@ from cadrumo.application.operations.access_resolution import (
     OperationAccessContext,
     ResolvedOperationAccess,
     bind_replayed_period_independent_access,
-    require_declared_frontend_and_action,
+    require_declared_action,
 )
 from cadrumo.application.operations.capabilities import RECORDED_IDEMPOTENT_SECURE_STORED_READ_CAPABILITIES
 from cadrumo.application.operations.composition import OperationComposedServices, compose_operation_services
 from cadrumo.application.operations.error_detail import operation_error_detail_schema
-from cadrumo.application.operations.execution_actor import OperationExecutionCallerReader, execution_admitted_on_mcp
 from cadrumo.application.operations.frontend_projection import (
     OperationPublicProjectionV1,
     OperationReviewProjectionReferenceV1,
@@ -60,7 +58,6 @@ from cadrumo.application.operations.operation_definition import build_single_pha
 from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.persistence.journal import OperationSecureReferenceStore
 from cadrumo.application.operations.registry import (
-    ALL_OPERATION_FRONTENDS,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
@@ -106,7 +103,8 @@ _DEFINITION = "test.sealed-document"
 _RESULT_SCHEMA = _DEFINITION + ".result"
 _DIRECTORY = "C:\\synthetic\\evidence"
 _FILE = "invoice-0001.pdf"
-_PERSONS_LOCATION = f"{_DIRECTORY}\\{_FILE}"
+_LOCATION = f"{_DIRECTORY}\\{_FILE}"
+_FRONTENDS = (_CLI, _TUI, _MCP)
 _REFUSAL_MESSAGE_KEY = "aggregation.grouping.errors.unsupported_modelo"
 _REPLAY_KEY = "sealed-document-once"
 
@@ -125,19 +123,13 @@ class _DocumentResult(BaseModel):
     location: str
 
 
-class _SealingExecutor:
-    """Seal where the document lies for a person, and its file name alone for an agent."""
-
-    def __init__(self, execution_caller_reader: OperationExecutionCallerReader) -> None:
-        self._execution_caller_reader = execution_caller_reader
+class _DocumentExecutor:
+    """Store where the document lies, or refuse with a public detail that names it."""
 
     async def execute(self, request: OperationRequest[_DocumentRequest], context: OperationExecutorContext) -> str:
         if request.payload.refuse:
-            raise AggregationUnsupportedModeloError(tr(_REFUSAL_MESSAGE_KEY), context={"location": _PERSONS_LOCATION})
-        for_agent = execution_admitted_on_mcp(self._execution_caller_reader, context)
-        result = _DocumentResult(
-            profile_id=request.payload.profile_id, location=_FILE if for_agent else _PERSONS_LOCATION
-        )
+            raise AggregationUnsupportedModeloError(tr(_REFUSAL_MESSAGE_KEY), context={"location": _LOCATION})
+        result = _DocumentResult(profile_id=request.payload.profile_id, location=_LOCATION)
         reference = await context.operands.put(result, written_at=now())
         await context.events.effect(OperationEffect.NONE)
         return reference
@@ -150,20 +142,19 @@ def _resolve_access(
     if not isinstance(payload, _DocumentRequest) or payload.profile_id != context.profile_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     access = LIFECYCLE_PERIOD_INDEPENDENT_REGISTERED_RESULT_PROFILE_VALUES_ACCESS
-    require_declared_frontend_and_action(context, frontends=ALL_OPERATION_FRONTENDS, actions=access.actions)
+    require_declared_action(context, actions=access.actions)
     return bind_replayed_period_independent_access(context, access, definition_id=request.definition_id)
 
 
-def _registry(execution_caller_reader: OperationExecutionCallerReader) -> OperationRegistry:
+def _registry() -> OperationRegistry:
     definition = build_single_phase_definition(
         definition_id=_DEFINITION,
         request_type=_DocumentRequest,
         subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=_DocumentResult,
-        executor_type=_SealingExecutor,
-        build=lambda: _SealingExecutor(execution_caller_reader),
+        executor_type=_DocumentExecutor,
+        build=_DocumentExecutor,
         capabilities=RECORDED_IDEMPOTENT_SECURE_STORED_READ_CAPABILITIES,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
         public_error_detail=True,
     )
     registration = OperationPublicDefinitionRegistrationV1.compose(
@@ -236,7 +227,7 @@ class _SealedDocumentHost(ProfileWorkerOperationHost):
     @override
     def _composed(self) -> OperationComposedServices:
         if self._services is None:
-            registry = _registry(self._execution_caller)
+            registry = _registry()
             journal = OperationJournalRepository(storage_root=self.custody.root)
             self._services = compose_operation_services(
                 registry=registry,
@@ -304,11 +295,11 @@ def _session(identity: ProfileWorkerIdentity, kind: SessionKind) -> AccessSessio
 
 @dataclass(frozen=True)
 class _Worker:
-    """One profile worker with a person's session and an agent's session of the same profile."""
+    """One profile worker with a person's session and a key session of the same profile."""
 
     host: _SealedDocumentHost
     person: AccessSession
-    agent: AccessSession
+    key: AccessSession
     profile_id: UUID
 
     def request(self, *, refuse: bool = False, idempotency_key: str | None = None) -> OperationRequest[BaseModel]:
@@ -354,8 +345,7 @@ class _Worker:
     async def _result_request(
         self, operation_id: OperationId, schema: OperationSchemaIdentityV1 | None
     ) -> OperationResultProjectionRequestV1:
-        # A reader is refused whatever coordinates it names, so each read names
-        # the true ones, taken from the person's own observation.
+        # Every read names the true coordinates, taken from the person's own observation.
         terminal = await self.observed(self.person, _CLI, operation_id)
         registered = terminal.definition_contract.result_schema
         assert registered is not None
@@ -419,14 +409,6 @@ async def _refusal(read: Awaitable[object]) -> AccessDenialCode:
     return refused.value.reason
 
 
-async def _unknown_operation_refusal(worker: _Worker, action: AccessAction) -> AccessDenialCode:
-    """What an MCP reader is told about an operation identifier this profile never stored."""
-    with pytest.raises(ProfileAccessRefusedError) as refused:
-        async with worker.host.release(worker.agent.session_id, new_operation_id(), _MCP, action):
-            pytest.fail("an unknown operation must release nothing")
-    return refused.value.reason
-
-
 def _location(document: dict[str, JsonValue]) -> JsonValue:
     assert document["outcome"] == "success", document
     projection = document["projection"]
@@ -448,14 +430,14 @@ def _worker(tmp_path: Path) -> Iterator[_Worker]:
                 dek_epoch=uuid4(),
             ),
         )
-        person, agent = _session(identity, SessionKind.HUMAN), _session(identity, SessionKind.API_KEY)
-        custody = _SessionsWitness(identity, profile.storage_root, (person, agent))
+        person, key = _session(identity, SessionKind.HUMAN), _session(identity, SessionKind.API_KEY)
+        custody = _SessionsWitness(identity, profile.storage_root, (person, key))
         host = _SealedDocumentHost(
             custody,
             authorization=_ScopeCeilingPermit(custody),
             operands=operation_secure_reference_repository(objects=profile.repository),
         )
-        yield _Worker(host, person, agent, identity.binding.profile_id)
+        yield _Worker(host, person, key, identity.binding.profile_id)
 
 
 def _exercise(tmp_path: Path, scenario: Callable[[_Worker], Awaitable[None]]) -> None:
@@ -471,59 +453,62 @@ def _exercise(tmp_path: Path, scenario: Callable[[_Worker], Awaitable[None]]) ->
         asyncio.run(body(worker))
 
 
-def test_a_persons_result_is_released_to_the_person_and_withheld_from_an_agent(tmp_path: Path) -> None:
-    """The result and its pages reach the command line and the terminal interface, never an MCP session."""
+@pytest.mark.parametrize("admitting", _FRONTENDS, ids=["cli", "tui", "mcp"])
+def test_every_frontend_reads_the_same_result_and_page_whichever_frontend_admitted_the_operation(
+    tmp_path: Path, admitting: OperationFrontendProjection
+) -> None:
+    """Either kind of session reads the stored result whole, on the frontend it happens to use."""
 
     async def scenario(worker: _Worker) -> None:
-        operation_id = await worker.run(worker.person, _CLI)
-        assert await worker.admitting_frontend(operation_id) is _CLI
+        operation_id = await worker.run(worker.person, admitting)
+        assert await worker.admitting_frontend(operation_id) is admitting
 
-        for frontend in (_CLI, _TUI):
-            assert _location(await worker.result(worker.person, frontend, operation_id)) == _PERSONS_LOCATION
-        assert _FILE.encode() in await worker.result_page(worker.person, _CLI, operation_id)
-
-        unknown = await _unknown_operation_refusal(worker, AccessAction.RESULT)
-        assert unknown is AccessDenialCode.OPERATION_UNAVAILABLE
-        assert await _refusal(worker.result(worker.agent, _MCP, operation_id)) is unknown
-        assert await _refusal(worker.result_page(worker.agent, _MCP, operation_id)) is unknown
+        pages = set[bytes]()
+        for session in (worker.person, worker.key):
+            for frontend in _FRONTENDS:
+                assert _location(await worker.result(session, frontend, operation_id)) == _LOCATION
+                pages.add(await worker.result_page(session, frontend, operation_id))
+        assert len(pages) == 1
+        assert _FILE.encode() in next(iter(pages))
 
     _exercise(tmp_path, scenario)
 
 
-def test_a_persons_review_and_stopped_detail_are_withheld_from_an_agent(tmp_path: Path) -> None:
+def test_a_review_read_and_a_stopped_operations_detail_answer_alike_on_every_frontend(tmp_path: Path) -> None:
     """A review read and a refused operation's public detail follow the result's rule."""
 
     async def scenario(worker: _Worker) -> None:
         settled = await worker.run(worker.person, _CLI)
-        # The operation declares no review, so its own policy refuses a person's
-        # review read; an agent is refused earlier, as for an unknown operation.
-        assert await _refusal(worker.review(worker.person, _CLI, settled)) is AccessDenialCode.OPERATION_DENIED
-        unknown = await _unknown_operation_refusal(worker, AccessAction.REVIEW)
-        assert unknown is AccessDenialCode.OPERATION_UNAVAILABLE
-        assert await _refusal(worker.review(worker.agent, _MCP, settled)) is unknown
+        # The operation declares no review, so its own policy refuses the read to every reader.
+        for session in (worker.person, worker.key):
+            for frontend in _FRONTENDS:
+                refusal = await _refusal(worker.review(session, frontend, settled))
+                assert refusal is AccessDenialCode.OPERATION_DENIED
 
         refused = await worker.run(worker.person, _CLI, refuse=True)
         terminal = await worker.observed(worker.person, _CLI, refused)
         assert terminal.terminal_condition is OperationTerminalCondition.REFUSED
         detail = await worker.result(worker.person, _CLI, refused, schema=operation_error_detail_schema())
         assert detail["outcome"] == "success", detail
-        assert (
-            await _refusal(worker.result(worker.agent, _MCP, refused, schema=operation_error_detail_schema()))
-            is AccessDenialCode.OPERATION_UNAVAILABLE
-        )
+        for session in (worker.person, worker.key):
+            for frontend in _FRONTENDS:
+                read = await worker.result(session, frontend, refused, schema=operation_error_detail_schema())
+                assert read == detail
 
     _exercise(tmp_path, scenario)
 
 
-def test_an_agent_observes_a_persons_operation_and_the_observation_holds_none_of_its_result(tmp_path: Path) -> None:
-    """Observation stays open to every frontend: it carries the settled state and effect, not what was sealed."""
+def test_every_frontend_observes_the_same_settled_state_and_none_of_the_result(tmp_path: Path) -> None:
+    """Observation carries the settled state and effect, not what the execution stored."""
 
     async def scenario(worker: _Worker) -> None:
         operation_id = await worker.run(worker.person, _CLI)
 
-        observed = await worker.observed(worker.agent, _MCP, operation_id)
+        observed = await worker.observed(worker.person, _CLI, operation_id)
 
-        assert observed == await worker.observed(worker.person, _CLI, operation_id)
+        for session in (worker.person, worker.key):
+            for frontend in _FRONTENDS:
+                assert await worker.observed(session, frontend, operation_id) == observed
         assert observed.lifecycle is OperationLifecycle.TERMINAL
         assert observed.terminal_condition is OperationTerminalCondition.SUCCEEDED
         assert observed.effect is OperationEffect.NONE
@@ -534,50 +519,42 @@ def test_an_agent_observes_a_persons_operation_and_the_observation_holds_none_of
     _exercise(tmp_path, scenario)
 
 
-def test_an_agents_result_is_released_to_the_agent_and_to_a_person(tmp_path: Path) -> None:
-    """What an agent's execution sealed is the reduced result, and a person may read it too."""
-
+def test_an_unknown_operation_is_refused_alike_on_every_frontend(tmp_path: Path) -> None:
     async def scenario(worker: _Worker) -> None:
-        operation_id = await worker.run(worker.agent, _MCP)
-        assert await worker.admitting_frontend(operation_id) is _MCP
-
-        assert _location(await worker.result(worker.agent, _MCP, operation_id)) == _FILE
-        assert await worker.result_page(worker.agent, _MCP, operation_id)
-        for frontend in (_CLI, _TUI):
-            assert _location(await worker.result(worker.person, frontend, operation_id)) == _FILE
-        # The agent's review read reaches the operation's own policy, which declares no review.
-        assert await _refusal(worker.review(worker.agent, _MCP, operation_id)) is AccessDenialCode.OPERATION_DENIED
+        for frontend in _FRONTENDS:
+            for action in (AccessAction.OBSERVE, AccessAction.RESULT, AccessAction.REVIEW):
+                with pytest.raises(ProfileAccessRefusedError) as refused:
+                    async with worker.host.release(worker.key.session_id, new_operation_id(), frontend, action):
+                        pytest.fail("an unknown operation must release nothing")
+                assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
 
     _exercise(tmp_path, scenario)
 
 
-def test_a_replay_from_an_agent_names_the_persons_operation_and_releases_none_of_its_result(tmp_path: Path) -> None:
-    """The same key resolves to the person's invocation; its admission, not the replaying session, decides."""
+def test_a_replay_on_another_frontend_names_the_first_operation_and_reads_its_result(tmp_path: Path) -> None:
+    """The same key resolves to the first invocation, and the replaying session reads what it stored."""
 
     async def scenario(worker: _Worker) -> None:
         operation_id = await worker.run(worker.person, _CLI, idempotency_key=_REPLAY_KEY)
 
-        replayed = await worker.submit(worker.agent, _MCP, worker.request(idempotency_key=_REPLAY_KEY))
+        replayed = await worker.submit(worker.key, _MCP, worker.request(idempotency_key=_REPLAY_KEY))
 
         assert replayed == operation_id
+        # The admission the worker stored still names the frontend that first submitted it.
         assert await worker.admitting_frontend(operation_id) is _CLI
-        # The worker releases the replayed receipt on the agent's own frontend.
-        async with worker.host.release(worker.agent.session_id, operation_id, _MCP, AccessAction.SUBMIT) as receipt:
+        async with worker.host.release(worker.key.session_id, operation_id, _MCP, AccessAction.SUBMIT) as receipt:
             assert receipt.request.frontend is _MCP
-        observed = await worker.observed(worker.agent, _MCP, operation_id)
+        observed = await worker.observed(worker.key, _MCP, operation_id)
         assert observed.terminal_condition is OperationTerminalCondition.SUCCEEDED
-        assert await _refusal(worker.result(worker.agent, _MCP, operation_id)) is AccessDenialCode.OPERATION_UNAVAILABLE
-        assert (
-            await _refusal(worker.result_page(worker.agent, _MCP, operation_id))
-            is AccessDenialCode.OPERATION_UNAVAILABLE
-        )
-        assert _location(await worker.result(worker.person, _CLI, operation_id)) == _PERSONS_LOCATION
+        assert _location(await worker.result(worker.key, _MCP, operation_id)) == _LOCATION
+        assert _FILE.encode() in await worker.result_page(worker.key, _MCP, operation_id)
+        assert _location(await worker.result(worker.person, _CLI, operation_id)) == _LOCATION
 
     _exercise(tmp_path, scenario)
 
 
-def test_an_operation_stored_without_an_admission_is_withheld_from_an_agent(tmp_path: Path) -> None:
-    """An invocation the journal holds with no recorded admission was not an agent's."""
+def test_an_operation_stored_without_an_admission_releases_nothing_on_any_frontend(tmp_path: Path) -> None:
+    """A read needs the admission the worker recorded, whoever reads and wherever."""
 
     async def scenario(worker: _Worker) -> None:
         services = worker.host._composed()
@@ -585,49 +562,40 @@ def test_an_operation_stored_without_an_admission_is_withheld_from_an_agent(tmp_
         assert execution is not None
         request = worker.request()
         operation_id = new_operation_id()
-        execution.bind(operation_id, WorkerOperationBinding(worker.agent.session_id, _MCP, request))
+        execution.bind(operation_id, WorkerOperationBinding(worker.key.session_id, _MCP, request))
         submitted = await services.submission.submit(
-            request, actor_ref=f"session:{worker.agent.session_id}", operation_id=operation_id
+            request, actor_ref=f"session:{worker.key.session_id}", operation_id=operation_id
         )
         assert submitted.receipt.operation_id == operation_id
         assert await worker.admitting_frontend(operation_id) is None
 
-        for action in (AccessAction.RESULT, AccessAction.REVIEW):
-            with pytest.raises(ProfileAccessRefusedError) as refused:
-                async with worker.host.release(worker.agent.session_id, operation_id, _MCP, action):
-                    pytest.fail("an invocation without an admission must release nothing to an agent")
-            assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+        for session in (worker.person, worker.key):
+            for frontend in _FRONTENDS:
+                for action in (AccessAction.RESULT, AccessAction.REVIEW):
+                    with pytest.raises(ProfileAccessRefusedError) as refused:
+                        async with worker.host.release(session.session_id, operation_id, frontend, action):
+                            pytest.fail("an invocation without an admission must release nothing")
+                    assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
 
     _exercise(tmp_path, scenario)
 
 
-def test_an_agents_invocation_a_person_re_enters_is_still_sealed_for_the_agent(tmp_path: Path) -> None:
-    """Resuming from the command line does not seal a person's result into what the agent may read."""
+@pytest.mark.parametrize(("admitting", "resuming"), [(_MCP, _CLI), (_CLI, _MCP)], ids=["mcp-then-cli", "cli-then-mcp"])
+def test_an_invocation_re_entered_on_another_frontend_is_read_whole_on_both(
+    tmp_path: Path, admitting: OperationFrontendProjection, resuming: OperationFrontendProjection
+) -> None:
+    """Whichever session carries the execution to its end, each session reads the stored result."""
 
     async def scenario(worker: _Worker) -> None:
-        operation_id = await worker.submit(worker.agent, _MCP, worker.request())
+        first, second = (worker.key, worker.person) if admitting is _MCP else (worker.person, worker.key)
+        operation_id = await worker.submit(first, admitting, worker.request())
 
-        await worker.host.resume(operation_id, worker.person.session_id, frontend=_CLI)
+        await worker.host.resume(operation_id, second.session_id, frontend=resuming)
         await worker.settled(operation_id)
 
-        assert await worker.admitting_frontend(operation_id) is _MCP
-        assert _location(await worker.result(worker.agent, _MCP, operation_id)) == _FILE
-        assert _location(await worker.result(worker.person, _CLI, operation_id)) == _FILE
-
-    _exercise(tmp_path, scenario)
-
-
-def test_a_persons_invocation_an_agent_re_enters_releases_nothing_to_the_agent(tmp_path: Path) -> None:
-    """The stored admission still names the person, so the agent that resumed it reads no result."""
-
-    async def scenario(worker: _Worker) -> None:
-        operation_id = await worker.submit(worker.person, _CLI, worker.request())
-
-        await worker.host.resume(operation_id, worker.agent.session_id, frontend=_MCP)
-        await worker.settled(operation_id)
-
-        assert await worker.admitting_frontend(operation_id) is _CLI
-        assert await _refusal(worker.result(worker.agent, _MCP, operation_id)) is AccessDenialCode.OPERATION_UNAVAILABLE
-        assert _location(await worker.result(worker.person, _CLI, operation_id)) == _FILE
+        # Attribution keeps the frontend that first submitted the invocation.
+        assert await worker.admitting_frontend(operation_id) is admitting
+        assert _location(await worker.result(first, admitting, operation_id)) == _LOCATION
+        assert _location(await worker.result(second, resuming, operation_id)) == _LOCATION
 
     _exercise(tmp_path, scenario)

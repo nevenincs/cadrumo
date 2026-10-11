@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import time
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 from ...adapters.local_runtime.installation import runtime_installation
@@ -46,12 +46,6 @@ if TYPE_CHECKING:
 
 
 type _ExistingRuntimeAccessRequest = RuntimeAutomationDeny | RuntimeProfileResume | RuntimeSessionInventory
-
-_PERSON_FRONTENDS: Final = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
-"""The frontends a person types a password into, and so the only ones that store a sign-in."""
-
-_SIGN_IN_RESUME_FRONTENDS: Final = _PERSON_FRONTENDS | {OperationFrontendProjection.MCP}
-"""The frontends that may present the proof of a sign-in already stored."""
 
 
 class ProfileConnectionAdmissionMixin:
@@ -139,23 +133,16 @@ class ProfileConnectionAdmissionMixin:
 
     @staticmethod
     def _validate_login_request(request: RuntimeProfileLogin) -> None:
-        """Refuse a login whose method, frontend and options do not belong together.
+        """Refuse a login whose method and options do not belong together, on any frontend.
 
-        A password is typed by a person, so only the command line and the
-        terminal interface send one, and only their password login may ask
-        for the sign-in to be stored. An MCP connection carries no secret of
-        the person's: it resumes a sign-in already stored by presenting its
-        proof, as those two frontends do, and is otherwise held to an
-        enrolled key. A sign-in holds the profile's whole ceiling, so neither
-        method takes a narrowing scope.
+        A sign-in holds the profile's whole ceiling, so neither a password nor
+        the proof of a stored sign-in takes a narrowing scope. Only a password
+        login can ask for the sign-in to be stored: a proof resumes one that
+        already is, and a key stores none.
         """
         if request.method in {"password", "receipt"} and request.scope is not None:
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-        if request.method == "password" and request.frontend not in _PERSON_FRONTENDS:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-        if request.method == "receipt" and request.frontend not in _SIGN_IN_RESUME_FRONTENDS:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-        if request.persist_receipt and (request.method != "password" or request.frontend not in _PERSON_FRONTENDS):
+        if request.persist_receipt and request.method != "password":
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
 
     @staticmethod

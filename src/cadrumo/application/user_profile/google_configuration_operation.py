@@ -29,7 +29,6 @@ from ..operations.capabilities import (
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
@@ -71,8 +70,6 @@ from .google_configuration_result_projection import (
 GOOGLE_STORED_RECORD_READ_DEFINITION_IDS = frozenset(
     {GOOGLE_FOLDER_VIEW_OPERATION_DEFINITION_ID, GOOGLE_STATUS_OPERATION_DEFINITION_ID}
 )
-_PERSON_COMMAND_FRONTENDS = frozenset({OperationFrontendProjection.CLI})
-_STORED_RECORD_READ_FRONTENDS = _PERSON_COMMAND_FRONTENDS | {OperationFrontendProjection.MCP}
 
 
 def resolve_google_configuration_access(
@@ -176,7 +173,6 @@ def build_google_configuration_definitions(
                 reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT
                 if consent
                 else OperationReconciliationPolicy.INTERRUPT,
-                permitted_frontends=_STORED_RECORD_READ_FRONTENDS if stored_record_read else _PERSON_COMMAND_FRONTENDS,
                 refusal_detail_codes=frozenset({GOOGLE_CONFIGURATION_REFUSAL_CODE}),
             )
         )

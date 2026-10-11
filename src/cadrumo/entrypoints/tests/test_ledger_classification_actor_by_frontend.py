@@ -2,16 +2,11 @@
 
 The production registry and the real executors run over a stored profile with
 a session host that answers for the frontend that admitted the invocation.
-Each operation below records who acted, and for an execution admitted on the
-MCP frontend that label is the session's, whatever the request carries. The
-ratio verbs carry no label of their own, so the person's frontends record the
-operator label there.
-
-Bulk classification lists only the command line today, because it replaces a
-classification the person made by hand and keeps only the new one. Its two
-tests run the executor under a session host that answers for MCP, which the
-executor reads whatever the definition lists, so the actor and source command
-are held ready for the day the definition opens.
+Each operation below runs on the three frontends and records who acted: for an
+execution admitted on the MCP frontend that label is the session's, whatever
+the request carries. The ratio verbs carry no label of their own, so the
+person's frontends record the operator label there. Nothing else an operation
+stores differs by frontend.
 """
 
 from __future__ import annotations
@@ -41,11 +36,12 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _MCP = OperationFrontendProjection.MCP
 _CLI = OperationFrontendProjection.CLI
+_TUI = OperationFrontendProjection.TUI
 _SESSION_CLIENT = UUID("5aa00000-0000-4000-8000-0000000000dd")
 _TYPED_ACTOR = "typed by the caller"
 _AGENT_LABEL = f"agent:mcp.attended.{_SESSION_CLIENT}"
 _PERSON_LABEL = "operator"
-_FRONTENDS = pytest.mark.parametrize("frontend", [_MCP, _CLI], ids=["mcp", "cli"])
+_FRONTENDS = pytest.mark.parametrize("frontend", [_MCP, _CLI, _TUI], ids=["mcp", "cli", "tui"])
 
 
 def _session_host(definition_id: str, frontend: OperationFrontendProjection) -> OperationExecutionCallerReader:
@@ -114,10 +110,7 @@ def _typed(request: BaseModel) -> BaseModel:
 def test_bulk_classification_records_the_session_label_for_an_agent(
     tmp_path: Path, operation: PinnedAuthorityOperation, frontend: OperationFrontendProjection
 ) -> None:
-    """Every classification event of the batch names the derived label, not the typed one.
-
-    The definition does not list MCP; the session host answers for it regardless.
-    """
+    """Every classification event of the batch names the derived label, not the typed one."""
     projection, events = _run(
         tmp_path,
         operation,
@@ -135,10 +128,10 @@ def test_bulk_classification_records_the_session_label_for_an_agent(
 
 
 @_FRONTENDS
-def test_bulk_classification_records_a_command_line_only_for_the_command_line(
+def test_bulk_classification_records_the_same_source_command_on_every_frontend(
     tmp_path: Path, operation: PinnedAuthorityOperation, frontend: OperationFrontendProjection
 ) -> None:
-    """An agent sends the table itself, so its events name the operation rather than the file command."""
+    """What a batch stores names no frontend: the same table leaves the same events whoever submits it."""
     projection, events = _run(
         tmp_path,
         operation,
@@ -150,8 +143,9 @@ def test_bulk_classification_records_a_command_line_only_for_the_command_line(
     assert projection.result is not None
     assert projection.result.bucket_event_ids
     by_id = {event.event_id: event for event in events}
-    recorded = "ledger.classify.bulk" if frontend is _MCP else "aeat app ledger classify --file"
-    assert {by_id[event_id].payload["source_command"] for event_id in projection.result.bucket_event_ids} == {recorded}
+    assert {by_id[event_id].payload["source_command"] for event_id in projection.result.bucket_event_ids} == {
+        "aeat app ledger classify --file"
+    }
 
 
 @_FRONTENDS

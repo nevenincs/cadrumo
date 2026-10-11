@@ -1,4 +1,4 @@
-"""Which login methods and options the runtime accepts from each frontend.
+"""Which login methods and options the runtime accepts, the same from every frontend.
 
 The connection service and its rules are the real ones. A login the rules
 refuse is refused before any credential is read, any native login is captured
@@ -27,38 +27,23 @@ from ..profile_connections import RuntimeProfileConnections
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_CLI = OperationFrontendProjection.CLI
-_TUI = OperationFrontendProjection.TUI
-_MCP = OperationFrontendProjection.MCP
 _METHODS = ("password", "receipt", "api_key")
 
 type _Login = tuple[OperationFrontendProjection, str, bool]
 """A frontend, the method it sends, and whether it asks for the sign-in to be stored."""
 
-_ADMITTED: tuple[_Login, ...] = (
-    (_CLI, "password", False),
-    (_CLI, "password", True),
-    (_TUI, "password", False),
-    (_TUI, "password", True),
-    (_CLI, "receipt", False),
-    (_TUI, "receipt", False),
-    # An MCP connection resumes a sign-in the person already stored, and does nothing else as the person.
-    (_MCP, "receipt", False),
-    (_CLI, "api_key", False),
-    (_TUI, "api_key", False),
-    (_MCP, "api_key", False),
+_ADMITTED_OPTIONS = (("password", False), ("password", True), ("receipt", False), ("api_key", False))
+# Only a password login can store a sign-in.
+_REFUSED_OPTIONS = (("receipt", True), ("api_key", True))
+_ADMITTED: tuple[_Login, ...] = tuple(
+    (frontend, method, persist_receipt)
+    for frontend in OperationFrontendProjection
+    for method, persist_receipt in _ADMITTED_OPTIONS
 )
-_REFUSED: tuple[_Login, ...] = (
-    # No password travels through MCP, and MCP never asks for a sign-in to be stored.
-    (_MCP, "password", False),
-    (_MCP, "password", True),
-    (_MCP, "receipt", True),
-    # Only a password login can store a sign-in.
-    (_CLI, "receipt", True),
-    (_TUI, "receipt", True),
-    (_CLI, "api_key", True),
-    (_TUI, "api_key", True),
-    (_MCP, "api_key", True),
+_REFUSED: tuple[_Login, ...] = tuple(
+    (frontend, method, persist_receipt)
+    for frontend in OperationFrontendProjection
+    for method, persist_receipt in _REFUSED_OPTIONS
 )
 _NARROWING_SCOPE = AccessScope(
     operations=frozenset(),
@@ -124,7 +109,7 @@ def test_every_frontend_method_and_storing_option_has_a_recorded_answer() -> Non
 
 
 @pytest.mark.parametrize(("frontend", "method", "persist_receipt"), _ADMITTED)
-def test_a_login_its_frontend_may_send_passes_the_login_rules(
+def test_a_login_whose_method_and_option_belong_together_passes_the_login_rules_on_every_frontend(
     frontend: OperationFrontendProjection, method: str, persist_receipt: bool
 ) -> None:
     # Passing the rules admits nothing: the credential is still read and proven afterwards.
@@ -132,7 +117,7 @@ def test_a_login_its_frontend_may_send_passes_the_login_rules(
 
 
 @pytest.mark.parametrize(("frontend", "method", "persist_receipt"), _REFUSED)
-def test_a_login_its_frontend_may_not_send_is_refused_before_any_credential_is_read(
+def test_a_login_that_cannot_store_a_sign_in_and_asks_to_is_refused_before_any_credential_is_read(
     tmp_path: Path, frontend: OperationFrontendProjection, method: str, persist_receipt: bool
 ) -> None:
     request = _login(frontend, method, persist_receipt)

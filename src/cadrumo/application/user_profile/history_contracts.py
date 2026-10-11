@@ -1,8 +1,8 @@
 """Typed public and private contracts for exact-profile history reads.
 
-The history is a person's projection: it returns each event's payload, a
-name-and-value list every producer in the application fills as it sees fit.
-The timeline serves the same events to an agent without that payload.
+The history returns each event's payload, a name-and-value list every producer
+in the application fills as it sees fit. The timeline serves the same events
+without that payload.
 """
 
 from __future__ import annotations

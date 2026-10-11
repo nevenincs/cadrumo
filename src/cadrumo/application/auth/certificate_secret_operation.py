@@ -20,14 +20,13 @@ from ..operations.access_resolution import (
     OperationAccessContext,
     ResolvedOperationAccess,
     bind_operation_access_profile,
-    require_declared_frontend_and_action,
+    require_declared_action,
 )
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_STORED_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
@@ -49,7 +48,6 @@ from .operator_scope_ports import OperatorScopePorts
 CERTIFICATE_CREDENTIAL_SET_OPERATION_DEFINITION_ID = "auth.certificate.secret.set"
 CERTIFICATE_CREDENTIAL_REMOVE_OPERATION_DEFINITION_ID = "auth.certificate.secret.remove"
 CERTIFICATE_CREDENTIAL_KIND = "auth.certificate.passphrase"
-_FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
 
 
 class CertificateSecretMutationRequest(BaseModel):
@@ -211,7 +209,6 @@ def _definition(*, removing: bool, ports: CertificateSecretOperationPorts) -> Op
         interaction_kinds=frozenset(),
         capabilities=RECORDED_IDEMPOTENT_SECURE_STORED_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=_FRONTENDS,
         ephemeral_secret=(
             None
             if removing
@@ -248,7 +245,7 @@ def resolve_certificate_secret_access(
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     access_profile = HUMAN_SINGLE_RUN_COMMITTING_PERIOD_INDEPENDENT_DEFINITION_RESULT_PROFILE_VALUES_ACCESS
-    require_declared_frontend_and_action(context, frontends=_FRONTENDS, actions=access_profile.actions)
+    require_declared_action(context, actions=access_profile.actions)
     return bind_operation_access_profile(
         context, access_profile, profile_id=context.profile_id, definition_id=request.definition_id, periods=frozenset()
     )

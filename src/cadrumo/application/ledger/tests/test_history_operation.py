@@ -382,33 +382,25 @@ def _submission_context(
     )
 
 
-def test_the_typed_history_is_admitted_on_mcp_alone_and_the_history_keeps_to_a_person() -> None:
+def test_the_typed_history_is_admitted_alike_on_every_frontend_without_a_commit_door() -> None:
     registry, registration = _typed_registry()
-    _person_registry, person_registration = _registry()
 
-    resolved = resolve_operation_access(
-        registry=registry,
-        request=_typed_request(),
-        context=_submission_context(registration, OperationFrontendProjection.MCP),
-    )
+    resolved = {
+        frontend: resolve_operation_access(
+            registry=registry, request=_typed_request(), context=_submission_context(registration, frontend)
+        )
+        for frontend in OperationFrontendProjection
+    }
 
-    assert registration.contract.permitted_frontends == frozenset({OperationFrontendProjection.MCP})
-    assert person_registration.contract.permitted_frontends == frozenset(
-        {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}
-    )
-    assert resolved.request.frontend is OperationFrontendProjection.MCP
-    assert resolved.request.period_independent is True and resolved.policy.requires_all_periods is True
-    # A session under the person's sign-in and one under an enrolled key differ
-    # in kind alone, and only a human-only policy tells the two apart.
-    assert resolved.policy.requires_human is False
-    assert AccessAction.COMMIT not in resolved.policy.actions
+    assert len({answer.policy for answer in resolved.values()}) == 1
+    for frontend, answer in resolved.items():
+        assert answer.request.frontend is frontend
+        assert answer.request.period_independent is True and answer.policy.requires_all_periods is True
+        # A session under the person's sign-in and one under an enrolled key differ
+        # in kind alone, and only a human-only policy tells the two apart.
+        assert answer.policy.requires_human is False
+        assert AccessAction.COMMIT not in answer.policy.actions
     assert registration.contract.permitted_effects == frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
-    for frontend in (OperationFrontendProjection.CLI, OperationFrontendProjection.TUI):
-        with pytest.raises(ProfileAccessRefusedError) as refused:
-            resolve_operation_access(
-                registry=registry, request=_typed_request(), context=_submission_context(registration, frontend)
-            )
-        assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED
 
 
 def _rejection_event() -> BucketEvent:

@@ -146,6 +146,8 @@ async def test_authenticated_mcp_discovers_executes_observes_and_reads_native_re
                     "outcome": "status",
                     "profile_id": str(enrolled.profile_id),
                     "authenticated": False,
+                    "session": "none",
+                    "surface": "full",
                     "denial": "authentication_required",
                 }
                 private_before_auth = await sdk.call_tool("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID})

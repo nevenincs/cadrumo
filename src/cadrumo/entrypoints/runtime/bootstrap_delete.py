@@ -10,7 +10,6 @@ from ...adapters.local_runtime.runtime_frame_io import write_document
 from ...adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
 from ...application.bucket_maintenance.contracts import AssessBucketDeletionCommand
 from ...application.bucket_maintenance.service import BucketMaintenanceService
-from ...application.operations.registry import OperationFrontendProjection
 from ...application.runtime.bootstrap_delete import (
     RuntimeProfileDelete,
     RuntimeProfileDeleted,
@@ -85,11 +84,7 @@ class RuntimeBootstrapDeleteMixin:
         transaction_id: UUID | None = None
         reserved = False
         try:
-            if (
-                context.runtime_boot_id != self.boot
-                or context.peer != channel.peer
-                or request.frontend not in {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}
-            ):
+            if context.runtime_boot_id != self.boot or context.peer != channel.peer:
                 raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
             with self._guard:
                 prior = self._connections.get(context.connection_id)

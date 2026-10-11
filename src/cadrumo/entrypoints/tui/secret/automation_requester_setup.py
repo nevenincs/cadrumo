@@ -35,12 +35,8 @@ def validate_client_admission(
 
 
 def operation_choices(contracts: OperationPublicContractSetV1) -> tuple[str, ...]:
-    """Keep only operations that the TUI is permitted to request."""
-    return tuple(
-        str(row.definition_id)
-        for row in contracts.definitions
-        if OperationFrontendProjection.TUI in row.permitted_frontends
-    )
+    """Offer every registered operation."""
+    return tuple(str(row.definition_id) for row in contracts.definitions)
 
 
 def disclosure_choices(
@@ -52,7 +48,6 @@ def disclosure_choices(
             {
                 (str(schema.schema_id), category)
                 for row in contracts.definitions
-                if OperationFrontendProjection.TUI in row.permitted_frontends
                 for schema in (
                     row.result_schema,
                     row.review_projection_schema,

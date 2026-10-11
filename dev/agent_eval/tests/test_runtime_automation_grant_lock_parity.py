@@ -424,6 +424,10 @@ def test_tui_rotates_renews_changes_scope_and_cli_inspects_same_grant(
                                 if outcomes:
                                     login.action_abandon()
                                     return
+                                # The screen first tries the stored sign-in for the selected profile and
+                                # ignores a method change until that attempt has been refused.
+                                await pilot.pause()
+                                await _until(pilot, lambda: not login._busy, timeout=25)
                                 login.query_one(
                                     "#runtime-login-method", Select
                                 ).value = RuntimeLoginMethod.API_REFERENCE
@@ -431,7 +435,8 @@ def test_tui_rotates_renews_changes_scope_and_cli_inspects_same_grant(
                                 credential = login.query_one("#runtime-login-credential", Input)
                                 assert credential.password and credential.value == "" and not credential.display
                                 login.query_one("#runtime-login-reference", Input).value = str(selected_reference)
-                                await pilot.click("#runtime-login-submit")
+                                login.query_one("#runtime-login-submit", Button).press()
+                                await pilot.pause()
                                 await _until(pilot, lambda: not login._busy, timeout=25)
                                 if not login._transferred:
                                     status = login.query_one("#runtime-login-status", PinnedStatusBar)

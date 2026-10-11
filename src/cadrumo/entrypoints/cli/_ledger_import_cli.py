@@ -7,7 +7,7 @@ from pathlib import Path
 
 import typer
 
-from ...application.ledger.actions_import import LedgerProviderID, plan_ledger_import_sources
+from ...application.ledger.actions_import import LedgerProviderID
 from ...application.ledger.import_operation import (
     MAX_LEDGER_IMPORT_FILES,
     LedgerImportFileRefusal,
@@ -17,7 +17,6 @@ from ...application.ledger.import_operation import (
 )
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ...domain.transactions.errors import TransactionValidationError
 from ._ledger_payloads import LedgerImportPayload
 from .common import bad, emit_envelope
 from .period_parsing import _optional_canonical_period
@@ -135,18 +134,10 @@ def ledger_import(
 ) -> None:
     """Import statement files through the exact-profile operation registry."""
     normalised_provider = _validate_import_provider(provider)
-    import_paths = _resolve_import_paths(file)
-    if len(import_paths) > MAX_LEDGER_IMPORT_FILES:
-        raise bad(
-            tr(
-                "cli.ledger.errors.command_input_invalid",
-                details=f"ledger import accepts at most {MAX_LEDGER_IMPORT_FILES} files per operation",
-            ),
-        )
     canonical_period = _optional_canonical_period(period, year=year)
     completed = import_ledger_sources_for_cli(
         ctx,
-        files=import_paths,
+        files=(file,),
         provider=normalised_provider,
         dry_run=dry_run,
         verify=verify,
@@ -156,7 +147,7 @@ def ledger_import(
     )
     result = completed.projection
     if not result.validations and result.refused_files:
-        raise bad(_refusal_message(result.refused_files[0]))
+        raise bad(_whole_import_refusal_message(result.refused_files[0], named=file))
     report = _import_report(result, verbose=verbose, verify=verify)
     refused = _refused_file_report(result.refused_files)
     report.lines.extend(refused.lines)
@@ -170,12 +161,16 @@ def ledger_import(
     )
 
 
-def _resolve_import_paths(path: Path) -> tuple[Path, ...]:
-    """Resolve a file/folder using the canonical source-selection contract."""
-    try:
-        return plan_ledger_import_sources(path)
-    except TransactionValidationError as exc:
-        raise bad(tr("cli.ledger.import.empty_directory", path=str(path))) from exc
+def _whole_import_refusal_message(refusal: LedgerImportFileRefusal, *, named: Path) -> str:
+    """Explain an import that read nothing; the two plan refusals name what the operator typed."""
+    if refusal.reason_code == "empty_directory":
+        return tr("cli.ledger.import.empty_directory", path=str(named))
+    if refusal.reason_code == "file_limit":
+        return tr(
+            "cli.ledger.errors.command_input_invalid",
+            details=f"ledger import accepts at most {MAX_LEDGER_IMPORT_FILES} files per operation",
+        )
+    return _refusal_message(refusal)
 
 
 def _empty_import_notice(result: LedgerImportResultProjection) -> tuple[str, Notice] | None:

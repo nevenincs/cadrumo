@@ -54,7 +54,11 @@ class QuickfileCalculationInputs(BaseModel):
 
 
 class QuickfileRequest(BaseModel):
-    """One exact profile and natural filing target, retained in encrypted custody."""
+    """One exact profile and natural filing target, retained in encrypted custody.
+
+    ``actor`` is recorded as sent for a person's session. An agent's session is
+    recorded under its own session label, whatever the request carries.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID

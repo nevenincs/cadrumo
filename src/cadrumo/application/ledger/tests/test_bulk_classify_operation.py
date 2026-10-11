@@ -95,7 +95,7 @@ def test_request_is_strict_hides_csv_and_round_trips_through_public_schema() -> 
         operation.LedgerBulkClassifyRequest.model_validate({**request.model_dump(), "file": "private.csv"})
 
 
-def test_registration_requires_all_periods_commit_and_lists_only_the_command_line() -> None:
+def test_registration_requires_all_periods_commit_on_every_frontend() -> None:
     def unused(*, bucket_id: str, operation: PinnedAuthorityOperation) -> LedgerActionPorts:
         raise AssertionError("access resolution must not compose profile storage")
 
@@ -114,10 +114,7 @@ def test_registration_requires_all_periods_commit_and_lists_only_the_command_lin
         contract=registration.contract,
         published_authority=Availability.AVAILABLE,
     )
-    # Bulk classification replaces a classification the person made by hand and keeps only the
-    # new one, so an agent may not submit it until the person's approval can stand in front of it.
-    assert definition.permitted_frontends == frozenset({OperationFrontendProjection.CLI})
-    for frontend in definition.permitted_frontends:
+    for frontend in OperationFrontendProjection:
         access = resolve_operation_access(
             registry=registry, request=public_request, context=replace(context, frontend=frontend)
         )

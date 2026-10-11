@@ -51,8 +51,6 @@ from ..operations.models import (
 )
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
@@ -614,7 +612,6 @@ def build_modelo_work_calculate_definition(
         interaction_kinds=frozenset[OperationInteractionKind](),
         capabilities=RECORDED_COOPERATIVE_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
         public_error_detail=True,
     )
 
@@ -646,9 +643,15 @@ def build_modelo_work_calculate_registration(
 class ModeloWorkDiscardExecutor:
     """Run the existing discard writer against an exactly approved unit."""
 
-    def __init__(self, *, work_lifecycle_ports_factory: ActiveWorkLifecyclePortsFactory) -> None:
+    def __init__(
+        self,
+        *,
+        work_lifecycle_ports_factory: ActiveWorkLifecyclePortsFactory,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
+    ) -> None:
         """Bind the active-profile lifecycle authorities at the composition root."""
         self._work_lifecycle_ports_factory = work_lifecycle_ports_factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(
         self,
@@ -670,6 +673,7 @@ class ModeloWorkDiscardExecutor:
         await context.events.phase(MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID)
 
         baseline = request.payload.baseline
+        actor = execution_actor_label(self._execution_caller_reader, context, supplied=request.payload.actor)
         ports = self._work_lifecycle_ports_factory()
 
         def approved_unit() -> WorkUnit:
@@ -691,7 +695,7 @@ class ModeloWorkDiscardExecutor:
                 discarded = await asyncio.to_thread(
                     discard_work_unit,
                     baseline.work_unit_id,
-                    actor=request.payload.actor,
+                    actor=actor,
                     reason=request.payload.reason,
                     ports=ports,
                     expected=current,
@@ -713,11 +717,15 @@ class ModeloWorkDiscardExecutor:
 def build_modelo_work_discard_definition(
     *,
     work_lifecycle_ports_factory: ActiveWorkLifecyclePortsFactory,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
 ) -> OperationDefinition:
     """Bind the discard writer to its registered operation contract."""
 
     def build() -> ModeloWorkDiscardExecutor:
-        return ModeloWorkDiscardExecutor(work_lifecycle_ports_factory=work_lifecycle_ports_factory)
+        return ModeloWorkDiscardExecutor(
+            work_lifecycle_ports_factory=work_lifecycle_ports_factory,
+            execution_caller_reader=execution_caller_reader,
+        )
 
     return OperationDefinition(
         definition_id=MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID,
@@ -745,7 +753,6 @@ def build_modelo_work_discard_definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
         public_error_detail=True,
     )
 
@@ -981,7 +988,6 @@ def build_modelo_work_verify_definition(
             close_policy=OperationClosePolicy.REQUEST_CANCEL,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
         public_error_detail=True,
     )
 
@@ -1042,12 +1048,14 @@ class ModeloWorkFileExecutor:
         operator_scope_ports: OperatorScopePorts,
         filing_action_ports_factory: FilingActionPortsFactory,
         certificate_secret_backend_factory: CertificateSecretBackendFactory,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
     ) -> None:
         """Bind the live profile the filing gates are judged against."""
         self._profile_resolver = profile_resolver
         self._operator_scope_ports = operator_scope_ports
         self._filing_action_ports_factory = filing_action_ports_factory
         self._certificate_secret_backend_factory = certificate_secret_backend_factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(
         self,
@@ -1063,6 +1071,7 @@ class ModeloWorkFileExecutor:
         """
         await context.events.phase("modelo.work.file.preconditions")
         payload = request.payload
+        actor = execution_actor_label(self._execution_caller_reader, context, supplied=payload.actor)
         from ...core.bucket_pointer import require_active_bucket_id
 
         filing_ports = self._filing_action_ports_factory(
@@ -1087,7 +1096,7 @@ class ModeloWorkFileExecutor:
                     file_modelo_revision,
                     payload.approval.calculation_revision_id,
                     approved_verification_report_id=payload.approval.verification_report_id,
-                    actor=payload.actor,
+                    actor=actor,
                     workflow_profile=profile,
                     certificate_secret_backend_factory=self._certificate_secret_backend_factory,
                     operator_scope_ports=self._operator_scope_ports,
@@ -1121,6 +1130,7 @@ def build_modelo_work_file_definition(
     filing_action_ports_factory: FilingActionPortsFactory,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
     profile_resolver: ModeloWorkVerifyProfileResolver = resolve_active_workflow_profile,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
 ) -> OperationDefinition:
     """Bind the local filing authority to its registered operation contract."""
 
@@ -1130,6 +1140,7 @@ def build_modelo_work_file_definition(
             operator_scope_ports=operator_scope_ports,
             filing_action_ports_factory=filing_action_ports_factory,
             certificate_secret_backend_factory=certificate_secret_backend_factory,
+            execution_caller_reader=execution_caller_reader,
         )
 
     return OperationDefinition(
@@ -1162,7 +1173,6 @@ def build_modelo_work_file_definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
         public_error_detail=True,
     )
 
@@ -1283,6 +1293,7 @@ class ModeloExportExecutor:
         export_ports_factory: ModeloExportPortsFactory,
         signing_keypair_capability_factory: ReviewPackageSigningKeypairCapabilityFactory,
         calculation_summary_pdf_writer: CalculationSummaryPdfWriter,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
     ) -> None:
         """Bind the live profile the export gates are judged against, and the summary PDF writer.
 
@@ -1294,6 +1305,7 @@ class ModeloExportExecutor:
         self._export_ports_factory = export_ports_factory
         self._signing_keypair_capability_factory = signing_keypair_capability_factory
         self._calculation_summary_pdf_writer = calculation_summary_pdf_writer
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(
         self,
@@ -1315,6 +1327,7 @@ class ModeloExportExecutor:
         """
         await context.events.phase("modelo.export.preconditions")
         payload = request.payload
+        actor = execution_actor_label(self._execution_caller_reader, context, supplied=payload.actor)
         from ...core.bucket_pointer import require_active_bucket_id
 
         def export() -> ModeloExportSettledResult:
@@ -1330,6 +1343,7 @@ class ModeloExportExecutor:
                     return ModeloExportSettledResult(
                         fichero_boe=self._published_fichero_boe(
                             payload,
+                            actor=actor,
                             workflow_profile=workflow_profile,
                             export_ports=export_ports,
                             operation=context.authority_operation,
@@ -1357,6 +1371,7 @@ class ModeloExportExecutor:
     def _published_fichero_boe(
         payload: ModeloExportRequest,
         *,
+        actor: str,
         workflow_profile: TaxpayerProfile,
         export_ports: ModeloExportPorts,
         operation: PinnedAuthorityOperation,
@@ -1366,7 +1381,7 @@ class ModeloExportExecutor:
             ModeloExportCommand(
                 calculation_revision_id=payload.calculation_revision_id,
                 output_path=Path(payload.output_path),
-                actor=payload.actor,
+                actor=actor,
                 refund_election=payload.refund_election,
                 payment_election=payload.payment_election,
                 prior_domiciliation_election=payload.prior_domiciliation_election,
@@ -1425,6 +1440,7 @@ def build_modelo_export_definition(
     export_ports_factory: ModeloExportPortsFactory,
     signing_keypair_capability_factory: ReviewPackageSigningKeypairCapabilityFactory,
     calculation_summary_pdf_writer: CalculationSummaryPdfWriter,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
 ) -> OperationDefinition:
     """Bind the export authority to its registered operation contract."""
 
@@ -1434,6 +1450,7 @@ def build_modelo_export_definition(
             export_ports_factory=export_ports_factory,
             signing_keypair_capability_factory=signing_keypair_capability_factory,
             calculation_summary_pdf_writer=calculation_summary_pdf_writer,
+            execution_caller_reader=execution_caller_reader,
         )
 
     return OperationDefinition(
@@ -1462,7 +1479,6 @@ def build_modelo_export_definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
         public_error_detail=True,
     )
 
@@ -1611,7 +1627,6 @@ def build_modelo_work_amend_definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
         public_error_detail=True,
     )
 
@@ -1795,7 +1810,6 @@ def build_modelo_edit_apply_definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
         transient_financial_operand=modelo_edit_financial_operand(receipt_repository_factory),
         public_error_detail=False,
     )
@@ -1864,7 +1878,6 @@ def build_modelo_work_rename_definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
         public_error_detail=True,
     )
 
@@ -1933,17 +1946,22 @@ def build_modelo_lifecycle_operation_definitions(
             profile_resolver=profile_resolver,
             signing_keypair_capability_factory=signing_keypair_capability_factory,
             calculation_summary_pdf_writer=calculation_summary_pdf_writer,
+            execution_caller_reader=execution_caller_reader,
         ),
         build_modelo_work_amend_definition(
             amendment_action_ports_factory=amendment_action_ports_factory,
             execution_caller_reader=execution_caller_reader,
         ),
-        build_modelo_work_discard_definition(work_lifecycle_ports_factory=work_lifecycle_ports_factory),
+        build_modelo_work_discard_definition(
+            work_lifecycle_ports_factory=work_lifecycle_ports_factory,
+            execution_caller_reader=execution_caller_reader,
+        ),
         build_modelo_work_file_definition(
             profile_resolver=profile_resolver,
             operator_scope_ports=operator_scope_ports,
             filing_action_ports_factory=filing_action_ports_factory,
             certificate_secret_backend_factory=certificate_secret_backend_factory,
+            execution_caller_reader=execution_caller_reader,
         ),
         build_modelo_work_rename_definition(
             work_lifecycle_ports_factory=work_lifecycle_ports_factory,

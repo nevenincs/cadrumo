@@ -48,13 +48,15 @@ _FRONTEND_PACKAGES: Mapping[OperationFrontendProjection, str] = {
     OperationFrontendProjection.MCP: _MCP_PACKAGE_PREFIX,
     OperationFrontendProjection.TUI: "src/cadrumo/entrypoints/tui/",
 }
-"""Where a claimed projection's own surface lives.
+"""Where each frontend's own surface lives.
 
-The census asserts both directions across this map: a definition claiming
-a projection must be reachable from that package, and a reference found in
-that package must belong to a definition that claims it. Files directly
-under the entrypoint tier, in no projection's package, are shared
-composition seams and can serve any projection that claims them."""
+The census asserts both directions across this map: every registered
+operation must be named by some frontend's package or by a shared seam, and a
+reference found in a frontend's package must belong to a registered
+definition. Files directly under the entrypoint tier, in no frontend's
+package, are shared composition seams and serve every frontend. The MCP
+adapter dispatches any registered operation by its id, which a scan for named
+ids does not see."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -508,32 +510,30 @@ def _exposures_for(projection: OperationFrontendProjection) -> frozenset[str]:
     return frozenset(own | _shared_seam_exposures())
 
 
-def test_every_claimed_projection_joins_a_real_surface() -> None:
-    """A definition claiming a frontend is actually reachable from it."""
+def test_every_registered_operation_joins_a_real_surface() -> None:
+    """No operation is registered that no frontend's own surface or shared seam names."""
+    exposed = frozenset[str]().union(*(_exposures_for(projection) for projection in OperationFrontendProjection))
     unreached = sorted(
-        (definition.definition_id, projection.value)
-        for definition in _definitions()
-        for projection in definition.permitted_frontends
-        if definition.definition_id not in _exposures_for(projection)
+        definition.definition_id for definition in _definitions() if definition.definition_id not in exposed
     )
     assert not unreached, (
-        f"{len(unreached)} projection claims join no surface in the source tree "
+        f"{len(unreached)} operations join no surface in the source tree "
         f"(denominator: {len(_production_sources())} production sources, "
         f"{len(_definitions())} registered operations): {unreached}"
     )
 
 
-def test_every_surface_reference_joins_a_definition_that_claims_it() -> None:
-    """A frontend never exposes an operation whose contract excludes it."""
+def test_every_surface_reference_joins_a_registered_definition() -> None:
+    """A frontend never names an operation the registry does not hold."""
     references = _references_by_package()
-    claims = {definition.definition_id: definition.permitted_frontends for definition in _definitions()}
-    unclaimed: list[tuple[str, str, str]] = []
+    registered = {definition.definition_id for definition in _definitions()}
+    unregistered: list[tuple[str, str, str]] = []
     for projection, prefix in _FRONTEND_PACKAGES.items():
         for path in _paths_under(prefix):
             for definition_id in sorted(references.get(path, _NO_IDS)):
-                if projection not in claims.get(definition_id, frozenset()):
-                    unclaimed.append((path, definition_id, projection.value))
-    assert not unclaimed, f"a surface exposes an operation its definition does not permit there: {unclaimed}"
+                if definition_id not in registered:
+                    unregistered.append((path, definition_id, projection.value))
+    assert not unregistered, f"a surface names an operation that is not registered: {unregistered}"
 
 
 def _asyncio_run_sites_in_tree(path: str, tree: ast.AST) -> tuple[tuple[str, str], ...]:

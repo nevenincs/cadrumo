@@ -167,7 +167,7 @@ def _contracts(*, include_edit: bool = True) -> OperationPublicContractSetV1:
         schema_id="modelo.edit.apply.request", schema_version=1, schema_fingerprint=_DIGEST
     )
     contract = OperationPublicDefinitionContractV1.model_construct(
-        manifest_version=3,
+        manifest_version=4,
         definition_id="modelo.edit.apply",
         request_schema=schema,
         subject_reference=OperationSubjectReferenceV1.payload_field("work_unit_id"),

@@ -72,7 +72,6 @@ def test_real_registry_compiles_complete_human_family_and_closed_metadata_schema
             contract.result_schema is not None
             and contract.result_schema.schema_id == definition.definition_id + ".result"
         )
-        assert definition.permitted_frontends == frozenset({OperationFrontendProjection.CLI})
         assert {
             OperationEffect.NONE,
             OperationEffect.UPDATED,
@@ -414,10 +413,12 @@ def test_actual_policy_requires_complete_human_destination_consent_all_periods_a
         )
         wrong = frozenset(row.model_copy(update={"destination_id": uuid4()}) for row in disclosures)
         assert isinstance(policy_decision(resolved, registry, disclosures=wrong, human=True), AccessDenied)
-    with pytest.raises(ProfileAccessRefusedError):
-        module.resolve_review_package_exchange_operation_access(
-            request, replace(context, frontend=OperationFrontendProjection.MCP)
+    for frontend in OperationFrontendProjection:
+        on_frontend = module.resolve_review_package_exchange_operation_access(
+            request, replace(context, frontend=frontend)
         )
+        assert on_frontend.policy == resolved.policy, frontend
+        assert on_frontend.request == resolved.request.model_copy(update={"frontend": frontend}), frontend
     observed = module.resolve_review_package_exchange_operation_access(
         request, replace(context, action=AccessAction.OBSERVE)
     )

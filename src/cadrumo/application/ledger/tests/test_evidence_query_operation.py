@@ -1,4 +1,4 @@
-"""The agent-facing evidence query: admitted on MCP alone, and released without a host path."""
+"""The evidence query: admitted alike on every frontend, and released without a host path."""
 
 from __future__ import annotations
 
@@ -210,30 +210,25 @@ async def _run_query(monkeypatch: pytest.MonkeyPatch, evidence_id: str | None) -
     return released
 
 
-def test_the_query_is_admitted_on_mcp_alone_for_either_kind_of_session_without_a_commit_door() -> None:
+def test_the_query_is_admitted_alike_on_every_frontend_for_either_kind_of_session_without_a_commit_door() -> None:
     registry = _registry()
-    contract = registry.lookup_public_contract(LEDGER_EVIDENCE_QUERY_OPERATION_DEFINITION_ID)
 
-    resolved = resolve_operation_access(
-        registry=registry,
-        request=_query_request(),
-        context=_access_context(registry, OperationFrontendProjection.MCP),
-    )
+    resolved = {
+        frontend: resolve_operation_access(
+            registry=registry, request=_query_request(), context=_access_context(registry, frontend)
+        )
+        for frontend in OperationFrontendProjection
+    }
 
-    assert contract.permitted_frontends == frozenset({OperationFrontendProjection.MCP})
-    assert resolved.request.frontend is OperationFrontendProjection.MCP
-    assert resolved.request.profile_id == _PROFILE
-    assert resolved.request.period_independent is True
-    # A session under the person's sign-in and one under an enrolled key differ
-    # in kind alone, and only a human-only policy tells the two apart.
-    assert resolved.policy.requires_human is False
-    assert AccessAction.COMMIT not in resolved.policy.actions
-    for frontend in (OperationFrontendProjection.CLI, OperationFrontendProjection.TUI):
-        with pytest.raises(ProfileAccessRefusedError) as refused:
-            resolve_operation_access(
-                registry=registry, request=_query_request(), context=_access_context(registry, frontend)
-            )
-        assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED
+    assert len({answer.policy for answer in resolved.values()}) == 1
+    for frontend, answer in resolved.items():
+        assert answer.request.frontend is frontend
+        assert answer.request.profile_id == _PROFILE
+        assert answer.request.period_independent is True
+        # A session under the person's sign-in and one under an enrolled key differ
+        # in kind alone, and only a human-only policy tells the two apart.
+        assert answer.policy.requires_human is False
+        assert AccessAction.COMMIT not in answer.policy.actions
 
 
 def test_the_query_refuses_a_request_addressed_to_another_profile() -> None:

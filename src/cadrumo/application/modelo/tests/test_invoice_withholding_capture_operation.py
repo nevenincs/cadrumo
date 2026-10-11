@@ -132,13 +132,6 @@ def test_definition_and_access_are_confidential_exact_profile_and_period_scoped(
         frozenset({MODELO_INVOICE_WITHHOLDING_CAPTURE_REFUSAL_CODE, MODELO_INVOICE_WITHHOLDING_DEFECTS_REFUSAL_CODE})
         == MODELO_INVOICE_WITHHOLDING_CAPTURE_REFUSAL_CODES
     )
-    assert definition.permitted_frontends == frozenset(
-        {
-            OperationFrontendProjection.CLI,
-            OperationFrontendProjection.TUI,
-            OperationFrontendProjection.MCP,
-        }
-    )
     assert definition.capabilities.permitted_effects == frozenset(
         {OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}
     )

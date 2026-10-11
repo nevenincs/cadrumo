@@ -1,10 +1,10 @@
 """Encrypted transaction history through the registered profile worker.
 
-The history is a person's projection: it returns each event's payload as the
-producers wrote it, which can hold the path an export was written to and the
-reason a model gave after reading an attached document. The typed history
-serves the same events to an agent with every payload entry the ledger's
-producers write declared by name, and with those two left in custody.
+The history returns each event's payload as the producers wrote it, which can
+hold the path an export was written to and the reason a model gave after
+reading an attached document. The typed history is a second read of the same
+events, with every payload entry the ledger's producers write declared by
+name, and with those two left in custody.
 """
 
 from __future__ import annotations
@@ -37,7 +37,7 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_profile_operation_identity
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -47,9 +47,6 @@ from .id_resolution import resolve_lineage_transaction_id
 
 LEDGER_HISTORY_OPERATION_DEFINITION_ID = "ledger.history"
 LEDGER_HISTORY_TYPED_OPERATION_DEFINITION_ID = "ledger.history.typed"
-
-_PERSON_FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
-_AGENT_FRONTENDS = frozenset({OperationFrontendProjection.MCP})
 _DetailValue = Annotated[str, Field(max_length=BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH)]
 
 
@@ -210,7 +207,7 @@ class LedgerHistoryTypedEvent(BaseModel):
 
 
 class LedgerHistoryTypedProjection(BaseModel):
-    """Profile-bound chronological history for an agent, with its lineage anchors."""
+    """Profile-bound chronological history in typed form, with its lineage anchors."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
@@ -321,12 +318,11 @@ def build_ledger_history_definition(ports: LedgerActionPortsFactory) -> Operatio
         executor_type=LedgerHistoryExecutor,
         build=lambda: LedgerHistoryExecutor(ports),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        permitted_frontends=_PERSON_FRONTENDS,
     )
 
 
 def build_ledger_history_typed_definition(ports: LedgerActionPortsFactory) -> OperationDefinition:
-    """Declare the agent-only read of the same lineage, without COMMIT or provider effects."""
+    """Declare the typed read of the same lineage, without COMMIT or provider effects."""
     return build_single_phase_definition(
         definition_id=LEDGER_HISTORY_TYPED_OPERATION_DEFINITION_ID,
         request_type=LedgerHistoryRequest,
@@ -335,7 +331,6 @@ def build_ledger_history_typed_definition(ports: LedgerActionPortsFactory) -> Op
         executor_type=LedgerHistoryTypedExecutor,
         build=lambda: LedgerHistoryTypedExecutor(ports),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        permitted_frontends=_AGENT_FRONTENDS,
     )
 
 
@@ -369,9 +364,7 @@ def resolve_ledger_history_access(
 def resolve_ledger_history_typed_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    """Admit the typed history as the history is admitted, on the agent frontend alone."""
-    if context.frontend is not OperationFrontendProjection.MCP:
-        raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
+    """Admit the typed history as the history is admitted."""
     return _resolve_history_access(request, context, definition_id=LEDGER_HISTORY_TYPED_OPERATION_DEFINITION_ID)
 
 

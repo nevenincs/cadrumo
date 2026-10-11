@@ -32,7 +32,6 @@ from ..operations.operation_definition import OperationDefinition, OperationExec
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
@@ -212,7 +211,6 @@ def build_modelo_iva_wallet_balance_definition(
         interaction_kinds=frozenset(),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.MCP}),
     )
 
 

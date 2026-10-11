@@ -29,7 +29,6 @@ from .....application.operations.models import (
 from .....application.operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from .....application.operations.owner import OperationExecutorContext
 from .....application.operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationRegistry,
@@ -42,6 +41,7 @@ from .....application.operations.secret_submission import (
 from .....application.operations.subject_reference import OperationSubjectReferenceV1
 from .....application.operations.supervisor import OperationSupervisor
 from .....application.operations.tests.authority_test_support import unread_authority_operation
+from .....application.operator_actions.models import ActionReference
 from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.operations import (
     OperationCancellation,
@@ -175,7 +175,6 @@ def _definition(executor: ConsumingExecutor | BlockingExecutor) -> OperationDefi
         interaction_kinds=frozenset(),
         capabilities=_capabilities(),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
         ephemeral_secret=OperationEphemeralSecretDeclaration(
             secret_kind=_INPUT_KIND,
             lifetime=timedelta(seconds=30),
@@ -206,7 +205,7 @@ def _registry(executor: ConsumingExecutor | BlockingExecutor) -> OperationRegist
 
 def _drifted_registry(executor: ConsumingExecutor | BlockingExecutor) -> OperationRegistry:
     definition = _definition(executor).model_copy(
-        update={"permitted_frontends": frozenset({OperationFrontendProjection.TUI})}
+        update={"action_reference": ActionReference(action_id="operator.contract.drift")}
     )
     registration = OperationPublicDefinitionRegistrationV1.compose(
         definition=definition,

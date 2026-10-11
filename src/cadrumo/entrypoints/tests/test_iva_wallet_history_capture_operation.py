@@ -379,7 +379,6 @@ def test_supervisor_admits_exact_mcp_profile_and_projects_guarded_iva_history_ca
         terminal, projected = asyncio.run(run())
 
     assert definition.definition_id == "live.iva-wallet.history-capture"
-    assert OperationFrontendProjection.MCP in definition.permitted_frontends
     assert terminal.lifecycle is OperationLifecycle.TERMINAL
     assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
     assert terminal.effect is OperationEffect.UPDATED

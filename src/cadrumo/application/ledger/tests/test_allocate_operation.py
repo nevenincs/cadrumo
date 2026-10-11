@@ -137,7 +137,6 @@ def test_registered_allocate_request_is_secure_and_requires_commit() -> None:
     definition = registry.lookup(operation.LEDGER_ALLOCATE_OPERATION_DEFINITION_ID)
     assert definition.capabilities.request_storage.value == "secure_reference"
     assert definition.capabilities.sensitive_input.value == "secure_reference"
-    assert definition.permitted_frontends == frozenset({OperationFrontendProjection.CLI})
     assert AccessAction.COMMIT in resolved.policy.actions
     assert operation.LedgerAllocateRequest.model_validate_json(request.payload.model_dump_json()) == request.payload
 

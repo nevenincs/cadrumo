@@ -52,7 +52,6 @@ from cadrumo.application.operations.operation_definition import OperationDefinit
 from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.persistence.events import OperationLogRecord, OperationPhaseEvent
 from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationRegistry,
@@ -179,7 +178,6 @@ def _supervisor(
         interaction_kinds=frozenset(),
         capabilities=_capabilities(),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.TUI}),
     )
     registration = OperationPublicDefinitionRegistrationV1.compose(
         definition=definition,

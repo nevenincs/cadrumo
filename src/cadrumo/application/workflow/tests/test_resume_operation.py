@@ -199,9 +199,6 @@ def test_resume_context_is_admitted_on_the_mcp_frontend_without_a_commit_door() 
         context=_context(registration, frontend=OperationFrontendProjection.MCP),
     )
 
-    definition = registry.lookup(WORKFLOW_RESUME_OPERATION_DEFINITION_ID)
-    assert OperationFrontendProjection.MCP in definition.permitted_frontends
-    assert OperationFrontendProjection.MCP in registration.contract.permitted_frontends
     assert resolved.request.frontend is OperationFrontendProjection.MCP
     assert resolved.request.periods == frozenset({_PERIOD})
     assert AccessAction.COMMIT not in resolved.policy.actions

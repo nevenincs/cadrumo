@@ -24,7 +24,7 @@ from ..operations.models import (
 )
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.profile_guard import ProfileAccessPayload, require_access_request_profile_payload
-from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationReconciliationPolicy
+from ..operations.registry import OperationReconciliationPolicy
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..operator_actions.models import ActionReference
 
@@ -52,7 +52,6 @@ def build_live_operation_definition[ExecutorT](
         action_reference=action_reference,
         capabilities=capabilities,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

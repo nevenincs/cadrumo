@@ -272,7 +272,6 @@ def test_registered_notification_reads_are_exact_profile_and_project_closed_resu
         assert latest_definition.action_reference is None
         for definition in (list_definition, show_definition, latest_definition):
             assert definition.capabilities.owned_resources == frozenset()
-            assert OperationFrontendProjection.MCP in definition.permitted_frontends
 
         durable_root = tmp_path / "operations"
         journal = OperationJournalRepository(storage_root=durable_root)

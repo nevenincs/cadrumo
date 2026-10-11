@@ -10,10 +10,14 @@ the policy it resolves is held to carry no commit action and to be admitted on
 the surface.
 
 A request is first built from the operation's registered schema alone, exactly
-as the census of recorded MCP decisions probes resolvers. An operation whose
-resolver needs stored records, or whose request model checks rules a schema
-does not carry, is resolved instead from the request its executor's conformance
+as the frontend parity census probes resolvers. An operation whose resolver
+needs stored records, or whose request model checks rules a schema does not
+carry, is resolved instead from the request its executor's conformance
 scenario seeds into a real profile, as the subject-binding census does.
+
+Whether a read is reserved for a person is not the surface's concern: such a
+read is judged for a session of the human kind, which an MCP connection
+resumed from the person's sign-in is.
 """
 
 from __future__ import annotations
@@ -37,7 +41,7 @@ from ...application.user_profile.access_contracts import AccessAction, Availabil
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...core.errors.hierarchy import CadrumoError
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from .test_operation_mcp_admission import _PROBE_PROFILE, _probe_requests
+from .test_operation_frontend_parity import _PROBE_PROFILE, _probe_requests
 from .test_operation_mcp_surfaces import (
     _ALLOWED,
     _CLIENT,
@@ -111,10 +115,10 @@ def _assert_read_policy_is_admitted_on_the_surface(
     where = f"{definition_id} resolves {sorted(action.value for action in resolved.policy.actions)}"
     assert resolved.request.action is AccessAction.SUBMIT, where
     assert AccessAction.COMMIT not in resolved.policy.actions, f"{where}: a listed read holds the commit action"
-    assert not resolved.policy.requires_human, f"{where}: a listed read is reserved for a person"
+    human = resolved.policy.requires_human
     # The same access, without a surface, says whether anything else refuses it.
-    assert answer_for_resolved_access(resolved, None, registry=registry) == _ALLOWED, where
-    assert answer_for_resolved_access(resolved, _READ_ONLY_LOCAL, registry=registry) == _ALLOWED, where
+    assert answer_for_resolved_access(resolved, None, registry=registry, human=human) == _ALLOWED, where
+    assert answer_for_resolved_access(resolved, _READ_ONLY_LOCAL, registry=registry, human=human) == _ALLOWED, where
 
 
 def _assert_the_surface_would_catch_a_commit(
@@ -122,9 +126,10 @@ def _assert_the_surface_would_catch_a_commit(
 ) -> None:
     """A policy that did hold the commit action is refused on the surface, so the assertion above has teeth."""
     committing = with_commit_action(resolved)
+    human = committing.policy.requires_human
     assert AccessAction.COMMIT in committing.policy.actions
-    assert answer_for_resolved_access(committing, None, registry=registry) == _ALLOWED, definition_id
-    refused = answer_for_resolved_access(committing, _READ_ONLY_LOCAL, registry=registry)
+    assert answer_for_resolved_access(committing, None, registry=registry, human=human) == _ALLOWED, definition_id
+    refused = answer_for_resolved_access(committing, _READ_ONLY_LOCAL, registry=registry, human=human)
     assert refused == _FRONTEND_DENIED, definition_id
 
 

@@ -80,7 +80,6 @@ from cadrumo.application.operations.persistence.leases import (
     operation_conflict_scope_reference,
 )
 from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationRegistry,
@@ -90,6 +89,7 @@ from cadrumo.application.operations.subject_reference import OperationSubjectRef
 from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.operations.supervisor_context import SupervisorExecutorContext
 from cadrumo.application.operations.tests.authority_test_support import unread_authority_operation
+from cadrumo.application.operator_actions.models import ActionReference
 from cadrumo.core.access_gate.errors import AeatLiveReadNotEnabledError
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.errors.error_codes import ErrorCategory, get_registered_error_code, resolve_error_message
@@ -919,7 +919,6 @@ def _definition(
         interaction_kinds=interaction_kinds,
         capabilities=_capabilities() if capabilities is None else capabilities,
         reconciliation_policy=reconciliation_policy,
-        permitted_frontends=frozenset({OperationFrontendProjection.TUI}),
     )
 
 
@@ -978,7 +977,7 @@ def _registry(
 
 def _drifted_registry(registry: OperationRegistry) -> OperationRegistry:
     item = registry.lookup("operation.supervisor.test").model_copy(
-        update={"permitted_frontends": frozenset({OperationFrontendProjection.CLI})}
+        update={"action_reference": ActionReference(action_id="operator.contract.drift")}
     )
     registration = OperationPublicDefinitionRegistrationV1.compose(
         definition=item,

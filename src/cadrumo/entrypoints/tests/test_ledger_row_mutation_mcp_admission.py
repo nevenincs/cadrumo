@@ -1,15 +1,12 @@
-"""The row mutations of the ledger are open to an MCP session, and each says how it is put back.
+"""The row mutations of the ledger run alike on every frontend, and each says how it is put back.
 
 The production registry, its real access resolvers and the real executors run
-over a stored profile. An agent may archive, stash and restore a row, exclude
-or split a row that carries none of the person's work, attach evidence that is
-already stored and detach what an agent attached. None of these deletes anything: what the
-mutation replaced stays stored, the result names the registered operations that
-return it, and what the agent records carries its own session label. A split
-sets a parent's classification, evidence and attachments aside with no
-operation but the approval-bound merge to recombine them, so an agent's split
-of a parent that carries any of them is refused. The operations that do delete
-stay closed to it.
+over a stored profile. Archive, stash, restore, exclude, split, attach and
+detach resolve to one policy for the command line, the terminal interface and
+MCP, and settle with the same result. None of these deletes anything: what the
+mutation replaced stays stored, and the result names the registered operations
+that return it. What an agent's execution records carries its own session
+label; a person's carries the label the request typed.
 """
 
 from __future__ import annotations
@@ -24,7 +21,7 @@ import pytest
 from pydantic import BaseModel
 
 from ...application.bucket_event_repository import bucket_event_history_repository
-from ...application.ledger.actions_manual import attach_manual_transaction_evidence, create_manual_transaction
+from ...application.ledger.actions_manual import create_manual_transaction
 from ...application.ledger.attachment_mutation_operation import (
     LedgerAttachmentOperationResult,
     LedgerAttachRequest,
@@ -39,16 +36,12 @@ from ...application.ledger.split_operation import (
 )
 from ...application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...application.operations.execution_actor import OperationExecutionCaller, OperationExecutionCallerReader
-from ...application.operations.frontend_requests import OperationObservationSuccessV1
-from ...application.operations.mcp_admission import McpRuling, mcp_admission_decision
 from ...application.operations.models import OperationIdentity, OperationRequest
 from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
 from ...application.user_profile.access_contracts import AccessAction, AccessDenialCode, Availability, SessionKind
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.time.clock import now
-from ...domain.attachments.enums import AttachmentKind, AttachmentSource
-from ...domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 from ...domain.buckets.event import BucketEvent
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.transactions.enums import (
@@ -67,6 +60,7 @@ from .test_operation_catalogue import _registry
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _CLI = OperationFrontendProjection.CLI
+_TUI = OperationFrontendProjection.TUI
 _MCP = OperationFrontendProjection.MCP
 _OPENED = (
     "ledger.archive",
@@ -77,7 +71,6 @@ _OPENED = (
     "ledger.split.manual",
     "ledger.stash",
 )
-_STILL_AWAITING_APPROVAL = ("ledger.merge", "ledger.remove", "ledger.reset")
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _SESSION_CLIENT = UUID("5aa00000-0000-4000-8000-0000000000dd")
@@ -85,7 +78,7 @@ _AGENT_LABEL = f"agent:mcp.attended.{_SESSION_CLIENT}"
 _ACTIVE = TransactionLifecycleState.ACTIVE
 _STASHED = TransactionLifecycleState.STASHED
 _ARCHIVED = TransactionLifecycleState.ARCHIVED
-_FRONTENDS = pytest.mark.parametrize("frontend", [_MCP, _CLI], ids=["mcp", "cli"])
+_FRONTENDS = pytest.mark.parametrize("frontend", [_MCP, _CLI, _TUI], ids=["mcp", "cli", "tui"])
 
 
 def _recorded(frontend: OperationFrontendProjection, typed: str) -> str:
@@ -151,24 +144,6 @@ def _context(
     )
 
 
-def test_the_row_mutations_list_mcp_with_nothing_outstanding_and_the_deleting_operations_do_not() -> None:
-    """Opening the reversible mutations opens no route to the ones that wait for the person's approval."""
-    registry = _registry()
-
-    for definition_id in _OPENED:
-        decision = mcp_admission_decision(definition_id)
-        assert decision.ruling is McpRuling.ADMITTED, definition_id
-        assert not decision.prerequisites, definition_id
-        assert not decision.sensitive_actions, definition_id
-        assert decision.changes_records, definition_id
-        assert not decision.reaches_network, definition_id
-        assert registry.lookup(definition_id).permitted_frontends == frozenset({_CLI, _MCP}), definition_id
-        assert registry.lookup_public_contract(definition_id).permitted_frontends == frozenset({_CLI, _MCP})
-    for definition_id in _STILL_AWAITING_APPROVAL:
-        assert mcp_admission_decision(definition_id).ruling is McpRuling.ADMITTED_BEHIND_APPROVAL, definition_id
-        assert _MCP not in registry.lookup(definition_id).permitted_frontends, definition_id
-
-
 def test_no_request_of_the_opened_operations_carries_a_path_bytes_or_a_confirmation() -> None:
     """Every member is an identifier, typed text or a typed amount; none stands for a file or the person's consent."""
     registry = _registry()
@@ -188,10 +163,10 @@ def test_no_request_of_the_opened_operations_carries_a_path_bytes_or_a_confirmat
         assert set(properties) == expected[definition_id], definition_id
 
 
-def test_the_real_resolvers_admit_an_agent_as_they_admit_the_command_line(
+def test_the_real_resolvers_grant_every_frontend_the_same_policy(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """Each opened operation resolves for MCP exactly as for the command line, at every access it is asked for."""
+    """Each row mutation resolves to one policy on the three frontends, at every access it is asked for."""
     registry = _registry()
     requests = _ordinary_requests(_PROFILE)
 
@@ -200,8 +175,9 @@ def test_the_real_resolvers_admit_an_agent_as_they_admit_the_command_line(
         request = OperationRequest[BaseModel](
             definition_id=definition_id, subject_ref=profile_operation_subject(str(_PROFILE)), payload=payload
         )
-        for frontend in (_CLI, _MCP):
-            for action in (AccessAction.SUBMIT, AccessAction.START, AccessAction.COMMIT):
+        for action in (AccessAction.SUBMIT, AccessAction.START, AccessAction.COMMIT):
+            policies = set()
+            for frontend in OperationFrontendProjection:
                 access = resolve_operation_access(
                     registry=registry,
                     request=request,
@@ -212,10 +188,15 @@ def test_the_real_resolvers_admit_an_agent_as_they_admit_the_command_line(
                 assert access.request.period_independent, (definition_id, frontend, action)
                 assert AccessAction.COMMIT in access.policy.actions, (definition_id, frontend, action)
                 assert not access.policy.requires_human, (definition_id, frontend, action)
+                policies.add(access.policy)
+            assert len(policies) == 1, (definition_id, action)
 
 
-def test_the_real_resolvers_refuse_an_agent_a_row_of_another_profile(operation: PinnedAuthorityOperation) -> None:
-    """The admission above is a decision: the same resolvers refuse the same requests addressed elsewhere."""
+@_FRONTENDS
+def test_the_real_resolvers_refuse_a_row_of_another_profile_on_every_frontend(
+    operation: PinnedAuthorityOperation, frontend: OperationFrontendProjection
+) -> None:
+    """The grant above is a decision: the same resolvers refuse the same requests addressed elsewhere."""
     registry = _registry()
 
     for definition_id, payload in _ordinary_requests(_OTHER_PROFILE):
@@ -226,7 +207,7 @@ def test_the_real_resolvers_refuse_an_agent_a_row_of_another_profile(operation: 
             resolve_operation_access(
                 registry=registry,
                 request=request,
-                context=_context(registry, definition_id, frontend=_MCP, operation=operation),
+                context=_context(registry, definition_id, frontend=frontend, operation=operation),
             )
         assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH, definition_id
 
@@ -491,151 +472,4 @@ def test_a_split_records_the_session_keeps_its_parent_stored_and_is_not_undone_b
 
         assert refused.projection.terminal_condition is OperationTerminalCondition.REFUSED
         assert refused.projection.effect is OperationEffect.NONE
-        assert _stored_row(profile_id, parent_id, operation).lifecycle_state is TransactionLifecycleState.SPLIT
-
-
-class _SwitchableSessionHost:
-    """A session host whose admitting frontend a test changes between invocations."""
-
-    def __init__(self, frontend: OperationFrontendProjection) -> None:
-        self.frontend = frontend
-
-    def __call__(self, identity: OperationIdentity) -> OperationExecutionCaller:
-        assert identity.definition_id in _OPENED
-        return OperationExecutionCaller(
-            frontend=self.frontend, session_kind=SessionKind.ATTENDED, client_id=_SESSION_CLIENT
-        )
-
-
-def _split_request(profile_id: UUID, transaction_id: str) -> LedgerSplitRequest:
-    return LedgerSplitRequest(
-        profile_id=profile_id,
-        transaction_id=transaction_id,
-        children=(
-            LedgerSplitChildRequest(amount="8", description="first part"),
-            LedgerSplitChildRequest(amount="12", description="second part"),
-        ),
-        reason="synthetic split",
-        actor="typed for the split",
-    )
-
-
-def _refused_for_the_frontend(observed: OperationObservationSuccessV1) -> bool:
-    terminal = observed.projection
-    return (
-        terminal.terminal_condition is OperationTerminalCondition.REFUSED
-        and terminal.refusal_ref == "REFUSED_PROFILE_ACCESS"
-        and terminal.effect is OperationEffect.NONE
-        and terminal.result_ref is None
-    )
-
-
-def _stored_state(profile_id: UUID, operation: PinnedAuthorityOperation) -> tuple[dict[str, Transaction], int]:
-    ports = compose_ledger_action_ports(bucket_id=str(profile_id), operation=operation)
-    history = bucket_event_history_repository(bucket_id=str(profile_id)).load().events
-    return dict(ports.transaction_repository.load().transactions), len(history)
-
-
-_PDF_BYTES = b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n"
-
-
-def _seed_with_attachment(profile_id: UUID, operation: PinnedAuthorityOperation) -> tuple[str, str]:
-    """Store an unclassified row and link one stored attachment to it; no revision cites the row."""
-    bucket_id = str(profile_id)
-    ports = compose_ledger_action_ports(bucket_id=bucket_id, operation=operation)
-    created = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=bucket_id,
-            booked_date=date(2025, 1, 21),
-            amount=Decimal("20.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="synthetic row with an attachment",
-            actor="synthetic-seed",
-        ),
-        ports=ports,
-        occurred_at=now(),
-    )
-    attachment = add_attachment(
-        ports.attachment_store,
-        content=AttachmentBytesContent(data=_PDF_BYTES),
-        request=AttachmentIngestionRequest(
-            kind=AttachmentKind.INVOICE_PDF,
-            source=AttachmentSource.INLINE,
-            source_reference="split-refusal-seed",
-            mime_type="application/pdf",
-            captured_at=now(),
-            bucket_id=bucket_id,
-            captured_by="synthetic-seed",
-            source_command="synthetic seed",
-        ),
-    )
-    attach_manual_transaction_evidence(
-        bucket_id=bucket_id,
-        transaction_id=created.ref.transaction_id,
-        attachment_ids=(attachment.attachment_id,),
-        actor="synthetic-seed",
-        source_command="aeat app ledger attach",
-        ports=ports,
-        occurred_at=now(),
-    )
-    return created.ref.transaction_id, attachment.attachment_id
-
-
-def _seed_classified_by_hand(profile_id: UUID, operation: PinnedAuthorityOperation) -> str:
-    created = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=str(profile_id),
-            booked_date=date(2025, 1, 21),
-            amount=Decimal("20.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="synthetic row classified by hand",
-            business_classification=BusinessClassification.PERSONAL,
-            actor="synthetic-seed",
-        ),
-        ports=compose_ledger_action_ports(bucket_id=str(profile_id), operation=operation),
-        occurred_at=now(),
-    )
-    return created.ref.transaction_id
-
-
-@pytest.mark.parametrize("work", ["classification", "attachment"])
-def test_an_agents_split_of_a_parent_carrying_the_persons_work_is_refused_and_the_command_lines_is_not(
-    tmp_path: Path, operation: PinnedAuthorityOperation, work: str
-) -> None:
-    """The refusal comes before any effect, so nothing is stored; the person's frontends split the same row."""
-    host = _SwitchableSessionHost(_CLI)
-    with conformance._runtime(
-        tmp_path / "runtime", cleanup=conformance._CloseWitness(), execution_caller_reader=host
-    ) as (driver, registry, profile_id):
-        if work == "classification":
-            parent_id = _seed_classified_by_hand(profile_id, operation)
-            assert _stored_row(profile_id, parent_id, operation).classified_by == "manual"
-        else:
-            parent_id, attachment_id = _seed_with_attachment(profile_id, operation)
-            assert _stored_row(profile_id, parent_id, operation).attachment_ids == (attachment_id,)
-        rows_before, events_before = _stored_state(profile_id, operation)
-
-        host.frontend = _MCP
-        _submitted, refused = asyncio.run(
-            driver.run(
-                definition_id="ledger.split.manual",
-                subject_ref=profile_operation_subject(str(profile_id)),
-                payload=_split_request(profile_id, parent_id),
-            )
-        )
-
-        assert _refused_for_the_frontend(refused)
-        assert _stored_state(profile_id, operation) == (rows_before, events_before)
-
-        host.frontend = _CLI
-        split = _run(
-            driver,
-            registry,
-            definition_id="ledger.split.manual",
-            profile_id=profile_id,
-            payload=_split_request(profile_id, parent_id),
-            result_type=LedgerSplitOperationResult,
-        )
-
-        assert split.parent_transaction_id == parent_id
         assert _stored_row(profile_id, parent_id, operation).lifecycle_state is TransactionLifecycleState.SPLIT

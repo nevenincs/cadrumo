@@ -127,7 +127,6 @@ def test_mcp_result_access_requires_exact_destination_and_tax_values(
     ):
         request = _request(payload)
         contract = registry.lookup_public_contract(request.definition_id)
-        assert OperationFrontendProjection.MCP in contract.permitted_frontends
         assert contract.result_schema is not None
         resolved = resolve_operation_access(
             registry=registry,

@@ -104,8 +104,6 @@ def test_both_strict_public_contracts_compile_and_share_no_artifact_agent_purpos
     )
     registry = OperationRegistry(definitions=definitions, public_registrations=registrations)
     assert registry.lookup_public_registration("ledger.export").contract.result_schema is not None
-    assert OperationFrontendProjection.MCP not in definitions[0].permitted_frontends
-    assert OperationFrontendProjection.MCP in definitions[1].permitted_frontends
     assert all(row.capabilities.request_storage.value == "secure_reference" for row in definitions)
 
 
@@ -299,7 +297,7 @@ def test_foreign_worker_subject_refuses_before_private_ports(subject: Subject, t
 
 
 @pytest.mark.parametrize("kind", ["export", "link"])
-def test_exact_scope_human_artifact_and_dual_category_consent(subject: Subject, tmp_path: Path, kind: str) -> None:
+def test_exact_scope_and_dual_category_consent_on_every_frontend(subject: Subject, tmp_path: Path, kind: str) -> None:
     definition = _definition(subject, kind)
     registration = (
         build_ledger_export_registration(definition) if kind == "export" else build_ledger_link_registration(definition)
@@ -334,31 +332,32 @@ def test_exact_scope_human_artifact_and_dual_category_consent(subject: Subject, 
     )
     resolved = resolve_operation_access(registry=registry, request=request, context=context)
     assert resolved.policy.requires_all_periods is (kind == "link")
-    assert resolved.policy.requires_human is (kind == "export")
+    assert resolved.policy.requires_human is False
     assert {row.category for row in resolved.policy.disclosures} == {
         DisclosureCategory.PROFILE_VALUES,
         DisclosureCategory.TAX_VALUES,
     }
-    assert isinstance(
-        policy_decision(resolved, registry, disclosures=resolved.policy.disclosures, human=kind == "export"),
-        AccessAllowed,
-    )
-    for missing in (DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES):
-        denied = policy_decision(
-            resolved,
-            registry,
-            disclosures=frozenset(row for row in resolved.policy.disclosures if row.category is not missing),
-            human=kind == "export",
+    # A session under the person's sign-in and one under an enrolled key are answered alike.
+    for human in (True, False):
+        assert isinstance(
+            policy_decision(resolved, registry, disclosures=resolved.policy.disclosures, human=human),
+            AccessAllowed,
         )
-        assert isinstance(denied, AccessDenied) and denied.code is AccessDenialCode.DISCLOSURE_DENIED
+        for missing in (DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES):
+            denied = policy_decision(
+                resolved,
+                registry,
+                disclosures=frozenset(row for row in resolved.policy.disclosures if row.category is not missing),
+                human=human,
+            )
+            assert isinstance(denied, AccessDenied) and denied.code is AccessDenialCode.DISCLOSURE_DENIED
     observed = resolve_operation_access(
         registry=registry, request=request, context=replace(context, action=AccessAction.OBSERVE)
     )
     assert {row.category for row in observed.policy.disclosures} == {DisclosureCategory.OPERATION_METADATA}
-    if kind == "export":
-        with pytest.raises(ProfileAccessRefusedError):
-            resolve_operation_access(
-                registry=registry, request=request, context=replace(context, frontend=OperationFrontendProjection.MCP)
-            )
-        denied = policy_decision(resolved, registry, disclosures=resolved.policy.disclosures)
-        assert isinstance(denied, AccessDenied) and denied.code is AccessDenialCode.HUMAN_AUTHORITY_REQUIRED
+    for frontend in OperationFrontendProjection:
+        elsewhere = resolve_operation_access(
+            registry=registry, request=request, context=replace(context, frontend=frontend)
+        )
+        assert elsewhere.request.frontend is frontend
+        assert elsewhere.policy == resolved.policy

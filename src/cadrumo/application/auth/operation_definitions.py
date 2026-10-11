@@ -42,8 +42,6 @@ from ..operations.models import OperationIdentity, OperationRequest
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
@@ -454,7 +452,6 @@ def _definition(
     phases: tuple[str, ...],
     secret_kind: str | None = None,
     request_storage: OperationRequestStoragePolicy = OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-    permitted_frontends: frozenset[OperationFrontendProjection] = ALL_OPERATION_FRONTENDS,
     public_error_detail: bool = False,
 ) -> OperationDefinition:
     return OperationDefinition(
@@ -483,7 +480,6 @@ def _definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=permitted_frontends,
         ephemeral_secret=(
             None
             if secret_kind is None
@@ -516,7 +512,6 @@ def build_auth_operation_definitions(
             build=lambda: AuthConfigureOperationExecutor(ports=ports, configure=configure),
             phases=("auth.configure.preflight", "auth.configure.execute", "auth.configure.settlement"),
             request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
         ),
         _definition(
             definition_id=AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID,
@@ -526,7 +521,6 @@ def build_auth_operation_definitions(
             build=lambda: AuthSessionAcquireOperationExecutor(ports=ports, acquire=acquire),
             phases=("auth.acquire.preflight", "auth.acquire.execute", "auth.acquire.settlement"),
             request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
             public_error_detail=True,
         ),
         _definition(
@@ -546,8 +540,6 @@ def build_auth_operation_definitions(
             build=lambda: AuthResetOperationExecutor(ports=ports, reset=reset),
             phases=("auth.reset.preflight", "auth.reset.execute", "auth.reset.settlement"),
             request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            # Reset destroys stored sessions, sources and secrets, so only a person's frontend offers it.
-            permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
         ),
         _definition(
             definition_id=PROFILE_ROTATION_OPERATION_DEFINITION_ID,
@@ -561,7 +553,6 @@ def build_auth_operation_definitions(
             phases=("auth.passphrase.secret-consume", "auth.passphrase.execute", "auth.passphrase.settlement"),
             secret_kind=_PROFILE_ROTATION_KIND,
             request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
         ),
     )
 

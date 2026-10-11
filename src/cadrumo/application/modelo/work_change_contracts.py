@@ -93,7 +93,11 @@ class ModeloWorkDiscardBaseline(BaseModel):
 
 
 class ModeloWorkDiscardRequest(CredentialFreeOperationRequest):
-    """The approved unit and the reason recorded against its discard."""
+    """The approved unit and the reason recorded against its discard.
+
+    ``actor`` is recorded as sent for a person's session. An agent's session is
+    recorded under its own session label, whatever the request carries.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 

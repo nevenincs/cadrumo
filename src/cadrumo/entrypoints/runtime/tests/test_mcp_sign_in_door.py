@@ -1,4 +1,4 @@
-"""An MCP connection resumes the person's stored sign-in, and may end no session but its own.
+"""An MCP connection signs in and acts on the person's sessions exactly as the command line does.
 
 The runtime, its connection service, the session authority, the profile worker
 and the stored sign-in are real. Only the native login the runtime observes,
@@ -17,6 +17,7 @@ from uuid import UUID
 import pytest
 
 from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
+from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT
 from cadrumo.application.operations.mcp_surfaces import McpSurfaceName
 from cadrumo.application.operations.registry import OperationFrontendProjection
@@ -24,6 +25,7 @@ from cadrumo.application.runtime.contracts import RuntimeRefusalCode
 from cadrumo.application.runtime.profile_access import RuntimeAccessRefusal, RuntimeProfileStatus, RuntimeSessionsLocked
 from cadrumo.application.runtime.sign_in import RuntimeHumanSignedOut, SignInPresence
 from cadrumo.application.user_profile.access_contracts import AccessDenialCode, AccessScope, SessionKind
+from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind
 
 from .stored_sign_in_runtime import SessionReply, StoredSignInRuntime, stored_sign_in_runtime
 
@@ -97,12 +99,6 @@ def test_an_mcp_connection_resumes_the_stored_sign_in_as_the_person_and_extends_
         assert narrowed_lease.kind is SessionKind.HUMAN
         assert narrowed_lease.surface is McpSurfaceName.READ_ONLY_LOCAL
 
-        # An MCP connection sends no password and never asks for a sign-in to be stored.
-        for method, persist_receipt in (("password", False), ("password", True), ("receipt", True)):
-            secret = bytearray(PROFILE_INPUT.encode())
-            refused = runtime.login(runtime.connect(), method, secret, frontend=_MCP, persist_receipt=persist_receipt)
-            _refused(refused, RuntimeRefusalCode.INVALID_FRAME)
-
         # Four resumes, one of them from MCP on a surface, moved neither deadline and rewrote nothing.
         assert runtime.stored_sign_in() == stored
         assert runtime.sign_in(observer) == before
@@ -113,9 +109,13 @@ def test_an_mcp_connection_resumes_the_stored_sign_in_as_the_person_and_extends_
             ("receipt", _MCP),
         ]
 
-        # The command line still signs in with the password, as before.
-        password = runtime.login(runtime.connect(), "password", bytearray(PROFILE_INPUT.encode()), frontend=_CLI)
-        assert runtime.lease(_admitted(password)).kind is SessionKind.HUMAN
+        # The password signs the person in on every frontend, to the same kind of lease.
+        for frontend in (_CLI, _TUI, _MCP):
+            password = runtime.login(
+                runtime.connect(), "password", bytearray(PROFILE_INPUT.encode()), frontend=frontend
+            )
+            lease = runtime.lease(_admitted(password))
+            assert lease.kind is SessionKind.HUMAN and lease.surface is None
 
 
 @pytest.mark.parametrize("state", ["never-signed-in", "timed-out"])
@@ -142,61 +142,70 @@ def test_an_mcp_resume_is_refused_exactly_as_the_command_line_is(
         assert runtime.leases() == ()
 
 
-def test_a_session_on_the_mcp_frontend_may_end_only_itself(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    with stored_sign_in_runtime(tmp_path, monkeypatch) as runtime:
-        stored = runtime.stored_sign_in()
-        person, agent = runtime.connect(), runtime.connect()
-        person_id = _admitted(runtime.resume(person, _CLI))
-        agent_id = _admitted(runtime.resume(agent, _MCP))
-
-        _refused(runtime.session(agent, agent_id, "human_sign_out"), AccessDenialCode.FRONTEND_DENIED)
-        _refused(
-            runtime.session(agent, agent_id, "session_lock", target_session_id=person_id),
-            AccessDenialCode.FRONTEND_DENIED,
-        )
-        # Neither refusal ended a session or touched the person's sign-in.
-        assert _live(runtime, person, person_id) and _live(runtime, agent, agent_id)
-        assert runtime.stored_sign_in() == stored
-
-        own = runtime.session(agent, agent_id, "session_lock")
-        assert isinstance(own, RuntimeSessionsLocked) and own.session_ids == (agent_id,)
-        assert not _live(runtime, agent, agent_id)
-        assert _live(runtime, person, person_id)
-
-        # Naming its own session as the target is the same act.
-        second = runtime.connect()
-        second_id = _admitted(runtime.resume(second, _MCP))
-        named = runtime.session(second, second_id, "session_lock", target_session_id=second_id)
-        assert isinstance(named, RuntimeSessionsLocked) and named.session_ids == (second_id,)
-        assert _live(runtime, person, person_id)
-        assert runtime.stored_sign_in() == stored
-
-
-def test_a_person_on_the_command_line_still_locks_any_session_and_signs_out_everywhere(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+@pytest.mark.parametrize("acting", [_CLI, _TUI, _MCP], ids=["cli", "tui", "mcp"])
+def test_the_persons_session_locks_any_session_and_signs_out_everywhere_from_every_frontend(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, acting: OperationFrontendProjection
 ) -> None:
     with stored_sign_in_runtime(tmp_path, monkeypatch) as runtime:
-        person, other, agent = runtime.connect(), runtime.connect(), runtime.connect()
-        person_id = _admitted(runtime.resume(person, _CLI))
+        stored = runtime.stored_sign_in()
+        actor, other, third = runtime.connect(), runtime.connect(), runtime.connect()
+        actor_id = _admitted(runtime.resume(actor, acting))
         other_id = _admitted(runtime.resume(other, _TUI))
-        agent_id = _admitted(runtime.resume(agent, _MCP))
+        third_id = _admitted(runtime.resume(third, _MCP))
 
-        revoked = runtime.session(person, person_id, "session_lock", target_session_id=agent_id)
-        assert isinstance(revoked, RuntimeSessionsLocked) and revoked.session_ids == (agent_id,)
-        assert not _live(runtime, agent, agent_id)
+        revoked = runtime.session(actor, actor_id, "session_lock", target_session_id=third_id)
+        assert isinstance(revoked, RuntimeSessionsLocked) and revoked.session_ids == (third_id,)
+        assert not _live(runtime, third, third_id)
+        assert _live(runtime, actor, actor_id) and _live(runtime, other, other_id)
 
-        own = runtime.session(person, person_id, "session_lock")
-        assert isinstance(own, RuntimeSessionsLocked) and own.session_ids == (person_id,)
-
-        # The sign-in is still stored, so an MCP connection resumes it again until the person signs out.
+        # A session ends itself whether it names itself as the target or names none.
+        named, unnamed = runtime.connect(), runtime.connect()
+        named_id = _admitted(runtime.resume(named, acting))
+        unnamed_id = _admitted(runtime.resume(unnamed, acting))
+        by_name = runtime.session(named, named_id, "session_lock", target_session_id=named_id)
+        assert isinstance(by_name, RuntimeSessionsLocked) and by_name.session_ids == (named_id,)
+        own = runtime.session(unnamed, unnamed_id, "session_lock")
+        assert isinstance(own, RuntimeSessionsLocked) and own.session_ids == (unnamed_id,)
+        assert not _live(runtime, named, named_id) and not _live(runtime, unnamed, unnamed_id)
+        # No lock touched the stored sign-in, so a connection resumes it again until the person signs out.
+        assert runtime.stored_sign_in() == stored
         resumed = runtime.connect()
         resumed_id = _admitted(runtime.resume(resumed, _MCP))
-        signed_out = runtime.session(other, other_id, "human_sign_out")
+
+        signed_out = runtime.session(actor, actor_id, "human_sign_out")
         assert isinstance(signed_out, RuntimeHumanSignedOut), signed_out
-        assert {other_id, resumed_id} <= set(signed_out.session_ids)
+        assert {actor_id, other_id, resumed_id} <= set(signed_out.session_ids)
         assert signed_out.receipt_removed and signed_out.keychain_removed
         assert runtime.stored_sign_in() is None
-        assert not _live(runtime, resumed, resumed_id)
+        assert not _live(runtime, other, other_id) and not _live(runtime, resumed, resumed_id)
 
-        after = runtime.login(runtime.connect(), "receipt", bytearray(32), frontend=_MCP)
+        after = runtime.login(runtime.connect(), "receipt", bytearray(32), frontend=acting)
         _refused(after, AccessDenialCode.AUTHENTICATION_REQUIRED)
+
+
+@pytest.mark.parametrize("acting", [_CLI, _TUI, _MCP], ids=["cli", "tui", "mcp"])
+def test_the_person_locks_the_profile_and_resumes_it_with_the_password_from_every_frontend(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, acting: OperationFrontendProjection
+) -> None:
+    with stored_sign_in_runtime(tmp_path, monkeypatch) as runtime:
+        actor = RuntimeFrontendClient(runtime.connect(), profile_id=runtime.profile_id, frontend=acting)
+        actor.resume_receipt()
+        assert [item.session_id for item in actor.sessions()] == [actor.session_id]
+
+        locked = actor.deny_automation(AutomationDenialKind.PROFILE_LOCK)
+
+        assert locked.access_denied and locked.profile_lock_generation is not None
+        assert runtime.enrollment.store.profile_lock_state().globally_locked
+        assert runtime.leases() == ()
+        # The lock retired the stored sign-in with it, so no frontend resumes it.
+        refused = runtime.login(runtime.connect(), "receipt", bytearray(32), frontend=acting)
+        assert isinstance(refused, RuntimeAccessRefusal), refused
+
+        fresh = RuntimeFrontendClient(runtime.connect(), profile_id=runtime.profile_id, frontend=acting)
+        resumed = fresh.recover_profile(bytearray(PROFILE_INPUT.encode()))
+
+        assert resumed.profile_id == runtime.profile_id
+        assert resumed.lock_generation == locked.profile_lock_generation
+        assert not runtime.enrollment.store.profile_lock_state().globally_locked
+        password = runtime.login(runtime.connect(), "password", bytearray(PROFILE_INPUT.encode()), frontend=acting)
+        assert runtime.lease(_admitted(password)).kind is SessionKind.HUMAN

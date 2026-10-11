@@ -28,7 +28,6 @@ from ..operations.operation_definition import OperationDefinition, OperationExec
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
@@ -260,7 +259,6 @@ def build_censal_file_import_operation_definition() -> OperationDefinition:
         interaction_kinds=frozenset(),
         capabilities=RECORDED_NON_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
 
 

@@ -171,7 +171,6 @@ def test_public_projection_preserves_stored_differences_and_advisories() -> None
         "registry_snapshot_ref",
         "source_kind",
         "source_path",
-        "source_directory_withheld",
         "verdict",
         "diff_count",
         "advisory_count",
@@ -181,7 +180,6 @@ def test_public_projection_preserves_stored_differences_and_advisories() -> None
         "reconciled_at",
     }
     assert dumped["reconciliations"][0]["source_path"] == first.source_path
-    assert dumped["reconciliations"][0]["source_directory_withheld"] is False
     assert dumped["reconciliations"][0]["calculation_revision_id"] == "c" * 64
     assert dumped["reconciliations"][0]["registry_snapshot_ref"] == {
         "modelo": "303",
@@ -243,9 +241,6 @@ def test_access_resolves_whole_profile_disclosure_and_requires_all_periods() -> 
     assert resolved.request.profile_id == _PROFILE
     assert resolved.request.period_independent and not resolved.request.periods
     assert resolved.policy.allow_period_independent and resolved.policy.requires_all_periods
-    assert definition.permitted_frontends == frozenset(
-        {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-    )
 
     result_admission = OperationAccessRequest(
         profile_id=_PROFILE,

@@ -98,7 +98,6 @@ from .actions_common import (
     verify_usage_ratio_reference,
 )
 from .actions_import import apply_fx_conversion as _apply_fx_conversion
-from .agent_row_guard import require_actor_may_detach, require_actor_may_link_invoice, require_actor_may_reclassify
 from .evidence import PurchaseInvoiceEvidence
 from .models import (
     LedgerRemovalBlocker,
@@ -351,7 +350,6 @@ def detach_manual_transaction_attachments(
             translated_message="application.ledger.errors.evidence_detachment_unknown_attachment",
             context={"attachment_ids": ", ".join(unknown)},
         )
-    require_actor_may_detach(actor=trimmed_actor, row=current, attachment_ids=requested)
     remaining = tuple(identifier for identifier in attached if identifier not in set(requested))
     return update_manual_transaction_fields(
         bucket_id=bucket_id,
@@ -401,7 +399,6 @@ def link_manual_transaction_invoice(
     trimmed_source_command = require_source_command(source_command, operation="ledger invoice linkage")
     repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
     current = require_transaction(repository.load(), transaction_id)
-    require_actor_may_link_invoice(actor=trimmed_actor, row=current, invoice_id=invoice_id)
     invoices_repo = resolve_invoice_repository(bucket_id=bucket_id, repository=ports.invoice_repository)
     invoice_record = invoices_repo.load().get(invoice_id)
     if invoice_record is None:
@@ -1058,7 +1055,6 @@ def _prepare_manual_transaction_update(
     _require_finalized_revisions_undisturbed(
         current, replacement, blockers=finalized_blockers, evidence_only=evidence_only, restated=restated
     )
-    require_actor_may_reclassify(actor=command.actor, current=current, replacement=replacement)
     verify_evidence_references(
         command,
         transaction_id=replacement.transaction_id,

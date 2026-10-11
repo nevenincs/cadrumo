@@ -116,6 +116,12 @@ class _RuntimeClientStub:
             )
         )
 
+    def subscribe_session_retirement(self, receive: object) -> None:
+        """The runtime retires no lease of this double."""
+
+    def subscribe_lifecycle_notices(self, receive: object) -> None:
+        """The runtime sends this double no lifecycle notice."""
+
     def close(self) -> None:
         self.close_count += 1
 

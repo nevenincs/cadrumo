@@ -14,7 +14,6 @@ from cadrumo.adapters.local_runtime.automation_inventory import (
     read_automation_inventory,
 )
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
     OperationPublicProjectionV1,
@@ -41,7 +40,7 @@ from cadrumo.application.runtime.operation_access import (
     RuntimeOperationSubmit,
     RuntimeOperationSubmitted,
 )
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode, AuthorityState
+from cadrumo.application.user_profile.access_contracts import AuthorityState
 from cadrumo.application.user_profile.automation_enrollment import (
     AutomationInventoryProjection,
     AutomationKeyProjection,
@@ -177,8 +176,11 @@ class _InterruptedClient(RuntimeFrontendClient):
         raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
 
 
-def test_post_submit_connection_loss_retains_id_and_unknown_effect() -> None:
-    client = _InterruptedClient()
+@pytest.mark.parametrize("frontend", list(OperationFrontendProjection))
+def test_post_submit_connection_loss_retains_id_and_unknown_effect_on_every_frontend(
+    frontend: OperationFrontendProjection,
+) -> None:
+    client = _InterruptedClient(frontend=frontend)
     with pytest.raises(AutomationInventoryReadError) as failed:
         read_automation_inventory(client)
     assert isinstance(client.requests[0], RuntimeOperationSubmit)
@@ -208,18 +210,12 @@ def test_terminal_refusal_uses_public_refusal_reference_and_observed_context() -
     }
 
 
-def test_mismatched_contract_and_mcp_frontend_refuse_before_submission() -> None:
+def test_a_mismatched_contract_refuses_before_submission() -> None:
     client = _InterruptedClient()
     client.return_wrong_contract = True
     with pytest.raises(RuntimeRefusalError, match=RuntimeRefusalCode.INVALID_FRAME.value):
         read_automation_inventory(client)
     assert client.requests == []
-
-    mcp = _InterruptedClient(frontend=OperationFrontendProjection.MCP)
-    with pytest.raises(RuntimeFrontendRefusedError) as refused:
-        read_automation_inventory(mcp)
-    assert refused.value.reason == AccessDenialCode.FRONTEND_DENIED.value
-    assert mcp.requests == []
 
 
 def test_a_foreign_key_row_cannot_join_the_bound_profile_inventory() -> None:

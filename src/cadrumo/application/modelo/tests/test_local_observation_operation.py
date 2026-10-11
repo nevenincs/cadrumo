@@ -43,8 +43,6 @@ _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _PERIOD = PublicPeriod(filing_year=2026, code="1T")
 _NOW = datetime(2026, 4, 10, 9, 0, tzinfo=UTC)
-_MCP = OperationFrontendProjection.MCP
-_CLI = OperationFrontendProjection.CLI
 
 
 def _factory() -> CalculationActionPortsFactory:
@@ -197,20 +195,6 @@ def test_projection_keeps_the_canonical_record_and_its_persisted_layer_aligned()
     assert wire["aeat_accepted"] is False
 
 
-def _access_context(
-    frontend: OperationFrontendProjection, *, action: AccessAction = AccessAction.SUBMIT
-) -> OperationAccessContext:
-    _definition, registration = _definition_and_registration()
-    return OperationAccessContext(
-        profile_id=_PROFILE,
-        destination_id=uuid4(),
-        action=action,
-        frontend=frontend,
-        contract=registration.contract,
-        published_authority=Availability.AVAILABLE,
-    )
-
-
 def _record_request() -> OperationRequest[BaseModel]:
     payload = ModeloLocalObservationMutationRequest(
         profile_id=_PROFILE,
@@ -227,35 +211,25 @@ def _record_request() -> OperationRequest[BaseModel]:
     )
 
 
-def test_the_definition_is_open_to_the_command_line_and_to_mcp() -> None:
-    definition, registration = _definition_and_registration()
-
-    listed = frozenset({_CLI, _MCP})
-    assert definition.permitted_frontends == listed
-    assert registration.contract.permitted_frontends == listed
-
-
-def test_an_mcp_session_is_admitted_to_record_exactly_as_the_command_line_is() -> None:
-    """A recorded figure is never official evidence, so recording it states nothing only the person can."""
-    on_mcp = resolve_modelo_local_observation_access(_record_request(), _access_context(_MCP))
-    on_cli = resolve_modelo_local_observation_access(_record_request(), _access_context(_CLI))
-
-    assert on_mcp.request.frontend is _MCP
-    assert on_mcp.request.periods == on_cli.request.periods == frozenset({_PERIOD.to_period()})
-    assert on_mcp.policy.actions == on_cli.policy.actions
-    assert AccessAction.COMMIT in on_mcp.policy.actions
-    assert not on_mcp.policy.requires_human
-
-
+@pytest.mark.parametrize("mutation", ["record", "clear"])
 @pytest.mark.parametrize("action", [AccessAction.SUBMIT, AccessAction.START, AccessAction.COMMIT, AccessAction.RESULT])
-def test_clearing_a_figure_is_refused_to_mcp_at_every_access_and_to_no_other_frontend(action: AccessAction) -> None:
-    """Clearing removes the figure and keeps no copy of it, so it waits for the person."""
-    clear = cast(OperationRequest[BaseModel], cast(object, _request()))
+def test_every_frontend_resolves_recording_and_clearing_to_the_same_access(mutation: str, action: AccessAction) -> None:
+    _definition, registration = _definition_and_registration()
+    request = _record_request() if mutation == "record" else cast(OperationRequest[BaseModel], cast(object, _request()))
+    context = OperationAccessContext(
+        profile_id=_PROFILE,
+        destination_id=uuid4(),
+        action=action,
+        frontend=OperationFrontendProjection.CLI,
+        contract=registration.contract,
+        published_authority=Availability.AVAILABLE,
+    )
+    on_cli = resolve_modelo_local_observation_access(request, context)
 
-    with pytest.raises(ProfileAccessRefusedError) as refused:
-        resolve_modelo_local_observation_access(clear, _access_context(_MCP, action=action))
-    assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED
-
-    on_cli = resolve_modelo_local_observation_access(clear, _access_context(_CLI))
-    assert on_cli.request.frontend is _CLI
+    assert on_cli.request.periods == frozenset({_PERIOD.to_period()})
     assert AccessAction.COMMIT in on_cli.policy.actions
+    assert not on_cli.policy.requires_human
+    for frontend in OperationFrontendProjection:
+        on_frontend = resolve_modelo_local_observation_access(request, replace(context, frontend=frontend))
+        assert on_frontend.policy == on_cli.policy, frontend
+        assert on_frontend.request == on_cli.request.model_copy(update={"frontend": frontend}), frontend

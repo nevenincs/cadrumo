@@ -20,7 +20,6 @@ from ..classification_origin import (
     CLASSIFICATION_DECISION_FIELDS,
     ClassificationOrigin,
     classification_facts,
-    classification_is_the_persons,
     resolved_classification_origin,
     with_classification_origin,
     written_classification_origin,
@@ -110,7 +109,6 @@ def test_a_classified_row_stored_without_an_origin_is_the_persons_unless_a_rule_
 
     assert stored.classification_origin is None
     assert resolved_classification_origin(stored) is origin
-    assert classification_is_the_persons(stored) is (origin is _PERSON)
 
 
 def test_a_row_stored_before_the_origin_was_recorded_still_loads() -> None:
@@ -121,7 +119,7 @@ def test_a_row_stored_before_the_origin_was_recorded_still_loads() -> None:
     loaded = Transaction.model_validate_json(json.dumps(older))
 
     assert loaded.classification_origin is None
-    assert classification_is_the_persons(loaded)
+    assert resolved_classification_origin(loaded) is _PERSON
 
 
 def test_the_recorded_origin_round_trips_through_the_stored_form() -> None:
@@ -129,13 +127,13 @@ def test_the_recorded_origin_round_trips_through_the_stored_form() -> None:
 
     assert Transaction.model_validate_json(recorded.model_dump_json()) == recorded
     assert Transaction.model_validate(recorded.model_dump(mode="python")) == recorded
-    assert not classification_is_the_persons(recorded)
+    assert resolved_classification_origin(recorded) is _AGENT
 
 
 def test_an_unprocessed_row_is_nobodys_whatever_it_records() -> None:
     assert resolved_classification_origin(_row()) is None
     assert resolved_classification_origin(_row(origin=_PERSON)) is None
-    assert not classification_is_the_persons(_row(classified_by="manual"))
+    assert resolved_classification_origin(_row(classified_by="manual")) is None
 
 
 def test_the_recorded_origin_wins_over_the_last_writers_stamp() -> None:
@@ -143,7 +141,6 @@ def test_the_recorded_origin_wins_over_the_last_writers_stamp() -> None:
     restamped = _row(BusinessClassification.BUSINESS, classified_by="manual", origin=_AUTOMATIC)
 
     assert resolved_classification_origin(restamped) is _AUTOMATIC
-    assert not classification_is_the_persons(restamped)
 
 
 @pytest.mark.parametrize("current_origin", [_PERSON, _AGENT, _AUTOMATIC])

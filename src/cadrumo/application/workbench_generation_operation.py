@@ -28,7 +28,6 @@ from .operations.models import CredentialFreeOperationRequest, OperationIdentity
 from .operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from .operations.owner import OperationExecutorContext
 from .operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionContractV1,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -141,7 +140,6 @@ def build_workbench_generation_operation_definition(
         interaction_kinds=frozenset(),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
 
@@ -161,7 +159,7 @@ def build_workbench_generation_operation_registration(
 def resolve_workbench_generation_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    """Require live human CLI/TUI authority for both profile and tax values."""
+    """Require a live human session's authority for both profile and tax values."""
     payload = request.payload
     if type(payload) is not WorkbenchGenerationOperationRequest:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)

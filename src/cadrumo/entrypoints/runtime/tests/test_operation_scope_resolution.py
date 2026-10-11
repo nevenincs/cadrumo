@@ -252,7 +252,6 @@ def harness(authority_operation: PinnedAuthorityOperation, tmp_path: Path) -> _H
         executor_type=_UnusedExecutor,
         build=_UnusedExecutor,
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
     registration = OperationPublicDefinitionRegistrationV1.compose_request_only(
         definition=definition, request_schema_id=_DEFINITION + ".request", access_resolver=reader.resolve

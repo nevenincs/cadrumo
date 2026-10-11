@@ -21,6 +21,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationReviewProjectionRequestV1,
 )
 from cadrumo.application.operations.mcp_surfaces import McpSurface
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
 from cadrumo.application.operations.subject_reference import (
     OperationSubjectKind,
     OperationSubjectReferenceV1,
@@ -28,9 +29,11 @@ from cadrumo.application.operations.subject_reference import (
 )
 from cadrumo.application.operator_output.runtime_remedies import runtime_unavailable_remedy
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo.application.runtime.deadline_budget import remaining_budget
 from cadrumo.application.runtime.operation_access import (
     RuntimeOperationAcknowledged,
     RuntimeOperationControl,
+    RuntimeOperationFinancialInput,
     RuntimeOperationManage,
     RuntimeOperationObserve,
     RuntimeOperationReview,
@@ -46,9 +49,10 @@ from .operation_discovery import search_operations
 from .protocol_contract import parse_model, public_value, refusal_code
 from .result_request import resolve_result_request
 from .runtime_admission import McpAdmission, status_on_surface
+from .session_acts import NO_SESSION, act_on_sessions
 
 _TIMEOUT = 30.0
-_NO_SESSION = "none"
+_SECRET_DELIVERY_TIMEOUT = 20.0
 
 
 class _AdmittedConnection(Protocol):
@@ -101,7 +105,7 @@ def _unauthenticated_status(connection: _AdmittedConnection) -> dict[str, Any]:
         "outcome": "status",
         "profile_id": None if connection.profile_id is None else str(connection.profile_id),
         "authenticated": False,
-        "session": _NO_SESSION,
+        "session": NO_SESSION,
         "surface": connection.surface.name.value,
         "denial": denial or "authentication_required",
     }
@@ -116,7 +120,7 @@ def _admitted_status(client: RuntimeFrontendClient, admission: McpAdmission, sur
     return {
         "outcome": "status",
         # A lease the runtime now denies is no session, whatever admitted it.
-        "session": admission.value if status.denial is None else _NO_SESSION,
+        "session": admission.value if status.denial is None else NO_SESSION,
         "surface": surface.name.value,
         "status": public_value(status),
     }
@@ -136,35 +140,122 @@ def _describe(
         # The runtime refuses the operation itself; this only answers as it would.
         raise RuntimeFrontendRefusedError(AccessDenialCode.FRONTEND_DENIED.value)
     description = binding.contracts.description(client, definition_id, deadline=deadline, fresh=True)
-    return {"outcome": "described", "description": public_value(description)}
+    reply: dict[str, Any] = {"outcome": "described", "description": public_value(description)}
+    if description.contract.transient_financial_operand is not None:
+        reply["operator_input_json_schema"] = _operator_input_json_schema()
+    return reply
+
+
+def _operator_input_json_schema() -> dict[str, object]:
+    """Return the schema of the typed operator input the runtime decodes for a financial operand.
+
+    The registered request of such an operation carries no amount: the
+    runtime builds it from this input, which every frontend submits in its
+    place. Imported on use so that serving the other tools loads none of it.
+    """
+    from cadrumo.application.modelo.edit_operator_input import ModeloEditOperatorInputV2
+    from cadrumo.application.operations.registry_schema_validation import strict_model_json_schema
+
+    return strict_model_json_schema(ModeloEditOperatorInputV2)
 
 
 def _execute(client: RuntimeFrontendClient, binding: _Binding, args: dict[str, Any], deadline: float) -> dict[str, Any]:
     definition_id = args["definition_id"]
-    description = binding.contracts.description(client, definition_id, deadline=deadline)
+    # Taken out of the call before anything can fail, so no later step holds or repeats the text.
+    secret_text = args.pop("secret", None)
+    contract = binding.contracts.description(client, definition_id, deadline=deadline).contract
+    secret: bytearray | None = None
     try:
-        subject_ref = _subject(description.contract.subject_reference, client.profile_id, args)
-    except _SubjectRefusedError as refused:
-        # Nothing was submitted, and the wording quotes only the public contract.
-        return {"outcome": "refused", "code": "invalid_request", "message": str(refused)}
-    submission = _submission(client, args, definition_id, subject_ref)
+        try:
+            secret = _typed_secret(contract, secret_text)
+            submission = _submission(client, contract, args)
+        except _ContractRefusedError as refused:
+            # Nothing was submitted, and the wording quotes only the public contract.
+            return {"outcome": "refused", "code": "invalid_request", "message": str(refused)}
+        try:
+            reply = client.operation(submission, deadline=deadline)
+            if not isinstance(reply, RuntimeOperationSubmitted):
+                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        except RuntimeRefusalError as error:
+            return _unresolved_submission(error, submission.request_id, definition_id)
+        except TimeoutError:
+            return _unresolved_submission(
+                RuntimeRefusalCode.DEADLINE_EXCEEDED.value, submission.request_id, definition_id
+            )
+        except OSError:
+            return _unresolved_submission(
+                RuntimeRefusalCode.CONNECTION_CLOSED.value, submission.request_id, definition_id
+            )
+        response: dict[str, Any] = {"outcome": "submitted", "receipt": public_value(reply.receipt)}
+        ready = True
+        if secret is not None or reply.receipt.secret_requirement is not None:
+            delivery = _deliver_secret(client, reply, submission, secret, deadline)
+            response["secret_delivery"] = delivery
+            ready = delivery["outcome"] == "delivered"
+        if args.get("start", True) and ready:
+            response["start"] = _start_submitted_operation(client, reply.receipt.operation_id, deadline)
+        return response
+    finally:
+        if secret is not None:
+            secret[:] = bytes(len(secret))
+
+
+class _ContractRefusedError(ValueError):
+    """The call does not fit what its operation's contract declares."""
+
+
+def _typed_secret(contract: OperationPublicDefinitionContractV1, text: object) -> bytearray | None:
+    """Hold the call to the typed secret its contract declares, and encode one that belongs.
+
+    The bytes are the text's UTF-8 encoding, which is what the command line
+    sends for the same operation.
+    """
+    if not contract.ephemeral_secret_required:
+        if text is not None:
+            raise _ContractRefusedError("secret is not accepted: this operation's contract declares no typed secret")
+        return None
+    if not isinstance(text, str) or not text:
+        raise _ContractRefusedError("secret is required: this operation's contract says ephemeral_secret_required")
+    return bytearray(text, "utf-8")
+
+
+def _deliver_secret(
+    client: RuntimeFrontendClient,
+    submitted: RuntimeOperationSubmitted,
+    submission: RuntimeOperationSubmit | RuntimeOperationFinancialInput,
+    secret: bytearray | None,
+    deadline: float,
+) -> dict[str, Any]:
+    """Hand the typed secret to the exact wait its submission opened, on the protected secret frame.
+
+    The submission is already durable, so every outcome keeps its receipt: a
+    refusal says the runtime took no secret, and anything else that goes
+    wrong leaves unknown whether it did.
+    """
+    requirement = submitted.receipt.secret_requirement
+    if (
+        requirement is None
+        or secret is None
+        or requirement.identity.operation_id != submitted.receipt.operation_id
+        or requirement.identity.definition_id != submission.definition_id
+        or requirement.identity.subject_ref != submission.subject_ref
+    ):
+        # The runtime's wait and the contract this call was held to disagree, so nothing is sent.
+        return {"outcome": "refused", "code": RuntimeRefusalCode.INVALID_FRAME.value}
     try:
-        reply = client.operation(submission, deadline=deadline)
-        if not isinstance(reply, RuntimeOperationSubmitted):
+        acknowledged = client.submit_secret(
+            requirement, secret, timeout=min(_SECRET_DELIVERY_TIMEOUT, remaining_budget(deadline))
+        )
+        if acknowledged.operation_id != submitted.receipt.operation_id:
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-    except RuntimeRefusalError as error:
-        return _unresolved_submission(error, submission.request_id, definition_id)
-    except TimeoutError:
-        return _unresolved_submission(RuntimeRefusalCode.DEADLINE_EXCEEDED.value, submission.request_id, definition_id)
-    except OSError:
-        return _unresolved_submission(RuntimeRefusalCode.CONNECTION_CLOSED.value, submission.request_id, definition_id)
-    response: dict[str, Any] = {"outcome": "submitted", "receipt": public_value(reply.receipt)}
-    if args.get("start", True) and reply.receipt.secret_requirement is None:
-        response["start"] = _start_submitted_operation(client, reply.receipt.operation_id, deadline)
-    return response
+    except RuntimeFrontendRefusedError as error:
+        return {"outcome": "refused", "code": refusal_code(error)}
+    except Exception as error:
+        return {"outcome": "unresolved", "code": refusal_code(error)}
+    return {"outcome": "delivered"}
 
 
-class _SubjectRefusedError(ValueError):
+class _SubjectRefusedError(_ContractRefusedError):
     """The call cannot be given the subject its operation's contract declares."""
 
 
@@ -208,17 +299,37 @@ def _subject(reference: OperationSubjectReferenceV1, profile_id: UUID, args: dic
 
 
 def _submission(
-    client: RuntimeFrontendClient, args: dict[str, Any], definition_id: str, subject_ref: str
-) -> RuntimeOperationSubmit:
+    client: RuntimeFrontendClient, contract: OperationPublicDefinitionContractV1, args: dict[str, Any]
+) -> RuntimeOperationSubmit | RuntimeOperationFinancialInput:
+    """Build the submission the contract calls for: the registered request, or the typed operator input."""
     payload_json = json.dumps(args["payload"], ensure_ascii=False, separators=(",", ":"), allow_nan=False)
-    return RuntimeOperationSubmit(
+    if contract.transient_financial_operand is None:
+        return RuntimeOperationSubmit(
+            request_id=uuid4(),
+            profile_id=client.profile_id,
+            session_id=client.session_id,
+            definition_id=contract.definition_id,
+            subject_ref=_subject(contract.subject_reference, client.profile_id, args),
+            payload_json=payload_json,
+            idempotency_key=args.get("idempotency_key"),
+        )
+    # The payload is the operator input and not the registered request, so the
+    # subject cannot be read from it; the runtime holds the supplied one to the input.
+    subject_ref = args.get("subject_ref")
+    if not isinstance(subject_ref, str):
+        raise _SubjectRefusedError(
+            f"subject_ref is required with typed operator input: it is {_subject_form(contract.subject_reference)} "
+            "of the registered request"
+        )
+    if "idempotency_key" in args:
+        raise _ContractRefusedError("idempotency_key is not accepted with typed operator input")
+    return RuntimeOperationFinancialInput(
         request_id=uuid4(),
         profile_id=client.profile_id,
         session_id=client.session_id,
-        definition_id=definition_id,
+        definition_id=contract.definition_id,
         subject_ref=subject_ref,
         payload_json=payload_json,
-        idempotency_key=args.get("idempotency_key"),
     )
 
 
@@ -383,6 +494,12 @@ def _control_cancel_or_detach(
     )
 
 
+def _session(
+    client: RuntimeFrontendClient, binding: _Binding, args: dict[str, Any], _deadline: float
+) -> dict[str, Any]:
+    return act_on_sessions(client, binding.admission, args)
+
+
 _ADMITTED_TOOL_HANDLERS: dict[str, _ToolHandler] = {
     "search": _search,
     "describe": _describe,
@@ -393,4 +510,5 @@ _ADMITTED_TOOL_HANDLERS: dict[str, _ToolHandler] = {
     "review": _review,
     "respond": _respond,
     "control": _control,
+    "session": _session,
 }

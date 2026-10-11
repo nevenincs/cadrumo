@@ -31,7 +31,6 @@ def resolve_export_link_access(
     *,
     profile_id: UUID,
     periods: frozenset[Period],
-    requires_human: bool,
 ) -> ResolvedOperationAccess:
     """Keep current scope and require both identity-bearing and tax result consent."""
     resolved = resolve_ledger_read_access(request, context, profile_id=profile_id, periods=periods)
@@ -51,7 +50,6 @@ def resolve_export_link_access(
             **dict(resolved.policy),
             "actions": resolved.policy.actions | {AccessAction.COMMIT},
             "disclosures": disclosures,
-            "requires_human": requires_human,
         }
     )
     return replace(resolved, policy=policy)

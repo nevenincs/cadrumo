@@ -27,7 +27,7 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.public_period import PublicPeriod
 from ..operations.refusal_evidence import OperationRefusalEvidence
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
@@ -257,9 +257,6 @@ def build_workflow_resume_definition(
         executor_type=WorkflowResumeExecutor,
         build=lambda: WorkflowResumeExecutor(runs, calculations),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
         refusal_detail_codes=frozenset({WORKFLOW_RESUME_REFUSAL_CODE, WORKFLOW_RESUME_AMBIGUITY_CODE}),
     )
 

@@ -14,7 +14,7 @@ from ...application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
 from ...application.operations.models import OperationId
-from ...application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from ...application.operations.registry import OperationPublicDefinitionContractV1
 from ...application.operations.secret_submission import OperationSecretRequirement
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.deadline_budget import bounded_deadline_after, remaining_budget
@@ -237,9 +237,7 @@ def _reviewed_decision_contract(
     decision: AutomationDecision,
     deadline: float,
 ) -> tuple[AutomationReviewProjection, PinnedConnection, OperationPublicDefinitionContractV1, str]:
-    """Pin the validated review to the permitted frontend and exact public contract."""
-    if client.frontend not in {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}:
-        raise RuntimeFrontendRefusedError(AccessDenialCode.FRONTEND_DENIED.value)
+    """Pin the validated review to the connection and exact public contract."""
     review = _checked_review(review)
     pinned = PinnedConnection.of(client)
     profile_id = pinned.profile_id

@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-from pathlib import PurePath
 from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ..operations.host_path_name import host_path_file_name
 from ..operations.models import CredentialFreeOperationRequest
 from ..operator_actions.projection import PreconditionVerdictSnapshot
 from .diagnostics import (
@@ -52,37 +50,8 @@ class AuthReadRequest(CredentialFreeOperationRequest):
         return self
 
 
-def _certificate_directory_withheld_leaves_a_name(path: str, *, withheld: bool) -> None:
-    """Refuse a result that says it withheld the certificate's directory and still holds one."""
-    if withheld and ("/" in path or "\\" in path):
-        raise ValueError("a withheld certificate directory leaves a file name alone")
-
-
-def _file_name_updates(readiness: AuthStatusResult) -> dict[str, str]:
-    """Name the members of ``readiness`` that hold the certificate's directory, with the file name in its place."""
-    path = readiness.certificate_path
-    name = host_path_file_name(path) or ""
-    # The probe words a missing file with the path as the platform spells it,
-    # which can differ from the configured spelling.
-    spellings = (path, str(PurePath(path)))
-    updates = {"certificate_path": name}
-    quoting = {"health_summary": readiness.health_summary}
-    if isinstance(readiness, AuthTestResult):
-        quoting["probe_summary"] = readiness.probe_summary
-    for field, text in quoting.items():
-        for spelling in spellings:
-            text = text.replace(spelling, name)
-        updates[field] = text
-    return updates
-
-
 class AuthReadResult(BaseModel):
-    """Encrypted result body; exactly one canonical redacted read projection.
-
-    A status or test read carries the certificate file's configured path. An
-    agent's execution seals the file name alone in that member, and in the
-    summaries that quote it, and sets ``certificate_directory_withheld``.
-    """
+    """Encrypted result body; exactly one canonical redacted read projection."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
@@ -92,20 +61,6 @@ class AuthReadResult(BaseModel):
     diagnostics_list: AuthDiagnosticListReport | None = None
     diagnostics_view: AuthDiagnosticDetail | None = None
     diagnostic_found: bool | None = None
-    certificate_directory_withheld: bool = False
-
-    def sealed_for_agent(self) -> AuthReadResult:
-        """Return this read with the certificate file's directory withheld, as an agent receives it."""
-        readiness = self.status or self.test
-        if readiness is None or not readiness.certificate_path:
-            return self
-        return self.model_copy(
-            update={
-                "status": self.status.model_copy(update=_file_name_updates(self.status)) if self.status else None,
-                "test": self.test.model_copy(update=_file_name_updates(self.test)) if self.test else None,
-                "certificate_directory_withheld": True,
-            }
-        )
 
     @model_validator(mode="after")
     def _one_result(self) -> AuthReadResult:
@@ -121,10 +76,6 @@ class AuthReadResult(BaseModel):
                 raise ValueError("diagnostic detail presence is inconsistent")
         elif self.diagnostic_found is not None or self.diagnostics_view is not None:
             raise ValueError("diagnostic detail belongs only to a detail read")
-        readiness = self.status or self.test
-        _certificate_directory_withheld_leaves_a_name(
-            readiness.certificate_path if readiness else "", withheld=self.certificate_directory_withheld
-        )
         return self
 
 
@@ -235,7 +186,6 @@ class AuthReadProjection(BaseModel):
     diagnostics_rows: tuple[AuthDiagnosticSummarySnapshot, ...] | None = None
     diagnostics_view: AuthDiagnosticDetailSnapshot | None = None
     diagnostic_found: bool | None = None
-    certificate_directory_withheld: bool = False
 
     def to_result(self) -> AuthReadResult:
         """Restore the canonical redacted response for existing CLI presenters."""
@@ -254,5 +204,4 @@ class AuthReadProjection(BaseModel):
             ),
             diagnostics_view=self.diagnostics_view.to_detail() if self.diagnostics_view else None,
             diagnostic_found=self.diagnostic_found,
-            certificate_directory_withheld=self.certificate_directory_withheld,
         )

@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 from ...adapters.local_runtime.runtime_frame_io import write_document
-from ...application.operations.registry import OperationFrontendProjection
 from ...application.runtime.access_management import (
     RuntimeAccessManagementRequest,
     RuntimeAutomationDeny,
@@ -63,12 +62,7 @@ class ProfileConnectionAccessMixin:
             ):
                 raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
         observed = connection.login.observe(credential_facilities=Availability.UNAVAILABLE)
-        if (
-            connection.frontend not in {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}
-            or not observed.active
-            or not observed.unlocked
-            or observed.os_owner_id != connection.context.peer.os_owner_id
-        ):
+        if not observed.active or not observed.unlocked or observed.os_owner_id != connection.context.peer.os_owner_id:
             raise AutomationCustodyError(AutomationCustodyCode.NEEDS_USER)
 
     def _resolve_access_management(
@@ -92,8 +86,6 @@ class ProfileConnectionAccessMixin:
         channel: RuntimeByteChannel,
         request: RuntimeProfileRecoveryPrepare,
     ) -> tuple[ProfileConnection, RuntimeProfileHost]:
-        if request.frontend not in {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}:
-            raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
         with self._guard:
             connection = self._connections.get(context.connection_id)
         if connection is None:

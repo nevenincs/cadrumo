@@ -31,7 +31,6 @@ from .....application.operations.observation import OperationObservationService
 from .....application.operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from .....application.operations.owner import OperationExecutorContext
 from .....application.operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationRegistry,
@@ -133,7 +132,6 @@ def _registry() -> OperationRegistry:
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.TUI}),
         transient_financial_operand=declaration,
     )
     registration = OperationPublicDefinitionRegistrationV1.compose(

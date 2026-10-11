@@ -74,6 +74,12 @@ def _runtime_refusal(reason: ProfileSessionRefusalReason, code: str) -> ProfileR
     return refused
 
 
+class _ListedContract(dict[str, str]):
+    """The one member a listing shows of a contract that declares no typed operator input."""
+
+    transient_financial_operand = None
+
+
 class _SignInConnection:
     """One opened MCP connection, answering a resume as its runtime was told to."""
 
@@ -146,7 +152,10 @@ class _SignInConnection:
     def describe(self, definition_id: str, *, deadline: float) -> SimpleNamespace:
         assert self.close_count == 0 and deadline > 0
         self.described.append(definition_id)
-        return SimpleNamespace(contract={"definition_id": definition_id})
+        return SimpleNamespace(contract=_ListedContract(definition_id=definition_id))
+
+    def subscribe_lifecycle_notices(self, receive: object) -> None:
+        """The runtime sends this double no lifecycle notice."""
 
     def close(self) -> None:
         self.close_count += 1

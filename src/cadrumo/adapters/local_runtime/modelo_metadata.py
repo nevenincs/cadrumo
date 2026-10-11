@@ -269,7 +269,6 @@ def _require_metadata_contract(
         contract.definition_id != definition_id
         or contract.request_schema != expected_request
         or contract.result_schema != expected_result
-        or client.frontend not in contract.permitted_frontends
         or contract.ephemeral_secret_required
     ):
         raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)

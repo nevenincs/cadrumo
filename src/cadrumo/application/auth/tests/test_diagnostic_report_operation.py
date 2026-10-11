@@ -105,7 +105,6 @@ def test_report_public_definition_is_a_real_human_mutation() -> None:
     registration = build_auth_diagnostic_report_registration(definition)
     registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
     assert AUTH_DIAGNOSTIC_NOT_FOUND_REFUSAL_CODE in registry.definitions[0].refusal_detail_codes
-    assert OperationFrontendProjection.MCP not in registry.definitions[0].permitted_frontends
     request = AuthDiagnosticReportRequest(
         profile_id=_PROFILE,
         diagnostic_id="d-1",

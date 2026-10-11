@@ -1,4 +1,4 @@
-"""Registered exact-profile human ledger export using the canonical serializer."""
+"""Registered exact-profile ledger export using the canonical serializer."""
 
 from __future__ import annotations
 
@@ -20,12 +20,13 @@ from ...domain.calculations.registry.governed_fact_scope import validating_gover
 from ..export.tabular import ExportSerializationFormat
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_NON_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_PARTIAL_UPDATE_CAPABILITIES
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest, OperationTerminalReceipt, terminal_receipt_matches
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_payload, require_operation_profile
 from ..operations.public_period import PublicPeriod
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import AccessDenialCode
@@ -99,7 +100,7 @@ class LedgerExportRowProjection(BaseModel):
 
 
 class LedgerExportProjection(BaseModel):
-    """The complete existing human report, excluding artifact bytes."""
+    """The complete export report, excluding artifact bytes."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
@@ -128,7 +129,7 @@ class LedgerExportProjection(BaseModel):
 
 
 class LedgerExportExecutionResult(BaseModel):
-    """Canonical encrypted result custody for the human export report."""
+    """Canonical encrypted result custody for the export report."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     projection: LedgerExportProjection
@@ -137,12 +138,18 @@ class LedgerExportExecutionResult(BaseModel):
 class LedgerExportExecutor:
     """Render outside COMMIT and fence only file publication and canonical co-commit."""
 
-    def __init__(self, factory: LedgerActionPortsFactory) -> None:
+    def __init__(
+        self,
+        factory: LedgerActionPortsFactory,
+        *,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
+    ) -> None:
         """Retain the exact-profile canonical action-port factory."""
         self._factory = factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(self, request: OperationRequest[BaseModel], context: OperationExecutorContext) -> str:
-        """Publish the human export and settle each concrete write outcome."""
+        """Publish the export and settle each concrete write outcome."""
         payload = require_access_request_payload(
             request,
             definition_id=LEDGER_EXPORT_OPERATION_DEFINITION_ID,
@@ -150,6 +157,9 @@ class LedgerExportExecutor:
         )
         require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(request.definition_id)
+        actor = execution_actor_label(
+            self._execution_caller_reader, context, supplied=payload.actor or str(payload.profile_id)
+        )
         tracker = LedgerCommitAttemptTracker()
         artifact_confirmed = False
 
@@ -176,7 +186,7 @@ class LedgerExportExecutor:
                         export_format=payload.export_format,
                         include_inactive=payload.include_inactive,
                         period=payload.period.to_period() if payload.period else None,
-                        actor=payload.actor or str(payload.profile_id),
+                        actor=actor,
                         source_command="aeat app ledger export",
                     ),
                     transaction_repository=repository,
@@ -228,37 +238,37 @@ def project_ledger_export_result(result: BaseModel, receipt: OperationTerminalRe
 def resolve_ledger_export_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    """Require current human authority for the chosen local artifact destination."""
+    """Require the exact profile, the exported periods and both result disclosures."""
     payload = request.payload
     if (
         request.definition_id != LEDGER_EXPORT_OPERATION_DEFINITION_ID
         or type(payload) is not LedgerExportRequest
         or not isinstance(payload, LedgerExportRequest)
-        or context.frontend not in {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     periods = frozenset({payload.period.to_period()}) if payload.period is not None else frozenset[Period]()
-    return resolve_export_link_access(
-        request, context, profile_id=payload.profile_id, periods=periods, requires_human=True
-    )
+    return resolve_export_link_access(request, context, profile_id=payload.profile_id, periods=periods)
 
 
-def build_ledger_export_definition(factory: LedgerActionPortsFactory) -> OperationDefinition:
-    """Declare the existing human export, including partial and uncertain writes."""
+def build_ledger_export_definition(
+    factory: LedgerActionPortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
+) -> OperationDefinition:
+    """Declare the ledger export, including partial and uncertain writes."""
     return build_single_phase_definition(
         definition_id=LEDGER_EXPORT_OPERATION_DEFINITION_ID,
         request_type=LedgerExportRequest,
         subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerExportExecutionResult,
         executor_type=LedgerExportExecutor,
-        build=lambda: LedgerExportExecutor(factory),
+        build=lambda: LedgerExportExecutor(factory, execution_caller_reader=execution_caller_reader),
         capabilities=RECORDED_NON_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_PARTIAL_UPDATE_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
 
 def build_ledger_export_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
-    """Bind the strict human projection and current destination/category policy."""
+    """Bind the strict report projection and current destination/category policy."""
     return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
         public_result_type=LedgerExportProjection,

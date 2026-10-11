@@ -36,7 +36,7 @@ from ..operations.access_resolution import (
     OperationAccessContext,
     ResolvedOperationAccess,
     bind_operation_access_profile,
-    require_declared_frontend_and_action,
+    require_declared_action,
     require_period_independent_replay_or_authority,
 )
 from ..operations.capabilities import (
@@ -52,7 +52,6 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
@@ -71,7 +70,6 @@ from .capsule_archive import ProfileCapsuleArchiveReceipt
 PROFILE_ARCHIVE_EXPORT_OPERATION_DEFINITION_ID = "profile.archive.export"
 PROFILE_ARCHIVE_PUSH_OPERATION_DEFINITION_ID = "profile.archive.push"
 PROFILE_ARCHIVE_RECONCILE_OPERATION_DEFINITION_ID = "profile.archive.reconcile"
-_FRONTENDS = frozenset({OperationFrontendProjection.CLI})
 
 
 class ProfileArchiveExportRequest(BaseModel):
@@ -412,13 +410,12 @@ def resolve_profile_archive_operation_access(
         str(payload.profile_id)
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    frontends = _FRONTENDS
     access_profile = (
         HUMAN_RESUMABLE_COMMITTING_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
         if mutation
         else HUMAN_RESUMABLE_READ_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
     )
-    require_declared_frontend_and_action(context, frontends=frontends, actions=access_profile.actions)
+    require_declared_action(context, actions=access_profile.actions)
     require_period_independent_replay_or_authority(context, profile_id=payload.profile_id, definition_id=expected)
     return bind_operation_access_profile(
         context, access_profile, profile_id=payload.profile_id, definition_id=expected, periods=frozenset()
@@ -526,7 +523,6 @@ def build_profile_archive_operation_definitions(
             capabilities=_capabilities(
                 frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN})
             ),
-            permitted_frontends=_FRONTENDS,
         ),
         build_single_phase_definition(
             definition_id=PROFILE_ARCHIVE_PUSH_OPERATION_DEFINITION_ID,
@@ -540,7 +536,6 @@ def build_profile_archive_operation_definitions(
             capabilities=_capabilities(
                 frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN})
             ),
-            permitted_frontends=_FRONTENDS,
         ),
         build_single_phase_definition(
             definition_id=PROFILE_ARCHIVE_RECONCILE_OPERATION_DEFINITION_ID,
@@ -550,7 +545,6 @@ def build_profile_archive_operation_definitions(
             executor_type=ProfileArchiveReconcileExecutor,
             build=lambda: ProfileArchiveReconcileExecutor(factory),
             capabilities=_capabilities(frozenset(OperationEffect)),
-            permitted_frontends=_FRONTENDS,
         ),
     )
 

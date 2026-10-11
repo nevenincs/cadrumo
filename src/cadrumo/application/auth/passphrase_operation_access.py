@@ -14,10 +14,9 @@ from ..operations.access_resolution import (
     OperationAccessContext,
     ResolvedOperationAccess,
     bind_operation_access_profile,
-    require_declared_frontend_and_action,
+    require_declared_action,
 )
 from ..operations.models import OperationRequest, OperationTerminalReceipt
-from ..operations.registry import OperationFrontendProjection
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -26,7 +25,6 @@ from ..user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
 from .operation_definitions import PROFILE_ROTATION_OPERATION_DEFINITION_ID, ProfilePassphraseRotationOperationRequest
 
 PROFILE_ROTATION_RESULT_SCHEMA_ID = "auth.profile.passphrase-rotate.result"
-_ROTATION_FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
 
 
 class ProfilePassphraseRotationResultProjection(BaseModel):
@@ -51,7 +49,7 @@ def resolve_profile_rotation_access(
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     access_profile = HUMAN_SINGLE_RUN_COMMITTING_PERIOD_INDEPENDENT_DEFINITION_RESULT_PROFILE_VALUES_ACCESS
-    require_declared_frontend_and_action(context, frontends=_ROTATION_FRONTENDS, actions=access_profile.actions)
+    require_declared_action(context, actions=access_profile.actions)
     return bind_operation_access_profile(
         context, access_profile, profile_id=payload.profile_id, definition_id=request.definition_id, periods=frozenset()
     )

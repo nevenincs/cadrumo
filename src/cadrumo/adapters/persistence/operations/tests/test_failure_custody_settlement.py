@@ -45,7 +45,6 @@ from cadrumo.application.operations.operation_definition import OperationDefinit
 from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
 from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationRegistry,
@@ -172,7 +171,6 @@ def _supervisor(
         interaction_kinds=frozenset({OperationInteractionKind.INPUT}),
         capabilities=_capabilities(),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.TUI}),
         transient_financial_operand=_DECLARATION,
         public_error_detail=False,
     )

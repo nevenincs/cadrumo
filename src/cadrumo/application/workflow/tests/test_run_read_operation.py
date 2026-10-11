@@ -272,9 +272,6 @@ def test_workflow_reads_are_admitted_on_the_mcp_frontend_without_a_commit_door()
                 context=_context(registration, frontend=OperationFrontendProjection.MCP),
             )
 
-            definition = registry.lookup(request.definition_id)
-            assert OperationFrontendProjection.MCP in definition.permitted_frontends
-            assert OperationFrontendProjection.MCP in registration.contract.permitted_frontends
             assert resolved.request.frontend is OperationFrontendProjection.MCP
             assert resolved.request.profile_id == _PROFILE
             assert AccessAction.COMMIT not in resolved.policy.actions

@@ -39,7 +39,7 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.refusal_evidence import OperationRefusalEvidence
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
@@ -89,8 +89,6 @@ from .rule_results import (
 LEDGER_RULE_ADD_OPERATION_DEFINITION_ID = "ledger.rule.add"
 LEDGER_RULE_LIST_OPERATION_DEFINITION_ID = "ledger.rule.list"
 LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID = "ledger.rule.apply"
-
-_FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.MCP})
 
 
 class _TrackedRuleRepository:
@@ -516,7 +514,6 @@ def _definition[RequestT: BaseModel, ResultT: BaseModel, ExecutorT](
     executor_type: type[ExecutorT],
     build: Callable[[], ExecutorT],
     effects: frozenset[OperationEffect],
-    permitted_frontends: frozenset[OperationFrontendProjection],
     refusal_detail_codes: frozenset[str] = frozenset({LEDGER_RULE_VALIDATION_REFUSAL_CODE}),
 ) -> OperationDefinition:
     """Declare one exact-profile recorded rule operation."""
@@ -540,7 +537,6 @@ def _definition[RequestT: BaseModel, ResultT: BaseModel, ExecutorT](
             permitted_effects=effects,
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
-        permitted_frontends=permitted_frontends,
         refusal_detail_codes=refusal_detail_codes,
     )
 
@@ -558,7 +554,6 @@ def build_ledger_rule_add_definition(
         executor_type=LedgerRuleAddExecutor,
         build=lambda: LedgerRuleAddExecutor(repository_factory, execution_caller_reader=execution_caller_reader),
         effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
-        permitted_frontends=_FRONTENDS,
     )
 
 
@@ -573,7 +568,6 @@ def build_ledger_rule_list_definition(
         executor_type=LedgerRuleListExecutor,
         build=lambda: LedgerRuleListExecutor(repository_factory),
         effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
-        permitted_frontends=_FRONTENDS,
         refusal_detail_codes=frozenset(),
     )
 
@@ -596,7 +590,6 @@ def build_ledger_rule_apply_definition(
         effects=frozenset(
             {OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.PARTIAL, OperationEffect.UNKNOWN}
         ),
-        permitted_frontends=_FRONTENDS,
     )
 
 
@@ -647,17 +640,9 @@ def resolve_ledger_rule_list_access(
 def resolve_ledger_rule_apply_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    """Resolve whole-profile rule apply, requiring commit except for dry-run.
-
-    A run that reaffirms replaces classifications someone already set by
-    hand, and the earlier value is not kept. An MCP client is refused that run
-    before any record is read; its preview, and a run that only classifies
-    unprocessed rows, stay open to it.
-    """
+    """Resolve whole-profile rule apply, requiring commit except for dry-run."""
     if not isinstance(request.payload, LedgerRuleApplyRequest):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    if request.payload.reaffirm and not request.payload.dry_run and context.frontend is OperationFrontendProjection.MCP:
-        raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
     return _resolve_rule_access(
         request,
         context,

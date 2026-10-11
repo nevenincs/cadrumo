@@ -254,9 +254,6 @@ def test_registration_requires_profile_scoped_commit_and_secure_request_storage(
     assert access.policy.actions >= {AccessAction.SUBMIT, AccessAction.COMMIT}
     assert definition.capabilities.request_storage.value == "secure_reference"
     assert definition.capabilities.sensitive_input.value == "secure_reference"
-    assert definition.permitted_frontends == frozenset(
-        {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-    )
 
 
 class _Events:

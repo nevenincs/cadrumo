@@ -199,8 +199,6 @@ def _registered_contract_or_refusal(
         return AccessDenied(code=AccessDenialCode.OPERATION_UNAVAILABLE)
     if policy.requires_human and session.kind is not SessionKind.HUMAN:
         return AccessDenied(code=AccessDenialCode.HUMAN_AUTHORITY_REQUIRED)
-    if request.frontend not in contract.permitted_frontends:
-        return AccessDenied(code=AccessDenialCode.FRONTEND_DENIED)
     return contract
 
 
@@ -209,11 +207,11 @@ def _surface_refusal(
     policy: OperationAccessPolicy,
     leases: tuple[AccessSession, ...],
 ) -> AccessDenied | None:
-    """Apply the MCP surface each lease was admitted under, after the frontend list.
+    """Apply the MCP surface each lease was admitted under.
 
-    A surface narrows what the registry opens to the MCP frontend, so it is
-    refused as that frontend is. A lease that names none is not narrowed, and a
-    child is held to every surface its ancestors named.
+    A surface is what the person chose to serve one MCP connection, and the
+    registry opens every operation to every frontend. A lease that names none
+    is not narrowed, and a child is held to every surface its ancestors named.
     """
     for lease in leases:
         if lease.surface is not None and _surface_refuses(MCP_SURFACES[lease.surface], request, policy):

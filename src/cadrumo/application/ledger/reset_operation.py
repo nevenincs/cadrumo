@@ -19,11 +19,12 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.transactions.errors import TransactionValidationError
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -132,9 +133,15 @@ class LedgerResetOperationResult(BaseModel):
 class LedgerResetExecutor:
     """Invoke the canonical reset action under exact-profile commit custody."""
 
-    def __init__(self, ports_factory: LedgerActionPortsFactory) -> None:
+    def __init__(
+        self,
+        ports_factory: LedgerActionPortsFactory,
+        *,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
+    ) -> None:
         """Retain the exact-profile service composition capability."""
         self._ports_factory = ports_factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(self, request: OperationRequest[LedgerResetRequest], context: OperationExecutorContext) -> str:
         """Preview or reset one profile and publish its bounded encrypted receipt."""
@@ -144,6 +151,9 @@ class LedgerResetExecutor:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(LEDGER_RESET_PHASE)
+        actor = execution_actor_label(
+            self._execution_caller_reader, context, supplied=payload.actor or bucket_id or "operator"
+        )
 
         def reset(*, dry_run: bool) -> LedgerCatalogueResetReport:
             operation: PinnedAuthorityOperation = context.authority_operation
@@ -151,7 +161,7 @@ class LedgerResetExecutor:
             require_exact_ledger_action_ports(ports, bucket_id=bucket_id, operation=operation)
             return reset_ledger_catalogue(
                 bucket_id=bucket_id,
-                actor=payload.actor or bucket_id or "operator",
+                actor=actor,
                 reason=payload.reason,
                 dry_run=dry_run,
                 source_command="aeat app ledger reset",
@@ -201,7 +211,11 @@ class LedgerResetExecutor:
         return await await_cancellation_complete(commit(), task_name="ledger-reset-commit")
 
 
-def build_ledger_reset_definition(ports_factory: LedgerActionPortsFactory) -> OperationDefinition:
+def build_ledger_reset_definition(
+    ports_factory: LedgerActionPortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
+) -> OperationDefinition:
     """Declare durable exact-profile reset with a bounded secure receipt."""
     return build_single_phase_definition(
         definition_id=LEDGER_RESET_OPERATION_DEFINITION_ID,
@@ -209,9 +223,8 @@ def build_ledger_reset_definition(ports_factory: LedgerActionPortsFactory) -> Op
         subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerResetOperationResult,
         executor_type=LedgerResetExecutor,
-        build=lambda: LedgerResetExecutor(ports_factory),
+        build=lambda: LedgerResetExecutor(ports_factory, execution_caller_reader=execution_caller_reader),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
 
 

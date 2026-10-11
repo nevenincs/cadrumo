@@ -32,16 +32,12 @@ from ...domain.transactions.models import LedgerDatePartition, Transaction, Tran
 from ..operations.access_port import OperationAccessResolver
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
-from ..operations.execution_actor import (
-    OperationExecutionCallerReader,
-    execution_actor_label,
-    execution_admitted_on_mcp,
-)
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.refusal_evidence import OperationRefusalEvidence
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
@@ -54,7 +50,6 @@ from .actions_lifecycle import (
     restore_manual_transaction,
     stash_manual_transaction,
 )
-from .agent_row_guard import require_agent_may_change_lifecycle, require_agent_may_set_aside
 from .id_resolution import resolve_transaction_id
 from .lifecycle_contracts import (
     LEDGER_ARCHIVE_OPERATION_DEFINITION_ID,
@@ -234,16 +229,6 @@ class _LedgerLifecycleExecutor:
                 project_lifecycle_validation_from_error(error, transaction_id=None),
             )
             return await _publish_refusal(context, refused)
-        if execution_admitted_on_mcp(self._execution_caller_reader, context):
-            # Each of these moves a row into or out of the calculations, which an agent
-            # may run. Refused here, before any effect is declared.
-            stored = catalogue.transactions[transaction_id]
-            if self._operation_id == LEDGER_EXCLUDE_OPERATION_DEFINITION_ID:
-                require_agent_may_set_aside(stored)
-            else:
-                require_agent_may_change_lifecycle(
-                    stored, restores=self._operation_id == LEDGER_RESTORE_OPERATION_DEFINITION_ID
-                )
 
         prepared = _PreparedLifecycleMutation(
             profile_id=payload.profile_id,
@@ -423,7 +408,6 @@ def _build_definition(
         executor_type=executor_type,
         build=lambda: executor_type(ports_factory, execution_caller_reader=execution_caller_reader),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.MCP}),
         refusal_detail_codes=frozenset({LEDGER_LIFECYCLE_VALIDATION_REFUSAL_CODE}),
     )
 

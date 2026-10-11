@@ -778,23 +778,8 @@ def test_global_unlock_requires_selected_grant_reactivation(scenario: Scenario) 
     assert selected.grant.scope == scenario.grant.scope
 
 
-def test_frontend_and_registered_result_projection_are_enforced(scenario: Scenario) -> None:
+def test_the_registered_result_projection_is_enforced_alike_on_every_frontend(scenario: Scenario) -> None:
     original = scenario.registry.lookup(scenario.request.definition_id)
-    definition = changed(original, permitted_frontends=frozenset({OperationFrontendProjection.CLI}))
-    registry = OperationRegistry(
-        definitions=(definition,), public_registrations=build_user_profile_operation_registrations((definition,))
-    )
-    subject = replace(
-        scenario,
-        registry=registry,
-        policy=changed(
-            scenario.policy,
-            definition_contract_digest=registry.lookup_public_contract(
-                definition.definition_id
-            ).definition_contract_digest,
-        ),
-    )
-    assert_denied(subject, AccessDenialCode.FRONTEND_DENIED)
     # Enroll the real executor's existing result model in an isolated registry to
     # exercise the generic result door without claiming this production exposure.
     assert original.result_type is not None
@@ -828,11 +813,13 @@ def test_frontend_and_registered_result_projection_are_enforced(scenario: Scenar
         grant=changed(scenario.grant, scope=scope),
         session=changed(scenario.session, scope=scope),
     )
-    assert isinstance(subject.evaluate(), AccessAllowed)
-    assert_denied(
-        replace(subject, policy=changed(subject.policy, transaction_authority_required=True)),
-        AccessDenialCode.TRANSACTION_AUTHORITY_REQUIRED,
-    )
+    for frontend in OperationFrontendProjection:
+        on_frontend = replace(subject, request=changed(subject.request, frontend=frontend))
+        assert isinstance(on_frontend.evaluate(), AccessAllowed), frontend
+        assert_denied(
+            replace(on_frontend, policy=changed(on_frontend.policy, transaction_authority_required=True)),
+            AccessDenialCode.TRANSACTION_AUTHORITY_REQUIRED,
+        )
     assert_denied(
         replace(subject, request=changed(subject.request, action=AccessAction.RESPOND)),
         AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED,

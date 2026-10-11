@@ -354,7 +354,6 @@ def test_supervisor_records_filed_list_and_discover_for_exact_mcp_profile(tmp_pa
         )
 
         for definition in (list_definition, discover_definition):
-            assert OperationFrontendProjection.MCP in definition.permitted_frontends
             assert definition.capabilities.owned_resources == frozenset({OperationOwnedResource.PROCESS})
 
         durable_root = tmp_path / "operations"

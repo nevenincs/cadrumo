@@ -10,7 +10,7 @@ from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_PARTIAL_U
 from ..operations.execution_actor import OperationExecutionCallerReader
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
@@ -37,7 +37,6 @@ def _definition(
     definition_id: str,
     factory: InvoiceIntakePortsFactory,
     *,
-    permitted_frontends: frozenset[OperationFrontendProjection],
     execution_caller_reader: OperationExecutionCallerReader | None = None,
 ) -> OperationDefinition:
     request_type = INVOICE_INTAKE_REQUEST_TYPES[definition_id]
@@ -49,7 +48,6 @@ def _definition(
         executor_type=InvoiceIntakeExecutor,
         build=lambda: InvoiceIntakeExecutor(factory, execution_caller_reader=execution_caller_reader),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_PARTIAL_UPDATE_CAPABILITIES,
-        permitted_frontends=permitted_frontends,
         refusal_detail_codes=frozenset({INVOICE_WIZARD_VALIDATION_REFUSAL_CODE})
         if definition_id == INVOICE_WIZARD_OPERATION_DEFINITION_ID
         else frozenset(),
@@ -61,7 +59,6 @@ def build_invoice_import_definition(factory: InvoiceIntakePortsFactory) -> Opera
     return _definition(
         INVOICE_IMPORT_OPERATION_DEFINITION_ID,
         factory,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
 
 
@@ -80,7 +77,6 @@ def build_invoice_wizard_definition(
     return _definition(
         INVOICE_WIZARD_OPERATION_DEFINITION_ID,
         factory,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.MCP}),
         execution_caller_reader=execution_caller_reader,
     )
 

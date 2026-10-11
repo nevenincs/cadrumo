@@ -190,11 +190,6 @@ def test_registration_requires_human_and_exact_profile(
         published_authority=Availability.AVAILABLE,
         authority_operation=authority_operation,
     )
-    if frontend is OperationFrontendProjection.MCP:
-        # The native contract door enforces frontend admission before invoking
-        # this policy resolver; automation must remain excluded there.
-        assert frontend not in registration.contract.permitted_frontends
-        return
     access = resolve_operation_access(registry=registry, request=request, context=context)
     assert access.policy.requires_human and access.policy.requires_all_periods
     assert {item.category for item in access.policy.disclosures} == {
@@ -202,9 +197,6 @@ def test_registration_requires_human_and_exact_profile(
         DisclosureCategory.TAX_VALUES,
     }
     assert AccessAction.COMMIT in access.policy.actions
-    assert definition.permitted_frontends == frozenset(
-        {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}
-    )
 
 
 def test_optional_filing_selection_preserves_older_request_wire() -> None:

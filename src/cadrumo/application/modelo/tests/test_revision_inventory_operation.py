@@ -93,9 +93,6 @@ def test_revision_discovery_is_admitted_on_the_mcp_frontend_without_a_commit_doo
 ) -> None:
     unit = _unit()
     registry, registration = _registry(unit, authority_operation)
-    definition = registry.lookup(MODELO_WORK_REVISIONS_OPERATION_DEFINITION_ID)
-    assert OperationFrontendProjection.MCP in definition.permitted_frontends
-    assert OperationFrontendProjection.MCP in registration.contract.permitted_frontends
 
     whole_profile = resolve_operation_access(
         registry=registry,

@@ -140,10 +140,9 @@ class LedgerRuleApplyRequest(BaseModel):
     """Private exact-profile rule apply or non-mutating preview request.
 
     ``reaffirm`` widens the run to rows already classified by hand, replacing
-    what they carry; a run that does so is not offered to an MCP client, which
-    may still preview it with ``dry_run``. ``actor`` is recorded as sent for a
-    person's session. An agent's session is recorded under its own session
-    label, whatever the request carries.
+    what they carry. ``actor`` is recorded as sent for a person's session. An
+    agent's session is recorded under its own session label, whatever the
+    request carries.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG

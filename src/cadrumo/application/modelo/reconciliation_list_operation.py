@@ -23,13 +23,12 @@ from ..operations.access_resolution import (
     bind_replayed_period_independent_access,
 )
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
-from ..operations.execution_actor import OperationExecutionCallerReader, execution_admitted_on_mcp
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import (
@@ -44,7 +43,6 @@ from .reconciliation_records import (
     ModeloReconciliationVerdict,
     list_modelo_reconciliations,
 )
-from .reconciliation_source_reference import agent_source_reference
 from .verification_report_public_facts import ModeloVerificationRegistrySnapshotProjection
 
 MODELO_RECONCILIATION_LIST_OPERATION_DEFINITION_ID = "modelo.reconcile.list"
@@ -79,13 +77,7 @@ class ModeloReconciliationAdvisoryProjection(BaseModel):
 
 
 class ModeloReconciliationListEntryProjection(BaseModel):
-    """Saved history and grounded differences without re-reading external evidence.
-
-    ``source_path`` is the reference the earlier import recorded: the path the
-    person typed, or a handle on evidence in the profile's store. An agent's
-    execution seals a typed path to its file name and sets
-    ``source_directory_withheld``.
-    """
+    """Saved history and grounded differences without re-reading external evidence."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -103,25 +95,12 @@ class ModeloReconciliationListEntryProjection(BaseModel):
     advisories: tuple[ModeloReconciliationAdvisoryProjection, ...] = ()
     actor: ModeloActorLabel
     reconciled_at: datetime
-    source_directory_withheld: bool = False
 
     @field_validator("reconciled_at")
     @classmethod
     @pydantic_validation_boundary
     def _reconciled_at_is_utc(cls, value: datetime) -> datetime:
         return validate_utc_aware(value)
-
-    @model_validator(mode="after")
-    def _withheld_directory_leaves_a_name(self) -> Self:
-        """Refuse a sealed path that still holds a directory."""
-        if self.source_directory_withheld and ("/" in self.source_path or "\\" in self.source_path):
-            raise ValueError("a withheld source directory leaves a file name alone")
-        return self
-
-    def sealed_for_agent(self) -> ModeloReconciliationListEntryProjection:
-        """Return this entry with the directory of its evidence file withheld, as an agent receives it."""
-        source_path, withheld = agent_source_reference(self.source_path)
-        return self.model_copy(update={"source_path": source_path, "source_directory_withheld": withheld})
 
     @classmethod
     def from_history_entry(cls, entry: ModeloReconciliationHistoryEntry) -> ModeloReconciliationListEntryProjection:
@@ -186,10 +165,6 @@ def _require_reconciliation_list_filter(projection: ModeloReconciliationListProj
 class ModeloReconciliationListExecutor:
     """Read canonical reconciliation records and retain their bounded projection."""
 
-    def __init__(self, *, execution_caller_reader: OperationExecutionCallerReader | None = None) -> None:
-        """Retain the session host's reader of the admitting session, where one composed it."""
-        self._execution_caller_reader = execution_caller_reader
-
     async def execute(
         self,
         request: OperationRequest[ModeloReconciliationListRequest],
@@ -202,7 +177,6 @@ class ModeloReconciliationListExecutor:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(MODELO_RECONCILIATION_LIST_OPERATION_DEFINITION_ID)
-        for_agent = execution_admitted_on_mcp(self._execution_caller_reader, context)
 
         def read() -> ModeloReconciliationListProjection:
             entries = list_modelo_reconciliations(
@@ -212,12 +186,13 @@ class ModeloReconciliationListExecutor:
             )
             if any(len(entry.source_path) > MAX_MODELO_RECONCILIATION_SOURCE_PATH_LENGTH for entry in entries):
                 raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-            rows = tuple(ModeloReconciliationListEntryProjection.from_history_entry(entry) for entry in entries)
             projection = ModeloReconciliationListProjection(
                 profile_id=payload.profile_id,
                 work_unit_id=payload.work_unit_id,
-                reconciliation_count=len(rows),
-                reconciliations=tuple(row.sealed_for_agent() for row in rows) if for_agent else rows,
+                reconciliation_count=len(entries),
+                reconciliations=tuple(
+                    ModeloReconciliationListEntryProjection.from_history_entry(entry) for entry in entries
+                ),
             )
             if len(canonical_json_bytes(projection.model_dump(mode="json"))) > _RESULT_DOCUMENT_MAX_BYTES:
                 raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
@@ -226,23 +201,16 @@ class ModeloReconciliationListExecutor:
         return await capture_read_result(context, read, task_name="modelo-reconciliation-list")
 
 
-def build_modelo_reconciliation_list_definition(
-    *, execution_caller_reader: OperationExecutionCallerReader | None = None
-) -> OperationDefinition:
-    """Declare a credential-free, recorded, nonmutating history read.
-
-    ``execution_caller_reader`` names the frontend that admitted an execution,
-    so an agent's listing carries file names and not the directories typed.
-    """
+def build_modelo_reconciliation_list_definition() -> OperationDefinition:
+    """Declare a credential-free, recorded, nonmutating history read."""
     return build_single_phase_definition(
         definition_id=MODELO_RECONCILIATION_LIST_OPERATION_DEFINITION_ID,
         request_type=ModeloReconciliationListRequest,
         subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloReconciliationListProjection,
         executor_type=ModeloReconciliationListExecutor,
-        build=lambda: ModeloReconciliationListExecutor(execution_caller_reader=execution_caller_reader),
+        build=ModeloReconciliationListExecutor,
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

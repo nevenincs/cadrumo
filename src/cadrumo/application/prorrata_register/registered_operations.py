@@ -11,8 +11,6 @@ from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CA
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationResultProjector,
 )
@@ -38,9 +36,6 @@ from .result_projections import (
     project_prorrata_mutation_result as _project_prorrata_mutation_result,
 )
 
-_ELECTION_FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
-"""A prorrata election or its revocation is the taxpayer's own choice, made on a frontend a person operates."""
-
 
 def _shape_access(
     request: OperationRequest[BaseModel],
@@ -57,8 +52,6 @@ def _shape_access(
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     if not isinstance(payload, _requests.ProrrataProfileRequest):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    if context.frontend not in context.contract.permitted_frontends:
-        raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
     resolved = resolve_ledger_read_access(request, context, profile_id=payload.profile_id, periods=frozenset())
     if not mutation:
         return resolved
@@ -83,7 +76,6 @@ def _definition(
     repository_factory: ProrrataRegisterRepositoryFactory,
     *,
     calculation_action_ports_factory: CalculationActionPortsFactory | None = None,
-    permitted_frontends: frozenset[OperationFrontendProjection] = ALL_OPERATION_FRONTENDS,
 ) -> OperationDefinition:
     shape = _result_contracts.prorrata_operation_contract(definition_id)
     if shape is None:
@@ -102,7 +94,6 @@ def _definition(
             calculation_action_ports_factory=calculation_action_ports_factory,
         ),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        permitted_frontends=permitted_frontends,
         refusal_detail_codes=shape.refusal_codes,
     )
 
@@ -153,7 +144,6 @@ def build_prorrata_elect_especial_definition(
         _requests.PRORRATA_ELECT_ESPECIAL_OPERATION_DEFINITION_ID,
         _requests.ProrrataElectEspecialRequest,
         repository_factory,
-        permitted_frontends=_ELECTION_FRONTENDS,
     )
 
 
@@ -165,7 +155,6 @@ def build_prorrata_elect_general_definition(
         _requests.PRORRATA_ELECT_GENERAL_OPERATION_DEFINITION_ID,
         _requests.ProrrataElectGeneralRequest,
         repository_factory,
-        permitted_frontends=_ELECTION_FRONTENDS,
     )
 
 
@@ -177,7 +166,6 @@ def build_prorrata_revoke_especial_definition(
         _requests.PRORRATA_REVOKE_ESPECIAL_OPERATION_DEFINITION_ID,
         _requests.ProrrataRevokeEspecialRequest,
         repository_factory,
-        permitted_frontends=_ELECTION_FRONTENDS,
     )
 
 

@@ -103,9 +103,6 @@ def test_revision_snapshot_is_admitted_on_the_mcp_frontend_without_a_commit_door
             authority_operation=authority_operation,
         ),
     )
-
-    assert OperationFrontendProjection.MCP in definition.permitted_frontends
-    assert OperationFrontendProjection.MCP in registration.contract.permitted_frontends
     assert resolved.request.frontend is OperationFrontendProjection.MCP
     assert resolved.request.periods == frozenset({_PERIOD})
     assert AccessAction.COMMIT not in resolved.policy.actions

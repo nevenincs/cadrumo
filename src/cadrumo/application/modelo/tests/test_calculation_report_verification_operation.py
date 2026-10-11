@@ -191,9 +191,6 @@ def test_registration_requires_all_periods_and_excludes_commit_without_reads(tmp
     assert definition.capabilities.permitted_effects == frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
     assert definition.capabilities.request_storage is OperationRequestStoragePolicy.SECURE_REFERENCE
     assert definition.capabilities.sensitive_input is OperationSensitiveInputPolicy.SECURE_REFERENCE
-    assert definition.permitted_frontends == frozenset(
-        {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}
-    )
 
 
 def test_executor_uses_canonical_verifier_and_same_source_bytes(tmp_path: Path) -> None:

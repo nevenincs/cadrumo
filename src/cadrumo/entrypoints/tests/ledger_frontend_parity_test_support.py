@@ -1,4 +1,4 @@
-"""Synthetic ledger rows and one driver for the suites about what an agent may do to the person's rows.
+"""Synthetic ledger rows and one driver for the suites that run one ledger act on each frontend.
 
 Every row is stored through the ledger's own actions under a person's actor
 label, so what a row records about who classified it and who linked its
@@ -227,7 +227,7 @@ def stored_events(profile_id: UUID) -> dict[str, BucketEvent]:
 def stored_state(
     profile_id: UUID, operation: PinnedAuthorityOperation
 ) -> tuple[dict[str, Transaction], dict[str, BucketEvent]]:
-    """Every stored row and every stored event: what a refused act must leave exactly as it was."""
+    """Every stored row and every stored event: what an act that does not take effect leaves as it was."""
     ports = compose_ledger_action_ports(bucket_id=str(profile_id), operation=operation)
     return dict(ports.transaction_repository.load().transactions), stored_events(profile_id)
 
@@ -279,17 +279,6 @@ def succeeded(observed: OperationObservationSuccessV1) -> bool:
     return (
         terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
         and terminal.effect is OperationEffect.UPDATED
-    )
-
-
-def refused_for_the_frontend(observed: OperationObservationSuccessV1) -> bool:
-    """The refusal an agent's execution gets: a profile-access refusal with no effect and no result."""
-    terminal = observed.projection
-    return (
-        terminal.terminal_condition is OperationTerminalCondition.REFUSED
-        and terminal.refusal_ref == "REFUSED_PROFILE_ACCESS"
-        and terminal.effect is OperationEffect.NONE
-        and terminal.result_ref is None
     )
 
 

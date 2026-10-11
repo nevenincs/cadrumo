@@ -16,7 +16,7 @@ from ..operations.access_resolution import (
     ResolvedOperationAccess,
     bind_operation_access,
     operation_disclosures,
-    require_declared_frontend_and_action,
+    require_declared_action,
 )
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_STORED_READ_CAPABILITIES
 from ..operations.models import (
@@ -29,7 +29,6 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationSchemaBindingV1,
 )
@@ -90,7 +89,7 @@ def resolve_recovery_status_access(
 ) -> ResolvedOperationAccess:
     """Require explicit operation and disclosure permission for the exact profile."""
     payload = _validated_recovery_request(request, context)
-    require_declared_frontend_and_action(context, frontends=ALL_OPERATION_FRONTENDS, actions=_ACTIONS)
+    require_declared_action(context, actions=_ACTIONS)
     disclosures = operation_disclosures(
         context,
         observed_by=frozenset({AccessAction.OBSERVE}),
@@ -154,7 +153,6 @@ def build_recovery_status_definition() -> OperationDefinition:
         executor_type=RecoveryStatusExecutor,
         build=RecoveryStatusExecutor,
         capabilities=RECORDED_IDEMPOTENT_SECURE_STORED_READ_CAPABILITIES,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

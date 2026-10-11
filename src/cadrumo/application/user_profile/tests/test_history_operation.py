@@ -112,7 +112,6 @@ def _access_request() -> OperationRequest[BaseModel]:
 def test_history_contract_requires_all_periods_and_exact_result_destination() -> None:
     registry = _registry()
     contract = registry.lookup_public_contract(PROFILE_HISTORY_OPERATION_DEFINITION_ID)
-    assert contract.permitted_frontends == frozenset({OperationFrontendProjection.CLI})
     assert contract.result_schema is not None
     destination = uuid4()
     base = OperationAccessContext(

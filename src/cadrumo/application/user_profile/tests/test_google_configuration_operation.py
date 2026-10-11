@@ -227,11 +227,6 @@ def test_all_public_contracts_compile_and_require_dual_whole_profile_access(
             DisclosureCategory.PROFILE_VALUES,
             DisclosureCategory.TAX_VALUES,
         }
-        assert definition.permitted_frontends == (
-            frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.MCP})
-            if stored_record_read
-            else frozenset({OperationFrontendProjection.CLI})
-        )
         assert definition.refusal_detail_codes == frozenset({GOOGLE_CONFIGURATION_REFUSAL_CODE})
         # No Google configuration leaf accepts operator-supplied secret input.
         assert definition.ephemeral_secret is None

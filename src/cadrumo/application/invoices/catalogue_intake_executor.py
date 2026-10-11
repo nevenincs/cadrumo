@@ -181,6 +181,7 @@ class _InvoiceIntakeRun:
         )
         return InvoiceImportProjection(
             profile_id=self.payload.profile_id,
+            source_sha256=source.source_sha256,
             rows=outcome.rows,
             created=outcome.created,
             skipped_duplicate=outcome.skipped_duplicate,

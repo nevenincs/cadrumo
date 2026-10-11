@@ -105,7 +105,7 @@ class ModeloEditCompatibilityTupleV1(EditModel):
 
     workspace_contract_version: Literal[1] = 1
     edit_contract_version: Literal[1] = 1
-    operation_manifest_version: Literal[3] = 3
+    operation_manifest_version: Literal[4] = 4
     contract_set_digest: ContentDigest
     operation_definition_id: OperationDefinitionId
     definition_contract_digest: ContentDigest

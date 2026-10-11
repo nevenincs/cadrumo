@@ -9,7 +9,7 @@ from ....core.models import STRICT_FROZEN_CONFIG
 from ..capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operation_definition import OperationDefinition, build_single_phase_definition
 from ..owner import OperationExecutorContext
-from ..registry import OperationFrontendProjection, OperationReconciliationPolicy
+from ..registry import OperationReconciliationPolicy
 from ..subject_reference import OperationSubjectReferenceV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -44,7 +44,6 @@ def _definition(*, executor: object | None = None, public_error_detail: bool = F
         executor_type=_Executor,
         build=(lambda: executor) if executor is not None else _Executor,
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.TUI}),
         public_error_detail=public_error_detail,
     )
 
@@ -57,7 +56,6 @@ def test_definition_declares_its_own_id_as_the_sole_phase() -> None:
     assert definition.interaction_kinds == frozenset()
     assert definition.reconciliation_policy is OperationReconciliationPolicy.INTERRUPT
     assert definition.capabilities is RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
-    assert definition.permitted_frontends == frozenset({OperationFrontendProjection.TUI})
     assert definition.request_type is _Request
     assert definition.result_type is _Result
 
@@ -85,6 +83,5 @@ def test_definition_refuses_an_unregistered_error_detail_declaration_without_a_r
             executor_type=_Executor,
             build=_Executor,
             capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-            permitted_frontends=frozenset({OperationFrontendProjection.TUI}),
             refusal_detail_codes=frozenset({"REFUSED_TEST"}),
         )

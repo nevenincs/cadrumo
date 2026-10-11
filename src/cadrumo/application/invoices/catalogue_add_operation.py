@@ -41,7 +41,7 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.refusal_evidence import OperationRefusalEvidence
-from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
@@ -362,7 +362,6 @@ def build_invoice_add_definition(
         executor_type=InvoiceAddExecutor,
         build=lambda: InvoiceAddExecutor(factory, execution_caller_reader=execution_caller_reader),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
         refusal_detail_codes=frozenset({INVOICE_ADD_VALIDATION_REFUSAL_CODE}),
     )
 

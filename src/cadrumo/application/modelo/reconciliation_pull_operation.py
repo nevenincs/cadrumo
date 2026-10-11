@@ -25,11 +25,7 @@ from ..live.justificante import (
 )
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_NON_IDEMPOTENT_JOURNALED_UPDATE_CAPABILITIES
-from ..operations.execution_actor import (
-    OperationExecutionCallerReader,
-    execution_actor_label,
-    execution_admitted_on_mcp,
-)
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import (
     CredentialFreeOperationRequest,
     OperationRequest,
@@ -40,7 +36,6 @@ from ..operations.operation_definition import OperationDefinition, OperationExec
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
@@ -58,7 +53,6 @@ from .reconciliation import (
 )
 from .reconciliation_import_operation import ModeloReconciliationImportProjection
 from .reconciliation_records import ModeloReconciliationEvidenceKind
-from .reconciliation_source_reference import SECURE_OBJECT_REFERENCE_PREFIX
 from .work_addressing import ModeloWorkAddressNotFoundError
 from .work_unit_repository import work_unit_catalogue_repository
 
@@ -110,8 +104,8 @@ def reconciliation_pull_source_ref(
     ):
         raise ValueError("reconciliation evidence reference is inconsistent with its source kind")
     if source_kind is ModeloReconciliationEvidenceKind.JUSTIFICANTE:
-        return f"{SECURE_OBJECT_REFERENCE_PREFIX}{JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE}/{snapshot_id}"
-    return f"{SECURE_OBJECT_REFERENCE_PREFIX}cadrumo.outbound.aeat.sede.filed_declaration.observations/{observation_id}"
+        return f"secure-object://{JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE}/{snapshot_id}"
+    return f"secure-object://cadrumo.outbound.aeat.sede.filed_declaration.observations/{observation_id}"
 
 
 class ModeloReconciliationPullOperationReport(BaseModel):
@@ -173,7 +167,6 @@ class ModeloReconciliationPullExecutor:
 
         await context.events.phase(_PHASES[0])
         actor = execution_actor_label(self._execution_caller_reader, context, supplied=payload.actor)
-        for_agent = execution_admitted_on_mcp(self._execution_caller_reader, context)
 
         def prepare() -> PreparedModeloReconciliation:
             if require_active_bucket_id() != profile_id:
@@ -265,7 +258,7 @@ class ModeloReconciliationPullExecutor:
 
         await context.events.phase(_PHASES[2])
         result = ModeloReconciliationPullOperationReport(
-            projection=projection.sealed_for_agent() if for_agent else projection,
+            projection=projection,
             snapshot_id=payload.snapshot_id,
             observation_id=payload.observation_id,
             source_kind=payload.source_kind,
@@ -298,7 +291,6 @@ def build_modelo_reconciliation_pull_definition(
         interaction_kinds=frozenset(),
         capabilities=RECORDED_NON_IDEMPOTENT_JOURNALED_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

@@ -47,7 +47,7 @@ from ..operations.access_resolution import (
     OperationAccessProfile,
     ResolvedOperationAccess,
     bind_operation_access_profile,
-    require_declared_frontend_and_action,
+    require_declared_action,
     require_period_independent_replay_or_authority,
 )
 from ..operations.capabilities import (
@@ -62,7 +62,9 @@ from ..operations.profile_guard import (
     require_access_request_profile_payload,
     require_operation_profile,
 )
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import (
+    OperationPublicDefinitionRegistrationV1,
+)
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
@@ -73,8 +75,6 @@ from .audit_operation_ports import ModeloAuditOperationPorts, ModeloAuditOperati
 MODELO_AUDIT_READ_OPERATION_DEFINITION_ID = "modelo.audit.read"
 MODELO_AUDIT_QUERY_OPERATION_DEFINITION_ID = "modelo.audit.query"
 MODELO_AUDIT_EXPORT_OPERATION_DEFINITION_ID = "modelo.audit.export"
-_HUMAN_FRONTENDS = frozenset({OperationFrontendProjection.CLI})
-_QUERY_FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.MCP})
 type ModeloAuditReadKind = Literal["view", "check"]
 
 
@@ -465,8 +465,8 @@ def resolve_modelo_audit_operation_access(
         payload_type=ModeloAuditExportRequest if recording else ModeloAuditReadRequest,
         access_profile_id=context.profile_id,
     )
-    frontends, access_profile = _audit_access_policy(recording=recording, query=query)
-    require_declared_frontend_and_action(context, frontends=frontends, actions=access_profile.actions)
+    access_profile = _audit_access_policy(recording=recording, query=query)
+    require_declared_action(context, actions=access_profile.actions)
     require_period_independent_replay_or_authority(context, profile_id=payload.profile_id, definition_id=expected)
     return bind_operation_access_profile(
         context, access_profile, profile_id=payload.profile_id, definition_id=expected, periods=frozenset()
@@ -486,20 +486,12 @@ def _audit_access_mode(expected: str) -> tuple[bool, bool]:
     )
 
 
-def _audit_access_policy(
-    *,
-    recording: bool,
-    query: bool,
-) -> tuple[frozenset[OperationFrontendProjection], OperationAccessProfile]:
-    frontends = _HUMAN_FRONTENDS if recording else _QUERY_FRONTENDS if query else _HUMAN_FRONTENDS
-    access_profile = (
-        HUMAN_RESUMABLE_COMMITTING_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
-        if recording
-        else RESUMABLE_READ_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
-        if query
-        else HUMAN_RESUMABLE_READ_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
-    )
-    return frontends, access_profile
+def _audit_access_policy(*, recording: bool, query: bool) -> OperationAccessProfile:
+    if recording:
+        return HUMAN_RESUMABLE_COMMITTING_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
+    if query:
+        return RESUMABLE_READ_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
+    return HUMAN_RESUMABLE_READ_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
 
 
 def project_modelo_audit_operation_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
@@ -544,11 +536,10 @@ def build_modelo_audit_operation_definitions(
             executor_type=ModeloAuditReadExecutor,
             build=lambda query=query: ModeloAuditReadExecutor(factory, query=query),
             capabilities=RECORDED_IDEMPOTENT_SECURE_STORED_READ_CAPABILITIES,
-            permitted_frontends=frontends,
         )
-        for definition_id, result_type, query, frontends in (
-            (MODELO_AUDIT_READ_OPERATION_DEFINITION_ID, ModeloAuditReadExecutionResult, False, _HUMAN_FRONTENDS),
-            (MODELO_AUDIT_QUERY_OPERATION_DEFINITION_ID, ModeloAuditQueryExecutionResult, True, _QUERY_FRONTENDS),
+        for definition_id, result_type, query in (
+            (MODELO_AUDIT_READ_OPERATION_DEFINITION_ID, ModeloAuditReadExecutionResult, False),
+            (MODELO_AUDIT_QUERY_OPERATION_DEFINITION_ID, ModeloAuditQueryExecutionResult, True),
         )
     )
     recording = build_single_phase_definition(
@@ -559,7 +550,6 @@ def build_modelo_audit_operation_definitions(
         executor_type=ModeloAuditExportExecutor,
         build=lambda: ModeloAuditExportExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        permitted_frontends=_HUMAN_FRONTENDS,
     )
     return (*reads, recording)
 

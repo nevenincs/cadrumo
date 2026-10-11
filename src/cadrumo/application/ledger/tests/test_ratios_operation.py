@@ -173,9 +173,6 @@ def test_every_ratio_read_is_admitted_on_the_mcp_frontend_without_a_commit_door(
             published_authority=Availability.AVAILABLE,
         ),
     )
-
-    assert OperationFrontendProjection.MCP in registry.lookup(definition_id).permitted_frontends
-    assert OperationFrontendProjection.MCP in registration.contract.permitted_frontends
     assert resolved.request.frontend is OperationFrontendProjection.MCP
     assert resolved.request.profile_id == _PROFILE
     assert resolved.request.period_independent is True
@@ -209,9 +206,6 @@ def test_ratio_writes_are_admitted_on_the_mcp_and_cli_frontends_with_a_commit_do
         ),
     )
 
-    expected = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.MCP})
-    assert registry.lookup(definition_id).permitted_frontends == expected
-    assert registration.contract.permitted_frontends == expected
     assert resolved.request.frontend is frontend
     assert resolved.request.period_independent is True
     assert AccessAction.COMMIT in resolved.policy.actions

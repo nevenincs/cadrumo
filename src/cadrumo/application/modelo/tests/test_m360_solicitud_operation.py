@@ -43,8 +43,7 @@ from ...operations.access_resolution import (
 )
 from ...operations.models import OperationRequest
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
-from ...user_profile.access_errors import ProfileAccessRefusedError
+from ...user_profile.access_contracts import AccessAction, Availability
 from ..m360_solicitud_operation import (
     Modelo360RepresentanteAccountInput,
     Modelo360SolicitudAction,
@@ -311,35 +310,19 @@ def test_the_access_cases_cover_every_declared_action() -> None:
     assert {*_CHANGES, "list"} == set(get_args(Modelo360SolicitudAction))
 
 
-@pytest.mark.parametrize("frontend", [OperationFrontendProjection.CLI, OperationFrontendProjection.TUI])
-@pytest.mark.parametrize("action", [*_CHANGES, "list"])
-def test_a_persons_frontend_is_admitted_to_every_action_and_commits_only_a_change(
-    action: str, frontend: OperationFrontendProjection
-) -> None:
-    resolved = _resolve(action, frontend)
-
-    assert resolved.request.frontend is frontend
-    assert resolved.request.profile_id == _PROFILE
-    assert (AccessAction.COMMIT in resolved.policy.actions) is (action in _CHANGES)
-
-
+@pytest.mark.parametrize("frontend", sorted(OperationFrontendProjection))
 @pytest.mark.parametrize(
     "access",
-    [AccessAction.SUBMIT, AccessAction.START, AccessAction.COMMIT, AccessAction.OBSERVE, AccessAction.RESULT],
+    [AccessAction.SUBMIT, AccessAction.START, AccessAction.OBSERVE, AccessAction.RESULT],
 )
-@pytest.mark.parametrize("action", _CHANGES)
-def test_an_mcp_client_is_refused_every_change_at_every_access(action: str, access: AccessAction) -> None:
-    assert _resolve(action, OperationFrontendProjection.CLI, access).request.action is access
+@pytest.mark.parametrize("action", [*_CHANGES, "list"])
+def test_every_frontend_is_admitted_to_every_action_under_one_policy_and_commits_only_a_change(
+    action: str, access: AccessAction, frontend: OperationFrontendProjection
+) -> None:
+    resolved = _resolve(action, frontend, access)
+    on_cli = _resolve(action, OperationFrontendProjection.CLI, access)
 
-    with pytest.raises(ProfileAccessRefusedError) as refused:
-        _resolve(action, OperationFrontendProjection.MCP, access)
-
-    assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED
-
-
-def test_an_mcp_client_keeps_the_listing_under_the_policy_a_person_gets() -> None:
-    resolved = _resolve("list", OperationFrontendProjection.MCP)
-
-    assert resolved.request.frontend is OperationFrontendProjection.MCP
-    assert resolved.policy == _resolve("list", OperationFrontendProjection.CLI).policy
-    assert AccessAction.COMMIT not in resolved.policy.actions
+    assert resolved.request == on_cli.request.model_copy(update={"frontend": frontend})
+    assert resolved.request.profile_id == _PROFILE
+    assert resolved.policy == on_cli.policy
+    assert (AccessAction.COMMIT in resolved.policy.actions) is (action in _CHANGES)

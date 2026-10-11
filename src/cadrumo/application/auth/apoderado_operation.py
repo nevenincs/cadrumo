@@ -17,7 +17,7 @@ from ...core.operations import (
 from ..operations.access_resolution import (
     OperationAccessContext,
     ResolvedOperationAccess,
-    require_declared_frontend_and_action,
+    require_declared_action,
     require_period_independent_replay_or_authority,
 )
 from ..operations.capabilities import (
@@ -32,8 +32,6 @@ from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
 )
 from ..operations.secret_submission import OperationEphemeralSecretDeclaration
@@ -72,9 +70,6 @@ _IDS = (
     APODERADO_CLEAR_OPERATION_DEFINITION_ID,
     APODERADO_CHECK_OPERATION_DEFINITION_ID,
 )
-
-
-_WRITE_FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
 
 
 _READ_ACTIONS = frozenset({AccessAction.SUBMIT, AccessAction.START, AccessAction.OBSERVE, AccessAction.RESULT})
@@ -128,9 +123,7 @@ def _apoderado_disclosures(
 def _resolve_access(request: OperationRequest[BaseModel], context: OperationAccessContext) -> ResolvedOperationAccess:
     operation_id, payload, mutating = _require_apoderado_access_request(request, context)
     actions = _WRITE_ACTIONS if mutating else _READ_ACTIONS
-    require_declared_frontend_and_action(
-        context, frontends=_WRITE_FRONTENDS if mutating else ALL_OPERATION_FRONTENDS, actions=actions
-    )
+    require_declared_action(context, actions=actions)
     require_period_independent_replay_or_authority(context, profile_id=payload.profile_id, definition_id=operation_id)
     disclosures = _apoderado_disclosures(operation_id, context)
     return ResolvedOperationAccess(
@@ -199,7 +192,6 @@ def build_apoderado_operation_definitions(factory: ApoderadoOperationPortsFactor
                     else frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
                     close_policy=OperationClosePolicy.DETACH_ALLOWED,
                 ),
-                permitted_frontends=_WRITE_FRONTENDS if mutating else ALL_OPERATION_FRONTENDS,
                 ephemeral_secret=OperationEphemeralSecretDeclaration(
                     secret_kind=APODERADO_REPRESENTED_NIF_SECRET_KIND, lifetime=timedelta(minutes=5)
                 )

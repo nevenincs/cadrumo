@@ -15,7 +15,7 @@ related:
   - '[[2026-10-11-mcp-parity-full-parity-adr]]'
 modified: '2026-10-11'
 body_schema: body-v2
-body_hash: 'sha256:349eeafbaf4b138e83278668ca86e33c828153c2f9d000814c2b4afb84e9a06c'
+body_hash: 'sha256:5d7ac7132cfe2f8d9bac2fc8f8b88bda71c79e7f3609635ab1d6e6ec76826542'
 ---
 
 <!-- RETIRED: P03, P07, S20, S21, S22, S23, S24, S25, S26, S31, S32, S36, S40, S41, S43 -->
@@ -125,11 +125,11 @@ Delivers statement, invoice-book and evidence intake and the file exports under 
 
 Delivers the owner's rule of 2026-10-11: the command line, the terminal interface and MCP are at parity. Every operation is submittable from every frontend with the same decision, effect and result; every refusal, narrowing and reduced result built for one frontend is removed; and MCP is given the means to carry what the command line carries. Replaces the approval, file-exchange and held-back admission work, which that rule rejects.
 
-- [ ] `P08.S47` - Make every registered operation submittable from the command line, the terminal interface and MCP, reduce the decision table to the two facts the opt-in surface needs, and replace the tests that held rulings with tests that hold parity: every operation on every frontend, the same resolver decision for the same request, and no comparison of a frontend inside an access path outside a short allow-list; `src/cadrumo/application/operations/mcp_admission.py`.
-- [ ] `P08.S48` - Remove every frontend-specific refusal, guard and reduced result from the ledger, invoice, inventory and prorrata operations, keeping attribution and the recorded origin of a classification as facts; `src/cadrumo/application/ledger`.
-- [ ] `P08.S49` - Remove every frontend-specific refusal and reduced result from the modelo, workflow, live and export operations, and give a resolver to any operation that had none so it can be submitted; `src/cadrumo/application/modelo`.
-- [ ] `P08.S50` - Remove every frontend-specific refusal from the profile, authentication and Google operations and from the runtime's release of results and session acts, and give the MCP harness the means to carry a typed secret and to answer every interaction kind; `src/cadrumo_harness/mcp`.
-- [ ] `P08.S51` - Rewrite the user documentation, its translations and the packaged agent text to say that an agent runs every operation the command line can, keeping the agent's own conduct before a destructive act as guidance and not as a product gate; `src/cadrumo_harness/_data/agent`.
+- [x] `P08.S47` - Make every registered operation submittable from the command line, the terminal interface and MCP, reduce the decision table to the two facts the opt-in surface needs, and replace the tests that held rulings with tests that hold parity: every operation on every frontend, the same resolver decision for the same request, and no comparison of a frontend inside an access path outside a short allow-list; `src/cadrumo/application/operations/mcp_admission.py`.
+- [x] `P08.S48` - Remove every frontend-specific refusal, guard and reduced result from the ledger, invoice, inventory and prorrata operations, keeping attribution and the recorded origin of a classification as facts; `src/cadrumo/application/ledger`.
+- [x] `P08.S49` - Remove every frontend-specific refusal and reduced result from the modelo, workflow, live and export operations, and give a resolver to any operation that had none so it can be submitted; `src/cadrumo/application/modelo`.
+- [x] `P08.S50` - Remove every frontend-specific refusal from the profile, authentication and Google operations and from the runtime's release of results and session acts, and give the MCP harness the means to carry a typed secret and to answer every interaction kind; `src/cadrumo_harness/mcp`.
+- [x] `P08.S51` - Rewrite the user documentation, its translations and the packaged agent text to say that an agent runs every operation the command line can, keeping the agent's own conduct before a destructive act as guidance and not as a product gate; `src/cadrumo_harness/_data/agent`.
 
 ## Parallelization
 

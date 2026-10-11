@@ -186,7 +186,6 @@ def test_every_public_spreadsheet_schema_compiles_with_secure_requests() -> None
         assert registration.contract.result_schema is not None
         assert row.result_type is ModeloSpreadsheetExecutionResult
         assert len(registration.schema_bindings) == 2
-        assert row.permitted_frontends == frozenset({OperationFrontendProjection.CLI})
 
 
 def test_foreign_worker_profile_is_refused_before_port_construction(

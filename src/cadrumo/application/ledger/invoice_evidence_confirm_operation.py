@@ -29,7 +29,6 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationSchemaBindingV1,
 )
@@ -257,7 +256,6 @@ def build_ledger_evidence_confirm_definition(
         executor_type=LedgerEvidenceConfirmExecutor,
         build=lambda: LedgerEvidenceConfirmExecutor(ports_factory),
         capabilities=invoice_evidence_operation_capabilities(mutates=True),
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
 

@@ -461,21 +461,6 @@ def test_native_human_generation_is_exact_profile_and_key_cannot_submit_or_read(
                     mcp.login_api_key(mcp_key)
                     assert not any(mcp_key)
 
-                    # Contract discovery crosses the worker control channel,
-                    # whose own bounded exchange may take ten seconds. Allow
-                    # that exchange to return the actual policy refusal.
-                    mcp_contract = mcp_raw.operation(
-                        RuntimeOperationContract(
-                            request_id=uuid4(),
-                            profile_id=profile_id,
-                            session_id=mcp.session_id,
-                            definition_id=WORKBENCH_GENERATION_OPERATION_DEFINITION_ID,
-                        ),
-                        deadline=time.monotonic() + 30,
-                    )
-                    assert isinstance(mcp_contract, RuntimeAccessRefusal)
-                    assert mcp_contract.code is AccessDenialCode.FRONTEND_DENIED
-
                     foreign = uuid4()
                     wrong = human_raw.operation(
                         RuntimeOperationSubmit(
@@ -550,13 +535,10 @@ def test_native_human_generation_is_exact_profile_and_key_cannot_submit_or_read(
                         changed(fresh_observe, request_id=uuid4(), session_id=mcp.session_id),
                         deadline=time.monotonic() + 5,
                     )
-                    # The key-authenticated MCP session is neither human nor on a
-                    # declared frontend; either refusal keeps the operation private.
+                    # The generation is read under a person's session, and a key
+                    # session is not one on any frontend.
                     assert isinstance(mcp_observed, RuntimeAccessRefusal)
-                    assert mcp_observed.code in {
-                        AccessDenialCode.HUMAN_AUTHORITY_REQUIRED,
-                        AccessDenialCode.FRONTEND_DENIED,
-                    }
+                    assert mcp_observed.code is AccessDenialCode.HUMAN_AUTHORITY_REQUIRED
                     other = second_raw.operation(
                         changed(owner_page, request_id=uuid4(), session_id=second.session_id),
                         deadline=time.monotonic() + 5,

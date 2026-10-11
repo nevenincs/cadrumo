@@ -181,10 +181,8 @@ def test_receipt_proof_reenters_without_password_or_api_promotion(
                 running = pool.submit(server.serve)
                 try:
                     assert server.ready.wait(3)
-                    api, human, stranger, invalid_api, invalid_receipt, invalid_mcp = (
-                        _connect(endpoint) for _ in range(6)
-                    )
-                    clients.extend((api, human, stranger, invalid_api, invalid_receipt, invalid_mcp))
+                    api, human, stranger, invalid_api, invalid_receipt = (_connect(endpoint) for _ in range(5))
+                    clients.extend((api, human, stranger, invalid_api, invalid_receipt))
                     presence = human.sign_in_status(
                         RuntimeSignInStatusRequest(request_id=uuid4(), profile_id=profile_id),
                         deadline=time.monotonic() + 5,
@@ -199,29 +197,9 @@ def test_receipt_proof_reenters_without_password_or_api_promotion(
                     invalid_receipt_reply = _login(
                         invalid_receipt, profile_id, "receipt", bytearray(b"x" * 32), persist_receipt=True
                     )
-                    invalid_mcp_reply = _login(
-                        invalid_mcp,
-                        profile_id,
-                        "password",
-                        bytearray(PROFILE_INPUT.encode()),
-                        frontend=OperationFrontendProjection.MCP,
-                        persist_receipt=True,
-                    )
-                    for denied in (invalid_api_reply, invalid_receipt_reply, invalid_mcp_reply):
+                    for denied in (invalid_api_reply, invalid_receipt_reply):
                         assert isinstance(denied, RuntimeAccessRefusal)
                         assert denied.code is RuntimeRefusalCode.INVALID_FRAME
-                    # An MCP connection never sends a password and never asks for a sign-in to be stored.
-                    for method, persist_receipt in (("password", False), ("receipt", True)):
-                        mcp_human = _login(
-                            invalid_mcp,
-                            profile_id,
-                            method,
-                            bytearray(b"nonsecret-rejected-before-delivery"),
-                            frontend=OperationFrontendProjection.MCP,
-                            persist_receipt=persist_receipt,
-                        )
-                        assert isinstance(mcp_human, RuntimeAccessRefusal)
-                        assert mcp_human.code is RuntimeRefusalCode.INVALID_FRAME
                     admitted_api = _login(api, profile_id, "api_key", bytearray(api_credential.get_secret_value()))
                     assert isinstance(admitted_api, RuntimeProfileStatus) and admitted_api.status.session_id is not None
                     assert admitted_api.human_login is None

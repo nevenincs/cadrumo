@@ -61,8 +61,13 @@ class _ResolvedLedgerAddRegistryFacts(NamedTuple):
 def prepare_ledger_add_command(
     payload: LedgerAddRequest,
     operation: PinnedAuthorityOperation,
+    *,
+    actor: str,
 ) -> ManualLedgerTransactionCommand:
-    """Resolve ordered profile facts, then construct the canonical command."""
+    """Resolve ordered profile facts, then construct the canonical command.
+
+    ``actor`` is the label the executing operation settled for this entry.
+    """
     booked_date, value_date, amount = _resolve_ledger_add_dates(payload)
     category_id, business_pct = _resolve_ledger_add_business_share(
         payload,
@@ -102,7 +107,7 @@ def prepare_ledger_add_command(
         purchase_invoice_evidence_id=payload.purchase_invoice_evidence_id,
         attachment_ids=payload.attachment_ids,
         notes=payload.notes,
-        actor=payload.actor or str(payload.profile_id) or "operator",
+        actor=actor,
         source_command="aeat app ledger add",
         idempotency_key=payload.idempotency_key,
         source_jurisdiction=source_jurisdiction,

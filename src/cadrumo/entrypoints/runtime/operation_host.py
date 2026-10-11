@@ -391,8 +391,7 @@ class ProfileWorkerOperationHost:
             self._require_owner(operation_id, session_id)
             original = self._submissions.get(operation_id)
             if (
-                frontend not in {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}
-                or original is None
+                original is None
                 or original[0] != session_id
                 or original[1].receipt.secret_requirement != requirement
                 or now() >= requirement.expires_at
@@ -467,13 +466,13 @@ class ProfileWorkerOperationHost:
             binding = WorkerOperationBinding(session_id, frontend, invocation.request, invocation.provenance)
             async with execution.guard_binding(invocation.identity, action, binding) as authorization:
                 # The full-owner workbench projection is released only to the
-                # human session that generated it; observing its lifecycle
-                # discloses operation metadata alone and stays caller-independent.
+                # session that generated it; observing its lifecycle discloses
+                # operation metadata alone and stays caller-independent.
                 if (
                     action in _PRIVATE_RESULT_RELEASE_ACTIONS
                     and invocation.identity.definition_id == WORKBENCH_GENERATION_OPERATION_DEFINITION_ID
                 ):
-                    execution.require_owner(operation_id, session_id, frontend=frontend)
+                    execution.require_owner(operation_id, session_id)
                 yield authorization
         finally:
             self._output_tasks.pop(task, None)

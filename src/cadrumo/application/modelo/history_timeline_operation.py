@@ -25,7 +25,7 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_payload, require_operation_profile
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import AccessAction, AccessDenialCode, DisclosureCategory, DisclosurePermission
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -146,7 +146,6 @@ def build_modelo_history_timeline_definition(factory: ModeloHistoryPortsFactory)
         executor_type=ModeloHistoryTimelineExecutor,
         build=lambda: ModeloHistoryTimelineExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.MCP}),
     )
 
 

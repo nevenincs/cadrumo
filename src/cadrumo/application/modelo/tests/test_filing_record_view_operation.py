@@ -324,7 +324,7 @@ def test_the_view_is_admitted_alike_on_every_frontend_for_either_kind_of_session
     frontend: OperationFrontendProjection,
 ) -> None:
     unit, record = _source()
-    _factory, definition, registration, registry = _registered(_bundle())
+    _factory, _definition, registration, registry = _registered(_bundle())
     operation = cast(PinnedAuthorityOperation, object())
 
     admitted = resolve_operation_access(
@@ -332,9 +332,6 @@ def test_the_view_is_admitted_alike_on_every_frontend_for_either_kind_of_session
         request=_request(record),
         context=_context(registration, operation=operation, frontend=frontend),
     )
-
-    assert definition.permitted_frontends == frozenset(OperationFrontendProjection)
-    assert registration.contract.permitted_frontends == frozenset(OperationFrontendProjection)
     assert admitted.request.frontend is frontend
     assert admitted.request.periods == frozenset({unit.period})
     # A session under the person's sign-in and one under an enrolled key differ

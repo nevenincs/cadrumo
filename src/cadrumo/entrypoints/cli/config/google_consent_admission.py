@@ -53,7 +53,6 @@ def admit_google_consent_contract(
         or contract.result_schema != expected_result
         or contract.review_projection_schema != GOOGLE_CONSENT_REVIEW_SCHEMA_BINDING.identity
         or contract.interaction_response_schema != GOOGLE_CONSENT_RESPONSE_SCHEMA_BINDING.identity
-        or client.frontend not in contract.permitted_frontends
         or contract.ephemeral_secret_required
     ):
         raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)

@@ -28,7 +28,6 @@ from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ..operations.models import OperationRequest, OperationTerminalReceipt, require_succeeded_receipt_references
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationResultProjector,
@@ -74,9 +73,6 @@ from .operator_results import (
     CertificateSourceListResult,
     CertificateSourceMutationResult,
 )
-
-_HUMAN_FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
-
 
 _READ_ACTIONS = frozenset({AccessAction.SUBMIT, AccessAction.START, AccessAction.OBSERVE, AccessAction.RESULT})
 
@@ -134,7 +130,6 @@ def _definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=_HUMAN_FRONTENDS,
     )
 
 
@@ -257,8 +252,6 @@ def _require_certificate_source_access_request(
 
 
 def _require_certificate_source_action(context: OperationAccessContext, *, mutation: bool) -> frozenset[AccessAction]:
-    if context.frontend not in _HUMAN_FRONTENDS:
-        raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
     actions = _MUTATION_ACTIONS if mutation else _READ_ACTIONS
     if context.action not in actions:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)

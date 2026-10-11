@@ -419,7 +419,6 @@ def test_request_is_credential_free_and_registration_is_human_cli_tui_only() -> 
         )
     registry = _registry()
     contract = registry.lookup_public_contract(WORKBENCH_GENERATION_OPERATION_DEFINITION_ID)
-    assert contract.permitted_frontends == frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
     assert contract.result_schema is not None
     assert registry.lookup_public_registration(contract.definition_id).result_projector is None
 

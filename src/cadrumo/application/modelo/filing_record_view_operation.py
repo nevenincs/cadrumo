@@ -40,7 +40,6 @@ from ..operations.profile_guard import require_access_request_profile_payload
 from ..operations.public_period import PublicPeriod
 from ..operations.read_capture import capture_read_result
 from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationSchemaBindingV1,
 )
@@ -308,7 +307,6 @@ def build_modelo_filing_record_view_definition(
         executor_type=ModeloFilingRecordViewExecutor,
         build=lambda: ModeloFilingRecordViewExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

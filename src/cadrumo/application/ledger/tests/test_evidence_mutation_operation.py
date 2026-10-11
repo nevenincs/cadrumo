@@ -32,6 +32,7 @@ from ....application.ledger.evidence_mutation_operation import (
     build_ledger_evidence_update_registration,
 )
 from ....application.ledger.evidence_ports import LedgerEvidencePorts
+from ....application.ledger.evidence_read_operation import LedgerEvidenceRecordProjection
 from ....application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ....application.operations.execution_actor import OperationExecutionCaller, OperationExecutionCallerReader
 from ....application.operations.models import OperationIdentity, OperationRequest
@@ -131,9 +132,9 @@ def test_update_request_admits_a_canonical_date_and_rate() -> None:
     assert (patch.invoice_date, patch.iva_rate, patch.taxable_base) == ("2026-05-08", "21", "100.5")
 
 
-@pytest.mark.parametrize("frontend", [OperationFrontendProjection.CLI, OperationFrontendProjection.MCP])
+@pytest.mark.parametrize("frontend", sorted(OperationFrontendProjection))
 @pytest.mark.parametrize("action", [AccessAction.SUBMIT, AccessAction.COMMIT, AccessAction.RESULT])
-def test_update_is_open_to_the_command_line_and_to_an_agent_under_one_policy(
+def test_update_is_open_to_every_frontend_under_one_policy(
     frontend: OperationFrontendProjection, action: AccessAction
 ) -> None:
     definition = build_ledger_evidence_update_definition(_unused_factory)
@@ -163,13 +164,6 @@ def test_update_is_open_to_the_command_line_and_to_an_agent_under_one_policy(
     resolved = resolve_operation_access(registry=registry, request=request, context=context(frontend))
     person = resolve_operation_access(
         registry=registry, request=request, context=context(OperationFrontendProjection.CLI)
-    )
-
-    assert registration.contract.permitted_frontends == frozenset(
-        {OperationFrontendProjection.CLI, OperationFrontendProjection.MCP}
-    )
-    assert build_ledger_evidence_remove_definition(_unused_factory).permitted_frontends == frozenset(
-        {OperationFrontendProjection.CLI}
     )
     assert resolved.policy == person.policy
     assert resolved.policy.requires_human is False
@@ -215,18 +209,11 @@ def _session_host(frontend: OperationFrontendProjection) -> OperationExecutionCa
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    ("frontend", "sealed_path", "withheld"),
-    [
-        (OperationFrontendProjection.MCP, "invoice.pdf", True),
-        (OperationFrontendProjection.CLI, f"{_TYPED_DIRECTORY}/invoice.pdf", False),
-    ],
-    ids=["mcp", "cli"],
-)
-async def test_update_result_keeps_the_directory_the_evidence_was_added_from_out_of_an_agents_result(
-    monkeypatch: pytest.MonkeyPatch, frontend: OperationFrontendProjection, sealed_path: str, withheld: bool
+@pytest.mark.parametrize("frontend", sorted(OperationFrontendProjection))
+async def test_update_result_carries_the_stored_record_whole_whichever_frontend_submits_it(
+    monkeypatch: pytest.MonkeyPatch, frontend: OperationFrontendProjection
 ) -> None:
-    """The path is the person's own typing; an agent's result names the file and says the rest was left out."""
+    """The record's path is sealed as stored: no frontend's result is a reduced form of another's."""
     current = _record().model_copy(update={"source_path": f"{_TYPED_DIRECTORY}/invoice.pdf"})
     backend = object()
     ports = LedgerEvidencePorts(
@@ -280,10 +267,8 @@ async def test_update_result_keeps_the_directory_the_evidence_was_added_from_out
     (result,) = sealed
     assert isinstance(result, LedgerEvidenceUpdateExecutionResult)
     assert effects == [OperationEffect.NONE]
-    assert result.result.record.source_path == sealed_path
-    assert result.result.source_directory_withheld is withheld
-    assert (_TYPED_DIRECTORY in result.model_dump_json()) is not withheld
-    assert result.result.record.supplier == current.supplier
+    assert result.result.record == LedgerEvidenceRecordProjection.from_record(current)
+    assert result.result.record.source_path == f"{_TYPED_DIRECTORY}/invoice.pdf"
 
 
 @pytest.mark.asyncio

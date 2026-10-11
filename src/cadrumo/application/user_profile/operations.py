@@ -28,8 +28,6 @@ from ..operations.capabilities import (
 from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
@@ -122,7 +120,6 @@ def _definition(
     phase_codes: tuple[str, ...],
     ephemeral_secret: OperationEphemeralSecretDeclaration | None = None,
     permitted_effects: frozenset[OperationEffect] = EFFECTS_WITHOUT_PARTIAL_COMMIT,
-    permitted_frontends: frozenset[OperationFrontendProjection] = ALL_OPERATION_FRONTENDS,
 ) -> OperationDefinition:
     return OperationDefinition(
         definition_id=definition_id,
@@ -150,7 +147,6 @@ def _definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=permitted_frontends,
         ephemeral_secret=ephemeral_secret,
     )
 
@@ -226,7 +222,6 @@ USER_PROFILE_OPERATION_DEFINITIONS = (
         result_type=ProfileBundleExportResult,
         executor_type=ProfileBundleExportOperationExecutor,
         phase_codes=PROFILE_BUNDLE_EXPORT_PHASES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
         ephemeral_secret=OperationEphemeralSecretDeclaration(
             secret_kind=PROFILE_BUNDLE_EXPORT_INPUT_KIND,
             lifetime=timedelta(minutes=5),

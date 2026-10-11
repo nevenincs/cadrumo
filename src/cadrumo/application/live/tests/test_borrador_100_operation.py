@@ -369,8 +369,10 @@ def test_query_consent_never_authorizes_full_read_or_import(
             human=True,
         )
         assert isinstance(denied, AccessDenied) and denied.code is AccessDenialCode.OPERATION_DENIED
-        with pytest.raises(ProfileAccessRefusedError):
-            module.resolve_borrador_100_access(public, replace(context, frontend=OperationFrontendProjection.MCP))
+        for frontend in OperationFrontendProjection:
+            on_frontend = module.resolve_borrador_100_access(public, replace(context, frontend=frontend))
+            assert on_frontend.policy == resolved.policy, (request.definition_id, frontend)
+            assert on_frontend.request == resolved.request.model_copy(update={"frontend": frontend})
 
 
 def test_projector_rejects_cross_purpose_receipt(subject: Subject) -> None:

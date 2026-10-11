@@ -9,7 +9,6 @@ from ...adapters.local_runtime.runtime_frame_io import decode_document, read_sec
 from ...adapters.persistence.storage.custody.acceleration_receipt import ReceiptDeletion
 from ...adapters.persistence.storage.errors import StorageError
 from ...adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
-from ...application.operations.registry import OperationFrontendProjection
 from ...application.runtime.bootstrap import (
     RuntimePasswordReset,
     RuntimePasswordResetCompleted,
@@ -54,8 +53,6 @@ class RuntimeBootstrapMixin:
         )
         try:
             if isinstance(request, RuntimePasswordResetPrepare):
-                if request.frontend not in {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}:
-                    raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
                 connection, host = self._prepare_unadmitted(context, channel, request, method="bootstrap-reset")
                 with host.guard, composed_profile_persistence_ports(automation_secrets_store=self._secret_store()):
                     self._validate_access_connection(connection, host)

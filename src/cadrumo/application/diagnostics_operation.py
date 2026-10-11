@@ -34,7 +34,7 @@ from .operations.access_resolution import (
     ResolvedOperationAccess,
     bind_operation_access,
     operation_disclosures,
-    require_declared_frontend_and_action,
+    require_declared_action,
     require_period_independent_replay_or_authority,
 )
 from .operations.capabilities import RECORDED_IDEMPOTENT_SECURE_STORED_READ_CAPABILITIES, OperationCapabilities
@@ -48,7 +48,6 @@ from .operations.owner import OperationExecutorContext
 from .operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from .operations.read_capture import capture_read_result
 from .operations.registry import (
-    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
@@ -131,7 +130,7 @@ def _resolve_access(request: OperationRequest[BaseModel], context: OperationAcce
         access_profile_id=context.profile_id,
     )
     actions = RESUMABLE_READ_ACTIONS
-    require_declared_frontend_and_action(context, frontends=ALL_OPERATION_FRONTENDS, actions=actions)
+    require_declared_action(context, actions=actions)
     require_period_independent_replay_or_authority(context, profile_id=payload.profile_id, definition_id=expected)
     disclosures = operation_disclosures(
         context,
@@ -198,7 +197,6 @@ def build_diagnostics_read_definition(factory: DiagnosticsReadPortsFactory) -> O
         interaction_kinds=frozenset(),
         capabilities=_capabilities(),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

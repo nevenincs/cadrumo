@@ -86,7 +86,6 @@ from .actions_common import (
 )
 from .actions_manual import update_manual_transaction_fields
 from .actions_split_merge import split_transaction_with_classified_children
-from .agent_row_guard import require_actor_may_reclassify
 from .evidence_advisory import printed_iva_advisory
 from .evidence_errors import PurchaseInvoiceEvidenceInputError
 from .evidence_split import derive_child_amounts
@@ -671,7 +670,6 @@ def apply_llm_classification(
             "classification write dropped the transaction it was applied to",
             context={"transaction_id": str(suggestion.transaction_id)},
         )
-    require_actor_may_reclassify(actor=actor, current=current, replacement=updated_transaction)
     event = build_ledger_bucket_event(
         bucket_id=bucket_id,
         event_type=BucketEventType.LEDGER_TRANSACTION_CLASSIFIED,

@@ -31,6 +31,9 @@ class ModeloExportRequest(CredentialFreeOperationRequest):
     The three elections are the declaration-shaping choices the command line
     also accepts, with the same neutral defaults, so one revision exports as
     the same declaration type from either surface.
+
+    ``actor`` is recorded as sent for a person's session. An agent's session is
+    recorded under its own session label, whatever the request carries.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)

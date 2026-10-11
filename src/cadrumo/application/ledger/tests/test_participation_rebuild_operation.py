@@ -235,8 +235,6 @@ def test_rebuild_is_open_to_every_frontend_under_the_same_policy(
     """The index is derived from stored revisions, so an agent may regenerate it as a person may."""
     registry, registration = _registry()
     request = _access_request()
-
-    assert registration.contract.permitted_frontends == frozenset(OperationFrontendProjection)
     resolved = resolve_operation_access(
         registry=registry, request=request, context=_access_context(registration, action=action, frontend=frontend)
     )

@@ -21,11 +21,12 @@ from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.model_validation import classification_for_business_share
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..review.filter import LedgerReviewStatus
 from ..user_profile.access_contracts import AccessDenialCode
@@ -82,9 +83,15 @@ class LedgerAllocateOperationResult(BaseModel):
 class LedgerAllocateExecutor:
     """Apply the canonical allocation action with exact worker profile custody."""
 
-    def __init__(self, ports_factory: LedgerActionPortsFactory) -> None:
+    def __init__(
+        self,
+        ports_factory: LedgerActionPortsFactory,
+        *,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
+    ) -> None:
         """Retain the exact-profile service composition capability."""
         self._ports_factory = ports_factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(
         self,
@@ -98,6 +105,9 @@ class LedgerAllocateExecutor:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(LEDGER_ALLOCATE_PHASE)
+        actor = execution_actor_label(
+            self._execution_caller_reader, context, supplied=payload.actor or bucket_id or "operator"
+        )
 
         def prepare() -> tuple[LedgerActionPorts, ManualLedgerTransactionPatch]:
             operation: PinnedAuthorityOperation = context.authority_operation
@@ -133,7 +143,7 @@ class LedgerAllocateExecutor:
                 bucket_id=bucket_id,
                 transaction_id=transaction_id,
                 patch=patch,
-                actor=payload.actor or bucket_id or "operator",
+                actor=actor,
                 source_command="aeat app ledger allocate",
                 ports=ports,
                 catalogue=catalogue,
@@ -153,7 +163,11 @@ class LedgerAllocateExecutor:
         return await await_cancellation_complete(commit(), task_name="ledger-allocate-commit")
 
 
-def build_ledger_allocate_definition(ports_factory: LedgerActionPortsFactory) -> OperationDefinition:
+def build_ledger_allocate_definition(
+    ports_factory: LedgerActionPortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
+) -> OperationDefinition:
     """Declare durable, exact-profile allocation with a bounded secure result."""
     return build_single_phase_definition(
         definition_id=LEDGER_ALLOCATE_OPERATION_DEFINITION_ID,
@@ -161,9 +175,8 @@ def build_ledger_allocate_definition(ports_factory: LedgerActionPortsFactory) ->
         subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerAllocateOperationResult,
         executor_type=LedgerAllocateExecutor,
-        build=lambda: LedgerAllocateExecutor(ports_factory),
+        build=lambda: LedgerAllocateExecutor(ports_factory, execution_caller_reader=execution_caller_reader),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
 
 

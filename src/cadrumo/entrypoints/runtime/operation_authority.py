@@ -69,9 +69,6 @@ from ...domain.calculations.registry.governed_fact_scope import validating_gover
 
 _LOGGER = get_logger(__name__)
 
-_SEALED_CONTENT_ACTIONS = frozenset({AccessAction.RESULT, AccessAction.REVIEW})
-"""Reads of what an execution sealed: its result and result pages, a stopped operation's detail, a review."""
-
 
 @dataclass(frozen=True, slots=True)
 class WorkerOperationBinding:
@@ -111,7 +108,6 @@ class ProfileWorkerOperationAuthority:
             or identity.definition_id != WORKBENCH_GENERATION_OPERATION_DEFINITION_ID
             or binding.request.payload != payload
             or payload.profile_id != self.custody.identity.binding.profile_id
-            or binding.frontend not in {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}
         ):
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
         authorization = self._resolve(identity, AccessAction.START)
@@ -124,13 +120,12 @@ class ProfileWorkerOperationAuthority:
         """Name the frontend and live session that admitted this exact invocation.
 
         The answer is read from the binding this worker made at admission, never
-        from the request, so an executor can tell an agent's execution from a
-        person's without trusting anything the caller typed.
+        from the request, so the actor an execution records is the session that
+        admitted it and nothing the caller typed.
 
-        An invocation an agent submitted stays an agent's when another session
-        re-enters it: what it seals is later released to an agent on the
-        strength of that admission, and its request is still what the agent
-        typed. The session named is the one carrying the execution now.
+        An invocation submitted on the MCP frontend stays attributed to it when
+        another session re-enters it: its request is still what was typed
+        there. The session named is the one carrying the execution now.
         """
         binding = self._bindings.get(identity.operation_id)
         if binding is None:
@@ -298,7 +293,6 @@ class ProfileWorkerOperationAuthority:
         request = binding.request
         self._require_binding_identity(identity, request)
         lease = self.custody.require(binding.session_id)
-        self._require_content_sealed_for_reader(action, binding)
         contract = self._public_contract(request.definition_id)
         provenance = self._require_invocation_provenance(identity, request, action, binding.provenance)
         resolution = self._resolve_access(request, action, binding, lease, contract, provenance)
@@ -325,25 +319,6 @@ class ProfileWorkerOperationAuthority:
     def _require_binding_identity(identity: OperationIdentity, request: OperationRequest[BaseModel]) -> None:
         if identity.definition_id != request.definition_id or identity.subject_ref != request.subject_ref:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-
-    @staticmethod
-    def _require_content_sealed_for_reader(action: AccessAction, binding: WorkerOperationBinding) -> None:
-        """Refuse an agent the sealed content of an operation no agent's session submitted.
-
-        An execution seals its result, review and stopped detail for the
-        frontend that admitted it, and a person's may hold what an agent's
-        would not: a host path, text taken from a document. Which it was is
-        read from the admission this worker stored, never from the reader, so
-        naming a person's operation, or replaying its submission under the same
-        key, releases none of it on the MCP frontend. An invocation stored
-        without an admission was not an agent's. The refusal is the one an
-        unknown operation gets, so it does not confirm that the operation exists.
-        """
-        if action not in _SEALED_CONTENT_ACTIONS or binding.frontend is not OperationFrontendProjection.MCP:
-            return
-        provenance = binding.provenance
-        if provenance is None or provenance.admitting_frontend is not OperationFrontendProjection.MCP:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
     def _public_contract(self, definition_id: str) -> OperationPublicDefinitionContractV1:
         try:
@@ -571,20 +546,10 @@ class ProfileWorkerOperationAuthority:
             and outcome.dek_epoch_preserved
         )
 
-    def require_owner(
-        self,
-        operation_id: OperationId,
-        session_id: UUID,
-        *,
-        frontend: OperationFrontendProjection | None = None,
-    ) -> None:
+    def require_owner(self, operation_id: OperationId, session_id: UUID) -> None:
         """Refuse ID-only adoption even by another admitted same-profile session."""
         binding = self._bindings.get(operation_id)
-        if (
-            binding is None
-            or binding.session_id != session_id
-            or (frontend is not None and binding.frontend is not frontend)
-        ):
+        if binding is None or binding.session_id != session_id:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
         self.custody.require(session_id)
 

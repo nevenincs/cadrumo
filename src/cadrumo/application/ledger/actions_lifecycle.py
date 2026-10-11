@@ -51,7 +51,6 @@ from .actions_common import (
     transaction_catalogue_object_id,
     transaction_modelo_source_ids,
 )
-from .agent_row_guard import require_actor_may_change_lifecycle, require_actor_may_set_aside
 from .models import (
     LedgerCatalogueResetReport,
     LedgerRemovalBlocker,
@@ -258,7 +257,6 @@ def mark_transaction_reviewed_excluded(
             "ledger transaction is already reviewed-excluded",
             context={"bucket_id": bucket_id, "transaction_id": transaction_id},
         )
-    require_actor_may_set_aside(actor=trimmed_actor, row=current)
     blockers = blocking_modelo_references(
         bucket_id=bucket_id,
         transaction_ids=transaction_modelo_source_ids(current),
@@ -850,9 +848,6 @@ def _transition_manual_transaction_lifecycle(
                 "requested_state": state.value,
             },
         )
-    require_actor_may_change_lifecycle(
-        actor=trimmed_actor, row=current, restores=state is TransactionLifecycleState.ACTIVE
-    )
     blockers = blocking_modelo_references(
         bucket_id=bucket_id,
         transaction_ids=transaction_modelo_source_ids(current),

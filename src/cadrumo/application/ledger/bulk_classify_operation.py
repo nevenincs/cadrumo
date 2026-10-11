@@ -18,17 +18,13 @@ from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.transactions.errors import TransactionValidationError
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
-from ..operations.execution_actor import (
-    OperationExecutionCallerReader,
-    execution_actor_label,
-    execution_admitted_on_mcp,
-)
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.refusal_evidence import OperationRefusalEvidence
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..runtime.submission_payload import SUBMISSION_PAYLOAD_MAX_BYTES
 from ..user_profile.access_contracts import (
@@ -151,13 +147,6 @@ class LedgerBulkClassifyExecutor:
         require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID)
         actor = execution_actor_label(self._execution_caller_reader, context, supplied=payload.actor or bucket_id)
-        # The command line is the person's route to a file; an agent sends the table itself,
-        # so its rows name the operation instead of a command it never ran.
-        source_command = (
-            LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID
-            if execution_admitted_on_mcp(self._execution_caller_reader, context)
-            else _CLI_SOURCE_COMMAND
-        )
         operation = context.authority_operation
         ports = await asyncio.to_thread(self._ports_factory, bucket_id=bucket_id, operation=operation)
         repository = _require_revision_guarded_ports(ports, bucket_id=bucket_id, operation=operation)
@@ -172,7 +161,7 @@ class LedgerBulkClassifyExecutor:
                     bucket_id=bucket_id,
                     csv_text=payload.csv_text,
                     actor=actor,
-                    source_command=source_command,
+                    source_command=_CLI_SOURCE_COMMAND,
                     ports=tracked_ports,
                 ),
                 tracker=tracker,
@@ -264,7 +253,6 @@ def build_ledger_bulk_classify_definition(
         executor_type=LedgerBulkClassifyExecutor,
         build=lambda: LedgerBulkClassifyExecutor(ports_factory, execution_caller_reader=execution_caller_reader),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
         refusal_detail_codes=frozenset({LEDGER_BULK_CLASSIFY_VALIDATION_REFUSAL_CODE}),
     )
 
@@ -272,11 +260,7 @@ def build_ledger_bulk_classify_definition(
 def resolve_ledger_bulk_classify_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    """Require the exact profile, all-period disclosure and mutation authority.
-
-    The resolver does not tell frontends apart; the definition's frontend list
-    decides who may submit.
-    """
+    """Require the exact profile, all-period disclosure and mutation authority."""
     if request.definition_id != LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID or not isinstance(
         request.payload, LedgerBulkClassifyRequest
     ):

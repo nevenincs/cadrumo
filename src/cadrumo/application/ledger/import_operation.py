@@ -25,12 +25,13 @@ from ...domain.transactions.models import BucketTransactionRef
 from ...domain.transactions.own_accounts import OwnAccountId, OwnAccountRegister
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.public_period import PublicPeriod
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..transactions.diagnostics import LedgerImportDiagnosticKind
 from ..user_profile.access_contracts import AccessDenialCode
@@ -42,6 +43,7 @@ from .actions_import import (
     PreparedLedgerSourceImport,
     aggregate_ledger_import_results,
     persist_prepared_ledger_source_import,
+    plan_ledger_import_sources,
     prepare_ledger_source_import,
 )
 from .import_ports import LedgerImportPorts
@@ -52,6 +54,8 @@ from .read_access import resolve_ledger_commit_access, resolve_ledger_read_acces
 
 LEDGER_IMPORT_OPERATION_DEFINITION_ID = "ledger.import"
 MAX_LEDGER_IMPORT_FILES = 128
+MAX_LEDGER_IMPORT_REFUSALS = 2 * MAX_LEDGER_IMPORT_FILES
+"""Every requested entry and every planned file can each be refused once."""
 MAX_LEDGER_IMPORT_ROWS = 4_096
 MAX_LEDGER_IMPORT_DIAGNOSTICS = MAX_LEDGER_IMPORT_ROWS + (2 * MAX_LEDGER_IMPORT_FILES)
 MAX_LEDGER_IMPORT_EVENTS = 4 * MAX_LEDGER_IMPORT_ROWS
@@ -97,7 +101,14 @@ class LedgerImportOperationPortsFactory(Protocol):
 
 
 class LedgerImportRequest(BaseModel):
-    """Sensitive local file references and import options for one profile."""
+    """Sensitive local file references and import options for one profile.
+
+    Each entry of ``files`` is a statement file or a directory. The operation
+    plans a directory into its importable files itself, in a deterministic
+    order, so every caller that names the same directory imports the same
+    files. The planned files of all entries together are held to
+    ``MAX_LEDGER_IMPORT_FILES``.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -111,7 +122,8 @@ class LedgerImportRequest(BaseModel):
     own_account_id: OwnAccountId | None = None
     expected_source_sha256: tuple[ContentDigest, ...] | None = None
     """The digest a preview reported for each file, in ``files`` order; a file whose
-    parsed bytes now differ is refused rather than imported."""
+    parsed bytes now differ is refused rather than imported. A digest names one
+    file's bytes, so an entry that is a directory is refused when paired with one."""
 
     @model_validator(mode="after")
     def _one_digest_per_file(self) -> LedgerImportRequest:
@@ -126,7 +138,17 @@ class LedgerImportFileRefusal(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     file_name: str = Field(min_length=1, max_length=255)
-    reason_code: Literal["transaction_validation", "own_account_mismatch", "result_limit", "source_changed"]
+    reason_code: Literal[
+        "transaction_validation",
+        "own_account_mismatch",
+        "result_limit",
+        "source_changed",
+        "empty_directory",
+        "file_limit",
+    ]
+    """``empty_directory`` names a requested directory holding no importable file.
+    ``file_limit`` names each requested entry of a request whose planned files
+    exceed the registered count, of which none is read."""
 
 
 class LedgerImportValidationProjection(BaseModel):
@@ -149,7 +171,11 @@ class LedgerImportSourceProjection(BaseModel):
 
 
 class LedgerImportSourceDigest(BaseModel):
-    """The SHA-256 of the bytes parsed from one requested file, by its position in the request."""
+    """The SHA-256 of the bytes parsed from one planned file, by its position in the plan.
+
+    The plan is the request's entries in order, each directory replaced by its
+    importable files, so for a request that names files alone it is the request.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -194,7 +220,7 @@ class LedgerImportResultProjection(BaseModel):
     diagnostics: tuple[LedgerImportDiagnosticProjection, ...] = Field(
         default=(), max_length=MAX_LEDGER_IMPORT_DIAGNOSTICS
     )
-    refused_files: tuple[LedgerImportFileRefusal, ...] = Field(default=(), max_length=MAX_LEDGER_IMPORT_FILES)
+    refused_files: tuple[LedgerImportFileRefusal, ...] = Field(default=(), max_length=MAX_LEDGER_IMPORT_REFUSALS)
     source_digests: tuple[LedgerImportSourceDigest, ...] = Field(default=(), max_length=MAX_LEDGER_IMPORT_FILES)
 
     @model_validator(mode="after")
@@ -253,7 +279,7 @@ class LedgerImportExecutionResult(BaseModel):
     verify: bool
     period: PublicPeriod | None = None
     files: tuple[_LedgerImportExecutionFile, ...] = Field(default=(), max_length=MAX_LEDGER_IMPORT_FILES)
-    refused_files: tuple[LedgerImportFileRefusal, ...] = Field(default=(), max_length=MAX_LEDGER_IMPORT_FILES)
+    refused_files: tuple[LedgerImportFileRefusal, ...] = Field(default=(), max_length=MAX_LEDGER_IMPORT_REFUSALS)
 
 
 def _safe_file_name(path: Path) -> str:
@@ -421,6 +447,7 @@ def _prepare_import_file(
     path: Path,
     *,
     bucket_id: str,
+    actor: str,
     payload: LedgerImportRequest,
     ports: LedgerImportOperationPorts,
     own_accounts: OwnAccountRegister,
@@ -437,7 +464,7 @@ def _prepare_import_file(
         source=payload.verify_source,
         period=payload.period.to_period() if payload.period is not None else None,
         own_account_id=payload.own_account_id,
-        actor=bucket_id,
+        actor=actor,
         source_command="aeat app ledger import",
     )
     try:
@@ -465,12 +492,47 @@ def parsed_source_sha256(prepared: PreparedLedgerSourceImport) -> str | None:
 
 
 type _StagedImport = tuple[int, Path, PreparedLedgerSourceImport]
-"""One parsed statement with its position in the request and its path."""
+"""One parsed statement with its position in the plan and its path."""
+
+type _PlannedFile = tuple[Path, str | None]
+"""One file to read, with the digest the request expects of it, if any."""
+
+
+def _plan_requested_files(
+    payload: LedgerImportRequest,
+) -> tuple[tuple[_PlannedFile, ...], list[LedgerImportFileRefusal]]:
+    """Expand each requested entry into the files to read, in request order.
+
+    A directory is planned by the one function every frontend's import uses,
+    so the files chosen and their order do not depend on who submitted. An
+    over-long plan is refused whole: reading a part of it would import a
+    selection the caller never named.
+    """
+    planned: list[_PlannedFile] = []
+    refusals: list[LedgerImportFileRefusal] = []
+    for position, entry in enumerate(payload.files):
+        expected = None if payload.expected_source_sha256 is None else payload.expected_source_sha256[position]
+        try:
+            files = plan_ledger_import_sources(entry)
+        except TransactionValidationError:
+            refusals.append(LedgerImportFileRefusal(file_name=_safe_file_name(entry), reason_code="empty_directory"))
+            continue
+        if expected is not None and files != (entry,):
+            refusals.append(LedgerImportFileRefusal(file_name=_safe_file_name(entry), reason_code="source_changed"))
+            continue
+        planned.extend((path, expected) for path in files)
+    if len(planned) > MAX_LEDGER_IMPORT_FILES:
+        return (), [
+            LedgerImportFileRefusal(file_name=_safe_file_name(entry), reason_code="file_limit")
+            for entry in payload.files
+        ]
+    return tuple(planned), refusals
 
 
 def _compose_staged_imports(
     *,
     bucket_id: str,
+    actor: str,
     payload: LedgerImportRequest,
     operation: PinnedAuthorityOperation,
     ports_factory: LedgerImportOperationPortsFactory,
@@ -479,25 +541,26 @@ def _compose_staged_imports(
     list[_StagedImport],
     list[LedgerImportFileRefusal],
 ]:
-    """Compose exact-profile ports and stage admissible source files in request order."""
+    """Compose exact-profile ports and stage admissible source files in plan order."""
     ports = ports_factory(bucket_id=bucket_id, operation=operation)
     if ports.transaction_repository.bucket_id != bucket_id or ports.operation is not operation:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    planned, refusals = _plan_requested_files(payload)
     own_accounts = ports.own_accounts.load()
     if payload.own_account_id is not None:
         require_registered_own_account(own_accounts, payload.own_account_id)
     staged: list[_StagedImport] = []
-    refusals: list[LedgerImportFileRefusal] = []
     staged_rows = 0
-    for index, path in enumerate(payload.files):
+    for index, (path, expected_sha256) in enumerate(planned):
         outcome = _prepare_import_file(
             path,
             bucket_id=bucket_id,
+            actor=actor,
             payload=payload,
             ports=ports,
             own_accounts=own_accounts,
             remaining_row_capacity=MAX_LEDGER_IMPORT_ROWS - staged_rows,
-            expected_sha256=(None if payload.expected_source_sha256 is None else payload.expected_source_sha256[index]),
+            expected_sha256=expected_sha256,
         )
         if isinstance(outcome, LedgerImportFileRefusal):
             refusals.append(outcome)
@@ -607,9 +670,15 @@ async def _commit_staged_imports(
 class LedgerImportExecutor:
     """Stage source bytes first, then persist pinned parsed rows under COMMIT."""
 
-    def __init__(self, ports: LedgerImportOperationPortsFactory) -> None:
+    def __init__(
+        self,
+        ports: LedgerImportOperationPortsFactory,
+        *,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
+    ) -> None:
         """Retain the explicit profile-aware composition capability."""
         self._ports = ports
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(self, request: OperationRequest[LedgerImportRequest], context: OperationExecutorContext) -> str:
         """Parse before the fresh local-write guard and publish a private result."""
@@ -622,6 +691,7 @@ class LedgerImportExecutor:
         ports, staged, refusals = await asyncio.to_thread(
             _compose_staged_imports,
             bucket_id=bucket_id,
+            actor=execution_actor_label(self._execution_caller_reader, context, supplied=bucket_id),
             payload=payload,
             operation=context.authority_operation,
             ports_factory=self._ports,
@@ -651,7 +721,11 @@ class LedgerImportExecutor:
         )
 
 
-def build_ledger_import_definition(ports: LedgerImportOperationPortsFactory) -> OperationDefinition:
+def build_ledger_import_definition(
+    ports: LedgerImportOperationPortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
+) -> OperationDefinition:
     """Declare a durable, exact-profile local import with honest effects."""
     return build_single_phase_definition(
         definition_id=LEDGER_IMPORT_OPERATION_DEFINITION_ID,
@@ -659,9 +733,8 @@ def build_ledger_import_definition(ports: LedgerImportOperationPortsFactory) -> 
         subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerImportExecutionResult,
         executor_type=LedgerImportExecutor,
-        build=lambda: LedgerImportExecutor(ports),
+        build=lambda: LedgerImportExecutor(ports, execution_caller_reader=execution_caller_reader),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
 

@@ -1,14 +1,14 @@
-"""A person who confirms or completes a classification owns it, and an agent's label then changes nothing of it.
+"""A person who confirms or completes a classification is recorded as the one who decided it.
 
 The ledger actions run over real secure storage. A person who submits the
 classification a rule, a model or an agent already gave a row has accepted it:
-the row becomes theirs although no value moves, and the history records the
-classification they confirmed. A person who sets any tax-bearing fact of such
-a row takes it the same way; one who edits only a note or a label does not.
-Nobody else takes a row by restating it. Once the row is the person's, a write
-recorded under an agent's label that would change any tax-bearing fact of it,
-or archive or stash it, is refused at the writer with nothing stored, and an
-agent's label restores only what an agent's label set aside.
+the row records them as the one who decided although no value moves, and the
+history records the classification they confirmed. A person who sets any
+tax-bearing fact of such a row is recorded the same way; one who edits only a
+note or a label is not. Nobody else is recorded by restating a row. Who
+decided a row is a stored fact: a write under any label that changes a
+tax-bearing fact, or sets the row aside or restores it, is stored whoever
+decided the row and whoever set it aside.
 """
 
 from __future__ import annotations
@@ -27,8 +27,6 @@ from cadrumo.application.ledger.actions_lifecycle import (
 )
 from cadrumo.application.ledger.actions_manual import update_manual_transaction_fields
 from cadrumo.application.ledger.models import ManualLedgerTransactionPatch, ManualLedgerTransactionResult
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
-from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from cadrumo.domain.calculations.registry.iva_deduction_catalogue import require_iva_deduction_fact_kind
@@ -55,13 +53,7 @@ from .classification_origin_support import (
     classify_row,
     composed_ledger,
 )
-from .test_classification_origin_at_the_ledger_writers import (
-    _PROPOSED_BY,
-    _REPLACING_WRITES,
-    _accept_proposal,
-    _derive,
-    _exclude,
-)
+from .test_classification_origin_at_the_ledger_writers import _PROPOSED_BY, _accept_proposal, _derive
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -107,21 +99,6 @@ def _write(
     )
 
 
-def _refused(act: Callable[[], object]) -> bool:
-    with pytest.raises(ProfileAccessRefusedError) as refused:
-        act()
-    return refused.value.reason is AccessDenialCode.FRONTEND_DENIED
-
-
-def _every_agent_write_is_refused(ledger: Ledger, row: str) -> bool:
-    """Run each replacing write under an agent's label; each must be refused and store nothing."""
-    before = ledger.stored()
-    for name, write in _REPLACING_WRITES:
-        assert _refused(lambda write=write: write(ledger, row, actor=AGENT)), name
-        assert ledger.stored() == before, name
-    return True
-
-
 @_PARTIES
 @pytest.mark.parametrize("reaffirm", [False, True], ids=["plain", "reaffirm"])
 @pytest.mark.parametrize("source_command", [_CLASSIFY, _ADD], ids=["another-reason", "same-reason"])
@@ -153,7 +130,6 @@ def test_a_person_confirming_the_classification_a_row_already_has_takes_the_row_
     assert set(recorded) == set(confirmed.bucket_event_ids) and recorded
     assert {event.actor for event in recorded.values()} == {PERSON}
     assert BucketEventType.LEDGER_TRANSACTION_CLASSIFIED in {event.event_type for event in recorded.values()}
-    assert _every_agent_write_is_refused(ledger, row)
 
 
 def test_a_person_restating_their_own_classification_writes_nothing(ledger: Ledger) -> None:
@@ -179,7 +155,6 @@ def test_an_agents_label_restating_the_persons_classification_takes_nothing(ledg
     personal = add_row(ledger, description="the person's personal row", classification=BusinessClassification.PERSONAL)
     _accept_proposal(ledger, personal, actor=AGENT)
     assert ledger.row(personal).classification_origin is ClassificationOrigin.PERSON
-    assert _every_agent_write_is_refused(ledger, row)
 
 
 def test_a_person_running_the_derivation_an_agent_ran_or_accepting_the_proposal_an_agent_accepted_takes_the_row(
@@ -199,7 +174,6 @@ def test_a_person_running_the_derivation_an_agent_ran_or_accepting_the_proposal_
     assert classification_facts(ledger.row(derived)) == figures
     for row in (derived, accepted):
         assert ledger.row(row).classification_origin is ClassificationOrigin.PERSON
-        assert _refused(lambda row=row: _exclude(ledger, row, actor=AGENT))
 
 
 def _m210(_ledger_unused: Ledger) -> M210IncomeClassification:
@@ -243,9 +217,6 @@ def test_a_person_setting_one_further_tax_bearing_fact_on_an_agents_row_takes_th
     assert field in CLASSIFICATION_DECISION_FIELDS
     assert getattr(ledger.row(row), field) is not None
     assert ledger.row(row).classification_origin is ClassificationOrigin.PERSON
-    before = ledger.stored()
-    assert _refused(lambda: _exclude(ledger, row, actor=AGENT))
-    assert ledger.stored() == before
 
 
 _CHANGES: dict[str, Callable[[Ledger], object]] = {
@@ -259,19 +230,23 @@ _CHANGES: dict[str, Callable[[Ledger], object]] = {
 
 
 @pytest.mark.parametrize("field", list(_CHANGES))
-def test_a_write_under_an_agents_label_that_changes_a_tax_bearing_fact_of_the_persons_row_is_refused(
-    ledger: Ledger, field: str
+@pytest.mark.parametrize(
+    ("decided_by", "actor", "origin"),
+    [(PERSON, AGENT, ClassificationOrigin.AGENT), (AGENT, PERSON, ClassificationOrigin.PERSON)],
+    ids=["agent-on-the-persons-row", "person-on-an-agents-row"],
+)
+def test_a_write_that_changes_a_tax_bearing_fact_is_stored_under_either_label_and_records_who_ran_it(
+    ledger: Ledger, field: str, decided_by: str, actor: str, origin: ClassificationOrigin
 ) -> None:
     """Whichever fact it is: the writer compares the one set the origin is decided from."""
-    row = add_row(ledger, description="the person's row", classification=BUSINESS)
+    row = add_row(ledger, description="a classified row", actor=decided_by, classification=BUSINESS)
     before = ledger.stored()
 
-    assert field in CLASSIFICATION_DECISION_FIELDS
-    assert _refused(lambda: _write(ledger, row, {field: _CHANGES[field](ledger)}, actor=AGENT))
-    assert ledger.stored() == before
+    changed = _write(ledger, row, {field: _CHANGES[field](ledger)}, actor=actor)
 
-    _write(ledger, row, {field: _CHANGES[field](ledger)}, actor=PERSON)
+    assert field in CLASSIFICATION_DECISION_FIELDS
     assert ledger.stored() != before
+    assert ledger.row(changed.ref.transaction_id).classification_origin is origin
 
 
 @pytest.mark.parametrize("values", [{"notes": "a note"}, {"group_label": "a label"}], ids=["note", "label"])
@@ -305,59 +280,45 @@ def _lifecycle(act: _SetAside, ledger: Ledger, row: str, *, actor: str) -> None:
     act(bucket_id=BUCKET_ID, transaction_id=row, actor=actor, reason="synthetic", ports=ledger.ports)
 
 
+_LABELS = [PERSON, AGENT]
+_LABEL_IDS = ["person", "agent"]
+
+
 @_SET_ASIDES
-def test_an_agents_label_sets_aside_and_restores_a_row_that_carries_none_of_the_persons_work(
-    ledger: Ledger, set_aside: _SetAside, state: TransactionLifecycleState
+@pytest.mark.parametrize("set_aside_by", _LABELS, ids=[f"set-aside-by-{label}" for label in _LABEL_IDS])
+@pytest.mark.parametrize("restored_by", _LABELS, ids=[f"restored-by-{label}" for label in _LABEL_IDS])
+def test_a_row_is_set_aside_and_restored_under_either_label_whoever_decided_it_and_whoever_set_it_aside(
+    ledger: Ledger, set_aside: _SetAside, state: TransactionLifecycleState, set_aside_by: str, restored_by: str
 ) -> None:
+    """The row records who ran each archive, stash and restore; none of them is refused for that record."""
     for row in (
         add_row(ledger, description="unprocessed"),
         add_row_classified_by_a_rule(ledger, description="classified by a rule"),
         add_row(ledger, description="classified by an agent", actor=AGENT, classification=BUSINESS),
+        add_row(ledger, description="the person's row", classification=BUSINESS),
     ):
-        _lifecycle(set_aside, ledger, row, actor=AGENT)
+        decided = ledger.row(row).classification_origin
+
+        _lifecycle(set_aside, ledger, row, actor=set_aside_by)
         assert ledger.row(row).lifecycle_state is state
-        assert ledger.row(row).lifecycle_lineage[-1].actor == AGENT
+        assert ledger.row(row).lifecycle_lineage[-1].actor == set_aside_by
 
-        _lifecycle(restore_manual_transaction, ledger, row, actor=AGENT)
+        _lifecycle(restore_manual_transaction, ledger, row, actor=restored_by)
         assert ledger.row(row).lifecycle_state is TransactionLifecycleState.ACTIVE
+        assert ledger.row(row).lifecycle_lineage[-1].actor == restored_by
+        assert ledger.row(row).classification_origin is decided
 
 
-@_SET_ASIDES
-def test_an_agents_label_does_not_set_aside_the_persons_row_nor_restore_what_the_person_set_aside(
-    ledger: Ledger, set_aside: _SetAside, state: TransactionLifecycleState
+@pytest.mark.parametrize("stashed_by", _LABELS, ids=[f"stashed-by-{label}" for label in _LABEL_IDS])
+@pytest.mark.parametrize("archived_by", _LABELS, ids=[f"archived-by-{label}" for label in _LABEL_IDS])
+def test_a_stashed_row_is_archived_and_restored_under_either_label_whoever_stashed_it(
+    ledger: Ledger, stashed_by: str, archived_by: str
 ) -> None:
-    """The row records who ran each archive, stash and restore, and the last one set the state it is in."""
-    the_persons = add_row(ledger, description="the person's row", classification=BUSINESS)
-    by_rule = add_row_classified_by_a_rule(ledger, description="classified by a rule")
-    before = ledger.stored()
-
-    assert _refused(lambda: _lifecycle(set_aside, ledger, the_persons, actor=AGENT))
-    assert ledger.stored() == before
-
-    for row in (the_persons, by_rule):
-        _lifecycle(set_aside, ledger, row, actor=PERSON)
-        assert ledger.row(row).lifecycle_state is state
-    set_aside_by_the_person = ledger.stored()
-    for row in (the_persons, by_rule):
-        assert _refused(lambda row=row: _lifecycle(restore_manual_transaction, ledger, row, actor=AGENT))
-    assert ledger.stored() == set_aside_by_the_person
-
-    for row in (the_persons, by_rule):
-        _lifecycle(restore_manual_transaction, ledger, row, actor=PERSON)
-        assert ledger.row(row).lifecycle_state is TransactionLifecycleState.ACTIVE
-
-
-def test_an_agents_label_does_not_archive_a_row_the_person_stashed_to_make_the_state_its_own(ledger: Ledger) -> None:
-    """Archiving it would record an agent as the last to set the row aside, and so let an agent restore it."""
     row = add_row_classified_by_a_rule(ledger, description="classified by a rule")
-    _lifecycle(stash_manual_transaction, ledger, row, actor=PERSON)
-    before = ledger.stored()
+    _lifecycle(stash_manual_transaction, ledger, row, actor=stashed_by)
 
-    assert _refused(lambda: _lifecycle(archive_manual_transaction, ledger, row, actor=AGENT))
-    assert ledger.stored() == before
+    _lifecycle(archive_manual_transaction, ledger, row, actor=archived_by)
+    assert ledger.row(row).lifecycle_state is TransactionLifecycleState.ARCHIVED
 
-    own = add_row(ledger, description="unprocessed")
-    _lifecycle(stash_manual_transaction, ledger, own, actor=AGENT)
-    _lifecycle(archive_manual_transaction, ledger, own, actor=AGENT)
-    _lifecycle(restore_manual_transaction, ledger, own, actor=AGENT)
-    assert ledger.row(own).lifecycle_state is TransactionLifecycleState.ACTIVE
+    _lifecycle(restore_manual_transaction, ledger, row, actor=archived_by)
+    assert ledger.row(row).lifecycle_state is TransactionLifecycleState.ACTIVE

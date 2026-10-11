@@ -118,10 +118,6 @@ def test_registered_configure_requires_exact_profile_and_releases_profile_result
         request=_request(),
         context=_access_context(registration, action=action),
     )
-
-    assert registry.lookup(AUTH_CONFIGURE_OPERATION_DEFINITION_ID).permitted_frontends == frozenset(
-        {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}
-    )
     assert registration.contract.result_schema is not None
     assert registration.contract.result_schema.schema_id == AUTH_CONFIGURE_RESULT_SCHEMA_ID
     assert action in resolved.policy.actions
@@ -149,17 +145,20 @@ def test_configure_access_refuses_a_different_profile_subject() -> None:
     assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
 
 
-def test_configure_access_refuses_mcp_frontend() -> None:
+def test_configure_access_is_the_same_on_every_frontend() -> None:
     registry, registration = _registered_configure()
 
-    with pytest.raises(ProfileAccessRefusedError) as refused:
-        resolve_operation_access(
-            registry=registry,
-            request=_request(),
-            context=_access_context(registration, frontend=OperationFrontendProjection.MCP),
+    resolved = {
+        frontend: resolve_operation_access(
+            registry=registry, request=_request(), context=_access_context(registration, frontend=frontend)
         )
+        for frontend in OperationFrontendProjection
+    }
 
-    assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED
+    for frontend, access in resolved.items():
+        assert access.request.frontend is frontend
+        assert access.policy.requires_human
+        assert access.policy == resolved[OperationFrontendProjection.CLI].policy
 
 
 def _receipt(

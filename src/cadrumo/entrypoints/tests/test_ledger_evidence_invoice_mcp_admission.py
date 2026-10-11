@@ -1,11 +1,11 @@
-"""An agent's evidence update, typed invoice entry and extraction, run through the real executors.
+"""An evidence update, a typed invoice entry and an extraction, run on each frontend through the real executors.
 
 The production registry and the real executors run over a stored profile with
-a session host that answers for the frontend that admitted the invocation. An
-agent's write is recorded under its session's label, its update result leaves
-out the directory the evidence was added from, and its extraction result
-carries the reading's summary and no text from the document. A person's run of
-the same operations is unchanged.
+a session host that answers for the frontend that admitted the invocation.
+Each operation settles with the same result on the command line, the terminal
+interface and MCP: the update result carries the stored record whole, and the
+extraction result carries the full draft. What an agent's write records
+carries its session's label; a person's carries the frontend's own.
 """
 
 from __future__ import annotations
@@ -19,7 +19,6 @@ import pytest
 from ...application.bucket_event_repository import bucket_event_history_repository
 from ...application.invoices.catalogue_intake_contracts import InvoiceWizardOutcome, InvoiceWizardRequest
 from ...application.ledger.evidence import PurchaseInvoiceEvidenceService
-from ...application.ledger.evidence_followup_contracts import DRAFT_TEXT_FIELDS_WITHHELD_FROM_AGENTS
 from ...application.ledger.evidence_mutation_operation import (
     LedgerEvidenceUpdatePatch,
     LedgerEvidenceUpdateProjection,
@@ -40,13 +39,14 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _MCP = OperationFrontendProjection.MCP
 _CLI = OperationFrontendProjection.CLI
+_TUI = OperationFrontendProjection.TUI
 _SESSION_CLIENT = UUID("5aa00000-0000-4000-8000-0000000000dd")
 _AGENT_LABEL = f"agent:mcp.attended.{_SESSION_CLIENT}"
 _PERSON_LABEL = "cli"
 _FRONTENDS = pytest.mark.parametrize(
     ("frontend", "recorded"),
-    [(_MCP, _AGENT_LABEL), (_CLI, _PERSON_LABEL)],
-    ids=["mcp", "cli"],
+    [(_MCP, _AGENT_LABEL), (_CLI, _PERSON_LABEL), (_TUI, _PERSON_LABEL)],
+    ids=["mcp", "cli", "tui"],
 )
 _MINIMAL_PDF = b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n"
 
@@ -67,12 +67,12 @@ def _actors_of(profile_id: UUID, *, object_id: str) -> set[str]:
 
 
 @_FRONTENDS
-def test_evidence_update_records_who_acted_and_keeps_the_directory_out_of_an_agents_result(
+def test_evidence_update_records_who_acted_and_returns_the_stored_record_whole_on_every_frontend(
     tmp_path: Path,
     frontend: OperationFrontendProjection,
     recorded: str,
 ) -> None:
-    """The replacement event names the derived label, and the stored record keeps the person's path either way."""
+    """The replacement event names the derived label; the result and the stored record keep the typed path."""
     definition_id = "ledger.evidence.update"
     with conformance._runtime(
         tmp_path / "runtime",
@@ -111,13 +111,11 @@ def test_evidence_update_records_who_acted_and_keeps_the_directory_out_of_an_age
         )
         stored = service.view(bucket_id=str(profile_id), evidence_id=added.evidence_id)
         replaced = bucket_event_history_repository(bucket_id=str(profile_id)).load().events
-        for_agent = frontend is _MCP
 
         assert {replaced[event_id].actor for event_id in result.bucket_event_ids} == {recorded}
         assert (result.record.supplier, result.record.taxable_base) == ("Synthetic Supplier SL", "100.5")
-        assert result.source_directory_withheld is for_agent
-        assert result.record.source_path == (source.name if for_agent else added.source_path)
-        assert (source_directory.name in result.model_dump_json()) is not for_agent
+        assert result.record.source_path == added.source_path
+        assert source_directory.name in result.model_dump_json()
         assert (stored.source_path, stored.attachment_id, stored.source_sha256) == (
             added.source_path,
             added.attachment_id,
@@ -165,13 +163,13 @@ def test_a_typed_invoice_entry_records_who_made_it(
         assert _actors_of(profile_id, object_id=outcome.result.invoice.invoice_id) == {recorded}
 
 
-@pytest.mark.parametrize("frontend", [_MCP, _CLI], ids=["mcp", "cli"])
-def test_an_extraction_seals_the_summary_for_an_agent_and_the_full_draft_for_a_person(
+@pytest.mark.parametrize("frontend", [_MCP, _CLI, _TUI], ids=["mcp", "cli", "tui"])
+def test_an_extraction_seals_the_full_draft_whichever_frontend_submits_it(
     tmp_path: Path,
     operation: PinnedAuthorityOperation,
     frontend: OperationFrontendProjection,
 ) -> None:
-    """The same stored document is read on this machine; only what is sealed of the reading differs."""
+    """The same stored document is read on this machine, and the whole reading is sealed for every caller."""
     definition_id = "ledger.evidence.extract"
     with (
         conformance._model_runtime_for(definition_id),
@@ -184,7 +182,6 @@ def test_an_extraction_seals_the_summary_for_an_agent_and_the_full_draft_for_a_p
         case = prepare_invoice_evidence_conformance_case(definition_id, profile_id=profile_id, operation=operation)
         expected = case.expected_read
         assert isinstance(expected, LedgerEvidenceExtractProjection)
-        full = expected.person_draft()
 
         submitted, observed = asyncio.run(
             driver.run(
@@ -203,29 +200,5 @@ def test_an_extraction_seals_the_summary_for_an_agent_and_the_full_draft_for_a_p
             terminal_revision=observed.projection.revision,
             projection_type=LedgerEvidenceExtractProjection,
         )
-        assert (result.source_sha256, result.draft_review_sha256) == (
-            expected.source_sha256,
-            expected.draft_review_sha256,
-        )
-        if frontend is _CLI:
-            assert result == expected
-            return
-        summary = result.draft_summary
-        assert result.draft is None and summary is not None
-        printed = {
-            name: value for name in DRAFT_TEXT_FIELDS_WITHHELD_FROM_AGENTS if (value := getattr(full, name)) is not None
-        }
-        assert set(summary.withheld_text_fields) == set(printed)
-        assert summary.text_withheld is True
-        assert (summary.taxable_base, summary.iva_amount, summary.grand_total) == (
-            full.taxable_base,
-            full.iva_amount,
-            full.grand_total,
-        )
-        assert len(summary.lines) == len(full.lines)
-        assert len(summary.fields) == len(full.provenance)
-        released = result.model_dump_json()
-        party_names = [str(value) for name, value in printed.items() if name.endswith("_name")]
-        assert party_names
-        assert [text for text in party_names if text in released] == []
-        assert [line.description for line in full.lines if line.description and line.description in released] == []
+        assert result == expected
+        assert result.draft.provenance

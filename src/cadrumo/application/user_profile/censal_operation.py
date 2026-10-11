@@ -59,7 +59,6 @@ from ..operations.operation_definition import OperationDefinition, OperationExec
 from ..operations.owner import OperationExecutorContext, OperationResumeCheckpoint
 from ..operations.persistence.journal import serialize_operation_operand
 from ..operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
@@ -371,8 +370,6 @@ def _validated_censal_operation_access_request(
     payload = request.payload
     if request.definition_id != CENSAL_OPERATION_DEFINITION_ID or not isinstance(payload, CensalOperationRequest):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    if context.frontend not in context.contract.permitted_frontends:
-        raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
     baseline = payload.baseline
     if request.subject_ref != str(baseline.profile_id) or context.profile_id != UUID(str(baseline.profile_id)):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
@@ -770,9 +767,6 @@ def build_censal_operation_definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
-        # Applying the review rewrites profile facts in bulk, and an apply cannot be told
-        # from a reject where a response is authorized, so only a person's frontend runs it.
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
 

@@ -49,7 +49,6 @@ from ..operations.models import CredentialFreeOperationRequest, OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import (
-    OperationFrontendProjection,
     OperationPublicContractSetV1,
     OperationPublicDefinitionRegistrationV1,
 )
@@ -476,8 +475,6 @@ class ModeloEditApplyPrerequisiteExecutor:
 
 
 _READ_CAPABILITIES = RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
-#: Owner reads for a human at a password-authenticated CLI or TUI; never an agent or off-host destination.
-_HUMAN_FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
 #: Four of the reads name their declaration directly; the renewal names it inside the baseline it renews.
 _WORK_UNIT_SUBJECT = OperationSubjectReferenceV1.payload_field("work_unit_id")
 #: Each read's public request and result models, in registration order.
@@ -518,7 +515,6 @@ def _definition(
         transient_financial_operand=modelo_edit_financial_operand(None)
         if definition_id == MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID
         else None,
-        permitted_frontends=_HUMAN_FRONTENDS,
     )
 
 

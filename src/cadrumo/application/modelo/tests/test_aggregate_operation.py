@@ -300,9 +300,6 @@ def test_definition_and_access_are_profile_and_period_scoped() -> None:
 
     assert definition.capabilities.request_storage is OperationRequestStoragePolicy.SECURE_REFERENCE
     assert definition.capabilities.sensitive_input is OperationSensitiveInputPolicy.SECURE_REFERENCE
-    assert definition.permitted_frontends == frozenset(
-        {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-    )
     context = OperationAccessContext(
         profile_id=_PROFILE,
         destination_id=uuid4(),

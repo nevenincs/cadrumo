@@ -176,12 +176,9 @@ def test_request_shapes_are_closed_and_use_secure_reference_custody() -> None:
 
     ports, definitions, registrations = _definitions_and_registrations()
     del ports
-    registry = OperationRegistry(definitions=definitions, public_registrations=registrations)
+    OperationRegistry(definitions=definitions, public_registrations=registrations)
     assert tuple(item.definition_id for item in definitions) == tuple(
         sorted(item.definition_id for item in definitions)
-    )
-    assert tuple(registry.lookup(item.definition_id).permitted_frontends for item in definitions) == tuple(
-        frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}) for _ in definitions
     )
     assert all(
         definition.capabilities.request_storage.value == "secure_reference"
@@ -217,10 +214,12 @@ def test_every_source_verb_requires_human_authority_and_exact_profile(action: Ac
             resolved = resolve_operation_access(registry=registry, request=request, context=context)
             assert resolved.policy.requires_human
 
-        wrong_frontend = replace(context, frontend=OperationFrontendProjection.MCP)
-        with pytest.raises(ProfileAccessRefusedError) as refused:
-            resolve_operation_access(registry=registry, request=request, context=wrong_frontend)
-        assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED
+        for frontend in OperationFrontendProjection:
+            elsewhere = resolve_operation_access(
+                registry=registry, request=request, context=replace(context, frontend=frontend)
+            )
+            assert elsewhere.request.frontend is frontend
+            assert elsewhere.policy == resolved.policy
 
         wrong_profile = replace(context, profile_id=uuid4())
         with pytest.raises(ProfileAccessRefusedError) as refused:

@@ -371,9 +371,6 @@ def test_revision_selection_is_admitted_on_the_mcp_frontend_without_a_commit_doo
             authority_operation=authority_operation,
         ),
     )
-
-    assert OperationFrontendProjection.MCP in definition.permitted_frontends
-    assert OperationFrontendProjection.MCP in registration.contract.permitted_frontends
     assert resolved.request.frontend is OperationFrontendProjection.MCP
     assert resolved.request.periods == frozenset({unit.period})
     assert AccessAction.COMMIT not in resolved.policy.actions

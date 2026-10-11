@@ -102,9 +102,6 @@ def test_real_registry_compiles_all_purpose_schemas_without_agent_source_prose(s
     assert "notes" not in module.ModeloAuditQueryBundle.model_fields
     assert "object_id" not in module.ModeloAuditQueryRecord.model_fields
     assert "detail" not in module.ModeloAuditQueryFinding.model_fields
-    assert registry.lookup(module.MODELO_AUDIT_EXPORT_OPERATION_DEFINITION_ID).permitted_frontends == frozenset(
-        {OperationFrontendProjection.CLI}
-    )
 
 
 @pytest.mark.asyncio
@@ -328,10 +325,10 @@ def test_query_authority_cannot_authorize_human_read_export_and_observation_stay
         assert isinstance(restricted, AccessDenied) and restricted.code is AccessDenialCode.OPERATION_DENIED
         automated = policy_decision(resolved, registry, disclosures=resolved.policy.disclosures)
         assert isinstance(automated, AccessDenied) and automated.code is AccessDenialCode.HUMAN_AUTHORITY_REQUIRED
-        with pytest.raises(ProfileAccessRefusedError):
-            module.resolve_modelo_audit_operation_access(
-                public, replace(context, frontend=OperationFrontendProjection.MCP)
-            )
+        for frontend in OperationFrontendProjection:
+            on_frontend = module.resolve_modelo_audit_operation_access(public, replace(context, frontend=frontend))
+            assert on_frontend.policy == resolved.policy, (request.definition_id, frontend)
+            assert on_frontend.request == resolved.request.model_copy(update={"frontend": frontend})
         observed = module.resolve_modelo_audit_operation_access(public, replace(context, action=AccessAction.OBSERVE))
         permission = next(iter(observed.policy.disclosures))
         assert len(observed.policy.disclosures) == 1 and permission.category is DisclosureCategory.OPERATION_METADATA

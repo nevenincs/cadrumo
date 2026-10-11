@@ -321,19 +321,14 @@ def test_profile_mismatch_precedes_a_mismatched_replay(route: str) -> None:
 
 
 _CAPABILITY_PATHS = tuple(capability.schema_path for capability in ServiceCapability)
-_CAPABILITY_ADDRESSES = (
+_FIELD_PATHS = (
     *_CAPABILITY_PATHS,
     # The fact writer trims the path, so a padded one stores the same capability.
-    f"  {ServiceCapability.CLOUD_EVIDENCE_UPLOAD.schema_path}\t",
-    # A member the capability enum does not name yet still lies in the section.
-    "capabilities.later_service",
-)
-_OTHER_FIELD_PATHS = (
+    f"  {ServiceCapability.CLOUD_EVIDENCE_UPLOAD.schema_path}	",
     "preferences.output_language",
     "identity.notes",
-    # A section that only begins with the same letters is not the capability section.
-    "capabilities_note.text",
 )
+_FRONTENDS = tuple(OperationFrontendProjection)
 
 
 def _field_mutation(path: str, value: str) -> OperationRequest[BaseModel]:
@@ -358,48 +353,27 @@ def _resolve_on(
     return resolve_operation_access(registry=registry, request=request, context=context)
 
 
-def test_the_capability_cases_name_every_service_capability() -> None:
+def test_the_field_cases_name_every_service_capability() -> None:
     assert _CAPABILITY_PATHS
-    assert set(_CAPABILITY_PATHS) < set(_CAPABILITY_ADDRESSES)
+    assert set(_CAPABILITY_PATHS) < set(_FIELD_PATHS)
 
 
 @pytest.mark.parametrize("value", ["true", "false", ""])
 @pytest.mark.parametrize("action", _ALL_ACTIONS)
-@pytest.mark.parametrize("path", _CAPABILITY_ADDRESSES)
-def test_an_mcp_client_is_refused_setting_or_clearing_a_service_capability(
+@pytest.mark.parametrize("path", _FIELD_PATHS)
+def test_every_frontend_resolves_the_same_access_for_a_field_change(
     path: str, action: AccessAction, value: str
 ) -> None:
-    with pytest.raises(ProfileAccessRefusedError) as refused:
-        _resolve_on(OperationFrontendProjection.MCP, _field_mutation(path, value), action)
+    request = _field_mutation(path, value)
 
-    assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED
+    resolved = {frontend: _resolve_on(frontend, request, action) for frontend in _FRONTENDS}
 
-
-@pytest.mark.parametrize("frontend", [OperationFrontendProjection.CLI, OperationFrontendProjection.TUI])
-@pytest.mark.parametrize("value", ["true", "false", ""])
-@pytest.mark.parametrize("path", _CAPABILITY_ADDRESSES)
-def test_a_persons_frontend_still_sets_and_clears_a_service_capability(
-    path: str, value: str, frontend: OperationFrontendProjection
-) -> None:
-    resolved = _resolve_on(frontend, _field_mutation(path, value), AccessAction.SUBMIT)
-
-    assert resolved.request.frontend is frontend
-    assert AccessAction.COMMIT in resolved.policy.actions
-
-
-@pytest.mark.parametrize("action", _ALL_ACTIONS)
-@pytest.mark.parametrize("path", _OTHER_FIELD_PATHS)
-def test_an_mcp_client_still_changes_every_field_that_is_not_a_service_capability(
-    path: str, action: AccessAction
-) -> None:
-    request = _field_mutation(path, "es")
-
-    on_mcp = _resolve_on(OperationFrontendProjection.MCP, request, action)
-
-    assert on_mcp.request.frontend is OperationFrontendProjection.MCP
-    assert on_mcp.request.action is action
-    assert on_mcp.policy == _resolve_on(OperationFrontendProjection.CLI, request, action).policy
-    assert AccessAction.COMMIT in on_mcp.policy.actions
+    assert set(resolved) == set(OperationFrontendProjection)
+    for frontend, access in resolved.items():
+        assert access.request.frontend is frontend
+        assert access.request.action is action
+        assert access.policy == resolved[OperationFrontendProjection.CLI].policy
+        assert AccessAction.COMMIT in access.policy.actions
 
 
 _KNOWN_CAPABILITY_QUESTIONS = ("llm-vision", "google-export")
@@ -433,95 +407,44 @@ def _resolve_patch(
     return resolve_operation_access(registry=registry, request=request, context=context)
 
 
-def _catalogue_capability_questions(operation: PinnedAuthorityOperation) -> set[str]:
-    return {
-        question.id
-        for section in build_setup_flow(operation).sections
-        for question in section.questions
-        if question.profile_key is not None and question.profile_key.split(".")[0] == "capabilities"
-    }
-
-
 def test_the_setup_catalogue_asks_the_known_capability_questions(operation: PinnedAuthorityOperation) -> None:
-    asked = _catalogue_capability_questions(operation)
-
-    assert set(_KNOWN_CAPABILITY_QUESTIONS) <= asked
     questions = {
         question.id: question.profile_key
         for section in build_setup_flow(operation).sections
         for question in section.questions
     }
-    assert {questions[question_id] for question_id in asked} <= {item.schema_path for item in ServiceCapability}
+
+    assert {questions[question_id] for question_id in _KNOWN_CAPABILITY_QUESTIONS} <= {
+        item.schema_path for item in ServiceCapability
+    }
     assert questions[_OTHER_QUESTION] == "identity.notes"
 
 
-@pytest.mark.parametrize("value", ["true", "false", ""])
-@pytest.mark.parametrize("action", _ALL_ACTIONS)
-@pytest.mark.parametrize("question_id", _KNOWN_CAPABILITY_QUESTIONS)
-def test_an_mcp_client_is_refused_a_patch_that_answers_a_capability_question(
-    question_id: str, action: AccessAction, value: str, operation: PinnedAuthorityOperation
-) -> None:
-    alone = _patch((question_id, value))
-    among_others = _patch((_OTHER_QUESTION, "synthetic note"), (question_id, value))
-
-    for request in (alone, among_others):
-        with pytest.raises(ProfileAccessRefusedError) as refused:
-            _resolve_patch(OperationFrontendProjection.MCP, request, action, operation)
-        assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED
+_PATCHES = (
+    *(((question_id, value),) for question_id in _KNOWN_CAPABILITY_QUESTIONS for value in ("true", "false", "")),
+    ((_OTHER_QUESTION, "synthetic note"), (_KNOWN_CAPABILITY_QUESTIONS[0], "false")),
+    ((_OTHER_QUESTION, "synthetic note"),),
+    (),
+)
 
 
-def test_every_capability_question_the_catalogue_asks_is_refused_to_mcp(operation: PinnedAuthorityOperation) -> None:
-    """The refusal follows the catalogue, so a capability question added later is covered."""
-    asked = sorted(_catalogue_capability_questions(operation))
-    assert asked
-
-    for question_id in asked:
-        request = _patch((question_id, "false"))
-        with pytest.raises(ProfileAccessRefusedError) as refused:
-            _resolve_patch(OperationFrontendProjection.MCP, request, AccessAction.SUBMIT, operation)
-        assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED, question_id
-
-
-@pytest.mark.parametrize("frontend", [OperationFrontendProjection.CLI, OperationFrontendProjection.TUI])
 @pytest.mark.parametrize("with_authority", [True, False])
-@pytest.mark.parametrize("question_id", _KNOWN_CAPABILITY_QUESTIONS)
-def test_a_persons_frontend_still_patches_a_capability_answer(
-    question_id: str, with_authority: bool, frontend: OperationFrontendProjection, operation: PinnedAuthorityOperation
-) -> None:
-    request = _patch((question_id, "false"))
-
-    resolved = _resolve_patch(frontend, request, AccessAction.SUBMIT, operation if with_authority else None)
-
-    assert resolved.request.frontend is frontend
-    assert AccessAction.COMMIT in resolved.policy.actions
-
-
 @pytest.mark.parametrize("action", _ALL_ACTIONS)
-def test_an_mcp_client_still_patches_answers_that_touch_no_capability(
-    action: AccessAction, operation: PinnedAuthorityOperation
+@pytest.mark.parametrize("answers", _PATCHES)
+def test_every_frontend_resolves_the_same_access_for_a_patch(
+    answers: tuple[tuple[str, str], ...],
+    action: AccessAction,
+    with_authority: bool,
+    operation: PinnedAuthorityOperation,
 ) -> None:
-    request = _patch((_OTHER_QUESTION, "synthetic note"), colegio_concertado=True)
+    request = _patch(*answers, colegio_concertado=None if answers else False)
+    authority = operation if with_authority else None
 
-    on_mcp = _resolve_patch(OperationFrontendProjection.MCP, request, action, operation)
+    resolved = {frontend: _resolve_patch(frontend, request, action, authority) for frontend in _FRONTENDS}
 
-    assert on_mcp.request.frontend is OperationFrontendProjection.MCP
-    assert on_mcp.policy == _resolve_patch(OperationFrontendProjection.CLI, request, action, operation).policy
-    assert AccessAction.COMMIT in on_mcp.policy.actions
-
-
-def test_a_patch_that_answers_no_question_needs_no_catalogue_on_mcp() -> None:
-    request = _patch(colegio_concertado=False)
-
-    resolved = _resolve_patch(OperationFrontendProjection.MCP, request, AccessAction.SUBMIT, None)
-
-    assert resolved.request.frontend is OperationFrontendProjection.MCP
-
-
-def test_an_mcp_patch_with_answers_is_refused_when_the_catalogue_cannot_be_read() -> None:
-    """Without the pinned authority no answer can be shown to leave the capabilities alone."""
-    with pytest.raises(ProfileAccessRefusedError) as refused:
-        _resolve_patch(
-            OperationFrontendProjection.MCP, _patch((_OTHER_QUESTION, "synthetic note")), AccessAction.SUBMIT, None
-        )
-
-    assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+    assert set(resolved) == set(OperationFrontendProjection)
+    for frontend, access in resolved.items():
+        assert access.request.frontend is frontend
+        assert access.request.action is action
+        assert access.policy == resolved[OperationFrontendProjection.CLI].policy
+        assert AccessAction.COMMIT in access.policy.actions

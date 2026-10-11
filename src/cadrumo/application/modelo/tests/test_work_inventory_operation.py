@@ -163,9 +163,6 @@ def test_work_list_is_admitted_on_the_mcp_frontend_without_a_commit_door() -> No
         context=_context(registration, frontend=OperationFrontendProjection.MCP),
     )
 
-    definition = registry.lookup(MODELO_WORK_LIST_OPERATION_DEFINITION_ID)
-    assert OperationFrontendProjection.MCP in definition.permitted_frontends
-    assert OperationFrontendProjection.MCP in registration.contract.permitted_frontends
     assert resolved.request.frontend is OperationFrontendProjection.MCP
     assert resolved.request.profile_id == _PROFILE
     assert AccessAction.COMMIT not in resolved.policy.actions

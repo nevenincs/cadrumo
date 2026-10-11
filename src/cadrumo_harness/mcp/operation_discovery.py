@@ -19,7 +19,7 @@ from .operation_search import rank_operations
 from .protocol_contract import SEARCH_PAGE_DEFAULT, public_value, refusal_code
 from .runtime_admission import McpAdmission, require_exact_admitted_status
 
-# An operation outside the session's frontend or scope is simply not offered.
+# An operation outside the connection's surface or the session's scope is simply not offered.
 _NOT_OFFERED = frozenset({AccessDenialCode.FRONTEND_DENIED.value, AccessDenialCode.OPERATION_DENIED.value})
 # These refusals concern one operation, so the others are still worth listing.
 _UNAVAILABLE_OPERATION = frozenset(

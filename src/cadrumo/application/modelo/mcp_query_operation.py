@@ -1,8 +1,8 @@
-"""Agent-specific, typed modelo binding and readiness projections.
+"""Typed modelo binding and readiness projections with closed result fields.
 
 The canonical readers remain in query_read_operation. This module validates
 caller values against the same pinned declaration and publishes only closed
-result fields whose disclosure was authorized for the MCP destination.
+result fields whose disclosure was authorized for the requesting destination.
 """
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ from ..operations.access_resolution import OperationAccessContext, ResolvedOpera
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..operator_actions.preconditions import PROFILE_SETUP_DECLARED_COMPLETE_CONDITION
 from ..operator_actions.projection import PreconditionVerdictSnapshot
@@ -195,7 +195,7 @@ class ModeloReadinessSummaryExecutor:
 
 
 def build_modelo_bindings_resolve_typed_definition() -> OperationDefinition:
-    """Define the agent-only validated binding preview."""
+    """Define the validated typed binding preview."""
     return build_single_phase_definition(
         definition_id=MODELO_BINDINGS_RESOLVE_TYPED_OPERATION_DEFINITION_ID,
         request_type=ModeloBindingsResolveRequest,
@@ -204,12 +204,11 @@ def build_modelo_bindings_resolve_typed_definition() -> OperationDefinition:
         executor_type=ModeloBindingsResolveTypedExecutor,
         build=ModeloBindingsResolveTypedExecutor,
         capabilities=modelo_query_read_capabilities(sensitive=True),
-        permitted_frontends=frozenset({OperationFrontendProjection.MCP}),
     )
 
 
 def build_modelo_readiness_summary_definition(factory: ModeloQueryReadPortsFactory) -> OperationDefinition:
-    """Define the agent-only readiness summary."""
+    """Define the typed readiness summary."""
     return build_single_phase_definition(
         definition_id=MODELO_READINESS_SUMMARY_OPERATION_DEFINITION_ID,
         request_type=ModeloReadinessOperationRequest,
@@ -218,7 +217,6 @@ def build_modelo_readiness_summary_definition(factory: ModeloQueryReadPortsFacto
         executor_type=ModeloReadinessSummaryExecutor,
         build=lambda: ModeloReadinessSummaryExecutor(factory),
         capabilities=modelo_query_read_capabilities(),
-        permitted_frontends=frozenset({OperationFrontendProjection.MCP}),
     )
 
 
@@ -226,8 +224,6 @@ def _registration(
     definition: OperationDefinition, request_type: type[BaseModel], result_type: type[BaseModel]
 ) -> OperationPublicDefinitionRegistrationV1:
     def resolve(request: OperationRequest[BaseModel], context: OperationAccessContext, /) -> ResolvedOperationAccess:
-        if context.frontend is not OperationFrontendProjection.MCP:
-            raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
         return resolve_modelo_query_read_access(
             request,
             context,

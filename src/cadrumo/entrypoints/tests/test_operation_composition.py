@@ -40,7 +40,6 @@ from ...application.operations.projection_services import (
     OperationReviewProjectionService,
     OperationWorkspaceRefreshTargetService,
 )
-from ...application.operations.registry import OperationFrontendProjection
 from ...application.operations.tests.authority_test_support import unread_authority_operation
 from ...core.config import load_settings
 from ...core.time.clock import now
@@ -136,21 +135,14 @@ def test_saved_calculation_review_export_is_registered_for_both_operator_surface
         assert current_active_bucket_session() is None
         registry = build_production_operation_registry()
         definition = registry.lookup("export.calculation-review-xlsx")
-        contract = registry.lookup_public_contract(definition.definition_id)
         assert definition.request_type is CalculationReviewXlsxRequest
         assert definition.result_type is CalculationReviewXlsxExecutionResult
-        assert contract.permitted_frontends == frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}
-        )
         assert (
             registry.lookup_public_registration(definition.definition_id).contract.definition_id
             == definition.definition_id
         )
         reconciliation = registry.lookup("modelo.reconcile.export-xlsx")
         assert reconciliation.request_type is ReconciliationExportXlsxRequest
-        assert registry.lookup_public_contract(reconciliation.definition_id).permitted_frontends == frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}
-        )
 
 
 def test_submission_issues_actor_bound_opaque_response_capability(tmp_path: Path) -> None:

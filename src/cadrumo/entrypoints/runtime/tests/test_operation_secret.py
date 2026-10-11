@@ -96,7 +96,7 @@ class _LoginObservation:
         )
 
 
-def test_original_tui_export_secret_is_one_use_and_server_refuses_mcp_before_bytes(tmp_path: Path) -> None:
+def test_original_export_secret_is_one_use_and_another_sessions_answer_is_refused_before_bytes(tmp_path: Path) -> None:
     """Wrong peers cannot answer the copied requirement; genuine export settles."""
     root = tmp_path / "cadrumo-storage"
     root.mkdir()
@@ -109,8 +109,7 @@ def test_original_tui_export_secret_is_one_use_and_server_refuses_mcp_before_byt
     ) as subject:
         profile_id = subject.store.binding.profile_id
         destination = tmp_path / "private-transfer.bundle"
-        # The runtime admits an MCP frontend by API key only, so the peer that
-        # must be refused before the protected frame holds a genuine key.
+        # A third session, admitted by a genuine key on another frontend, also answers the wait.
         api_key = _issue_scoped_key(subject)
         close_active_bucket_session()
         stop, boot = Event(), uuid4()
@@ -181,8 +180,8 @@ def test_original_tui_export_secret_is_one_use_and_server_refuses_mcp_before_byt
                     assert wrong_revision == bytes(len(_EXPORT_SECRET))
                     assert client.status().status.connected
 
-                    # Bypass only the frontend helper's local MCP check to exercise
-                    # the verified server's refusal before its protected byte frame.
+                    # The requirement belongs to the session that submitted it, whichever
+                    # frontend another session is on; the server refuses before its protected byte frame.
                     raw_mcp = asyncio.run(launch.open(timeout=10))
                     try:
                         login = raw_mcp.login(

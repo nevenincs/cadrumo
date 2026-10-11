@@ -445,9 +445,6 @@ def test_report_reads_are_admitted_on_the_mcp_frontend_without_a_commit_door() -
                 request=_request(definition_id=definition.definition_id, payload=payload),
                 context=_context(registration, operation=operation, frontend=OperationFrontendProjection.MCP),
             )
-
-            assert OperationFrontendProjection.MCP in definition.permitted_frontends
-            assert OperationFrontendProjection.MCP in registration.contract.permitted_frontends
             assert resolved.request.frontend is OperationFrontendProjection.MCP
             assert resolved.request.profile_id == _PROFILE
             assert AccessAction.COMMIT not in resolved.policy.actions

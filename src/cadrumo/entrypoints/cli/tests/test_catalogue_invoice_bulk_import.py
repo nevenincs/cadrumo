@@ -61,6 +61,7 @@ def _projection(
 ) -> InvoiceImportProjection:
     return InvoiceImportProjection(
         profile_id=_PROFILE_ID,
+        source_sha256="a" * 64,
         rows=rows,
         created=created,
         skipped_duplicate=skipped_duplicate,

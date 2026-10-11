@@ -384,29 +384,6 @@ def _review_view_projection(
     )
 
 
-def review_extraction_draft(
-    profile_id: UUID,
-    stored: StoredExtractionDraft,
-    operation: PinnedAuthorityOperation,
-) -> LedgerEvidenceReviewViewProjection:
-    """Derive one draft's complete review under the retained authority.
-
-    The draft need not have been read back from the pending queue: a reading
-    that was just made is reviewed by the same rules.
-    """
-    draft = stored.draft.with_label_reading_fallback(stored.label_reading_fallback)
-    party_advisory, country_advisory = _review_view_advisories(draft, operation)
-    projected_draft = _review_view_invoice_draft_projection(draft)
-    return _review_view_projection(
-        profile_id,
-        stored,
-        draft,
-        projected_draft,
-        _party_attribution_projection(party_advisory),
-        _country_vocabulary_projection(country_advisory),
-    )
-
-
 def _read_review_view(
     ports: LedgerEvidenceFollowupOperationPorts,
     bucket_id: str,
@@ -415,7 +392,17 @@ def _read_review_view(
 ) -> LedgerEvidenceReviewViewProjection:
     """Read one pending draft and derive its complete review under the retained authority."""
     stored = _stored_review_view_draft(ports, bucket_id, payload.evidence_reference)
-    result = review_extraction_draft(payload.profile_id, stored, operation)
+    draft = stored.draft.with_label_reading_fallback(stored.label_reading_fallback)
+    party_advisory, country_advisory = _review_view_advisories(draft, operation)
+    projected_draft = _review_view_invoice_draft_projection(draft)
+    result = _review_view_projection(
+        payload.profile_id,
+        stored,
+        draft,
+        projected_draft,
+        _party_attribution_projection(party_advisory),
+        _country_vocabulary_projection(country_advisory),
+    )
     if result.evidence_reference != payload.evidence_reference:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     return result
@@ -602,5 +589,4 @@ __all__ = [
     "LedgerEvidenceReviewListExecutor",
     "LedgerEvidenceReviewSummaryExecutor",
     "LedgerEvidenceReviewViewExecutor",
-    "review_extraction_draft",
 ]

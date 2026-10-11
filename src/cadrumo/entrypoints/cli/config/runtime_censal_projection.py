@@ -110,7 +110,6 @@ def _validate_contract(
         or contract.result_schema != expected_result
         or contract.review_projection_schema != CENSAL_REVIEW_PROJECTION_SCHEMA_BINDING.identity
         or contract.interaction_response_schema != CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING.identity
-        or client.frontend not in contract.permitted_frontends
         or client.frontend is not OperationFrontendProjection.CLI
         or contract.ephemeral_secret_required
         or request.baseline.profile_id != str(client.profile_id)

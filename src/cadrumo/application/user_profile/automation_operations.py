@@ -36,7 +36,6 @@ from ..operations.models import (
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
@@ -411,7 +410,6 @@ def build_automation_operation_definitions(
                 interaction_kinds=frozenset(),
                 capabilities=RECORDED_IDEMPOTENT_JOURNALED_UPDATE_CAPABILITIES,
                 reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-                permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
                 ephemeral_secret=None
                 if secret_kind is None
                 else OperationEphemeralSecretDeclaration(secret_kind=secret_kind, lifetime=timedelta(minutes=5)),
@@ -423,7 +421,7 @@ def build_automation_operation_definitions(
 def build_automation_operation_registrations(
     definitions: tuple[OperationDefinition, ...],
 ) -> tuple[OperationPublicDefinitionRegistrationV1, ...]:
-    """Expose human inventory, approval and decline with safe typed results."""
+    """Expose human inventory, approval and decline with safe typed results, and proposals with none."""
     return tuple(
         OperationPublicDefinitionRegistrationV1.compose(
             definition=item,
@@ -444,9 +442,50 @@ def build_automation_operation_registrations(
             else project_automation_enrollment_result
             if item.definition_id in _REVIEWED_HUMAN_DEFINITIONS
             else None,
-            access_resolver=resolve_automation_human_access if item.definition_id in _HUMAN_DEFINITIONS else None,
+            access_resolver=resolve_automation_human_access
+            if item.definition_id in _HUMAN_DEFINITIONS
+            else resolve_automation_proposal_access,
         )
         for item in definitions
+    )
+
+
+def resolve_automation_proposal_access(
+    request: OperationRequest[BaseModel], context: OperationAccessContext, /
+) -> ResolvedOperationAccess:
+    """Admit a proposal for the exact profile from the session that asks for the authority.
+
+    A proposal is filed by the client that wants a grant or a change to its
+    own, so it does not take a person's session; the person's part is the
+    reviewed decision. A proposal registers no result, so reading one is
+    refused as unavailable.
+    """
+    payload = request.payload
+    if not isinstance(payload, AutomationOperationRequest):
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    if (
+        request.definition_id not in _PROPOSALS
+        or payload.profile_id != context.profile_id
+        or request.subject_ref != profile_operation_subject(str(payload.profile_id))
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    disclosures = operation_disclosures(
+        context,
+        observed_by=OBSERVATION_DISCLOSING_ACTIONS,
+        result_categories=frozenset({DisclosureCategory.PROFILE_VALUES}),
+        result_schema_id=None,
+    )
+    return bind_operation_access(
+        context,
+        profile_id=payload.profile_id,
+        definition_id=request.definition_id,
+        actions=COMMITTING_OPERATION_LIFECYCLE_ACTIONS,
+        disclosures=disclosures,
+        periods=frozenset(),
+        period_independent=True,
+        requires_all_periods=False,
+        requires_human=False,
+        provider=Availability.NOT_REQUIRED,
     )
 
 

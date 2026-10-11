@@ -92,7 +92,6 @@ from ....application.operations.registry import (
 )
 from ....application.user_profile.access_contracts import (
     AccessAction,
-    AccessDenialCode,
     Availability,
     DisclosureCategory,
 )
@@ -530,9 +529,6 @@ def test_each_evidence_metadata_read_is_admitted_on_the_mcp_frontend_without_a_c
         request=_request(definition_id),
         context=_access_context(contract, action=AccessAction.SUBMIT, frontend=OperationFrontendProjection.MCP),
     )
-
-    assert OperationFrontendProjection.MCP in registry.lookup(definition_id).permitted_frontends
-    assert OperationFrontendProjection.MCP in contract.permitted_frontends
     assert resolved.request.frontend is OperationFrontendProjection.MCP
     assert resolved.request.profile_id == _PROFILE
     assert resolved.request.period_independent is True
@@ -544,15 +540,6 @@ def test_each_mcp_admitted_evidence_read_declares_only_metadata_fields(definitio
     result_model = _registered_result_model(_registry(), definition_id)
 
     assert _result_fields(result_model) == _MCP_RESULT_FIELDS[definition_id]
-
-
-def test_the_review_view_keeps_to_the_command_line_and_the_terminal_interface() -> None:
-    registry = _registry()
-    expected = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
-
-    assert registry.lookup(LEDGER_EVIDENCE_REVIEW_VIEW_OPERATION_DEFINITION_ID).permitted_frontends == expected
-    contract = registry.lookup_public_contract(LEDGER_EVIDENCE_REVIEW_VIEW_OPERATION_DEFINITION_ID)
-    assert contract.permitted_frontends == expected
 
 
 # ---------------------------------------------------------------------------
@@ -658,32 +645,28 @@ def _summary_request() -> OperationRequest[BaseModel]:
     )
 
 
-def test_the_review_summary_is_admitted_on_mcp_alone_for_either_kind_of_session_without_a_commit_door() -> None:
+def test_the_review_summary_is_admitted_alike_on_every_frontend_without_a_commit_door() -> None:
     registry = _summary_registry()
     contract = registry.lookup_public_contract(LEDGER_EVIDENCE_REVIEW_SUMMARY_OPERATION_DEFINITION_ID)
 
-    resolved = resolve_operation_access(
-        registry=registry,
-        request=_summary_request(),
-        context=_access_context(contract, action=AccessAction.SUBMIT, frontend=OperationFrontendProjection.MCP),
-    )
+    resolved = {
+        frontend: resolve_operation_access(
+            registry=registry,
+            request=_summary_request(),
+            context=_access_context(contract, action=AccessAction.SUBMIT, frontend=frontend),
+        )
+        for frontend in OperationFrontendProjection
+    }
 
-    assert contract.permitted_frontends == frozenset({OperationFrontendProjection.MCP})
-    assert resolved.request.frontend is OperationFrontendProjection.MCP
-    assert resolved.request.profile_id == _PROFILE
-    assert resolved.request.period_independent is True
-    # A session under the person's sign-in and one under an enrolled key differ
-    # in kind alone, and only a human-only policy tells the two apart.
-    assert resolved.policy.requires_human is False
-    assert AccessAction.COMMIT not in resolved.policy.actions
-    for frontend in (OperationFrontendProjection.CLI, OperationFrontendProjection.TUI):
-        with pytest.raises(ProfileAccessRefusedError) as refused:
-            resolve_operation_access(
-                registry=registry,
-                request=_summary_request(),
-                context=_access_context(contract, action=AccessAction.SUBMIT, frontend=frontend),
-            )
-        assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED
+    assert len({answer.policy for answer in resolved.values()}) == 1
+    for frontend, answer in resolved.items():
+        assert answer.request.frontend is frontend
+        assert answer.request.profile_id == _PROFILE
+        assert answer.request.period_independent is True
+        # A session under the person's sign-in and one under an enrolled key differ
+        # in kind alone, and only a human-only policy tells the two apart.
+        assert answer.policy.requires_human is False
+        assert AccessAction.COMMIT not in answer.policy.actions
 
 
 def test_the_review_summary_keeps_every_finding_and_figure_and_no_text_from_the_document() -> None:

@@ -52,7 +52,6 @@ from .actions_manual import (
 from .actions_manual import (
     prepare_manual_transaction_update as _prepare_manual_transaction_update,
 )
-from .agent_row_guard import require_actor_may_set_aside
 from .models import (
     ManualLedgerTransactionPatch,
     MergeTransactionsResult,
@@ -320,7 +319,6 @@ def _build_split_state(
     is defined once.
     """
     parent = _resolve_active_split_parent(catalogue, bucket_id=bucket_id, transaction_id=transaction_id)
-    require_actor_may_set_aside(actor=actor, row=parent)
     _reject_split_with_finalized_modelo_blockers(
         parent=parent,
         bucket_id=bucket_id,

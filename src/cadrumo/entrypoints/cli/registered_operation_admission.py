@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ...application.operations.models import OperationId
-from ...application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from ...application.operations.registry import OperationPublicDefinitionContractV1
 from ...application.operations.schema_identity import OperationSchemaIdentityV1
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.deadline_budget import remaining_budget
@@ -29,15 +29,13 @@ def require_registered_definition_contract(
     definition_id: str,
     expected_request: OperationSchemaIdentityV1,
     expected_result: OperationSchemaIdentityV1,
-    frontend: OperationFrontendProjection,
     secret: bytearray | None,
 ) -> None:
-    """Require exact payload, result, frontend and secret admission contracts."""
+    """Require exact payload, result and secret admission contracts."""
     if (
         contract.definition_id != definition_id
         or contract.request_schema != expected_request
         or contract.result_schema != expected_result
-        or frontend not in contract.permitted_frontends
         or contract.ephemeral_secret_required is not (secret is not None)
     ):
         raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)

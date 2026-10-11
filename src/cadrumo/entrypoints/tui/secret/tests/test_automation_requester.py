@@ -129,18 +129,7 @@ async def test_form_uses_registered_tui_choices_and_server_destination_only() ->
         await pilot.pause()
         operation = "user-profile.view"
         contract = next(item for item in contracts.definitions if str(item.definition_id) == operation)
-        assert OperationFrontendProjection.TUI in contract.permitted_frontends
         assert operation in screen._operation_choices
-        assert all(
-            str(item.definition_id) in screen._operation_choices
-            for item in contracts.definitions
-            if OperationFrontendProjection.TUI in item.permitted_frontends
-        )
-        assert all(
-            str(item.definition_id) not in screen._operation_choices
-            for item in contracts.definitions
-            if OperationFrontendProjection.TUI not in item.permitted_frontends
-        )
         cast("SelectionList[str]", screen.query_one("#automation-request-operations", SelectionList)).select(operation)
         cast("SelectionList[str]", screen.query_one("#automation-request-actions", SelectionList)).select(
             AccessAction.OBSERVE.value

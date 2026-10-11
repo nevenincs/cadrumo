@@ -86,8 +86,6 @@ def test_readiness_is_admitted_alike_on_every_frontend_for_either_kind_of_sessio
             published_authority=Availability.AVAILABLE,
         ),
     )
-
-    assert contract.permitted_frontends == frozenset(OperationFrontendProjection)
     assert resolved.request.frontend is frontend
     assert resolved.request.profile_id == _PROFILE
     # A session under the person's sign-in and one under an enrolled key differ

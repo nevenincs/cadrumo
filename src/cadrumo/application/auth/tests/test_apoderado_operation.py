@@ -71,13 +71,6 @@ def test_apoderado_definitions_bind_the_real_public_graph_and_one_use_identity_s
     assert configure.ephemeral_secret is not None
     assert configure.ephemeral_secret.secret_kind == APODERADO_REPRESENTED_NIF_SECRET_KIND
     assert "represented_nif" not in ApoderadoConfigureRequest.model_fields
-    assert (
-        OperationFrontendProjection.MCP in registry.lookup(APODERADO_STATUS_OPERATION_DEFINITION_ID).permitted_frontends
-    )
-    assert (
-        OperationFrontendProjection.MCP in registry.lookup(APODERADO_CHECK_OPERATION_DEFINITION_ID).permitted_frontends
-    )
-    assert OperationFrontendProjection.MCP not in configure.permitted_frontends
 
 
 _PIN = cast(PinnedAuthorityOperation, object())

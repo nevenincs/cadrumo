@@ -13,6 +13,8 @@ itself; the entrypoint composition binds the outbound adapters.
 
 from __future__ import annotations
 
+from pydantic import BaseModel
+
 from ..core.operations import (
     OperationCancellation,
     OperationClosePolicy,
@@ -30,6 +32,7 @@ from .local_reader_contracts import (
     LOCAL_READER_OPERATION_SUBJECT,
     LOCAL_READER_PREFLIGHT_PHASE,
     LOCAL_READER_SETTLEMENT_PHASE,
+    LocalReaderProvisionAction,
     LocalReaderProvisionOutcome,
     LocalReaderProvisionPublicResultV1,
     LocalReaderProvisionRequest,
@@ -38,6 +41,13 @@ from .local_reader_contracts import (
     project_local_reader_result,
 )
 from .local_reader_provisioning import LocalReaderProvisionExecutor
+from .operations.access_resolution import (
+    LIFECYCLE_PERIOD_INDEPENDENT_REGISTERED_RESULT_PROFILE_VALUES_ACCESS,
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    bind_replayed_period_independent_access,
+    with_commit_action,
+)
 from .operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -46,9 +56,10 @@ from .operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
+from .operations.models import OperationRequest
 from .operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from .operations.profile_guard import require_access_request_payload
 from .operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
@@ -58,10 +69,13 @@ from .provisioning_host import (
     InstallerRunner,
     RuntimeSpawner,
 )
+from .user_profile.access_contracts import AccessDenialCode
+from .user_profile.access_errors import ProfileAccessRefusedError
 
 __all__ = [
     "build_local_reader_operation_definition",
     "build_local_reader_operation_registration",
+    "resolve_local_reader_provision_access",
 ]
 
 _PHASES = (
@@ -111,7 +125,6 @@ def build_local_reader_operation_definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
 
@@ -132,4 +145,30 @@ def build_local_reader_operation_registration(
             model_type=LocalReaderProvisionPublicResultV1,
         ),
         result_projector=project_local_reader_result,
+        access_resolver=resolve_local_reader_provision_access,
     )
+
+
+def resolve_local_reader_provision_access(
+    request: OperationRequest[BaseModel], context: OperationAccessContext, /
+) -> ResolvedOperationAccess:
+    """Bind period-independent access to the machine's reader, with COMMIT for every action but verify.
+
+    The reader belongs to the machine, so the request names no profile and its
+    subject is the runtime's fixed one. Verify measures and changes nothing.
+    Every other action can install, start, load or remove something, so a
+    session whose scope holds no COMMIT is refused it at submission.
+    """
+    payload = require_access_request_payload(
+        request, definition_id=LOCAL_READER_OPERATION_DEFINITION_ID, payload_type=LocalReaderProvisionRequest
+    )
+    if context.contract.definition_id != LOCAL_READER_OPERATION_DEFINITION_ID:
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    if request.subject_ref != LOCAL_READER_OPERATION_SUBJECT:
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+    resolved = bind_replayed_period_independent_access(
+        context,
+        LIFECYCLE_PERIOD_INDEPENDENT_REGISTERED_RESULT_PROFILE_VALUES_ACCESS,
+        definition_id=LOCAL_READER_OPERATION_DEFINITION_ID,
+    )
+    return resolved if payload.action is LocalReaderProvisionAction.VERIFY else with_commit_action(resolved)

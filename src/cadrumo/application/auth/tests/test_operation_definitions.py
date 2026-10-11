@@ -93,11 +93,7 @@ def test_auth_families_have_one_canonical_registered_operation_each() -> None:
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000c1")
 _DESTINATION = UUID("5aa00000-0000-4000-8000-0000000000c2")
-_PERSON_FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
-_TEARDOWN_FRONTENDS = {
-    AUTH_LOGOUT_OPERATION_DEFINITION_ID: frozenset(OperationFrontendProjection),
-    AUTH_RESET_OPERATION_DEFINITION_ID: _PERSON_FRONTENDS,
-}
+_TEARDOWN_DEFINITIONS = (AUTH_LOGOUT_OPERATION_DEFINITION_ID, AUTH_RESET_OPERATION_DEFINITION_ID)
 _TEARDOWN_ACCESSES = (AccessAction.SUBMIT, AccessAction.START, AccessAction.COMMIT, AccessAction.OBSERVE)
 
 
@@ -108,49 +104,41 @@ def _teardown_registry() -> OperationRegistry:
     )
 
 
-def test_reset_is_declared_for_a_persons_frontends_and_logout_for_every_frontend() -> None:
-    registry = _teardown_registry()
-
-    for definition_id, expected in _TEARDOWN_FRONTENDS.items():
-        assert registry.lookup(definition_id).permitted_frontends == expected
-        assert registry.lookup_public_contract(definition_id).permitted_frontends == expected
-
-
 @pytest.mark.parametrize("access", _TEARDOWN_ACCESSES)
-@pytest.mark.parametrize("frontend", sorted(OperationFrontendProjection))
-@pytest.mark.parametrize("definition_id", sorted(_TEARDOWN_FRONTENDS))
-def test_teardown_resolves_on_exactly_the_frontends_its_definition_declares(
-    definition_id: str, frontend: OperationFrontendProjection, access: AccessAction
-) -> None:
+@pytest.mark.parametrize("definition_id", _TEARDOWN_DEFINITIONS)
+def test_teardown_resolves_the_same_access_on_every_frontend(definition_id: str, access: AccessAction) -> None:
     registry = _teardown_registry()
     request = OperationRequest[BaseModel](
         definition_id=definition_id,
         subject_ref=profile_operation_subject(str(_PROFILE)),
         payload=AuthTeardownOperationRequest(),
     )
-    context = OperationAccessContext(
-        profile_id=_PROFILE,
-        destination_id=_DESTINATION,
-        action=access,
-        frontend=frontend,
-        contract=registry.lookup_public_contract(definition_id),
-        published_authority=Availability.AVAILABLE,
-    )
 
-    if frontend in _TEARDOWN_FRONTENDS[definition_id]:
-        resolved = resolve_operation_access(registry=registry, request=request, context=context)
-        assert resolved.request.frontend is frontend
-        assert resolved.request.definition_id == definition_id
-        assert AccessAction.COMMIT in resolved.policy.actions
-        return
-    assert (definition_id, frontend) == (AUTH_RESET_OPERATION_DEFINITION_ID, OperationFrontendProjection.MCP)
-    with pytest.raises(ProfileAccessRefusedError) as refused:
-        resolve_operation_access(registry=registry, request=request, context=context)
-    assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED
+    resolved = {
+        frontend: resolve_operation_access(
+            registry=registry,
+            request=request,
+            context=OperationAccessContext(
+                profile_id=_PROFILE,
+                destination_id=_DESTINATION,
+                action=access,
+                frontend=frontend,
+                contract=registry.lookup_public_contract(definition_id),
+                published_authority=Availability.AVAILABLE,
+            ),
+        )
+        for frontend in OperationFrontendProjection
+    }
+
+    for frontend, admitted in resolved.items():
+        assert admitted.request.frontend is frontend
+        assert admitted.request.definition_id == definition_id
+        assert AccessAction.COMMIT in admitted.policy.actions
+        assert admitted.policy == resolved[OperationFrontendProjection.CLI].policy
 
 
 def test_teardown_refuses_a_request_resolved_under_the_other_definitions_contract() -> None:
-    """Reset cannot borrow the frontends logout declares."""
+    """Reset cannot be resolved under the contract logout registered."""
     registry = _teardown_registry()
     request = OperationRequest[BaseModel](
         definition_id=AUTH_RESET_OPERATION_DEFINITION_ID,

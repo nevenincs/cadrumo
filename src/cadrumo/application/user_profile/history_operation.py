@@ -1,8 +1,8 @@
 """Exact-profile registered reads of the complete local bucket event history.
 
-The history is the person's read. The timeline is the agent-facing read of the
-same events: it shares the history's reader and admission, and its result
-leaves each event's payload in custody.
+The history carries each event's complete payload. The timeline is the lighter
+read of the same events: it shares the history's reader and admission, and its
+result leaves each event's payload in custody.
 """
 
 from __future__ import annotations
@@ -36,7 +36,6 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
@@ -219,7 +218,7 @@ class ProfileHistoryTimelineExecutor:
 
 
 def build_profile_history_definition(factory: ProfileHistoryReadPortsFactory) -> OperationDefinition:
-    """Declare a CLI-only read of all periods without COMMIT or provider effects."""
+    """Declare a read of all periods without COMMIT or provider effects."""
     return build_single_phase_definition(
         definition_id=PROFILE_HISTORY_OPERATION_DEFINITION_ID,
         request_type=ProfileHistoryRequest,
@@ -228,12 +227,11 @@ def build_profile_history_definition(factory: ProfileHistoryReadPortsFactory) ->
         executor_type=ProfileHistoryExecutor,
         build=lambda: ProfileHistoryExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
 
 
 def build_profile_history_timeline_definition(factory: ProfileHistoryReadPortsFactory) -> OperationDefinition:
-    """Declare the agent-only read of the same events, without COMMIT or provider effects."""
+    """Declare the payload-free read of the same events, without COMMIT or provider effects."""
     return build_single_phase_definition(
         definition_id=PROFILE_HISTORY_TIMELINE_OPERATION_DEFINITION_ID,
         request_type=ProfileHistoryRequest,
@@ -242,7 +240,6 @@ def build_profile_history_timeline_definition(factory: ProfileHistoryReadPortsFa
         executor_type=ProfileHistoryTimelineExecutor,
         build=lambda: ProfileHistoryTimelineExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.MCP}),
     )
 
 
@@ -278,9 +275,7 @@ def resolve_profile_history_access(
 def resolve_profile_history_timeline_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    """Admit the timeline as the history is admitted, on the agent frontend alone."""
-    if context.frontend is not OperationFrontendProjection.MCP:
-        raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
+    """Admit the timeline as the history is admitted."""
     return _resolve_history_read_access(
         request, context, definition_id=PROFILE_HISTORY_TIMELINE_OPERATION_DEFINITION_ID
     )

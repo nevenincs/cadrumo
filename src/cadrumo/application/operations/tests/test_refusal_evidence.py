@@ -43,7 +43,6 @@ from ..persistence.events import OperationPhaseEvent
 from ..persistence.journal import OperationPersistedSnapshot
 from ..refusal_evidence import OperationExecutorResult, OperationRefusalEvidence
 from ..registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationRegistry,
@@ -142,7 +141,6 @@ def _definition(
         interaction_kinds=frozenset({OperationInteractionKind.INPUT}),
         capabilities=_capabilities(),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
         refusal_detail_codes=refusal_detail_codes,
     )
 

@@ -261,16 +261,13 @@ def test_filing_reader_is_admitted_on_the_mcp_frontend_without_a_commit_door(
     *, operation: PinnedAuthorityOperation
 ) -> None:
     unit, record = _source()
-    definition, registration, registry = _build(_bundle(unit=unit, record=record))
+    _definition, registration, registry = _build(_bundle(unit=unit, record=record))
 
     resolved = resolve_operation_access(
         registry=registry,
         request=_request(record),
         context=_access_context(registration, operation=operation, frontend=OperationFrontendProjection.MCP),
     )
-
-    assert OperationFrontendProjection.MCP in definition.permitted_frontends
-    assert OperationFrontendProjection.MCP in registration.contract.permitted_frontends
     assert resolved.request.frontend is OperationFrontendProjection.MCP
     assert resolved.request.periods == frozenset({unit.period})
     assert AccessAction.COMMIT not in resolved.policy.actions

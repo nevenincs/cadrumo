@@ -29,7 +29,6 @@ from ..operations.capabilities import (
 from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationResultProjector,
 )
@@ -180,7 +179,6 @@ def _definition(
             permitted_effects=effects,
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
         refusal_detail_codes=ACTIVITY_ASSET_REFUSAL_CODES,
     )
 

@@ -30,7 +30,6 @@ from cadrumo.application.operations.persistence.leases import (
     operation_conflict_scope_reference,
 )
 from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationRegistry,
@@ -143,7 +142,6 @@ def _registry(executor: _ProcessExecutor) -> OperationRegistry:
             close_policy=OperationClosePolicy.REQUEST_CANCEL,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
         subject_reference=OperationSubjectReferenceV1.profile(),
     )
     registration = OperationPublicDefinitionRegistrationV1.compose(

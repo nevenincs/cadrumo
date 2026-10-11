@@ -217,8 +217,7 @@ class RuntimeEvidenceTuiDoorV1:
             success_effect=OperationEffect.NONE,
         )
         if (
-            projection.draft is None
-            or projection.profile_id != self._profile_id
+            projection.profile_id != self._profile_id
             or projection.evidence_id != evidence_id
             or projection.attachment_id is not None
             or projection.consent_audit_effect is not OperationEffect.NONE
@@ -337,7 +336,7 @@ class RuntimeEvidenceTuiDoorV1:
     @staticmethod
     def _draft(projection: LedgerEvidenceExtractProjection, *, evidence_id: str) -> LedgerEvidenceDraftV1:
         """Map the review screen's display fields from the complete canonical draft."""
-        draft = projection.person_draft()
+        draft = projection.draft
         return LedgerEvidenceDraftV1(
             evidence_id=evidence_id,
             supplier_name=draft.supplier_name,

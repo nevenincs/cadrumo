@@ -11,10 +11,9 @@ are replaced. A write that does change a value of such a row is refused as it
 always was, by single and by bulk classification alike.
 
 Linking purchase-invoice evidence is not a document beside the row: a
-calculation takes the row's figures from the invoice. A link recorded under an
-agent's label to a row the person classified is refused; the person's own link
-to an agent's row makes the row theirs; a supplementary attachment does
-neither.
+calculation takes the row's figures from the invoice. Whoever links it is
+recorded as the one who decided the row, under any label and on any row; a
+supplementary attachment records nobody.
 """
 
 from __future__ import annotations
@@ -43,8 +42,6 @@ from cadrumo.application.ledger.models import (
     ManualLedgerTransactionCommand,
     ManualLedgerTransactionPatch,
 )
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
-from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
@@ -277,10 +274,10 @@ def _link_purchase_evidence(ledger: Ledger, row: str, evidence_id: str, *, actor
 
 
 @pytest.mark.parametrize("direction", [TransactionDirection.INCOMING, TransactionDirection.OUTGOING])
-def test_an_agents_label_does_not_link_purchase_evidence_to_a_row_the_person_classified(
+def test_an_agents_label_links_purchase_evidence_to_a_row_the_person_classified_and_is_recorded_for_it(
     ledger: Ledger, direction: TransactionDirection
 ) -> None:
-    """A calculation would then take the row's figures from the invoice, and count an incoming row as a refund."""
+    """A calculation then takes the row's figures from the invoice, so the row names who linked it."""
     invoice = synthetic_invoice("SYNTHETIC-1")
     ledger.invoices.save(build_invoice_catalogue([invoice]))
     created = create_manual_transaction(
@@ -296,19 +293,14 @@ def test_an_agents_label_does_not_link_purchase_evidence_to_a_row_the_person_cla
         ports=ledger.ports,
     )
     row = created.ref.transaction_id
-    before = ledger.stored()
-
-    with pytest.raises(ProfileAccessRefusedError) as refused:
-        _link_purchase_evidence(ledger, row, invoice.invoice_id, actor=AGENT)
-
-    assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED
-    assert ledger.stored() == before
 
     attach_attachment(ledger, row, store_attachment(ledger, b"supplementary"), actor=AGENT)
     assert ledger.row(row).classification_origin is ClassificationOrigin.PERSON
-    _link_purchase_evidence(ledger, row, invoice.invoice_id, actor=PERSON)
+
+    _link_purchase_evidence(ledger, row, invoice.invoice_id, actor=AGENT)
+
     assert ledger.row(row).purchase_invoice_evidence_id == invoice.invoice_id
-    assert ledger.row(row).classification_origin is ClassificationOrigin.PERSON
+    assert ledger.row(row).classification_origin is ClassificationOrigin.AGENT
 
 
 def test_linking_purchase_evidence_decides_the_rows_figures_for_whoever_links_it(ledger: Ledger) -> None:

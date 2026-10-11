@@ -65,7 +65,6 @@ from ..operations.public_period import PublicPeriod
 from ..operations.public_scalar import PublicDecimal
 from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
@@ -548,7 +547,6 @@ def build_modelo_aggregate_operation_definition(
         interaction_kinds=frozenset(),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
         refusal_detail_codes=MODELO_AGGREGATE_REFUSAL_CODES,
     )
 

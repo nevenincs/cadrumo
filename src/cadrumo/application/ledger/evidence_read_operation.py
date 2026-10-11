@@ -1,8 +1,8 @@
-"""Exact-profile worker reads for purchase-invoice evidence list, view and agent query.
+"""Exact-profile worker reads for purchase-invoice evidence list, view and query.
 
-The list and the view are a person's projections: they return the path the
-operator typed when the evidence was added. The query serves the same records
-to an agent and names the file without the directory it came from.
+The list and the view return the path the operator typed when the evidence
+was added. The query is a second read of the same records that names the file
+without the directory it came from.
 """
 
 from __future__ import annotations
@@ -43,7 +43,6 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationSchemaBindingV1,
 )
@@ -650,10 +649,6 @@ class LedgerEvidenceQueryExecutor:
         return await self._reader.execute_query(request, context)
 
 
-_PERSON_FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
-_AGENT_FRONTENDS = frozenset({OperationFrontendProjection.MCP})
-
-
 def _build_definition(
     *,
     definition_id: str,
@@ -663,7 +658,6 @@ def _build_definition(
     | type[LedgerEvidenceViewExecutor]
     | type[LedgerEvidenceQueryExecutor],
     ports_factory: LedgerEvidencePortsFactory,
-    permitted_frontends: frozenset[OperationFrontendProjection] = _PERSON_FRONTENDS,
     refusal_detail_codes: frozenset[OperationFailureErrorCode] = frozenset(),
 ) -> OperationDefinition:
     return build_single_phase_definition(
@@ -674,7 +668,6 @@ def _build_definition(
         executor_type=executor_type,
         build=lambda: executor_type(ports_factory),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES,
-        permitted_frontends=permitted_frontends,
         refusal_detail_codes=refusal_detail_codes,
     )
 
@@ -703,14 +696,13 @@ def build_ledger_evidence_view_definition(ports_factory: LedgerEvidencePortsFact
 
 
 def build_ledger_evidence_query_definition(ports_factory: LedgerEvidencePortsFactory) -> OperationDefinition:
-    """Declare the agent-only evidence read that serves the list and the view."""
+    """Declare the evidence read that serves the list and the view in one typed result."""
     return _build_definition(
         definition_id=LEDGER_EVIDENCE_QUERY_OPERATION_DEFINITION_ID,
         request_type=LedgerEvidenceQueryRequest,
         result_type=LedgerEvidenceQueryExecutionResult,
         executor_type=LedgerEvidenceQueryExecutor,
         ports_factory=ports_factory,
-        permitted_frontends=_AGENT_FRONTENDS,
     )
 
 
@@ -747,8 +739,6 @@ def _resolve_view_access(
 def _resolve_query_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    if context.frontend is not OperationFrontendProjection.MCP:
-        raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
     if request.definition_id != LEDGER_EVIDENCE_QUERY_OPERATION_DEFINITION_ID or not isinstance(
         request.payload, LedgerEvidenceQueryRequest
     ):

@@ -34,7 +34,7 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.public_period import PublicPeriod
 from ..operations.refusal_evidence import OperationRefusalEvidence
-from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..overview.status_report import build_filing_obligation_advisories
 from ..user_profile.access_contracts import (
@@ -383,7 +383,6 @@ def build_modelo_work_create_definition(
         executor_type=ModeloWorkCreateExecutor,
         build=lambda: ModeloWorkCreateExecutor(factory, execution_caller_reader=execution_caller_reader),
         capabilities=RECORDED_COOPERATIVE_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_UPDATE_CAPABILITIES,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
         refusal_detail_codes=frozenset({MODELO_WORK_CREATE_APPLICABILITY_REFUSAL_CODE}),
         public_error_detail=True,
     )

@@ -56,7 +56,7 @@ from ..adapter_composition import build_inventory_service_ports
 from ..justificante_composition import build_justificante_capture_service
 from . import modelo_operation_test_support
 from . import test_registered_executor_conformance as conformance
-from .ledger_persons_work_test_support import seed_row_a_rule_classified
+from .ledger_frontend_parity_test_support import seed_row_a_rule_classified
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -98,11 +98,7 @@ def test_operator_iva_derivation_records_the_session_label_for_an_agent(
     frontend: OperationFrontendProjection,
     recorded: str,
 ) -> None:
-    """The audit events of the derivation carry the label the executor derived, not the typed one.
-
-    The row is one a stored rule classified: an agent derives on that, and not
-    on a row whose classification the person decided.
-    """
+    """The audit events of the derivation carry the label the executor derived, not the typed one."""
     definition_id = "ledger.classify.iva-derive"
     with (
         conformance._model_runtime_for(definition_id),

@@ -60,8 +60,6 @@ from ..models import (
 )
 from ..operation_definition import OperationDefinition, OperationExecutorFactory
 from ..registry import (
-    ALL_OPERATION_FRONTENDS,
-    OperationFrontendProjection,
     OperationPublicContractSetV1,
     OperationPublicDefinitionContractV1,
     OperationPublicDefinitionRegistrationV1,
@@ -424,7 +422,6 @@ def definition(*, definition_id: str, action_id: str | None = None) -> Operation
         interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
         capabilities=capabilities(),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
         action_reference=ActionReference(action_id=action_id) if action_id is not None else None,
     )
 
@@ -518,13 +515,6 @@ def snapshot(*, definition_id: str = "profile.sync", value: str = "submitted") -
     )
 
 
-def test_all_operation_frontends_names_every_declared_frontend() -> None:
-    assert isinstance(ALL_OPERATION_FRONTENDS, frozenset)
-    assert {frontend.value for frontend in ALL_OPERATION_FRONTENDS} == {"cli", "mcp", "tui"}
-    # A new frontend must be granted to all-frontend operations deliberately.
-    assert frozenset(OperationFrontendProjection) == ALL_OPERATION_FRONTENDS
-
-
 def test_registry_canonicalises_and_resolves_definition_and_action_identity() -> None:
     second = definition(definition_id="profile.sync", action_id="operator.profile.sync")
     first = definition(definition_id="auth.login")
@@ -589,7 +579,6 @@ def test_definition_refuses_mismatched_factory_payload_and_factory_output() -> N
             interaction_kinds=frozenset(),
             capabilities=capabilities(),
             reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-            permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
         )
 
     wrong_output_factory = OperationExecutorFactory(
@@ -1016,9 +1005,6 @@ def test_public_definition_and_contract_set_digests_are_deterministic_and_self_v
             "interaction_kinds": frozenset(
                 [OperationInteractionKind.REVIEW],
             ),
-            "permitted_frontends": frozenset(
-                [OperationFrontendProjection.CLI, OperationFrontendProjection.TUI],
-            ),
             "capabilities": first_definition.capabilities.model_copy(
                 update={
                     "owned_resources": frozenset(
@@ -1036,9 +1022,6 @@ def test_public_definition_and_contract_set_digests_are_deterministic_and_self_v
             "interaction_kinds": frozenset(
                 [OperationInteractionKind.REVIEW],
             ),
-            "permitted_frontends": frozenset(
-                [OperationFrontendProjection.TUI, OperationFrontendProjection.CLI],
-            ),
             "capabilities": first_definition.capabilities.model_copy(
                 update={
                     "owned_resources": frozenset(
@@ -1055,7 +1038,7 @@ def test_public_definition_and_contract_set_digests_are_deterministic_and_self_v
         public_registration(set_order_two).contract.definition_contract_digest
     )
     tampered_contract = {field_name: getattr(first, field_name) for field_name in first.__class__.model_fields}
-    tampered_contract["permitted_frontends"] = frozenset({OperationFrontendProjection.TUI})
+    tampered_contract["permitted_effects"] = first.permitted_effects | {OperationEffect.PARTIAL}
     with pytest.raises(ValidationError, match="digest does not reproduce"):
         OperationPublicDefinitionContractV1.model_validate(tampered_contract)
     tampered_set = {field_name: getattr(contract_set, field_name) for field_name in contract_set.__class__.model_fields}
@@ -1071,16 +1054,16 @@ def test_registry_public_contract_is_a_live_definition_fixed_point() -> None:
 
     assert registration.contract.refusal_detail_codes == frozenset()
     assert registration.contract.definition_contract_digest == (
-        "3ef244fa1187a9e7628e44abe6ac89b4f49e5ee338455fa749b169877d13c3f6"
+        "72dd4165b249297c10b45d3ad2ef06541558d24b091d4e97e39fa8331275c737"
     )
     assert registry.public_contract_set.contract_set_digest == (
-        "4ca9ef18671ad7cb4ea5f0d63fcfaa6b03ab17376d6c998bc51a04c2e5427c72"
+        "62688896da2c0917ad8e9c524932e5f3168058108fea957110027be1f9a9e7c8"
     )
     assert registry.public_contract_set.definitions == (registration.contract,)
     assert registry.lookup_public_contract(item.definition_id) == registration.contract
     with pytest.raises(KeyError, match="no public contract"):
         OperationRegistry(definitions=(item,)).lookup_public_contract(item.definition_id)
-    drifted = item.model_copy(update={"permitted_frontends": frozenset({OperationFrontendProjection.TUI})})
+    drifted = item.model_copy(update={"action_reference": ActionReference(action_id="operator.profile.drift")})
     with pytest.raises(ValidationError, match="not a live-registry fixed point"):
         OperationRegistry(definitions=(drifted,), public_registrations=(registration,))
 
@@ -1173,7 +1156,6 @@ def _no_interaction_definition(definition_id: str = "profile.sync.settled") -> O
         interaction_kinds=frozenset(),
         capabilities=capabilities(),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
 

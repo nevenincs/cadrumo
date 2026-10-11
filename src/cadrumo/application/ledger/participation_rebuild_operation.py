@@ -19,7 +19,6 @@ from ..operations.models import CredentialFreeOperationRequest, OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationSchemaBindingV1,
 )
@@ -108,7 +107,6 @@ def build_ledger_participation_rebuild_definition(ports: ParticipationIndexRebui
         executor_type=LedgerParticipationRebuildExecutor,
         build=lambda: LedgerParticipationRebuildExecutor(ports),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_UPDATE_CAPABILITIES,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

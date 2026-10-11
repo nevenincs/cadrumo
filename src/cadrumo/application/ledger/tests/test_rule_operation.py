@@ -275,20 +275,18 @@ def test_access_refuses_a_different_context_profile() -> None:
         )
 
 
-def test_rule_list_is_admitted_on_the_mcp_frontend_without_a_commit_door() -> None:
+@pytest.mark.parametrize("frontend", sorted(OperationFrontendProjection))
+def test_rule_list_is_admitted_on_every_frontend_without_a_commit_door(frontend: OperationFrontendProjection) -> None:
     registry, registrations = _registry()
     registration = registrations[LEDGER_RULE_LIST_OPERATION_DEFINITION_ID]
 
     resolved = resolve_operation_access(
         registry=registry,
         request=_request(LEDGER_RULE_LIST_OPERATION_DEFINITION_ID),
-        context=_access_context(registration, frontend=OperationFrontendProjection.MCP),
+        context=_access_context(registration, frontend=frontend),
     )
 
-    definition = registry.lookup(LEDGER_RULE_LIST_OPERATION_DEFINITION_ID)
-    assert OperationFrontendProjection.MCP in definition.permitted_frontends
-    assert OperationFrontendProjection.MCP in registration.contract.permitted_frontends
-    assert resolved.request.frontend is OperationFrontendProjection.MCP
+    assert resolved.request.frontend is frontend
     assert resolved.request.profile_id == _PROFILE
     assert resolved.request.period_independent is True
     assert AccessAction.COMMIT not in resolved.policy.actions
@@ -298,8 +296,8 @@ def test_rule_list_is_admitted_on_the_mcp_frontend_without_a_commit_door() -> No
     "definition_id",
     (LEDGER_RULE_ADD_OPERATION_DEFINITION_ID, LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID),
 )
-@pytest.mark.parametrize("frontend", (OperationFrontendProjection.MCP, OperationFrontendProjection.CLI))
-def test_rule_writes_are_admitted_on_the_mcp_and_cli_frontends_with_a_commit_door(
+@pytest.mark.parametrize("frontend", sorted(OperationFrontendProjection))
+def test_rule_writes_are_admitted_on_every_frontend_with_a_commit_door(
     definition_id: str, frontend: OperationFrontendProjection
 ) -> None:
     registry, registrations = _registry()
@@ -311,9 +309,6 @@ def test_rule_writes_are_admitted_on_the_mcp_and_cli_frontends_with_a_commit_doo
         context=_access_context(registration, frontend=frontend),
     )
 
-    expected = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.MCP})
-    assert registry.lookup(definition_id).permitted_frontends == expected
-    assert registration.contract.permitted_frontends == expected
     assert resolved.request.frontend is frontend
     assert resolved.request.period_independent is True
     assert AccessAction.COMMIT in resolved.policy.actions
@@ -327,45 +322,28 @@ def _apply_access_request(*, reaffirm: bool, dry_run: bool) -> OperationRequest[
     )
 
 
-def test_a_reaffirming_run_is_refused_to_mcp_and_to_no_other_frontend() -> None:
-    registry, registrations = _registry()
-    registration = registrations[LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID]
-    request = _apply_access_request(reaffirm=True, dry_run=False)
-
-    with pytest.raises(ProfileAccessRefusedError) as refused:
-        resolve_operation_access(
-            registry=registry,
-            request=request,
-            context=_access_context(registration, frontend=OperationFrontendProjection.MCP),
-        )
-    resolved = resolve_operation_access(
-        registry=registry,
-        request=request,
-        context=_access_context(registration, frontend=OperationFrontendProjection.CLI),
-    )
-
-    assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED
-    assert AccessAction.COMMIT in resolved.policy.actions
-
-
 @pytest.mark.parametrize(
     ("reaffirm", "dry_run", "commit_required"),
-    ((False, False, True), (False, True, False), (True, True, False)),
-    ids=("classifies-unprocessed-rows", "previews", "previews-a-reaffirming-run"),
+    ((False, False, True), (True, False, True), (False, True, False), (True, True, False)),
+    ids=("classifies-unprocessed-rows", "reaffirms", "previews", "previews-a-reaffirming-run"),
 )
-def test_the_rest_of_a_rule_run_stays_open_to_mcp(reaffirm: bool, dry_run: bool, commit_required: bool) -> None:
+def test_a_rule_run_is_granted_the_same_policy_on_every_frontend(
+    reaffirm: bool, dry_run: bool, commit_required: bool
+) -> None:
     registry, registrations = _registry()
+    request = _apply_access_request(reaffirm=reaffirm, dry_run=dry_run)
 
-    resolved = resolve_operation_access(
-        registry=registry,
-        request=_apply_access_request(reaffirm=reaffirm, dry_run=dry_run),
-        context=_access_context(
-            registrations[LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID], frontend=OperationFrontendProjection.MCP
-        ),
-    )
+    policies = {
+        frontend: resolve_operation_access(
+            registry=registry,
+            request=request,
+            context=_access_context(registrations[LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID], frontend=frontend),
+        ).policy
+        for frontend in OperationFrontendProjection
+    }
 
-    assert resolved.request.frontend is OperationFrontendProjection.MCP
-    assert (AccessAction.COMMIT in resolved.policy.actions) is commit_required
+    assert len(set(policies.values())) == 1
+    assert all((AccessAction.COMMIT in policy.actions) is commit_required for policy in policies.values())
 
 
 def test_registrations_wire_graphs_are_closed() -> None:

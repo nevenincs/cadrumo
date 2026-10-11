@@ -29,7 +29,7 @@ from ..access_resolution import (
     bind_operation_access,
     operation_disclosures,
     require_admitted_submission,
-    require_declared_frontend_and_action,
+    require_declared_action,
     require_period_independent_admission,
     require_period_independent_replay_or_authority,
     require_single_period_admission,
@@ -339,19 +339,13 @@ def test_without_an_admission_every_action_requires_held_authority() -> None:
     _replay_or_authority(replace(_context(AccessAction.OBSERVE), authority_operation=_HELD_AUTHORITY))
 
 
-def test_an_undeclared_frontend_is_refused_before_an_undeclared_action() -> None:
-    context = _context(AccessAction.COMMIT)
-    cli = frozenset({OperationFrontendProjection.CLI})
-    require_declared_frontend_and_action(context, frontends=cli, actions=frozenset({AccessAction.COMMIT}))
-
-    with pytest.raises(ProfileAccessRefusedError) as frontend_refused:
-        require_declared_frontend_and_action(
-            context, frontends=frozenset({OperationFrontendProjection.TUI}), actions=frozenset({AccessAction.OBSERVE})
-        )
-    assert frontend_refused.value.reason is AccessDenialCode.FRONTEND_DENIED
-    with pytest.raises(ProfileAccessRefusedError) as action_refused:
-        require_declared_frontend_and_action(context, frontends=cli, actions=frozenset({AccessAction.OBSERVE}))
-    assert action_refused.value.reason is AccessDenialCode.OPERATION_DENIED
+def test_an_undeclared_action_is_refused_alike_on_every_frontend() -> None:
+    for frontend in OperationFrontendProjection:
+        context = replace(_context(AccessAction.COMMIT), frontend=frontend)
+        require_declared_action(context, actions=frozenset({AccessAction.COMMIT}))
+        with pytest.raises(ProfileAccessRefusedError) as refused:
+            require_declared_action(context, actions=frozenset({AccessAction.OBSERVE}))
+        assert refused.value.reason is AccessDenialCode.OPERATION_DENIED
 
 
 def test_commit_door_is_added_to_the_policy_and_nothing_else_changes() -> None:

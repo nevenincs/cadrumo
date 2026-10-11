@@ -15,7 +15,6 @@ from ..execution_actor import (
     OperationExecutionCaller,
     OperationExecutionCallerReader,
     execution_actor_label,
-    execution_admitted_on_mcp,
 )
 from ..interactions import OperationActorReference
 from ..models import OperationIdentity
@@ -102,23 +101,3 @@ def test_without_a_session_host_the_supplied_label_stands_and_no_identity_is_rea
     context_without_identity = cast(OperationExecutorContext, object())
 
     assert execution_actor_label(reader, context_without_identity, supplied=_SUPPLIED) == _SUPPLIED
-
-
-@pytest.mark.parametrize("kind", list(SessionKind))
-def test_an_execution_admitted_on_mcp_is_an_agents_whatever_kind_of_session_admitted_it(kind: SessionKind) -> None:
-    """A session resumed from the person's sign-in is of the human kind on MCP too; the frontend is what tells."""
-    host = _host(OperationFrontendProjection.MCP, kind)
-
-    assert execution_admitted_on_mcp(host, _context()) is True
-    assert host.asked == [_IDENTITY]
-
-
-@pytest.mark.parametrize("frontend", [OperationFrontendProjection.CLI, OperationFrontendProjection.TUI])
-def test_an_execution_admitted_on_a_persons_frontend_is_not_an_agents(frontend: OperationFrontendProjection) -> None:
-    assert execution_admitted_on_mcp(_host(frontend), _context()) is False
-
-
-def test_without_a_session_host_no_execution_is_an_agents_and_no_identity_is_read() -> None:
-    context_without_identity = cast(OperationExecutorContext, object())
-
-    assert execution_admitted_on_mcp(None, context_without_identity) is False

@@ -20,7 +20,7 @@ from ..operations.access_resolution import (
     ResolvedOperationAccess,
     bind_operation_access,
     operation_disclosures,
-    require_declared_frontend_and_action,
+    require_declared_action,
     require_period_independent_replay_or_authority,
 )
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_STORED_READ_CAPABILITIES
@@ -33,7 +33,7 @@ from ..operations.profile_guard import (
 )
 from ..operations.public_scalar import PublicDecimal
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessAction,
@@ -351,7 +351,7 @@ def resolve_ledger_llm_diagnostics_access(
         payload_type=LedgerLlmDiagnosticsRequest,
         access_profile_id=context.profile_id,
     )
-    require_declared_frontend_and_action(context, frontends=ALL_OPERATION_FRONTENDS, actions=_ACTIONS)
+    require_declared_action(context, actions=_ACTIONS)
     require_period_independent_replay_or_authority(
         context, profile_id=payload.profile_id, definition_id=request.definition_id
     )
@@ -387,7 +387,6 @@ def build_ledger_llm_diagnostics_definition(
         executor_type=LedgerLlmDiagnosticsExecutor,
         build=lambda: LedgerLlmDiagnosticsExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_SECURE_STORED_READ_CAPABILITIES,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

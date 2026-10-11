@@ -1,15 +1,12 @@
-"""Every ledger writer records whose decision a classification is, and refuses an agent the person's.
+"""Every ledger writer records whose decision a classification is, and admits the same write under any label.
 
 The ledger actions run over real secure storage. A write recorded under an
 agent's session label is an agent's, because an agent's execution can record no
 other label. Each action that sets or changes a classification, its share or a
 tax figure records who decided it; an action that changes none of them leaves
-the recorded origin as it found it, whatever stamp it leaves. Each action that
-would replace, split or exclude what the person gave a row refuses a write
-recorded under an agent's label, and stores nothing.
-
-These refusals are the writers' own. The executors refuse first, before they
-declare an effect, and are covered where the real runtime is.
+the recorded origin as it found it, whatever stamp it leaves. The label and
+the recorded origin are facts the writers store: no writer refuses a write for
+the label it carries or for who decided the row it replaces.
 """
 
 from __future__ import annotations
@@ -32,8 +29,6 @@ from cadrumo.application.ledger.models import (
     ManualLedgerTransactionPatch,
     SplitChildCommand,
 )
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
-from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.domain.invoices.models import Invoice
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.iva.schema import IvaCategory
@@ -219,141 +214,107 @@ def test_a_split_child_classified_in_the_split_records_who_ran_it_and_the_parent
 
 
 _Write = Callable[..., None]
-_REPLACING_WRITES: tuple[tuple[str, _Write], ...] = (
+_WRITES_IN_PLACE: tuple[tuple[str, _Write], ...] = (
     ("derive", _derive),
     ("reclassify", _reclassify),
     ("accept-proposal", _accept_proposal),
     ("exclude", _exclude),
-    ("split", _split),
-    ("classified-split", _classified_split),
 )
-_WRITES = pytest.mark.parametrize(
-    "write", [write for _, write in _REPLACING_WRITES], ids=[name for name, _ in _REPLACING_WRITES]
-)
+_SPLITS: tuple[tuple[str, _Write], ...] = (("split", _split), ("classified-split", _classified_split))
+_DECIDED_BY = pytest.mark.parametrize("decided_by", ["person", "rule", "agent"])
 
 
-@_WRITES
-@pytest.mark.parametrize("stamp", ["manual", "llm", "derived"])
-def test_a_write_under_an_agents_label_is_refused_at_the_writer_on_a_row_the_person_decided(
-    ledger: Ledger, write: _Write, stamp: str
-) -> None:
-    """Whatever stamp the person's decision left, and with nothing stored by the refused write."""
-    if stamp == "llm":
-        row = add_row(ledger, description="the person's row")
-        classify_row(ledger, row, actor=PERSON, stamp=_PROPOSED_BY)
-    else:
-        row = add_row(ledger, description="the person's row", classification=BUSINESS)
-        if stamp == "derived":
-            _derive(ledger, row, actor=PERSON, category="domestic_reduced")
-    assert ledger.row(row).classified_by.startswith(stamp)
-    assert ledger.row(row).classification_origin is ClassificationOrigin.PERSON
-    before = ledger.stored()
-
-    with pytest.raises(ProfileAccessRefusedError) as refused:
-        write(ledger, row, actor=AGENT)
-
-    assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED
-    assert ledger.stored() == before
-
-
-@_WRITES
-@pytest.mark.parametrize("decided_by", ["rule", "agent"])
-def test_the_same_write_under_an_agents_label_goes_through_on_a_row_a_rule_or_an_agent_decided(
-    ledger: Ledger, write: _Write, decided_by: str
-) -> None:
+def _row_decided_by(ledger: Ledger, decided_by: str) -> str:
     if decided_by == "rule":
-        row = add_row_classified_by_a_rule(ledger, description="classified by a rule")
-    else:
-        row = add_row(ledger, description="classified by an agent", actor=AGENT, classification=BUSINESS)
-    before = ledger.stored()
-
-    write(ledger, row, actor=AGENT)
-
-    assert ledger.stored() != before
+        return add_row_classified_by_a_rule(ledger, description="classified by a rule")
+    actor = PERSON if decided_by == "person" else AGENT
+    return add_row(ledger, description=f"classified by the {decided_by}", actor=actor, classification=BUSINESS)
 
 
-@_WRITES
-def test_the_same_write_under_the_persons_label_goes_through_on_the_row_they_decided(
-    ledger: Ledger, write: _Write
+@pytest.mark.parametrize("write", [write for _, write in _WRITES_IN_PLACE], ids=[name for name, _ in _WRITES_IN_PLACE])
+@_ACTORS
+@_DECIDED_BY
+def test_a_write_that_replaces_what_a_row_carries_goes_through_under_either_label_and_records_who_ran_it(
+    ledger: Ledger, write: _Write, actor: str, origin: ClassificationOrigin, decided_by: str
 ) -> None:
-    row = add_row(ledger, description="the person's row", classification=BUSINESS)
+    """Whoever decided the row before, the write is stored and the row then names the party who ran it."""
+    row = _row_decided_by(ledger, decided_by)
     before = ledger.stored()
 
-    write(ledger, row, actor=PERSON)
+    write(ledger, row, actor=actor)
 
     assert ledger.stored() != before
+    assert ledger.row(row).classification_origin is origin
+
+
+@pytest.mark.parametrize("write", [write for _, write in _SPLITS], ids=[name for name, _ in _SPLITS])
+@_ACTORS
+@_DECIDED_BY
+def test_a_split_goes_through_under_either_label_and_the_parent_keeps_whose_decision_it_was(
+    ledger: Ledger, write: _Write, actor: str, origin: ClassificationOrigin, decided_by: str
+) -> None:
+    del origin
+    row = _row_decided_by(ledger, decided_by)
+    decided = ledger.row(row).classification_origin
+
+    write(ledger, row, actor=actor)
+
+    parent = ledger.row(row)
+    assert parent.lifecycle_state is TransactionLifecycleState.SPLIT
+    assert parent.classification_origin is decided
 
 
 @pytest.mark.parametrize("write", [_exclude, _split, _classified_split], ids=["exclude", "split", "classified-split"])
 @pytest.mark.parametrize("linked_by", [PERSON, AGENT], ids=["the-persons-attachment", "the-agents-attachment"])
-def test_setting_aside_an_unprocessed_row_under_an_agents_label_turns_on_who_linked_its_attachment(
-    ledger: Ledger, write: _Write, linked_by: str
+@pytest.mark.parametrize("actor", [PERSON, AGENT], ids=["person", "agent"])
+def test_setting_aside_a_row_that_carries_a_document_goes_through_whoever_linked_it(
+    ledger: Ledger, write: _Write, linked_by: str, actor: str
 ) -> None:
-    """The row records who linked each attachment, and an agent's own does not close the row to it."""
     row = add_row(ledger, description="unprocessed with a document")
     attach_attachment(ledger, row, store_attachment(ledger, b"document"), actor=linked_by)
     before = ledger.stored()
 
-    if linked_by == PERSON:
-        with pytest.raises(ProfileAccessRefusedError) as refused:
-            write(ledger, row, actor=AGENT)
-        assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED
-        assert ledger.stored() == before
-    else:
-        write(ledger, row, actor=AGENT)
-        assert ledger.stored() != before
+    write(ledger, row, actor=actor)
+
+    assert ledger.stored() != before
+    assert ledger.row(row).attachment_ids
 
 
-def test_a_detachment_under_an_agents_label_removes_what_an_agent_linked_and_not_what_the_person_linked(
-    ledger: Ledger,
-) -> None:
+@pytest.mark.parametrize("actor", [PERSON, AGENT], ids=["person", "agent"])
+def test_a_detachment_removes_the_named_attachment_whoever_linked_it(ledger: Ledger, actor: str) -> None:
     row = add_row(ledger, description="unprocessed with two documents")
     the_persons, the_agents = store_attachment(ledger, b"person"), store_attachment(ledger, b"agent")
     attach_attachment(ledger, row, the_persons, actor=PERSON)
     attach_attachment(ledger, row, the_agents, actor=AGENT)
-    before = ledger.stored()
-
-    for requested in ((the_persons,), (the_agents, the_persons)):
-        with pytest.raises(ProfileAccessRefusedError) as refused:
-            detach_manual_transaction_attachments(
-                bucket_id=BUCKET_ID, transaction_id=row, actor=AGENT, attachment_ids=requested, ports=ledger.ports
-            )
-        assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED
-        assert ledger.stored() == before
 
     detach_manual_transaction_attachments(
-        bucket_id=BUCKET_ID, transaction_id=row, actor=AGENT, attachment_ids=(the_agents,), ports=ledger.ports
+        bucket_id=BUCKET_ID, transaction_id=row, actor=actor, attachment_ids=(the_persons,), ports=ledger.ports
     )
-    assert ledger.row(row).attachment_ids == (the_persons,)
+    assert ledger.row(row).attachment_ids == (the_agents,)
     detach_manual_transaction_attachments(
-        bucket_id=BUCKET_ID, transaction_id=row, actor=PERSON, attachment_ids=(the_persons,), ports=ledger.ports
+        bucket_id=BUCKET_ID, transaction_id=row, actor=actor, attachment_ids=(the_agents,), ports=ledger.ports
     )
     assert ledger.row(row).attachment_ids == ()
 
 
-def test_a_link_under_an_agents_label_does_not_replace_the_invoice_a_row_already_links(ledger: Ledger) -> None:
-    """The person's label replaces it as before; the row does not record who linked the earlier one."""
+@pytest.mark.parametrize("actor", [PERSON, AGENT], ids=["person", "agent"])
+@pytest.mark.parametrize("first_linked_by", [PERSON, AGENT], ids=["linked-by-the-person", "linked-by-an-agent"])
+def test_a_link_replaces_the_invoice_a_row_already_links_under_either_label(
+    ledger: Ledger, actor: str, first_linked_by: str
+) -> None:
     first, second = synthetic_invoice("SYNTHETIC-1"), synthetic_invoice("SYNTHETIC-2")
     ledger.invoices.save(build_invoice_catalogue([first, second]))
     row = add_row(ledger, description="unprocessed row to link")
 
-    def link(invoice: Invoice, *, actor: str) -> None:
+    def link(invoice: Invoice, *, linked_by: str) -> None:
         link_manual_transaction_invoice(
-            bucket_id=BUCKET_ID, transaction_id=row, invoice_id=invoice.invoice_id, actor=actor, ports=ledger.ports
+            bucket_id=BUCKET_ID, transaction_id=row, invoice_id=invoice.invoice_id, actor=linked_by, ports=ledger.ports
         )
 
-    link(first, actor=AGENT)
+    link(first, linked_by=first_linked_by)
     assert ledger.row(row).invoice_id == first.invoice_id
-    before = ledger.stored()
 
-    with pytest.raises(ProfileAccessRefusedError) as refused:
-        link(second, actor=AGENT)
+    link(second, linked_by=actor)
 
-    assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED
-    assert ledger.stored() == before
-    assert second.invoice_id not in {
-        invoice_id for invoice_id, stored in ledger.invoices.load().invoices.items() if stored.linked_transaction_ids
-    }
-
-    link(second, actor=PERSON)
     assert ledger.row(row).invoice_id == second.invoice_id
+    assert row in ledger.invoices.load().invoices[second.invoice_id].linked_transaction_ids

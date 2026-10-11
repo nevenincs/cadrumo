@@ -1,19 +1,19 @@
-"""Every request field that names who acted, on an operation open to MCP, is accounted for.
+"""Every request field that names who acted is accounted for, on every registered operation.
 
 An agent's execution must record the label derived from its session, never a
-name the request typed. A request field that attributes an act (an actor, an
-author, a reviewer, an asserting party) is found by name at any depth in the
-request model of every definition that lists the MCP frontend. Each such
-definition is then required to appear in exactly one of two explicit tables:
-the definitions proven to record the session-derived label for an agent, each
-naming the test that proves it, and the fields that are not attribution, each
-with its reason.
+name the request typed, and every registered operation is open to an agent. A
+request field that attributes an act (an actor, an author, a reviewer, an
+asserting party) is found by name at any depth in the request model of every
+registered definition. Each such definition is then required to appear in
+exactly one of two explicit tables: the definitions proven to record the
+session-derived label for an agent, each naming the test that proves it, and
+the fields that are not attribution, each with its reason.
 
-A definition that gains such a field and is in neither table fails here, so
-opening an operation to MCP cannot leave a caller-typed attribution behind.
-The census reads request fields. A write that records a label with no request
-field to carry it is proven beside the others, in the tests that run the real
-executor under a session host.
+A definition that gains such a field and is in neither table fails here, so no
+operation can leave a caller-typed attribution behind. The census reads
+request fields. A write that records a label with no request field to carry
+it is proven beside the others, in the tests that run the real executor under
+a session host.
 """
 
 from __future__ import annotations
@@ -21,13 +21,41 @@ from __future__ import annotations
 import importlib
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
+from functools import cache
+from typing import Annotated, TypeAliasType, get_args, get_origin
 
 import pytest
 from pydantic import BaseModel
 
-from .test_operation_mcp_admission import _mcp_listed_ids, _public_models, _unwrapped
+from .test_operation_catalogue import _registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+
+def _unwrapped(annotation: object) -> object:
+    """Strip a type alias or an ``Annotated`` wrapper to the type beneath it."""
+    while True:
+        if isinstance(annotation, TypeAliasType):
+            annotation = annotation.__value__
+        elif get_origin(annotation) is Annotated:
+            annotation = get_args(annotation)[0]
+        else:
+            return annotation
+
+
+@cache
+def _public_models(definition_id: str) -> tuple[type[BaseModel], type[BaseModel] | None]:
+    """The registered request model and, when one is declared, the registered result model."""
+    registry = _registry()
+    contract = registry.lookup_public_contract(definition_id)
+    request = registry.lookup_public_schema_binding(contract.request_schema).model_type
+    result = (
+        None
+        if contract.result_schema is None
+        else registry.lookup_public_schema_binding(contract.result_schema).model_type
+    )
+    return request, result
+
 
 _ATTRIBUTION_NAMES: frozenset[str] = frozenset(
     {
@@ -74,7 +102,8 @@ _CLASSIFICATION_ACTOR = f"{_ENTRYPOINT_TESTS}.test_ledger_classification_actor_b
 _ROW_MUTATION = f"{_ENTRYPOINT_TESTS}.test_ledger_row_mutation_mcp_admission"
 _LOCAL_RECORDS = f"{_ENTRYPOINT_TESTS}.test_modelo_local_records_mcp_admission"
 _MODELO_WORK = f"{_ENTRYPOINT_TESTS}.test_modelo_work_mcp_admission"
-_PERSONS_WORK = f"{_ENTRYPOINT_TESTS}.test_ledger_persons_work_mcp_guard"
+_PERSONS_WORK = f"{_ENTRYPOINT_TESTS}.test_ledger_persons_work_frontend_parity"
+_LEDGER_WRITES = f"{_ENTRYPOINT_TESTS}.test_ledger_write_actor_by_frontend"
 
 _ACTOR = frozenset({"actor"})
 
@@ -85,8 +114,24 @@ _REVIEW_TEST = "test_a_review_run_to_its_commit_stores_the_session_label_for_an_
 _WORK_STEPS_TEST = (
     "test_creation_calculation_and_rename_record_the_session_label_for_an_agent_and_the_supplied_one_otherwise"
 )
+_LEDGER_WRITE_TEST = "test_a_ledger_write_records_the_session_label_for_an_agent_and_the_persons_label_otherwise"
+_MODELO_WRITE_TEST = "test_a_modelo_write_stores_the_session_label_for_an_agent_and_the_supplied_label_for_a_person"
 
 _RECORDS_THE_SESSION_LABEL: Mapping[str, _Proof] = {
+    # One test runs each of these writes on every frontend and reads the label from the events it stored.
+    **{
+        definition_id: _Proof(_ACTOR, _LEDGER_WRITES, _LEDGER_WRITE_TEST)
+        for definition_id in (
+            "ledger.add",
+            "ledger.allocate",
+            "ledger.classify.single",
+            "ledger.export",
+            "ledger.merge",
+            "ledger.remove",
+            "ledger.reset",
+            "ledger.update",
+        )
+    },
     "ledger.archive": _Proof(_ACTOR, _ROW_MUTATION, _LIFECYCLE_TEST),
     "ledger.stash": _Proof(_ACTOR, _ROW_MUTATION, _LIFECYCLE_TEST),
     "ledger.restore": _Proof(_ACTOR, _ROW_MUTATION, _LIFECYCLE_TEST),
@@ -94,6 +139,9 @@ _RECORDS_THE_SESSION_LABEL: Mapping[str, _Proof] = {
     "ledger.attach": _Proof(_ACTOR, _ROW_MUTATION, _ATTACHMENT_TEST),
     "ledger.detach": _Proof(_ACTOR, _ROW_MUTATION, _ATTACHMENT_TEST),
     "ledger.split.manual": _Proof(_ACTOR, _ROW_MUTATION, _SPLIT_TEST),
+    "ledger.classify.bulk": _Proof(
+        _ACTOR, _CLASSIFICATION_ACTOR, "test_bulk_classification_records_the_session_label_for_an_agent"
+    ),
     "ledger.rule.add": _Proof(_ACTOR, _CLASSIFICATION_ACTOR, "test_rule_add_records_the_session_label_for_an_agent"),
     "ledger.rule.apply": _Proof(
         _ACTOR, _CLASSIFICATION_ACTOR, "test_rule_apply_records_the_session_label_for_an_agent"
@@ -140,15 +188,44 @@ _RECORDS_THE_SESSION_LABEL: Mapping[str, _Proof] = {
     "modelo.work.calculate": _Proof(_ACTOR, _MODELO_WORK, _WORK_STEPS_TEST),
     "modelo.work.create": _Proof(_ACTOR, _MODELO_WORK, _WORK_STEPS_TEST),
     "modelo.work.rename": _Proof(_ACTOR, _MODELO_WORK, _WORK_STEPS_TEST),
+    # One test runs each of these writes under an MCP and a command-line session host and reads the
+    # label from the events it stored.
+    **{
+        definition_id: _Proof(_ACTOR, _MODELO_WORK, _MODELO_WRITE_TEST)
+        for definition_id in (
+            "modelo.export",
+            "modelo.filing_record.import",
+            "modelo.m145.export",
+            "modelo.m145.mark_delivered_to_payer",
+            "modelo.m145.mark_locally_completed",
+            "modelo.quickfile",
+            "modelo.review_package.build",
+            "modelo.work.amend",
+            "modelo.work.discard",
+            "modelo.work.file",
+        )
+    },
+    "modelo.work.wizard_attempt": _Proof(frozenset({"calculation.actor"}), _MODELO_WORK, _MODELO_WRITE_TEST),
+    "modelo.work.m303_attestation": _Proof(
+        _ACTOR, _MODELO_WORK, "test_the_modelo_390_attestation_is_captured_under_the_session_label_for_an_agent"
+    ),
+    "modelo.review_package.encrypt_feedback": _Proof(
+        frozenset({"submitted_by"}),
+        _MODELO_WORK,
+        "test_review_feedback_names_the_session_label_as_its_submitter_for_an_agent",
+    ),
 }
-"""Definitions listing MCP whose request types a name, each with the test proving an agent's run stores the session label."""
+"""Definitions whose request types a name, each with the test proving an agent's run stores the session label."""
 
 _NOT_ATTRIBUTION: Mapping[str, Mapping[str, str]] = {
+    "profile.history": {
+        "actor": "a filter that selects the events one actor recorded; the read stores nothing",
+    },
     "profile.history.timeline": {
         "actor": "a filter that selects the events one actor recorded; the read stores nothing",
     },
 }
-"""Attribution-named fields on definitions listing MCP that do not record who acted, each with the reason."""
+"""Attribution-named fields that do not record who acted, each with the reason."""
 
 
 def _model_types(annotation: object) -> Iterator[type[BaseModel]]:
@@ -185,9 +262,10 @@ def _attribution_fields(model: type[BaseModel]) -> frozenset[str]:
     return frozenset(path for path, name in _members(model) if _is_attribution_name(name))
 
 
-def _found_on_listed_definitions() -> dict[str, frozenset[str]]:
+def _found_on_registered_definitions() -> dict[str, frozenset[str]]:
     found: dict[str, frozenset[str]] = {}
-    for definition_id in _mcp_listed_ids():
+    for registration in _registry().public_registrations:
+        definition_id = registration.contract.definition_id
         request, _result = _public_models(definition_id)
         fields = _attribution_fields(request)
         if fields:
@@ -215,24 +293,22 @@ def _unaccounted(found: Mapping[str, frozenset[str]]) -> dict[str, frozenset[str
     }
 
 
-def test_every_attribution_field_of_an_operation_open_to_mcp_is_proven_or_explained() -> None:
-    """A listed definition with an attribution-named field is in a table, field for field."""
-    found = _found_on_listed_definitions()
-    assert found, "no listed operation carries an attribution field, so the detection found nothing to judge"
+def test_every_attribution_field_of_a_registered_operation_is_proven_or_explained() -> None:
+    """A registered definition with an attribution-named field is in a table, field for field."""
+    found = _found_on_registered_definitions()
+    assert found, "no registered operation carries an attribution field, so the detection found nothing to judge"
 
     unaccounted = {item: sorted(fields) for item, fields in _unaccounted(found).items()}
-    assert not unaccounted, (
-        f"request fields naming who acted, on operations open to MCP, that no table accounts for: {unaccounted}"
-    )
+    assert not unaccounted, f"request fields naming who acted that no table accounts for: {unaccounted}"
 
 
-def test_the_tables_name_only_listed_definitions_and_fields_that_are_still_declared() -> None:
-    """A table entry that no longer matches a listed definition's request model is removed, not kept."""
-    found = _found_on_listed_definitions()
+def test_the_tables_name_only_registered_definitions_and_fields_that_are_still_declared() -> None:
+    """A table entry that no longer matches a registered definition's request model is removed, not kept."""
+    found = _found_on_registered_definitions()
 
     stale_definitions = sorted((set(_RECORDS_THE_SESSION_LABEL) | set(_NOT_ATTRIBUTION)) - set(found))
     assert not stale_definitions, (
-        f"table entries for definitions that do not list MCP or no longer carry such a field: {stale_definitions}"
+        f"table entries for definitions that are not registered or no longer carry such a field: {stale_definitions}"
     )
     stale_fields = {
         definition_id: sorted(_accounted_for(definition_id) - found[definition_id])

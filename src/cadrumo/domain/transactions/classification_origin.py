@@ -55,11 +55,9 @@ a calculation takes a linked row's figures from the invoice, counts an
 incoming row as a refund, and admits its input IVA deduction on that
 evidence. A write that sets one of them decides the row's tax treatment; a
 write that sets only what is left (a note, a description, a label, a
-supplementary attachment) does not. One set serves the origin
-recorded here and the refusal of an agent's change to the person's row, and a
-test holds it equal to what the ledger's command can carry less the members
-that test declares as bearing on no tax, so a field added later is placed in
-one or the other.
+supplementary attachment) does not. A test holds the set equal to what the
+ledger's command can carry less the members that test declares as bearing on
+no tax, so a field added later is placed in one or the other.
 """
 
 
@@ -109,11 +107,6 @@ def resolved_classification_origin(transaction: Transaction) -> ClassificationOr
     return written_classification_origin(by_agent=False, classified_by=transaction.classified_by)
 
 
-def classification_is_the_persons(transaction: Transaction) -> bool:
-    """Return whether the person decided the classification and tax figures the row carries now."""
-    return resolved_classification_origin(transaction) is ClassificationOrigin.PERSON
-
-
 def with_classification_origin(
     replacement: Transaction,
     *,
@@ -151,7 +144,6 @@ __all__ = [
     "CLASSIFICATION_DECISION_FIELDS",
     "ClassificationOrigin",
     "classification_facts",
-    "classification_is_the_persons",
     "resolved_classification_origin",
     "with_classification_origin",
     "written_classification_origin",

@@ -433,15 +433,26 @@ def test_explicit_rejection_renders_settled_audit_without_claiming_row_persisten
     assert payload["suggestion_kind"] == ("split" if mode == "auto_split" else "classification")
 
 
+@pytest.mark.parametrize("business_pct", ["1.5", "-0.1", "abc", "1,5"])
 @pytest.mark.parametrize("mode", ["classification", "saturated"])
-def test_noncanonical_percentage_refuses_before_submitting_review(monkeypatch: pytest.MonkeyPatch, mode: _Mode) -> None:
+def test_invalid_share_refuses_before_submitting_review(
+    monkeypatch: pytest.MonkeyPatch, mode: _Mode, business_pct: str
+) -> None:
     port = _ReviewPort(_review(mode))
     port.bind(monkeypatch, classify, definition_id=LEDGER_CLASSIFY_REVIEW_DEFINITION_ID)
     with pytest.raises(typer.BadParameter):
-        _invoke(mode, "apply", business_pct="0.2500")
+        _invoke(mode, "apply", business_pct=business_pct)
     assert port.requests == []
     assert port.decisions == []
     assert port.output == []
+
+
+@pytest.mark.parametrize("mode", ["classification", "saturated"])
+def test_share_with_trailing_zeros_reaches_the_request_normalised(monkeypatch: pytest.MonkeyPatch, mode: _Mode) -> None:
+    port = _ReviewPort(_review(mode))
+    port.bind(monkeypatch, classify, definition_id=LEDGER_CLASSIFY_REVIEW_DEFINITION_ID)
+    _invoke(mode, "apply", business_pct="0.2500")
+    assert [request.business_pct for request in port.requests] == ["0.25"]
 
 
 @pytest.mark.parametrize("action", ["preview", "apply"])

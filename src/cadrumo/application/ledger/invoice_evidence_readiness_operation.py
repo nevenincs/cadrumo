@@ -27,7 +27,7 @@ from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
-from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..provisioning_host import RuntimeHostPlatform, RuntimeInstaller
 from ..user_profile.access_contracts import (
@@ -244,7 +244,6 @@ def build_ledger_evidence_reader_readiness_definition(
         executor_type=LedgerEvidenceReaderReadinessExecutor,
         build=lambda: LedgerEvidenceReaderReadinessExecutor(read_status),
         capabilities=invoice_evidence_operation_capabilities(mutates=False),
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

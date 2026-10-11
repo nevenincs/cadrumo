@@ -310,7 +310,6 @@ def definition_contract_policy_value(contract: OperationPublicDefinitionContract
         "permitted_effects": tuple(sorted(item.value for item in contract.permitted_effects)),
         "close_policy": contract.close_policy.value,
         "reconciliation_policy": contract.reconciliation_policy.value,
-        "permitted_frontends": tuple(sorted(item.value for item in contract.permitted_frontends)),
         "ephemeral_secret_required": contract.ephemeral_secret_required,
         "transient_financial_operand": None
         if contract.transient_financial_operand is None
@@ -365,7 +364,6 @@ def build_public_contract(
         permitted_effects=capabilities.permitted_effects,
         close_policy=capabilities.close_policy,
         reconciliation_policy=definition.reconciliation_policy,
-        permitted_frontends=definition.permitted_frontends,
         ephemeral_secret_required=definition.ephemeral_secret is not None,
         transient_financial_operand=public_financial_operand,
         refusal_detail_codes=definition.refusal_detail_codes,
@@ -393,7 +391,6 @@ def build_public_contract(
         permitted_effects=provisional.permitted_effects,
         close_policy=provisional.close_policy,
         reconciliation_policy=provisional.reconciliation_policy,
-        permitted_frontends=provisional.permitted_frontends,
         ephemeral_secret_required=provisional.ephemeral_secret_required,
         transient_financial_operand=provisional.transient_financial_operand,
         refusal_detail_codes=provisional.refusal_detail_codes,

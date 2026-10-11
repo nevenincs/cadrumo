@@ -49,7 +49,6 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationResultProjector,
 )
@@ -82,8 +81,6 @@ REVIEW_PACKAGE_RECIPIENT_LIST_OPERATION_DEFINITION_ID = "config.collab.recipient
 REVIEW_PACKAGE_RECIPIENT_REMOVE_OPERATION_DEFINITION_ID = "config.collab.recipient.remove"
 MAX_REVIEW_PACKAGE_RECIPIENT_ROWS = 4_096
 _RESULT_DOCUMENT_MAX_BYTES = PROJECTION_DOCUMENT_MAX_BYTES - 4_096
-_WRITE_FRONTENDS = frozenset({OperationFrontendProjection.CLI})
-_READ_FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.MCP})
 
 
 class ReviewPackageRecipientAddRequest(BaseModel):
@@ -515,7 +512,6 @@ def _definition(
     | type[ReviewPackageRecipientRemoveExecutor],
     build: Callable[[], object],
     mutation: bool,
-    permitted_frontends: frozenset[OperationFrontendProjection],
 ) -> OperationDefinition:
     effects = (
         frozenset({OperationEffect.NONE, OperationEffect.PARTIAL, OperationEffect.UPDATED, OperationEffect.UNKNOWN})
@@ -542,7 +538,6 @@ def _definition(
             permitted_effects=effects,
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
-        permitted_frontends=permitted_frontends,
     )
 
 
@@ -559,7 +554,6 @@ def build_review_package_recipient_add_definition(
         executor_type=ReviewPackageRecipientAddExecutor,
         build=lambda: ReviewPackageRecipientAddExecutor(ports),
         mutation=True,
-        permitted_frontends=_WRITE_FRONTENDS,
     )
 
 
@@ -574,7 +568,6 @@ def build_review_package_recipient_list_definition(
         executor_type=ReviewPackageRecipientListExecutor,
         build=lambda: ReviewPackageRecipientListExecutor(registry_factory),
         mutation=False,
-        permitted_frontends=_READ_FRONTENDS,
     )
 
 
@@ -591,7 +584,6 @@ def build_review_package_recipient_remove_definition(
         executor_type=ReviewPackageRecipientRemoveExecutor,
         build=lambda: ReviewPackageRecipientRemoveExecutor(ports),
         mutation=True,
-        permitted_frontends=_WRITE_FRONTENDS,
     )
 
 

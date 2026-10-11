@@ -412,7 +412,6 @@ def test_review_bridge_uses_exact_session_projection_and_terminal_decision(
     )
 
     assert client.contract_reads == [CENSAL_OPERATION_DEFINITION_ID]
-    assert OperationFrontendProjection.CLI in client.public_contract.permitted_frontends
     assert all(
         exchange.profile_id == client.profile_id and exchange.session_id == client.session_id
         for exchange in client.requests

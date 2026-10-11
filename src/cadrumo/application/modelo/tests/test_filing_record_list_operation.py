@@ -242,7 +242,7 @@ def test_access_is_exact_profile_and_requires_whole_profile_consent() -> None:
 
 
 def test_filing_record_list_is_admitted_on_the_mcp_frontend_without_a_commit_door() -> None:
-    _factory, definition, registration, registry = _setup(_bundle(_record()))
+    _factory, _definition, registration, registry = _setup(_bundle(_record()))
     operation = cast(PinnedAuthorityOperation, object())
 
     resolved = resolve_operation_access(
@@ -250,9 +250,6 @@ def test_filing_record_list_is_admitted_on_the_mcp_frontend_without_a_commit_doo
         request=_request(),
         context=_access_context(registration, operation=operation, frontend=OperationFrontendProjection.MCP),
     )
-
-    assert OperationFrontendProjection.MCP in definition.permitted_frontends
-    assert OperationFrontendProjection.MCP in registration.contract.permitted_frontends
     assert resolved.request.frontend is OperationFrontendProjection.MCP
     assert resolved.request.profile_id == _PROFILE
     assert AccessAction.COMMIT not in resolved.policy.actions

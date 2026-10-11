@@ -44,12 +44,12 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.public_period import PublicPeriod
 from ..operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
@@ -74,7 +74,11 @@ MODELO_REVIEW_PACKAGE_BUILD_OPERATION_DEFINITION_ID = "modelo.review_package.bui
 
 
 class ModeloReviewPackageBuildRequest(BaseModel):
-    """Exact revision and operator output, stored by secure reference."""
+    """Exact revision and operator output, stored by secure reference.
+
+    ``actor`` is recorded as sent for a person's session. An agent's session is
+    recorded under its own session label, whatever the request carries.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -227,10 +231,12 @@ class ModeloReviewPackageBuildExecutor:
         profile_resolver: Callable[[PinnedAuthorityOperation], TaxpayerProfile],
         export_ports_factory: ModeloExportPortsFactory,
         repositories: VerificationRepositoryBundleFactory,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
     ) -> None:
         self._profile_resolver = profile_resolver
         self._export_ports_factory = export_ports_factory
         self._repositories = repositories
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(
         self, request: OperationRequest[ModeloReviewPackageBuildRequest], context: OperationExecutorContext
@@ -243,6 +249,7 @@ class ModeloReviewPackageBuildExecutor:
         ):
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
         await context.events.phase("modelo.review_package.build.preconditions")
+        actor = execution_actor_label(self._execution_caller_reader, context, supplied=payload.actor)
 
         def publish() -> ModeloReviewPackageBuildPublicResultV1:
             profile_id = str(payload.profile_id)
@@ -269,7 +276,7 @@ class ModeloReviewPackageBuildExecutor:
                         ModeloExportCommand(
                             calculation_revision_id=payload.calculation_revision_id,
                             output_path=draft_path,
-                            actor=payload.actor,
+                            actor=actor,
                             refund_election=payload.refund_election,
                             payment_election=payload.payment_election,
                             prior_domiciliation_election=payload.prior_domiciliation_election,
@@ -307,7 +314,7 @@ class ModeloReviewPackageBuildExecutor:
                         work_unit=unit,
                         draft_bytes=draft_path.read_bytes(),
                         output_path=output,
-                        built_by=payload.actor,
+                        built_by=actor,
                         operation=context.authority_operation,
                         notes=payload.notes,
                     )
@@ -330,6 +337,7 @@ def build_modelo_review_package_build_definition(
     profile_resolver: Callable[[PinnedAuthorityOperation], TaxpayerProfile],
     export_ports_factory: ModeloExportPortsFactory,
     repositories: VerificationRepositoryBundleFactory,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
 ) -> OperationDefinition:
     """Register one irreversible, secure-reference package publication.
 
@@ -341,6 +349,7 @@ def build_modelo_review_package_build_definition(
             profile_resolver=profile_resolver,
             export_ports_factory=export_ports_factory,
             repositories=repositories,
+            execution_caller_reader=execution_caller_reader,
         )
 
     return OperationDefinition(
@@ -369,7 +378,6 @@ def build_modelo_review_package_build_definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
 

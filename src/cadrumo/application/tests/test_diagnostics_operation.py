@@ -214,7 +214,6 @@ def _registry() -> OperationRegistry:
 def test_real_registration_compiles_closed_nested_schemas() -> None:
     registry = _registry()
     read = registry.lookup_public_contract(DIAGNOSTICS_READ_OPERATION_DEFINITION_ID)
-    assert read.permitted_frontends == frozenset(OperationFrontendProjection)
     assert read.result_schema is not None
     assert read.request_schema.schema_version == read.result_schema.schema_version == 1
 

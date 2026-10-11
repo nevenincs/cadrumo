@@ -58,11 +58,6 @@ class ModeloWorkCalculateRequest(BaseModel):
 
     ``actor`` is recorded as sent for a person's session. An agent's session is
     recorded under its own session label, whatever the request carries.
-
-    An explicit calculation records its inputs as the person's own entries, and
-    the two Modelo 303 filing facts are the person's statements. An agent's
-    session may therefore only replay the head: an explicit request, or one
-    that supplies the filing facts, is refused to it.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG

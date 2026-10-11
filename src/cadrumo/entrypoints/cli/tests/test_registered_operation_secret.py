@@ -65,7 +65,6 @@ class _Client:
             result_schema=OperationSchemaIdentityV1.from_model(
                 schema_id=definition_id + ".result", schema_version=1, model_type=SecretResult
             ),
-            permitted_frontends=frozenset({self.frontend}),
             ephemeral_secret_required=self.secret_required,
         )
 

@@ -49,6 +49,7 @@ from ...core.decimal.grammar import DecimalSeparator, DecimalSeparatorValue, try
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import DEFAULT_CURRENCY, XLS_EXTENSION
 from ...core.hashing import sha256_hex
+from ...core.hex import Hex64Str
 from ...core.legacy_workbook import read_legacy_workbook
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.codes import IsoCurrencyCode
@@ -127,6 +128,8 @@ class BulkInvoiceImportSource(BaseModel):
         decimal_separator: The convention the file writes amounts in, detected
             once for the whole file. Amounts are converted with it at parse
             time rather than being rewritten in ``rows``.
+        source_sha256: The SHA-256 of the bytes the rows were parsed from: one
+            read supplies both, so the digest is of exactly what was imported.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -134,6 +137,7 @@ class BulkInvoiceImportSource(BaseModel):
     rows: tuple[BulkImportSourceRow, ...]
     resolution: BulkImportColumnResolution
     decimal_separator: DecimalSeparatorValue = DecimalSeparator.PERIOD
+    source_sha256: Hex64Str
 
 
 class BulkInvoiceImportRow(BaseModel):
@@ -584,6 +588,7 @@ def _read_delimited_source(
         decimal_separator=(
             table.dialect.decimal_separator if resolution.consulted_mapping_lane else DecimalSeparator.PERIOD
         ),
+        source_sha256=source_sha256,
     )
 
 
@@ -647,7 +652,9 @@ def _workbook_source_from_rows(
     try:
         header_cells = next(rows_iter)
     except StopIteration:
-        return BulkInvoiceImportSource(rows=(), resolution=resolve_bulk_import_columns((), mapper=None))
+        return BulkInvoiceImportSource(
+            rows=(), resolution=resolve_bulk_import_columns((), mapper=None), source_sha256=source_sha256
+        )
     _refuse_formula_cells(header_cells, path=path, row_number=1)
     headers = [coerce_cell_text(cell.value) for cell in header_cells]
     resolution = resolve_bulk_import_columns(
@@ -664,6 +671,7 @@ def _workbook_source_from_rows(
             ingested_at=ingested_at,
         ),
         resolution=resolution,
+        source_sha256=source_sha256,
     )
 
 
@@ -766,7 +774,9 @@ def read_bulk_invoice_import_source(
         path: The invoice book to read.
         mapper: Establishes roles for columns exact matching did not resolve.
         expected_sha256: Optional submitted source digest, checked against the
-            single read before parsing or consulting the mapping lane.
+            single read before parsing or consulting the mapping lane. Without
+            one the digest of that same read is computed and returned on the
+            source.
 
     Returns:
         The resolved source, ready to apply.

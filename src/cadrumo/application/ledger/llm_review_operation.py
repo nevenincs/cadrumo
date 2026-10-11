@@ -29,7 +29,6 @@ from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.persistence.journal import serialize_operation_operand
 from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
@@ -169,7 +168,6 @@ def build_ledger_llm_review_definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

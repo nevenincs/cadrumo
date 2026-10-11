@@ -95,7 +95,6 @@ from cadrumo.application.operations.projection_services import (
     UnavailableOperationSecureResponseAuthority,
 )
 from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationRegistry,
@@ -268,7 +267,6 @@ def _registry(
         interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
         capabilities=capabilities,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.TUI}),
         refusal_detail_codes=refusal_detail_codes,
     )
     registration = OperationPublicDefinitionRegistrationV1.compose(

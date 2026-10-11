@@ -1,13 +1,12 @@
 """The one set of tax-bearing facts covers everything a ledger write can set.
 
-Whose decision a row's classification is, and whether an agent's write to the
-person's row is refused, both turn on one declared set of fields. A field a
-write can set and the set does not name is a hole in both: the person sets it
-and does not become the row's owner, and an agent changes it on the person's
-row unrefused. So every field the ledger's command can carry is required to be
-either in the set or declared here as bearing on no tax, with its reason, and
-the request models of classification, bulk classification and update are held
-inside the two. A field added to any of them reddens this until it is placed.
+Whose decision a row's classification is turns on one declared set of fields.
+A field a write can set and the set does not name is a hole in the record: a
+party sets it and the row does not record that party as the one who decided.
+So every field the ledger's command can carry is required to be either in the
+set or declared here as bearing on no tax, with its reason, and the request
+models of classification, bulk classification and update are held inside the
+two. A field added to any of them reddens this until it is placed.
 
 The exclusions are checked against an independent reading: the filing
 snapshot's fingerprint of a row's tax facts does not move when one changes.

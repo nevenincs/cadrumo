@@ -199,11 +199,6 @@ def test_both_public_contracts_compile_without_constructing_storage(
         )
         access = resolve_operation_access(registry=registry, request=request, context=context)
         assert access.policy.requires_all_periods and AccessAction.COMMIT in access.policy.actions
-        # The wizard states every field in its request, so an agent may make the
-        # entry; the import names a file on the host and stays with the person.
-        typed_entry = isinstance(payload, intake_contracts.InvoiceWizardRequest)
-        listed = {OperationFrontendProjection.CLI} | ({OperationFrontendProjection.MCP} if typed_entry else set())
-        assert definition.permitted_frontends == frozenset(listed)
         on_mcp = resolve_operation_access(
             registry=registry, request=request, context=replace(context, frontend=OperationFrontendProjection.MCP)
         )
@@ -391,8 +386,12 @@ def test_wizard_field_refusal_retains_order_and_correlates_only_prewrite_receipt
         project_invoice_intake_result(operands.value.model_copy(update={"effect": "updated"}), receipt)
 
 
+@pytest.mark.parametrize("digest_supplied", [True, False], ids=["digest-supplied", "no-digest"])
 def test_import_worker_retains_every_row_refusal_unmapped_header_and_repeat_noop(
-    tmp_path: Path, authority_operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+    monkeypatch: pytest.MonkeyPatch,
+    digest_supplied: bool,
 ) -> None:
     monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     path = tmp_path / "synthetic.csv"
@@ -403,7 +402,7 @@ def test_import_worker_retains_every_row_refusal_unmapped_header_and_repeat_noop
             profile_id=_PROFILE,
             kind=InvoiceKind.RECEIVED,
             source_path=str(path),
-            source_sha256=sha256_hex(source),
+            source_sha256=sha256_hex(source) if digest_supplied else None,
             country="ES",
         ),
         intake_contracts.INVOICE_IMPORT_OPERATION_DEFINITION_ID,
@@ -437,6 +436,8 @@ def test_import_worker_retains_every_row_refusal_unmapped_header_and_repeat_noop
         assert isinstance(operands.value, intake_contracts.InvoiceIntakeExecutionResult)
         projection = operands.value.projection
         assert isinstance(projection, intake_contracts.InvoiceImportProjection)
+        # The digest returned is of the bytes parsed, whether or not the caller supplied one.
+        assert projection.source_sha256 == sha256_hex(source)
         assert (
             projection.rows == 2
             and projection.created == int(not repeat)

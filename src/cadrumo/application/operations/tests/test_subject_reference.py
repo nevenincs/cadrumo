@@ -12,7 +12,6 @@ from ..capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operation_definition import OperationDefinition, build_single_phase_definition
 from ..owner import OperationExecutorContext
 from ..registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionContractV1,
     OperationPublicDefinitionRegistrationV1,
 )
@@ -77,7 +76,6 @@ def _definition(subject_reference: OperationSubjectReferenceV1) -> OperationDefi
         executor_type=_Executor,
         build=_Executor,
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.TUI}),
     )
 
 

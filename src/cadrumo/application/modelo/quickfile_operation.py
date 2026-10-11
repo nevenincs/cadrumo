@@ -41,6 +41,7 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import (
     OperationRequest,
     OperationTerminalReceipt,
@@ -49,7 +50,7 @@ from ..operations.models import (
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import (
@@ -169,14 +170,21 @@ def _inputs(payload: QuickfileRequest, ports: QuickfileOperationPorts, work_unit
 class QuickfileExecutor:
     """Own actual mutation fences and cancellation settlement without copying any stage."""
 
-    def __init__(self, factory: QuickfileOperationPortsFactory) -> None:
+    def __init__(
+        self,
+        factory: QuickfileOperationPortsFactory,
+        *,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
+    ) -> None:
         """Retain the exact-profile capabilities factory without resolving storage."""
         self._factory = factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(self, request: OperationRequest[QuickfileRequest], context: OperationExecutorContext) -> str:
         """Join the canonical synchronous chain and settle all admitted local writes."""
         payload = request.payload
         _admit_quickfile_request(request, context)
+        actor = execution_actor_label(self._execution_caller_reader, context, supplied=payload.actor)
         writes = _Writes()
         loop = asyncio.get_running_loop()
         admission_failure: BaseException | None = None
@@ -217,7 +225,7 @@ class QuickfileExecutor:
                         period=payload.period.to_period(),
                         registry_revision_id=payload.revision_id,
                         output_path=Path(payload.output_path),
-                        actor=payload.actor,
+                        actor=actor,
                         refund_election=payload.refund_election,
                         payment_election=payload.payment_election,
                         prior_domiciliation_election=payload.prior_domiciliation_election,
@@ -289,7 +297,11 @@ def _require_quickfile_result_size(result: QuickfileExecutionResult) -> None:
         raise ValueError("quickfile result contradicts its terminal receipt")
 
 
-def build_quickfile_definition(factory: QuickfileOperationPortsFactory) -> OperationDefinition:
+def build_quickfile_definition(
+    factory: QuickfileOperationPortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
+) -> OperationDefinition:
     """Register the existing local human chain with encrypted inputs and full effect settlement."""
     return build_single_phase_definition(
         definition_id=QUICKFILE_OPERATION_DEFINITION_ID,
@@ -297,7 +309,7 @@ def build_quickfile_definition(factory: QuickfileOperationPortsFactory) -> Opera
         subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=QuickfileExecutionResult,
         executor_type=QuickfileExecutor,
-        build=lambda: QuickfileExecutor(factory),
+        build=lambda: QuickfileExecutor(factory, execution_caller_reader=execution_caller_reader),
         capabilities=OperationCapabilities(
             durability=OperationDurability.RECORDED,
             cancellation=OperationCancellation.COOPERATIVE,
@@ -313,7 +325,6 @@ def build_quickfile_definition(factory: QuickfileOperationPortsFactory) -> Opera
             ),
             close_policy=OperationClosePolicy.REQUEST_CANCEL,
         ),
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
 
 
@@ -353,7 +364,6 @@ def _quickfile_access_payload(
     if (
         request.definition_id != QUICKFILE_OPERATION_DEFINITION_ID
         or not isinstance(payload, QuickfileRequest)
-        or context.frontend is not OperationFrontendProjection.CLI
         or context.authority_operation is None
         or context.contract.definition_id != QUICKFILE_OPERATION_DEFINITION_ID
     ):

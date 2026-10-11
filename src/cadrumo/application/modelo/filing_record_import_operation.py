@@ -26,12 +26,12 @@ from ..operations.access_resolution import (
     require_single_period_admission,
 )
 from ..operations.capabilities import RECORDED_NON_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest, OperationTerminalReceipt, require_terminal_receipt_match
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
@@ -174,9 +174,15 @@ def _record_projection(
 class ModeloFilingRecordImportExecutor:
     """Run the existing external-import writer inside exact-profile custody."""
 
-    def __init__(self, ports_factory: CalculationActionPortsFactory) -> None:
-        """Retain the composition-supplied per-profile application capabilities."""
+    def __init__(
+        self,
+        ports_factory: CalculationActionPortsFactory,
+        *,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
+    ) -> None:
+        """Retain the per-profile application capabilities and the session host's caller reader."""
         self._ports_factory = ports_factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(
         self,
@@ -191,6 +197,7 @@ class ModeloFilingRecordImportExecutor:
         require_operation_profile(request, context, payload.profile_id)
 
         await context.events.phase(_PHASES[0])
+        actor = execution_actor_label(self._execution_caller_reader, context, supplied=payload.actor)
 
         source_file_lexicals = None
         if payload.source_path is not None:
@@ -238,7 +245,7 @@ class ModeloFilingRecordImportExecutor:
                 evidence_kind=payload.evidence_kind,
                 evidence_reference_id=payload.evidence_reference_id,
                 declared_kind=payload.declared_kind,
-                actor=payload.actor,
+                actor=actor,
                 expected_tax_id=expected_tax_id,
                 work_unit_repository=ports.work_unit_repository,
                 calculation_repository=ports.calculation_repository,
@@ -279,6 +286,8 @@ class ModeloFilingRecordImportExecutor:
 
 def build_modelo_filing_record_import_definition(
     ports_factory: CalculationActionPortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
 ) -> OperationDefinition:
     """Declare an interrupt-on-restart import with confidential request custody."""
     return OperationDefinition(
@@ -289,13 +298,14 @@ def build_modelo_filing_record_import_definition(
         executor_factory=OperationExecutorFactory(
             request_type=ModeloFilingRecordImportRequest,
             executor_type=ModeloFilingRecordImportExecutor,
-            build=lambda: ModeloFilingRecordImportExecutor(ports_factory),
+            build=lambda: ModeloFilingRecordImportExecutor(
+                ports_factory, execution_caller_reader=execution_caller_reader
+            ),
         ),
         phase_codes=_PHASES,
         interaction_kinds=frozenset(),
         capabilities=RECORDED_NON_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
 
 

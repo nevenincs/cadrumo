@@ -1,4 +1,4 @@
-"""The agent-facing profile timeline: the history's events, admitted on MCP alone, without their payload."""
+"""The profile timeline: the history's events without their payload, admitted on every frontend as the history is."""
 
 from __future__ import annotations
 
@@ -51,7 +51,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE = UUID("3a3a3a3a-3a3a-4a3a-8a3a-3a3a3a3a3a3a")
 _OTHER = UUID("4b4b4b4b-4b4b-4b4b-8b4b-4b4b4b4b4b4b")
 _PIN = cast(PinnedAuthorityOperation, object())
-_MCP = OperationFrontendProjection.MCP
 _HOST_PATH = r"C:\Users\synthetic-operator\Documents\facturas-privadas\factura-417.pdf"
 _PAYLOAD_NOTE = "synthetic-payload-note-7f3a"
 _PAYLOAD_FRAGMENTS = ("synthetic-operator", "facturas-privadas", "source_path", "note_text", _PAYLOAD_NOTE)
@@ -151,55 +150,48 @@ def _context(
     )
 
 
-def test_the_timeline_is_admitted_on_mcp_alone_for_either_kind_of_session_without_a_commit_door() -> None:
+@pytest.mark.parametrize(
+    "definition_id", [PROFILE_HISTORY_OPERATION_DEFINITION_ID, PROFILE_HISTORY_TIMELINE_OPERATION_DEFINITION_ID]
+)
+def test_every_frontend_is_admitted_to_either_read_alike_for_either_kind_of_session_without_a_commit_door(
+    definition_id: str,
+) -> None:
     registry = _registry()
-    timeline = PROFILE_HISTORY_TIMELINE_OPERATION_DEFINITION_ID
-    contract = registry.lookup_public_contract(timeline)
+    contract = registry.lookup_public_contract(definition_id)
 
-    admitted = resolve_operation_access(
-        registry=registry, request=_request(timeline), context=_context(registry, timeline, frontend=_MCP)
-    )
-
-    assert contract.permitted_frontends == frozenset({_MCP})
-    assert admitted.request.frontend is _MCP
-    assert admitted.request.period_independent and admitted.policy.requires_all_periods
-    # A session under the person's sign-in and one under an enrolled key differ
-    # in kind alone, and only a human-only policy tells the two apart.
-    assert admitted.policy.requires_human is False
-    assert AccessAction.COMMIT not in admitted.policy.actions
-    released = resolve_operation_access(
-        registry=registry,
-        request=_request(timeline),
-        context=_context(registry, timeline, frontend=_MCP, action=AccessAction.RESULT, admitted=admitted.request),
-    )
-    assert contract.result_schema is not None
-    assert {item.projection_id for item in released.policy.disclosures} == {contract.result_schema.schema_id}
-    for frontend in (OperationFrontendProjection.CLI, OperationFrontendProjection.TUI):
-        with pytest.raises(ProfileAccessRefusedError) as refused:
-            resolve_operation_access(
-                registry=registry, request=_request(timeline), context=_context(registry, timeline, frontend=frontend)
-            )
-        assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED
-    with pytest.raises(ProfileAccessRefusedError) as foreign:
-        resolve_operation_access(
+    admitted = {
+        frontend: resolve_operation_access(
             registry=registry,
-            request=_request(timeline),
-            context=_context(registry, timeline, frontend=_MCP, profile_id=_OTHER),
+            request=_request(definition_id),
+            context=_context(registry, definition_id, frontend=frontend),
         )
-    assert foreign.value.reason is AccessDenialCode.PROFILE_MISMATCH
+        for frontend in OperationFrontendProjection
+    }
 
-
-def test_the_person_history_keeps_its_frontend_and_resolves_as_before() -> None:
-    registry = _registry()
-    history = PROFILE_HISTORY_OPERATION_DEFINITION_ID
-    cli = OperationFrontendProjection.CLI
-
-    admitted = resolve_operation_access(
-        registry=registry, request=_request(history), context=_context(registry, history, frontend=cli)
-    )
-
-    assert registry.lookup_public_contract(history).permitted_frontends == frozenset({cli})
-    assert admitted.request.frontend is cli and admitted.policy.requires_human is False
+    assert contract.result_schema is not None
+    for frontend, access in admitted.items():
+        assert access.request.frontend is frontend
+        assert access.request.period_independent and access.policy.requires_all_periods
+        # A session under the person's sign-in and one under an enrolled key differ
+        # in kind alone, and only a human-only policy tells the two apart.
+        assert access.policy.requires_human is False
+        assert AccessAction.COMMIT not in access.policy.actions
+        assert access.policy.actions == admitted[OperationFrontendProjection.CLI].policy.actions
+        released = resolve_operation_access(
+            registry=registry,
+            request=_request(definition_id),
+            context=_context(
+                registry, definition_id, frontend=frontend, action=AccessAction.RESULT, admitted=access.request
+            ),
+        )
+        assert {item.projection_id for item in released.policy.disclosures} == {contract.result_schema.schema_id}
+        with pytest.raises(ProfileAccessRefusedError) as foreign:
+            resolve_operation_access(
+                registry=registry,
+                request=_request(definition_id),
+                context=_context(registry, definition_id, frontend=frontend, profile_id=_OTHER),
+            )
+        assert foreign.value.reason is AccessDenialCode.PROFILE_MISMATCH
 
 
 class _Operands:
@@ -291,7 +283,7 @@ async def test_the_timeline_releases_each_event_fact_and_nothing_of_its_payload(
 
 
 @pytest.mark.asyncio
-async def test_the_person_history_still_releases_the_complete_payload(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_the_history_still_releases_the_complete_payload(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     history = PROFILE_HISTORY_OPERATION_DEFINITION_ID
     request = _worker_request(history, actor="operator", object_id="chosen")

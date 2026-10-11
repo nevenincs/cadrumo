@@ -67,7 +67,6 @@ def _request(*, year: int | None = None, period: str | None = None) -> Operation
 def test_timeline_mcp_result_disclosure_and_full_period_scope(authority_operation: PinnedAuthorityOperation) -> None:
     registry = _registry()
     contract = registry.lookup_public_contract(MODELO_HISTORY_TIMELINE_OPERATION_DEFINITION_ID)
-    assert contract.permitted_frontends == frozenset({OperationFrontendProjection.MCP})
     assert contract.result_schema is not None
     destination = uuid4()
     context = OperationAccessContext(

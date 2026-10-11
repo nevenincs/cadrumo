@@ -110,8 +110,7 @@ class _RecordingClient:
         assert request.session_id == self.session_id
         assert request.profile_id == self.profile_id
         if isinstance(request, RuntimeOperationSubmit):
-            contract = self.registry.lookup_public_contract(request.definition_id)
-            assert OperationFrontendProjection.TUI in contract.permitted_frontends
+            self.registry.lookup_public_contract(request.definition_id)
             payload = InvoiceAddRequest.model_validate_json(request.payload_json)
             assert payload.profile_id == self.profile_id
             assert request.subject_ref == profile_operation_subject(str(self.profile_id))

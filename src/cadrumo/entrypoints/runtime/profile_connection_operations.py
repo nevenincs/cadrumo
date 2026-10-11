@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING
 
 from ...adapters.local_runtime.runtime_frame_io import read_secret, write_document
 from ...application.operations.mcp_surfaces import MCP_SURFACES
-from ...application.operations.registry import OperationFrontendProjection
 from ...application.runtime.contracts import (
     RuntimeByteChannel,
     RuntimeRefusalCode,
@@ -97,8 +96,6 @@ class ProfileConnectionOperationMixin:
         request: RuntimeOperationSecret,
     ) -> None:
         """Preflight before bytes, then reauthorize their one-use canonical delivery."""
-        if connection.frontend not in {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}:
-            raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
         worker = host.owner.operation_worker()
 
         def checked(receipt: ProfileWorkerOperationReceipt) -> None:
@@ -249,8 +246,6 @@ class ProfileConnectionOperationMixin:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
         description = host.owner.operation_worker().describe(request.session_id, request.definition_id)
         contract = description.contract
-        if connection.frontend not in contract.permitted_frontends:
-            raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
         _require_surface_admits(connection, contract.definition_id)
         reply = RuntimeOperationContractReply(
             request_id=request.request_id,
@@ -272,8 +267,6 @@ class ProfileConnectionOperationMixin:
     ) -> tuple[RuntimeOperationReply, datetime | None]:
         self._require_upload_session(connection, host, request)
         contract = host.owner.operation_worker().describe(request.session_id, request.definition_id).contract
-        if connection.frontend not in contract.permitted_frontends:
-            raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
         _require_surface_admits(connection, contract.definition_id)
         if isinstance(request.descriptor, FinancialOperandInputDescriptor) != (
             contract.transient_financial_operand is not None

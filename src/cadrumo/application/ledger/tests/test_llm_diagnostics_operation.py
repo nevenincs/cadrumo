@@ -193,8 +193,6 @@ def test_public_report_is_lossless_for_precision_null_costs_order_and_reversed_d
 def test_real_registry_compiles_and_request_threshold_keeps_legacy_bounds() -> None:
     """The registered schema accepts the canonical default and unit endpoints."""
     registry = _registry()
-    definition = registry.lookup(_OPERATION_ID)
-    assert definition.permitted_frontends == frozenset(OperationFrontendProjection)
     assert (
         AccessAction.COMMIT
         not in resolve_ledger_llm_diagnostics_access(

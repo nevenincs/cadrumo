@@ -95,7 +95,11 @@ def _validate_filing_import_casilla_value(key: CasillaId, lexical: str) -> None:
 
 
 class ModeloFilingRecordImportRequest(BaseModel):
-    """Immutable filing import intent, retained only through secure custody."""
+    """Immutable filing import intent, retained only through secure custody.
+
+    ``actor`` is recorded as sent for a person's session. An agent's session is
+    recorded under its own session label, whatever the request carries.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 

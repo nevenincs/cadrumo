@@ -215,7 +215,6 @@ def test_registration_is_secure_and_requires_exact_profile_commit() -> None:
     definition = registry.lookup(operation.LEDGER_MERGE_OPERATION_DEFINITION_ID)
     assert definition.capabilities.request_storage.value == "secure_reference"
     assert definition.capabilities.sensitive_input.value == "secure_reference"
-    assert definition.permitted_frontends == frozenset({OperationFrontendProjection.CLI})
     assert AccessAction.COMMIT in resolved.policy.actions
     with pytest.raises(ProfileAccessRefusedError):
         resolve_operation_access(

@@ -37,7 +37,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
     OperationSubmissionReceiptV1,
 )
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
 from cadrumo.application.runtime.projection_pages import ProjectionPage, ProjectionPageRequest
 from cadrumo.application.user_profile.access_contracts import (
     AccessAction,
@@ -175,11 +175,6 @@ async def test_native_mcp_discloses_only_scoped_typed_modelo_queries(
                 assert published.is_error is False, _structured(published)
                 assert _structured(published)["logical_generation"] == authority_operation.pin().logical_generation
 
-                for denied_id in ("modelo.bindings.resolve", "modelo.readiness"):
-                    denied = await sdk.call_tool("describe", {"definition_id": denied_id})
-                    assert denied.is_error is True
-                    assert _structured(denied) == {"outcome": "refused", "code": "frontend_denied"}
-
                 list_case = enrolled.prepared[0]
                 assert isinstance(list_case.request, ModeloBindingsListRequest)
                 wrong_period_request = list_case.request.model_copy(update={"year": 2026})
@@ -204,7 +199,6 @@ async def test_native_mcp_discloses_only_scoped_typed_modelo_queries(
                     )
                     assert contract.definition_id == definition_id
                     assert contract.result_schema is not None
-                    assert OperationFrontendProjection.MCP in contract.permitted_frontends
                     submitted = await sdk.call_tool(
                         "execute",
                         {
@@ -306,20 +300,6 @@ async def test_native_mcp_discloses_only_scoped_typed_modelo_queries(
                         assert "profile_refusal" not in disclosed
                         assert "registry_refusal" not in disclosed
                         assert all("detail" not in issue for issue in disclosed["ledger_issues"])
-                        for prohibited_id in (
-                            AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID,
-                            MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
-                        ):
-                            denied = await sdk.call_tool(
-                                "execute",
-                                {
-                                    "definition_id": prohibited_id,
-                                    "subject_ref": profile_operation_subject(str(enrolled.profile_id)),
-                                    "payload": {},
-                                },
-                            )
-                            assert denied.is_error is True
-                            assert _structured(denied) == {"outcome": "refused", "code": "frontend_denied"}
 
                 typed_case = enrolled.prepared[2]
                 assert isinstance(typed_case.request, ModeloBindingsResolveRequest)

@@ -94,7 +94,6 @@ def test_real_registry_compiles_complete_human_only_family(subject: Subject) -> 
     registry = _registry(subject)
     for definition in module.build_profile_archive_operation_definitions(subject.compose):
         assert registry.lookup_public_contract(definition.definition_id).result_schema is not None
-        assert definition.permitted_frontends == frozenset({OperationFrontendProjection.CLI})
         assert OperationEffect.UNKNOWN in definition.capabilities.permitted_effects
     assert "passphrase" not in module.ProfileArchiveExportRequest.model_fields
     assert "password" not in module.ProfileArchivePushRequest.model_fields
@@ -364,7 +363,7 @@ def test_actual_policy_requires_complete_human_consent_and_all_periods(
         assert isinstance(restricted, AccessDenied) and restricted.code is AccessDenialCode.PERIOD_DENIED
     else:
         assert isinstance(decision, AccessDenied) and decision.code is AccessDenialCode.DISCLOSURE_DENIED
-    with pytest.raises(ProfileAccessRefusedError):
-        module.resolve_profile_archive_operation_access(
-            public, replace(context, frontend=OperationFrontendProjection.MCP)
-        )
+    for frontend in OperationFrontendProjection:
+        elsewhere = module.resolve_profile_archive_operation_access(public, replace(context, frontend=frontend))
+        assert elsewhere.request.frontend is frontend
+        assert elsewhere.policy == resolved.policy

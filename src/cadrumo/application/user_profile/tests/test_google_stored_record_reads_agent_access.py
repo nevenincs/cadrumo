@@ -1,4 +1,4 @@
-"""The two Google stored-record reads serve an agent; every other Google leaf stays a person's."""
+"""The two Google stored-record reads serve any session; every other Google leaf takes a person's, on any frontend."""
 
 from __future__ import annotations
 
@@ -66,7 +66,6 @@ _NOW = datetime(2026, 10, 10, 12, tzinfo=UTC)
 _PIN = cast(PinnedAuthorityOperation, object())
 _CLI = OperationFrontendProjection.CLI
 _MCP = OperationFrontendProjection.MCP
-_TUI = OperationFrontendProjection.TUI
 
 _STORED_RECORD_READS: tuple[tuple[str, contracts.GoogleConfigurationRequest], ...] = (
     (contracts.GOOGLE_FOLDER_VIEW_OPERATION_DEFINITION_ID, contracts.GoogleFolderViewRequest(profile_id=_PROFILE)),
@@ -241,7 +240,7 @@ def _decision(
 
 
 @pytest.mark.parametrize(("definition_id", "payload"), _STORED_RECORD_READS)
-@pytest.mark.parametrize("frontend", [_CLI, _MCP])
+@pytest.mark.parametrize("frontend", list(OperationFrontendProjection))
 @pytest.mark.parametrize("kind", [SessionKind.HUMAN, SessionKind.API_KEY])
 def test_a_stored_record_read_is_admitted_under_the_sign_in_and_under_an_enrolled_key(
     definition_id: str,
@@ -252,32 +251,16 @@ def test_a_stored_record_read_is_admitted_under_the_sign_in_and_under_an_enrolle
     assert isinstance(_decision(definition_id, payload, frontend=frontend, kind=kind), AccessAllowed)
 
 
-@pytest.mark.parametrize(("definition_id", "payload"), _STORED_RECORD_READS)
-@pytest.mark.parametrize("kind", [SessionKind.HUMAN, SessionKind.API_KEY])
-def test_a_stored_record_read_is_refused_on_the_frontend_its_definition_does_not_list(
-    definition_id: str, payload: contracts.GoogleConfigurationRequest, kind: SessionKind
-) -> None:
-    assert _decision(definition_id, payload, frontend=_TUI, kind=kind) == AccessDenied(
-        code=AccessDenialCode.FRONTEND_DENIED
-    )
-
-
+@pytest.mark.parametrize("frontend", list(OperationFrontendProjection))
 @pytest.mark.parametrize(("definition_id", "payload"), _PERSON_LEAVES)
-def test_every_other_google_leaf_refuses_an_enrolled_key_and_the_mcp_frontend(
-    definition_id: str, payload: contracts.GoogleConfigurationRequest
+def test_every_other_google_leaf_takes_the_persons_session_and_refuses_an_enrolled_key_on_every_frontend(
+    definition_id: str, payload: contracts.GoogleConfigurationRequest, frontend: OperationFrontendProjection
 ) -> None:
-    assert _decision(definition_id, payload, frontend=_CLI, kind=SessionKind.API_KEY) == AccessDenied(
+    assert _decision(definition_id, payload, frontend=frontend, kind=SessionKind.API_KEY) == AccessDenied(
         code=AccessDenialCode.HUMAN_AUTHORITY_REQUIRED
     )
-    assert _decision(definition_id, payload, frontend=_MCP, kind=SessionKind.API_KEY) == AccessDenied(
-        code=AccessDenialCode.HUMAN_AUTHORITY_REQUIRED
-    )
-    # The sign-in session is of the human kind on every frontend, so the
-    # definition's frontend list is what keeps a person's leaf off MCP.
-    assert _decision(definition_id, payload, frontend=_MCP, kind=SessionKind.HUMAN) == AccessDenied(
-        code=AccessDenialCode.FRONTEND_DENIED
-    )
-    assert isinstance(_decision(definition_id, payload, frontend=_CLI, kind=SessionKind.HUMAN), AccessAllowed)
+    # The sign-in session is of the human kind on every frontend.
+    assert isinstance(_decision(definition_id, payload, frontend=frontend, kind=SessionKind.HUMAN), AccessAllowed)
 
 
 def _receipt(definition_id: str) -> tuple[OperationIdentity, OperationTerminalReceipt]:

@@ -137,9 +137,6 @@ def test_real_family_registration_compiles_complete_human_and_safe_schemas(subje
     assert "sede_justificante" in module.M036DeclarationSnapshot.model_fields
     assert "note" not in module.M036QueryDeclaration.model_fields
     assert "sede_justificante" not in module.M036QueryDeclaration.model_fields
-    assert registry.lookup(module.M036_RECORD_OPERATION_DEFINITION_ID).permitted_frontends == frozenset(
-        {OperationFrontendProjection.CLI}
-    )
     assert (
         OperationEffect.PARTIAL
         not in registry.lookup(module.M036_RECORD_OPERATION_DEFINITION_ID).capabilities.permitted_effects
@@ -378,8 +375,10 @@ def test_observation_is_only_metadata_and_record_commit_is_declared(subject: Sub
         permission.category is DisclosureCategory.OPERATION_METADATA
         and permission.projection_id == OPERATION_OBSERVATION_PROJECTION_ID
     )
-    with pytest.raises(ProfileAccessRefusedError):
-        module.resolve_m036_operation_access(public, replace(context, frontend=OperationFrontendProjection.MCP))
+    for frontend in OperationFrontendProjection:
+        on_frontend = module.resolve_m036_operation_access(public, replace(context, frontend=frontend))
+        assert on_frontend.policy == observed.policy, frontend
+        assert on_frontend.request == observed.request.model_copy(update={"frontend": frontend}), frontend
 
 
 def test_projector_correlates_purpose_and_write_effect(subject: Subject) -> None:

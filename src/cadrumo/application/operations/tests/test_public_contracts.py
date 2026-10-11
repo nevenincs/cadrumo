@@ -72,7 +72,6 @@ from ..operation_definition import OperationDefinition, OperationExecutorFactory
 from ..owner import OperationExecutorContext
 from ..persistence.replay import OperationReplayStatus
 from ..registry import (
-    OperationFrontendProjection,
     OperationPublicContractSetV1,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -149,7 +148,6 @@ def _projection_contract_set(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.TUI}),
     )
     registration = OperationPublicDefinitionRegistrationV1.compose(
         definition=definition,

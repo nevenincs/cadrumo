@@ -323,10 +323,8 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
     def submit_secret(
         self, requirement: OperationSecretRequirement, secret: bytearray, *, timeout: float = 20
     ) -> RuntimeOperationAcknowledged:
-        """Consume a CLI/TUI secret through its exact operation's protected handoff."""
+        """Consume a secret through its exact operation's protected handoff."""
         try:
-            if self.frontend not in {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}:
-                raise RuntimeFrontendRefusedError(AccessDenialCode.FRONTEND_DENIED.value)
             return self._reply(
                 self._connection.operation_secret(
                     RuntimeOperationSecret(

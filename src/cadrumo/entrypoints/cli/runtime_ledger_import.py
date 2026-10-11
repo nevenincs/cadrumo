@@ -40,7 +40,9 @@ def require_ledger_import_correlation(
         invalid_ledger_import_receipt(completed, result, profile_id, expected_effect)
         or invalid_ledger_import_selection(result, dry_run, verify, period)
         or len(result.validations) != len(result.sources)
-        or (len(result.validations) + len(result.refused_files) != len(files))
+        # The operation plans a named directory into its files, so each entry
+        # accounts for at least one outcome.
+        or len(result.validations) + len(result.refused_files) < len(files)
     )
     if invalid:
         raise invalid_completion_error(completed)
@@ -57,7 +59,7 @@ def import_ledger_sources_for_cli(
     period: Period | None,
     own_account_id: str | None = None,
 ) -> RegisteredOperationCompletion[LedgerImportResultProjection]:
-    """Submit staged source paths to the exact profile and correlate the result."""
+    """Submit the named files or directories to the exact profile and correlate the result."""
     if not files or len(files) > MAX_LEDGER_IMPORT_FILES:
         raise TransactionValidationError("ledger import source file count is outside the registered operation limit")
     client = require_profile_client(ctx, expected_profile_id=UUID(require_active_bucket_id()))

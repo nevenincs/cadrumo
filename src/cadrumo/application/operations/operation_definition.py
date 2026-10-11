@@ -68,7 +68,6 @@ class OperationDefinition(BaseModel):
     interaction_kinds: frozenset[OperationInteractionKind]
     capabilities: OperationCapabilities
     reconciliation_policy: OperationReconciliationPolicy
-    permitted_frontends: frozenset[OperationFrontendProjection] = Field(min_length=1)
     action_reference: ActionReference | None = None
     ephemeral_secret: OperationEphemeralSecretDeclaration | None = None
     transient_financial_operand: OperationTransientFinancialOperandDeclarationV1 | None = None
@@ -165,10 +164,10 @@ class OperationDefinition(BaseModel):
             raise ValueError("typed financial custody requires amount-free recorded requests and bounded refusals")
 
 
-# The two enums live in the registry's central contract module. Resolving them
-# here happens after the model class exists; registry imports this module after
-# defining the enums and completes any deferred Pydantic fields before use.
-from .registry import OperationFrontendProjection, OperationReconciliationPolicy  # noqa: E402
+# The enum lives in the registry's central contract module. Resolving it here
+# happens after the model class exists; registry imports this module after
+# defining the enum and completes any deferred Pydantic fields before use.
+from .registry import OperationReconciliationPolicy  # noqa: E402
 
 OperationDefinition.model_rebuild(_types_namespace=globals())
 
@@ -182,7 +181,6 @@ def build_single_phase_definition(
     executor_type: type[object],
     build: Callable[[], object],
     capabilities: OperationCapabilities,
-    permitted_frontends: frozenset[OperationFrontendProjection],
     action_reference: ActionReference | None = None,
     ephemeral_secret: OperationEphemeralSecretDeclaration | None = None,
     refusal_detail_codes: frozenset[OperationFailureErrorCode] = frozenset(),
@@ -204,7 +202,6 @@ def build_single_phase_definition(
         interaction_kinds=frozenset(),
         capabilities=capabilities,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=permitted_frontends,
         action_reference=action_reference,
         ephemeral_secret=ephemeral_secret,
         transient_financial_operand=transient_financial_operand,

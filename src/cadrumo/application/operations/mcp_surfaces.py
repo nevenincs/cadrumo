@@ -7,11 +7,12 @@ on it reaches the network. A surface whose tools or properties change takes a
 new name. Its operation list may grow between releases, and only within those
 properties.
 
-A surface narrows what the registry opens to the MCP frontend and never widens
-it: the frontend list of a definition is still applied first, wherever a
-surface is applied. The runtime applies the surface a connection named at
-login to every operation access on that connection. What a server lists or
-describes under a surface is a convenience and enforces nothing.
+Every registered operation is open to every frontend, and the surface served
+when none is named keeps all of them. A narrower surface is the choice of the
+person who starts the connection, and it only narrows. The runtime applies the
+surface a connection named at login to every operation access on that
+connection. What a server lists or describes under a surface is a convenience
+and enforces nothing.
 
 Operations are named by definition id text and tools by their protocol name.
 This package owns neither the feature packages' constants nor the tool
@@ -26,14 +27,14 @@ from enum import StrEnum
 from types import MappingProxyType
 from typing import Final
 
-from .mcp_admission import MCP_ADMISSION_DECISIONS, McpRuling, mcp_admission_decision
+from .mcp_surface_facts import OPERATION_SURFACE_FACTS, operation_surface_facts
 
 
 class McpSurfaceName(StrEnum):
     """The stable names a client pins."""
 
     FULL = "full"
-    """Everything the registry opens to the MCP frontend."""
+    """Every registered operation."""
     READ_ONLY_LOCAL = "read-only-local"
     """Reads that change no record and contact no host other than this machine."""
 
@@ -50,7 +51,7 @@ class McpSurface:
     reaches_network: bool
     """Something on the surface can contact a host other than this machine."""
     operations: frozenset[str] | None
-    """The definition ids the surface keeps; ``None`` keeps whatever the registry opens to MCP."""
+    """The definition ids the surface keeps; ``None`` keeps every registered operation."""
 
     def __post_init__(self) -> None:
         """Refuse a surface whose operation list breaks one of its declared properties."""
@@ -62,16 +63,16 @@ class McpSurface:
 
     @property
     def narrows(self) -> bool:
-        """Whether the surface keeps anything the registry opens to MCP off a connection."""
+        """Whether the surface keeps any registered operation off a connection."""
         return self.operations is not None or not (self.changes_records and self.reaches_network)
 
     def admits(self, definition_id: str) -> bool:
-        """Tell whether the surface keeps one operation the registry opens to MCP.
+        """Tell whether the surface keeps one registered operation.
 
         An operation outside the list is refused, and so is one whose recorded
-        decision says it can do what the surface declares nothing on it does.
-        An operation with no recorded decision is refused by every surface
-        that narrows.
+        facts say it can do what the surface declares nothing on it does. An
+        operation with no recorded facts is refused by every surface that
+        narrows.
         """
         if not self.narrows:
             return True
@@ -81,11 +82,11 @@ class McpSurface:
 
     def _within_properties(self, definition_id: str) -> bool:
         try:
-            decision = mcp_admission_decision(definition_id)
+            facts = operation_surface_facts(definition_id)
         except KeyError:
             return False
-        return (self.changes_records or not decision.changes_records) and (
-            self.reaches_network or not decision.reaches_network
+        return (self.changes_records or not facts.changes_records) and (
+            self.reaches_network or not facts.reaches_network
         )
 
 
@@ -107,6 +108,7 @@ _EVERY_TOOL: Final = frozenset(
         "review",
         "respond",
         "control",
+        "session",
     }
 )
 
@@ -115,20 +117,12 @@ _EVERY_TOOL: Final = frozenset(
 _REVIEW_TOOLS: Final = frozenset({"review", "respond"})
 
 
-def _open_local_reads() -> frozenset[str]:
-    """Name every operation open to MCP that changes no record and contacts no other host.
-
-    An admitted decision with nothing outstanding is what lists the MCP
-    frontend, so this is the part of the registry's MCP listing the two facts
-    allow. A decision that waits for approval is a sensitive act and stays out.
-    """
+def _local_reads() -> frozenset[str]:
+    """Name every operation that changes no record and contacts no other host."""
     return frozenset(
-        decision.definition_id
-        for decision in MCP_ADMISSION_DECISIONS
-        if decision.ruling is McpRuling.ADMITTED
-        and not decision.prerequisites
-        and not decision.changes_records
-        and not decision.reaches_network
+        facts.definition_id
+        for facts in OPERATION_SURFACE_FACTS
+        if not facts.changes_records and not facts.reaches_network
     )
 
 
@@ -148,7 +142,7 @@ MCP_SURFACES: Final[Mapping[McpSurfaceName, McpSurface]] = MappingProxyType(
                 tools=_EVERY_TOOL - _REVIEW_TOOLS,
                 changes_records=False,
                 reaches_network=False,
-                operations=_open_local_reads(),
+                operations=_local_reads(),
             ),
         )
     }

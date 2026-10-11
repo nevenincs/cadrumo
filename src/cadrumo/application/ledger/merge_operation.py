@@ -21,11 +21,12 @@ from ...domain.transactions.enums import SplitRole, TransactionLifecycleState
 from ...domain.transactions.errors import TransactionValidationError
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest, OperationTerminalReceipt, terminal_receipt_matches
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
@@ -134,9 +135,15 @@ class LedgerMergeExecutionResult(BaseModel):
 class LedgerMergeExecutor:
     """Resolve every child prefix and merge against the same guarded snapshot."""
 
-    def __init__(self, ports_factory: LedgerActionPortsFactory) -> None:
+    def __init__(
+        self,
+        ports_factory: LedgerActionPortsFactory,
+        *,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
+    ) -> None:
         """Retain the exact-profile ledger port factory supplied by composition."""
         self._ports_factory = ports_factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(
         self,
@@ -150,6 +157,9 @@ class LedgerMergeExecutor:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(LEDGER_MERGE_PHASE)
+        actor = execution_actor_label(
+            self._execution_caller_reader, context, supplied=payload.actor or bucket_id or "operator"
+        )
 
         def merge() -> LedgerMergeOperationResult:
             operation: PinnedAuthorityOperation = context.authority_operation
@@ -172,7 +182,7 @@ class LedgerMergeExecutor:
             result = merge_transactions(
                 bucket_id=bucket_id,
                 child_transaction_ids=child_ids,
-                actor=payload.actor or bucket_id or "operator",
+                actor=actor,
                 source_command="aeat app ledger merge",
                 reason=payload.reason,
                 ports=pinned_ports,
@@ -308,7 +318,11 @@ def _project_operation_result(result: BaseModel, receipt: OperationTerminalRecei
     return result.result
 
 
-def build_ledger_merge_definition(ports_factory: LedgerActionPortsFactory) -> OperationDefinition:
+def build_ledger_merge_definition(
+    ports_factory: LedgerActionPortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
+) -> OperationDefinition:
     """Declare durable, exact-profile manual merge with a bounded result."""
     return build_single_phase_definition(
         definition_id=LEDGER_MERGE_OPERATION_DEFINITION_ID,
@@ -316,9 +330,8 @@ def build_ledger_merge_definition(ports_factory: LedgerActionPortsFactory) -> Op
         subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerMergeExecutionResult,
         executor_type=LedgerMergeExecutor,
-        build=lambda: LedgerMergeExecutor(ports_factory),
+        build=lambda: LedgerMergeExecutor(ports_factory, execution_caller_reader=execution_caller_reader),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
 
 

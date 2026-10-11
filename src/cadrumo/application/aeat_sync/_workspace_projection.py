@@ -18,7 +18,7 @@ from ...core.identity.tax_id import same_tax_identifier
 from ...core.period import Period
 from ...domain.modelos.codes import ModeloCode
 from ..operations.models import OperationDefinitionId
-from ..operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
+from ..operations.registry import OperationPublicContractSetV1
 from ..operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogue
 from ..operator_actions.models import ActionReference
 from ..user_profile.censal_observation import CensalObservation
@@ -305,7 +305,7 @@ def _validate_operation_ids(
     _unique(operation_ids, "row operations")
     for operation_id in operation_ids:
         contract = contract_by_id.get(operation_id)
-        if contract is None or OperationFrontendProjection.TUI not in contract.permitted_frontends:
+        if contract is None:
             raise AeatSyncWorkspaceProjectionError("operation is not admitted by public contracts")
     if not set(operation_ids) <= _ALLOWED_OPERATIONS[key]:
         raise AeatSyncWorkspaceProjectionError("operation is not allowed for row area/state")

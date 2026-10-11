@@ -136,37 +136,12 @@ class M145CommunicationFieldValueProjection(BaseModel):
     value: Annotated[str, Field(max_length=512)]
 
 
-M145_SIGNED_BLOCK_CASILLA_IDS: frozenset[str] = frozenset(
-    {
-        "comunicacion.firma-lugar",
-        "comunicacion.firma-fecha-dia",
-        "comunicacion.firma-fecha-mes",
-        "comunicacion.firma-fecha-anio",
-        "comunicacion.firma-tipo",
-        "acuse-recibo.empresa-entidad",
-        "acuse-recibo.lugar",
-        "acuse-recibo.fecha-dia",
-        "acuse-recibo.fecha-mes",
-        "acuse-recibo.fecha-anio",
-        "acuse-recibo.tipo-firma",
-    }
-)
-"""The casillas of the two blocks of the form that are signed.
-
-The first block is the place, date and signature under which the worker
-declares the communicated data to be true. The second is the payer's signed
-acknowledgement of receipt. A value in either stands for a signature, which
-only the person who signs can state.
-"""
-
-
 class M145CommunicationCreateRequest(BaseModel):
     """Sensitive create intent held only as a secure operation reference.
 
     The record it creates is a local draft in the ``created`` state. ``actor``
     is recorded as sent for a person's session. An agent's session is recorded
-    under its own session label, whatever the request carries, and it is
-    refused a request whose ``field_values`` fill a signed block of the form.
+    under its own session label, whatever the request carries.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -215,10 +190,6 @@ class M145CommunicationCreateRequest(BaseModel):
             note=self.note,
         )
 
-    def fills_a_signed_block(self) -> bool:
-        """Return whether any field value belongs to a signed block of the form."""
-        return any(str(item.casilla_id) in M145_SIGNED_BLOCK_CASILLA_IDS for item in self.field_values)
-
 
 class _M145RecordSelectionRequest(BaseModel):
     """Exact-profile record selector used by the four existing read/action verbs."""
@@ -234,19 +205,31 @@ class M145CommunicationValidateRequest(_M145RecordSelectionRequest):
 
 
 class M145CommunicationExportRequest(_M145RecordSelectionRequest):
-    """Registry-layout export of one full record id or existing prefix."""
+    """Registry-layout export of one full record id or existing prefix.
+
+    ``actor`` is recorded as sent for a person's session. An agent's session is
+    recorded under its own session label, whatever the request carries.
+    """
 
     actor: Annotated[str, Field(min_length=1, max_length=64)]
 
 
 class M145CommunicationMarkDeliveredRequest(_M145RecordSelectionRequest):
-    """Mark one valid communication as delivered to its payer."""
+    """Mark one valid communication as delivered to its payer.
+
+    ``actor`` is recorded as sent for a person's session. An agent's session is
+    recorded under its own session label, whatever the request carries.
+    """
 
     actor: Annotated[str, Field(min_length=1, max_length=64)]
 
 
 class M145CommunicationMarkCompletedRequest(_M145RecordSelectionRequest):
-    """Mark one payer-delivered communication as locally completed."""
+    """Mark one payer-delivered communication as locally completed.
+
+    ``actor`` is recorded as sent for a person's session. An agent's session is
+    recorded under its own session label, whatever the request carries.
+    """
 
     actor: Annotated[str, Field(min_length=1, max_length=64)]
 
@@ -608,7 +591,6 @@ __all__ = [
     "M145_COMMUNICATION_REFUSAL_CODE_BY_VALUE",
     "M145_COMMUNICATION_REQUEST_TYPES",
     "M145_COMMUNICATION_VALIDATE_OPERATION_DEFINITION_ID",
-    "M145_SIGNED_BLOCK_CASILLA_IDS",
     "M145CommunicationCreateRequest",
     "M145CommunicationErrorContextFact",
     "M145CommunicationExecutionResult",

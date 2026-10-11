@@ -14,7 +14,6 @@ from ..operations.execution_actor import OperationExecutionCallerReader
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationResultProjector,
 )
@@ -111,7 +110,6 @@ def _definition(
             ports_factory, definition_id=definition_id, execution_caller_reader=execution_caller_reader
         ),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
         refusal_detail_codes=shape.refusal_codes,
     )
 

@@ -31,6 +31,9 @@ class _FieldSchema(TypedDict):
     enum: NotRequired[list[str]]
     minimum: NotRequired[int]
     maximum: NotRequired[int]
+    format: NotRequired[str]
+    writeOnly: NotRequired[bool]
+    items: NotRequired[dict[str, str]]
 
 
 class _ToolSchema(TypedDict):
@@ -50,10 +53,20 @@ def _schema(required: Mapping[str, _FieldSchema], optional: Mapping[str, _FieldS
 
 _TEXT: _FieldSchema = {"type": "string"}
 _DOC: _FieldSchema = {"type": "object"}
+# Marked so a client that follows the schema keeps the value out of its own logs and echoes.
+_SECRET: _FieldSchema = {"type": "string", "format": "password", "writeOnly": True}
+_TEXTS: _FieldSchema = {"type": "array", "items": {"type": "string"}}
+_FLAG: _FieldSchema = {"type": "boolean"}
 SEARCH_PAGE_DEFAULT = 50
 SEARCH_PAGE_MAX = 200
 MCP_TOOL_CATALOGUE = (
-    ("status", "Current exact-profile authorization and availability", _schema({})),
+    (
+        "status",
+        "Current exact-profile authorization and availability. A notice member carries the runtime's lifecycle "
+        "notice: upgrade_pending says an update is ready and the runtime restarts for it once idle, after which "
+        "the next call re-establishes the session",
+        _schema({}),
+    ),
     (
         "authorization_prepare",
         "Prepare enrollment, or an own-grant change using a protected credential reference",
@@ -105,17 +118,23 @@ MCP_TOOL_CATALOGUE = (
         "describe",
         "Read one current registered operation contract and input schema. The contract's subject_reference says "
         "what the operation's subject is: the admitted profile, the payload field its payload_path names, a fixed "
-        "literal, or the work unit that owns the stored record its payload_path names",
+        "literal, or the work unit that owns the stored record its payload_path names. A contract that declares "
+        "a transient_financial_operand is described with operator_input_json_schema, the typed input execute "
+        "submits for it",
         _schema({"definition_id": _TEXT}),
     ),
     (
         "execute",
         "Submit one registered operation under current profile authority. Leave subject_ref out: it is derived "
         "from the contract's subject_reference, the admitted profile and the payload. Only a stored_work_unit "
-        "operation needs it, as the id of the work unit that owns the record its payload_path names",
+        "operation needs it, as the id of the work unit that owns the record its payload_path names. "
+        "An operation whose contract says ephemeral_secret_required takes that secret as text in secret, and no "
+        "other operation accepts one: it travels to the runtime on the protected secret frame, apart from the "
+        "payload, and no reply repeats it. An operation whose contract declares a transient_financial_operand "
+        "takes its typed operator input as payload, with subject_ref and without idempotency_key",
         _schema(
             {"definition_id": _TEXT, "payload": _DOC},
-            {"subject_ref": _TEXT, "idempotency_key": _TEXT, "start": {"type": "boolean"}},
+            {"subject_ref": _TEXT, "idempotency_key": _TEXT, "start": {"type": "boolean"}, "secret": _SECRET},
         ),
     ),
     ("observe", "Read a currently authorized operation observation", _schema({"observation": _DOC})),
@@ -153,6 +172,51 @@ MCP_TOOL_CATALOGUE = (
             {"expected_revision": {"type": "integer", "minimum": 0}},
         ),
     ),
+    (
+        "session",
+        "Act on a profile's sessions as the command line does. Under the held session: list them, lock this "
+        "session or the one target_session_id names, deny_automation of the given kind (a key or a grant named "
+        "by target_id, all automation, or the whole profile), or sign_out the person. Without one: sign_in with "
+        "the profile password in secret (store keeps the sign-in for every frontend and selects the profile; "
+        "method api_key takes a raw key instead), sign_in_status, resume a locked profile with the password in "
+        "secret and the grants to reactivate, reset_password with the recovery code in secret and the new "
+        "password in new_secret and new_secret_confirmation, change_password with the current password in secret "
+        "and the new one in the same two fields, and delete_profile for the profile named, which only reports "
+        "what would be destroyed unless confirm is true. Each secret travels on the runtime's protected secret "
+        "frame and no reply repeats it",
+        _schema(
+            {
+                "action": {
+                    "type": "string",
+                    "enum": [
+                        "list",
+                        "lock",
+                        "deny_automation",
+                        "sign_out",
+                        "sign_in",
+                        "sign_in_status",
+                        "resume",
+                        "reset_password",
+                        "change_password",
+                        "delete_profile",
+                    ],
+                }
+            },
+            {
+                "target_session_id": _TEXT,
+                "kind": {"type": "string", "enum": ["key", "grant", "all", "profile_lock"]},
+                "target_id": _TEXT,
+                "profile": _TEXT,
+                "method": {"type": "string", "enum": ["password", "api_key"]},
+                "store": _FLAG,
+                "grants": _TEXTS,
+                "confirm": _FLAG,
+                "secret": _SECRET,
+                "new_secret": _SECRET,
+                "new_secret_confirmation": _SECRET,
+            },
+        ),
+    ),
 )
 _TOOL_SCHEMAS = {name: schema for name, _description, schema in MCP_TOOL_CATALOGUE}
 MCP_TOOL_NAMES = frozenset(_TOOL_SCHEMAS)
@@ -171,6 +235,8 @@ def _field_type_matches(kind: str, value: object, declaration: _FieldSchema) -> 
         return isinstance(value, dict)
     if kind == "boolean":
         return isinstance(value, bool)
+    if kind == "array":
+        return isinstance(value, list) and all(isinstance(item, str) for item in value)
     if kind == "integer":
         return _integer_value_matches(value, declaration)
     return True
@@ -268,9 +334,10 @@ def has_refusal(value: dict[str, Any]) -> bool:
     """Classify only explicit wire refusals and complete canonical refusal pages."""
     if value.get("outcome") in {"refused", "unresolved"}:
         return True
-    start = _result_object(value.get("start"))
-    if start is not None and start.get("outcome") == "unresolved":
-        return True
+    for step in ("secret_delivery", "start"):
+        taken = _result_object(value.get(step))
+        if taken is not None and taken.get("outcome") in {"refused", "unresolved"}:
+            return True
     if value.get("outcome") != "reply":
         return False
     reply = _result_object(value.get("reply"))

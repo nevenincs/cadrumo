@@ -28,7 +28,7 @@ from ..operations.models import OperationRequest, OperationTerminalReceipt, term
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import AccessDenialCode
@@ -261,22 +261,19 @@ class LedgerEvidenceBatchExecutor:
 def resolve_ledger_evidence_ingestion_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    """Require human CLI, all-period scope and exact dual-category disclosure."""
+    """Require all-period scope and exact dual-category disclosure."""
     payload = request.payload
     if (
         request.definition_id != LEDGER_EVIDENCE_BATCH_OPERATION_DEFINITION_ID
         or type(payload) is not LedgerEvidenceBatchRequest
         or not isinstance(payload, LedgerEvidenceBatchRequest)
-        or context.frontend is not OperationFrontendProjection.CLI
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_export_link_access(
-        request, context, profile_id=payload.profile_id, periods=frozenset[Period](), requires_human=True
-    )
+    return resolve_export_link_access(request, context, profile_id=payload.profile_id, periods=frozenset[Period]())
 
 
 def project_ledger_evidence_ingestion_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
-    """Release only the declared human projection matching a certain terminal effect."""
+    """Release only the declared projection matching a certain terminal effect."""
     if type(result) is not LedgerEvidenceBatchExecutionResult or not isinstance(
         result, LedgerEvidenceBatchExecutionResult
     ):
@@ -299,7 +296,7 @@ def project_ledger_evidence_ingestion_result(result: BaseModel, receipt: Operati
 def build_ledger_evidence_ingestion_definitions(
     factory: LedgerEvidenceIngestionPortsFactory,
 ) -> tuple[OperationDefinition, ...]:
-    """Declare the human batch ingestion route and its truthful effects."""
+    """Declare the batch ingestion route and its truthful effects."""
     return (
         build_single_phase_definition(
             definition_id=LEDGER_EVIDENCE_BATCH_OPERATION_DEFINITION_ID,
@@ -309,7 +306,6 @@ def build_ledger_evidence_ingestion_definitions(
             executor_type=LedgerEvidenceBatchExecutor,
             build=lambda: LedgerEvidenceBatchExecutor(factory),
             capabilities=RECORDED_NON_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_PARTIAL_UPDATE_CAPABILITIES,
-            permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
         ),
     )
 
@@ -317,7 +313,7 @@ def build_ledger_evidence_ingestion_definitions(
 def build_ledger_evidence_ingestion_registrations(
     definitions: tuple[OperationDefinition, ...],
 ) -> tuple[OperationPublicDefinitionRegistrationV1, ...]:
-    """Bind the closed schema and the exact human result policy for the route."""
+    """Bind the closed schema and the exact result policy for the route."""
     return tuple(
         OperationPublicDefinitionRegistrationV1.compose_request_result(
             definition=definition,

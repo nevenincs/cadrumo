@@ -10,7 +10,7 @@ from ..ledger.read_access import resolve_ledger_request_read_access
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
-from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from .read_contracts import (
     REVIEW_QUEUE_OPERATION_DEFINITION_ID,
@@ -46,7 +46,6 @@ def _build_definition(
         executor_type=executor_type,
         build=build,
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

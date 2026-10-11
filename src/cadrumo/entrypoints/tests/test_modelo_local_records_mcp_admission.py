@@ -1,12 +1,11 @@
-"""A local observation and a Modelo 145 draft are open to an MCP session, and what stays the person's is not.
+"""A local observation and a Modelo 145 draft do the same on every frontend, under the actor of the session.
 
 The production registry and the real executors run over a stored profile with
-a session host that answers for the frontend that admitted the invocation. An
-agent may record an operator figure and draft a payer communication, and what
-it records carries its own session label. It may not clear a figure, replace a
-local filing's own observation, or fill a signed block of the form. Importing a
-filing record waits for the person, because the record it leaves reads as
-confirmed by the tax agency.
+a session host that answers for the frontend that admitted the invocation.
+Recording an operator figure, recording over the observation of a pending
+local filing, clearing a figure and drafting a payer communication, signed
+blocks included, have the same effect and result whichever frontend submits
+them. What an MCP session records carries its own session label.
 """
 
 from __future__ import annotations
@@ -48,7 +47,6 @@ from ...application.modelo.m145_communication_records import (
 from ...application.operations.composition import OperationSubmission
 from ...application.operations.execution_actor import OperationExecutionCaller
 from ...application.operations.frontend_requests import OperationObservationSuccessV1
-from ...application.operations.mcp_admission import McpRuling, mcp_admission_decision
 from ...application.operations.models import OperationIdentity
 from ...application.operations.public_period import PublicPeriod
 from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
@@ -62,20 +60,19 @@ from ...domain.calculations.registry.bindings import CasillaObservation, Registr
 from ...domain.calculations.registry.tests.cross_period_seeding import resolved_revision
 from . import modelo_operation_test_support
 from . import test_registered_executor_conformance as conformance
-from .test_operation_catalogue import _registry
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _MCP = OperationFrontendProjection.MCP
 _CLI = OperationFrontendProjection.CLI
+_TUI = OperationFrontendProjection.TUI
 _SESSION_CLIENT = UUID("5aa00000-0000-4000-8000-0000000000dd")
 _TYPED_ACTOR = "typed by the caller"
 _AGENT_LABEL = f"agent:mcp.attended.{_SESSION_CLIENT}"
-_REFUSED_FOR_THE_FRONTEND = "REFUSED_PROFILE_ACCESS"
 _FRONTENDS = pytest.mark.parametrize(
     ("frontend", "recorded"),
-    [(_MCP, _AGENT_LABEL), (_CLI, _TYPED_ACTOR)],
-    ids=["mcp", "cli"],
+    [(_MCP, _AGENT_LABEL), (_CLI, _TYPED_ACTOR), (_TUI, _TYPED_ACTOR)],
+    ids=["mcp", "cli", "tui"],
 )
 
 _OBSERVATION = MODELO_LOCAL_OBSERVATION_OPERATION_DEFINITION_ID
@@ -101,7 +98,7 @@ _WORKER = {
 
 
 class _SessionHost:
-    """A session host whose admitting frontend a test sets between invocations."""
+    """A session host that answers with the frontend one test admits its invocations on."""
 
     def __init__(self, frontend: OperationFrontendProjection) -> None:
         self.frontend = frontend
@@ -128,48 +125,9 @@ def _run(
     return submitted, observed
 
 
-def _refused_for_the_frontend(observed: OperationObservationSuccessV1) -> bool:
-    terminal = observed.projection
-    return (
-        terminal.terminal_condition is OperationTerminalCondition.REFUSED
-        and terminal.refusal_ref == _REFUSED_FOR_THE_FRONTEND
-        and terminal.effect is OperationEffect.NONE
-        and terminal.result_ref is None
-    )
-
-
 def _events(profile_id: UUID, event_type: BucketEventType) -> list[BucketEvent]:
     events = bucket_event_history_repository(bucket_id=str(profile_id)).load().events
     return [event for event in events.values() if event.event_type is event_type]
-
-
-# ---------------------------------------------------------------------------
-# The recorded decisions
-# ---------------------------------------------------------------------------
-
-
-def test_three_local_records_are_open_to_mcp_and_the_filing_import_waits_for_the_person() -> None:
-    """The import leaves a record that reads as confirmed by the tax agency, so it is not opened with them."""
-    registry = _registry()
-
-    for definition_id in (_OBSERVATION, _M145_CREATE, _M145_VALIDATE):
-        decision = mcp_admission_decision(definition_id)
-        assert decision.ruling is McpRuling.ADMITTED, definition_id
-        assert not decision.prerequisites, definition_id
-        assert registry.lookup(definition_id).permitted_frontends == frozenset({_CLI, _MCP}), definition_id
-        assert registry.lookup_public_contract(definition_id).permitted_frontends == frozenset({_CLI, _MCP})
-    assert mcp_admission_decision(_OBSERVATION).sensitive_actions == ("clear",)
-    assert mcp_admission_decision(_M145_CREATE).sensitive_actions == ("signed_block",)
-    assert not mcp_admission_decision(_M145_VALIDATE).changes_records
-
-    for definition_id in (
-        "modelo.filing_record.import",
-        "modelo.m145.mark_delivered_to_payer",
-        "modelo.m145.mark_locally_completed",
-    ):
-        assert mcp_admission_decision(definition_id).ruling is McpRuling.ADMITTED_BEHIND_APPROVAL, definition_id
-        assert _MCP not in registry.lookup(definition_id).permitted_frontends, definition_id
-    assert _MCP not in registry.lookup("modelo.m145.export").permitted_frontends
 
 
 # ---------------------------------------------------------------------------
@@ -286,12 +244,16 @@ def test_a_recorded_figure_carries_the_session_label_for_an_agent_and_never_read
         assert event.actor == recorded
 
 
-def test_an_agents_figure_leaves_official_evidence_stored_and_says_what_it_replaced(
-    tmp_path: Path, operation: PinnedAuthorityOperation
+@_FRONTENDS
+def test_a_figure_leaves_official_evidence_stored_and_says_what_it_replaced(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    frontend: OperationFrontendProjection,
+    recorded: str,
 ) -> None:
-    """Nothing of the official layer is lost, so the result states it for the agent to tell the person."""
+    """Nothing of the official layer is lost, so the result states it for the caller to tell the person."""
     with conformance._runtime(
-        tmp_path / "runtime", cleanup=conformance._CloseWitness(), execution_caller_reader=_SessionHost(_MCP)
+        tmp_path / "runtime", cleanup=conformance._CloseWitness(), execution_caller_reader=_SessionHost(frontend)
     ) as (driver, registry, profile_id):
         modelo_operation_test_support.seeded_modelo_work_unit(profile_id, operation=operation)
         _store_observation(profile_id, "250.00", source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE)
@@ -302,6 +264,7 @@ def test_an_agents_figure_leaves_official_evidence_stored_and_says_what_it_repla
 
         layers = _observation_result(driver, registry, submitted, observed).observation_layers
         assert layers.override is not None
+        assert layers.override.actor == recorded
         assert layers.override.replaced_source_kind is ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE
         assert layers.override.replaced_values == ((_CASILLA, "250.00"),)
         assert layers.official is not None
@@ -312,68 +275,65 @@ def test_an_agents_figure_leaves_official_evidence_stored_and_says_what_it_repla
         assert _stored_layers(profile_id).official == official_before
 
 
-def test_an_agent_is_refused_a_figure_that_would_replace_a_local_filings_observation(
-    tmp_path: Path, operation: PinnedAuthorityOperation
+@_FRONTENDS
+def test_a_figure_recorded_over_a_local_filings_observation_replaces_it_and_says_so_on_every_frontend(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    frontend: OperationFrontendProjection,
+    recorded: str,
 ) -> None:
-    """That observation shares the layer the figure is written to, and nothing records it again once replaced."""
-    host = _SessionHost(_MCP)
+    """That observation shares the layer the figure is written to, so the result names what was replaced."""
     with conformance._runtime(
-        tmp_path / "runtime", cleanup=conformance._CloseWitness(), execution_caller_reader=host
+        tmp_path / "runtime", cleanup=conformance._CloseWitness(), execution_caller_reader=_SessionHost(frontend)
     ) as (driver, registry, profile_id):
         modelo_operation_test_support.seeded_modelo_work_unit(profile_id, operation=operation)
         _store_observation(profile_id, "300.00", source_kind=ObservationSourceKind.APP_FILING)
         filed = _stored_layers(profile_id)
         assert filed.pending_local is not None and filed.pending_local.override is None
 
-        _submitted, refused = _run(driver, _OBSERVATION, profile_id, _observation_request(profile_id))
+        submitted, observed = _run(driver, _OBSERVATION, profile_id, _observation_request(profile_id))
 
-        assert _refused_for_the_frontend(refused)
-        assert _stored_layers(profile_id) == filed
-        assert _events(profile_id, BucketEventType.MODELO_OBSERVATION_OVERRIDDEN) == []
-
-        # The person's own frontend still records over it, and is told what it replaced.
-        host.frontend = _CLI
-        own = _observation_request(profile_id, reason="corrected by the person")
-        submitted, observed = _run(driver, _OBSERVATION, profile_id, own)
         override = _observation_result(driver, registry, submitted, observed).observation_layers.override
         assert override is not None
+        assert override.actor == recorded
         assert override.replaced_source_kind is ObservationSourceKind.APP_FILING
         assert override.replaced_values == ((_CASILLA, "300.00"),)
+        pending = _stored_layers(profile_id).pending_local
+        assert pending is not None and pending.override is not None
+        assert pending.source_kind is ObservationSourceKind.OPERATOR_MANUAL
+        (event,) = _events(profile_id, BucketEventType.MODELO_OBSERVATION_OVERRIDDEN)
+        assert event.actor == recorded
 
 
-def test_an_agent_may_replace_an_operator_figure_and_may_not_clear_one(
-    tmp_path: Path, operation: PinnedAuthorityOperation
+@_FRONTENDS
+def test_an_operator_figure_is_replaced_and_then_cleared_alike_on_every_frontend(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    frontend: OperationFrontendProjection,
+    recorded: str,
 ) -> None:
-    """A later figure keeps the values of the one it replaces; clearing keeps nothing, so it is the person's."""
-    host = _SessionHost(_CLI)
+    """A later figure keeps the values of the one it replaces, and clearing removes the figure."""
     with conformance._runtime(
-        tmp_path / "runtime", cleanup=conformance._CloseWitness(), execution_caller_reader=host
+        tmp_path / "runtime", cleanup=conformance._CloseWitness(), execution_caller_reader=_SessionHost(frontend)
     ) as (driver, registry, profile_id):
         modelo_operation_test_support.seeded_modelo_work_unit(profile_id, operation=operation)
         _run(driver, _OBSERVATION, profile_id, _observation_request(profile_id, value="125.00"))
 
-        host.frontend = _MCP
         submitted, observed = _run(driver, _OBSERVATION, profile_id, _observation_request(profile_id, value="130.00"))
         override = _observation_result(driver, registry, submitted, observed).observation_layers.override
         assert override is not None
-        assert (override.actor, override.replaced_source_kind) == (_AGENT_LABEL, ObservationSourceKind.OPERATOR_MANUAL)
+        assert (override.actor, override.replaced_source_kind) == (recorded, ObservationSourceKind.OPERATOR_MANUAL)
         assert override.replaced_values == ((_CASILLA, "125.00"),)
-        replaced = _stored_layers(profile_id)
 
-        asked_by_the_agent = _clear_request(profile_id, reason="asked by the agent")
-        _submitted, refused = _run(driver, _OBSERVATION, profile_id, asked_by_the_agent)
-
-        assert _refused_for_the_frontend(refused)
-        assert _stored_layers(profile_id) == replaced
-        assert _events(profile_id, BucketEventType.MODELO_OBSERVATION_OVERRIDE_CLEARED) == []
-
-        host.frontend = _CLI
-        cleared_by_the_person = _clear_request(profile_id, reason="the figure was mistyped")
-        submitted, observed = _run(driver, _OBSERVATION, profile_id, cleared_by_the_person)
+        submitted, observed = _run(
+            driver, _OBSERVATION, profile_id, _clear_request(profile_id, reason="the figure was mistyped")
+        )
         cleared = _observation_result(driver, registry, submitted, observed)
         assert cleared.action == "cleared"
-        assert cleared.captured_by == _TYPED_ACTOR
+        assert cleared.captured_by == recorded
         assert _stored_layers(profile_id).pending_local is None
+        (event,) = _events(profile_id, BucketEventType.MODELO_OBSERVATION_OVERRIDE_CLEARED)
+        assert event.actor == recorded
 
 
 # ---------------------------------------------------------------------------
@@ -436,16 +396,18 @@ def test_a_draft_is_a_created_record_whose_event_carries_the_session_label_for_a
         assert event.actor == recorded
 
 
-@pytest.mark.parametrize("signed", ["comunicacion.firma-lugar", "acuse-recibo.tipo-firma"])
-def test_an_agents_draft_that_fills_a_signed_block_stores_nothing_and_the_persons_is_stored(
-    tmp_path: Path, operation: PinnedAuthorityOperation, signed: str
+@_FRONTENDS
+def test_a_draft_that_fills_the_signed_blocks_is_stored_on_every_frontend(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    frontend: OperationFrontendProjection,
+    recorded: str,
 ) -> None:
-    """The executor refuses the draft itself, whether or not a resolver was asked first."""
-    host = _SessionHost(_MCP)
+    """The signature block of the worker and the acknowledgement of the payer are fields of the draft like any other."""
     with conformance._runtime(
-        tmp_path / "runtime", cleanup=conformance._CloseWitness(), execution_caller_reader=host
+        tmp_path / "runtime", cleanup=conformance._CloseWitness(), execution_caller_reader=_SessionHost(frontend)
     ) as (driver, registry, profile_id):
-        values = {**_WORKER, signed: "1"}
+        values = {**_WORKER, "comunicacion.firma-lugar": "1", "acuse-recibo.tipo-firma": "1"}
         revision = operation.snapshot("145", filing_year=_M145_YEAR, period=_M145_PERIOD.value).revision
         record_id = derive_m145_communication_record_id(
             bucket_id=str(profile_id),
@@ -456,19 +418,16 @@ def test_an_agents_draft_that_fills_a_signed_block_stores_nothing_and_the_person
         )
         records = build_m145_communication_records_ports(bucket_id=str(profile_id)).record_repository
 
-        _submitted, refused = _run(driver, _M145_CREATE, profile_id, _draft_request(profile_id, values))
+        submitted, observed = _run(driver, _M145_CREATE, profile_id, _draft_request(profile_id, values))
 
-        assert _refused_for_the_frontend(refused)
-        assert not records.exists(record_id)
-        assert _events(profile_id, BucketEventType.MODELO_145_COMMUNICATION_CREATED) == []
-
-        host.frontend = _CLI
-        signed_by_the_person = _draft_request(profile_id, values, note="signed by the person")
-        submitted, observed = _run(driver, _M145_CREATE, profile_id, signed_by_the_person)
         record = _m145_result(driver, registry, _M145_CREATE, submitted, observed).result
         assert isinstance(record, M145CommunicationRecordProjection)
         assert record.communication_record_id == record_id
+        assert record.state is M145CommunicationRecordState.CREATED
+        assert {item.casilla_id: item.value for item in record.field_values} == values
         assert records.exists(record_id)
+        (event,) = _events(profile_id, BucketEventType.MODELO_145_COMMUNICATION_CREATED)
+        assert event.actor == recorded
 
 
 def test_an_agents_validation_reads_the_draft_and_writes_nothing(

@@ -6,6 +6,7 @@ import asyncio
 import threading
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
+from dataclasses import replace
 from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import Protocol, cast
@@ -18,8 +19,7 @@ from ....core.hashing import sha256_hex
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....domain.buckets.event import BucketEventHistoryCatalogue
 from ....domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
+from ...operations.access_resolution import OperationAccessContext
 from ...operations.capabilities import (
     OperationReplayPolicy,
     OperationRequestStoragePolicy,
@@ -33,8 +33,7 @@ from ...operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
-from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
-from ...user_profile.access_errors import ProfileAccessRefusedError
+from ...user_profile.access_contracts import AccessAction, Availability
 from .. import m145_communication_execution as m145_operation
 from .._ports import FicheroBoeRecordRenderer
 from ..m145_communication_contracts import (
@@ -43,7 +42,6 @@ from ..m145_communication_contracts import (
     M145_COMMUNICATION_MARK_COMPLETED_OPERATION_DEFINITION_ID,
     M145_COMMUNICATION_MARK_DELIVERED_OPERATION_DEFINITION_ID,
     M145_COMMUNICATION_VALIDATE_OPERATION_DEFINITION_ID,
-    M145_SIGNED_BLOCK_CASILLA_IDS,
     M145CommunicationCreateRequest,
     M145CommunicationExecutionResult,
     M145CommunicationExportProjection,
@@ -390,19 +388,6 @@ def test_five_registrations_are_secure_and_require_all_periods_and_two_are_open_
 
     assert {definition.definition_id for definition in definitions} == expected_ids
     assert {registration.contract.definition_id for registration in registrations} == expected_ids
-    # The draft and its validation are an agent's to run; the export writes a file
-    # and the two marks record what the person says happened with the payer.
-    assert {definition.definition_id: definition.permitted_frontends for definition in definitions} == {
-        M145_COMMUNICATION_CREATE_OPERATION_DEFINITION_ID: frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.MCP}
-        ),
-        M145_COMMUNICATION_VALIDATE_OPERATION_DEFINITION_ID: frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.MCP}
-        ),
-        M145_COMMUNICATION_EXPORT_OPERATION_DEFINITION_ID: frozenset({OperationFrontendProjection.CLI}),
-        M145_COMMUNICATION_MARK_DELIVERED_OPERATION_DEFINITION_ID: frozenset({OperationFrontendProjection.CLI}),
-        M145_COMMUNICATION_MARK_COMPLETED_OPERATION_DEFINITION_ID: frozenset({OperationFrontendProjection.CLI}),
-    }
     assert all(
         definition.capabilities.request_storage is OperationRequestStoragePolicy.SECURE_REFERENCE
         and definition.capabilities.sensitive_input is OperationSensitiveInputPolicy.SECURE_REFERENCE
@@ -509,70 +494,53 @@ def _create_request(values: dict[str, str]) -> OperationRequest[BaseModel]:
     )
 
 
-def _resolve_on(
-    frontend: OperationFrontendProjection, request: OperationRequest[BaseModel], *, action: AccessAction
-) -> ResolvedOperationAccess:
+_SIGNED_BLOCK_VALUES = {"comunicacion.firma-lugar": "1", "acuse-recibo.empresa-entidad": "1"}
+
+
+@pytest.mark.parametrize("action", [AccessAction.SUBMIT, AccessAction.START, AccessAction.RESULT])
+def test_every_frontend_resolves_each_command_to_the_same_access(action: AccessAction) -> None:
+    """A draft that fills the signed blocks of the form is one of the requests every frontend sends alike."""
     _definitions, registrations = _definition_set()
-    registration = next(item for item in registrations if item.contract.definition_id == request.definition_id)
-    resolver = registration.access_resolver
-    assert resolver is not None
-    return resolver(
-        request,
-        OperationAccessContext(
+    record = {"profile_id": _PROFILE, "communication_record_id": "a" * 64}
+    requests: dict[str, BaseModel] = {
+        M145_COMMUNICATION_VALIDATE_OPERATION_DEFINITION_ID: M145CommunicationValidateRequest(**record),
+        M145_COMMUNICATION_EXPORT_OPERATION_DEFINITION_ID: M145CommunicationExportRequest(
+            **record, actor="M145 operator"
+        ),
+        M145_COMMUNICATION_MARK_DELIVERED_OPERATION_DEFINITION_ID: M145CommunicationMarkDeliveredRequest(
+            **record, actor="M145 operator"
+        ),
+        M145_COMMUNICATION_MARK_COMPLETED_OPERATION_DEFINITION_ID: M145CommunicationMarkCompletedRequest(
+            **record, actor="M145 operator"
+        ),
+    }
+    cases = [
+        _create_request(_VALUES),
+        _create_request({**_VALUES, **_SIGNED_BLOCK_VALUES}),
+        *(
+            OperationRequest[BaseModel](
+                definition_id=definition_id, subject_ref=profile_operation_subject(str(_PROFILE)), payload=payload
+            )
+            for definition_id, payload in requests.items()
+        ),
+    ]
+    assert {case.definition_id for case in cases} == {item.contract.definition_id for item in registrations}
+
+    for request in cases:
+        registration = next(item for item in registrations if item.contract.definition_id == request.definition_id)
+        resolver = registration.access_resolver
+        assert resolver is not None
+        context = OperationAccessContext(
             profile_id=_PROFILE,
             destination_id=uuid4(),
             action=action,
-            frontend=frontend,
+            frontend=OperationFrontendProjection.CLI,
             contract=registration.contract,
             published_authority=Availability.AVAILABLE,
-        ),
-    )
-
-
-def test_an_mcp_session_is_admitted_to_draft_and_to_validate_as_the_command_line_is() -> None:
-    """A draft of the worker's and family's data, and its validation, state nothing only the person can."""
-    validate = OperationRequest[BaseModel](
-        definition_id=M145_COMMUNICATION_VALIDATE_OPERATION_DEFINITION_ID,
-        subject_ref=profile_operation_subject(str(_PROFILE)),
-        payload=M145CommunicationValidateRequest(profile_id=_PROFILE, communication_record_id="a" * 64),
-    )
-
-    for request, commits in ((_create_request(_VALUES), True), (validate, False)):
-        on_mcp = _resolve_on(OperationFrontendProjection.MCP, request, action=AccessAction.SUBMIT)
-        on_cli = _resolve_on(OperationFrontendProjection.CLI, request, action=AccessAction.SUBMIT)
-        assert on_mcp.request.frontend is OperationFrontendProjection.MCP, request.definition_id
-        assert on_mcp.request.period_independent and on_mcp.request.periods == frozenset(), request.definition_id
-        assert on_mcp.policy.actions == on_cli.policy.actions, request.definition_id
-        assert (AccessAction.COMMIT in on_mcp.policy.actions) is commits, request.definition_id
-        assert not on_mcp.policy.requires_human, request.definition_id
-
-
-@pytest.mark.parametrize("casilla_id", sorted(M145_SIGNED_BLOCK_CASILLA_IDS))
-def test_a_draft_that_fills_a_signed_block_is_refused_to_mcp_alone(casilla_id: str) -> None:
-    """One value of the worker's signature block or of the payer's acknowledgement closes the draft to an agent."""
-    request = _create_request({**_VALUES, casilla_id: "1"})
-
-    for action in (AccessAction.SUBMIT, AccessAction.START, AccessAction.RESULT):
-        with pytest.raises(ProfileAccessRefusedError) as refused:
-            _resolve_on(OperationFrontendProjection.MCP, request, action=action)
-        assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED, action
-    on_cli = _resolve_on(OperationFrontendProjection.CLI, request, action=AccessAction.SUBMIT)
-    assert on_cli.request.frontend is OperationFrontendProjection.CLI
-    assert AccessAction.COMMIT in on_cli.policy.actions
-
-
-@pytest.mark.parametrize("period", list(M145CommunicationPeriod))
-def test_the_signed_blocks_named_here_are_the_ones_the_registry_declares(
-    operation: PinnedAuthorityOperation, period: M145CommunicationPeriod
-) -> None:
-    """The registry is the oracle: every casilla of the acknowledgement section, and every signature role."""
-    revision = operation.snapshot("145", filing_year=2026, period=period.value).revision
-    declared = {
-        str(casilla.id)
-        for casilla in revision.casillas
-        if "acuse_recibo" in casilla.section or "_firma_" in f"_{casilla.semantic_role or ''}_"
-    }
-
-    assert declared == M145_SIGNED_BLOCK_CASILLA_IDS
-    # The comparison must rest on a real declaration, with fields outside the signed blocks.
-    assert {str(casilla.id) for casilla in revision.casillas} - declared
+        )
+        on_cli = resolver(request, context)
+        assert not on_cli.policy.requires_human, request.definition_id
+        for frontend in OperationFrontendProjection:
+            on_frontend = resolver(request, replace(context, frontend=frontend))
+            assert on_frontend.policy == on_cli.policy, (request.definition_id, frontend)
+            assert on_frontend.request == on_cli.request.model_copy(update={"frontend": frontend})

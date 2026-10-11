@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import date
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
+from pydantic import BaseModel
 
 from cadrumo.application.ledger.preflight import LedgerPreflightIssue, LedgerPreflightIssueReason
 from cadrumo.application.modelo import mcp_query_operation as subject
@@ -23,13 +25,18 @@ from cadrumo.application.modelo.mcp_query_operation import (
     build_modelo_readiness_summary_registration,
 )
 from cadrumo.application.modelo.query_read_contracts import ModeloQueryReadPorts, ModeloReadinessOperationRequest
+from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
+from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.public_period import PublicPeriod
+from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
 from cadrumo.application.state_projection import (
     ModeloProfileRefusalCause,
     ProjectionModeloReadiness,
 )
+from cadrumo.application.user_profile.access_contracts import AccessAction, Availability
 from cadrumo.core.aggregation import BindingTypedEnumKind
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.operations import profile_operation_subject
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.binding_value_contract import (
@@ -176,3 +183,42 @@ def test_readiness_summary_preserves_axes_and_typed_cause_without_diagnostic_det
     assert "private applicability prose" not in public
     assert "private arbitrary diagnostic" not in public
     assert "detail" not in public
+
+
+@pytest.mark.parametrize("action", [AccessAction.SUBMIT, AccessAction.OBSERVE, AccessAction.RESULT])
+def test_every_frontend_resolves_the_typed_readiness_summary_to_the_same_access(action: AccessAction) -> None:
+    definition = build_modelo_readiness_summary_definition(_unused_ports)
+    registration = build_modelo_readiness_summary_registration(definition)
+    registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
+    period = Period.from_year_and_code(2025, "1T")
+    request = OperationRequest[BaseModel](
+        definition_id=definition.definition_id,
+        subject_ref=profile_operation_subject(str(_PROFILE)),
+        payload=ModeloReadinessOperationRequest(
+            profile_id=_PROFILE,
+            modelo="303",
+            filing_year=2025,
+            period=PublicPeriod.from_period(period),
+            language=OutputLanguage.ES,
+        ),
+    )
+    with bundled_indexed_authority().operation() as operation:
+        context = OperationAccessContext(
+            profile_id=_PROFILE,
+            destination_id=uuid4(),
+            action=action,
+            frontend=OperationFrontendProjection.CLI,
+            contract=registration.contract,
+            published_authority=Availability.AVAILABLE,
+            authority_operation=operation,
+        )
+        on_cli = resolve_operation_access(registry=registry, request=request, context=context)
+
+        assert on_cli.request.periods == frozenset({period})
+        assert AccessAction.COMMIT not in on_cli.policy.actions
+        for frontend in OperationFrontendProjection:
+            on_frontend = resolve_operation_access(
+                registry=registry, request=request, context=replace(context, frontend=frontend)
+            )
+            assert on_frontend.policy == on_cli.policy, frontend
+            assert on_frontend.request == on_cli.request.model_copy(update={"frontend": frontend}), frontend

@@ -2,10 +2,10 @@
 
 A surface is enforced where an operation access is evaluated, so each claim
 here is put to that evaluation for every registered operation: the production
-registry, the recorded MCP decisions and the access policy are the real ones.
+registry, the recorded surface facts and the access policy are the real ones.
 The session is a key session whose grant, scope and login facts admit every
-operation, so a refusal is the frontend list's or the surface's and nothing
-else's. The policy document is the widest an operation could resolve for a
+operation, so a refusal of a submission is the surface's and nothing else's.
+The policy document is the widest an operation could resolve for a
 submission, with and without the commit action.
 
 A surface's operation list can grow under an unchanged name. This file passes
@@ -23,7 +23,7 @@ import pytest
 from cadrumo_harness.mcp.protocol_contract import MCP_TOOL_NAMES
 
 from ...application.operations.access_resolution import ResolvedOperationAccess
-from ...application.operations.mcp_admission import McpRuling, mcp_admission_decision
+from ...application.operations.mcp_surface_facts import operation_surface_facts
 from ...application.operations.mcp_surfaces import MCP_SURFACES, McpSurfaceName
 from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
 from ...application.user_profile.access_contracts import (
@@ -87,15 +87,6 @@ def _registry() -> OperationRegistry:
 @cache
 def _definition_ids() -> tuple[str, ...]:
     return tuple(sorted(item.contract.definition_id for item in _registry().public_registrations))
-
-
-@cache
-def _mcp_listed() -> frozenset[str]:
-    return frozenset(
-        item.contract.definition_id
-        for item in _registry().public_registrations
-        if _MCP in item.contract.permitted_frontends
-    )
 
 
 @cache
@@ -285,20 +276,52 @@ def _evaluate(
     return decision.code.value if isinstance(decision, AccessDenied) else _ALLOWED
 
 
+def human_lease(scope_of: AccessSession) -> AccessSession:
+    """A session of the human kind with the scope, connection, client and surface of a key session."""
+    return AccessSession.model_validate(
+        {
+            **dict(scope_of),
+            "kind": SessionKind.HUMAN,
+            "originating_login_id": _context().login_contexts[0].login_id,
+            "grant_id": None,
+            "grant_generation": None,
+            "key_id": None,
+            "key_generation": None,
+            "expires_at": _NOW + timedelta(hours=1),
+        }
+    )
+
+
 def answer_for_resolved_access(
-    resolved: ResolvedOperationAccess, surface: McpSurfaceName | None, *, registry: OperationRegistry
+    resolved: ResolvedOperationAccess,
+    surface: McpSurfaceName | None,
+    *,
+    registry: OperationRegistry,
+    human: bool = False,
 ) -> str:
-    """Name what the key session is answered for an access its operation's own resolver produced.
+    """Name what a session is answered for an access its operation's own resolver produced.
 
     The request is the resolver's, with the profile replaced by the one this
     file's synthetic session is bound to; the policy is used as resolved, and
     the session's ceilings hold every action and exactly the disclosures the
-    policy makes. A refusal is therefore the frontend list's, the surface's or
-    the policy's own.
+    policy makes. A refusal is therefore the surface's or the policy's own.
+    The session is a key session, or one of the human kind where ``human``.
     """
     request = resolved.request.model_copy(update={"profile_id": _BINDING.profile_id})
-    session = _lease(surface, disclosures=resolved.policy.disclosures)
-    return _evaluate(request, resolved.policy, session=session, ancestors=(), registry=registry)
+    disclosures = resolved.policy.disclosures
+    key_session = _lease(surface, disclosures=disclosures)
+    decision = evaluate_operation_access(
+        request=request,
+        policy=resolved.policy,
+        registry=registry,
+        session=human_lease(key_session) if human else key_session,
+        ancestors=(),
+        grant=None if human else _grant(disclosures),
+        key=None if human else _key(disclosures),
+        profile=_profile(disclosures),
+        context=_context(),
+    )
+    return decision.code.value if isinstance(decision, AccessDenied) else _ALLOWED
 
 
 def _answers(definition_id: str, surface: McpSurfaceName | None) -> set[str]:
@@ -307,8 +330,8 @@ def _answers(definition_id: str, surface: McpSurfaceName | None) -> set[str]:
 
 
 def _recorded_as_changing_or_reaching(definition_id: str) -> bool:
-    decision = mcp_admission_decision(definition_id)
-    return decision.changes_records or decision.reaches_network
+    facts = operation_surface_facts(definition_id)
+    return facts.changes_records or facts.reaches_network
 
 
 def _barred_by_the_two_facts() -> list[str]:
@@ -322,17 +345,15 @@ def _read_only_local_operations() -> frozenset[str]:
     return operations
 
 
-def test_without_a_surface_the_session_is_admitted_to_exactly_what_the_registry_opens_to_mcp() -> None:
-    """The session used throughout is refused by the frontend list alone."""
-    listed = _mcp_listed()
-    assert listed
-    assert listed != set(_definition_ids())
-    unexpected: dict[str, set[str]] = {}
+def test_without_a_surface_the_session_is_admitted_to_every_registered_operation() -> None:
+    """The session used throughout is refused nothing, so each refusal below is a surface's."""
+    assert _definition_ids()
+    refused: dict[str, set[str]] = {}
     for definition_id in _definition_ids():
         answers = _answers(definition_id, None)
-        if answers != {_ALLOWED if definition_id in listed else _FRONTEND_DENIED}:
-            unexpected[definition_id] = answers
-    assert not unexpected, f"operations the baseline session is not answered for by the frontend list: {unexpected}"
+        if answers != {_ALLOWED}:
+            refused[definition_id] = answers
+    assert not refused, f"operations the baseline session is refused with no surface named: {refused}"
 
 
 def test_the_full_surface_answers_every_access_as_no_surface_does() -> None:
@@ -348,8 +369,9 @@ def test_the_full_surface_answers_every_access_as_no_surface_does() -> None:
                 if unnamed != named:
                     differing[f"{definition_id} {action.value}"] = (unnamed, named)
     assert not differing, f"accesses the full surface answers differently from no surface: {differing}"
-    # Two refusals of everything would also agree, so the comparison must cover admissions.
-    assert {_ALLOWED, _FRONTEND_DENIED} <= seen
+    # Two refusals of everything would also agree, so the comparison must cover admissions and refusals.
+    assert _ALLOWED in seen
+    assert seen - {_ALLOWED}
 
 
 def test_the_read_only_local_surface_refuses_every_operation_that_changes_records_or_reaches_the_network() -> None:
@@ -362,8 +384,8 @@ def test_the_read_only_local_surface_refuses_every_operation_that_changes_record
         if answers != {_FRONTEND_DENIED}:
             admitted[definition_id] = answers
     assert not admitted, f"writes or network reaches the read-only local surface does not refuse: {admitted}"
-    # Some of them are open to MCP, so it is the surface that refuses those.
-    assert any(_answers(definition_id, None) == {_ALLOWED} for definition_id in barred)
+    # Without the surface each is admitted, so it is the surface that refuses them.
+    assert all(_answers(definition_id, None) == {_ALLOWED} for definition_id in barred)
 
 
 def test_the_read_only_local_surface_refuses_every_operation_outside_its_list() -> None:
@@ -392,27 +414,24 @@ def test_the_read_only_local_surface_admits_every_operation_on_its_list() -> Non
     assert not refused, f"listed operations the read-only local surface refuses: {refused}"
 
 
-def test_no_surface_lists_an_operation_the_registry_does_not_open_to_mcp() -> None:
-    """A surface narrows the registry's MCP listing and never widens it."""
-    listed = _mcp_listed()
+def test_no_surface_lists_an_operation_that_is_not_registered() -> None:
+    """A surface narrows the registry and never names anything outside it."""
+    registered = set(_definition_ids())
     judged = 0
     for surface in MCP_SURFACES.values():
         if surface.operations is None:
             continue
         judged += 1
-        widened = sorted(surface.operations - listed)
-        assert not widened, f"{surface.name}: lists operations the registry does not open to MCP: {widened}"
+        unregistered = sorted(surface.operations - registered)
+        assert not unregistered, f"{surface.name}: lists operations that are not registered: {unregistered}"
     assert judged
 
 
-def _is_an_open_local_read(definition_id: str) -> bool:
-    decision = mcp_admission_decision(definition_id)
-    return decision.ruling is McpRuling.ADMITTED and not _recorded_as_changing_or_reaching(definition_id)
-
-
-def test_the_read_only_local_list_is_every_local_read_the_registry_opens_to_mcp() -> None:
-    """The list is derived from the recorded facts, and the registry's own listing agrees with it."""
-    expected = {definition_id for definition_id in _mcp_listed() if _is_an_open_local_read(definition_id)}
+def test_the_read_only_local_list_is_every_registered_local_read() -> None:
+    """The list is derived from the recorded facts alone, and no local read is left off it."""
+    expected = {
+        definition_id for definition_id in _definition_ids() if not _recorded_as_changing_or_reaching(definition_id)
+    }
     assert _read_only_local_operations() == expected
 
 
@@ -433,8 +452,8 @@ def test_the_tools_the_read_only_local_surface_leaves_out_serve_no_operation_on_
     assert MCP_TOOL_NAMES - MCP_SURFACES[_READ_ONLY_LOCAL].tools == {"review", "respond"}
     reviewed = sorted(filter(_declares_a_review, _read_only_local_operations()))
     assert not reviewed, f"read-only local operations that need a tool the surface leaves out: {reviewed}"
-    # Reviews exist elsewhere on MCP, so the check has something to find.
-    assert any(_declares_a_review(definition_id) for definition_id in _mcp_listed())
+    # Reviews exist elsewhere in the registry, so the check has something to find.
+    assert any(_declares_a_review(definition_id) for definition_id in _definition_ids())
 
 
 def test_a_read_only_surface_refuses_the_commit_section_and_a_submission_that_could_open_it() -> None:
@@ -450,7 +469,7 @@ def test_a_read_only_surface_refuses_the_commit_section_and_a_submission_that_co
 
 
 def test_a_lease_that_names_no_surface_is_held_to_the_surface_its_parent_named() -> None:
-    barred = sorted(set(_barred_by_the_two_facts()) & _mcp_listed())
+    barred = sorted(_barred_by_the_two_facts())
     assert barred
     for definition_id in barred:
         free = _answer(definition_id, None, delegated=True, resolved=_COMMITTING)
@@ -466,8 +485,7 @@ def test_a_lease_that_names_a_surface_is_refused_on_every_other_frontend() -> No
     """A surface belongs to the MCP frontend, so a lease that names one is admitted nowhere else."""
     judged = 0
     for definition_id in sorted(_read_only_local_operations()):
-        others = _registry().lookup_public_contract(definition_id).permitted_frontends - {_MCP}
-        for frontend in sorted(others):
+        for frontend in sorted(set(OperationFrontendProjection) - {_MCP}):
             judged += 1
             assert _answer(definition_id, None, frontend=frontend) == _ALLOWED, definition_id
             assert _answer(definition_id, _READ_ONLY_LOCAL, frontend=frontend) == _FRONTEND_DENIED, definition_id
