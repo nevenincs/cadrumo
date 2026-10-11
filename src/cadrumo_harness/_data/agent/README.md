@@ -21,8 +21,9 @@ Subtrees:
 - `skills/` — executable workflow playbooks (preconditions, command sequence, JSON
   success assertions) for the canonical end-to-end tax flows.
 
-Start with MCP `status`, then `search` and `describe` for the operations permitted
-to this session. Public tax queries use `authority`. A connection is either under
+Start with MCP `status`, then `search` and `describe` for the operations of this
+session. Every operation the command line can run is among them, with the same
+results. Public tax queries use `authority`. A connection is either under
 the person's own Cadrumo sign-in or under an enrolled key, and `status` says which:
 its session is `sign_in`, `key` or `none`, and it names the surface the connection
 serves. Never ask for or accept a password, and never paste a password or API
@@ -32,9 +33,8 @@ Under the person's sign-in, a profile tool is refused with `authentication_requi
 when nobody is signed in to Cadrumo. Tell the person to sign in to Cadrumo, then
 call again. The session ends when the person signs out, locks, or the sign-in
 reaches its deadline, which by default is 15 minutes after the password was
-entered. Activity through MCP does not extend it, and you can end only your own
-session. To work while nobody is signed in, prepare an authorization request for
-human approval, which enrolls a key.
+entered. Activity through MCP does not extend it. To work while nobody is signed in,
+prepare an authorization request for human approval, which enrolls a key.
 
 Under an enrolled key, configure MCP with the exact profile ID and the credential
 reference. Approved protected credential references support fresh admission while

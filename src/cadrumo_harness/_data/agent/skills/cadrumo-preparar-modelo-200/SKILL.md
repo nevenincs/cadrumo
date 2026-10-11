@@ -211,7 +211,7 @@ Before handing off, confirm in the calculate / revision JSON:
    as a verdict; relay every finding, including advisories. Do not export a
    revision that verifies BLOCKED (a BIN compensation over either cap will
    BLOCK here).
-6. When verified clean and the person approves that exact act in Cadrumo, export
+6. When verified clean and the person gives the go-ahead for that export in the conversation, export
    the local artefact:
    `aeat app modelo export <work-unit-id>`. This produces a fichero-BOE file.
    It is NOT official AEAT evidence and the return is NOT filed. Tell the

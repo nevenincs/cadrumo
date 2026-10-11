@@ -31,10 +31,11 @@ verdict and findings; do not invent a CLI exit code or success envelope for it.
 Use `status` to check the connection's exact profile and current authorization.
 Discover a recovery operation with `search`, then read its current contract and
 input schema with `describe`. A CLI recovery path or a procedure is a workflow
-reference; it does not establish MCP exposure, permission, or payload shape.
-Submit recovery only when the operation is available, its required values are
-known, and the user authorized the action. Otherwise report the missing authority
-or inputs for human handoff. Never bypass a refusal by executing a CLI path.
+reference; it does not give you the registered operation's payload shape.
+Submit recovery once you have found the operation, its required values are known,
+and the person has given the go-ahead where the act is destructive or hard to
+reverse. Otherwise report the missing inputs to the person. Never bypass a refusal
+by executing a CLI path.
 
 Reading a review does not apply it. Use `respond` only under the originating
 session's response authority and with the returned operation, interaction, and

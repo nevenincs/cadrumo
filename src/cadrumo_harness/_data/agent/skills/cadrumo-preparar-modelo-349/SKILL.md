@@ -124,7 +124,7 @@ row is ledger-derived, with no manual (non-ledger) income block.
    checks the recapitulative listing's own internal completeness and
    ledger-consistency. Treat exit `1` as a verdict; do not export a BLOCKED
    revision.
-6. Once the person approves that exact act in Cadrumo, export the local artefact: `aeat app modelo export <work-unit-id>`. It is
+6. Once the person gives the go-ahead for that export in the conversation, export the local artefact: `aeat app modelo export <work-unit-id>`. It is
    NOT official AEAT evidence; the taxpayer uploads it in the AEAT portal.
 7. After the human files, pull official evidence with
    `aeat app modelo reconcile pull`.

@@ -16,8 +16,9 @@ only; you never compute a tax value and never contact AEAT to write.
   (`aeat config profile view`). The profile/bucket is the unit of isolation; the
   taxpayer is addressed by their operator label, never a UUID.
 - When later live reads need AEAT access, check the state (`aeat config auth status`,
-  `aeat config auth test`). The person configures the AEAT provider and any
-  certificate, key or grant themselves; you state what is missing and hand off.
+  `aeat config auth test`). If provider, certificate, key or grant setup is
+  missing, tell the person what you would change and wait for their go-ahead; any
+  password or secret stays out of the conversation.
 - Confirm the workspace is ready with `aeat app overview status` before handing
   off to the bookkeeper.
 

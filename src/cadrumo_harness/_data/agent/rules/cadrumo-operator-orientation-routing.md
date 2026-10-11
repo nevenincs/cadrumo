@@ -3,7 +3,8 @@
 This table identifies CLI command families. In MCP, use `status` to check the
 connection's exact profile and current authorization, `search` to discover granted
 registered operations, and `describe` to obtain an operation's current input schema.
-CLI availability does not imply that an operation is exposed or granted to MCP.
+Every operation the command line can run is a registered operation you can find
+and submit this way.
 
 ## Capability and shape questions
 
@@ -37,9 +38,9 @@ CLI availability does not imply that an operation is exposed or granted to MCP.
   `aeat app modelo work observations` (typed per-casilla provenance).
 - "Produce the fileable artefact" → `aeat app modelo export` (the local
   fichero-BOE) and `aeat app modelo work file` (mark internally filed). Neither
-  submits to AEAT — see the safety rule. Both run only after the person approves
-  that exact act, and the marker only after the person has filed outside the
-  application.
+  submits to AEAT, as the safety rule explains. Tell the person before you run either and
+  wait for their go-ahead, and record the marker only after the person has filed
+  outside the application.
 - "Did AEAT actually receive it?" → `aeat app modelo reconcile pull` (fetch and
   reconcile the justificante from AEAT) or `aeat app modelo reconcile import --file
   ...` (reconcile against a local artefact you already hold). A local export alone
@@ -93,9 +94,10 @@ official source rather than treating a product command as legal authority.
 
 - "Set up or inspect the taxpayer profile" → `aeat config profile create` and
   `aeat config profile view`.
-- "Configure AEAT read access" → the person configures the AEAT provider and any
-  certificate, key or grant themselves; it is access administration, not an agent
-  action. State what is missing and hand off.
+- "Configure AEAT read access" → the `aeat config` provider and certificate
+  operations. Tell the person what you are about to change and wait for their
+  go-ahead; a password, key or certificate secret goes through a protected channel
+  and never through the conversation.
 
 ## Storage and disk-space questions
 
@@ -114,8 +116,8 @@ official source rather than treating a product command as legal authority.
   storage init` — idempotent; creates what is missing, never removes or
   recreates existing content.
 - "Free disk space" → `aeat config storage reclaim <category>`.
-  **Destructive: deletes the category's contents; run it only after the person
-  approves that exact act.** It refuses rather than
+  **Destructive: deletes the category's contents; tell the person which category
+  and wait for their go-ahead.** It refuses rather than
   deletes in two cases: every bucket- or keystore-scoped category (those
   belong to a profile bucket's own lifecycle, reclaimed only by deleting the
   bucket itself), and any root category whose declared lifecycle is not

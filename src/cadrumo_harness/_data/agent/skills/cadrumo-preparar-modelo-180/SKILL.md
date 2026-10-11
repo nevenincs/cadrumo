@@ -121,7 +121,7 @@ ledger-derived like Modelo 190's.
    was created — re-check each 115 quarter's revision before retrying, never
    edit the 180 declarante casilla to force a match. Treat exit `1` as a
    verdict; do not export a BLOCKED revision.
-6. Once the person approves that exact act in Cadrumo, export the local artefact: `aeat app modelo export <work-unit-id>`. It is
+6. Once the person gives the go-ahead for that export in the conversation, export the local artefact: `aeat app modelo export <work-unit-id>`. It is
    NOT official AEAT evidence; the taxpayer uploads it in the AEAT portal.
 7. After the human files, pull official evidence with
    `aeat app modelo reconcile pull`.

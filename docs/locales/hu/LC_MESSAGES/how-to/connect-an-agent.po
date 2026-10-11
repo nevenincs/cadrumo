@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-10 22:21+0200\n"
+"POT-Creation-Date: 2026-10-11 12:08+0200\n"
 "PO-Revision-Date: 2026-07-19 10:00+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
@@ -31,13 +31,13 @@ msgid ""
 "grant. A connection started with a profile ID is not retargeted by a "
 "later switch of the human active profile."
 msgstr ""
-"A telepített `cadrumo-mcp` parancs egy MCP-klienst csatlakoztat a "
-"Cadrumo helyi futtatókörnyezetéhez. A kapcsolat kétféleképpen "
-"működhet: követi a saját Cadrumo-bejelentkezésedet, vagy regisztrált "
-"kulcsot használ. A kliens csak az aktuális munkamenete, kulcs esetén "
-"pedig az engedélye által megengedett műveleteket fedezheti fel és "
-"futtathatja. Az emberi felhasználó aktív profiljának későbbi váltása "
-"nem irányítja át a profilazonosítóval indított kapcsolatot."
+"A telepített `cadrumo-mcp` parancs egy MCP-klienst csatlakoztat a Cadrumo"
+" helyi futtatókörnyezetéhez. A kapcsolat kétféleképpen működhet: követi a"
+" saját Cadrumo-bejelentkezésedet, vagy regisztrált kulcsot használ. A "
+"kliens csak az aktuális munkamenete, kulcs esetén pedig az engedélye "
+"által megengedett műveleteket fedezheti fel és futtathatja. Az emberi "
+"felhasználó aktív profiljának későbbi váltása nem irányítja át a "
+"profilazonosítóval indított kapcsolatot."
 
 #: ../../how-to/connect-an-agent.md:10
 msgid ""
@@ -47,8 +47,8 @@ msgid ""
 msgstr ""
 "Mielőtt csatlakoztatsz egy ügynököt vagy kezeled annak hozzáférését, "
 "állítsd be a kívánt profilt a [Profil beállítása](profile-setup.md) "
-"útmutató szerint, és jelentkezz be a profilba. A telepítés "
-"ellenőrzéséhez nem szükséges profilhitelesítés."
+"útmutató szerint, és jelentkezz be a profilba. A telepítés ellenőrzéséhez"
+" nem szükséges profilhitelesítés."
 
 #: ../../how-to/connect-an-agent.md:14
 msgid "Check the installation"
@@ -121,19 +121,18 @@ msgid ""
 "`profile_mismatch`. Without it, the server acts for whichever profile is "
 "selected."
 msgstr ""
-"**A bejelentkezésed követése.** Indítsd a kiszolgálót "
-"`--credential-reference` nélkül. A kiválasztott profilhoz a saját "
-"Cadrumo-bejelentkezésedet követi. Az inicializálásra, az "
-"eszközlistájára és a nyilvános eszközökre (`authority` és "
-"`corpus_search`) akkor is válaszol, ha senki sincs bejelentkezve. A "
-"profilt igénylő eszköz egyszer megpróbálja folytatni a tárolt "
-"bejelentkezésedet. Élő bejelentkezéssel a hívás működik. Ha nincs, "
-"`authentication_required` kóddal elutasítja: jelentkezz be a "
-"Cadrumóba, majd hívd újra. A `--profile-id` nem kötelező. Önmagában "
-"megadva csak addig érvényes, amíg az a profil a kiválasztott; "
-"ellenkező esetben a profilhívások `profile_mismatch` kódot adnak "
-"vissza. Nélküle a kiszolgáló arra a profilra működik, amelyik éppen ki "
-"van választva."
+"**A bejelentkezésed követése.** Indítsd a kiszolgálót `--credential-"
+"reference` nélkül. A kiválasztott profilhoz a saját Cadrumo-"
+"bejelentkezésedet követi. Az inicializálásra, az eszközlistájára és a "
+"nyilvános eszközökre (`authority` és `corpus_search`) akkor is válaszol, "
+"ha senki sincs bejelentkezve. A profilt igénylő eszköz egyszer "
+"megpróbálja folytatni a tárolt bejelentkezésedet. Élő bejelentkezéssel a "
+"hívás működik. Ha nincs, `authentication_required` kóddal elutasítja: "
+"jelentkezz be a Cadrumóba, majd hívd újra. A `--profile-id` nem kötelező."
+" Önmagában megadva csak addig érvényes, amíg az a profil a kiválasztott; "
+"ellenkező esetben a profilhívások `profile_mismatch` kódot adnak vissza. "
+"Nélküle a kiszolgáló arra a profilra működik, amelyik éppen ki van "
+"választva."
 
 #: ../../how-to/connect-an-agent.md:66
 msgid ""
@@ -146,8 +145,8 @@ msgstr ""
 "A bejelentkezésed szabja meg ezt a munkamenetet. Ha kijelentkezel, "
 "zárolsz, vagy a bejelentkezés eléri a határidejét, a munkamenet vele "
 "együtt véget ér, és a profilhívásokat elutasítja, amíg újra be nem "
-"jelentkezel. Alapértelmezés szerint a bejelentkezés 15 perccel a "
-"jelszó megadása után véget ér, és az MCP-n keresztüli tevékenység nem "
+"jelentkezel. Alapértelmezés szerint a bejelentkezés 15 perccel a jelszó "
+"megadása után véget ér, és az MCP-n keresztüli tevékenység nem "
 "hosszabbítja meg."
 
 #: ../../how-to/connect-an-agent.md:71
@@ -161,28 +160,22 @@ msgid ""
 " is refused at start-up."
 msgstr ""
 "**Regisztrált kulccsal.** Indítsd a kiszolgálót a `--profile-id` és a "
-"`--credential-reference` kapcsolóval. A későbbi kapcsolathoz "
-"megadhatsz egy jóváhagyott védett hitelesítőadat-hivatkozást, amelyet "
-"az alább leírt engedélyezési folyamat ad át, amíg az engedélye és a "
-"profil jogosult marad. A kiszolgáló a profilhoz regisztrált kulccsal "
-"hitelesít, és akkor is működik, ha senki sincs bejelentkezve. A "
-"`--credential-reference` a `--profile-id` nélkül indításkor "
-"elutasításra kerül."
+"`--credential-reference` kapcsolóval. A későbbi kapcsolathoz megadhatsz "
+"egy jóváhagyott védett hitelesítőadat-hivatkozást, amelyet az alább leírt"
+" engedélyezési folyamat ad át, amíg az engedélye és a profil jogosult "
+"marad. A kiszolgáló a profilhoz regisztrált kulccsal hitelesít, és akkor "
+"is működik, ha senki sincs bejelentkezve. A `--credential-reference` a "
+"`--profile-id` nélkül indításkor elutasításra kerül."
 
 #: ../../how-to/connect-an-agent.md:78
 msgid ""
-"Either way, a client connected through MCP can end only its own session. "
-"It cannot sign you out or lock another session. The `status` tool reports"
-" whether the connection's session is `none`, `sign_in` or `key`, and "
-"which surface it serves."
+"Either way, the `status` tool reports whether the connection's session is"
+" `none`, `sign_in` or `key`, and which surface it serves."
 msgstr ""
-"Mindkét esetben az MCP-n keresztül csatlakozott kliens csak a saját "
-"munkamenetét fejezheti be. Nem jelentkeztetheti ki a felhasználót, és "
-"nem zárolhat másik munkamenetet. A `status` eszköz jelzi, hogy a "
-"kapcsolat munkamenete `none`, `sign_in` vagy `key`, és hogy melyik "
-"nézetet szolgálja ki."
+"Mindkét esetben a `status` eszköz jelzi, hogy a kapcsolat munkamenete "
+"`none`, `sign_in` vagy `key`, és hogy melyik nézetet szolgálja ki."
 
-#: ../../how-to/connect-an-agent.md:83
+#: ../../how-to/connect-an-agent.md:81
 msgid ""
 "The optional `--surface NAME` argument pins the view of the server that "
 "the connection is served. Without it the server uses `full`, which "
@@ -207,7 +200,7 @@ msgstr ""
 "még bármely kapcsolat előtt, és a hibaüzenet felsorolja az elérhető "
 "nézeteket."
 
-#: ../../how-to/connect-an-agent.md:92
+#: ../../how-to/connect-an-agent.md:90
 msgid ""
 "If the configured reference cannot authenticate, the MCP connection stays"
 " open. Use `status` to inspect the refusal; private operations remain "
@@ -222,7 +215,7 @@ msgstr ""
 "majd hívd meg kifejezetten az `authenticate` eszközt. A nyilvános "
 "`authority` lekérdezések továbbra is elérhetők."
 
-#: ../../how-to/connect-an-agent.md:97
+#: ../../how-to/connect-an-agent.md:95
 msgid ""
 "Before authentication, `corpus_search` searches the bundled BOE/AEAT "
 "corpus and approved tax terminology. Supply `query` and optionally "
@@ -239,11 +232,11 @@ msgstr ""
 " adnak. A válasz megnevezi a hivatkozás kikereséséhez használt "
 "közzétételi generációt. Ez a nyilvános keresés nem olvas profiladatokat."
 
-#: ../../how-to/connect-an-agent.md:104
+#: ../../how-to/connect-an-agent.md:102
 msgid "Authorize the connection"
 msgstr "A kapcsolat engedélyezése"
 
-#: ../../how-to/connect-an-agent.md:106
+#: ../../how-to/connect-an-agent.md:104
 msgid ""
 "A connection that follows your sign-in needs no key. To let an agent work"
 " while nobody is signed in, enroll one. On a first connection, ask the "
@@ -257,15 +250,15 @@ msgstr ""
 "A bejelentkezésedet követő kapcsolatnak nincs szüksége kulcsra. Ha azt "
 "szeretnéd, hogy az ügynök akkor is dolgozzon, amikor senki sincs "
 "bejelentkezve, regisztrálj egyet. Első csatlakozáskor kérd meg az "
-"ügynököt, hogy használja a `status`, majd az `authorization_prepare` "
-"és az `authorization_request` eszközöket a szükséges műveletekhez, "
+"ügynököt, hogy használja a `status`, majd az `authorization_prepare` és "
+"az `authorization_request` eszközöket a szükséges műveletekhez, "
 "időszakokhoz és adatközlésekhez. Ellenőrizd és hagyd jóvá a kérelmet a "
 "Cadrumo CLI-jében vagy TUI-jában. Az ügynök az `authorization_poll` "
 "segítségével kapja meg a védett hivatkozást, az `authenticate` "
-"segítségével pedig külön nyilvántartott munkamenetet indít. A jelszó "
-"soha nem ügynöki munkamenet: a kiszolgáló nem fogad el jelszót."
+"segítségével pedig külön nyilvántartott munkamenetet indít. A jelszó soha"
+" nem ügynöki munkamenet: a kiszolgáló nem fogad el jelszót."
 
-#: ../../how-to/connect-an-agent.md:114
+#: ../../how-to/connect-an-agent.md:112
 msgid ""
 "After admission, `search` ranks permitted operations by the query, using "
 "their current contracts and request vocabulary; omit the query to list "
@@ -288,7 +281,7 @@ msgstr ""
 " tisztázd a bizonytalan hatásokat ahelyett, hogy ellenőrzés nélkül újra "
 "beküldenéd ugyanazt a hatást."
 
-#: ../../how-to/connect-an-agent.md:123
+#: ../../how-to/connect-an-agent.md:121
 msgid ""
 "Read a settled operation's approved projection with `result`. For a large"
 " result, use `result_page` with the same result request and an initial "
@@ -307,7 +300,7 @@ msgstr ""
 "engedély szükséges; egy zárolás vagy visszavonás megakadályozhatja a "
 "további lapok elérését. A hiányos dokumentum nem teljes eredmény."
 
-#: ../../how-to/connect-an-agent.md:130
+#: ../../how-to/connect-an-agent.md:128
 msgid ""
 "To rotate or narrow an existing grant, reconnect with its protected "
 "credential reference and prepare a new authorization request. Human "
@@ -319,53 +312,54 @@ msgstr ""
 "engedélykérelmet. A változtatáshoz emberi jóváhagyás szükséges. Az "
 "engedély visszavonása megakadályozza a későbbi belépést ezzel a kulccsal."
 
-#: ../../how-to/connect-an-agent.md:134
+#: ../../how-to/connect-an-agent.md:132
 msgid ""
-"Discover the currently supported operations with `search`; a CLI "
-"command's availability alone does not make it available through MCP. Some"
-" sensitive operations are refused through MCP for now; they need the "
-"person and are done in the command line or terminal interface. "
-"Calculations use Cadrumo's deterministic engine and published tax "
-"authority. Connecting an agent does not authorize submission to AEAT. "
-"Review the prepared filing yourself as described in the [filing guide"
-"](file-at-aeat.md)."
+"Discover the operations with `search`. An agent connected through MCP can"
+" run every operation the command line can, with the same results, under "
+"the session it holds. The packaged agent guidance has the agent tell you "
+"what it is about to do before anything destructive or hard to reverse, "
+"and wait for your go-ahead in the conversation. Calculations use "
+"Cadrumo's deterministic engine and published tax authority. Connecting an"
+" agent does not authorize submission to AEAT. Review the prepared filing "
+"yourself as described in the [filing guide](file-at-aeat.md)."
 msgstr ""
-"A jelenleg támogatott műveleteket a `search` segítségével fedezd fel; "
-"egy CLI-parancs elérhetősége önmagában nem teszi azt MCP-n keresztül "
-"elérhetővé. Néhány érzékeny művelet egyelőre el van utasítva MCP-n "
-"keresztül; ezekhez a személy szükséges, és a parancssorban vagy a "
-"terminálfelületen végezhetők el. A számítások a Cadrumo "
-"determinisztikus motorját és közzétett adóhatósági adatokat "
-"használnak. Egy ügynök csatlakoztatása nem engedélyezi az AEAT-hoz "
-"történő benyújtást. Személyesen ellenőrizd az előkészített bevallást a "
-"[benyújtási útmutató](file-at-aeat.md) szerint."
+"Az elérhető műveleteket a `search` eszközzel találod meg. Az MCP-n "
+"keresztül csatlakozott ügynök minden olyan műveletet futtathat, "
+"amelyet a parancssor is, ugyanazokkal az eredményekkel, az általa "
+"birtokolt munkamenet alatt. A termékkel szállított ügynöki útmutató "
+"szerint az ügynök minden romboló vagy nehezen visszafordítható lépés "
+"előtt elmondja neked, mire készül, és megvárja a beszélgetésben adott "
+"jóváhagyásodat. A számításokat a Cadrumo determinisztikus motorja és a"
+" közzétett adóhatósági adatok végzik. Egy ügynök csatlakoztatása nem "
+"jogosít fel az AEAT-nál való benyújtásra. Az elkészített bevallást "
+"magad ellenőrizd, ahogy a [bevallási útmutató](file-at-aeat.md) "
+"leírja."
 
-#: ../../how-to/connect-an-agent.md:142
+#: ../../how-to/connect-an-agent.md:140
 msgid "Review and manage access as the profile owner"
 msgstr "Hozzáférés ellenőrzése és kezelése a profil tulajdonosaként"
 
-#: ../../how-to/connect-an-agent.md:144
+#: ../../how-to/connect-an-agent.md:142
 msgid ""
 "Use a human password-authorized session for the intended profile, as "
-"described in [Set up a profile](profile-setup.md). The agent's API-key "
-"session cannot approve its own request or administer other clients, and a"
-" connection that follows your sign-in can end only its own session. Check"
-" the profile ID in each result."
+"described in [Set up a profile](profile-setup.md). Approve a request "
+"yourself rather than leaving the agent to approve its own, and administer"
+" other clients from your own session. Check the profile ID in each "
+"result."
 msgstr ""
-"A kívánt profilhoz emberi, jelszóval engedélyezett munkamenetet "
-"használj a [Profil beállítása](profile-setup.md) útmutató szerint. Az "
-"ügynök API-kulcsos munkamenete nem hagyhatja jóvá a saját kérelmét, és "
-"nem kezelhet más klienseket, a bejelentkezésedet követő kapcsolat "
-"pedig csak a saját munkamenetét fejezheti be. Minden eredményben "
-"ellenőrizd a profilazonosítót."
+"Használj az érintett profilhoz emberi, jelszóval engedélyezett "
+"munkamenetet, ahogyan a [Profil beállítása](profile-setup.md) leírja. "
+"A kérelmet te magad hagyd jóvá, ne az ügynök a sajátját, a többi "
+"klienst pedig a saját munkameneted alól kezeld. Ellenőrizd a "
+"profilazonosítót minden eredményben."
 
-#: ../../how-to/connect-an-agent.md:149
+#: ../../how-to/connect-an-agent.md:147
 msgid "List pending requests and inspect the exact request before deciding:"
 msgstr ""
 "Döntés előtt listázd a függő kérelmeket, és vizsgáld meg a pontos "
 "kérelmet:"
 
-#: ../../how-to/connect-an-agent.md:154
+#: ../../how-to/connect-an-agent.md:152
 msgid ""
 "Replace `REQUEST_UUID` with the returned request ID. Review the client "
 "and destination, operations, actions, disclosures, periods, expiry, "
@@ -380,7 +374,7 @@ msgstr ""
 " az ellenőrzés aktuális `review_digest` értékét. Csak az ellenőrzött "
 "jogosultságokat hagyd jóvá, vagy utasítsd el a kérelmet:"
 
-#: ../../how-to/connect-an-agent.md:162
+#: ../../how-to/connect-an-agent.md:160
 msgid ""
 "Run one decision command. Approval asks for a fresh profile password "
 "through a hidden terminal prompt; decline does not. For controlled "
@@ -402,7 +396,7 @@ msgstr ""
 "ügynöknek be kell fejeznie a lekérdezést, és a kapott hivatkozással "
 "hitelesítenie kell magát."
 
-#: ../../how-to/connect-an-agent.md:170
+#: ../../how-to/connect-an-agent.md:168
 msgid ""
 "The same review procedure applies to rotation, renewal and scope-change "
 "requests. Enrollment and rotation can deliver a new protected reference; "
@@ -425,13 +419,13 @@ msgstr ""
 "szükséges. Az aktuális munkamenet zárolása nem vonja vissza ezt a "
 "független engedélyt."
 
-#: ../../how-to/connect-an-agent.md:179
+#: ../../how-to/connect-an-agent.md:177
 msgid "Use the inventory's non-secret key or grant ID to revoke access:"
 msgstr ""
 "A hozzáférés visszavonásához használd a leltár nem titkos kulcs- vagy "
 "engedélyazonosítóját:"
 
-#: ../../how-to/connect-an-agent.md:184
+#: ../../how-to/connect-an-agent.md:182
 msgid ""
 "Check `access_denied` and `cleanup_pending` in text output; in the JSON "
 "result, inspect `receipt.access_denied` and `receipt.cleanup_pending`. "
@@ -444,7 +438,7 @@ msgstr ""
 "tároló függő fizikai takarítása külön kérdés attól, hogy a hozzáférést "
 "megtagadták-e."
 
-#: ../../how-to/connect-an-agent.md:188
+#: ../../how-to/connect-an-agent.md:186
 msgid ""
 "List sessions, then choose the intended lock scope. A current-session "
 "lock ends the caller's session; a selected-session lock ends that "
@@ -455,7 +449,7 @@ msgstr ""
 "munkamenetét; egy kiválasztott munkamenet zárolása azt a munkamenetet "
 "zárja le. A teljes profil zárolása felfüggeszti az automatizálását."
 
-#: ../../how-to/connect-an-agent.md:196
+#: ../../how-to/connect-an-agent.md:194
 msgid ""
 "To resume, supply the fresh password at the hidden prompt. Add `--grant "
 "GRANT_UUID` for each grant you deliberately reactivate; omitting it "
@@ -466,7 +460,7 @@ msgstr ""
 "meg egy `--grant GRANT_UUID` kapcsolót; ha ezt elhagyod, az emberi "
 "hozzáférés az engedélyek újraaktiválása nélkül áll helyre."
 
-#: ../../how-to/connect-an-agent.md:203
+#: ../../how-to/connect-an-agent.md:201
 msgid ""
 "Confirm the returned grant IDs, then let agents reconnect and "
 "authenticate afresh."

@@ -23,11 +23,12 @@ work around, not a shortcut to take.
   (produce the fichero-BOE) and `aeat app modelo work file` (mark internally
   filed) are the terminal, irreversible steps of the local half. Both still stop
   short of AEAT — see the safety rule.
-- **Export and the marker are the person's to approve.** A clean verify informs
-  that approval and never stands in for it, and a second run by the same agent is
-  not an independent verifier. Run each of the two only after the person approves
-  that exact act in Cadrumo, and record the marker only after the person has filed
-  outside the application. An approval for one does not cover the other.
+- **Tell the person before you export or record the marker.** A clean verify
+  informs their decision and never stands in for it, and a second run by the same
+  agent is not an independent verifier. Say what you are about to do and run each of
+  the two only after the person gives the go-ahead in the conversation, and record
+  the marker only after the person has filed outside the application. The go-ahead
+  for one does not cover the other.
 - **Reconcile is a separate, later step.** `aeat app modelo reconcile pull` or
   `reconcile import --file ...` runs after the human has actually filed outside the
   application. Never report a filing as reconciled or accepted before this step

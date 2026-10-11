@@ -104,7 +104,7 @@ retenciones aggregation, not IVA repercutido/soportado) and the period grammar
 5. Dispatch the verifier as an independent step: `aeat app modelo work verify
    <work-unit-id> --format json`. Treat exit `1` as a verdict; relay every
    finding. Do not export a revision that verifies BLOCKED.
-6. When verified clean and the person approves that exact act in Cadrumo, export
+6. When verified clean and the person gives the go-ahead for that export in the conversation, export
    the local artefact: `aeat app modelo export
    <work-unit-id>`. This produces a fichero-BOE file. It is NOT official AEAT
    evidence and the return is NOT filed. Tell the taxpayer to upload it

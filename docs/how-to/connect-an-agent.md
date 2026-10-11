@@ -75,10 +75,8 @@ its grant and the profile remain eligible. The server authenticates with the
 enrolled key for that profile and works whether or not anyone is signed in.
 `--credential-reference` without `--profile-id` is refused at start-up.
 
-Either way, a client connected through MCP can end only its own session. It
-cannot sign you out or lock another session. The `status` tool reports whether
-the connection's session is `none`, `sign_in` or `key`, and which surface it
-serves.
+Either way, the `status` tool reports whether the connection's session is
+`none`, `sign_in` or `key`, and which surface it serves.
 
 The optional `--surface NAME` argument pins the view of the server that the
 connection is served. Without it the server uses `full`, which advertises every
@@ -131,20 +129,20 @@ To rotate or narrow an existing grant, reconnect with its protected credential
 reference and prepare a new authorization request. Human approval is required
 for the change. Revoking the grant prevents future admission under that key.
 
-Discover the currently supported operations with `search`; a CLI command's
-availability alone does not make it available through MCP. Some sensitive
-operations are refused through MCP for now; they need the person and are done in
-the command line or terminal interface. Calculations use
-Cadrumo's deterministic engine and published tax authority. Connecting an agent
-does not authorize submission to AEAT. Review the prepared filing yourself as
-described in the [filing guide](file-at-aeat.md).
+Discover the operations with `search`. An agent connected through MCP can run
+every operation the command line can, with the same results, under the session it
+holds. The packaged agent guidance has the agent tell you what it is about to do
+before anything destructive or hard to reverse, and wait for your go-ahead in the
+conversation. Calculations use Cadrumo's deterministic engine and published tax
+authority. Connecting an agent does not authorize submission to AEAT. Review the
+prepared filing yourself as described in the [filing guide](file-at-aeat.md).
 
 ## Review and manage access as the profile owner
 
 Use a human password-authorized session for the intended profile, as described
-in [Set up a profile](profile-setup.md). The agent's API-key session cannot approve
-its own request or administer other clients, and a connection that follows your
-sign-in can end only its own session. Check the profile ID in each result.
+in [Set up a profile](profile-setup.md). Approve a request yourself
+rather than leaving the agent to approve its own, and administer other clients from
+your own session. Check the profile ID in each result.
 
 List pending requests and inspect the exact request before deciding:
 

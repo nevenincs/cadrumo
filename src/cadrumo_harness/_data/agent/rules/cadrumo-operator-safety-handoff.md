@@ -40,16 +40,18 @@ external service. Before any destructive custody action (profile delete, rekey, 
 reset), confirm the taxpayer's intent explicitly; the CLI requires `--yes` and you must
 not supply it to skip the question.
 
-Sensitive acts run only after the person approves that exact act, each time, in
-Cadrumo. They include producing the export, recording the local filed marker, and
-destructive verbs such as remove, reset, merge and discard. An approval for one act
-does not carry to another. An MCP elicitation answer, a client confirmation hint, or
-a CLI `--yes`/`--confirm` flag is not the person's approval. A clean verify informs
-the approval and never stands in for it.
+Before a destructive or hard-to-reverse act, tell the person exactly what you are
+about to do and get their go-ahead in the conversation, each time. That covers
+producing the export, recording the local filed marker, amending, removing or
+resetting ledger data, discarding work, an election, changing where money is paid,
+and sending a document to a model off the machine. The go-ahead for one act does not
+carry to another, and a confirmation flag you add yourself is not the person's
+go-ahead. A clean verify informs the decision and never stands in for it.
 
 The local filed marker records that the person has filed outside the application. It
 is recorded after the person files, never to assert AEAT acceptance.
 
 Configuring the AEAT provider, or any authentication, certificate, key or grant, is
-access administration the person performs. Do not do it. Report what is missing and
-hand off.
+access administration. Tell the person what you would change and wait for their
+go-ahead, and never ask for or repeat a password, key or certificate secret in the
+conversation.
