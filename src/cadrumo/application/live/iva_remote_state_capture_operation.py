@@ -11,7 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, model_validat
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.filing_year import FilingYear
 from ...core.operations import OperationEffect
-from ...core.period import Period, PeriodError
+from ...core.period import Period
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_PROCESS_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest, OperationTerminalReceipt
@@ -63,11 +63,7 @@ class IvaRemoteStateCaptureRequest(BaseModel):
     def _valid_range(self) -> IvaRemoteStateCaptureRequest:
         if self.year_from > self.year_to:
             raise ValueError("IVA evidence year_from exceeds year_to")
-        try:
-            Period.from_year_and_code(self.target_year, self.target_period)
-        except PeriodError:
-            # The period's own wording quotes the year and code it refused; this names the rule alone.
-            raise ValueError("target_period is not a period code that exists in target_year") from None
+        Period.from_year_and_code(self.target_year, self.target_period)
         return self
 
 

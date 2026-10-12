@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:c11deb328722231b9de4b0c3872927c19aa70a5d65936414edf7185c393616fe'
+body_hash: 'sha256:b289c2d75852b1c36206ab1a910f6d540b3f90d1a82b8b0631780457de6fc06a'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -2112,6 +2112,23 @@ related:
 - `S63` `verify:` `pytest command counterpart, command operation and contract tests (792 of 797; four ledger import locale cases answer a local runtime refusal and one crash funnel case finds no traceback, neither path changed here)` -> `pass`
 - `S63` `verify:` `lint-imports (15 contracts)` -> `pass`
 - `S63` `verify:` `ruff, format and ty on the 94 files` -> `pass`
+- `S63` `M` `docs/technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md`
+- `S63` `M` `docs/technical/topics/runtime-tui-and-agent-harness.md`
+- `S63` `M` `src/cadrumo/application/runtime/tests/test_request_fault_refusals.py`
+- `S63` `M` `src/cadrumo/core/request_faults.py`
+- `S63` `M` `src/cadrumo/core/tests/test_request_faults.py`
+- `S63` `M` `src/cadrumo/entrypoints/cli/tests/test_request_fault_rendering.py`
+- `S63` `D` `src/cadrumo/entrypoints/tests/request_validator_message_scan.py`
+- `S63` `D` `src/cadrumo/entrypoints/tests/test_request_validator_messages_quote_no_value.py`
+- `S63` `M` `src/cadrumo/entrypoints/tui/operations/request_form.py`
+- `S63` `M` `src/cadrumo/entrypoints/tui/operations/tests/test_request_form.py`
+- `S63` `M` `src/cadrumo/entrypoints/tui/tests/test_operation_run_request_faults.py`
+- `S63` `verify:` `pytest command-line discovery defects (30)` -> `pass`
+- `S63` `verify:` `pytest the restored modules' tests, eighteen files and directories (311)` -> `pass`
+- `S63` `verify:` `pytest fault carrier, rendering and form tests (41) and the runtime fault tests serially (5)` -> `pass`
+- `S63` `verify:` `pytest harness tool suite and two command-line files (449 of 450, 3 skipped; the one waited on a runtime endpoint under parallel load and passes alone)` -> `pass`
+- `S63` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S63` `verify:` `ruff, format, ty on the 29 files; basedpyright and pyrefly on the request-fault module` -> `pass`
 
 ## Notes
 
@@ -2182,3 +2199,4 @@ related:
 - `S61` Review follow-up. Each in-process pair of the counterpart gate names the test that holds the command's output to its counterpart's, and the gate fails if the test does not exist; pairs with no such test are declared unproven with a reason (the bare command and the session-door commands). A reached operation with no access resolver fails the gate; export.google-sheets is the declared exception, a retired template no frontend can submit. The writers of the two generated documents moved to `dev/harness_data;` the render and read logic stays beside the staleness tests because shipped code may not import dev.
 - `S62` Review follow-up. A one-use held secret is taken last, immediately before it is sent, under the store's cross-process lock, so a call refused locally or made with no runtime does not spend it and two processes cannot both receive it. A failed changing act answers as unresolved with the act that reads its outcome.
 - `S63` Review follow-up. A registry-wide test fails on a request validator whose message interpolates anything but a field name or a constant; it found eleven and each now names the field and the rule without the value, among them the tax identity and date parsers many request models share.
+- `S63` Reversal of the validator rewording logged above under this Step: the twelve files are byte-identical to their content before it, checked by object hash, and the scan is deleted. A fault carries the validator's message as the command line shows it and never pydantic's input, context or link. A registered error raised while a worker decodes a request no longer ends the worker; it is answered as invalid with the error's code and message. Left as it was: when the command line builds a request in process and pydantic wraps the refusal, it prints its generic validation boundary with the path and the kind of rule, which predates this work.

@@ -91,7 +91,7 @@ class AutomationCustodyError(CadrumoError):
     """Safe failure code with no native error or secret-bearing input."""
 
     def __init__(self, code: AutomationCustodyCode, *, request_faults: tuple[RequestFault, ...] = ()) -> None:
-        """Retain only a safe code and, for a request its model refused, the model's value-free faults.
+        """Retain only a safe code and, for a request refused as invalid, the faults that say why.
 
         Raises:
             ValueError: Faults are given for a code other than ``INVALID``.

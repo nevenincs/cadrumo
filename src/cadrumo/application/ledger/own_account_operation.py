@@ -104,12 +104,10 @@ class LedgerOwnAccountRequest(BaseModel):
     def _action_fields(self) -> LedgerOwnAccountRequest:
         details = [name for name in _DETAIL_FIELDS if getattr(self, name) is not None]
         needs_id = self.action in {"show", "update", "close", "remove", "designate"}
-        if needs_id and self.own_account_id is None:
-            raise ValueError("this own account action requires account id")
-        if not needs_id and self.own_account_id is not None:
-            raise ValueError("this own account action takes no account id")
+        if needs_id != (self.own_account_id is not None):
+            raise ValueError(f"own account action {self.action!r} {'requires' if needs_id else 'takes no'} account id")
         if details and self.action not in {"add", "update"}:
-            raise ValueError("this own account action takes no account details")
+            raise ValueError(f"own account action {self.action!r} takes no account details")
         if self.action == "add" and (self.label is None or self.holding is None or self.iban is None):
             raise ValueError("adding an own account requires its label, holding and IBAN")
         if self.action == "update" and not details:

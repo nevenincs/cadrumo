@@ -68,9 +68,10 @@ from ...application.workbench_generation_operation import (
 from ...application.workflow.profile_bucket_scan import read_profile_bucket_by_id
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.config import override_settings
+from ...core.errors.hierarchy import CadrumoError
 from ...core.logging import get_logger
 from ...core.operations import OperationLifecycle
-from ...core.request_faults import request_faults
+from ...core.request_faults import registered_error_fault, request_faults
 from ...core.startup_phase_log import startup_phase
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import (
@@ -648,8 +649,15 @@ class ProfileWorkerOperationHost:
             with validating_governed_facts(self._pinned()):
                 payload = self._execution.registry.decode_request_payload(definition_id, payload_json)
         except ValidationError as refused:
-            # The model's reasons reach the caller; the values it refused do not.
+            # Every frontend is told what the validator said, as the command line shows it.
             faults = request_faults(refused)
+            raise AutomationCustodyError(AutomationCustodyCode.INVALID, request_faults=faults) from None
+        except (AutomationCustodyError, ProfileAccessRefusedError):
+            raise
+        except CadrumoError as refused:
+            # A validator can refuse with a registered error the model does not wrap. It is the
+            # request that is refused, with that error's code and message, and the worker serves on.
+            faults = (registered_error_fault(refused),)
             raise AutomationCustodyError(AutomationCustodyCode.INVALID, request_faults=faults) from None
         except (ValueError, TypeError, RecursionError):
             raise AutomationCustodyError(AutomationCustodyCode.INVALID) from None

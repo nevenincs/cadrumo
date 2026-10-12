@@ -290,7 +290,9 @@ class RenewableSelfConsumptionEvidence(BaseModel):
     def _validate_documentation(self) -> Self:
         electricity = self.purpose is RenewableInstallationPurpose.ELECTRICITY_SELF_CONSUMPTION
         if electricity != (self.documentation_kind in _ELECTRICITY_DOCUMENTS):
-            raise ValueError("documentation_kind does not evidence the installation purpose (LIS DA 17a.6)")
+            raise ValueError(
+                f"{self.documentation_kind.value} does not evidence a {self.purpose.value} installation (LIS DA 17a.6)",
+            )
         return self
 
 

@@ -34,10 +34,11 @@ class RuntimeFrontendRefusedError(CadrumoError):
         custody_transaction_id: UUID | None = None,
         request_faults: tuple[RequestFault, ...] = (),
     ) -> None:
-        """Retain an allowlisted refusal code without private diagnostic text.
+        """Retain an allowlisted refusal code and the reasons the runtime returned with it.
 
-        ``request_faults`` are the value-free reasons an operation's request
-        model gave for refusing a payload, when the runtime returned them.
+        ``request_faults`` are the reasons an operation's request was refused
+        as invalid, in the validators' own messages, when the runtime returned
+        them.
         """
         self.reason = code
         self.sign_in = sign_in

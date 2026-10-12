@@ -42,7 +42,7 @@ def map_registered_transport_failure(
         refusal_code=progress.refusal_code,
     )
     if isinstance(error, RuntimeFrontendRefusedError) and error.request_faults and mapped.context is not None:
-        # The reasons the runtime's request model gave, which carry no value of the request.
+        # The validators' own messages, as the runtime returned them for a request it refused as invalid.
         mapped.context["request_faults"] = request_faults_text(error.request_faults)
     for field in ("async_cleanup_error", "cleanup_error"):
         cleanup = error.__dict__.get(field)

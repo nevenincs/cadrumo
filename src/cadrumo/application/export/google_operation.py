@@ -25,7 +25,7 @@ from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import OperationEffect, OperationInteractionKind
 from ...core.operations import profile_operation_subject as _profile_subject
-from ...core.period import Period, PeriodError
+from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.ids import (
@@ -118,11 +118,7 @@ class GoogleSheetsExportOperationRequest(CredentialFreeOperationRequest):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _require_canonical_filing_period(self) -> Self:
-        try:
-            Period.from_year_and_code(self.filing_year, self.period)
-        except PeriodError:
-            # The period's own wording quotes the year and code it refused; this names the rule alone.
-            raise ValueError("period is not a period code that exists in filing_year") from None
+        Period.from_year_and_code(self.filing_year, self.period)
         return self
 
     @property

@@ -16,7 +16,9 @@ from uuid import UUID
 import pytest
 
 from .....application.operations.subject_reference import OperationSubjectKind, OperationSubjectReferenceV1
+from .....core.errors.error_codes import build_error_envelope
 from .....core.operations import profile_operation_subject
+from .....core.period import PeriodError
 from ....operation_composition import build_production_operation_registry
 from ..catalogue import OperationCatalogueEntryV1, OperationCatalogueV1, build_operation_catalogue
 from ..request_form import (
@@ -218,6 +220,27 @@ def test_the_request_model_s_refusals_are_reported_against_their_fields_without_
     rendered = json.dumps(validation.field_errors)
     assert rejected_digest not in rendered
     assert "4096" not in rendered
+
+
+def test_a_registered_refusal_a_validator_raises_is_shown_in_the_words_the_command_line_prints() -> None:
+    entry = _entry("modelo.bindings.list")
+    document: dict[str, object] = {
+        "profile_id": str(_PROFILE_ID),
+        "modelo": "210",
+        "year": 2025,
+        "period_code": "evento",
+        "missing": True,
+    }
+
+    validation = validate_request(entry.input_type, document)
+    # The command builds this same request, and prints the error it raises through this envelope.
+    with pytest.raises(PeriodError) as raised:
+        entry.input_type.model_validate(document | {"profile_id": _PROFILE_ID})
+    printed = build_error_envelope(raised.value).message
+
+    assert "EVENT-N" in printed
+    assert (validation.payload, dict(validation.field_errors)) == (None, {})
+    assert validation.general_errors == (printed,)
 
 
 def test_text_that_is_not_the_value_its_field_calls_for_is_reported_and_left_out() -> None:

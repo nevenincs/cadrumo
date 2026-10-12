@@ -1,14 +1,15 @@
 """A payload refused with a code alone is answered with the fields that explain it, where names do.
 
 The runtime decodes a submitted payload with the operation's registered
-request model and returns the model's faults with its refusal, which the
-server passes on. A refusal can still arrive as a code alone, and the lease
-here gives exactly that: it decodes each submission with the real registry's
-own request model and answers ``invalid``, with no faults, when that model
-raises. What is under test is the server's part for such a refusal, that it
-names a missing or unknown field from the schema it described, repeats no
-value, refuses nothing itself, and leaves a refusal about a value as it was
-given. The faults the runtime itself returns are tested through a real one.
+request model and returns the validators' own messages as faults with its
+refusal, which the server passes on. A refusal can still arrive as a code
+alone, and the lease here gives exactly that: it decodes each submission with
+the real registry's own request model and answers ``invalid``, with no faults,
+when that model raises. What is under test is the server's part for such a
+refusal, that it names a missing or unknown field from the schema it described
+in fixed words, attaches no part of the payload, refuses nothing itself, and
+leaves a refusal about a value as it was given. The faults the runtime itself
+returns are tested through a real one.
 """
 
 from __future__ import annotations
@@ -150,7 +151,7 @@ async def test_a_missing_required_field_is_named_and_the_payload_that_fits_is_su
 
 
 @pytest.mark.anyio
-async def test_every_missing_and_unknown_field_is_named_and_no_fault_repeats_a_value() -> None:
+async def test_every_missing_and_unknown_field_is_named_and_no_fault_attaches_a_value_of_the_payload() -> None:
     lease = _DecodingLease(uuid4())
     payload = {"profile_id": str(lease.profile_id), "path": "identity.name", "valeu": _PRIVATE, "note": _PRIVATE}
 
@@ -197,4 +198,6 @@ async def test_another_refusal_of_the_runtime_is_not_explained_as_a_fault_of_the
 def test_the_execute_tool_says_what_faults_names() -> None:
     (described,) = [description for name, description, _schema in MCP_TOOL_CATALOGUE if name == "execute"]
 
-    assert "faults names" in described and "never repeats a value" in described
+    assert "faults names each reason by location, type and message" in described
+    assert "The message is the validator's own, the text the command line shows for the same refusal" in described
+    assert "No fault attaches the refused input itself" in described

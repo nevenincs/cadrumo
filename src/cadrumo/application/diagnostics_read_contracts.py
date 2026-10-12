@@ -8,7 +8,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
-from ..core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
+from ..core.errors.hierarchy import pydantic_validation_boundary
 from ..core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..core.time.date_range import validate_inclusive_date_range
 from .diagnostics_run_report_contracts import (
@@ -38,11 +38,7 @@ class DiagnosticsReadRequest(CredentialFreeOperationRequest):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _filters(self) -> Self:
-        try:
-            validate_inclusive_date_range(self.since, self.until)
-        except CoreValidationError:
-            # The shared check quotes both dates; the refusal here names the rule alone.
-            raise ValueError("until must not precede since") from None
+        validate_inclusive_date_range(self.since, self.until)
         if self.limit is not None and self.kind != "runs":
             raise ValueError("limit belongs only to diagnostics runs")
         return self

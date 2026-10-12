@@ -1,4 +1,4 @@
-"""A refusal that carries the request model's faults reaches the command line's error with them."""
+"""A refusal that carries faults reaches the command line's error with each validator's message as written."""
 
 from __future__ import annotations
 
@@ -24,6 +24,7 @@ _OPERATION = "a" * 64
 _FAULTS = (
     RequestFault(location=("patch", "taxable_base"), type="value_error", message="a synthetic rule about a decimal"),
     RequestFault(location=("patch_fields",), type="value_error", message="a synthetic rule about an order"),
+    RequestFault(location=(), type="value_error", message="synthetic action 'list' takes no reference; use 'add'"),
 )
 
 
@@ -49,7 +50,8 @@ def test_the_faults_the_runtime_returned_are_printed_in_the_error_context(
     context = json.loads(capsys.readouterr().err)["error"]["context"]
     assert context["reason"] == "invalid"
     assert context["request_faults"] == (
-        "patch.taxable_base: a synthetic rule about a decimal; patch_fields: a synthetic rule about an order"
+        "patch.taxable_base: a synthetic rule about a decimal; patch_fields: a synthetic rule about an order; "
+        "synthetic action 'list' takes no reference; use 'add'"
     )
 
 

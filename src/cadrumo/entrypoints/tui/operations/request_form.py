@@ -23,6 +23,8 @@ from ....application.operations.subject_reference import (
     OperationSubjectReferenceV1,
     expected_operation_subject,
 )
+from ....core.errors.error_codes import resolve_error_message
+from ....core.errors.hierarchy import CadrumoError
 
 type _Schema = Mapping[str, object]
 
@@ -331,7 +333,7 @@ def validate_request(input_type: type[BaseModel], document: Mapping[str, object]
 
     The document is validated as the JSON the runtime decodes, so a value is
     accepted here exactly when the runtime accepts it. An error names its field
-    and the model's reason, never the value that was entered.
+    and gives the validator's own message, as the command line shows it.
     """
     try:
         encoded = json.dumps(document, ensure_ascii=False, separators=(",", ":"), allow_nan=False)
@@ -355,6 +357,10 @@ def validate_request(input_type: type[BaseModel], document: Mapping[str, object]
             field_errors={name: tuple(messages) for name, messages in by_field.items()},
             general_errors=tuple(general),
         )
+    except CadrumoError as error:
+        # A validator can refuse with a registered error the model does not wrap. It refuses the
+        # whole request, in the message the command line prints for the same error.
+        return RequestValidationV1(payload=None, field_errors={}, general_errors=(resolve_error_message(error),))
 
 
 def subject_is_entered(reference: OperationSubjectReferenceV1, *, typed_operator_input: bool) -> bool:

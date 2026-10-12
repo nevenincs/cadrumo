@@ -1,4 +1,7 @@
-"""A payload the runtime's request model refuses comes back to an MCP client with the model's reasons.
+"""A payload the runtime refuses as invalid comes back to an MCP client in the validators' own words.
+
+A fault's message is the validator's message, the text the command line shows
+for the same refusal, and no fault attaches the refused input.
 
 The adapter, the installed client it opens, the native transport, the runtime,
 the session authority, the profile worker and the stored sign-in are real, and
@@ -20,7 +23,11 @@ import pytest
 
 from cadrumo.application.ledger.classify_requests import LEDGER_CLASSIFY_OPERATION_DEFINITION_ID
 from cadrumo.application.ledger.own_account_operation import LEDGER_OWN_ACCOUNT_OPERATION_DEFINITION_ID
+from cadrumo.application.modelo.query_read_contracts import ModeloBindingsListRequest
+from cadrumo.application.modelo.query_read_operation import MODELO_BINDINGS_LIST_OPERATION_DEFINITION_ID
 from cadrumo.core.config import override_settings
+from cadrumo.core.errors.error_codes import build_error_envelope
+from cadrumo.core.period import PeriodError
 from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 
 from .stored_sign_in_runtime import StoredSignInRuntime, stored_sign_in_runtime
@@ -64,7 +71,7 @@ def _faults(reply: dict[str, Any]) -> dict[tuple[str | int, ...], tuple[str, str
 
 
 @pytest.mark.anyio
-async def test_a_value_that_breaks_a_rule_is_answered_with_its_location_and_rule_and_without_the_value(
+async def test_a_value_that_breaks_a_rule_is_answered_with_its_location_and_the_validators_message(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     with (
@@ -92,13 +99,12 @@ async def test_a_value_that_breaks_a_rule_is_answered_with_its_location_and_rule
         ),
         ("patch_fields",): ("value_error", "Value error, ledger classify fields must use canonical sorted order"),
     }
-    written = json.dumps(refused)
-    assert _NON_CANONICAL not in written
-    assert _PRIVATE_NOTE not in written
+    # The whole patch was refused input; no fault attaches it.
+    assert _PRIVATE_NOTE not in json.dumps(refused)
 
 
 @pytest.mark.anyio
-async def test_a_missing_and_an_unknown_member_are_named_by_the_model_and_no_private_value_is_repeated(
+async def test_a_missing_and_an_unknown_member_are_named_by_the_model_and_the_refused_input_is_not_attached(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     with (
@@ -128,25 +134,49 @@ async def test_a_missing_and_an_unknown_member_are_named_by_the_model_and_no_pri
 
 
 @pytest.mark.anyio
-async def test_a_validators_wording_that_names_no_value_reaches_the_caller_with_its_location_and_kind(
+async def test_a_validators_message_that_quotes_what_it_refused_reaches_the_caller_as_written(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    account = "acc-4242"
     with (
         stored_sign_in_runtime(tmp_path, monkeypatch) as runtime,
         override_settings(cadrumo_active_profile=str(runtime.profile_id)),
     ):
         adapter = _adapter()
         try:
-            # The model refuses an account id given to an action that takes none, and says so without either.
+            # The model's wording for this rule names the action it was given.
             refused = await _execute(
-                adapter, runtime, LEDGER_OWN_ACCOUNT_OPERATION_DEFINITION_ID, action="list", own_account_id=account
+                adapter, runtime, LEDGER_OWN_ACCOUNT_OPERATION_DEFINITION_ID, action="list", own_account_id="acc-4242"
             )
         finally:
             await adapter.close()
 
-    assert _faults(refused) == {(): ("value_error", "Value error, this own account action takes no account id")}
-    assert account not in json.dumps(refused)
+    assert _faults(refused) == {(): ("value_error", "Value error, own account action 'list' takes no account id")}
+
+
+@pytest.mark.anyio
+async def test_a_registered_refusal_raised_while_a_request_is_read_reaches_the_caller_as_the_command_line_prints_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    members: dict[str, Any] = {"modelo": "210", "year": 2025, "period_code": "evento", "missing": True}
+    with (
+        stored_sign_in_runtime(tmp_path, monkeypatch) as runtime,
+        override_settings(cadrumo_active_profile=str(runtime.profile_id)),
+    ):
+        adapter = _adapter()
+        try:
+            refused = await _execute(adapter, runtime, MODELO_BINDINGS_LIST_OPERATION_DEFINITION_ID, **members)
+            # The worker that refused it still serves the session.
+            again = await _execute(adapter, runtime, MODELO_BINDINGS_LIST_OPERATION_DEFINITION_ID, **members)
+        finally:
+            await adapter.close()
+        # The command builds this same request, and prints the error it raises through this envelope.
+        with pytest.raises(PeriodError) as raised:
+            ModeloBindingsListRequest(profile_id=runtime.profile_id, **members)
+    printed = build_error_envelope(raised.value)
+
+    assert (printed.code, "EVENT-N" in printed.message) == ("INTEGRITY_PERIOD", True)
+    assert _faults(refused) == {(): (printed.code, printed.message)}
+    assert again == refused
 
 
 @pytest.mark.anyio

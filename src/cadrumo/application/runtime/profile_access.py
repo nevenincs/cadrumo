@@ -216,11 +216,12 @@ class RuntimeSessionsLocked(BaseModel):
 
 
 class RuntimeAccessRefusal(BaseModel):
-    """Allowlisted application or native refusal, with no input or diagnostic text.
+    """Allowlisted application or native refusal, with no input attached.
 
-    ``request_faults`` says why an operation's request model refused a
-    payload: where, what kind and which rule, and never the value. Only a
-    refusal whose code is ``invalid`` has any.
+    ``request_faults`` says why an operation's request was refused before it
+    became an operation: where, what kind, and the validator's own message, the
+    text the command line shows for the same refusal. A fault never attaches
+    the refused input. Only a refusal whose code is ``invalid`` has any.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG

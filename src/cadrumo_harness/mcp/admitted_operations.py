@@ -210,7 +210,7 @@ def _execute(client: RuntimeFrontendClient, binding: _Binding, args: dict[str, A
                 raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         except RuntimeFrontendRefusedError as refused:
             if refused.request_faults:
-                # The request model's own reasons, as the runtime returned them without the values.
+                # The validators' own reasons, as the runtime returned them and the command line shows them.
                 return {
                     "outcome": "refused",
                     "code": refusal_code(refused),
@@ -264,8 +264,8 @@ def _named_field_faults(
     explains a refusal that came with a code and nothing else. Which fields
     the model requires and which it knows are in the schema already described,
     so a missing or unknown field is named from there. Only a refusal the
-    runtime gave is explained: nothing is refused here, and no fault carries a
-    value.
+    runtime gave is explained: nothing is refused here, and these faults name
+    fields in fixed words, since no validator's message came with the code.
     """
     schema = description.request_json_schema
     properties = schema.get("properties")

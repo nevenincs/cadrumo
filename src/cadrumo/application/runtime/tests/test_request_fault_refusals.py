@@ -1,7 +1,8 @@
-"""Only a refusal of an invalid request carries the request model's faults, on the wire and in the error."""
+"""Only a refusal of an invalid request carries faults, and a fault on the wire is its three members alone."""
 
 from __future__ import annotations
 
+import json
 from uuid import uuid4
 
 import pytest
@@ -15,7 +16,10 @@ from ..profile_access import RuntimeAccessRefusal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_FAULT = RequestFault(location=("patch", "taxable_base"), type="value_error", message="a synthetic rule")
+_MESSAGE = "Value error, own account action 'list' takes no account id"
+"""A validator's message as written, quoting what it refused."""
+
+_FAULT = RequestFault(location=("patch", "taxable_base"), type="value_error", message=_MESSAGE)
 
 
 def _refusal(
@@ -35,8 +39,17 @@ def test_an_invalid_refusal_carries_its_faults_through_the_wire_document() -> No
     assert read_back.request_faults[0].model_dump(mode="json") == {
         "location": ["patch", "taxable_base"],
         "type": "value_error",
-        "message": "a synthetic rule",
+        "message": _MESSAGE,
     }
+
+
+@pytest.mark.parametrize("member", ["input", "ctx", "url"])
+def test_a_wire_document_whose_fault_attaches_the_refused_input_its_context_or_its_link_is_refused(member: str) -> None:
+    document = json.loads(_refusal(AutomationCustodyCode.INVALID, _FAULT).model_dump_json())
+    document["request_faults"][0][member] = {"refused": "payload"}
+
+    with pytest.raises(ValidationError, match="extra_forbidden"):
+        RuntimeAccessRefusal.model_validate_json(json.dumps(document))
 
 
 def test_a_refusal_with_no_faults_says_so() -> None:

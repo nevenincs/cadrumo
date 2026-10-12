@@ -388,10 +388,11 @@ class ProfileWorkerHumanBound(BaseModel):
 
 
 class ProfileWorkerRefusal(BaseModel):
-    """An allowlisted application refusal that does not expose rejected input.
+    """An allowlisted application refusal that attaches no rejected input.
 
-    ``request_faults`` says why the operation's request model refused a
-    payload, without the values it refused. Only an ``INVALID`` refusal has any.
+    ``request_faults`` says why the operation's request was refused, in the
+    validators' own messages, as the command line shows them, and never with
+    the refused input attached. Only an ``INVALID`` refusal has any.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG

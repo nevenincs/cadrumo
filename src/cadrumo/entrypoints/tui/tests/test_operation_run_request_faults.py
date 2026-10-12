@@ -14,7 +14,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _FAULTS = (
     RequestFault(location=("patch", "taxable_base"), type="value_error", message="a synthetic rule about a decimal"),
     RequestFault(location=("lines", 2), type="missing", message="Field required"),
-    RequestFault(location=(), type="value_error", message="a synthetic rule about the whole request"),
+    RequestFault(location=(), type="value_error", message="synthetic action 'list' takes no reference; use 'add'"),
 )
 
 
@@ -25,7 +25,7 @@ def test_each_fault_the_runtime_returned_is_shown_under_the_refusal_as_the_form_
         "invalid",
         "patch.taxable_base: a synthetic rule about a decimal",
         "lines.2: Field required",
-        "a synthetic rule about the whole request",
+        "synthetic action 'list' takes no reference; use 'add'",
     ]
 
 

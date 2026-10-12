@@ -184,9 +184,7 @@ class LedgerUpdateRequest(BaseModel):
 
     @model_validator(mode="after")
     def _required_facts_are_not_cleared(self) -> LedgerUpdateRequest:
-        for field_name in sorted(_REQUIRED_FIELD_NAMES):
-            if field_name not in self.patch_fields:
-                continue
+        for field_name in sorted(_REQUIRED_FIELD_NAMES & set(self.patch_fields)):
             value = getattr(self.patch, field_name)
             if value is None or (isinstance(value, str) and not value.strip()):
                 raise ValueError(f"ledger update cannot clear {field_name}; omit it to leave it unchanged")

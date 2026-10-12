@@ -9,7 +9,7 @@ from typing import Annotated, Final
 from pydantic import AfterValidator
 
 from ....core.errors.hierarchy import pydantic_validation_boundary
-from ....core.identity.documents import TAX_ID_FORMAT_CONTEXT, IdentityError, SpanishTaxIdFormat
+from ....core.identity.documents import TAX_ID_FORMAT_CONTEXT, SpanishTaxIdFormat
 from ....core.identity.tax_id import validate_spanish_tax_id
 from ....core.time.clock import today_madrid
 from .facts.payloads import GovernedFactFamily, MappingFactPayload
@@ -181,17 +181,8 @@ def runtime_tax_id_format(
 
 @pydantic_validation_boundary
 def _validate_subject_tax_id(value: str) -> str:
-    """Validate an ordinary runtime subject against the established artifact.
-
-    The kernel's own wording quotes the identifier it refused, in a normalised
-    form that a request fault cannot recognise as the input, so a refusal here
-    says what rule failed and never which identifier.
-    """
-    tax_id_format = runtime_tax_id_format()
-    try:
-        return validate_spanish_tax_id(value, tax_id_format)
-    except IdentityError:
-        raise ValueError("the value is not a valid Spanish NIF, NIE or CIF") from None
+    """Validate an ordinary runtime subject against the established artifact."""
+    return validate_spanish_tax_id(value, runtime_tax_id_format())
 
 
 type SubjectTaxId = Annotated[str, AfterValidator(_validate_subject_tax_id)]
