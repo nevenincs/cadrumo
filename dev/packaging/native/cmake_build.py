@@ -8,6 +8,7 @@ import json
 import os
 import shutil
 import sys
+import time
 from collections.abc import Mapping
 from contextlib import nullcontext
 from dataclasses import asdict
@@ -20,7 +21,7 @@ from ..authority_staging import selected_published_authority
 from ..command_execution import CommandResult, run_command
 from ..google_oauth import build_client_json, client_build_identity
 from ..runtime_wheel_selection import plan_target_wheels
-from .action_cache import action_lock, completed, fingerprint, staleness
+from .action_cache import action_lock, completed, fingerprint, modified_inputs, staleness
 from .assemble import assemble, image_artifact
 from .build_log import BuildLog, command_line, display_path
 from .build_paths import build_paths
@@ -265,6 +266,7 @@ def execute_action(build: Path, arguments: argparse.Namespace, timings: BuildTim
                 return
             timings.log.status(f"building ({reason}) -> {display_path(destination)}")
             (destination / "ready").unlink(missing_ok=True)
+            started_ns = time.time_ns()
             with timings.phase("producer"):
                 destination = build_action(build, arguments, timings=timings)
             with timings.phase("input-stability"):
@@ -273,8 +275,24 @@ def execute_action(build: Path, arguments: argparse.Namespace, timings: BuildTim
                     (paths["generated"] / "build-toolchain.json").read_text(encoding="utf-8")
                 )
                 latest_selected = action_toolchain(latest_configured, arguments.action, latest_target)
-                if latest_target != arguments.target or latest_selected != selected or admitted_identity() != identity:
-                    raise RuntimeError(f"Inputs changed during {arguments.action}; completion receipt refused")
+                if latest_target != arguments.target or latest_selected != selected:
+                    raise RuntimeError(
+                        f"The configured target or toolchain changed during {arguments.action}; "
+                        "completion receipt refused"
+                    )
+                if admitted_identity() != identity:
+                    changed = modified_inputs(
+                        arguments.inputs, (*extra, Path(sys.executable), *selected_builder_inputs), started_ns
+                    )
+                    detail = (
+                        f"{len(changed)} modified while it ran, first {display_path(changed[0])}"
+                        if changed
+                        else "no enrolled file was modified while it ran; the client build identity changed"
+                    )
+                    raise RuntimeError(
+                        f"Inputs changed during {arguments.action} ({detail}); completion receipt refused. "
+                        "Build again once nothing edits the checkout."
+                    )
             with timings.phase("output-inventory"):
                 completed(destination, identity)
             timings.log.status(f"built {display_path(destination)}")

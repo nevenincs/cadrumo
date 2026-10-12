@@ -79,6 +79,20 @@ def fingerprint(inputs: Path, extra: tuple[Path, ...] = (), *, outside: Path | N
     return result.hexdigest()
 
 
+def modified_inputs(inputs: Path, extra: tuple[Path, ...], since_ns: int) -> list[Path]:
+    """Return the enrolled inputs changed, removed or replaced at or after ``since_ns``, in name order."""
+    changed = []
+    for path in sorted({*map(Path, inputs.read_text(encoding="utf-8").splitlines()), *extra}):
+        try:
+            metadata = path.stat()
+        except OSError:
+            changed.append(path)
+            continue
+        if max(metadata.st_mtime_ns, metadata.st_ctime_ns) >= since_ns:
+            changed.append(path)
+    return changed
+
+
 def current(destination: Path, identity: str) -> bool:
     """Reuse only complete outputs from exactly these inputs."""
     return staleness(destination, identity) is None
