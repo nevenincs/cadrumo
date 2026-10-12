@@ -49,15 +49,31 @@ class SessionActRefusedError(Exception):
 
 
 class SessionSecrets:
-    """The secrets of one call, taken out of its arguments as mutable buffers.
+    """The secrets of one call, taken out of its arguments and read only when they are about to be sent.
 
     A secret arrives as text in its field, or by reference in the field of
     the same name ending in ``_reference``. Both forms end as the same
-    buffer, so everything after this class treats them alike.
+    buffer, so everything after this class treats them alike. A reference
+    names a secret in the credential store, and reading a secret held for one
+    use spends it, so the store is read only by ``take``, which the caller
+    runs immediately before the send, after every other check has passed.
     """
 
-    def __init__(self, args: dict[str, Any]) -> None:
-        """Remove every secret field and every reference from the call, so nothing later can repeat either."""
+    def __init__(
+        self,
+        args: dict[str, Any],
+        *,
+        take: Callable[[UUID], bytearray],
+        verify: Callable[[UUID], None],
+    ) -> None:
+        """Remove every secret field and every reference from the call, so nothing later can repeat either.
+
+        ``verify`` confirms that a reference names a held secret and spends
+        nothing; ``take`` reads one into a buffer, spending it if it was held
+        for one use.
+        """
+        self._take = take
+        self._verify = verify
         self._buffers: dict[str, bytearray] = {}
         self._references: dict[str, str] = {}
         for name in SECRET_FIELDS:
@@ -71,11 +87,31 @@ class SessionSecrets:
         """Whether any secret of the call is still to be read from the store."""
         return bool(self._references)
 
-    def resolve(self, read: Callable[[UUID], bytearray]) -> None:
-        """Read each secret given by reference into its buffer, refusing one given in both forms.
+    def check(self) -> None:
+        """Refuse a reference that cannot name a held secret, without reading or spending any.
+
+        Raises:
+            ValueError: A field was given as text and by reference, a reference
+                is not one, or nothing is held under it.
+        """
+        if set(self._references) & set(self._buffers):
+            raise ValueError("a secret is given as text or by reference, not both")
+        for reference in dict.fromkeys(UUID(text) for text in self._references.values()):
+            self._verify(reference)
+
+    def require(self, action: str, *names: str) -> None:
+        """Refuse a call that gives a missing, empty or extra secret, in either form, reading none of them."""
+        given = set(self._buffers) | set(self._references)
+        if given != set(names) or any(name in self._buffers and not self._buffers[name] for name in names):
+            expected = ", ".join(names) if names else "no secret field"
+            raise ValueError(f"{action} takes {expected}")
+
+    def take(self, *names: str) -> tuple[bytearray, ...]:
+        """Return the buffers of exactly these secrets, reading each one given by reference now.
 
         Two fields that name one reference share one read, so a secret held
-        for a single use can fill a value and its confirmation.
+        for a single use can fill a value and its confirmation. The buffers
+        are wiped by ``wipe`` whatever becomes of the call.
 
         Raises:
             ValueError: A field was given as text and by reference, or a reference is not one.
@@ -87,18 +123,12 @@ class SessionSecrets:
         try:
             for name, reference in named.items():
                 if reference not in read_once:
-                    read_once[reference] = read(reference)
+                    read_once[reference] = self._take(reference)
                 self._buffers[name] = bytearray(read_once[reference])
                 del self._references[name]
         finally:
             for buffer in read_once.values():
                 buffer[:] = bytes(len(buffer))
-
-    def require(self, action: str, *names: str) -> tuple[bytearray, ...]:
-        """Return exactly the buffers the act takes, refusing a missing, empty, extra or unread one."""
-        if self._references or set(self._buffers) != set(names) or not all(self._buffers[name] for name in names):
-            expected = ", ".join(names) if names else "no secret field"
-            raise ValueError(f"{action} takes {expected}")
         return tuple(self._buffers[name] for name in names)
 
     def wipe(self) -> None:

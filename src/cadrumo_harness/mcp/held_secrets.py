@@ -21,7 +21,11 @@ straight into the buffer it sends on the runtime's protected secret frame.
 
 An entered secret stays until the person deletes it, so a connection can sign
 in again after a lock or an expiry without the password reaching anyone. Held
-with ``--once`` it is deleted by the first call that presents its reference.
+with ``--once`` it is spent by the first call that sends it: a call checks that
+the reference is held and does every other check first, and reads the secret,
+deleting it in the same step, only when it is about to send it. A call that is
+refused before that point leaves the secret held. Once it has been read it is
+spent, whether or not the send then succeeds.
 
 A tool call may present either kind of reference. A recovery code held for the
 person to read can be used at once, as it can at a terminal where it is shown:
@@ -90,7 +94,7 @@ HOLD_OPTION: Final = "--hold-secret"
 """The option that asks the person for a secret and holds it for a tool to take by reference."""
 
 ONCE_OPTION: Final = "--once"
-"""Beside the hold option: the secret is deleted by the first call that presents its reference."""
+"""Beside the hold option: the secret is spent by the first call that sends it."""
 
 MAX_ENTERED_SECRET_BYTES: Final = 512
 """The longest secret the person can enter: with its label it still fits one native item."""
@@ -197,22 +201,34 @@ class HeldSecretCustody:
         """
         return self._hold(origin=label, secret=secret, entered=True, single_use=single_use)
 
+    def verify(self, reference: UUID) -> None:
+        """Confirm that a held secret can be read under ``reference``, spending nothing.
+
+        Raises:
+            AutomationCustodyError: Nothing is held there, or the item is not a held secret.
+        """
+        self.read(reference)
+
     def take(self, reference: UUID) -> bytearray:
         """Return the secret held under ``reference`` for one call, in a buffer the caller wipes.
 
         A secret the person entered for one use is deleted before it is
-        returned, so a deletion that fails gives the secret to nobody. A
-        secret held for the person to read is never deleted here: a call that
-        uses it has not shown it to them. The copies the store itself hands
-        back are immutable and outside the wipe.
+        returned, so a deletion that fails gives the secret to nobody. The
+        read and the deletion happen under the lock that serializes every
+        writer of the index across processes, so of several callers racing for
+        one such secret exactly one receives it and the others find nothing
+        held. A secret held for the person to read is never deleted here: a
+        call that uses it has not shown it to them. The copies the store
+        itself hands back are immutable and outside the wipe.
 
         Raises:
             AutomationCustodyError: Nothing is held there, the item is not a
                 held secret, or its one use could not be recorded.
         """
-        held = self.read(reference)
-        if held.entered and held.single_use:
-            self.release(reference)
+        with self._index_lock():
+            held = self.read(reference)
+            if held.entered and held.single_use:
+                self._delete_held(reference)
         return bytearray(held.secret.get_secret_value())
 
     def _hold(self, *, origin: str, secret: bytearray, entered: bool, single_use: bool) -> HeldSecret:
@@ -297,11 +313,15 @@ class HeldSecretCustody:
         Raises:
             AutomationCustodyError: The store could not delete it; it may still be held.
         """
-        self._store.delete(HELD_SECRET_NAMESPACE, str(reference))
         with self._index_lock():
-            references = self._read_index()
-            if reference in references:
-                self._write_index([held for held in references if held != reference])
+            self._delete_held(reference)
+
+    def _delete_held(self, reference: UUID) -> None:
+        """Delete the secret and drop its reference from the index; the caller holds the index lock."""
+        self._store.delete(HELD_SECRET_NAMESPACE, str(reference))
+        references = self._read_index()
+        if reference in references:
+            self._write_index([held for held in references if held != reference])
 
     @contextmanager
     def _index_lock(self) -> Iterator[None]:
@@ -569,7 +589,7 @@ def hold_secret(
         first[:] = bytes(len(first))
         second[:] = bytes(len(second))
     lifetime = (
-        "It is deleted by the first tool call that presents this reference."
+        "The first tool call that sends it spends it; a call refused before then leaves it held."
         if single_use
         else f"It stays until you delete it with `cadrumo-mcp {DELETE_HELD_OPTION} {held.reference}`."
     )

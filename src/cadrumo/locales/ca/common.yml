@@ -2075,10 +2075,10 @@ tui:
     profile: Perfil
     withholding: Retencions
     installation: Instal·lació
-  home:
     operations: Operacions
-    account_fallback: Compte
+  home:
     reference: Referència
+    account_fallback: Compte
     action:
       context_across_records: A tots els registres
       reason: Suggerida pel resum local
@@ -2162,9 +2162,6 @@ tui:
       locked: Perfil blocat
       no_profile: Cap perfil seleccionat
     title: Inici
-  ledger:
-    area:
-      classification: Classificació
   installation:
     act:
       archive_import:
@@ -2322,6 +2319,9 @@ tui:
       entries: Apunts
       evidence: Justificants
       import: Importació
+  ledger:
+    area:
+      classification: Classificació
       overview: Resum
       reconciliation: Conciliació
       review: Revisió
@@ -3553,9 +3553,6 @@ tui:
       value:
         not_applicable: no s'aplica
       was: 'abans: {value}'
-  restricted:
-    actions: 'Accions permeses: {values}'
-    all_periods: Tots els períodes
   operations:
     action:
       close: Tanca
@@ -3590,6 +3587,9 @@ tui:
       required: obligatori
       secret: Secret (ocult en escriure, s'envia a part de la sol·licitud)
       secret_required: Aquesta operació necessita el seu secret. Introdueix-lo i torna
+      replay_key: Clau de repetició (opcional)
+      replay_key_hint: Envia la mateixa clau una altra vegada amb la mateixa sol·licitud
+        per recuperar la primera operació en lloc d'iniciar-ne una de nova.
         a executar. No s'ha enviat res.
       session: Sessió
       subject: Subjecte
@@ -3703,6 +3703,9 @@ tui:
     availability: 'Disponibilitat - emmagatzematge: {storage}; autoritat: {authority};
       proveïdor: {provider}'
     change_user: Canvia d’usuari
+  restricted:
+    actions: 'Accions permeses: {values}'
+    all_periods: Tots els períodes
     close: Tanca
     grant: 'Concessió vàlida: {valid}; venç: {expires_at}'
     lock: Bloqueja aquesta sessió
@@ -3829,27 +3832,27 @@ tui:
       profile: Obre Perfil
       unknown: Obre l'àrea
       installation: Obre Instal·lació
-      withholding: Obre Retencions
       operations: Obre Operacions
-    destination_help:
+      withholding: Obre Retencions
       reference: Obre Referència
+    destination_help:
       aeat_sync: El que s'ha llegit de l'AEAT i el que es pot llegir a continuació
       declarations: Declaracions, càlculs anteriors, historial de presentacions i
         calendari
       home: Properes accions, declaracions i terminis d'un cop d'ull
-      ledger: Apunts, revisió, classificació i justificants
-      profile: Les dades d'aquest perfil i els orígens que les completen
-      withholding: Registra i consulta les retencions de factures de l'exercici seleccionat
       installation: Emmagatzematge, reparació, restabliment i els perfils d'aquest
         equip
-    refusal:
+      ledger: Apunts, revisió, classificació i justificants
       operations: Totes les operacions que Cadrumo pot executar, per cercar-les, emplenar-les
         i executar-les
-      not_composed: Encara no s'han pogut llegir totes les àrees.
+      profile: Les dades d'aquest perfil i els orígens que les completen
       reference: Models, caselles, categories, portals i mètodes d'accés
       refresh_failed: La darrera actualització no ha pogut reconstruir l'índex.
       unavailable: La cerca no està disponible en aquesta sessió
       unknown: No s'ha pogut preparar la cerca.
+      withholding: Registra i consulta les retencions de factures de l'exercici seleccionat
+    refusal:
+      not_composed: Encara no s'han pogut llegir totes les àrees.
     result:
       address: Model %{modelo} · %{filing_year} · %{period}
       label:

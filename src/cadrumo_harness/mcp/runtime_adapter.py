@@ -404,10 +404,11 @@ class RuntimeMcpAdapter:
         return self.client
 
     def held_secret(self, reference: UUID) -> bytearray:
-        """Read the secret held under ``reference`` into a buffer the call wipes.
+        """Read the secret held under ``reference`` into a buffer the call wipes, spending it if it is a one-use one.
 
         A reference that names nothing held is a mistaken argument, and is
-        answered as any other one is.
+        answered as any other one is. Callers read only at the moment they
+        send, after every other check.
 
         Raises:
             ValueError: No secret is held under the reference.
@@ -420,10 +421,28 @@ class RuntimeMcpAdapter:
                 raise ValueError("no secret is held under that reference") from None
             raise
 
-    async def _read_references(self, secrets: SessionSecrets) -> None:
-        """Fill the secrets a call gave by reference, off the event loop as every store read is."""
+    def check_held_secret(self, reference: UUID) -> None:
+        """Confirm that a secret is held under ``reference``, as a call is checked, without spending it.
+
+        Raises:
+            ValueError: No secret is held under the reference.
+            AutomationCustodyError: The credential store could not be read.
+        """
+        try:
+            held_secret_custody(installed_automation_secret_store()).verify(reference)
+        except AutomationCustodyError as refused:
+            if refused.reason in {AutomationCustodyCode.MISSING, AutomationCustodyCode.INVALID}:
+                raise ValueError("no secret is held under that reference") from None
+            raise
+
+    def _call_secrets(self, args: dict[str, Any]) -> SessionSecrets:
+        """Take the secrets out of one call's arguments; none is read from the store until it is sent."""
+        return SessionSecrets(args, take=self.held_secret, verify=self.check_held_secret)
+
+    async def _check_references(self, secrets: SessionSecrets) -> None:
+        """Refuse a call whose reference names nothing held, off the event loop as every store read is."""
         if secrets.by_reference:
-            await self._wire(lambda: secrets.resolve(self.held_secret))
+            await self._wire(secrets.check)
 
     async def call(self, name: str, args: dict[str, Any]) -> dict[str, Any]:
         """Serialize all blocking wire calls; cancellation waits for cleanup."""
@@ -506,9 +525,9 @@ class RuntimeMcpAdapter:
 
     async def _call_session_tool(self, args: dict[str, Any]) -> dict[str, Any]:
         """Serve one session act; its secrets leave the call here and are wiped whatever follows."""
-        secrets = SessionSecrets(args)
+        secrets = self._call_secrets(args)
         try:
-            await self._read_references(secrets)
+            await self._check_references(secrets)
             action = args["action"]
             if action in UNADMITTED_SESSION_ACTIONS:
                 reply = await self._unadmitted_session_act(action, args, secrets)
@@ -526,9 +545,9 @@ class RuntimeMcpAdapter:
 
     async def _call_installation_tool(self, args: dict[str, Any]) -> dict[str, Any]:
         """Serve one installation act; its secret leaves the call here and is wiped whatever follows."""
-        secrets = SessionSecrets(args)
+        secrets = self._call_secrets(args)
         try:
-            await self._read_references(secrets)
+            await self._check_references(secrets)
             return await self._installation_act(args, secrets)
         finally:
             secrets.wipe()
@@ -595,18 +614,21 @@ class RuntimeMcpAdapter:
             require_only(args, action)
             return await self._on_own_connection(await self._bound_profile(), read_sign_in_status)
         if action == "resume":
-            (proof,) = secrets.require(action, "secret")
+            secrets.require(action, "secret")
             require_only(args, action, "grants")
             grants = frozenset(UUID(item) for item in args.get("grants", ()))
-            return await self._on_own_connection(
-                await self._bound_profile(), lambda client: resume_profile(client, proof, grants)
-            )
-        first, replacement, confirmation = secrets.require(action, *SECRET_FIELDS)
+
+            def resume(client: RuntimeFrontendClient) -> dict[str, Any]:
+                (proof,) = secrets.take("secret")
+                return resume_profile(client, proof, grants)
+
+            return await self._on_own_connection(await self._bound_profile(), resume)
+        secrets.require(action, *SECRET_FIELDS)
         if action == "reset_password":
             require_only(args, action, "profile")
             profile_id = await self._named_or_bound_profile(args)
             reply = await self._on_own_connection(
-                profile_id, lambda client: reset_password(client, first, replacement, confirmation)
+                profile_id, lambda client: reset_password(client, *secrets.take(*SECRET_FIELDS))
             )
         else:
             require_only(args, action)
@@ -617,7 +639,7 @@ class RuntimeMcpAdapter:
 
             reply = await self._on_own_connection(
                 profile_id,
-                lambda client: change_password(client, first, replacement, confirmation, fresh_client=fresh_client),
+                lambda client: change_password(client, *secrets.take(*SECRET_FIELDS), fresh_client=fresh_client),
             )
         if reply["outcome"] != "unresolved" and profile_id == self.profile_id:
             # The new password fenced every session admitted under the old one.
@@ -650,7 +672,7 @@ class RuntimeMcpAdapter:
 
     async def _sign_in(self, args: dict[str, Any], secrets: SessionSecrets) -> dict[str, Any]:
         """Sign in with the typed password, or a raw key, and hold the session it admits."""
-        (proof,) = secrets.require("sign_in", "secret")
+        secrets.require("sign_in", "secret")
         require_only(args, "sign_in", "method", "store", "profile")
         keyed = args.get("method", "password") == "api_key"
         store = args.get("store", False)
@@ -661,6 +683,7 @@ class RuntimeMcpAdapter:
         client = await self._open_unadmitted_client(profile_id, on_surface=True)
 
         def admit() -> tuple[RuntimeProfileStatus, ProfileAccessStatus, Event]:
+            (proof,) = secrets.take("secret")
             admitted = client.login_api_key(proof) if keyed else client.login_password(proof, persist_receipt=store)
             status = require_exact_admitted_status(client, profile_id=profile_id, admission=admission)
             if store:

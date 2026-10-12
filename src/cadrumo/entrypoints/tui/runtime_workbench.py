@@ -43,7 +43,7 @@ from .modelo.runtime_work_create import compose_runtime_calendar_create_handoff,
 from .modelo.runtime_workbench_reads import RuntimeModeloWorkbenchSource
 from .modelo.workbench.installed import compose_installed_modelo_workbench_factory
 from .navigation import TuiScreenContextV1, TuiScreenFactoryV1, build_destination_catalogue
-from .operations.catalogue import OperationCatalogueSourceV1, production_operation_registry
+from .operations.catalogue import OperationCatalogueSourceV1
 from .operations.destination import OperationsDestinationV1
 from .profile.runtime_manager import RuntimeProfileManagerComposition
 from .profile.runtime_overview import read_runtime_profile_overview
@@ -197,13 +197,14 @@ class RuntimeWorkbenchRoot:
         profile_label: str,
         output_language: OutputLanguage,
         open_recovery_client: RecoveryClientOpener,
+        operation_registry: Callable[[], OperationRegistry],
         requester_factory: HumanAutomationRequesterFactory | None = None,
-        operation_registry: Callable[[], OperationRegistry] = production_operation_registry,
     ) -> None:
         """Pin a TUI client and its explicit capture language without performing I/O.
 
-        ``operation_registry`` is composed on first use and once only, however
-        many generations this root captures.
+        ``operation_registry`` is the installed session's, handed down so that
+        this root composes nothing; it is called on first use and the session
+        composes it once, however many generations this root captures.
         """
         if client.frontend is not OperationFrontendProjection.TUI:
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)

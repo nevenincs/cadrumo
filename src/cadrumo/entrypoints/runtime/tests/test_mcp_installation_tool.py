@@ -43,6 +43,8 @@ from cadrumo.application.runtime.installation_requests import (
     RuntimeRecoveryEnrollRequest,
     RuntimeRepairLogsReply,
     RuntimeRepairLogsRequest,
+    RuntimeResetStartReply,
+    RuntimeResetStartRequest,
     RuntimeStorageCheckReply,
     RuntimeStorageCheckRequest,
     RuntimeStorageInitRequest,
@@ -132,7 +134,14 @@ def _acts(served: _Served) -> InstallationActRegistry:
             recovery_enrolled=False,
         )
 
+    def serve_reset_that_fails_midway(
+        request: RuntimeResetStartRequest, exchange: InstallationActExchange
+    ) -> RuntimeResetStartReply:
+        exchange.changes_begin()
+        raise ValueError(FAULT_TEXT)
+
     registry = InstallationActRegistry()
+    registry.register(RuntimeResetStartRequest, serve_reset_that_fails_midway)
     registry.register(RuntimeStorageCheckRequest, serve_check)
     registry.register(RuntimeRepairLogsRequest, serve_tail)
     registry.register(RuntimeStorageInitRequest, serve_fault)
@@ -437,6 +446,27 @@ async def test_a_fault_an_unserved_act_and_a_locked_login_each_answer_with_the_r
     assert unserved == {"outcome": "refused", "code": "operation_unavailable"}
     assert locked == {"outcome": "refused", "code": "needs_user"}
     assert again["outcome"] == "completed"
+
+
+@pytest.mark.anyio
+async def test_a_change_that_failed_after_it_began_names_the_act_that_reads_its_outcome(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    served, login = _Served(), InstallationLogin(owner=owner_id())
+    caplog.set_level(logging.DEBUG)
+    with _installed_runtime(tmp_path, served, login):
+        adapter = _adapter()
+        try:
+            failed = await adapter.call("installation", {"action": "reset_start", "confirm": True})
+        finally:
+            await adapter.close()
+
+    # The records may already have changed, so the reply is neither a refusal nor a failure to repeat.
+    assert failed["outcome"] == "unresolved"
+    assert failed["code"] == "installation_failed"
+    assert failed["act"] == "reset_start"
+    assert failed["outcome_read_by"] == "reset_status"
+    assert _private_in(FAULT_TEXT, failed, caplog) == []
 
 
 @pytest.mark.anyio

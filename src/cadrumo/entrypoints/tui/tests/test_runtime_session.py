@@ -50,7 +50,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 async def test_upgrade_notice_renders_without_retiring_the_restricted_session(monkeypatch: pytest.MonkeyPatch) -> None:
     client = _Client()
     session = client.session_id
-    app = RuntimeRestrictedSessionApp(client, profile_label="Synthetic private profile")
+    app = RuntimeRestrictedSessionApp(client, profile_label="Synthetic private profile", operation_registry=_registry)
     notices: list[str] = []
     monkeypatch.setattr(app, "notify", lambda message, **_: notices.append(str(message)))
     async with app.run_test() as pilot:
@@ -69,7 +69,7 @@ async def test_upgrade_notice_renders_without_retiring_the_restricted_session(mo
 @pytest.mark.asyncio
 async def test_pushed_retirement_clears_private_view_without_waiting_for_status_poll() -> None:
     client = _Client()
-    app = RuntimeRestrictedSessionApp(client, profile_label="Synthetic private profile")
+    app = RuntimeRestrictedSessionApp(client, profile_label="Synthetic private profile", operation_registry=_registry)
     async with app.run_test() as pilot:
         await _shown(app, pilot)
         reads = client.status_calls
@@ -227,7 +227,9 @@ async def test_status_renders_exact_disclosures_and_delegation_and_clears_on_clo
 ) -> None:
     client = _Client()
     _disclosure_scope(client, delegation=delegation)
-    app = RuntimeRestrictedSessionApp(client, profile_label="[bold]Literal profile[/bold]")
+    app = RuntimeRestrictedSessionApp(
+        client, profile_label="[bold]Literal profile[/bold]", operation_registry=_registry
+    )
     async with app.run_test(size=size) as pilot:
         await _shown(app, pilot)
         assert "[bold]Literal profile[/bold]" in str(app.query_one("#restricted-profile", Static).render())
@@ -250,7 +252,7 @@ async def test_status_renders_exact_disclosures_and_delegation_and_clears_on_clo
 @pytest.mark.asyncio
 async def test_status_shows_exact_allowlisted_scope_without_human_calls_or_client_close() -> None:
     client = _Client()
-    app = RuntimeRestrictedSessionApp(client, profile_label="Synthetic API profile")
+    app = RuntimeRestrictedSessionApp(client, profile_label="Synthetic API profile", operation_registry=_registry)
     async with app.run_test() as pilot:
         await _shown(app, pilot)
         assert str(client.profile_id) in str(app.query_one("#restricted-profile", Static).render())
@@ -272,7 +274,7 @@ async def test_wrong_binding_or_expired_lease_clears_and_exits(invalid: str) -> 
         client.reported_profile_id = uuid4()
     elif invalid == "expiry":
         client.expires_at = datetime.now(UTC) - timedelta(seconds=1)
-    app = RuntimeRestrictedSessionApp(client, profile_label="Synthetic API profile")
+    app = RuntimeRestrictedSessionApp(client, profile_label="Synthetic API profile", operation_registry=_registry)
     if invalid == "binding":
         client._session_id = uuid4()
     async with app.run_test() as pilot:
@@ -288,7 +290,7 @@ async def test_wrong_binding_or_expired_lease_clears_and_exits(invalid: str) -> 
 async def test_periodic_status_detects_revoked_grant_and_wipes_previous_projection() -> None:
     client = _Client()
     _disclosure_scope(client)
-    app = RuntimeRestrictedSessionApp(client, profile_label="Synthetic API profile")
+    app = RuntimeRestrictedSessionApp(client, profile_label="Synthetic API profile", operation_registry=_registry)
     async with app.run_test() as pilot:
         await _shown(app, pilot)
         assert "profile_values" in str(app.query_one("#restricted-disclosures", Static).render())
@@ -321,7 +323,7 @@ async def test_lock_clears_private_status_before_owned_native_completion(
     client = _Client()
     _disclosure_scope(client)
     client.lock_release.clear()
-    app = RuntimeRestrictedSessionApp(client, profile_label="Synthetic API profile")
+    app = RuntimeRestrictedSessionApp(client, profile_label="Synthetic API profile", operation_registry=_registry)
     async with app.run_test() as pilot:
         await _shown(app, pilot)
         assert "profile_values" in str(app.query_one("#restricted-disclosures", Static).render())
@@ -346,7 +348,7 @@ async def test_missing_lock_acknowledgement_or_refusal_requires_fresh_admission(
     client = _Client()
     client.lock_acknowledged = False
     client.lock_refusal = refusal
-    app = RuntimeRestrictedSessionApp(client, profile_label="Synthetic API profile")
+    app = RuntimeRestrictedSessionApp(client, profile_label="Synthetic API profile", operation_registry=_registry)
     async with app.run_test() as pilot:
         await _shown(app, pilot)
         assert await pilot.click("#restricted-lock")
@@ -436,7 +438,7 @@ async def test_the_shell_opens_operations_installation_and_reference_and_lists_t
 @pytest.mark.asyncio
 async def test_a_session_retired_while_a_destination_is_open_still_clears_the_shell_and_leaves() -> None:
     client = _Client()
-    app = RuntimeRestrictedSessionApp(client, profile_label="Synthetic private profile")
+    app = RuntimeRestrictedSessionApp(client, profile_label="Synthetic private profile", operation_registry=_registry)
     async with app.run_test(size=(120, 40)) as pilot:
         await _shown(app, pilot)
         shell = app.screen

@@ -17,14 +17,24 @@ What each side is told about its own work is read from its own replies, the
 operation results on one side and the command envelopes on the other, and
 compared after the two are brought to one shape. Identifiers a profile mints for
 itself are named by their role first, and the agent's replies are passed through
-the redaction the command line applies to everything it prints. The one
-intended difference is who is recorded as having acted.
+the redaction the command line applies to everything it prints. What each side
+recorded is compared too: every event of the profile's history with its payload,
+and the origin each ledger row's classification is stored with. The notices the
+command line prints are compared with the facts the operation results carry
+wherever both sides state them.
+
+There are two intended differences, and both follow from who acted. The actor
+recorded on each event is the agent's session on one side and the label the
+command line was given on the other. The origin of each classified row is
+``agent`` on one side and ``person`` on the other. Nothing else is normalised
+away.
 """
 
 from __future__ import annotations
 
 import asyncio
 import json
+import re
 import sys
 import time
 from collections.abc import Iterator, Mapping, Sequence
@@ -32,7 +42,8 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from decimal import Decimal
 from pathlib import Path
-from typing import Any
+from typing import Any, Final
+from uuid import UUID
 
 import pytest
 from click.testing import Result
@@ -46,13 +57,18 @@ from ...adapters.persistence.storage.custody.tests.enrollment_support import PRO
 from ...adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ...application.operations.execution_actor import actor_label_is_an_agents
 from ...application.runtime.contracts import RuntimeShutdownIncompleteError
-from ...application.user_profile.login_session import resolve_login_target
+from ...application.user_profile.login_session import (
+    authenticate_profile_for_invocation,
+    resolve_login_target,
+)
 from ...core.config import override_settings
 from ...core.i18n.render import tr
 from ...core.redaction.rules import redact_structured_for_cli_output
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...tests.cli_envelope import require_error_document, require_schema_envelope, unwrap_envelope_notices
 from ..cli.tests.cli_runner import invoke_cached_cli
 from ..cli.tests.command_operation_reference import read_command_operation_reference
+from ..ledger_action_composition import compose_ledger_action_ports
 from ..runtime.tests.stored_sign_in_runtime import StoredSignInRuntime, stored_sign_in_runtime
 
 pytestmark = [
@@ -85,6 +101,15 @@ _CLASSIFY_OPTIONS: Mapping[str, str] = {
     "irpf_category": "--irpf-category",
 }
 """Each classification fact as the operation's field, and the command option that carries the same fact."""
+
+_IDENTIFIER = re.compile(r"[0-9a-f]{64}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
+"""The shape of every identifier a profile mints for itself: a content digest or a UUID."""
+
+_INVOCATION_NOTICES = frozenset({"config.login.session_not_persisted"})
+"""Notices every command prints about being given the profile password for its own process alone."""
+
+_MINTED_PAYLOAD_NAMES = frozenset({"dek_epoch"})
+"""Event payload members whose value the profile draws at random when it is created, and which name no content."""
 
 _EXCHANGE_FACTS = frozenset({"operation_id", "effect", "terminal_condition"})
 """What a command adds to a refusal about its own exchange with the runtime, beside the refusal's own detail."""
@@ -254,6 +279,13 @@ _ANNUAL = _Declaration(
 )
 
 
+def _event_payload(event: Mapping[str, Any]) -> dict[str, str]:
+    """Read an event's payload: the command prints it as an object, the operation result as named details."""
+    if "payload" in event:
+        return dict(event["payload"])
+    return {detail["name"]: detail["value"] for detail in event["details"]}
+
+
 @dataclass(slots=True)
 class _Prepared:
     """What one side was told about the declaration it prepared, in one shape for both sides."""
@@ -268,16 +300,20 @@ class _Prepared:
     verification: dict[str, Any] = field(default_factory=dict)
     export: dict[str, Any] = field(default_factory=dict)
     exported: bytes = b""
-    events: list[tuple[str, str]] = field(default_factory=list)
+    events: list[dict[str, Any]] = field(default_factory=list)
     actors: list[str] = field(default_factory=list)
+    origins: dict[str, str] = field(default_factory=dict)
+    """Whose decision each ledger row's classification is, as the profile stored it, by the row's description."""
+    notices: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
+    """What this side states, as notices, about the work of each step."""
     aliases: dict[str, str] = field(default_factory=dict)
     calls: list[str] = field(default_factory=list)
 
     def named_by_role(self, value: Any) -> Any:
         """Return ``value`` with every identifier this profile minted replaced by the role it plays."""
         if isinstance(value, str):
-            for identifier, role in self.aliases.items():
-                value = value.replace(identifier, role)
+            for identifier in sorted(self.aliases, key=len, reverse=True):
+                value = value.replace(identifier, self.aliases[identifier])
             return value
         if isinstance(value, Mapping):
             return {key: self.named_by_role(item) for key, item in value.items()}
@@ -289,11 +325,27 @@ class _Prepared:
         """Keep what the profile's history says was recorded, and under whose name.
 
         Events recorded in the same instant are listed in the order of identifiers the profile minted, so they
-        are put in the order of their kinds, which is the same for both profiles.
+        are put in the order of their kinds, which is the same for both profiles. An identifier an event names
+        that nothing named before is given the role of the first event that names it, in that order.
         """
         ordered = sorted(history, key=lambda event: (event["occurred_at"], event["event_type"], event["object_type"]))
-        self.events = [(event["event_type"], event["object_type"]) for event in ordered]
         self.actors = [event["actor"] for event in ordered]
+        for event in ordered:
+            payload = _event_payload(event)
+            for name in _MINTED_PAYLOAD_NAMES & payload.keys():
+                self.aliases.setdefault(payload[name], f"<{name}>")
+            for identifier in _IDENTIFIER.findall(json.dumps([event["object_id"], payload])):
+                self.aliases.setdefault(identifier, f"<{event['object_type']}:{len(self.aliases)}>")
+        self.events = [
+            {
+                "event_type": event["event_type"],
+                "object_type": event["object_type"],
+                "object_id": event["object_id"],
+                "payload_version": event["payload_version"],
+                "payload": _event_payload(event),
+            }
+            for event in ordered
+        ]
 
     def told(self) -> dict[str, Any]:
         """Everything this side was told that the other side must be told too, with identifiers named by role."""
@@ -308,7 +360,7 @@ class _Prepared:
                 "registry_snapshot": self.registry_snapshot,
                 "verification": self.verification,
                 "export": self.export,
-                "events": [list(event) for event in self.events],
+                "events": self.events,
             }
         )
 
@@ -334,6 +386,31 @@ def _fresh_profile(root: Path, monkeypatch: pytest.MonkeyPatch, *, signed_in: bo
         if failure is None:
             raise
         raise failure from None
+
+
+def _stored_origins(root: Path, profile_id: UUID, operation: PinnedAuthorityOperation) -> dict[str, str]:
+    """Read, from the stopped profile's own store, whose decision each ledger row's classification is.
+
+    No frontend shows it: it is the one recorded fact that tells an agent's classification from a person's.
+    """
+    close_active_bucket_session()
+    with override_settings(cadrumo_local_storage_root=root):
+        authenticate_profile_for_invocation(
+            name=str(profile_id),
+            passphrase_callback=lambda: PROFILE_INPUT,
+            profile_decode_context=operation.profile_decode_context(),
+        )
+        try:
+            rows = compose_ledger_action_ports(
+                bucket_id=str(profile_id), operation=operation
+            ).transaction_repository.load()
+            return {
+                row.raw.description: row.classification_origin.value
+                for row in rows.transactions.values()
+                if row.classification_origin is not None
+            }
+        finally:
+            close_active_bucket_session()
 
 
 # --- What both sides report, brought to one shape ---------------------------------------------------------------
@@ -398,6 +475,19 @@ def _verification(report: Mapping[str, Any], findings: list[dict[str, Any]]) -> 
         "registry_snapshot": dict(report["registry_snapshot_ref"]),
         "findings": findings,
     }
+
+
+_EVIDENCE_NOTICE: Final = "modelo.export.local_export_not_official_evidence"
+
+
+def _export_notices(written: Mapping[str, Any]) -> list[dict[str, Any]]:
+    """State, from an export's result, the notices the command line prints about the same export."""
+    notices: list[dict[str, Any]] = [{"code": _EVIDENCE_NOTICE, "evidence_status": written["evidence_status"]}]
+    if written["software_identity_grade"] == "development_mock":
+        notices.append({"code": "modelo.export.development_software_identity"})
+    if written["completeness"] == "unverified":
+        notices.append({"code": "modelo.export.completeness_unverified"})
+    return notices
 
 
 # --- The MCP side -----------------------------------------------------------------------------------------------
@@ -638,6 +728,10 @@ async def _prepare_through_mcp(
                 },
             )
             unit = created.succeeded()["outcome"]["unit"]
+            prepared.notices["app modelo work create"] = [
+                {"code": "modelo.work.create.filing_obligation", "message": tr(key, locale="en")}
+                for key in created.succeeded()["outcome"]["advisory_keys"]
+            ]
             work_unit_id = unit["work_unit_id"]
             prepared.aliases[work_unit_id] = "<work-unit>"
             prepared.work_unit = {name: unit[name] for name in _UNIT_FACTS}
@@ -673,6 +767,9 @@ async def _prepare_through_mcp(
             )
 
             written = await agent.export(profile_id, work_unit_id, output)
+            prepared.aliases[str(output)] = "<export>"
+            prepared.aliases[output.name] = "<export-file>"
+            prepared.notices["app modelo export"] = _export_notices(written)
             prepared.export = {
                 "format": written["export_format"],
                 "byte_size": written["byte_size"],
@@ -701,7 +798,7 @@ class _CommandLine:
         """The notices of the last command that succeeded."""
 
     def _invoke(self, command: Sequence[str]) -> Result:
-        path = command[: next(index for index, token in enumerate((*command, "-")) if _is_argument(token))]
+        path = _command_path(command)
         self._prepared.calls.append(" ".join(("aeat", *path)))
         # The command authenticates through the runtime, so this process holds no open profile of its own.
         close_active_bucket_session()
@@ -727,6 +824,7 @@ class _CommandLine:
         result = self._invoke(command)
         assert result.exit_code == 0, (command, result.output)
         self.notices = unwrap_envelope_notices(result.output)
+        self._prepared.notices[" ".join(_command_path(command))] = self.notices
         return require_schema_envelope(result.output)
 
     def refused(self, *command: str) -> dict[str, Any]:
@@ -736,6 +834,11 @@ class _CommandLine:
         error = require_error_document(result.output)["error"]
         assert isinstance(error, dict), result.output
         return error
+
+
+def _command_path(command: Sequence[str]) -> Sequence[str]:
+    """The words of a command before its first option or identifier."""
+    return command[: next(index for index, token in enumerate((*command, "-")) if _is_argument(token))]
 
 
 def _is_argument(token: str) -> bool:
@@ -825,6 +928,8 @@ def _prepare_through_the_command_line(
         verified, [_finding(finding, finding["message"]) for finding in verified["findings"]]
     )
 
+    prepared.aliases[str(output)] = "<export>"
+    prepared.aliases[output.name] = "<export-file>"
     exported = aeat.run("app", "modelo", "export", work_unit_id, "--output", str(output), "--by", _PERSON)
     (evidence,) = (
         notice["context"]["evidence_status"]
@@ -856,22 +961,47 @@ class _Twice:
     agent_label: str
 
 
-def _prepared_twice(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, declaration: _Declaration) -> _Twice:
-    """Prepare ``declaration`` in two fresh profiles: through MCP alone, then through the command line."""
+def _prepared_twice(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, declaration: _Declaration, operation: PinnedAuthorityOperation
+) -> _Twice:
+    """Prepare ``declaration`` in two fresh profiles: through MCP alone, then through the command line.
+
+    Each profile's store is read once its runtime has stopped, for the one fact no frontend shows.
+    """
     exports = tmp_path / "exports"
     exports.mkdir()
     with _fresh_profile(tmp_path / "through-mcp", monkeypatch, signed_in=True) as runtime:
         through_mcp, agent_label = asyncio.run(
             _prepare_through_mcp(runtime, declaration, exports / f"mcp-{declaration.export_name}")
         )
+        mcp_root, mcp_profile = runtime.root, runtime.profile_id
+    through_mcp.origins = _stored_origins(mcp_root, mcp_profile, operation)
     with _fresh_profile(tmp_path / "through-the-command-line", monkeypatch, signed_in=False) as runtime:
         through_the_command_line = _prepare_through_the_command_line(
             runtime, declaration, exports / f"command-line-{declaration.export_name}"
         )
+        line_root, line_profile = runtime.root, runtime.profile_id
+    through_the_command_line.origins = _stored_origins(line_root, line_profile, operation)
     return _Twice(through_mcp, through_the_command_line, agent_label)
 
 
-def _assert_the_same_declaration(twice: _Twice) -> None:
+def _as_stated(step: str, notices: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
+    """Reduce the notices a command printed about its work to the facts the step's operation result states.
+
+    A notice about the invocation itself, which every command prints because its password was given to this
+    one process, is about no step's work and is left out.
+    """
+    notices = [notice for notice in notices if notice["code"] not in _INVOCATION_NOTICES]
+    if step == "app modelo export":
+        return [
+            {"code": notice["code"]}
+            | ({"evidence_status": notice["context"]["evidence_status"]} if notice["code"] == _EVIDENCE_NOTICE else {})
+            for notice in notices
+        ]
+    return [{"code": notice["code"], "message": notice["message"]} for notice in notices]
+
+
+def _assert_the_same_declaration(twice: _Twice, declaration: _Declaration) -> None:
     through_mcp, through_the_command_line = twice.through_mcp, twice.through_the_command_line
     assert set(through_mcp.calls) <= _MCP_TOOLS, sorted(set(through_mcp.calls))
     # The command line prints nothing it has not passed through its output redaction, so the agent's replies
@@ -880,6 +1010,13 @@ def _assert_the_same_declaration(twice: _Twice) -> None:
     assert isinstance(as_printed, dict)
     printed = through_the_command_line.told()
     for part, told in printed.items():
+        if part == "events":
+            different = [
+                (index, agent, person)
+                for index, (agent, person) in enumerate(zip(as_printed[part], told, strict=True))
+                if agent != person
+            ]
+            assert not different, different
         assert as_printed[part] == told, part
     assert through_mcp.exported == through_the_command_line.exported
     assert through_mcp.exported, "the export wrote an empty file"
@@ -887,9 +1024,9 @@ def _assert_the_same_declaration(twice: _Twice) -> None:
     assert through_mcp.verification["granted"] is True
     assert through_mcp.export["evidence_status"] == "local_export_not_official_aeat_filing_evidence"
     # No event on either side says a declaration was presented.
-    assert not [kind for kind, _object in through_mcp.events if kind.startswith("modelo.filed")]
+    assert not [event for event in through_mcp.events if event["event_type"].startswith("modelo.filed")]
 
-    # The one intended difference: an agent's acts are recorded under its session, a person's under the label
+    # The first intended difference: an agent's acts are recorded under its session, a person's under the label
     # the command line supplied. Where neither acted (the profile's own lifecycle) both record the same name.
     assert actor_label_is_an_agents(twice.agent_label) and not actor_label_is_an_agents(_PERSON)
     recorded = list(zip(through_mcp.actors, through_the_command_line.actors, strict=True))
@@ -897,13 +1034,28 @@ def _assert_the_same_declaration(twice: _Twice) -> None:
     assert acted == {(twice.agent_label, _PERSON)}
     assert _PERSON not in through_mcp.actors and twice.agent_label not in through_the_command_line.actors
 
+    # The second: every row was classified by the one who acted, so the stored origin of its classification is
+    # the agent's on one side and the person's on the other. It is read from the store, which no frontend shows.
+    rows = {row.description for row in declaration.rows}
+    assert set(through_mcp.origins) == set(through_the_command_line.origins) == rows
+    assert set(through_mcp.origins.values()) == {"agent"}
+    assert set(through_the_command_line.origins.values()) == {"person"}
+
+    # The notices both sides state about the same step are the same notices. The command line states more of
+    # them, in its own words, than an operation result carries; those are listed in the failure of a step
+    # whose notices the result does state.
+    for step, stated in through_mcp.notices.items():
+        printed = _as_stated(step, through_the_command_line.notices.get(step, []))
+        assert printed == stated, (step, through_the_command_line.notices.get(step))
+    assert through_mcp.notices, "the agent's results stated no notice to compare"
+
 
 def test_a_quarterly_declaration_prepared_through_mcp_alone_equals_the_command_lines(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, authority_operation: PinnedAuthorityOperation
 ) -> None:
-    twice = _prepared_twice(tmp_path, monkeypatch, _QUARTERLY)
+    twice = _prepared_twice(tmp_path, monkeypatch, _QUARTERLY, authority_operation)
 
-    _assert_the_same_declaration(twice)
+    _assert_the_same_declaration(twice, _QUARTERLY)
     told = twice.through_mcp
     # The inputs reached the calculation: both invoices are the quarter's income, and the private purchase is
     # not an expense of the activity.
@@ -916,11 +1068,11 @@ def test_a_quarterly_declaration_prepared_through_mcp_alone_equals_the_command_l
 
 
 def test_an_annual_declaration_prepared_through_mcp_alone_equals_the_command_lines(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, authority_operation: PinnedAuthorityOperation
 ) -> None:
-    twice = _prepared_twice(tmp_path, monkeypatch, _ANNUAL)
+    twice = _prepared_twice(tmp_path, monkeypatch, _ANNUAL, authority_operation)
 
-    _assert_the_same_declaration(twice)
+    _assert_the_same_declaration(twice, _ANNUAL)
     told = twice.through_mcp
     assert Decimal(told.casilla_values["0003"]) == Decimal("24000")
     assert told.export["format"] == "xml-dictionary"

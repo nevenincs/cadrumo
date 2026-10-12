@@ -165,8 +165,16 @@ def require_iso8601_date_unless_blank(raw: str | None) -> date | None:
 
 
 def _iso_date_string(value: str) -> str:
-    """Validate ``value`` as an extended-form ISO-8601 date and return it unchanged."""
-    require_iso8601_date(value)
+    """Validate ``value`` as an extended-form ISO-8601 date and return it unchanged.
+
+    The parser's own wording quotes the text it refused. This runs as a model
+    validator, whose wording reaches callers that never saw the model's input,
+    so the refusal names the rule alone.
+    """
+    try:
+        require_iso8601_date(value)
+    except ValueError:
+        raise ValueError("the value is not an extended-form ISO-8601 calendar date (YYYY-MM-DD)") from None
     return value
 
 

@@ -594,12 +594,14 @@ def test_native_human_generation_is_exact_profile_and_key_cannot_submit_or_read(
                         profile_label="Enrollment tests",
                         output_language=OutputLanguage.ES,
                         open_recovery_client=reject_recovery,
+                        operation_registry=build_production_operation_registry,
                     )
                     api_root = RuntimeWorkbenchRoot(
                         api,
                         profile_label="Enrollment tests",
                         output_language=OutputLanguage.ES,
                         open_recovery_client=reject_recovery,
+                        operation_registry=build_production_operation_registry,
                     )
                     with ThreadPoolExecutor(max_workers=3) as reader:
                         binding = reader.submit(root.load).result(timeout=90)

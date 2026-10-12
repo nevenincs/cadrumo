@@ -84,7 +84,11 @@ _DifferingCasillaIds = Annotated[tuple[CasillaId, ...], Field(max_length=MAX_MOD
 
 def _validate_filing_import_casilla_value(key: CasillaId, lexical: str) -> None:
     """Admit a declared casilla and its finite two-place decimal without coercion."""
-    validated_casilla_id(key, surface="filing record import")
+    try:
+        validated_casilla_id(key, surface="filing record import")
+    except ValueError:
+        # The shared check quotes the key it refused; the refusal here names the rule alone.
+        raise ValueError("filing record import names a casilla that is not a canonical casilla.id") from None
     try:
         value = Decimal(lexical)
     except Exception as exc:  # pragma: no cover - the schema regex closes this input

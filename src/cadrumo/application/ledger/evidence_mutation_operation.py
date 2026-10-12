@@ -112,7 +112,14 @@ class LedgerEvidenceUpdatePatch(BaseModel):
     @field_validator("invoice_date")
     @classmethod
     def _canonical_calendar_date(cls, value: str | None) -> str | None:
-        if value is not None and require_iso8601_date(value).isoformat() != value:
+        if value is None:
+            return value
+        try:
+            canonical = require_iso8601_date(value).isoformat() == value
+        except ValueError:
+            # The shared parser quotes the text it refused; the refusal here names the rule alone.
+            canonical = False
+        if not canonical:
             raise ValueError("invoice_date must be a canonical ISO-8601 calendar date")
         return value
 

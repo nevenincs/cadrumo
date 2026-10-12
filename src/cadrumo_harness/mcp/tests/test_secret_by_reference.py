@@ -14,27 +14,35 @@ from __future__ import annotations
 
 import json
 import logging
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, cast, override
 from uuid import UUID, uuid4
 
 import pytest
 
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.mcp_surfaces import MCP_SURFACES, McpSurfaceName
 from cadrumo.application.operations.secret_submission import OperationSecretRequirement
+from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.runtime.installation_requests import INSTALLATION_ACT_CONTRACTS, InstallationAct
+from cadrumo.application.runtime.operation_access import (
+    RuntimeOperationFinancialInput,
+    RuntimeOperationReply,
+    RuntimeOperationSubmit,
+)
 from cadrumo_harness.mcp import runtime_adapter as mcp_runtime
 from cadrumo_harness.mcp.held_secrets import HELD_SECRET_NAMESPACE, HeldSecretCustody, held_secret_custody
 from cadrumo_harness.mcp.installation_acts import prepare_installation_act
 from cadrumo_harness.mcp.protocol_contract import MCP_TOOL_CATALOGUE, validate_tool_arguments
 from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_harness.mcp.server import build_server
-from cadrumo_harness.mcp.session_acts import SECRET_FIELDS, SessionSecrets
+from cadrumo_harness.mcp.session_acts import SECRET_FIELDS
+from cadrumo_harness.mcp.tests.held_secret_support import call_secrets
 from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
 from cadrumo_harness.mcp.tests.test_execute_typed_input_tool import _AnsweringClient, _export
 
@@ -218,19 +226,6 @@ def test_every_tool_that_takes_a_secret_takes_it_by_reference_too_and_says_which
         assert "`cadrumo-mcp --hold-secret`" in description and "--once" in description, name
 
 
-def _secrets(arguments: dict[str, Any], held: dict[UUID, str]) -> tuple[SessionSecrets, list[UUID]]:
-    """Take the secrets out of one call and read its references from ``held``; return them and each read made."""
-    reads: list[UUID] = []
-
-    def read(reference: UUID) -> bytearray:
-        reads.append(reference)
-        return bytearray(held[reference], "utf-8")
-
-    secrets = SessionSecrets(arguments)
-    secrets.resolve(read)
-    return secrets, reads
-
-
 def test_the_session_tools_secrets_arrive_as_the_same_buffers_in_either_form() -> None:
     current, replacement = uuid4(), uuid4()
     held = {current: _ENTERED, replacement: _OTHER}
@@ -249,14 +244,19 @@ def test_the_session_tools_secrets_arrive_as_the_same_buffers_in_either_form() -
     validate_tool_arguments("session", by_reference)
     validate_tool_arguments("session", typed)
 
-    read_secrets, reads = _secrets(by_reference, held)
-    typed_secrets, typed_reads = _secrets(typed, held)
+    read_secrets, reads = call_secrets(by_reference, held)
+    typed_secrets, typed_reads = call_secrets(typed, held)
 
     assert by_reference == typed == {"action": "change_password"}
-    buffers = read_secrets.require("change_password", *SECRET_FIELDS)
-    assert buffers == typed_secrets.require("change_password", *SECRET_FIELDS)
+    read_secrets.require("change_password", *SECRET_FIELDS)
+    typed_secrets.require("change_password", *SECRET_FIELDS)
+    read_secrets.check()
+    # Checking a call reads nothing; the store is read when the secrets are taken to be sent.
+    assert reads.taken == [] and reads.verified == [current, replacement]
+    buffers = read_secrets.take(*SECRET_FIELDS)
+    assert buffers == typed_secrets.take(*SECRET_FIELDS)
     # A value and its confirmation that name one reference share one read, so a one-use secret fills both.
-    assert reads == [current, replacement] and typed_reads == []
+    assert reads.taken == [current, replacement] and typed_reads.taken == []
     assert buffers[1] is not buffers[2]
     read_secrets.wipe()
     assert [bytes(buffer) for buffer in buffers] == [bytes(len(buffer)) for buffer in buffers]
@@ -271,14 +271,15 @@ def test_a_mixed_call_fills_only_what_was_given_by_reference() -> None:
         "new_secret_confirmation_reference": str(replacement),
     }
 
-    secrets, reads = _secrets(arguments, {replacement: _OTHER})
+    secrets, reads = call_secrets(arguments, {replacement: _OTHER})
 
-    assert [bytes(buffer) for buffer in secrets.require("reset_password", *SECRET_FIELDS)] == [
+    secrets.require("reset_password", *SECRET_FIELDS)
+    assert [bytes(buffer) for buffer in secrets.take(*SECRET_FIELDS)] == [
         _ENTERED_BYTES,
         _OTHER.encode(),
         _OTHER.encode(),
     ]
-    assert reads == [replacement]
+    assert reads.taken == [replacement]
 
 
 @pytest.mark.parametrize(
@@ -292,16 +293,32 @@ def test_a_mixed_call_fills_only_what_was_given_by_reference() -> None:
 def test_a_field_in_both_forms_or_a_malformed_reference_is_refused_before_the_store_is_read(
     arguments: dict[str, Any],
 ) -> None:
-    secrets = SessionSecrets(dict(arguments))
-
-    def unread(_reference: UUID) -> bytearray:
-        raise AssertionError("the store is not read for a call that is refused as it stands")
+    secrets, reads = call_secrets(dict(arguments))
 
     with pytest.raises(ValueError):
-        secrets.resolve(unread)
-    # A reference that was not read cannot stand in for a secret.
+        secrets.check()
+    with pytest.raises(ValueError):
+        secrets.take("secret")
+    assert reads.verified == [] and reads.taken == []
+
+
+def test_a_call_that_gives_a_secret_the_act_does_not_take_or_omits_one_it_does_is_refused_unread() -> None:
+    reference = uuid4()
+    held = {reference: _ENTERED}
+
+    extra, extra_reads = call_secrets({"secret_reference": str(reference)}, held)
+    missing, missing_reads = call_secrets({}, held)
+    empty, empty_reads = call_secrets({"secret": ""}, held)
+
+    with pytest.raises(ValueError, match="storage_check takes no secret field"):
+        extra.require("storage_check")
     with pytest.raises(ValueError, match="sign_in takes secret"):
-        secrets.require("sign_in", "secret")
+        missing.require("sign_in", "secret")
+    with pytest.raises(ValueError, match="sign_in takes secret"):
+        empty.require("sign_in", "secret")
+    # A reference stands in for the secret its field names, and for nothing else.
+    extra.require("sign_in", "secret")
+    assert extra_reads.taken == missing_reads.taken == empty_reads.taken == []
 
 
 def test_an_installation_act_takes_its_passphrase_by_reference_as_the_same_buffer() -> None:
@@ -310,14 +327,17 @@ def test_an_installation_act_takes_its_passphrase_by_reference_as_the_same_buffe
     arguments: dict[str, Any] = {"action": InstallationAct.RECOVERY_ENROLL.value, "secret_reference": str(reference)}
     validate_tool_arguments("installation", arguments)
 
-    secrets, reads = _secrets(arguments, {reference: _ENTERED})
+    secrets, reads = call_secrets(arguments, {reference: _ENTERED})
     prepared = prepare_installation_act(arguments, secrets, MCP_SURFACES[McpSurfaceName.FULL])
 
-    assert reads == [reference] and "secret_reference" not in arguments
-    assert prepared.passphrase is not None and bytes(prepared.passphrase) == _ENTERED_BYTES
+    # Preparing the act reads nothing: the passphrase is read by the call that is about to send it.
+    assert reads.taken == [] and "secret_reference" not in arguments
+    assert prepared.passphrase is not None
+    passphrase = prepared.passphrase()
+    assert reads.taken == [reference] and bytes(passphrase) == _ENTERED_BYTES
     assert _ENTERED not in prepared.request.model_dump_json()
     secrets.wipe()
-    assert not any(prepared.passphrase)
+    assert not any(passphrase)
 
 
 @pytest.mark.anyio
@@ -342,3 +362,135 @@ async def test_a_session_or_installation_call_with_a_reference_that_holds_nothin
         assert refused.structured_content["code"] == "invalid_request"
     # The call that gave both forms read nothing, so the one use is still held.
     assert entered.held() == {once} and adapter.client is None
+
+
+class _InterferedClient(_AnsweringClient):
+    """The admitted lease over a transport that fails or is interfered with when the submission is made."""
+
+    def __init__(
+        self,
+        profile_id: UUID,
+        *,
+        submission_failure: Exception | None = None,
+        on_submission: Callable[[], None] | None = None,
+        secret_answer: Exception | None = None,
+    ) -> None:
+        super().__init__(profile_id, secret_answer=secret_answer)
+        self._submission_failure = submission_failure
+        self._on_submission = on_submission
+
+    @override
+    def operation(self, request: object, *, deadline: float) -> RuntimeOperationReply:
+        if isinstance(request, RuntimeOperationSubmit | RuntimeOperationFinancialInput):
+            if self._on_submission is not None:
+                self._on_submission()
+            if self._submission_failure is not None:
+                self.exchanges.append(request)
+                raise self._submission_failure
+        return super().operation(request, deadline=deadline)
+
+
+@pytest.mark.anyio
+async def test_an_execute_call_refused_before_the_secret_is_sent_leaves_a_one_use_reference_held(
+    entered: _Entered,
+) -> None:
+    reference = entered.hold(single_use=True)
+    refused_by_runtime = _InterferedClient(uuid4(), submission_failure=RuntimeFrontendRefusedError("profile_mismatch"))
+    unreachable = _InterferedClient(
+        uuid4(), submission_failure=RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+    )
+    unchecked = _AnsweringClient(uuid4())
+
+    _wrong_subject_error, wrong_subject = await _execute(
+        unchecked, _export(unchecked, secret_reference=reference, subject_ref="not-the-subject")
+    )
+    _refused_error, refused = await _execute(
+        refused_by_runtime, _export(refused_by_runtime, secret_reference=reference)
+    )
+    _lost_error, lost = await _execute(unreachable, _export(unreachable, secret_reference=reference))
+
+    assert wrong_subject["code"] == "invalid_request" and unchecked.exchanges == []
+    assert refused == {"outcome": "refused", "code": "profile_mismatch"}
+    assert lost["outcome"] == "unresolved" and lost["code"] == RuntimeRefusalCode.CONNECTION_CLOSED.value
+    assert refused_by_runtime.secrets == [] and unreachable.secrets == []
+    # None of the three calls sent the secret, so none spent it.
+    assert entered.held() == {reference}
+
+    sent = _AnsweringClient(uuid4())
+    _sent_error, delivered = await _execute(sent, _export(sent, secret_reference=reference))
+    assert delivered["secret_delivery"] == {"outcome": "delivered"} and entered.store.items == {}
+
+
+@pytest.mark.anyio
+async def test_a_one_use_reference_that_another_call_spent_after_the_check_sends_no_secret(
+    entered: _Entered,
+) -> None:
+    reference = entered.hold(single_use=True)
+    spent: list[bytearray] = []
+    client = _InterferedClient(uuid4(), on_submission=lambda: spent.append(entered.custody.take(UUID(reference))))
+
+    _error, result = await _execute(client, _export(client, secret_reference=reference))
+
+    assert bytes(spent[0]) == _ENTERED_BYTES
+    # The submission is recorded, and says the runtime took no secret and was not asked to start.
+    assert result["outcome"] == "submitted"
+    assert result["secret_delivery"] == {"outcome": "refused", "code": "invalid_request"}
+    assert "start" not in result and client.secrets == []
+
+
+@pytest.mark.anyio
+async def test_a_one_use_secret_is_spent_by_the_call_that_sends_it_even_when_the_send_fails(
+    entered: _Entered,
+) -> None:
+    reference = entered.hold(single_use=True)
+    client = _InterferedClient(uuid4(), secret_answer=RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED))
+
+    _error, result = await _execute(client, _export(client, secret_reference=reference))
+
+    assert result["secret_delivery"] == {"outcome": "unresolved", "code": RuntimeRefusalCode.CONNECTION_CLOSED.value}
+    assert [secret for _requirement, secret in client.secrets] == [_ENTERED_BYTES]
+    assert entered.store.items == {}
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize(
+    ("tool", "action", "fields"),
+    [
+        pytest.param("session", "sign_in", ("secret_reference",), id="sign-in"),
+        pytest.param("session", "resume", ("secret_reference",), id="resume"),
+        pytest.param(
+            "session",
+            "reset_password",
+            ("secret_reference", "new_secret_reference", "new_secret_confirmation_reference"),
+            id="reset-password",
+        ),
+        pytest.param("installation", "recovery_enroll", ("secret_reference",), id="recovery-enroll"),
+    ],
+)
+async def test_a_session_or_installation_call_made_with_no_runtime_running_spends_no_one_use_reference(
+    entered: _Entered, tool: str, action: str, fields: tuple[str, ...]
+) -> None:
+    reference = entered.hold(single_use=True)
+    adapter = RuntimeMcpAdapter(profile_id=None, client=None, resumes_sign_in=True)
+    try:
+        reply = await adapter.call(tool, {"action": action, **dict.fromkeys(fields, reference)})
+    finally:
+        await adapter.close()
+
+    # Refused for want of a runtime, not for the arguments, and the reference is still the person's to spend.
+    assert reply["outcome"] == "refused" and reply["code"] != "invalid_request", reply
+    assert entered.held() == {reference}
+
+
+@pytest.mark.anyio
+async def test_an_installation_call_refused_locally_spends_no_one_use_reference(entered: _Entered) -> None:
+    reference = entered.hold(single_use=True)
+    adapter = RuntimeMcpAdapter(profile_id=None, client=None, resumes_sign_in=True)
+    try:
+        # A read that takes no secret, and a secret of an act that was never asked for.
+        reply = await adapter.call("installation", {"action": "storage_check", "secret_reference": reference})
+    finally:
+        await adapter.close()
+
+    assert reply == _INVALID
+    assert entered.held() == {reference}

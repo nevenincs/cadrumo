@@ -2066,10 +2066,10 @@ tui:
     ledger: Nyilvántartás
     profile: Profil
     installation: Telepítés
-    withholding: Levonások
-    operations: Műveletek
-  home:
     reference: Kézikönyv
+    operations: Műveletek
+    withholding: Levonások
+  home:
     account_fallback: Fiók
     action:
       context_across_records: Minden nyilvántartásra
@@ -2154,8 +2154,6 @@ tui:
       locked: A profil zárolva van
       no_profile: Nincs kiválasztott profil
     title: Kezdőlap
-  ledger:
-    area:
   installation:
     act:
       archive_import:
@@ -2310,6 +2308,8 @@ tui:
       valid: Érvényes.
       classification: Besorolás
       entries: Tételek
+  ledger:
+    area:
       evidence: Bizonylatok
       import: Importálás
       overview: Áttekintés
@@ -3542,8 +3542,6 @@ tui:
       value:
         not_applicable: nem alk.
       was: 'korábban: {value}'
-  restricted:
-    actions: 'Engedélyezett tevékenységek: {values}'
   operations:
     action:
       close: Bezárás
@@ -3577,6 +3575,9 @@ tui:
       profile: Profil
       required: kötelező
       secret: Titok (gépelés közben rejtve, a kéréstől külön kerül elküldésre)
+      replay_key: Ismétlési kulcs (opcionális)
+      replay_key_hint: Küldd el ugyanazt a kulcsot ugyanazzal a kéréssel még egyszer,
+        és az első műveletet kapod vissza új indítása helyett.
       secret_required: Ehhez a művelethez meg kell adnod a titkot. Írd be, és futtasd
         újra. Semmi sem lett elküldve.
       session: Munkamenet
@@ -3689,6 +3690,8 @@ tui:
     title: Referencia
     all_periods: Minden időszak
     availability: 'Elérhetőség - tároló: {storage}; jogosultság: {authority}; szolgáltató:
+  restricted:
+    actions: 'Engedélyezett tevékenységek: {values}'
       {provider}'
     change_user: Felhasználóváltás
     close: Bezárás
@@ -3817,24 +3820,24 @@ tui:
       ledger: Nyilvántartás megnyitása
       profile: Profil megnyitása
       installation: Telepítés megnyitása
-      unknown: Terület megnyitása
-      operations: Műveletek megnyitása
-      withholding: Levonások megnyitása
       reference: Kézikönyv megnyitása
+      operations: Műveletek megnyitása
+      unknown: Terület megnyitása
+      withholding: Levonások megnyitása
     destination_help:
       aeat_sync: Amit az AEAT-tól már beolvastunk, és amit legközelebb be lehet olvasni
       declarations: Bevallások, korábbi számítások, benyújtási előzmények és naptár
       home: Következő teendők, bevallások és határidők egy pillantással
-      ledger: Tételek, ellenőrzés, besorolás és bizonylatok
-      profile: A profil adatai és az azokat kitöltő források
       installation: Tárhely, javítás, visszaállítás és a számítógépen lévő profilok
-      withholding: Számla-levonások rögzítése és megtekintése a kiválasztott adóévben
+      ledger: Tételek, ellenőrzés, besorolás és bizonylatok
       operations: 'A Cadrumo minden futtatható művelete: kereshető, kitölthető és
         futtatható'
-    refusal:
+      profile: A profil adatai és az azokat kitöltő források
       reference: Modelók, rovatok, kategóriák, portálok és bejelentkezési módok
       not_composed: Még nem sikerült minden területet beolvasni.
       refresh_failed: A legutóbbi frissítés nem tudta újraépíteni az indexet.
+      withholding: Számla-levonások rögzítése és megtekintése a kiválasztott adóévben
+    refusal:
       unavailable: A keresés nem érhető el ebben a munkamenetben
       unknown: A keresést nem sikerült előkészíteni.
     result:

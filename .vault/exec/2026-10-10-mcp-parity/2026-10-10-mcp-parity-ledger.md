@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:9fae5fcdacf94fbdeba89eea25ce5b664317f768ac79cf7055282f06cdb120cc'
+body_hash: 'sha256:c11deb328722231b9de4b0c3872927c19aa70a5d65936414edf7185c393616fe'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -2034,6 +2034,84 @@ related:
 - `S55` `verify:` `pytest terminal-interface installation tests (38)` -> `pass`
 - `S55` `verify:` `lint-imports (15 contracts)` -> `pass`
 - `S55` `verify:` `ruff, format and ty on the 25 files` -> `pass`
+- `S39` `M` `src/cadrumo/entrypoints/tests/test_declaration_through_mcp_equals_command_line.py`
+- `S39` `verify:` `pytest harness tool and package suites (478, 3 skipped for the credential store)` -> `pass`
+- `S39` `verify:` `pytest terminal-interface composition root, session, navigation, app, native destinations and operations tests (197, then the two installed-session cases fixed and 18 re-run)` -> `pass`
+- `S39` `verify:` `pytest runtime MCP secret, installation tool, request faults, contract document and validator message tests (50)` -> `pass`
+- `S39` `verify:` `pytest request validator suites after the wording fixes (349)` -> `pass`
+- `S39` `verify:` `pytest command counterpart, command operation and contract tests (792 of 797; four ledger import locale cases answer a local runtime refusal and one crash funnel case finds no traceback, neither path changed here)` -> `pass`
+- `S39` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S39` `verify:` `ruff, format and ty on the 94 files` -> `pass`
+- `S60` `M` `dev/acceptance/review/installed_google_review_tui.py`
+- `S60` `M` `dev/tui/harness/sequences.py`
+- `S60` `M` `src/cadrumo/entrypoints/tui/declarations/tests/test_declarations_installed_create.py`
+- `S60` `M` `src/cadrumo/entrypoints/tui/operations/catalogue.py`
+- `S60` `M` `src/cadrumo/entrypoints/tui/operations/run_screen.py`
+- `S60` `M` `src/cadrumo/entrypoints/tui/operations/tests/test_operation_catalogue.py`
+- `S60` `M` `src/cadrumo/entrypoints/tui/tests/test_operations_destination_native.py`
+- `S60` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_reference_login.py`
+- `S60` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_workbench_native.py`
+- `S60` `verify:` `pytest harness tool and package suites (478, 3 skipped for the credential store)` -> `pass`
+- `S60` `verify:` `pytest terminal-interface composition root, session, navigation, app, native destinations and operations tests (197, then the two installed-session cases fixed and 18 re-run)` -> `pass`
+- `S60` `verify:` `pytest runtime MCP secret, installation tool, request faults, contract document and validator message tests (50)` -> `pass`
+- `S60` `verify:` `pytest request validator suites after the wording fixes (349)` -> `pass`
+- `S60` `verify:` `pytest command counterpart, command operation and contract tests (792 of 797; four ledger import locale cases answer a local runtime refusal and one crash funnel case finds no traceback, neither path changed here)` -> `pass`
+- `S60` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S60` `verify:` `ruff, format and ty on the 94 files` -> `pass`
+- `S61` `M` `src/cadrumo/entrypoints/cli/tests/command_frontend_counterparts.py`
+- `S61` `M` `src/cadrumo/entrypoints/cli/tests/command_operation_reference.py`
+- `S61` `M` `src/cadrumo/entrypoints/cli/tests/test_command_frontend_parity.py`
+- `S61` `M` `src/cadrumo/entrypoints/cli/tests/test_command_operation_reference.py`
+- `S61` `M` `src/cadrumo/entrypoints/tests/operation_contract_document.py`
+- `S61` `M` `src/cadrumo/entrypoints/tests/test_operation_contract_document.py`
+- `S61` `A` `dev/harness_data/__init__.py`
+- `S61` `A` `dev/harness_data/command_operation_reference.py`
+- `S61` `A` `dev/harness_data/operation_contract_document.py`
+- `S61` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S61` `verify:` `pytest harness tool and package suites (478, 3 skipped for the credential store)` -> `pass`
+- `S61` `verify:` `pytest terminal-interface composition root, session, navigation, app, native destinations and operations tests (197, then the two installed-session cases fixed and 18 re-run)` -> `pass`
+- `S61` `verify:` `pytest runtime MCP secret, installation tool, request faults, contract document and validator message tests (50)` -> `pass`
+- `S61` `verify:` `pytest request validator suites after the wording fixes (349)` -> `pass`
+- `S61` `verify:` `pytest command counterpart, command operation and contract tests (792 of 797; four ledger import locale cases answer a local runtime refusal and one crash funnel case finds no traceback, neither path changed here)` -> `pass`
+- `S61` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S61` `verify:` `ruff, format and ty on the 94 files` -> `pass`
+- `S62` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_installation_tool.py`
+- `S62` `M` `src/cadrumo_harness/mcp/held_secrets.py`
+- `S62` `M` `src/cadrumo_harness/mcp/installation_acts.py`
+- `S62` `M` `src/cadrumo_harness/mcp/session_acts.py`
+- `S62` `M` `src/cadrumo_harness/mcp/tests/test_held_secrets.py`
+- `S62` `M` `src/cadrumo_harness/mcp/tests/test_installation_tool.py`
+- `S62` `M` `src/cadrumo_harness/mcp/tests/test_secret_by_reference.py`
+- `S62` `A` `src/cadrumo_harness/mcp/tests/held_secret_support.py`
+- `S62` `verify:` `pytest harness tool and package suites (478, 3 skipped for the credential store)` -> `pass`
+- `S62` `verify:` `pytest terminal-interface composition root, session, navigation, app, native destinations and operations tests (197, then the two installed-session cases fixed and 18 re-run)` -> `pass`
+- `S62` `verify:` `pytest runtime MCP secret, installation tool, request faults, contract document and validator message tests (50)` -> `pass`
+- `S62` `verify:` `pytest request validator suites after the wording fixes (349)` -> `pass`
+- `S62` `verify:` `pytest command counterpart, command operation and contract tests (792 of 797; four ledger import locale cases answer a local runtime refusal and one crash funnel case finds no traceback, neither path changed here)` -> `pass`
+- `S62` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S62` `verify:` `ruff, format and ty on the 94 files` -> `pass`
+- `S63` `M` `src/cadrumo/application/actividad_asset/activity_asset_contracts.py`
+- `S63` `M` `src/cadrumo/application/diagnostics_read_contracts.py`
+- `S63` `M` `src/cadrumo/application/export/google_operation.py`
+- `S63` `M` `src/cadrumo/application/ledger/evidence_mutation_operation.py`
+- `S63` `M` `src/cadrumo/application/ledger/own_account_operation.py`
+- `S63` `M` `src/cadrumo/application/ledger/update_contracts.py`
+- `S63` `M` `src/cadrumo/application/live/iva_remote_state_capture_operation.py`
+- `S63` `M` `src/cadrumo/application/modelo/filing_record_import_contracts.py`
+- `S63` `M` `src/cadrumo/application/modelo/query_read_contracts.py`
+- `S63` `M` `src/cadrumo/core/parsing/dates.py`
+- `S63` `M` `src/cadrumo/domain/calculations/registry/tax_id_format.py`
+- `S63` `M` `src/cadrumo/domain/renta/actividad_asset/election.py`
+- `S63` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_request_faults.py`
+- `S63` `A` `src/cadrumo/entrypoints/tests/request_validator_message_scan.py`
+- `S63` `A` `src/cadrumo/entrypoints/tests/test_request_validator_messages_quote_no_value.py`
+- `S63` `verify:` `pytest harness tool and package suites (478, 3 skipped for the credential store)` -> `pass`
+- `S63` `verify:` `pytest terminal-interface composition root, session, navigation, app, native destinations and operations tests (197, then the two installed-session cases fixed and 18 re-run)` -> `pass`
+- `S63` `verify:` `pytest runtime MCP secret, installation tool, request faults, contract document and validator message tests (50)` -> `pass`
+- `S63` `verify:` `pytest request validator suites after the wording fixes (349)` -> `pass`
+- `S63` `verify:` `pytest command counterpart, command operation and contract tests (792 of 797; four ledger import locale cases answer a local runtime refusal and one crash funnel case finds no traceback, neither path changed here)` -> `pass`
+- `S63` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S63` `verify:` `ruff, format and ty on the 94 files` -> `pass`
 
 ## Notes
 
@@ -2099,3 +2177,8 @@ related:
 - `S61` The registry composes the nine new operations and the installed runtime serves all nineteen acts. The gate over 335 executable commands: 274 submit an operation, 13 send a runtime request or an act, 44 work in process with a declared counterpart, 4 have nothing to share, none is left over; it proves a counterpart exists, and sameness rests on each family's parity test. Each surface name is pinned to its tool list. The entrypoint module inventory was long stale, so its regeneration carries unrelated lines. `profile_host.py` is committed for its two lines only, and the aggregate import inventory without another session's dev lines. Open from this work: five tests of `dev/agent_eval/tests/test_mcp_runtime_authority.py` fail since the authority query was rewritten in S57; they are being repaired next.
 - `S63` Discovery with no session answers from a generated contract document of 279 operations in fifteen parts, split because the repository bounds an added file at 500 KB. A sessionless reply carries session none; a call on a dead or denied lease now answers from the document, while execute, observe and result stay fenced. A fault's location carries payload member names, so for a mapping-typed field it carries its keys; the financial-input path still answers a bare invalid. Not rerun: the strict type lane. A full wheel build was not run; inclusion of the document is shown by the build backend's own file listing. Failing in `dev/agent_eval` and not from this step: two session-lock parity tests, three golden files where the command line reports no runtime, and the suggestion command conformance count.
 - `S55` Reopened by the phase review and closed again. The reset and storage acts run on the root the runtime serves; shown with a runtime over one root while ambient settings name another, whose tree stays byte for byte. In an installed runtime the two cannot differ, since the manager clears the child's environment and pins the root. The command line falls back to in-process work only when the endpoint is absent. An error after a handler's change began settles as failed with effect unknown. Not run on macOS, where a socket left by a crashed runtime reads as indeterminate and the reset says to run again until a runtime clears it.
+- `S39` Review follow-up. The proof asserts the stored origin of a classification as its second intended difference, compares event payloads with identifiers named by role, and compares notices where both sides produce them. Alone: quarterly passed in 155 s and annual in 322 s; one whole-file run lost the command line's cold start to a runtime that was unavailable under other load.
+- `S60` Review follow-up. The Operations form carries an optional replay key for the operations that can take one, derived from the fact the MCP execute tool uses. The terminal interface composes the operation registry once, in the installed session, and hands it down; a gate that only that module composes it passes again.
+- `S61` Review follow-up. Each in-process pair of the counterpart gate names the test that holds the command's output to its counterpart's, and the gate fails if the test does not exist; pairs with no such test are declared unproven with a reason (the bare command and the session-door commands). A reached operation with no access resolver fails the gate; export.google-sheets is the declared exception, a retired template no frontend can submit. The writers of the two generated documents moved to `dev/harness_data;` the render and read logic stays beside the staleness tests because shipped code may not import dev.
+- `S62` Review follow-up. A one-use held secret is taken last, immediately before it is sent, under the store's cross-process lock, so a call refused locally or made with no runtime does not spend it and two processes cannot both receive it. A failed changing act answers as unresolved with the act that reads its outcome.
+- `S63` Review follow-up. A registry-wide test fails on a request validator whose message interpolates anything but a field name or a constant; it found eleven and each now names the field and the rule without the value, among them the tax identity and date parsers many request models share.

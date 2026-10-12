@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field, model_validator
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.period import Period
+from ...core.period import Period, PeriodError
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.renta.actividad_asset.errors import (
     ActividadAssetClaimConflictError,
@@ -192,5 +192,9 @@ class ActivityAssetFilingHandoffRequest(CredentialFreeOperationRequest):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _require_canonical_period(self) -> Self:
-        Period.from_year_and_code(self.tax_year, self.m130_period)
+        try:
+            Period.from_year_and_code(self.tax_year, self.m130_period)
+        except PeriodError:
+            # The period's own wording quotes the year and code it refused; this names the rule alone.
+            raise ValueError("m130_period is not a period code that exists in tax_year") from None
         return self

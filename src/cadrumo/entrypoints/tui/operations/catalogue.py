@@ -42,6 +42,15 @@ class OperationCatalogueEntryV1:
         return self.contract.definition_id
 
     @property
+    def accepts_replay_key(self) -> bool:
+        """Report whether a submission may carry a replay key.
+
+        The typed operator input has no registered request to bind a key to, so
+        the runtime refuses a key there on every frontend.
+        """
+        return not self.typed_operator_input
+
+    @property
     def family(self) -> str:
         """Return the leading segment the operation's identity is grouped under."""
         return self.definition_id.split(".", 1)[0]
@@ -132,14 +141,6 @@ def build_operation_catalogue(registry: OperationRegistry) -> OperationCatalogue
     return OperationCatalogueV1(tuple(entries))
 
 
-def production_operation_registry() -> OperationRegistry:
-    """Compose the registry the runtime serves, whose operations a session may ask it to run."""
-    # Imported on use: composing the registry imports every operation family.
-    from ...operation_composition import build_production_operation_registry
-
-    return build_production_operation_registry()
-
-
 class OperationCatalogueSourceV1:
     """Build the catalogue once, on first use, for every surface that offers operations.
 
@@ -167,5 +168,4 @@ __all__ = [
     "OperationCatalogueSourceV1",
     "OperationCatalogueV1",
     "build_operation_catalogue",
-    "production_operation_registry",
 ]

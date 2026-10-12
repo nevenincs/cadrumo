@@ -66,7 +66,8 @@ give you only the reference it prints. Put that reference in `secret_reference`,
 for the secret argument the action takes, and leave that secret argument out; a
 call gives one form or the other, never both. A secret held that way stays until the
 person deletes it, so keep the reference and use it again after a lock or an
-expiry. One held with `--once` is spent by the first call that presents it. Do not
+expiry. One held with `--once` is spent by the first call that sends it, even
+if that send then fails; a call refused before it is sent leaves it held. Do not
 run `cadrumo-mcp --hold-secret` yourself: it works only at a person's terminal. If
 the person gives you the secret as text anyway, put it in the secret argument of
 that one call and nowhere else, and never repeat it.

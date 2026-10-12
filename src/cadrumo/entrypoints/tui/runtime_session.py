@@ -33,7 +33,7 @@ from .account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1, Accou
 from .components.theme import BASE_CSS, install_cadrumo_themes, tokenised
 from .installation.destination import installation_screen_factory
 from .navigation import TuiDestinationIdV1, TuiScreenContextV1, TuiScreenFactoryV1
-from .operations.catalogue import OperationCatalogueSourceV1, production_operation_registry
+from .operations.catalogue import OperationCatalogueSourceV1
 from .operations.destination import OperationsDestinationV1
 from .reference.destination import reference_screen_factory
 from .secret.automation_requester import RuntimeAutomationRequesterScreen
@@ -98,13 +98,14 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
         client: RuntimeFrontendClient,
         *,
         profile_label: str,
+        operation_registry: Callable[[], OperationRegistry],
         requester_factory: RestrictedRequesterFactory | None = None,
-        operation_registry: Callable[[], OperationRegistry] = production_operation_registry,
     ) -> None:
         """Pin the caller-owned TUI connection without taking ownership of close.
 
-        ``operation_registry`` is composed only when the person opens the
-        operations, and once.
+        ``operation_registry`` is the installed session's, handed down so that
+        this screen composes nothing; it is called only when the person opens
+        the operations.
         """
         super().__init__()
         if client.frontend is not OperationFrontendProjection.TUI or not profile_label:

@@ -55,6 +55,8 @@ from .runtime_controller import RuntimeOperationController
 
 _CONTRACT_READ_SECONDS = 30.0
 _ACTION_MIN_COLUMN_WIDTH = 16
+_REPLAY_KEY_MAX_LENGTH = 256
+"""The longest replay key the operation request model accepts."""
 _UNKNOWN_OUTCOME_CODES = frozenset({RuntimeRefusalCode.DEADLINE_EXCEEDED, RuntimeRefusalCode.CONNECTION_CLOSED})
 """Transport outcomes that leave unknown whether the runtime recorded the submission."""
 
@@ -154,6 +156,13 @@ class OperationRunScreen(Screen[None]):
             whole_request = TextArea("", id="operation-json", classes="operation-json")
             whole_request.display = False
             yield whole_request
+            if entry.accepts_replay_key:
+                yield Static(
+                    f"{tr('tui.operations.form.replay_key')}\n{tr('tui.operations.form.replay_key_hint')}",
+                    classes="operation-field-label",
+                    markup=False,
+                )
+                yield Input(max_length=_REPLAY_KEY_MAX_LENGTH, id="operation-replay-key")
             yield Static("", id="operation-run-notice", markup=False)
             yield Static("", id="operation-result-receipt", markup=False)
             yield Static("", id="operation-result-stopped", markup=False)
@@ -303,6 +312,12 @@ class OperationRunScreen(Screen[None]):
         field.value = ""
         return secret
 
+    def _replay_key(self) -> str | None:
+        """Read the replay key the person entered; an empty field submits without one."""
+        if not self._entry.accepts_replay_key:
+            return None
+        return self.query_one("#operation-replay-key", Input).value.strip() or None
+
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Dispatch the form's own controls."""
         button_id = event.button.id
@@ -360,12 +375,12 @@ class OperationRunScreen(Screen[None]):
         self._submitting = True
         self.query_one("#operation-run", Button).disabled = True
         self._clear_result()
-        self.run_worker(self._submit(payload, subject, secret), group="operation-run-submission")
+        self.run_worker(self._submit(payload, subject, secret, self._replay_key()), group="operation-run-submission")
 
-    async def _submit(self, payload: BaseModel, subject: str, secret: bytearray | None) -> None:
+    async def _submit(self, payload: BaseModel, subject: str, secret: bytearray | None, replay_key: str | None) -> None:
         client, entry = self._client, self._entry
         try:
-            controller = await self._submitted(client, entry, payload, subject, secret)
+            controller = await self._submitted(client, entry, payload, subject, secret, replay_key)
         finally:
             if secret is not None:
                 secret[:] = bytes(len(secret))
@@ -395,6 +410,7 @@ class OperationRunScreen(Screen[None]):
         payload: BaseModel,
         subject: str,
         secret: bytearray | None,
+        replay_key: str | None,
     ) -> RuntimeOperationController | None:
         try:
             live = await await_cancellation_complete(
@@ -415,6 +431,7 @@ class OperationRunScreen(Screen[None]):
                 expected_session_id=client.session_id,
                 financial_input=entry.typed_operator_input,
                 secret=secret,
+                idempotency_key=replay_key,
             )
         except CadrumoError as error:
             self._notice(self._failure_text(error))

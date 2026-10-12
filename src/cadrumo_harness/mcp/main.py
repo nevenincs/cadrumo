@@ -83,7 +83,7 @@ def main() -> None:
     parser.add_argument(
         "--once",
         action="store_true",
-        help="with --hold-secret: the first tool call that presents the reference deletes the secret",
+        help="with --hold-secret: the first tool call that sends the secret spends it and deletes it",
     )
     args = parser.parse_args()
     if args.once and not args.hold_secret:

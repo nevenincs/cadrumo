@@ -13,7 +13,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.period import Period
+from ...core.period import Period, PeriodError
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.query_reports import ModeloBindingQueryRow, ModeloBindingsReport
 from ..operations.models import CredentialFreeOperationRequest
@@ -52,7 +52,11 @@ def _validate_binding_as_of(as_of: date | None, year: int | None) -> None:
 
 def _validate_binding_period(year: int | None, period_code: str | None) -> None:
     if year is not None and period_code is not None:
-        Period.from_year_and_code(year, period_code)
+        try:
+            Period.from_year_and_code(year, period_code)
+        except PeriodError:
+            # The period's own wording quotes the year and code it refused; this names the rule alone.
+            raise ValueError("period_code is not a period code that exists in year") from None
 
 
 @dataclass(frozen=True, slots=True)

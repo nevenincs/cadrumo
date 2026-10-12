@@ -45,7 +45,7 @@ from cadrumo.application.runtime.operation_access import (
 )
 from cadrumo.application.runtime.projection_pages import ProjectionPageRequest
 from cadrumo.application.user_profile.access_contracts import AccessDenialCode
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
+from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.core.time.clock import now
 
 from .operation_contract_cache import OperationContractCache
@@ -72,6 +72,8 @@ class _AdmittedConnection(Protocol):
 
     def held_secret(self, reference: UUID) -> bytearray: ...
 
+    def check_held_secret(self, reference: UUID) -> None: ...
+
 
 @dataclass(frozen=True, slots=True)
 class _Binding:
@@ -82,6 +84,7 @@ class _Binding:
     surface: McpSurface
     admission: McpAdmission
     held_secret: Callable[[UUID], bytearray]
+    check_held_secret: Callable[[UUID], None]
 
 
 type _ToolHandler = Callable[[RuntimeFrontendClient, _Binding, dict[str, Any], float], dict[str, Any]]
@@ -102,7 +105,14 @@ def call_admitted_operation(connection: _AdmittedConnection, name: str, args: di
     handler = _ADMITTED_TOOL_HANDLERS.get(name)
     if handler is None:
         raise ValueError("unsupported tool")
-    binding = _Binding(profile_id, connection._contracts, connection.surface, admission, connection.held_secret)
+    binding = _Binding(
+        profile_id,
+        connection._contracts,
+        connection.surface,
+        admission,
+        connection.held_secret,
+        connection.check_held_secret,
+    )
     return handler(client, binding, args, deadline)
 
 
@@ -186,10 +196,10 @@ def _execute(client: RuntimeFrontendClient, binding: _Binding, args: dict[str, A
     secret_reference = args.pop(f"secret{BY_REFERENCE_SUFFIX}", None)
     description = binding.contracts.description(client, definition_id, deadline=deadline)
     contract = description.contract
-    secret: bytearray | None = None
+    secret: _CallSecret | None = None
     try:
         try:
-            secret = _typed_secret(contract, secret_text, secret_reference, binding.held_secret)
+            secret = _typed_secret(contract, secret_text, secret_reference, binding)
             submission = _submission(client, contract, args)
         except _ContractRefusedError as refused:
             # Nothing was submitted, and the wording quotes only the public contract.
@@ -236,7 +246,7 @@ def _execute(client: RuntimeFrontendClient, binding: _Binding, args: dict[str, A
         return response
     finally:
         if secret is not None:
-            secret[:] = bytes(len(secret))
+            secret.wipe()
 
 
 _FAULTS_COVER: Final = (
@@ -283,18 +293,42 @@ class _ContractRefusedError(ValueError):
     """The call does not fit what its operation's contract declares."""
 
 
+class _CallSecret:
+    """The typed secret of one call: its text, or a reference that is read only when the secret is sent.
+
+    Reading a secret held for one use spends it, so a reference is read by
+    ``take`` alone, which the delivery calls once everything else has passed.
+    """
+
+    def __init__(self, *, text: str | None, reference: UUID | None, read: Callable[[UUID], bytearray]) -> None:
+        self._buffer = None if text is None else bytearray(text, "utf-8")
+        self._reference = reference
+        self._read = read
+
+    def take(self) -> bytearray:
+        """Return the secret's buffer, reading it from the store if it was given by reference."""
+        if self._buffer is None:
+            if self._reference is None:
+                raise ValueError("no secret was given")
+            self._buffer = self._read(self._reference)
+        return self._buffer
+
+    def wipe(self) -> None:
+        """Overwrite the buffer, if one was ever filled."""
+        if self._buffer is not None:
+            self._buffer[:] = bytes(len(self._buffer))
+
+
 def _typed_secret(
-    contract: OperationPublicDefinitionContractV1,
-    text: object,
-    reference: object,
-    held_secret: Callable[[UUID], bytearray],
-) -> bytearray | None:
-    """Hold the call to the typed secret its contract declares, and return one that belongs as a buffer.
+    contract: OperationPublicDefinitionContractV1, text: object, reference: object, binding: _Binding
+) -> _CallSecret | None:
+    """Hold the call to the typed secret its contract declares, and return the one that belongs.
 
     Given as text, the bytes are its UTF-8 encoding, which is what the
     command line sends for the same operation. Given by reference, they are
-    the bytes held under it in the credential store, read here only once the
-    contract is known to take them.
+    the bytes held under it in the credential store. The store is asked here
+    only whether something is held, once the contract is known to take it; the
+    secret is read, and spent if it was held for one use, when it is sent.
     """
     if not contract.ephemeral_secret_required:
         if text is not None or reference is not None:
@@ -303,24 +337,29 @@ def _typed_secret(
     if reference is not None:
         if text is not None:
             raise _ContractRefusedError("secret is given as text or by reference, not both")
-        return held_secret(UUID(str(reference)))
+        held = UUID(str(reference))
+        binding.check_held_secret(held)
+        return _CallSecret(text=None, reference=held, read=binding.held_secret)
     if not isinstance(text, str) or not text:
         raise _ContractRefusedError("secret is required: this operation's contract says ephemeral_secret_required")
-    return bytearray(text, "utf-8")
+    return _CallSecret(text=text, reference=None, read=binding.held_secret)
 
 
 def _deliver_secret(
     client: RuntimeFrontendClient,
     submitted: RuntimeOperationSubmitted,
     submission: RuntimeOperationSubmit | RuntimeOperationFinancialInput,
-    secret: bytearray | None,
+    secret: _CallSecret | None,
     deadline: float,
 ) -> dict[str, Any]:
     """Hand the typed secret to the exact wait its submission opened, on the protected secret frame.
 
     The submission is already durable, so every outcome keeps its receipt: a
     refusal says the runtime took no secret, and anything else that goes
-    wrong leaves unknown whether it did.
+    wrong leaves unknown whether it did. A secret given by reference is read
+    here, after the wait it is for has been matched and immediately before it
+    is sent, so a call that never gets this far spends none. Once read, a
+    secret held for one use is spent whether or not the send succeeds.
     """
     requirement = submitted.receipt.secret_requirement
     if (
@@ -333,8 +372,13 @@ def _deliver_secret(
         # The runtime's wait and the contract this call was held to disagree, so nothing is sent.
         return {"outcome": "refused", "code": RuntimeRefusalCode.INVALID_FRAME.value}
     try:
+        buffer = secret.take()
+    except (ValueError, AutomationCustodyError) as unavailable:
+        # Another call took it between the check and now, or the store cannot be read: nothing was sent.
+        return {"outcome": "refused", "code": refusal_code(unavailable)}
+    try:
         acknowledged = client.submit_secret(
-            requirement, secret, timeout=min(_SECRET_DELIVERY_TIMEOUT, remaining_budget(deadline))
+            requirement, buffer, timeout=min(_SECRET_DELIVERY_TIMEOUT, remaining_budget(deadline))
         )
         if acknowledged.operation_id != submitted.receipt.operation_id:
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)

@@ -9,10 +9,12 @@ document the agent consults, so no skill carries a tool route of its own that
 could drift from the command it stands beside.
 
 The recorded join and the declared counterparts are the authority and the
-reference is their copy. Run this module to write the reference again after
-either changes::
+reference is their copy. Write the reference again after either changes::
 
-    python -m cadrumo.entrypoints.cli.tests.command_operation_reference
+    python -m dev.harness_data.command_operation_reference
+
+This module renders and reads the reference, so the tests that hold it to the
+join can; the command above is the one thing that writes it.
 """
 
 from __future__ import annotations
@@ -23,7 +25,6 @@ from typing import Final
 
 from ....application.operator_surface.command_operations import CommandOperationJoin
 from ....tests.inventory import SRC_CADRUMO
-from ..operator_surface_reconciliation import recorded_command_operation_join
 from .command_frontend_counterparts import ToolRoute, other_frontend_routes
 
 REFERENCE_PATH: Final[Path] = (
@@ -166,16 +167,3 @@ def read_command_tool_routes(text: str) -> dict[str, tuple[ToolRoute, ...]]:
             () if routed == NO_ROUTE else tuple(_read_route(item) for item in routed.split(_ROUTE_SEPARATOR))
         )
     return routes
-
-
-def main() -> int:
-    """Write the reference from the recorded join."""
-    join = recorded_command_operation_join()
-    REFERENCE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    REFERENCE_PATH.write_text(render_command_operation_reference(join), encoding="utf-8", newline="\n")
-    print(f"wrote {REFERENCE_PATH} ({len(join.commands)} commands)")
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

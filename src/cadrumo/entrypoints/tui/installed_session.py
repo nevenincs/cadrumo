@@ -25,7 +25,11 @@ from ...adapters.local_runtime.runtime_client import open_installed_runtime_clie
 from ...adapters.local_runtime.runtime_credentials import open_installed_credential_client
 from ...adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
 from ...adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from ...application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
+from ...application.operations.registry import (
+    OperationFrontendProjection,
+    OperationPublicContractSetV1,
+    OperationRegistry,
+)
 from ...application.operator_output.runtime_remedies import runtime_unavailable_remedy
 from ...application.runtime.contracts import RuntimeRefusalError
 from ...application.user_profile.login_interaction import (
@@ -164,12 +168,15 @@ async def _open_credential_client(
 async def _run_runtime_session(
     inventory: ProfileLoginInventoryV1,
     *,
-    operation_contracts: Callable[[], OperationPublicContractSetV1],
+    operation_registry: Callable[[], OperationRegistry],
     choose_profile: bool,
     headless: bool,
     auto_pilot: AutopilotCallbackType | None,
 ) -> AccountRecomposeRequiredV1 | None:
     """Own login, one immutable root and its cleanup before any fresh choice."""
+
+    def operation_contracts() -> OperationPublicContractSetV1:
+        return operation_registry().public_contract_set
 
     def requester_for_login(profile_id: UUID) -> RuntimeAutomationRequesterScreen:
         return RuntimeAutomationRequesterScreen(
@@ -224,6 +231,7 @@ async def _run_runtime_session(
             app = RuntimeRestrictedSessionApp(
                 handoff.client,
                 profile_label=handoff.profile_label,
+                operation_registry=operation_registry,
                 requester_factory=requester_for_api,
             )
             return await app.run_async(headless=headless, auto_pilot=auto_pilot)
@@ -247,6 +255,7 @@ async def _run_runtime_session(
             profile_label=handoff.profile_label,
             output_language=OutputLanguage(output_language()),
             open_recovery_client=open_recovery_client,
+            operation_registry=operation_registry,
             requester_factory=requester_for_human,
         )
         return await run_precomposed_runtime_root_session(load_root=root.load, headless=headless, auto_pilot=auto_pilot)
@@ -292,7 +301,7 @@ def _runtime_session_refusal(error: RuntimeFrontendRefusedError | RuntimeRefusal
 
 def _attempt_runtime_session(
     inventory: ProfileLoginInventoryV1,
-    operation_contracts: Callable[[], OperationPublicContractSetV1],
+    operation_registry: Callable[[], OperationRegistry],
     choose_profile: bool,
     headless: bool,
     auto_pilot: AutopilotCallbackType | None,
@@ -301,7 +310,7 @@ def _attempt_runtime_session(
         return asyncio.run(
             _run_runtime_session(
                 inventory,
-                operation_contracts=operation_contracts,
+                operation_registry=operation_registry,
                 choose_profile=choose_profile,
                 headless=headless,
                 auto_pilot=auto_pilot,
@@ -322,15 +331,16 @@ def run_installed_workbench_session(
     autopilot may drive the same real login and root screens used interactively.
     Profile switching discards the former connection before rereading choices.
     """
-    contracts: OperationPublicContractSetV1 | None = None
+    registry: OperationRegistry | None = None
 
-    def operation_contracts() -> OperationPublicContractSetV1:
-        nonlocal contracts
-        if contracts is None:
+    def operation_registry() -> OperationRegistry:
+        """Compose the registry once, on first use: it is the one place this interface does."""
+        nonlocal registry
+        if registry is None:
             from ..operation_composition import build_production_operation_registry
 
-            contracts = build_production_operation_registry().public_contract_set
-        return contracts
+            registry = build_production_operation_registry()
+        return registry
 
     choose_profile = False
     with profile_adapter_composition():
@@ -364,7 +374,7 @@ def run_installed_workbench_session(
                 return SESSION_COMPLETED
             recompose = _attempt_runtime_session(
                 inventory,
-                operation_contracts,
+                operation_registry,
                 choose_profile,
                 headless,
                 auto_pilot,

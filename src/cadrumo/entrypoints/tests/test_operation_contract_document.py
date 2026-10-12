@@ -40,7 +40,7 @@ from .operation_contract_document import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_REGENERATE = "write it again with: python -m cadrumo.entrypoints.tests.operation_contract_document"
+_REGENERATE = "write it again with: python -m dev.harness_data.operation_contract_document"
 
 
 @cache

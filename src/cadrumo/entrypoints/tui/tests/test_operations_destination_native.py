@@ -98,6 +98,9 @@ _VIEW = "user-profile.view"
 _RECIPIENT_ADD = "config.collab.recipient.add"
 _RECIPIENT_LIST = "config.collab.recipient.list"
 _GUARDED_OPERATION = "auth.certificate.secret.set"
+_TYPED_INPUT_OPERATION = "modelo.edit.apply"
+_REPLAY_KEY = "tui-operations-replay-key-synthetic"
+_REPLAY_KEY_FIELD = "#operation-replay-key"
 _SETTLE_SECONDS = 180
 
 
@@ -135,6 +138,11 @@ def _text(widget: Static) -> str:
 
 def _field(run: OperationRunScreen, name: str) -> str:
     return f"#operation-field-{[field.name for field in run._fields].index(name)}"
+
+
+def _operation_id(run: OperationRunScreen) -> str:
+    """Read the operation a settled run's receipt names."""
+    return _text(run.query_one("#operation-result-receipt", Static)).splitlines()[0].rsplit(": ", 1)[1]
 
 
 def _rendered(app: App[None]) -> str:
@@ -201,6 +209,10 @@ class _McpConnection:
         return self.client
 
     def held_secret(self, reference: UUID) -> bytearray:
+        """Answer as a connection that holds nothing under any reference."""
+        raise ValueError("no secret is held under that reference")
+
+    def check_held_secret(self, reference: UUID) -> None:
         """Answer as a connection that holds nothing under any reference."""
         raise ValueError("no secret is held under that reference")
 
@@ -358,6 +370,28 @@ async def _journey(
         assert _RECIPIENT in json.dumps(_result(run))
         assert _RECIPIENT_KEY in json.dumps(_result(run))
         listed_by_form = _text(run.query_one("#operation-result-receipt", Static)).splitlines()[0].rsplit(": ", 1)[1]
+        await _close(pilot, run, listing)
+
+        # A replay key: the same key from the form names the same operation, no key starts another one, and an
+        # operation that takes the typed operator input has no field to enter one in.
+        run = await _open(pilot, listing, _RECIPIENT_LIST)
+        run.query_one(_REPLAY_KEY_FIELD, Input).value = f"  {_REPLAY_KEY}  "
+        await _run(pilot, run)
+        first_keyed = _operation_id(run)
+        await _close(pilot, run, listing)
+        run = await _open(pilot, listing, _RECIPIENT_LIST)
+        run.query_one(_REPLAY_KEY_FIELD, Input).value = _REPLAY_KEY
+        await _run(pilot, run)
+        assert _operation_id(run) == first_keyed
+        await _close(pilot, run, listing)
+        run = await _open(pilot, listing, _RECIPIENT_LIST)
+        assert not run.query_one(_REPLAY_KEY_FIELD, Input).value
+        await _run(pilot, run)
+        unkeyed = _operation_id(run)
+        assert unkeyed not in {first_keyed, listed_by_form}
+        await _close(pilot, run, listing)
+        run = await _open(pilot, listing, _TYPED_INPUT_OPERATION)
+        assert not run.query(_REPLAY_KEY_FIELD)
         await _close(pilot, run, listing)
 
         # An operation with a one-shot secret: without the secret nothing is sent; with it, it travels and settles.

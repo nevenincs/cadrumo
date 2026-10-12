@@ -10,8 +10,10 @@ from __future__ import annotations
 import getpass
 import io
 import sys
+import threading
 from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import suppress
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import override
@@ -448,7 +450,7 @@ def test_a_secret_entered_for_one_use_is_deleted_by_the_call_that_takes_it(tmp_p
 
     status, written, _errors = _enter(custody, _Typed(_ENTERED, _ENTERED), single_use=True)
 
-    assert status == 0 and "deleted by the first tool call" in written
+    assert status == 0 and "spends it" in written
     (entry,) = custody.entries()
     assert entry.single_use and entry.entered
     assert bytes(custody.take(entry.reference)) == _ENTERED.encode()
@@ -456,6 +458,62 @@ def test_a_secret_entered_for_one_use_is_deleted_by_the_call_that_takes_it(tmp_p
         custody.take(entry.reference)
     assert spent.value.reason is AutomationCustodyCode.MISSING
     assert store.items == {}
+
+
+class _ReadsMeetBeforeAnyDeletion(MemoryNativePort):
+    """A store whose reads of a held secret wait for each other, so callers that do not exclude one another collide."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.meeting: threading.Barrier | None = None
+
+    @override
+    def read(self, namespace: str, account: str) -> SecretBytes | None:
+        found = super().read(namespace, account)
+        if self.meeting is not None and namespace == HELD_SECRET_NAMESPACE and found is not None:
+            # Excluded callers never meet here, so the one inside gives up waiting for the other.
+            with suppress(threading.BrokenBarrierError):
+                self.meeting.wait(timeout=1.0)
+        return found
+
+
+def test_of_two_callers_racing_for_a_one_use_secret_exactly_one_receives_it(tmp_path: Path) -> None:
+    store = _ReadsMeetBeforeAnyDeletion()
+    held = _custody(store, tmp_path).hold_entered(label=_LABEL, secret=bytearray(_ENTERED, "utf-8"), single_use=True)
+    store.meeting = threading.Barrier(2)
+    start = threading.Barrier(2)
+
+    def race(_caller: int) -> bytearray | AutomationCustodyCode:
+        # Each caller is its own server process: its own custody over the same store, root and lock.
+        custody = HeldSecretCustody(store, root=tmp_path, scratch=tmp_path)
+        start.wait(timeout=5)
+        try:
+            return custody.take(held.reference)
+        except AutomationCustodyError as refused:
+            return refused.reason
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        outcomes = list(pool.map(race, range(2)))
+
+    received = [outcome for outcome in outcomes if isinstance(outcome, bytearray)]
+    assert [bytes(secret) for secret in received] == [_ENTERED.encode()]
+    assert outcomes.count(AutomationCustodyCode.MISSING) == 1
+    assert store.items == {}
+
+
+def test_verifying_a_one_use_secret_spends_nothing(tmp_path: Path) -> None:
+    store = MemoryNativePort()
+    custody = _custody(store, tmp_path)
+    held = custody.hold_entered(label=_LABEL, secret=bytearray(_ENTERED, "utf-8"), single_use=True)
+
+    custody.verify(held.reference)
+    custody.verify(held.reference)
+
+    assert _held(store) == {str(held.reference)}
+    with pytest.raises(AutomationCustodyError) as absent:
+        custody.verify(uuid4())
+    assert absent.value.reason is AutomationCustodyCode.MISSING
+    assert bytes(custody.take(held.reference)) == _ENTERED.encode()
 
 
 def test_a_one_use_secret_that_cannot_be_deleted_is_given_to_nobody(tmp_path: Path) -> None:

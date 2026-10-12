@@ -38,6 +38,7 @@ from cadrumo.application.user_profile.access_contracts import (
     SessionKind,
 )
 from cadrumo.application.user_profile.login_interaction import ProfileLoginChoice
+from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.runtime.profile_connections import RuntimeProfileConnections
 from cadrumo.entrypoints.tui.runtime_admission import runtime_login_session
 from cadrumo.entrypoints.tui.runtime_session import RuntimeRestrictedSessionApp
@@ -204,7 +205,9 @@ def test_stored_reference_enters_restricted_shell_without_human_fallback(tmp_pat
                             api = tuple(item for item in sessions if item.session_id == handoff.client.session_id)
                             assert len(api) == 1 and api[0].kind is SessionKind.API_KEY
                             await RuntimeRestrictedSessionApp(
-                                handoff.client, profile_label=handoff.profile_label
+                                handoff.client,
+                                profile_label=handoff.profile_label,
+                                operation_registry=build_production_operation_registry,
                             ).run_async(headless=True, auto_pilot=drive_restricted)
                         async with runtime_login_session(
                             choices=choices,

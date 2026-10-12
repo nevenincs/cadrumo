@@ -1,18 +1,25 @@
 """Whatever a command does, the terminal interface and MCP can ask for the same work.
 
-Every executable command of the live tree is held to one of four ways of
-reaching the other frontends: it submits a registered operation; it sends a
-runtime request or an installation act; it works in the command-line process
-and a declared operation, installation act or ``authority`` query does the
-same work; or it has no work to share, and says why. A command in none of the
-four does work only the command line can do, and fails here by name.
+Every executable command of the live tree is held to each of four ways of
+reaching the other frontends that applies to it: it submits a registered
+operation; it sends a runtime request or an installation act; it works in the
+command-line process and a declared operation, installation act or ``authority``
+query does the same work; or it has no work to share, and says why. A command
+that submits in one mode and works in process in another is held to both. A
+command in none of the four does work only the command line can do, and fails
+here by name.
 
 The first two ways are read from the recorded command table, which the tests
 beside this one hold to the live handlers and registry. The third and fourth
 are declared, and the declarations are held here to the live registry, the
 table of installation acts and the harness's own tools, in both directions: a
 counterpart that does not exist fails, and so does an installation act or a
-registered operation that no command reaches and nothing accounts for.
+registered operation that no command reaches and nothing accounts for. Each
+declared pair also names the test that runs the command and its counterpart
+and compares what they return. That test must exist, and a pair no test
+compares says so, so that the pairs nothing proves stay a visible list. An
+operation a command submits or serves must be one the runtime can admit, or be
+declared with the reason it cannot.
 
 No count is a pass condition. The assertions are about membership, so a tree
 that gains a command, an operation or an act changes what is checked and
@@ -23,11 +30,20 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from functools import cache
+from pathlib import Path
+from typing import NoReturn
 
 import pytest
 
 from cadrumo_harness.mcp.protocol_contract import MCP_TOOL_CATALOGUE
 
+from ....application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
+from ....application.auth.read_operation import build_auth_read_definition, build_auth_read_registration
+from ....application.export.google_operation import (
+    build_google_sheets_export_operation_definition,
+    build_google_sheets_export_operation_registration,
+)
+from ....application.operations.registry import OperationRegistry
 from ....application.operator_surface.command_operations import CommandOperationJoin, CommandOperations
 from ....application.operator_surface.command_ports import CommandNodeKind
 from ....application.runtime.installation_requests import INSTALLATION_ACT_CONTRACTS, InstallationAct
@@ -43,14 +59,20 @@ from .command_frontend_counterparts import (
     INSTALLATION_ACTS_WITHOUT_A_COMMAND,
     INSTALLATION_TOOL,
     OPERATIONS_WITHOUT_A_COMMAND,
+    OPERATIONS_WITHOUT_AN_ACCESS_RESOLVER,
     SESSION_DOOR_COMMAND_TOOLS,
     SESSION_TOOL,
     CommandReach,
+    Counterpart,
     ToolRoute,
-    command_reach,
+    Unproven,
+    command_reaches,
+    operations_without_an_access_resolver,
     other_frontend_routes,
+    proof_finding,
     reach_of_every_command,
     requests_beyond_admission,
+    unproven_pairs,
 )
 from .command_operation_derivation import PROFILE_ADMISSION_ACTION, CliPath
 
@@ -62,6 +84,10 @@ _SELECTOR_ARGUMENT: Mapping[str, str] = {
     SESSION_TOOL: "action",
 }
 """The argument through which each of these tools is told which piece of work to do."""
+
+
+def _unused_port(*_args: object, **_kwargs: object) -> NoReturn:
+    raise AssertionError("no executor runs in a registry that is only read")
 
 
 @cache
@@ -125,7 +151,8 @@ def test_every_executable_command_reaches_the_other_frontends_or_has_no_work_to_
         "these commands submit nothing, send nothing and declare no counterpart, so the terminal interface "
         f"and MCP cannot do what they do: {unreached}"
     )
-    assert sum(len(paths) for paths in reach.values()) == len(_rows())
+    for cli_path in _rows():
+        assert sum(cli_path in paths for paths in reach.values()) >= 1, _spelled(cli_path)
     for populated in (
         CommandReach.SUBMITS_OPERATION,
         CommandReach.SENDS_RUNTIME_REQUEST,
@@ -142,29 +169,56 @@ def test_admission_to_a_profile_alone_is_not_read_as_reaching_the_runtime() -> N
         cli_path=("config", "example"), runtime_requests=(PROFILE_ADMISSION_ACTION, "session_inventory")
     )
 
-    assert command_reach(admitted_only, in_process={}, no_work={}) is CommandReach.UNREACHED
-    assert command_reach(sends, in_process={}, no_work={}) is CommandReach.SENDS_RUNTIME_REQUEST
+    assert command_reaches(admitted_only, in_process={}, no_work={}) == (CommandReach.UNREACHED,)
+    assert command_reaches(sends, in_process={}, no_work={}) == (CommandReach.SENDS_RUNTIME_REQUEST,)
 
 
-def test_the_reading_takes_each_way_in_turn_and_names_a_command_no_way_covers() -> None:
-    """A planted command of each kind is read as that kind, and one with nothing is read as unreached."""
+def test_the_reading_names_every_way_a_command_reaches_and_one_no_way_covers() -> None:
+    """A planted command of each kind is read as that kind, one with two ways as both, and one with none as unreached."""
     submits = CommandOperations(cli_path=("a",), operation_ids=("ledger.list",))
     sends = CommandOperations(cli_path=("b",), runtime_requests=("storage_check",))
     paired = CommandOperations(cli_path=("c",))
     idle = CommandOperations(cli_path=("d",))
     alone = CommandOperations(cli_path=("e",))
-    in_process: dict[CliPath, tuple[ToolRoute, ...]] = {("c",): (ToolRoute(EXECUTE_TOOL, "ledger.list"),), ("z",): ()}
+    both = CommandOperations(cli_path=("f",), operation_ids=("ledger.list",))
+    served = Counterpart((ToolRoute(EXECUTE_TOOL, "ledger.list"),), Unproven("planted"))
+    in_process: dict[CliPath, Counterpart] = {
+        ("c",): served,
+        ("f",): served,
+        ("z",): Counterpart((), Unproven("planted")),
+    }
     no_work: dict[CliPath, str] = {("d",): "prints its own help"}
 
-    assert command_reach(submits, in_process=in_process, no_work=no_work) is CommandReach.SUBMITS_OPERATION
-    assert command_reach(sends, in_process=in_process, no_work=no_work) is CommandReach.SENDS_RUNTIME_REQUEST
-    assert command_reach(paired, in_process=in_process, no_work=no_work) is CommandReach.WORKS_IN_PROCESS
-    assert command_reach(idle, in_process=in_process, no_work=no_work) is CommandReach.NO_WORK_TO_SHARE
-    assert command_reach(alone, in_process=in_process, no_work=no_work) is CommandReach.UNREACHED
-    # A row that names no counterpart pairs the command with nothing.
-    assert command_reach(CommandOperations(cli_path=("z",)), in_process=in_process, no_work=no_work) is (
-        CommandReach.UNREACHED
+    assert command_reaches(submits, in_process=in_process, no_work=no_work) == (CommandReach.SUBMITS_OPERATION,)
+    assert command_reaches(sends, in_process=in_process, no_work=no_work) == (CommandReach.SENDS_RUNTIME_REQUEST,)
+    assert command_reaches(paired, in_process=in_process, no_work=no_work) == (CommandReach.WORKS_IN_PROCESS,)
+    assert command_reaches(idle, in_process=in_process, no_work=no_work) == (CommandReach.NO_WORK_TO_SHARE,)
+    assert command_reaches(alone, in_process=in_process, no_work=no_work) == (CommandReach.UNREACHED,)
+    assert command_reaches(both, in_process=in_process, no_work=no_work) == (
+        CommandReach.SUBMITS_OPERATION,
+        CommandReach.WORKS_IN_PROCESS,
     )
+    # A row that names no counterpart pairs the command with nothing.
+    assert command_reaches(CommandOperations(cli_path=("z",)), in_process=in_process, no_work=no_work) == (
+        CommandReach.UNREACHED,
+    )
+
+
+def test_a_command_that_submits_an_operation_and_works_in_process_is_held_to_both() -> None:
+    """The real tree's commands with an operation row and an in-process row are read in both ways."""
+    rows = _rows()
+    both = sorted(
+        cli_path
+        for cli_path, row in rows.items()
+        if row.operation_ids and IN_PROCESS_COMMAND_COUNTERPARTS.get(cli_path) is not None
+    )
+    reach = reach_of_every_command(rows.values())
+
+    assert both, "no command both submits an operation and works in process; the reading has lost a whole kind"
+    for cli_path in both:
+        assert cli_path in reach[CommandReach.SUBMITS_OPERATION], _spelled(cli_path)
+        assert cli_path in reach[CommandReach.WORKS_IN_PROCESS], _spelled(cli_path)
+        assert other_frontend_routes(rows[cli_path]), _spelled(cli_path)
 
 
 # -- the declarations name live things -------------------------------------------
@@ -191,16 +245,16 @@ def test_every_declared_counterpart_and_tool_route_exists() -> None:
     findings = {
         f"{_spelled(cli_path)} -> {route.tool} {route.selector or ''}".rstrip(): finding
         for declared in (IN_PROCESS_COMMAND_COUNTERPARTS, SESSION_DOOR_COMMAND_TOOLS)
-        for cli_path, routes in declared.items()
-        for route in routes
+        for cli_path, pair in declared.items()
+        for route in pair.routes
         if (finding := _route_finding(route)) is not None
     }
     assert not findings, f"declared routes that lead nowhere: {findings}"
     empty = sorted(
         _spelled(cli_path)
         for declared in (IN_PROCESS_COMMAND_COUNTERPARTS, SESSION_DOOR_COMMAND_TOOLS)
-        for cli_path, routes in declared.items()
-        if not routes
+        for cli_path, pair in declared.items()
+        if not pair.routes
     )
     assert not empty, f"declared rows that name no route: {empty}"
 
@@ -258,7 +312,7 @@ def test_every_command_that_reaches_the_other_frontends_has_a_tool_route() -> No
     without_a_route = sorted(
         _spelled(row.cli_path)
         for row in _join().commands
-        if command_reach(row) not in {CommandReach.NO_WORK_TO_SHARE, CommandReach.UNREACHED}
+        if set(command_reaches(row)) - {CommandReach.NO_WORK_TO_SHARE, CommandReach.UNREACHED}
         and not row.operation_ids
         and not other_frontend_routes(row)
     )
@@ -271,8 +325,8 @@ def test_every_command_that_reaches_the_other_frontends_has_a_tool_route() -> No
 def _paired(tool: str) -> frozenset[str]:
     return frozenset(
         route.selector
-        for routes in IN_PROCESS_COMMAND_COUNTERPARTS.values()
-        for route in routes
+        for pair in IN_PROCESS_COMMAND_COUNTERPARTS.values()
+        for route in pair.routes
         if route.tool == tool and route.selector is not None
     )
 
@@ -321,3 +375,96 @@ def test_every_registered_operation_is_submitted_by_a_command_or_serves_the_work
     assert not unreached_siblings, (
         f"named as the command line's way to the same records, but no command submits them: {unreached_siblings}"
     )
+
+
+# -- every pair says what holds the command to its counterpart ---------------------
+
+
+def test_every_declared_pair_names_a_test_that_exists_or_says_that_none_compares_it() -> None:
+    """A proof is a test function that exists in a file that exists; the absence of one is stated with a reason."""
+    findings: dict[str, str] = {}
+    for name, declared in (
+        ("in-process counterparts", IN_PROCESS_COMMAND_COUNTERPARTS),
+        ("session and key tools", SESSION_DOOR_COMMAND_TOOLS),
+    ):
+        for cli_path, pair in declared.items():
+            if isinstance(pair.proof, Unproven):
+                if not pair.proof.reason.strip():
+                    findings[f"{name}: {_spelled(cli_path)}"] = "says no test compares it, and gives no reason"
+            elif (finding := proof_finding(pair.proof)) is not None:
+                findings[f"{name}: {_spelled(cli_path)}"] = f"proof {pair.proof} {finding}"
+    assert not findings, f"pairs whose proof is not a test that exists: {findings}"
+    proven = [pair for pair in IN_PROCESS_COMMAND_COUNTERPARTS.values() if isinstance(pair.proof, str)]
+    assert proven, "no in-process pair names a test; the proofs have been lost"
+
+
+def test_a_proof_that_names_no_test_is_found(tmp_path: Path) -> None:
+    """A malformed proof, a missing file, a file that is not Python and a test the file lacks are each named."""
+    (tmp_path / "test_present.py").write_text(
+        "def test_defined():\n    pass\n\nclass TestGrouped:\n    def test_inside(self):\n        pass\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "test_broken.py").write_text("def test_defined(:\n", encoding="utf-8")
+
+    assert proof_finding("test_present.py::test_defined", root=tmp_path) is None
+    assert proof_finding("test_present.py", root=tmp_path) is not None
+    assert proof_finding("test_present.py::", root=tmp_path) is not None
+    assert proof_finding("test_present.py::test_defined[param]", root=tmp_path) is not None
+    assert proof_finding("test_present.py::test_missing", root=tmp_path) is not None
+    assert proof_finding("test_present.py::test_inside", root=tmp_path) is not None
+    assert proof_finding("test_absent.py::test_defined", root=tmp_path) is not None
+    assert proof_finding("test_broken.py::test_defined", root=tmp_path) is not None
+
+
+def test_the_pairs_no_test_compares_are_listed_and_each_names_a_live_command() -> None:
+    """The unproven pairs are data the report reads, and none belongs to a command that left the tree."""
+    unproven = unproven_pairs()
+    rows = _rows()
+
+    assert {cli_path for cli_path, _reason in unproven} <= set(rows)
+    declared = {*IN_PROCESS_COMMAND_COUNTERPARTS, *SESSION_DOOR_COMMAND_TOOLS}
+    proven = {
+        cli_path
+        for cli_path in declared
+        if isinstance(
+            (IN_PROCESS_COMMAND_COUNTERPARTS.get(cli_path) or SESSION_DOOR_COMMAND_TOOLS[cli_path]).proof, str
+        )
+    }
+    assert {cli_path for cli_path, _reason in unproven} == declared - proven
+
+
+# -- every operation a command submits or serves can be admitted ---------------------
+
+
+def test_every_operation_a_command_reaches_has_an_access_resolver_or_is_declared_to_have_none() -> None:
+    """The runtime refuses an operation with no resolver for every frontend, so none may pass unnoticed."""
+    registry = build_production_operation_registry()
+    reached = (
+        {row.operation_id for row in _join().operations if row.cli_paths}
+        | _paired(EXECUTE_TOOL)
+        | set(OPERATIONS_WITHOUT_A_COMMAND)
+    )
+    without_a_resolver = operations_without_an_access_resolver(registry, reached)
+
+    undeclared = sorted(without_a_resolver - set(OPERATIONS_WITHOUT_AN_ACCESS_RESOLVER))
+    stale = sorted(set(OPERATIONS_WITHOUT_AN_ACCESS_RESOLVER) - without_a_resolver)
+    assert not undeclared, f"operations the runtime cannot admit, with no reason declared: {undeclared}"
+    assert not stale, f"declared as having no access resolver, yet they have one or nothing reaches them: {stale}"
+    assert all(reason.strip() for reason in OPERATIONS_WITHOUT_AN_ACCESS_RESOLVER.values())
+
+
+def test_an_operation_composed_without_an_access_resolver_is_found() -> None:
+    """Of an operation with a resolver and one without, only the one the runtime could not admit is named."""
+    with_a_resolver = build_auth_read_definition(_unused_port)
+    without_a_resolver = build_google_sheets_export_operation_definition()
+    registry = OperationRegistry(
+        definitions=(with_a_resolver, without_a_resolver),
+        public_registrations=(
+            build_auth_read_registration(with_a_resolver),
+            build_google_sheets_export_operation_registration(without_a_resolver),
+        ),
+    )
+
+    found = operations_without_an_access_resolver(registry, [AUTH_READ_OPERATION_DEFINITION_ID, "export.google-sheets"])
+
+    assert found == {"export.google-sheets"}

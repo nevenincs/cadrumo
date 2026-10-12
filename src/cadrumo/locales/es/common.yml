@@ -2085,10 +2085,10 @@ tui:
     profile: Perfil
     withholding: Retenciones
     installation: Instalación
-  home:
     operations: Operaciones
-    account_fallback: Cuenta
+  home:
     reference: Referencia
+    account_fallback: Cuenta
     action:
       context_across_records: En todos los registros
       reason: Sugerida por el resumen local
@@ -2172,9 +2172,6 @@ tui:
       locked: Perfil bloqueado
       no_profile: Ningún perfil seleccionado
     title: Inicio
-  ledger:
-    area:
-      classification: Clasificación
   installation:
     act:
       archive_import:
@@ -2332,6 +2329,9 @@ tui:
       entries: Apuntes
       evidence: Justificantes
       import: Importación
+  ledger:
+    area:
+      classification: Clasificación
       overview: Resumen
       reconciliation: Conciliación
       review: Revisión
@@ -3552,9 +3552,6 @@ tui:
       value:
         not_applicable: no aplica
       was: 'antes: {value}'
-  restricted:
-    actions: 'Acciones permitidas: {values}'
-    all_periods: Todos los períodos
   operations:
     action:
       close: Cerrar
@@ -3589,6 +3586,9 @@ tui:
       required: obligatorio
       secret: Secreto (oculto al escribir, se envía aparte de la solicitud)
       secret_required: Esta operación necesita su secreto. Introdúcelo y vuelve a
+      replay_key: Clave de repetición (opcional)
+      replay_key_hint: Envía la misma clave otra vez con la misma solicitud para recuperar
+        la primera operación en lugar de iniciar una nueva.
         ejecutar. No se ha enviado nada.
       session: Sesión
       subject: Sujeto
@@ -3704,6 +3704,9 @@ tui:
     availability: 'Disponibilidad - almacenamiento: {storage}; autoridad: {authority};
       proveedor: {provider}'
     change_user: Cambiar de usuario
+  restricted:
+    actions: 'Acciones permitidas: {values}'
+    all_periods: Todos los períodos
     close: Cerrar
     grant: 'Concesión válida: {valid}; vence: {expires_at}'
     lock: Bloquear esta sesión
@@ -3830,27 +3833,27 @@ tui:
       profile: Abrir Perfil
       unknown: Abrir área
       installation: Abrir Instalación
-      withholding: Abrir Retenciones
       operations: Abrir Operaciones
-    destination_help:
+      withholding: Abrir Retenciones
       reference: Abrir Referencia
+    destination_help:
       aeat_sync: Lo que se ha leído de la AEAT y lo que se puede leer a continuación
       declarations: Declaraciones, cálculos anteriores, historial de presentaciones
         y calendario
       home: Próximas acciones, declaraciones y plazos de un vistazo
-      ledger: Apuntes, revisión, clasificación y justificantes
-      profile: Los datos de este perfil y los orígenes que los completan
-      withholding: Registrar y consultar retenciones de facturas del ejercicio seleccionado
       installation: Almacenamiento, reparación, restablecimiento y los perfiles de
         este equipo
-    refusal:
+      ledger: Apuntes, revisión, clasificación y justificantes
       operations: Todas las operaciones que Cadrumo puede ejecutar, para buscarlas,
         rellenarlas y ejecutarlas
-      not_composed: Todavía no se han podido leer todas las áreas.
+      profile: Los datos de este perfil y los orígenes que los completan
       reference: Modelos, casillas, categorías, portales y métodos de acceso
       refresh_failed: La última actualización no pudo reconstruir el índice.
       unavailable: La búsqueda no está disponible en esta sesión
       unknown: No se ha podido preparar la búsqueda.
+      withholding: Registrar y consultar retenciones de facturas del ejercicio seleccionado
+    refusal:
+      not_composed: Todavía no se han podido leer todas las áreas.
     result:
       address: Modelo %{modelo} · %{filing_year} · %{period}
       label:

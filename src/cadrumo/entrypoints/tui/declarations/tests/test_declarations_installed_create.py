@@ -42,6 +42,7 @@ from .....application.user_profile.access_contracts import Availability, LoginEl
 from .....core.external_constants import OutputLanguage
 from .....core.period import Period
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....operation_composition import build_production_operation_registry
 from ....runtime.profile_connections import RuntimeProfileConnections
 from ....tests.modelo_operation_test_support import seeded_modelo_work_unit
 from ...components.dialogs import ConfirmScreen
@@ -141,6 +142,7 @@ def _drive(
             profile_label="Enrollment tests",
             output_language=OutputLanguage.EN,
             open_recovery_client=reject_recovery,
+            operation_registry=build_production_operation_registry,
         )
         binding = reader.submit(root.load).result(timeout=120)
         screen = binding.destination_catalogue.create_screen(

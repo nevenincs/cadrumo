@@ -1,4 +1,4 @@
-"""Render the registered operations' public contracts as the document the MCP harness ships.
+"""Render and read the registered operations' public contracts as the document the MCP harness ships.
 
 The harness answers ``search`` and ``describe`` for a connection with no
 session and with no runtime running, as the command line's help lists its
@@ -7,11 +7,13 @@ schema of every registered operation, as the production registry describes
 them. One description is one line, and the operations of one family are one
 part, so a contract that changes is one changed line of one small file.
 
-The registry is the authority and the document is its copy. Run this module to
-write the document again after an operation is added, removed, or its contract
-or request changes::
+The registry is the authority and the document is its copy. Write the document
+again after an operation is added, removed, or its contract or request changes::
 
-    python -m cadrumo.entrypoints.tests.operation_contract_document
+    python -m dev.harness_data.operation_contract_document
+
+This module renders and reads the document, so the tests that hold it to the
+registry can; the command above is the one thing that writes it.
 """
 
 from __future__ import annotations
@@ -21,15 +23,10 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Final
 
-from cadrumo_harness.mcp.public_operation_discovery import (
-    CONTRACT_DOCUMENT_DIRECTORY,
-    CONTRACT_PART_SUFFIX,
-    contract_part_name,
-)
+from cadrumo_harness.mcp.public_operation_discovery import CONTRACT_DOCUMENT_DIRECTORY, contract_part_name
 
 from ...application.operations.registry import OperationPublicDefinitionDescriptionV1, OperationRegistry
 from ...tests.inventory import SRC_CADRUMO
-from ..operation_composition import build_production_operation_registry
 
 DOCUMENT_ROOT: Final[Path] = SRC_CADRUMO.parent / "cadrumo_harness" / "_data" / CONTRACT_DOCUMENT_DIRECTORY
 
@@ -96,21 +93,3 @@ def render_contract_document(descriptions: Sequence[OperationPublicDefinitionDes
 def shipped_contract_document() -> dict[str, str]:
     """Read every file the document's directory holds, by name, whether or not it is a part."""
     return {path.name: path.read_text(encoding=_UTF_8) for path in sorted(DOCUMENT_ROOT.iterdir()) if path.is_file()}
-
-
-def main() -> int:
-    """Write the document from the production registry, and drop the part of a family that is gone."""
-    document = render_contract_document(registered_descriptions(build_production_operation_registry()))
-    DOCUMENT_ROOT.mkdir(parents=True, exist_ok=True)
-    for stale in sorted(DOCUMENT_ROOT.glob(f"*{CONTRACT_PART_SUFFIX}")):
-        if stale.name not in document and stale.is_file():
-            stale.unlink()
-    for name, text in document.items():
-        (DOCUMENT_ROOT / name).write_text(text, encoding=_UTF_8, newline=_LINE_END)
-    operations = sum(text.count(_LINE_END) for text in document.values())
-    print(f"wrote {DOCUMENT_ROOT} ({operations} operations in {len(document)} parts)")
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

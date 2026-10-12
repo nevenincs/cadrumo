@@ -72,6 +72,15 @@ def test_an_operation_with_a_typed_operator_input_is_entered_as_that_input() -> 
         assert "submission" in entry.input_type.model_fields
 
 
+def test_a_replay_key_is_accepted_exactly_where_the_contract_declares_no_typed_operator_input() -> None:
+    entries = _catalogue().entries
+
+    for entry in entries:
+        assert entry.accepts_replay_key is (entry.contract.transient_financial_operand is None)
+    assert any(entry.accepts_replay_key for entry in entries)
+    assert any(not entry.accepts_replay_key for entry in entries)
+
+
 def test_grouping_places_every_operation_under_exactly_one_family() -> None:
     catalogue = _catalogue()
 

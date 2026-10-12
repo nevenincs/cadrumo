@@ -41,7 +41,7 @@ from cadrumo_harness.mcp.protocol_contract import (
 )
 from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_harness.mcp.server import build_server
-from cadrumo_harness.mcp.session_acts import SessionSecrets
+from cadrumo_harness.mcp.tests.held_secret_support import call_secrets
 from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
@@ -157,7 +157,8 @@ def test_a_call_the_schema_admits_builds_the_acts_own_request(act: InstallationA
     contract = INSTALLATION_ACT_CONTRACTS[act]
     arguments = _call_arguments(act, every=every)
     validate_tool_arguments("installation", arguments)
-    secrets = SessionSecrets(arguments)
+    secrets = call_secrets(arguments)[0]
+    passphrase: bytearray | None = None
     try:
         prepared = prepare_installation_act(arguments, secrets, _FULL)
         request = prepared.request
@@ -165,6 +166,7 @@ def test_a_call_the_schema_admits_builds_the_acts_own_request(act: InstallationA
         assert type(request) is contract.request
         assert request.frontend is OperationFrontendProjection.MCP
         assert (prepared.passphrase is not None) is contract.takes_secret
+        passphrase = None if prepared.passphrase is None else prepared.passphrase()
         sent = request.model_dump(mode="json", exclude=_SERVER_SUPPLIED, exclude_unset=True)
         expected = {("confirmed" if name == "confirm" else name): value for name, value in arguments.items()}
         del expected["action"]
@@ -173,7 +175,7 @@ def test_a_call_the_schema_admits_builds_the_acts_own_request(act: InstallationA
         assert "secret" not in arguments
     finally:
         secrets.wipe()
-    assert prepared.passphrase is None or not any(prepared.passphrase)
+    assert passphrase is None or not any(passphrase)
 
 
 def test_an_argument_of_another_act_and_an_unknown_action_are_refused_before_anything_is_sent() -> None:
@@ -184,10 +186,10 @@ def test_an_argument_of_another_act_and_an_unknown_action_are_refused_before_any
     stray: dict[str, object] = {"action": "storage_check", "lines": 5}
     validate_tool_arguments("installation", stray)
     with pytest.raises(ValueError):
-        prepare_installation_act(stray, SessionSecrets(stray), _FULL)
+        prepare_installation_act(stray, call_secrets(stray)[0], _FULL)
     relative: dict[str, object] = {"action": "archive_inspect", "path": "relative/archive.cadrumo"}
     with pytest.raises(ValueError):
-        prepare_installation_act(relative, SessionSecrets(relative), _FULL)
+        prepare_installation_act(relative, call_secrets(relative)[0], _FULL)
 
 
 def test_the_narrowed_surface_offers_reads_and_unconfirmed_reports_and_nothing_that_changes_records() -> None:
@@ -220,10 +222,10 @@ def test_the_narrowed_surface_decides_on_the_facts_of_the_exact_request(act: Ins
     for every in (False, True):
         arguments = _call_arguments(act, every=every)
         on_full = dict(arguments)
-        request = prepare_installation_act(on_full, SessionSecrets(on_full), _FULL).request
+        request = prepare_installation_act(on_full, call_secrets(on_full)[0], _FULL).request
         facts = installation_request_facts(request)
         allowed = not facts.changes_records and not facts.reaches_network
-        secrets = SessionSecrets(arguments)
+        secrets = call_secrets(arguments)[0]
         if allowed:
             assert type(prepare_installation_act(arguments, secrets, _READ_ONLY_LOCAL).request) is type(request)
         else:
@@ -238,13 +240,13 @@ def test_confirmation_is_what_turns_a_report_into_a_change_on_the_narrowed_surfa
     inspection = {"action": "repair_profile", "profile": "Synthetic", "confirm": True}
     clearing = {"action": "repair_profile", "clear_active": True, "confirm": True}
 
-    reported = prepare_installation_act(unconfirmed, SessionSecrets(unconfirmed), _READ_ONLY_LOCAL).request
-    inspected = prepare_installation_act(inspection, SessionSecrets(inspection), _READ_ONLY_LOCAL).request
+    reported = prepare_installation_act(unconfirmed, call_secrets(unconfirmed)[0], _READ_ONLY_LOCAL).request
+    inspected = prepare_installation_act(inspection, call_secrets(inspection)[0], _READ_ONLY_LOCAL).request
     assert isinstance(reported, RuntimeStorageReclaimRequest) and not reported.confirmed
     assert isinstance(inspected, RuntimeRepairProfileRequest) and not inspected.clear_active
     for changing in (confirmed, clearing):
         with pytest.raises(RuntimeFrontendRefusedError):
-            prepare_installation_act(changing, SessionSecrets(changing), _READ_ONLY_LOCAL)
+            prepare_installation_act(changing, call_secrets(changing)[0], _READ_ONLY_LOCAL)
 
 
 @pytest.mark.anyio
@@ -289,10 +291,10 @@ def test_a_changing_act_whose_outcome_was_lost_is_unresolved_and_names_the_act_t
     report: dict[str, object] = {"action": "storage_reclaim", "area": "cache"}
 
     started = perform_installation_act(
-        lost, prepare_installation_act(reset, SessionSecrets(reset), _FULL), held_secrets=_no_held_secret
+        lost, prepare_installation_act(reset, call_secrets(reset)[0], _FULL), held_secrets=_no_held_secret
     )
     reclaimed = perform_installation_act(
-        lost, prepare_installation_act(reclaim, SessionSecrets(reclaim), _FULL), held_secrets=_no_held_secret
+        lost, prepare_installation_act(reclaim, call_secrets(reclaim)[0], _FULL), held_secrets=_no_held_secret
     )
 
     code = RuntimeRefusalCode.DEADLINE_EXCEEDED.value
@@ -301,7 +303,7 @@ def test_a_changing_act_whose_outcome_was_lost_is_unresolved_and_names_the_act_t
     # A request that changes no record lost nothing: the refusal is the transport's own.
     with pytest.raises(RuntimeRefusalError):
         perform_installation_act(
-            lost, prepare_installation_act(report, SessionSecrets(report), _FULL), held_secrets=_no_held_secret
+            lost, prepare_installation_act(report, call_secrets(report)[0], _FULL), held_secrets=_no_held_secret
         )
 
 

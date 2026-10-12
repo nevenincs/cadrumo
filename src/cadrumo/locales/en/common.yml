@@ -2024,10 +2024,10 @@ tui:
     ledger: Records
     profile: Profile
     installation: Installation
-    withholding: Withholding
-    operations: Operations
-  home:
     reference: Reference
+    operations: Operations
+    withholding: Withholding
+  home:
     account_fallback: Account
     action:
       context_across_records: Across records
@@ -2111,8 +2111,6 @@ tui:
       locked: Profile locked
       no_profile: No profile selected
     title: Home
-  ledger:
-    area:
   installation:
     act:
       archive_import:
@@ -2263,6 +2261,8 @@ tui:
       valid: Valid.
       classification: Classification
       entries: Entries
+  ledger:
+    area:
       evidence: Supporting documents
       import: Import
       overview: Overview
@@ -3469,8 +3469,6 @@ tui:
       value:
         not_applicable: n/a
       was: was {value}
-  restricted:
-    actions: 'Allowed actions: {values}'
   operations:
     action:
       close: Close
@@ -3503,6 +3501,9 @@ tui:
       profile: Profile
       required: required
       secret: Secret (hidden as you type, sent apart from the request)
+      replay_key: Replay key (optional)
+      replay_key_hint: Send the same key again with the same request to get the first
+        operation back instead of starting a new one.
       secret_required: This operation needs its secret. Enter it and run again. Nothing
         was sent.
       session: Session
@@ -3615,6 +3616,8 @@ tui:
     title: Reference
     all_periods: All periods
     availability: 'Availability - storage: {storage}; authority: {authority}; provider:
+  restricted:
+    actions: 'Allowed actions: {values}'
       {provider}'
     change_user: Change user
     close: Close
@@ -3742,10 +3745,10 @@ tui:
       ledger: Open Records
       profile: Open Profile
       installation: Open Installation
-      unknown: Open area
-      operations: Open Operations
-      withholding: Open Withholding
       reference: Open Reference
+      operations: Open Operations
+      unknown: Open area
+      withholding: Open Withholding
     destination_help:
       aeat_sync: What has been read from the AEAT and what can be read next
       declarations: Declarations, earlier calculations, filing history and calendar
@@ -3753,10 +3756,10 @@ tui:
       ledger: Entries, review, classification and supporting documents
       profile: This profile's details and the sources that fill them in
       installation: Storage, repair, reset and the profiles on this computer
-      withholding: Capture and inspect invoice withholding for a selected filing year
-      operations: Every operation Cadrumo can run, to search, fill in and run
-    refusal:
       reference: Modelos, casillas, categories, portals and sign-in methods
+      operations: Every operation Cadrumo can run, to search, fill in and run
+      withholding: Capture and inspect invoice withholding for a selected filing year
+    refusal:
       not_composed: Not every area could be read yet.
       refresh_failed: The last refresh could not rebuild the index.
       unavailable: Search is unavailable in this session

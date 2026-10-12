@@ -49,6 +49,7 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import output_language
 from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
+from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.tui.app import RootBindingV1
 from cadrumo.entrypoints.tui.components.dialogs import ConfirmScreen
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
@@ -593,6 +594,7 @@ async def _capture_all(
             profile_label=SANDBOX_PROFILE_LABEL,
             output_language=OutputLanguage(output_language()),
             open_recovery_client=_no_recovery,
+            operation_registry=build_production_operation_registry,
         )
         root = await asyncio.to_thread(workbench.load)
         frames: list[ScenarioFrame] = []

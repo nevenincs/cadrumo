@@ -17,7 +17,7 @@ import pytest
 from ....application.operator_surface.command_operations import join_command_operations
 from ..command_specs import COMMAND_GRAPH
 from ..operator_surface_reconciliation import recorded_command_operation_join
-from .command_frontend_counterparts import CommandReach, ToolRoute, command_reach, other_frontend_routes
+from .command_frontend_counterparts import CommandReach, ToolRoute, command_reaches, other_frontend_routes
 from .command_operation_reference import (
     NO_OPERATION,
     REFERENCE_PATH,
@@ -29,7 +29,7 @@ from .command_operation_reference import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_REGENERATE = "write it again with: python -m cadrumo.entrypoints.cli.tests.command_operation_reference"
+_REGENERATE = "write it again with: python -m dev.harness_data.command_operation_reference"
 
 
 def _shipped() -> str:
@@ -68,7 +68,7 @@ def test_every_command_with_work_to_share_has_a_tool_named_in_its_row() -> None:
     commands, _unsubmitted = read_command_operation_reference(_shipped())
     routes = read_command_tool_routes(_shipped())
     without_work = {
-        spelled_command(row.cli_path) for row in join.commands if command_reach(row) is CommandReach.NO_WORK_TO_SHARE
+        spelled_command(row.cli_path) for row in join.commands if CommandReach.NO_WORK_TO_SHARE in command_reaches(row)
     }
     without_a_tool = {command for command in commands if not commands[command] and not routes[command]}
     assert without_a_tool == without_work

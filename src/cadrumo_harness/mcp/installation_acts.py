@@ -82,11 +82,15 @@ def installation_acts_on(surface: McpSurface) -> tuple[InstallationAct, ...]:
 
 @dataclass(frozen=True, slots=True)
 class PreparedInstallationAct:
-    """One act ready to send: its contract, its request and the passphrase buffer it takes, if any."""
+    """One act ready to send: its contract, its request and how it reads the passphrase it takes, if any.
+
+    ``passphrase`` reads the passphrase when it is called, which is the moment
+    before it is sent, because reading a secret held for one use spends it.
+    """
 
     contract: InstallationActContract
     request: RuntimeInstallationActRequest
-    passphrase: bytearray | None
+    passphrase: Callable[[], bytearray] | None
 
 
 def prepare_installation_act(
@@ -99,7 +103,7 @@ def prepare_installation_act(
     changes no record and refused there once confirmed.
     """
     contract = INSTALLATION_ACT_CONTRACTS[InstallationAct(args["action"])]
-    buffers = secrets.require(contract.act.value, *(("secret",) if contract.takes_secret else ()))
+    secrets.require(contract.act.value, *(("secret",) if contract.takes_secret else ()))
     members = {
         (INSTALLATION_CONFIRMED_MEMBER if name == INSTALLATION_CONFIRM_ARGUMENT else name): value
         for name, value in args.items()
@@ -110,7 +114,8 @@ def prepare_installation_act(
     if not _surface_allows(surface, installation_request_facts(request)):
         # The same refusal the surface gives an operation it leaves out.
         raise RuntimeFrontendRefusedError(AccessDenialCode.FRONTEND_DENIED.value)
-    return PreparedInstallationAct(contract, request, buffers[0] if buffers else None)
+    passphrase = (lambda: secrets.take("secret")[0]) if contract.takes_secret else None
+    return PreparedInstallationAct(contract, request, passphrase)
 
 
 class _SecretHandover:
@@ -148,7 +153,11 @@ def perform_installation_act(
     how the person reads it, whatever became of the act: the secret itself is
     in no reply.
 
+    The passphrase is read only here, immediately before the request is sent,
+    so an act refused or unreachable before this point spends none.
+
     Raises:
+        ValueError: The passphrase's reference no longer names a held secret.
         RuntimeFrontendRefusedError: The runtime refused admission and no secret was held.
         RuntimeRefusalError: The transport refused a request that changes no record, and no secret was held.
     """
@@ -156,8 +165,8 @@ def perform_installation_act(
     act = contract.act.value
     changing = installation_request_facts(request).changes_records
     handover = _SecretHandover(held_secrets, request) if contract.delivers_secret else None
-    passphrase = None if prepared.passphrase is None else installation_passphrase_document(prepared.passphrase)
     try:
+        passphrase = None if prepared.passphrase is None else installation_passphrase_document(prepared.passphrase())
         settled = client.perform(request, contract.reply, secret=passphrase, hold_secret=handover)
     except RuntimeFrontendRefusedError as error:
         if handover is None or handover.reference is None:
@@ -183,6 +192,9 @@ def perform_installation_act(
         }
     elif isinstance(settled, RuntimeInstallationFailed):
         reply = {"outcome": "unresolved" if changing else "refused", "code": settled.kind, "act": act}
+        if changing and contract.outcome_read_by is not None:
+            # The act may have changed some records before it stopped, so the reply says which act reads the outcome.
+            reply["outcome_read_by"] = contract.outcome_read_by.value
     else:
         reply = {"outcome": "completed", "act": act, "reply": public_value(settled)}
     if handover is not None and handover.reference is not None:

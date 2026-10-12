@@ -373,13 +373,13 @@ def test_registration_reads_the_profiles_again_when_the_installation_area_change
     assert len(opened) == 2
 
 
-def test_requester_contracts_are_shared_across_recomposition_but_fresh_in_a_separate_session(
+def test_the_operation_registry_is_shared_across_recomposition_but_fresh_in_a_separate_session(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     profile_id = uuid4()
     _bootstrap(monkeypatch, iter((_recognized_inventory(profile_id),) * 3))
     registries: list[OperationRegistry] = []
-    observed: list[OperationPublicContractSetV1] = []
+    observed: list[OperationRegistry] = []
     choices: list[bool] = []
 
     def build() -> OperationRegistry:
@@ -389,7 +389,7 @@ def test_requester_contracts_are_shared_across_recomposition_but_fresh_in_a_sepa
 
     def attempt(
         inventory: ProfileLoginInventoryV1,
-        supplier: Callable[[], OperationPublicContractSetV1],
+        supplier: Callable[[], OperationRegistry],
         choose_profile: bool,
         headless: bool,
         auto_pilot: AutopilotCallbackType | None,
@@ -409,28 +409,29 @@ def test_requester_contracts_are_shared_across_recomposition_but_fresh_in_a_sepa
     assert choices == [False, True]
     assert installed_session.run_installed_workbench_session() == 0
     assert len(registries) == 2 and observed[2] is not observed[0]
-    assert observed[2].contract_set_digest == observed[0].contract_set_digest
+    assert observed[2].public_contract_set.contract_set_digest == observed[0].public_contract_set.contract_set_digest
     assert choices == [False, True, False]
 
 
-def test_failed_contract_construction_propagates_and_publishes_no_partial_value(
+def test_a_failed_registry_composition_propagates_and_publishes_nothing(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     profile_id = uuid4()
     _bootstrap(monkeypatch, iter((_recognized_inventory(profile_id),)))
     complete = _registry()
-    incomplete = OperationRegistry(definitions=complete.definitions)
     builds = 0
-    suppliers: list[Callable[[], OperationPublicContractSetV1]] = []
+    suppliers: list[Callable[[], OperationRegistry]] = []
 
     def build() -> OperationRegistry:
         nonlocal builds
         builds += 1
-        return incomplete if builds == 1 else complete
+        if builds == 1:
+            raise InternalInvariantError("no public contract composition")
+        return complete
 
     def attempt(
         inventory: ProfileLoginInventoryV1,
-        supplier: Callable[[], OperationPublicContractSetV1],
+        supplier: Callable[[], OperationRegistry],
         choose_profile: bool,
         headless: bool,
         auto_pilot: AutopilotCallbackType | None,
@@ -444,6 +445,6 @@ def test_failed_contract_construction_propagates_and_publishes_no_partial_value(
         installed_session.run_installed_workbench_session()
     assert builds == 1
     supplier = suppliers[0]
-    assert supplier() is complete.public_contract_set
-    assert supplier() is complete.public_contract_set
+    assert supplier() is complete
+    assert supplier() is complete
     assert builds == 2

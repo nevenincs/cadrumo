@@ -21,7 +21,6 @@ import pytest
 from cadrumo.application.ledger.classify_requests import LEDGER_CLASSIFY_OPERATION_DEFINITION_ID
 from cadrumo.application.ledger.own_account_operation import LEDGER_OWN_ACCOUNT_OPERATION_DEFINITION_ID
 from cadrumo.core.config import override_settings
-from cadrumo.core.request_faults import VALUE_FREE_FAULT_MESSAGE
 from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 
 from .stored_sign_in_runtime import StoredSignInRuntime, stored_sign_in_runtime
@@ -129,7 +128,7 @@ async def test_a_missing_and_an_unknown_member_are_named_by_the_model_and_no_pri
 
 
 @pytest.mark.anyio
-async def test_wording_that_would_repeat_a_value_is_replaced_and_the_location_and_kind_stay(
+async def test_a_validators_wording_that_names_no_value_reaches_the_caller_with_its_location_and_kind(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     account = "acc-4242"
@@ -139,14 +138,14 @@ async def test_wording_that_would_repeat_a_value_is_replaced_and_the_location_an
     ):
         adapter = _adapter()
         try:
-            # The model's wording for this rule names the action it was given.
+            # The model refuses an account id given to an action that takes none, and says so without either.
             refused = await _execute(
                 adapter, runtime, LEDGER_OWN_ACCOUNT_OPERATION_DEFINITION_ID, action="list", own_account_id=account
             )
         finally:
             await adapter.close()
 
-    assert _faults(refused) == {(): ("value_error", VALUE_FREE_FAULT_MESSAGE)}
+    assert _faults(refused) == {(): ("value_error", "Value error, this own account action takes no account id")}
     assert account not in json.dumps(refused)
 
 

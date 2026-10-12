@@ -32,6 +32,7 @@ from cadrumo.application.runtime.profile_access import status_admits_session
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.hashing import sha256_file
 from cadrumo.core.i18n.render import output_language
+from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.review_publication_labels import GoogleReviewLabels
 from cadrumo.entrypoints.tui.app import CadrumoTuiApp
 from cadrumo.entrypoints.tui.declarations.grouped import GroupedDeclarationsScreen
@@ -252,7 +253,11 @@ async def run_google_saved_review_tui(
         raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
 
     root = RuntimeWorkbenchRoot(
-        client, profile_label=profile_label, output_language=language, open_recovery_client=no_recovery
+        client,
+        profile_label=profile_label,
+        output_language=language,
+        open_recovery_client=no_recovery,
+        operation_registry=build_production_operation_registry,
     )
     app = CadrumoTuiApp(load_root=root.load)
     screenshots: list[tuple[str, str]] = []

@@ -88,7 +88,9 @@ _SECRET_FORMS: Final = (
     f"`cadrumo-mcp {HOLD_OPTION}` in a terminal of their own, types the secret there unseen, and gives you only "
     "the reference it prints. Prefer the reference and ask the person for one. A secret held that way stays "
     "until the person deletes it, so the same reference serves again after a lock or an expiry; one held with "
-    f"{ONCE_OPTION} is deleted by the first call that presents its reference, whatever that call then answers. "
+    f"{ONCE_OPTION} is spent by the first call that sends it, whatever that call then answers, and a send that "
+    "then fails does not give it back; a call refused before it is sent, or made while no runtime is running, "
+    "leaves it held. "
     "The reference of a secret a tool handed to the person, such as a recovery code, is accepted too, and "
     "using it neither shows the secret nor deletes it"
 )
