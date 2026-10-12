@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import secrets
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
@@ -19,6 +20,7 @@ from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.profile_access import RuntimeProfileStatus
+from cadrumo.application.runtime.session_events import RuntimeLifecycleNotice
 from cadrumo.application.user_profile.access_contracts import (
     AccessScope,
     Availability,
@@ -57,6 +59,11 @@ class _AdmissionClient(RuntimeFrontendClient):
         self.password_calls = 0
         self.closed = False
         self.refuse = False
+
+    @override
+    def subscribe_lifecycle_notices(self, receive: Callable[[RuntimeLifecycleNotice], None]) -> Callable[[], None]:
+        # The screen subscribes before it sends the proof; this port has no runtime to send notices.
+        return lambda: None
 
     @override
     def login_password(
