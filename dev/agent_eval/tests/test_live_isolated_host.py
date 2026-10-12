@@ -73,6 +73,55 @@ def test_a_sign_in_the_credential_store_cannot_keep_is_unavailable(document: dic
     assert raised.value.reason == CREDENTIAL_STORE_UNAVAILABLE
 
 
+_ABSENT_CHANNEL_ACTION = {
+    "action": {"action_id": "operator.profile.login", "cli_path": ["config", "login"]},
+    "failed_condition_id": "profile.human.input_channel_available",
+    "evidence": [{"values": {"password_channel_available": False}}],
+}
+
+
+@pytest.mark.parametrize(
+    "document",
+    [
+        {
+            "status": "error",
+            "error": {"code": "REFUSED_CLI_BOUNDARY", "context": None, "action": _ABSENT_CHANNEL_ACTION},
+        },
+        {"status": "error", "error": {"code": "REFUSED", "context": {"keychain": "logon_without_credentials"}}},
+        {
+            "status": "warning",
+            "result": {"session_persisted": False},
+            "notices": [
+                {"code": "config.login.session_not_persisted", "context": {"keychain": "logon_without_credentials"}}
+            ],
+        },
+    ],
+)
+def test_the_products_current_answers_for_a_logon_without_a_keychain_are_unavailable(
+    document: dict[str, Any],
+) -> None:
+    with pytest.raises(UnavailableError) as raised:
+        classify_sign_in(_result(document, returncode=0 if document["status"] != "error" else 1))
+    assert raised.value.reason == CREDENTIAL_STORE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    "document",
+    [
+        {"status": "error", "error": {"code": "REFUSED", "context": {"reason": "runtime_deadline_exceeded"}}},
+        {"status": "error", "error": {"code": "REFUSED_CLI_BOUNDARY", "context": None, "action": None}},
+        {
+            "status": "error",
+            "error": {"code": "REFUSED_CLI_BOUNDARY", "action": {"failed_condition_id": "profile.exists"}},
+        },
+        {"status": "error", "error": {"code": "REFUSED", "context": {"keychain": "something_else"}}},
+    ],
+)
+def test_other_refusals_are_failures_not_unavailable(document: dict[str, Any]) -> None:
+    with pytest.raises(RuntimeError, match="sign-in refused"):
+        classify_sign_in(_result(document, returncode=1))
+
+
 def test_a_wrong_password_is_a_failure_not_unavailable() -> None:
     refused = {"status": "error", "error": {"code": "AUTH", "context": {"reason": "credential_rejected"}}}
     with pytest.raises(RuntimeError, match="credential_rejected"):

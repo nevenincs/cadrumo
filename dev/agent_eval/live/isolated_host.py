@@ -27,6 +27,7 @@ from pathlib import Path
 from typing import Any, Final
 
 from cadrumo.adapters.local_runtime.windows_process import WindowsProcessScope
+from cadrumo.core.profile_session import KeychainUnavailability
 from dev.packaging.command_execution import run_command
 
 from .capture import Scrubber
@@ -67,6 +68,11 @@ HOST_ENVIRONMENT_ALLOWLIST: Final = frozenset(
 
 CREDENTIAL_STORE_UNAVAILABLE: Final = "credential_store_unavailable"
 _KEYRING_SIGNALS: Final = ("keyring_unavailable", "KEYRING_UNAVAILABLE", "custody_unavailable", "1312")
+_NO_INPUT_CHANNEL_CONDITION: Final = "profile.human.input_channel_available"
+"""The precondition a profile-bound verb fails when its sign-in cannot be resumed and no terminal can prompt.
+
+The lane always supplies the password channel, so this refusal can only mean the sign-in was never kept.
+"""
 
 
 def allowlisted_environment(ambient: Mapping[str, str]) -> dict[str, str]:
@@ -421,6 +427,33 @@ class PackageHost:
         self.package_python("delete-session", "--root", str(self.root), "--profile-id", person.profile_id)
 
 
+def _keychain_reasons(document: Mapping[str, Any]) -> tuple[str, ...]:
+    """The typed keychain reasons the product attached to the refusal or to its notices."""
+    known = {reason.value for reason in KeychainUnavailability}
+    contexts: list[object] = []
+    error = document.get("error")
+    if isinstance(error, dict):
+        contexts.append(error.get("context"))
+    notices = document.get("notices")
+    if isinstance(notices, list):
+        contexts.extend(notice.get("context") for notice in notices if isinstance(notice, dict))
+    reasons: list[str] = []
+    for context in contexts:
+        reason = context.get("keychain") if isinstance(context, dict) else None
+        if isinstance(reason, str) and reason in known:
+            reasons.append(reason)
+    return tuple(reasons)
+
+
+def _refused_for_want_of_a_kept_sign_in(document: Mapping[str, Any]) -> bool:
+    """True for the CLI-boundary refusal whose typed action names the absent password channel."""
+    error = document.get("error")
+    if not isinstance(error, dict) or error.get("code") != "REFUSED_CLI_BOUNDARY":
+        return False
+    action = error.get("action")
+    return isinstance(action, dict) and bool(action.get("failed_condition_id") == _NO_INPUT_CHANNEL_CONDITION)
+
+
 def classify_sign_in(result: CliResult) -> None:
     """Turn a sign-in the credential store could not keep into ``unavailable``, never a pass.
 
@@ -429,11 +462,17 @@ def classify_sign_in(result: CliResult) -> None:
     SSH logon on Windows answers WinError 1312) cannot run the lane.
     """
     tokens = result.error_tokens
-    if any(signal in token for token in tokens for signal in _KEYRING_SIGNALS):
+    keychain = _keychain_reasons(result.document)
+    if (
+        any(signal in token for token in tokens for signal in _KEYRING_SIGNALS)
+        or keychain
+        or _refused_for_want_of_a_kept_sign_in(result.document)
+    ):
+        shown = [*tokens, *(f"keychain:{reason}" for reason in keychain)]
         raise UnavailableError(
             CREDENTIAL_STORE_UNAVAILABLE,
-            f"the OS credential store refused this logon session ({'/'.join(tokens)}); stored sign-in and API keys "
-            "need an interactive logon",
+            f"the OS credential store refused this logon session ({'/'.join(shown) or 'sign-in not resumable'}); "
+            "stored sign-in and API keys need an interactive logon",
         )
     if not result.ok:
         raise RuntimeError(f"sign-in refused: {'/'.join(tokens) or result.returncode}")
