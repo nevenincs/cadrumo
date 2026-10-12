@@ -8,11 +8,12 @@ Nothing here imports the product to reach the runtime. The run:
 1. creates a synthetic profile on a fresh root and shows that sign-in is
    refused while no runtime serves that root;
 2. starts ``cadrumo-runtime --configured-root`` and waits for its readiness line;
-3. signs in through the CLI's secret channel, reads the profile, and opens the
-   packaged MCP server against the same root;
-4. signs out, requires a new MCP process to be refused the profile read once a
-   stored sign-in existed, closes the runtime's standard input and requires a
-   drained exit;
+3. signs in through the CLI's secret channel, requires a new piped CLI process
+   with no secret to read the profile exactly when the sign-in was stored, and
+   opens the packaged MCP server against the same root;
+4. signs out, requires new CLI and MCP processes to be refused the profile read
+   once a stored sign-in existed, closes the runtime's standard input and
+   requires a drained exit;
 5. requires the person's installed default storage root to be unchanged outside the
    checkouts' development roots, and free of anything this run created.
 
@@ -21,7 +22,7 @@ standard input. Run it with ``just verify-caller-owned-runtime PACKAGE``.
 
 Exit 0 means every step held. Exit 1 names the contradicted step. Exit 3 means
 every step that ran held, but the logon's native credential store refused the
-stored sign-in, so MCP resume and logout could not be shown; run it again from
+stored sign-in, so CLI and MCP resume and logout could not be shown; run it again from
 an interactive desktop logon.
 """
 
@@ -355,21 +356,27 @@ def run(package: Path, scratch: Path) -> Receipt:
         )
         receipt.record("login_authenticated", status=envelope.get("status"), persisted=persisted, notices=notices)
         if not persisted:
-            # MCP follows only a stored sign-in, and logout checks it; this logon's credential store refused it.
-            receipt.unproven.append("stored sign-in: MCP resume and logout need a working native credential store")
+            # CLI and MCP follow only a stored sign-in, and logout checks it; this logon's credential store refused it.
+            receipt.unproven.append("stored sign-in: CLI and MCP resume and logout need a native credential store")
 
-        # A piped command names its own credential channel; it never borrows the stored sign-in.
-        code, envelope = run_cli(
-            programs,
-            environment,
-            "--profile-secrets-stdin",
-            "config",
-            "profile",
-            "status",
-            secret={"profile_passphrase": password},
-        )
-        require(code == 0 and envelope.get("status") in {"success", "warning"}, f"profile status: {code} {envelope}")
-        receipt.record("profile_read", status=envelope.get("status"))
+        # A new piped CLI process with no secret reads the profile exactly when a stored sign-in exists to resume.
+        code, envelope = run_cli(programs, environment, "config", "profile", "status")
+        resumed = code == 0 and envelope.get("status") in {"success", "warning"}
+        receipt.record("cli_resumed", exit_code=code, status=envelope.get("status"), code=error_code(envelope))
+        require(resumed is persisted, f"CLI resume disagrees with the stored sign-in: {code} {envelope}")
+        if not persisted:
+            code, envelope = run_cli(
+                programs,
+                environment,
+                "--profile-secrets-stdin",
+                "config",
+                "profile",
+                "status",
+                secret={"profile_passphrase": password},
+            )
+            read = code == 0 and envelope.get("status") in {"success", "warning"}
+            require(read, f"profile status: {code} {envelope}")
+            receipt.record("profile_read", status=envelope.get("status"))
 
         mcp = asyncio.run(_mcp_status(programs, environment, scratch))
         connected = _mcp_facts(mcp)
@@ -403,6 +410,9 @@ def run(package: Path, scratch: Path) -> Receipt:
                 refused["authenticated"] is not True and not refused["answered"],
                 f"MCP still read the profile after sign-out: {refused}",
             )
+            code, envelope = run_cli(programs, environment, "config", "profile", "status")
+            receipt.record("cli_after_logout", exit_code=code, code=error_code(envelope))
+            require(code != 0, f"CLI still read the profile after sign-out: {envelope}")
         exit_code = runtime.stop()
     require(exit_code == _SUPERVISOR_STOP, f"runtime exit after input closed: {exit_code}")
     receipt.record("runtime_stopped", exit_code=exit_code)
