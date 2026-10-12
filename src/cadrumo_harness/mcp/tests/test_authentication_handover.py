@@ -237,7 +237,8 @@ async def test_search_requires_exact_live_admission_before_listing_private_opera
             assert (result["outcome"], result["code"]) == ("refused", expected_code)
             assert client.describe_calls == []
             assert samples == [_AT] or not samples
-        assert client.close_count == 0
+        # A lease the runtime says has ended is let go at once; any other refusal leaves it to the next call.
+        assert client.close_count == (1 if expected_code == "session_expired" else 0)
     finally:
         await adapter.close()
     assert client.close_count == 1

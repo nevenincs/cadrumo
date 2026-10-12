@@ -60,6 +60,17 @@ from .runtime_cleanup import (
 WireResultT = TypeVar("WireResultT")
 
 
+_SESSION_ENDED = frozenset(
+    {
+        AccessDenialCode.AUTHENTICATION_REQUIRED.value,
+        AccessDenialCode.SESSION_INACTIVE.value,
+        AccessDenialCode.SESSION_EXPIRED.value,
+        AccessDenialCode.CONNECTION_MISMATCH.value,
+    }
+)
+"""The refusals by which the runtime says the session a connection holds no longer admits anything."""
+
+
 class RuntimeMcpAdapter:
     """One MCP connection owns one admitted lease, from the person's sign-in or a key the person configured.
 
@@ -406,6 +417,10 @@ class RuntimeMcpAdapter:
             if isinstance(error, RuntimeFrontendRefusedError) and error.request_faults:
                 # The runtime said why, in a registered error's code and message; every tool passes that on.
                 reply["faults"] = [public_value(fault) for fault in error.request_faults]
+            if self.client is not None and code in _SESSION_ENDED:
+                # The runtime has ended the held session, whether or not its notice has arrived yet: let it go,
+                # so this answer sends the agent to the person and the next call asks the runtime once again.
+                await self._release_lease(task_name="mcp-ended-session-close")
             if code == PERSON_ACT_REQUIRED:
                 # The runtime refused the person's own act; the agent is told to ask the person.
                 reply["remedy"] = PERSON_ACT_REMEDY

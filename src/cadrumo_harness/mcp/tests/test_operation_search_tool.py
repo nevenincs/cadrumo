@@ -41,6 +41,7 @@ from cadrumo.core.time.clock import now
 from cadrumo_harness.mcp import admitted_operations
 from cadrumo_harness.mcp import runtime_adapter as mcp_runtime
 from cadrumo_harness.mcp.operation_contract_cache import OperationContractCache
+from cadrumo_harness.mcp.protocol_contract import SIGN_IN_REMEDY
 from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_harness.mcp.server import build_server
 from cadrumo_harness.mcp.tests.admitted_lease import public_descriptions
@@ -215,7 +216,8 @@ async def test_search_refuses_when_a_description_fails_for_a_reason_other_than_s
         result = await adapter.call("search", {"query": "ledger"})
     finally:
         await adapter.close()
-    assert result == {"outcome": "refused", "code": "session_expired"}
+    # The session ended, so the answer sends the agent to the person.
+    assert result == {"outcome": "refused", "code": "session_expired", "remedy": SIGN_IN_REMEDY}
 
 
 class _SlowConnectionClient(_AdmittedClient):
@@ -408,7 +410,8 @@ async def test_search_still_fails_whole_when_the_session_is_refused_for_one_oper
         result = await adapter.call("search", {})
     finally:
         await adapter.close()
-    assert result == {"outcome": "refused", "code": "session_inactive"}
+    # The session ended, so the answer sends the agent to the person.
+    assert result == {"outcome": "refused", "code": "session_inactive", "remedy": SIGN_IN_REMEDY}
 
 
 @pytest.mark.anyio
