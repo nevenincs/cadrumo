@@ -8,7 +8,7 @@ related:
   - '[[2026-10-04-application-sign-in-adr]]'
 modified: '2026-10-12'
 body_schema: body-v2
-body_hash: 'sha256:e3cc5a368b68d7c7be9a2bd171ae9a4a9daac3259e735cefd1513805ad9b5bed'
+body_hash: 'sha256:213a8dbc735477003d5a2aaadd108724132f43e9b1092365984570073594eadf'
 ---
 
 # `application-sign-in` plan
@@ -73,7 +73,7 @@ Interactive-only automatic resume, global sign-out and the status leaf.
 
 Resume first, opt-in persistence, event-driven clearing and global sign-out.
 
-- [ ] `P05.S15` - Make the TUI resume a live sign-in first and offer a Stay signed in opt-in defaulting off on its password screen; `src/cadrumo/entrypoints/tui/secret/runtime_login_form.py, runtime_login_attempt.py, runtime_admission.py, locale keys, owning tests`.
+- [x] `P05.S15` - Make the TUI resume a live sign-in first and offer a Stay signed in opt-in defaulting off on its password screen; `src/cadrumo/entrypoints/tui/secret/runtime_login_form.py, runtime_login_attempt.py, runtime_admission.py, locale keys, owning tests`.
 - [x] `P05.S16` - Subscribe the TUI to session events to clear private views immediately, route sign-out to the global operation and keep Lock this window; `src/cadrumo/entrypoints/tui/app.py, runtime_account.py, app_navigation.py, runtime_session.py, owning tests`.
 
 ### Phase `P06` - Acceptance and review

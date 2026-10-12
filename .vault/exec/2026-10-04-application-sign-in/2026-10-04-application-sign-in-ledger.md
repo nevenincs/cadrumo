@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:e394f7fd337b256750c5940fb55bad884629fa5d7e4d1242cda978493bdc6287'
+body_hash: 'sha256:2b9e6f0304a3016a1e37835891ef3ad0bf17249629f188be65e216245d7a5609'
 related:
   - "[[2026-10-04-application-sign-in-plan]]"
 ---
@@ -283,6 +283,16 @@ related:
 - `S14` `verify:` `just check-types (31 ty findings in dev/ and adapters/local_runtime/tests/test_posix.py, none in this Step's files)` -> `fail`
 - `S14` `verify:` `just check-import-boundaries (unavailable: governed tree changed mid-run)` -> `fail`
 - `S14` `verify:` `ruff check, ruff format --check, ty on the Step's files` -> `pass`
+- `S15` `M` `src/cadrumo/entrypoints/tui/secret/runtime_login.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/secret/runtime_login_form.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/secret/runtime_login_attempt.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_admission.py`
+- `S15` `verify:` `pytest test_runtime_admission 20 passed x3 and test_runtime_login 53/55 (2 load timeouts pass alone)` -> `pass`
+- `S15` `verify:` `just check-style` -> `pass`
+- `S15` `verify:` `just check-format (4 findings, none in this Step's files)` -> `fail`
+- `S15` `verify:` `just check-types (31 ty findings in dev/ and adapters/local_runtime/tests/test_posix.py, none in this Step's files)` -> `fail`
+- `S15` `verify:` `just check-import-boundaries (unavailable: governed tree changed mid-run)` -> `fail`
+- `S15` `verify:` `ruff check, ruff format --check, ty on the Step's files` -> `pass`
 
 ## Notes
 
@@ -306,3 +316,4 @@ related:
 - `S12` The registered in-process profile login/logout operations, the non-runtime unwrap callers and the CLI receipt extension were already retired by commit 5a09ab8082 `(login_handover,` `login_session` in-process paths); no extension code exists anywhere. Closed with the ownership gate over src/cadrumo.
 - `S13` Gate already implemented (custody.py `passphrase_channel_absent,` `runtime_profile_admission` terminal check). Three runtime-login tests expected a non-interactive resume; they now declare a terminal. Two of those hunks were already present uncommitted in the worktree for the same purpose and are committed here.
 - `S14` Generated CLI reference already current for config logout and config sign-in-status; regeneration shows unrelated drift (config google folder organize, schema paths) owned by other lanes, not committed. `command_operation_table` lists `human_sign_out` under config login because rows are a generated upper bound over the shared handler module, not a defect.
+- `S15` Resume-first ran only with a preselected profile and reported an ordinary no-saved-sign-in as a refusal. Absent and missing-keychain-entry now fall back quietly to the password; binding, expiry and keyring refusals still show their code. Resume stays off for an explicit profile choice (change user locks the session first). Stay signed in default-off already present.

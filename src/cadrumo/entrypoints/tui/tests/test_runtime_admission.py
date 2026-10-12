@@ -31,12 +31,16 @@ from ....application.user_profile.login_interaction import (
     ProfileLoginInventoryState,
     ProfileLoginInventoryV1,
 )
+from ....application.user_profile.login_session import ProfileReceiptRefusedError
 from ....core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from ....core.i18n.render import tr
 from ....core.product_identity import PRODUCT_IDENTITY
+from ....core.profile_session import ProfileSessionRefusalReason, ReceiptBindingRefusal
 from ... import operation_composition
 from .. import installed_session
+from ..components.status import PinnedStatusBar
 from ..runtime_admission import runtime_login_session
+from ..secret.runtime_login import RuntimeLoginScreen
 from ..secret.runtime_login_contracts import (
     RuntimeLoginHandoff,
     RuntimeLoginMethod,
@@ -203,6 +207,120 @@ async def test_explicit_preselected_profile_resumes_before_password_prompt() -> 
             assert handoff is not None and handoff.method is RuntimeLoginMethod.RECEIPT
             assert handoff.client is client and client.closed == 0
     assert client.closed == 1
+
+
+class _RefusedResumeClient(_OwnedClient):
+    """A connection whose saved sign-in the runtime refuses for one typed reason."""
+
+    def __init__(self, profile_id: UUID, refusal: ProfileReceiptRefusedError) -> None:
+        super().__init__(profile_id)
+        self.refusal = refusal
+        self.resumes = 0
+
+    @override
+    def resume_receipt(self, *, timeout: float = 20) -> RuntimeProfileStatus:
+        self.resumes += 1
+        raise self.refusal
+
+
+async def _settled(pilot: Pilot[object], condition: Callable[[], bool]) -> None:
+    for _ in range(200):
+        await pilot.pause()
+        if condition():
+            return
+    raise AssertionError("the sign-in screen did not settle")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "reason", [ProfileSessionRefusalReason.ABSENT, ProfileSessionRefusalReason.KEYCHAIN_ENTRY_MISSING]
+)
+async def test_no_saved_sign_in_falls_back_to_the_password_without_a_refusal(
+    reason: ProfileSessionRefusalReason,
+) -> None:
+    profile_id = uuid4()
+    resumed = _RefusedResumeClient(profile_id, ProfileReceiptRefusedError(reason))
+    password = _OwnedClient(profile_id)
+    clients = iter((resumed, password))
+    seen: list[tuple[str, bool]] = []
+
+    async def open_client(selected: UUID) -> RuntimeFrontendClient:
+        assert selected == profile_id
+        return next(clients)
+
+    async def sign_in(pilot: Pilot[object]) -> None:
+        await pilot.resize_terminal(140, 60)
+        screen = pilot.app.screen
+        assert isinstance(screen, RuntimeLoginScreen)
+        status = screen.query_one("#runtime-login-status", PinnedStatusBar)
+        credential = screen.query_one("#runtime-login-credential", Input)
+        await _settled(pilot, lambda: resumed.closed == 1 and not screen._busy and credential.has_focus)
+        seen.append((status.message, credential.has_focus))
+        credential.value = "synthetic-proof"
+        await pilot.click("#runtime-login-submit")
+
+    async with asyncio.timeout(20):
+        async with runtime_login_session(
+            choices=(ProfileLoginChoice(profile_id=str(profile_id), label="Saved profile"),),
+            preselected=str(profile_id),
+            open_client=open_client,
+            headless=True,
+            auto_pilot=sign_in,
+        ) as handoff:
+            assert handoff is not None and handoff.method is RuntimeLoginMethod.PASSWORD
+            assert handoff.client is password
+    assert resumed.resumes == 1
+    assert seen == [("", True)]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("refusal", "shown"),
+    [
+        (
+            ProfileReceiptRefusedError(
+                ProfileSessionRefusalReason.ABSENT, binding=ReceiptBindingRefusal.GENERATION_CHANGED
+            ),
+            "generation_changed",
+        ),
+        (
+            ProfileReceiptRefusedError(
+                ProfileSessionRefusalReason.ABSENT, binding=ReceiptBindingRefusal.LOGIN_MISMATCH
+            ),
+            "login_mismatch",
+        ),
+        (ProfileReceiptRefusedError(ProfileSessionRefusalReason.EXPIRED_IDLE), "expired_idle"),
+        (ProfileReceiptRefusedError(ProfileSessionRefusalReason.KEYRING_UNAVAILABLE), "keyring_unavailable"),
+    ],
+)
+async def test_a_refused_saved_sign_in_says_why_before_the_password(
+    refusal: ProfileReceiptRefusedError, shown: str
+) -> None:
+    profile_id = uuid4()
+    resumed = _RefusedResumeClient(profile_id, refusal)
+    seen: list[str] = []
+
+    async def open_client(selected: UUID) -> RuntimeFrontendClient:
+        assert selected == profile_id
+        return resumed
+
+    async def observe(pilot: Pilot[object]) -> None:
+        screen = pilot.app.screen
+        assert isinstance(screen, RuntimeLoginScreen)
+        await _settled(pilot, lambda: resumed.closed == 1 and not screen._busy)
+        seen.append(screen.query_one("#runtime-login-status", PinnedStatusBar).message)
+        await pilot.press("escape")
+
+    async with asyncio.timeout(20):
+        async with runtime_login_session(
+            choices=(ProfileLoginChoice(profile_id=str(profile_id), label="Saved profile"),),
+            preselected=str(profile_id),
+            open_client=open_client,
+            headless=True,
+            auto_pilot=observe,
+        ) as handoff:
+            assert handoff is None
+    assert len(seen) == 1 and seen[0].endswith(f"({shown})")
 
 
 @pytest.mark.asyncio

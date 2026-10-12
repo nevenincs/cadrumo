@@ -86,7 +86,12 @@ class RuntimeLoginFormMixin:
         self._controls()
         if self._resume_preselected is not None:
             self.call_after_refresh(
-                self._start_login_attempt, self._resume_preselected, RuntimeLoginMethod.RECEIPT, None, None
+                self._start_login_attempt,
+                self._resume_preselected,
+                RuntimeLoginMethod.RECEIPT,
+                None,
+                None,
+                resume_first=True,
             )
 
     def _show_method(self: RuntimeLoginScreen, method: RuntimeLoginMethod) -> None:
@@ -227,8 +232,10 @@ class RuntimeLoginFormMixin:
         reference: UUID | None,
         *,
         persist_receipt: bool = False,
+        resume_first: bool = False,
     ) -> None:
         label = next(choice.label for choice in self._choices if choice.profile_id == selected)
+        self._resume_first = resume_first
         self._busy = True
         self._pending_proof = proof
         self._controls()

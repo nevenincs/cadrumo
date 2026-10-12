@@ -25,6 +25,7 @@ from ....core.async_cleanup import (
 from ....core.diagnostic_log import diagnostic_error_fields, diagnostic_event, diagnostic_scope
 from ....core.i18n.render import tr
 from ....core.logging import get_logger
+from ....core.profile_session import ProfileSessionRefusalReason
 from ....core.time.clock import now
 from ..account import RuntimeUpgradePending
 from .runtime_login_contracts import RuntimeLoginHandoff, RuntimeLoginMethod
@@ -34,6 +35,9 @@ if TYPE_CHECKING:
     from .runtime_login import RuntimeLoginScreen
 
 _LOGGER = get_logger(__name__)
+
+_NO_SAVED_SIGN_IN = frozenset({ProfileSessionRefusalReason.ABSENT, ProfileSessionRefusalReason.KEYCHAIN_ENTRY_MISSING})
+"""Resume refusals that only mean nobody is signed in, so the password is simply next."""
 
 
 class RuntimeLoginAttemptMixin:
@@ -241,6 +245,20 @@ class RuntimeLoginAttemptMixin:
         await await_cancellation_complete(self.dismiss(handoff), task_name="tui-runtime-login-dismiss")
 
     def _handle_login_failure(self: RuntimeLoginScreen, error: BaseException, *, transferred: bool) -> bool:
+        resume_first, self._resume_first = self._resume_first, False
+        if (
+            resume_first
+            and isinstance(error, ProfileReceiptRefusedError)
+            and error.binding is None
+            and error.reason in _NO_SAVED_SIGN_IN
+        ):
+            diagnostic_event(
+                _LOGGER,
+                "tui_login_resume_absent",
+                fields={"reason_code": error.reason.value, "outcome": "password_required"},
+            )
+            self._password_first()
+            return False
         if isinstance(error, (RuntimeFrontendRefusedError, RuntimeRefusalError, ProfileReceiptRefusedError)):
             code = error.reason if isinstance(error, RuntimeFrontendRefusedError) else error.reason.value
             sign_in = error.sign_in if isinstance(error, RuntimeFrontendRefusedError) else None

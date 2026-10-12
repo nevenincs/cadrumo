@@ -95,6 +95,7 @@ class RuntimeLoginScreen(
         self._input_fields: tuple[Input, ...] = ()
         self._cleanup_owners: dict[int, LoginCleanup] = {}
         self._uncertain_resumes: set[UUID] = set()
+        self._resume_first = False
 
     def _active(self) -> bool:
         """Check liveness afresh after each asynchronous native boundary."""
@@ -170,6 +171,13 @@ class RuntimeLoginScreen(
             return
         proof, selected_grants = inputs
         self._start_resume(profile_id, proof, selected_grants)
+
+    def _password_first(self) -> None:
+        """Fall back to the password quietly: no saved sign-in is not a refusal."""
+        if self._active():
+            self.query_one("#runtime-login-status", PinnedStatusBar).clear_message()
+            # The field is re-enabled only once the attempt has settled.
+            self.call_after_refresh(self.query_one("#runtime-login-credential", Input).focus)
 
     def _status_refused(self, code: str | None = None, *, remaining_seconds: int | None = None) -> None:
         if self._active():
