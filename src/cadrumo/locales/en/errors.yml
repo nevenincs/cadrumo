@@ -759,6 +759,9 @@ errors:
       try again.
     auth_profile_identity_mismatch: The active profile identity cannot own the requested
       authentication session.
+    automation_requester_disconnected: The program that asked for this key is no longer
+      connected, so the key cannot reach it. Ask it to request the key again, and
+      approve the new request.
     bootstrap_already_complete: Secure storage bootstrap is already complete. Use
       aeat config login NAME to activate an existing profile or aeat config profile
       create NAME to add another profile.

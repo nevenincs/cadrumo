@@ -28,6 +28,7 @@ from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from contextvars import copy_context
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from importlib.metadata import version
 from pathlib import Path
 from threading import Event
@@ -38,8 +39,9 @@ import pytest
 from click.testing import Result
 
 from cadrumo.adapters.local_runtime import runtime_credentials
-from cadrumo.adapters.local_runtime.automation_decision import run_automation_decision
+from cadrumo.adapters.local_runtime.automation_decision import AutomationDecisionRunError, run_automation_decision
 from cadrumo.adapters.local_runtime.automation_inventory import read_automation_inventory
+from cadrumo.adapters.local_runtime.automation_requester import AutomationRequesterJourney
 from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.adapters.local_runtime.installation import runtime_installation
@@ -60,6 +62,7 @@ from cadrumo.application.user_profile.access_contracts import (
     OsLockState,
     OsLoginContext,
 )
+from cadrumo.application.user_profile.automation_agent_key import agent_key_proposal, agent_key_scope
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentStage
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind
 from cadrumo.application.user_profile.history_operation import PROFILE_HISTORY_OPERATION_DEFINITION_ID
@@ -85,6 +88,12 @@ pytestmark = [
 _KEYS = 10
 """More agent keys than an inventory of listed scopes could hold."""
 
+_CONNECT_SECONDS = 30
+"""The test's own allowance for a new connection's handshake on a loaded host."""
+
+_FENCE_HELD_SECONDS = 13
+"""Longer than the ten seconds a requester's single exchange was once allowed, plus its five-second long poll."""
+
 
 class _LoginObservation:
     login_id = "cli-automation-agent-key-login"
@@ -107,6 +116,7 @@ class _Runtime:
     profile_id: UUID
     store: AutomationControlStore
     pool: ThreadPoolExecutor
+    profiles: RuntimeProfileConnections
 
 
 @dataclass(frozen=True)
@@ -119,9 +129,9 @@ class _IssuedKey:
 def _human(endpoint: WindowsRuntimeEndpoint, profile_id: UUID) -> RuntimeFrontendClient:
     """The person's own signed-in connection, separate from the requesting command."""
     raw = VerifiedRuntimeConnection(
-        endpoint.connect(timeout=3),
+        endpoint.connect(timeout=_CONNECT_SECONDS),
         expected=RuntimeClientHello(product_version=version("cadrumo"), storage_identity=endpoint.storage_identity),
-        deadline=time.monotonic() + 3,
+        deadline=time.monotonic() + _CONNECT_SECONDS,
     )
     human = RuntimeFrontendClient(raw, profile_id=profile_id, frontend=OperationFrontendProjection.CLI)
     human.login_password(bytearray(PROFILE_INPUT.encode()), timeout=90)
@@ -165,7 +175,7 @@ def _running_runtime(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterato
             running = pool.submit(server.serve)
             try:
                 assert server.ready.wait(3)
-                yield _Runtime(root, endpoint, profile_id, store, pool)
+                yield _Runtime(root, endpoint, profile_id, store, pool, profiles)
             finally:
                 primary = sys.exception()
                 stop.set()
@@ -178,8 +188,12 @@ def _running_runtime(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterato
                     endpoint.close()
 
 
-def _issue_agent_key(runtime: _Runtime, *, check_review: bool = False) -> _IssuedKey:
-    """Run the real create command for an agent key and approve it from a separate signed-in connection."""
+def _issue_agent_key(runtime: _Runtime, *, check_review: bool = False, hold_fence: float = 0) -> _IssuedKey:
+    """Run the real create command for an agent key and approve it from a separate signed-in connection.
+
+    ``hold_fence`` holds the profile's publication fence that long once the
+    request is pending, as a slow commit on a loaded host does.
+    """
 
     def invoke_create() -> Result:
         with override_settings(
@@ -211,6 +225,11 @@ def _issue_agent_key(runtime: _Runtime, *, check_review: bool = False) -> _Issue
         if creating.done():
             pytest.fail(f"requester exited before a review existed: {creating.result()!r}")
         time.sleep(0.05)
+    if hold_fence:
+        # The requester's next inspect or poll waits here for its reply.
+        with runtime.profiles._profiles[runtime.profile_id].guard:
+            time.sleep(hold_fence)
+        assert not creating.done(), cast(Result, creating.result()).output
     human = _human(runtime.endpoint, runtime.profile_id)
     try:
         (review,) = (
@@ -335,3 +354,59 @@ def test_the_person_lists_inspects_and_revokes_ten_agent_keys(tmp_path: Path, mo
             person.close()
         with override_settings(cadrumo_local_storage_root=runtime.root):
             asyncio.run(_refused_reference(runtime.profile_id, issued[-1].reference))
+
+
+def test_a_slow_runtime_keeps_the_requester_waiting_through_the_persons_approval(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A reply held behind the profile's publication fence is late, not lost, and the approval completes."""
+    with _running_runtime(tmp_path, monkeypatch) as runtime:
+        issued = _issue_agent_key(runtime, hold_fence=_FENCE_HELD_SECONDS)
+        person = _human(runtime.endpoint, runtime.profile_id)
+        try:
+            keys = {key.key_id: key.state for key in read_automation_inventory(person).projection.keys}
+        finally:
+            person.close()
+        assert keys[issued.key_id] is AuthorityState.ACTIVE
+
+
+def test_an_approval_after_the_requester_left_names_the_departed_requester(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The key cannot reach a requester that disconnected, and the person is told so by name."""
+    with _running_runtime(tmp_path, monkeypatch) as runtime:
+        requester = RuntimeFrontendClient(
+            VerifiedRuntimeConnection(
+                runtime.endpoint.connect(timeout=_CONNECT_SECONDS),
+                expected=RuntimeClientHello(
+                    product_version=version("cadrumo"), storage_identity=runtime.endpoint.storage_identity
+                ),
+                deadline=time.monotonic() + _CONNECT_SECONDS,
+            ),
+            profile_id=runtime.profile_id,
+            frontend=OperationFrontendProjection.CLI,
+        )
+        try:
+            enrollment = requester.prepare_enrollment(MemoryNativePort())
+            proposal = agent_key_proposal(
+                agent_key_scope(), destination_id=enrollment.prepared.destination_id, now=datetime.now(UTC)
+            )
+            submitted = AutomationRequesterJourney(enrollment, timeout=60).submit(proposal)
+        finally:
+            requester.close()
+        person = _human(runtime.endpoint, runtime.profile_id)
+        try:
+            (review,) = (
+                item
+                for item in read_automation_inventory(person).projection.requests
+                if item.receipt.request_id == submitted.request_id
+            )
+            with pytest.raises(AutomationDecisionRunError) as refused:
+                run_automation_decision(person, review, decision="approve", password=bytearray(PROFILE_INPUT.encode()))
+        finally:
+            person.close()
+        assert refused.value.reason == "REFUSED_AUTOMATION_REQUESTER_DISCONNECTED"
+        (record,) = (
+            item for item in runtime.store.enrollment_state().requests if item.request_id == submitted.request_id
+        )
+        assert record.stage is not EnrollmentStage.COMPLETE

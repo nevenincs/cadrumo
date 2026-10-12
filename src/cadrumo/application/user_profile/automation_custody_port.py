@@ -85,6 +85,7 @@ class AutomationCustodyCode(StrEnum):
     INVALID = "invalid"
     CONFLICT = "conflict"
     CREDENTIAL_REJECTED = "credential_rejected"
+    REQUESTER_DISCONNECTED = "requester_disconnected"
 
 
 class AutomationCustodyError(CadrumoError):

@@ -824,6 +824,9 @@ errors:
       a intentarlo.
     auth_profile_identity_mismatch: La identidad del perfil activo no puede ser titular
       de la sesión de autenticación solicitada.
+    automation_requester_disconnected: El programa que pidió esta clave ya no está
+      conectado, así que la clave no puede llegarle. Pídele que vuelva a solicitar
+      la clave y aprueba la nueva solicitud.
     bootstrap_already_complete: El arranque del almacenamiento seguro ya está completo.
       Usa aeat config login NAME para activar un perfil existente o aeat config profile
       create NAME para añadir otro perfil.

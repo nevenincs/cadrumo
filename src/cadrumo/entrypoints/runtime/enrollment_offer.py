@@ -100,11 +100,11 @@ class RuntimeEnrollmentOffer:
         if not self.host.store.enrollment_state().automation_enabled:
             raise AutomationCustodyError(AutomationCustodyCode.NEEDS_USER)
 
-    def close(self) -> None:
-        """Wake blocked delivery before host drain waits for its callback threads."""
+    def close(self, reason: AutomationCustodyCode = AutomationCustodyCode.UNAVAILABLE) -> None:
+        """Wake blocked delivery with ``reason`` before host drain waits for its callback threads."""
         self.closed = True
         if self.recipient is not None:
-            self.recipient.close()
+            self.recipient.close(reason)
 
 
 @dataclass(frozen=True)

@@ -834,6 +834,9 @@ errors:
       a provar.
     auth_profile_identity_mismatch: La identitat del perfil actiu no pot ser titular
       de la sessió d'autenticació sol·licitada.
+    automation_requester_disconnected: El programa que va demanar aquesta clau ja
+      no està connectat, així que la clau no li pot arribar. Demana-li que torni a
+      sol·licitar la clau i aprova la nova sol·licitud.
     bootstrap_already_complete: L'arrencada de l'emmagatzematge segur ja està completa.
       Fes servir aeat config login NAME per activar un perfil existent o aeat config
       profile create NAME per afegir-ne un altre.

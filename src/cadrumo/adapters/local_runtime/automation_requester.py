@@ -14,7 +14,7 @@ from typing import Protocol
 from uuid import UUID
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from ...application.runtime.deadline_budget import remaining_budget
+from ...application.runtime.deadline_budget import RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS, remaining_budget
 from ...application.user_profile.access_contracts import AccessDenialCode
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
@@ -115,7 +115,13 @@ class AutomationRequesterJourney:
         return remaining_budget(deadline)
 
     def _wire_timeout(self) -> float:
-        return min(self._remaining(), 10.0)
+        # Each exchange waits behind the profile's publication fence, which the
+        # person's own approval holds while it commits; a slow host can hold it
+        # for many seconds. A timed-out exchange ends this journey, and with it
+        # the delivery the person is approving, so a reply that is late but
+        # coming may use the journey's remaining budget, up to one exchange's
+        # runtime maximum. The runtime bounds its own long poll.
+        return min(self._remaining(), RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS)
 
     def _uncertain(self, error: Exception) -> AutomationRequesterUncertainError:
         return AutomationRequesterUncertainError(self._client.prepared.enrollment_request_id, _reason(error))

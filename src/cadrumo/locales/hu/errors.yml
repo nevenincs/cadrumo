@@ -772,6 +772,9 @@ errors:
       újra.
     auth_profile_identity_mismatch: Az aktív profil azonossága nem rendelkezhet a
       kért hitelesítési munkamenettel.
+    automation_requester_disconnected: A kulcsot kérő program már nem kapcsolódik,
+      ezért a kulcs nem juthat el hozzá. Kérd meg, hogy kérje újra a kulcsot, és hagyd
+      jóvá az új kérést.
     bootstrap_already_complete: A biztonságos tároló beállítása már befejeződött.
       Használd az aeat config login NÉV parancsot egy meglévő profil aktiválásához,
       vagy az aeat config profile create NÉV parancsot másik profil hozzáadásához.

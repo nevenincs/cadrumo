@@ -139,6 +139,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.user_profile.automation_operations.AutomationRequesterDisconnectedError",
+        ErrorCode(
+            code="REFUSED_AUTOMATION_REQUESTER_DISCONNECTED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.automation_requester_disconnected",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.work_addressing.ModeloWorkCaptureError",
         ErrorCode(
             code="REFUSED_MODELO_WORK_CAPTURE_NOT_CURRENT",

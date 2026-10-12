@@ -98,7 +98,11 @@ class RuntimeEnrollmentConnections:
         """Resolve only the original still-live requesting connection."""
         with self._guard:
             offer = self._offers.get(requester.connection_id)
-        if offer is None or offer.requester() != requester or offer.recipient is None or not self._admitting():
+        if offer is None:
+            # The recorded requester's connection ended, or its offer did: the
+            # key can no longer reach it, and only a new request can.
+            raise AutomationCustodyError(AutomationCustodyCode.REQUESTER_DISCONNECTED)
+        if offer.requester() != requester or offer.recipient is None or not self._admitting():
             raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
         offer.require_live()
         return offer.recipient
@@ -321,7 +325,7 @@ class RuntimeEnrollmentConnections:
         with self._guard:
             offer = self._offers.pop(connection_id, None)
         if offer is not None:
-            offer.close()
+            offer.close(AutomationCustodyCode.REQUESTER_DISCONNECTED)
 
     def poll(self) -> None:
         """End offers on expiry and originating-login loss even without client calls."""

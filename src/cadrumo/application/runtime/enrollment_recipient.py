@@ -323,7 +323,7 @@ class VolatileEnrollmentRecipient:
             pending.work.candidate = None
         self._condition.notify_all()
 
-    def close(self) -> None:
-        """Fail all waiters and prevent reuse after client disconnect or shutdown."""
+    def close(self, reason: AutomationCustodyCode = AutomationCustodyCode.UNAVAILABLE) -> None:
+        """Fail all waiters with ``reason`` and prevent reuse after client disconnect or shutdown."""
         with self._condition:
-            self._fail_locked(AutomationCustodyCode.UNAVAILABLE)
+            self._fail_locked(reason)

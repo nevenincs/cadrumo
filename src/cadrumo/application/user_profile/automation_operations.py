@@ -214,6 +214,10 @@ class AutomationAdministrationRefusedError(CadrumoError):
     """Safe operation refusal; private adapter diagnostics never enter the journal."""
 
 
+class AutomationRequesterDisconnectedError(CadrumoError):
+    """The client that asked for a key no longer waits for it, so only a new request can deliver one."""
+
+
 class _EnrollmentPublication:
     """Keep each publication and its effect recording under one operation owner."""
 
@@ -273,6 +277,8 @@ class AutomationAdministrationExecutor:
         try:
             return await self._execute(request, context)
         except AutomationCustodyError as error:
+            if error.reason is AutomationCustodyCode.REQUESTER_DISCONNECTED:
+                raise AutomationRequesterDisconnectedError(error.reason.value) from None
             raise AutomationAdministrationRefusedError(error.reason.value) from None
 
     async def _execute(
