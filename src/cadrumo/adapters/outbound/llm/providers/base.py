@@ -179,9 +179,10 @@ class ProviderAdapter(ABC):
         was dropped without telling anyone; one is sent without asking.
 
         Declared per MODEL rather than per adapter because that is where vendors
-        actually differ: the same Anthropic adapter serves models that accept
-        ``temperature`` and models that refuse it, so an adapter-wide flag
-        cannot express the constraint.
+        actually differ: one adapter may serve models that accept a parameter
+        and models that refuse it, so an adapter-wide flag cannot express the
+        constraint. An adapter whose SDK has no such parameter at all, as the
+        Anthropic SDK has no ``temperature``, declares it for every model.
 
         Defaults to the empty set -- an adapter carries every parameter until it
         declares otherwise. That is the opposite default from
