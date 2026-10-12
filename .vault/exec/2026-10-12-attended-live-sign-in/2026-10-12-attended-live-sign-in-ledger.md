@@ -5,7 +5,7 @@ tags:
 date: '2026-10-12'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:81a4b18cf2fae28fd617fe91a89e0276b2d52315c1390e84975df36ca6f98d8e'
+body_hash: 'sha256:4b9ed36c511d0de0189be082d11f63cf1c59fdda7df0d4e7828d5ebe32c671e6'
 related:
   - "[[2026-10-12-attended-live-sign-in-plan]]"
 ---
@@ -82,8 +82,32 @@ related:
 - `S03` `verify:` `pytest src/cadrumo_harness/mcp/tests/test_sign_in_resume.py (27)` -> `pass`
 - `S03` `verify:` `ruff check, ty check on runtime_adapter.py and runtime_admission.py` -> `pass`
 - `S03` `by:` `claude`
+- `S04` `M` `docs/how-to/connect-an-agent.md`
+- `S04` `M` `.vault/adr/2026-10-12-mcp-parity-attended-live-sign-in-adr.md`
+- `S04` `M` `.vault/adr/2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr.md`
+- `S04` `M` `.vault/adr/2026-10-10-mcp-parity-shared-sign-in-door-adr.md`
+- `S04` `M` `.vault/adr/2026-09-26-mcp-purpose-authentication-profile-access-adr.md`
+- `S04` `M` `.vault/adr/2026-10-04-application-sign-in-adr.md`
+- `S04` `verify:` `docs contract matches the dev-environment real-process run of dev.runtime_lifecycle.live_sign_in (all lifecycle steps held; expiry skipped)` -> `pass`
+- `S04` `by:` `claude`
+- `S05` `A` `dev/runtime_lifecycle/live_sign_in.py`
+- `S05` `M` `dev/runtime_lifecycle/caller_owned_root.py`
+- `S05` `M` `dev/runtime_lifecycle/README.md`
+- `S05` `M` `justfile`
+- `S05` `M` `src/cadrumo/application/user_profile/session_authority_core.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/config/sign_in_hold.py`
+- `S05` `M` `src/cadrumo/entrypoints/runtime/tests/test_attendance.py`
+- `S05` `verify:` `just verify-live-sign-in build/windows-x64/stage/Release/app (manifest sha256 24b8d3c3..., 18:29-18:48Z, expiry included): every lifecycle step held; exit 3 incomplete for the reviewed operation only` -> `pass`
+- `S05` `verify:` `pytest -m integration test_attendance.py five consecutive runs` -> `pass`
+- `S05` `verify:` `pytest application/user_profile + MCP test_sign_in_resume (1002)` -> `pass`
+- `S05` `by:` `claude`
 
 ## Notes
 
 - `S02` Code was swept into c7fbea9454 by another session's catch-all commit; the counterpart declaration and regenerated reference landed in 9790b9e63c. Command name is config sign-in-hold (ADR hypothesis config sign-in hold); password arrives as the first stdin line, not --secrets-fd; both reconciled in the ADR under S04. Other CLI suites showed 11 failures from `runtime_deadline_exceeded/KDF_RESOURCE_LIMIT` under 100% host CPU from concurrent sessions, not from this change.
 - `S03` Adapter code was swept into c7fbea9454 by another session; test updates committed in 9790b9e63c. Packaged end-to-end proof is S05.
+- `S04` ADR amendments reconcile: command named config sign-in-hold (hypothesis was config sign-in hold); password read as the first stdin line, not --secrets-fd; bounds 120s ask, 8 pending, 90s MCP wait; attended children judged by lineage without automation custody.
+- `S05` Packaged proof found and fixed two defects: lease revalidation retired attended children where the automation store is unavailable (6521d4c2ca), and the holder could abort at shutdown with a daemon thread blocked on buffered stdin (6521d4c2ca).
+- `S05` Unproven: a safe operation with a real review response. Every review-gated operation (ledger.classify.review, ledger.split.review, config.google.login, export.google-review, user-profile.censo-review) reaches a remote service, hands data to a model, or needs a censal document no parser accepts. S05 stays open for that item.
+- `S05` Observed, not ours: the package redacts profile ids even with `CADRUMO_CLI_REVEAL_IDENTIFIERS=1` (dev env reveals them); MCP search failed on person-act describe refusals, fixed by another session in 07b729934c after this package was built.
+- `S05` Package built from HEAD e11fb302f2 with 21 dirty paths from other sessions; packaged `runtime_adapter.py` predates a408f4b773.
