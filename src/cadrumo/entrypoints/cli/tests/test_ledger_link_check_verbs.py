@@ -172,13 +172,13 @@ def test_check_refuses_foreign_bucket_id_without_unlocked_session() -> None:
         ["app", "ledger", "check", "--bucket-id", "some-other-bucket"],
     )
     assert result.exit_code != 0, result.output
-    # Asserted on the READINESS CODE, not on the sentence. The refusal is
+    # Asserted on the stable reason token, not on the sentence. The refusal is
     # rendered in the operator's language, so matching English prose passed
     # only under an English ambient locale and said nothing about WHY the
-    # command refused. ``route_bucket_mismatch`` is the stable transport token
-    # that names this exact cause: the supplied bucket does not match the
-    # session's route, which is the bypass this verb must refuse.
-    assert "route_bucket_mismatch" in result.output, result.output
+    # command refused. ``profile_mismatch`` names this exact cause: the
+    # supplied bucket is not the profile the command is admitted to, which is
+    # the bypass this verb must refuse before any operation is submitted.
+    assert "profile_mismatch" in result.output, result.output
 
 
 def _line_value(output: str, key: str) -> str:
@@ -231,7 +231,9 @@ def test_invoice_add_id_is_linkable(tmp_path: Path, authority_operation: PinnedA
         assert invoice.exit_code == 0, invoice.output
         invoice_add_id = _line_value(invoice.output, "invoice_id")
 
-        linked = _invoke(["app", "ledger", "link", transaction_id, "--invoice-id", invoice_add_id])
+        linked = session.invoke_password(
+            "app", "ledger", "link", transaction_id, "--invoice-id", invoice_add_id, output_format="text"
+        )
 
         assert linked.exit_code == 0, linked.output
         assert "traceback" not in linked.output.lower(), linked.output
@@ -250,7 +252,8 @@ def test_check_reports_zero_link_inconsistencies_on_a_consistent_bucket() -> Non
     payload = json.loads(result.output)
     assert payload["result"]["link_inconsistencies"] == []
     assert payload["result"]["ready"] is True
-    assert payload["notices"] == []
+    # The operator was admitted with the password for this command alone, which it says; nothing else.
+    assert [notice["code"] for notice in payload["notices"]] == ["config.login.session_not_persisted"]
 
 
 @pytest.mark.windows_only
@@ -296,7 +299,9 @@ def test_check_reports_a_one_sided_invoice_link(tmp_path: Path, authority_operat
         assert created.exit_code == 0, created.output
         invoice_id = _line_value(created.output, "invoice_id")
 
-        linked = _invoke(["app", "ledger", "link", transaction_id, "--invoice-id", invoice_id])
+        linked = session.invoke_password(
+            "app", "ledger", "link", transaction_id, "--invoice-id", invoice_id, output_format="text"
+        )
         assert linked.exit_code == 0, linked.output
 
         # Drop the transaction side of the link, leaving the invoice citing it.
