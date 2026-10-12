@@ -238,7 +238,7 @@ def _descends_from_harness(process_id: int) -> bool:
         return False
 
 
-async def _ask_and_decide(
+async def ask_and_decide(
     holder: Holder, session: McpSession, *, approve: bool, receipt: Receipt, step: str
 ) -> tuple[bool, dict[str, Any]]:
     """Make one profile call that asks to be attended, verify the asking process, decide it, and return the call."""
@@ -287,7 +287,7 @@ async def _require_refused(session: McpSession, receipt: Receipt, step: str) -> 
 
 
 async def _admit(holder: Holder, session: McpSession, profile: Profile, receipt: Receipt, step: str) -> dict[str, Any]:
-    is_error, content = await _ask_and_decide(holder, session, approve=True, receipt=receipt, step=step)
+    is_error, content = await ask_and_decide(holder, session, approve=True, receipt=receipt, step=step)
     require(not is_error, f"{step}: the approved connection was refused: {content}")
     _status_error, status = await session.call("status", {})
     require(status.get("session") == "attended", f"{step}: not attended: {status}")
@@ -302,7 +302,7 @@ async def _admit(holder: Holder, session: McpSession, profile: Profile, receipt:
     return read
 
 
-def _create(programs: Programs, environment: Mapping[str, str], name: str, log: Path) -> Profile:
+def create_profile(programs: Programs, environment: Mapping[str, str], name: str, log: Path) -> Profile:
     """Create a profile, then learn its id from the ``held`` event of a brief hold.
 
     Command output hides profile identifiers, so the id comes from the one
@@ -324,7 +324,8 @@ def _create(programs: Programs, environment: Mapping[str, str], name: str, log: 
     return Profile(name, password, UUID(int=0))
 
 
-def _identify(programs: Programs, environment: Mapping[str, str], profile: Profile, log: Path) -> Profile:
+def identify_profile(programs: Programs, environment: Mapping[str, str], profile: Profile, log: Path) -> Profile:
+    """Learn a profile's id from the ``held`` event of a brief hold, then let the hold go."""
     holder = Holder(programs, environment, profile, log)
     try:
         held = holder.event("held")
@@ -371,15 +372,21 @@ def local_model(scratch: Path, models: Path) -> Iterator[bool]:
             names = {item.get("name") for item in (tags or {}).get("models", [])}
             yield _LOCAL_TEXT_MODEL in names
         finally:
-            server.terminate()
-            try:
-                server.wait(timeout=30)
-            except subprocess.TimeoutExpired:
-                server.kill()
-                server.wait(timeout=30)
+            # The server starts a model runner per loaded model; stopping only the server leaves it running.
+            with suppress(psutil.Error):
+                tree = [psutil.Process(server.pid), *psutil.Process(server.pid).children(recursive=True)]
+                for process in tree:
+                    with suppress(psutil.Error):
+                        process.terminate()
+                _gone, alive = psutil.wait_procs(tree, timeout=30)
+                for process in alive:
+                    with suppress(psutil.Error):
+                        process.kill()
+                psutil.wait_procs(alive, timeout=30)
+            server.wait(timeout=30)
 
 
-def _state_taxpayer(programs: Programs, environment: Mapping[str, str], profile: Profile) -> None:
+def state_taxpayer(programs: Programs, environment: Mapping[str, str], profile: Profile) -> None:
     """State the synthetic taxpayer facts and complete the setup, as the person does at the command line."""
     for arguments in (
         ("config", "profile", "edit", "--quiet", *_TAXPAYER_FACTS),
@@ -395,7 +402,8 @@ def _state_taxpayer(programs: Programs, environment: Mapping[str, str], profile:
         require(code == 0, f"{' '.join(arguments[:3])}: {code} {envelope}")
 
 
-async def _observe(session: McpSession, operation_id: str) -> dict[str, Any]:
+async def observe(session: McpSession, operation_id: str) -> dict[str, Any]:
+    """Return the operation's current projection as the agent observes it."""
     is_error, observed = await session.call(
         "observe", {"observation": {"operation_id": operation_id, "after_cursor": 0, "page_limit": 32}}
     )
@@ -403,7 +411,8 @@ async def _observe(session: McpSession, operation_id: str) -> dict[str, Any]:
     return observed["reply"]["observation"]["projection"]
 
 
-async def _execute(session: McpSession, definition_id: str, payload: Mapping[str, object]) -> str:
+async def execute(session: McpSession, definition_id: str, payload: Mapping[str, object]) -> str:
+    """Submit and start a registered operation through MCP; return the operation id its receipt names."""
     is_error, submitted = await session.call(
         "execute", {"definition_id": definition_id, "payload": dict(payload), "start": True}
     )
@@ -413,7 +422,8 @@ async def _execute(session: McpSession, definition_id: str, payload: Mapping[str
     return str(operation_id)
 
 
-async def _settled(session: McpSession, operation_id: str) -> dict[str, Any]:
+async def settled(session: McpSession, operation_id: str) -> dict[str, Any]:
+    """Wait until the operation's result is terminal and return it."""
     deadline = time.monotonic() + _CALL_SECONDS
     while True:
         is_error, result = await session.call("result", {"result": {"operation_id": operation_id}})
@@ -429,9 +439,9 @@ async def _reviewed_classification(
 ) -> None:
     """Classify one ledger row through the local model, answer its review, and read the outcome independently."""
     description = "Papeleria y material de oficina"
-    added = await _settled(
+    added = await settled(
         session,
-        await _execute(
+        await execute(
             session,
             "ledger.add",
             {
@@ -448,7 +458,7 @@ async def _reviewed_classification(
     transaction_id = row.get("transaction_id")
     if not isinstance(transaction_id, str):
         raise AcceptanceError(f"ledger.add created no row: {added}")
-    review_id = await _execute(
+    review_id = await execute(
         session,
         "ledger.classify.review",
         {
@@ -460,7 +470,7 @@ async def _reviewed_classification(
     )
     deadline = time.monotonic() + _REVIEW_SECONDS
     while True:
-        projection = await _observe(session, review_id)
+        projection = await observe(session, review_id)
         pending = projection.get("pending_interaction") or {}
         if pending.get("disposition") == "review_available":
             break
@@ -480,12 +490,12 @@ async def _reviewed_classification(
     require(not is_error and "apply" in document.get("permitted_intents", ()), f"inspect: {inspected}")
     is_error, applied = await session.call("respond", {"action": "apply", **answer})
     require(not is_error, f"apply refused: {applied}")
-    settled = await _settled(session, review_id)
-    projection = (settled.get("document") or {}).get("projection") or {}
+    outcome = await settled(session, review_id)
+    projection = (outcome.get("document") or {}).get("projection") or {}
     classified = projection.get("classification") or {}
     stored = classified.get("transaction") or {}
-    require(classified.get("outcome") == "classified", f"not classified: {settled}")
-    require(classified.get("review_status") == "reviewed", f"not reviewed: {settled}")
+    require(classified.get("outcome") == "classified", f"not classified: {outcome}")
+    require(classified.get("review_status") == "reviewed", f"not reviewed: {outcome}")
     require(str(stored.get("classified_by", "")).startswith("llm:local-text:"), f"not the local model: {stored}")
     code, listing = run_cli(
         programs,
@@ -509,7 +519,8 @@ async def _reviewed_classification(
     )
 
 
-def _identity(package: Path | None) -> dict[str, object]:
+def package_identity(package: Path | None) -> dict[str, object]:
+    """Name the package under test by its manifest digest and build record."""
     if package is None:
         return {"package": None}
     manifest = package / "data" / "package-manifest.json"
@@ -521,7 +532,8 @@ def _identity(package: Path | None) -> dict[str, object]:
     }
 
 
-def _started_processes() -> list[str]:
+def started_processes() -> list[str]:
+    """List this driver's descendant processes that are still running."""
     survivors = []
     for child in psutil.Process(os.getpid()).children(recursive=True):
         with suppress(psutil.Error):
@@ -535,7 +547,7 @@ async def run(
 ) -> Receipt:
     """Execute the whole lifecycle on a fresh root below ``scratch``."""
     receipt = Receipt()
-    receipt.record("artifact", **_identity(package))
+    receipt.record("artifact", **package_identity(package))
     root, secret_store = scratch / "storage", scratch / "secrets"
     secret_store.mkdir(parents=True)
     environment = consumer_environment(root, secret_store)
@@ -559,18 +571,18 @@ async def run(
     require(help_run.returncode == 0 and "sign-in-hold" in help_run.stdout, f"no sign-in-hold: {help_run.stderr}")
     receipt.record("command_registered", command="config sign-in-hold")
 
-    other = _create(programs, environment, _OTHER_PROFILE, log)
-    profile = _create(programs, environment, _PROFILE, log)
+    other = create_profile(programs, environment, _OTHER_PROFILE, log)
+    profile = create_profile(programs, environment, _PROFILE, log)
     receipt.record("profiles_created", profiles=2)
 
     with caller_owned_runtime(programs, environment, scratch / "runtime-stderr.log") as runtime:
         ready = runtime.ready()
         receipt.record("runtime_ready", product_version=ready.get("product_version"))
-        other = _identify(programs, environment, other, log)
-        profile = _identify(programs, environment, profile, log)
+        other = identify_profile(programs, environment, other, log)
+        profile = identify_profile(programs, environment, profile, log)
         receipt.record("profiles_identified_by_held_events", profiles=2)
         if review:
-            _state_taxpayer(programs, environment, profile)
+            state_taxpayer(programs, environment, profile)
             receipt.record("taxpayer_stated")
 
         async with mcp_session(programs, environment, scratch) as agent:
@@ -582,7 +594,7 @@ async def run(
                 held = holder.event("held")
                 receipt.record("held", session_expires_at=held.get("session_expires_at"))
 
-                is_error, content = await _ask_and_decide(
+                is_error, content = await ask_and_decide(
                     holder, agent, approve=False, receipt=receipt, step="declined"
                 )
                 require(is_error and _refused_code(content) == "authentication_required", f"declined: {content}")
@@ -707,7 +719,7 @@ async def run(
     changed = sorted(name for name in before.keys() | after.keys() if before.get(name) != after.get(name))
     require(not changed, f"the installed default root changed: {changed[:20]}")
     receipt.record("default_root_unchanged", entries=len(after))
-    survivors = _started_processes()
+    survivors = started_processes()
     require(not survivors, f"processes this run started survive it: {survivors}")
     receipt.record("no_surviving_processes")
     return receipt
@@ -723,13 +735,13 @@ def _programs(options: argparse.Namespace) -> tuple[Programs, Path | None]:
     return Programs(*((directory / f"{name}{suffix}").resolve(strict=True) for name in names)), None
 
 
-def _acceptance_failure(error: BaseException) -> str | None:
+def acceptance_failure(error: BaseException) -> str | None:
     """Find the contradicted step inside the task groups the MCP client wraps it in."""
     if isinstance(error, AcceptanceError):
         return str(error)
     if isinstance(error, BaseExceptionGroup):
         for inner in error.exceptions:
-            reason = _acceptance_failure(inner)
+            reason = acceptance_failure(inner)
             if reason is not None:
                 return reason
     return None
@@ -767,7 +779,7 @@ def main(arguments: list[str] | None = None) -> int:
             )
         )
     except (AcceptanceError, BaseExceptionGroup) as failure:
-        reason = _acceptance_failure(failure)
+        reason = acceptance_failure(failure)
         if reason is None:
             raise
         print(json.dumps({"step": "failed", "reason": reason, "kept_root": str(scratch)}), flush=True)
