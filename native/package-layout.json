@@ -36,6 +36,7 @@
     "ensurepip"
   ],
   "overrides": [
+    "CADRUMO_CLI_REVEAL_IDENTIFIERS",
     "CADRUMO_EXTERNAL_BIN_DIRS"
   ],
   "entrypoints": {

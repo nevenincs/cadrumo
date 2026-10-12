@@ -16,7 +16,7 @@ from cadrumo.adapters.local_runtime.runtime_credentials import open_installed_cr
 from cadrumo.application.operations.mcp_surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES, McpSurface
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.operator_output.runtime_remedies import runtime_unavailable_remedy
-from cadrumo.application.runtime.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
+from cadrumo.application.runtime.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS, RuntimeProfileStatus
 from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.core.async_cleanup import (
     AsyncCloseable,
@@ -288,7 +288,7 @@ class RuntimeMcpAdapter:
         """
         try:
             profile_id = await self._bound_profile()
-            if self.client is not None and self._retired.is_set():
+            if self.client is not None and self._retired.is_set() and not await self._renew_attendance(profile_id):
                 await self._release_lease(task_name="mcp-retired-session-close")
             await self._require_selected(profile_id)
             if self.client is None:
@@ -299,6 +299,31 @@ class RuntimeMcpAdapter:
             self._admission_denial = AdmissionDenial.of(error)
             return
         self._admission_denial = None
+
+    async def _renew_attendance(self, profile_id: UUID) -> bool:
+        """Renew an attended lease that ended, on the connection the person approved, and say whether it was.
+
+        The person approved this exact connection under their session. While
+        that session lives the runtime issues it a new child without a new
+        decision; once it has ended the runtime refuses, and the connection is
+        let go like any other whose session ended.
+        """
+        client = self.client
+        if client is None or self.admission is not McpAdmission.ATTENDED:
+            return False
+
+        def renew() -> Event:
+            if not isinstance(client.request_attendance(), RuntimeProfileStatus):
+                # Only a fresh ask waits for a decision; this connection's approval did not carry.
+                raise RuntimeFrontendRefusedError(AccessDenialCode.AUTHENTICATION_REQUIRED.value)
+            require_exact_admitted_status(client, profile_id=profile_id, admission=McpAdmission.ATTENDED)
+            return self._watch(client)
+
+        try:
+            self._retired = await self._wire(renew)
+        except Exception:
+            return False
+        return True
 
     async def _open_signed_in_client(self, profile_id: UUID) -> tuple[RuntimeFrontendClient, Event, McpAdmission]:
         """Resume the person's stored sign-in; with none to resume, ask the person holding it to admit this one."""
@@ -417,9 +442,13 @@ class RuntimeMcpAdapter:
                 # The runtime said why, in a registered error's code and message; every tool passes that on.
                 reply["faults"] = [public_value(fault) for fault in error.request_faults]
             if self.client is not None and code in _SESSION_ENDED:
-                # The runtime has ended the held session, whether or not its notice has arrived yet: let it go,
-                # so this answer sends the agent to the person and the next call asks the runtime once again.
-                await self._release_lease(task_name="mcp-ended-session-close")
+                if self.admission is McpAdmission.ATTENDED:
+                    # An attended lease is short; the next call asks again on this approved connection.
+                    self._retired.set()
+                else:
+                    # The runtime has ended the held session, whether or not its notice has arrived yet: let it
+                    # go, so this answer sends the agent to the person and the next call asks the runtime again.
+                    await self._release_lease(task_name="mcp-ended-session-close")
             if code == AccessDenialCode.PERSON_ACT_REQUIRED.value:
                 # The runtime refused the person's own act; the agent is told to ask the person.
                 reply["remedy"] = PERSON_ACT_REMEDY

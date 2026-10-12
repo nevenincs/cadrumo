@@ -190,6 +190,11 @@ def test_an_ask_is_admitted_only_by_the_persons_approval_and_ends_with_their_ses
             assert admitted.status.profile_id == profile_id
             assert agent.session_id == admitted.status.session_id != holder.session_id
             assert agent.status().status.denial is None
+            # Asking again on the approved connection is answered under the same approval, with no new decision.
+            again = agent.request_attendance()
+            assert isinstance(again, RuntimeProfileStatus)
+            assert again.status.denial is None
+            assert holder.attendance_inventory().candidates == ()
 
             # Ending the person's session ends the attended one, and the approval with it.
             holder.lock()

@@ -342,7 +342,9 @@ configuration and reserved Settings except the product allowlist that
 taxonomy member. The development root variable `CADRUMO_STORAGE_ROOT` and the
 development tool locations are not in it. Package-owned `CADRUMO_EXTERNAL_BIN_DIRS`
 accepts existing absolute directories for external executables. These directories
-affect child-process PATH, not DLL search. No development environment template is
+affect child-process PATH, not DLL search. `CADRUMO_CLI_REVEAL_IDENTIFIERS` also
+passes, so the installed command line can show profile and bucket identifiers
+when the person asks for them; it reveals no credential. No development environment template is
 copied into the package.
 
 Temporary and cache locations follow the canonical storage declarations. Managed browsers,

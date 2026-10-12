@@ -59,6 +59,8 @@ from ...application.runtime.operation_access import (
 )
 from ...application.runtime.profile_access import (
     PROFILE_ADMISSION_TIMEOUT_SECONDS,
+    RuntimeDisclosurePage,
+    RuntimeDisclosurePageRequest,
     RuntimeProfileLogin,
     RuntimeProfileStatus,
     RuntimeSessionRequest,
@@ -66,7 +68,7 @@ from ...application.runtime.profile_access import (
 )
 from ...application.runtime.session_events import RuntimeConnectionEvent, RuntimeLifecycleNotice
 from ...application.runtime.sign_in import RuntimeHumanSignedOut, RuntimeSignInStatusReply, RuntimeSignInStatusRequest
-from ...application.user_profile.access_contracts import AccessDenialCode
+from ...application.user_profile.access_contracts import AccessDenialCode, DisclosurePage, DisclosurePageRequest
 from ...application.user_profile.access_projections import PublicAccessSession
 from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationSecretStore
 from ...application.user_profile.automation_enrollment import AutomationReceiptProjection, EnrollmentStage
@@ -380,8 +382,13 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
     def _attendance_ask(
         self, action: Literal["attendance_request", "attendance_status"], attendance_id: UUID | None
     ) -> RuntimeAttendanceAsk:
-        if self._session_id is not None or self._connection_purpose not in {"fresh", "attendance"}:
+        if self._connection_purpose not in {"fresh", "attendance"} or (
+            self._session_id is not None and self._connection_purpose != "attendance"
+        ):
             raise RuntimeFrontendRefusedError(AutomationCustodyCode.CONFLICT.value)
+        # An attended connection asks again when its short lease ends. The runtime answers with the
+        # child it still holds, or issues a new one under the same approval while the person's session lives.
+        self._session_id = None
         self._connection_purpose = "attendance"
         return RuntimeAttendanceAsk(
             action=action,
@@ -466,6 +473,21 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
     def status(self, *, timeout: float = 5) -> RuntimeProfileStatus:
         """Recheck the current connection-bound session without refreshing it."""
         return self._session_status("session_status", timeout=timeout)
+
+    def disclosure_page(self, request: DisclosurePageRequest, *, timeout: float = 5) -> DisclosurePage:
+        """Read one page of the disclosures this session's status counts."""
+        reply = self._reply(
+            self._connection.disclosure_page(
+                RuntimeDisclosurePageRequest(
+                    request_id=uuid4(), profile_id=self.profile_id, session_id=self._session(), page=request
+                ),
+                deadline=deadline_after(timeout),
+            ),
+            RuntimeDisclosurePage,
+        )
+        if reply.page.offset != request.offset or request.expected_digest not in (None, reply.page.disclosure_digest):
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        return reply.page
 
     def sign_in_status(self, *, timeout: float = 5) -> RuntimeSignInStatusReply:
         """Observe shared presence without borrowing proof or authenticating this connection."""
