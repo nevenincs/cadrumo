@@ -19,7 +19,12 @@ from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.profile_access import RuntimeProfileStatus
-from cadrumo.application.user_profile.access_contracts import AccessScope, Availability, ProfileAccessStatus
+from cadrumo.application.user_profile.access_contracts import (
+    AccessScope,
+    Availability,
+    EffectiveScopeSummary,
+    ProfileAccessStatus,
+)
 from cadrumo.application.user_profile.login_interaction import ProfileLoginChoice
 from cadrumo.entrypoints.tui.runtime_admission import runtime_login_session
 
@@ -82,13 +87,15 @@ class _AdmissionClient(RuntimeFrontendClient):
                 automation_custody=Availability.UNSUPPORTED,
                 published_authority=Availability.AVAILABLE,
                 provider=Availability.NOT_REQUIRED,
-                effective_scope=AccessScope(
-                    operations=frozenset(),
-                    actions=frozenset(),
-                    disclosures=frozenset(),
-                    periods=None,
-                    allow_period_independent=True,
-                    allow_delegation=False,
+                effective_scope=EffectiveScopeSummary.summarize(
+                    AccessScope(
+                        operations=frozenset(),
+                        actions=frozenset(),
+                        disclosures=frozenset(),
+                        periods=None,
+                        allow_period_independent=True,
+                        allow_delegation=False,
+                    )
                 ),
                 denial=None,
             ),

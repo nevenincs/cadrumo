@@ -56,6 +56,8 @@ from ...application.runtime.operation_access import (
 )
 from ...application.runtime.profile_access import (
     RuntimeAccessRefusal,
+    RuntimeDisclosurePage,
+    RuntimeDisclosurePageRequest,
     RuntimeProfileHandler,
     RuntimeProfileLogin,
     RuntimeProfileStatus,
@@ -80,6 +82,7 @@ type _ProfileConnectionRequest = (
     | RuntimePasswordReset
     | RuntimeSignInStatusRequest
     | RuntimeSessionRequest
+    | RuntimeDisclosurePageRequest
     | RuntimeAttendanceAsk
     | RuntimeAttendanceDecide
     | RuntimeOperationRequest
@@ -211,6 +214,7 @@ class RuntimeConnectionHandling:
         self, channel: RuntimeByteChannel, context: RuntimeConnectionContext, request: _ProfileConnectionRequest
     ) -> (
         RuntimeProfileStatus
+        | RuntimeDisclosurePage
         | RuntimeSessionsLocked
         | RuntimeSignInStatusReply
         | RuntimeHumanSignedOut
@@ -270,6 +274,7 @@ class RuntimeConnectionHandling:
             request,
             RuntimeProfileLogin
             | RuntimeSessionRequest
+            | RuntimeDisclosurePageRequest
             | RuntimeSignInStatusRequest
             | RuntimeAttendanceAsk
             | RuntimeAttendanceDecide,

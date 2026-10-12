@@ -15,7 +15,7 @@ from cadrumo.application.corpus_search.errors import CorpusSearchError
 from cadrumo.application.operations.frontend_requests import OperationResultProjectionRefusalV1
 from cadrumo.application.runtime.contracts import RuntimeRefusalError
 from cadrumo.application.runtime.projection_pages import ProjectionPage
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
+from cadrumo.application.user_profile.access_contracts import DISCLOSURE_PAGE_ENTRIES, AccessDenialCode
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.sign_in_refusals import SignInRefusal
 from cadrumo.core.errors.hierarchy import InternalInvariantError
@@ -172,8 +172,14 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         "needs that: with neither, each answers refused, and remedy says to ask the person to sign in to Cadrumo. "
         "You never sign in, and never ask for a password, a key or any other secret. A notice member carries the "
         "runtime's lifecycle notice: upgrade_pending says an update is ready and the runtime restarts for it once "
-        f"idle, after which the next call re-establishes the session. {_SIGN_IN_REFUSAL}",
-        _schema({}),
+        f"idle, after which the next call re-establishes the session. {_SIGN_IN_REFUSAL} "
+        "The status's effective_scope counts the disclosures the session may release: disclosure_count, "
+        "disclosure_summary with the count in each category, and disclosure_digest. For the entries themselves "
+        "pass disclosures, an object with offset, starting at 0, and expected_digest, the disclosure_digest: "
+        f"the reply then carries disclosure_page, with at most {DISCLOSURE_PAGE_ENTRIES} entries and a "
+        "next_offset to pass for the next page until it is null. A list that changed since its digest, or an "
+        "offset past its end, is refused with operation_unavailable; read status again and start over",
+        _schema({}, {"disclosures": _DOC}),
         _reads("Session and profile status"),
     ),
     (

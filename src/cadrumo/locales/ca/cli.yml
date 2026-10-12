@@ -2499,6 +2499,12 @@ cli:
           vàlids: {valid}.'
         invalid_timestamp: '{flag} ha de ser una marca de temps ISO-8601 (p. ex. 2026-04-01T00:00:00+00:00);
           s''ha rebut {raw}.'
+      disclosures:
+        help: Compta per categoria les dades que aquesta sessió pot revelar i imprimeix
+          una pàgina de la llista completa.
+        offset_help: L'entrada on comença la pàgina; passa el next_offset de la pàgina
+          anterior. Cada execució de l'ordre és una sessió pròpia, així que les seves
+          entrades anomenen aquesta sessió com a destinació.
         since_after_until: --since ha de ser anterior o igual a --until.
       history_actor_help: Filtrar l'historial a esdeveniments registrats per un actor
         concret (coincidència exacta)

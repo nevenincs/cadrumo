@@ -13,6 +13,7 @@ from ....adapters.local_runtime.automation_inventory import read_automation_inve
 from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ....application.operations.models import OperationId
+from ....application.user_profile.access_contracts import DisclosurePageRequest
 from ....application.user_profile.access_projections import PublicAccessSession
 from ....application.user_profile.automation_enrollment import (
     AutomationReviewProjection,
@@ -31,6 +32,7 @@ from .runtime_access_management_payloads import (
     ConfigProfileAutomationDenyResult,
     ConfigProfileAutomationInspectResult,
     ConfigProfileAutomationListResult,
+    ConfigProfileDisclosuresResult,
     ConfigProfileLockResult,
     ConfigProfileResumeResult,
     ConfigProfileSessionsResult,
@@ -103,6 +105,39 @@ def profile_sessions(ctx: typer.Context, output_language: OutputLanguage | None 
         lines=tuple(
             f"session\t{item.session_id}\t{item.kind.value}\t{item.state.value}\t{item.remaining_seconds}"
             for item in projected
+        ),
+    )
+
+
+def profile_disclosures(ctx: typer.Context, offset: int = 0, output_language: OutputLanguage | None = None) -> None:
+    """Count this session's disclosures by category and print one page of the full list.
+
+    Each run is a session of its own, so a page is read by offset alone and is
+    not pinned to the list an earlier run read.
+    """
+    client = _client(ctx, requested_language=output_language)
+    try:
+        page = client.disclosure_page(DisclosurePageRequest(offset=offset))
+    except RuntimeFrontendRefusedError as error:
+        raise _refused(error) from error
+    emit_envelope(
+        ctx,
+        command="config.profile.disclosures",
+        result=ConfigProfileDisclosuresResult(
+            profile_id=client.profile_id,
+            disclosure_count=page.total,
+            disclosure_summary=page.disclosure_summary,
+            disclosure_digest=page.disclosure_digest,
+            page=page,
+        ),
+        lines=(
+            f"disclosures\t{page.total}\t{page.disclosure_digest}",
+            *(f"category\t{item.category.value}\t{item.count}" for item in page.disclosure_summary),
+            *(
+                f"disclosure\t{item.category.value}\t{item.projection_id}\t{item.destination_id}"
+                for item in page.entries
+            ),
+            f"page\t{page.offset}\t{page.total}\t{'' if page.next_offset is None else page.next_offset}",
         ),
     )
 
@@ -448,6 +483,7 @@ __all__ = [
     "automation_deny",
     "automation_inspect",
     "automation_list",
+    "profile_disclosures",
     "profile_lock",
     "profile_resume",
     "profile_sessions",

@@ -142,7 +142,8 @@ what it would change, and continue once they have.
 ## Discovering registered operations through MCP
 
 The MCP server exposes a fixed protocol surface. Use `status` to inspect whether
-this connection is admitted for its bound profile. Use `search` to find
+this connection is admitted for its bound profile; it counts the session's
+disclosures by category, and its `disclosures` argument pages the full list. Use `search` to find
 operations, then `describe` with the returned `definition_id` to inspect an
 operation's contract and input schema. Both need a session, as every tool but
 `status` does, and cover the operations that session may use. With no session,

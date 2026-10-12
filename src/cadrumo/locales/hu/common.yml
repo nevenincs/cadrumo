@@ -3814,6 +3814,11 @@ tui:
     none: Nincs
     operations: 'Engedélyezett műveletek: {values}'
     periods: 'Időszakok: {values}; időszaktól független munka: {independent}'
+    disclosure_page: 'Felfedhető adatok: {first}–{last} / {total}'
+    disclosure_page_empty: Ez a munkamenet semmit sem fedhet fel.
+    disclosure_page_stale: A felfedhető adatok megváltoztak, mióta megszámoltuk őket.
+      Várd meg, amíg az állapot frissül, majd olvasd be őket újra.
+    disclosures_next: Felfedhető adatok, következő oldal
     profile: 'Profil: {label} ({profile_id})'
     session_expiry: 'A munkamenet lejár: {expires_at}'
     title: Korlátozott API-munkamenet

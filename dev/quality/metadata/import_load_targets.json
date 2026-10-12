@@ -3191,6 +3191,7 @@
         "cadrumo.entrypoints.tui.installation",
         "cadrumo.entrypoints.tui.installation.act_screen",
         "cadrumo.entrypoints.tui.installation.acts",
+        "cadrumo.entrypoints.tui.disclosure_pages",
         "cadrumo.entrypoints.tui.installation.area_factory",
         "cadrumo.entrypoints.tui.installation.destination",
         "cadrumo.entrypoints.tui.installation.door",

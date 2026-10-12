@@ -44,6 +44,7 @@ from cadrumo.application.runtime.profile_access import RuntimeProfileStatus
 from cadrumo.application.user_profile.access_contracts import (
     AccessScope,
     Availability,
+    EffectiveScopeSummary,
     LoginEligibility,
     OsLockState,
     OsLoginContext,
@@ -130,13 +131,15 @@ class _RuntimeClient:
                 automation_custody=Availability.NOT_REQUIRED,
                 published_authority=Availability.AVAILABLE,
                 provider=Availability.NOT_REQUIRED,
-                effective_scope=AccessScope(
-                    operations=frozenset(),
-                    actions=frozenset(),
-                    disclosures=frozenset(),
-                    periods=frozenset(),
-                    allow_period_independent=False,
-                    allow_delegation=False,
+                effective_scope=EffectiveScopeSummary.summarize(
+                    AccessScope(
+                        operations=frozenset(),
+                        actions=frozenset(),
+                        disclosures=frozenset(),
+                        periods=frozenset(),
+                        allow_period_independent=False,
+                        allow_delegation=False,
+                    )
                 ),
                 denial=None,
             ),

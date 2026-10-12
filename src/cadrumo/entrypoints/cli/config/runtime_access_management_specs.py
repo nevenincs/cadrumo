@@ -13,6 +13,7 @@ from ..command_parameter_contracts import ArgumentSpec, OptionSpec
 from ..command_shared_contracts import (
     DeferredTarget,
     LazyBinding,
+    ParameterConstraint,
     ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
@@ -71,6 +72,29 @@ RUNTIME_ACCESS_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         policy=PROFILE_READ,
         handler=_handler("profile_sessions"),
         result_schema=_result("ConfigProfileSessionsResult", "config.profile.sessions"),
+    ),
+    CommandSpec(
+        "config_profile_disclosures",
+        "config_profile",
+        "disclosures",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.config.profile.disclosures.help"),
+        short_help_key=None,
+        invocation=InvocationSpec(context_parameter="ctx"),
+        parameters=(
+            OptionSpec(
+                name="offset",
+                declarations=("--offset",),
+                value=ValueContract(DeferredTarget("builtins", "int")),
+                default=ParameterDefault.value(0),
+                help_key=TranslationKey("cli.config.profile.disclosures.offset_help"),
+                constraint=ParameterConstraint(minimum=0),
+            ),
+            _LANGUAGE,
+        ),
+        policy=PROFILE_READ,
+        handler=_handler("profile_disclosures"),
+        result_schema=_result("ConfigProfileDisclosuresResult", "config.profile.disclosures"),
     ),
     CommandSpec(
         "config_profile_automation_list",

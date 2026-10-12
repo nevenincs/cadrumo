@@ -25,6 +25,8 @@ from ...application.runtime.contracts import (
 )
 from ...application.runtime.profile_access import (
     RuntimeAccessRefusal,
+    RuntimeDisclosurePage,
+    RuntimeDisclosurePageRequest,
     RuntimeProfileLogin,
     RuntimeProfileStatus,
     RuntimeSecretReady,
@@ -236,6 +238,32 @@ class ProfileConnectionSessionMixin:
                 return self._refresh_session(connection, host, context, request)
             return self._status(connection, host, request.request_id, request.session_id)
 
+    def _disclosure_page(
+        self: RuntimeProfileConnections, context: RuntimeConnectionContext, request: RuntimeDisclosurePageRequest
+    ) -> RuntimeDisclosurePage | AccessDenied:
+        """Page the disclosures the caller's own status counts, under the same connection checks as a status."""
+        connection = self._connected(context.connection_id)
+        if connection.context != context or connection.profile_id != request.profile_id:
+            return AccessDenied(code=AccessDenialCode.PROFILE_MISMATCH)
+        if connection.session_id != request.session_id:
+            return AccessDenied(code=AccessDenialCode.CONNECTION_MISMATCH)
+        with self._guard:
+            host = self._profiles[connection.profile_id]
+        with host.guard:
+            if not self._admitting():
+                raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
+            page = host.authority.disclosure_page(
+                connection_id=context.connection_id, session_id=request.session_id, request=request.page
+            )
+        if isinstance(page, AccessDenied):
+            return page
+        return RuntimeDisclosurePage(
+            request_id=request.request_id,
+            runtime_boot_id=self.boot,
+            connection_id=context.connection_id,
+            page=page,
+        )
+
     def _human_sign_out(
         self: RuntimeProfileConnections,
         host: RuntimeProfileHost,
@@ -310,11 +338,13 @@ class ProfileConnectionSessionMixin:
         channel: RuntimeByteChannel,
         request: RuntimeProfileLogin
         | RuntimeSessionRequest
+        | RuntimeDisclosurePageRequest
         | RuntimeSignInStatusRequest
         | RuntimeAttendanceAsk
         | RuntimeAttendanceDecide,
     ) -> (
         RuntimeProfileStatus
+        | RuntimeDisclosurePage
         | RuntimeSessionsLocked
         | RuntimeSignInStatusReply
         | RuntimeHumanSignedOut
@@ -353,6 +383,8 @@ class ProfileConnectionSessionMixin:
                 result = self._attendance_decide(context, request)
             elif isinstance(request, RuntimeProfileLogin):
                 result = self._login(context, channel, request)
+            elif isinstance(request, RuntimeDisclosurePageRequest):
+                result = self._disclosure_page(context, request)
             else:
                 result = self._session(context, request)
             if not isinstance(result, AccessDenied):

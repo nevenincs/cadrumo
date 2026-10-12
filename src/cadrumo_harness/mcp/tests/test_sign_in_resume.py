@@ -31,6 +31,7 @@ from cadrumo.application.user_profile.access_contracts import (
     AccessDenialCode,
     AccessScope,
     Availability,
+    EffectiveScopeSummary,
     ProfileAccessStatus,
 )
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
@@ -150,13 +151,15 @@ class _SignInConnection:
                 automation_custody=Availability.AVAILABLE,
                 published_authority=Availability.AVAILABLE,
                 provider=Availability.NOT_REQUIRED,
-                effective_scope=AccessScope(
-                    operations=frozenset(operations),
-                    actions=frozenset(AccessAction),
-                    disclosures=frozenset(),
-                    periods=None,
-                    allow_period_independent=True,
-                    allow_delegation=True,
+                effective_scope=EffectiveScopeSummary.summarize(
+                    AccessScope(
+                        operations=frozenset(operations),
+                        actions=frozenset(AccessAction),
+                        disclosures=frozenset(),
+                        periods=None,
+                        allow_period_independent=True,
+                        allow_delegation=True,
+                    )
                 ),
                 denial=None,
             )

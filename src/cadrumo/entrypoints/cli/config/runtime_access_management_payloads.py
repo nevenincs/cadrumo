@@ -13,6 +13,8 @@ from pydantic import model_validator
 
 from ....application.operations.models import OperationId
 from ....application.user_profile.access_contracts import (
+    DisclosureCategoryCount,
+    DisclosurePage,
     SessionKind,
     SessionState,
 )
@@ -26,6 +28,7 @@ from ....application.user_profile.automation_enrollment import (
 )
 from ....application.user_profile.automation_lifecycle import AutomationDenialKind, AutomationDenialReceipt
 from ....application.user_profile.automation_lifecycle_service import AutomationResumeReceipt
+from ....core.identity.digest import ContentDigest
 from ....core.json_contract import OutputSchema
 from ....core.operations import OperationEffect
 
@@ -51,6 +54,16 @@ class ConfigProfileSessionsResult(OutputSchema):
 
     profile_id: UUID
     sessions: tuple[RuntimeSessionPayload, ...]
+
+
+class ConfigProfileDisclosuresResult(OutputSchema):
+    """The session's disclosures counted by category, and one page of the full list."""
+
+    profile_id: UUID
+    disclosure_count: int
+    disclosure_summary: tuple[DisclosureCategoryCount, ...]
+    disclosure_digest: ContentDigest
+    page: DisclosurePage
 
 
 class ConfigProfileAutomationListResult(OutputSchema):

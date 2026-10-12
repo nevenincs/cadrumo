@@ -20,13 +20,20 @@ from ....application.runtime.installation_requests import InstallationAct
 from ....application.runtime.profile_access import RuntimeProfileStatus, RuntimeSessionsLocked
 from ....application.runtime.session_events import RuntimeLifecycleNotice
 from ....application.user_profile.access_contracts import (
+    DISCLOSURE_PAGE_ENTRIES,
     AccessAction,
     AccessScope,
     AuthorityState,
     Availability,
     DisclosureCategory,
+    DisclosurePage,
+    DisclosurePageRequest,
     DisclosurePermission,
+    EffectiveScopeSummary,
     ProfileAccessStatus,
+    disclosure_digest,
+    ordered_disclosures,
+    summarize_disclosures,
 )
 from ....application.user_profile.access_projections import PublicAccessSession
 from ....application.user_profile.automation_lifecycle import AutomationDenialKind, AutomationDenialReceipt
@@ -149,9 +156,22 @@ class _Client(RuntimeFrontendClient):
                 automation_custody=Availability.AVAILABLE,
                 published_authority=Availability.AVAILABLE,
                 provider=Availability.NOT_REQUIRED,
-                effective_scope=self.scope,
+                effective_scope=EffectiveScopeSummary.summarize(self.scope),
                 denial=None,
             ),
+        )
+
+    @override
+    def disclosure_page(self, request: DisclosurePageRequest, *, timeout: float = 5) -> DisclosurePage:
+        ordered = ordered_disclosures(self.scope.disclosures)
+        end = min(request.offset + DISCLOSURE_PAGE_ENTRIES, len(ordered))
+        return DisclosurePage(
+            offset=request.offset,
+            total=len(ordered),
+            disclosure_summary=summarize_disclosures(ordered),
+            disclosure_digest=disclosure_digest(ordered),
+            entries=ordered[request.offset : end],
+            next_offset=end if end < len(ordered) else None,
         )
 
     @override
@@ -233,11 +253,19 @@ async def test_status_renders_exact_disclosures_and_delegation_and_clears_on_clo
     async with app.run_test(size=size) as pilot:
         await _shown(app, pilot)
         assert "[bold]Literal profile[/bold]" in str(app.query_one("#restricted-profile", Static).render())
-        expected = (
-            f"{UUID(int=1)}/user-profile.view.result/profile_values, {UUID(int=2)}/user-profile.view.result/tax_values"
-        )
         assert str(app.query_one("#restricted-disclosures", Static).render()) == (
-            f"{tr('tui.automation_inventory.disclosures')}: {expected}"
+            f"{tr('tui.automation_inventory.disclosures')}: 2 (profile_values 1, tax_values 1)"
+        )
+        assert await pilot.click("#restricted-disclosures-next")
+        async with asyncio.timeout(5):
+            while not str(app.query_one("#restricted-disclosure-page", Static).render()):
+                await pilot.pause()
+        assert str(app.query_one("#restricted-disclosure-page", Static).render()) == "\n".join(
+            (
+                tr("tui.restricted.disclosure_page", first=1, last=2, total=2),
+                f"profile_values  user-profile.view.result  {UUID(int=1)}",
+                f"tax_values  user-profile.view.result  {UUID(int=2)}",
+            )
         )
         assert str(app.query_one("#restricted-delegation", Static).render()) == (
             f"{tr('tui.automation_inventory.delegation')}: "
@@ -245,6 +273,7 @@ async def test_status_renders_exact_disclosures_and_delegation_and_clears_on_clo
         )
         assert await pilot.click("#restricted-close")
         assert str(app.query_one("#restricted-disclosures", Static).render()) == ""
+        assert str(app.query_one("#restricted-disclosure-page", Static).render()) == ""
         assert str(app.query_one("#restricted-delegation", Static).render()) == ""
     assert client.close_calls == 0 and client.lock_calls == 0 and client.human_calls == 0
 

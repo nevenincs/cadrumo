@@ -27,6 +27,8 @@ from .access_contracts import (
     ApiKeyRecord,
     AutomationGrant,
     Availability,
+    DisclosurePage,
+    DisclosurePageRequest,
     OperationAccessPolicy,
     OperationAccessRequest,
     OperationResponseScopeAllowed,
@@ -34,7 +36,12 @@ from .access_contracts import (
     SessionKind,
 )
 from .access_errors import ProfileAccessRefusedError
-from .access_projections import PublicAccessSession, project_access_session, project_access_status
+from .access_projections import (
+    PublicAccessSession,
+    project_access_session,
+    project_access_status,
+    project_disclosure_page,
+)
 from .automation_enrollment import AdministrationFacts
 from .operation_access_policy import evaluate_operation_access, evaluate_response_scope
 from .session_authority_contracts import SessionAuthorityFacts
@@ -251,6 +258,32 @@ class SessionAuthorityAccess(SessionAuthorityCore):
                 context=facts.context,
                 published_authority=published_authority,
                 provider=provider,
+            )
+
+    def disclosure_page(
+        self: SessionAuthorityAccess,
+        *,
+        connection_id: UUID,
+        session_id: UUID,
+        request: DisclosurePageRequest,
+    ) -> DisclosurePage | AccessDenied:
+        """Page the disclosures the caller's own status counts, reevaluated as the status is."""
+        with self.owner.admission_guard():
+            facts = self._facts(connection_id)
+            if isinstance(facts, AccessDenied):
+                return facts
+            context = self._status_context(facts, connection_id, session_id)
+            if isinstance(context, AccessDenied):
+                return context
+            session, grant, key = context
+            return project_disclosure_page(
+                session=session,
+                ancestors=() if session is None else self._ancestors(session),
+                grant=grant,
+                key=key,
+                profile=facts.profile,
+                context=facts.context,
+                request=request,
             )
 
     def _status_context(

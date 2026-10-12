@@ -21,7 +21,13 @@ from ....application.operations.registry import OperationFrontendProjection, Ope
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....application.runtime.profile_access import RuntimeProfileStatus
 from ....application.runtime.session_events import RuntimeLifecycleNotice
-from ....application.user_profile.access_contracts import AccessScope, AuthorityState, Availability, ProfileAccessStatus
+from ....application.user_profile.access_contracts import (
+    AccessScope,
+    AuthorityState,
+    Availability,
+    EffectiveScopeSummary,
+    ProfileAccessStatus,
+)
 from ....application.user_profile.automation_operations import (
     build_automation_operation_definitions,
     build_automation_operation_registrations,
@@ -93,13 +99,15 @@ class _OwnedClient(RuntimeFrontendClient):
                 automation_custody=Availability.UNAVAILABLE,
                 published_authority=Availability.AVAILABLE,
                 provider=Availability.NOT_REQUIRED,
-                effective_scope=AccessScope(
-                    operations=frozenset(),
-                    actions=frozenset(),
-                    disclosures=frozenset(),
-                    periods=None,
-                    allow_period_independent=True,
-                    allow_delegation=False,
+                effective_scope=EffectiveScopeSummary.summarize(
+                    AccessScope(
+                        operations=frozenset(),
+                        actions=frozenset(),
+                        disclosures=frozenset(),
+                        periods=None,
+                        allow_period_independent=True,
+                        allow_delegation=False,
+                    )
                 ),
                 denial=None,
             ),
@@ -131,13 +139,15 @@ class _OwnedClient(RuntimeFrontendClient):
                 automation_custody=Availability.AVAILABLE,
                 published_authority=Availability.AVAILABLE,
                 provider=Availability.NOT_REQUIRED,
-                effective_scope=AccessScope(
-                    operations=frozenset(),
-                    actions=frozenset(),
-                    disclosures=frozenset(),
-                    periods=None,
-                    allow_period_independent=True,
-                    allow_delegation=False,
+                effective_scope=EffectiveScopeSummary.summarize(
+                    AccessScope(
+                        operations=frozenset(),
+                        actions=frozenset(),
+                        disclosures=frozenset(),
+                        periods=None,
+                        allow_period_independent=True,
+                        allow_delegation=False,
+                    )
                 ),
                 denial=None,
             ),

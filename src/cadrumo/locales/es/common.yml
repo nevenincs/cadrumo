@@ -3826,6 +3826,11 @@ tui:
     none: Ninguno
     operations: 'Operaciones permitidas: {values}'
     periods: 'Períodos: {values}; trabajo sin período: {independent}'
+    disclosure_page: Datos revelables {first} a {last} de {total}
+    disclosure_page_empty: Esta sesión no puede revelar nada.
+    disclosure_page_stale: Los datos revelables cambiaron desde que se contaron. Espera
+      a que se actualice el estado y vuelve a leerlos.
+    disclosures_next: Datos revelables, página siguiente
     profile: 'Perfil: {label} ({profile_id})'
     session_expiry: 'La sesión vence: {expires_at}'
     title: Sesión API restringida

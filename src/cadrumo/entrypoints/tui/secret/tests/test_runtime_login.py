@@ -25,6 +25,7 @@ from .....application.user_profile.access_contracts import (
     AccessScope,
     AuthorityState,
     Availability,
+    EffectiveScopeSummary,
     ProfileAccessStatus,
 )
 from .....application.user_profile.automation_lifecycle_service import AutomationResumeReceipt
@@ -125,13 +126,15 @@ class _Client(RuntimeFrontendClient):
                 automation_custody=Availability.AVAILABLE,
                 published_authority=Availability.AVAILABLE,
                 provider=Availability.NOT_REQUIRED,
-                effective_scope=AccessScope(
-                    operations=frozenset(),
-                    actions=frozenset(),
-                    disclosures=frozenset(),
-                    periods=None,
-                    allow_period_independent=True,
-                    allow_delegation=False,
+                effective_scope=EffectiveScopeSummary.summarize(
+                    AccessScope(
+                        operations=frozenset(),
+                        actions=frozenset(),
+                        disclosures=frozenset(),
+                        periods=None,
+                        allow_period_independent=True,
+                        allow_delegation=False,
+                    )
                 ),
                 denial=None,
             ),

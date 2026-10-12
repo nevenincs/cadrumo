@@ -2489,6 +2489,12 @@ cli:
           {valid}.'
         invalid_timestamp: 'A(z) {flag} értékének ISO-8601 időbélyegnek kell lennie
           (pl. 2026-04-01T00:00:00+00:00); kapott: {raw}.'
+      disclosures:
+        help: Kategóriánként megszámolja, mit fedhet fel ez a munkamenet, és kiírja
+          a teljes lista egy oldalát.
+        offset_help: Az a tétel, amelynél az oldal kezdődik; add meg az előző oldal
+          next_offset értékét. A parancs minden futása külön munkamenet, ezért a tételei
+          ezt a munkamenetet nevezik meg célként.
         since_after_until: --since értékének korábbinak vagy egyenlőnek kell lennie
           az --until értékénél.
       history_actor_help: Az előzmények szűrése egy adott aktor által rögzített eseményekre

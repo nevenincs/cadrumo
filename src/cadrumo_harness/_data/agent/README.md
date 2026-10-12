@@ -36,7 +36,13 @@ MCP `status`. It says whether a session admits this server: its session is
 admitted it, or `none`, and it names the surface the connection serves. With
 `none`, every tool but `status` is refused, reference data and operation discovery
 included, and the reply's `remedy` says what to do: ask the person to sign in to
-Cadrumo, then call again. Under a session, `search` and `describe` find the
+Cadrumo, then call again. The status counts what the session may disclose:
+`effective_scope` carries `disclosure_count`, `disclosure_summary` with the count
+in each category, and `disclosure_digest`, not the list itself. When you need the
+entries, call `status` with `disclosures` set to `offset` 0 and `expected_digest`
+the digest, and keep calling with each page's `next_offset` until it is null. The
+command line's `config profile disclosures` and the terminal interface read the
+same pages. Under a session, `search` and `describe` find the
 registered operations and `authority` answers public tax queries. Every operation
 the command line can run inside the profile is among them, with the same results.
 

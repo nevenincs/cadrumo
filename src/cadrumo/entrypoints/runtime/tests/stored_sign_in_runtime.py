@@ -40,9 +40,18 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import close
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.application.operations.mcp_surfaces import McpSurfaceName
 from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.application.runtime.attendance import (
+    RuntimeAttendanceAsk,
+    RuntimeAttendanceDecide,
+    RuntimeAttendanceDecided,
+    RuntimeAttendanceInventory,
+    RuntimeAttendancePending,
+)
 from cadrumo.application.runtime.contracts import RuntimeByteChannel, RuntimeClientHello
 from cadrumo.application.runtime.profile_access import (
     RuntimeAccessRefusal,
+    RuntimeDisclosurePage,
+    RuntimeDisclosurePageRequest,
     RuntimeProfileLogin,
     RuntimeProfileStatus,
     RuntimeSessionRequest,
@@ -92,12 +101,21 @@ class RecordingProfileConnections(RuntimeProfileConnections):
         self,
         context: RuntimeConnectionContext,
         channel: RuntimeByteChannel,
-        request: RuntimeProfileLogin | RuntimeSessionRequest | RuntimeSignInStatusRequest,
+        request: RuntimeProfileLogin
+        | RuntimeSessionRequest
+        | RuntimeDisclosurePageRequest
+        | RuntimeSignInStatusRequest
+        | RuntimeAttendanceAsk
+        | RuntimeAttendanceDecide,
     ) -> (
         RuntimeProfileStatus
+        | RuntimeDisclosurePage
         | RuntimeSessionsLocked
         | RuntimeSignInStatusReply
         | RuntimeHumanSignedOut
+        | RuntimeAttendancePending
+        | RuntimeAttendanceInventory
+        | RuntimeAttendanceDecided
         | RuntimeAccessRefusal
     ):
         if isinstance(request, RuntimeProfileLogin):

@@ -44,7 +44,7 @@ from cadrumo.application.runtime.operation_access import (
     RuntimeOperationSubmitted,
 )
 from cadrumo.application.runtime.projection_pages import ProjectionPageRequest
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
+from cadrumo.application.user_profile.access_contracts import AccessDenialCode, DisclosurePageRequest
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
 from cadrumo.core.time.clock import now
 
@@ -98,7 +98,7 @@ def call_admitted_operation(connection: _AdmittedConnection, name: str, args: di
         # A lease is held only for a bound profile and a known admission.
         raise RuntimeFrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
     if name == "status":
-        return _admitted_status(client, admission, connection.surface)
+        return _admitted_status(client, admission, connection.surface, args)
     deadline = time.monotonic() + _TIMEOUT
     handler = _ADMITTED_TOOL_HANDLERS.get(name)
     if handler is None:
@@ -127,16 +127,26 @@ def _unauthenticated_status(connection: _AdmittedConnection) -> dict[str, Any]:
     return reply
 
 
-def _admitted_status(client: RuntimeFrontendClient, admission: McpAdmission, surface: McpSurface) -> dict[str, Any]:
-    """Say how the held session was admitted, and its scope as the surface leaves it."""
+def _admitted_status(
+    client: RuntimeFrontendClient, admission: McpAdmission, surface: McpSurface, args: dict[str, Any]
+) -> dict[str, Any]:
+    """Say how the held session was admitted, and its scope as the surface leaves it.
+
+    The scope counts its disclosures by category; ``disclosures`` names one
+    page of the full list, which the reply carries beside the status.
+    """
     status = status_on_surface(client.status().status, surface)
-    return {
+    reply: dict[str, Any] = {
         "outcome": "status",
         # A lease the runtime now denies is no session, whatever admitted it.
         "session": admission.value if status.denial is None else NO_SESSION,
         "surface": surface.name.value,
         "status": public_value(status),
     }
+    if "disclosures" in args:
+        page = client.disclosure_page(parse_model(DisclosurePageRequest, args["disclosures"]))
+        reply["disclosure_page"] = public_value(page)
+    return reply
 
 
 def _search(client: RuntimeFrontendClient, binding: _Binding, args: dict[str, Any], deadline: float) -> dict[str, Any]:

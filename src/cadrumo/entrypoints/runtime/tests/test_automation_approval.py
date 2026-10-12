@@ -52,6 +52,8 @@ from cadrumo.application.runtime.operation_access import (
 )
 from cadrumo.application.runtime.profile_access import (
     RuntimeAccessRefusal,
+    RuntimeDisclosurePage,
+    RuntimeDisclosurePageRequest,
     RuntimeProfileLogin,
     RuntimeProfileStatus,
     RuntimeSessionRequest,
@@ -61,6 +63,7 @@ from cadrumo.application.user_profile.access_contracts import (
     AccessDenialCode,
     Availability,
     DisclosureCategory,
+    DisclosurePageRequest,
     DisclosurePermission,
     LoginEligibility,
     OsLockState,
@@ -279,6 +282,26 @@ def _run_approval(
         time.sleep(0.02)
 
 
+def _disclosure_destinations(connection: VerifiedRuntimeConnection, profile_id: UUID, session_id: UUID) -> set[UUID]:
+    """Read every page of a session's disclosures and name the destinations they release to."""
+    destinations: set[UUID] = set()
+    offset: int | None = 0
+    while offset is not None:
+        reply = connection.disclosure_page(
+            RuntimeDisclosurePageRequest(
+                request_id=uuid4(),
+                profile_id=profile_id,
+                session_id=session_id,
+                page=DisclosurePageRequest(offset=offset),
+            ),
+            deadline=time.monotonic() + 5,
+        )
+        assert isinstance(reply, RuntimeDisclosurePage), reply
+        destinations |= {item.destination_id for item in reply.page.entries}
+        offset = reply.page.next_offset
+    return destinations
+
+
 def test_native_human_renews_existing_grant_and_key_session_cannot_approve(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -333,6 +356,7 @@ def test_native_human_renews_existing_grant_and_key_session_cannot_approve(
                         deadline=time.monotonic() + 5,
                     )
                     assert isinstance(human_status, RuntimeProfileStatus)
+                    human_destinations = _disclosure_destinations(human, profile_id, human_id)
                     api_id = _login(
                         api,
                         profile_id,
@@ -362,9 +386,7 @@ def test_native_human_renews_existing_grant_and_key_session_cannot_approve(
                     renewal = next(
                         item for item in enrollment.store.enrollment_state().requests if item.request_id == renewal_id
                     )
-                    assert renewal.requester.destination_id not in {
-                        permission.destination_id for permission in human_status.status.effective_scope.disclosures
-                    }
+                    assert renewal.requester.destination_id not in human_destinations
                     contract = human.operation(
                         RuntimeOperationContract(
                             request_id=uuid4(),

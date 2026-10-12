@@ -39,6 +39,7 @@ from cadrumo.application.user_profile.access_contracts import (
     Availability,
     DisclosureCategory,
     DisclosurePermission,
+    EffectiveScopeSummary,
     ProfileAccessStatus,
     SessionKind,
     SessionState,
@@ -517,18 +518,22 @@ def _large_profile_status() -> RuntimeProfileStatus:
             automation_custody=Availability.NOT_REQUIRED,
             published_authority=Availability.AVAILABLE,
             provider=Availability.NEEDS_USER,
-            effective_scope=AccessScope(
-                operations=frozenset(),
-                actions=frozenset(),
-                disclosures=frozenset(
-                    DisclosurePermission(
-                        destination_id=uuid4(), projection_id="synthetic.result", category=DisclosureCategory.TAX_VALUES
-                    )
-                    for _ in range(700)
-                ),
-                periods=None,
-                allow_period_independent=False,
-                allow_delegation=False,
+            effective_scope=EffectiveScopeSummary.summarize(
+                AccessScope(
+                    operations=frozenset(),
+                    actions=frozenset(),
+                    disclosures=frozenset(
+                        DisclosurePermission(
+                            destination_id=uuid4(),
+                            projection_id="synthetic.result",
+                            category=DisclosureCategory.TAX_VALUES,
+                        )
+                        for _ in range(700)
+                    ),
+                    periods=None,
+                    allow_period_independent=False,
+                    allow_delegation=False,
+                )
             ),
             denial=None,
         ),

@@ -12,6 +12,7 @@ from ...user_profile.access_contracts import (
     AccessScope,
     AuthorityState,
     Availability,
+    EffectiveScopeSummary,
     ProfileAccessStatus,
 )
 from ..profile_access import status_admits_session
@@ -38,13 +39,15 @@ def _status(**overrides: object) -> ProfileAccessStatus:
         "automation_custody": Availability.NOT_REQUIRED,
         "published_authority": Availability.AVAILABLE,
         "provider": Availability.NOT_REQUIRED,
-        "effective_scope": AccessScope(
-            operations=frozenset(),
-            actions=frozenset(),
-            disclosures=frozenset(),
-            periods=frozenset(),
-            allow_period_independent=False,
-            allow_delegation=False,
+        "effective_scope": EffectiveScopeSummary.summarize(
+            AccessScope(
+                operations=frozenset(),
+                actions=frozenset(),
+                disclosures=frozenset(),
+                periods=frozenset(),
+                allow_period_independent=False,
+                allow_delegation=False,
+            )
         ),
         "denial": None,
     }

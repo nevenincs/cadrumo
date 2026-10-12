@@ -2329,6 +2329,12 @@ cli:
       history:
         invalid_event_type: 'Unknown event type: {value}. Valid event types: {valid}.'
         invalid_timestamp: '{flag} must be an ISO-8601 timestamp (e.g. 2026-04-01T00:00:00+00:00);
+      disclosures:
+        help: Count this session's disclosures by category and print one page of the
+          full list.
+        offset_help: The entry to start the page at; pass the next_offset of the previous
+          page. Each run of the command is a session of its own, so its entries name
+          that session as their destination.
           got {raw}.'
         since_after_until: --since must be before or equal to --until.
       history_actor_help: Filter the history to events recorded by a specific actor

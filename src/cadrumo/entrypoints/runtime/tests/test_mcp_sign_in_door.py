@@ -28,7 +28,7 @@ from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode
 from cadrumo.application.runtime.profile_access import RuntimeAccessRefusal, RuntimeProfileStatus, RuntimeSessionsLocked
 from cadrumo.application.runtime.sign_in import RuntimeHumanSignedOut, SignInPresence
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode, AccessScope, SessionKind
+from cadrumo.application.user_profile.access_contracts import AccessDenialCode, EffectiveScopeSummary, SessionKind
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind
 
 from .stored_sign_in_runtime import SessionReply, StoredSignInRuntime, stored_sign_in_runtime
@@ -78,7 +78,7 @@ def test_an_mcp_connection_resumes_the_stored_sign_in_as_the_person_and_extends_
         assert before.presence is SignInPresence.PRESENT
         assert (before.idle_deadline, before.absolute_deadline) == (idle, absolute)
 
-        scopes: dict[OperationFrontendProjection, AccessScope] = {}
+        scopes: dict[OperationFrontendProjection, EffectiveScopeSummary] = {}
         for frontend in (_CLI, _TUI, _MCP):
             reply = runtime.resume(runtime.connect(), frontend)
             session_id = _admitted(reply)

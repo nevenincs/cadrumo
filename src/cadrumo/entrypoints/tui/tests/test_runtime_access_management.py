@@ -23,6 +23,7 @@ from ....application.user_profile.access_contracts import (
     AccessScope,
     AuthorityState,
     Availability,
+    EffectiveScopeSummary,
     ProfileAccessStatus,
     SessionKind,
     SessionState,
@@ -101,7 +102,9 @@ class _RuntimeClient(RuntimeFrontendClient):
                 automation_custody=Availability.AVAILABLE,
                 published_authority=Availability.AVAILABLE,
                 provider=Availability.NOT_REQUIRED,
-                effective_scope=self.inventory[0].scope if self.inventory else _scope(),
+                effective_scope=EffectiveScopeSummary.summarize(
+                    self.inventory[0].scope if self.inventory else _scope()
+                ),
                 denial=None,
             ),
         )

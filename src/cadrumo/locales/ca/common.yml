@@ -3825,6 +3825,11 @@ tui:
     none: Cap
     operations: 'Operacions permeses: {values}'
     periods: 'Períodes: {values}; treball sense període: {independent}'
+    disclosure_page: Dades revelables {first} a {last} de {total}
+    disclosure_page_empty: Aquesta sessió no pot revelar res.
+    disclosure_page_stale: Les dades revelables han canviat des que es van comptar.
+      Espera que s'actualitzi l'estat i torna-les a llegir.
+    disclosures_next: Dades revelables, pàgina següent
     profile: 'Perfil: {label} ({profile_id})'
     session_expiry: 'La sessió venç: {expires_at}'
     title: Sessió API restringida

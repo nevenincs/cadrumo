@@ -126,6 +126,11 @@ IN_PROCESS_COMMAND_COUNTERPARTS: Final[Mapping[CliPath, Counterpart]] = MappingP
         # ``--document-only`` verifies the file's own signature and submits nothing.
         ("config", "auth", "apoderado", "scopes", "list"): _query(_REFERENCE_PROOF, "apoderado_scopes"),
         ("config", "auth", "providers"): _query(_REFERENCE_PROOF, "auth_providers"),
+        # The command sends the runtime's disclosure read, which MCP reaches through the status tool's argument.
+        ("config", "profile", "disclosures"): Counterpart(
+            (ToolRoute("status"),),
+            f"{_RUNTIME_TESTS}/test_disclosure_summary.py::test_every_frontend_counts_and_pages_the_same_disclosures",
+        ),
         # The command parses the certificate itself before it submits the facts it read.
         ("config", "profile", "censo", "import"): _operation(
             f"{_ENTRYPOINT_TESTS}/test_censal_certificate_file_operation.py"

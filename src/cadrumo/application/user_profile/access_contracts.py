@@ -8,6 +8,7 @@ a password, API secret, verifier, encryption key or operation response bearer.
 
 from __future__ import annotations
 
+from collections import Counter
 from datetime import timedelta
 from enum import StrEnum
 from typing import Annotated, Literal
@@ -15,6 +16,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.hashing import canonical_json_bytes, sha256_hex
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
@@ -92,6 +94,135 @@ class AccessScope(BaseModel):
     periods: frozenset[Period] | None
     allow_period_independent: bool
     allow_delegation: bool
+
+
+DISCLOSURE_PAGE_ENTRIES = 100
+"""The most disclosure entries one page read releases; a frame holds them with room to spare."""
+
+
+def ordered_disclosures(disclosures: frozenset[DisclosurePermission]) -> tuple[DisclosurePermission, ...]:
+    """Order a scope's disclosures as every summary digest and page read sees them, by category first."""
+    return tuple(
+        sorted(disclosures, key=lambda item: (item.category.value, str(item.projection_id), str(item.destination_id)))
+    )
+
+
+def disclosure_digest(ordered: tuple[DisclosurePermission, ...]) -> ContentDigest:
+    """Digest the ordered list a page read continues against, so a summary pins what it counted."""
+    return sha256_hex(canonical_json_bytes([item.model_dump(mode="json") for item in ordered]))
+
+
+class DisclosureCategoryCount(BaseModel):
+    """How many of a scope's disclosures fall in one category."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    category: DisclosureCategory
+    count: Annotated[int, Field(ge=1)]
+
+
+type DisclosureSummary = Annotated[tuple[DisclosureCategoryCount, ...], Field(max_length=len(DisclosureCategory))]
+
+
+def summarize_disclosures(ordered: tuple[DisclosurePermission, ...]) -> tuple[DisclosureCategoryCount, ...]:
+    """Count an ordered list by category, each category once and in order."""
+    counts = Counter(item.category for item in ordered)
+    return tuple(
+        DisclosureCategoryCount(category=category, count=counts[category])
+        for category in sorted(counts, key=lambda item: item.value)
+    )
+
+
+def _require_summary_of(summary: tuple[DisclosureCategoryCount, ...], count: int) -> None:
+    categories = [item.category.value for item in summary]
+    if categories != sorted(set(categories)):
+        raise ValueError("a disclosure summary names each category once, in order")
+    if sum(item.count for item in summary) != count:
+        raise ValueError("a disclosure summary counts every disclosure once")
+
+
+class EffectiveScopeSummary(BaseModel):
+    """The effective scope a status reply carries, with its disclosures counted and not listed.
+
+    The full disclosure list is read by page against ``disclosure_digest``.
+    Summarising grants and enforces nothing: the runtime checks every access
+    against the session's whole scope.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    operations: frozenset[OperationDefinitionId]
+    actions: frozenset[AccessAction]
+    disclosure_count: Annotated[int, Field(ge=0)]
+    disclosure_summary: DisclosureSummary
+    disclosure_digest: ContentDigest
+    periods: frozenset[Period] | None
+    allow_period_independent: bool
+    allow_delegation: bool
+
+    @model_validator(mode="after")
+    def _summary_counts_the_list(self) -> EffectiveScopeSummary:
+        _require_summary_of(self.disclosure_summary, self.disclosure_count)
+        return self
+
+    @classmethod
+    def summarize(cls, scope: AccessScope) -> EffectiveScopeSummary:
+        """Count the scope's disclosures by category and keep every other axis as it is."""
+        ordered = ordered_disclosures(scope.disclosures)
+        return cls(
+            operations=scope.operations,
+            actions=scope.actions,
+            disclosure_count=len(ordered),
+            disclosure_summary=summarize_disclosures(ordered),
+            disclosure_digest=disclosure_digest(ordered),
+            periods=scope.periods,
+            allow_period_independent=scope.allow_period_independent,
+            allow_delegation=scope.allow_delegation,
+        )
+
+
+class DisclosurePageRequest(BaseModel):
+    """Read the effective scope's disclosures from ``offset``.
+
+    A reader that holds one session across its pages pins them with
+    ``expected_digest`` and is refused if the list changed. A person's session
+    names its own connection as the destination, so a reader that opens a new
+    session for each page, as each run of a command does, reads that session's
+    list by offset alone: the order is the same, and only the destination
+    differs.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    offset: Annotated[int, Field(ge=0)] = 0
+    expected_digest: ContentDigest | None = None
+
+
+class DisclosurePage(BaseModel):
+    """One bounded run of the ordered disclosure list; ``next_offset`` is absent on the last page.
+
+    Every page carries the count and the summary of the whole list it belongs
+    to, which are those a status reply of the same list carries.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    offset: Annotated[int, Field(ge=0)]
+    total: Annotated[int, Field(ge=0)]
+    disclosure_summary: DisclosureSummary
+    disclosure_digest: ContentDigest
+    entries: Annotated[tuple[DisclosurePermission, ...], Field(max_length=DISCLOSURE_PAGE_ENTRIES)]
+    next_offset: Annotated[int, Field(ge=1)] | None
+
+    @model_validator(mode="after")
+    def _validate_range(self) -> DisclosurePage:
+        _require_summary_of(self.disclosure_summary, self.total)
+        end = self.offset + len(self.entries)
+        if end > self.total or (self.total and not self.entries):
+            raise ValueError("a disclosure page lies inside its list and is not empty unless the list is")
+        if self.next_offset != (end if end < self.total else None):
+            raise ValueError("a disclosure page continues exactly where it ends")
+        return self
 
 
 class AuthorityState(StrEnum):
@@ -493,6 +624,6 @@ class ProfileAccessStatus(BaseModel):
     automation_custody: Availability
     published_authority: Availability
     provider: Availability
-    effective_scope: AccessScope
+    effective_scope: EffectiveScopeSummary
     denial: AccessDenialCode | None
     human_resume_refusal: ProfileSessionRefusalReason | None = None

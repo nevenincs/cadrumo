@@ -2519,6 +2519,12 @@ cli:
         invalid_event_type: 'Tipo de evento desconocido: {value}. Tipos de evento
           válidos: {valid}.'
         invalid_timestamp: '{flag} debe ser una marca de tiempo ISO-8601 (p. ej. 2026-04-01T00:00:00+00:00);
+      disclosures:
+        help: Cuenta por categoría los datos que esta sesión puede revelar e imprime
+          una página de la lista completa.
+        offset_help: La entrada en la que empieza la página; pasa el next_offset de
+          la página anterior. Cada ejecución del comando es una sesión propia, así
+          que sus entradas nombran esa sesión como destino.
           se recibió {raw}.'
         since_after_until: --since debe ser anterior o igual a --until.
       history_actor_help: Filtrar el historial a eventos registrados por un actor

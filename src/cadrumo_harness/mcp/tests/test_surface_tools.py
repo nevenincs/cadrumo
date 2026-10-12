@@ -38,6 +38,7 @@ from cadrumo.application.user_profile.access_contracts import (
     AccessScope,
     AuthorityState,
     Availability,
+    EffectiveScopeSummary,
     ProfileAccessStatus,
 )
 from cadrumo.core import logging as cadrumo_logging
@@ -100,13 +101,15 @@ class _AdmittedClient:
             automation_custody=Availability.AVAILABLE,
             published_authority=Availability.AVAILABLE,
             provider=Availability.NOT_REQUIRED,
-            effective_scope=AccessScope(
-                operations=frozenset(_EVERY_ID),
-                actions=frozenset(),
-                disclosures=frozenset(),
-                periods=None,
-                allow_period_independent=True,
-                allow_delegation=False,
+            effective_scope=EffectiveScopeSummary.summarize(
+                AccessScope(
+                    operations=frozenset(_EVERY_ID),
+                    actions=frozenset(),
+                    disclosures=frozenset(),
+                    periods=None,
+                    allow_period_independent=True,
+                    allow_delegation=False,
+                )
             ),
             denial=None,
         )

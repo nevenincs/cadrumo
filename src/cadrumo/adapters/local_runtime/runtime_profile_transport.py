@@ -43,6 +43,8 @@ from ...application.runtime.operation_access import (
 )
 from ...application.runtime.profile_access import (
     RuntimeAccessRefusal,
+    RuntimeDisclosurePage,
+    RuntimeDisclosurePageRequest,
     RuntimeProfileLogin,
     RuntimeProfileStatus,
     RuntimeSessionRequest,
@@ -211,6 +213,23 @@ class RuntimeProfileTransport(RuntimeVerifiedTransport):
                 if not isinstance(
                     result, (RuntimeProfileStatus, RuntimeSessionsLocked, RuntimeHumanSignedOut, RuntimeAccessRefusal)
                 ):
+                    raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                return result
+            except BaseException as error:
+                self._close_after_failure(error)
+                raise
+
+    def disclosure_page(
+        self, request: RuntimeDisclosurePageRequest, *, deadline: float
+    ) -> RuntimeDisclosurePage | RuntimeAccessRefusal:
+        """Read one page of the disclosures this connection's own status counts."""
+        with self._exchange(deadline=deadline):
+            if self._closed:
+                raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+            try:
+                write_document(self._channel, request, deadline=deadline)
+                result = self._reply(request.request_id, deadline=deadline).root
+                if not isinstance(result, (RuntimeDisclosurePage, RuntimeAccessRefusal)):
                     raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
                 return result
             except BaseException as error:

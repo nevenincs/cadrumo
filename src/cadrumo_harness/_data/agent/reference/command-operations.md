@@ -326,6 +326,7 @@ without its options and arguments.
 | `aeat config profile descendiente add` | `user-profile.descendants`, `user-profile.view` | none |
 | `aeat config profile descendiente list` | `user-profile.view` | none |
 | `aeat config profile descendiente remove` | `user-profile.descendants`, `user-profile.view` | none |
+| `aeat config profile disclosures` | none | `status` |
 | `aeat config profile edit` | `user-profile.patch`, `user-profile.view` | none |
 | `aeat config profile edit-row` | `user-profile.repeatable-row-update`, `user-profile.view` | none |
 | `aeat config profile history` | `profile.history` | none |

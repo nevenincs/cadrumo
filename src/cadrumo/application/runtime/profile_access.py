@@ -13,7 +13,14 @@ from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.request_faults import MAX_REQUEST_FAULTS, RequestFault
 from ..operations.registry import OperationFrontendProjection
-from ..user_profile.access_contracts import AccessDenialCode, AccessScope, AuthorityState, ProfileAccessStatus
+from ..user_profile.access_contracts import (
+    AccessDenialCode,
+    AccessScope,
+    AuthorityState,
+    DisclosurePage,
+    DisclosurePageRequest,
+    ProfileAccessStatus,
+)
 from ..user_profile.automation_custody_port import AutomationCustodyCode
 from ..user_profile.login_session import ProfileHumanLoginReceipt
 from ..user_profile.sign_in_refusals import SignInRefusal
@@ -113,6 +120,21 @@ class RuntimeSessionRequest(BaseModel):
     target_session_id: UUID | None = None
 
 
+class RuntimeDisclosurePageRequest(BaseModel):
+    """Read one page of the disclosures the caller's own status counts.
+
+    It is a record of its own, apart from the session requests, because it
+    reads and never changes a session.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    action: Literal["session_disclosures"] = "session_disclosures"
+    request_id: UUID
+    profile_id: UUID
+    session_id: UUID
+    page: DisclosurePageRequest
+
+
 class RuntimeRequest(
     RootModel[
         Annotated[
@@ -123,6 +145,7 @@ class RuntimeRequest(
             | RuntimePasswordReset
             | RuntimeSignInStatusRequest
             | RuntimeSessionRequest
+            | RuntimeDisclosurePageRequest
             | RuntimeAttendanceAsk
             | RuntimeAttendanceDecide
             | RuntimeOperationRequest
@@ -201,6 +224,17 @@ def _automation_grant_is_live(status: ProfileAccessStatus, *, at: datetime) -> b
     )
 
 
+class RuntimeDisclosurePage(BaseModel):
+    """One page of the effective disclosures the caller's own status counts."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["disclosure_page"] = "disclosure_page"
+    request_id: UUID
+    runtime_boot_id: UUID
+    connection_id: UUID
+    page: DisclosurePage
+
+
 class RuntimeProfileStatusTransfer(BaseModel):
     """Bounded full-scope status transfer, correlated before its chunks are read."""
 
@@ -264,6 +298,7 @@ class RuntimeReply(
             | RuntimeSignInStatusReply
             | RuntimeProfileStatus
             | RuntimeProfileStatusTransfer
+            | RuntimeDisclosurePage
             | RuntimeSessionInventoryTransfer
             | RuntimeSessionsLocked
             | RuntimeAttendancePending
@@ -319,11 +354,13 @@ class RuntimeProfileHandler(Protocol):
         channel: RuntimeByteChannel,
         request: RuntimeProfileLogin
         | RuntimeSessionRequest
+        | RuntimeDisclosurePageRequest
         | RuntimeSignInStatusRequest
         | RuntimeAttendanceAsk
         | RuntimeAttendanceDecide,
     ) -> (
         RuntimeProfileStatus
+        | RuntimeDisclosurePage
         | RuntimeSessionsLocked
         | RuntimeSignInStatusReply
         | RuntimeHumanSignedOut

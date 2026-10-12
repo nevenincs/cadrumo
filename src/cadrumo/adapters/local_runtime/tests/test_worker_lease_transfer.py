@@ -23,6 +23,7 @@ from cadrumo.application.user_profile.access_contracts import (
     Availability,
     DisclosureCategory,
     DisclosurePermission,
+    EffectiveScopeSummary,
     ProfileAccessBinding,
     ProfileAccessStatus,
     SessionKind,
@@ -187,7 +188,7 @@ def test_login_status_preserves_full_scope_and_correlates_transfer(fault: str | 
             automation_custody=Availability.NOT_REQUIRED,
             published_authority=Availability.AVAILABLE,
             provider=Availability.NEEDS_USER,
-            effective_scope=session.scope,
+            effective_scope=EffectiveScopeSummary.summarize(session.scope),
             denial=None,
         ),
     )

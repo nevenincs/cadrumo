@@ -296,6 +296,7 @@ _RUNTIME_PROFILE_KEYS = frozenset(
         "config_profile_descendiente_add",
         "config_profile_descendiente_list",
         "config_profile_descendiente_remove",
+        "config_profile_disclosures",
         "config_profile_sessions",
         "config_profile_automation_deny",
         "config_profile_automation_list",

@@ -28,9 +28,11 @@ from ...application.runtime.profile_access import status_admits_session
 from ...application.user_profile.access_contracts import ProfileAccessStatus
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.i18n.render import tr
+from ...core.identity.digest import ContentDigest
 from ...core.time.clock import now
 from .account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1, AccountSessionRetired, RuntimeUpgradePending
 from .components.theme import BASE_CSS, install_cadrumo_themes, tokenised
+from .disclosure_pages import DisclosurePager, disclosure_page_text, disclosure_summary_text
 from .installation.destination import installation_screen_factory
 from .navigation import TuiDestinationIdV1, TuiScreenContextV1, TuiScreenFactoryV1
 from .operations.catalogue import OperationCatalogueSourceV1
@@ -44,20 +46,7 @@ type RestrictedRequesterFactory = Callable[[RuntimeFrontendClient], RuntimeAutom
 
 
 def _restricted_disclosures(status: ProfileAccessStatus, empty: str) -> str:
-    scope = status.effective_scope
-    disclosures = sorted(
-        scope.disclosures,
-        key=lambda permission: (
-            str(permission.destination_id),
-            str(permission.projection_id),
-            permission.category.value,
-        ),
-    )
-    values = (
-        f"{permission.destination_id}/{permission.projection_id}/{permission.category.value}"
-        for permission in disclosures
-    )
-    return ", ".join(values) or empty
+    return disclosure_summary_text(status.effective_scope, empty)
 
 
 def _restricted_periods(status: ProfileAccessStatus, empty: str) -> str:
@@ -128,6 +117,8 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
         self._cleared = False
         self._locking = False
         self._reading = False
+        self._disclosure_digest: ContentDigest | None = None
+        self._disclosures = DisclosurePager(client)
         self._unsubscribe_retirement: Callable[[], None] | None = None
         self._unsubscribe_notices: Callable[[], None] | None = None
 
@@ -141,12 +132,14 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
             yield Static("", id="restricted-operations", markup=False)
             yield Static("", id="restricted-scope-actions", markup=False)
             yield Static("", id="restricted-disclosures", markup=False)
+            yield Static("", id="restricted-disclosure-page", markup=False)
             yield Static("", id="restricted-delegation", markup=False)
             yield Static("", id="restricted-periods", markup=False)
             yield Static("", id="restricted-availability", markup=False)
             with Horizontal(id="restricted-actions"):
                 if self._requester_factory is not None:
                     yield Button(tr("tui.automation_request.title"), id="restricted-request-access")
+                yield Button(tr("tui.restricted.disclosures_next"), id="restricted-disclosures-next")
                 yield Button(tr("tui.restricted.lock"), id="restricted-lock")
                 yield Button(tr("tui.restricted.change_user"), id="restricted-change-user")
                 yield Button(tr("tui.restricted.close"), id="restricted-close")
@@ -242,6 +235,7 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
         if status.session_expires_at is None or status.grant_expires_at is None:
             self._expire()
             return
+        self._disclosure_digest = status.effective_scope.disclosure_digest
         shell = self._shell()
         shell.query_one("#restricted-profile", Static).update(
             tr("tui.restricted.profile", label=self._profile_label, profile_id=str(self._profile_id))
@@ -286,11 +280,13 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
             "#restricted-operations",
             "#restricted-scope-actions",
             "#restricted-disclosures",
+            "#restricted-disclosure-page",
             "#restricted-delegation",
             "#restricted-periods",
             "#restricted-availability",
         ):
             shell.query_one(selector, Static).update("")
+        shell.query_one("#restricted-disclosures-next", Button).disabled = True
         shell.query_one("#restricted-lock", Button).disabled = True
         shell.query_one("#restricted-change-user", Button).disabled = True
         # The session is gone, so nothing more can be asked of the runtime under it.
@@ -328,6 +324,25 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
             reason = AccountRecomposeReasonV1.EXPIRED
         if self.is_running:
             self.exit(AccountRecomposeRequiredV1(reason=reason))
+
+    @on(Button.Pressed, "#restricted-disclosures-next")
+    def _disclosures_pressed(self) -> None:
+        """Show the next page of the disclosures the last status counted."""
+        digest = self._disclosure_digest
+        if digest is not None and not self._cleared and not self._locking and self._binding_is_current():
+            self.run_worker(self._read_disclosures(digest), group="restricted-disclosures", exclusive=True)
+
+    async def _read_disclosures(self, digest: ContentDigest) -> None:
+        try:
+            page = await await_cancellation_complete(
+                asyncio.to_thread(self._disclosures.next_page, digest), task_name="tui-restricted-disclosures"
+            )
+            text = disclosure_page_text(page)
+        except (RuntimeFrontendRefusedError, RuntimeRefusalError):
+            # The list changed since the status counted it; the next status read pins the new one.
+            text = tr("tui.restricted.disclosure_page_stale")
+        if not self._cleared and not self._locking:
+            self._shell().query_one("#restricted-disclosure-page", Static).update(text)
 
     @on(Button.Pressed, "#restricted-lock")
     def _lock_pressed(self) -> None:
