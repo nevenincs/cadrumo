@@ -21,6 +21,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationReviewProjectionRequestV1,
 )
 from cadrumo.application.operations.mcp_surfaces import McpSurface
+from cadrumo.application.operations.person_acts import operation_is_persons_act
 from cadrumo.application.operations.registry import (
     OperationPublicDefinitionContractV1,
     OperationPublicDefinitionDescriptionV1,
@@ -32,7 +33,6 @@ from cadrumo.application.operations.subject_reference import (
 )
 from cadrumo.application.operator_output.runtime_remedies import runtime_unavailable_remedy
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from cadrumo.application.runtime.deadline_budget import remaining_budget
 from cadrumo.application.runtime.operation_access import (
     RuntimeOperationAcknowledged,
     RuntimeOperationControl,
@@ -45,19 +45,17 @@ from cadrumo.application.runtime.operation_access import (
 )
 from cadrumo.application.runtime.projection_pages import ProjectionPageRequest
 from cadrumo.application.user_profile.access_contracts import AccessDenialCode
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
+from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
 from cadrumo.core.time.clock import now
 
 from .operation_contract_cache import OperationContractCache
 from .operation_discovery import search_operations
 from .payload_vocabulary import PAYLOAD_VOCABULARY_MEMBER, payload_vocabulary
-from .protocol_contract import BY_REFERENCE_SUFFIX, parse_model, public_value, refusal_code
+from .protocol_contract import PERSON_ACT_REMEDY, PERSON_ACT_REQUIRED, parse_model, public_value, refusal_code
 from .result_request import resolve_result_request, stopped_operation_detail
-from .runtime_admission import AdmissionDenial, McpAdmission, status_on_surface
-from .session_acts import NO_SESSION, act_on_sessions
+from .runtime_admission import NO_SESSION, AdmissionDenial, McpAdmission, status_on_surface
 
 _TIMEOUT = 30.0
-_SECRET_DELIVERY_TIMEOUT = 20.0
 
 
 class _AdmittedConnection(Protocol):
@@ -70,10 +68,6 @@ class _AdmittedConnection(Protocol):
 
     def _admitted(self) -> RuntimeFrontendClient: ...
 
-    def held_secret(self, reference: UUID) -> bytearray: ...
-
-    def check_held_secret(self, reference: UUID) -> None: ...
-
 
 @dataclass(frozen=True, slots=True)
 class _Binding:
@@ -83,8 +77,6 @@ class _Binding:
     contracts: OperationContractCache
     surface: McpSurface
     admission: McpAdmission
-    held_secret: Callable[[UUID], bytearray]
-    check_held_secret: Callable[[UUID], None]
 
 
 type _ToolHandler = Callable[[RuntimeFrontendClient, _Binding, dict[str, Any], float], dict[str, Any]]
@@ -105,14 +97,7 @@ def call_admitted_operation(connection: _AdmittedConnection, name: str, args: di
     handler = _ADMITTED_TOOL_HANDLERS.get(name)
     if handler is None:
         raise ValueError("unsupported tool")
-    binding = _Binding(
-        profile_id,
-        connection._contracts,
-        connection.surface,
-        admission,
-        connection.held_secret,
-        connection.check_held_secret,
-    )
+    binding = _Binding(profile_id, connection._contracts, connection.surface, admission)
     return handler(client, binding, args, deadline)
 
 
@@ -193,62 +178,47 @@ def _operator_input_json_schema() -> dict[str, object]:
 
 def _execute(client: RuntimeFrontendClient, binding: _Binding, args: dict[str, Any], deadline: float) -> dict[str, Any]:
     definition_id = args["definition_id"]
-    # Taken out of the call before anything can fail, so no later step holds or repeats the text.
-    secret_text = args.pop("secret", None)
-    secret_reference = args.pop(f"secret{BY_REFERENCE_SUFFIX}", None)
     description = binding.contracts.description(client, definition_id, deadline=deadline)
     contract = description.contract
-    secret: _CallSecret | None = None
+    if operation_is_persons_act(contract.definition_id, ephemeral_secret_required=contract.ephemeral_secret_required):
+        # A credential or access act is the person's own; nothing is submitted.
+        return {"outcome": "refused", "code": PERSON_ACT_REQUIRED, "remedy": PERSON_ACT_REMEDY}
     try:
-        try:
-            secret = _typed_secret(contract, secret_text, secret_reference, binding)
-            submission = _submission(client, contract, args)
-        except _ContractRefusedError as refused:
-            # Nothing was submitted, and the wording quotes only the public contract.
-            return {"outcome": "refused", "code": "invalid_request", "message": str(refused)}
-        try:
-            reply = client.operation(submission, deadline=deadline)
-            if not isinstance(reply, RuntimeOperationSubmitted):
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-        except RuntimeFrontendRefusedError as refused:
-            if refused.request_faults:
-                # The validators' own reasons, as the runtime returned them and the command line shows them.
-                return {
-                    "outcome": "refused",
-                    "code": refusal_code(refused),
-                    "faults": [public_value(fault) for fault in refused.request_faults],
-                }
-            faults = _named_field_faults(refused, description, args["payload"])
-            if not faults:
-                raise
+        submission = _submission(client, contract, args)
+    except _ContractRefusedError as refused:
+        # Nothing was submitted, and the wording quotes only the public contract.
+        return {"outcome": "refused", "code": "invalid_request", "message": str(refused)}
+    try:
+        reply = client.operation(submission, deadline=deadline)
+        if not isinstance(reply, RuntimeOperationSubmitted):
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    except RuntimeFrontendRefusedError as refused:
+        if refused.request_faults:
+            # The validators' own reasons, as the runtime returned them and the command line shows them.
             return {
                 "outcome": "refused",
                 "code": refusal_code(refused),
-                "faults": faults,
-                "faults_cover": _FAULTS_COVER,
+                "faults": [public_value(fault) for fault in refused.request_faults],
             }
-        except RuntimeRefusalError as error:
-            return _unresolved_submission(error, submission.request_id, definition_id)
-        except TimeoutError:
-            return _unresolved_submission(
-                RuntimeRefusalCode.DEADLINE_EXCEEDED.value, submission.request_id, definition_id
-            )
-        except OSError:
-            return _unresolved_submission(
-                RuntimeRefusalCode.CONNECTION_CLOSED.value, submission.request_id, definition_id
-            )
-        response: dict[str, Any] = {"outcome": "submitted", "receipt": public_value(reply.receipt)}
-        ready = True
-        if secret is not None or reply.receipt.secret_requirement is not None:
-            delivery = _deliver_secret(client, reply, submission, secret, deadline)
-            response["secret_delivery"] = delivery
-            ready = delivery["outcome"] == "delivered"
-        if args.get("start", True) and ready:
-            response["start"] = _start_submitted_operation(client, reply.receipt.operation_id, deadline)
-        return response
-    finally:
-        if secret is not None:
-            secret.wipe()
+        faults = _named_field_faults(refused, description, args["payload"])
+        if not faults:
+            raise
+        return {
+            "outcome": "refused",
+            "code": refusal_code(refused),
+            "faults": faults,
+            "faults_cover": _FAULTS_COVER,
+        }
+    except RuntimeRefusalError as error:
+        return _unresolved_submission(error, submission.request_id, definition_id)
+    except TimeoutError:
+        return _unresolved_submission(RuntimeRefusalCode.DEADLINE_EXCEEDED.value, submission.request_id, definition_id)
+    except OSError:
+        return _unresolved_submission(RuntimeRefusalCode.CONNECTION_CLOSED.value, submission.request_id, definition_id)
+    response: dict[str, Any] = {"outcome": "submitted", "receipt": public_value(reply.receipt)}
+    if args.get("start", True):
+        response["start"] = _start_submitted_operation(client, reply.receipt.operation_id, deadline)
+    return response
 
 
 _FAULTS_COVER: Final = (
@@ -293,102 +263,6 @@ def _named_field_faults(
 
 class _ContractRefusedError(ValueError):
     """The call does not fit what its operation's contract declares."""
-
-
-class _CallSecret:
-    """The typed secret of one call: its text, or a reference that is read only when the secret is sent.
-
-    Reading a secret held for one use spends it, so a reference is read by
-    ``take`` alone, which the delivery calls once everything else has passed.
-    """
-
-    def __init__(self, *, text: str | None, reference: UUID | None, read: Callable[[UUID], bytearray]) -> None:
-        self._buffer = None if text is None else bytearray(text, "utf-8")
-        self._reference = reference
-        self._read = read
-
-    def take(self) -> bytearray:
-        """Return the secret's buffer, reading it from the store if it was given by reference."""
-        if self._buffer is None:
-            if self._reference is None:
-                raise ValueError("no secret was given")
-            self._buffer = self._read(self._reference)
-        return self._buffer
-
-    def wipe(self) -> None:
-        """Overwrite the buffer, if one was ever filled."""
-        if self._buffer is not None:
-            self._buffer[:] = bytes(len(self._buffer))
-
-
-def _typed_secret(
-    contract: OperationPublicDefinitionContractV1, text: object, reference: object, binding: _Binding
-) -> _CallSecret | None:
-    """Hold the call to the typed secret its contract declares, and return the one that belongs.
-
-    Given as text, the bytes are its UTF-8 encoding, which is what the
-    command line sends for the same operation. Given by reference, they are
-    the bytes held under it in the credential store. The store is asked here
-    only whether something is held, once the contract is known to take it; the
-    secret is read, and spent if it was held for one use, when it is sent.
-    """
-    if not contract.ephemeral_secret_required:
-        if text is not None or reference is not None:
-            raise _ContractRefusedError("secret is not accepted: this operation's contract declares no typed secret")
-        return None
-    if reference is not None:
-        if text is not None:
-            raise _ContractRefusedError("secret is given as text or by reference, not both")
-        held = UUID(str(reference))
-        binding.check_held_secret(held)
-        return _CallSecret(text=None, reference=held, read=binding.held_secret)
-    if not isinstance(text, str) or not text:
-        raise _ContractRefusedError("secret is required: this operation's contract says ephemeral_secret_required")
-    return _CallSecret(text=text, reference=None, read=binding.held_secret)
-
-
-def _deliver_secret(
-    client: RuntimeFrontendClient,
-    submitted: RuntimeOperationSubmitted,
-    submission: RuntimeOperationSubmit | RuntimeOperationFinancialInput,
-    secret: _CallSecret | None,
-    deadline: float,
-) -> dict[str, Any]:
-    """Hand the typed secret to the exact wait its submission opened, on the protected secret frame.
-
-    The submission is already durable, so every outcome keeps its receipt: a
-    refusal says the runtime took no secret, and anything else that goes
-    wrong leaves unknown whether it did. A secret given by reference is read
-    here, after the wait it is for has been matched and immediately before it
-    is sent, so a call that never gets this far spends none. Once read, a
-    secret held for one use is spent whether or not the send succeeds.
-    """
-    requirement = submitted.receipt.secret_requirement
-    if (
-        requirement is None
-        or secret is None
-        or requirement.identity.operation_id != submitted.receipt.operation_id
-        or requirement.identity.definition_id != submission.definition_id
-        or requirement.identity.subject_ref != submission.subject_ref
-    ):
-        # The runtime's wait and the contract this call was held to disagree, so nothing is sent.
-        return {"outcome": "refused", "code": RuntimeRefusalCode.INVALID_FRAME.value}
-    try:
-        buffer = secret.take()
-    except (ValueError, AutomationCustodyError) as unavailable:
-        # Another call took it between the check and now, or the store cannot be read: nothing was sent.
-        return {"outcome": "refused", "code": refusal_code(unavailable)}
-    try:
-        acknowledged = client.submit_secret(
-            requirement, buffer, timeout=min(_SECRET_DELIVERY_TIMEOUT, remaining_budget(deadline))
-        )
-        if acknowledged.operation_id != submitted.receipt.operation_id:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-    except RuntimeFrontendRefusedError as error:
-        return {"outcome": "refused", "code": refusal_code(error)}
-    except Exception as error:
-        return {"outcome": "unresolved", "code": refusal_code(error)}
-    return {"outcome": "delivered"}
 
 
 class _SubjectRefusedError(_ContractRefusedError):
@@ -635,12 +509,6 @@ def _control_cancel_or_detach(
     )
 
 
-def _session(
-    client: RuntimeFrontendClient, binding: _Binding, args: dict[str, Any], _deadline: float
-) -> dict[str, Any]:
-    return act_on_sessions(client, binding.admission, args)
-
-
 _ADMITTED_TOOL_HANDLERS: dict[str, _ToolHandler] = {
     "search": _search,
     "describe": _describe,
@@ -651,5 +519,4 @@ _ADMITTED_TOOL_HANDLERS: dict[str, _ToolHandler] = {
     "review": _review,
     "respond": _respond,
     "control": _control,
-    "session": _session,
 }

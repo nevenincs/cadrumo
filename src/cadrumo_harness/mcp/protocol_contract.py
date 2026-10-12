@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Collection, Mapping
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
 from types import MappingProxyType
@@ -14,11 +14,6 @@ from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFron
 from cadrumo.application.corpus_search.errors import CorpusSearchError
 from cadrumo.application.operations.frontend_requests import OperationResultProjectionRefusalV1
 from cadrumo.application.runtime.contracts import RuntimeRefusalError
-from cadrumo.application.runtime.installation_requests import (
-    INSTALLATION_ACT_CONTRACTS,
-    InstallationAct,
-    InstallationActContract,
-)
 from cadrumo.application.runtime.projection_pages import ProjectionPage
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
 from cadrumo.application.user_profile.sign_in_refusals import SignInRefusal
@@ -34,8 +29,6 @@ from cadrumo.domain.calculations.registry.errors import (
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.portals.categories import PortalCategory
 
-from .held_secrets import HOLD_OPTION, ONCE_OPTION
-
 
 class _FieldSchema(TypedDict):
     """One supported JSON Schema property declaration."""
@@ -48,7 +41,6 @@ class _FieldSchema(TypedDict):
     maxLength: NotRequired[int]
     pattern: NotRequired[str]
     format: NotRequired[str]
-    writeOnly: NotRequired[bool]
     items: NotRequired[dict[str, str]]
 
 
@@ -69,32 +61,10 @@ def _schema(required: Mapping[str, _FieldSchema], optional: Mapping[str, _FieldS
 
 _TEXT: _FieldSchema = {"type": "string"}
 _DOC: _FieldSchema = {"type": "object"}
-# Marked so a client that follows the schema keeps the value out of its own logs and echoes.
-_SECRET: _FieldSchema = {"type": "string", "format": "password", "writeOnly": True}
-# Names a secret the person entered at a terminal of their own; the reference itself is no secret.
-_SECRET_REFERENCE: _FieldSchema = {"type": "string", "format": "uuid"}
-_TEXTS: _FieldSchema = {"type": "array", "items": {"type": "string"}}
 _FLAG: _FieldSchema = {"type": "boolean"}
 SEARCH_PAGE_DEFAULT = 10
 """How many operations a search page holds when the call names no limit: few, so a page is cheap to read."""
 SEARCH_PAGE_MAX = 200
-
-BY_REFERENCE_SUFFIX: Final = "_reference"
-"""What a secret argument's name gains to name the argument that takes the same secret by reference."""
-
-_SECRET_FORMS: Final = (
-    "Each secret argument has a sibling ending in _reference, and a call gives one of the two, never both. "
-    "Text in the secret argument has already passed through this conversation and the host's transcript before "
-    "it reaches this server. The reference form keeps the secret out of the conversation: the person runs "
-    f"`cadrumo-mcp {HOLD_OPTION}` in a terminal of their own, types the secret there unseen, and gives you only "
-    "the reference it prints. Prefer the reference and ask the person for one. A secret held that way stays "
-    "until the person deletes it, so the same reference serves again after a lock or an expiry; one held with "
-    f"{ONCE_OPTION} is spent by the first call that sends it, whatever that call then answers, and a send that "
-    "then fails does not give it back; a call refused before it is sent, or made while no runtime is running, "
-    "leaves it held. "
-    "The reference of a secret a tool handed to the person, such as a recovery code, is accepted too, and "
-    "using it neither shows the secret nor deletes it"
-)
 
 _SIGN_IN_REFUSAL: Final = (
     "A call refused because the runtime would not sign this connection in answers with the runtime's code and, "
@@ -104,6 +74,23 @@ _SIGN_IN_REFUSAL: Final = (
     "another login); and seconds, how long a throttled sign-in waits before the password is tried again. "
     "status reports the same facts beside denial"
 )
+
+PERSON_ACT_REQUIRED: Final = "person_act_required"
+"""The code of a refusal of an act that only the person takes in Cadrumo, never an agent."""
+
+SIGN_IN_REMEDY: Final = (
+    "Nobody is signed in to Cadrumo for this profile, and no key the person configured admits this server. "
+    "Ask the person to sign in to Cadrumo, then call again. You cannot sign in, and you never ask for a password, "
+    "a key or any other secret"
+)
+"""What a call refused for want of a live sign-in or a configured key tells the agent to do."""
+
+PERSON_ACT_REMEDY: Final = (
+    "Ask the person to do this in Cadrumo. Signing in or out, locking, passwords, recovery, keys and their grants, "
+    "and anything outside this profile are the person's acts, and you never ask for a password, a key or any "
+    "other secret"
+)
+"""What a call refused as the person's own act tells the agent to do."""
 
 _UNKNOWN_OUTCOME: Final = (
     "An answer whose outcome is unresolved is not an error: it says the effect is not known, and its "
@@ -141,134 +128,6 @@ def _acts(title: str, *, destructive: bool, open_world: bool) -> ToolHints:
     return ToolHints(title=title, read_only=False, destructive=destructive, idempotent=False, open_world=open_world)
 
 
-INSTALLATION_CONFIRM_ARGUMENT: Final = "confirm"
-"""The tool argument that carries a request's confirmation, named as the session tool names it."""
-
-INSTALLATION_CONFIRMED_MEMBER: Final = "confirmed"
-"""The request member that argument fills."""
-
-_INSTALLATION_COORDINATES: Final = frozenset({"request_id", "frontend", "action"})
-_INSTALLATION_OWN_ARGUMENTS: Final = frozenset(
-    {"secret", f"secret{BY_REFERENCE_SUFFIX}", INSTALLATION_CONFIRM_ARGUMENT}
-)
-_CARRIED_CONSTRAINTS: Final = ("enum", "minimum", "maximum", "minLength", "maxLength", "pattern", "format")
-_INSTALLATION_PURPOSE: Final = (
-    "Do work that needs no profile and no sign-in, as the command line does it: the storage tree (inventory, "
-    "check, init, reclaim), the reset of all profiles, the profile list, profile archive inspect and import, "
-    "recovery enrolment, repair, and verification of review packages and calculation reports. The runtime does "
-    "the work, so it must be running. A file is named by its absolute path on this machine. An argument written "
-    "with ? is optional. An action that takes confirm changes nothing unless confirm is true: without it the "
-    "action answers with what it would do, or with a refusal that says so, as the command does without its "
-    "confirmation flag. A completed action answers with its typed reply in reply; a refusal carries the "
-    "runtime's code and, where the runtime recorded one, error_detail; an action that may have changed "
-    "records before its outcome was lost answers unresolved and, where another action reads that outcome, "
-    f"names it in outcome_read_by. {_UNKNOWN_OUTCOME}"
-)
-_INSTALLATION_PROTECTED_INPUT: Final = (
-    "An action listed with secret takes the profile password, as text in secret or by reference in "
-    "secret_reference: it travels to the runtime on the protected secret frame, apart from the other arguments, "
-    f"and no reply repeats it. {_SECRET_FORMS}"
-)
-_INSTALLATION_HANDOVER: Final = (
-    "An action that hands a secret to the person never returns it: one copy is held in this machine's "
-    "protected credential store until the person has read it at a terminal of their own and confirmed they kept "
-    "it, and the reply carries only secret_reference and, in secret_retrieval, how the person reads it. A "
-    "reference a reply carries may be given wherever a secret is taken by reference, so a recovery code can "
-    "be used before the person has read it: that sends the code to the runtime, shows it to nobody, and "
-    "leaves it held until the person reads it or deletes it"
-)
-_INSTALLATION_TITLE: Final = "Manage the installation"
-
-
-def _installation_argument(declaration: Mapping[str, Any], definitions: Mapping[str, Any]) -> _FieldSchema:
-    """Reduce one request member's schema to the declaration a tool argument advertises.
-
-    An optional member is advertised in its present form and is left out
-    when unset; a named type is advertised as what it resolves to.
-    """
-    options = declaration.get("anyOf")
-    if options is not None:
-        present = [option for option in options if option.get("type") != "null"]
-        if len(present) != 1:
-            raise InternalInvariantError("an installation act argument has one present form")
-        declaration = present[0]
-    reference = declaration.get("$ref")
-    if reference is not None:
-        declaration = definitions[str(reference).rpartition("/")[2]]
-    if declaration.get("type") not in {"string", "boolean", "integer"}:
-        raise InternalInvariantError("an installation act argument is text, a flag or a whole number")
-    carried = {key: declaration[key] for key in _CARRIED_CONSTRAINTS if key in declaration}
-    return cast(_FieldSchema, {"type": declaration["type"], **carried})
-
-
-def installation_act_arguments(contract: InstallationActContract) -> dict[str, tuple[_FieldSchema, bool]]:
-    """Return the arguments one act takes on the tool, each with its declaration and whether it is required.
-
-    They are the members of the act's request other than the coordinates the
-    server supplies, so a request that gains a member gains the argument.
-    """
-    schema = contract.request.model_json_schema()
-    definitions, required = schema.get("$defs", {}), set(schema.get("required", ()))
-    arguments: dict[str, tuple[_FieldSchema, bool]] = {}
-    for member, declaration in schema["properties"].items():
-        if member in _INSTALLATION_COORDINATES:
-            continue
-        if member in _INSTALLATION_OWN_ARGUMENTS:
-            raise InternalInvariantError("an installation request member takes the name of a tool argument")
-        name = INSTALLATION_CONFIRM_ARGUMENT if member == INSTALLATION_CONFIRMED_MEMBER else member
-        arguments[name] = (_installation_argument(declaration, definitions), member in required)
-    return arguments
-
-
-def _opening_sentence(model: type[BaseModel]) -> str:
-    """Return the sentence a model's documentation opens with, as plain text."""
-    text = " ".join((model.__doc__ or "").split()).replace("``", "")
-    return text.partition(". ")[0].rstrip(".")
-
-
-def installation_tool(acts: Collection[InstallationAct]) -> tuple[str, str, _ToolSchema]:
-    """Build the ``installation`` tool for the acts given, from the act table and each act's models.
-
-    Its action list, its arguments and the line that describes each action
-    are read from the table, so an act the table gains is offered without
-    being typed here. A surface that narrows passes only the acts it allows.
-    """
-    offered = [contract for act, contract in INSTALLATION_ACT_CONTRACTS.items() if act in acts]
-    properties: dict[str, _FieldSchema] = {}
-    actions: list[str] = []
-    for contract in offered:
-        takes: list[str] = []
-        for name, (declaration, required) in installation_act_arguments(contract).items():
-            if properties.setdefault(name, declaration) != declaration:
-                raise InternalInvariantError("two installation acts declare one argument differently")
-            takes.append(name if required else f"{name}?")
-        if contract.takes_secret:
-            takes.append("secret or secret_reference")
-        handover = "; hands a secret to the person" if contract.delivers_secret else ""
-        actions.append(
-            f"{contract.act.value}({', '.join(takes)}{handover}): {_opening_sentence(contract.request)}. "
-            f"Returns: {_opening_sentence(contract.reply)}"
-        )
-    sentences = [_INSTALLATION_PURPOSE]
-    if any(contract.takes_secret for contract in offered):
-        properties["secret"] = _SECRET
-        properties[f"secret{BY_REFERENCE_SUFFIX}"] = _SECRET_REFERENCE
-        sentences.append(_INSTALLATION_PROTECTED_INPUT)
-    if any(contract.delivers_secret for contract in offered):
-        sentences.append(_INSTALLATION_HANDOVER)
-    action: _FieldSchema = {"type": "string", "enum": [contract.act.value for contract in offered]}
-    return ("installation", ". ".join((*sentences, "Actions", *actions)), _schema({"action": action}, properties))
-
-
-def _installation_hints() -> ToolHints:
-    """Read the installation tool's hints from the act table: what any act in it can do."""
-    facts = [contract.facts for contract in INSTALLATION_ACT_CONTRACTS.values()]
-    if not any(fact.changes_records for fact in facts):
-        return _reads(_INSTALLATION_TITLE)
-    # An act that changes records includes the reset of every profile, so the change is not only additive.
-    return _acts(_INSTALLATION_TITLE, destructive=True, open_world=any(fact.reaches_network for fact in facts))
-
-
 _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
     (
         "status",
@@ -279,32 +138,6 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         f"the next call re-establishes the session. {_SIGN_IN_REFUSAL}",
         _schema({}),
         _reads("Session and profile status"),
-    ),
-    (
-        "authorization_prepare",
-        "Prepare enrollment, or an own-grant change using a protected credential reference",
-        _schema({}, {"credential_reference": _TEXT}),
-        # A grant change can rotate a key, which replaces the one stored.
-        _acts("Prepare an authorization request", destructive=True, open_world=False),
-    ),
-    (
-        "authorization_request",
-        "Submit a proposal for the prepared destination",
-        _schema({"proposal": _DOC}),
-        _acts("Submit an authorization proposal", destructive=True, open_world=False),
-    ),
-    (
-        "authorization_poll",
-        "Inspect or complete this connection's pending authorization",
-        _schema({}),
-        _acts("Check the pending authorization", destructive=True, open_world=False),
-    ),
-    (
-        "authenticate",
-        "Admit this connection using a protected credential reference",
-        _schema({"credential_reference": _TEXT}),
-        # Admission adds a session and takes nothing away.
-        _acts("Authenticate with an enrolled key", destructive=False, open_world=False),
     ),
     (
         "authority",
@@ -365,7 +198,8 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         "search",
         "Rank currently permitted registered operations by relevance to a query; without one, list them. "
         "Each row is a summary: the operation's definition_id, a one-line description, the kind of subject it "
-        "acts on, the effects it may have, the interactions it may ask for and whether it takes a secret. "
+        "acts on, the effects it may have, the interactions it may ask for and whether it takes a secret, which "
+        "makes it the person's act and not one execute submits. "
         "The contract and the request schema are not in a row: pass a small limit, then describe the operation "
         f"you pick. A page holds {SEARCH_PAGE_DEFAULT} rows when limit is omitted and at most {SEARCH_PAGE_MAX}: "
         "pass a returned next_cursor as cursor for the next page, and family to narrow to one definition "
@@ -402,9 +236,8 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         "Submit one registered operation under current profile authority. Leave subject_ref out: it is derived "
         "from the contract's subject_reference, the admitted profile and the payload. Only a stored_work_unit "
         "operation needs it, as the id of the work unit that owns the record its payload_path names. "
-        "An operation whose contract says ephemeral_secret_required takes that secret, as text in secret or by "
-        "reference in secret_reference, and no other operation accepts one: it travels to the runtime on the "
-        "protected secret frame, apart from the payload, and no reply repeats it. An operation whose contract "
+        "An operation whose contract says ephemeral_secret_required is the person's own act and is refused "
+        f"here: {PERSON_ACT_REMEDY}. An operation whose contract "
         "declares a transient_financial_operand takes its typed operator input as payload, with subject_ref and "
         "without idempotency_key. A payload the operation's request model refuses is answered refused with "
         "code invalid, and faults names each reason by location, type and message: a missing field, a field "
@@ -416,15 +249,13 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         "Every call submits a new operation, so two identical calls run twice. "
         "idempotency_key is optional, and giving one makes a repeat safe: a repeat with the same key, operation "
         f"and payload answers with the operation already recorded and submits nothing. {_UNKNOWN_OUTCOME} "
-        f"unless it carried an idempotency_key, and then repeat it only with that same key. {_SECRET_FORMS}",
+        "unless it carried an idempotency_key, and then repeat it only with that same key",
         _schema(
             {"definition_id": _TEXT, "payload": _DOC},
             {
                 "subject_ref": _TEXT,
                 "idempotency_key": _TEXT,
                 "start": {"type": "boolean"},
-                "secret": _SECRET,
-                f"secret{BY_REFERENCE_SUFFIX}": _SECRET_REFERENCE,
             },
         ),
         # Some registered operation deletes records, and some reads a remote host.
@@ -487,68 +318,6 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         # Starting an operation lets it do whatever execute could have started.
         _acts("Control an operation", destructive=True, open_world=True),
     ),
-    (
-        "session",
-        "Act on a profile's sessions as the command line does. Under the held session: list them, lock this "
-        "session or the one target_session_id names, deny_automation of the given kind (a key or a grant named "
-        "by target_id, all automation, or the whole profile), or sign_out the person. Without one: sign_in with "
-        "the profile password in secret (store keeps the sign-in for every frontend and selects the profile; "
-        "method api_key takes a raw key instead), sign_in_status, resume a locked profile with the password in "
-        "secret and the grants to reactivate, reset_password with the recovery code in secret and the new "
-        "password in new_secret and new_secret_confirmation, change_password with the current password in secret "
-        "and the new one in the same two fields, delete_profile for the profile named, which only reports "
-        "what would be destroyed unless confirm is true, and enable_recovery with the profile password in secret, "
-        "for the profile named or else the selected one, which answers as the installation tool's recovery_enroll "
-        "does: one copy of the recovery code is held in this machine's protected credential store until the "
-        "person has read it at a terminal of their own and confirmed they kept it, and the reply carries only "
-        "secret_reference and, in secret_retrieval, how the person reads it. Each secret travels on the runtime's "
-        "protected secret frame and no reply repeats it. Wherever an action takes secret, new_secret or "
-        "new_secret_confirmation it takes secret_reference, new_secret_reference or "
-        "new_secret_confirmation_reference in its place; new_secret_reference and "
-        "new_secret_confirmation_reference may name the same held secret. reset_password's secret_reference "
-        "also takes the secret_reference enable_recovery answered with: the held recovery code is used without "
-        f"being shown, and stays held until the person reads it or deletes it. {_SECRET_FORMS}. {_SIGN_IN_REFUSAL}. "
-        f"{_UNKNOWN_OUTCOME}",
-        _schema(
-            {
-                "action": {
-                    "type": "string",
-                    "enum": [
-                        "list",
-                        "lock",
-                        "deny_automation",
-                        "sign_out",
-                        "sign_in",
-                        "sign_in_status",
-                        "resume",
-                        "reset_password",
-                        "change_password",
-                        "delete_profile",
-                        "enable_recovery",
-                    ],
-                }
-            },
-            {
-                "target_session_id": _TEXT,
-                "kind": {"type": "string", "enum": ["key", "grant", "all", "profile_lock"]},
-                "target_id": _TEXT,
-                "profile": _TEXT,
-                "method": {"type": "string", "enum": ["password", "api_key"]},
-                "store": _FLAG,
-                "grants": _TEXTS,
-                "confirm": _FLAG,
-                "secret": _SECRET,
-                "new_secret": _SECRET,
-                "new_secret_confirmation": _SECRET,
-                f"secret{BY_REFERENCE_SUFFIX}": _SECRET_REFERENCE,
-                f"new_secret{BY_REFERENCE_SUFFIX}": _SECRET_REFERENCE,
-                f"new_secret_confirmation{BY_REFERENCE_SUFFIX}": _SECRET_REFERENCE,
-            },
-        ),
-        # Deleting a profile destroys it; every act stays on this machine.
-        _acts("Manage profile sessions", destructive=True, open_world=False),
-    ),
-    (*installation_tool(tuple(INSTALLATION_ACT_CONTRACTS)), _installation_hints()),
 )
 MCP_TOOL_CATALOGUE = tuple((name, description, schema) for name, description, schema, _hints in _DECLARED_TOOLS)
 """Each tool as it is advertised: its name, its description and the schema of its arguments."""
@@ -560,12 +329,6 @@ MCP_TOOL_HINTS: Final[Mapping[str, ToolHints]] = MappingProxyType(
 
 _TOOL_SCHEMAS = {name: schema for name, _description, schema in MCP_TOOL_CATALOGUE}
 MCP_TOOL_NAMES = frozenset(_TOOL_SCHEMAS)
-
-
-def tool_catalogue(installation_acts: Collection[InstallationAct]) -> tuple[tuple[str, str, _ToolSchema], ...]:
-    """Return the catalogue as one connection advertises it, offering only these installation acts."""
-    narrowed = installation_tool(installation_acts)
-    return tuple(narrowed if entry[0] == narrowed[0] else entry for entry in MCP_TOOL_CATALOGUE)
 
 
 def _field_matches(kind: str, value: object, declaration: _FieldSchema) -> bool:
@@ -700,7 +463,7 @@ def _reply_contains_refusal(reply: dict[str, Any]) -> bool:
     return False
 
 
-_EXECUTE_STEPS: Final = ("secret_delivery", "start")
+_EXECUTE_STEPS: Final = ("start",)
 """The steps an execute reply reports beside its receipt, each with an outcome of its own."""
 
 UNKNOWN_OUTCOME_MEMBER: Final = "unknown_outcome"
@@ -722,17 +485,9 @@ def unknown_outcome_instruction(value: dict[str, Any]) -> str | None:
 
     A repeat of a call that may already have committed can commit it twice,
     so each sentence names what the reply kept to read the outcome by
-    instead: the operation, the act that reads it, or the request alone.
+    instead: the operation, or the request alone.
     """
     if value.get("outcome") == "unresolved":
-        if "act" in value:
-            reader = (
-                f"read it with the installation action {value['outcome_read_by']}"
-                if "outcome_read_by" in value
-                else "no action reads it directly, so read what the action changes with the installation tool's "
-                "reading actions before deciding anything"
-            )
-            return f"{_NOT_KNOWN}. {_NEVER_REPEAT}: {reader}, and tell the person the outcome is not known."
         if "operation_id" in value:
             return (
                 f"{_NOT_KNOWN}. {_NEVER_REPEAT}: read the operation named by operation_id with observe, and with "
@@ -746,10 +501,7 @@ def unknown_outcome_instruction(value: dict[str, Any]) -> str | None:
                 "payload answers with the operation already recorded. Otherwise read the records the operation "
                 "writes to learn whether it ran, and tell the person the outcome is not known."
             )
-        return (
-            f"{_NOT_KNOWN}. {_NEVER_REPEAT}: request_id identifies what was sent, and authorization_poll reads "
-            "where it stands."
-        )
+        return f"{_NOT_KNOWN}. {_NEVER_REPEAT}, and tell the person the outcome is not known."
     unsettled = [
         step
         for step in _EXECUTE_STEPS

@@ -30,9 +30,11 @@ class McpAdmission(StrEnum):
     SIGN_IN = "sign_in"
     """Resumed from the person's sign-in; it ends when that sign-in ends."""
     KEY = "key"
-    """Authenticated by an enrolled key, under the grant approved for it."""
-    TYPED_SIGN_IN = "typed_sign_in"
-    """Signed in with the profile password given to this connection; it is the person's session."""
+    """Authenticated by an enrolled key the person configured at launch, under the grant approved for it."""
+
+
+NO_SESSION: Final = "none"
+"""What a reply's ``session`` says when the connection holds no session."""
 
 
 @dataclass(frozen=True, slots=True)

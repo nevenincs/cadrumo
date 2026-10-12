@@ -15,9 +15,10 @@ related:
   - '[[2026-10-11-mcp-parity-full-parity-adr]]'
   - '[[2026-07-08-mcp-protocol-hardening-adr]]'
   - '[[2026-07-31-mcp-sdk-major-carry-adr]]'
-modified: '2026-10-11'
+  - '[[2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr]]'
+modified: '2026-10-12'
 body_schema: body-v2
-body_hash: 'sha256:111943325596254d34285f73a142bb1c2faa0bf40f1139f113fcf0e482734631'
+body_hash: 'sha256:451c528c035cb31657483c9b44132ce255a30bf92a72b29e4a872504577d5878'
 ---
 
 <!-- RETIRED: P03, P07, S20, S21, S22, S23, S24, S25, S26, S31, S32, S36, S40, S41, S43 -->
@@ -33,6 +34,13 @@ Approved 2026-10-10
 The owner approved this plan first-hand on 2026-10-10, after reading its summary and the open decisions ("1 approved"), and set the execution pipeline: sonnet at high effort for well-defined, unambiguous tasks, opus for problem solving, and haiku for tool calls, testing and summarising code and context.
 
 Amended 2026-10-11 on the owner's first-hand ruling, which is the authorization for phase `P08` and for retiring the Steps it replaces: "MCP should aboslutely NEVER refuse anyhting the cli can do. stop underminig the program", and "I want the cli tui and mcp to be partify. clic can do everythign so should the tui and mcp. no more qesitons". `2026-10-11-mcp-parity-full-parity-adr` records it and supersedes the admission rulings; the four proposed records on the approval step, file exchange, replay identity and agent provenance are rejected. The phases on the approval step and on admitting sensitive acts behind it are removed, with the Steps that waited on those records. Statements below that an operation is refused, held back, admitted behind approval or waits on file exchange describe the plan as first approved and no longer hold: every operation the command line can submit is submittable from the terminal interface and from MCP with the same decision, effect and result. Refusals built in earlier Steps of this plan are removed in `P08`.
+
+Amended 2026-10-12: phase `P10` is authorized by the owner's first-hand ruling of 2026-10-12 recorded in `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`, which governs it: the agent never authenticates or manages authentication, never handles a secret, runs only inside the one signed-in profile, and does not run at all without a live sign-in or an API key the person issued and configured by reference. Only one profile is signed in at a time. API keys stay and the runtime manages them. That record narrows `2026-10-11-mcp-parity-full-parity-adr` to operations inside the bound profile, so the session and installation tools built in `P09.S59` and the secret carriage built in `P08.S50` and `P09.S62` are removed by `P10`, and statements below that MCP carries a secret or serves those acts no longer hold. The orchestrator applied four defaults while the owner was away; each is provisional and the owner may confirm or change it:
+
+- (a) MCP's `authorization_prepare`, `authorization_request` and `authorization_poll` key-request flow is removed. Keys are issued only by the person through `config automation` and given to the MCP server by reference in its launch configuration.
+- (b) A sign-in to profile B while A is signed in signs A out everywhere: A's sessions, agents and key sessions that depend on A's sign-in. Keys issued for A that work without a sign-in are not ended by it.
+- (c) With no live sign-in and no valid key, MCP answers only the handshake, the tool list and `status`, which says to sign in to Cadrumo. Everything else is refused, the public reference and corpus queries included.
+- (d) An agent session timing out ends that agent session only. A resumed sign-in ends when the person's sign-in ends.
 
 The goal is the owner's: the MCP server reaches every tax capability that the command line and terminal interface offer, through the operation registry and the sixteen existing tools, and never through the command line. The end of the work is a calculated and verified declaration and a local export. Fixed boundary, not open to any Step: nothing here designs, builds or supports sending data to the tax agency in a way that changes its state. `modelo.export` writes a local file and `modelo.work.file` writes a local record. The only work that touches that boundary is `P01.S01`, which adds a test that fails if any operation or tool ever declares a submission.
 
@@ -150,6 +158,18 @@ Delivers the rest of parity: about forty-five command-line commands do their wor
 - [x] `P09.S62` - Let a tool call name a secret the person stored at a terminal by reference beside the typed argument, report an unresolved outcome as an outcome and not a tool error, mark the pure reads read-only, and test the handshake-free protocol revision; `src/cadrumo_harness/mcp/protocol_contract.py`.
 - [x] `P09.S63` - Carry the request model's faults, without values, on the runtime's invalid refusal so MCP names the field and the rule, and answer search and describe from the public contracts with no session, as the command line's help does; `src/cadrumo/entrypoints/runtime/operation_host.py`.
 
+### Phase `P10` - keep the agent inside the one signed-in profile
+
+Delivers the owner's ruling of 2026-10-12: MCP carries no secret and offers no authentication, session, access or installation act; the runtime refuses those acts and every operation that needs a typed secret on the MCP frontend; one profile is signed in at a time; an MCP server is bound to one profile and does nothing but answer its handshake, tool list and status without a live sign-in or a key the person configured; and the desktop shows its sign-in view on every loss of sign-in.
+
+- [x] `P10.S64` - Remove from the MCP server every tool and argument that signs in, administers sessions or access, carries or names a secret, or acts outside the bound profile: the session, installation, authenticate and authorization tools, the secret arguments of execute and the held-secret commands, keeping the key named by --credential-reference in the launch configuration, and replace the tests that proved them with tests of their absence; `src/cadrumo_harness/mcp/protocol_contract.py`.
+- [ ] `P10.S65` - Refuse on the MCP frontend, in the runtime, the password login, enrollment, password reset, recovery, profile resume and deletion, session inventory, lock, sign-out, automation denial and installation acts, and every operation whose contract requires a typed secret, with one typed refusal that names the act as the person's, keyed on the act through one predicate the frontend scan lists with its reason; `src/cadrumo/entrypoints/runtime/profile_connection_admission.py`.
+- [ ] `P10.S66` - Keep one profile signed in at a time: a human sign-in to a profile ends every other profile's stored sign-in and the human sessions resumed from it on every frontend, and leaves key sessions that need no sign-in; `src/cadrumo/application/user_profile/login_session.py`.
+- [ ] `P10.S67` - Bind each MCP server to one profile for its life, the key's or the first resumed sign-in's, refuse every call when the signed-in profile later differs, and answer nothing but the handshake, the tool list and status without a live sign-in or a valid key, with one typed result that tells the person to sign in to Cadrumo; `src/cadrumo_harness/mcp/runtime_adapter.py`.
+- [ ] `P10.S68` - Show the desktop sign-in view on a locked profile instead of handing it to the terminal interface, and on the pushed expiry and lock events as well as the status poll; `native/desktop/frontend/src/shell/signIn.ts`.
+- [ ] `P10.S69` - Regenerate what derives from the tool list and the surfaces, the surface pins, the shipped contract document and the agent command reference, and rewrite the packaged agent text and user documentation so the agent asks the person to sign in to Cadrumo when refused and never asks for a secret; `src/cadrumo_harness/_data/agent`.
+- [ ] `P10.S70` - Prove against a running runtime with a synthetic encrypted profile that MCP works inside the signed-in profile and through a configured key, is refused without either, after sign-out and after a sign-in to another profile, and cannot reach a credential act; `src/cadrumo_harness/mcp/tests`.
+
 ## Parallelization
 
 The phases that ordered work around an approval step, `P03` and `P07`, were removed on 2026-10-11 with the Steps that depended on them, and nothing waits on an approval, a file-exchange folder, a replay identity or a provenance mark. What follows describes how the remaining work was sequenced and what a later Step must respect.
@@ -163,6 +183,8 @@ Hard ordering:
 May run in parallel:
 
 - `S53` and `S57` are independent of the door. `S54`, `S55`, `S56`, `S58` and `S59` have disjoint files apart from the door's models file, which each changes only for its own acts. The two halves of `S60` split the terminal interface between the operations destination, which solely edits the navigation files, and the installation and reference destinations.
+
+Within `P10` the Steps run in order, because `S64`, `S67` and `S70` share the MCP adapter and `S69` regenerates what the earlier Steps change. `S68` edits the desktop tree, which another session holds with uncommitted work; it stays open until that tree is free and blocks nothing else.
 
 `P02.S18` waits on the sealing-key decision in the application sign-in record another session holds; it blocks nothing around it.
 

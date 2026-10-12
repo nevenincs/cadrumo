@@ -31,23 +31,17 @@ class _Pin:
 _PINNED: Mapping[str, _Pin] = {
     "full": _Pin(
         tools=(
-            "authenticate",
             "authority",
-            "authorization_poll",
-            "authorization_prepare",
-            "authorization_request",
             "control",
             "corpus_search",
             "describe",
             "execute",
-            "installation",
             "observe",
             "respond",
             "result",
             "result_page",
             "review",
             "search",
-            "session",
             "status",
         ),
         changes_records=True,
@@ -55,21 +49,15 @@ _PINNED: Mapping[str, _Pin] = {
     ),
     "read-only-local": _Pin(
         tools=(
-            "authenticate",
             "authority",
-            "authorization_poll",
-            "authorization_prepare",
-            "authorization_request",
             "control",
             "corpus_search",
             "describe",
             "execute",
-            "installation",
             "observe",
             "result",
             "result_page",
             "search",
-            "session",
             "status",
         ),
         changes_records=False,
@@ -125,7 +113,7 @@ def test_a_surface_that_changes_under_its_name_is_found() -> None:
 
     assert _finding(full, _PINNED) is None
     assert _finding(replace(full, tools=full.tools | {"another_tool"}), _PINNED) is not None
-    assert _finding(replace(full, tools=full.tools - {"session"}), _PINNED) is not None
+    assert _finding(replace(full, tools=full.tools - {"status"}), _PINNED) is not None
     assert _finding(replace(narrowed, reaches_network=True), _PINNED) is not None
     assert _finding(replace(narrowed, changes_records=True, operations=None), _PINNED) is not None
     assert _finding(full, {"read-only-local": _PINNED["read-only-local"]}) is not None

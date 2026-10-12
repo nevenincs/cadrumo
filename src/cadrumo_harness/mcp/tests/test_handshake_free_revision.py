@@ -177,8 +177,5 @@ async def test_execute_on_a_read_operation_is_submitted_and_started_for_a_handsh
     assert [type(item) for item in legacy_lease.exchanges] == [RuntimeOperationSubmit, RuntimeOperationControl]
     assert _without_identities(document) == _without_identities(executed_after_handshake.structured_content)
     assert unfit.is_error is True
-    assert unfit.structured_content == {
-        "outcome": "refused",
-        "code": "invalid_request",
-        "message": "secret is not accepted: this operation's contract declares no typed secret",
-    }
+    # No tool takes a secret, so a call that gives one is refused at the wire, before anything is sent.
+    assert unfit.structured_content == {"outcome": "refused", "code": "invalid_request"}

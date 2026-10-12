@@ -101,8 +101,7 @@ async def _authenticated(
 
     monkeypatch.setattr(mcp_runtime, "open_installed_credential_client", admit)
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=None)
-    authenticated = await adapter.call("authenticate", {"credential_reference": str(reference)})
-    assert authenticated["outcome"] == "authenticated"
+    await adapter.bootstrap_reference(reference)
     assert (await adapter.call("status", {}))["session"] == "key"
     assert len(opened) == 1 and asked == [reference]
     return adapter, opened, asked

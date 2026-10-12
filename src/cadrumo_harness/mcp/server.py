@@ -14,10 +14,10 @@ from cadrumo.application.operations.mcp_surfaces import DEFAULT_MCP_SURFACE, MCP
 from cadrumo.domain.calculations.registry.authority import release_bundled_indexed_authority
 
 from .protocol_contract import (
+    MCP_TOOL_CATALOGUE,
     MCP_TOOL_HINTS,
     UNKNOWN_OUTCOME_MEMBER,
     has_refusal,
-    tool_catalogue,
     unknown_outcome_instruction,
 )
 
@@ -39,11 +39,6 @@ def build_server(adapter: RuntimeMcpAdapter) -> Server:
         ToolAnnotations,
     )
 
-    from .installation_acts import installation_acts_on
-
-    # The installation tool offers only the acts the surface allows; the adapter refuses the others.
-    catalogue = tool_catalogue(installation_acts_on(adapter.surface))
-
     def annotations(name: str) -> ToolAnnotations:
         hints = MCP_TOOL_HINTS[name]
         return ToolAnnotations(
@@ -63,7 +58,7 @@ def build_server(adapter: RuntimeMcpAdapter) -> Server:
                     input_schema=cast(dict[str, Any], schema),
                     annotations=annotations(name),
                 )
-                for name, description, schema in catalogue
+                for name, description, schema in MCP_TOOL_CATALOGUE
                 if name in adapter.surface.tools
             ]
         )
@@ -91,10 +86,11 @@ def serve(
 ) -> None:
     """Run one stdio adapter on one surface; EOF closes its lease, never the shared runtime.
 
-    With a credential reference the adapter authenticates by that enrolled key
-    for the named profile and never resumes a sign-in. Without one it starts
-    with no session, and asks the runtime to resume the person's sign-in when
-    a call first needs the profile.
+    With a credential reference, which only the person's launch configuration
+    gives, the adapter authenticates by that enrolled key for the named
+    profile and never resumes a sign-in. Without one it starts with no
+    session, and asks the runtime to resume the person's sign-in when a call
+    first needs the profile.
     """
     from mcp.server.lowlevel import NotificationOptions
     from mcp.server.stdio import stdio_server

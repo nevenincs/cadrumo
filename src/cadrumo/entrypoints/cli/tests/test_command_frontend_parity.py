@@ -1,13 +1,20 @@
 """Whatever a command does, the terminal interface and MCP can ask for the same work.
 
-Every executable command of the live tree is held to each of four ways of
+Every executable command of the live tree is held to each of five ways of
 reaching the other frontends that applies to it: it submits a registered
 operation; it sends a runtime request or an installation act; it works in the
-command-line process and a declared operation, installation act or ``authority``
-query does the same work; or it has no work to share, and says why. A command
+command-line process and a declared operation or ``authority`` query does the
+same work; it is the person's own act, which the terminal interface reaches
+and MCP does not serve; or it has no work to share, and says why. A command
 that submits in one mode and works in process in another is held to both. A
-command in none of the four does work only the command line can do, and fails
+command in none of the five does work only the command line can do, and fails
 here by name.
+
+An agent on MCP works only inside the one profile the person signed in to, so
+the commands that sign in or out, administer sessions or keys, take a secret or
+do installation work are the person's acts. Every command that sends a request
+of that kind, or submits only operations of that kind, is declared so, and no
+declared act can go stale.
 
 The first two ways are read from the recorded command table, which the tests
 beside this one hold to the live handlers and registry. The third and fourth
@@ -43,6 +50,7 @@ from ....application.export.google_operation import (
     build_google_sheets_export_operation_definition,
     build_google_sheets_export_operation_registration,
 )
+from ....application.operations.person_acts import ACCESS_ADMINISTRATION_OPERATIONS
 from ....application.operations.registry import OperationRegistry
 from ....application.operator_surface.command_operations import CommandOperationJoin, CommandOperations
 from ....application.operator_surface.command_ports import CommandNodeKind
@@ -57,11 +65,10 @@ from .command_frontend_counterparts import (
     EXECUTE_TOOL,
     IN_PROCESS_COMMAND_COUNTERPARTS,
     INSTALLATION_ACTS_WITHOUT_A_COMMAND,
-    INSTALLATION_TOOL,
     OPERATIONS_WITHOUT_A_COMMAND,
     OPERATIONS_WITHOUT_AN_ACCESS_RESOLVER,
-    SESSION_DOOR_COMMAND_TOOLS,
-    SESSION_TOOL,
+    PERSON_ACT_COMMANDS,
+    PERSON_REQUESTS,
     CommandReach,
     Counterpart,
     ToolRoute,
@@ -69,6 +76,7 @@ from .command_frontend_counterparts import (
     command_reaches,
     operations_without_an_access_resolver,
     other_frontend_routes,
+    persons_operations,
     proof_finding,
     reach_of_every_command,
     requests_beyond_admission,
@@ -78,11 +86,7 @@ from .command_operation_derivation import PROFILE_ADMISSION_ACTION, CliPath
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_SELECTOR_ARGUMENT: Mapping[str, str] = {
-    AUTHORITY_TOOL: "query",
-    INSTALLATION_TOOL: "action",
-    SESSION_TOOL: "action",
-}
+_SELECTOR_ARGUMENT: Mapping[str, str] = {AUTHORITY_TOOL: "query"}
 """The argument through which each of these tools is told which piece of work to do."""
 
 
@@ -157,6 +161,7 @@ def test_every_executable_command_reaches_the_other_frontends_or_has_no_work_to_
         CommandReach.SUBMITS_OPERATION,
         CommandReach.SENDS_RUNTIME_REQUEST,
         CommandReach.WORKS_IN_PROCESS,
+        CommandReach.PERSON_ACT,
         CommandReach.NO_WORK_TO_SHARE,
     ):
         assert reach[populated], f"no command {populated.value}; the reading has lost a whole way of reaching"
@@ -169,8 +174,8 @@ def test_admission_to_a_profile_alone_is_not_read_as_reaching_the_runtime() -> N
         cli_path=("config", "example"), runtime_requests=(PROFILE_ADMISSION_ACTION, "session_inventory")
     )
 
-    assert command_reaches(admitted_only, in_process={}, no_work={}) == (CommandReach.UNREACHED,)
-    assert command_reaches(sends, in_process={}, no_work={}) == (CommandReach.SENDS_RUNTIME_REQUEST,)
+    assert command_reaches(admitted_only, in_process={}, no_work={}, person={}) == (CommandReach.UNREACHED,)
+    assert command_reaches(sends, in_process={}, no_work={}, person={}) == (CommandReach.SENDS_RUNTIME_REQUEST,)
 
 
 def test_the_reading_names_every_way_a_command_reaches_and_one_no_way_covers() -> None:
@@ -189,17 +194,23 @@ def test_the_reading_names_every_way_a_command_reaches_and_one_no_way_covers() -
     }
     no_work: dict[CliPath, str] = {("d",): "prints its own help"}
 
-    assert command_reaches(submits, in_process=in_process, no_work=no_work) == (CommandReach.SUBMITS_OPERATION,)
-    assert command_reaches(sends, in_process=in_process, no_work=no_work) == (CommandReach.SENDS_RUNTIME_REQUEST,)
-    assert command_reaches(paired, in_process=in_process, no_work=no_work) == (CommandReach.WORKS_IN_PROCESS,)
-    assert command_reaches(idle, in_process=in_process, no_work=no_work) == (CommandReach.NO_WORK_TO_SHARE,)
-    assert command_reaches(alone, in_process=in_process, no_work=no_work) == (CommandReach.UNREACHED,)
-    assert command_reaches(both, in_process=in_process, no_work=no_work) == (
+    assert command_reaches(submits, in_process=in_process, no_work=no_work, person={}) == (
+        CommandReach.SUBMITS_OPERATION,
+    )
+    assert command_reaches(sends, in_process=in_process, no_work=no_work, person={}) == (
+        CommandReach.SENDS_RUNTIME_REQUEST,
+    )
+    assert command_reaches(paired, in_process=in_process, no_work=no_work, person={}) == (
+        CommandReach.WORKS_IN_PROCESS,
+    )
+    assert command_reaches(idle, in_process=in_process, no_work=no_work, person={}) == (CommandReach.NO_WORK_TO_SHARE,)
+    assert command_reaches(alone, in_process=in_process, no_work=no_work, person={}) == (CommandReach.UNREACHED,)
+    assert command_reaches(both, in_process=in_process, no_work=no_work, person={}) == (
         CommandReach.SUBMITS_OPERATION,
         CommandReach.WORKS_IN_PROCESS,
     )
     # A row that names no counterpart pairs the command with nothing.
-    assert command_reaches(CommandOperations(cli_path=("z",)), in_process=in_process, no_work=no_work) == (
+    assert command_reaches(CommandOperations(cli_path=("z",)), in_process=in_process, no_work=no_work, person={}) == (
         CommandReach.UNREACHED,
     )
 
@@ -229,7 +240,7 @@ def test_every_declared_row_names_an_executable_command_once() -> None:
     rows = _rows()
     for name, declared in (
         ("in-process counterparts", IN_PROCESS_COMMAND_COUNTERPARTS),
-        ("session and key tools", SESSION_DOOR_COMMAND_TOOLS),
+        ("the person's acts", PERSON_ACT_COMMANDS),
         ("commands with no work to share", COMMANDS_WITH_NO_WORK_TO_SHARE),
     ):
         unknown = sorted(_spelled(cli_path) for cli_path in set(declared) - set(rows))
@@ -238,44 +249,60 @@ def test_every_declared_row_names_an_executable_command_once() -> None:
         _spelled(cli_path) for cli_path in set(IN_PROCESS_COMMAND_COUNTERPARTS) & set(COMMANDS_WITH_NO_WORK_TO_SHARE)
     )
     assert not both, f"declared both as having a counterpart and as having no work to share: {both}"
+    served = sorted(_spelled(cli_path) for cli_path in set(IN_PROCESS_COMMAND_COUNTERPARTS) & set(PERSON_ACT_COMMANDS))
+    assert not served, f"declared both as the person's act and as served to an agent: {served}"
 
 
 def test_every_declared_counterpart_and_tool_route_exists() -> None:
     """Each operation is registered, each act is served, and each query and action is one its tool takes."""
     findings = {
         f"{_spelled(cli_path)} -> {route.tool} {route.selector or ''}".rstrip(): finding
-        for declared in (IN_PROCESS_COMMAND_COUNTERPARTS, SESSION_DOOR_COMMAND_TOOLS)
-        for cli_path, pair in declared.items()
+        for cli_path, pair in IN_PROCESS_COMMAND_COUNTERPARTS.items()
         for route in pair.routes
         if (finding := _route_finding(route)) is not None
     }
     assert not findings, f"declared routes that lead nowhere: {findings}"
-    empty = sorted(
-        _spelled(cli_path)
-        for declared in (IN_PROCESS_COMMAND_COUNTERPARTS, SESSION_DOOR_COMMAND_TOOLS)
-        for cli_path, pair in declared.items()
-        if not pair.routes
-    )
+    empty = sorted(_spelled(cli_path) for cli_path, pair in IN_PROCESS_COMMAND_COUNTERPARTS.items() if not pair.routes)
     assert not empty, f"declared rows that name no route: {empty}"
+    unregistered = sorted(
+        f"{_spelled(cli_path)} -> {operation_id}"
+        for cli_path, act in PERSON_ACT_COMMANDS.items()
+        for operation_id in act.operations
+        if operation_id not in _registered()
+    )
+    assert not unregistered, f"the person's acts name operations that are not registered: {unregistered}"
 
 
-def test_the_installation_tool_offers_every_act_the_runtime_serves() -> None:
-    """An act named as a counterpart is one the installed runtime answers and the harness offers."""
+def test_mcp_serves_no_installation_act_session_act_or_key_request() -> None:
+    """The acts the runtime serves to the terminal interface outside a profile have no tool on MCP."""
     served = production_installation_acts().served_acts
     assert served == frozenset(INSTALLATION_ACT_CONTRACTS)
-    assert _tool_selectors(INSTALLATION_TOOL) == {act.value for act in served}
+    tools = {name for name, _description, _schema in MCP_TOOL_CATALOGUE}
+    assert not tools & {
+        "installation",
+        "session",
+        "authenticate",
+        "authorization_prepare",
+        "authorization_request",
+        "authorization_poll",
+    }
+    # Each act the runtime serves is the work of some command the person runs, and of none an agent runs.
+    declared = {act for person in PERSON_ACT_COMMANDS.values() for act in person.acts}
+    sent = {row.action for row in _join().runtime_requests if row.cli_paths}
+    assert {act.value for act in served} <= {act.value for act in declared} | sent
 
 
 def test_a_route_that_leads_nowhere_is_found() -> None:
     """An unregistered operation, an unknown act, query, action and tool are each named."""
     assert _route_finding(ToolRoute(EXECUTE_TOOL, "ledger.no-such-operation")) is not None
-    assert _route_finding(ToolRoute(INSTALLATION_TOOL, "no_such_act")) is not None
     assert _route_finding(ToolRoute(AUTHORITY_TOOL, "no_such_query")) is not None
-    assert _route_finding(ToolRoute(SESSION_TOOL, "no_such_action")) is not None
     assert _route_finding(ToolRoute("no_such_tool")) is not None
     assert _route_finding(ToolRoute("status", "anything")) is not None
+    # The tools that served the person's acts are gone, so a route through one leads nowhere.
+    assert _route_finding(ToolRoute("installation", InstallationAct.STORAGE_CHECK.value)) is not None
+    assert _route_finding(ToolRoute("session", "lock")) is not None
+    assert _route_finding(ToolRoute("authenticate")) is not None
     assert _route_finding(ToolRoute(EXECUTE_TOOL, "ledger.list")) is None
-    assert _route_finding(ToolRoute(INSTALLATION_TOOL, InstallationAct.STORAGE_CHECK.value)) is None
     assert _route_finding(ToolRoute("status")) is None
 
 
@@ -295,28 +322,46 @@ def test_a_command_with_no_work_to_share_sends_nothing_and_says_why() -> None:
     assert ("app", "tui") in COMMANDS_WITH_NO_WORK_TO_SHARE
 
 
-def test_every_command_that_sends_a_session_or_key_request_names_the_tool_that_sends_it() -> None:
-    """A request of the runtime's door that is no installation act is asked for through a declared tool."""
-    acts = {act.value for act in InstallationAct}
-    sending = {
-        cli_path for cli_path, row in _rows().items() if not row.operation_ids and requests_beyond_admission(row) - acts
+def test_every_command_that_is_the_persons_act_is_declared_and_no_declaration_is_stale() -> None:
+    """A command that sends a person's request or submits only the person's operations is declared, and only such."""
+    registry = build_production_operation_registry()
+    rows = _rows()
+    sending = {cli_path for cli_path, row in rows.items() if requests_beyond_admission(row) & PERSON_REQUESTS}
+    submitting = {
+        cli_path
+        for cli_path, row in rows.items()
+        if row.operation_ids and persons_operations(registry, row.operation_ids) == set(row.operation_ids)
     }
-    undeclared = sorted(_spelled(cli_path) for cli_path in sending - set(SESSION_DOOR_COMMAND_TOOLS))
-    stale = sorted(_spelled(cli_path) for cli_path in set(SESSION_DOOR_COMMAND_TOOLS) - sending)
-    assert not undeclared, f"commands that send a session or key request with no tool named for it: {undeclared}"
-    assert not stale, f"commands named with a session or key tool that send no such request: {stale}"
+    in_process = {cli_path for cli_path, act in PERSON_ACT_COMMANDS.items() if act.acts or act.operations}
+
+    undeclared = sorted(_spelled(cli_path) for cli_path in (sending | submitting) - set(PERSON_ACT_COMMANDS))
+    stale = sorted(_spelled(cli_path) for cli_path in set(PERSON_ACT_COMMANDS) - sending - submitting - in_process)
+    assert not undeclared, f"commands that are the person's act but are not declared so: {undeclared}"
+    assert not stale, f"declared as the person's act, yet they send, submit and serve nothing of the kind: {stale}"
+    assert all(act.reason.strip() for act in PERSON_ACT_COMMANDS.values())
+    served = sorted(
+        f"{_spelled(cli_path)} -> {operation_id}"
+        for cli_path, act in PERSON_ACT_COMMANDS.items()
+        for operation_id in act.operations
+        if operation_id not in persons_operations(registry, act.operations)
+    )
+    assert not served, f"the person's acts name an operation an agent may run: {served}"
+    assert _registered() >= ACCESS_ADMINISTRATION_OPERATIONS
 
 
 def test_every_command_that_reaches_the_other_frontends_has_a_tool_route() -> None:
-    """An MCP client can find a tool for the work of every command that has work to share."""
+    """An MCP client can find a tool for the work of every command that has work to share with it."""
     without_a_route = sorted(
         _spelled(row.cli_path)
         for row in _join().commands
-        if set(command_reaches(row)) - {CommandReach.NO_WORK_TO_SHARE, CommandReach.UNREACHED}
+        if set(command_reaches(row)) - {CommandReach.NO_WORK_TO_SHARE, CommandReach.UNREACHED, CommandReach.PERSON_ACT}
+        and row.cli_path not in PERSON_ACT_COMMANDS
         and not row.operation_ids
         and not other_frontend_routes(row)
     )
     assert not without_a_route
+    # The person's acts offer an agent no route besides the operations they submit.
+    assert not any(other_frontend_routes(_rows()[cli_path]) for cli_path in PERSON_ACT_COMMANDS)
 
 
 # -- nothing made for the other frontends is left unaccounted for ---------------------
@@ -331,10 +376,19 @@ def _paired(tool: str) -> frozenset[str]:
     )
 
 
+def _persons_served() -> tuple[frozenset[str], frozenset[str]]:
+    """The installation acts and the operations that serve the person's in-process acts to the terminal interface."""
+    acts = frozenset(act.value for person in PERSON_ACT_COMMANDS.values() for act in person.acts)
+    operations = frozenset(
+        operation_id for person in PERSON_ACT_COMMANDS.values() for operation_id in person.operations
+    )
+    return acts, operations
+
+
 def test_every_installation_act_is_sent_by_a_command_or_serves_the_work_of_one() -> None:
     """An act no command reaches is declared with its reason, and the declaration cannot go stale."""
     sent = {row.action for row in _join().runtime_requests if row.cli_paths}
-    reached = sent | _paired(INSTALLATION_TOOL)
+    reached = sent | _persons_served()[0]
     declared = {act.value for act in INSTALLATION_ACTS_WITHOUT_A_COMMAND}
     every = {act.value for act in InstallationAct}
 
@@ -351,7 +405,7 @@ def test_every_registered_operation_is_submitted_by_a_command_or_serves_the_work
     registered = _registered()
     submitted = {row.operation_id for row in join.operations if row.cli_paths}
     unsubmitted = registered - submitted
-    paired = _paired(EXECUTE_TOOL)
+    paired = _paired(EXECUTE_TOOL) | _persons_served()[1]
     declared = set(OPERATIONS_WITHOUT_A_COMMAND)
 
     unaccounted = sorted(unsubmitted - paired - declared)
@@ -385,7 +439,7 @@ def test_every_declared_pair_names_a_test_that_exists_or_says_that_none_compares
     findings: dict[str, str] = {}
     for name, declared in (
         ("in-process counterparts", IN_PROCESS_COMMAND_COUNTERPARTS),
-        ("session and key tools", SESSION_DOOR_COMMAND_TOOLS),
+        ("the person's acts", PERSON_ACT_COMMANDS),
     ):
         for cli_path, pair in declared.items():
             if isinstance(pair.proof, Unproven):
@@ -422,13 +476,11 @@ def test_the_pairs_no_test_compares_are_listed_and_each_names_a_live_command() -
     rows = _rows()
 
     assert {cli_path for cli_path, _reason in unproven} <= set(rows)
-    declared = {*IN_PROCESS_COMMAND_COUNTERPARTS, *SESSION_DOOR_COMMAND_TOOLS}
+    declared = {*IN_PROCESS_COMMAND_COUNTERPARTS, *PERSON_ACT_COMMANDS}
     proven = {
         cli_path
         for cli_path in declared
-        if isinstance(
-            (IN_PROCESS_COMMAND_COUNTERPARTS.get(cli_path) or SESSION_DOOR_COMMAND_TOOLS[cli_path]).proof, str
-        )
+        if isinstance((IN_PROCESS_COMMAND_COUNTERPARTS.get(cli_path) or PERSON_ACT_COMMANDS[cli_path]).proof, str)
     }
     assert {cli_path for cli_path, _reason in unproven} == declared - proven
 
@@ -442,6 +494,7 @@ def test_every_operation_a_command_reaches_has_an_access_resolver_or_is_declared
     reached = (
         {row.operation_id for row in _join().operations if row.cli_paths}
         | _paired(EXECUTE_TOOL)
+        | _persons_served()[1]
         | set(OPERATIONS_WITHOUT_A_COMMAND)
     )
     without_a_resolver = operations_without_an_access_resolver(registry, reached)

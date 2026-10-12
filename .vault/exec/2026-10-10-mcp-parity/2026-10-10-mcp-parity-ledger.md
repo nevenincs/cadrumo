@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:ca518f199bc95857a754da06a74bd1f496dcce7c7a44c24ad16183ed5dbc6627'
+body_hash: 'sha256:cd26e2b815893bfee922aa1f4d2b0512062e61a3b091ea1989daf49183a75d90'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -2144,6 +2144,68 @@ related:
 - `S63` `verify:` `pytest harness tool suite and the two carrier files (461, 3 skipped for the credential store)` -> `pass`
 - `S63` `verify:` `lint-imports (15 contracts)` -> `pass`
 - `S63` `verify:` `ruff, format and ty on the eleven files; pyrefly on the seven production files` -> `pass`
+- `S64` `M` `dev/agent_eval/tests/test_authenticated_mcp_runtime.py`
+- `S64` `M` `dev/agent_eval/tests/test_installed_authenticated_stdio.py`
+- `S64` `M` `dev/agent_eval/tests/test_installed_failed_reference_stdio.py`
+- `S64` `M` `dev/agent_eval/tests/test_installed_linux_refusal_stdio.py`
+- `S64` `M` `dev/agent_eval/tests/test_installed_mcp_first_enrollment.py`
+- `S64` `M` `dev/agent_eval/tests/test_mcp_frontend_session_lock_parity.py`
+- `S64` `M` `dev/agent_eval/tests/test_mcp_revocation_runtime.py`
+- `S64` `M` `dev/agent_eval/tests/test_modelo_projection_mcp_runtime.py`
+- `S64` `M` `dev/agent_eval/tests/test_modelo_query_reads_mcp_runtime.py`
+- `S64` `M` `dev/packaging/tests/test_installed_oracles.py`
+- `S64` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S64` `M` `dev/quality/metadata/import_load_targets.cadrumo_harness.json`
+- `S64` `M` `src/cadrumo/application/operations/mcp_surfaces.py`
+- `S64` `M` `src/cadrumo/application/operations/tests/test_mcp_surface_pins.py`
+- `S64` `M` `src/cadrumo/entrypoints/cli/tests/command_frontend_counterparts.py`
+- `S64` `M` `src/cadrumo/entrypoints/cli/tests/command_operation_reference.py`
+- `S64` `M` `src/cadrumo/entrypoints/cli/tests/test_command_frontend_parity.py`
+- `S64` `M` `src/cadrumo/entrypoints/cli/tests/test_command_operation_reference.py`
+- `S64` `D` `src/cadrumo/entrypoints/runtime/tests/test_mcp_installation_tool.py`
+- `S64` `D` `src/cadrumo/entrypoints/runtime/tests/test_mcp_password_session_acts.py`
+- `S64` `D` `src/cadrumo/entrypoints/runtime/tests/test_mcp_secret_by_reference.py`
+- `S64` `D` `src/cadrumo/entrypoints/runtime/tests/test_mcp_session_and_secret_tools.py`
+- `S64` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_sign_in_adapter.py`
+- `S64` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_sign_in_refusal_facts.py`
+- `S64` `M` `src/cadrumo/entrypoints/tests/test_operation_no_tax_agency_write.py`
+- `S64` `M` `src/cadrumo_harness/_data/agent/reference/command-operations.md`
+- `S64` `M` `src/cadrumo_harness/mcp/admitted_operations.py`
+- `S64` `D` `src/cadrumo_harness/mcp/held_secrets.py`
+- `S64` `D` `src/cadrumo_harness/mcp/installation_acts.py`
+- `S64` `M` `src/cadrumo_harness/mcp/main.py`
+- `S64` `M` `src/cadrumo_harness/mcp/protocol_contract.py`
+- `S64` `M` `src/cadrumo_harness/mcp/public_operation_discovery.py`
+- `S64` `M` `src/cadrumo_harness/mcp/runtime_adapter.py`
+- `S64` `M` `src/cadrumo_harness/mcp/runtime_admission.py`
+- `S64` `M` `src/cadrumo_harness/mcp/server.py`
+- `S64` `D` `src/cadrumo_harness/mcp/session_acts.py`
+- `S64` `D` `src/cadrumo_harness/mcp/tests/held_secret_support.py`
+- `S64` `M` `src/cadrumo_harness/mcp/tests/test_adapter_cleanup.py`
+- `S64` `M` `src/cadrumo_harness/mcp/tests/test_authentication_handover.py`
+- `S64` `M` `src/cadrumo_harness/mcp/tests/test_bootstrap_reference_recovery.py`
+- `S64` `M` `src/cadrumo_harness/mcp/tests/test_execute_typed_input_tool.py`
+- `S64` `M` `src/cadrumo_harness/mcp/tests/test_handover_cleanup.py`
+- `S64` `M` `src/cadrumo_harness/mcp/tests/test_handshake_free_revision.py`
+- `S64` `D` `src/cadrumo_harness/mcp/tests/test_held_secrets.py`
+- `S64` `D` `src/cadrumo_harness/mcp/tests/test_installation_tool.py`
+- `S64` `D` `src/cadrumo_harness/mcp/tests/test_installed_secret_by_reference.py`
+- `S64` `M` `src/cadrumo_harness/mcp/tests/test_installed_stdio.py`
+- `S64` `M` `src/cadrumo_harness/mcp/tests/test_lifecycle_notice_tool.py`
+- `S64` `M` `src/cadrumo_harness/mcp/tests/test_operation_search_tool.py`
+- `S64` `M` `src/cadrumo_harness/mcp/tests/test_runtime_protocol.py`
+- `S64` `D` `src/cadrumo_harness/mcp/tests/test_secret_by_reference.py`
+- `S64` `M` `src/cadrumo_harness/mcp/tests/test_surface_tools.py`
+- `S64` `M` `src/cadrumo_harness/mcp/tests/test_tool_annotations.py`
+- `S64` `M` `src/cadrumo_harness/mcp/tests/test_unknown_outcome_results.py`
+- `S64` `A` `src/cadrumo/application/operations/person_acts.py`
+- `S64` `A` `src/cadrumo/entrypoints/runtime/tests/test_mcp_no_credential_acts.py`
+- `S64` `M` `dev/quality/metadata/import_load_targets.json`
+- `S64` `verify:` `pytest src/cadrumo_harness -m 'unit or integration'` -> `pass`
+- `S64` `verify:` `pytest runtime tests -k mcp` -> `pass`
+- `S64` `verify:` `pytest cli parity, reference, entrypoints and operations tests` -> `pass`
+- `S64` `verify:` `ruff check and format` -> `pass`
+- `S64` `verify:` `ty check on touched files` -> `pass`
 
 ## Notes
 
@@ -2217,3 +2279,4 @@ related:
 - `S63` Reversal of the validator rewording logged above under this Step: the twelve files are byte-identical to their content before it, checked by object hash, and the scan is deleted. A fault carries the validator's message as the command line shows it and never pydantic's input, context or link. A registered error raised while a worker decodes a request no longer ends the worker; it is answered as invalid with the error's code and message. Left as it was: when the command line builds a request in process and pydantic wraps the refusal, it prints its generic validation boundary with the path and the kind of rule, which predates this work.
 - `S63` The financial-input path and an access resolver that raises during admission no longer end the worker; each answers invalid with the registered code and message and the session serves on. Three row validators on the financial path quote the operand's value in their message and are left as they are, since the command line prints them. Open and recorded in the audit: a registered error from a resolver on an action after admission still escapes the loop.
 - `S63` Reads answer instead of ending the worker when an access resolver raises: observation, result, result page, review projection and review inspection go through one place. Shown through the real runtime with the work unit removed from the encrypted store behind a running worker, since no frontend act removes one. A plain error from a resolver on a fresh submission answers a bare invalid, shown at the authority level only. Open: start, resume, cancel, detach, apply and reject still end the worker when their access resolution raises.
+- `S64` Pre-existing failures outside MCP in the entrypoints lane (modelo 184/303 calculation, ledger bulk classify) and in `dev/agent_eval/tests/test_mcp_frontend_session_lock_parity.py` (key session expiry precedes the human one); a session-mode discovery search hit `runtime_deadline_exceeded` under load and is reworked in S67

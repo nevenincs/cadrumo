@@ -163,11 +163,11 @@ async def test_native_mcp_discloses_only_scoped_typed_modelo_queries(
         adapter = RuntimeMcpAdapter(profile_id=enrolled.profile_id, client=None)
         try:
             async with connected_server_and_client_session(build_server(adapter)) as sdk:
-                authenticated = await sdk.call_tool(
-                    "authenticate", {"credential_reference": str(enrolled.credential_reference)}
-                )
+                # What serve does with the key the launch configuration names; no tool takes one.
+                await adapter.bootstrap_reference(enrolled.credential_reference)
+                authenticated = await sdk.call_tool("status", {})
                 assert authenticated.is_error is False, _structured(authenticated)
-                assert _structured(authenticated)["outcome"] == "authenticated"
+                assert _structured(authenticated)["session"] == "key", _structured(authenticated)
 
                 published = await sdk.call_tool(
                     "authority", {"query": "describe", "modelo": "303", "filing_year": 2025, "period": "1T"}

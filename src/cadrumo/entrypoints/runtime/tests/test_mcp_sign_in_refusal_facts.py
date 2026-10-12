@@ -19,13 +19,7 @@ from typing import Any
 import pytest
 
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGenerationCustody
-from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT
-from cadrumo.adapters.persistence.storage.master_key.login_throttle import (
-    THROTTLE_BACKOFF_CAP_SECONDS,
-    record_login_failure,
-)
 from cadrumo.core.config import override_settings
-from cadrumo.core.time.clock import now
 from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 
 from .stored_sign_in_runtime import StoredSignInRuntime, stored_sign_in_runtime
@@ -117,32 +111,4 @@ async def test_a_sign_in_past_its_idle_deadline_says_it_expired(
 
         assert refused == {"outcome": "refused", "code": "session_expired", "sign_in_reason": "expired_idle"}
         assert status == _no_session(runtime, "authentication_required", sign_in_reason="absent")
-        assert runtime.leases() == ()
-
-
-@pytest.mark.anyio
-async def test_a_throttled_password_sign_in_says_how_long_to_wait(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    with (
-        stored_sign_in_runtime(tmp_path, monkeypatch, signed_in=False) as runtime,
-        override_settings(cadrumo_active_profile=str(runtime.profile_id)),
-    ):
-        # Six wrong passwords in a row put the next attempt behind the longest backoff.
-        for _ in range(6):
-            record_login_failure(storage_root=runtime.root, bucket_id=str(runtime.profile_id), now=now())
-        adapter = RuntimeMcpAdapter(profile_id=None, client=None, resumes_sign_in=True)
-        try:
-            refused = await adapter.call("session", {"action": "sign_in", "secret": PROFILE_INPUT})
-        finally:
-            await adapter.close()
-
-        seconds = refused.pop("seconds")
-        assert refused == {
-            "outcome": "refused",
-            "code": "authentication_required",
-            "sign_in_reason": "throttled",
-        }
-        assert isinstance(seconds, int) and 0 < seconds <= THROTTLE_BACKOFF_CAP_SECONDS
-        # The correct password was never tried, so no session was admitted.
         assert runtime.leases() == ()

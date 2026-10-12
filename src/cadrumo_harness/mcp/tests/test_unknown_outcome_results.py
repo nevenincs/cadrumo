@@ -11,22 +11,20 @@ and the wording under test are the server's own.
 from __future__ import annotations
 
 import json
-from typing import NoReturn, cast, override
+from typing import cast, override
 from uuid import uuid4
 
 import pytest
 from mcp.types import CallToolResult, TextContent
 
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.adapters.local_runtime.installation_client import RuntimeInstallationClient
 from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
 from cadrumo.application.operations.frontend_requests import (
     OperationObservationRequestV1,
     OperationObservationSuccessV1,
 )
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo.application.runtime.contracts import RuntimeRefusalCode
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
-from cadrumo_harness.mcp import runtime_adapter as mcp_runtime
 from cadrumo_harness.mcp.protocol_contract import (
     MCP_TOOL_CATALOGUE,
     UNKNOWN_OUTCOME_MEMBER,
@@ -43,67 +41,12 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 _DEADLINE = RuntimeRefusalCode.DEADLINE_EXCEEDED.value
 
 
-class _LostInstallationConnection:
-    """A connection whose wait runs out after the act was sent, as a long act on a slow disk can."""
-
-    def __init__(self) -> None:
-        self.closed = False
-
-    def perform(self, *_request: object, **_exchange: object) -> NoReturn:
-        raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
-
-    def close(self) -> None:
-        self.closed = True
-
-
 def _document(called: CallToolResult) -> dict[str, object]:
     """Return a result's document, having checked that its text block carries the same one."""
     assert called.structured_content is not None
     (block,) = called.content
     assert isinstance(block, TextContent) and json.loads(block.text) == called.structured_content
     return cast("dict[str, object]", called.structured_content)
-
-
-@pytest.mark.anyio
-async def test_an_installation_act_whose_outcome_was_lost_is_no_error_and_names_what_reads_it(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    connections: list[_LostInstallationConnection] = []
-
-    async def open_lost() -> RuntimeInstallationClient:
-        connections.append(_LostInstallationConnection())
-        return cast("RuntimeInstallationClient", connections[-1])
-
-    monkeypatch.setattr(mcp_runtime, "open_installed_installation_client", open_lost)
-    adapter = RuntimeMcpAdapter(profile_id=None, client=None, resumes_sign_in=True)
-    try:
-        async with connected_server_and_client_session(build_server(adapter)) as sdk:
-            started = await sdk.call_tool("installation", {"action": "reset_start", "confirm": True})
-            reclaimed = await sdk.call_tool(
-                "installation", {"action": "storage_reclaim", "area": "cache", "confirm": True}
-            )
-            # The same lost reply on an act that changes nothing lost nothing, so it stays a refusal.
-            reported = await sdk.call_tool("installation", {"action": "storage_reclaim", "area": "cache"})
-    finally:
-        await adapter.close()
-
-    reset, reclaim = _document(started), _document(reclaimed)
-    assert started.is_error is False and reclaimed.is_error is False
-    told = str(reset.pop(UNKNOWN_OUTCOME_MEMBER))
-    assert reset == {
-        "outcome": "unresolved",
-        "code": _DEADLINE,
-        "act": "reset_start",
-        "outcome_read_by": "reset_status",
-    }
-    assert "not known" in told and "Do not repeat this call" in told
-    assert "installation action reset_status" in told
-    untold = str(reclaim.pop(UNKNOWN_OUTCOME_MEMBER))
-    assert reclaim == {"outcome": "unresolved", "code": _DEADLINE, "act": "storage_reclaim"}
-    assert "Do not repeat this call" in untold and "no action reads it directly" in untold
-    assert reported.is_error is True
-    assert _document(reported) == {"outcome": "refused", "code": _DEADLINE}
-    assert [connection.closed for connection in connections] == [True, True, True]
 
 
 class _UnsettledClient(_ObservedClient):
@@ -170,17 +113,13 @@ async def test_an_observation_of_an_unsettled_or_unknown_effect_says_so_and_is_n
     [
         ({"outcome": "unresolved", "code": _DEADLINE, "request_id": "r", "definition_id": "d"}, "idempotency_key"),
         ({"outcome": "unresolved", "code": "failed", "operation_id": "o"}, "operation_id with observe"),
-        ({"outcome": "unresolved", "code": "unavailable", "request_id": "r"}, "authorization_poll"),
-        (
-            {"outcome": "unresolved", "code": _DEADLINE, "act": "reset_start", "outcome_read_by": "reset_status"},
-            "reset_status",
-        ),
+        ({"outcome": "unresolved", "code": "unavailable", "request_id": "r"}, "tell the person"),
         (
             {"outcome": "submitted", "receipt": {"operation_id": "o"}, "start": {"outcome": "unresolved", "code": "c"}},
             "receipt.operation_id",
         ),
     ],
-    ids=["lost-submission", "known-operation", "authorization", "installation-act", "lost-start"],
+    ids=["lost-submission", "known-operation", "request-only", "lost-start"],
 )
 def test_every_unknown_outcome_is_no_refusal_and_says_not_to_repeat_and_what_to_read(
     reply: dict[str, object], reads_with: str
@@ -199,7 +138,7 @@ def test_every_unknown_outcome_is_no_refusal_and_says_not_to_repeat_and_what_to_
         {
             "outcome": "submitted",
             "receipt": {"operation_id": "o"},
-            "secret_delivery": {"outcome": "refused", "code": "c"},
+            "start": {"outcome": "refused", "code": "c"},
         },
         {"outcome": "reply", "reply": {"kind": "access_refusal", "code": "operation_denied"}},
         {"outcome": "reply", "document": {"outcome": "refused", "code": "operation_not_successful"}},
@@ -214,7 +153,7 @@ def test_a_refusal_is_still_an_error_and_carries_no_unknown_outcome(reply: dict[
 def test_the_tools_that_can_answer_unresolved_say_it_is_no_error_and_what_makes_a_repeat_safe() -> None:
     described = {name: description for name, description, _schema in MCP_TOOL_CATALOGUE}
 
-    for name in ("execute", "installation", "session"):
+    for name in ("execute",):
         assert "unresolved is not an error" in described[name], name
         assert "Do not repeat a call that answered so" in described[name], name
     assert "idempotency_key is optional, and giving one makes a repeat safe" in described["execute"]

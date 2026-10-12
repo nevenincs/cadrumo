@@ -127,11 +127,11 @@ async def test_native_mcp_automation_revocation_fences_live_execution_and_result
         adapter = RuntimeMcpAdapter(profile_id=enrolled.profile_id, client=None)
         try:
             async with connected_server_and_client_session(build_server(adapter)) as sdk:
-                authenticated = await sdk.call_tool(
-                    "authenticate", {"credential_reference": str(enrolled.credential_reference)}
-                )
+                # What serve does with the key the launch configuration names; no tool takes one.
+                await adapter.bootstrap_reference(enrolled.credential_reference)
+                authenticated = await sdk.call_tool("status", {})
                 assert authenticated.is_error is False, _structured(authenticated)
-                assert _structured(authenticated)["outcome"] == "authenticated"
+                assert _structured(authenticated)["session"] == "key", _structured(authenticated)
                 authenticated_status = ProfileAccessStatus.model_validate_json(
                     canonical_json_bytes(_structured(authenticated)["status"])
                 )
@@ -246,14 +246,15 @@ async def test_native_mcp_automation_revocation_fences_live_execution_and_result
 
         fresh_adapter = RuntimeMcpAdapter(profile_id=enrolled.profile_id, client=None)
         try:
+            await fresh_adapter.bootstrap_reference(enrolled.credential_reference)
             async with connected_server_and_client_session(build_server(fresh_adapter)) as sdk:
-                refused = await sdk.call_tool(
-                    "authenticate", {"credential_reference": str(enrolled.credential_reference)}
-                )
-                assert refused.is_error is True, _structured(refused)
+                refused = await sdk.call_tool("status", {})
                 response = _structured(refused)
-                assert response["outcome"] == "refused"
-                assert response["code"] in {"missing", "key_inactive", "grant_inactive"}
+                assert response["outcome"] == "status" and response["authenticated"] is False, response
+                assert response["denial"] in {"missing", "key_inactive", "grant_inactive"}
                 assert str(enrolled.credential_reference) not in repr(response)
+                private = await sdk.call_tool("observe", {"observation": {}})
+                assert private.is_error is True
+                assert _structured(private)["code"] == response["denial"]
         finally:
             await fresh_adapter.close()

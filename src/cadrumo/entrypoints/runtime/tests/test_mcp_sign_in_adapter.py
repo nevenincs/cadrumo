@@ -428,7 +428,7 @@ async def test_with_no_profile_selected_the_tool_list_and_public_queries_answer_
 
 @pytest.mark.anyio
 @pytest.mark.parametrize("signed_in", [False, True], ids=["nobody-signed-in", "a-sign-in-is-stored"])
-async def test_an_adapter_started_with_a_credential_reference_authenticates_with_the_enrolled_key(
+async def test_an_adapter_started_with_a_credential_reference_authenticates_with_the_configured_key(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, signed_in: bool
 ) -> None:
     with stored_sign_in_runtime(tmp_path, monkeypatch, signed_in=signed_in) as runtime:
@@ -443,18 +443,12 @@ async def test_an_adapter_started_with_a_credential_reference_authenticates_with
         adapter = RuntimeMcpAdapter(profile_id=runtime.profile_id, client=None)
         try:
             with override_settings(cadrumo_active_profile=str(runtime.profile_id)):
+                # The launch configuration names the key, as serve does; no tool names one.
+                await adapter.bootstrap_reference(enrolled.credential_reference)
                 async with connected_server_and_client_session(build_server(adapter)) as sdk:
-                    before = await sdk.call_tool("status", {})
-                    authenticated = await sdk.call_tool(
-                        "authenticate", {"credential_reference": str(enrolled.credential_reference)}
-                    )
                     status = await sdk.call_tool("status", {})
                     listed = await sdk.call_tool("search", {})
 
-            assert before.structured_content == _no_session(runtime, "authentication_required")
-            assert authenticated.is_error is False
-            assert authenticated.structured_content is not None
-            assert authenticated.structured_content["outcome"] == "authenticated"
             assert status.structured_content is not None
             assert status.structured_content["session"] == "key"
             held = ProfileAccessStatus.model_validate_json(canonical_json_bytes(status.structured_content["status"]))

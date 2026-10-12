@@ -147,10 +147,6 @@ def _tool_vocabulary(schema: Mapping[str, object]) -> tuple[str, ...]:
 
 
 _TOOLS_NAMED_LIKE_A_WRITE: Mapping[str, tuple[frozenset[str], str]] = {
-    "session": (
-        frozenset({"sign"}),
-        "its sign_out action ends the person's sign-in to Cadrumo; nothing is signed at the tax agency",
-    ),
     "authority": (
         frozenset({"payment"}),
         "its category filter names a category of the bundled portal catalogue, which lists where the tax agency's "

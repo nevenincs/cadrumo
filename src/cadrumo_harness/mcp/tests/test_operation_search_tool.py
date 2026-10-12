@@ -521,8 +521,8 @@ async def test_reauthentication_starts_a_fresh_description_cache(monkeypatch: py
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, original))
     try:
         await adapter.call("search", {})
-        authenticated = await adapter.call("authenticate", {"credential_reference": str(uuid4())})
-        assert authenticated["outcome"] == "authenticated"
+        await adapter.bootstrap_reference(uuid4())
+        assert adapter.client is replacement
         await adapter.call("search", {})
     finally:
         await adapter.close()

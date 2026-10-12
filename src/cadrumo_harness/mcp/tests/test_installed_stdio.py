@@ -61,7 +61,8 @@ async def test_installed_stdio_serves_a_client_that_never_sends_the_handshake(tm
             private = await client.call_tool(*_PROFILE_CALL)
             authority = await client.call_tool("authority", {"query": "auth_providers"})
 
-    assert {"status", "execute", "session", "installation"} <= {tool.name for tool in tools}
+    assert {"status", "execute"} <= {tool.name for tool in tools}
+    assert not {"session", "installation", "authenticate"} & {tool.name for tool in tools}
     assert all(tool.annotations is not None for tool in tools)
     assert status.is_error is False
     assert status.structured_content == {
@@ -125,7 +126,7 @@ async def test_installed_stdio_finds_and_describes_operations_with_no_sign_in_an
     with (tmp_path / "server.stderr").open("w", encoding="utf-8") as error_log:
         transport = stdio_client(_installed_server(tmp_path, uuid4()), errlog=error_log)
         async with Client(transport, read_timeout_seconds=45, cache=None) as client:
-            unreachable = await client.call_tool("installation", {"action": "profile_list"})
+            unserved = await client.call_tool("installation", {"action": "profile_list"})
             status = await client.call_tool("status", {})
             ranked = await client.call_tool("search", {"query": read, "limit": 3})
             listed = await client.call_tool("search", {"family": "auth", "limit": 100})
@@ -133,9 +134,9 @@ async def test_installed_stdio_finds_and_describes_operations_with_no_sign_in_an
             unregistered = await client.call_tool("describe", {"definition_id": "auth.synthetic-unregistered"})
             private = await client.call_tool("execute", {"definition_id": read, "payload": {}})
 
-    # An act only the runtime performs says that none is running, and nobody is signed in.
-    assert unreachable.is_error is True
-    assert unreachable.structured_content["code"] == "runtime_unavailable"
+    # An act outside the profile is not served at all, and nobody is signed in.
+    assert unserved.is_error is True
+    assert unserved.structured_content == {"outcome": "refused", "code": "unknown_tool"}
     assert status.structured_content["authenticated"] is False
     assert ranked.is_error is False and listed.is_error is False and described.is_error is False
     assert (ranked.structured_content["outcome"], ranked.structured_content["session"]) == ("found", "none")

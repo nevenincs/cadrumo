@@ -1464,6 +1464,7 @@
         "cadrumo.application.operations.persistence.journal",
         "cadrumo.application.operations.persistence.leases",
         "cadrumo.application.operations.persistence.replay",
+        "cadrumo.application.operations.person_acts",
         "cadrumo.application.operations.profile_guard",
         "cadrumo.application.operations.projection_services",
         "cadrumo.application.operations.provenance",

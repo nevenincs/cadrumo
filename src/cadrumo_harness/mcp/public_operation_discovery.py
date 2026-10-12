@@ -24,7 +24,7 @@ from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from .._resources import packaged_data
 from .admitted_operations import described_reply
 from .operation_discovery import search_public_operations
-from .session_acts import NO_SESSION
+from .runtime_admission import NO_SESSION
 
 SESSIONLESS_DISCOVERY_TOOLS: Final = frozenset({"search", "describe"})
 """The tools a connection with no session answers from the shipped contracts."""

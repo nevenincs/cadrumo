@@ -4,32 +4,16 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import suppress
-from datetime import timedelta
 from threading import Event
-from types import SimpleNamespace
 from typing import cast, override
 from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.adapters.local_runtime.enrollment_client import NativeEnrollmentClient
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from cadrumo.application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    AutomationCustodyError,
-    AutomationSecretStore,
-)
-from cadrumo.application.user_profile.automation_enrollment import (
-    AutomationReceiptProjection,
-    EnrollmentKind,
-    EnrollmentProposal,
-    EnrollmentStage,
-)
+from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
-from cadrumo.core.time.clock import now
 from cadrumo_harness.mcp import runtime_adapter as mcp_runtime
 from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_harness.mcp.tests.test_authentication_handover import _Client
@@ -49,9 +33,6 @@ class _CloseClient(_Client):
         if self.fail_once and self.close_calls == 1:
             raise OSError("synthetic close failure")
         super().close()
-
-    def prepare_enrollment(self, _store: AutomationSecretStore) -> NativeEnrollmentClient:
-        raise RuntimeFrontendRefusedError("grant_inactive")
 
 
 def _adapter(client: _CloseClient) -> RuntimeMcpAdapter:
@@ -94,10 +75,9 @@ async def test_teardown_preserves_body_error_and_retains_failed_client_for_retry
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("tool", ["authenticate", "authorization_prepare", "authorization_prepare_without_reference"])
 @pytest.mark.parametrize("failure_kind", ["refusal", "cancellation", "aliased_cancellation"])
 async def test_opener_failure_transfers_retained_cleanup_to_adapter(
-    monkeypatch: pytest.MonkeyPatch, tool: str, failure_kind: str
+    monkeypatch: pytest.MonkeyPatch, failure_kind: str
 ) -> None:
     class FailedAdmissionOwner:
         def __init__(self) -> None:
@@ -113,20 +93,17 @@ async def test_opener_failure_transfers_retained_cleanup_to_adapter(
     original = _CloseClient(uuid4())
     failed_owner = FailedAdmissionOwner()
     reference = uuid4()
-    without_reference = tool == "authorization_prepare_without_reference"
     refusal: BaseException = (
         asyncio.CancelledError("synthetic admission cancellation")
         if failure_kind != "refusal"
-        else RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
-        if without_reference
         else AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
     )
 
     async def refuse_admission(
-        *, profile_id: UUID, frontend: OperationFrontendProjection, credential_reference: UUID | None = None
+        *, profile_id: UUID, frontend: OperationFrontendProjection, credential_reference: UUID
     ) -> RuntimeFrontendClient:
         assert profile_id == original.profile_id
-        assert credential_reference == (None if without_reference else reference)
+        assert credential_reference == reference
         assert frontend is OperationFrontendProjection.MCP
         try:
             await close_async_resources(failed_owner, task_name="test-helper-admission-close", primary_error=refusal)
@@ -138,28 +115,18 @@ async def test_opener_failure_transfers_retained_cleanup_to_adapter(
                 refusal.__dict__["async_cleanup_error"] = failure
         raise refusal
 
-    monkeypatch.setattr(
-        mcp_runtime,
-        "open_installed_runtime_client" if without_reference else "open_installed_credential_client",
-        refuse_admission,
-    )
+    monkeypatch.setattr(mcp_runtime, "open_installed_credential_client", refuse_admission)
     adapter = _adapter(original)
     try:
-        args = {} if without_reference else {"credential_reference": str(reference)}
-        calling_tool = "authorization_prepare" if without_reference else tool
         if failure_kind == "refusal":
-            reply = await adapter.call(calling_tool, args)
-            expected_code = (
-                RuntimeRefusalCode.UNAVAILABLE.value if without_reference else AutomationCustodyCode.UNAVAILABLE.value
-            )
-            assert reply["outcome"] == "refused" and reply["code"] == expected_code
-            assert ("remedy" in reply) is without_reference
+            await adapter.bootstrap_reference(reference)
+            denial = adapter._admission_denial
+            assert denial is not None and denial.code == AutomationCustodyCode.UNAVAILABLE.value
         else:
             with pytest.raises(asyncio.CancelledError) as caught:
-                await adapter.call(calling_tool, args)
+                await adapter.bootstrap_reference(reference)
             assert caught.value is refusal
         assert adapter.client is original
-        assert adapter._enrollment_client is None
         assert not original.closed
         assert failed_owner.close_calls == 1 and not failed_owner.closed
         await adapter.close()
@@ -176,85 +143,6 @@ async def test_opener_failure_transfers_retained_cleanup_to_adapter(
 
 
 @pytest.mark.asyncio
-async def test_uncertain_reconciliation_retains_failed_fresh_admission_owner(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    original = _CloseClient(uuid4())
-    pending = _CloseClient(original.profile_id)
-    reference, request_id, grant_id = uuid4(), uuid4(), uuid4()
-    receipt = AutomationReceiptProjection(
-        request_id=request_id,
-        profile_id=original.profile_id,
-        stage=EnrollmentStage.REQUESTED,
-        review_digest="a" * 64,
-        grant_id=grant_id,
-        key_id=None,
-        credential_reference=None,
-    )
-    proposal = EnrollmentProposal(
-        kind=EnrollmentKind.RENEW,
-        scope=original.status().status.effective_scope,
-        expires_at=now() + timedelta(days=30),
-        key_expires_at=None,
-        unattended=False,
-        allow_os_lock=False,
-        target_grant_id=grant_id,
-    )
-
-    class PreparedEnrollment:
-        prepared = SimpleNamespace(enrollment_request_id=request_id)
-        submissions = 0
-
-        def submit(self, submitted: EnrollmentProposal, *, timeout: float) -> AutomationReceiptProjection:
-            assert submitted == proposal and 0 < timeout <= 10
-            self.submissions += 1
-            return receipt
-
-        def inspect(self, *, timeout: float) -> AutomationReceiptProjection:
-            assert 0 < timeout <= 10
-            raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
-
-    class FailedAdmissionOwner:
-        close_calls = 0
-
-        async def close(self) -> None:
-            self.close_calls += 1
-            if self.close_calls == 1:
-                raise OSError("synthetic reconciliation admission close failure")
-
-    failed_owner = FailedAdmissionOwner()
-
-    async def refuse_admission(
-        *, profile_id: UUID, credential_reference: UUID, frontend: OperationFrontendProjection, timeout: float
-    ) -> RuntimeFrontendClient:
-        assert profile_id == original.profile_id and credential_reference == reference
-        assert frontend is OperationFrontendProjection.MCP and 0 < timeout <= 300
-        refusal = AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
-        await close_async_resources(failed_owner, task_name="test-reconcile-admission-close", primary_error=refusal)
-        raise refusal
-
-    monkeypatch.setattr(mcp_runtime, "open_installed_credential_client", refuse_admission)
-    enrollment = PreparedEnrollment()
-    adapter = _adapter(original)
-    adapter._enrollment = cast(NativeEnrollmentClient, enrollment)
-    adapter._enrollment_client = cast(RuntimeFrontendClient, pending)
-    adapter._enrollment_reference = reference
-    try:
-        submitted = await adapter.call("authorization_request", {"proposal": proposal.model_dump(mode="json")})
-        assert submitted == {"outcome": "recorded", "receipt": receipt.model_dump(mode="json")}
-        result = await adapter.call("authorization_poll", {})
-        assert result == {"outcome": "unresolved", "request_id": str(request_id), "code": "unavailable"}
-        assert enrollment.submissions == 1 and failed_owner.close_calls == 1
-        assert not original.closed and not pending.closed
-        await adapter.close()
-        assert failed_owner.close_calls == 2 and original.closed and pending.closed
-        await adapter.close()
-        assert failed_owner.close_calls == 2 and original.close_calls == pending.close_calls == 1
-    finally:
-        await adapter.close()
-
-
-@pytest.mark.asyncio
 async def test_reauthentication_keeps_candidate_and_retries_failed_predecessor_close(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -263,9 +151,9 @@ async def test_reauthentication_keeps_candidate_and_retries_failed_predecessor_c
     _admit(monkeypatch, candidate)
     adapter = _adapter(original)
     try:
-        reply = await adapter.call("authenticate", {"credential_reference": str(uuid4())})
-        assert reply["outcome"] == "refused" and reply["code"] == "runtime_unavailable"
-        assert isinstance(reply["remedy"], str)
+        await adapter.bootstrap_reference(uuid4())
+        denial = adapter._admission_denial
+        assert denial is not None and denial.code == "runtime_unavailable"
         assert adapter.client is candidate
         assert not original.closed and not candidate.closed
         await adapter.close()
@@ -285,73 +173,15 @@ async def test_candidate_denial_survives_close_failure_and_candidate_is_retried(
     _admit(monkeypatch, candidate)
     adapter = _adapter(original)
     try:
-        reply = await adapter.call("authenticate", {"credential_reference": str(uuid4())})
-        assert reply == {"outcome": "refused", "code": "session_expired"}
+        await adapter.bootstrap_reference(uuid4())
+        denial = adapter._admission_denial
+        assert denial is not None and denial.code == "session_expired"
         assert adapter.client is original
         assert not original.closed and not candidate.closed
         await adapter.close()
         assert original.closed and candidate.closed
         assert original.close_calls == 1
         assert candidate.close_calls == 2
-    finally:
-        await adapter.close()
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize("finished", [True, False], ids=["finished", "expired"])
-async def test_previous_enrollment_close_failure_remains_retryable_after_slots_clear(finished: bool) -> None:
-    original = _CloseClient(uuid4())
-    previous = _CloseClient(original.profile_id, fail_once=True)
-    adapter = _adapter(original)
-    adapter._enrollment_client = cast(RuntimeFrontendClient, previous)
-    adapter._enrollment = cast(
-        NativeEnrollmentClient,
-        SimpleNamespace(
-            receipt=SimpleNamespace(stage=EnrollmentStage.COMPLETE) if finished else None,
-            prepared=SimpleNamespace(expires_at=now() + timedelta(minutes=1) if finished else now()),
-        ),
-    )
-    try:
-        reply = await adapter.call("authorization_prepare", {})
-        assert reply["outcome"] == "refused" and reply["code"] == "runtime_unavailable"
-        assert isinstance(reply["remedy"], str)
-        assert adapter._enrollment_client is None
-        assert adapter._enrollment is None
-        assert adapter.client is original
-        assert previous.close_calls == 1 and not previous.closed
-        await adapter.close()
-        assert previous.closed and original.closed
-        assert previous.close_calls == 2
-        assert original.close_calls == 1
-    finally:
-        await adapter.close()
-
-
-@pytest.mark.asyncio
-async def test_prepare_failure_preserves_denial_and_retains_candidate_for_cleanup(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    original = _CloseClient(uuid4())
-    candidate = _CloseClient(original.profile_id, fail_once=True)
-
-    async def open_client(*, profile_id: UUID, frontend: OperationFrontendProjection) -> RuntimeFrontendClient:
-        assert profile_id == candidate.profile_id
-        assert frontend is OperationFrontendProjection.MCP
-        return cast(RuntimeFrontendClient, candidate)
-
-    monkeypatch.setattr(mcp_runtime, "open_installed_runtime_client", open_client)
-    monkeypatch.setattr(mcp_runtime, "installed_automation_secret_store", lambda: object())
-    adapter = _adapter(original)
-    try:
-        reply = await adapter.call("authorization_prepare", {})
-        assert reply == {"outcome": "refused", "code": "grant_inactive"}
-        assert adapter.client is original
-        assert adapter._enrollment_client is None
-        assert not candidate.closed and not original.closed
-        await adapter.close()
-        assert candidate.closed and original.closed
-        assert candidate.close_calls == 2
-        assert original.close_calls == 1
     finally:
         await adapter.close()
 
@@ -377,7 +207,7 @@ async def test_repeated_cancellation_waits_for_temporary_close_without_closing_i
         candidate = BlockedCandidate(original.profile_id, fail_status=True)
         _admit(monkeypatch, candidate)
         adapter = _adapter(original)
-        calling = asyncio.create_task(adapter.call("authenticate", {"credential_reference": str(uuid4())}))
+        calling = asyncio.create_task(adapter.bootstrap_reference(uuid4()))
         try:
             await started.wait()
             for _ in range(2):

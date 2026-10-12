@@ -23,8 +23,6 @@
         "cadrumo_harness.mcp.admitted_operations",
         "cadrumo_harness.mcp.authority_query",
         "cadrumo_harness.mcp.corpus_query",
-        "cadrumo_harness.mcp.held_secrets",
-        "cadrumo_harness.mcp.installation_acts",
         "cadrumo_harness.mcp.lifecycle_notices",
         "cadrumo_harness.mcp.main",
         "cadrumo_harness.mcp.operation_contract_cache",
@@ -38,7 +36,6 @@
         "cadrumo_harness.mcp.runtime_admission",
         "cadrumo_harness.mcp.runtime_cleanup",
         "cadrumo_harness.mcp.server",
-        "cadrumo_harness.mcp.session_acts",
         "cadrumo_harness.resources"
       ]
     }

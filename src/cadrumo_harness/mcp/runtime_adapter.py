@@ -1,61 +1,38 @@
-"""One MCP connection's authenticated runtime and enrollment adapter."""
+"""One MCP connection's runtime adapter, admitted by the person's sign-in or a configured key."""
 
 from __future__ import annotations
 
 import asyncio
 import sys
-import time
 from collections.abc import Callable
 from threading import Event
 from typing import Any, TypeVar
 from uuid import UUID
 
-from cadrumo.adapters.local_runtime.automation_requester import (
-    AutomationRequesterJourney,
-    AutomationRequesterUncertainError,
-)
-from cadrumo.adapters.local_runtime.enrollment_client import NativeEnrollmentClient
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
-from cadrumo.adapters.local_runtime.installation_client import (
-    RuntimeInstallationClient,
-    open_installed_installation_client,
-)
 from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
 from cadrumo.adapters.local_runtime.runtime_credentials import open_installed_credential_client
-from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
 from cadrumo.application.operations.mcp_surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES, McpSurface
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.operator_output.runtime_remedies import runtime_unavailable_remedy
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from cadrumo.application.runtime.installation_requests import InstallationAct
-from cadrumo.application.runtime.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS, RuntimeProfileStatus
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode, ProfileAccessStatus
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
-from cadrumo.application.user_profile.automation_enrollment import (
-    AutomationReceiptProjection,
-    EnrollmentKind,
-    EnrollmentProposal,
-    EnrollmentStage,
-)
+from cadrumo.application.runtime.contracts import RuntimeRefusalError
+from cadrumo.application.runtime.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
+from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.core.async_cleanup import (
     AsyncCloseable,
     AsyncResourceCleanupError,
     await_cancellation_complete,
     close_async_resources,
 )
-from cadrumo.core.time.clock import now
 
 from .admitted_operations import call_admitted_operation
 from .authority_query import authority_query
 from .corpus_query import corpus_query
-from .held_secrets import held_secret_custody
-from .installation_acts import perform_installation_act, prepare_installation_act
 from .lifecycle_notices import LifecycleNoticeBoard
 from .operation_contract_cache import OperationContractCache
 from .protocol_contract import (
     MCP_TOOL_NAMES,
-    parse_model,
     public_value,
     refusal_code,
     refusal_facts,
@@ -68,7 +45,6 @@ from .runtime_admission import (
     require_exact_admitted_status,
     resume_shared_sign_in,
     selected_profile_id,
-    status_on_surface,
 )
 from .runtime_cleanup import (
     RuntimeAdmissionCleanup,
@@ -77,30 +53,16 @@ from .runtime_cleanup import (
     preserve_cancellation_body_error,
     retain_cleanup_failure,
 )
-from .session_acts import (
-    NO_SESSION,
-    SECRET_FIELDS,
-    UNADMITTED_SESSION_ACTIONS,
-    SessionActRefusedError,
-    SessionSecrets,
-    assess_profile_deletion,
-    change_password,
-    delete_assessed_profile,
-    read_sign_in_status,
-    require_only,
-    reset_password,
-    resolve_named_profile,
-    resume_profile,
-    select_signed_in_profile,
-)
 
-_TIMEOUT = 30.0
-_KEY_ROUTE_TOOLS = frozenset({"authorization_prepare", "authorization_request", "authorization_poll", "authenticate"})
 WireResultT = TypeVar("WireResultT")
 
 
 class RuntimeMcpAdapter:
-    """One MCP connection owns one admitted lease and independent enrollment door."""
+    """One MCP connection owns one admitted lease, from the person's sign-in or a key the person configured.
+
+    It offers no way to sign in, to name or request a credential, or to act
+    outside its profile: those are the person's acts in Cadrumo.
+    """
 
     def __init__(
         self,
@@ -142,10 +104,6 @@ class RuntimeMcpAdapter:
         self._named_profile_id = profile_id
         self._retired = Event()
         self._lock = asyncio.Lock()
-        self._enrollment_client: RuntimeFrontendClient | None = None
-        self._enrollment: NativeEnrollmentClient | None = None
-        self._enrollment_reference: UUID | None = None
-        self._requester: AutomationRequesterJourney | None = None
         self._admission_denial: AdmissionDenial | None = None
         self._contracts = OperationContractCache()
         self._retiring_resources: dict[int, AsyncCloseable] = {}
@@ -153,14 +111,21 @@ class RuntimeMcpAdapter:
         self._key_reference: UUID | None = None
 
     async def bootstrap_reference(self, credential_reference: UUID) -> None:
-        """Try the normal authentication door while keeping public MCP reachable."""
-        result = await self.call("authenticate", {"credential_reference": str(credential_reference)})
-        if result.get("outcome") == "authenticated":
-            return
-        code = result.get("code")
-        self._admission_denial = AdmissionDenial(code if isinstance(code, str) else "runtime_unavailable")
+        """Authenticate with the key the person configured at launch, keeping a refusal as this connection's denial.
 
-    def _retirement(self, client: RuntimeFrontendClient | RuntimeInstallationClient) -> AsyncCloseable:
+        The reference comes from the launch configuration and from nowhere
+        else: no tool takes one. A refused key leaves the server answering
+        its tool list and ``status`` with that refusal, and every later call
+        asks the runtime again with the same key, as each command does.
+        """
+        self._key_reference = credential_reference
+        async with self._lock:
+            try:
+                await self._authenticate_key(credential_reference, await self._bound_profile())
+            except Exception as error:
+                self._admission_denial = AdmissionDenial.of(error)
+
+    def _retirement(self, client: RuntimeFrontendClient) -> AsyncCloseable:
         identity = id(client)
         owner = self._retiring_resources.get(identity)
         if owner is None:
@@ -185,9 +150,7 @@ class RuntimeMcpAdapter:
 
                     self._retiring_resources[identity] = RuntimeAdmissionCleanup(failure, on_closed=released)
 
-    async def _open_reference_client(
-        self, reference: UUID, *, profile_id: UUID, timeout: float | None = None
-    ) -> RuntimeFrontendClient:
+    async def _open_reference_client(self, reference: UUID, *, profile_id: UUID) -> RuntimeFrontendClient:
         try:
             if self.surface.narrows:
                 # A surface that narrows nothing is not named, so that
@@ -196,15 +159,8 @@ class RuntimeMcpAdapter:
                     profile_id=profile_id,
                     credential_reference=reference,
                     frontend=OperationFrontendProjection.MCP,
-                    timeout=PROFILE_ADMISSION_TIMEOUT_SECONDS if timeout is None else timeout,
+                    timeout=PROFILE_ADMISSION_TIMEOUT_SECONDS,
                     surface=self.surface.name,
-                )
-            if timeout is not None:
-                return await open_installed_credential_client(
-                    profile_id=profile_id,
-                    credential_reference=reference,
-                    frontend=OperationFrontendProjection.MCP,
-                    timeout=timeout,
                 )
             return await open_installed_credential_client(
                 profile_id=profile_id, credential_reference=reference, frontend=OperationFrontendProjection.MCP
@@ -239,10 +195,9 @@ class RuntimeMcpAdapter:
 
         A sign-in is resumed for the profile the installation has selected and
         for no other, so a lease resumed earlier is released once the
-        selection has moved on. A lease admitted by key or by the typed password
-        is not held to this.
+        selection has moved on. A lease admitted by key is not held to this.
         """
-        if self._named_profile_id is None or self.admission in {McpAdmission.KEY, McpAdmission.TYPED_SIGN_IN}:
+        if self._named_profile_id is None or self.admission is McpAdmission.KEY:
             return
         try:
             await self._wire(lambda: selected_profile_id(expected=profile_id))
@@ -252,11 +207,7 @@ class RuntimeMcpAdapter:
 
     async def _release_profile_state(self, *, task_name: str) -> None:
         """Close every connection held for the bound profile and forget what it remembered."""
-        held = tuple(item for item in (self._enrollment_client, self.client) if item is not None)
-        self._enrollment_client = None
-        self._enrollment = None
-        self._enrollment_reference = None
-        self._requester = None
+        held = tuple(item for item in (self.client,) if item is not None)
         self.client = None
         self.admission = None
         self._contracts.clear()
@@ -310,7 +261,7 @@ class RuntimeMcpAdapter:
                 return
             await self._release_lease(task_name="mcp-retired-key-session-close")
         try:
-            await self._authenticate({"credential_reference": str(reference)}, await self._bound_profile())
+            await self._authenticate_key(reference, await self._bound_profile())
         except Exception as error:
             self._admission_denial = AdmissionDenial.of(error)
 
@@ -348,7 +299,7 @@ class RuntimeMcpAdapter:
 
     async def _retire_client(
         self,
-        client: RuntimeFrontendClient | RuntimeInstallationClient,
+        client: RuntimeFrontendClient,
         *,
         task_name: str,
         primary_error: BaseException | None = None,
@@ -358,15 +309,9 @@ class RuntimeMcpAdapter:
 
     async def _release_owned_clients(self, primary_error: BaseException | None) -> None:
         async with self._lock:
-            if self._enrollment_client is not None:
-                self._retirement(self._enrollment_client)
             if self.client is not None:
                 self._retirement(self.client)
             owners = tuple(self._retiring_resources.values())
-            self._enrollment_client = None
-            self._enrollment = None
-            self._enrollment_reference = None
-            self._requester = None
             self.client = None
             self.admission = None
             self._contracts.clear()
@@ -380,7 +325,7 @@ class RuntimeMcpAdapter:
             failures.append(error)
 
     async def close(self) -> None:
-        """Release only this adapter's connection and pending enrollment."""
+        """Release only this adapter's connection."""
         primary_error = sys.exception()
         failures: list[BaseException] = []
         diagnostics: dict[int, BaseException] = {}
@@ -405,47 +350,6 @@ class RuntimeMcpAdapter:
             raise (self._admission_denial or AdmissionDenial(AccessDenialCode.AUTHENTICATION_REQUIRED.value)).refusal()
         return self.client
 
-    def held_secret(self, reference: UUID) -> bytearray:
-        """Read the secret held under ``reference`` into a buffer the call wipes, spending it if it is a one-use one.
-
-        A reference that names nothing held is a mistaken argument, and is
-        answered as any other one is. Callers read only at the moment they
-        send, after every other check.
-
-        Raises:
-            ValueError: No secret is held under the reference.
-            AutomationCustodyError: The credential store could not be read.
-        """
-        try:
-            return held_secret_custody(installed_automation_secret_store()).take(reference)
-        except AutomationCustodyError as refused:
-            if refused.reason in {AutomationCustodyCode.MISSING, AutomationCustodyCode.INVALID}:
-                raise ValueError("no secret is held under that reference") from None
-            raise
-
-    def check_held_secret(self, reference: UUID) -> None:
-        """Confirm that a secret is held under ``reference``, as a call is checked, without spending it.
-
-        Raises:
-            ValueError: No secret is held under the reference.
-            AutomationCustodyError: The credential store could not be read.
-        """
-        try:
-            held_secret_custody(installed_automation_secret_store()).verify(reference)
-        except AutomationCustodyError as refused:
-            if refused.reason in {AutomationCustodyCode.MISSING, AutomationCustodyCode.INVALID}:
-                raise ValueError("no secret is held under that reference") from None
-            raise
-
-    def _call_secrets(self, args: dict[str, Any]) -> SessionSecrets:
-        """Take the secrets out of one call's arguments; none is read from the store until it is sent."""
-        return SessionSecrets(args, take=self.held_secret, verify=self.check_held_secret)
-
-    async def _check_references(self, secrets: SessionSecrets) -> None:
-        """Refuse a call whose reference names nothing held, off the event loop as every store read is."""
-        if secrets.by_reference:
-            await self._wire(secrets.check)
-
     async def call(self, name: str, args: dict[str, Any]) -> dict[str, Any]:
         """Serialize all blocking wire calls; cancellation waits for cleanup."""
         if name not in MCP_TOOL_NAMES or name not in self.surface.tools:
@@ -463,20 +367,10 @@ class RuntimeMcpAdapter:
                 return await self._wire(lambda: authority_query(args))
             if name == "corpus_search":
                 return await self._wire(lambda: corpus_query(args))
-            if name in _KEY_ROUTE_TOOLS:
-                return await self._call_key_route_tool(name, args)
-            if name == "session":
-                return await self._call_session_tool(args)
-            if name == "installation":
-                return await self._call_installation_tool(args)
             await self._hold_or_restore_session()
             if name in SESSIONLESS_DISCOVERY_TOOLS:
                 return await self._wire(lambda: self._discover(name, args))
             return await self._wire(lambda: call_admitted_operation(self, name, args))
-        except AutomationRequesterUncertainError as error:
-            return {"outcome": "unresolved", "request_id": str(error.request_id), "code": error.reason}
-        except SessionActRefusedError as refused:
-            return refused.reply()
         except Exception as error:
             code = refusal_code(error)
             # A sign-in refusal keeps its reason, binding and wait, as the command line reports them.
@@ -523,62 +417,6 @@ class RuntimeMcpAdapter:
         else:
             await self._restore_key_session()
 
-    def _session_token(self) -> str:
-        """Say how this connection's own session stands, as ``status`` names it."""
-        if self.client is None or self.admission is None or self._retired.is_set():
-            return NO_SESSION
-        return self.admission.value
-
-    async def _call_session_tool(self, args: dict[str, Any]) -> dict[str, Any]:
-        """Serve one session act; its secrets leave the call here and are wiped whatever follows."""
-        secrets = self._call_secrets(args)
-        try:
-            await self._check_references(secrets)
-            action = args["action"]
-            if action in UNADMITTED_SESSION_ACTIONS:
-                reply = await self._unadmitted_session_act(action, args, secrets)
-                reply.setdefault("session", self._session_token())
-                return reply
-            secrets.require(action)
-            await self._hold_or_restore_session()
-            reply = await self._wire(lambda: call_admitted_operation(self, "session", args))
-            if reply.get("session") == NO_SESSION:
-                # The act ended this connection's own session, so its lease is not kept.
-                await self._release_lease(task_name="mcp-ended-session-close")
-            return reply
-        finally:
-            secrets.wipe()
-
-    async def _call_installation_tool(self, args: dict[str, Any]) -> dict[str, Any]:
-        """Serve one installation act; its secret leaves the call here and is wiped whatever follows."""
-        secrets = self._call_secrets(args)
-        try:
-            await self._check_references(secrets)
-            return await self._installation_act(args, secrets)
-        finally:
-            secrets.wipe()
-
-    async def _installation_act(self, args: dict[str, Any], secrets: SessionSecrets) -> dict[str, Any]:
-        """Send one sessionless act on a connection opened for it alone.
-
-        No profile session is asked for, resumed or held: the runtime admits
-        the act on the verified connection and the person's own login.
-        """
-        prepared = prepare_installation_act(args, secrets, self.surface)
-        try:
-            client = await open_installed_installation_client()
-        except BaseException as error:
-            self._retain_admission_cleanup(error)
-            raise
-        try:
-            return await self._wire(
-                lambda: perform_installation_act(
-                    client, prepared, held_secrets=lambda: held_secret_custody(installed_automation_secret_store())
-                )
-            )
-        finally:
-            await self._retire_client(client, task_name="mcp-installation-act-close", primary_error=sys.exception())
-
     async def _open_unadmitted_client(self, profile_id: UUID, *, on_surface: bool = False) -> RuntimeFrontendClient:
         """Open a connection for one profile that holds no session yet."""
         try:
@@ -591,145 +429,6 @@ class RuntimeMcpAdapter:
         except BaseException as error:
             self._retain_admission_cleanup(error)
             raise
-
-    async def _on_own_connection(
-        self, profile_id: UUID, act: Callable[[RuntimeFrontendClient], dict[str, Any]]
-    ) -> dict[str, Any]:
-        """Run one act on a connection opened for it alone and closed whatever it answers."""
-        client = await self._open_unadmitted_client(profile_id)
-        try:
-            return await self._wire(lambda: act(client))
-        finally:
-            await self._retire_client(client, task_name="mcp-session-act-close", primary_error=sys.exception())
-
-    async def _unadmitted_session_act(
-        self, action: str, args: dict[str, Any], secrets: SessionSecrets
-    ) -> dict[str, Any]:
-        """Serve an act that proves itself with its own secret, or needs none, on its own connection."""
-        if action == "sign_in":
-            return await self._sign_in(args, secrets)
-        if action == "delete_profile":
-            return await self._delete_profile(args, secrets)
-        if action == "enable_recovery":
-            require_only(args, action, "profile")
-            profile_id = await self._named_or_bound_profile(args)
-            enrolment = {"action": InstallationAct.RECOVERY_ENROLL.value, "profile_id": str(profile_id)}
-            return await self._installation_act(enrolment, secrets)
-        if action == "sign_in_status":
-            secrets.require(action)
-            require_only(args, action)
-            return await self._on_own_connection(await self._bound_profile(), read_sign_in_status)
-        if action == "resume":
-            secrets.require(action, "secret")
-            require_only(args, action, "grants")
-            grants = frozenset(UUID(item) for item in args.get("grants", ()))
-
-            def resume(client: RuntimeFrontendClient) -> dict[str, Any]:
-                (proof,) = secrets.take("secret")
-                return resume_profile(client, proof, grants)
-
-            return await self._on_own_connection(await self._bound_profile(), resume)
-        secrets.require(action, *SECRET_FIELDS)
-        if action == "reset_password":
-            require_only(args, action, "profile")
-            profile_id = await self._named_or_bound_profile(args)
-            reply = await self._on_own_connection(
-                profile_id, lambda client: reset_password(client, *secrets.take(*SECRET_FIELDS))
-            )
-        else:
-            require_only(args, action)
-            profile_id = await self._bound_profile()
-
-            def fresh_client() -> RuntimeFrontendClient:
-                return asyncio.run(self._open_unadmitted_client(profile_id))
-
-            reply = await self._on_own_connection(
-                profile_id,
-                lambda client: change_password(client, *secrets.take(*SECRET_FIELDS), fresh_client=fresh_client),
-            )
-        if reply["outcome"] != "unresolved" and profile_id == self.profile_id:
-            # The new password fenced every session admitted under the old one.
-            await self._release_lease(task_name="mcp-replaced-password-close")
-        return reply
-
-    async def _named_or_bound_profile(self, args: dict[str, Any]) -> UUID:
-        named = args.get("profile")
-        if named is None:
-            return await self._bound_profile()
-        return await self._wire(lambda: resolve_named_profile(named))
-
-    async def _sign_in_profile(self, args: dict[str, Any], *, store: bool) -> UUID:
-        """Return the profile a sign-in is for, never moving a connection off the profile it is bound to.
-
-        A connection started for one profile signs in to that profile alone.
-        One that follows the selection signs in to another profile only when
-        the sign-in is stored, which selects that profile as ``config login``
-        does.
-        """
-        if "profile" not in args:
-            return await self._bound_profile()
-        target = await self._named_or_bound_profile(args)
-        bound = self._named_profile_id
-        if bound is None and not store:
-            bound = await self._bound_profile()
-        if bound is not None and bound != target:
-            raise RuntimeFrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
-        return target
-
-    async def _sign_in(self, args: dict[str, Any], secrets: SessionSecrets) -> dict[str, Any]:
-        """Sign in with the typed password, or a raw key, and hold the session it admits."""
-        secrets.require("sign_in", "secret")
-        require_only(args, "sign_in", "method", "store", "profile")
-        keyed = args.get("method", "password") == "api_key"
-        store = args.get("store", False)
-        if keyed and store:
-            raise ValueError("only a password sign-in can be stored")
-        profile_id = await self._sign_in_profile(args, store=store)
-        admission = McpAdmission.KEY if keyed else McpAdmission.TYPED_SIGN_IN
-        client = await self._open_unadmitted_client(profile_id, on_surface=True)
-
-        def admit() -> tuple[RuntimeProfileStatus, ProfileAccessStatus, Event]:
-            (proof,) = secrets.take("secret")
-            admitted = client.login_api_key(proof) if keyed else client.login_password(proof, persist_receipt=store)
-            status = require_exact_admitted_status(client, profile_id=profile_id, admission=admission)
-            if store:
-                select_signed_in_profile(profile_id)
-            return admitted, status, self._watch(client)
-
-        try:
-            admitted, status, retired = await self._wire(admit)
-        except BaseException as error:
-            await self._retire_client(client, task_name="mcp-sign-in-close", primary_error=error)
-            raise
-        if profile_id != self.profile_id:
-            await self._release_profile_state(task_name="mcp-reselected-profile-close")
-            self.profile_id = profile_id
-        await self._replace_lease(client, retired, admission)
-        self._key_reference = None
-        reply: dict[str, Any] = {
-            "outcome": "signed_in",
-            "session": admission.value,
-            "status": public_value(status_on_surface(status, self.surface)),
-        }
-        if admitted.human_login is not None:
-            reply["sign_in"] = public_value(admitted.human_login)
-        return reply
-
-    async def _delete_profile(self, args: dict[str, Any], secrets: SessionSecrets) -> dict[str, Any]:
-        """Report what deleting the named profile would destroy, and destroy it only when confirmed."""
-        secrets.require("delete_profile")
-        require_only(args, "delete_profile", "profile", "confirm")
-        if "profile" not in args:
-            raise ValueError("delete_profile names its profile")
-        preflight = await self._wire(lambda: assess_profile_deletion(args["profile"]))
-        if not args.get("confirm", False):
-            return {"outcome": "profile_assessed", "deleted": False, **preflight.reply}
-        reply = await self._on_own_connection(
-            preflight.profile_id, lambda client: delete_assessed_profile(client, preflight)
-        )
-        if preflight.profile_id == self.profile_id:
-            await self._release_profile_state(task_name="mcp-deleted-profile-close")
-        return reply
 
     async def _replace_lease(self, client: RuntimeFrontendClient, retired: Event, admission: McpAdmission) -> None:
         """Hold a newly admitted connection and let go of the one it replaces."""
@@ -744,138 +443,18 @@ class RuntimeMcpAdapter:
     async def _wire(self, function: Callable[[], WireResultT]) -> WireResultT:
         return await await_cancellation_complete(asyncio.to_thread(function), task_name="mcp-runtime-call")
 
-    async def _call_key_route_tool(self, name: str, args: dict[str, Any]) -> dict[str, Any]:
-        """Serve enrollment and key authentication for the bound profile; neither resumes a sign-in."""
-        profile_id = await self._bound_profile()
-        if name == "authorization_prepare":
-            return await self._authorization_prepare(args, profile_id)
-        if name == "authorization_request":
-            return await self._wire(lambda: self._authorization_request(args, profile_id))
-        if name == "authorization_poll":
-            return await self._wire(self._authorization_poll)
-        return await self._authenticate(args, profile_id)
-
-    async def _authorization_prepare(self, args: dict[str, Any], profile_id: UUID) -> dict[str, Any]:
-        reference = UUID(args["credential_reference"]) if "credential_reference" in args else None
-        if self._enrollment_client is not None:
-            enrollment = self._enrollment
-            receipt = None if enrollment is None else enrollment.receipt
-            finished = receipt is not None and receipt.stage in {EnrollmentStage.COMPLETE, EnrollmentStage.DECLINED}
-            expired = enrollment is not None and now() >= enrollment.prepared.expires_at
-            if not finished and not expired:
-                raise ValueError("one pending authorization per connection")
-            # Retire only the request transport. A completed grant and this
-            # adapter's independently admitted session retain their own lives.
-            previous = self._enrollment_client
-            self._enrollment_client = None
-            self._enrollment = None
-            self._enrollment_reference = None
-            self._requester = None
-            await self._retire_client(previous, task_name="mcp-enrollment-retire")
-        client = await self._open_enrollment_client(reference, profile_id)
-        try:
-            enrollment = await self._wire(lambda: self._prepare_enrollment(client, reference))
-        except BaseException as error:
-            await self._retire_client(client, task_name="mcp-enrollment-close", primary_error=error)
-            raise
-        self._enrollment_client = client
-        self._enrollment = enrollment
-        self._enrollment_reference = reference
-        prepared = enrollment.prepared
-        return {
-            "outcome": "prepared",
-            "profile_id": str(profile_id),
-            "request_id": str(prepared.enrollment_request_id),
-            "client_id": str(prepared.client_id),
-            "destination_id": str(prepared.destination_id),
-            "expires_at": prepared.expires_at.isoformat(),
-        }
-
-    async def _open_enrollment_client(self, reference: UUID | None, profile_id: UUID) -> RuntimeFrontendClient:
-        if reference is not None:
-            return await self._open_reference_client(reference, profile_id=profile_id)
-        try:
-            return await open_installed_runtime_client(profile_id=profile_id, frontend=OperationFrontendProjection.MCP)
-        except BaseException as error:
-            self._retain_admission_cleanup(error)
-            raise
-
-    @staticmethod
-    def _prepare_enrollment(client: RuntimeFrontendClient, reference: UUID | None) -> NativeEnrollmentClient:
-        secret_store = installed_automation_secret_store()
-        if reference is None:
-            return client.prepare_enrollment(secret_store)
-        return client.prepare_grant_change(secret_store)
-
-    def _authorization_request(self, args: dict[str, Any], profile_id: UUID) -> dict[str, Any]:
-        enrollment = self._enrollment
-        if enrollment is None:
-            raise ValueError("authorization_prepare required")
-        if self._requester is not None:
-            raise ValueError("one proposal per prepared request")
-        proposal = parse_model(EnrollmentProposal, args["proposal"])
-        original_reference = self._enrollment_reference
-        if (proposal.kind is EnrollmentKind.ENROLL) != (original_reference is None):
-            raise ValueError("grant changes require an authenticated prepared request")
-
-        def reconcile(submitted: AutomationReceiptProjection, *, timeout: float) -> AutomationReceiptProjection:
-            reference = self._reconciliation_reference(enrollment, proposal, original_reference)
-            return asyncio.run(self._reconcile_enrollment(reference, profile_id, submitted, timeout))
-
-        self._requester = AutomationRequesterJourney(
-            enrollment, timeout=300, reconcile=None if original_reference is None else reconcile
-        )
-        receipt = self._requester.submit(proposal)
-        return {"outcome": "recorded", "receipt": public_value(receipt)}
-
-    async def _reconcile_enrollment(
-        self, reference: UUID, profile_id: UUID, submitted: AutomationReceiptProjection, timeout: float
-    ) -> AutomationReceiptProjection:
-        deadline = time.monotonic() + timeout
-        fresh = await self._open_reference_client(reference, profile_id=profile_id, timeout=timeout)
-        try:
-            return fresh.reconcile_enrollment(submitted.request_id, timeout=deadline - time.monotonic())
-        finally:
-            await self._retire_client(fresh, task_name="mcp-reconcile-close", primary_error=sys.exception())
-
-    @staticmethod
-    def _reconciliation_reference(
-        enrollment: NativeEnrollmentClient, proposal: EnrollmentProposal, original_reference: UUID | None
-    ) -> UUID:
-        reference = (
-            enrollment.delivered_credential_metadata().credential_reference
-            if proposal.kind is EnrollmentKind.ROTATE
-            else original_reference
-        )
-        if reference is None:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-        return reference
-
-    def _authorization_poll(self) -> dict[str, Any]:
-        if self._requester is None:
-            raise ValueError("no authorization request")
-        receipt = self._requester.step()
-        completion = self._requester.completion
-        return {
-            "outcome": "recorded",
-            "receipt": public_value(receipt),
-            "delivery_state": "processed" if completion is not None else "waiting",
-        }
-
-    async def _authenticate(self, args: dict[str, Any], profile_id: UUID) -> dict[str, Any]:
-        credential_reference = UUID(args["credential_reference"])
+    async def _authenticate_key(self, credential_reference: UUID, profile_id: UUID) -> None:
+        """Hold a session admitted by the key configured at launch, under the grant the person approved for it."""
         client = await self._open_reference_client(credential_reference, profile_id=profile_id)
 
-        def admit() -> tuple[ProfileAccessStatus, Event]:
-            status = require_exact_admitted_status(client, profile_id=profile_id)
-            return status, self._watch(client)
+        def admit() -> Event:
+            require_exact_admitted_status(client, profile_id=profile_id)
+            return self._watch(client)
 
         try:
-            status, retired = await self._wire(admit)
+            retired = await self._wire(admit)
         except BaseException as error:
             await self._retire_client(client, task_name="mcp-admission-close", primary_error=error)
             raise
-        result = {"outcome": "authenticated", "status": public_value(status_on_surface(status, self.surface))}
         self._key_reference = credential_reference
         await self._replace_lease(client, retired, McpAdmission.KEY)
-        return result

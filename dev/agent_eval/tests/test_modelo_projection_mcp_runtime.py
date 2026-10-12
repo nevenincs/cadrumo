@@ -174,11 +174,11 @@ async def test_authorized_mcp_modelo_projection_results_and_history_disclosure_d
         missing_provenance: list[str] = []
         try:
             async with connected_server_and_client_session(build_server(adapter)) as sdk:
-                authenticated = await sdk.call_tool(
-                    "authenticate", {"credential_reference": str(enrolled.credential_reference)}
-                )
+                # What serve does with the key the launch configuration names; no tool takes one.
+                await adapter.bootstrap_reference(enrolled.credential_reference)
+                authenticated = await sdk.call_tool("status", {})
                 assert authenticated.is_error is False, _structured(authenticated)
-                assert _structured(authenticated)["outcome"] == "authenticated"
+                assert _structured(authenticated)["session"] == "key", _structured(authenticated)
 
                 requests = (
                     ModeloProjectOperationRequest(profile_id=enrolled.profile_id, year=2025, ccaa="madrid"),

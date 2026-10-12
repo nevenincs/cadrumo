@@ -26,7 +26,6 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.mcp_surfaces import MCP_SURFACES, McpSurface
 from cadrumo.application.operations.registry import OperationPublicDefinitionDescriptionV1
-from cadrumo.application.runtime.installation_requests import INSTALLATION_ACT_CONTRACTS
 from cadrumo.application.runtime.operation_access import RuntimeOperationObserve, RuntimeOperationReview
 from cadrumo.application.runtime.projection_pages import ProjectionPageRequest
 from cadrumo.core.hashing import sha256_hex
@@ -148,12 +147,8 @@ def test_the_hints_of_the_tools_that_act_state_the_widest_thing_each_can_do() ->
 
     # Only a tool that runs or releases a registered operation can reach another host.
     assert reaching == {"execute", "control", "respond"}
-    assert additive == {"authenticate"}
-    # The installation tool's hints follow the act table: some act changes records, and none reaches the network.
-    facts = [contract.facts for contract in INSTALLATION_ACT_CONTRACTS.values()]
-    installation = MCP_TOOL_HINTS["installation"]
-    assert installation.read_only is not any(fact.changes_records for fact in facts)
-    assert installation.open_world is any(fact.reaches_network for fact in facts)
+    # Every tool that acts can overwrite or delete: none only adds, now that no tool admits a session.
+    assert additive == set()
 
 
 @pytest.mark.anyio

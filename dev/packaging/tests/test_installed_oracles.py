@@ -1056,7 +1056,7 @@ async def _call_dev_installed_mcp_authenticate(
     profile_id: str,
     credential_reference: str,
 ) -> tuple[bool, dict[str, Any], bool, dict[str, Any]]:
-    """Call authenticate and status on the active development environment's stdio process."""
+    """Start the stdio process with a launch-configured key, then ask for the removed key tool and the status."""
     from mcp import ClientSession
     from mcp.client.stdio import StdioServerParameters, stdio_client
 
@@ -1064,7 +1064,7 @@ async def _call_dev_installed_mcp_authenticate(
     environment.update({"CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root), "PYTHONIOENCODING": "utf-8"})
     server = StdioServerParameters(
         command=str(executable.resolve(strict=True)),
-        args=["--profile-id", profile_id],
+        args=["--profile-id", profile_id, "--credential-reference", credential_reference],
         env=environment,
         cwd=storage_root,
     )
@@ -1194,8 +1194,9 @@ def test_dev_installed_mcp_authenticate_fails_closed_for_an_unavailable_or_missi
                 credential_reference=str(credential_reference),
             )
         )
+        # No tool presents a key; the one the launch configuration names was refused, and status says why.
         assert authentication_error is True
-        assert authentication == {"outcome": "refused", "code": expected_refusal}
+        assert authentication == {"outcome": "refused", "code": "unknown_tool"}
         assert status_error is False
         assert status == {
             "outcome": "status",
@@ -1203,5 +1204,5 @@ def test_dev_installed_mcp_authenticate_fails_closed_for_an_unavailable_or_missi
             "authenticated": False,
             "session": "none",
             "surface": "full",
-            "denial": "authentication_required",
+            "denial": expected_refusal,
         }

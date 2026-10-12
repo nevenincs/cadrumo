@@ -6,9 +6,11 @@ anything on the surface can change the profile's records and whether anything
 on it reaches the network. Its operation list may grow between releases, and
 only within those properties.
 
-No release has yet been pinned by a consumer, so the default surface gained the
-``session`` and ``installation`` tools in this release under the name ``full``.
-From the first release a consumer pins, a name moves with its tool list: a
+No release has yet been pinned by a consumer, so the default surface lost the
+tools that signed in, administered sessions and keys, and served the
+installation, in this release under the name ``full``: an agent works only
+inside the one profile the person signed in to or issued a key for. From the
+first release a consumer pins, a name moves with its tool list: a
 surface whose tools or properties change takes a new name, the name it had
 keeps what it stood for while it is served, and the default follows the newest
 surface that keeps everything. Each name is held to its exact tool list and
@@ -101,10 +103,6 @@ class McpSurface:
 _EVERY_TOOL: Final = frozenset(
     {
         "status",
-        "authorization_prepare",
-        "authorization_request",
-        "authorization_poll",
-        "authenticate",
         "authority",
         "corpus_search",
         "search",
@@ -116,8 +114,6 @@ _EVERY_TOOL: Final = frozenset(
         "review",
         "respond",
         "control",
-        "session",
-        "installation",
     }
 )
 

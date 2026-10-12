@@ -17,12 +17,19 @@ import pytest
 from ....application.operator_surface.command_operations import join_command_operations
 from ..command_specs import COMMAND_GRAPH
 from ..operator_surface_reconciliation import recorded_command_operation_join
-from .command_frontend_counterparts import CommandReach, ToolRoute, command_reaches, other_frontend_routes
+from .command_frontend_counterparts import (
+    PERSON_ACT_COMMANDS,
+    CommandReach,
+    ToolRoute,
+    command_reaches,
+    other_frontend_routes,
+)
 from .command_operation_reference import (
     NO_OPERATION,
     REFERENCE_PATH,
     read_command_operation_reference,
     read_command_tool_routes,
+    read_person_act_commands,
     render_command_operation_reference,
     spelled_command,
 )
@@ -70,27 +77,35 @@ def test_every_command_with_work_to_share_has_a_tool_named_in_its_row() -> None:
     without_work = {
         spelled_command(row.cli_path) for row in join.commands if CommandReach.NO_WORK_TO_SHARE in command_reaches(row)
     }
-    without_a_tool = {command for command in commands if not commands[command] and not routes[command]}
+    persons = read_person_act_commands(_shipped())
+    without_a_tool = {
+        command for command in commands if not commands[command] and not routes[command] and command not in persons
+    }
     assert without_a_tool == without_work
+    # Every command whose work is the person's own says so in its row, and no other row does.
+    assert persons == {spelled_command(cli_path) for cli_path in PERSON_ACT_COMMANDS}
 
 
 def test_a_route_is_read_back_as_its_tool_and_what_the_tool_is_given() -> None:
     """A tool alone, a tool with its selector, and several routes in one row are each read back whole."""
     document = (
-        "| `aeat one` | none | `installation` `storage_check` |\n"
-        "| `aeat two` | `ledger.list` | `authorization_prepare`; `session` `lock` |\n"
+        "| `aeat one` | none | `authority` `modelos` |\n"
+        "| `aeat two` | `ledger.list` | `execute` `ledger.history`; `status` |\n"
         "| `aeat three` | none | none |\n"
+        "| `aeat four` | none | the person's act |\n"
     )
 
     routes = read_command_tool_routes(document)
 
     assert routes == {
-        "aeat one": (ToolRoute("installation", "storage_check"),),
-        "aeat two": (ToolRoute("authorization_prepare"), ToolRoute("session", "lock")),
+        "aeat one": (ToolRoute("authority", "modelos"),),
+        "aeat two": (ToolRoute("execute", "ledger.history"), ToolRoute("status")),
         "aeat three": (),
+        "aeat four": (),
     }
+    assert read_person_act_commands(document) == {"aeat four"}
     with pytest.raises(ValueError, match="a route names one tool"):
-        read_command_tool_routes("| `aeat four` | none | `session` `lock` `again` |\n")
+        read_command_tool_routes("| `aeat five` | none | `authority` `modelos` `again` |\n")
 
 
 def test_the_reference_names_every_executable_command_of_the_live_graph() -> None:

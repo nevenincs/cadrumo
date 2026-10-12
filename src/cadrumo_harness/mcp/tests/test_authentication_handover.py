@@ -185,17 +185,15 @@ async def test_reauthentication_retires_existing_session_only_after_candidate_st
     monkeypatch.setattr(mcp_runtime, "open_installed_credential_client", admit)
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, original))
     try:
-        result = await adapter.call("authenticate", {"credential_reference": str(reference)})
+        await adapter.bootstrap_reference(reference)
         if failure is None:
-            assert result == {"outcome": "authenticated", "status": candidate.status().status.model_dump(mode="json")}
             assert adapter.client is candidate
+            assert (await adapter.call("status", {}))["session"] == "key"
             assert original.close_count == 1
             assert candidate.close_count == 0
         else:
-            assert result == {
-                "outcome": "refused",
-                "code": expected_code,
-            }
+            denial = adapter._admission_denial
+            assert denial is not None and denial.code == expected_code
             assert adapter.client is original
             assert original.close_count == 0
             assert original.session_id == original_session

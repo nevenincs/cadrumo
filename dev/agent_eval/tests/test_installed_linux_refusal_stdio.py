@@ -128,10 +128,10 @@ async def test_installed_linux_native_reference_refusal_preserves_public_stdio(t
                 ):
                     await client.initialize()
                     names = {tool.name for tool in (await client.list_tools()).tools}
+                    assert "authenticate" not in names
                     assert {
                         "status",
                         "authority",
-                        "authenticate",
                         "search",
                         "describe",
                         "execute",
@@ -174,7 +174,7 @@ async def test_installed_linux_native_reference_refusal_preserves_public_stdio(t
                     assert public.structured_content["outcome"] == "published"
                     retried = await client.call_tool("authenticate", {"credential_reference": str(reference)})
                     assert retried.is_error is True
-                    assert retried.structured_content == refusal
+                    assert retried.structured_content == {"outcome": "refused", "code": "unknown_tool"}
                     after = await client.call_tool("status", {})
                     assert after.is_error is False
                     assert after.structured_content == status

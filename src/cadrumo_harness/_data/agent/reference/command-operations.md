@@ -15,11 +15,16 @@ without its options and arguments.
   and often a read first: the operation that resolves the identifier the write
   then takes.
 - The third column lists every other route to the command's work: a tool, and
-  after it the operation, action or query the tool is given. `execute` with an
+  after it the operation or query the tool is given. `execute` with an
   operation there means the command does that work in its own process and the
-  operation does the same work for you. `installation` and `session` take the
-  name shown as their `action`, and `authority` takes it as its `query`. A
-  tool shown alone takes no such name.
+  operation does the same work for you. `authority` takes the name shown as its
+  `query`. A tool shown alone takes no such name.
+- `the person's act` in the third column means the command's work is the
+  person's own: signing in or out, locking, sessions, keys, passwords and other
+  secrets, recovery, and work outside this profile such as the profile list,
+  storage, repair and resetting every profile. You cannot do it. Ask the person
+  to do it in Cadrumo. An operation listed beside it that needs a secret, or
+  that administers keys, is refused to you as the person's act too.
 - `none` in both columns means the command has no work to do for you: it
   prints help, or it starts the terminal interface.
 - A command's options are not the operation's fields. Read the operation's
@@ -211,9 +216,9 @@ without its options and arguments.
 | `aeat app modelo review-package encrypt-for-recipient` | `modelo.review_package.encrypt_for_recipient` | none |
 | `aeat app modelo review-package import-feedback` | `modelo.review_package.import_feedback` | none |
 | `aeat app modelo review-package sign` | `modelo.review_package.sign` | none |
-| `aeat app modelo review-package verify` | none | `installation` `review_package_verify` |
-| `aeat app modelo review-package verify-receipt` | none | `installation` `review_package_verify_receipt` |
-| `aeat app modelo review-package verify-signature` | none | `installation` `review_package_verify_signature` |
+| `aeat app modelo review-package verify` | none | the person's act |
+| `aeat app modelo review-package verify-receipt` | none | the person's act |
+| `aeat app modelo review-package verify-signature` | none | the person's act |
 | `aeat app modelo spreadsheet export` | `modelo.spreadsheet.export` | none |
 | `aeat app modelo spreadsheet publish` | `export.google-review` | none |
 | `aeat app modelo spreadsheet push` | `export.google-sheets` | none |
@@ -236,7 +241,7 @@ without its options and arguments.
 | `aeat app modelo work preview-maritime-exemption` | `modelo.work.preview_maritime_exemption` | none |
 | `aeat app modelo work rename` | `modelo.work.metadata`, `modelo.work.rename` | none |
 | `aeat app modelo work report` | `modelo.export`, `modelo.work.revision` | none |
-| `aeat app modelo work report-verify` | `modelo.work.report_verify` | `installation` `report_verify_document` |
+| `aeat app modelo work report-verify` | `modelo.work.report_verify` | the person's act |
 | `aeat app modelo work resume` | `workflow.resume.context` | none |
 | `aeat app modelo work review` | `modelo.work.metadata`, `modelo.work.review` | none |
 | `aeat app modelo work revision` | `modelo.work.revision`, `modelo.work.revision_snapshot` | none |
@@ -262,7 +267,7 @@ without its options and arguments.
 | `aeat config` | none | none |
 | `aeat config auth apoderado check` | `auth.apoderado.check` | none |
 | `aeat config auth apoderado clear` | `auth.apoderado.clear` | none |
-| `aeat config auth apoderado configure` | `auth.apoderado.configure` | none |
+| `aeat config auth apoderado configure` | `auth.apoderado.configure` | the person's act |
 | `aeat config auth apoderado scopes list` | none | `authority` `apoderado_scopes` |
 | `aeat config auth apoderado status` | `auth.apoderado.status` | none |
 | `aeat config auth certificate check` | `auth.certificate.source.check` | none |
@@ -270,7 +275,7 @@ without its options and arguments.
 | `aeat config auth certificate register` | `auth.certificate.source.register` | none |
 | `aeat config auth certificate remove` | `auth.certificate.source.remove` | none |
 | `aeat config auth certificate secret remove` | `auth.certificate.secret.remove` | none |
-| `aeat config auth certificate secret set` | `auth.certificate.secret.set` | none |
+| `aeat config auth certificate secret set` | `auth.certificate.secret.set` | the person's act |
 | `aeat config auth certificate select` | `auth.certificate.source.select` | none |
 | `aeat config auth configure` | `auth.provider.configure` | none |
 | `aeat config auth diagnostics list` | `auth.local-read` | none |
@@ -292,23 +297,23 @@ without its options and arguments.
 | `aeat config google logout` | `config.google.logout` | none |
 | `aeat config google probe` | `config.google.probe` | none |
 | `aeat config google status` | `config.google.status` | none |
-| `aeat config login` | none | `session` `sign_in` |
-| `aeat config logout` | none | `session` `sign_out` |
-| `aeat config passphrase change` | `auth.profile.passphrase-rotate` | none |
-| `aeat config passphrase reset` | none | `session` `reset_password` |
+| `aeat config login` | none | the person's act |
+| `aeat config logout` | none | the person's act |
+| `aeat config passphrase change` | `auth.profile.passphrase-rotate` | the person's act |
+| `aeat config passphrase reset` | none | the person's act |
 | `aeat config profile add-row` | `user-profile.repeatable-row-mutation`, `user-profile.view` | none |
 | `aeat config profile archive export` | `profile.archive.export` | none |
-| `aeat config profile archive import` | none | `installation` `archive_import_prepare`; `installation` `archive_import` |
-| `aeat config profile archive inspect` | none | `installation` `archive_inspect` |
+| `aeat config profile archive import` | none | the person's act |
+| `aeat config profile archive inspect` | none | the person's act |
 | `aeat config profile archive push` | `profile.archive.push` | none |
 | `aeat config profile archive reconcile` | `profile.archive.reconcile` | none |
-| `aeat config profile automation approve` | `user-profile.automation-approve`, `user-profile.automation-inventory` | none |
-| `aeat config profile automation change` | none | `authorization_prepare`; `authorization_request`; `authorization_poll` |
-| `aeat config profile automation create` | none | `authorization_prepare`; `authorization_request`; `authorization_poll` |
-| `aeat config profile automation decline` | `user-profile.automation-decline`, `user-profile.automation-inventory` | none |
-| `aeat config profile automation deny` | none | `session` `deny_automation` |
-| `aeat config profile automation inspect` | `user-profile.automation-inventory` | none |
-| `aeat config profile automation list` | `user-profile.automation-inventory` | none |
+| `aeat config profile automation approve` | `user-profile.automation-approve`, `user-profile.automation-inventory` | the person's act |
+| `aeat config profile automation change` | none | the person's act |
+| `aeat config profile automation create` | none | the person's act |
+| `aeat config profile automation decline` | `user-profile.automation-decline`, `user-profile.automation-inventory` | the person's act |
+| `aeat config profile automation deny` | none | the person's act |
+| `aeat config profile automation inspect` | `user-profile.automation-inventory` | the person's act |
+| `aeat config profile automation list` | `user-profile.automation-inventory` | the person's act |
 | `aeat config profile capabilities set` | `user-profile.field-mutation`, `user-profile.view` | none |
 | `aeat config profile capabilities view` | `user-profile.view` | none |
 | `aeat config profile censo import` | `user-profile.censo-file-import` | `execute` `user-profile.censo-certificate-import` |
@@ -316,7 +321,7 @@ without its options and arguments.
 | `aeat config profile censo show` | `user-profile.censo-prepare` | none |
 | `aeat config profile complete-setup` | `user-profile.complete-setup`, `user-profile.view` | none |
 | `aeat config profile create` | `user-profile.patch`, `user-profile.view` | none |
-| `aeat config profile delete` | none | `session` `delete_profile` |
+| `aeat config profile delete` | none | the person's act |
 | `aeat config profile descendiente` | `user-profile.descendants`, `user-profile.view` | none |
 | `aeat config profile descendiente add` | `user-profile.descendants`, `user-profile.view` | none |
 | `aeat config profile descendiente list` | `user-profile.view` | none |
@@ -324,17 +329,17 @@ without its options and arguments.
 | `aeat config profile edit` | `user-profile.patch`, `user-profile.view` | none |
 | `aeat config profile edit-row` | `user-profile.repeatable-row-update`, `user-profile.view` | none |
 | `aeat config profile history` | `profile.history` | none |
-| `aeat config profile list` | none | `installation` `profile_list` |
-| `aeat config profile lock` | none | `session` `lock` |
+| `aeat config profile list` | none | the person's act |
+| `aeat config profile lock` | none | the person's act |
 | `aeat config profile plantilla-media list` | `user-profile.view` | none |
 | `aeat config profile plantilla-media remove` | `user-profile.plantilla-media`, `user-profile.view` | none |
 | `aeat config profile plantilla-media set` | `user-profile.plantilla-media`, `user-profile.view` | none |
-| `aeat config profile recovery disable` | none | `execute` `user-profile.recovery.revoke` |
-| `aeat config profile recovery enable` | none | `installation` `recovery_enroll` |
+| `aeat config profile recovery disable` | none | the person's act |
+| `aeat config profile recovery enable` | none | the person's act |
 | `aeat config profile recovery status` | `user-profile.recovery.status` | none |
 | `aeat config profile remove-row` | `user-profile.repeatable-row-remove`, `user-profile.view` | none |
-| `aeat config profile resume` | none | `session` `resume` |
-| `aeat config profile sessions` | none | `session` `list` |
+| `aeat config profile resume` | none | the person's act |
+| `aeat config profile sessions` | none | the person's act |
 | `aeat config profile status` | `user-profile.view` | none |
 | `aeat config profile validate` | `user-profile.view` | none |
 | `aeat config profile view` | `user-profile.view` | none |
@@ -349,22 +354,22 @@ without its options and arguments.
 | `aeat config provision start` | none | `execute` `local-reader.provision` |
 | `aeat config provision status` | none | `execute` `local-reader.status` |
 | `aeat config provision verify` | none | `execute` `local-reader.provision` |
-| `aeat config repair` | none | `installation` `repair_report` |
+| `aeat config repair` | none | the person's act |
 | `aeat config repair connectivity` | none | `execute` `diagnostics.connectivity.probe` |
 | `aeat config repair integrity objects` | none | `execute` `diagnostics.secure-objects.check` |
-| `aeat config repair logs` | none | `installation` `repair_logs` |
-| `aeat config repair profile` | none | `installation` `repair_profile` |
+| `aeat config repair logs` | none | the person's act |
+| `aeat config repair profile` | none | the person's act |
 | `aeat config repair quarantine` | none | `execute` `diagnostics.secure-objects.quarantine` |
 | `aeat config repair reset-progress` | none | `execute` `diagnostics.workflow-progress.reset` |
-| `aeat config reset resume` | none | `installation` `reset_resume` |
-| `aeat config reset start` | none | `installation` `reset_start` |
-| `aeat config reset status` | none | `installation` `reset_status` |
-| `aeat config sign-in-status` | none | `session` `sign_in_status` |
-| `aeat config storage check` | none | `installation` `storage_check` |
-| `aeat config storage init` | none | `installation` `storage_init` |
-| `aeat config storage list` | none | `installation` `storage_inventory` |
-| `aeat config storage reclaim` | none | `installation` `storage_reclaim` |
-| `aeat config storage view` | none | `installation` `storage_inventory` |
+| `aeat config reset resume` | none | the person's act |
+| `aeat config reset start` | none | the person's act |
+| `aeat config reset status` | none | the person's act |
+| `aeat config sign-in-status` | none | the person's act |
+| `aeat config storage check` | none | the person's act |
+| `aeat config storage init` | none | the person's act |
+| `aeat config storage list` | none | the person's act |
+| `aeat config storage reclaim` | none | the person's act |
+| `aeat config storage view` | none | the person's act |
 
 ## Operations no command submits
 

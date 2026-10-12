@@ -256,11 +256,13 @@ def _structured(reply: CallToolResult) -> dict[str, JsonValue]:
     return cast("dict[str, JsonValue]", reply.structured_content)
 
 
-async def _authenticate(sdk: ClientSession, runtime: _ParityRuntime) -> ProfileAccessStatus:
-    reply = await sdk.call_tool("authenticate", {"credential_reference": str(runtime.reference)})
+async def _authenticate(sdk: ClientSession, adapter: RuntimeMcpAdapter, runtime: _ParityRuntime) -> ProfileAccessStatus:
+    """Admit the server with the key a launch configuration names, as serve does; no tool takes one."""
+    await adapter.bootstrap_reference(runtime.reference)
+    reply = await sdk.call_tool("status", {})
     assert not reply.is_error, _structured(reply)
     value = _structured(reply)
-    assert value["outcome"] == "authenticated"
+    assert value["session"] == "key", value
     status = ProfileAccessStatus.model_validate_json(canonical_json_bytes(value["status"]))
     assert status.profile_id == runtime.profile_id and status.grant_valid and status.denial is None
     assert status.session_id is not None
@@ -364,7 +366,7 @@ async def test_cli_own_lock_and_human_proof_loss_preserve_independent_mcp_grant(
             human_id = human.session_id
             runtime.capture[0] = runtime.independent
             async with connected_server_and_client_session(build_server(adapter)) as sdk:
-                first = await _authenticate(sdk, runtime)
+                first = await _authenticate(sdk, adapter, runtime)
                 await _private_read(sdk, runtime.profile_id)
                 runtime.assert_worker_contained()
                 before = runtime.subject.store.snapshot()
@@ -427,7 +429,7 @@ async def test_cli_own_lock_and_human_proof_loss_preserve_independent_mcp_grant(
                 live_status = ProfileAccessStatus.model_validate_json(canonical_json_bytes(_structured(live)["status"]))
                 assert live_status.session_id == first.session_id and live_status.grant_valid
                 # Reconnect from the same protected root key without a human password.
-                fresh = await _authenticate(sdk, runtime)
+                fresh = await _authenticate(sdk, adapter, runtime)
                 assert fresh.session_id != first.session_id and fresh.session_id != human_id
                 await _private_read(sdk, runtime.profile_id)
                 cli = await asyncio.to_thread(
@@ -479,7 +481,7 @@ async def test_cli_global_lock_fences_tui_mcp_and_password_login_cannot_clear_it
             assert not any(password)
             runtime.capture[0] = runtime.independent
             async with connected_server_and_client_session(build_server(adapter)) as sdk:
-                await _authenticate(sdk, runtime)
+                await _authenticate(sdk, adapter, runtime)
                 private_result = await _private_read(sdk, runtime.profile_id)
                 runtime.assert_worker_contained()
                 before = runtime.subject.store.snapshot()
@@ -499,7 +501,8 @@ async def test_cli_global_lock_fences_tui_mcp_and_password_login_cannot_clear_it
                 enrollment_suspended = runtime.subject.store.enrollment_state()
                 refused = await sdk.call_tool("result", {"result": private_result.model_dump(mode="json")})
                 assert refused.is_error and _structured(refused)["outcome"] == "refused"
-                fresh_api = await sdk.call_tool("authenticate", {"credential_reference": str(runtime.reference)})
+                await adapter.bootstrap_reference(runtime.reference)
+                fresh_api = await sdk.call_tool("result", {"result": private_result.model_dump(mode="json")})
                 assert fresh_api.is_error and _structured(fresh_api)["outcome"] == "refused"
                 fresh_human = await open_installed_runtime_client(
                     profile_id=runtime.profile_id, frontend=OperationFrontendProjection.TUI

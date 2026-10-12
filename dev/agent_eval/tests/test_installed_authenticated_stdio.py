@@ -310,10 +310,11 @@ async def test_installed_stdio_authenticates_and_reads_pinned_auth_result(tmp_pa
                     assert auth_projection["kind"] == "status"
                     assert auth_projection["status"] is not None
 
+                    # No tool names another key: only the person's launch configuration does.
                     wrong_reference = uuid4()
                     denied = await client.call_tool("authenticate", {"credential_reference": str(wrong_reference)})
                     assert denied.is_error is True
-                    assert denied.structured_content == {"outcome": "refused", "code": "missing"}
+                    assert denied.structured_content == {"outcome": "refused", "code": "unknown_tool"}
                     after_denial_call = await client.call_tool("status", {})
                     assert after_denial_call.is_error is False
                     after_denial = _object(_object(after_denial_call.structured_content)["status"])

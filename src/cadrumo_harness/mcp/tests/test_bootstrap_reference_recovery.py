@@ -1,4 +1,4 @@
-"""A failed configured reference leaves public MCP open for explicit recovery."""
+"""A key the person configured at launch is the only key the server uses, and a refusal of it is asked again."""
 
 from __future__ import annotations
 
@@ -74,9 +74,14 @@ class _AdmittedClient:
         self.closed = True
 
 
+_REMOVED_TOOLS = frozenset(
+    {"authorization_prepare", "authorization_request", "authorization_poll", "authenticate", "session", "installation"}
+)
+
+
 @pytest.mark.anyio
 @pytest.mark.parametrize("failure", [AutomationCustodyCode.MISSING, AutomationCustodyCode.UNAVAILABLE])
-async def test_failed_configured_reference_preserves_public_tools_and_fences_every_private_route(
+async def test_a_refused_configured_key_fences_every_private_route_and_offers_no_way_to_name_another(
     monkeypatch: pytest.MonkeyPatch, failure: AutomationCustodyCode
 ) -> None:
     profile_id, reference = uuid4(), uuid4()
@@ -89,7 +94,6 @@ async def test_failed_configured_reference_preserves_public_tools_and_fences_eve
         raise AutomationCustodyError(failure)
 
     monkeypatch.setattr(mcp_runtime, "open_installed_credential_client", missing)
-    monkeypatch.setattr(mcp_runtime, "authority_query", lambda _args: {"outcome": "published", "report": {}})
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=None)
     try:
         await adapter.bootstrap_reference(reference)
@@ -97,31 +101,14 @@ async def test_failed_configured_reference_preserves_public_tools_and_fences_eve
         assert adapter.client is None
         async with connected_server_and_client_session(build_server(adapter)) as sdk:
             names = {tool.name for tool in (await sdk.list_tools()).tools}
-            assert {"status", "authority", "authorization_prepare", "authenticate"} <= names
+            # No tool names, requests or presents a credential: the key comes from the launch configuration.
+            assert "status" in names
+            assert not names & _REMOVED_TOOLS
             status = await sdk.call_tool("status", {})
             assert status.is_error is False
-            assert status.structured_content == {
-                "outcome": "status",
-                "profile_id": str(profile_id),
-                "authenticated": False,
-                "session": "none",
-                "surface": "full",
-                "denial": failure.value,
-            }
-            published = await sdk.call_tool("authority", {"query": "modelos"})
-            assert published.is_error is False
-            assert published.structured_content == {"outcome": "published", "report": {}}
-            recovery = await sdk.call_tool("authorization_prepare", {"credential_reference": str(reference)})
-            assert recovery.is_error is True
-            assert recovery.structured_content == {"outcome": "refused", "code": failure.value}
-            # Which operations exist is no profile's data, so both still answer, from the shipped contracts.
-            for name, args in (
-                ("search", {"query": "auth.local-read", "limit": 1}),
-                ("describe", {"definition_id": "auth.local-read"}),
-            ):
-                discovered = await sdk.call_tool(name, args)
-                assert discovered.is_error is False, name
-                assert discovered.structured_content["session"] == "none", name
+            assert status.structured_content is not None
+            assert status.structured_content["authenticated"] is False
+            assert status.structured_content["denial"] == failure.value
             for name, args in (
                 (
                     "execute",
@@ -136,20 +123,24 @@ async def test_failed_configured_reference_preserves_public_tools_and_fences_eve
             ):
                 denied = await sdk.call_tool(name, args)
                 assert denied.is_error is True, name
-                assert denied.structured_content == {"outcome": "refused", "code": failure.value}, name
-        assert calls == [
-            (profile_id, reference, OperationFrontendProjection.MCP),
-            (profile_id, reference, OperationFrontendProjection.MCP),
-        ]
+                assert denied.structured_content is not None
+                assert denied.structured_content["code"] == failure.value, name
+            for name in sorted(_REMOVED_TOOLS):
+                absent = await sdk.call_tool(name, {"credential_reference": str(reference)})
+                assert absent.is_error is True, name
+                assert absent.structured_content == {"outcome": "refused", "code": "unknown_tool"}, name
+        # Every call asked the runtime again with the configured key, and with no other.
+        assert len(calls) > 1
+        assert {call[1] for call in calls} == {reference}
     finally:
         await adapter.close()
 
 
 @pytest.mark.anyio
-async def test_explicit_successful_authentication_clears_failed_bootstrap_status_only_after_exact_admission(
+async def test_a_configured_key_the_runtime_refused_admits_the_server_once_the_runtime_admits_it(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    profile_id, configured_reference, replacement_reference = uuid4(), uuid4(), uuid4()
+    profile_id, reference = uuid4(), uuid4()
     candidate = _AdmittedClient(profile_id)
     opened: list[UUID] = []
 
@@ -158,35 +149,18 @@ async def test_explicit_successful_authentication_clears_failed_bootstrap_status
     ) -> RuntimeFrontendClient:
         assert profile_id == candidate.profile_id
         assert frontend is OperationFrontendProjection.MCP
+        assert credential_reference == reference
         opened.append(credential_reference)
-        if credential_reference == configured_reference:
-            raise AutomationCustodyError(AutomationCustodyCode.MISSING)
-        assert credential_reference == replacement_reference
+        if len(opened) == 1:
+            raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
         return cast(RuntimeFrontendClient, candidate)
 
     monkeypatch.setattr(mcp_runtime, "open_installed_credential_client", open_candidate)
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=None)
     try:
-        await adapter.bootstrap_reference(configured_reference)
+        await adapter.bootstrap_reference(reference)
+        assert adapter.client is None
         async with connected_server_and_client_session(build_server(adapter)) as sdk:
-            failed_again = await sdk.call_tool("authenticate", {"credential_reference": str(configured_reference)})
-            assert failed_again.is_error is True
-            assert failed_again.structured_content == {"outcome": "refused", "code": "missing"}
-            stale = await sdk.call_tool("status", {})
-            assert stale.structured_content == {
-                "outcome": "status",
-                "profile_id": str(profile_id),
-                "authenticated": False,
-                "session": "none",
-                "surface": "full",
-                "denial": "missing",
-            }
-            recovered = await sdk.call_tool("authenticate", {"credential_reference": str(replacement_reference)})
-            assert recovered.is_error is False
-            assert recovered.structured_content == {
-                "outcome": "authenticated",
-                "status": candidate.status().status.model_dump(mode="json"),
-            }
             current = await sdk.call_tool("status", {})
             assert current.is_error is False
             assert current.structured_content == {
@@ -195,7 +169,7 @@ async def test_explicit_successful_authentication_clears_failed_bootstrap_status
                 "surface": "full",
                 "status": candidate.status().status.model_dump(mode="json"),
             }
-        assert opened == [configured_reference, configured_reference, replacement_reference]
+        assert opened == [reference, reference]
+        assert adapter.client is candidate
     finally:
         await adapter.close()
-    assert candidate.closed

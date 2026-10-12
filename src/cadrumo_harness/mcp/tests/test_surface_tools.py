@@ -249,11 +249,11 @@ async def test_an_admission_names_the_surface_to_the_runtime_only_when_it_narrow
     monkeypatch.setattr(mcp_runtime, "open_installed_credential_client", admit)
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=None, surface=surface)
     try:
-        authenticated = await adapter.call("authenticate", {"credential_reference": str(reference)})
+        await adapter.bootstrap_reference(reference)
+        assert adapter.client is admitted
     finally:
         await adapter.close()
 
-    assert authenticated["outcome"] == "authenticated"
     unnamed: dict[str, object] = {
         "profile_id": profile_id,
         "credential_reference": reference,

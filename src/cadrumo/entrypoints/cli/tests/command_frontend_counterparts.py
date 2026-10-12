@@ -2,12 +2,19 @@
 
 A command reaches the other frontends in one of three ways. It submits a
 registered operation, which every frontend can submit. It sends a runtime
-request or an installation act, which every frontend can send. Or it does its
-work in the command-line process, and the same application function is served
-to the other frontends by a registered operation, an installation act or an
-``authority`` query. The first two are read from the handlers' source and
-recorded in the command table. The third cannot be read from a handler that
-sends nothing, so it is declared here, one row for each such command.
+request or an installation act, which the terminal interface can send. Or it
+does its work in the command-line process, and the same application function
+is served to the other frontends by a registered operation or an ``authority``
+query. The first two are read from the handlers' source and recorded in the
+command table. The third cannot be read from a handler that sends nothing, so
+it is declared here, one row for each such command.
+
+Some commands are the person's own act: they sign in or out, lock, administer
+sessions or keys, take a secret, or do installation work that belongs to no
+single profile. An agent works only inside the one profile the person signed
+in to, so MCP serves none of them, and the terminal interface reaches them
+through the installation acts and session requests the runtime serves. They
+are declared here too, each with the reason it is the person's.
 
 A command that also submits or sends has a row here when one of its modes does
 its work in process: the row names what serves that mode, and the command is
@@ -31,23 +38,21 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Final
 
+from ....application.operations.person_acts import PERSON_RUNTIME_REQUESTS, operation_is_persons_act
 from ....application.operations.registry import OperationRegistry
 from ....application.operator_surface.command_operations import CommandOperations
 from ....application.runtime.installation_requests import InstallationAct
 from .command_operation_derivation import PROFILE_ADMISSION_ACTION, CliPath
 
 EXECUTE_TOOL: Final = "execute"
-INSTALLATION_TOOL: Final = "installation"
 AUTHORITY_TOOL: Final = "authority"
-SESSION_TOOL: Final = "session"
 
 
 @dataclass(frozen=True, slots=True)
 class ToolRoute:
     """One MCP tool and what it is given to do one piece of work.
 
-    ``selector`` is the operation an ``execute`` runs, the action an
-    ``installation`` or a ``session`` call names, or the query an
+    ``selector`` is the operation an ``execute`` runs or the query an
     ``authority`` call names. A tool that does one thing has none.
     """
 
@@ -86,16 +91,8 @@ def _operation(proof: str | Unproven, *definition_ids: str) -> Counterpart:
     return Counterpart(tuple(ToolRoute(EXECUTE_TOOL, definition_id) for definition_id in definition_ids), proof)
 
 
-def _act(proof: str | Unproven, *acts: InstallationAct) -> Counterpart:
-    return Counterpart(tuple(ToolRoute(INSTALLATION_TOOL, act.value) for act in acts), proof)
-
-
 def _query(proof: str | Unproven, *queries: str) -> Counterpart:
     return Counterpart(tuple(ToolRoute(AUTHORITY_TOOL, query) for query in queries), proof)
-
-
-def _session(proof: str | Unproven, *actions: str) -> Counterpart:
-    return Counterpart(tuple(ToolRoute(SESSION_TOOL, action) for action in actions), proof)
 
 
 _RUNTIME_TESTS: Final = "src/cadrumo/entrypoints/runtime/tests"
@@ -126,60 +123,14 @@ IN_PROCESS_COMMAND_COUNTERPARTS: Final[Mapping[CliPath, Counterpart]] = MappingP
         ("app", "modelo", "formulas"): _query(_REFERENCE_PROOF, "formulas"),
         ("app", "modelo", "list"): _query(_REFERENCE_PROOF, "modelos"),
         ("app", "modelo", "support-matrix"): _query(_REFERENCE_PROOF, "support"),
-        ("app", "modelo", "review-package", "verify"): _act(
-            f"{_RUNTIME_TESTS}/test_installation_artefacts.py"
-            "::test_a_genuine_package_verifies_clean_and_the_act_and_the_command_give_one_document",
-            InstallationAct.REVIEW_PACKAGE_VERIFY,
-        ),
-        ("app", "modelo", "review-package", "verify-receipt"): _act(
-            f"{_RUNTIME_TESTS}/test_installation_artefacts.py"
-            "::test_a_receipt_holds_only_for_both_keys_and_the_package_it_was_made_for",
-            InstallationAct.REVIEW_PACKAGE_VERIFY_RECEIPT,
-        ),
-        ("app", "modelo", "review-package", "verify-signature"): _act(
-            f"{_RUNTIME_TESTS}/test_installation_artefacts.py"
-            "::test_a_signature_holds_for_its_signer_and_fails_for_any_other_key_or_a_changed_package",
-            InstallationAct.REVIEW_PACKAGE_VERIFY_SIGNATURE,
-        ),
         # ``--document-only`` verifies the file's own signature and submits nothing.
-        ("app", "modelo", "work", "report-verify"): _act(
-            f"{_RUNTIME_TESTS}/test_installation_artefacts.py"
-            "::test_a_summary_is_checked_by_its_own_bytes_and_the_act_and_the_command_give_one_document",
-            InstallationAct.REPORT_VERIFY_DOCUMENT,
-        ),
         ("config", "auth", "apoderado", "scopes", "list"): _query(_REFERENCE_PROOF, "apoderado_scopes"),
         ("config", "auth", "providers"): _query(_REFERENCE_PROOF, "auth_providers"),
-        ("config", "profile", "archive", "import"): _act(
-            f"{_RUNTIME_TESTS}/test_installation_profiles.py"
-            "::test_an_import_republishes_the_prepared_source_and_answers_what_the_command_prints",
-            InstallationAct.ARCHIVE_IMPORT_PREPARE,
-            InstallationAct.ARCHIVE_IMPORT,
-        ),
-        ("config", "profile", "archive", "inspect"): _act(
-            f"{_RUNTIME_TESTS}/test_installation_profiles.py"
-            "::test_the_inspect_act_reports_the_header_the_command_prints_and_refuses_what_is_no_archive",
-            InstallationAct.ARCHIVE_INSPECT,
-        ),
         # The command parses the certificate itself before it submits the facts it read.
         ("config", "profile", "censo", "import"): _operation(
             f"{_ENTRYPOINT_TESTS}/test_censal_certificate_file_operation.py"
             "::test_the_shipped_parser_refuses_the_file_for_a_direct_client_as_it_does_for_the_command",
             "user-profile.censo-certificate-import",
-        ),
-        ("config", "profile", "list"): _act(
-            f"{_RUNTIME_TESTS}/test_installation_profiles.py"
-            "::test_the_listing_act_answers_every_frontend_with_what_the_command_prints",
-            InstallationAct.PROFILE_LIST,
-        ),
-        ("config", "profile", "recovery", "disable"): _operation(
-            f"{_ENTRYPOINT_TESTS}/test_recovery_revoke_operation.py"
-            "::test_revocation_proves_the_passphrase_removes_the_wrapper_and_prints_what_the_command_prints",
-            "user-profile.recovery.revoke",
-        ),
-        ("config", "profile", "recovery", "enable"): _act(
-            f"{_RUNTIME_TESTS}/test_installation_profiles.py"
-            "::test_enrolment_hands_out_a_code_that_resets_the_passphrase_and_answers_what_the_command_prints",
-            InstallationAct.RECOVERY_ENROLL,
         ),
         ("config", "provision", "browser"): _operation(_PROVISION_PROOF, "browser-runtime.provision"),
         ("config", "provision", "install"): _PROVISION,
@@ -192,11 +143,6 @@ IN_PROCESS_COMMAND_COUNTERPARTS: Final[Mapping[CliPath, Counterpart]] = MappingP
         ("config", "provision", "start"): _PROVISION,
         ("config", "provision", "status"): _operation(_PROVISION_PROOF, "local-reader.status"),
         ("config", "provision", "verify"): _PROVISION,
-        ("config", "repair"): _act(
-            f"{_RUNTIME_TESTS}/test_installation_repair.py"
-            "::test_the_report_act_replies_with_the_diagnosis_the_command_prints",
-            InstallationAct.REPAIR_REPORT,
-        ),
         ("config", "repair", "connectivity"): _operation(
             f"{_REPAIR_OPERATIONS}::test_connectivity_prints_what_the_probe_operation_returns_for_the_same_observation",
             "diagnostics.connectivity.probe",
@@ -204,15 +150,6 @@ IN_PROCESS_COMMAND_COUNTERPARTS: Final[Mapping[CliPath, Counterpart]] = MappingP
         ("config", "repair", "integrity", "objects"): _operation(
             f"{_REPAIR_OPERATIONS}::test_integrity_objects_prints_what_the_check_operation_returns",
             "diagnostics.secure-objects.check",
-        ),
-        ("config", "repair", "logs"): _act(
-            f"{_RUNTIME_TESTS}/test_installation_repair.py::test_the_logs_act_replies_with_the_tail_the_command_prints",
-            InstallationAct.REPAIR_LOGS,
-        ),
-        ("config", "repair", "profile"): _act(
-            f"{_RUNTIME_TESTS}/test_installation_repair.py"
-            "::test_the_profile_act_on_a_healthy_root_inspects_the_named_record_and_clears_nothing",
-            InstallationAct.REPAIR_PROFILE,
         ),
         ("config", "repair", "quarantine"): _operation(
             f"{_REPAIR_OPERATIONS}::test_quarantine_prints_what_the_quarantine_operation_returns",
@@ -222,51 +159,143 @@ IN_PROCESS_COMMAND_COUNTERPARTS: Final[Mapping[CliPath, Counterpart]] = MappingP
             f"{_REPAIR_OPERATIONS}::test_reset_progress_prints_what_the_reset_operation_returns",
             "diagnostics.workflow-progress.reset",
         ),
-        ("config", "reset", "status"): _act(
-            f"{_RUNTIME_TESTS}/test_installation_reset.py"
-            "::test_each_reset_act_replies_with_the_document_its_command_prints",
-            InstallationAct.RESET_STATUS,
-        ),
-        ("config", "storage", "check"): _act(_STORAGE_PROOF, InstallationAct.STORAGE_CHECK),
-        ("config", "storage", "init"): _act(_STORAGE_PROOF, InstallationAct.STORAGE_INIT),
-        ("config", "storage", "list"): _act(_STORAGE_PROOF, InstallationAct.STORAGE_INVENTORY),
-        ("config", "storage", "reclaim"): _act(_STORAGE_PROOF, InstallationAct.STORAGE_RECLAIM),
-        ("config", "storage", "view"): _act(_STORAGE_PROOF, InstallationAct.STORAGE_INVENTORY),
     }
 )
 """Each command that works in the command-line process, and what serves that work to the other frontends."""
 
-_KEY_ENROLLMENT: Final = (
-    ToolRoute("authorization_prepare"),
-    ToolRoute("authorization_request"),
-    ToolRoute("authorization_poll"),
+
+@dataclass(frozen=True, slots=True)
+class PersonAct:
+    """A command whose work is the person's own act, which MCP does not serve.
+
+    ``acts`` and ``operations`` name the installation acts and registered
+    operations that serve the command's in-process work to the terminal
+    interface; a command that sends its requests or submits its operations
+    itself names none. ``proof`` is the test that compares the command's
+    output with the counterpart's, as for a counterpart, or the statement
+    that no test does.
+    """
+
+    reason: str
+    acts: tuple[InstallationAct, ...] = ()
+    operations: tuple[str, ...] = ()
+    proof: str | Unproven = Unproven("no test runs the command and the terminal interface's act and compares them")
+
+
+_SIGN_IN: Final = "it signs the person in or out, locks a session or reads the sign-in, which only the person does"
+_SESSIONS: Final = "it lists or denies the profile's sessions and keys, which is the person's administration of access"
+_KEYS: Final = "it requests, approves, declines, changes or lists an automation key, which only the person issues"
+_TYPED_BY_THE_PERSON: Final = "it takes a password or another secret, which only the person types"
+_INSTALLATION: Final = (
+    "it does installation work that belongs to no single profile, outside the profile an agent works in"
 )
 
-SESSION_DOOR_COMMAND_TOOLS: Final[Mapping[CliPath, Counterpart]] = MappingProxyType(
+
+def _installation(proof: str | Unproven, *acts: InstallationAct) -> PersonAct:
+    return PersonAct(_INSTALLATION, acts=acts, proof=proof)
+
+
+PERSON_ACT_COMMANDS: Final[Mapping[CliPath, PersonAct]] = MappingProxyType(
     {
-        ("config", "login"): _session(_NOT_COMPARED, "sign_in"),
-        ("config", "logout"): _session(_NOT_COMPARED, "sign_out"),
-        ("config", "passphrase", "reset"): _session(_NOT_COMPARED, "reset_password"),
-        ("config", "profile", "automation", "change"): Counterpart(_KEY_ENROLLMENT, _NOT_COMPARED),
-        ("config", "profile", "automation", "create"): Counterpart(_KEY_ENROLLMENT, _NOT_COMPARED),
-        ("config", "profile", "automation", "deny"): _session(_NOT_COMPARED, "deny_automation"),
-        # The command and the tool report the one deletion preflight and refuse where it refuses.
-        ("config", "profile", "delete"): _session(
-            "src/cadrumo/entrypoints/cli/config/tests/test_profile_delete_preflight_parity.py"
-            "::test_the_command_prints_the_observation_and_gives_the_refusals_the_preflight_decides",
-            "delete_profile",
+        ("app", "modelo", "review-package", "verify"): _installation(
+            f"{_RUNTIME_TESTS}/test_installation_artefacts.py"
+            "::test_a_genuine_package_verifies_clean_and_the_act_and_the_command_give_one_document",
+            InstallationAct.REVIEW_PACKAGE_VERIFY,
         ),
-        ("config", "profile", "lock"): _session(_NOT_COMPARED, "lock"),
-        ("config", "profile", "resume"): _session(_NOT_COMPARED, "resume"),
-        ("config", "profile", "sessions"): _session(_NOT_COMPARED, "list"),
-        ("config", "sign-in-status"): _session(_NOT_COMPARED, "sign_in_status"),
+        ("app", "modelo", "review-package", "verify-receipt"): _installation(
+            f"{_RUNTIME_TESTS}/test_installation_artefacts.py"
+            "::test_a_receipt_holds_only_for_both_keys_and_the_package_it_was_made_for",
+            InstallationAct.REVIEW_PACKAGE_VERIFY_RECEIPT,
+        ),
+        ("app", "modelo", "review-package", "verify-signature"): _installation(
+            f"{_RUNTIME_TESTS}/test_installation_artefacts.py"
+            "::test_a_signature_holds_for_its_signer_and_fails_for_any_other_key_or_a_changed_package",
+            InstallationAct.REVIEW_PACKAGE_VERIFY_SIGNATURE,
+        ),
+        ("app", "modelo", "work", "report-verify"): _installation(
+            f"{_RUNTIME_TESTS}/test_installation_artefacts.py"
+            "::test_a_summary_is_checked_by_its_own_bytes_and_the_act_and_the_command_give_one_document",
+            InstallationAct.REPORT_VERIFY_DOCUMENT,
+        ),
+        ("config", "profile", "archive", "import"): _installation(
+            f"{_RUNTIME_TESTS}/test_installation_profiles.py"
+            "::test_an_import_republishes_the_prepared_source_and_answers_what_the_command_prints",
+            InstallationAct.ARCHIVE_IMPORT_PREPARE,
+            InstallationAct.ARCHIVE_IMPORT,
+        ),
+        ("config", "profile", "archive", "inspect"): _installation(
+            f"{_RUNTIME_TESTS}/test_installation_profiles.py"
+            "::test_the_inspect_act_reports_the_header_the_command_prints_and_refuses_what_is_no_archive",
+            InstallationAct.ARCHIVE_INSPECT,
+        ),
+        ("config", "profile", "list"): _installation(
+            f"{_RUNTIME_TESTS}/test_installation_profiles.py"
+            "::test_the_listing_act_answers_every_frontend_with_what_the_command_prints",
+            InstallationAct.PROFILE_LIST,
+        ),
+        ("config", "profile", "recovery", "enable"): _installation(
+            f"{_RUNTIME_TESTS}/test_installation_profiles.py"
+            "::test_enrolment_hands_out_a_code_that_resets_the_passphrase_and_answers_what_the_command_prints",
+            InstallationAct.RECOVERY_ENROLL,
+        ),
+        ("config", "repair"): _installation(
+            f"{_RUNTIME_TESTS}/test_installation_repair.py"
+            "::test_the_report_act_replies_with_the_diagnosis_the_command_prints",
+            InstallationAct.REPAIR_REPORT,
+        ),
+        ("config", "repair", "logs"): _installation(
+            f"{_RUNTIME_TESTS}/test_installation_repair.py::test_the_logs_act_replies_with_the_tail_the_command_prints",
+            InstallationAct.REPAIR_LOGS,
+        ),
+        ("config", "repair", "profile"): _installation(
+            f"{_RUNTIME_TESTS}/test_installation_repair.py"
+            "::test_the_profile_act_on_a_healthy_root_inspects_the_named_record_and_clears_nothing",
+            InstallationAct.REPAIR_PROFILE,
+        ),
+        ("config", "reset", "status"): _installation(
+            f"{_RUNTIME_TESTS}/test_installation_reset.py"
+            "::test_each_reset_act_replies_with_the_document_its_command_prints",
+            InstallationAct.RESET_STATUS,
+        ),
+        ("config", "storage", "check"): _installation(_STORAGE_PROOF, InstallationAct.STORAGE_CHECK),
+        ("config", "storage", "init"): _installation(_STORAGE_PROOF, InstallationAct.STORAGE_INIT),
+        ("config", "storage", "list"): _installation(_STORAGE_PROOF, InstallationAct.STORAGE_INVENTORY),
+        ("config", "storage", "reclaim"): _installation(_STORAGE_PROOF, InstallationAct.STORAGE_RECLAIM),
+        ("config", "storage", "view"): _installation(_STORAGE_PROOF, InstallationAct.STORAGE_INVENTORY),
+        ("config", "auth", "apoderado", "configure"): PersonAct(_TYPED_BY_THE_PERSON),
+        ("config", "auth", "certificate", "secret", "set"): PersonAct(_TYPED_BY_THE_PERSON),
+        ("config", "login"): PersonAct(_SIGN_IN),
+        ("config", "logout"): PersonAct(_SIGN_IN),
+        ("config", "passphrase", "change"): PersonAct(_TYPED_BY_THE_PERSON),
+        ("config", "passphrase", "reset"): PersonAct(_TYPED_BY_THE_PERSON),
+        ("config", "profile", "automation", "approve"): PersonAct(_KEYS),
+        ("config", "profile", "automation", "change"): PersonAct(_KEYS),
+        ("config", "profile", "automation", "create"): PersonAct(_KEYS),
+        ("config", "profile", "automation", "decline"): PersonAct(_KEYS),
+        ("config", "profile", "automation", "deny"): PersonAct(_SESSIONS),
+        ("config", "profile", "automation", "inspect"): PersonAct(_KEYS),
+        ("config", "profile", "automation", "list"): PersonAct(_KEYS),
+        ("config", "profile", "delete"): PersonAct(_INSTALLATION),
+        ("config", "profile", "lock"): PersonAct(_SIGN_IN),
+        ("config", "profile", "recovery", "disable"): PersonAct(
+            _TYPED_BY_THE_PERSON,
+            operations=("user-profile.recovery.revoke",),
+            proof=f"{_ENTRYPOINT_TESTS}/test_recovery_revoke_operation.py"
+            "::test_revocation_proves_the_passphrase_removes_the_wrapper_and_prints_what_the_command_prints",
+        ),
+        ("config", "profile", "resume"): PersonAct(_TYPED_BY_THE_PERSON),
+        ("config", "profile", "sessions"): PersonAct(_SESSIONS),
+        ("config", "reset", "resume"): PersonAct(_INSTALLATION),
+        ("config", "reset", "start"): PersonAct(_INSTALLATION),
+        ("config", "sign-in-status"): PersonAct(_SIGN_IN),
     }
 )
-"""The tools that send, for an MCP client, the session and key requests each of these commands sends.
+"""Each command whose work is the person's own act, with why; MCP serves none of them.
 
-The command table records which requests of the runtime's own door a command
-sends. An installation act is asked for by its own name. A request about a
-profile's sessions or keys is asked for through the tool named here.
+An agent works only inside the one profile the person signed in to or issued a
+key for, and never authenticates, administers access or handles a secret. The
+terminal interface reaches these commands' work through the installation acts
+and session requests the runtime serves to it.
 """
 
 _PRINTS_HELP: Final = "invoked bare, it prints the help of its group, which every frontend holds as text of its own"
@@ -291,7 +320,7 @@ _FORM_WORKBENCH: Final = (
 )
 _KEY_PROPOSAL: Final = (
     "a proposal about an automation key, which the command line makes through the runtime's enrollment "
-    "requests that its automation commands send"
+    "requests that its automation commands send; it is the person's act and no agent's"
 )
 
 
@@ -372,11 +401,15 @@ class CommandReach(StrEnum):
     SUBMITS_OPERATION = "submits a registered operation"
     SENDS_RUNTIME_REQUEST = "sends a runtime request or an installation act"
     WORKS_IN_PROCESS = "works in process, with a declared counterpart"
+    PERSON_ACT = "is the person's own act, which MCP does not serve"
     NO_WORK_TO_SHARE = "has no work to share"
     UNREACHED = "does work no other frontend can ask for"
 
 
 _INSTALLATION_ACTIONS: Final = frozenset(act.value for act in InstallationAct)
+
+PERSON_REQUESTS: Final = PERSON_RUNTIME_REQUESTS | _INSTALLATION_ACTIONS
+"""Every request of the runtime's own door that is the person's act: the session and key requests and every act."""
 
 
 def requests_beyond_admission(row: CommandOperations) -> frozenset[str]:
@@ -389,6 +422,7 @@ def command_reaches(
     *,
     in_process: Mapping[CliPath, Counterpart] = IN_PROCESS_COMMAND_COUNTERPARTS,
     no_work: Mapping[CliPath, str] = COMMANDS_WITH_NO_WORK_TO_SHARE,
+    person: Mapping[CliPath, PersonAct] = PERSON_ACT_COMMANDS,
 ) -> tuple[CommandReach, ...]:
     """Say every way one recorded command reaches the other frontends.
 
@@ -408,6 +442,8 @@ def command_reaches(
         reaches.append(CommandReach.WORKS_IN_PROCESS)
     if row.cli_path in no_work:
         reaches.append(CommandReach.NO_WORK_TO_SHARE)
+    if row.cli_path in person:
+        reaches.append(CommandReach.PERSON_ACT)
     return tuple(reaches) or (CommandReach.UNREACHED,)
 
 
@@ -453,9 +489,21 @@ def operations_without_an_access_resolver(registry: OperationRegistry, operation
     )
 
 
+def persons_operations(registry: OperationRegistry, operation_ids: Iterable[str]) -> frozenset[str]:
+    """Name the registered operations among ``operation_ids`` that are the person's own act and not an agent's."""
+    return frozenset(
+        operation_id
+        for operation_id in operation_ids
+        if operation_is_persons_act(
+            operation_id,
+            ephemeral_secret_required=registry.lookup_public_contract(operation_id).ephemeral_secret_required,
+        )
+    )
+
+
 def unproven_pairs() -> tuple[tuple[CliPath, Unproven], ...]:
     """List every declared pair that no test holds to one result, in command order."""
-    declared = (*IN_PROCESS_COMMAND_COUNTERPARTS.items(), *SESSION_DOOR_COMMAND_TOOLS.items())
+    declared = (*IN_PROCESS_COMMAND_COUNTERPARTS.items(), *PERSON_ACT_COMMANDS.items())
     return tuple(
         sorted(
             ((cli_path, pair.proof) for cli_path, pair in declared if isinstance(pair.proof, Unproven)),
@@ -465,22 +513,16 @@ def unproven_pairs() -> tuple[tuple[CliPath, Unproven], ...]:
 
 
 def other_frontend_routes(row: CommandOperations) -> tuple[ToolRoute, ...]:
-    """Name every tool route to a command's work besides executing the operations it submits.
+    """Name every MCP tool route to a command's work besides executing the operations it submits.
 
-    These are the installation acts it sends, the session and key tools that
-    send its other runtime requests, and what serves the work it does in
-    process, each once and in that order. Declared routes keep the order they
-    are declared in, which is the order a client calls them in.
+    These are what serves the work it does in process, each once, in the order
+    they are declared, which is the order a client calls them in. A command
+    that is the person's own act has none: MCP serves no such work.
     """
-    sent = sorted(action for action in requests_beyond_admission(row) if action in _INSTALLATION_ACTIONS)
-    session = SESSION_DOOR_COMMAND_TOOLS.get(row.cli_path)
+    if row.cli_path in PERSON_ACT_COMMANDS:
+        return ()
     in_process = IN_PROCESS_COMMAND_COUNTERPARTS.get(row.cli_path)
-    routes = (
-        *(ToolRoute(INSTALLATION_TOOL, action) for action in sent),
-        *(() if session is None else session.routes),
-        *(() if in_process is None else in_process.routes),
-    )
-    return tuple(dict.fromkeys(routes))
+    return tuple(dict.fromkeys(() if in_process is None else in_process.routes))
 
 
 __all__ = [
@@ -488,21 +530,22 @@ __all__ = [
     "COMMANDS_WITH_NO_WORK_TO_SHARE",
     "EXECUTE_TOOL",
     "INSTALLATION_ACTS_WITHOUT_A_COMMAND",
-    "INSTALLATION_TOOL",
     "IN_PROCESS_COMMAND_COUNTERPARTS",
     "OPERATIONS_WITHOUT_AN_ACCESS_RESOLVER",
     "OPERATIONS_WITHOUT_A_COMMAND",
+    "PERSON_ACT_COMMANDS",
+    "PERSON_REQUESTS",
     "REPOSITORY_ROOT",
-    "SESSION_DOOR_COMMAND_TOOLS",
-    "SESSION_TOOL",
     "CommandReach",
     "Counterpart",
     "OperationWithoutCommand",
+    "PersonAct",
     "ToolRoute",
     "Unproven",
     "command_reaches",
     "operations_without_an_access_resolver",
     "other_frontend_routes",
+    "persons_operations",
     "proof_finding",
     "reach_of_every_command",
     "requests_beyond_admission",

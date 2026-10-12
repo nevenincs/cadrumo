@@ -80,11 +80,10 @@ async def test_installed_missing_reference_keeps_public_stdio_and_fences_private
             ):
                 await client.initialize()
                 names = {tool.name for tool in (await client.list_tools()).tools}
+                assert not names & {"authorization_prepare", "authenticate", "session", "installation"}
                 assert {
                     "status",
                     "authority",
-                    "authorization_prepare",
-                    "authenticate",
                     "search",
                     "describe",
                     "execute",
@@ -105,9 +104,10 @@ async def test_installed_missing_reference_keeps_public_stdio_and_fences_private
                 public = await client.call_tool("authority", {"query": "modelos"})
                 assert public.is_error is False, _object(public.structured_content)
                 assert _object(public.structured_content)["outcome"] == "published"
+                # No tool names another key: only the person's launch configuration does.
                 recovery = await client.call_tool("authorization_prepare", {"credential_reference": str(reference)})
                 assert recovery.is_error is True
-                assert recovery.structured_content == {"outcome": "refused", "code": denial}
+                assert recovery.structured_content == {"outcome": "refused", "code": "unknown_tool"}
 
                 # Which operations exist is no profile's data, so both still answer, under no session.
                 for name, args in (
@@ -136,7 +136,7 @@ async def test_installed_missing_reference_keeps_public_stdio_and_fences_private
 
                 retried = await client.call_tool("authenticate", {"credential_reference": str(reference)})
                 assert retried.is_error is True
-                assert retried.structured_content == {"outcome": "refused", "code": denial}
+                assert retried.structured_content == {"outcome": "refused", "code": "unknown_tool"}
                 after = await client.call_tool("status", {})
                 assert after.structured_content == status
                 assert str(reference) not in repr(after.structured_content)

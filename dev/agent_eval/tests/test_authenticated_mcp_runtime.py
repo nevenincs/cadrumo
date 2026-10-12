@@ -117,7 +117,7 @@ def _safe_failure_observations(session: NativeApiCliSession[None]) -> tuple[tupl
 async def test_authenticated_mcp_discovers_executes_observes_and_reads_native_result(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """The SDK authentication tool admits the exact profile before a native operation."""
+    """The key the launch configuration names admits the exact profile before a native operation."""
     with native_api_cli_session(
         tmp_path,
         scope_for_destination=_scope_for_destination,
@@ -138,7 +138,9 @@ async def test_authenticated_mcp_discovers_executes_observes_and_reads_native_re
                 tools = (await sdk.list_tools()).tools
                 names = [tool.name for tool in tools]
                 assert len(names) == len(set(names))
-                assert {"authenticate", "status", "search", "describe", "execute", "observe", "result"} <= set(names)
+                assert {"status", "search", "describe", "execute", "observe", "result"} <= set(names)
+                # No tool names or presents a credential: the key is given at launch, by the person.
+                assert "authenticate" not in names
 
                 unauthenticated = await sdk.call_tool("status", {})
                 assert unauthenticated.is_error is False
@@ -157,35 +159,34 @@ async def test_authenticated_mcp_discovers_executes_observes_and_reads_native_re
                     "code": "authentication_required",
                 }
 
-                authenticated = await sdk.call_tool(
-                    "authenticate",
-                    {"credential_reference": str(enrolled.credential_reference)},
-                )
-                authenticated_result = _structured(authenticated)
-                if authenticated.is_error:
+                # What serve does with the launch configuration's reference.
+                await adapter.bootstrap_reference(enrolled.credential_reference)
+                admitted = await sdk.call_tool("status", {})
+                admitted_result = _structured(admitted)
+                if admitted.is_error or admitted_result.get("session") != "key":
                     pytest.fail(
                         "native MCP admission failed; "
-                        f"safe result={authenticated_result!r}; "
+                        f"safe result={admitted_result!r}; "
                         f"sanitized runtime failures={_safe_failure_observations(enrolled)!r}",
                         pytrace=False,
                     )
-                assert authenticated_result["outcome"] == "authenticated"
-                admitted_status = authenticated_result["status"]
+                admitted_status = admitted_result["status"]
                 assert isinstance(admitted_status, dict)
                 assert admitted_status["profile_id"] == str(enrolled.profile_id)
                 assert admitted_status["credential_authenticated"] is True
                 first_session_value = admitted_status["session_id"]
                 assert isinstance(first_session_value, str)
                 first_session_id = UUID(first_session_value)
-                assert str(enrolled.credential_reference) not in repr(authenticated_result)
+                assert str(enrolled.credential_reference) not in repr(admitted_result)
 
+                # A tool call cannot name another key: there is no such tool, and the session stands.
                 wrong_reference_id = UUID(int=enrolled.credential_reference.int ^ 1)
                 wrong_reference = await sdk.call_tool(
                     "authenticate",
                     {"credential_reference": str(wrong_reference_id)},
                 )
                 assert wrong_reference.is_error is True
-                assert _structured(wrong_reference) == {"outcome": "refused", "code": "missing"}
+                assert _structured(wrong_reference) == {"outcome": "refused", "code": "unknown_tool"}
                 assert adapter.client is not None and adapter.client.session_id == first_session_id
                 still_admitted = await sdk.call_tool("status", {})
                 still_admitted_result = _structured(still_admitted)
@@ -308,14 +309,12 @@ async def test_authenticated_mcp_discovers_executes_observes_and_reads_native_re
         assert first_session_id is not None
         reconnected_adapter = RuntimeMcpAdapter(profile_id=enrolled.profile_id, client=None)
         try:
+            await reconnected_adapter.bootstrap_reference(enrolled.credential_reference)
             async with connected_server_and_client_session(build_server(reconnected_adapter)) as sdk:
-                reauthenticated = await sdk.call_tool(
-                    "authenticate",
-                    {"credential_reference": str(enrolled.credential_reference)},
-                )
+                reauthenticated = await sdk.call_tool("status", {})
                 assert reauthenticated.is_error is False
                 reauthenticated_result = _structured(reauthenticated)
-                assert reauthenticated_result["outcome"] == "authenticated"
+                assert reauthenticated_result["session"] == "key"
                 reauthenticated_status = reauthenticated_result["status"]
                 assert isinstance(reauthenticated_status, dict)
                 assert reauthenticated_status["profile_id"] == str(enrolled.profile_id)

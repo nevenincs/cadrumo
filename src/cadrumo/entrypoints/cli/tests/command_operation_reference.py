@@ -25,7 +25,7 @@ from typing import Final
 
 from ....application.operator_surface.command_operations import CommandOperationJoin
 from ....tests.inventory import SRC_CADRUMO
-from .command_frontend_counterparts import ToolRoute, other_frontend_routes
+from .command_frontend_counterparts import PERSON_ACT_COMMANDS, ToolRoute, other_frontend_routes
 
 REFERENCE_PATH: Final[Path] = (
     SRC_CADRUMO.parent / "cadrumo_harness" / "_data" / "agent" / "reference" / "command-operations.md"
@@ -39,6 +39,9 @@ NO_OPERATION: Final[str] = "none"
 
 NO_ROUTE: Final[str] = "none"
 """What the routes column says for a command whose work no other tool does."""
+
+PERSON_ROUTE: Final[str] = "the person's act"
+"""What the routes column says for a command whose work is the person's own act, which no tool does for you."""
 
 _ROUTE_SEPARATOR: Final[str] = "; "
 
@@ -59,11 +62,16 @@ without its options and arguments.
   and often a read first: the operation that resolves the identifier the write
   then takes.
 - The third column lists every other route to the command's work: a tool, and
-  after it the operation, action or query the tool is given. `execute` with an
+  after it the operation or query the tool is given. `execute` with an
   operation there means the command does that work in its own process and the
-  operation does the same work for you. `installation` and `session` take the
-  name shown as their `action`, and `authority` takes it as its `query`. A
-  tool shown alone takes no such name.
+  operation does the same work for you. `authority` takes the name shown as its
+  `query`. A tool shown alone takes no such name.
+- `the person's act` in the third column means the command's work is the
+  person's own: signing in or out, locking, sessions, keys, passwords and other
+  secrets, recovery, and work outside this profile such as the profile list,
+  storage, repair and resetting every profile. You cannot do it. Ask the person
+  to do it in Cadrumo. An operation listed beside it that needs a secret, or
+  that administers keys, is refused to you as the person's act too.
 - `none` in both columns means the command has no work to do for you: it
   prints help, or it starts the terminal interface.
 - A command's options are not the operation's fields. Read the operation's
@@ -107,7 +115,11 @@ def render_command_operation_reference(join: CommandOperationJoin) -> str:
     lines = [_HEADER]
     for row in join.commands:
         operations = ", ".join(f"`{operation_id}`" for operation_id in row.operation_ids) or NO_OPERATION
-        routes = _ROUTE_SEPARATOR.join(spelled_route(route) for route in other_frontend_routes(row)) or NO_ROUTE
+        routes = (
+            PERSON_ROUTE
+            if row.cli_path in PERSON_ACT_COMMANDS
+            else _ROUTE_SEPARATOR.join(spelled_route(route) for route in other_frontend_routes(row)) or NO_ROUTE
+        )
         lines.append(f"| `{spelled_command(row.cli_path)}` | {operations} | {routes} |\n")
     lines.append(_UNSUBMITTED_HEADER)
     lines.extend(f"- `{row.operation_id}`\n" for row in join.operations if not row.cli_paths)
@@ -164,6 +176,18 @@ def read_command_tool_routes(text: str) -> dict[str, tuple[ToolRoute, ...]]:
             raise ValueError(f"command has more than one row: {command!r}")
         routed = command_row["routes"]
         routes[command] = (
-            () if routed == NO_ROUTE else tuple(_read_route(item) for item in routed.split(_ROUTE_SEPARATOR))
+            ()
+            if routed in {NO_ROUTE, PERSON_ROUTE}
+            else tuple(_read_route(item) for item in routed.split(_ROUTE_SEPARATOR))
         )
     return routes
+
+
+def read_person_act_commands(text: str) -> frozenset[str]:
+    """Read back the spelled commands whose row says their work is the person's own act."""
+    commands: set[str] = set()
+    for line in text.splitlines():
+        command_row = _COMMAND_ROW.match(line)
+        if command_row is not None and command_row["routes"] == PERSON_ROUTE:
+            commands.add(str(command_row["command"]))
+    return frozenset(commands)
