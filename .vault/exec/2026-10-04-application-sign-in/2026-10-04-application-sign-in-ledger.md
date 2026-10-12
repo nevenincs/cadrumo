@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:2ea92809efafa0b9c7f7b85cf7588f3854f15b49f479d52f611379a3f035fe9a'
+body_hash: 'sha256:724cedf22d1f59620e15e51134929e73eaed5df923e64c46af2a1843d3513b4c'
 related:
   - "[[2026-10-04-application-sign-in-plan]]"
 ---
@@ -238,6 +238,12 @@ related:
 - `S11` `verify:` `just check-types (31 ty findings in dev/ and adapters/local_runtime/tests/test_posix.py, none in this Step's files)` -> `fail`
 - `S11` `verify:` `just check-import-boundaries (unavailable: governed tree changed mid-run)` -> `fail`
 - `S11` `verify:` `adapters/local_runtime test_session_events and entrypoints/runtime test_session_events in that run` -> `pass`
+- `S16` `verify:` `focused sign-in pytest over 28 runtime/adapter/CLI/TUI modules -n 4: 343 passed 7 failed; 6 of 7 pass rerun -n0 (load deadline timeouts), 1 fixed under S13` -> `pass`
+- `S16` `verify:` `just check-style` -> `pass`
+- `S16` `verify:` `just check-format (4 findings, none in this Step's files)` -> `fail`
+- `S16` `verify:` `just check-types (31 ty findings in dev/ and adapters/local_runtime/tests/test_posix.py, none in this Step's files)` -> `fail`
+- `S16` `verify:` `just check-import-boundaries (unavailable: governed tree changed mid-run)` -> `fail`
+- `S16` `verify:` `test_runtime_session, test_runtime_admission, test_runtime_account_factories in that run` -> `pass`
 
 ## Notes
 
@@ -256,3 +262,4 @@ related:
 - `S08` Implemented before this ledger resumed `(profile_connection_sessions,` `entrypoints/runtime/sign_in_status.py);` closed on test evidence.
 - `S10` Implemented before this ledger resumed `(session_authority_core` retire point with SessionRetirementKind); closed on test evidence.
 - `S11` Implemented before this ledger resumed `(runtime_frame_io` event frames, `session_events` queue bound 64, `server_connection_handling,` `runtime_verified_transport);` closed on test evidence.
+- `S16` Implemented before this ledger resumed (tui `runtime_session,` app, `runtime_account);` closed on test evidence.
