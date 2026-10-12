@@ -253,6 +253,8 @@ def test_receipt_resume_avoids_prompt_and_preserves_deadlines(monkeypatch: Monke
     client = _RuntimeClient(profile_id, receipt=_receipt(resumed=True))
     client.resume_refusal = False
     _install_client(monkeypatch, client)
+    # A console that could prompt is present; the receipt must still make prompting unnecessary.
+    monkeypatch.setattr("cadrumo.entrypoints.cli.config.secure_input.terminal_can_prompt_for_secrets", lambda: True)
     monkeypatch.setattr(
         "cadrumo.entrypoints.cli.config.secure_input.prompt_secret_no_echo", lambda _: pytest.fail("prompted")
     )
@@ -289,6 +291,7 @@ def test_candidate_selection_conflict_keeps_other_profile_selected(monkeypatch: 
     client.resume_refusal = False
     client.on_status = lambda: _select(second_id)
     _install_client(monkeypatch, client)
+    monkeypatch.setattr("cadrumo.entrypoints.cli.config.secure_input.terminal_can_prompt_for_secrets", lambda: True)
 
     with pytest.raises(ActiveProfilePointerTransactionError):
         _login_through_the_prompt(_ctx(), name=str(first_id), machine_secret=None)
@@ -379,6 +382,11 @@ def test_installed_cli_resumes_other_profile_without_retiring_original(
     monkeypatch: MonkeyPatch, _isolated_cli_backend: Path
 ) -> None:
     """One process owns the in-memory keyring; runtime, pipes and worker remain real."""
+    # Only a CLI attached to a terminal resumes a saved sign-in; prompting would fail the test.
+    monkeypatch.setattr("cadrumo.entrypoints.cli.config.secure_input.terminal_can_prompt_for_secrets", lambda: True)
+    monkeypatch.setattr(
+        "cadrumo.entrypoints.cli.config.secure_input.prompt_secret_no_echo", lambda _: pytest.fail("prompted")
+    )
     keyring = _Keyring()
     monkeypatch.setattr(receipt_store, "_keyring", lambda: (keyring, _KeyringError, _KeyringError))
     passphrase = dev_test_database_password()
