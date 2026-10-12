@@ -256,8 +256,10 @@ class _Worker(ProfileWorkerHumanAdmission):
         authorization: WorkerAuthorizationOwner | None = None,
         worker_script: Path | None = None,
         wall_clock=now,
+        runtime_server_starter: Callable[[], int | None] | None = None,
     ) -> None:
-        del wall_clock
+        # This worker runs in the runtime's own interpreter, so nothing contains a server it would start.
+        del wall_clock, runtime_server_starter
         if authorization is None or worker_script is not None:
             raise AssertionError("portable worker requires its runtime owner and no external script")
         oracle = current_active_bucket_session()
