@@ -42,6 +42,10 @@ _UNAVAILABLE_OPERATION = frozenset(
         RuntimeRefusalCode.INVALID_FRAME.value,
     }
 )
+# Reading one contract is one exchange with the runtime, and an exchange cut short
+# by its deadline closes the connection and the session it holds. A search's own
+# budget is therefore checked between reads, and each read is bounded by itself.
+_CONTRACT_READ_SECONDS = 10.0
 
 
 def search_operations(
@@ -133,7 +137,7 @@ def _listed_page(
         # A late page ends early and resumes from the cache instead of failing.
         if len(rows) >= limit or (examined and time.monotonic() >= deadline):
             break
-        description = _described(client, contracts, definition_id, deadline, unavailable)
+        description = _described(client, contracts, definition_id, unavailable)
         examined += 1
         if description is not None:
             rows.append(description)
@@ -159,7 +163,7 @@ def _ranked_page(
         # Contracts already read stay cached, so a retry resumes where this stopped.
         if time.monotonic() >= deadline:
             raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
-        description = _described(client, contracts, definition_id, deadline, unavailable)
+        description = _described(client, contracts, definition_id, unavailable)
         if description is not None:
             permitted.append(description)
     ranked = rank_operations(query, permitted)
@@ -181,11 +185,10 @@ def _described(
     client: RuntimeFrontendClient,
     contracts: OperationContractCache,
     definition_id: str,
-    deadline: float,
     unavailable: list[dict[str, str]],
 ) -> OperationPublicDefinitionDescriptionV1 | None:
     try:
-        return contracts.description(client, definition_id, deadline=deadline)
+        return contracts.description(client, definition_id, deadline=time.monotonic() + _CONTRACT_READ_SECONDS)
     except (RuntimeFrontendRefusedError, RuntimeRefusalError) as error:
         code = refusal_code(error)
         if code in _NOT_OFFERED:

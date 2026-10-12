@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from datetime import timedelta
 from types import SimpleNamespace
 from typing import NoReturn, cast, override
@@ -30,6 +31,7 @@ from cadrumo.application.operations.registry import (
     OperationPublicDefinitionDescriptionV1,
     OperationRegistry,
 )
+from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.user_profile.access_contracts import (
     AccessScope,
     AuthorityState,
@@ -37,6 +39,7 @@ from cadrumo.application.user_profile.access_contracts import (
     ProfileAccessStatus,
 )
 from cadrumo.core.time.clock import now
+from cadrumo_harness.mcp import admitted_operations
 from cadrumo_harness.mcp import runtime_adapter as mcp_runtime
 from cadrumo_harness.mcp.operation_contract_cache import OperationContractCache
 from cadrumo_harness.mcp.public_operation_discovery import discover_public_operations, shipped_public_descriptions
@@ -214,6 +217,65 @@ async def test_search_refuses_when_a_description_fails_for_a_reason_other_than_s
     finally:
         await adapter.close()
     assert result == {"outcome": "refused", "code": "session_expired"}
+
+
+class _SlowConnectionClient(_AdmittedClient):
+    """A runtime connection whose contract reads take time and close it when cut short.
+
+    The transport closes a connection whose exchange outlives its deadline, and
+    the session goes with it; this double keeps that rule.
+    """
+
+    def __init__(self, profile_id: UUID, registry: OperationRegistry, *, read_seconds: float) -> None:
+        super().__init__(profile_id, registry)
+        self.read_seconds = read_seconds
+        self.cut: list[str] = []
+
+    def _require_open(self) -> None:
+        if self.cut:
+            raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+
+    @override
+    def status(self) -> SimpleNamespace:
+        self._require_open()
+        return super().status()
+
+    @override
+    def describe(self, definition_id: str, *, deadline: float) -> OperationPublicDefinitionDescriptionV1:
+        self._require_open()
+        time.sleep(self.read_seconds)
+        if time.monotonic() > deadline:
+            self.cut.append(definition_id)
+            raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+        return super().describe(definition_id, deadline=deadline)
+
+
+@pytest.mark.anyio
+async def test_a_search_out_of_time_keeps_the_session_and_resumes_from_what_it_read(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A search longer than its budget refuses between reads, and a retry finishes from the cache."""
+    profile_id = uuid4()
+    client = _SlowConnectionClient(profile_id, _registry(), read_seconds=0.06)
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    try:
+        with monkeypatch.context() as budget:
+            # Four contract reads cannot fit; the first read already reaches past the budget.
+            budget.setattr(admitted_operations, "_TIMEOUT", 0.05)
+            late = await adapter.call("search", {"query": "ledger"})
+        assert client.cut == []
+        assert late == {"outcome": "refused", "code": RuntimeRefusalCode.DEADLINE_EXCEEDED.value}
+        found = await adapter.call("search", {"query": "ledger"})
+    finally:
+        await adapter.close()
+    assert client.cut == []
+    assert sorted(_definition_ids(found)) == [
+        LEDGER_ATTACH_OPERATION_DEFINITION_ID,
+        LEDGER_DETACH_OPERATION_DEFINITION_ID,
+    ]
+    assert "session" not in found
+    # Contracts read before the refusal are not read again.
+    assert [client.described.count(definition_id) for definition_id in _PERMITTED_IDS] == [1, 1, 1]
 
 
 _PERMITTED_IDS = sorted(
