@@ -13,9 +13,9 @@ related:
   - '[[2026-08-13-cli-action-envelope-successor-adr]]'
   - '[[2026-09-04-tui-architecture-authenticated-tui-visibility-adr]]'
   - '[[2026-09-14-registry-authority-artifact-boundary-indexed-storage-adr]]'
-modified: '2026-10-03'
+modified: '2026-10-12'
 body_schema: body-v2
-body_hash: 'sha256:a659e25721b9086c8fc3a54a567ad753d3579f9d8a2185e2f18c41d4aacfecb5'
+body_hash: 'sha256:81fabe98b73d53395868dc38ac6a94f87d4efea1d573b99e772ba8a81ad86842'
 ---
 
 # `mcp-purpose-authentication` plan
@@ -95,8 +95,8 @@ Make each interface independently operate every key, authentication and lock cap
 
 Connect agents to the shared authority, remove the old MCP paths and verify autonomous operation and recovery across all supported platforms.
 
-- [ ] `P05.S16` - Replace MCP bootstrap and dispatch with a client-owned stdio adapter for the shared runtime, protected credential references and exact session binding; expose status, authorization requests and registered discovery/execute/result projections with identical guards on every tool/resource path; `src/cadrumo_harness/mcp/main.py, server.py, runtime client integration and owning MCP protocol tests`.
-- [ ] `P05.S17` - Integrate canonical published-authority queries and pinned operation provenance into MCP; preserve readiness grades and separate AEAT authentication/needs-user outcomes; prove generation consistency, corrupt-publication refusal and that local API keys never reach provider requests; `MCP projections, src/cadrumo/domain/calculations/registry/authority.py consumed through its owning application boundary, src/cadrumo/application/auth/sessions.py and registered domain operation projections`.
+- [x] `P05.S16` - Replace MCP bootstrap and dispatch with a client-owned stdio adapter for the shared runtime, protected credential references and exact session binding; expose status, authorization requests and registered discovery/execute/result projections with identical guards on every tool/resource path; `src/cadrumo_harness/mcp/main.py, server.py, runtime client integration and owning MCP protocol tests`.
+- [x] `P05.S17` - Integrate canonical published-authority queries and pinned operation provenance into MCP; preserve readiness grades and separate AEAT authentication/needs-user outcomes; prove generation consistency, corrupt-publication refusal and that local API keys never reach provider requests; `MCP projections, src/cadrumo/domain/calculations/registry/authority.py consumed through its owning application boundary, src/cadrumo/application/auth/sessions.py and registered domain operation projections`.
 - [ ] `P05.S18` - Delete displaced identity-flag admission, password-file bootstrap/forwarding, wrapper execution and unsafe timeout/process paths after replacement wiring; remove their options/tests and regenerate installed references; document enrollment, unattended access, locks and revocation without secret-bearing examples or runtime-management controls; `displaced MCP modules and actual consumers identified by the live census, owning documentation generators`.
 - [ ] `P05.S19` - Prove full cross-interface parity and autonomous recovery against real synthetic encrypted profiles: create/rotate/revoke across CLI/TUI, reconnect through MCP after human timeout, race lock/revocation with work, and retain domain/filing refusals; fix integrated defects and complete the rolling review; `existing CLI/TUI/MCP owning integration-test directories and runtime/profile integration tests, application operation and storage implementations under test`.
 - [ ] `P05.S20` - Complete installed Windows/macOS/Linux acceptance, package/import/locale/schema/reference gates and the final integrated review; record actual commands and platform evidence, preserve unrelated baseline failures, and close only when all declared lifecycle and custody obligations pass; `runtime/MCP installed tests, pyproject.toml, repository-owned quality/packaging commands and this plan's execution ledger/audit`.

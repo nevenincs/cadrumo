@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#mcp-purpose-authentication'
 date: '2026-09-26'
-modified: '2026-10-10'
+modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:889846c00422ea1d3d1bd8f6482f2d2cba3fda6bbd0711afe94eb15081e9ef59'
+body_hash: 'sha256:d65ab1405950869ea5d745fa29ab6d3e083fd41b147d976e6200badb2eb44aa7'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-plan]]"
 ---
@@ -6247,6 +6247,32 @@ related:
 - `S10` `by:` `root`
 - `S17` `M` `src/cadrumo_harness/mcp/tests/test_runtime_authority.py`
 - `S17` `by:` `root`
+- `S17` `M` `src/cadrumo/application/reference_catalogue.py`
+- `S17` `M` `src/cadrumo/application/tests/test_reference_catalogue.py`
+- `S17` `M` `src/cadrumo_harness/mcp/authority_query.py`
+- `S17` `M` `src/cadrumo_harness/mcp/corpus_query.py`
+- `S17` `M` `src/cadrumo_harness/mcp/payload_vocabulary.py`
+- `S17` `verify:` `pytest -m '(unit or integration) and not perf' mcp test_runtime_authority/test_corpus_search_tool/test_describe_payload_vocabulary/test_server_shutdown_release/test_provider_authority_boundary + application test_reference_catalogue*/test_apoderado_scopes_payload (76 passed, run 20261012T050520.532450Z-pytest-17400-9a3416cf)` -> `pass`
+- `S17` `verify:` `pytest portable harness population src/cadrumo_harness/mcp/tests (439 passed, 0 failed, run 20261012T050648.435176Z-pytest-19044-8f6dc8d1)` -> `pass`
+- `S17` `verify:` `ruff format/check, ty, pyrefly, basedpyright on the five changed files` -> `pass`
+- `S17` `verify:` `just check-style` -> `pass`
+- `S17` `verify:` `just check-import-boundaries` -> `fail`
+- `S17` `verify:` `just check-format` -> `fail`
+- `S17` `verify:` `just check-types` -> `fail`
+- `S16` `verify:` `pytest portable harness population src/cadrumo_harness/mcp/tests incl. test_installed_stdio (439 passed, 0 failed, run 20261012T050648.435176Z-pytest-19044-8f6dc8d1)` -> `pass`
+- `S16` `verify:` `pytest -n0 -m '(windows_only or os_keychain)' harness installed cases: test_installed_sign_in_resume 1 passed, test_installed_secret_by_reference typed-secret journey 1 passed, 2 credential-store cases skipped (run 20261012T050853.038545Z-pytest-92068-c2be72ee)` -> `pass`
+- `S12` `verify:` `pytest portable CLI automation/access-management tests (parser, schema, secret channel, non-disclosure; within 672 passed, run 20261012T050648.435176Z-pytest-19044-8f6dc8d1)` -> `pass`
+- `S12` `verify:` `pytest -n0 -m '(windows_only or os_keychain)' test_runtime_automation_{create,list,decision,change}_native.py (run 20261012T050853.038545Z-pytest-92068-c2be72ee)` -> `fail`
+- `S13` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_login.py`
+- `S13` `verify:` `pytest test_runtime_login.py non-installed cases (14 passed with S15 file, run 20261012T052850.079344Z-pytest-55208-5f3e28c4)` -> `pass`
+- `S13` `verify:` `pytest test_session_lifecycle_roundtrip/test_profile_session_root_resume/test_profile_authentication_gate (22 passed, 7 failed runtime_unavailable/endpoint_not_ready, run 20261012T052922.433461Z-pytest-21600-3598f457)` -> `fail`
+- `S13` `verify:` `pytest -n0 native test_runtime_access_management_native, test_runtime_api_key_authentication, test_runtime_sign_in_native, test_installed_cli_resumes_other_profile (run 20261012T050853.038545Z-pytest-92068-c2be72ee)` -> `fail`
+- `S15` `M` `src/cadrumo/entrypoints/tui/secret/tests/test_runtime_login_diagnostics.py`
+- `S15` `verify:` `pytest test_runtime_login_diagnostics.py (8 passed after fix)` -> `pass`
+- `S15` `verify:` `pytest -n0 native test_runtime_restricted_destinations_native and test_runtime_reference_login (run 20261012T050853.038545Z-pytest-92068-c2be72ee)` -> `pass`
+- `S15` `verify:` `pytest -n0 native test_runtime_login_native, test_runtime_automation_requester_native, test_runtime_password_rotation, test_runtime_workbench_native installed cases (run 20261012T050853.038545Z-pytest-92068-c2be72ee)` -> `fail`
+- `S18` `verify:` `pytest dev/docs/tests/test_cli_reference_pages_are_not_stubs.py test_cli_anchor_parity.py (6 passed)` -> `pass`
+- `S18` `verify:` `python -m dev.docs.sequences check --page how-to/connect-an-agent` -> `fail`
 
 ## Notes
 
@@ -7286,3 +7312,15 @@ related:
 - `S10` All six selected Windows native cases have now passed on post-merge source with fresh noneditable installs. sdk-autonomous failed once in V9 (fresh MCP server started unauthenticated against the supervisor-recovered host; denial code not captured) and then passed 4 of 4 in V10 with identical product code: an intermittent admission race after crash recovery is suspected but unproven. The status helper now reports the full status document, so a recurrence will show its denial. Remaining S10 obligations still unproven: complete eligible-login inventory with unreadable LSA rows and last-eligible-logout, and full descendant/handle-inheritance containment; cold-start latency `(~95` s fresh install vs 75 s budget) remains a recorded finding.
 - `S10` Recover omitted historical S10 change rows from baseline snapshot 90d55a9a7e77fd622dc19eb2cfaae3ff106e1763; these record past work and do not restore current runtime administration.
 - `S17` Recover original historical S17 change evidence omitted after preservation; baseline snapshot 90d55a9a7e77fd622dc19eb2cfaae3ff106e1763 records this row. Current S01 separately verifies the adapted runtime-authority tests.
+- `S17` The harness no longer opens the published authority itself: application `reference_catalogue.read_pinned_reference` owns the pin and returns the report with the generation taken while the pin is held; authority, corpus and payload-vocabulary projections consume it, and no harness module but server.py (out of this session's edit scope, release only) imports registry/authority.py.
+- `S17` Generation consistency, descriptor cutover, missing and corrupt publication refusal are proven by `test_runtime_authority.py` through the real path; local API keys never reaching provider requests is proven by `test_provider_authority_boundary.py` (delivered key, native items and unlock bytes absent from selector, provider arguments, logs, argv, env and files).
+- `S17` Gate failures are not from this change: import gate 15/15 contracts kept, 198 test-scoped private-import findings plus a graph census mismatch; format names calendar.py, `profile_host.py,` `test_supervised_runtime.py;` ty 31 diagnostics in dev/ and `test_posix.py.` None names a file changed here.
+- `S16` Closed on verification of existing code. server.py registers only `list_tools` and `call_tool,` both through RuntimeMcpAdapter; it registers no MCP resources or prompts, so identical guards on every tool/resource path is a claim about tools only.
+- `S16` Unproven here: the credential-store-backed installed reference cases skipped because this shell's logon session has no Credential Manager (WinError 1312); they remain S20 installed acceptance.
+- `S12` Left open: every installed CLI key-lifecycle case failed in this shell, whose logon session has no Credential Manager (WinError 1312, `session_not_persisted` notices, runtime deadline). Native create/list/inspect/approve/decline/rotate/renew/change-scope/revoke acceptance needs a rerun from the signed-in desktop: just test-windows plus just test-os-keychain.
+- `S13` Two receipt-resume tests assumed an interactive console; since the early no-channel refusal they failed off a terminal. They now pin the console as present, which is what they assert about (no prompt despite one being possible).
+- `S13` Left open: global lock, resume and installed timeout behaviour were not proven here; the native cases failed on the missing Credential Manager (WinError 1312) and runtime deadlines, and seven root-resume cases on `runtime_unavailable` while another session ran a live runtime.
+- `S15` The diagnostics fault port lacked `subscribe_lifecycle_notices,` which the login screen calls since the idle-upgrade notice change, so the credential refusal surfaced as `unexpected_login_failure;` the port now answers with a no-op subscription.
+- `S15` Left open: restricted-key login reaching no human-only administration passed natively, but cold global-lock recovery and installed lock/resume journeys failed here on runtime deadline and the missing Credential Manager (WinError 1312); rerun from the signed-in desktop.
+- `S18` Displaced identity-flag, password-file, wrapper and process paths are absent from `src/cadrumo_harness` by search; cadrumo-mcp accepts only profile, credential-reference, surface and held-secret options.
+- `S18` Left open: the guide's sequence check refused because .authority is stale against current legal sources; republishing the shared authority was not done while another session runs a live runtime. Needs publish-authority --if-stale, then the page check.
