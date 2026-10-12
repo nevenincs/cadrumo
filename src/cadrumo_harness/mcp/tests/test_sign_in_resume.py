@@ -51,6 +51,7 @@ from cadrumo_harness.mcp.protocol_contract import (
 )
 from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_harness.mcp.runtime_admission import (
+    ATTENDABLE_REFUSALS,
     McpAdmission,
     require_exact_admitted_status,
     selected_profile_id,
@@ -95,6 +96,7 @@ class _SignInConnection:
         self._receivers: list[Callable[[], None]] = []
         self.described: list[str] = []
         self.close_count = 0
+        self.asked: str | None = None
 
     @property
     def session_id(self) -> UUID:
@@ -103,11 +105,19 @@ class _SignInConnection:
         return self._session
 
     def resume_receipt(self) -> None:
-        assert self.close_count == 0
+        assert self.close_count == 0 and self.asked is None
+        self.asked = "resume"
         self._runtime.resumes += 1
         if self._runtime.refusal is not None:
             raise self._runtime.refusal
         self._session = uuid4()
+
+    def request_attendance(self) -> None:
+        """Answer as the runtime does when nobody holds a sign-in that could attend this connection."""
+        assert self.close_count == 0 and self.asked is None
+        self.asked = "attendance"
+        self._runtime.attendance_asks += 1
+        raise RuntimeFrontendRefusedError(AccessDenialCode.AUTHENTICATION_REQUIRED.value)
 
     def subscribe_session_retirement(self, receive: Callable[[], None]) -> Callable[[], None]:
         self._receivers.append(receive)
@@ -171,6 +181,7 @@ class _Runtime:
         self.refusal: Exception | None = None
         self.holds_a_write = False
         self.resumes = 0
+        self.attendance_asks = 0
         self.opened: list[_SignInConnection] = []
         self.options: list[dict[str, object]] = []
 
@@ -181,9 +192,14 @@ class _Runtime:
         return cast(RuntimeFrontendClient, connection)
 
     @property
+    def resumed(self) -> list[_SignInConnection]:
+        """The connections on which a resume was asked, in the order they were opened."""
+        return [connection for connection in self.opened if connection.asked == "resume"]
+
+    @property
     def attempts(self) -> tuple[int, int]:
-        """How many connections were opened and how many resumes were asked on them."""
-        return len(self.opened), self.resumes
+        """How many connections were opened to resume, and how many resumes were asked on them."""
+        return len(self.resumed), self.resumes
 
 
 @pytest.fixture
@@ -322,12 +338,15 @@ async def test_a_profile_call_with_nobody_signed_in_returns_the_refusal_after_on
 ) -> None:
     profile_id = uuid4()
     runtime.refusal = refusal
+    # Only a refusal that leaves a person's held sign-in as the way in goes on to ask for attendance.
+    attends = int(code in ATTENDABLE_REFUSALS)
     adapter = _adapter()
     try:
         with _selection(tmp_path, profile_id):
             assert await adapter.call(*_PROFILE_CALL) == _refused(code, **facts)
             assert runtime.attempts == (1, 1)
-            assert runtime.opened[0].close_count == 1
+            assert runtime.attendance_asks == attends
+            assert runtime.resumed[0].close_count == 1
             assert adapter.client is None and adapter.admission is None
             assert await adapter.call("status", {}) == _no_session(profile_id, code, **facts)
             # The status call needed the profile too, so it asked once more and no more than once.
@@ -335,10 +354,11 @@ async def test_a_profile_call_with_nobody_signed_in_returns_the_refusal_after_on
             # Discovery asks the runtime for the session once as well, and is refused without one.
             assert await adapter.call("describe", {"definition_id": _READ}) == _refused(code, **facts)
             assert runtime.attempts == (3, 3)
+            assert runtime.attendance_asks == 3 * attends
     finally:
         await adapter.close()
-    assert [connection.close_count for connection in runtime.opened] == [1, 1, 1]
-    assert runtime.options == [{"profile_id": profile_id, "frontend": _MCP}] * 3
+    assert [connection.close_count for connection in runtime.opened] == [1] * 3 * (1 + attends)
+    assert runtime.options == [{"profile_id": profile_id, "frontend": _MCP}] * 3 * (1 + attends)
 
 
 @pytest.mark.anyio
@@ -405,7 +425,7 @@ async def test_a_retired_session_is_dropped_and_the_next_call_asks_the_runtime_o
     try:
         with _selection(tmp_path, profile_id):
             assert await adapter.call("search", {}) == _FOUND
-            first = runtime.opened[0]
+            first = runtime.resumed[0]
             assert first.described == [_READ]
             first.retire()
             # Nothing happens until a call needs the profile: the notice starts no attempt of its own.
@@ -416,7 +436,7 @@ async def test_a_retired_session_is_dropped_and_the_next_call_asks_the_runtime_o
             after = await adapter.call("search", {}) if admitted_again else await adapter.call(*_PROFILE_CALL)
             assert first.close_count == 1
             assert runtime.attempts == (2, 2)
-            second = runtime.opened[1]
+            second = runtime.resumed[1]
             if admitted_again:
                 assert after == _FOUND
                 assert adapter.client is second and adapter.admission is McpAdmission.SIGN_IN

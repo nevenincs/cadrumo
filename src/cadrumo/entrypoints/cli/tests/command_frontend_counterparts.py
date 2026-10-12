@@ -287,6 +287,7 @@ PERSON_ACT_COMMANDS: Final[Mapping[CliPath, PersonAct]] = MappingProxyType(
         ("config", "profile", "sessions"): PersonAct(_SESSIONS),
         ("config", "reset", "resume"): PersonAct(_INSTALLATION),
         ("config", "reset", "start"): PersonAct(_INSTALLATION),
+        ("config", "sign-in-hold"): PersonAct(_SIGN_IN),
         ("config", "sign-in-status"): PersonAct(_SIGN_IN),
     }
 )

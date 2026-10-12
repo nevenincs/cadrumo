@@ -364,6 +364,7 @@ without its options and arguments.
 | `aeat config reset resume` | none | the person's act |
 | `aeat config reset start` | none | the person's act |
 | `aeat config reset status` | none | the person's act |
+| `aeat config sign-in-hold` | none | the person's act |
 | `aeat config sign-in-status` | none | the person's act |
 | `aeat config storage check` | none | the person's act |
 | `aeat config storage init` | none | the person's act |
