@@ -25,7 +25,6 @@ encrypted profile and a native worker with synthetic OS/store observations:
 
 from __future__ import annotations
 
-import json
 import sys
 from collections.abc import Iterator, Sequence
 from datetime import date
@@ -35,14 +34,13 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from ....core.config import load_settings
 from ....domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from .cli_runner import invoke_cached_cli as _invoke_cached_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
+from .modelo_profile_seed import invoke_seeded_profile_cli
 from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 pytestmark = [
@@ -126,16 +124,8 @@ def _seed_natural_person_profile(runtime_profile: NativeCliProfileFixture) -> No
 
 
 def invoke_cached_cli(args: Sequence[str]) -> Result:
-    """Supply a fresh verified password only for the descendant runtime verbs."""
-    target = ("config", "profile", "descendiente")
-    if any(tuple(args[index : index + 3]) == target for index in range(len(args) - 2)):
-        return _invoke_cached_cli(
-            ("--profile", _PROFILE_LABEL, "--profile-secrets-stdin", *args),
-            input=json.dumps(
-                {"profile_passphrase": load_settings().cadrumo_dev_test_database_password.get_secret_value()}
-            ),
-        )
-    return _invoke_cached_cli(args)
+    """Run each command as the registered profile's operator, through its joined runtime."""
+    return invoke_seeded_profile_cli(args)
 
 
 def _registry_first_tranche(year: int) -> Decimal:
@@ -193,7 +183,7 @@ def test_descendiente_add_then_calculate_computes_the_registry_tranche(
     # whose own message names a different one.
     notices = unwrap_envelope_notices(calc_result.output)
     advisories = [n for n in notices if n["code"] == "modelo.work.calculate.source_advisory"]
-    kinds = {n.get("context", {}).get("source_kind") for n in advisories}
+    kinds = {(n.get("context") or {}).get("source_kind") for n in advisories}
 
     # The declared descendant is exactly what this advisory exists NOT to fire on.
     assert "minimo_descendientes_undeclared" not in kinds, (
@@ -236,7 +226,7 @@ def test_undeclared_descendientes_advisory_fires_when_0513_is_zero(
         n
         for n in notices
         if n["code"] == "modelo.work.calculate.source_advisory"
-        and n.get("context", {}).get("source_kind") == "minimo_descendientes_undeclared"
+        and (n.get("context") or {}).get("source_kind") == "minimo_descendientes_undeclared"
     ]
     assert len(fired) == 1, f"expected exactly one undeclared-descendientes advisory; got notices={notices}"
     # The entry command rides on the notice context's `remedy`, which is where
@@ -281,7 +271,7 @@ def test_declared_but_ineligible_descendant_does_not_fire_the_advisory(
         n
         for n in notices
         if n["code"] == "modelo.work.calculate.source_advisory"
-        and n.get("context", {}).get("source_kind") == "minimo_descendientes_undeclared"
+        and (n.get("context") or {}).get("source_kind") == "minimo_descendientes_undeclared"
     ]
     assert fired == [], f"a declared (even if ineligible) descendant must not fire the advisory; got {fired}"
 
@@ -363,7 +353,7 @@ def test_descendiente_remove_drops_the_row_and_recomputes_to_zero(
         n
         for n in notices
         if n["code"] == "modelo.work.calculate.source_advisory"
-        and n.get("context", {}).get("source_kind") == "minimo_descendientes_undeclared"
+        and (n.get("context") or {}).get("source_kind") == "minimo_descendientes_undeclared"
     ]
     assert fired == [], f"an explicit descendientes_count=0 (written by remove) must not fire the advisory; got {fired}"
 
@@ -479,7 +469,7 @@ def test_an_annual_only_figure_in_the_turning_three_period_is_disclosed_not_sile
     fired = [
         n
         for n in unwrap_envelope_notices(calc_result.output)
-        if n.get("context", {}).get("source_kind") == "guarderia_spend_needs_monthly_detail"
+        if (n.get("context") or {}).get("source_kind") == "guarderia_spend_needs_monthly_detail"
     ]
     assert len(fired) == 1, f"the shape advisory must reach the operator; notices were {fired}"
     assert "GASTOS_GUARDERIA_MENSUAL" in (fired[0].get("context", {}).get("remedy") or "")
@@ -597,7 +587,7 @@ def test_declared_spend_without_the_mothers_months_is_disclosed_not_silent(
     fired = [
         n
         for n in unwrap_envelope_notices(calc_result.output)
-        if n.get("context", {}).get("source_kind") == "guarderia_madre_meses_undeclared"
+        if (n.get("context") or {}).get("source_kind") == "guarderia_madre_meses_undeclared"
     ]
     assert len(fired) == 1, f"the zero must be explained to the operator; notices were {fired}"
     assert "MESES_TRABAJO" in (fired[0].get("context", {}).get("remedy") or "")

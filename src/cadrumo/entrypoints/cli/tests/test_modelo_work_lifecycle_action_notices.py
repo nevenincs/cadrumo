@@ -20,10 +20,11 @@ from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ._modelo_work_ux_support import _create_m130_work_unit, _create_profile, _invoke
 from .cli_runner import semantic_cli_output
+from .modelo_profile_seed import seed_profile
 
-__all__ = ["_isolated_cli_backend"]
+__all__ = ["_isolated_cli_backend", "seed_profile"]
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("seed_profile")]
 
 _LOCALES = ("en", "es", "ca", "hu")
 

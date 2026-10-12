@@ -4,17 +4,18 @@ from __future__ import annotations
 
 import sys
 import traceback
-from collections.abc import Callable, Generator, Iterator, Mapping
+from collections.abc import Callable, Generator, Iterator, Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass
 from importlib.metadata import version
 from pathlib import Path
 from threading import Event, Lock
-from typing import Any, cast
+from typing import Any, Unpack, cast
 from uuid import UUID, uuid4
 
 import pytest
+from click.testing import Result
 from pydantic import BaseModel
 
 from ....adapters.local_runtime.installation import runtime_installation
@@ -43,6 +44,9 @@ from ....application.user_profile.access_errors import ProfileAccessRefusedError
 from ....application.user_profile.automation_custody_port import AutomationCustodyError
 from ....core.config import load_settings, override_settings
 from ...runtime.profile_connections import RuntimeProfileConnections
+from .cli_runner import ClickInvokeKwargs
+from .modelo_profile_seed import bind_profile_cli
+from .profile_password_cli import invoke_with_profile_password
 
 __all__ = [
     "RuntimeFailureObservation",
@@ -395,6 +399,15 @@ class NativeCliProfileFixture:
         register_cli_profile(label=label, facts=facts, log_in=False)
         self.scope.enter_context(native_cli_profile_server(self.storage_root, failure_observer=self.failure_observer))
         self.label = label
+        # Shared helpers that run commands without naming this fixture reach the
+        # same joined runtime, admitted the same way.
+        self.scope.enter_context(bind_profile_cli(self))
+
+    def invoke(self, args: Sequence[str], **kwargs: Unpack[ClickInvokeKwargs]) -> Result:
+        """Run one command as this profile's operator, sending its password where a sign-in would resume."""
+        if self.label is None:
+            raise AssertionError("register the profile before running its commands")
+        return invoke_with_profile_password(args, label=self.label, **kwargs)
 
 
 @contextmanager

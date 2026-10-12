@@ -28,10 +28,11 @@ from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
 from ._modelo_work_ux_support import _create_profile, _invoke
+from .modelo_profile_seed import seed_profile
 
-__all__ = ["_isolated_cli_backend"]
+__all__ = ["_isolated_cli_backend", "seed_profile"]
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("seed_profile")]
 
 _FILING_YEAR = 2026
 

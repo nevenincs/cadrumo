@@ -6,7 +6,6 @@ from datetime import date
 from decimal import Decimal
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from ....application.aggregation.invoice_retencion import InvoiceWithholdingEvidenceRequest
 from ....application.aggregation.retenciones import Modelo180PropertyEvidence, Modelo180StructuredAddress
 from ....application.aggregation.withholding_recognition import (
@@ -28,7 +27,7 @@ from ....domain.calculations.registry.withholding_bindings import WithholdingObs
 from ....domain.modelos.work_unit import WorkUnit
 from ....tests.cli_envelope import unwrap_schema_envelope
 from .modelo_cli import create_modelo_work_unit_via_cli
-from .modelo_profile_seed import invoke_seeded_profile_cli
+from .modelo_profile_seed import invoke_seeded_profile_cli, seed_test_profile
 
 _WIZARD_REGISTRATION_MODULES = (_wizard_catalogue, _wizard_persistence)
 _M111_PROFESSIONAL_NIF = "B12345674"
@@ -75,24 +74,22 @@ GB_NON_RESIDENT_PROFILE_FACTS: dict[str, str] = {
 
 
 def _create_profile(*, activity_start_date: str | None = None) -> None:
-    """Register the operator profile through the shared CLI registration door.
+    """Register the operator profile and join its runtime through the test's ``seed_profile`` fixture.
 
     Creation is a precondition here, not the subject: these tests exercise the
     modelo work UX against a profile that already exists.
     """
-    register_cli_profile(
-        label=_PROFILE_LABEL, facts=operator_profile_facts(activity_start_date=activity_start_date), log_in=False
-    )
+    seed_test_profile(label=_PROFILE_LABEL, facts=operator_profile_facts(activity_start_date=activity_start_date))
 
 
 def _create_gb_non_resident_profile() -> None:
     """Register the profile through the shared CLI registration door."""
-    register_cli_profile(label="operator", facts=GB_NON_RESIDENT_PROFILE_FACTS, log_in=False)
+    seed_test_profile(label="operator", facts=GB_NON_RESIDENT_PROFILE_FACTS)
 
 
 def _create_de_nonresident_legal_entity_profile() -> None:
     """Register the profile through the shared CLI registration door."""
-    register_cli_profile(
+    seed_test_profile(
         label="operator",
         facts={
             "taxpayer_type.entity_type": "legal_entity",
@@ -110,13 +107,12 @@ def _create_de_nonresident_legal_entity_profile() -> None:
             "iva.voluntary_sii_enrolled": "false",
             "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
-        log_in=False,
     )
 
 
 def _create_attribution_entity_intracom_profile() -> None:
     """Register the profile through the shared CLI registration door."""
-    register_cli_profile(
+    seed_test_profile(
         label="operator",
         facts={
             "taxpayer_type.entity_type": "attribution_entity",
@@ -125,7 +121,6 @@ def _create_attribution_entity_intracom_profile() -> None:
             "activities.description": "intracommunity operations",
             "iva.does_intracomunitario": "true",
         },
-        log_in=False,
     )
 
 

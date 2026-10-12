@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import asyncio
 import hmac
-import json
 import os
 import sys
 import time
@@ -47,7 +46,6 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import (
 )
 from cadrumo.adapters.persistence.storage.master_key.bucket_session import BucketSession
 from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
-from cadrumo.application.operator_surface.command_ports import ProfileAuthenticationPosture
 from cadrumo.application.runtime.contracts import (
     RuntimeByteChannel,
     RuntimePeer,
@@ -73,7 +71,6 @@ from cadrumo.application.user_profile.automation_custody_port import (
     AutomationSecretStore,
 )
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventory
-from cadrumo.core.config import load_settings
 from cadrumo.core.time.clock import now
 from cadrumo.core.time.utc import UtcInstant
 from cadrumo.domain.calculations.registry.authority_location import published_authority_generation
@@ -84,10 +81,9 @@ from cadrumo.entrypoints.runtime.profile_connections import RuntimeProfileConnec
 from cadrumo.entrypoints.runtime.profile_login import ProfileWorkerHumanLogin
 
 from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
-from .._profile_authentication_contract import profile_authentication_posture
-from ..command_specs import COMMAND_GRAPH
 from ..config import runtime_automation_request
-from .cli_runner import ClickInvokeKwargs, invoke_cached_cli
+from .cli_runner import ClickInvokeKwargs
+from .profile_password_cli import invoke_with_profile_password
 
 
 class _Buffer:
@@ -366,32 +362,7 @@ class PortableHumanCliRuntime:
 
     def invoke(self, args: Sequence[str], **kwargs: Unpack[ClickInvokeKwargs]) -> Result:
         """Preserve explicit root options and add only a missing human source."""
-        arguments = list(args)
-        spec = COMMAND_GRAPH.resolve_invocation(arguments)
-        if (
-            spec is None
-            or profile_authentication_posture(COMMAND_GRAPH.node(spec.key))
-            is not ProfileAuthenticationPosture.RESUME_FALLBACK
-        ):
-            return invoke_cached_cli(arguments, **kwargs)
-        if any(
-            token.startswith(("--profile-secrets-", "--profile-credential-ref", "--profile-auth-method"))
-            for token in arguments
-        ):
-            return invoke_cached_cli(arguments, **kwargs)
-        if "input" in kwargs and kwargs["input"] is not None:
-            raise AssertionError(
-                "human runtime will not overwrite explicit stdin; select its secret channel explicitly"
-            )
-        passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
-        if "--profile" not in arguments:
-            arguments[:0] = ["--profile", self.label]
-        arguments[:0] = ["--profile-secrets-stdin"]
-        invocation = cast(ClickInvokeKwargs, dict(kwargs))
-        invocation["input"] = json.dumps({"profile_passphrase": passphrase})
-        result = invoke_cached_cli(arguments, **invocation)
-        assert passphrase not in result.output
-        return result
+        return invoke_with_profile_password(args, label=self.label, **kwargs)
 
 
 @contextmanager

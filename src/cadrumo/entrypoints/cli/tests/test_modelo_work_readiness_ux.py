@@ -6,7 +6,6 @@ import json
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 
 from ....adapters.persistence.storage.tests.secure_sql import (
@@ -23,10 +22,11 @@ from ._modelo_work_ux_support import (
     _create_profile,
     _invoke,
 )
+from .modelo_profile_seed import seed_profile, seed_test_profile
 
-__all__ = ["_isolated_cli_backend"]
+__all__ = ["_isolated_cli_backend", "seed_profile"]
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("seed_profile")]
 
 _REPRESENTANTE_PROFILE_PATHS = frozenset(
     {
@@ -58,7 +58,7 @@ def _remove_representante_fields_from_operator_profile() -> None:
 
 
 def test_work_create_refuses_status_blocked_profile_missing_activity() -> None:
-    register_cli_profile(
+    seed_test_profile(
         label=_PROFILE_LABEL,
         facts={
             "taxpayer_type.entity_type": "natural_person",
@@ -69,7 +69,6 @@ def test_work_create_refuses_status_blocked_profile_missing_activity() -> None:
             "activities.description": "",
         },
         complete=False,
-        log_in=False,
     )
 
     status = _invoke(["--format", "json", "config", "profile", "status"])
@@ -104,7 +103,7 @@ def test_work_create_refuses_status_blocked_profile_missing_activity() -> None:
 
 def test_incomplete_setup_readiness_matches_work_create_and_names_completion_door() -> None:
     """Fact-complete is not operator-declared complete on either surface."""
-    register_cli_profile(label="issue-113-incomplete", complete=False, log_in=False)
+    seed_test_profile(label="issue-113-incomplete", complete=False)
 
     readiness = _invoke(
         [
@@ -274,7 +273,7 @@ def test_m210_work_create_refuses_legacy_non_eea_irnr_missing_representante() ->
 
 
 def test_work_create_not_applicable_m130_wins_over_pre_activity_for_irnr_profile() -> None:
-    register_cli_profile(
+    seed_test_profile(
         label=_PROFILE_LABEL,
         facts={
             "taxpayer_type.entity_type": "natural_person",
@@ -288,7 +287,6 @@ def test_work_create_not_applicable_m130_wins_over_pre_activity_for_irnr_profile
             "taxpayer_type.country_of_fiscal_residence": "FR",
             "censo.activity_start_date": "2026-07-15",
         },
-        log_in=False,
     )
 
     result = _invoke(

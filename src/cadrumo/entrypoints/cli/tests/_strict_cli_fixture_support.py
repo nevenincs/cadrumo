@@ -14,6 +14,7 @@ from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....core.config import override_settings
 from ._cli_surface_support import isolated_cli_surface_backend
+from .modelo_profile_seed import ProfileSeeder
 
 _DIAGNOSTICS_BUCKET_ID = "22222222-3333-4444-8555-666666666666"
 
@@ -30,17 +31,19 @@ def diagnostics_isolated_backend(tmp_path: Path) -> Iterator[None]:
 
 
 @pytest.fixture(name="_isolated_backend", autouse=True)
-def binding_isolated_backend(tmp_path: Path) -> Iterator[None]:
+def seeded_runtime_backend(seed_profile: ProfileSeeder) -> Iterator[None]:
+    """Register one password-custodied operator profile whose joined runtime admits each command.
+
+    Commands that submit registered operations reach records the test plants in
+    this profile's encrypted catalogues through the same runtime an operator's
+    command reaches. A module using this fixture also imports ``seed_profile``.
+    """
     dispose_engine()
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        open_test_profile_session("11111111-1111-4111-8111-111111111111"),
-    ):
-        try:
-            register_minimal_profile(profile_id="11111111-1111-4111-8111-111111111111")
-            yield
-        finally:
-            dispose_engine()
+    try:
+        seed_profile(label="operator", facts={})
+        yield
+    finally:
+        dispose_engine()
 
 
 @pytest.fixture(name="_isolated_backend", autouse=True)
