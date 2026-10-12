@@ -75,6 +75,7 @@ def test_leaf_machine_secret_inventory_remains_leaf_only_and_scope_disjoint() ->
     adopters = tuple(node for node in COMMAND_GRAPH.nodes() if node.spec.machine_secret is not None)
     assert {node.spec.result_schema.identity for node in adopters} == {
         "config.login",
+        "config.logout",
         "config.passphrase.change",
         "config.passphrase.reset",
         "config.profile.create",

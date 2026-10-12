@@ -13,7 +13,7 @@ from cadrumo.application.operator_surface.command_ports import ProfileAuthentica
 from ....core.config import override_settings
 from ....core.errors.hierarchy import InternalInvariantError
 from ....core.external_constants import OutputLanguage
-from ....core.i18n.render import tr
+from ....core.i18n.render import lookup_translation, tr
 from ....core.profile_session import ProfileSessionRefusalReason
 from .._profile_authentication_gate import _preflight_sources, _uses_runtime_profile_client
 from .._profile_authentication_notice import (
@@ -106,7 +106,12 @@ def test_every_resume_refusal_reason_has_an_operator_diagnostic() -> None:
             "cli.config.errors.profile_session_absent",
             "cli.config.errors.profile_session_custody_changed",
             "cli.config.errors.profile_session_expired",
-        }
+            "cli.config.errors.profile_session_outdated",
+            "cli.config.errors.profile_session_unreadable",
+            "errors.auth.auth_storage_keyring_unavailable",
+        }, reason
+        for language in OutputLanguage:
+            assert lookup_translation(key, locale=language.value), (reason, language)
 
 
 @pytest.mark.parametrize("language", tuple(OutputLanguage))

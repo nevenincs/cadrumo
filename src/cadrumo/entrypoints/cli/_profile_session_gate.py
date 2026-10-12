@@ -287,17 +287,11 @@ def activate_profile_session(
     command_path: tuple[str, ...],
     authenticate_root: RootAuthenticator,
 ) -> None:
-    """Apply write policy and exact-target session proof from parsed authority."""
-    from ._argument_only_refusals import refuse_on_arguments_alone
+    """Apply write policy and exact-target session proof from parsed authority.
 
-    # A refusal the arguments alone settle must precede the profile-bound write
-    # gate below. Otherwise an unsupported modelo is answered with "no active
-    # profile", sending the operator to build an environment for a request that
-    # is refused regardless of it. Dispatch has already opened the invocation's
-    # governed-fact scope, so an argument-only parse reads the generation the
-    # command itself will.
-    refuse_on_arguments_alone(spec, arguments)
-
+    The authentication gate has already raised any refusal the arguments alone
+    settle, before this or any runtime route.
+    """
     from ...adapters.persistence.storage.master_key.active_session import active_bucket_session_serves
     from ...application.storage_write_policy import inspect_storage_write_policy
     from ...core.bucket_pointer import resolve_active_bucket_id

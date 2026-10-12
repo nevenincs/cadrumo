@@ -699,6 +699,15 @@ def preflight_parsed_leaf(
             arguments=arguments,
         )
 
+    from ._argument_only_refusals import refuse_on_arguments_alone
+
+    # A refusal the arguments alone settle precedes every route that depends
+    # on profile or runtime state: the runtime admission below, as much as the
+    # profile-bound write gate, would otherwise answer an unsupported modelo
+    # with "no active profile". Dispatch has already opened the invocation's
+    # governed-fact scope, so an argument-only parse reads the generation the
+    # command itself will.
+    refuse_on_arguments_alone(spec, arguments)
     if _activate_runtime_leaf(
         ctx,
         spec,
