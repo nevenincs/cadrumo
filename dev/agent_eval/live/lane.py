@@ -279,6 +279,7 @@ def _work_run(
                 casillas=scenario.calculation.casillas,
                 bindings=scenario.calculation.bindings,
                 export_path=export_path,
+                joint_return_elected=scenario.calculation.joint_return_elected,
             )
             report.stop_reasons.append("completed" if outcome.completed else f"{outcome.stopped_at}:{outcome.refusal}")
             report.phases_completed = 1

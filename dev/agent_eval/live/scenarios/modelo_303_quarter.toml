@@ -6,15 +6,14 @@
 # 2.520 EUR of cuota: casillas 07 and 09, and the total devengado 27. No IVA is
 # deducted, so the quarter's result 71 equals the cuota.
 #
-# The person (the harness) states the profile facts at the command line; the
-# agent books the row and prepares the declaration up to a local export.
+# The person (the harness) states the profile facts at the command line and
+# answers the one question every 303 asks, whether a joint return is elected;
+# the agent books the row and prepares the declaration up to a local export.
+# The business starts in the filing year, so the profile itself proves there is
+# no compensation carried from before and no wallet decision is asked for. The
+# Modelo 390 exemption attestation belongs only to the last period (4T).
 
 name = "live-modelo-303-quarter"
-# Provisional: through the package on 2026-10-12 the IVA-bearing ledger add ended in an internal
-# command-line error, and the calculation was refused for missing ordinary 303 filing evidence (the
-# 390 exoneration attestation or the joint-return election). The lane reports this scenario
-# unavailable until its inputs are grounded.
-provisional = "the ordinary 303 filing evidence and the IVA ledger row are not yet grounded"
 modelo = "303"
 filing_year = 2026
 period = "1T"
@@ -35,7 +34,7 @@ tax-id = "12345678Z"
 name = "Daniel"
 surnames = "Persona"
 activity = "consultoria"
-activity-start-date = "2024-01-01"
+activity-start-date = "2026-01-01"
 irpf-income-categories = "actividad_economica"
 irpf-estimation-regime = "directa_normal"
 iva-regime = "GENERAL"
@@ -54,11 +53,12 @@ amount = "14520.00"
 direction = "INCOMING"
 description = "Factura consultoria primer trimestre con IVA"
 counterparty = "Cliente SA"
-classification = { business_classification = "BUSINESS", taxable_base = "12000", iva_rate = "21", iva_amount = "2520", irpf_category = "actividad_economica" }
+classification = { business_classification = "BUSINESS", taxable_base = "12000", iva_rate = "0.21", iva_amount = "2520", irpf_category = "actividad_economica" }
 
 [calculation]
 casillas = {}
 bindings = {}
+joint_return_elected = false
 
 [expected]
 casillas = { "07" = "12000.00", "09" = "2520.00", "27" = "2520.00" }
@@ -77,11 +77,12 @@ task = """
 Please prepare my Modelo 303 (IVA) for the first quarter of 2026. My profile is already set up.
 
 1. Book this ledger row and classify it as business income with IVA at the general rate
-   (business classification BUSINESS, taxable base 12000, IVA rate 21, IVA amount 2520,
+   (business classification BUSINESS, taxable base 12000, IVA rate 0.21 (that is 21 %, written as a fraction), IVA amount 2520,
    IRPF category actividad_economica):
    - 2026-02-15, incoming, 14520.00 EUR, "Factura consultoria primer trimestre con IVA", counterparty Cliente SA
 2. Create the Modelo 303 work unit for 2026, period 1T.
-3. Calculate it. If Cadrumo asks for a fact you do not have, tell me which one instead of guessing.
+3. Calculate it. I did not elect a joint return (tributación conjunta): answer that when Cadrumo asks.
+   If it asks for any other fact you do not have, tell me which one instead of guessing.
 4. Verify the calculation.
 5. Export it to this file: {export_path}
 Then tell me casillas 07, 09, 27 and 71 and confirm the export. Use "Synthetic Person" as the actor where one is

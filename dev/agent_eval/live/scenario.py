@@ -16,7 +16,7 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Final
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from cadrumo.core.toml import parse_toml
 
@@ -54,12 +54,17 @@ class LedgerRow(BaseModel):
 
 
 class CalculationInputs(BaseModel):
-    """The casilla and binding values the person supplies to the calculation."""
+    """The casilla and binding values and filing answers the person supplies to the calculation.
+
+    ``joint_return_elected`` is the person's answer to the one question every
+    Modelo 303 period asks; it stays ``None`` for a modelo that does not ask it.
+    """
 
     model_config = _FROZEN
 
     casillas: dict[str, str] = {}
     bindings: dict[str, str] = {}
+    joint_return_elected: bool | None = None
 
 
 class Expected(BaseModel):
@@ -128,6 +133,12 @@ class LiveScenario(BaseModel):
     prompt: Prompt
     provisional: str = ""
     """Why the scenario cannot run yet; a provisional scenario is reported unavailable, never run."""
+
+    @model_validator(mode="after")
+    def _303_answers_the_joint_return_question(self) -> LiveScenario:
+        if (self.modelo == "303") != (self.calculation.joint_return_elected is not None):
+            raise ValueError("a Modelo 303 scenario states the joint-return answer, and no other modelo does")
+        return self
 
     def profile_options(self) -> tuple[str, ...]:
         """The profile facts spelled as ``config profile edit`` options: a switch for a yes or no."""

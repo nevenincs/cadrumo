@@ -266,6 +266,7 @@ async def run_scripted(
     casillas: Mapping[str, str],
     bindings: Mapping[str, str],
     export_path: Path,
+    joint_return_elected: bool | None = None,
 ) -> ScriptedRun:
     """Prepare the declaration with the MCP tools alone, the way the parity test's agent does."""
     run = ScriptedRun()
@@ -316,21 +317,20 @@ async def run_scripted(
             },
         )
         run.work_unit_id = created["outcome"]["unit"]["work_unit_id"]
-        await _settle(
-            tools,
-            "modelo.work.calculate",
-            {
-                "definition_id": "modelo.work.calculate",
-                "payload": {
-                    "work_unit_id": run.work_unit_id,
-                    "actor": ACTOR,
-                    "caller_context": "explicit",
-                    "inputs": {
-                        "casilla_overrides": [{"key": key, "value": value} for key, value in casillas.items()],
-                        "binding_overrides": [{"key": key, "value": value} for key, value in bindings.items()],
-                    },
-                },
+        calculation: dict[str, Any] = {
+            "work_unit_id": run.work_unit_id,
+            "actor": ACTOR,
+            "caller_context": "explicit",
+            "inputs": {
+                "casilla_overrides": [{"key": key, "value": value} for key, value in casillas.items()],
+                "binding_overrides": [{"key": key, "value": value} for key, value in bindings.items()],
             },
+        }
+        if joint_return_elected is not None:
+            # The answer a person gives with --joint-return-elected / --no-joint-return-elected.
+            calculation["ordinary_m303_filing_evidence"] = {"joint_return_elected": joint_return_elected}
+        await _settle(
+            tools, "modelo.work.calculate", {"definition_id": "modelo.work.calculate", "payload": calculation}
         )
         for purpose, definition_id in (("verify", "modelo.work.verify"), ("export", "modelo.export")):
             selected = await _settle(

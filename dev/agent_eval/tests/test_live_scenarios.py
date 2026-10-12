@@ -59,3 +59,27 @@ def test_a_task_without_the_export_placeholder_is_refused(tmp_path: Path) -> Non
     source["prompt"]["task"] = "Export it somewhere."
     with pytest.raises(ValueError, match="export_path"):
         LiveScenario.model_validate(source, strict=False)
+
+
+def test_the_modelo_303_scenario_is_runnable_and_grounded_in_the_ledger_and_the_first_period() -> None:
+    scenario = load_scenario("modelo_303_quarter")
+    assert scenario.provisional == ""
+    (row,) = scenario.rows
+    assert Decimal(row.classification["iva_rate"]) == Decimal("0.21")
+    base, cuota = Decimal(row.classification["taxable_base"]), Decimal(row.classification["iva_amount"])
+    assert base * Decimal(row.classification["iva_rate"]) == cuota
+    assert {key: Decimal(value) for key, value in scenario.expected.casillas.items()} == {
+        "07": base,
+        "09": cuota,
+        "27": cuota,
+    }
+    assert scenario.calculation.joint_return_elected is False
+    assert scenario.profile["activity-start-date"].startswith(str(scenario.filing_year))
+    assert "joint return" in scenario.task(Path("C:/run/exports") / scenario.export_file)
+
+
+def test_a_modelo_303_scenario_without_the_joint_return_answer_is_refused() -> None:
+    source = load_scenario("modelo_303_quarter").model_dump(mode="json")
+    source["calculation"]["joint_return_elected"] = None
+    with pytest.raises(ValueError, match="joint-return"):
+        LiveScenario.model_validate(source, strict=False)
