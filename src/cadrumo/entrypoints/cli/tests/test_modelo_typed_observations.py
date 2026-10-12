@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_backend import runtime_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -107,7 +107,7 @@ def test_cli_counterpart_observation_schema_violation_is_argument_validation(tmp
     without one the guard's no-active-profile refusal preempts the argument
     error this test exists to pin.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path):
+    with runtime_cli_profile(tmp_path=tmp_path):
         result = invoke_cached_cli(
             [
                 "--language",

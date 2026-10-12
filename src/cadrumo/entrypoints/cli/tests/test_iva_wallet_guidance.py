@@ -9,14 +9,13 @@ import pytest
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....tests.cli_envelope import require_schema_envelope
 from ._iva_wallet_inspector_support import (
-    _GUIDANCE_PROFILE,
     _seed_full_autonomo_profile_for_guidance,
 )
 from ._m303_ordinary_cli_support import joint_return_options
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_backend import runtime_cli_profile
 
 __all__ = ["_isolated_cli_backend"]
 
@@ -27,11 +26,8 @@ def test_m303_fresh_profile_binding_override_is_a_terminal_typed_refusal(
     tmp_path: Path,
 ) -> None:
     """No seed inference is made when a compensation record is absent."""
-    with isolated_runtime_profile(
-        tmp_path=tmp_path,
-        bucket_id=_GUIDANCE_PROFILE,
-    ):
-        _seed_full_autonomo_profile_for_guidance(_GUIDANCE_PROFILE)
+    with runtime_cli_profile(tmp_path=tmp_path) as profile:
+        _seed_full_autonomo_profile_for_guidance(profile.bucket_id)
         work_unit_result = invoke_cached_cli(
             [
                 "--format",
@@ -80,11 +76,8 @@ def test_m303_in_scope_missing_wallet_surfaces_typed_terminal_refusal(
     """In-scope missing authority preserves its terminal operator-decision verdict."""
     filing_year = 2025
     period_code = "2T"
-    with isolated_runtime_profile(
-        tmp_path=tmp_path,
-        bucket_id=_GUIDANCE_PROFILE,
-    ):
-        _seed_full_autonomo_profile_for_guidance(_GUIDANCE_PROFILE)
+    with runtime_cli_profile(tmp_path=tmp_path) as profile:
+        _seed_full_autonomo_profile_for_guidance(profile.bucket_id)
         work_unit_result = invoke_cached_cli(
             [
                 "--format",
@@ -136,11 +129,8 @@ def test_m303_fresh_profile_calculate_without_binding_override_does_not_raise_wa
     tmp_path: Path,
 ) -> None:
     """Anti-tautology: fresh-profile M303 calculate without binding override does not error on wallet."""
-    with isolated_runtime_profile(
-        tmp_path=tmp_path,
-        bucket_id=_GUIDANCE_PROFILE,
-    ):
-        _seed_full_autonomo_profile_for_guidance(_GUIDANCE_PROFILE)
+    with runtime_cli_profile(tmp_path=tmp_path) as profile:
+        _seed_full_autonomo_profile_for_guidance(profile.bucket_id)
 
         work_unit_result = invoke_cached_cli(
             [

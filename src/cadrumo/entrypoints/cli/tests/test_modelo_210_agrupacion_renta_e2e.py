@@ -18,8 +18,6 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.modelo.calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
 from ....application.modelo.calculation_actions import calculate_modelo_revision
 from ....application.modelo.m303_regimen_simplificado_scope import active_taxpayer_profile
@@ -41,10 +39,9 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, c
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ...tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_backend import runtime_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
-
-_BUCKET_ID = "0f629c46-1dc8-4cb1-8d02-aa0ee4f45a42"
 
 
 def _authored_m210_annual_filing_year() -> int:
@@ -95,13 +92,14 @@ __all__ = ["register_wizard_catalogue"]
 
 
 @contextmanager
-def _secure_backend(tmp_path: Path) -> Generator[None]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
-        _seed_minimal_profile(runtime.repository)
-        yield
+def _secure_backend(tmp_path: Path) -> Generator[str]:
+    """Yield the id of a password-custodied profile whose runtime admits the CLI commands."""
+    with runtime_cli_profile(tmp_path=tmp_path) as runtime:
+        _seed_minimal_profile(runtime.bucket_id)
+        yield runtime.bucket_id
 
 
-def _seed_minimal_profile(objects: SecureObjectRepository) -> None:
+def _seed_minimal_profile(profile_id: str) -> None:
     """Seed the modelo readiness baseline through the canonical seeder.
 
     The fact tuple this used to restate lived here in four identical
@@ -110,7 +108,6 @@ def _seed_minimal_profile(objects: SecureObjectRepository) -> None:
     the readiness gate decides what modelo work may run at all and every
     copy was another place for that answer to drift.
     """
-    del objects
     create_context, _decode_context = profile_authority_contexts()
     facts = (
         *(fact for fact in MODELO_READY_PROFILE_FACTS if fact.path not in _NON_RESIDENT_FACTS),
@@ -120,7 +117,7 @@ def _seed_minimal_profile(objects: SecureObjectRepository) -> None:
         create_user_profile_record(
             context=create_context,
             setup_state=ProfileSetupState.COMPLETE,
-            profile_id=str(_BUCKET_ID),
+            profile_id=profile_id,
             facts=facts,
             created_at=_CLOCK,
             updated_at=_CLOCK,
@@ -170,14 +167,14 @@ def test_annual_grouped_rentas_persist_without_becoming_a_second_arithmetic_path
         ),
     )
 
-    with _secure_backend(tmp_path):
+    with _secure_backend(tmp_path) as bucket_id:
         snapshot = published_snapshot("210", filing_year=_FILING_YEAR, period="0A")
         work_repo = WorkUnitCatalogueRepository()
         calculation_repo = CalculationRevisionCatalogueRepository()
         event_repo = BucketEventHistoryRepository()
         with bundled_indexed_authority().operation() as operation:
             work_unit = create_work_unit(
-                bucket_id=_BUCKET_ID,
+                bucket_id=bucket_id,
                 modelo="210",
                 filing_year=_FILING_YEAR,
                 period=Period.from_year_and_code(_FILING_YEAR, "0A"),
@@ -190,7 +187,7 @@ def test_annual_grouped_rentas_persist_without_becoming_a_second_arithmetic_path
         with (
             pytest.raises(ModeloError),
             calculation_ports_for_test(
-                bucket_id=_BUCKET_ID,
+                bucket_id=bucket_id,
                 work_unit_repository=work_repo,
                 calculation_repository=calculation_repo,
                 bucket_event_repository=event_repo,
@@ -207,7 +204,7 @@ def test_annual_grouped_rentas_persist_without_becoming_a_second_arithmetic_path
                 clock=_CLOCK,
             )
         with calculation_ports_for_test(
-            bucket_id=_BUCKET_ID,
+            bucket_id=bucket_id,
             work_unit_repository=work_repo,
             calculation_repository=calculation_repo,
             bucket_event_repository=event_repo,
@@ -292,15 +289,15 @@ def test_calculate_and_verify_project_exactly_one_grounded_qualified_plazo_notic
     expected_window: str,
 ) -> None:
     """Real calculation and verification retain one identical grounded notice."""
-    with _secure_backend(tmp_path):
+    with _secure_backend(tmp_path) as bucket_id:
         snapshot = published_snapshot("210", filing_year=_FILING_YEAR, period="0A")
         work_repo = WorkUnitCatalogueRepository()
         with calculation_ports_for_test(
-            bucket_id=_BUCKET_ID,
+            bucket_id=bucket_id,
             work_unit_repository=work_repo,
         ) as _calculation_ports_210:
             work_unit = create_work_unit(
-                bucket_id=_BUCKET_ID,
+                bucket_id=bucket_id,
                 modelo="210",
                 filing_year=_FILING_YEAR,
                 period=Period.from_year_and_code(_FILING_YEAR, "0A"),
@@ -357,15 +354,15 @@ def test_calculate_and_verify_project_exactly_one_grounded_qualified_plazo_notic
 
 def test_calculate_and_verify_never_project_an_ungrounded_tipo_28_offset(tmp_path: Path) -> None:
     """Tipo 28 remains event-shaped and silent at both lifecycle boundaries."""
-    with _secure_backend(tmp_path):
+    with _secure_backend(tmp_path) as bucket_id:
         snapshot = published_snapshot("210", filing_year=_FILING_YEAR, period="EVENT-1")
         work_repo = WorkUnitCatalogueRepository()
         with calculation_ports_for_test(
-            bucket_id=_BUCKET_ID,
+            bucket_id=bucket_id,
             work_unit_repository=work_repo,
         ) as _calculation_ports_28:
             work_unit = create_work_unit(
-                bucket_id=_BUCKET_ID,
+                bucket_id=bucket_id,
                 modelo="210",
                 filing_year=_FILING_YEAR,
                 period=Period.from_year_and_code(_FILING_YEAR, "EVENT-1"),
@@ -406,15 +403,15 @@ def test_imputadas_02_event_work_with_an_unresolved_treaty_rate_projects_no_plaz
     then unknown, and neither lifecycle boundary may project the zero-quota
     window in its place.
     """
-    with _secure_backend(tmp_path):
+    with _secure_backend(tmp_path) as bucket_id:
         snapshot = published_snapshot("210", filing_year=_FILING_YEAR, period="EVENT-1")
         work_repo = WorkUnitCatalogueRepository()
         with calculation_ports_for_test(
-            bucket_id=_BUCKET_ID,
+            bucket_id=bucket_id,
             work_unit_repository=work_repo,
         ) as _calculation_ports_02:
             work_unit = create_work_unit(
-                bucket_id=_BUCKET_ID,
+                bucket_id=bucket_id,
                 modelo="210",
                 filing_year=_FILING_YEAR,
                 period=Period.from_year_and_code(_FILING_YEAR, "EVENT-1"),

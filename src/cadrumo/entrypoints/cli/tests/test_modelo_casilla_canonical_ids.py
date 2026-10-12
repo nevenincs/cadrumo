@@ -22,19 +22,17 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import s
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from ....adapters.persistence.storage.tests.secure_sql import (
     TestRuntimeProfile,
-    isolated_runtime_profile,
 )
 from ....adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ....tests.cli_envelope import unwrap_schema_envelope
 from ._m303_ordinary_cli_support import joint_return_options
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_backend import runtime_cli_profile
 
 __all__ = ["_isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_PROFILE_ID = "ca511a00-ca51-4ca5-8ca5-11a00ca511a0"
 
 
 @pytest.fixture
@@ -43,30 +41,25 @@ def runtime_profile(
 ) -> Iterator[TestRuntimeProfile]:
     """Real session backend for casilla canonical-id tests.
 
-    Uses ``isolated_runtime_profile`` (real KEK/DEK, real SQLite per
-    active bucket).  Extra env-var overrides supply the non-bucket
-    directories that work-unit commands read from settings.
+    A password-custodied profile whose runtime admits the CLI commands, with
+    the non-bucket directories work-unit commands read from settings isolated.
     """
 
-    with isolated_runtime_profile(
-        tmp_path=tmp_path,
-        bucket_id=_PROFILE_ID,
-        label="Casilla canonical-id test profile",
-    ) as profile:
+    with runtime_cli_profile(tmp_path=tmp_path, label="Casilla canonical-id test profile") as profile:
         yield profile
 
 
 def _seed_profile(runtime_profile: TestRuntimeProfile) -> None:
     """Write a minimal UserProfileRecord into the real bucket.
 
-    ``isolated_runtime_profile`` provisions the manifest.  We write the
+    ``runtime_cli_profile`` registers the profile.  We write the
     profile record directly to skip the ``config profile create`` flow
     (which re-provisions the bucket and conflicts with the live session).
     """
 
     record = create_user_profile_record(
         context=profile_authority_contexts()[0],
-        profile_id=_PROFILE_ID,
+        profile_id=runtime_profile.bucket_id,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(
             UserProfileFact(path="identity.name", value="Test Operator"),

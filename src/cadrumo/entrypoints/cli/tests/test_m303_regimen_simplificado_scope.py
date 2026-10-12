@@ -15,7 +15,6 @@ from cadrumo.domain.user_profile.values import create_user_profile_record as _cr
 
 from ....adapters.persistence.storage.tests.secure_sql import (
     TestRuntimeProfile,
-    isolated_runtime_profile,
 )
 from ....adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend
 from ....core.period import Period
@@ -29,18 +28,18 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....tests.cli_envelope import unwrap_schema_envelope
 from ._m303_ordinary_cli_support import joint_return_options
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_backend import runtime_cli_profile
 
 __all__ = ["_isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
-_BUCKET_ID = "e3030000-0000-4000-8000-000000000060"
 _DECIDED_AT = datetime(2026, 4, 1, tzinfo=UTC)
 
 
 @pytest.fixture
 def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+    with runtime_cli_profile(tmp_path=tmp_path) as profile:
         yield profile
 
 
@@ -53,7 +52,7 @@ def _store_current_profile(
     seed_test_profile_record(
         _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_BUCKET_ID,
+            profile_id=runtime_profile.bucket_id,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
                 UserProfileFact(path="identity.name", value="M303"),
