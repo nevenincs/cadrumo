@@ -5,7 +5,7 @@ tags:
 date: '2026-10-12'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:cd4637f4aa36161a080aefdd7d1e15cd26d333018745aae00ba809f16b3158fd'
+body_hash: 'sha256:9e360c540f6807a18376f747b3f1cc61415104286eb0fbcd8b8b62026c986d47'
 related:
   - "[[2026-10-12-live-agent-evaluation-plan]]"
 ---
@@ -98,6 +98,15 @@ related:
 - `S09` `verify:` `ruff check, ruff format, ty check on touched files` -> `pass`
 - `S09` `verify:` `just --dry-run eval-agent-floor; just --show eval-agent-live` -> `pass`
 - `S09` `verify:` `just eval-agent-floor on this host: unavailable package_stale before measuring, exit 3` -> `pass`
+- `S10` `M` `.vault/index/live-agent-evaluation.index.md`
+- `S10` `verify:` `just eval-agent-floor reports unavailable package_stale on the stale package, exit 3` -> `pass`
+- `S10` `verify:` `just eval-agent-floor modelo_130_dr130 1 --measure-stale-package reports unavailable credential_store_unavailable, exit 3` -> `pass`
+- `S10` `verify:` `just eval-agent-live modelo_130_dr130 3 --measure-stale-package reports unavailable credential_store_unavailable before model spend, exit 3` -> `pass`
+- `S10` `verify:` `just eval-agent-live modelo_303_quarter 3 reports unavailable scenario_provisional, exit 3` -> `pass`
+- `S10` `verify:` `just eval-agent-floor access-signed-out 1 --measure-stale-package reports unavailable credential_store_unavailable, exit 3` -> `pass`
+- `S10` `verify:` `claude CLI driver capped haiku session with nobody signed in: claude-haiku-5-5, 0.01 USD, person sent back to Cadrumo, phase met` -> `pass`
+- `S10` `verify:` `pytest dev/agent_eval/tests/test_live_*.py (64)` -> `pass`
+- `S10` `verify:` `just check-import-boundaries` -> `fail`
 
 ## Notes
 
@@ -107,3 +116,4 @@ related:
 - `S07` the 130 scenario moved to a first year of activity: a prior-year income above 12000 blocks verification on an isolated profile `(cross_period_dependency_unclean` on the unfiled 2025 Modelo 100), so casilla 13 is the 100 EUR minoracion of RD 439/2007 art. 110.3; the 303 scenario is marked provisional after its IVA ledger add ended in `INTERNAL_CLI_UNEXPECTED_BOUNDARY` and its calculation was refused for missing ordinary 303 filing evidence
 - `S08` unverified on this host: key issuance and approval, lock, sign-out, expiry and revocation against a signed-in runtime; a CLI-created key cannot name the MCP client as a disclosure destination, so the key scope carries no disclosure and in-scope results may not be releasable; confirm on the interactive run (S11)
 - `S09` the S08 and S09 code (access.py, lane.py, `__main__.py,` `test_live_access.py,` `test_live_lane.py,` the justfile recipes and the phase markers) was committed inside another session's sweep commit e292d394b3 while uncommitted here; this Step's own commit carries the ledger and plan only
+- `S10` import gate failures name no `dev/agent_eval` module; the post-P10 rebuild was refused by native-process-quiesce because another session was running the staged package (cadrumo-runtime and aeat from build/windows-x64/stage, started 15:31), so the staged package is the 14:56 pre-P10 build
