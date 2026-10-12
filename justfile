@@ -704,6 +704,11 @@ verify-caller-owned-runtime PACKAGE:
 verify-live-sign-in PACKAGE *ARGS:
     uv run --no-sync python -m dev.runtime_lifecycle.live_sign_in --package {{quote(PACKAGE)}} {{ARGS}}
 
+[doc('Prove a review-gated operation is rejected without changing its row and applied exactly once, through a built package.')]
+[group('test')]
+verify-reviewed-operation PACKAGE *ARGS:
+    uv run --no-sync python -m dev.runtime_lifecycle.reviewed_operation --package {{quote(PACKAGE)}} {{ARGS}}
+
 # ── Devcontainer ─────────────────────────────────────────────────────────────
 
 # Two questions about the same artifacts. actionlint asks whether the YAML is

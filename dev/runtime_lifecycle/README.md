@@ -160,6 +160,58 @@ It waits out the sign-in deadline (about 15 minutes); `--skip-expiry` and
 `--skip-review` leave those steps out and report `incomplete`. A step it cannot
 prove is reported `incomplete`, never passed.
 
+## Prove a reviewed operation is rejected without changing the row and applied once
+
+```powershell
+just verify-reviewed-operation build/windows-x64/stage/Release/app
+```
+
+Prerequisites: the package's own `bin/aeat`, `bin/cadrumo-runtime` and
+`bin/cadrumo-mcp`, built with the optional `llm` extra (a core-only package
+refuses local-model work with `ERROR_OPTIONAL_EXTRA_MISSING`); an installed
+Ollama and an existing model store holding `qwen3:1.7b` (`--ollama-models`,
+default `~/.ollama/models`); and a free loopback port 11434. No remote service is used and nothing is downloaded. The
+attendance approval only admits the MCP connection; the review is answered on
+its own interaction.
+
+The driver runs each step as a real process on a fresh root under
+`build/acceptance/reviewed-operation-*`, with the password only on a command's
+standard input:
+
+1. `aeat config profile create NAME --quiet --secrets-stdin`, then
+   `aeat --profile-secrets-stdin config profile edit ...` with synthetic
+   taxpayer facts and `config profile complete-setup`.
+2. `cadrumo-runtime --configured-root`, then `aeat config sign-in-hold NAME`
+   with the password on its first input line; its `held` event names the
+   profile id.
+3. `ollama serve` with `OLLAMA_MODELS` set to the store and pruning off.
+4. `cadrumo-mcp` over stdio. Its first profile call raises an
+   `attendance_request` on the holder, which approves that exact ask after
+   checking that the asking process descends from the driver.
+5. MCP `execute ledger.add` adds a synthetic row. The command line
+   (`aeat app ledger list`, `aeat app ledger history ID`) records the row and
+   its history.
+6. MCP `execute ledger.classify.review`, then `observe` until the pending
+   interaction is `review_available` with effect `none`, then `review` to read
+   the proposal.
+7. MCP `respond` with `reject` and the review's operation, interaction and
+   revision. A rejection is a recorded decision: the command line lists the row
+   exactly as before, and its history gains exactly one
+   `ledger.transaction.llm_suggestion.rejected` audit event.
+8. Steps 6 and 7 again with `apply`. The row is classified and reviewed by
+   `llm:local-text:*`, the command line reads that classification, and the
+   history gains exactly one `ledger.transaction.classified` event.
+9. A second `apply` to the same interaction is refused, and the row and its
+   history are unchanged.
+10. Close the holder's input (`input_closed`, exit 0), stop the model server
+    with its runners, and stop the runtime (exit 64). No started process may
+    survive.
+
+The root is removed afterwards; `--keep` keeps it, and a failed run keeps it and
+prints its path. The driver exits 0 when every step held, 1 when one was
+contradicted, and 3 when the model was unavailable or the package lacks the
+`llm` extra.
+
 ## Inspect timing evidence
 
 Open `build/windows-x64/testing/lifecycle.xml`. Each test's `lifecycle_seconds`
