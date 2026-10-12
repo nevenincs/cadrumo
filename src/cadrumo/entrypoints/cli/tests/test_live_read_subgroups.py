@@ -10,7 +10,6 @@ import pytest
 from typer._click.core import Context as ClickContext
 from typer.main import get_command
 
-from ....adapters.persistence.storage.tests.seeded_isolated_backend_fixture import seeded_isolated_backend_fixture
 from ....application.auth.operator_results import LiveAuthPreflightReport
 from ....application.live.errors import LiveIvaAcquisitionFailureMode
 from ....application.live.remote_state_models import (
@@ -30,9 +29,9 @@ from .._app_live_auth_preflight import _live_auth_preflight_lines
 from .._app_live_command_specs import LIVE_COMMAND_SPECS
 from .._root_command_specs import ROOT_COMMAND_SPECS
 from ..command_graph import CommandSpecGraph
-from ._live_read_profile_fixture import _ACTIVE_TEST_BUCKET_ID
 from .cli_runner import invoke_cached_cli
 from .command_runtime_support import build_command_subtree
+from .runtime_profile_backend import runtime_seeded_profile_backend_fixture
 
 #: The world every case here starts from, seeded once and copied per test.
 #:
@@ -40,9 +39,8 @@ from .command_runtime_support import build_command_subtree
 #: copy keeps each test's storage root private, so the cases that persist an
 #: observation or a snapshot still cannot reach the ones that assert a fresh
 #: bucket.
-_live_read_origin, _isolated_backend = seeded_isolated_backend_fixture(
+_live_read_origin, _isolated_backend = runtime_seeded_profile_backend_fixture(
     seed=lambda: None,
-    bucket_id=_ACTIVE_TEST_BUCKET_ID,
     name="_isolated_backend",
     origin_name="_live_read_origin",
 )

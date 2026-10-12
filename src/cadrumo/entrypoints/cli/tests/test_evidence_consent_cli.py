@@ -18,13 +18,11 @@ because the verb opens a bucket.
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
+from pathlib import Path
 from typing import Any
 
 import pytest
-
-from ....adapters.persistence.storage.tests.consent_profile_fixture import consent_profile
-
-__all__ = ["consent_profile"]
 
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ....application.ledger.document_transcription import TranscriberIdentity
@@ -33,8 +31,17 @@ from ....application.ledger.invoice_draft_records import InvoiceDraft
 from ....core.field_origin import FieldOrigin
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_backend import runtime_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+@pytest.fixture(name="profile")
+def consent_cli_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
+    """A password-custodied profile whose runtime admits the consent verbs."""
+    with runtime_cli_profile(tmp_path=tmp_path) as profile:
+        yield profile
+
 
 _DIGEST = "c" * 64
 _REFERENCE = "ev-consent-cli"

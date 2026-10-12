@@ -6,9 +6,9 @@ from decimal import Decimal
 
 import pytest
 
-from ....adapters.persistence.storage.tests.seeded_isolated_backend_fixture import seeded_isolated_backend_fixture
 from ....tests.cli_envelope import unwrap_cli_result as _json
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_backend import runtime_seeded_profile_backend_fixture
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -21,9 +21,9 @@ def _profile_only() -> None:
 #: Every case starts from the same registered profile and writes ledger rows
 #: into it, so the profile is published once and each test gets its own
 #: filesystem copy of that world.
-_seeded_origin, _isolated_backend = seeded_isolated_backend_fixture(
+_seeded_origin, _isolated_backend = runtime_seeded_profile_backend_fixture(
     seed=_profile_only,
-    display_name="lucia",
+    label="lucia",
     profile_overrides={
         "identity.tax_id": "12345678Z",
         "taxpayer_type.entity_type": "natural_person",
