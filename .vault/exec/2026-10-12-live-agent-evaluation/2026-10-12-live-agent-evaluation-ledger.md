@@ -5,7 +5,7 @@ tags:
 date: '2026-10-12'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:84654992b4c3750b8a0d3fbd7b119e53ec9a613fa9955af13f1cdd6e46385c93'
+body_hash: 'sha256:cd4637f4aa36161a080aefdd7d1e15cd26d333018745aae00ba809f16b3158fd'
 related:
   - "[[2026-10-12-live-agent-evaluation-plan]]"
 ---
@@ -89,6 +89,15 @@ related:
 - `S08` `verify:` `pytest dev/agent_eval/tests/test_live_access.py dev/agent_eval/tests/test_live_recorder.py` -> `pass`
 - `S08` `verify:` `ruff check, ruff format, ty check on touched files` -> `pass`
 - `S08` `verify:` `just eval-agent-floor access-signed-out 1 --measure-stale-package on this SSH logon: unavailable credential_store_unavailable` -> `pass`
+- `S09` `A` `dev/agent_eval/live/lane.py`
+- `S09` `A` `dev/agent_eval/live/__main__.py`
+- `S09` `A` `dev/agent_eval/tests/test_live_lane.py`
+- `S09` `M` `justfile`
+- `S09` `M` `dev/agent_eval/live/drivers.py`
+- `S09` `verify:` `pytest dev/agent_eval/tests/test_live_lane.py` -> `pass`
+- `S09` `verify:` `ruff check, ruff format, ty check on touched files` -> `pass`
+- `S09` `verify:` `just --dry-run eval-agent-floor; just --show eval-agent-live` -> `pass`
+- `S09` `verify:` `just eval-agent-floor on this host: unavailable package_stale before measuring, exit 3` -> `pass`
 
 ## Notes
 
@@ -97,3 +106,4 @@ related:
 - `S06` committed after S05, whose recorder imports this scrubber; the S05 commit alone does not import cleanly
 - `S07` the 130 scenario moved to a first year of activity: a prior-year income above 12000 blocks verification on an isolated profile `(cross_period_dependency_unclean` on the unfiled 2025 Modelo 100), so casilla 13 is the 100 EUR minoracion of RD 439/2007 art. 110.3; the 303 scenario is marked provisional after its IVA ledger add ended in `INTERNAL_CLI_UNEXPECTED_BOUNDARY` and its calculation was refused for missing ordinary 303 filing evidence
 - `S08` unverified on this host: key issuance and approval, lock, sign-out, expiry and revocation against a signed-in runtime; a CLI-created key cannot name the MCP client as a disclosure destination, so the key scope carries no disclosure and in-scope results may not be releasable; confirm on the interactive run (S11)
+- `S09` the S08 and S09 code (access.py, lane.py, `__main__.py,` `test_live_access.py,` `test_live_lane.py,` the justfile recipes and the phase markers) was committed inside another session's sweep commit e292d394b3 while uncommitted here; this Step's own commit carries the ledger and plan only
