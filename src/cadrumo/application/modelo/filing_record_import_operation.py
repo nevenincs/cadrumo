@@ -17,7 +17,7 @@ from ...core.identity.hex_ids import WorkUnitId
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
 from ...core.time.clock import now
-from ...domain.modelos.work_unit import WorkUnit, WorkUnitState
+from ...domain.modelos.work_unit import WorkUnit
 from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import (
     ADMISSION_REPLAY_ACTIONS,
@@ -64,6 +64,7 @@ from .filing_record_import_contracts import (
 from .filing_record_list_contracts import ModeloFilingRecordListEntryProjection
 from .local_observation_spreadsheet import parse_casilla_lexical_spreadsheet
 from .work_addressing import ModeloWorkRegistryYearMismatchError, law_selected_revision_for_work_target
+from .work_lifecycle import ActiveWorkUnitUse, require_active_work_unit
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -106,14 +107,17 @@ def _selected_work_unit(ports: CalculationActionPorts, payload: ModeloFilingReco
     repository = ports.work_unit_repository
     if repository.bucket_id != profile_id or ports.work_lifecycle_ports.work_unit_repository.bucket_id != profile_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    work_unit = repository.load().get(payload.work_unit_id)
+    work_units = repository.load()
+    work_unit = work_units.get(payload.work_unit_id)
     if work_unit is None:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
     if work_unit.bucket_id != profile_id or work_unit.work_unit_id != payload.work_unit_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    if work_unit.state is WorkUnitState.DESCARTADO:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-    return work_unit
+    # A discarded unit is the caller's own record, so its declared lifecycle
+    # verdict says why the import stops; an access denial would misstate it.
+    return require_active_work_unit(
+        work_units, work_unit_id=payload.work_unit_id, repository_bucket_id=profile_id, use=ActiveWorkUnitUse.IMPORT
+    )
 
 
 def _declared_tax_id(ports: CalculationActionPorts, *, profile_id: str) -> str:
@@ -306,6 +310,8 @@ def build_modelo_filing_record_import_definition(
         interaction_kinds=frozenset(),
         capabilities=RECORDED_NON_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
+        # A refusal's registered message, context and verdict reach every frontend.
+        public_error_detail=True,
     )
 
 

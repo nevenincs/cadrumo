@@ -53,13 +53,16 @@ from .selectors import (
     ModeloCalculationRevisionDefault,
     ModeloCalculationRevisionSelector,
     ModeloCalculationRevisionSelectorError,
+    ModeloCalculationRevisionSelectorNotFoundError,
     resolve_modelo_calculation_revision_pick,
 )
 from .verification_repository_ports import VerificationRepositoryBundle, VerificationRepositoryBundleFactory
 from .work_addressing import (
+    ModeloWorkAddress,
     ModeloWorkAddressNotFoundError,
     ModeloWorkPeriodTokenError,
     ModeloWorkSelectorError,
+    calculation_revision_work_unit_target_error,
     resolve_modelo_work_unit_for_operator_target,
 )
 from .work_lifecycle import RevisionParentOperation, require_revision_parent_active
@@ -259,15 +262,32 @@ def _capture(
     selected_id = payload.calculation_revision_id
     if selected_id is not None and selected_id == unit.work_unit_id and calculations.get(selected_id) is None:
         selected_id = None
-    selection = resolve_modelo_calculation_revision_pick(
-        unit,
-        selector=payload.selector,
-        calculation_revision_id=selected_id,
-        default_for=payload.default_for,
-        calculation_repository=bundle.calculation,
-        operation=operation.authority_operation,
-        calculation_catalogue=calculations,
-    )
+    try:
+        selection = resolve_modelo_calculation_revision_pick(
+            unit,
+            selector=payload.selector,
+            calculation_revision_id=selected_id,
+            default_for=payload.default_for,
+            calculation_repository=bundle.calculation,
+            operation=operation.authority_operation,
+            calculation_catalogue=calculations,
+        )
+    except ModeloCalculationRevisionSelectorNotFoundError as error:
+        # A positional work-unit id with nothing to select keeps the recovery
+        # verify and file declare for it: calculate the unit first.
+        if selected_id is not None or payload.calculation_revision_id is None:
+            raise
+        recovery = calculation_revision_work_unit_target_error(
+            error=error,
+            calculation_revision_id=payload.calculation_revision_id,
+            address=ModeloWorkAddress(),
+            default_for=payload.default_for,
+            catalogue=bundle.work_unit.load(),
+            resolved_bucket_id=str(payload.profile_id),
+        )
+        if recovery is error:
+            raise
+        raise recovery from error
     revision = selection.revision
     if payload.default_for in {"verify", "file"}:
         require_revision_parent_active(
@@ -344,6 +364,9 @@ def build_modelo_work_revision_definition(factory: VerificationRepositoryBundleF
         executor_type=ModeloWorkRevisionExecutor,
         build=lambda: ModeloWorkRevisionExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
+        # Every command that selects a revision stops here first, so the
+        # selection refusal's own message, context and verdict reach every frontend.
+        public_error_detail=True,
     )
 
 

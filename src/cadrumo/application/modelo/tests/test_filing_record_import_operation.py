@@ -16,6 +16,7 @@ from pydantic import BaseModel, ValidationError
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.modelos.filing_record import (
@@ -39,6 +40,7 @@ from ...user_profile.access_contracts import (
     Availability,
 )
 from ...user_profile.access_errors import ProfileAccessRefusedError
+from ..action_errors import WorkUnitMutationRefusedError
 from ..calculation_action_ports import CalculationActionPorts, CalculationActionPortsFactory
 from ..filing_chain_reconciliation import (
     FilingReconciliationNotice,
@@ -343,12 +345,18 @@ def test_source_refuses_discarded_or_stale_exact_work_unit_before_import(
         work_unit_repository=discarded_catalogue,
         work_lifecycle_ports=SimpleNamespace(work_unit_repository=discarded_catalogue),
     )
-    with pytest.raises(ProfileAccessRefusedError) as inactive:
+    # The discarded unit is the caller's own, so the refusal is its declared
+    # terminal lifecycle verdict, the one every frontend renders, not a denial.
+    with pytest.raises(WorkUnitMutationRefusedError) as inactive:
         operation_module._selected_work_unit(
             cast(CalculationActionPorts, cast(object, ports)),
             cast(ModeloFilingRecordImportRequest, _request(source_path="C:/evidence.xlsx").payload),
         )
-    assert inactive.value.reason is AccessDenialCode.OPERATION_DENIED
+    verdict = inactive.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == "modelo.filing_record.import.lifecycle.active"
+    assert verdict.action is None
+    assert verdict.no_recovery_outcome is NoRecoveryOutcome.TERMINAL
     assert set(discarded_catalogue.load().work_units) == {discarded.work_unit_id}
 
     active = _unit()

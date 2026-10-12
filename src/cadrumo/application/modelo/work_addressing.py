@@ -472,16 +472,21 @@ def resolve_modelo_work_unit_for_operator_target(
     )
 
 
-def _calculation_revision_work_unit_target_error(
+def calculation_revision_work_unit_target_error[UnresolvedError: Exception](
     *,
-    error: CalculationRevisionNotFoundError,
+    error: UnresolvedError,
     calculation_revision_id: CalculationRevisionId | None,
     address: ModeloWorkAddress,
     default_for: ModeloCalculationRevisionDefault | None,
     catalogue: WorkUnitCatalogue,
     resolved_bucket_id: str,
-) -> CalculationRevisionNotFoundError:
-    """Attach the declared calculate recovery when an exact work unit was supplied."""
+) -> UnresolvedError | CalculationRevisionNotFoundError:
+    """Attach the declared calculate recovery when an exact work unit was supplied.
+
+    Verify and file accept a positional work-unit id; when that unit has no
+    revision to select, the refusal names calculation as the next step, or a
+    terminal outcome for a discarded unit. Any other ``error`` is returned as is.
+    """
     if default_for == "verify":
         subject_leaf_key = "modelo.work.verify"
     elif default_for == "file":
@@ -1211,7 +1216,7 @@ def _resolve_modelo_calculation_revision_address(
             selection.selector,
         )
     except CalculationRevisionNotFoundError as error:
-        recovery_error = _calculation_revision_work_unit_target_error(
+        recovery_error = calculation_revision_work_unit_target_error(
             error=error,
             calculation_revision_id=calculation_revision_id,
             address=address,
@@ -1412,6 +1417,7 @@ __all__ = [
     "ModeloWorkUnitNotFoundError",
     "ModeloWorkVisibleTargetAmbiguousError",
     "assert_work_target_revision",
+    "calculation_revision_work_unit_target_error",
     "capture_modelo_work_resolution",
     "ensure_modelo_work_unit_for_active_target",
     "law_selected_revision_for_work_target",
