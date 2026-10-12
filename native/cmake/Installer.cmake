@@ -10,11 +10,14 @@ set(CADRUMO_MSI_ADAPTER
 set(CADRUMO_MSI_RUNNER
   "${CADRUMO_PATH_CARGO}/${CADRUMO_PIN_rust_target}/$<IF:$<CONFIG:Debug>,debug,release>/cadrumo-msi-maintenance.exe")
 cadrumo_cargo_command(installer_cargo)
+cadrumo_build_step(installer_comment rust_installer GROUP native
+  SUMMARY "compile the installer-only MSI adapter and maintenance runner"
+  OUTPUTS "${CADRUMO_MSI_ADAPTER}" "${CADRUMO_MSI_RUNNER}")
 add_custom_target(rust_installer
   COMMAND ${installer_cargo} build --locked --lib --bins --manifest-path "${installer_manifest}"
     --target "${CADRUMO_PIN_rust_target}" --profile "${installer_profile}"
   BYPRODUCTS "${CADRUMO_MSI_ADAPTER}" "${CADRUMO_MSI_RUNNER}"
-  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${installer_comment}" VERBATIM)
 if(COMMAND cadrumo_register_clean)
   cadrumo_register_clean(TARGET rust_installer PATHS "${CADRUMO_MSI_ADAPTER}" "${CADRUMO_MSI_RUNNER}")
 endif()

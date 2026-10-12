@@ -67,6 +67,24 @@ def test_run_command_returns_nonzero_result_without_synthesising_a_success(tmp_p
     assert execution.stderr == "refusal\n"
 
 
+def test_run_command_inherited_output_reaches_the_parent_streams_in_order(
+    tmp_path: Path, capfd: pytest.CaptureFixture[str]
+) -> None:
+    """A streamed build step writes through the parent's descriptors after the parent's earlier lines."""
+    print("before", flush=False)
+    execution = run_command(
+        (sys.executable, "-c", "import sys; print('out'); print('err', file=sys.stderr); raise SystemExit(3)"),
+        cwd=tmp_path,
+        inherit_output=True,
+    )
+
+    assert execution.returncode == 3
+    assert (execution.stdout, execution.stderr) == ("", "")
+    captured = capfd.readouterr()
+    assert captured.out.splitlines() == ["before", "out"]
+    assert captured.err.splitlines() == ["err"]
+
+
 def test_run_command_propagates_a_real_timeout_without_inventing_an_exit_status(tmp_path: Path) -> None:
     """A process that did not exit cannot truthfully become a command transcript."""
     with pytest.raises(subprocess.TimeoutExpired):

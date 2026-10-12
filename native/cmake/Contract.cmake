@@ -45,9 +45,12 @@ cadrumo_cached_command(contract_command native_contract SHARED
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/release-python-version" "${CADRUMO_SOURCE_ROOT}/.python-version"
     "${CADRUMO_BUILD_HELPER}"
   OUTPUTS "${CONTRACT_DIR}/contract.rs" "${CONTRACT_DIR}/contract.h" "${CONTRACT_DIR}/contract.json")
+cadrumo_build_step(contract_comment native_contract GROUP contract
+  SUMMARY "generate the native package contract for Rust, C and the assembler"
+  OUTPUTS "${CONTRACT_DIR}/contract.json" "${CONTRACT_DIR}/contract.rs" "${CONTRACT_DIR}/contract.h")
 add_custom_target(native_contract
   COMMAND ${contract_command} ${CADRUMO_HELPER} run -- "${CADRUMO_DEV_PYTHON}" -B
     -m dev.packaging.native.generate "${CONTRACT_DIR}"
     --channel "${CADRUMO_ID_CHANNEL}" --target "${CADRUMO_TARGET}"
   BYPRODUCTS "${CONTRACT_DIR}/contract.rs" "${CONTRACT_DIR}/contract.h" "${CONTRACT_DIR}/contract.json"
-  WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" VERBATIM)
+  WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${contract_comment}" VERBATIM)

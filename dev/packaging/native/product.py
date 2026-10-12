@@ -22,6 +22,7 @@ from ..authority_staging import stage_published_authority
 from ..command_execution import run_command
 from ..google_oauth import GOOGLE_OAUTH_ENV, build_client_json
 from ..wheel_metadata import read_wheel_metadata
+from .build_log import BuildLog, display_path
 from .build_timing import BuildTimings
 from .build_toolchain import selected_uv
 from .hashing import digest
@@ -143,7 +144,9 @@ def build_product(
         json.dumps({p.name: digest(p) for p in artifacts}, indent=2),
         encoding="utf-8",
     )
-    print(f"Installed {len(artifacts)} exact-version product wheels into {dependencies}")
+    BuildLog("product").status(
+        f"installed {len(artifacts)} exact-version product wheels into {display_path(dependencies)}"
+    )
 
 
 if __name__ == "__main__":

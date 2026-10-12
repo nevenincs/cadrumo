@@ -9,11 +9,15 @@ set(CADRUMO_RUST_ROOT "" CACHE PATH "Pinned target-capable Rust toolchain root")
 if(NOT EXISTS "${CADRUMO_RUST_ROOT}/bin/rustc")
   message(FATAL_ERROR "Supply CADRUMO_RUST_ROOT for the pinned Rust toolchain")
 endif()
+message(CHECK_START "Checking the pinned Rust ${CADRUMO_PIN_rust} toolchain")
 execute_process(COMMAND "${CADRUMO_RUST_ROOT}/bin/rustc" --version
   OUTPUT_VARIABLE rust_version OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
 if(NOT rust_version MATCHES "^rustc ${CADRUMO_PIN_rust} ")
+  message(CHECK_FAIL "found ${rust_version}")
   message(FATAL_ERROR "Rust ${CADRUMO_PIN_rust} is required")
 endif()
+message(CHECK_PASS "${rust_version}")
+cadrumo_build_fact("Rust" "${CADRUMO_PIN_rust} for ${CADRUMO_PIN_rust_target}: ${CADRUMO_RUST_ROOT}")
 set(CADRUMO_ENTRYPOINTS)
 string(JSON entrypoint_count LENGTH "${package_layout}" entrypoints)
 if(entrypoint_count GREATER 0)
@@ -26,12 +30,15 @@ endif()
 cadrumo_cached_command(metadata_command native_metadata SHARED
   INPUTS ${metadata_inputs} "${CONTRACT_DIR}/identity.json"
   OUTPUTS "${CONTRACT_DIR}/build_metadata.h" "${CONTRACT_DIR}/build.json")
+cadrumo_build_step(step_comment native_metadata GROUP contract
+  SUMMARY "generate the build metadata the native hosts embed"
+  OUTPUTS "${CONTRACT_DIR}/build.json" "${CONTRACT_DIR}/build_metadata.h")
 add_custom_target(native_metadata
   COMMAND ${metadata_command} ${CADRUMO_HELPER} run -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.metadata "${CONTRACT_DIR}"
     --number "${CADRUMO_BUILD_NUMBER}" --date "${CADRUMO_BUILD_DATE}" --tools "${CADRUMO_PATH_TOOLS}"
     --channel "${CADRUMO_CHANNEL}" --target "${CADRUMO_TARGET}"
   BYPRODUCTS "${CONTRACT_DIR}/build_metadata.h" "${CONTRACT_DIR}/build.json"
-  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
 
 set(rust_profile "$<IF:$<CONFIG:Debug>,debug,release>")
 string(TOUPPER "${CADRUMO_PIN_rust_target}" cargo_target)
@@ -49,32 +56,43 @@ cadrumo_cargo_command(platform_cargo --env "CADRUMO_CONTRACT_RS=${CONTRACT_DIR}/
 set(platform_dir "${CADRUMO_PATH_CARGO}/${CADRUMO_PIN_rust_target}/${rust_profile}")
 set(platform_static "${platform_dir}/libcadrumo_platform.a")
 # Separate crate types let one native library be rebuilt without linking its sibling.
+cadrumo_build_step(step_comment rust_platform_static GROUP native
+  SUMMARY "compile the Rust platform library as a static library" OUTPUTS "${platform_static}")
 add_custom_target(rust_platform_static
   COMMAND ${platform_cargo} rustc --locked --lib --crate-type staticlib
     --manifest-path "${CMAKE_CURRENT_SOURCE_DIR}/platform/Cargo.toml"
     --target "${CADRUMO_PIN_rust_target}" --profile "$<IF:$<CONFIG:Debug>,dev,release>"
   BYPRODUCTS "${platform_static}"
-  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
+cadrumo_build_step(step_comment rust_platform_shared GROUP native
+  SUMMARY "compile the Rust platform library as a shared library"
+  OUTPUTS "${platform_dir}/${CMAKE_SHARED_LIBRARY_PREFIX}cadrumo_platform${CMAKE_SHARED_LIBRARY_SUFFIX}")
 add_custom_target(rust_platform_shared
   COMMAND ${platform_cargo} rustc --locked --lib --crate-type cdylib
     --manifest-path "${CMAKE_CURRENT_SOURCE_DIR}/platform/Cargo.toml"
     --target "${CADRUMO_PIN_rust_target}" --profile "$<IF:$<CONFIG:Debug>,dev,release>"
   BYPRODUCTS "${platform_dir}/${CMAKE_SHARED_LIBRARY_PREFIX}cadrumo_platform${CMAKE_SHARED_LIBRARY_SUFFIX}"
-  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
 add_dependencies(rust_platform_static native_contract)
 add_dependencies(rust_platform_shared native_contract)
-add_custom_target(rust_platform DEPENDS rust_platform_static rust_platform_shared)
+cadrumo_build_step(step_comment rust_platform GROUP native
+  SUMMARY "both Rust platform library forms")
+add_custom_target(rust_platform DEPENDS rust_platform_static rust_platform_shared COMMENT "${step_comment}")
 set(platform_consumer "${platform_dir}/platform-consumer${CMAKE_EXECUTABLE_SUFFIX}")
+cadrumo_build_step(step_comment rust_platform_consumer GROUP verification
+  SUMMARY "compile the Rust consumer that exercises the platform library" OUTPUTS "${platform_consumer}")
 add_custom_target(rust_platform_consumer
   COMMAND ${platform_cargo} build --locked --bin platform-consumer
     --manifest-path "${CMAKE_CURRENT_SOURCE_DIR}/platform/Cargo.toml"
     --target "${CADRUMO_PIN_rust_target}" --profile "$<IF:$<CONFIG:Debug>,dev,release>"
   BYPRODUCTS "${platform_consumer}"
-  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
 add_dependencies(rust_platform_consumer native_contract)
 if(BUILD_TESTING)
   # Preserve the default test build while keeping either producer individually addressable.
-  add_custom_target(platform_test_binaries ALL DEPENDS rust_platform_consumer)
+  cadrumo_build_step(step_comment platform_test_binaries GROUP verification
+    SUMMARY "the platform test binaries the default build keeps current")
+  add_custom_target(platform_test_binaries ALL DEPENDS rust_platform_consumer COMMENT "${step_comment}")
 endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CADRUMO_PATH_BIN}/$<CONFIG>")
@@ -94,7 +112,19 @@ foreach(entrypoint IN LISTS CADRUMO_ENTRYPOINTS)
   list(APPEND CADRUMO_ENTRYPOINT_TARGETS ${target})
 endforeach()
 set(host_targets cadrumo_python cadrumo_python_d ${CADRUMO_ENTRYPOINT_TARGETS})
+cadrumo_describe_target(cadrumo_python GROUP native SUMMARY "compile the production interpreter host"
+  OUTPUTS "${CADRUMO_PATH_BIN}/$<CONFIG>/${production_name}${CMAKE_EXECUTABLE_SUFFIX}")
+cadrumo_describe_target(cadrumo_python_d GROUP native
+  SUMMARY "compile the development interpreter host (CADRUMO_INCLUDE_DEVELOPMENT_BINARY ships it)"
+  OUTPUTS "${CADRUMO_PATH_BIN}/$<CONFIG>/${development_name}${CMAKE_EXECUTABLE_SUFFIX}")
+foreach(entrypoint IN LISTS CADRUMO_ENTRYPOINTS)
+  string(MAKE_C_IDENTIFIER "cadrumo_entrypoint_${entrypoint}" target)
+  cadrumo_describe_target(${target} GROUP native SUMMARY "compile the ${entrypoint} console entrypoint"
+    OUTPUTS "${CADRUMO_PATH_BIN}/$<CONFIG>/${entrypoint}${CMAKE_EXECUTABLE_SUFFIX}")
+endforeach()
 add_library(cadrumo_python_bridge SHARED interpreter/python.c)
+cadrumo_describe_target(cadrumo_python_bridge GROUP native SUMMARY "compile the CPython ABI bridge library"
+  OUTPUTS "${CADRUMO_PATH_BIN}/$<CONFIG>/${bridge_name}${CMAKE_SHARED_LIBRARY_SUFFIX}")
 set_target_properties(cadrumo_python_bridge PROPERTIES PREFIX "" OUTPUT_NAME "${bridge_name}"
   BUILD_WITH_INSTALL_RPATH YES INSTALL_RPATH "$ORIGIN")
 if(APPLE)
@@ -124,6 +154,8 @@ if(BUILD_TESTING)
     "-DTEST_OUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}/linker-contract"
     -P "${CMAKE_CURRENT_LIST_DIR}/tests/RustLinker.cmake")
   add_executable(platform_invocation_test interpreter/posix/tests/invocation.c)
+  cadrumo_describe_target(platform_invocation_test GROUP verification
+    SUMMARY "compile the interpreter host invocation test")
   cadrumo_compile_policy(platform_invocation_test)
   target_compile_options(platform_invocation_test PRIVATE -UNDEBUG)
   add_test(NAME platform.invocation COMMAND platform_invocation_test)

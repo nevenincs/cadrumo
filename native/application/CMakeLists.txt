@@ -27,11 +27,14 @@ set(CADRUMO_APPLICATION_ARTIFACT_PROBE_FILE "${probe_file}" PARENT_SCOPE)
 
 # Always ask Cargo to check freshness, including include_str!, lockfile and transitive inputs.
 # The rlib is not a runtime payload and must not be copied into the Python package.
+cadrumo_build_step(application_comment rust_application GROUP native
+  SUMMARY "compile the Rust application library that native tests consume (never shipped)"
+  OUTPUTS "${application_output}")
 add_custom_target(rust_application ALL
   COMMAND ${application_cargo} build --locked --lib --manifest-path "${application_manifest}"
     --target "${CADRUMO_PIN_rust_target}" --profile "${application_profile}" --features platform
   BYPRODUCTS "${application_output}"
-  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${application_comment}" VERBATIM)
 add_dependencies(rust_application native_contract)
 if(COMMAND cadrumo_register_clean)
   cadrumo_register_clean(TARGET rust_application PATHS "${application_output}")

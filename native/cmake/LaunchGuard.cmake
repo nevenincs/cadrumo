@@ -7,12 +7,14 @@ set(launch_guard_library
   "${CADRUMO_PATH_CARGO}/${CADRUMO_PIN_rust_target}/$<IF:$<CONFIG:Debug>,debug,release>/${CMAKE_STATIC_LIBRARY_PREFIX}cadrumo_launch_guard${CMAKE_STATIC_LIBRARY_SUFFIX}")
 cadrumo_cargo_command(launch_guard_cargo
   --env "CADRUMO_NATIVE_CONTRACT=${CONTRACT_DIR}/contract.json")
+cadrumo_build_step(launch_guard_comment rust_launch_guard GROUP native
+  SUMMARY "compile the launch guard linked into every interpreter host" OUTPUTS "${launch_guard_library}")
 add_custom_target(rust_launch_guard
   COMMAND ${launch_guard_cargo} build --locked --lib
     --manifest-path "${launch_guard_source}/Cargo.toml"
     --target "${CADRUMO_PIN_rust_target}" --profile "$<IF:$<CONFIG:Debug>,dev,release>"
   BYPRODUCTS "${launch_guard_library}"
-  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${launch_guard_comment}" VERBATIM)
 add_dependencies(rust_launch_guard native_contract)
 foreach(target cadrumo_python cadrumo_python_d ${CADRUMO_ENTRYPOINT_TARGETS})
   target_include_directories(${target} PRIVATE

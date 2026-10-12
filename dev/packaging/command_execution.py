@@ -85,6 +85,7 @@ def run_command(
     errors: Literal["strict", "replace"] = "strict",
     input_text: str | None = None,
     inherited_descriptors: Sequence[int] = (),
+    inherit_output: bool = False,
 ) -> CommandResult:
     """Run one command and retain its actual output, timestamps, and exit status.
 
@@ -93,12 +94,20 @@ def run_command(
     the child what it was given, and the token differs by platform, so it reads
     the descriptor numbers - or, on Windows, ``msvcrt.get_osfhandle`` of the
     same descriptors - for itself.
+
+    ``inherit_output`` gives the child this process's standard output and
+    error instead of capturing them, so a long build step reports progress as
+    it happens. The result then carries empty ``stdout`` and ``stderr``.
     """
     if isinstance(argv, str):
         raise ValueError("command argv must be a sequence of arguments, not one string")
     command = tuple(argv)
     if not command or any(not argument for argument in command):
         raise ValueError("command argv must contain only non-empty arguments")
+    if inherit_output:
+        # The child writes to the same streams; keep this process's lines before its own.
+        sys.stdout.flush()
+        sys.stderr.flush()
     started_at = datetime.now(UTC)
     started = time.monotonic()
     try:
@@ -111,6 +120,7 @@ def run_command(
                 errors=errors,
                 input_text=input_text,
                 inherited_descriptors=inherited_descriptors,
+                inherit_output=inherit_output,
             ),
         )
     finally:
@@ -137,15 +147,17 @@ async def _run_process(
     errors: Literal["strict", "replace"],
     input_text: str | None,
     inherited_descriptors: Sequence[int],
+    inherit_output: bool = False,
 ) -> tuple[int, str, str]:
     """Execute one explicit argv with bounded capture and optional input."""
+    output = None if inherit_output else asyncio.subprocess.PIPE
     process = await asyncio.create_subprocess_exec(
         *command,
         cwd=str(cwd),
         env=dict(environment) if environment is not None else None,
         stdin=asyncio.subprocess.PIPE if input_text is not None else None,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
+        stdout=output,
+        stderr=output,
         **cast(Any, _inheritance_options(inherited_descriptors)),
     )
     encoded_input = None if input_text is None else input_text.encode(_UTF_8)
@@ -222,8 +234,10 @@ def _kill_posix_descendants(pid: int) -> None:
             descendant.kill()
 
 
-def _decode_output(payload: bytes, *, errors: Literal["strict", "replace"]) -> str:
-    """Match ``subprocess.run(text=True)`` universal-newline decoding."""
+def _decode_output(payload: bytes | None, *, errors: Literal["strict", "replace"]) -> str:
+    """Match ``subprocess.run(text=True)`` universal-newline decoding; inherited streams are empty."""
+    if payload is None:
+        return ""
     return payload.decode(_UTF_8, errors=errors).replace("\r\n", "\n").replace("\r", "\n")
 
 

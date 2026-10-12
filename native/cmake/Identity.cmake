@@ -1,9 +1,12 @@
 # Shared by the source build and the native distribution project.
 include("${CMAKE_CURRENT_LIST_DIR}/BuildPaths.cmake")
 get_filename_component(CADRUMO_SOURCE_ROOT "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)
+include("${CMAKE_CURRENT_LIST_DIR}/BuildLog.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/Bootstrap.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/Cleanup.cmake")
 cmake_language(DEFER DIRECTORY "${CMAKE_SOURCE_DIR}" CALL cadrumo_finalize_clean_targets)
+# After cleanup finalization, so the summary counts the clean targets it creates.
+cmake_language(DEFER DIRECTORY "${CMAKE_SOURCE_DIR}" CALL cadrumo_print_build_summary)
 if(NOT EXISTS "${CADRUMO_DEV_PYTHON}")
   message(FATAL_ERROR "Set CADRUMO_DEV_PYTHON to the project's development interpreter")
 endif()
@@ -27,11 +30,16 @@ endif()
 set(CADRUMO_CONFIGURED_TARGET "${CADRUMO_TARGET}" CACHE INTERNAL "Target owning this binary directory")
 set(CADRUMO_CHANNEL stable CACHE STRING "Installation channel, independent of Debug/Release")
 set_property(CACHE CADRUMO_CHANNEL PROPERTY STRINGS stable preview)
+message(CHECK_START "Resolving the product identity for ${CADRUMO_TARGET} on the ${CADRUMO_CHANNEL} channel")
 execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.identity
   --target "${CADRUMO_TARGET}" --channel "${CADRUMO_CHANNEL}" --output "${CADRUMO_PATH_GENERATED}"
   WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMAND_ERROR_IS_FATAL ANY)
 include("${CADRUMO_PATH_GENERATED}/Identity.cmake")
 set(CADRUMO_VERSION "${CADRUMO_ID_VERSION}")
+message(CHECK_PASS "${CADRUMO_ID_NAME} ${CADRUMO_ID_VERSION}")
+cadrumo_build_fact("Product" "${CADRUMO_ID_NAME} ${CADRUMO_ID_VERSION}")
+cadrumo_build_fact("Target" "${CADRUMO_TARGET}")
+cadrumo_build_fact("Channel" "${CADRUMO_CHANNEL}")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
   "${CADRUMO_SOURCE_ROOT}/pyproject.toml"
   "${CADRUMO_SOURCE_ROOT}/src/cadrumo/core/product_identity.py"

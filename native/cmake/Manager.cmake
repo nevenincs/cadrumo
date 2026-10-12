@@ -43,12 +43,14 @@ endif()
 # Cargo owns freshness, including build.rs inputs such as the embedded process manifest.
 # manager_cargo expands only here and in add_test: copying it into another list would split
 # the escaped semicolons of its LIB and INCLUDE values.
+cadrumo_build_step(manager_comment rust_manager GROUP native
+  SUMMARY "compile the per-user runtime manager image" OUTPUTS "${CADRUMO_MANAGER_EXECUTABLE}")
 add_custom_target(rust_manager ALL
   COMMAND ${manager_cargo} build --locked --bins --manifest-path "${manager_cargo_manifest}"
     --target "${CADRUMO_PIN_rust_target}" --profile "${manager_profile}"
   ${manager_manifest_check}
   BYPRODUCTS "${CADRUMO_MANAGER_EXECUTABLE}"
-  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${manager_comment}" VERBATIM)
 add_dependencies(rust_manager native_contract)
 if(COMMAND cadrumo_register_clean)
   cadrumo_register_clean(TARGET rust_manager PATHS "${CADRUMO_MANAGER_EXECUTABLE}")

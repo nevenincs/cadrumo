@@ -1,6 +1,7 @@
 # Build the native format from the exact payload produced by this source graph.
 # The distribution project owns package layout, native tools and installation gates.
 include_guard(GLOBAL)
+include("${CMAKE_CURRENT_LIST_DIR}/BuildLog.cmake")
 set(distribution_source "${PROJECT_SOURCE_DIR}/native/cmake/distribution")
 file(READ "${distribution_source}/CMakePresets.json" distribution_presets)
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
@@ -81,10 +82,13 @@ foreach(command distribution_configure distribution_build)
 endforeach()
 set(distribution_script_path "${PROJECT_BINARY_DIR}/native-installer-$<CONFIG>.cmake")
 file(GENERATE OUTPUT "${distribution_script_path}" CONTENT "${distribution_script}")
+cadrumo_build_step(installer_comment native-installer GROUP package
+  SUMMARY "configure the ${distribution_preset} distribution preset on this payload and build its native package"
+  OUTPUTS "${distribution_binary}")
 add_custom_target(native-installer
   COMMAND "${CMAKE_COMMAND}" -P "${distribution_script_path}"
   DEPENDS ${distribution_dependencies}
-  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" USES_TERMINAL VERBATIM)
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${installer_comment}" USES_TERMINAL VERBATIM)
 # The nested preset owns MSI outputs. Desktop bootstrap delivery also writes
 # beside this source graph's assembled payload, so this target owns its cleanup.
 if(WIN32 AND distribution_desktop)

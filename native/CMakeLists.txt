@@ -43,22 +43,28 @@ cmake_path(GET bridge_library STEM bridge_name)
 set(CADRUMO_PACKAGE_EXECUTABLE "${production_executable}" PARENT_SCOPE)
 string(JSON package_manifest GET "${package_layout}" files package_manifest)
 set(CADRUMO_PACKAGE_MANIFEST "${package_manifest}" PARENT_SCOPE)
+cadrumo_build_step(step_comment python_sdk GROUP dependencies
+  SUMMARY "provision the pinned CPython SDK for ${CADRUMO_TARGET}" OUTPUTS "${CADRUMO_PATH_PYTHON_SDK}")
 add_custom_target(python_sdk
   COMMAND ${CADRUMO_HELPER} sdk --build "${PROJECT_BINARY_DIR}" --inputs "${PROJECT_BINARY_DIR}/inputs-sdk.txt"
   DEPENDS ${sdk_inputs} "${PROJECT_BINARY_DIR}/inputs-sdk.txt"
   BYPRODUCTS "${CADRUMO_PATH_PYTHON_SDK}/ready" ${sdk_link_outputs}
-  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
+cadrumo_build_step(step_comment python_dependencies GROUP dependencies
+  SUMMARY "install the hash-pinned runtime wheels" OUTPUTS "${CADRUMO_PATH_RUNTIME}")
 add_custom_target(python_dependencies
   COMMAND ${CADRUMO_HELPER} provision --build "${PROJECT_BINARY_DIR}" --inputs "${PROJECT_BINARY_DIR}/inputs-provision.txt"
   DEPENDS ${provision_inputs} "${PROJECT_BINARY_DIR}/inputs-provision.txt"
   BYPRODUCTS "${CADRUMO_PATH_RUNTIME}/ready"
-  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
 add_dependencies(python_dependencies python_sdk)
+cadrumo_build_step(step_comment native_build_tools GROUP dependencies
+  SUMMARY "install the pinned build-only tools" OUTPUTS "${CADRUMO_PATH_TOOLS}")
 add_custom_target(native_build_tools
   COMMAND ${CADRUMO_HELPER} tools --build "${PROJECT_BINARY_DIR}" --inputs "${PROJECT_BINARY_DIR}/inputs-tools.txt"
   DEPENDS ${tool_inputs} "${PROJECT_BINARY_DIR}/inputs-tools.txt"
   BYPRODUCTS "${CADRUMO_PATH_TOOLS}/ready"
-  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
 if(COMMAND cadrumo_register_clean)
   cadrumo_register_clean(TARGET python_sdk PATHS "${CADRUMO_PATH_PYTHON_SDK}")
   cadrumo_register_clean(TARGET python_dependencies PATHS "${CADRUMO_PATH_RUNTIME}")

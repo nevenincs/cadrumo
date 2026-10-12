@@ -380,6 +380,47 @@ cmake --build --preset package-release
 cmake --build --preset release --target verify-package
 ```
 
+### Build output
+
+`native/cmake/BuildLog.cmake` owns what configure and build print. Configure
+reports each toolchain and identity check as it runs, then ends with a summary:
+the product, target, channel and selected tools, the payload options, and every
+build target grouped by role, with what it produces, where, and whether the
+default build includes it. `cmake --preset <name> --log-level=VERBOSE` adds the
+output directory layout, the clean targets, the CTest test names and the
+builder's `uv` output; `--log-context` prefixes each line with the project that
+printed it.
+
+During the build, every step announces itself before its commands run as
+`[cadrumo:<target>] <Config>: <what it does> -> <output>`, and prints
+`[cadrumo:<target>] <Config>: complete` once its commands succeed. The Python
+helpers it runs log under the same `[cadrumo:<step>]` prefix and stream the
+commands they start, such as Cargo, uv and CPack, as those commands run.
+`CADRUMO_BUILD_LOG_LEVEL` selects their level with CMake's names (`ERROR`,
+`WARNING`, `NOTICE`, `STATUS`, `VERBOSE`, `DEBUG`, `TRACE`) and defaults to
+`STATUS`: whether a step reuses or rebuilds its output and why, what it
+produced, and how long it took. `VERBOSE` adds phase timings and enrolled-input
+counts, and a non-empty `VERBOSE` environment variable selects it too. `DEBUG`
+adds the full command lines and input fingerprints. Warnings and errors go to
+standard error with a `warning:` or `error:` label.
+
+```text
+CADRUMO_BUILD_LOG_LEVEL=VERBOSE cmake --build --preset release --target bundle
+```
+
+A new custom target is described where it is created, so the summary and the
+build output name it:
+
+```cmake
+cadrumo_build_step(step_comment my_target GROUP assembly
+  SUMMARY "what the target does" OUTPUTS "${CADRUMO_PATH_STAGE}/$<CONFIG>/app")
+add_custom_target(my_target ... COMMENT "${step_comment}" VERBATIM)
+```
+
+`cadrumo_describe_target` describes an executable or library the same way, and
+`cadrumo_build_fact` adds a line to the summary. The configure summary lists any
+target left undescribed.
+
 `native/cmake/BuildPaths.cmake` owns build output directories and cleanup
 groups. CMake writes `build-paths.json` in the binary directory; Python helpers
 consume it without fallback directory definitions. Test fixtures use the test

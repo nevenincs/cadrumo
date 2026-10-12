@@ -14,6 +14,7 @@ from dev._paths import REPO_ROOT
 
 from ..command_execution import run_command
 from ..runtime_wheel_selection import plan_target_wheels
+from .build_log import BuildLog, display_path
 from .build_toolchain import selected_uv
 from .hashing import digest
 from .layout import backend, load_layout
@@ -113,7 +114,9 @@ def provision(
         ),
         encoding="utf-8",
     )
-    print(result.stderr)
+    log = BuildLog("provision")
+    log.status(f"installed {len(wheels)} hash-pinned runtime wheels for {target} into {display_path(dependencies)}")
+    log.verbose(result.stderr.strip())
 
 
 if __name__ == "__main__":

@@ -28,6 +28,7 @@ from dev.docs.language_roots import (
     text_file,
 )
 
+from .build_log import BuildLog, display_path
 from .build_paths import build_paths
 from .hashing import digest
 from .layout import load_layout
@@ -520,7 +521,7 @@ def stage_roots(build: Path, *, target: str | None = None) -> None:
         excluded = sorted({file.suffix or file.name for file in shippable if media_types.of(file.name) is None})
         if excluded:
             unserved = len(shippable) - len(selected[language])
-            print(f"Excluded {unserved} unserved {language} files: {', '.join(excluded)}", flush=True)
+            BuildLog("user_docs_stage").verbose(f"excluded {unserved} unserved {language} files: {', '.join(excluded)}")
         for source in selected[language]:
             kind = (media_types.of(source.name) or "").split(";")[0]
             if kind == "text/html":
@@ -568,11 +569,10 @@ def stage_roots(build: Path, *, target: str | None = None) -> None:
         inventory[relative] = digest(file)
     built_size = sum(source.stat().st_size for files in selected.values() for source in files)
     stored_size = sum(file.stat().st_size for file in payload.rglob("*") if file.is_file())
-    print(
-        f"Staged user documentation in {len(languages)} languages: {sum(map(len, selected.values()))} built files, "
-        f"{built_size / 1_000_000:.1f} MB, stored as {len(inventory)} files, {stored_size / 1_000_000:.1f} MB "
-        f"({len(stored.pages)} pages composed per language)",
-        flush=True,
+    BuildLog("user_docs_stage").status(
+        f"staged user documentation in {len(languages)} languages: {sum(map(len, selected.values()))} built "
+        f"files, {built_size / 1_000_000:.1f} MB, stored as {len(inventory)} files, "
+        f"{stored_size / 1_000_000:.1f} MB ({len(stored.pages)} pages composed per language) -> {display_path(payload)}"
     )
     manifest = {
         "schema": MANIFEST_SCHEMA,

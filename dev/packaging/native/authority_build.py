@@ -11,26 +11,33 @@ from dev._paths import REPO_ROOT
 from ..authority_staging import selected_published_authority
 from ..command_execution import run_command
 from .action_cache import action_lock
+from .build_log import BuildLog, command_line, display_path
 
 
 def publish(build: Path, *, rebuild: bool = False) -> None:
     """Compile missing publications; source or compiler edits require explicit rebuild."""
+    log = BuildLog("registry_authority")
     with action_lock(build, "authority-publication"):
         if not rebuild:
             try:
                 descriptor, _database = selected_published_authority(REPO_ROOT)
             except FileNotFoundError:
-                pass
+                log.status("no published authority is selected; compiling and publishing it")
             else:
-                print(f"Reusing published authority: {descriptor}; request registry_authority_rebuild to recompile")
+                log.status(
+                    f"up to date, reusing {display_path(descriptor)}; build registry_authority_rebuild to recompile"
+                )
                 return
+        else:
+            log.status("recompiling and republishing the registry authority on request")
         command = [sys.executable, "-B", "-m", "dev.registry.pipeline", "publish-authority"]
-        result = run_command(command, cwd=REPO_ROOT)
-        sys.stdout.write(result.stdout)
-        sys.stderr.write(result.stderr)
+        log.debug(f"command: {command_line(command)}")
+        result = run_command(command, cwd=REPO_ROOT, inherit_output=True)
         if result.returncode:
+            log.error(f"publication failed with exit status {result.returncode}; the existing publication is kept")
             raise SystemExit(result.returncode)
-        selected_published_authority(REPO_ROOT)
+        descriptor, _database = selected_published_authority(REPO_ROOT)
+        log.status(f"published {display_path(descriptor)}")
 
 
 if __name__ == "__main__":

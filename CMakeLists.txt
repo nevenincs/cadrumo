@@ -1,4 +1,6 @@
 cmake_minimum_required(VERSION 4.4)
+# --log-context prefixes each configure message with the section that printed it.
+list(APPEND CMAKE_MESSAGE_CONTEXT cadrumo)
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
   message(FATAL_ERROR "Use an out-of-source build directory")
 endif()
@@ -14,12 +16,14 @@ if(NOT CMAKE_VERSION VERSION_EQUAL CADRUMO_PIN_cmake)
 endif()
 include(native/cmake/Identity.cmake)
 string(JSON CADRUMO_PIN_rust_target GET "${toolchain}" targets "${CADRUMO_TARGET}" rust_target)
+message(CHECK_START "Resolving the target platform for ${CADRUMO_TARGET}")
 execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -c
   "import json; from dataclasses import asdict; from dev.packaging.runtime_wheelhouse_contract import target_platform; print(json.dumps(asdict(target_platform('${CADRUMO_TARGET}'))))"
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" OUTPUT_VARIABLE target_platform
   OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
 string(JSON target_system GET "${target_platform}" platform_system)
 string(JSON target_machine GET "${target_platform}" platform_machine)
+message(CHECK_PASS "${target_system} ${target_machine}")
 if(target_system STREQUAL "Darwin")
   string(JSON target_floor GET "${target_platform}" floor)
   string(REPLACE "macos-" "" target_floor "${target_floor}")
@@ -44,12 +48,19 @@ include(native/cmake/Configurations.cmake)
 if(WIN32)
   enable_language(RC)
 endif()
+message(CHECK_START "Checking the C compiler against native/toolchain.json")
 if(WIN32)
   if(NOT MSVC OR NOT CMAKE_C_COMPILER MATCHES "/MSVC/${CADRUMO_PIN_msvc}/"
       OR NOT CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION STREQUAL CADRUMO_PIN_windows_sdk)
+    message(CHECK_FAIL "MSVC ${CADRUMO_PIN_msvc} with Windows SDK ${CADRUMO_PIN_windows_sdk} is pinned")
     message(FATAL_ERROR "The selected compiler/SDK does not match native/toolchain.json")
   endif()
+  set(compiler_identity "MSVC ${CADRUMO_PIN_msvc}, Windows SDK ${CADRUMO_PIN_windows_sdk}")
+else()
+  set(compiler_identity "${CMAKE_C_COMPILER_ID} ${CMAKE_C_COMPILER_VERSION}")
 endif()
+message(CHECK_PASS "${compiler_identity}")
+cadrumo_build_fact("C compiler" "${compiler_identity}: ${CMAKE_C_COMPILER}")
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   set(CMAKE_INSTALL_PREFIX "${PROJECT_BINARY_DIR}/install" CACHE PATH "Default local installation prefix" FORCE)
 endif()
@@ -75,6 +86,7 @@ execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -c
 find_program(CADRUMO_UV NAMES uv REQUIRED)
 execute_process(COMMAND "${CADRUMO_UV}" --version
   OUTPUT_VARIABLE uv_version OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
+cadrumo_build_fact("uv" "${uv_version}: ${CADRUMO_UV}")
 set(build_toolchain "{}")
 string(JSON build_toolchain SET "${build_toolchain}" host_python "${host_python}")
 foreach(key CADRUMO_TARGET CADRUMO_CHANNEL CMAKE_C_COMPILER CMAKE_C_COMPILER_VERSION CMAKE_TOOLCHAIN_FILE CADRUMO_UV uv_version)
@@ -85,6 +97,7 @@ include(native/cmake/ArchiveTools.cmake)
 include(native/cmake/BuildNumber.cmake)
 string(TIMESTAMP build_date "%Y-%m-%dT%H:%M:%SZ" UTC)
 set(CADRUMO_BUILD_DATE "${build_date}" CACHE STRING "Build date; SOURCE_DATE_EPOCH controls the default")
+cadrumo_build_fact("Build" "number ${CADRUMO_BUILD_NUMBER}, dated ${CADRUMO_BUILD_DATE}")
 option(CADRUMO_INCLUDE_DEVELOPMENT_BINARY "Include the development interpreter in the assembled package" OFF)
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
   "${PROJECT_SOURCE_DIR}/pyproject.toml" "${PROJECT_SOURCE_DIR}/native/toolchain.json"
@@ -95,6 +108,7 @@ execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -c
   OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
 string(JSON CADRUMO_PLATFORM GET "${package_layout}" platform)
 string(JSON CADRUMO_BACKEND GET "${package_layout}" backend)
+cadrumo_build_fact("Package layout" "${CADRUMO_PLATFORM}, ${CADRUMO_BACKEND} assembly backend")
 execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -c
   "from cadrumo.core.storage_environment import STORAGE_ROOT; print(STORAGE_ROOT.variable)"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" OUTPUT_VARIABLE CADRUMO_STORAGE_ROOT_VARIABLE
@@ -106,6 +120,8 @@ option(CADRUMO_CONFIGURE_PAYLOAD "Configure full payload assembly, documentation
 if(CADRUMO_CONFIGURE_PAYLOAD)
   include(native/cmake/Packaging.cmake)
 else()
-  message(STATUS "Native component build only; payload assembly and package acceptance are unavailable")
+  cadrumo_build_fact("Payload" "native components only, without payload assembly or package acceptance (CADRUMO_CONFIGURE_PAYLOAD=OFF)")
 endif()
+cadrumo_build_fact("Install prefix" "${CMAKE_INSTALL_PREFIX}")
+cadrumo_build_fact("Tests" "BUILD_TESTING=${BUILD_TESTING}")
 file(CONFIGURE OUTPUT "${CADRUMO_PATH_GENERATED}/build-toolchain.json" CONTENT "@build_toolchain@\n" @ONLY)

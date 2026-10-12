@@ -9,6 +9,7 @@ from pathlib import Path
 
 from dev._paths import REPO_ROOT
 
+from .build_log import BuildLog, display_path
 from .build_paths import build_paths
 
 
@@ -38,14 +39,21 @@ def _bounded_path(build: Path, value: str) -> Path:
     return target
 
 
-def _remove(build: Path, values: list[str]) -> None:
+def _remove(build: Path, values: list[str], log: BuildLog) -> None:
     # Validate the complete request before making any filesystem changes.
     targets = [_bounded_path(build, value) for value in values]
+    removed = 0
     for target in targets:
         if target.is_dir():
             shutil.rmtree(target)
         elif target.exists():
             target.unlink()
+        else:
+            log.debug(f"already absent: {display_path(target)}")
+            continue
+        removed += 1
+        log.verbose(f"removed {display_path(target)}")
+    log.status(f"removed {removed} of {len(targets)} owned paths under {display_path(build)}")
 
 
 def clean_target(build: Path, target: str, config: str) -> None:
@@ -68,7 +76,7 @@ def clean_target(build: Path, target: str, config: str) -> None:
             collect(dependency)
 
     collect(target)
-    _remove(build, paths)
+    _remove(build, paths, BuildLog(f"clean-{target}"))
 
 
 def clean(build: Path, group: str) -> None:
@@ -86,7 +94,7 @@ def clean(build: Path, group: str) -> None:
             ownership = json.loads(manifest.read_text(encoding="utf-8"))
             _build_directory(build, Path(ownership["source"]))
             targets.extend(Path(path) for target in ownership["targets"].values() for path in target["paths"])
-    _remove(build, [str(target) for target in targets])
+    _remove(build, [str(target) for target in targets], BuildLog(f"clean-{group}"))
 
 
 if __name__ == "__main__":

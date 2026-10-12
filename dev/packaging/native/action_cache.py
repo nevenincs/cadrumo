@@ -24,16 +24,25 @@ def action_lock(build: Path, action: str, *, timings: BuildTimings | None = None
             if os.name == "nt":
                 import msvcrt
 
+                announced = False
                 while True:
                     try:
                         msvcrt.locking(stream.fileno(), msvcrt.LK_NBLCK, 1)
                         break
                     except PermissionError:
+                        if not announced and timings is not None:
+                            timings.log.status(f"waiting for the {action} lock another build step holds")
+                            announced = True
                         time.sleep(0.2)
             else:
                 import fcntl
 
-                fcntl.flock(stream, fcntl.LOCK_EX)
+                try:
+                    fcntl.flock(stream, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                except BlockingIOError:
+                    if timings is not None:
+                        timings.log.status(f"waiting for the {action} lock another build step holds")
+                    fcntl.flock(stream, fcntl.LOCK_EX)
         try:
             yield
         finally:
@@ -72,16 +81,25 @@ def fingerprint(inputs: Path, extra: tuple[Path, ...] = (), *, outside: Path | N
 
 def current(destination: Path, identity: str) -> bool:
     """Reuse only complete outputs from exactly these inputs."""
+    return staleness(destination, identity) is None
+
+
+def staleness(destination: Path, identity: str) -> str | None:
+    """Say why ``destination`` cannot be reused for these inputs, or ``None`` when it can."""
     marker = destination / "ready"
     if not marker.is_file():
-        return False
+        return "no completion receipt"
     try:
         state = json.loads(marker.read_text(encoding="utf-8"))
-        return bool(
-            state["schema"] == 3 and state["inputs"] == identity and state["outputs"] == _inventory(destination)
-        )
+        if state["schema"] != 3:
+            return "completion receipt has an older schema"
+        if state["inputs"] != identity:
+            return "inputs changed"
+        if state["outputs"] != _inventory(destination):
+            return "outputs differ from the completion receipt"
     except (ValueError, KeyError, TypeError, OSError):
-        return False
+        return "completion receipt is unreadable"
+    return None
 
 
 def _inventory(destination: Path) -> dict[str, Any]:

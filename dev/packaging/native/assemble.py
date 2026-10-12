@@ -19,6 +19,7 @@ from dev._paths import REPO_ROOT
 
 from ..runtime_wheel_selection import active_requirements
 from ..runtime_wheelhouse_contract import target_platform
+from .build_log import BuildLog, display_path
 from .build_timing import BuildTimings
 from .docs_stage import verified_stage
 from .hashing import digest
@@ -339,7 +340,7 @@ def assemble(
     if observed != set(package_inventory(root, manifest)):
         raise ValueError("Assembled files differ from the package inventory")
     (root / files["package_manifest"]).write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-    print(f"Assembled {root}: {len(modules)} relocated extension modules")
+    BuildLog("assemble").status(f"assembled {display_path(root)}: {len(modules)} relocated extension modules")
 
 
 if __name__ == "__main__":

@@ -11,13 +11,15 @@ include("${CMAKE_CURRENT_LIST_DIR}/CachedCommand.cmake")
 list(APPEND product_inputs "${CADRUMO_PATH_RUNTIME}/ready")
 list(JOIN product_inputs "\n" input_lines)
 file(GENERATE OUTPUT "${PROJECT_BINARY_DIR}/inputs-product.txt" CONTENT "${input_lines}\n")
+cadrumo_build_step(step_comment python_product GROUP dependencies
+  SUMMARY "build and install the product wheels from this checkout" OUTPUTS "${CADRUMO_PATH_PRODUCT}")
 add_custom_target(python_product
   # Always run the Python admission check: it loads env/.env or inherited CI
   # credentials and binds cache reuse to their digest without CMake variables.
   COMMAND ${CADRUMO_HELPER} product --build "${PROJECT_BINARY_DIR}" --inputs "${PROJECT_BINARY_DIR}/inputs-product.txt"
   DEPENDS ${product_inputs} "${PROJECT_BINARY_DIR}/inputs-product.txt"
   BYPRODUCTS "${CADRUMO_PATH_PRODUCT}/ready"
-  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
 add_dependencies(python_product python_dependencies registry_authority)
 cadrumo_register_clean(TARGET python_product PATHS "${CADRUMO_PATH_PRODUCT}")
 if(CADRUMO_INCLUDE_DEVELOPMENT_BINARY)
@@ -28,10 +30,11 @@ include("${PROJECT_SOURCE_DIR}/native/cmake/Docs.cmake")
 option(CADRUMO_PACKAGE_USER_DOCS "Bundle the user documentation in the assembled package" ON)
 if(CADRUMO_PACKAGE_USER_DOCS)
   set(user_docs_dependencies user_docs "${CADRUMO_PATH_USER_DOCS_STAGE}/ready")
-  message(STATUS "User documentation: bundled in the package (CADRUMO_PACKAGE_USER_DOCS=ON)")
+  cadrumo_build_fact("User documentation" "bundled in the package (CADRUMO_PACKAGE_USER_DOCS=ON)")
 else()
   set(user_docs_args --without-user-docs)
-  message(STATUS "User documentation: absent from the package; desktop payloads refuse it (CADRUMO_PACKAGE_USER_DOCS=OFF)")
+  cadrumo_build_fact("User documentation"
+    "not bundled, so desktop payloads refuse it (CADRUMO_PACKAGE_USER_DOCS=OFF)")
 endif()
 # Application images are native executables that are not interpreter hosts, declared by the
 # platform mapping. Each names its CMake target and the variable that holds its artifact path,
@@ -60,13 +63,14 @@ if(image_count GREATER 0)
   endforeach()
 endif()
 if(desktop_image_staged)
-  message(STATUS "Desktop application: configured; a desktop image is staged")
+  cadrumo_build_fact("Desktop application" "configured: the platform stages a desktop image")
   add_subdirectory("${PROJECT_SOURCE_DIR}/native/desktop" "${PROJECT_BINARY_DIR}/native/desktop")
 else()
-  message(STATUS "Desktop application: not configured; no desktop image is staged")
+  cadrumo_build_fact("Desktop application" "not configured: the platform stages no desktop image")
 endif()
 set(application_image_args)
 set(application_image_dependencies)
+set(staged_images)
 string(JSON image_count LENGTH "${application_images}")
 if(image_count GREATER 0)
   math(EXPR image_last "${image_count} - 1")
@@ -87,7 +91,7 @@ if(image_count GREATER 0)
     endif()
     list(APPEND application_image_args --image "${image_file}=${image_path}")
     list(APPEND application_image_dependencies "${image_target}" "${image_path}")
-    message(STATUS "Application image ${image_file}: staged from ${image_target}")
+    list(APPEND staged_images "${image_file} from ${image_target}")
     if(BUILD_TESTING)
       set(image_arguments)
       string(JSON argument_count LENGTH "${application_images}" ${index} version_arguments)
@@ -114,6 +118,7 @@ if(image_count GREATER 0)
     endif()
   endforeach()
 endif()
+cadrumo_build_fact("Application images" ${staged_images})
 include("${PROJECT_SOURCE_DIR}/native/cmake/PackageInputs.cmake")
 cadrumo_package_bootstrap(package_bootstrap "${package_layout}" "${PROJECT_SOURCE_DIR}")
 cadrumo_assembly_product_inputs(assembly_product_inputs "${CADRUMO_PATH_PRODUCT}")
@@ -150,6 +155,9 @@ foreach(input uv.lock pyproject.toml dev/packaging/release-python-version
 endforeach()
 cadrumo_cached_command(assembly_command bundle INPUTS ${assembly_inputs}
   OUTPUTS "${CADRUMO_PATH_STAGE}/$<CONFIG>")
+cadrumo_build_step(step_comment app-distro GROUP assembly
+  SUMMARY "assemble the application payload: interpreter, product, native images and documentation"
+  OUTPUTS "${CADRUMO_PATH_STAGE}/$<CONFIG>/app")
 add_custom_target(app-distro ALL
   COMMAND ${assembly_command} ${CADRUMO_HELPER} assemble --build "${PROJECT_BINARY_DIR}" --config "$<CONFIG>" ${development_args}
     ${user_docs_args} ${application_image_args}
@@ -162,9 +170,11 @@ add_custom_target(app-distro ALL
     ${contract_inputs}
     "${package_bootstrap}"
   BYPRODUCTS "${CADRUMO_PATH_STAGE}/$<CONFIG>/ready"
-  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
 add_dependencies(app-distro rust_application)
-add_custom_target(bundle DEPENDS app-distro)
+cadrumo_build_step(step_comment bundle GROUP assembly SUMMARY "alias of app-distro"
+  OUTPUTS "${CADRUMO_PATH_STAGE}/$<CONFIG>/app")
+add_custom_target(bundle DEPENDS app-distro COMMENT "${step_comment}")
 if(TARGET desktop-headless-test)
   add_dependencies(desktop-headless-test bundle)
 endif()
@@ -208,14 +218,18 @@ foreach(consumer platform_static_consumer platform_dll_consumer)
     list(APPEND native_verification_targets ${consumer})
   endif()
 endforeach()
+cadrumo_build_step(step_comment verify GROUP verification
+  SUMMARY "build the bundle and native verification targets, then run every CTest test")
 add_custom_target(verify
   COMMAND "${CMAKE_CTEST_COMMAND}" --test-dir "${PROJECT_BINARY_DIR}" -C "$<CONFIG>" --output-on-failure
   DEPENDS bundle ${native_verification_targets}
-  USES_TERMINAL VERBATIM)
+  COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
+cadrumo_build_step(step_comment verify-app-distro GROUP verification
+  SUMMARY "run the bundle and application package CTest tests")
 add_custom_target(verify-app-distro
   COMMAND "${CMAKE_CTEST_COMMAND}" --test-dir "${PROJECT_BINARY_DIR}" -C "$<CONFIG>"
     --output-on-failure -R "^(bundle[.]|application[.]package$)"
-  DEPENDS app-distro USES_TERMINAL VERBATIM)
+  DEPENDS app-distro COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
 cadrumo_cached_command(zip_command zip
   INPUTS "${CADRUMO_PATH_STAGE}/$<CONFIG>/app" "${PROJECT_BINARY_DIR}/CPackConfig.cmake"
     "${PROJECT_BINARY_DIR}/CPackProject.cmake" "${PROJECT_BINARY_DIR}/Artifact.cmake"
@@ -223,15 +237,21 @@ cadrumo_cached_command(zip_command zip
     "${PROJECT_SOURCE_DIR}/LICENSE" "${CMAKE_CPACK_COMMAND}"
   OUTPUTS "${CADRUMO_PATH_PACKAGES}/$<CONFIG>/${CADRUMO_ARTIFACT_STEM}-$<CONFIG>.zip"
     "${PROJECT_BINARY_DIR}/artifacts-$<CONFIG>.json")
+cadrumo_build_step(step_comment zip GROUP package
+  SUMMARY "package the bundle as the distributable ZIP"
+  OUTPUTS "${CADRUMO_PATH_PACKAGES}/$<CONFIG>/${CADRUMO_ARTIFACT_STEM}-$<CONFIG>.zip")
 add_custom_target(zip
   COMMAND ${zip_command} "${CMAKE_CPACK_COMMAND}" --config "${PROJECT_BINARY_DIR}/CPackConfig.cmake" -C "$<CONFIG>"
-  DEPENDS bundle USES_TERMINAL VERBATIM)
+  DEPENDS bundle COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
 add_custom_target(clean-package DEPENDS clean-zip)
+cadrumo_build_step(step_comment verify-package GROUP verification
+  SUMMARY "extract the ZIP and verify the package it contains"
+  OUTPUTS "${CADRUMO_PATH_VERIFICATION}/$<CONFIG>")
 add_custom_target(verify-package
   COMMAND ${CADRUMO_HELPER} run -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.artifact_verify
     --build "${PROJECT_BINARY_DIR}" --config "$<CONFIG>"
     --application-probe-command "${CADRUMO_APPLICATION_ARTIFACT_PROBE_FILE}"
-  DEPENDS zip WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" USES_TERMINAL VERBATIM)
+  DEPENDS zip WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
 # One dependency graph builds the bundle/ZIP once and verifies that exact artifact.
 # Separate recipe invocations repeat graph traversal and can observe different inputs.
 include("${CMAKE_CURRENT_LIST_DIR}/ReleaseVerification.cmake")

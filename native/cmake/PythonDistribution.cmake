@@ -20,12 +20,19 @@ foreach(target python python_d)
   cadrumo_cached_command(python_distribution_command ${target}
     INPUTS ${python_distribution_target_inputs}
     OUTPUTS "${CADRUMO_PATH_STAGE}/$<CONFIG>")
+  if(target STREQUAL "python_d")
+    set(python_distribution_summary "assemble the interpreter-only payload with the development binary")
+  else()
+    set(python_distribution_summary "assemble the interpreter-only payload, without product or documentation")
+  endif()
+  cadrumo_build_step(python_distribution_comment ${target} GROUP assembly
+    SUMMARY "${python_distribution_summary}" OUTPUTS "${CADRUMO_PATH_STAGE}/$<CONFIG>/app")
   add_custom_target(${target}
     COMMAND ${python_distribution_command} ${CADRUMO_HELPER} assemble
       --build "${PROJECT_BINARY_DIR}" --config "$<CONFIG>" --interpreter --without-user-docs
       ${python_distribution_args}
     DEPENDS ${python_distribution_dependencies}
-    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" USES_TERMINAL VERBATIM)
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${python_distribution_comment}" USES_TERMINAL VERBATIM)
   cadrumo_register_clean(TARGET ${target} PATHS "${CADRUMO_PATH_STAGE}/$<CONFIG>"
     DEPENDS ${python_distribution_dependencies})
 endforeach()

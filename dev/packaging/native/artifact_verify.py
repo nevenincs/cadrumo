@@ -11,6 +11,7 @@ from dev._paths import REPO_ROOT
 
 from ..command_execution import run_command
 from .archive import extract_bundle
+from .build_log import BuildLog, display_path
 from .build_paths import build_paths
 from .build_timing import BuildTimings, measure_build
 from .cmake_build import reset
@@ -108,7 +109,7 @@ def _check(build: Path, configuration: str, application_probe: list[str] | None,
             result = run_command(application_probe, cwd=REPO_ROOT, environment=probe_environment, timeout_seconds=900)
             if result.returncode:
                 raise AssertionError("Rust package compatibility failed:\n" + result.stdout + result.stderr)
-        print(result.stdout)
+        BuildLog("artifact-verification").verbose(result.stdout.strip())
     if digest(archive_path) != archive_hash:
         raise AssertionError("ZIP changed during verification")
     if digest(manifest_path) != artifacts["manifest_sha256"]:
@@ -133,7 +134,7 @@ def _check(build: Path, configuration: str, application_probe: list[str] | None,
         ),
         encoding="utf-8",
     )
-    print(f"Verified ZIP: {artifacts['archive']}")
+    BuildLog("artifact-verification").status(f"verified {display_path(artifacts['archive'])}")
 
 
 if __name__ == "__main__":

@@ -85,6 +85,7 @@ def _configure_distribution(tmp_path: Path, target: str, *, manager: bool = Fals
     bootstrap += f'set(CADRUMO_SOURCE_ROOT "{REPO_ROOT.as_posix()}")\n'
     bootstrap += f'set(CADRUMO_DEV_PYTHON "{Path(sys.executable).as_posix()}")\n'
     bootstrap += f"set(CADRUMO_TARGET {target})\nadd_custom_target(setup-native-builder)\n"
+    bootstrap += f'include("{(REPO_ROOT / "native/cmake/BuildLog.cmake").as_posix()}")\n'
     bootstrap += f'include("{(REPO_ROOT / "native/cmake/Cleanup.cmake").as_posix()}")\n'
     bootstrap += 'cmake_language(DEFER DIRECTORY "${CMAKE_SOURCE_DIR}" CALL cadrumo_finalize_clean_targets)\n'
     for key, relative in paths.items():

@@ -21,6 +21,7 @@ from dev.cache_root import dev_cache_dir
 from ..authority_staging import selected_published_authority
 from ..command_execution import run_command
 from .action_cache import action_lock, completed, current, fingerprint
+from .build_log import BuildLog, display_path
 from .build_paths import build_paths
 from .docs_input_identity import shared_docs_inputs
 from .docs_stage import DocsPackagingError, declared_languages, language_roots, package_prefix
@@ -104,6 +105,10 @@ def require_host_product_metadata(expected_version: str) -> None:
         )
 
 
+def _log() -> BuildLog:
+    return BuildLog("user_docs_build")
+
+
 def build_roots(build: Path, inputs: Path, *, target: str | None = None, shared_cache: bool = True) -> None:
     """Build every declared root with the owning driver unless its enrolled inputs are unchanged."""
     layout = load_layout(target)
@@ -127,7 +132,7 @@ def build_roots(build: Path, inputs: Path, *, target: str | None = None, shared_
         validate_inputs()
         if current(build_root, input_identity):
             validate_inputs()
-            print("Reusing user documentation: inputs and output inventory unchanged", flush=True)
+            _log().status(f"up to date, reusing {display_path(build_root)}: inputs and output inventory unchanged")
             return
         (build_root / "ready").unlink(missing_ok=True)
         languages = declared_languages(layout)
@@ -145,7 +150,7 @@ def build_roots(build: Path, inputs: Path, *, target: str | None = None, shared_
             reuse_shared=shared_cache,
         )
         if not built:
-            print("Reusing the user documentation another build configuration built from the same inputs", flush=True)
+            _log().status("reusing the site another build configuration built from the same inputs")
         validate_inputs()
         completed(build_root, input_identity)
 
@@ -250,7 +255,7 @@ def _compile_roots(build_root: Path, work: Path, languages: tuple[str, ...]) -> 
     # resolves, which is where the compile writes them.
     html_root = roots[OutputLanguage.EN.value].parent
     log = work / "compile.log"
-    print(f"Compiling the user documentation in {', '.join(languages)} once; log: {log}", flush=True)
+    _log().status(f"compiling the user documentation in {', '.join(languages)} once; log: {display_path(log)}")
     result = run_command(
         compile_command(html_root, build_root),
         cwd=REPO_ROOT,
@@ -258,13 +263,13 @@ def _compile_roots(build_root: Path, work: Path, languages: tuple[str, ...]) -> 
         errors="replace",
     )
     log.write_text(result.stdout + result.stderr, encoding="utf-8")
-    print(f"Documentation compile: exit {result.returncode} in {result.duration_seconds:.0f} s", flush=True)
+    _log().verbose(f"documentation compile exited with status {result.returncode} in {result.duration_seconds:.0f} s")
     if result.returncode:
         lines = log.read_text(encoding="utf-8").splitlines()
-        print(f"\nThe one documentation compile failed (exit {result.returncode}); log: {log}", file=sys.stderr)
-        print("\n".join(lines[-25:]), file=sys.stderr)
+        _log().error(f"the documentation compile failed with exit status {result.returncode}; log: {display_path(log)}")
+        _log().notice("\n".join(lines[-25:]))
         causes = [match.group(1) for line in lines if (match := _RAISED.search(line))]
-        print(f"cause: {causes[-1] if causes else 'see the log above'}", file=sys.stderr, flush=True)
+        _log().error(f"cause: {causes[-1] if causes else 'see the log excerpt above'}")
         raise SystemExit(f"User documentation compile failed: exit {result.returncode}")
     absent = sorted(language for language, root in roots.items() if not root.is_dir())
     if absent:
@@ -313,18 +318,17 @@ def _index_site(build_root: Path, languages: tuple[str, ...]) -> None:
     # scratch product storage rather than the workstation's own state.
     ensure_isolated_storage_root()
     stats: list[InjectionStats] = []
-    print(f"Indexing the documentation site once over {', '.join(languages)}", flush=True)
+    _log().status(f"indexing the documentation site once over {', '.join(languages)}")
     outcome = build_shared_search_index(
         indexed,
         apex[0].html_root,
         inject=resolve_record_injector(REPO_ROOT, PACKAGE_INDEX_ENVIRONMENT, on_complete=stats.append),
     )
     written = stats[0].custom_records_written if stats else 0
-    print(
-        f"Search index compiled: {outcome.page_count} pages of {len(languages)} languages "
+    _log().status(
+        f"search index compiled: {outcome.page_count} pages of {len(languages)} languages "
         f"+ {written} shared term/casilla/legal/CLI records "
-        f"-> {outcome.html_root / outcome.output_subdir}",
-        flush=True,
+        f"-> {display_path(outcome.html_root / outcome.output_subdir)}"
     )
 
 

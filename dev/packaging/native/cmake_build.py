@@ -20,8 +20,9 @@ from ..authority_staging import selected_published_authority
 from ..command_execution import CommandResult, run_command
 from ..google_oauth import build_client_json, client_build_identity
 from ..runtime_wheel_selection import plan_target_wheels
-from .action_cache import action_lock, completed, current, fingerprint
+from .action_cache import action_lock, completed, fingerprint, staleness
 from .assemble import assemble, image_artifact
+from .build_log import BuildLog, command_line, display_path
 from .build_paths import build_paths
 from .build_timing import BuildTimings, measure_build
 from .build_toolchain import builder_inputs, native_toolchain_identity, selected_uv
@@ -83,8 +84,9 @@ def run_configured_command(
     ):
         with timings.phase("builder-admission") if timings is not None else nullcontext():
             builder_inputs(configured)
+        _announce(timings, command)
         with timings.phase("configured-command") if timings is not None else nullcontext():
-            result = run_command(command, cwd=REPO_ROOT)
+            result = run_command(command, cwd=REPO_ROOT, inherit_output=True)
             if timings is not None:
                 timings.command_completed(result.returncode)
             return result
@@ -133,22 +135,35 @@ def run_configured_command(
             clean = [command[0], "clean", "--target-dir", str(directory)]
             if "--manifest-path" in command:
                 clean.extend(["--manifest-path", command[command.index("--manifest-path") + 1]])
+            if timings is not None:
+                timings.log.status(
+                    "the selected Rust toolchain or SDK changed; "
+                    f"cleaning {display_path(directory)} before a full Cargo rebuild"
+                )
+            _announce(timings, clean)
             with timings.phase("cargo-clean") if timings is not None else nullcontext():
-                result = run_command(clean, cwd=REPO_ROOT, environment=environment)
+                result = run_command(clean, cwd=REPO_ROOT, environment=environment, inherit_output=True)
                 if timings is not None:
                     timings.command_completed(result.returncode)
-            sys.stdout.write(result.stdout)
-            sys.stderr.write(result.stderr)
             if result.returncode:
                 return result
+        _announce(timings, command)
         with timings.phase("cargo-command") if timings is not None else nullcontext():
-            result = run_command(command, cwd=REPO_ROOT, environment=environment)
+            result = run_command(command, cwd=REPO_ROOT, environment=environment, inherit_output=True)
             if timings is not None:
                 timings.command_completed(result.returncode)
         if result.returncode == 0:
             marker.parent.mkdir(parents=True, exist_ok=True)
             marker.write_text(identity + "\n", encoding="utf-8")
         return result
+
+
+def _announce(timings: BuildTimings | None, command: list[str]) -> None:
+    """Name the program a step runs at STATUS, and its whole command line at DEBUG."""
+    if timings is not None:
+        subcommand = next((argument for argument in command[1:] if not argument.startswith("-")), "")
+        timings.log.status(f"running {Path(command[0]).stem} {subcommand}".rstrip())
+        timings.log.debug(f"command: {command_line(command)}")
 
 
 def main() -> None:
@@ -179,14 +194,18 @@ def main() -> None:
             parser.error("run requires -- followed by an executable and arguments")
         if arguments.build is not None:
             selected = build_paths(arguments.build)["generated"] / "build-toolchain.json"
-            with measure_build(arguments.build, "native-command") as timings:
+            with measure_build(arguments.build, _command_step(command)) as timings:
                 result = run_configured_command(
                     arguments.build, json.loads(selected.read_text(encoding="utf-8")), command, timings=timings
                 )
         else:
-            result = run_command(command, cwd=REPO_ROOT)
-        sys.stdout.write(result.stdout)
-        sys.stderr.write(result.stderr)
+            log = BuildLog(_command_step(command))
+            log.debug(f"command: {command_line(command)}")
+            result = run_command(command, cwd=REPO_ROOT, inherit_output=True)
+            if result.returncode:
+                log.error(f"exited with status {result.returncode} after {result.duration_seconds:.1f} s")
+            else:
+                log.verbose(f"finished in {result.duration_seconds:.1f} s")
         raise SystemExit(result.returncode)
     if arguments.build is None:
         parser.error("--build is required")
@@ -195,6 +214,13 @@ def main() -> None:
     build = arguments.build.resolve(strict=True)
     with measure_build(build, arguments.action) as timings:
         execute_action(build, arguments, timings)
+
+
+def _command_step(command: list[str]) -> str:
+    """Attribute a wrapped command to the module or program it runs."""
+    if "-m" in command[:-1]:
+        return command[command.index("-m") + 1].rsplit(".", 1)[-1]
+    return Path(command[0]).stem.lower()
 
 
 def execute_action(build: Path, arguments: argparse.Namespace, timings: BuildTimings) -> None:
@@ -228,11 +254,15 @@ def execute_action(build: Path, arguments: argparse.Namespace, timings: BuildTim
 
             with timings.phase("input-fingerprint"):
                 identity = admitted_identity()
+            timings.log.debug(f"input identity {identity}")
             with timings.phase("existing-output-inventory"):
-                reusable = current(destination, identity)
-            if reusable:
-                print(f"Reusing {arguments.action}: inputs and output inventory unchanged")
+                reason = staleness(destination, identity)
+            if reason is None:
+                timings.log.status(
+                    f"up to date, reusing {display_path(destination)}: inputs and output inventory unchanged"
+                )
                 return
+            timings.log.status(f"building ({reason}) -> {display_path(destination)}")
             (destination / "ready").unlink(missing_ok=True)
             with timings.phase("producer"):
                 destination = build_action(build, arguments, timings=timings)
@@ -246,7 +276,9 @@ def execute_action(build: Path, arguments: argparse.Namespace, timings: BuildTim
                     raise RuntimeError(f"Inputs changed during {arguments.action}; completion receipt refused")
             with timings.phase("output-inventory"):
                 completed(destination, identity)
+            timings.log.status(f"built {display_path(destination)}")
     else:
+        timings.log.status(f"assembling the {arguments.config} payload")
         destination = build_action(build, arguments, timings=timings)
         (destination / "ready").write_text("complete\n", encoding="utf-8")
 
@@ -288,9 +320,10 @@ def build_action(build: Path, arguments: argparse.Namespace, *, timings: BuildTi
                 f"resvg-py=={pins['resvg_py']}",
             ],
             cwd=REPO_ROOT,
+            inherit_output=True,
         )
         if result.returncode:
-            raise RuntimeError(result.stderr)
+            raise RuntimeError(f"Installing the pinned build tools failed with exit status {result.returncode}")
     elif arguments.action == "provision":
         destination = reset(build, str(runtime.relative_to(build)))
         provision(
