@@ -5,7 +5,7 @@ tags:
 date: '2026-10-12'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:d348c484e11642817a8d8d2b7a50b2a9745ad5be95215aa2d9d5f7865c502a11'
+body_hash: 'sha256:14e8572ba706733ff1b273bc276bc2f7a82c7ef4d8c2c620a027c7b95d2afaf3'
 related:
   - "[[2026-10-12-live-agent-evaluation-reference]]"
   - "[[2026-07-02-agent-harness-refoundation-adr]]"
@@ -25,7 +25,7 @@ related:
   - "[[2026-08-05-ci-lane-deconflation-adr]]"
 ---
 
-# `live-agent-evaluation` adr: `live agent evaluation runs a haiku agent over MCP against a verified copy of the built package` | (**status:** `proposed`)
+# `live-agent-evaluation` adr: `live agent evaluation runs a haiku agent over MCP against a verified copy of the built package` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -199,3 +199,4 @@ Other consequences:
 - Each lane run costs model spend: about 0.03 USD per haiku run on 2026-10-12. It also costs time: about three minutes per run, plus a package copy and verification measured in minutes, plus a package build of about eight minutes incremental when the package is stale.
 - The lane may at first fail runs on today's MCP surface, because that surface still offers the agent a password `sign_in`. That failure is intended. It turns into a pass when the governing record's code changes land.
 - Every live failure ends in one of two places. A product defect becomes an ordinary regression test in the owning tests directory. An agent-conduct failure becomes a golden scenario through the existing flywheel.
+- Accepted 2026-10-12 on the owner's first-hand approval of this text ("lgtm"), which also accepts the stated defaults: the model id `claude-haiku-5-5` and the pass rule of three runs with at least two reaching the end state. Who schedules the nightly run, and on which interactive host, stays open; until it is named the lane runs on demand. Acceptance records the decision; it is not evidence that any of it is built.
