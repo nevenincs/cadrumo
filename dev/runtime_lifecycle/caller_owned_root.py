@@ -13,7 +13,8 @@ Nothing here imports the product to reach the runtime. The run:
 4. signs out, requires a new MCP process to be refused the profile read once a
    stored sign-in existed, closes the runtime's standard input and requires a
    drained exit;
-5. requires the person's installed default storage root to be unchanged.
+5. requires the person's installed default storage root to be unchanged outside the
+   checkouts' development roots, and free of anything this run created.
 
 The profile password exists only in this process's memory and the CLI's
 standard input. Run it with ``just verify-caller-owned-runtime PACKAGE``.
@@ -52,6 +53,9 @@ _READY_SECONDS = 180
 _COMMAND_SECONDS = 180
 _STOP_SECONDS = 120
 _SUPERVISOR_STOP = 64
+# A registered read-only operation over the signed-in profile; tool discovery alone proves no access.
+_PRIVATE_READ = "auth.local-read"
+_DEVELOPMENT_ROOTS = ("storage", "development")
 
 
 @dataclass(frozen=True, slots=True)
@@ -207,12 +211,44 @@ async def _mcp_status(programs: Programs, environment: Mapping[str, str], direct
         ):
             await client.initialize()
             status = await client.call_tool("status", {})
-            private = await client.call_tool("observe", {"observation": {}})
+            read = await _private_read(client)
+    return {"status": status.structured_content, "status_error": status.is_error, "read": read}
+
+
+async def _private_read(client: ClientSession) -> dict[str, Any]:
+    """Run one registered profile read and wait for its result; only outcome codes are kept."""
+    executed = await client.call_tool("execute", {"definition_id": _PRIVATE_READ, "payload": {"kind": "status"}})
+    submitted = executed.structured_content or {}
+    facts: dict[str, Any] = {
+        "execute": submitted.get("outcome"),
+        "execute_code": submitted.get("code"),
+        "answered": False,
+    }
+    receipt = submitted.get("receipt")
+    if executed.is_error or submitted.get("outcome") != "submitted" or not isinstance(receipt, dict):
+        return facts
+    deadline = asyncio.get_running_loop().time() + _COMMAND_SECONDS
+    while True:
+        answer = await client.call_tool("result", {"result": {"operation_id": receipt.get("operation_id")}})
+        document = answer.structured_content or {}
+        facts.update(result=document.get("outcome"), result_code=document.get("code"))
+        if not answer.is_error and document.get("outcome") == "reply" and "error_detail" not in document:
+            facts["answered"] = True
+            return facts
+        if asyncio.get_running_loop().time() >= deadline:
+            return facts
+        await asyncio.sleep(1)
+
+
+def _mcp_facts(mcp: Mapping[str, Any]) -> dict[str, Any]:
+    """Return the credential-free facts of one MCP connection, without the granted scope listing."""
+    status = mcp["status"] or {}
     return {
-        "status": status.structured_content,
-        "status_error": status.is_error,
-        "observe": private.structured_content,
-        "observe_error": private.is_error,
+        "authenticated": status.get("authenticated"),
+        "session": status.get("session"),
+        "denial": status.get("denial"),
+        "sign_in_reason": status.get("sign_in_reason"),
+        **mcp["read"],
     }
 
 
@@ -305,27 +341,18 @@ def run(package: Path, scratch: Path) -> Receipt:
 
         mcp = asyncio.run(_mcp_status(programs, environment, scratch))
         status = mcp["status"] or {}
-        require(status.get("profile_id") is not None, f"MCP did not reach the served root: {mcp}")
-        receipt.record(
-            "mcp_connected",
-            authenticated=status.get("authenticated"),
-            session=status.get("session"),
-            denial=status.get("denial"),
-            sign_in_reason=status.get("sign_in_reason"),
-            observe=(mcp["observe"] or {}).get("outcome"),
-            observe_code=(mcp["observe"] or {}).get("code"),
-        )
+        connected = _mcp_facts(mcp)
+        require(status.get("profile_id") is not None, f"MCP did not reach the served root: {connected}")
+        receipt.record("mcp_connected", **connected)
 
         if persisted:
-            # Discovery alone proves nothing: the private read itself must be answered.
+            # Discovery alone proves nothing: a registered read of the profile must be answered.
             require(
-                status.get("authenticated") is True
-                and not mcp["observe_error"]
-                and (mcp["observe"] or {}).get("outcome") != "refused",
-                f"MCP did not follow the stored sign-in: {mcp}",
+                status.get("authenticated") is True and mcp["read"]["answered"],
+                f"MCP did not follow the stored sign-in: {connected}",
             )
         else:
-            require(status.get("denial") == "authentication_required", f"MCP without a stored sign-in: {mcp}")
+            require(status.get("denial") == "authentication_required", f"MCP without a stored sign-in: {connected}")
         code, envelope = run_cli(programs, environment, "config", "logout")
         error = envelope.get("error")
         receipt.record(
@@ -339,17 +366,11 @@ def run(package: Path, scratch: Path) -> Receipt:
         if persisted:
             # A new MCP process after sign-out must find nothing to follow.
             after_logout = asyncio.run(_mcp_status(programs, environment, scratch))
-            status = after_logout["status"] or {}
-            receipt.record(
-                "mcp_after_logout",
-                authenticated=status.get("authenticated"),
-                denial=status.get("denial"),
-                observe=(after_logout["observe"] or {}).get("outcome"),
-            )
+            refused = _mcp_facts(after_logout)
+            receipt.record("mcp_after_logout", **refused)
             require(
-                status.get("authenticated") is not True
-                and (after_logout["observe_error"] or (after_logout["observe"] or {}).get("outcome") == "refused"),
-                f"MCP still read the profile after sign-out: {after_logout}",
+                refused["authenticated"] is not True and not refused["answered"],
+                f"MCP still read the profile after sign-out: {refused}",
             )
         exit_code = runtime.stop()
     require(exit_code == _SUPERVISOR_STOP, f"runtime exit after input closed: {exit_code}")
@@ -361,8 +382,13 @@ def run(package: Path, scratch: Path) -> Receipt:
 
     after = file_facts(default_root)
     changed = sorted(name for name in before.keys() | after.keys() if before.get(name) != after.get(name))
-    require(not changed, f"the installed default root changed: {changed[:20]}")
-    receipt.record("default_root_unchanged", entries=len(after))
+    # Checkouts' own development roots live below the default root, and other builds and test runs on this
+    # host write there while this runs. Only what this run created can be attributed to it there.
+    development = [name for name in changed if Path(name).parts[:2] == _DEVELOPMENT_ROOTS]
+    ours = {path.name for path in (root / "buckets").iterdir()} if (root / "buckets").is_dir() else set()
+    leaked = [name for name in changed if name not in development or ours.intersection(Path(name).parts)]
+    require(not leaked, f"the installed default root changed: {leaked[:20]}")
+    receipt.record("default_root_unchanged", entries=len(after), development_roots_changed=len(development))
     return receipt
 
 
