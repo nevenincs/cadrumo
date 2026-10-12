@@ -44,6 +44,13 @@ _DEDUCTIBLE_PURCHASE = {
 }
 
 
+def _gap(row: LedgerEvidenceRow, *, revision_claims_ledger_iva: bool = True) -> bool:
+    """Judge ``row`` as part of a revision that claims IVA unless told otherwise."""
+    return ledger_evidence_row_missing_deductible_iva_evidence(
+        row, revision_claims_ledger_iva=revision_claims_ledger_iva
+    )
+
+
 def _row(**overrides: object) -> LedgerEvidenceRow:
     """A business purchase deducting input IVA with no evidence attached."""
     return LedgerEvidenceRow.model_validate({**_DEDUCTIBLE_PURCHASE, **overrides})
@@ -51,7 +58,7 @@ def _row(**overrides: object) -> LedgerEvidenceRow:
 
 def test_the_baseline_row_is_the_gap_the_gate_exists_to_catch() -> None:
     """Positive control: without it, every case below could pass vacuously."""
-    assert ledger_evidence_row_missing_deductible_iva_evidence(_row()) is True
+    assert _gap(_row()) is True
 
 
 @pytest.mark.parametrize(
@@ -69,12 +76,22 @@ def test_a_required_field_this_build_cannot_parse_refuses_the_row(field: str, st
     value is never absent. A value that will not parse is therefore drift, not
     a default, and the row's contribution to the filing cannot be vouched for.
     """
-    assert ledger_evidence_row_missing_deductible_iva_evidence(_row(**{field: stored_value})) is True
+    assert _gap(_row(**{field: stored_value})) is True
 
 
 def test_a_deduction_side_row_whose_cuota_was_never_captured_is_a_gap() -> None:
     """Absent is not zero: the claim was never recorded, not recorded as nil."""
-    assert ledger_evidence_row_missing_deductible_iva_evidence(_row(iva_amount=None)) is True
+    assert _gap(_row(iva_amount=None)) is True
+
+
+def test_an_uncaptured_cuota_on_a_revision_without_an_iva_claim_is_not_a_gap() -> None:
+    """An IRPF return claims no IVA, so an absent cuota there claims nothing to evidence."""
+    assert _gap(_row(iva_amount=None), revision_claims_ledger_iva=False) is False
+
+
+def test_a_positive_cuota_is_judged_whether_or_not_the_revision_claims_iva() -> None:
+    """Only the absent cuota is scoped by the IVA claim; a stated cuota still needs proof."""
+    assert _gap(_row(), revision_claims_ledger_iva=False) is True
 
 
 @pytest.mark.parametrize(
@@ -95,7 +112,7 @@ def test_rows_that_raise_no_question_are_still_cleared(
     overrides: dict[str, object],
 ) -> None:
     """Tightening must not turn the gate into a blanket refusal."""
-    assert ledger_evidence_row_missing_deductible_iva_evidence(_row(**overrides)) is False, description
+    assert _gap(_row(**overrides)) is False, description
 
 
 @pytest.mark.parametrize(
@@ -129,7 +146,7 @@ def test_an_unreadable_field_that_would_not_have_decided_anything_does_not_refus
     Reading all three up front would refuse rows that raise no question, and a
     gate that fires on those is one operators learn to work around.
     """
-    assert ledger_evidence_row_missing_deductible_iva_evidence(_row(**overrides)) is False, description
+    assert _gap(_row(**overrides)) is False, description
 
 
 def test_an_unreadable_iva_category_cannot_buy_an_exemption() -> None:
@@ -140,4 +157,4 @@ def test_an_unreadable_iva_category_cannot_buy_an_exemption() -> None:
     direction-derived flow rather than to the evidence-exempt set, so this
     pins that they do: a drifted category on a purchase still refuses.
     """
-    assert ledger_evidence_row_missing_deductible_iva_evidence(_row(iva_category="NOT_A_CATEGORY")) is True
+    assert _gap(_row(iva_category="NOT_A_CATEGORY")) is True

@@ -951,6 +951,7 @@ def test_output_iva_evidence_hint_is_advisory_and_names_current_cli_limit(
         target=revision,
         work_unit=work_unit,
         transaction_repository=tx_repo,
+        operation=operation,
     )
 
     assert len(findings) == 1

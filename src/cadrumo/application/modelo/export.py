@@ -1738,9 +1738,13 @@ def _emit_export_event(
     )
 
 
-def _raise_if_deductible_iva_evidence_missing(revision: CalculationRevision) -> None:
+def _raise_if_deductible_iva_evidence_missing(
+    revision: CalculationRevision,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Refuse legacy revisions whose deductible IVA evidence is incomplete."""
-    deductible_gap_transaction_ids = deductible_iva_evidence_gap_transaction_ids(revision)
+    deductible_gap_transaction_ids = deductible_iva_evidence_gap_transaction_ids(revision, operation=operation)
     if not deductible_gap_transaction_ids:
         return
     raise ModeloExportEvidenceMissingError(
@@ -1972,7 +1976,7 @@ def _prepare_modelo_export(
         operation=operation,
     )
     _raise_if_ledger_export_evidence_missing(revision)
-    _raise_if_deductible_iva_evidence_missing(revision)
+    _raise_if_deductible_iva_evidence_missing(revision, operation=operation)
     period, schema_provider = _prepare_modelo_export_schema(
         work_unit=work_unit,
         revision=revision,

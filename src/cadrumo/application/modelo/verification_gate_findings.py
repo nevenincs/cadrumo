@@ -49,6 +49,7 @@ from ...domain.modelos.work_unit import WorkUnit
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.evidence_advisory import (
     MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND,
+    calculation_revision_claims_ledger_iva,
     missing_evidence_advisory_observations,
 )
 from ..aggregation.ledger_membership import LedgerMembershipPorts, query_ledger_membership
@@ -172,9 +173,10 @@ def missing_evidence_findings(
     target: CalculationRevision,
     work_unit: WorkUnit,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
     blocking_finding_observer: Callable[[ModeloVerificationFinding, CalculationSourceDiagnostic], None] | None = None,
 ) -> list[ModeloVerificationFinding]:
-    """Build verification findings for evidence-less positive IVA rows.
+    """Build verification findings for IVA-bearing rows that lack their evidence.
 
     Loads the :class:`CalculationRevision` source transactions for the supplied
     :class:`WorkUnit` and
@@ -205,7 +207,10 @@ def missing_evidence_findings(
         for transaction_id in target.source_transaction_ids
         if (transaction := catalogue.get(transaction_id)) is not None
     ]
-    diagnostics: tuple[CalculationSourceDiagnostic, ...] = missing_evidence_advisory_observations(transactions)
+    diagnostics: tuple[CalculationSourceDiagnostic, ...] = missing_evidence_advisory_observations(
+        transactions,
+        revision_claims_ledger_iva=calculation_revision_claims_ledger_iva(target, operation=operation),
+    )
     findings: list[ModeloVerificationFinding] = []
     registry_source_refs = optional_observation_refs(target.observations, "source_refs")
     for diagnostic in diagnostics:
@@ -399,6 +404,7 @@ def collect_verification_gate_findings(
         target=target,
         work_unit=work_unit,
         transaction_repository=transaction_repository,
+        operation=operation,
         blocking_finding_observer=lambda finding, diagnostic: failures_by_finding_id.__setitem__(
             id(finding),
             build_verification_precondition_failure(

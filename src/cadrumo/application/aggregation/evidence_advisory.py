@@ -20,12 +20,30 @@ deductible side to the looser test would leave the blocking gate laxer than the
 statute it cites.
 
 The trigger set is deliberately narrow. A diagnostic fires only on an ``ACTIVE``
-business/mixed row with a strictly-positive IVA quota that lacks the evidence its
-side requires. Explicit exempt / zero-rated / not-subject IVA categories and
-non-declarable sentinels are excluded because they do not route an M303 quota.
-Rows with no explicit ``iva_category`` but with a positive ``iva_amount`` remain
-in scope: the IVA aggregation layer derives their domestic category from the
-stored rate and bank direction before feeding M303.
+business/mixed row that lacks the evidence its side requires. Explicit exempt /
+zero-rated / not-subject IVA categories and non-declarable sentinels are
+excluded because they do not route an M303 quota. Rows with no explicit
+``iva_category`` remain in scope: the IVA aggregation layer derives their
+domestic category from the stored rate and bank direction before feeding M303.
+
+The two sides read the cuota differently. The output side fires only on a
+strictly-positive ``iva_amount``. The deductible side also fires on an ABSENT
+``iva_amount``, but only for a revision that claims IVA at all, which is a
+revision whose registry declares ``ledger_iva_aggregation`` bindings. There a
+deduction-side row whose cuota was never captured is a missing input, not a
+proven zero, and only an explicit ``0.00`` clears it. A revision without those
+bindings -- an IRPF return such as Modelo 130 or 100 -- makes no IVA claim, so
+a base-only expense with no cuota claims no IVA deduction and is not an IVA
+gap. A positive cuota is still judged on every revision, as before.
+
+:func:`iva_evidence_flow`, :func:`calculation_revision_claims_ledger_iva` and
+:func:`deductible_iva_evidence_gap` are the one evaluation of the deductible
+side. Verification applies them to the live :class:`Transaction` rows here, and
+the export and local-filing gate in ``application.modelo._ledger_evidence_gate``
+applies them to the frozen evidence bundle, so verify cannot grant a revision
+those gates then refuse. Only the evidence test is supplied per caller, and
+verify's is the stricter one, so whatever verify clears the later gates clear
+too.
 """
 
 from __future__ import annotations
@@ -33,6 +51,9 @@ from __future__ import annotations
 from collections.abc import Iterable
 from decimal import Decimal
 
+from ...core.aggregation import BindingSourceKind
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.iva.components import registry_category_projection
 from ...domain.iva.flow import (
     IvaFlowDirection,
@@ -42,13 +63,20 @@ from ...domain.iva.flow import (
     is_devengada_flow,
 )
 from ...domain.iva.schema import IvaCategory
-from ...domain.transactions.enums import BUSINESS_BEARING_STATES, TransactionLifecycleState
+from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.transactions.enums import (
+    BUSINESS_BEARING_STATES,
+    BusinessClassification,
+    TransactionDirection,
+    TransactionLifecycleState,
+)
 from ...domain.transactions.models import Transaction
 from .invoice_kind import invoice_kind_for_direction
 from .source_mesh import CalculationSourceDiagnostic
 
-#: Diagnostic ``source_kind`` for missing supplier evidence on positive
-#: deductible input IVA. Verification treats this as filing-grade blocking.
+#: Diagnostic ``source_kind`` for missing supplier evidence on deductible input
+#: IVA whose cuota is positive or was never captured. Verification treats this
+#: as filing-grade blocking.
 MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND = "deductible_iva_evidence"
 
 #: Diagnostic ``source_kind`` for missing linked evidence on positive output IVA.
@@ -110,32 +138,94 @@ def _row_has_deduction_grade_evidence(transaction: Transaction) -> bool:
     return bool(transaction.purchase_invoice_evidence_id) or bool(transaction.invoice_id)
 
 
-def _is_cuota_bearing_iva_category(category: IvaCategory | None) -> bool:
-    """Return whether ``category`` is legally expected to bear a routed cuota.
+def iva_evidence_flow(
+    *,
+    lifecycle_state: TransactionLifecycleState,
+    business_classification: BusinessClassification,
+    direction: TransactionDirection,
+    iva_category: IvaCategory | None,
+) -> IvaFlowDirection | None:
+    """Return the IVA settlement flow a ledger row answers for, or ``None``.
 
-    ``None`` is treated as "not yet a cuota-bearing classification" and is
-    likewise excluded, alongside the categories named in the published 0084
-    evidence-exempt projection.
+    ``None`` means the row bears no evidence duty at all: it is not ``ACTIVE``,
+    not business-bearing, has no invoice kind (an internal transfer), or its
+    category is in the published 0084 evidence-exempt projection. An absent
+    category is an unclassified domestic row and takes the direction's flow.
     """
-    return category is None or category not in registry_category_projection("evidence_exempt")
-
-
-def _flow_for_transaction(transaction: Transaction) -> IvaFlowDirection | None:
-    """Return the IVA settlement flow for an evidence-significance test."""
-    invoice_kind = invoice_kind_for_direction(transaction.direction)
+    if lifecycle_state is not TransactionLifecycleState.ACTIVE:
+        return None
+    if business_classification not in BUSINESS_BEARING_STATES:
+        return None
+    invoice_kind = invoice_kind_for_direction(direction)
     if invoice_kind is None:
         return None
-    if transaction.iva_category is None:
+    if iva_category is None:
         return flow_direction_for_invoice_kind(invoice_kind)
-    if not _is_cuota_bearing_iva_category(transaction.iva_category):
+    if iva_category in registry_category_projection("evidence_exempt"):
         return None
-    return derive_flow_for_classification(
-        category=transaction.iva_category,
-        invoice_direction=invoice_kind,
-    )
+    return derive_flow_for_classification(category=iva_category, invoice_direction=invoice_kind)
 
 
-def _transaction_missing_evidence_flow(transaction: Transaction) -> IvaFlowDirection | None:
+def calculation_revision_claims_ledger_iva(
+    revision: CalculationRevision,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> bool:
+    """Return whether ``revision``'s registry revision declares IVA ledger bindings.
+
+    This is the typed fact that says whether a calculation claims IVA at all:
+    the registry revision the calculation is stamped with either declares
+    ``ledger_iva_aggregation`` bindings (Modelo 303 and its kin) or does not
+    (an IRPF return such as Modelo 130 or 100, which has no IVA claim).
+
+    A registry revision that cannot be read answers ``True``. An unreadable
+    authority cannot excuse an uncaptured cuota, and verification already
+    blocks on the unresolved snapshot on its own account.
+    """
+    ref = revision.registry_snapshot_ref
+    try:
+        snapshot = operation.snapshot(
+            ref.modelo,
+            filing_year=ref.modelo_year,
+            period=ref.period,
+            revision_id=ref.revision_id,
+        )
+    except (FileNotFoundError, RegistrySnapshotError, RegistryValidationError):
+        return True
+    return any(binding.source == BindingSourceKind.LEDGER_IVA_AGGREGATION for binding in snapshot.revision.bindings)
+
+
+def deductible_iva_evidence_gap(
+    *,
+    flow: IvaFlowDirection | None,
+    iva_amount: Decimal | None,
+    has_deduction_evidence: bool,
+    revision_claims_ledger_iva: bool,
+) -> bool:
+    """Return whether a row claims deductible IVA that its evidence cannot support.
+
+    An absent ``iva_amount`` on the deducible side is a gap only on a revision
+    that claims IVA (``revision_claims_ledger_iva``). There the cuota was never
+    captured, which is the missing-input state ``no-silent-under-declaration``
+    keeps distinct from a proven zero. On a revision with no IVA claim, an
+    absent cuota claims nothing. An explicit ``0.00`` deducts nothing and needs
+    no documento justificativo on either. A positive cuota without evidence is
+    a gap on every revision.
+    """
+    if flow is None or not is_deducible_flow(flow):
+        return False
+    if has_deduction_evidence:
+        return False
+    if iva_amount is None:
+        return revision_claims_ledger_iva
+    return iva_amount > Decimal("0")
+
+
+def _transaction_missing_evidence_flow(
+    transaction: Transaction,
+    *,
+    revision_claims_ledger_iva: bool,
+) -> IvaFlowDirection | None:
     """Return the IVA flow requiring evidence, or ``None`` when out of scope.
 
     The evidence test is applied per settlement side rather than once up front,
@@ -146,19 +236,24 @@ def _transaction_missing_evidence_flow(transaction: Transaction) -> IvaFlowDirec
     document. That asymmetry mirrors the per-category severity split downstream,
     where only the deductible finding blocks.
     """
-    if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
-        return None
-    if transaction.business_classification not in BUSINESS_BEARING_STATES:
-        return None
-    if not _positive_iva_quota(transaction):
-        return None
-    if not _is_cuota_bearing_iva_category(transaction.iva_category):
-        return None
-    flow = _flow_for_transaction(transaction)
+    flow = iva_evidence_flow(
+        lifecycle_state=transaction.lifecycle_state,
+        business_classification=transaction.business_classification,
+        direction=transaction.direction,
+        iva_category=transaction.iva_category,
+    )
     if flow is None:
         return None
     if is_deducible_flow(flow):
-        return None if _row_has_deduction_grade_evidence(transaction) else flow
+        gap = deductible_iva_evidence_gap(
+            flow=flow,
+            iva_amount=transaction.iva_amount,
+            has_deduction_evidence=_row_has_deduction_grade_evidence(transaction),
+            revision_claims_ledger_iva=revision_claims_ledger_iva,
+        )
+        return flow if gap else None
+    if not _positive_iva_quota(transaction):
+        return None
     return None if _row_has_linked_evidence(transaction) else flow
 
 
@@ -176,49 +271,57 @@ def _missing_evidence_diagnostic(
     refusal an operator can disprove by looking at the row teaches them to
     distrust the gate.
     """
+    claim = "declares a positive IVA quota" if _positive_iva_quota(transaction) else "records no IVA quota"
     return CalculationSourceDiagnostic(
         reason="missing_transaction_evidence",
         source_kind=source_kind,
         binding_id=transaction.transaction_id,
-        message=(f"{role} transaction {transaction.transaction_id!r} declares a positive IVA quota but {gap}."),
+        message=f"{role} transaction {transaction.transaction_id!r} {claim} but {gap}.",
     )
 
 
 def missing_evidence_advisory_observations(
     transactions: Iterable[Transaction],
+    *,
+    revision_claims_ledger_iva: bool,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Return missing-evidence diagnostics for positive IVA rows.
+    """Return missing-evidence diagnostics for IVA-bearing rows.
 
     A :class:`CalculationSourceDiagnostic` (reason
     ``missing_transaction_evidence``) is emitted for each ``ACTIVE``
-    business/mixed row with a strictly-positive IVA quota that lacks the evidence
-    its settlement side requires:
+    business/mixed row that lacks the evidence its settlement side requires:
 
-    - a deductible input-IVA row carrying no purchase-invoice evidence and no
-      linked, validated reconciliation-catalogue invoice. A generic attachment
-      does NOT satisfy this side: LIVA art. 97 enumerates the documents that
-      establish the right to deduct and an attachment is not among them. This
-      diagnostic blocks verification downstream.
-    - an output-IVA row whose IVA category is legally expected to bear a
-      devengada cuota — i.e. not in
-      the published 0084 evidence-exempt projection — carrying no linked
-      evidence of any kind (the issued-invoice evidence gap remains
-      visible but advisory).
+    - a deductible input-IVA row whose cuota is positive, OR was never
+      captured on a revision that claims IVA (``revision_claims_ledger_iva``),
+      carrying no purchase-invoice evidence and no linked, validated
+      reconciliation-catalogue invoice. A generic attachment does NOT satisfy
+      this side: LIVA art. 97 enumerates the documents that establish the right
+      to deduct and an attachment is not among them. This diagnostic blocks
+      verification downstream, on the same evaluation export and local filing
+      refuse.
+    - an output-IVA row with a strictly-positive cuota whose IVA category is
+      legally expected to bear a devengada cuota — i.e. not in the published
+      0084 evidence-exempt projection — carrying no linked evidence of any kind
+      (the issued-invoice evidence gap remains visible but advisory).
 
     Rows that legitimately bear no evidence requirement — non-business /
-    personal, exempt / zero-rated / not-subject / sentinel IVA categories, no
-    positive IVA quota, and non-ACTIVE lifecycle states — are excluded and never
+    personal, exempt / zero-rated / not-subject / sentinel IVA categories, an
+    explicit zero cuota, an absent cuota on the output side or on a revision
+    with no IVA claim, and non-ACTIVE lifecycle states — are excluded and never
     fire.
 
     Args:
         transactions: The revision's source transactions to inspect.
+        revision_claims_ledger_iva: Whether the revision's registry revision
+            declares IVA ledger bindings; see
+            :func:`calculation_revision_claims_ledger_iva`.
 
     Returns:
         A tuple of non-blocking missing-evidence diagnostics, in input order.
     """
     diagnostics: list[CalculationSourceDiagnostic] = []
     for transaction in transactions:
-        flow = _transaction_missing_evidence_flow(transaction)
+        flow = _transaction_missing_evidence_flow(transaction, revision_claims_ledger_iva=revision_claims_ledger_iva)
         if flow is None:
             continue
         if is_deducible_flow(flow):
@@ -231,7 +334,8 @@ def missing_evidence_advisory_observations(
                         "carries no purchase invoice evidence; LIVA art. 97 lists the "
                         "documents that establish the right to deduct, and a generic "
                         "attachment is not one of them, so register the invoice and "
-                        "link it before filing"
+                        "link it before filing, or record a 0.00 cuota when nothing "
+                        "is deducted"
                     ),
                 ),
             )
@@ -253,5 +357,8 @@ def missing_evidence_advisory_observations(
 __all__ = [
     "MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND",
     "MISSING_OUTPUT_IVA_EVIDENCE_SOURCE_KIND",
+    "calculation_revision_claims_ledger_iva",
+    "deductible_iva_evidence_gap",
+    "iva_evidence_flow",
     "missing_evidence_advisory_observations",
 ]

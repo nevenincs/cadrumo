@@ -12,9 +12,11 @@ The diagnostics pair a transaction's IVA settlement side with its evidence prese
 * it does NOT fire on an output-IVA row carrying any linked document, which is
   the deliberate asymmetry: art. 97 governs deduction only, and no CLI path
   mints issued-invoice evidence;
+* it DOES fire on a deductible row whose cuota was never captured, because an
+  absent ``iva_amount`` is a missing input rather than a proven zero;
 * it does NOT fire on the false-positive set: a cuota-less (exempt) IVA
-  category, a PERSONAL / non-business row, a zero-amount row, or a non-ACTIVE
-  lifecycle state.
+  category, a PERSONAL / non-business row, an explicit zero cuota, a sale with
+  no captured cuota, or a non-ACTIVE lifecycle state.
 
 Real :class:`Transaction` models; the expected trigger is derived from the
 row's economic role, not from any formula under test.
@@ -37,9 +39,19 @@ from ..evidence_advisory import (
     MISSING_OUTPUT_IVA_EVIDENCE_SOURCE_KIND,
     missing_evidence_advisory_observations,
 )
+from ..source_mesh import CalculationSourceDiagnostic
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 _DEFAULT_IVA_CATEGORY = IvaCategory("domestic_general")
+
+
+def _observations(
+    rows: list[Transaction],
+    *,
+    revision_claims_ledger_iva: bool = True,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Inspect ``rows`` as the sources of a revision that claims IVA unless told otherwise."""
+    return missing_evidence_advisory_observations(rows, revision_claims_ledger_iva=revision_claims_ledger_iva)
 
 
 def _raw(provider_id: str, *, amount: Decimal) -> RawTransaction:
@@ -104,7 +116,7 @@ def _tx(
 # --- Fires on positive significant rows with no evidence ----------------------------
 def test_advisory_fires_on_outgoing_business_expense_without_evidence() -> None:
     tx = _tx("expense-no-evidence", direction=TransactionDirection.OUTGOING)
-    diagnostics = missing_evidence_advisory_observations([tx])
+    diagnostics = _observations([tx])
     assert len(diagnostics) == 1
     diagnostic = diagnostics[0]
     assert diagnostic.reason == "missing_transaction_evidence"
@@ -118,7 +130,7 @@ def test_advisory_fires_on_incoming_cuota_bearing_income_without_evidence() -> N
         direction=TransactionDirection.INCOMING,
         iva_category=IvaCategory("domestic_general"),
     )
-    diagnostics = missing_evidence_advisory_observations([tx])
+    diagnostics = _observations([tx])
     assert len(diagnostics) == 1
     assert diagnostics[0].binding_id == tx.transaction_id
     assert diagnostics[0].source_kind == MISSING_OUTPUT_IVA_EVIDENCE_SOURCE_KIND
@@ -134,7 +146,7 @@ def test_deductible_row_still_fires_when_only_a_generic_attachment_is_present() 
     statement, a delivery note, a photograph -- is not among them.
     """
     tx = _tx("expense-with-attachment", attachment_ids=("a" * 64,))
-    diagnostics = missing_evidence_advisory_observations([tx])
+    diagnostics = _observations([tx])
     assert len(diagnostics) == 1
     assert diagnostics[0].source_kind == MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND
     assert diagnostics[0].binding_id == tx.transaction_id
@@ -152,12 +164,12 @@ def test_output_row_stays_silent_when_only_a_generic_attachment_is_present() -> 
         direction=TransactionDirection.INCOMING,
         attachment_ids=("a" * 64,),
     )
-    assert missing_evidence_advisory_observations([tx]) == ()
+    assert _observations([tx]) == ()
 
 
 def test_advisory_silent_when_purchase_invoice_present() -> None:
     tx = _tx("expense-with-invoice", purchase_invoice_evidence_id="pinv-001")
-    assert missing_evidence_advisory_observations([tx]) == ()
+    assert _observations([tx]) == ()
 
 
 def test_advisory_silent_when_a_validated_invoice_is_linked() -> None:
@@ -173,7 +185,7 @@ def test_advisory_silent_when_a_validated_invoice_is_linked() -> None:
     ``invoice_id`` being unset.
     """
     tx = _tx("expense-with-linked-invoice", invoice_id="inv-001")
-    assert missing_evidence_advisory_observations([tx]) == ()
+    assert _observations([tx]) == ()
 
 
 def test_advisory_still_fires_when_neither_invoice_id_nor_evidence_id_is_set() -> None:
@@ -187,7 +199,7 @@ def test_advisory_still_fires_when_neither_invoice_id_nor_evidence_id_is_set() -
     row) would pass every OTHER test in this module but fail this one.
     """
     tx = _tx("expense-with-nothing", purchase_invoice_evidence_id=None, invoice_id=None)
-    diagnostics = missing_evidence_advisory_observations([tx])
+    diagnostics = _observations([tx])
     assert len(diagnostics) == 1
     assert diagnostics[0].source_kind == MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND
     assert diagnostics[0].binding_id == tx.transaction_id
@@ -197,13 +209,13 @@ def test_advisory_still_fires_when_neither_invoice_id_nor_evidence_id_is_set() -
 def test_advisory_silent_on_exempt_iva_category() -> None:
     """A cuota-less (exempt) OUTGOING row with no evidence does not fire."""
     tx = _tx("exempt-expense", iva_category=IvaCategory("domestic_exempt"))
-    assert missing_evidence_advisory_observations([tx]) == ()
+    assert _observations([tx]) == ()
 
 
 def test_advisory_silent_on_personal_non_business_row() -> None:
     """A PERSONAL OUTGOING row with no evidence does not fire."""
     tx = _tx("personal-expense", business_classification=BusinessClassification.PERSONAL)
-    assert missing_evidence_advisory_observations([tx]) == ()
+    assert _observations([tx]) == ()
 
 
 def test_advisory_silent_on_zero_amount_row() -> None:
@@ -214,25 +226,32 @@ def test_advisory_silent_on_zero_amount_row() -> None:
         taxable_base=Decimal("0.00"),
         iva_amount=Decimal("0.00"),
     )
-    assert missing_evidence_advisory_observations([tx]) == ()
+    assert _observations([tx]) == ()
 
 
 def test_advisory_silent_on_non_active_row() -> None:
     """An ARCHIVED row with no evidence does not fire."""
     tx = _tx("archived-expense", lifecycle_state=TransactionLifecycleState.ARCHIVED)
-    assert missing_evidence_advisory_observations([tx]) == ()
+    assert _observations([tx]) == ()
 
 
 def test_advisory_fires_on_outgoing_with_positive_iva_and_no_explicit_category() -> None:
     """A domestic-rate row with no explicit IVA category still feeds M303."""
     tx = _tx("unclassified-expense", iva_category=None)
-    diagnostics = missing_evidence_advisory_observations([tx])
+    diagnostics = _observations([tx])
     assert len(diagnostics) == 1
     assert diagnostics[0].source_kind == MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND
 
 
-def test_advisory_silent_without_positive_iva_quota() -> None:
-    """A row with no stored IVA quota does not fire even if gross is positive."""
+def test_deductible_row_whose_cuota_was_never_captured_fires() -> None:
+    """On a revision that claims IVA, an uncaptured deductible cuota is a gap, not a pass.
+
+    This assertion is inverted from what it was. Verify used to stay silent on
+    a deduction-side row with no ``iva_amount`` while export and local filing
+    refused the same row, so verify granted a revision those gates could never
+    let through. Both now read the one evaluation, and it treats a missing
+    cuota as the missing input it is.
+    """
     tx = _tx(
         "no-iva-quota",
         amount=Decimal("121.00"),
@@ -240,7 +259,53 @@ def test_advisory_silent_without_positive_iva_quota() -> None:
         iva_rate=None,
         iva_amount=None,
     )
-    assert missing_evidence_advisory_observations([tx]) == ()
+    diagnostics = _observations([tx])
+    assert len(diagnostics) == 1
+    assert diagnostics[0].source_kind == MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND
+    assert diagnostics[0].binding_id == tx.transaction_id
+    assert "records no IVA quota" in diagnostics[0].message
+
+
+def test_uncaptured_cuota_on_a_revision_without_an_iva_claim_stays_silent() -> None:
+    """An IRPF return claims no IVA, so a base-only expense there is no IVA gap."""
+    tx = _tx(
+        "irpf-base-only-expense",
+        amount=Decimal("121.00"),
+        taxable_base=Decimal("121.00"),
+        iva_rate=None,
+        iva_amount=None,
+    )
+    assert _observations([tx], revision_claims_ledger_iva=False) == ()
+
+
+def test_positive_cuota_without_evidence_fires_even_without_an_iva_claim() -> None:
+    """The ruling scopes only the absent cuota; a stated positive cuota is still judged."""
+    tx = _tx("irpf-positive-cuota")
+    diagnostics = _observations([tx], revision_claims_ledger_iva=False)
+    assert [diagnostic.source_kind for diagnostic in diagnostics] == [MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND]
+
+
+def test_deductible_row_with_an_explicit_zero_cuota_stays_silent() -> None:
+    """A proven zero deducts nothing, so it needs no documento justificativo."""
+    tx = _tx(
+        "zero-iva-quota",
+        amount=Decimal("100.00"),
+        iva_rate=Decimal("0.00"),
+        iva_amount=Decimal("0.00"),
+    )
+    assert _observations([tx]) == ()
+
+
+def test_output_row_without_a_captured_cuota_stays_silent() -> None:
+    """The absent-cuota rule is the deductible side's; a sale without one is a sale."""
+    tx = _tx(
+        "income-no-iva-quota",
+        direction=TransactionDirection.INCOMING,
+        taxable_base=None,
+        iva_rate=None,
+        iva_amount=None,
+    )
+    assert _observations([tx]) == ()
 
 
 def test_advisory_silent_on_incoming_exempt_category() -> None:
@@ -250,13 +315,13 @@ def test_advisory_silent_on_incoming_exempt_category() -> None:
         direction=TransactionDirection.INCOMING,
         iva_category=IvaCategory("intra_community_supply"),
     )
-    assert missing_evidence_advisory_observations([tx]) == ()
+    assert _observations([tx]) == ()
 
 
 def test_advisory_silent_on_internal_transfer() -> None:
     """An internal transfer is never tax-relevant and never fires."""
     tx = _tx("internal", direction=TransactionDirection.INTERNAL_TRANSFER)
-    assert missing_evidence_advisory_observations([tx]) == ()
+    assert _observations([tx]) == ()
 
 
 def test_advisory_fires_once_per_significant_row_in_a_mixed_batch() -> None:
@@ -275,7 +340,7 @@ def test_advisory_fires_once_per_significant_row_in_a_mixed_batch() -> None:
         _tx("personal", business_classification=BusinessClassification.PERSONAL),
         _tx("exempt", iva_category=IvaCategory("domestic_exempt")),
     ]
-    diagnostics = missing_evidence_advisory_observations(rows)
+    diagnostics = _observations(rows)
     fired_ids = {diagnostic.binding_id for diagnostic in diagnostics}
     assert fired_ids == {
         rows[0].transaction_id,
