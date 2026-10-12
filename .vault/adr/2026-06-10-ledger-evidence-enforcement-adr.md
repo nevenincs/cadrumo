@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#ledger-evidence-enforcement'
 date: '2026-06-10'
-modified: '2026-10-04'
-body_hash: 'sha256:5937d315e854735cacc6a9952c9a43c8c70ece09029fc0a44367fc390e013e1b'
+modified: '2026-10-12'
+body_hash: 'sha256:8fa69194b3713229f636e117569902950465691e1540250f0517b6c1f2792604'
 related:
   - "[[2026-06-10-ledger-evidence-enforcement-research]]"
   - '[[2026-10-04-google-app-identity-adr]]'
@@ -117,9 +117,17 @@ transaction with no linked evidence (neither `purchase_invoice_evidence_id` nor
 any `attachment_ids`) raises an ADVISORY finding rather than a hard block. The
 triggering set is defined narrowly:
 
-- **OUTGOING business/mixed expense** with a positive amount and a deductible
-  base (a category that routes a deductible cuota or an IRPF-deductible expense):
-  expects a *purchase invoice*.
+- **OUTGOING business/mixed expense** with a positive deductible cuota, or with
+  no captured cuota on a revision that claims IVA (one whose registry revision
+  declares `ledger_iva_aggregation` bindings): expects a *purchase invoice*. A
+  base-only expense with no cuota on a revision without IVA ledger bindings, such
+  as Modelo 130 or Modelo 100, makes no IVA claim and does not fire. An explicit
+  zero cuota never fires. (Amended 2026-10-12 on the owner's ruling, "B,
+  obvioulsy, irpf has no iva claim (what sort of question is this anyway?).
+  reconcile"; before that this line read "with a positive amount and a
+  deductible base (a category that routes a deductible cuota or an
+  IRPF-deductible expense)", which made a base-only IRPF expense an IVA evidence
+  gap and let export refuse what verify had granted.)
 - **INCOMING cuota-bearing income** with a positive amount whose IVA category is
   legally expected to bear a cuota (excluding the cuota-less categories already
   enumerated for the IVA advisory): expects the *issued invoice*.
