@@ -7,11 +7,13 @@ does not render, derive, or publish export fragments.
 
 from __future__ import annotations
 
+import html
 import re
 from collections import Counter
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from typing import Literal
+from pathlib import Path
+from typing import Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -20,8 +22,11 @@ from cadrumo.core.filing_projection_ref import FilingProjectionRef
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import SourceRefId
+from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind
 from cadrumo.domain.calculations.registry.schema_exports import ProjectionEndpointDeclaration
+from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource
 
+from ..compiler.corpus_catalogue import verify_source_file
 from ..maintenance_support import GeneratedArtifactInspection
 from .record_design_intermediate import (
     AnchorKey,
@@ -49,6 +54,7 @@ __all__ = [
     "resolve_semantic_map_casilla_tokens",
     "validate_declared_parts",
     "validate_semantic_map",
+    "verify_requirement_statements",
 ]
 
 
@@ -128,6 +134,7 @@ def _validate_semantic_map_with_admissions(
         legal_ref_ids=inspection.legal_ref_ids,
         source_refs=frozenset(inspection.sources),
     )
+    _validate_requirement_sources(resolved_map, sources=inspection.sources)
     return _ValidatedSemanticMap(
         semantic_map=resolved_map,
     )
@@ -680,6 +687,101 @@ def _validate_catalogue_refs(
         raise RegistryValidationError(
             f"semantic map export field {entry.export_field_id!r} has unresolved source refs: {unknown_sources!r}",
         )
+
+
+def _validate_requirement_sources(
+    semantic_map: SemanticMap,
+    *,
+    sources: Mapping[SourceRefId, GeneratedArtifactSource],
+) -> None:
+    """Hold every reviewed requirement to a catalogued, non-design source at its reviewed bytes.
+
+    A requirement the design states is read from the design's own Validación
+    column, so citing the design here would be a second, unread spelling of
+    the same fact. The pinned digest makes a re-captured source a review
+    event: the quotation was checked against those bytes and no others.
+    """
+    for entry in semantic_map.entries:
+        requirement = entry.requirement
+        if requirement is None:
+            continue
+        source = sources.get(requirement.source_ref)
+        if source is None:
+            raise RegistryValidationError(
+                f"semantic map export field {entry.export_field_id!r} cites requirement source "
+                f"{requirement.source_ref!r}, which the target revision does not catalogue",
+            )
+        if source.kind is RegistrySourceKind.RECORD_DESIGN:
+            raise RegistryValidationError(
+                f"semantic map export field {entry.export_field_id!r} cites the record design "
+                f"{requirement.source_ref!r} for its requirement; a design states requirements in its "
+                "own Validación column, which the generator reads",
+            )
+        if requirement.source_sha256 != source.sha256:
+            raise RegistryValidationError(
+                f"semantic map export field {entry.export_field_id!r} reviewed requirement source "
+                f"{requirement.source_ref!r} at {requirement.source_sha256}, but the catalogue now pins "
+                f"{source.sha256}; review the quotation against the new bytes",
+            )
+
+
+#: Inline markup that sits inside a sentence. Removed outright, so a bolded
+#: label keeps its following colon; every other tag ends a block of text.
+_INLINE_HTML_TAG: Final = re.compile(r"</?(?:a|abbr|b|em|i|span|strong|sub|sup)\b[^>]*>", re.IGNORECASE)
+_ANY_HTML_TAG: Final = re.compile(r"<[^>]+>")
+_HTML_SUFFIXES: Final[frozenset[str]] = frozenset({".htm", ".html"})
+
+
+def verify_requirement_statements(
+    semantic_map: SemanticMap,
+    *,
+    source_root: Path,
+    sources: Mapping[SourceRefId, GeneratedArtifactSource],
+) -> None:
+    """Find every reviewed requirement's quotation in the exact bytes of the source it cites.
+
+    The cited file is verified against its catalogue digest first, then read
+    as the text a person sees: markup removed, entities decoded, whitespace
+    collapsed. A quotation absent from that text refuses, so a requirement
+    cannot rest on words its source does not contain. Only an HTML source can
+    be read this way here; a requirement citing any other format refuses
+    rather than passing unchecked.
+    """
+    texts: dict[SourceRefId, str] = {}
+    for entry in semantic_map.entries:
+        requirement = entry.requirement
+        if requirement is None:
+            continue
+        source = sources.get(requirement.source_ref)
+        if source is None:
+            raise RegistryValidationError(
+                f"semantic map export field {entry.export_field_id!r} cites requirement source "
+                f"{requirement.source_ref!r}, which the target revision does not catalogue",
+            )
+        if requirement.source_ref not in texts:
+            texts[requirement.source_ref] = _readable_source_text(source_root, source)
+        if _collapse_whitespace(requirement.statement) not in texts[requirement.source_ref]:
+            raise RegistryValidationError(
+                f"semantic map export field {entry.export_field_id!r} quotes a requirement that "
+                f"{requirement.source_ref!r} does not contain: {requirement.statement!r}",
+            )
+
+
+def _readable_source_text(source_root: Path, source: GeneratedArtifactSource) -> str:
+    try:
+        path = verify_source_file(source_root, source)
+    except RegistryValidationError as exc:
+        raise RegistryValidationError(
+            f"requirement source {source.id!r} cannot be verified under source root {source_root}: {exc}",
+        ) from exc
+    if path.suffix.casefold() not in _HTML_SUFFIXES:
+        raise RegistryValidationError(
+            f"requirement source {source.id!r} is not an HTML document, so its quotation cannot be "
+            "verified; cite a source whose text can be read",
+        )
+    markup = path.read_text(encoding="utf-8")
+    text = _ANY_HTML_TAG.sub(" ", _INLINE_HTML_TAG.sub("", markup))
+    return _collapse_whitespace(html.unescape(text))
 
 
 def _projection_endpoint_index(

@@ -28,6 +28,7 @@ from .pipeline.render_profile_evidence import RenderProfileSourceEvidence
 from .pipeline.render_profile_loading import load_render_profile_for_revision
 from .pipeline.render_profile_source_reader import load_render_profile_source_evidence
 from .pipeline.semantic_map import load_semantic_map_for_revision
+from .pipeline.semantic_map_validation import verify_requirement_statements
 
 
 @dataclass(frozen=True, slots=True)
@@ -77,6 +78,7 @@ def _verify_generated_revision(
         design_epoch=entry.design_epoch,
     )
     joined = join_record_design_semantics(semantic_map, intermediate, inspection)
+    verify_requirement_statements(semantic_map, source_root=source_root, sources=inspection.sources)
     claims_official = any(
         rule.evidence.authority_kind != "reviewed_policy"
         for rule in (*render_profile.singleton_rules, *render_profile.width_17_rules)

@@ -81,6 +81,7 @@ __all__ = [
     "SemanticMapFragment",
     "SemanticMapPart",
     "SemanticMapRecord",
+    "SemanticMapRequirement",
     "VariableEnvelopeSemantic",
     "load_semantic_map",
     "load_semantic_map_for_revision",
@@ -316,6 +317,40 @@ class SemanticMapPart(_StrictModel):
         return f"{self.offset}-{self.offset + self.length - 1}"
 
 
+#: The entry kinds a reviewed requirement may sit on. A header field carries a
+#: producer-supplied identifying fact and a draft field the return's own
+#: ejercicio or periodo; both have a blank that means the fact never arrived.
+#: Every other kind already has its requirement from its own owner: a casilla
+#: from the design and its block anchor, a literal or reserve from the source.
+_REQUIREMENT_KINDS: Final[frozenset[str]] = frozenset({"header", "draft"})
+
+
+class SemanticMapRequirement(_StrictModel):
+    """A requirement an official non-design source states for one field, quoted and pinned.
+
+    The record design's Validación column is the first authority for whether a
+    field may be blank, and the generator reads it. Some designs leave the
+    column empty for fields their own instructions plainly demand -- Modelo
+    111's page carries no Validación at all, while its instructions say
+    "Introduzca el NIF del declarante y los apellidos y nombre o bien la razón
+    social". This records such a requirement as reviewed meaning: the source
+    that states it, the exact bytes reviewed, and the sentence quoted verbatim,
+    so validation can hold the quotation to the cited document and a
+    requirement nobody can point at refuses.
+
+    ``applies_to`` is ``all_taxpayers`` for an unconditional requirement and
+    ``natural_person`` for one the source states only for a person -- the
+    nombre of an "apellidos y nombre o bien la razón social" pair, which an
+    entity does not have.
+    """
+
+    applies_to: Literal["all_taxpayers", "natural_person"]
+    source_ref: SourceRefId
+    source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    statement: str = Field(min_length=1)
+    """The source's own words, copied verbatim; validation finds them in the cited document."""
+
+
 class SemanticMapEntry(_StrictModel):
     """Reviewed registry meaning for one exact parser anchor.
 
@@ -346,6 +381,35 @@ class SemanticMapEntry(_StrictModel):
     that a later block may be empty. See ``ExportFieldDefinition.required_with``.
     """
     """The sub-slot of its anchor's cell this entry fills, when the cell's text divides it."""
+    requirement: SemanticMapRequirement | None = None
+    """A requirement a cited non-design official source states for this field.
+
+    Reviewed, never inferred, and only for a header or draft field; see
+    :class:`SemanticMapRequirement`. The cited source must also be one of the
+    entry's ``source_refs``, so the generated field carries its own citation.
+    """
+
+    @model_validator(mode="after")
+    def _require_cited_requirement_on_an_identifying_field(self) -> SemanticMapEntry:
+        requirement = self.requirement
+        if requirement is None:
+            return self
+        if self.kind.value not in _REQUIREMENT_KINDS:
+            raise ValueError(
+                f"semantic-map field {self.export_field_id!r} is a {self.kind.value} field; a reviewed "
+                f"requirement may sit only on a header or draft field",
+            )
+        if requirement.applies_to == "natural_person" and self.kind.value != "header":
+            raise ValueError(
+                f"semantic-map field {self.export_field_id!r} states a natural-person requirement on a "
+                f"{self.kind.value} field; a legal-form condition applies only to a producer-supplied header",
+            )
+        if requirement.source_ref not in self.source_refs:
+            raise ValueError(
+                f"semantic-map field {self.export_field_id!r} cites requirement source "
+                f"{requirement.source_ref!r} that is not among its source_refs",
+            )
+        return self
 
     @field_validator("projection_ref", mode="before")
     @classmethod

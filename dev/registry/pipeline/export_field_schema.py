@@ -55,6 +55,7 @@ def _schema_field(
 ) -> ExportFieldDerivation:
     parser_field = joined_field.parser_field
     semantic_entry = joined_field.semantic_entry
+    required, required_for = _combined_requirement(joined_field, design_required=required)
     return ExportFieldDerivation(
         export_record_id=export_record_id,
         parser_field=parser_field,
@@ -80,7 +81,7 @@ def _schema_field(
                 "decimals": decimals,
                 "signed": signed,
                 "sign_position": sign_position,
-                "required_for": _qualified_requirement(parser_field.validation),
+                "required_for": required_for,
                 "required_with": semantic_entry.required_with,
                 "design_type": _design_type(parser_field.aeat_type, data_type),
                 "value_policy": value_policy,
@@ -93,6 +94,34 @@ def _schema_field(
         normalization_schema_version=EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION,
         derivation_code=derivation_code,
     )
+
+
+def _combined_requirement(
+    joined_field: JoinedRecordDesignField,
+    *,
+    design_required: bool,
+) -> tuple[bool, Literal["natural_person"] | None]:
+    """Join the design's own requirement with a reviewed one a non-design source states.
+
+    The design's Validación column stays the first authority. A reviewed
+    requirement fills only the silence it leaves: one restating a requirement
+    the design already makes is refused as a second spelling of the same fact,
+    and one disagreeing with a qualified design wording is refused as a
+    conflict between authorities rather than resolved by preference.
+    """
+    design_required_for = _qualified_requirement(joined_field.parser_field.validation)
+    reviewed = joined_field.semantic_entry.requirement
+    if reviewed is None:
+        return design_required, design_required_for
+    field_id = joined_field.semantic_entry.export_field_id
+    if design_required or design_required_for is not None:
+        raise RegistryValidationError(
+            f"export field {field_id!r} carries a reviewed requirement, but its design already states one "
+            f"({joined_field.parser_field.validation!r}); the design's own Validación is the requirement",
+        )
+    if reviewed.applies_to == "natural_person":
+        return False, "natural_person"
+    return True, None
 
 
 #: The requirement wordings this project has adjudicated as unconditional,

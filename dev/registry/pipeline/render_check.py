@@ -79,6 +79,7 @@ from .semantic_map import (
     SemanticMap,
     load_semantic_map_for_revision,
 )
+from .semantic_map_validation import verify_requirement_statements
 from .source_defects import source_defects_for
 
 __all__ = [
@@ -640,6 +641,7 @@ def _revision_render_inputs(
         legal_ref_ids=frozenset(catalogues.legal),
     )
     joined = join_record_design_semantics(semantic_map, intermediate, inspection)
+    verify_requirement_statements(semantic_map, source_root=source_root, sources=design_sources)
     evidence = load_render_profile_source_evidence(
         source_root / sources[selected_source_ref].corpus_path,
         render_profile,

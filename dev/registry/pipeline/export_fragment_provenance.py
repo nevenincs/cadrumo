@@ -621,6 +621,8 @@ def export_fragment_provenance_manifest_json_bytes(manifest: ExportFragmentProve
             del derivation["semantic_entry"]["part"]
         if derivation["semantic_entry"]["required_with"] is None:
             del derivation["semantic_entry"]["required_with"]
+        if derivation["semantic_entry"]["requirement"] is None:
+            del derivation["semantic_entry"]["requirement"]
         if derivation["verdict"] is None:
             del derivation["verdict"]
     return canonical_json_bytes(payload)
