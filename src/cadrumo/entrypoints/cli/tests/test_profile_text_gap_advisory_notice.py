@@ -21,17 +21,17 @@ from typing import Any
 import pytest
 
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ....core.json_contract import Notice
 from ....domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ....tests.cli_envelope import require_schema_envelope, unwrap_envelope_notices
 from .cli_runner import invoke_cached_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
+from .runtime_profile_backend import runtime_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
-_PROFILE_ID = "5b7d2e40-0000-4000-8000-00000000a7c1"
 _LABEL = "Profile text gap advisory test profile"
 _CODE = "modelo.work.calculate.source_advisory"
 _DECLARANTE_NAME = "DP_APENOM_D"
@@ -46,7 +46,7 @@ _CALCULATE_FLAGS: tuple[str, ...] = (
 
 @pytest.fixture
 def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_cli_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID, label=_LABEL) as profile:
+    with runtime_cli_profile(tmp_path=tmp_path, label=_LABEL) as profile:
         yield profile
 
 
@@ -57,7 +57,7 @@ def _seed_salaried_profile(runtime_profile: TestRuntimeProfile, *identity: UserP
     profile keeps as numbers; they must still fill their text casillas.
     """
     record = create_user_profile_record(
-        profile_id=_PROFILE_ID,
+        profile_id=runtime_profile.bucket_id,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(
             *identity,

@@ -40,7 +40,7 @@ import pytest
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
@@ -50,6 +50,7 @@ from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
 from .cli_runner import invoke_cached_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
+from .runtime_profile_backend import runtime_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -57,7 +58,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 # Constants
 # ---------------------------------------------------------------------------
 
-_PROFILE_ID = "c0117a5e-c011-4c01-8c01-17a5ec0117a5"
 
 # Two materially different source-owned ingresos for 2025 vs 2026.
 # Oracle: rendimiento neto = ingresos - gastos; pago fraccionado = 20%.
@@ -110,13 +110,12 @@ def runtime_profile(
 ) -> Iterator[TestRuntimeProfile]:
     """Real-session backend for the compare verb regression test.
 
-    Uses ``isolated_runtime_profile`` (real KEK/DEK, real SQLite per
-    active bucket).  Extra env overrides provide non-bucket directories.
+    A password-custodied profile whose runtime admits the CLI commands, with
+    the non-bucket directories work-unit commands read from settings isolated.
     """
 
-    with isolated_cli_runtime_profile(
+    with runtime_cli_profile(
         tmp_path=tmp_path,
-        bucket_id=_PROFILE_ID,
         label="Modelo compare regression test profile",
     ) as profile:
         yield profile
@@ -125,7 +124,7 @@ def runtime_profile(
 def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
     record = create_user_profile_record(
         context=profile_authority_contexts()[0],
-        profile_id=_PROFILE_ID,
+        profile_id=runtime_profile.bucket_id,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(
             UserProfileFact(path="identity.name", value="Compare Test Autónomo"),

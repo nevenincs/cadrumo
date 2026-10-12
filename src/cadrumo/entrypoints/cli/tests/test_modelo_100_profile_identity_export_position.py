@@ -24,7 +24,7 @@ import pytest
 from defusedxml import ElementTree as DefusedElementTree
 
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ....domain.calculations.registry.profile_bindings import ProfileProvider
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
@@ -32,10 +32,10 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, c
 from ....tests.cli_envelope import require_schema_envelope
 from .cli_runner import invoke_cached_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
+from .runtime_profile_backend import runtime_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
-_PROFILE_ID = "5b7d2e40-0000-4000-8000-00000000a7c2"
 _LABEL = "Modelo 100 identity export position test profile"
 _FILING_YEAR = 2025
 _PERIOD = "0A"
@@ -60,13 +60,13 @@ _CALCULATE_FLAGS: tuple[str, ...] = (
 
 @pytest.fixture
 def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_cli_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID, label=_LABEL) as profile:
+    with runtime_cli_profile(tmp_path=tmp_path, label=_LABEL) as profile:
         yield profile
 
 
 def _seed_salaried_profile(runtime_profile: TestRuntimeProfile) -> None:
     record = create_user_profile_record(
-        profile_id=_PROFILE_ID,
+        profile_id=runtime_profile.bucket_id,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),

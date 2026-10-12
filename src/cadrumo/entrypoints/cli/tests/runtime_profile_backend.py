@@ -24,9 +24,12 @@ import pytest
 from click.testing import Result
 
 from ....adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from ....adapters.persistence.storage.bucket.directory_layout import bucket_paths
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from ....adapters.persistence.storage.runtime import inspect_storage_runtime
+from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_profile_storage_root
 from ....application.user_profile.login_session import authenticate_profile_for_invocation
 from ....application.workflow.profile_bucket_scan import read_profile_bucket_by_id
 from ....core.config import load_settings, override_settings
@@ -34,6 +37,7 @@ from ....core.paths import effective_storage_root
 from ....core.storage_taxonomy import StorageCategory
 from ....core.storage_taxonomy_locations import storage_location
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....tests.storage_scope import storage_overrides
 from .cli_runner import ClickInvokeKwargs, ProfileCliInvoker, bind_profile_cli, invoke_unbound_cli
 from .portable_human_cli_runtime import PortableHumanCliRuntime, portable_human_cli_runtime
 from .profile_password_cli import chooses_own_credential_source, refused_for_want_of_an_operator
@@ -41,6 +45,7 @@ from .profile_password_cli import chooses_own_credential_source, refused_for_wan
 __all__ = [
     "live_session_operator",
     "operator_profile_bound_to_cli",
+    "runtime_cli_profile",
     "runtime_profile_backend_fixture",
     "runtime_seeded_profile_backend_fixture",
 ]
@@ -104,6 +109,47 @@ def operator_profile_bound_to_cli(
     finally:
         # The registration's session belongs to this world; no later test inherits it.
         close_active_bucket_session()
+
+
+@contextmanager
+def runtime_cli_profile(
+    *,
+    tmp_path: Path,
+    label: str = _OPERATOR_LABEL,
+    facts: Mapping[str, str] | None = None,
+) -> Iterator[TestRuntimeProfile]:
+    """Isolate a CLI world around one password-custodied profile whose operator runs every command.
+
+    The command-line counterpart of the storage package's runtime profile: the
+    directories CLI work-unit commands read from settings are isolated beside
+    the storage root, and the profile is registered with genuine password
+    custody so its runtime admits the test's commands. Its session stays live
+    in this process for the test's own setup reads and writes, which address
+    the profile by the yielded ``bucket_id``.
+    """
+    overrides = storage_overrides(
+        tmp_path,
+        StorageCategory.RUNS,
+        StorageCategory.DRAFTS,
+        StorageCategory.TOKENS,
+        StorageCategory.FINANCIAL_TRANSACTIONS,
+        StorageCategory.INVOICES,
+    )
+    for location in overrides.values():
+        location.mkdir(parents=True, exist_ok=True)
+    with (
+        _isolated_world(tmp_path, overrides) as storage_root,
+        operator_profile_bound_to_cli(storage_root=storage_root, label=label, facts=facts) as profile_id,
+    ):
+        settings = load_settings()
+        yield TestRuntimeProfile(
+            storage_root=storage_root,
+            bucket_id=str(profile_id),
+            paths=bucket_paths(storage_root, str(profile_id)),
+            settings=settings,
+            runtime=inspect_storage_runtime(settings),
+            repository=secure_object_repository_for_active_bucket(),
+        )
 
 
 def runtime_profile_backend_fixture(

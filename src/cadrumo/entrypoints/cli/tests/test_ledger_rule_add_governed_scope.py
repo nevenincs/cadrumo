@@ -18,7 +18,7 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ....domain.calculations.registry.tests.fact_scope import outside_governed_fact_validation
@@ -26,18 +26,17 @@ from ....domain.user_profile.tests.profile_creation_authority import profile_cre
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ....tests.cli_envelope import unwrap_schema_envelope
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_backend import runtime_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_PROFILE_ID = "0ac1e000-0000-4000-8000-000000515003"
 _MISSING_SCOPE = "requires an explicit generation-pinned governed-fact scope"
 
 
 @pytest.fixture
 def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_cli_runtime_profile(
+    with runtime_cli_profile(
         tmp_path=tmp_path,
-        bucket_id=_PROFILE_ID,
         label="Ledger rule governed scope test profile",
     ) as profile:
         yield profile
@@ -47,7 +46,7 @@ def _seed_profile(runtime_profile: TestRuntimeProfile) -> None:
     """Seed a natural-person profile; the seed itself may lease the authority."""
     with bundled_indexed_authority().operation() as operation, validating_governed_facts(operation):
         record = create_user_profile_record(
-            profile_id=_PROFILE_ID,
+            profile_id=runtime_profile.bucket_id,
             setup_state=ProfileSetupState.COMPLETE,
             facts=(
                 UserProfileFact(path="identity.name", value="Ana"),

@@ -1,7 +1,7 @@
 """Cross-modelo CLI calculation tests grounded in external oracle values (contract/contract).
 
 Each test drives the real ``cadrumo`` CLI against an isolated real-session backend
-(``isolated_runtime_profile``) — no mocks, no unsecured-monkeypatch backend.
+(``runtime_cli_profile``) — no mocks, no unsecured-monkeypatch backend.
 
 Expected casilla values are derived exclusively from external authoritative
 sources cited inline with each test.  No expected value was hand-computed from
@@ -36,13 +36,14 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 from cadrumo.domain.calculations.registry.tests.authored_editions import revision_covering
 from cadrumo.domain.calculations.registry.tests.published_authority import published_legal_reference
 
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
 from .cli_runner import invoke_cached_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
+from .runtime_profile_backend import runtime_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -55,8 +56,6 @@ _DT44_FIRST_TRANSITIONAL_EXERCISE = published_legal_reference("ley-27-2014:dt-44
 # Fixture helpers
 # ---------------------------------------------------------------------------
 
-_PROFILE_ID = "0ac1e000-0000-4000-8000-000000000001"
-
 
 @pytest.fixture
 def runtime_profile(
@@ -64,16 +63,11 @@ def runtime_profile(
 ) -> Iterator[TestRuntimeProfile]:
     """Real-session backend for cross-modelo oracle calculation tests.
 
-    Uses ``isolated_runtime_profile`` (real KEK/DEK, real SQLite per
-    active bucket).  Extra env-var overrides supply the non-bucket
-    directories that work-unit commands read from settings.
+    A password-custodied profile whose runtime admits the CLI commands, with
+    the non-bucket directories work-unit commands read from settings isolated.
     """
 
-    with isolated_cli_runtime_profile(
-        tmp_path=tmp_path,
-        bucket_id=_PROFILE_ID,
-        label="Oracle calculation test profile",
-    ) as profile:
+    with runtime_cli_profile(tmp_path=tmp_path, label="Oracle calculation test profile") as profile:
         yield profile
 
 
@@ -89,7 +83,7 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
     create_context, _ = profile_authority_contexts()
     record = create_user_profile_record(
         context=create_context,
-        profile_id=_PROFILE_ID,
+        profile_id=runtime_profile.bucket_id,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(
             UserProfileFact(path="identity.name", value="Oracle Test Operator"),
@@ -159,7 +153,7 @@ def _seed_legal_entity_profile(
     create_context, _ = profile_authority_contexts()
     record = create_user_profile_record(
         context=create_context,
-        profile_id=_PROFILE_ID,
+        profile_id=runtime_profile.bucket_id,
         setup_state=ProfileSetupState.COMPLETE,
         facts=tuple(facts),
     )

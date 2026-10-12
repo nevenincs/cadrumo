@@ -20,24 +20,22 @@ from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCom
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ....application.calculations.binding_prefill import resolve_bindings_from_local_store
 from ....core.period import Period
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_backend import runtime_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_SPREADSHEET_OBSERVATION_PROFILE_ID = "35353535-3535-4535-8535-353535353535"
 
 
 @pytest.fixture
 def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
     """Real active encrypted profile storage for the spreadsheet-import CLI tests."""
-    with isolated_cli_runtime_profile(
+    with runtime_cli_profile(
         tmp_path=tmp_path,
-        bucket_id=_SPREADSHEET_OBSERVATION_PROFILE_ID,
         label="Spreadsheet local observation CLI test",
     ) as profile:
         yield profile
@@ -100,7 +98,11 @@ def test_observe_local_from_csv_spreadsheet_persists_non_official_observation(
         "1577": "0",
     }
     notices = unwrap_envelope_notices(result.output)
-    assert [notice["code"] for notice in notices] == ["modelo.filing_record.observe_local.non_official"]
+    # The operator was admitted with the password for this command alone, which it says.
+    assert [notice["code"] for notice in notices] == [
+        "modelo.filing_record.observe_local.non_official",
+        "config.login.session_not_persisted",
+    ]
 
     with open_test_profile_session(runtime_profile.bucket_id):
         repository = CalculationObservationRepository()

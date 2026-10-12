@@ -235,6 +235,7 @@ def _project_refusal(refusal: ActivityAssetRefusalResult | None) -> ActivityAsse
             if refusal.precondition_verdict is not None
             else None
         ),
+        accelerated_da18=refusal.accelerated_da18,
     )
 
 

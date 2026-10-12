@@ -15,6 +15,7 @@ from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.renta.actividad_asset.errors import (
+    ActividadAssetAcceleratedDa18DepreciationError,
     ActividadAssetClaimConflictError,
     ActividadAssetIncompleteError,
     ActividadAssetUnsupportedError,
@@ -37,10 +38,12 @@ from .activity_asset_contracts import (
     ACTIVITY_ASSET_FILING_HANDOFF_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_FORECAST_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_INSPECT_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_REFUSED_ACCELERATED_DA18,
     ACTIVITY_ASSET_REFUSED_CLAIM_CONFLICT,
     ACTIVITY_ASSET_REFUSED_INCOMPLETE,
     ACTIVITY_ASSET_REFUSED_UNSUPPORTED,
     ACTIVITY_ASSET_REFUSED_VALIDATION,
+    ActivityAssetAcceleratedDa18Facts,
     ActivityAssetAuthorityProvenance,
     ActivityAssetClaimRequest,
     ActivityAssetCorrectRequest,
@@ -153,6 +156,11 @@ def _refusal(error: Exception) -> ActivityAssetRefusalResult | None:
         return ActivityAssetRefusalResult(
             code=ACTIVITY_ASSET_REFUSED_INCOMPLETE,
             precondition_verdict=verdict if isinstance(verdict, PreconditionVerdict) else None,
+        )
+    if isinstance(error, ActividadAssetAcceleratedDa18DepreciationError):
+        return ActivityAssetRefusalResult(
+            code=ACTIVITY_ASSET_REFUSED_ACCELERATED_DA18,
+            accelerated_da18=ActivityAssetAcceleratedDa18Facts.from_error(error),
         )
     if isinstance(error, ActividadAssetUnsupportedError):
         return ActivityAssetRefusalResult(code=ACTIVITY_ASSET_REFUSED_UNSUPPORTED)

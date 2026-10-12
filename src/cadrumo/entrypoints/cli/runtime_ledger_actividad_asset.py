@@ -239,11 +239,14 @@ def forecast_activity_asset(
     )
     result = _finish(completed, success_effect=OperationEffect.NONE)
     forecast = result.forecast
+    # The charge covers the part of the requested interval the asset was in
+    # service, so it lies inside the request rather than equal to it.
     if (
         forecast is None
         or forecast.asset_id != asset_id
-        or forecast.covered_from != covered_from
-        or forecast.covered_until != covered_until
+        or forecast.covered_from < covered_from
+        or forecast.covered_until > covered_until
+        or forecast.covered_from > forecast.covered_until
     ):
         raise invalid_completion_error(completed)
     return result

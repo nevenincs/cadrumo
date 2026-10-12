@@ -260,10 +260,13 @@ class RuntimeActivityAssetTuiActionsV1:
         if projection.forecast is None:
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         forecast = projection.forecast.to_domain()
+        # The charge covers the part of the requested interval the asset was in
+        # service, so it lies inside the request rather than equal to it.
         if (
             forecast.asset_id != request.asset_id
-            or forecast.covered_from != request.covered_from
-            or forecast.covered_until != request.covered_until
+            or forecast.covered_from < request.covered_from
+            or forecast.covered_until > request.covered_until
+            or forecast.covered_from > forecast.covered_until
         ):
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         return forecast

@@ -16,6 +16,7 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.renta.actividad_asset.errors import (
+    ActividadAssetAcceleratedDa18DepreciationError,
     ActividadAssetClaimConflictError,
     ActividadAssetError,
     ActividadAssetIncompleteError,
@@ -52,12 +53,15 @@ ACTIVITY_ASSET_REFUSED_INCOMPLETE = "REFUSED_ACTIVIDAD_ASSET_INCOMPLETE"
 
 ACTIVITY_ASSET_REFUSED_CLAIM_CONFLICT = "REFUSED_ACTIVIDAD_ASSET_CLAIM_CONFLICT"
 
+ACTIVITY_ASSET_REFUSED_ACCELERATED_DA18 = "REFUSED_ACTIVIDAD_ASSET_ACCELERATED_DA18_DEPRECIATION_NOT_COMPUTED"
+
 ACTIVITY_ASSET_REFUSAL_CODES = frozenset(
     {
         ACTIVITY_ASSET_REFUSED_VALIDATION,
         ACTIVITY_ASSET_REFUSED_UNSUPPORTED,
         ACTIVITY_ASSET_REFUSED_INCOMPLETE,
         ACTIVITY_ASSET_REFUSED_CLAIM_CONFLICT,
+        ACTIVITY_ASSET_REFUSED_ACCELERATED_DA18,
     }
 )
 
@@ -72,6 +76,7 @@ ActivityAssetRefusalCode = Literal[
     "REFUSED_ACTIVIDAD_ASSET_UNSUPPORTED",
     "REFUSED_ACTIVIDAD_ASSET_INCOMPLETE",
     "REFUSED_ACTIVIDAD_ASSET_CLAIM_CONFLICT",
+    "REFUSED_ACTIVIDAD_ASSET_ACCELERATED_DA18_DEPRECIATION_NOT_COMPUTED",
 ]
 
 
@@ -105,6 +110,31 @@ class ActivityAssetAuthorityProvenance(BaseModel):
     reader_incarnation: Hex64Str
 
 
+class ActivityAssetAcceleratedDa18Facts(BaseModel):
+    """The typed facts that name a claim LIS DA 18 places under the accelerated regime."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    asset_id: ActivityAssetId
+    method: Annotated[str, Field(min_length=1, max_length=64)]
+    tax_year: ActivityAssetTaxYear
+    legal_reference: Annotated[str, Field(min_length=1, max_length=128)]
+
+    @classmethod
+    def from_error(cls, error: ActividadAssetAcceleratedDa18DepreciationError) -> Self:
+        """Keep the bounded facts the domain refusal names, never its prose."""
+        context = error.context or {}
+        return cls.model_validate(
+            {key: context.get(key) for key in ("asset_id", "method", "tax_year", "legal_reference")}
+        )
+
+
+def require_da18_facts_match(code: str, facts: ActivityAssetAcceleratedDa18Facts | None) -> None:
+    """Hold the DA 18 facts to the one refusal code that names them."""
+    if (code == ACTIVITY_ASSET_REFUSED_ACCELERATED_DA18) != (facts is not None):
+        raise ValueError("activity-asset DA 18 facts accompany exactly the DA 18 refusal")
+
+
 class ActivityAssetRefusal(BaseModel):
     """Bounded public refusal detail without persisted exception prose."""
 
@@ -112,9 +142,20 @@ class ActivityAssetRefusal(BaseModel):
 
     code: ActivityAssetRefusalCode
     precondition_verdict: PreconditionVerdictSnapshot | None = None
+    accelerated_da18: ActivityAssetAcceleratedDa18Facts | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _da18_facts_match_code(self) -> Self:
+        require_da18_facts_match(self.code, self.accelerated_da18)
+        return self
 
     def to_domain_error(self, *, context: Mapping[str, object]) -> ActividadAssetError:
         """Rebuild the domain refusal this detail was recorded from, carrying the settled receipt facts."""
+        if self.accelerated_da18 is not None:
+            return ActividadAssetAcceleratedDa18DepreciationError(
+                context={**self.accelerated_da18.model_dump(mode="python"), **context}
+            )
         if self.code == ACTIVITY_ASSET_REFUSED_INCOMPLETE:
             return ActividadAssetIncompleteError(
                 context=context,

@@ -23,7 +23,6 @@ import pytest
 from click.testing import Result
 
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from ....adapters.persistence.storage.tests.secure_sql import isolated_cli_runtime_profile
 from ....core.errors.error_codes import ErrorCategory, get_error_exit_code
 from ....core.i18n.render import tr
 from ....domain.calculations.registry.tests.published_authority import (
@@ -55,10 +54,10 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ....tests.cli_envelope import unwrap_schema_envelope
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_backend import runtime_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
-_BUCKET_ID = "00000000-0000-4000-8000-000000000618"
 _T0 = datetime(2026, 2, 1, 9, 0, tzinfo=UTC)
 _BASIS = Decimal("30000.00")
 _ACCELERATED_CODE = "REFUSED_ACTIVIDAD_ASSET_ACCELERATED_DA18_DEPRECIATION_NOT_COMPUTED"
@@ -66,11 +65,11 @@ _ACCELERATED_MESSAGE_KEY = "errors.refused.refused_actividad_asset_accelerated_d
 _LANGUAGES = ("en", "es", "ca", "hu")
 
 
-def _seed_direct_normal_profile(root: Path) -> None:
+def _seed_direct_normal_profile(root: Path, profile_id: str) -> None:
     seed_test_profile_record(
         _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_BUCKET_ID,
+            profile_id=profile_id,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
                 UserProfileFact(path="identity.name", value="Autonoma"),
@@ -154,8 +153,8 @@ def _forecast(asset_id: str, year: int, *, language: str = "es") -> Result:
 
 
 def test_an_electric_vehicle_under_the_accelerated_regime_refuses_in_every_language(tmp_path: Path) -> None:
-    with isolated_cli_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="accelerated da18") as profile:
-        _seed_direct_normal_profile(profile.storage_root)
+    with runtime_cli_profile(tmp_path=tmp_path, label="accelerated da18") as profile:
+        _seed_direct_normal_profile(profile.storage_root, profile.bucket_id)
         for asset_id, in_service in (("van-2023", date(2023, 3, 1)), ("van-2024", date(2024, 3, 1))):
             created = invoke_cached_cli(
                 ["--format", "json", "app", "ledger", "actividad-asset", "create", _electric_van(asset_id, in_service)],

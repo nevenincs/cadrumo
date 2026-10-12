@@ -58,7 +58,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import s
 from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
 
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.tests.published_authority import (
@@ -69,6 +69,7 @@ from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ._m130_source_support import seed_m130_income_transaction
 from .cli_runner import invoke_cached_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
+from .runtime_profile_backend import runtime_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -141,7 +142,6 @@ def test_proyecto_casilla_observations_carry_provenance() -> None:
 # Constants
 # ---------------------------------------------------------------------------
 
-_PROFILE_ID = "13013013-0130-4130-8130-130130130130"
 _PROFILE_LABEL = "M130 projection regression test profile"
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
 _M130_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id("03", surface="_M130_RENDIMIENTO_NETO_CASILLA")
@@ -223,14 +223,12 @@ def runtime_profile(
 ) -> Iterator[TestRuntimeProfile]:
     """Real-session backend for M130→M100 projection regression test.
 
-    Uses ``isolated_runtime_profile`` (real KEK/DEK, real SQLite per
-    active bucket).  Extra env overrides provide the non-bucket
-    directories work-unit commands read from settings.
+    A password-custodied profile whose runtime admits the CLI commands, with
+    the non-bucket directories work-unit commands read from settings isolated.
     """
 
-    with isolated_cli_runtime_profile(
+    with runtime_cli_profile(
         tmp_path=tmp_path,
-        bucket_id=_PROFILE_ID,
         label=_PROFILE_LABEL,
     ) as profile:
         yield profile
@@ -241,7 +239,7 @@ def _seed_autónomo_profile(runtime_profile: TestRuntimeProfile) -> None:
 
     record = create_user_profile_record(
         context=profile_authority_contexts()[0],
-        profile_id=_PROFILE_ID,
+        profile_id=runtime_profile.bucket_id,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(
             UserProfileFact(path="identity.name", value="Projection Test Autónomo"),

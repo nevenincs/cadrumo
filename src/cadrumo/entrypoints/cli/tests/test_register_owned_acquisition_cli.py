@@ -39,7 +39,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import s
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ....core.period import Period
 from ....core.storage_taxonomy import StorageCategory
 from ....domain.calculations.registry.tests.published_authority import (
@@ -53,10 +53,10 @@ from ....tests.pdf_fixtures import text_pdf_bytes
 from ....tests.storage_scope import storage_overrides
 from ._m303_ordinary_cli_support import joint_return_options
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_backend import runtime_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
-_BUCKET_ID = "00000000-0000-4000-8000-000000000461"
 _T0 = datetime(2026, 2, 1, 9, 0, tzinfo=UTC)
 _ACQUIRED_ON = date(2025, 4, 5)
 _ASSET_ID = "machine-2025"
@@ -110,11 +110,11 @@ def _prepare_cli_directories(tmp_path: Path) -> None:
         directory.mkdir(parents=True, exist_ok=True)
 
 
-def _seed_ready_profile(root: Path) -> None:
+def _seed_ready_profile(root: Path, profile_id: str) -> None:
     seed_test_profile_record(
         _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_BUCKET_ID,
+            profile_id=profile_id,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
                 UserProfileFact(path="identity.name", value="Autonoma"),
@@ -375,8 +375,8 @@ def _calculated_casillas(*, modelo: str, period: str, options: tuple[str, ...] =
 def test_register_owned_acquisition_deducts_the_charge_and_keeps_its_input_iva(tmp_path: Path) -> None:
     """The supported route: ledger purchase plus register claim, with no collision."""
     _prepare_cli_directories(tmp_path)
-    with isolated_cli_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="asset acquisition") as profile:
-        _seed_ready_profile(profile.storage_root)
+    with runtime_cli_profile(tmp_path=tmp_path, label="asset acquisition") as profile:
+        _seed_ready_profile(profile.storage_root, profile.bucket_id)
         _seed_zero_iva_compensation_decision(profile)
         transaction_id = _add_machine_purchase(_add_supplier_invoice_evidence(tmp_path))
         _register_machine(transaction_id)
@@ -412,8 +412,8 @@ def test_a_separate_depreciation_row_still_refuses_the_calculation(tmp_path: Pat
     calculation refuse and name what to reclassify or reverse.
     """
     _prepare_cli_directories(tmp_path)
-    with isolated_cli_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="asset collision") as profile:
-        _seed_ready_profile(profile.storage_root)
+    with runtime_cli_profile(tmp_path=tmp_path, label="asset collision") as profile:
+        _seed_ready_profile(profile.storage_root, profile.bucket_id)
         transaction_id = _add_machine_purchase(_add_supplier_invoice_evidence(tmp_path))
         _register_machine(transaction_id)
         _claim_2025_charge()

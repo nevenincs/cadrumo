@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.application.actividad_asset.activity_asset_contracts import ActivityAssetRefusal
 from cadrumo.domain.renta.actividad_asset.errors import (
+    ActividadAssetAcceleratedDa18DepreciationError,
     ActividadAssetClaimConflictError,
     ActividadAssetError,
     ActividadAssetIncompleteError,
@@ -43,3 +45,32 @@ def test_an_incomplete_refusal_without_a_verdict_carries_no_recovery_verdict() -
 
     assert isinstance(error, ActividadAssetIncompleteError)
     assert error.terminal_precondition_verdict is None
+
+
+_DA18_FACTS = {
+    "asset_id": "van-2023",
+    "method": "electric_vehicle_free",
+    "tax_year": 2023,
+    "legal_reference": "ley-27-2014:da-18",
+}
+
+
+def test_a_da18_refusal_rebuilds_its_own_error_with_the_facts_it_names() -> None:
+    error = ActivityAssetRefusal.model_validate(
+        {"code": "REFUSED_ACTIVIDAD_ASSET_ACCELERATED_DA18_DEPRECIATION_NOT_COMPUTED", "accelerated_da18": _DA18_FACTS}
+    ).to_domain_error(context=_CONTEXT)
+
+    assert type(error) is ActividadAssetAcceleratedDa18DepreciationError
+    assert error.context == {**_DA18_FACTS, **_CONTEXT}
+
+
+@pytest.mark.parametrize(
+    "document",
+    [
+        {"code": "REFUSED_ACTIVIDAD_ASSET_ACCELERATED_DA18_DEPRECIATION_NOT_COMPUTED"},
+        {"code": "REFUSED_ACTIVIDAD_ASSET_UNSUPPORTED", "accelerated_da18": _DA18_FACTS},
+    ],
+)
+def test_da18_facts_accompany_exactly_the_da18_refusal(document: dict[str, object]) -> None:
+    with pytest.raises(ValidationError):
+        ActivityAssetRefusal.model_validate(document)

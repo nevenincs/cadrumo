@@ -16,7 +16,7 @@ from uuid import UUID
 import pytest
 
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ....application.user_profile.profile_record_repository import ProfileRecordRepository
 from ....domain.calculations.registry.tests.published_authority import leased_profile_create_context
 from ....domain.user_profile.values import (
@@ -26,19 +26,19 @@ from ....domain.user_profile.values import (
     create_user_profile_record,
 )
 from .modelo_cli import create_modelo_work_unit_via_cli
+from .runtime_profile_backend import runtime_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
-_PROFILE_ID = "0ac1e000-0000-4000-8000-000000370001"
 _LABEL = "Work create profile load count"
 
 
 @pytest.fixture
 def runtime_profile(tmp_path: Path, authority_operation: object) -> Iterator[TestRuntimeProfile]:
     del authority_operation  # the record is created under the leased generation
-    with isolated_cli_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID, label=_LABEL) as profile:
+    with runtime_cli_profile(tmp_path=tmp_path, label=_LABEL) as profile:
         record = create_user_profile_record(
-            profile_id=_PROFILE_ID,
+            profile_id=profile.bucket_id,
             setup_state=ProfileSetupState.COMPLETE,
             facts=(
                 UserProfileFact(path="identity.name", value="Marta"),
@@ -80,8 +80,7 @@ def profile_loads(monkeypatch: pytest.MonkeyPatch) -> list[str]:
     return loads
 
 
-@pytest.mark.usefixtures("runtime_profile")
-def test_work_create_decrypts_the_profile_once(profile_loads: list[str]) -> None:
+def test_work_create_decrypts_the_profile_once(runtime_profile: TestRuntimeProfile, profile_loads: list[str]) -> None:
     create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
 
-    assert profile_loads == [_PROFILE_ID]
+    assert profile_loads == [runtime_profile.bucket_id]
