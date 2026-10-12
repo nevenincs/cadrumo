@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#mcp-purpose-authentication'
 date: '2026-09-26'
-modified: '2026-10-12'
+modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:d65ab1405950869ea5d745fa29ab6d3e083fd41b147d976e6200badb2eb44aa7'
+body_hash: 'sha256:a1d152e2608dab569936d8607cb70985cc463c67c15b17d349d5f095a163b42d'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-plan]]"
 ---
@@ -6273,6 +6273,8 @@ related:
 - `S15` `verify:` `pytest -n0 native test_runtime_login_native, test_runtime_automation_requester_native, test_runtime_password_rotation, test_runtime_workbench_native installed cases (run 20261012T050853.038545Z-pytest-92068-c2be72ee)` -> `fail`
 - `S18` `verify:` `pytest dev/docs/tests/test_cli_reference_pages_are_not_stubs.py test_cli_anchor_parity.py (6 passed)` -> `pass`
 - `S18` `verify:` `python -m dev.docs.sequences check --page how-to/connect-an-agent` -> `fail`
+- `S18` `M` `docs/_sequences/how-to/connect-an-agent/connect-an-agent-session-lock.json`
+- `S18` `verify:` `dev.docs.sequences check --page how-to/connect-an-agent` -> `pass`
 
 ## Notes
 
@@ -7324,3 +7326,4 @@ related:
 - `S15` Left open: restricted-key login reaching no human-only administration passed natively, but cold global-lock recovery and installed lock/resume journeys failed here on runtime deadline and the missing Credential Manager (WinError 1312); rerun from the signed-in desktop.
 - `S18` Displaced identity-flag, password-file, wrapper and process paths are absent from `src/cadrumo_harness` by search; cadrumo-mcp accepts only profile, credential-reference, surface and held-secret options.
 - `S18` Left open: the guide's sequence check refused because .authority is stale against current legal sources; republishing the shared authority was not done while another session runs a live runtime. Needs publish-authority --if-stale, then the page check.
+- `S18` Refreshed the session-lock golden: the locked-profile refusal keeps code `REFUSED_CLI_BOUNDARY` and context.reason `profile_locked,` and its message now reads the translated `errors.refused.profile_locked` text (named sign-in refusals); page prose unchanged, no catalogue change.

@@ -83,7 +83,7 @@
           "context": {
             "reason": "profile_locked"
           },
-          "message": "profile_locked",
+          "message": "This operation requires an unlocked profile. Run `aeat config login NAME` and try again.",
           "retryable": false,
           "runbook_id": null,
           "trace_id": null
