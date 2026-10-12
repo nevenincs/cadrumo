@@ -10,7 +10,7 @@ related:
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
 modified: '2026-10-12'
 body_schema: body-v2
-body_hash: 'sha256:a4e0b46aca4caa2cd6f168ae57e18d26a1ba264b544275be3e664c049e374fde'
+body_hash: 'sha256:e1fb6919290fbe713a3337ba034bdc01ecc766c3463f1b23b2da3dcf21634dc3'
 ---
 
 <!-- LINK RULES:
@@ -125,7 +125,7 @@ Scope bounds: the lane never edits `src/cadrumo_harness/mcp` or runtime code, wh
 
 - [x] `S01` - Correct the dev/agent_eval docstring to state what the package imports from the product; `dev/agent_eval/__init__.py`.
 - [x] `S02` - Verify the staged bundle package against its manifest, copy it to the development build root, verify and re-verify the copy, and compare its first-party modules with the checkout, refusing a stale package unless asked, with positive controls for a changed byte and a stale module; `dev/agent_eval/live/package_copy.py`.
-- [ ] `S03` - Host the copied package on a fresh isolated storage root, running the installation record, profile creation, sign-in and teardown as package code through the copy's interpreter and command line, with the runtime launched unsupervised with the manager's arguments inside a kill-on-close scope and an allow-listed environment, and classify an unusable credential store as unavailable; `dev/agent_eval/live/isolated_host.py`.
+- [x] `S03` - Host the copied package on a fresh isolated storage root, running the installation record, profile creation, sign-in and teardown as package code through the copy's interpreter and command line, with the runtime launched unsupervised with the manager's arguments inside a kill-on-close scope and an allow-listed environment, and classify an unusable credential store as unavailable; `dev/agent_eval/live/isolated_host.py`.
 - [ ] `S04` - Declare the live scenario files, Modelo 130 on the DR 130 worked example first and then Modelo 303 for the same quarter, with their loader and required subsequences; `dev/agent_eval/live/scenarios`.
 - [ ] `S05` - Drive the agent through the Anthropic API with an MCP client loop or the authenticated claude CLI fallback, always claude-haiku-5-5, both producing one LiveTrajectory, with turn, token and spend limits; `dev/agent_eval/live/drivers.py`.
 - [ ] `S06` - Scrub the stream before anything is written and capture the scrubbed trajectory, receipt and score to .logs/agent-eval/ behind a fail-closed residual scan, with a positive control on a planted secret; `dev/agent_eval/live/capture.py`.

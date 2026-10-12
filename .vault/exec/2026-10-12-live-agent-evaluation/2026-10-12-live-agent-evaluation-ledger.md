@@ -5,7 +5,7 @@ tags:
 date: '2026-10-12'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:4ea5289eae58f598783188ee56efa28c4429b7f35cbdaaf010ff318805add9cf'
+body_hash: 'sha256:2f5b94db913144eb3fb478416d778f93ee64b78c88b29f55564ea08d598112e0'
 related:
   - "[[2026-10-12-live-agent-evaluation-plan]]"
 ---
@@ -42,3 +42,21 @@ related:
 
 - `S01` `M` `dev/agent_eval/__init__.py`
 - `S01` `verify:` `ruff check dev/agent_eval/__init__.py` -> `pass`
+- `S02` `A` `dev/agent_eval/live/__init__.py`
+- `S02` `A` `dev/agent_eval/live/outcome.py`
+- `S02` `A` `dev/agent_eval/live/package_copy.py`
+- `S02` `A` `dev/agent_eval/tests/test_live_package_copy.py`
+- `S02` `A` `dev/agent_eval/tests/test_live_outcome.py`
+- `S02` `verify:` `pytest dev/agent_eval/tests/test_live_package_copy.py dev/agent_eval/tests/test_live_outcome.py` -> `pass`
+- `S02` `verify:` `ruff check, ruff format, ty check on touched files` -> `pass`
+- `S02` `verify:` `just check-import-boundaries` -> `fail`
+- `S03` `A` `dev/agent_eval/live/package_host.py`
+- `S03` `A` `dev/agent_eval/live/isolated_host.py`
+- `S03` `A` `dev/agent_eval/tests/test_live_isolated_host.py`
+- `S03` `verify:` `pytest dev/agent_eval/tests/test_live_isolated_host.py` -> `pass`
+- `S03` `verify:` `ruff check, ruff format, ty check on touched files` -> `pass`
+- `S03` `verify:` `real package smoke: verified copy of the rebuilt bundle, packaged runtime ready on a fresh root, profile created, sign-in classified credential_store_unavailable (config.login.session_not_persisted) on this SSH logon, run directory and processes removed` -> `pass`
+
+## Notes
+
+- `S02` import gate failed on findings outside this Step: P10 removing `cadrumo_harness.mcp` `held_secrets,` `session_acts` and `installation_acts` while the gate ran, and stale load-target metadata; no finding names `dev/agent_eval`
