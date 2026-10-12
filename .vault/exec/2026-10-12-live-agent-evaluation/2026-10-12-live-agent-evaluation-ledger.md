@@ -5,7 +5,7 @@ tags:
 date: '2026-10-12'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:2f5b94db913144eb3fb478416d778f93ee64b78c88b29f55564ea08d598112e0'
+body_hash: 'sha256:58240f38b91335051219365860d8de6d345213ea2fb2ba9b8c772f077ee7476a'
 related:
   - "[[2026-10-12-live-agent-evaluation-plan]]"
 ---
@@ -56,6 +56,12 @@ related:
 - `S03` `verify:` `pytest dev/agent_eval/tests/test_live_isolated_host.py` -> `pass`
 - `S03` `verify:` `ruff check, ruff format, ty check on touched files` -> `pass`
 - `S03` `verify:` `real package smoke: verified copy of the rebuilt bundle, packaged runtime ready on a fresh root, profile created, sign-in classified credential_store_unavailable (config.login.session_not_persisted) on this SSH logon, run directory and processes removed` -> `pass`
+- `S04` `A` `dev/agent_eval/live/scenario.py`
+- `S04` `A` `dev/agent_eval/live/scenarios/modelo_130_dr130.toml`
+- `S04` `A` `dev/agent_eval/live/scenarios/modelo_303_quarter.toml`
+- `S04` `A` `dev/agent_eval/tests/test_live_scenarios.py`
+- `S04` `verify:` `pytest dev/agent_eval/tests/test_live_scenarios.py` -> `pass`
+- `S04` `verify:` `ruff check, ruff format, ty check on touched files` -> `pass`
 
 ## Notes
 

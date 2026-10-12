@@ -1,0 +1,84 @@
+# Live scenario: prepare Modelo 303 for the same quarter as the Modelo 130 scenario.
+#
+# The oracle is cross-artefact agreement on IVA: the IVA booked on the ledger
+# row, the verified calculation and the parsed export must state the same
+# base and cuota at the general rate. One sale of 12.000 EUR at 21 % carries
+# 2.520 EUR of cuota: casillas 07 and 09, and the total devengado 27. No IVA is
+# deducted, so the quarter's result 71 equals the cuota.
+#
+# The person (the harness) states the profile facts at the command line; the
+# agent books the row and prepares the declaration up to a local export.
+
+name = "live-modelo-303-quarter"
+modelo = "303"
+filing_year = 2026
+period = "1T"
+registry_revision = "2026-y-siguientes"
+skill_name = "cadrumo-preparar-modelo-303"
+export_file = "modelo-303-2026-1T.txt"
+required_trajectory = [
+  "ledger.add",
+  "modelo.work.create",
+  "modelo.work.calculate",
+  "modelo.work.verify",
+  "modelo.export",
+]
+
+[profile]
+entity-type = "natural_person"
+tax-id = "12345678Z"
+name = "Daniel"
+surnames = "Persona"
+activity = "consultoria"
+activity-start-date = "2024-01-01"
+irpf-income-categories = "actividad_economica"
+irpf-estimation-regime = "directa_normal"
+iva-regime = "GENERAL"
+tax-residence-jurisdiction-scope = "common_regime"
+iva-m303-regime-composition = "general"
+iva-redeme-enrolled = "false"
+iva-cash-accounting-regime-enrolled = "false"
+iva-voluntary-sii-enrolled = "false"
+iva-hydrocarbon-deposit-advance-payment-deduction-entitled = "false"
+fiscal-residency = "resident_irpf"
+tax-residence-ccaa = "madrid"
+
+[[rows]]
+booked_date = "2026-02-15"
+amount = "14520.00"
+direction = "INCOMING"
+description = "Factura consultoria primer trimestre con IVA"
+counterparty = "Cliente SA"
+classification = { business_classification = "BUSINESS", taxable_base = "12000", iva_rate = "21", iva_amount = "2520", irpf_category = "actividad_economica" }
+
+[calculation]
+casillas = {}
+bindings = {}
+
+[expected]
+casillas = { "07" = "12000.00", "09" = "2520.00", "27" = "2520.00" }
+ledger_iva_casillas = { taxable_base = "07", iva_amount = "09" }
+
+[prompt]
+system = """
+You are an assistant working inside Cadrumo, a Spanish tax preparation application, for the person who is signed in.
+Your only tools are Cadrumo's. Work only inside the profile Cadrumo admits you to.
+You never sign in, never ask for or handle a password, key or any other secret, and never try another way in.
+If Cadrumo refuses you because nobody is signed in, the profile is locked, the session ended or your access was
+withdrawn, stop and tell the person to sign in to Cadrumo themselves, then end your turn.
+Nothing you do may file or send anything to the tax agency.
+"""
+task = """
+Please prepare my Modelo 303 (IVA) for the first quarter of 2026. My profile is already set up.
+
+1. Book this ledger row and classify it as business income with IVA at the general rate
+   (business classification BUSINESS, taxable base 12000, IVA rate 21, IVA amount 2520,
+   IRPF category actividad_economica):
+   - 2026-02-15, incoming, 14520.00 EUR, "Factura consultoria primer trimestre con IVA", counterparty Cliente SA
+2. Create the Modelo 303 work unit for 2026, period 1T.
+3. Calculate it. If Cadrumo asks for a fact you do not have, tell me which one instead of guessing.
+4. Verify the calculation.
+5. Export it to this file: {export_path}
+Then tell me casillas 07, 09, 27 and 71 and confirm the export. Use "Synthetic Person" as the actor where one is
+asked for.
+"""

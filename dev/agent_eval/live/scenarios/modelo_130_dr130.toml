@@ -1,0 +1,94 @@
+# Live scenario: prepare Modelo 130 for one quarter on the AEAT DR 130 worked example.
+#
+# The figures are the published example for estimacion directa, not derived
+# from the formula under test: ingresos 12.000 and gastos 4.000 give a
+# rendimiento neto of 8.000, casilla 04 = 20 % of it = 1.600, and with no
+# earlier instalments or withholdings casilla 07 = 1.600. Last year's net
+# activity income above 12.000 EUR leaves no minoracion, so casilla 13 is zero.
+# The same example grounds dev/agent_eval/tests/test_modelo_130_value_oracle.py.
+#
+# The person (the harness) creates and signs in the profile and states the
+# profile facts at the command line. The agent books the two ledger rows and
+# takes the declaration from creation to a local export. Nothing in this file
+# is a secret, and nothing here is sent to the tax agency.
+
+name = "live-modelo-130-dr130"
+modelo = "130"
+filing_year = 2026
+period = "1T"
+registry_revision = "2019-y-siguientes"
+skill_name = "cadrumo-preparar-modelo-130"
+export_file = "modelo-130-2026-1T.txt"
+required_trajectory = [
+  "ledger.add",
+  "modelo.work.create",
+  "modelo.work.calculate",
+  "modelo.work.verify",
+  "modelo.export",
+]
+
+[profile]
+entity-type = "natural_person"
+tax-id = "12345678Z"
+name = "Daniel"
+surnames = "Persona"
+activity = "consultoria"
+activity-start-date = "2024-01-01"
+irpf-income-categories = "actividad_economica"
+irpf-estimation-regime = "directa_normal"
+iva-regime = "GENERAL"
+tax-residence-jurisdiction-scope = "common_regime"
+iva-m303-regime-composition = "general"
+iva-redeme-enrolled = "false"
+iva-cash-accounting-regime-enrolled = "false"
+iva-voluntary-sii-enrolled = "false"
+iva-hydrocarbon-deposit-advance-payment-deduction-entitled = "false"
+fiscal-residency = "resident_irpf"
+tax-residence-ccaa = "madrid"
+
+[[rows]]
+booked_date = "2026-02-15"
+amount = "12000.00"
+direction = "INCOMING"
+description = "Factura consultoria primer trimestre"
+counterparty = "Cliente SA"
+classification = { business_classification = "BUSINESS", taxable_base = "12000", irpf_category = "actividad_economica" }
+
+[[rows]]
+booked_date = "2026-03-10"
+amount = "4000.00"
+direction = "OUTGOING"
+description = "Gastos de la actividad primer trimestre"
+counterparty = "Proveedor SA"
+classification = { business_classification = "BUSINESS", taxable_base = "4000", irpf_category = "actividad_economica" }
+
+[calculation]
+casillas = { "05" = "0.00", "06" = "0.00" }
+bindings = { "irpf.previous_year_economic_activity_net_income" = "13000", "modelo-130-resultados-negativos-anteriores" = "0", "modelo-130-pagos-fraccionados-anteriores" = "0" }
+
+[expected]
+casillas = { "04" = "1600.00", "07" = "1600.00", "13" = "0.00" }
+
+[prompt]
+system = """
+You are an assistant working inside Cadrumo, a Spanish tax preparation application, for the person who is signed in.
+Your only tools are Cadrumo's. Work only inside the profile Cadrumo admits you to.
+You never sign in, never ask for or handle a password, key or any other secret, and never try another way in.
+If Cadrumo refuses you because nobody is signed in, the profile is locked, the session ended or your access was
+withdrawn, stop and tell the person to sign in to Cadrumo themselves, then end your turn.
+Nothing you do may file or send anything to the tax agency.
+"""
+task = """
+Please prepare my Modelo 130 for the first quarter of 2026. My profile is already set up.
+
+1. Book these two ledger rows and classify each as business activity income or expense
+   (business classification BUSINESS, IRPF category actividad_economica, taxable base equal to the amount):
+   - 2026-02-15, incoming, 12000.00 EUR, "Factura consultoria primer trimestre", counterparty Cliente SA
+   - 2026-03-10, outgoing, 4000.00 EUR, "Gastos de la actividad primer trimestre", counterparty Proveedor SA
+2. Create the Modelo 130 work unit for 2026, period 1T.
+3. Calculate it. Facts you will need: last year's net income from the activity was 13000 EUR, I have no negative
+   results from earlier years (0), no earlier instalments this year (0), and casillas 05 and 06 are 0.00.
+4. Verify the calculation.
+5. Export it to this file: {export_path}
+Then tell me casillas 04, 07 and 13 and confirm the export. Use "Synthetic Person" as the actor where one is asked for.
+"""
