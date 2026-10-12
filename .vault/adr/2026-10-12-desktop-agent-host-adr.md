@@ -5,7 +5,7 @@ tags:
 date: '2026-10-12'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:c589a698083c327e42ad49ebd7a862974404d606b3617d789966df757d399c98'
+body_hash: 'sha256:f70ba9eb97aecdfff3af5c0e94c54fba7dd2de9c2c854e776cbaa3c7b4568d24'
 related:
   - "[[2026-10-12-desktop-agent-host-reference]]"
   - "[[2026-10-04-desktop-shell-adr]]"
@@ -37,7 +37,7 @@ cadrumo-agent today stores conversation content in plaintext SQLite, log files, 
 ## Considerations
 
 - The shell holds no runtime connection and launches only fixed product children (`2026-10-04-desktop-shell-adr`). A long-lived `aeat` child holding a connection has a precedent in `config sign-in-hold` and in `cadrumo-runtime --configured-root`'s standard-input lifetime (`2026-10-12-desktop-agent-host-reference`).
-- A non-interactive client may resume the stored sign-in only by an exception the sign-in record grants; today only MCP has one, and no frontend receives key material (`2026-10-04-application-sign-in-adr`).
+- Every client on the person's OS login resumes the live sign-in, terminal or not, and no frontend receives key material (`2026-10-04-application-sign-in-adr`, amended 2026-10-12).
 - The agent lives inside the one signed-in profile, never authenticates, never handles a secret, and is admitted by resume, a person-issued key or attendance (`2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`, `2026-10-12-mcp-parity-attended-live-sign-in-adr`).
 - Decrypted document bytes live only in memory; bytes never enter MCP results, only registered projections; consent is per invocation and digest-bound (`2026-06-10-llm-evidence-classification-adr`, `2026-09-26-mcp-purpose-authentication-adr`).
 - The capsule directory is content-inventoried and published as an immutable unit; live agent files there would block profile deletion (`2026-10-12-desktop-agent-host-reference`).
@@ -86,7 +86,7 @@ Binding if accepted:
 - A missing or incompatible bundled agent is a typed refusal shown in the agent column; Cadrumo never downloads or installs it.
 - Unbuilt capability is shown as unavailable; no mock host or simulated behaviour.
 
-Affected prior rulings, each needing its own amendment once this is accepted: `2026-10-04-desktop-shell-adr` (a long-lived `aeat` child and the agent host commands), `2026-10-04-application-sign-in-adr` (the `agent-host` resume exception and its key door), `2026-06-10-llm-evidence-classification-adr` (consent grants for hosted-assistant projections), `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr` (consent and key delivery as person acts or doors), and in cadrumo-agent's vault the conversation-data-posture, profile-data-root, shipping-and-versioning, project-boundary and hosting-contract records.
+Affected prior rulings, each needing its own amendment once this is accepted: `2026-10-04-desktop-shell-adr` (a long-lived `aeat` child and the agent host commands), `2026-10-04-application-sign-in-adr` (the `agent-host` key door; its resume needs no exception since that record's 2026-10-12 amendment admits every client), `2026-06-10-llm-evidence-classification-adr` (consent grants for hosted-assistant projections), `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr` (consent and key delivery as person acts or doors), and in cadrumo-agent's vault the conversation-data-posture, profile-data-root, shipping-and-versioning, project-boundary and hosting-contract records.
 
 ## Implementation
 
@@ -135,7 +135,7 @@ Contract 7, packaging and compatibility (owner: Cadrumo build; cadrumo-agent):
 
 - cadrumo-agent is a locked dependency in Cadrumo's lock file, installed by the normal provisioning; Cadrumo declares the launcher script; the package manifest carries an agent statement (bundled, distribution version, hosting-contract version, store-format version) checked like the user-docs statement.
 - Cadrumo declares the supported agent version range and contract versions; the launcher compares them with the manifest and with `cadrumo-agent version --json` before start.
-- The `anthropic` dependency is aligned to the agent's range; Node is not bundled while the Claude Code lane is excluded.
+- Both products use the latest Anthropic SDK release as their floor (1.13.0 on 2026-10-12), and current Claude model ids, with no compatibility path for older SDK versions or models. Owner ruling of 2026-10-12, first-hand: "ensure we're working against the latest anthropic versions, no backwards or old version support." Parameters the SDK removed, such as `temperature`, are dropped rather than shimmed. Node is not bundled while the Claude Code lane is excluded.
 
 Migration implications:
 

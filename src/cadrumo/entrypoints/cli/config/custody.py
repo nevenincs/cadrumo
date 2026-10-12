@@ -203,8 +203,6 @@ def _login_through_the_prompt(
     from .secure_input import prompt_secret_no_echo, read_machine_secret_payload, terminal_can_prompt_for_secrets
 
     interactive = terminal_can_prompt_for_secrets()
-    if machine_secret is None and not interactive:
-        raise CliRefusedBoundaryError(translated_message="cli.config.login.passphrase_channel_absent")
     captured = observe_active_profile_pointer()
     target_name = name or captured.bucket_id
     if target_name is None:
@@ -222,7 +220,8 @@ def _login_through_the_prompt(
         from ..runtime_profile_binding import subscribe_profile_notices
 
         subscribe_profile_notices(ctx, client)
-        if machine_secret is None and interactive:
+        # A live sign-in on this OS login is reused whether or not a terminal is attached.
+        if machine_secret is None:
             with suppress(ProfileReceiptRefusedError):
                 admitted = client.resume_receipt()
         if admitted is None:

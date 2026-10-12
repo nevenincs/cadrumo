@@ -12,7 +12,6 @@ from cadrumo.adapters.local_runtime.runtime_credentials import open_installed_cr
 
 from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ...adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
-from ...adapters.persistence.storage.errors import KeyringUnavailableError
 from ...application.operations.registry import OperationFrontendProjection
 from ...application.profile_preconditions import (
     profile_password_channel_failure_verdict,
@@ -116,12 +115,7 @@ def _authenticate(
     if root_selection is not None:
         _password(client, selection=root_selection)
         return
-    if not terminal_can_prompt_for_secrets():
-        raise attach_cli_policy_verdict(
-            CliRefusedBoundaryError(translated_message="cli.config.custody.errors.profile_passphrase_channel_absent"),
-            verdict=profile_password_channel_failure_verdict(profile_name=profile_label or str(client.profile_id)),
-            requested_leaf=requested_cli_leaf(ctx),
-        )
+    # A live sign-in on this OS login admits every client, attached to a terminal or not.
     try:
         client.resume_receipt()
     except ProfileReceiptRefusedError as error:
@@ -130,7 +124,13 @@ def _authenticate(
             if terminal_can_prompt_for_secrets():
                 _password(client, selection=None)
                 return
-            raise KeyringUnavailableError("OS keychain is unavailable for profile-session acceleration") from None
+            raise attach_cli_policy_verdict(
+                CliRefusedBoundaryError(
+                    translated_message="cli.config.custody.errors.profile_passphrase_channel_absent"
+                ),
+                verdict=profile_password_channel_failure_verdict(profile_name=profile_label or str(client.profile_id)),
+                requested_leaf=requested_cli_leaf(ctx),
+            ) from None
         raise attach_cli_policy_verdict(
             CliRefusedBoundaryError(
                 translated_message=session_refusal_translation_key(refusal, error.binding),

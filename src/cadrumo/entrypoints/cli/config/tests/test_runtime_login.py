@@ -271,6 +271,20 @@ def test_receipt_resume_avoids_prompt_and_preserves_deadlines(monkeypatch: Monke
     assert outcome.absolute_deadline == client.receipt.absolute_deadline
 
 
+def test_receipt_resume_without_a_console_reuses_the_live_sign_in(monkeypatch: MonkeyPatch) -> None:
+    profile_id = UUID(register_cli_profile(label="Login piped", log_in=False))
+    client = _RuntimeClient(profile_id, receipt=_receipt(resumed=True))
+    client.resume_refusal = False
+    _install_client(monkeypatch, client)
+    monkeypatch.setattr("cadrumo.entrypoints.cli.config.secure_input.terminal_can_prompt_for_secrets", lambda: False)
+
+    outcome = _login_through_the_prompt(_ctx(), name=str(profile_id), machine_secret=None)
+
+    assert client.calls == ["resume", "status", "close"]
+    assert outcome.already_authenticated and outcome.session_persisted
+    assert observe_active_profile_pointer().bucket_id == str(profile_id)
+
+
 def test_absent_receipt_and_no_console_refuse_before_password(monkeypatch: MonkeyPatch) -> None:
     profile_id = UUID(register_cli_profile(label="No console", log_in=False))
     original = observe_active_profile_pointer()
@@ -281,7 +295,7 @@ def test_absent_receipt_and_no_console_refuse_before_password(monkeypatch: Monke
     with pytest.raises(CliRefusedBoundaryError):
         _login_through_the_prompt(_ctx(), name=str(profile_id), machine_secret=None)
 
-    assert client.calls == []
+    assert client.calls == ["resume", "close"]
     assert client.password_buffer is None
     assert observe_active_profile_pointer() == original
 

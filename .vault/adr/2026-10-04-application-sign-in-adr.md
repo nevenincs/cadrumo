@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:57c5aea8e9d0995572baa0c95e2af16171a8d3197214414dbb84bf19776ac784'
+body_hash: 'sha256:bca20feb232bf2394ab540d97a86581a43f6bffbdaf4d34112e267adc1a654c1'
 related:
   - "[[2026-10-04-application-sign-in-reference]]"
   - "[[2026-09-26-mcp-purpose-authentication-profile-access-adr]]"
@@ -26,7 +26,7 @@ On 2026-10-04 the operator chose application-level sign-in:
 - The desktop app signs the user in through the runtime.
 - The TUI first reuses a live sign-in.
 - The runtime owns the authentication state.
-- Only interactive surfaces reuse a sign-in automatically.
+- Every client on the same OS login reuses a live sign-in automatically. (Amended 2026-10-12 on the owner's ruling "cli/mcp/tui should be able to resume if the runtime has authenticated valid login, in cadrumo it would NOT make sense at all to require another signing if the user is already signed in"; before that only interactive surfaces reused it.)
 
 The existing cross-process mechanism, the human login receipt, cannot carry that role as it stands (`2026-10-04-application-sign-in-reference`):
 - nothing a user can reach revokes it
@@ -59,7 +59,7 @@ This record decides the sign-in model, its owner, its lifecycle and synchronizat
 
 - **Runtime-owned shared sign-in, hardened from the receipt, with the desktop driving the canonical CLI login.** Chosen. It needs no transport client, no delegation and no desktop authority.
 - **The desktop holds a session and issues one-time child tickets to each TUI.** Rejected for now: the tickets are unimplemented, and the desktop would need a persistent runtime connection. It remains open if per-window scoping is ever required.
-- **Sign in once and every client is admitted.** Rejected as ambient authority. Limiting automatic reuse to interactive surfaces keeps non-interactive clients on API keys, except the MCP server, which resumes the sign-in under `2026-10-10-mcp-parity-shared-sign-in-door-adr`.
+- **Sign in once and every client on the same OS login is admitted.** Chosen on 2026-10-12 on the owner's ruling. Each client still presents the receipt proof on its own connection, so nothing is delegated and authority stays bound to the originating login and generation. Earlier this option was rejected as ambient authority, and automatic reuse was limited to interactive surfaces and the MCP server, although the terminal check was never an authority control.
 - **TUI-only sign-in, resuming first.** Insufficient on its own. It is kept as the TUI's behaviour.
 - **The manager tray signs the user in.** Rejected: the manager holds no authority.
 
@@ -88,10 +88,10 @@ This record decides the sign-in model, its owner, its lifecycle and synchronizat
 - Failures to delete the receipt are returned as typed results, never swallowed.
 
 **Automatic reuse.**
-- Only the TUI and a CLI attached to an interactive terminal resume a live sign-in automatically. `aeat config login` resumes it first unless a secret is supplied.
+- The TUI and every CLI invocation, attached to a terminal or not, resume a live sign-in automatically. `aeat config login` resumes it first unless a secret is supplied. (Amended 2026-10-12 on the owner's ruling quoted under Context; before that only a CLI attached to an interactive terminal resumed it.)
 - The MCP server resumes a live sign-in when it holds no enrolled credential reference in its launch configuration. It never authenticates by password, never presents or names a key from a tool call, and carries no secret. (Amended 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`. Earlier that day, under `2026-10-11-mcp-parity-full-parity-adr`, it could also authenticate by password carried as a typed secret; before that it never authenticated by password.)
-- Non-interactive CLI invocations do not resume automatically: pipes and scripts. They authenticate with a password on the secret channel, or with an enrolled API key. `aeat config login` with no secret in a non-interactive context refuses with `passphrase_channel_absent` instead of resuming.
-- This gate is a client-side default, not an authority control. It stops accidental reuse by pipes and scripts. Any same-user process can allocate a pseudo-terminal or declare a frontend, and the runtime cannot verify either.
+- A supplied password on the secret channel, or an enrolled API key, authenticates instead of resuming. Without a live sign-in, a non-interactive invocation refuses with the login action. Where the logon has no OS keychain, only a terminal is prompted for the password; a non-interactive invocation refuses with `passphrase_channel_absent`. (Amended 2026-10-12 on the owner's ruling; before that non-interactive invocations never resumed, and `aeat config login` with no secret in a non-interactive context refused instead of resuming.)
+- Whether a terminal is attached was never an authority control: any same-user process can allocate a pseudo-terminal or declare a frontend, and the runtime cannot verify either. Authority rests on the receipt's proof, login binding and generation.
 
 **Lifetime.**
 - The configured idle and absolute deadlines stay as they are: 15 minutes and 4 hours by default.
@@ -210,9 +210,13 @@ On 2026-10-11 the operator ruled that the CLI, TUI and MCP are at parity and tha
 
 On 2026-10-12 the owner ruled first-hand that the agent never authenticates or manages authentication, that no secret travels through MCP, that the agent works only inside one signed-in profile, and that Cadrumo has only one active, signed-in profile (`2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`). Reworded in place above, each with a note of what it said before: the shared sign-in, now at most one profile at a time; the MCP line of automatic reuse; the sign-out line; when the desktop sign-in view is shown; the 2026-10-06 rule on signing in to another profile; and the MCP sentence of the 2026-10-09 amendment. Parity of operations holds inside the signed-in profile. Authentication, sign-out, lock and acts outside the profile are not agent operations. The TUI, the CLI and MCP operate on a profile only while the person is signed in to it, or through an API key the person issued for it. The person's own password sign-in at the TUI, the CLI or the desktop is unchanged.
 
+### 2026-10-12 every client resumes the live sign-in
+
+On 2026-10-12 the owner ruled first-hand: "cli/mcp/tui should be able to resume if the runtime has authenticated valid login, in cadrumo it would NOT make sense at all to require another signing if the user is already signed in." The terminal gate on CLI resume is withdrawn: a CLI invocation from a pipe or script resumes the live sign-in exactly as one at a terminal does. Reworded in place above, each with a note of what it said before: the Context summary, the considered option of admitting every client, the TUI and CLI line of automatic reuse, and the non-interactive line. The record already held that the terminal check was not an authority control; admission still rests on the receipt's proof, its login binding and its generation, and each client still presents the proof on its own connection. Password prompting stays terminal-only, and the enrolled API key stays the way to work with no signed-in person.
+
 ## Implementation
 
-We will harden the human login receipt into the runtime-owned shared sign-in and add the sign-in generation, global sign-out, positive-evidence lock-down and pushed session events. The TUI and interactive CLI will resume first. The desktop gets a sign-in view that drives the canonical CLI login through a dedicated host command. Event framing, field names, the extension rate and the queue bound are *hypotheses* within the constraints.
+We will harden the human login receipt into the runtime-owned shared sign-in and add the sign-in generation, global sign-out, positive-evidence lock-down and pushed session events. The TUI and every CLI invocation will resume first. (Amended 2026-10-12; before that only the TUI and an interactive CLI.) The desktop gets a sign-in view that drives the canonical CLI login through a dedicated host command. Event framing, field names, the extension rate and the queue bound are *hypotheses* within the constraints.
 
 - **Runtime:**
   - receipt binding and generation record
@@ -242,7 +246,7 @@ We will harden the human login receipt into the runtime-owned shared sign-in and
   - upgrade with a live older receipt
   - keychain unavailability
   - throttling
-  - a non-interactive CLI not resuming
+  - a non-interactive CLI resuming a live sign-in, and refusing with the login action without one
   - no receipt mutation outside the runtime owner
   - the desktop secret absent from arguments, environment, logs, diagnostics and the documentation frame
 
