@@ -16,6 +16,8 @@ scenario or a platform the lane does not run on each end the lane as
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
 import os
 import sys
 import time
@@ -32,7 +34,17 @@ from cadrumo.core.storage_environment import storage_directory
 from dev._paths import REPO_ROOT
 
 from .._live_scoring import score_live_trajectory
-from .access import ACCESS_SCENARIOS, AccessScenario, Expectation, act, issue_key, judge_phase
+from .access import (
+    ACCESS_SCENARIOS,
+    NAME_PATH,
+    AccessScenario,
+    Expectation,
+    act,
+    issue_key,
+    judge_phase,
+    read_profile_facts,
+    scripted_phase,
+)
 from .capture import Scrubber, capture_directory, write_capture
 from .drivers import (
     DEFAULT_MAX_USD,
@@ -365,7 +377,7 @@ def _access_run(
     run = _Run(identity, ambient)
     try:
         person = run.open(load_scenario("modelo_130_dr130").profile_options())
-        reference = issue_key(run.host, person) if scenario.uses_key else None
+        reference = issue_key(run.host, person, scenario) if scenario.uses_key else None
         command, arguments, environment = mcp_launch(
             run.host, profile_id=person.profile_id if reference else None, credential_reference=reference
         )
@@ -375,9 +387,16 @@ def _access_run(
             scrubber=_scrubber(person, ambient), known_secrets=_known_secrets(person, ambient)
         )
         fingerprints: list[str] = []
+        names: list[str | None] = []
 
         def fingerprint() -> str:
-            return read_oracle(run.host, person, load_scenario("modelo_130_dr130"), run.run.path / "none").fingerprint()
+            """Read the profile the way the person does, and keep its name beside the digest of everything."""
+            facts = read_profile_facts(run.host, person)
+            names.append(facts.get(NAME_PATH))
+            ledger = read_oracle(run.host, person, load_scenario("modelo_130_dr130"), run.run.path / "none")
+            return hashlib.sha256(
+                (ledger.fingerprint() + json.dumps(facts, sort_keys=True)).encode("utf-8")
+            ).hexdigest()
 
         def between(phase_index: int) -> None:
             fingerprints.append(fingerprint())
@@ -393,6 +412,10 @@ def _access_run(
                     between(phase_index)
                 recorder.begin_phase()
                 await wait_for_admission(tools)
+                if not phase.scripted_operation.startswith("ledger."):
+                    await scripted_phase(tools, phase, person.profile_id)
+                    report.phases_completed = phase_index + 1
+                    continue
                 payload: dict[str, Any] = {"profile_id": person.profile_id}
                 if phase.scripted_operation == "ledger.add":
                     payload |= {
@@ -437,6 +460,8 @@ def _access_run(
                 narrations,
                 profile_changed=changed,
                 live_agent=driver is not DriverKind.SCRIPTED,
+                name_before=names[phase_index] if phase_index < len(names) else None,
+                name_after=names[phase_index + 1] if phase_index + 1 < len(names) else None,
             )
             reached = reached and met
             failures.extend(phase_failures)

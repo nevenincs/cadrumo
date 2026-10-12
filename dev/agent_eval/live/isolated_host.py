@@ -24,7 +24,7 @@ from collections.abc import Mapping, Sequence
 from contextlib import ExitStack
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Final
+from typing import Any, Final, Protocol
 
 from cadrumo.adapters.local_runtime.windows_process import WindowsProcessScope
 from cadrumo.core.profile_session import KeychainUnavailability
@@ -490,8 +490,22 @@ def classify_sign_in(result: CliResult) -> None:
         )
 
 
+class McpImageHost(Protocol):
+    """What launching the packaged MCP server needs of the hosted package."""
+
+    @property
+    def mcp_image(self) -> Path:
+        """The packaged MCP server's executable."""
+        ...
+
+    @property
+    def environment(self) -> Mapping[str, str]:
+        """The allow-listed environment the server runs in."""
+        ...
+
+
 def mcp_launch(
-    host: PackageHost, *, profile_id: str | None = None, credential_reference: str | None = None
+    host: McpImageHost, *, profile_id: str | None = None, credential_reference: str | None = None
 ) -> tuple[str, Sequence[str], dict[str, str]]:
     """The packaged MCP server's command, arguments and allow-listed environment.
 

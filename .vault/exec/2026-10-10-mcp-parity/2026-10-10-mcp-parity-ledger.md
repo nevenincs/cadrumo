@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:0df9fb613330f733260ed68cae7dbd3feaf333c925c0d94325eb11d1f65aeb95'
+body_hash: 'sha256:d448d246974def6df005b18ee24e1a88830196cf7e9dc45ba490857aec035af1'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -2491,6 +2491,12 @@ related:
 - `S72` `verify:` `pytest cli/config, user_profile, custody, automation_decision, tui/secret, tui/profile (2121 passed, 140 skipped; the 2 access-management failures then fixed and rerun)` -> `pass`
 - `S72` `verify:` `pytest mcp harness, harness, runtime, cli (3377 passed; join failures fixed and rerun; 2 remaining in config sign-in-hold surfaces, owned by tui-b3)` -> `fail`
 - `S72` `verify:` `just check-types: 26 ty diagnostics, none in this Step's files` -> `fail`
+- `S73` `M` `dev/agent_eval/live/access.py`
+- `S73` `M` `dev/agent_eval/live/lane.py`
+- `S73` `M` `dev/agent_eval/live/isolated_host.py`
+- `S73` `M` `dev/agent_eval/tests/test_live_access.py`
+- `S73` `verify:` `pytest-live-access-lane-host` -> `pass`
+- `S73` `verify:` `ruff-format-ty` -> `pass`
 
 ## Notes
 
@@ -2581,3 +2587,4 @@ related:
 - `S71` boundaries: the two `test_disclosure_summary` sibling edges are gone (new unapproved 144 to 142, none disclosure); the remaining failures are 188 hard findings, 142 ratchet occurrences and a `dev.agent_eval.live` `__main__` load failure, none from S71
 - `S72` Inventory and review count-and-page summaries (b) not built: S71's `page_disclosures` is not in HEAD, and an agent key now stores category grants (about 8 KB, mostly the explicit operation list), so the measured blocker is gone; the operation list still caps the inventory at a few agent grants.
 - `S72` Follow-up: an agent key stores one grant of every agent operation; its proposal is 721 bytes (about 47 KB listed, about 8 KB with category grants alone). Inventory and review count disclosures by category and page the full list. Ten-key test once refused an approval with `REFUSED_AUTOMATION_ADMINISTRATION` under heavy concurrent load, as the single-key test did once earlier; not reproduced in 30 later approvals.
+- `S73` The live run itself awaits the operator's interactive desktop logon: floor access-api-key on this host reports unavailable `credential_store_unavailable` (exit 3), measured on the stale staged package. `dev/agent_eval/tests` has 7 failures from the unmounted config sign-in-hold family, independent of this step.
