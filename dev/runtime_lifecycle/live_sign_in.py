@@ -14,8 +14,11 @@ The run proves, and records as one receipt line per step:
 - a held sign-in is reported with its deadline, and an MCP connection's ask
   names the kernel-verified process, which descends from this harness;
 - a declined ask, and a connection naming another profile, are refused;
-- an approved connection is admitted as ``attended`` and reads the
-  profile's own known data through a registered operation;
+- an approved connection is admitted as ``attended``, searches its operations
+  and reads the profile's own known data through a registered operation;
+- a reviewed operation pauses for the person's decision: a ledger row is
+  classified by a local model on this machine, the review is read, inspected
+  and applied, and the classification is read back through the command line;
 - signing out from the holder, closing the holder's input, a password-proven
   ``config logout`` from another process, a profile-wide lock, the sign-in's
   own deadline, and stopping the runtime each end that access;
@@ -25,13 +28,17 @@ The run proves, and records as one receipt line per step:
 Run it with ``just verify-live-sign-in PACKAGE``. ``--programs`` points at a
 directory of entry points instead, such as a development environment's
 scripts, for a quick run that is not package acceptance. ``--skip-expiry``
-leaves out the step that waits for the sign-in's own deadline.
+leaves out the step that waits for the sign-in's own deadline. The reviewed
+step runs a harness-owned ``ollama serve`` on the loopback port, reading an
+existing model store without pruning it, and stops it afterwards; with no local
+model the step is reported unproven. ``--skip-review`` leaves it out.
 """
 
 from __future__ import annotations
 
 import argparse
 import asyncio
+import contextlib
 import hashlib
 import json
 import os
@@ -43,7 +50,7 @@ import sys
 import tempfile
 import threading
 import time
-from collections.abc import AsyncIterator, Mapping
+from collections.abc import AsyncIterator, Iterator, Mapping
 from contextlib import asynccontextmanager, suppress
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -51,6 +58,7 @@ from pathlib import Path
 from typing import Any
 from uuid import UUID
 
+import httpx
 import psutil
 from mcp import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
@@ -74,6 +82,20 @@ _EVENT_SECONDS = 60
 _CALL_SECONDS = 150
 _EXPIRY_MARGIN_SECONDS = 45
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
+_OLLAMA_URL = "http://127.0.0.1:11434"
+_LOCAL_TEXT_MODEL = "qwen3:1.7b"
+_REVIEW_SECONDS = 600
+_TAXPAYER_FACTS = (
+    *("--entity-type", "natural_person", "--tax-id", "12345678Z", "--name", "Daniel", "--surnames", "Persona"),
+    *("--activity", "consultoria", "--activity-start-date", "2026-01-01"),
+    *("--irpf-income-categories", "actividad_economica", "--irpf-estimation-regime", "directa_normal"),
+    *("--iva-regime", "GENERAL", "--tax-residence-jurisdiction-scope", "common_regime"),
+    *("--iva-m303-regime-composition", "general", "--no-iva-redeme-enrolled"),
+    *("--no-iva-cash-accounting-regime-enrolled", "--no-iva-voluntary-sii-enrolled"),
+    "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
+    *("--fiscal-residency", "resident_irpf", "--tax-residence-ccaa", "madrid"),
+)
+"""Synthetic taxpayer facts, those of the live-agent lane's published worked example."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -271,10 +293,12 @@ async def _admit(holder: Holder, session: McpSession, profile: Profile, receipt:
     require(status.get("session") == "attended", f"{step}: not attended: {status}")
     admitted = status.get("status") or {}
     require(admitted.get("profile_id") == str(profile.profile_id), f"{step}: another profile: {status}")
+    is_error, found = await session.call("search", {})
+    require(not is_error and found.get("outcome") == "found", f"{step}: unfiltered search failed: {found}")
     read = await _authenticated_read(session, profile)
     text = json.dumps(read)
     require(profile.name in text, f"{step}: the read did not return the profile's own label: {text[:400]}")
-    receipt.record(f"{step}_read", session=status.get("session"), label_returned=True)
+    receipt.record(f"{step}_read", session=status.get("session"), label_returned=True, search_found=True)
     return read
 
 
@@ -312,6 +336,179 @@ def _identify(programs: Programs, environment: Mapping[str, str], profile: Profi
     return Profile(profile.name, profile.password, UUID(str(held["profile_id"])))
 
 
+@contextlib.contextmanager
+def local_model(scratch: Path, models: Path) -> Iterator[bool]:
+    """Serve the local text model on the loopback port for the block; say whether it is available.
+
+    A server this harness did not start is never used or stopped. Ollama's
+    pruning of blobs it does not recognise is switched off, so an existing
+    model store is only read.
+    """
+    try:
+        httpx.get(f"{_OLLAMA_URL}/api/tags", timeout=1)
+    except httpx.HTTPError:
+        pass
+    else:
+        raise AcceptanceError("a model server already listens on the loopback port; this run uses only its own")
+    found = shutil.which("ollama") or str(
+        Path(os.environ.get("LOCALAPPDATA", "")) / "Programs" / "Ollama" / "ollama.exe"
+    )
+    if not Path(found).is_file() or not models.is_dir():
+        yield False
+        return
+    environment = {**os.environ, "OLLAMA_MODELS": str(models), "OLLAMA_HOST": "127.0.0.1:11434", "OLLAMA_NOPRUNE": "1"}
+    with (scratch / "ollama.log").open("wb") as output:
+        server = subprocess.Popen(  # noqa: S603 -- the installed local model server; no shell.
+            [found, "serve"], env=environment, stdout=output, stderr=subprocess.STDOUT
+        )
+        try:
+            deadline = time.monotonic() + 60
+            tags = None
+            while tags is None and time.monotonic() < deadline:
+                with contextlib.suppress(httpx.HTTPError):
+                    tags = httpx.get(f"{_OLLAMA_URL}/api/tags", timeout=1).json()
+                time.sleep(0.5)
+            names = {item.get("name") for item in (tags or {}).get("models", [])}
+            yield _LOCAL_TEXT_MODEL in names
+        finally:
+            server.terminate()
+            try:
+                server.wait(timeout=30)
+            except subprocess.TimeoutExpired:
+                server.kill()
+                server.wait(timeout=30)
+
+
+def _state_taxpayer(programs: Programs, environment: Mapping[str, str], profile: Profile) -> None:
+    """State the synthetic taxpayer facts and complete the setup, as the person does at the command line."""
+    for arguments in (
+        ("config", "profile", "edit", "--quiet", *_TAXPAYER_FACTS),
+        ("config", "profile", "complete-setup"),
+    ):
+        code, envelope = run_cli(
+            programs,
+            environment,
+            "--profile-secrets-stdin",
+            *arguments,
+            secret={"profile_passphrase": profile.password},
+        )
+        require(code == 0, f"{' '.join(arguments[:3])}: {code} {envelope}")
+
+
+async def _observe(session: McpSession, operation_id: str) -> dict[str, Any]:
+    is_error, observed = await session.call(
+        "observe", {"observation": {"operation_id": operation_id, "after_cursor": 0, "page_limit": 32}}
+    )
+    require(not is_error, f"observe refused: {observed}")
+    return observed["reply"]["observation"]["projection"]
+
+
+async def _execute(session: McpSession, definition_id: str, payload: Mapping[str, object]) -> str:
+    is_error, submitted = await session.call(
+        "execute", {"definition_id": definition_id, "payload": dict(payload), "start": True}
+    )
+    require(not is_error, f"{definition_id} refused: {submitted}")
+    operation_id = (submitted.get("receipt") or {}).get("operation_id")
+    require(isinstance(operation_id, str), f"{definition_id} named no operation: {submitted}")
+    return str(operation_id)
+
+
+async def _settled(session: McpSession, operation_id: str) -> dict[str, Any]:
+    deadline = time.monotonic() + _CALL_SECONDS
+    while True:
+        is_error, result = await session.call("result", {"result": {"operation_id": operation_id}})
+        document = result.get("document") or {}
+        if not is_error and document.get("code") != "operation_not_terminal":
+            return result
+        require(time.monotonic() < deadline, f"the operation did not settle: {result}")
+        await asyncio.sleep(1)
+
+
+async def _reviewed_classification(
+    session: McpSession, programs: Programs, environment: Mapping[str, str], profile: Profile, receipt: Receipt
+) -> None:
+    """Classify one ledger row through the local model, answer its review, and read the outcome independently."""
+    description = "Papeleria y material de oficina"
+    added = await _settled(
+        session,
+        await _execute(
+            session,
+            "ledger.add",
+            {
+                "profile_id": str(profile.profile_id),
+                "booked_date": "2026-07-15",
+                "amount": "121.00",
+                "direction": "OUTGOING",
+                "description": description,
+                "counterparty": "Papeleria Central SL",
+            },
+        ),
+    )
+    row = ((added.get("document") or {}).get("projection") or {}).get("transaction") or {}
+    transaction_id = row.get("transaction_id")
+    if not isinstance(transaction_id, str):
+        raise AcceptanceError(f"ledger.add created no row: {added}")
+    review_id = await _execute(
+        session,
+        "ledger.classify.review",
+        {
+            "profile_id": str(profile.profile_id),
+            "transaction_id": transaction_id,
+            "mode": "classification",
+            "origin": "classify_llm_apply",
+        },
+    )
+    deadline = time.monotonic() + _REVIEW_SECONDS
+    while True:
+        projection = await _observe(session, review_id)
+        pending = projection.get("pending_interaction") or {}
+        if pending.get("disposition") == "review_available":
+            break
+        require(projection.get("terminal_condition") is None, f"the review ended without a decision: {projection}")
+        require(time.monotonic() < deadline, "the local model proposed nothing in time")
+        await asyncio.sleep(2)
+    require(projection.get("effect") == "none", f"something was written before the decision: {projection}")
+    is_error, proposal = await session.call("review", {"review": {"reference": pending["review_reference"]}})
+    require(not is_error, f"review read refused: {proposal}")
+    answer = {
+        "operation_id": pending["operation_id"],
+        "interaction_id": pending["interaction_id"],
+        "revision": pending["revision"],
+    }
+    is_error, inspected = await session.call("respond", {"action": "inspect", **answer})
+    document = (inspected.get("reply") or {}).get("document") or {}
+    require(not is_error and "apply" in document.get("permitted_intents", ()), f"inspect: {inspected}")
+    is_error, applied = await session.call("respond", {"action": "apply", **answer})
+    require(not is_error, f"apply refused: {applied}")
+    settled = await _settled(session, review_id)
+    projection = (settled.get("document") or {}).get("projection") or {}
+    classified = projection.get("classification") or {}
+    stored = classified.get("transaction") or {}
+    require(classified.get("outcome") == "classified", f"not classified: {settled}")
+    require(classified.get("review_status") == "reviewed", f"not reviewed: {settled}")
+    require(str(stored.get("classified_by", "")).startswith("llm:local-text:"), f"not the local model: {stored}")
+    code, listing = run_cli(
+        programs,
+        environment,
+        "--profile-secrets-stdin",
+        "app",
+        "ledger",
+        "list",
+        secret={"profile_passphrase": profile.password},
+    )
+    text = json.dumps(listing)
+    require(code == 0 and transaction_id in text, f"the command line does not list the row: {code} {text[:400]}")
+    require(stored.get("business_classification", "") in text, "the command line reads another classification")
+    receipt.record(
+        "reviewed_operation",
+        model=stored.get("classified_by"),
+        classification=stored.get("business_classification"),
+        review_status=classified.get("review_status"),
+        written_before_decision=False,
+        read_back_by_command_line=True,
+    )
+
+
 def _identity(package: Path | None) -> dict[str, object]:
     if package is None:
         return {"package": None}
@@ -333,7 +530,9 @@ def _started_processes() -> list[str]:
     return survivors
 
 
-async def run(programs: Programs, package: Path | None, scratch: Path, *, expiry: bool) -> Receipt:
+async def run(
+    programs: Programs, package: Path | None, scratch: Path, *, expiry: bool, review: bool, models: Path
+) -> Receipt:
     """Execute the whole lifecycle on a fresh root below ``scratch``."""
     receipt = Receipt()
     receipt.record("artifact", **_identity(package))
@@ -370,6 +569,9 @@ async def run(programs: Programs, package: Path | None, scratch: Path, *, expiry
         other = _identify(programs, environment, other, log)
         profile = _identify(programs, environment, profile, log)
         receipt.record("profiles_identified_by_held_events", profiles=2)
+        if review:
+            _state_taxpayer(programs, environment, profile)
+            receipt.record("taxpayer_stated")
 
         async with mcp_session(programs, environment, scratch) as agent:
             code = await _require_refused(agent, receipt, "refused_before_any_sign_in")
@@ -390,6 +592,14 @@ async def run(programs: Programs, package: Path | None, scratch: Path, *, expiry
                     require(code == "profile_mismatch", f"wrong profile: {code}")
 
                 await _admit(holder, agent, profile, receipt, "approved")
+                if review:
+                    with local_model(scratch, models) as available:
+                        if available:
+                            await _reviewed_classification(agent, programs, environment, profile, receipt)
+                        else:
+                            receipt.unproven.append(f"reviewed operation: no local {_LOCAL_TEXT_MODEL} model to serve")
+                else:
+                    receipt.unproven.append("reviewed operation: skipped by --skip-review")
                 holder.sign_out()
                 holder.event("signed_out")
                 reason, exit_code = holder.finish()
@@ -490,11 +700,6 @@ async def run(programs: Programs, package: Path | None, scratch: Path, *, expiry
             finally:
                 holder.stop()
 
-    # Every operation that pauses for a review either reaches a remote service (Google), hands a row to a
-    # language model (ledger classify and split reviews), or reviews a censal document no parser accepts.
-    receipt.unproven.append(
-        "reviewed operation: no review-gated operation runs here without a remote service, a model or a document"
-    )
     receipts = sorted(str(path.relative_to(root)) for path in root.rglob("session.v2.json"))
     require(not receipts, f"a sign-in was stored: {receipts}")
     receipt.record("no_stored_sign_in", receipts=0)
@@ -538,13 +743,29 @@ def main(arguments: list[str] | None = None) -> int:
     source.add_argument("--programs", type=Path, help="A directory of entry points; not package acceptance.")
     parser.add_argument("--skip-expiry", action="store_true", help="Leave out the wait for the sign-in deadline.")
     parser.add_argument("--keep", action="store_true", help="Keep the disposable root for inspection.")
+    parser.add_argument("--skip-review", action="store_true", help="Leave out the reviewed ledger operation.")
+    parser.add_argument(
+        "--ollama-models",
+        type=Path,
+        default=Path.home() / ".ollama" / "models",
+        help="An existing Ollama model store to read; nothing is pulled or pruned.",
+    )
     options = parser.parse_args(arguments)
     programs, package = _programs(options)
     base = _REPOSITORY_ROOT / "build" / "acceptance"
     base.mkdir(parents=True, exist_ok=True)
     scratch = Path(tempfile.mkdtemp(prefix="live-sign-in-", dir=base))
     try:
-        receipt = asyncio.run(run(programs, package, scratch, expiry=not options.skip_expiry))
+        receipt = asyncio.run(
+            run(
+                programs,
+                package,
+                scratch,
+                expiry=not options.skip_expiry,
+                review=not options.skip_review,
+                models=Path(options.ollama_models),
+            )
+        )
     except (AcceptanceError, BaseExceptionGroup) as failure:
         reason = _acceptance_failure(failure)
         if reason is None:

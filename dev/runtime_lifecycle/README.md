@@ -147,10 +147,18 @@ admission, under `build/acceptance`:
 - no stored sign-in is left, the default root is unchanged, and no started process
   survives.
 
-It waits out the sign-in deadline (about 15 minutes); `--skip-expiry` leaves that
-step out and reports `incomplete`. A step it cannot prove, such as a reviewed
-operation where none runs without a remote service or a model, is reported
-`incomplete`, never passed.
+It also runs one reviewed operation. A ledger row is classified by the local
+`qwen3:1.7b` text model on this machine. The pending review is read, inspected
+and applied through MCP, and the classification is read back through the
+command line. The harness serves the model itself: it runs `ollama serve` on
+the loopback port, reading an existing model store (`--ollama-models`, default
+`~/.ollama/models`) with pruning switched off, and stops it afterwards. It
+refuses to share a server it did not start. Without the model the step is
+unproven.
+
+It waits out the sign-in deadline (about 15 minutes); `--skip-expiry` and
+`--skip-review` leave those steps out and report `incomplete`. A step it cannot
+prove is reported `incomplete`, never passed.
 
 ## Inspect timing evidence
 

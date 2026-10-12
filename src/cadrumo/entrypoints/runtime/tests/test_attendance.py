@@ -13,6 +13,7 @@ import time
 from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
+from datetime import timedelta
 from pathlib import Path
 from threading import Event
 from uuid import UUID, uuid4
@@ -235,3 +236,31 @@ def test_a_declined_ask_admits_nothing_and_closing_the_holder_ends_attendance(tm
                     )
         finally:
             holder.close()
+
+
+def test_a_lapsed_attended_lease_is_issued_again_to_the_approved_connection(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The short attended lease ends; the same approved connection is admitted again while the person's session lives."""
+    from cadrumo.application.user_profile import session_authority_admission
+
+    monkeypatch.setattr(session_authority_admission, "ACCESS_LEASE_MAXIMUM", timedelta(seconds=3))
+    mcp, cli = OperationFrontendProjection.MCP, OperationFrontendProjection.CLI
+    with (
+        _runtime(tmp_path) as (profile_id, _other, launch),
+        _client(launch, profile_id, cli) as holder,
+        _client(launch, profile_id, mcp) as agent,
+    ):
+        holder.login_password(bytearray(PROFILE_INPUT.encode()), timeout=120)
+        holder.attendance_inventory()
+        ask = _pending(agent.request_attendance())
+        holder.decide_attendance(ask.attendance_id, approve=True)
+        first = agent.attendance_status(ask.attendance_id)
+        assert isinstance(first, RuntimeProfileStatus)
+        time.sleep(4)
+        assert _session_over(agent) in _SESSION_OVER | {AccessDenialCode.SESSION_EXPIRED.value}
+        again = agent.request_attendance()
+        assert isinstance(again, RuntimeProfileStatus), again
+        assert again.status.denial is None
+        assert again.status.session_id != first.status.session_id
+        assert holder.attendance_inventory().candidates == ()
