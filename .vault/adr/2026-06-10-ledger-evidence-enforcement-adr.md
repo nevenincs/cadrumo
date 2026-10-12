@@ -4,7 +4,7 @@ tags:
   - '#ledger-evidence-enforcement'
 date: '2026-06-10'
 modified: '2026-10-12'
-body_hash: 'sha256:8fa69194b3713229f636e117569902950465691e1540250f0517b6c1f2792604'
+body_hash: 'sha256:9996b1fa9eae44d13c10588a6fb36ca66b7a8fc1484cee92425eb23839588db0'
 related:
   - "[[2026-06-10-ledger-evidence-enforcement-research]]"
   - '[[2026-10-04-google-app-identity-adr]]'
@@ -117,17 +117,22 @@ transaction with no linked evidence (neither `purchase_invoice_evidence_id` nor
 any `attachment_ids`) raises an ADVISORY finding rather than a hard block. The
 triggering set is defined narrowly:
 
-- **OUTGOING business/mixed expense** with a positive deductible cuota, or with
-  no captured cuota on a revision that claims IVA (one whose registry revision
-  declares `ledger_iva_aggregation` bindings): expects a *purchase invoice*. A
-  base-only expense with no cuota on a revision without IVA ledger bindings, such
-  as Modelo 130 or Modelo 100, makes no IVA claim and does not fire. An explicit
-  zero cuota never fires. (Amended 2026-10-12 on the owner's ruling, "B,
-  obvioulsy, irpf has no iva claim (what sort of question is this anyway?).
-  reconcile"; before that this line read "with a positive amount and a
-  deductible base (a category that routes a deductible cuota or an
+- **OUTGOING business/mixed expense** on a revision that claims IVA (one whose
+  registry revision declares `ledger_iva_aggregation` bindings), with a positive
+  deductible cuota or no captured cuota: expects a *purchase invoice*. On a
+  revision without IVA ledger bindings, such as Modelo 130 or Modelo 100, no
+  expense fires at any cuota, because that revision makes no IVA claim. An
+  explicit zero cuota never fires. (Amended 2026-10-12 on the owner's ruling,
+  "B, obvioulsy, irpf has no iva claim (what sort of question is this
+  anyway?). reconcile"; before that this line read "with a positive amount and
+  a deductible base (a category that routes a deductible cuota or an
   IRPF-deductible expense)", which made a base-only IRPF expense an IVA evidence
-  gap and let export refuse what verify had granted.)
+  gap and let export refuse what verify had granted. Further amended
+  2026-10-12 on the same ruling; before that the first amendment still let a
+  positive cuota without evidence fire on a revision without IVA ledger
+  bindings. The implemented gate never carried a separate IRPF
+  expense-evidence requirement: it fired only on the IVA settlement side and
+  cited LIVA art. 97 and RD 1619/2012 art. 2.)
 - **INCOMING cuota-bearing income** with a positive amount whose IVA category is
   legally expected to bear a cuota (excluding the cuota-less categories already
   enumerated for the IVA advisory): expects the *issued invoice*.

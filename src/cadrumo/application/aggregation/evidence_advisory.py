@@ -28,13 +28,13 @@ domestic category from the stored rate and bank direction before feeding M303.
 
 The two sides read the cuota differently. The output side fires only on a
 strictly-positive ``iva_amount``. The deductible side also fires on an ABSENT
-``iva_amount``, but only for a revision that claims IVA at all, which is a
-revision whose registry declares ``ledger_iva_aggregation`` bindings. There a
-deduction-side row whose cuota was never captured is a missing input, not a
-proven zero, and only an explicit ``0.00`` clears it. A revision without those
-bindings -- an IRPF return such as Modelo 130 or 100 -- makes no IVA claim, so
-a base-only expense with no cuota claims no IVA deduction and is not an IVA
-gap. A positive cuota is still judged on every revision, as before.
+``iva_amount``. Both apply only to a revision that claims IVA at all, which
+is a revision whose registry declares ``ledger_iva_aggregation`` bindings.
+There a deduction-side row whose cuota was never captured is a missing input,
+not a proven zero, and only an explicit ``0.00`` clears it. A revision without
+those bindings -- an IRPF return such as Modelo 130 or 100 -- makes no IVA
+claim at any amount, so no expense on it is a deductible-IVA gap, whatever
+cuota the row records.
 
 :func:`iva_evidence_flow`, :func:`calculation_revision_claims_ledger_iva` and
 :func:`deductible_iva_evidence_gap` are the one evaluation of the deductible
@@ -204,21 +204,21 @@ def deductible_iva_evidence_gap(
 ) -> bool:
     """Return whether a row claims deductible IVA that its evidence cannot support.
 
-    An absent ``iva_amount`` on the deducible side is a gap only on a revision
-    that claims IVA (``revision_claims_ledger_iva``). There the cuota was never
-    captured, which is the missing-input state ``no-silent-under-declaration``
-    keeps distinct from a proven zero. On a revision with no IVA claim, an
-    absent cuota claims nothing. An explicit ``0.00`` deducts nothing and needs
-    no documento justificativo on either. A positive cuota without evidence is
-    a gap on every revision.
+    Only a revision that claims IVA (``revision_claims_ledger_iva``) can carry
+    a deductible-IVA gap; on one with no IVA claim no row deducts IVA, at any
+    amount. On a revision that claims IVA, an absent ``iva_amount`` is a gap:
+    the cuota was never captured, which is the missing-input state
+    ``no-silent-under-declaration`` keeps distinct from a proven zero. An
+    explicit ``0.00`` deducts nothing and needs no documento justificativo, and
+    a positive cuota needs one.
     """
+    if not revision_claims_ledger_iva:
+        return False
     if flow is None or not is_deducible_flow(flow):
         return False
     if has_deduction_evidence:
         return False
-    if iva_amount is None:
-        return revision_claims_ledger_iva
-    return iva_amount > Decimal("0")
+    return iva_amount is None or iva_amount > Decimal("0")
 
 
 def _transaction_missing_evidence_flow(
@@ -291,8 +291,8 @@ def missing_evidence_advisory_observations(
     ``missing_transaction_evidence``) is emitted for each ``ACTIVE``
     business/mixed row that lacks the evidence its settlement side requires:
 
-    - a deductible input-IVA row whose cuota is positive, OR was never
-      captured on a revision that claims IVA (``revision_claims_ledger_iva``),
+    - on a revision that claims IVA (``revision_claims_ledger_iva``), a
+      deductible input-IVA row whose cuota is positive or was never captured,
       carrying no purchase-invoice evidence and no linked, validated
       reconciliation-catalogue invoice. A generic attachment does NOT satisfy
       this side: LIVA art. 97 enumerates the documents that establish the right
@@ -306,9 +306,9 @@ def missing_evidence_advisory_observations(
 
     Rows that legitimately bear no evidence requirement — non-business /
     personal, exempt / zero-rated / not-subject / sentinel IVA categories, an
-    explicit zero cuota, an absent cuota on the output side or on a revision
-    with no IVA claim, and non-ACTIVE lifecycle states — are excluded and never
-    fire.
+    explicit zero cuota, an absent cuota on the output side, any deductible row
+    on a revision with no IVA claim, and non-ACTIVE lifecycle states — are
+    excluded and never fire.
 
     Args:
         transactions: The revision's source transactions to inspect.

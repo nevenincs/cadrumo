@@ -10,10 +10,10 @@ refused, so the operator was told the revision was complete and then could not
 export it.
 
 Both now read one evaluation, and that evaluation follows whether the revision
-claims IVA at all. An IRPF return (Modelo 130) has no IVA ledger bindings, so an
-absent cuota claims nothing; Modelo 303 has them, so an absent cuota is a
-missing input. An explicit ``0.00`` passes both, and a positive cuota needs a
-purchase invoice on both.
+claims IVA at all. An IRPF return (Modelo 130) has no IVA ledger bindings, so
+no expense on it is a deductible-IVA gap at any cuota. Modelo 303 has them, so
+there an absent cuota is a missing input, an explicit ``0.00`` passes, and a
+positive cuota needs a purchase invoice, on both gates alike.
 """
 
 from __future__ import annotations
@@ -277,7 +277,7 @@ _ZERO_CUOTA = _Cuota(taxable_base=Decimal("121.00"), iva_rate=Decimal("0.00"), i
     [
         pytest.param(_IRPF, _ABSENT_CUOTA, None, False, id="irpf-absent-cuota-claims-no-iva"),
         pytest.param(_IRPF, _ZERO_CUOTA, None, False, id="irpf-explicit-zero"),
-        pytest.param(_IRPF, _POSITIVE_CUOTA, None, True, id="irpf-positive-without-evidence"),
+        pytest.param(_IRPF, _POSITIVE_CUOTA, None, False, id="irpf-positive-cuota-claims-no-iva"),
         pytest.param(_IRPF, _POSITIVE_CUOTA, "synthetic-invoice", False, id="irpf-positive-with-invoice"),
         pytest.param(_IVA, _ABSENT_CUOTA, None, True, id="iva-absent-cuota-is-a-gap"),
         pytest.param(_IVA, _ZERO_CUOTA, None, False, id="iva-explicit-zero"),
@@ -329,6 +329,8 @@ def test_verify_is_never_laxer_than_export_on_the_evidence_axis(isolated_backend
     """
     expense = _expense(_POSITIVE_CUOTA, attachment_ids=("d" * 64,))
 
-    verify_blocks, outcome, baseline = _verify_and_export(_IRPF, expense, tmp_path)
+    verify_blocks, outcome, baseline = _verify_and_export(_IVA, expense, tmp_path)
 
-    assert (verify_blocks, outcome, baseline) == (True, _EXPORTED, _EXPORTED)
+    assert verify_blocks is True
+    assert baseline != _REFUSED
+    assert outcome == baseline

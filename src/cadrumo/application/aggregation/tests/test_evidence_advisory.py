@@ -278,11 +278,11 @@ def test_uncaptured_cuota_on_a_revision_without_an_iva_claim_stays_silent() -> N
     assert _observations([tx], revision_claims_ledger_iva=False) == ()
 
 
-def test_positive_cuota_without_evidence_fires_even_without_an_iva_claim() -> None:
-    """The ruling scopes only the absent cuota; a stated positive cuota is still judged."""
+def test_positive_cuota_without_evidence_stays_silent_without_an_iva_claim() -> None:
+    """An IRPF return claims no IVA at any amount, so a stated cuota is no IVA gap there."""
     tx = _tx("irpf-positive-cuota")
-    diagnostics = _observations([tx], revision_claims_ledger_iva=False)
-    assert [diagnostic.source_kind for diagnostic in diagnostics] == [MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND]
+    assert _observations([tx], revision_claims_ledger_iva=False) == ()
+    assert [d.source_kind for d in _observations([tx])] == [MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND]
 
 
 def test_deductible_row_with_an_explicit_zero_cuota_stays_silent() -> None:

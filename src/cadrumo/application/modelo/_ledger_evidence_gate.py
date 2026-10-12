@@ -158,9 +158,11 @@ def ledger_evidence_row_missing_deductible_iva_evidence(
     then the row is active, business-bearing, on the deducible side and
     carrying no evidence of any kind; a deduction-side claim whose cuota was
     never captured is exactly the missing-input state
-    ``no-silent-under-declaration`` keeps distinct from a proven zero. On a
-    revision with no IVA ledger bindings -- an IRPF return -- an absent cuota
-    claims no IVA and is not a gap.
+    ``no-silent-under-declaration`` keeps distinct from a proven zero.
+
+    A revision with no IVA ledger bindings -- an IRPF return -- makes no IVA
+    claim at any amount, so no row of it is judged at all, not even one this
+    build cannot read: there is no deduction for it to vouch for.
 
     The flow and the cuota rule are not restated here: they are
     :func:`~application.aggregation.evidence_advisory.iva_evidence_flow` and
@@ -181,6 +183,8 @@ def ledger_evidence_row_missing_deductible_iva_evidence(
     evidence over unchanged facts without moving its content address, so a row
     refused here can be answered by attaching the document and recapturing.
     """
+    if not revision_claims_ledger_iva:
+        return False
     lifecycle_state = _enum_or_unparseable(TransactionLifecycleState, row.lifecycle_state)
     if lifecycle_state is _UNPARSEABLE:
         return True
@@ -225,6 +229,8 @@ def deductible_iva_evidence_gap_transaction_ids(
     if evidence is None or not evidence.rows:
         return ()
     claims_ledger_iva = calculation_revision_claims_ledger_iva(revision, operation=operation)
+    if not claims_ledger_iva:
+        return ()
     return tuple(
         sorted(
             row.transaction_id

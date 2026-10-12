@@ -89,9 +89,10 @@ def test_an_uncaptured_cuota_on_a_revision_without_an_iva_claim_is_not_a_gap() -
     assert _gap(_row(iva_amount=None), revision_claims_ledger_iva=False) is False
 
 
-def test_a_positive_cuota_is_judged_whether_or_not_the_revision_claims_iva() -> None:
-    """Only the absent cuota is scoped by the IVA claim; a stated cuota still needs proof."""
-    assert _gap(_row(), revision_claims_ledger_iva=False) is True
+def test_no_row_of_a_revision_without_an_iva_claim_is_a_deductible_iva_gap() -> None:
+    """An IRPF return claims no IVA at any amount, so even an unreadable row raises no question."""
+    assert _gap(_row(), revision_claims_ledger_iva=False) is False
+    assert _gap(_row(lifecycle_state="HIBERNATING"), revision_claims_ledger_iva=False) is False
 
 
 @pytest.mark.parametrize(
