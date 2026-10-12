@@ -29,7 +29,7 @@ from ..user_profile.access_contracts import (
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory, require_exact_ledger_action_ports
 from .actions_common import require_registered_own_account
-from .actions_manual import create_manual_transaction
+from .actions_manual import PreparedManualTransaction, commit_manual_transaction, prepare_manual_transaction
 from .ledger_add_command import (
     SourceJurisdictionRequiredError,
     prepare_ledger_add_command,
@@ -110,6 +110,9 @@ class LedgerAddExecutor:
         async def commit() -> str | OperationRefusalEvidence:
             async with context.cancellation.irreversible_section():
                 operation: PinnedAuthorityOperation = context.authority_operation
+                from ...application.exchange_rate_provider import exchange_rate_provider
+                from ...domain.currency.service import CurrencyNormalizationService
+
                 try:
                     ports = await asyncio.to_thread(self._ports_factory, bucket_id=bucket_id, operation=operation)
                     require_exact_ledger_action_ports(ports, bucket_id=bucket_id, operation=operation)
@@ -126,25 +129,28 @@ class LedgerAddExecutor:
                         self._prorrata_register_repository_factory,
                         operation,
                     )
+                    # The domain row refuses its own invariants while it is built, so building it
+                    # here keeps every input refusal a typed refusal that provably wrote nothing.
+                    prepared = await asyncio.to_thread(
+                        prepare_manual_transaction,
+                        command,
+                        ports=ports,
+                        currency_normalizer=CurrencyNormalizationService(rate_provider=exchange_rate_provider()),
+                        require_revision_guard=True,
+                    )
                 except SourceJurisdictionRequiredError as refusal:
                     return await refuse(refusal, code=refusal.jurisdiction_code)
                 except (TransactionValidationError, ValidationError, ValueError) as error:
                     return await refuse(error)
 
-                # From this point the canonical service may have durably committed
-                # the transaction/event even if a later attachment back-reference
-                # or projection step fails. Preserve that uncertainty.
-                await context.events.effect(OperationEffect.UNKNOWN)
-                from ...application.exchange_rate_provider import exchange_rate_provider
-                from ...domain.currency.service import CurrencyNormalizationService
-
-                result = await asyncio.to_thread(
-                    create_manual_transaction,
-                    command,
-                    ports=ports,
-                    currency_normalizer=CurrencyNormalizationService(rate_provider=exchange_rate_provider()),
-                    require_revision_guard=True,
-                )
+                if isinstance(prepared, PreparedManualTransaction):
+                    # From this point the canonical service may have durably committed
+                    # the transaction/event even if a later attachment back-reference
+                    # or projection step fails. Preserve that uncertainty.
+                    await context.events.effect(OperationEffect.UNKNOWN)
+                    result = await asyncio.to_thread(commit_manual_transaction, prepared, ports=ports)
+                else:
+                    result = prepared
                 projected = build_ledger_add_operation_result(
                     payload.profile_id,
                     result,

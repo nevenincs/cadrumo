@@ -12,6 +12,7 @@ persistence.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -114,6 +115,7 @@ from .models import (
 )
 from .preflight import preflight_ledger_tax_readiness
 from .protocols import (
+    BucketEventHistoryCoCommitWriterProtocol,
     RevisionGuardedTransactionCatalogueCoCommitWriterProtocol,
     TransactionCatalogueCoCommitWriterProtocol,
 )
@@ -139,6 +141,19 @@ _EVIDENCE_PATCH_FIELDS = frozenset({"purchase_invoice_evidence_id", "attachment_
 _SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT = frozenset({"investment_asset_id", "own_account_id"})
 
 
+@dataclass(frozen=True, slots=True)
+class PreparedManualTransaction:
+    """A manual add that passed every refusal and has not written anything yet."""
+
+    command: ManualLedgerTransactionCommand
+    repository: TransactionCatalogueCoCommitWriterProtocol
+    event_repository: BucketEventHistoryCoCommitWriterProtocol
+    catalogue: TransactionCatalogue
+    catalogue_revision: str | None
+    transaction: Transaction
+    event: BucketEvent
+
+
 def create_manual_transaction(
     command: ManualLedgerTransactionCommand,
     *,
@@ -151,6 +166,33 @@ def create_manual_transaction(
 
     Returns a :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionResult`
     with the created transaction and associated bucket event.
+    """
+    prepared = prepare_manual_transaction(
+        command,
+        ports=ports,
+        occurred_at=occurred_at,
+        currency_normalizer=currency_normalizer,
+        require_revision_guard=require_revision_guard,
+    )
+    if isinstance(prepared, ManualLedgerTransactionResult):
+        return prepared
+    return commit_manual_transaction(prepared, ports=ports)
+
+
+def prepare_manual_transaction(
+    command: ManualLedgerTransactionCommand,
+    *,
+    ports: LedgerActionPorts,
+    occurred_at: datetime | None = None,
+    currency_normalizer: CurrencyNormalizationService | None = None,
+    require_revision_guard: bool = False,
+) -> PreparedManualTransaction | ManualLedgerTransactionResult:
+    """Run every refusal of a manual add without writing, so a caller can tell a refusal from a write.
+
+    Building the domain row is where its own invariants refuse (an IVA rate
+    given as a percentage, a gross that is not base plus cuota), so a refusal
+    raised here has provably written nothing. An idempotent retry of a stored
+    row returns its unchanged result instead of a preparation.
     """
     now = normalise_timestamp(occurred_at)
     repository = resolve_transaction_repository(bucket_id=command.bucket_id, repository=ports.transaction_repository)
@@ -223,15 +265,33 @@ def create_manual_transaction(
         currency_normalizer=currency_normalizer,
         evidence_records=ports.purchase_invoice_evidence_records,
     )
-    save_transaction_catalogue_and_events(
-        transaction_repository=repository,
+    return PreparedManualTransaction(
+        command=command,
+        repository=repository,
         event_repository=event_repository,
-        catalogue=upsert_transaction(catalogue, transaction),
-        events=(event,),
-        expected_catalogue_revision=catalogue_revision,
+        catalogue=catalogue,
+        catalogue_revision=catalogue_revision,
+        transaction=transaction,
+        event=event,
+    )
+
+
+def commit_manual_transaction(
+    prepared: PreparedManualTransaction,
+    *,
+    ports: LedgerActionPorts,
+) -> ManualLedgerTransactionResult:
+    """Write a prepared manual add: the row and its event co-commit, then the attachment back-references."""
+    transaction = prepared.transaction
+    save_transaction_catalogue_and_events(
+        transaction_repository=prepared.repository,
+        event_repository=prepared.event_repository,
+        catalogue=upsert_transaction(prepared.catalogue, transaction),
+        events=(prepared.event,),
+        expected_catalogue_revision=prepared.catalogue_revision,
     )
     _record_attachment_back_references(transaction, attachment_store=ports.attachment_store)
-    return build_manual_ledger_result(command.bucket_id, transaction, (event.event_id,))
+    return build_manual_ledger_result(prepared.command.bucket_id, transaction, (prepared.event.event_id,))
 
 
 def attach_manual_transaction_evidence(
@@ -1968,7 +2028,9 @@ command_from_patch = _command_from_patch
 prepare_manual_transaction_update = _prepare_manual_transaction_update
 
 __all__ = [
+    "PreparedManualTransaction",
     "attach_manual_transaction_evidence",
+    "commit_manual_transaction",
     "create_manual_transaction",
     "detach_manual_transaction_attachments",
     "get_manual_transaction",
@@ -1978,6 +2040,7 @@ __all__ = [
     "ledger_transaction_tracking_payload",
     "link_manual_transaction_invoice",
     "list_manual_transactions",
+    "prepare_manual_transaction",
     "query_ledger_review_rows",
     "summarize_manual_transactions",
     "update_manual_transaction",
