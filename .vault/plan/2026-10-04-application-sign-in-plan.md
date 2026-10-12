@@ -8,7 +8,7 @@ related:
   - '[[2026-10-04-application-sign-in-adr]]'
 modified: '2026-10-12'
 body_schema: body-v2
-body_hash: 'sha256:c6a0667ecec534a32cc5e0a0fbc1c62a2778955f2bc3256741bf4309a0948fbd'
+body_hash: 'sha256:14a2d5c75bd4953a5a729e33990d3deb2e1c0c0e5989b4251e672f7091d2b7fd'
 ---
 
 # `application-sign-in` plan
@@ -46,7 +46,7 @@ Runtime-owned shared sign-in: three-state lock observation, durable generation, 
 - [x] `P01.S05` - Make receipt borrowing proof-only so clients read only the keychain proof and locator while the runtime verifies, unwraps and deletes; `src/cadrumo/adapters/local_runtime/frontend_client.py, acceleration_receipt.py, src/cadrumo/application/user_profile/login_session.py, owning tests`.
 - [x] `P01.S06` - Advance the generation and delete the receipt on lock everywhere, positive OS lock and logout evidence, password rotation or reset, recovery and profile deletion, and sweep receipts whose bound login is positively gone; `src/cadrumo/application/user_profile/session_authority_lifecycle.py, automation_lifecycle_service.py, src/cadrumo/entrypoints/runtime/profile_host.py, profile_connections.py, owning tests`.
 - [x] `P01.S07` - Add the runtime human_sign_out operation for human-kind sessions or a presented proof, retiring every human and attended session and reporting remaining automation; `src/cadrumo/application/runtime/ contracts and transport, src/cadrumo/entrypoints/runtime/, owning tests`.
-- [ ] `P01.S08` - Add the unauthenticated sign_in_status runtime request reporting present, absent or unknown with deadlines, creating no worker and never reading the keychain; `src/cadrumo/application/runtime/ contracts, src/cadrumo/adapters/local_runtime/server dispatch, src/cadrumo/entrypoints/runtime/, owning tests`.
+- [x] `P01.S08` - Add the unauthenticated sign_in_status runtime request reporting present, absent or unknown with deadlines, creating no worker and never reading the keychain; `src/cadrumo/application/runtime/ contracts, src/cadrumo/adapters/local_runtime/server dispatch, src/cadrumo/entrypoints/runtime/, owning tests`.
 - [ ] `P01.S09` - Split typed refusals so THROTTLED carries remaining seconds and PROFILE_LOCKED, receipt reasons and generation changed reach clients, and add the throttle unreadable-state diagnostic while it keeps clearing; `src/cadrumo/entrypoints/runtime/profile_login.py, src/cadrumo/application/user_profile/access_contracts.py, src/cadrumo/adapters/persistence/storage/master_key/login_throttle.py, error catalogue, owning tests`.
 
 ### Phase `P02` - Session events
