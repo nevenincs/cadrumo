@@ -32,12 +32,12 @@ from cadrumo.application.user_profile.access_contracts import (
     DisclosurePage,
     DisclosurePageRequest,
 )
+from cadrumo.application.user_profile.disclosure_paging import DisclosurePager
 from cadrumo.core.config import override_settings
-from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
-from cadrumo.entrypoints.tui.disclosure_pages import DisclosurePager
 from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 
-from .stored_sign_in_runtime import stored_sign_in_runtime
+from ..runtime.tests.stored_sign_in_runtime import stored_sign_in_runtime
+from .command_line_rendering import command_result
 
 pytestmark = [
     pytest.mark.integration,
@@ -55,26 +55,20 @@ type _Page = dict[str, Any]
 
 def _cli_page(profile_id: str, offset: int) -> _Page:
     """Run the command once, signed in with the password on its own channel as a person at a terminal is."""
-    result = invoke_cached_cli(
-        (
-            "--format",
-            "json",
-            "--profile",
-            profile_id,
-            "--profile-secrets-stdin",
-            "config",
-            "profile",
-            "disclosures",
-            "--offset",
-            str(offset),
-        ),
-        input=json.dumps({"profile_passphrase": PROFILE_INPUT}),
+    reported = command_result(
+        "--profile",
+        profile_id,
+        "--profile-secrets-stdin",
+        "config",
+        "profile",
+        "disclosures",
+        "--offset",
+        str(offset),
+        stdin=json.dumps({"profile_passphrase": PROFILE_INPUT}),
+        reveal_identifiers=True,
     )
-    assert result.exit_code == 0, result.output
-    document = json.loads(result.stdout)
-    assert document["command"] == "config.profile.disclosures", document
-    reported = document["result"]
     page = reported["page"]
+    assert isinstance(page, dict)
     # The command's count and summary are those of the list its page belongs to.
     assert reported["disclosure_count"] == page["total"]
     assert reported["disclosure_summary"] == page["disclosure_summary"]

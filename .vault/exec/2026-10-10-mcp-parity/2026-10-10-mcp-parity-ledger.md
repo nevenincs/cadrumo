@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:fb9e4bd353127e9ba10584da8eda0022277b433acf69e9924679e20ca3e93250'
+body_hash: 'sha256:b7ce67210ad481cf89adec7755e24623d69b826a4943661bbb4b118bc3de2035'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -2416,6 +2416,12 @@ related:
 - `S71` `verify:` `pytest runtime sign-in suites` -> `fail`
 - `S71` `verify:` `pytest CLI and TUI access suites` -> `fail`
 - `S71` `verify:` `just check-import-boundaries` -> `fail`
+- `S71` `A` `src/cadrumo/application/user_profile/disclosure_paging.py`
+- `S71` `M` `src/cadrumo/entrypoints/tui/disclosure_pages.py`
+- `S71` `R` `src/cadrumo/entrypoints/runtime/tests/test_disclosure_summary.py` -> `src/cadrumo/entrypoints/tests/test_disclosure_summary.py`
+- `S71` `verify:` `pytest entrypoints/tests/test_disclosure_summary.py test_runtime_session.py test_command_frontend_parity.py test_command_operation_reference.py` -> `pass`
+- `S71` `verify:` `ruff and ty on moved files` -> `pass`
+- `S71` `verify:` `just check-import-boundaries` -> `fail`
 
 ## Notes
 
@@ -2503,3 +2509,4 @@ related:
 - `S64` alias removal after import authority finding; commit 84206fbc9d
 - `S18` vault check all passes for application-sign-in and mcp-purpose-authentication; mcp-parity reports two pre-existing schema errors (agent-inside and attended-live-sign-in ADRs link no evidence record in related)
 - `S71` harness: 1 failure, `test_installed_sign_in_resume` fresh installed process, outside the disclosure path; sign-in suites: framing and lease-transfer fixtures fixed and rerun green, `mcp_operation_discovery` and `mcp_attended_adapter` pass serially (load timeouts); CLI/TUI: specs test fixed, remaining 4 (installed TUI child AttributeError `subscribe_lifecycle_notices,` native session inventory, `runtime_login` prompt) do not reach the disclosure code; boundaries: 15 contracts kept, 2 new test-scoped sibling edges from `test_disclosure_summary.py` `(cli_runner,` `tui.disclosure_pages)` await ratchet approval, the rest pre-existing; `frontend_client.py` hunks were swept into fa4f7dc9c5 by another session
+- `S71` boundaries: the two `test_disclosure_summary` sibling edges are gone (new unapproved 144 to 142, none disclosure); the remaining failures are 188 hard findings, 142 ratchet occurrences and a `dev.agent_eval.live` `__main__` load failure, none from S71

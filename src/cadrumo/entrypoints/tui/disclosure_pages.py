@@ -1,30 +1,14 @@
 """The session's disclosures in the terminal interface: counted by category, read a page at a time.
 
 The status reply counts the disclosures and the runtime serves the full list by
-page, as it does for the command line and MCP. This module walks those pages
-and words them; it decides nothing about what a session may disclose.
+page, as it does for the command line and MCP. The walk over those pages is the
+application's pager; this module only words what it reads.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Protocol
-
-from ...application.user_profile.access_contracts import (
-    DisclosurePage,
-    DisclosurePageRequest,
-    EffectiveScopeSummary,
-)
+from ...application.user_profile.access_contracts import DisclosurePage, EffectiveScopeSummary
 from ...core.i18n.render import tr
-from ...core.identity.digest import ContentDigest
-
-
-class DisclosurePageReader(Protocol):
-    """The runtime client's page read of its own session's disclosures."""
-
-    def disclosure_page(self, request: DisclosurePageRequest, *, timeout: float = 5) -> DisclosurePage:
-        """Read one page of the disclosures this session's status counts."""
-        ...
 
 
 def disclosure_summary_text(scope: EffectiveScopeSummary, empty: str) -> str:
@@ -49,26 +33,4 @@ def disclosure_page_text(page: DisclosurePage) -> str:
     return "\n".join((heading, *lines))
 
 
-@dataclass
-class DisclosurePager:
-    """Walk one counted list from its start, page after page, and begin again after its last page.
-
-    Every read is pinned to the digest of the list the status counted, so a
-    list that changed is refused rather than read across two lists. A new
-    digest starts the walk over.
-    """
-
-    reader: DisclosurePageReader
-    digest: ContentDigest | None = None
-    next_offset: int = 0
-
-    def next_page(self, digest: ContentDigest) -> DisclosurePage:
-        """Read the page after the last one read of the list ``digest`` names."""
-        if digest != self.digest:
-            self.digest, self.next_offset = digest, 0
-        page = self.reader.disclosure_page(DisclosurePageRequest(offset=self.next_offset, expected_digest=digest))
-        self.next_offset = page.next_offset or 0
-        return page
-
-
-__all__ = ["DisclosurePageReader", "DisclosurePager", "disclosure_page_text", "disclosure_summary_text"]
+__all__ = ["disclosure_page_text", "disclosure_summary_text"]

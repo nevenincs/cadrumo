@@ -26,13 +26,14 @@ from ...application.operations.registry import OperationFrontendProjection, Oper
 from ...application.runtime.contracts import RuntimeRefusalError
 from ...application.runtime.profile_access import status_admits_session
 from ...application.user_profile.access_contracts import ProfileAccessStatus
+from ...application.user_profile.disclosure_paging import DisclosurePager
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.i18n.render import tr
 from ...core.identity.digest import ContentDigest
 from ...core.time.clock import now
 from .account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1, AccountSessionRetired, RuntimeUpgradePending
 from .components.theme import BASE_CSS, install_cadrumo_themes, tokenised
-from .disclosure_pages import DisclosurePager, disclosure_page_text, disclosure_summary_text
+from .disclosure_pages import disclosure_page_text, disclosure_summary_text
 from .installation.destination import installation_screen_factory
 from .navigation import TuiDestinationIdV1, TuiScreenContextV1, TuiScreenFactoryV1
 from .operations.catalogue import OperationCatalogueSourceV1

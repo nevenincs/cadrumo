@@ -129,7 +129,7 @@ IN_PROCESS_COMMAND_COUNTERPARTS: Final[Mapping[CliPath, Counterpart]] = MappingP
         # The command sends the runtime's disclosure read, which MCP reaches through the status tool's argument.
         ("config", "profile", "disclosures"): Counterpart(
             (ToolRoute("status"),),
-            f"{_RUNTIME_TESTS}/test_disclosure_summary.py::test_every_frontend_counts_and_pages_the_same_disclosures",
+            f"{_ENTRYPOINT_TESTS}/test_disclosure_summary.py::test_every_frontend_counts_and_pages_the_same_disclosures",
         ),
         # The command parses the certificate itself before it submits the facts it read.
         ("config", "profile", "censo", "import"): _operation(
