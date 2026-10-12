@@ -10,7 +10,7 @@ related:
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
 modified: '2026-10-12'
 body_schema: body-v2
-body_hash: 'sha256:c4f661a5b9d114421a374190de3939e82199d400db56db5969c0c3d3c32fa082'
+body_hash: 'sha256:41fdeebd8b6b620c6e627aa75b97c754a62e5bdc8adbbed15ae11d684ffc9654'
 ---
 
 <!-- LINK RULES:
@@ -128,7 +128,7 @@ Scope bounds: the lane never edits `src/cadrumo_harness/mcp` or runtime code, wh
 - [x] `S03` - Host the copied package on a fresh isolated storage root, running the installation record, profile creation, sign-in and teardown as package code through the copy's interpreter and command line, with the runtime launched unsupervised with the manager's arguments inside a kill-on-close scope and an allow-listed environment, and classify an unusable credential store as unavailable; `dev/agent_eval/live/isolated_host.py`.
 - [x] `S04` - Declare the live scenario files, Modelo 130 on the DR 130 worked example first and then Modelo 303 for the same quarter, with their loader and required subsequences; `dev/agent_eval/live/scenarios`.
 - [x] `S05` - Drive the agent through the Anthropic API with an MCP client loop or the authenticated claude CLI fallback, always claude-haiku-5-5, both producing one LiveTrajectory, with turn, token and spend limits; `dev/agent_eval/live/drivers.py`.
-- [ ] `S06` - Scrub the stream before anything is written and capture the scrubbed trajectory, receipt and score to .logs/agent-eval/ behind a fail-closed residual scan, with a positive control on a planted secret; `dev/agent_eval/live/capture.py`.
+- [x] `S06` - Scrub the stream before anything is written and capture the scrubbed trajectory, receipt and score to .logs/agent-eval/ behind a fail-closed residual scan, with a positive control on a planted secret; `dev/agent_eval/live/capture.py`.
 - [ ] `S07` - Read the oracle through the packaged command line JSON envelopes and the product export parser under the copy's authority, and fail on any disagreement, with a positive control on a planted disagreement; `dev/agent_eval/live/oracle.py`.
 - [ ] `S08` - Drive the access scenarios from the person's side through the packaged command line: key issue, use in scope, refusal out of scope, revocation mid-run, locked, signed out and expired, each requiring the agent to send the person back to Cadrumo; `dev/agent_eval/live/access.py`.
 - [ ] `S09` - Add the opt-in recipes eval-agent-floor and eval-agent-live with a receipt, the three-run pass rule and distinct outcome classes and exit codes, kept out of every default lane; `justfile`.
