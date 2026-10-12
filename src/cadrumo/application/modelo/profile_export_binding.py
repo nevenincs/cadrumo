@@ -27,6 +27,7 @@ from decimal import Decimal
 
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
+from ...core.filing_producer_key import FilingProducerKey
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids, revision_bindings_by_id
 from ...domain.calculations.registry.binding_value_contract import BindingValueChannel
@@ -60,6 +61,26 @@ _IDENTITY_LEGAL_NAME_KEY = "identity.legal_name"
 _ENTITY_TYPE_KEY = "taxpayer_type.entity_type"
 _CONTACT_PERSON_PHONE_KEY = "contact.contact_person_phone"
 _CONTACT_PERSON_NAME_KEY = "contact.contact_person_name"
+
+#: The stored profile facts each taxpayer-identity producer fact is shaped from
+#: by ``_taxpayer_identity_facts``. An export refusing a blank required identity
+#: field names these, because the operator declares a profile fact and never
+#: sees the producer key the layout reads.
+_TAXPAYER_IDENTITY_PROFILE_FACTS: Mapping[FilingProducerKey, tuple[str, ...]] = {
+    FilingProducerKey.TAXPAYER_TAX_ID: (_IDENTITY_TAX_ID_KEY,),
+    FilingProducerKey.TAXPAYER_LEGAL_NAME: (_IDENTITY_LEGAL_NAME_KEY,),
+    FilingProducerKey.TAXPAYER_GIVEN_NAME: (_IDENTITY_NAME_KEY,),
+    FilingProducerKey.TAXPAYER_SURNAMES: (_IDENTITY_SURNAMES_KEY,),
+    FilingProducerKey.TAXPAYER_SURNAMES_OR_LEGAL_NAME: (_IDENTITY_SURNAMES_KEY, _IDENTITY_LEGAL_NAME_KEY),
+}
+
+
+def taxpayer_identity_profile_facts(producer_key: str) -> tuple[str, ...]:
+    """Return the profile facts a taxpayer-identity producer value is read from, or ``()``."""
+    try:
+        return _TAXPAYER_IDENTITY_PROFILE_FACTS.get(FilingProducerKey(producer_key), ())
+    except ValueError:
+        return ()
 
 
 @dataclass(frozen=True, slots=True)

@@ -188,6 +188,7 @@ from .profile_export_binding import (
     resolve_declaration_contact,
     resolve_export_identity,
     resolve_profile_export_values,
+    taxpayer_identity_profile_facts,
 )
 from .result_disposition_resolution import require_admissible_charge_account, resolve_modelo_result_disposition
 from .revision_persistence import (
@@ -1637,11 +1638,29 @@ def _write_export_staging(
         # be written to fichero-BOE), which reads as a misleading disk/IO failure.
         raise ModeloExportError(
             translated_message="application.modelo.errors.export_draft_write_failed",
-            context={
-                "calculation_revision_id": command.calculation_revision_id,
-                "cause": str(exc),
-            },
+            context=_export_write_failure_context(command, exc),
         ) from exc
+
+
+def _export_write_failure_context(command: ModeloExportCommand, exc: FilingExportError) -> dict[str, object]:
+    """Name what the operator must supply when the refusal is a missing identity fact.
+
+    The layout refuses a blank required field by its producer key, which is a
+    registry spelling the operator never sees; the profile fact it is read from
+    is what they declare. Any other export failure keeps its own cause.
+    """
+    missing_producer_key = (exc.context or {}).get("missing_producer_key")
+    profile_facts = (
+        taxpayer_identity_profile_facts(missing_producer_key) if isinstance(missing_producer_key, str) else ()
+    )
+    if not profile_facts:
+        return {"calculation_revision_id": command.calculation_revision_id, "cause": str(exc)}
+    named = " or ".join(profile_facts)
+    return {
+        "calculation_revision_id": command.calculation_revision_id,
+        "cause": f"the export requires the profile fact {named}, which is not set",
+        "missing_profile_facts": list(profile_facts),
+    }
 
 
 def _emit_export_event(

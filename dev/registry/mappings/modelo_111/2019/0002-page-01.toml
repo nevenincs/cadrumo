@@ -92,8 +92,14 @@ record_identity = "dr M11101"
 export_field_id = "modelo-111-page-01-nif"
 kind = "header"
 legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
-source_refs = ["aeat-dr-111-2019-v18"]
+source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 producer_key = "taxpayer.tax_id"
+
+[entries.requirement]
+applies_to = "all_taxpayers"
+source_ref = "aeat-modelo-111-instructions"
+source_sha256 = "baaabd139e1dcff461b0c9b70e3ceb90d2287001fc8be3abb0a7a219fde6f19e"
+statement = "Introduzca el NIF del declarante y los apellidos y nombre o bien la razón social de la persona o entidad."
 
 [entries.anchor]
 sheet = "dr M11101"
@@ -106,8 +112,14 @@ record_identity = "dr M11101"
 export_field_id = "modelo-111-page-01-apellidos"
 kind = "header"
 legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
-source_refs = ["aeat-dr-111-2019-v18"]
+source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 producer_key = "taxpayer.surnames_or_legal_name"
+
+[entries.requirement]
+applies_to = "all_taxpayers"
+source_ref = "aeat-modelo-111-instructions"
+source_sha256 = "baaabd139e1dcff461b0c9b70e3ceb90d2287001fc8be3abb0a7a219fde6f19e"
+statement = "Introduzca el NIF del declarante y los apellidos y nombre o bien la razón social de la persona o entidad."
 
 [entries.anchor]
 sheet = "dr M11101"
@@ -120,8 +132,14 @@ record_identity = "dr M11101"
 export_field_id = "modelo-111-page-01-nombre"
 kind = "header"
 legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
-source_refs = ["aeat-dr-111-2019-v18"]
+source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 producer_key = "taxpayer.given_name"
+
+[entries.requirement]
+applies_to = "natural_person"
+source_ref = "aeat-modelo-111-instructions"
+source_sha256 = "baaabd139e1dcff461b0c9b70e3ceb90d2287001fc8be3abb0a7a219fde6f19e"
+statement = "Introduzca el NIF del declarante y los apellidos y nombre o bien la razón social de la persona o entidad."
 
 [entries.anchor]
 sheet = "dr M11101"
@@ -134,8 +152,14 @@ record_identity = "dr M11101"
 export_field_id = "modelo-111-page-01-ejercicio"
 kind = "draft"
 legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
-source_refs = ["aeat-dr-111-2019-v18"]
+source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 draft_attribute = "filing_year"
+
+[entries.requirement]
+applies_to = "all_taxpayers"
+source_ref = "aeat-modelo-111-instructions"
+source_sha256 = "baaabd139e1dcff461b0c9b70e3ceb90d2287001fc8be3abb0a7a219fde6f19e"
+statement = "Ejercicio: consigne las cuatro cifras del año natural al que corresponde el período por el que se efectúa la autoliquidación."
 
 [entries.anchor]
 sheet = "dr M11101"
@@ -148,8 +172,14 @@ record_identity = "dr M11101"
 export_field_id = "modelo-111-page-01-periodo"
 kind = "draft"
 legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
-source_refs = ["aeat-dr-111-2019-v18"]
+source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 draft_attribute = "period_code"
+
+[entries.requirement]
+applies_to = "all_taxpayers"
+source_ref = "aeat-modelo-111-instructions"
+source_sha256 = "baaabd139e1dcff461b0c9b70e3ceb90d2287001fc8be3abb0a7a219fde6f19e"
+statement = "Período: Si se trata de autoliquidación trimestral, consigne:"
 
 [entries.anchor]
 sheet = "dr M11101"

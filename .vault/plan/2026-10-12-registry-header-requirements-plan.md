@@ -8,7 +8,7 @@ related:
   - '[[2026-10-12-registry-header-requirements-adr]]'
 modified: '2026-10-12'
 body_schema: body-v2
-body_hash: 'sha256:6ad02942c594ba9d4a2b38fc555a531eb4f1ae4eee274bc60539a18518749f52'
+body_hash: 'sha256:5c4860aec67382a12b20828c0e3fa89e42401a21ce82fb0027515422b49b702f'
 ---
 
 # `registry-header-requirements` plan
@@ -24,7 +24,7 @@ Decision coverage: `2026-10-12-registry-header-requirements-adr` (accepted) gove
 ## Steps
 
 - [x] `S01` - Extend the semantic-map schema, validation, generator and provenance with reviewed source-cited header requirements, with tests; `dev/registry/pipeline`.
-- [ ] `S02` - Declare the cited Modelo 111 requirements, regenerate the 111 export target and name the missing profile fact in the export refusal; `dev/registry/mappings/modelo_111`.
+- [x] `S02` - Declare the cited Modelo 111 requirements, regenerate the 111 export target and name the missing profile fact in the export refusal; `dev/registry/mappings/modelo_111`.
 
 ## Parallelization
 

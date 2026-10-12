@@ -1,7 +1,10 @@
 [[revisions.2019-y-siguientes.export_layouts]]
 id = 'generated-modelo-111-2019-y-siguientes-fichero'
 format = 'fixed_width'
-source_refs = ['aeat-dr-111-2019-v18']
+source_refs = [
+    'aeat-dr-111-2019-v18',
+    'aeat-modelo-111-instructions',
+]
 legal_refs = [
     'ley-35-2006:art-101',
     'ley-35-2006:art-99',

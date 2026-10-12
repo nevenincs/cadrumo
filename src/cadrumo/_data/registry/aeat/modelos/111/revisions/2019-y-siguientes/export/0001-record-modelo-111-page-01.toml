@@ -147,7 +147,7 @@ length = 9
 kind = 'header'
 producer_key = 'taxpayer.tax_id'
 data_type = 'text'
-required = false
+required = true
 padding = 'right_space'
 justification = 'left'
 signed = false
@@ -160,7 +160,10 @@ legal_refs = [
     'ley-35-2006:art-101',
     'rd-439-2007:art-86',
 ]
-source_refs = ['aeat-dr-111-2019-v18']
+source_refs = [
+    'aeat-dr-111-2019-v18',
+    'aeat-modelo-111-instructions',
+]
 
 [[revisions.2019-y-siguientes.export_layouts.records.fields]]
 id = 'modelo-111-page-01-apellidos'
@@ -169,7 +172,7 @@ length = 60
 kind = 'header'
 producer_key = 'taxpayer.surnames_or_legal_name'
 data_type = 'text'
-required = false
+required = true
 padding = 'right_space'
 justification = 'left'
 signed = false
@@ -182,7 +185,10 @@ legal_refs = [
     'ley-35-2006:art-101',
     'rd-439-2007:art-86',
 ]
-source_refs = ['aeat-dr-111-2019-v18']
+source_refs = [
+    'aeat-dr-111-2019-v18',
+    'aeat-modelo-111-instructions',
+]
 
 [[revisions.2019-y-siguientes.export_layouts.records.fields]]
 id = 'modelo-111-page-01-nombre'
@@ -195,6 +201,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_for = 'natural_person'
 legal_refs = [
     'ley-35-2006:art-99',
     'orden-eha-586-2011:art-1',
@@ -204,7 +211,10 @@ legal_refs = [
     'ley-35-2006:art-101',
     'rd-439-2007:art-86',
 ]
-source_refs = ['aeat-dr-111-2019-v18']
+source_refs = [
+    'aeat-dr-111-2019-v18',
+    'aeat-modelo-111-instructions',
+]
 
 [[revisions.2019-y-siguientes.export_layouts.records.fields]]
 id = 'modelo-111-page-01-ejercicio'
@@ -213,7 +223,7 @@ length = 4
 kind = 'draft'
 draft_attribute = 'filing_year'
 data_type = 'integer'
-required = false
+required = true
 padding = 'left_zero'
 justification = 'right'
 signed = false
@@ -228,7 +238,10 @@ legal_refs = [
     'ley-35-2006:art-101',
     'rd-439-2007:art-86',
 ]
-source_refs = ['aeat-dr-111-2019-v18']
+source_refs = [
+    'aeat-dr-111-2019-v18',
+    'aeat-modelo-111-instructions',
+]
 
 [[revisions.2019-y-siguientes.export_layouts.records.fields]]
 id = 'modelo-111-page-01-periodo'
@@ -237,7 +250,7 @@ length = 2
 kind = 'draft'
 draft_attribute = 'period_code'
 data_type = 'text'
-required = false
+required = true
 padding = 'right_space'
 justification = 'left'
 signed = false
@@ -250,7 +263,10 @@ legal_refs = [
     'ley-35-2006:art-101',
     'rd-439-2007:art-86',
 ]
-source_refs = ['aeat-dr-111-2019-v18']
+source_refs = [
+    'aeat-dr-111-2019-v18',
+    'aeat-modelo-111-instructions',
+]
 
 [[revisions.2019-y-siguientes.export_layouts.records.fields]]
 id = 'modelo-111-casilla-01'
