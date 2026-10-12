@@ -20,7 +20,9 @@ from typing import TYPE_CHECKING
 from click.testing import Result
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.tests.filing_report_support import seed_filing_gate_report
 from ....application.modelo.work_addressing import law_selected_revision_for_work_target
 from ....application.workflow.persistence import workflow_state_repository
 from ....core.casilla_id import CasillaId
@@ -117,6 +119,9 @@ def seed_exportable_modelo_revision(
     )
     revisions = CalculationRevisionCatalogueRepository()
     revisions.save(upsert_calculation_revision(revisions.load(), revision))
+    # Verification persists a granting report before it marks a revision verified,
+    # and the runtime's revision selection refuses a verified revision without one.
+    seed_filing_gate_report(revision, VerificationReportCatalogueRepository())
     return work_unit_id, calculation_revision_id
 
 

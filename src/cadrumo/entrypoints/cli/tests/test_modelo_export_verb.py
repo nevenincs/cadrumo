@@ -13,10 +13,13 @@ import pytest
 from click.testing import Result
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend
 from cadrumo.domain.calculations.registry.tests.authored_editions import revision_before_first_declaring
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.tests.filing_report_support import seed_filing_gate_report
 from ....application.filing.producer_snapshot import M202_UNSUPPORTED_PRODUCER_IDS
 from ....application.modelo.operation_definitions import MODELO_EXPORT_OPERATION_DEFINITION_ID
 from ....application.modelo.tests.registry_revision import active_registry_revision_id
@@ -25,6 +28,8 @@ from ....application.operations.frontend_requests import OperationObservationReq
 from ....application.operations.models import OperationRequest
 from ....application.workflow.persistence import workflow_state_repository
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.errors.error_codes import get_registered_error_code_by_code
+from ....core.i18n.render import tr
 from ....core.operations import OperationTerminalCondition
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -44,16 +49,26 @@ from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ...operation_composition import compose_operation_dependencies
 from ._modelo_review_package_support import seed_exportable_modelo_revision
-from ._strict_cli_fixture_support import binding_isolated_backend
-from .cli_runner import invoke_cached_cli
+from .modelo_profile_seed import ProfileSeeder, invoke_seeded_profile_cli, seed_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-__all__ = ["binding_isolated_backend"]
+__all__ = ["_isolated_cli_backend", "seed_profile"]
+
+
+@pytest.fixture(autouse=True)
+def _export_operator(seed_profile: ProfileSeeder) -> None:
+    """Register one password-custodied profile whose joined runtime admits every export command.
+
+    The command line submits export through the runtime, so the revisions each
+    test plants in this profile's encrypted catalogues are read by the same
+    registered operation an operator's export reaches.
+    """
+    seed_profile(label="export operator", facts={})
 
 
 def _invoke(args: Sequence[str]) -> Result:
-    return invoke_cached_cli(args)
+    return invoke_seeded_profile_cli(args)
 
 
 def _seed_work_unit_only(
@@ -118,6 +133,8 @@ def _seed_work_unit_with_draft_revision(*, operation: PinnedAuthorityOperation) 
     )
     cr_repo = CalculationRevisionCatalogueRepository()
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
+    if revision.verified_at is not None:
+        seed_filing_gate_report(revision, VerificationReportCatalogueRepository())
     return work_unit_id, calculation_revision_id
 
 
@@ -178,6 +195,8 @@ def _seed_verified_revision_without_inputs(
     )
     cr_repo = CalculationRevisionCatalogueRepository()
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
+    if revision.verified_at is not None:
+        seed_filing_gate_report(revision, VerificationReportCatalogueRepository())
     return work_unit_id, calculation_revision_id
 
 
@@ -350,6 +369,10 @@ def _seed_modelo_111_revisions(
     for revision in revisions:
         catalogue = upsert_calculation_revision(catalogue, revision)
     cr_repo.save(catalogue)
+    reports = VerificationReportCatalogueRepository()
+    for revision in revisions:
+        if revision.verified_at is not None:
+            seed_filing_gate_report(revision, reports)
     return work_unit_id, tuple(revision_ids)
 
 
@@ -425,6 +448,8 @@ def _seed_exportable_modelo_202_pre_b2_revision(*, operation: PinnedAuthorityOpe
     )
     cr_repo = CalculationRevisionCatalogueRepository()
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
+    if revision.verified_at is not None:
+        seed_filing_gate_report(revision, VerificationReportCatalogueRepository())
     return work_unit_id, calculation_revision_id
 
 
@@ -1011,7 +1036,9 @@ def test_export_modelo_200_refuses_calculation_only_authority_for_filing(
     error = payload["error"]
     assert error["code"] == "ERROR_CALCULATIONS_REGISTRY_VALIDATION"
     assert error["category"] == "ERROR"
-    assert error["context"] is None
+    # The runtime names the stopped operation; the refusal's facts travel in its verdict.
+    assert set(error["context"]) == {"effect", "operation_id", "terminal_condition"}
+    assert error["context"]["terminal_condition"] == "failed"
     assert error["action"]["failed_condition_id"] == "registry.snapshot.authority_grade.sufficient"
     assert error["action"]["no_recovery_outcome"] == "safety"
     evidence = error["action"]["evidence"]
@@ -1024,8 +1051,8 @@ def test_export_modelo_200_refuses_calculation_only_authority_for_filing(
     assert evidence_values["modelo"] == "200"
     assert evidence_values["requested_authority_grade"] == "filing"
     assert evidence_values["revision_id"] == "2024"
-    assert "calculation" in error["message"]
-    assert "filing" in error["message"]
+    # Free exception text never crosses the runtime; the catalogue sentence does.
+    assert error["message"] == tr(get_registered_error_code_by_code(error["code"]).message_key)
     assert not out.exists()
     assert "Traceback" not in result.output
 
