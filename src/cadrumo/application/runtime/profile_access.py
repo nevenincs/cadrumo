@@ -26,6 +26,13 @@ from .access_management import (
     RuntimeSessionInventory,
     RuntimeSessionInventoryTransfer,
 )
+from .attendance import (
+    RuntimeAttendanceAsk,
+    RuntimeAttendanceDecide,
+    RuntimeAttendanceDecided,
+    RuntimeAttendanceInventory,
+    RuntimeAttendancePending,
+)
 from .bootstrap import (
     RuntimePasswordReset,
     RuntimePasswordResetCompleted,
@@ -116,6 +123,8 @@ class RuntimeRequest(
             | RuntimePasswordReset
             | RuntimeSignInStatusRequest
             | RuntimeSessionRequest
+            | RuntimeAttendanceAsk
+            | RuntimeAttendanceDecide
             | RuntimeOperationRequest
             | RuntimeEnrollmentRequest
             | RuntimeAccessManagementRequest
@@ -257,6 +266,9 @@ class RuntimeReply(
             | RuntimeProfileStatusTransfer
             | RuntimeSessionInventoryTransfer
             | RuntimeSessionsLocked
+            | RuntimeAttendancePending
+            | RuntimeAttendanceInventory
+            | RuntimeAttendanceDecided
             | RuntimeOperationReply
             | RuntimeEnrollmentReply
             | RuntimeAccessManagementReply
@@ -305,12 +317,19 @@ class RuntimeProfileHandler(Protocol):
         self,
         context: RuntimeConnectionContext,
         channel: RuntimeByteChannel,
-        request: RuntimeProfileLogin | RuntimeSessionRequest | RuntimeSignInStatusRequest,
+        request: RuntimeProfileLogin
+        | RuntimeSessionRequest
+        | RuntimeSignInStatusRequest
+        | RuntimeAttendanceAsk
+        | RuntimeAttendanceDecide,
     ) -> (
         RuntimeProfileStatus
         | RuntimeSessionsLocked
         | RuntimeSignInStatusReply
         | RuntimeHumanSignedOut
+        | RuntimeAttendancePending
+        | RuntimeAttendanceInventory
+        | RuntimeAttendanceDecided
         | RuntimeAccessRefusal
     ):
         """Admit or observe only the exact current connection."""

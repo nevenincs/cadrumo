@@ -13,6 +13,13 @@ from ...application.runtime.access_management import (
     RuntimeProfileResume,
     RuntimeSessionInventory,
 )
+from ...application.runtime.attendance import (
+    RuntimeAttendanceAsk,
+    RuntimeAttendanceDecide,
+    RuntimeAttendanceDecided,
+    RuntimeAttendanceInventory,
+    RuntimeAttendancePending,
+)
 from ...application.runtime.bootstrap import RuntimePasswordReset, RuntimePasswordResetPrepare
 from ...application.runtime.bootstrap_delete import (
     RuntimeProfileDelete,
@@ -73,6 +80,8 @@ type _ProfileConnectionRequest = (
     | RuntimePasswordReset
     | RuntimeSignInStatusRequest
     | RuntimeSessionRequest
+    | RuntimeAttendanceAsk
+    | RuntimeAttendanceDecide
     | RuntimeOperationRequest
     | RuntimeEnrollmentRequest
     | RuntimeAccessManagementRequest
@@ -205,6 +214,9 @@ class RuntimeConnectionHandling:
         | RuntimeSessionsLocked
         | RuntimeSignInStatusReply
         | RuntimeHumanSignedOut
+        | RuntimeAttendancePending
+        | RuntimeAttendanceInventory
+        | RuntimeAttendanceDecided
         | RuntimeAccessRefusal
         | None
     ):
@@ -254,7 +266,14 @@ class RuntimeConnectionHandling:
         ):
             self.profiles.operation(context, channel, request)
             return None
-        if isinstance(request, RuntimeProfileLogin | RuntimeSessionRequest | RuntimeSignInStatusRequest):
+        if isinstance(
+            request,
+            RuntimeProfileLogin
+            | RuntimeSessionRequest
+            | RuntimeSignInStatusRequest
+            | RuntimeAttendanceAsk
+            | RuntimeAttendanceDecide,
+        ):
             return self.profiles.handle(context, channel, request)
         self.profiles.installation(context, channel, request)
         return None

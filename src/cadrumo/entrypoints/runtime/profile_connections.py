@@ -53,6 +53,11 @@ from .lifecycle_guard import RuntimeLifecycleGuard
 from .notice_observation import NoticeObservation, start_notice_observation
 from .profile_connection_access import ProfileConnectionAccessMixin
 from .profile_connection_admission import ProfileConnectionAdmissionMixin
+from .profile_connection_attendance import (
+    AttendedConnection,
+    PendingAttendance,
+    ProfileConnectionAttendanceMixin,
+)
 from .profile_connection_drain import ProfileConnectionDrainMixin, ProfileDrainRecord
 from .profile_connection_operations import ProfileConnectionOperationMixin
 from .profile_connection_person_acts import ProfileConnectionPersonActMixin
@@ -75,6 +80,7 @@ class RuntimeProfileConnections(
     ProfileConnectionPersonActMixin,
     ProfileConnectionAdmissionMixin,
     ProfileConnectionAccessMixin,
+    ProfileConnectionAttendanceMixin,
     ProfileConnectionSessionMixin,
     ProfileConnectionOperationMixin,
     ProfileConnectionDrainMixin,
@@ -119,6 +125,9 @@ class RuntimeProfileConnections(
         self._custody_mutations: set[UUID] = set()
         self._submission_slots = BoundedSemaphore(4)
         self._connections: dict[UUID, ProfileConnection] = {}
+        self._attendance: dict[UUID, PendingAttendance] = {}
+        self._attendance_holders: dict[UUID, UUID] = {}
+        self._attended: dict[UUID, AttendedConnection] = {}
         self._events = RuntimeSessionEvents()
         self._notice_connections: dict[UUID, tuple[RuntimeConnectionContext, RuntimeLoginEvidence]] = {}
         self._notice_observation: NoticeObservation | None = None

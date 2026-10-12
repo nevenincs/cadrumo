@@ -24,6 +24,13 @@ from ...application.runtime.access_management import (
     RuntimeSessionInventory,
     RuntimeSessionInventoryReply,
 )
+from ...application.runtime.attendance import (
+    RuntimeAttendanceAsk,
+    RuntimeAttendanceDecide,
+    RuntimeAttendanceDecided,
+    RuntimeAttendanceInventory,
+    RuntimeAttendancePending,
+)
 from ...application.runtime.bootstrap import (
     RuntimePasswordReset,
     RuntimePasswordResetCompleted,
@@ -112,7 +119,9 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
         self._frontend = frontend
         self._surface = surface
         self._session_id: UUID | None = None
-        self._connection_purpose: Literal["fresh", "admission", "recovery", "enrollment", "bootstrap"] = "fresh"
+        self._connection_purpose: Literal["fresh", "admission", "recovery", "enrollment", "bootstrap", "attendance"] = (
+            "fresh"
+        )
         self._event_guard = RLock()
         self._retirement_epoch = 0
         self._retirement_receivers: list[Callable[[], None]] = []
@@ -319,6 +328,99 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
                 raise ProfileReceiptRefusedError(
                     reason, binding=None if error.sign_in is None else error.sign_in.binding
                 ) from error
+
+    def request_attendance(
+        self, *, timeout: float = PROFILE_ADMISSION_TIMEOUT_SECONDS
+    ) -> RuntimeAttendancePending | RuntimeProfileStatus:
+        """Ask to be attended by the person's held sign-in; nothing is admitted until the person decides.
+
+        A connection the person already approved under a sign-in that is
+        still live is admitted again at once, and the status says so.
+        """
+        return self._attendance(self._attendance_ask("attendance_request", None), timeout=timeout)
+
+    def attendance_status(
+        self, attendance_id: UUID, *, timeout: float = PROFILE_ADMISSION_TIMEOUT_SECONDS
+    ) -> RuntimeAttendancePending | RuntimeProfileStatus:
+        """Observe this connection's own ask; an approved one binds the attended session here."""
+        return self._attendance(self._attendance_ask("attendance_status", attendance_id), timeout=timeout)
+
+    def attendance_inventory(self, *, timeout: float = 5) -> RuntimeAttendanceInventory:
+        """List the asks pending for this person's profile, as the holder of its live sign-in."""
+        return self._reply(
+            self._connection.attendance(
+                RuntimeAttendanceDecide(
+                    action="attendance_inventory",
+                    request_id=uuid4(),
+                    profile_id=self.profile_id,
+                    session_id=self._session(),
+                ),
+                deadline=deadline_after(timeout),
+            ),
+            RuntimeAttendanceInventory,
+        )
+
+    def decide_attendance(self, attendance_id: UUID, *, approve: bool, timeout: float = 10) -> RuntimeAttendanceDecided:
+        """Approve or decline one exact ask under this connection's own human session."""
+        return self._reply(
+            self._connection.attendance(
+                RuntimeAttendanceDecide(
+                    action="attendance_decision",
+                    request_id=uuid4(),
+                    profile_id=self.profile_id,
+                    session_id=self._session(),
+                    attendance_id=attendance_id,
+                    approve=approve,
+                ),
+                deadline=deadline_after(timeout),
+            ),
+            RuntimeAttendanceDecided,
+        )
+
+    def _attendance_ask(
+        self, action: Literal["attendance_request", "attendance_status"], attendance_id: UUID | None
+    ) -> RuntimeAttendanceAsk:
+        if self._session_id is not None or self._connection_purpose not in {"fresh", "attendance"}:
+            raise RuntimeFrontendRefusedError(AutomationCustodyCode.CONFLICT.value)
+        self._connection_purpose = "attendance"
+        return RuntimeAttendanceAsk(
+            action=action,
+            request_id=uuid4(),
+            profile_id=self.profile_id,
+            frontend=self.frontend,
+            surface=None if self._surface is None else self._surface.value,
+            attendance_id=attendance_id,
+        )
+
+    def _attendance(
+        self, request: RuntimeAttendanceAsk, *, timeout: float
+    ) -> RuntimeAttendancePending | RuntimeProfileStatus:
+        with self._event_guard:
+            epoch = self._retirement_epoch
+        reply = self._connection.attendance(request, deadline=deadline_after(timeout))
+        if isinstance(reply, RuntimeAttendancePending):
+            return reply
+        admitted = self._reply(reply, RuntimeProfileStatus)
+        status = admitted.status
+        if (
+            status.denial is not None
+            or not status.connected
+            or not status.profile_bound
+            or status.profile_id != self.profile_id
+            or status.session_id is None
+        ):
+            raise RuntimeFrontendRefusedError(
+                status.denial.value if status.denial is not None else AccessDenialCode.PROFILE_MISMATCH.value
+            )
+        if self._event_subscription is None:
+            self._event_subscription = self._connection.subscribe_session_events(
+                self._session_retired, disconnected=self._connection_failed
+            )
+        with self._event_guard:
+            if epoch != self._retirement_epoch:
+                raise RuntimeFrontendRefusedError(AccessDenialCode.SESSION_INACTIVE.value)
+            self._session_id = status.session_id
+        return admitted
 
     def submit_secret(
         self, requirement: OperationSecretRequirement, secret: bytearray, *, timeout: float = 20

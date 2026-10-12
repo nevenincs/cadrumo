@@ -524,6 +524,83 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
             self._sessions[child.session_id] = child
             return child
 
+    def attend(
+        self: SessionAuthorityAdmission,
+        *,
+        connection_id: UUID,
+        parent_session_id: UUID,
+        recipient_connection_id: UUID,
+        surface: McpSurfaceName | None,
+    ) -> AccessSession | AccessDenied:
+        """Issue an attended child of a person's own session to a separately verified recipient connection.
+
+        Only the live human session held on ``connection_id`` may parent it.
+        A person's session carries no grant, so the child is bounded by that
+        session's scope, the recipient's profile ceiling and the surface the
+        recipient named, and it expires no later than the parent. Retiring the
+        parent retires the child.
+        """
+        with self.owner.admission_guard():
+            parent = self._sessions.get(parent_session_id)
+            if parent is None or parent.kind is not SessionKind.HUMAN or parent.connection_id != connection_id:
+                return AccessDenied(code=AccessDenialCode.HUMAN_AUTHORITY_REQUIRED)
+            facts = self._facts(connection_id)
+            if isinstance(facts, AccessDenied):
+                return facts
+            decision = self._evaluate(parent, facts, None, None)
+            if isinstance(decision, AccessDenied):
+                return decision
+            recipient = self._facts(recipient_connection_id)
+            if isinstance(recipient, AccessDenied):
+                return recipient
+            if any(item.connection_id == recipient_connection_id for item in self._sessions.values()):
+                return AccessDenied(code=AccessDenialCode.CONNECTION_MISMATCH)
+            child = self._attended_session(parent, recipient, recipient_connection_id, surface)
+            if isinstance(child, AccessDenied):
+                return child
+            decision = self._evaluate(child, recipient, None, None)
+            if isinstance(decision, AccessDenied):
+                return decision
+            with self._activation(child.session_id):
+                self.owner.share(child, parent)
+            self._sessions[child.session_id] = child
+            return child
+
+    def _attended_session(
+        self: SessionAuthorityAdmission,
+        parent: AccessSession,
+        recipient: SessionAuthorityFacts,
+        recipient_connection_id: UUID,
+        surface: McpSurfaceName | None,
+    ) -> AccessSession | AccessDenied:
+        remaining = (parent.expires_at - parent.issued_at).total_seconds() - (
+            recipient.context.monotonic_now - parent.issued_monotonic
+        )
+        expires = min(
+            recipient.context.now + ACCESS_LEASE_MAXIMUM,
+            recipient.context.now + timedelta(seconds=max(0, remaining)),
+            parent.expires_at,
+        )
+        if expires <= recipient.context.now:
+            return AccessDenied(code=AccessDenialCode.SESSION_EXPIRED)
+        return AccessSession(
+            session_id=uuid4(),
+            binding=self.binding,
+            profile_lock_generation=recipient.profile.lock_generation,
+            runtime_boot_id=self.runtime_boot_id,
+            connection_id=recipient_connection_id,
+            client_id=recipient.context.authenticated_client_id,
+            kind=SessionKind.ATTENDED,
+            originating_login_id=parent.originating_login_id,
+            state=SessionState.ACTIVE,
+            scope=intersect_scopes((parent.scope, recipient.profile.scope)),
+            parent_session_id=parent.session_id,
+            issued_at=recipient.context.now,
+            issued_monotonic=recipient.context.monotonic_now,
+            expires_at=expires,
+            surface=surface,
+        )
+
     def _delegation_authority(
         self: SessionAuthorityAdmission,
         connection_id: UUID,

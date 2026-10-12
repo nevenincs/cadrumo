@@ -283,7 +283,7 @@ def _lineage_member_refusal(
     refusal = _session_refusal(item, profile, context)
     if refusal is not None:
         return refusal
-    if item.kind is not SessionKind.HUMAN:
+    if session_requires_grant(item):
         refusal = _grant_refusal(item, grant, key, profile, context)
         if refusal is not None:
             return refusal
@@ -348,4 +348,17 @@ def _attended_parent_mismatch(child: AccessSession, parent: AccessSession) -> bo
     return child.kind is SessionKind.ATTENDED and (
         parent.kind not in {SessionKind.HUMAN, SessionKind.ATTENDED}
         or child.originating_login_id != parent.originating_login_id
+        # A child without a grant is bounded only by its lineage, which must root in a person's session.
+        or (child.grant_id is None and session_requires_grant(parent))
+    )
+
+
+def session_requires_grant(session: AccessSession) -> bool:
+    """Whether ``session`` is authorized by an automation grant rather than by a person's session.
+
+    A human session needs none. An attended child issued from a person's
+    session carries none: its parent bounds its scope and expiry.
+    """
+    return session.kind is not SessionKind.HUMAN and not (
+        session.kind is SessionKind.ATTENDED and session.grant_id is None
     )

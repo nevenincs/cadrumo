@@ -26,7 +26,7 @@ from .access_contracts import (
 from .automation_custody_port import AutomationCustodyError, AutomationCustodyPort, AutomationCustodySnapshot
 from .automation_enrollment import AutomationKeyIssuer
 from .session_authority_contracts import SessionAuthorityFacts, SessionAuthorityOwner
-from .session_authority_policy import evaluate_session_authority
+from .session_authority_policy import evaluate_session_authority, session_requires_grant
 from .session_retirement import SessionRetirement, SessionRetirementKind
 
 
@@ -172,7 +172,7 @@ class SessionAuthorityCore:
         facts: SessionAuthorityFacts,
         sessions: tuple[AccessSession, ...],
     ) -> AutomationCustodySnapshot | None:
-        if not any(item.kind is not SessionKind.HUMAN for item in sessions):
+        if not any(session_requires_grant(item) for item in sessions):
             return None
         try:
             snapshot = self._snapshot(facts)

@@ -12,6 +12,13 @@ from ...application.runtime.access_management import (
     RuntimeSessionInventory,
     RuntimeSessionInventoryReply,
 )
+from ...application.runtime.attendance import (
+    RuntimeAttendanceAsk,
+    RuntimeAttendanceDecide,
+    RuntimeAttendanceDecided,
+    RuntimeAttendanceInventory,
+    RuntimeAttendancePending,
+)
 from ...application.runtime.bootstrap import (
     RuntimePasswordReset,
     RuntimePasswordResetCompleted,
@@ -203,6 +210,38 @@ class RuntimeProfileTransport(RuntimeVerifiedTransport):
                 result = self._reply(request.request_id, deadline=deadline).root
                 if not isinstance(
                     result, (RuntimeProfileStatus, RuntimeSessionsLocked, RuntimeHumanSignedOut, RuntimeAccessRefusal)
+                ):
+                    raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                return result
+            except BaseException as error:
+                self._close_after_failure(error)
+                raise
+
+    def attendance(
+        self, request: RuntimeAttendanceAsk | RuntimeAttendanceDecide, *, deadline: float
+    ) -> (
+        RuntimeAttendancePending
+        | RuntimeAttendanceInventory
+        | RuntimeAttendanceDecided
+        | RuntimeProfileStatus
+        | RuntimeAccessRefusal
+    ):
+        """Ask to be attended, observe that ask, or list and decide asks as the person."""
+        with self._exchange(deadline=deadline):
+            if self._closed:
+                raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+            try:
+                write_document(self._channel, request, deadline=deadline)
+                result = self._reply(request.request_id, deadline=deadline).root
+                if not isinstance(
+                    result,
+                    (
+                        RuntimeAttendancePending,
+                        RuntimeAttendanceInventory,
+                        RuntimeAttendanceDecided,
+                        RuntimeProfileStatus,
+                        RuntimeAccessRefusal,
+                    ),
                 ):
                     raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
                 return result

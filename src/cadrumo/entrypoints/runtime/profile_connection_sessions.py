@@ -11,6 +11,13 @@ from pydantic import SecretBytes
 
 from ...adapters.local_runtime.runtime_frame_io import read_secret, write_document
 from ...adapters.persistence.storage.custody.acceleration_receipt import ReceiptDeletion
+from ...application.runtime.attendance import (
+    RuntimeAttendanceAsk,
+    RuntimeAttendanceDecide,
+    RuntimeAttendanceDecided,
+    RuntimeAttendanceInventory,
+    RuntimeAttendancePending,
+)
 from ...application.runtime.contracts import (
     RuntimeByteChannel,
     RuntimeRefusalCode,
@@ -301,12 +308,19 @@ class ProfileConnectionSessionMixin:
         self: RuntimeProfileConnections,
         context: RuntimeConnectionContext,
         channel: RuntimeByteChannel,
-        request: RuntimeProfileLogin | RuntimeSessionRequest | RuntimeSignInStatusRequest,
+        request: RuntimeProfileLogin
+        | RuntimeSessionRequest
+        | RuntimeSignInStatusRequest
+        | RuntimeAttendanceAsk
+        | RuntimeAttendanceDecide,
     ) -> (
         RuntimeProfileStatus
         | RuntimeSessionsLocked
         | RuntimeSignInStatusReply
         | RuntimeHumanSignedOut
+        | RuntimeAttendancePending
+        | RuntimeAttendanceInventory
+        | RuntimeAttendanceDecided
         | RuntimeAccessRefusal
     ):
         """Keep credentials out of request/response documents and refuse unknown authority."""
@@ -333,11 +347,14 @@ class ProfileConnectionSessionMixin:
                         instant=self._wall_clock(),
                     ),
                 )
-            result = (
-                self._login(context, channel, request)
-                if isinstance(request, RuntimeProfileLogin)
-                else self._session(context, request)
-            )
+            if isinstance(request, RuntimeAttendanceAsk):
+                result = self._attendance_ask(context, channel, request)
+            elif isinstance(request, RuntimeAttendanceDecide):
+                result = self._attendance_decide(context, request)
+            elif isinstance(request, RuntimeProfileLogin):
+                result = self._login(context, channel, request)
+            else:
+                result = self._session(context, request)
             if not isinstance(result, AccessDenied):
                 return result
             code = result.code
@@ -360,6 +377,7 @@ class ProfileConnectionSessionMixin:
         """Release only this connection's authority; keep native login provenance separate."""
         self._events.disconnect(context)
         self._enrollments.disconnect(context.connection_id)
+        self._forget_attendance(context.connection_id)
         with self._guard:
             connection = self._connections.get(context.connection_id)
             host = None if connection is None else self._profiles.get(connection.profile_id)

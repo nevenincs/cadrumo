@@ -192,7 +192,8 @@ def _validate_session_kind_lineage(session: AccessSession) -> None:
     if session.kind is SessionKind.HUMAN:
         if session.parent_session_id is not None or session.grant_id is not None or session.key_id is not None:
             raise ValueError("human authority cannot descend from automation")
-    elif session.grant_id is None:
+    elif session.grant_id is None and session.kind is not SessionKind.ATTENDED:
+        # An attended child of a person's own session is bounded by that session, not by a grant.
         raise ValueError("delegated sessions require an explicit grant")
 
 

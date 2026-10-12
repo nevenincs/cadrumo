@@ -39,6 +39,7 @@ from .automation_enrollment import AdministrationFacts
 from .operation_access_policy import evaluate_operation_access, evaluate_response_scope
 from .session_authority_contracts import SessionAuthorityFacts
 from .session_authority_core import SessionAuthorityCore
+from .session_authority_policy import session_requires_grant
 
 
 class SessionAuthorityAccess(SessionAuthorityCore):
@@ -72,7 +73,7 @@ class SessionAuthorityAccess(SessionAuthorityCore):
         if session is None:
             raise ProfileAccessRefusedError(AccessDenialCode.AUTHENTICATION_REQUIRED)
         grant, key = None, None
-        if session.kind is not SessionKind.HUMAN:
+        if session_requires_grant(session):
             snapshot = self._snapshot(facts)
             if isinstance(snapshot, AccessDenied):
                 self._retire({session_id}, reason=snapshot.code)
@@ -197,7 +198,7 @@ class SessionAuthorityAccess(SessionAuthorityCore):
                 return facts
             session = self._sessions.get(session_id)
             grant, key = None, None
-            if session is not None and session.kind is not SessionKind.HUMAN:
+            if session is not None and session_requires_grant(session):
                 snapshot = self._snapshot(facts)
                 if isinstance(snapshot, AccessDenied):
                     return snapshot
@@ -261,7 +262,7 @@ class SessionAuthorityAccess(SessionAuthorityCore):
         if session is not None and session.client_id != facts.context.authenticated_client_id:
             return AccessDenied(code=AccessDenialCode.CLIENT_MISMATCH)
         grant, key = None, None
-        if session is not None and session.kind is not SessionKind.HUMAN:
+        if session is not None and session_requires_grant(session):
             snapshot = self._snapshot(facts)
             if isinstance(snapshot, AccessDenied):
                 self._retire({session_id})
