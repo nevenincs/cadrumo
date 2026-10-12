@@ -11,8 +11,13 @@ from ..software_identity import aeat_aux_version
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def test_aeat_aux_version_derives_from_the_canonical_package_release() -> None:
-    assert aeat_aux_version() == "051"
+@pytest.mark.parametrize(("package_version", "token"), (("0.5.1", "051"), ("0.6.0", "060"), ("1.10.2", "1102")))
+def test_aeat_aux_version_derives_from_the_canonical_package_release(
+    monkeypatch: pytest.MonkeyPatch, package_version: str, token: str
+) -> None:
+    monkeypatch.setattr(identity_module, "PACKAGE_VERSION", package_version)
+
+    assert aeat_aux_version() == token
 
 
 @pytest.mark.parametrize("package_version", ("0.5.1rc1", "0.5.1+local", "0.5", "0.5.1.2"))
