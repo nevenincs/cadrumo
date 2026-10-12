@@ -68,9 +68,14 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 def _invoke(argv: list[str]) -> Result:
     if "capabilities" not in argv:
         return invoke_cached_cli(argv)
-    config_index = argv.index("config")
+    return _invoke_as_operator(argv)
+
+
+def _invoke_as_operator(argv: list[str]) -> Result:
+    """Run one profile-bound command with the profile password on the protected frame."""
+    family_index = next(index for index, token in enumerate(argv) if token in {"app", "config"})
     return invoke_cached_cli(
-        [*argv[:config_index], "--profile", _LABEL, "--profile-secrets-stdin", *argv[config_index:]],
+        [*argv[:family_index], "--profile", _LABEL, "--profile-secrets-stdin", *argv[family_index:]],
         input=json.dumps({"profile_passphrase": _CREDENTIAL_INPUT}),
     )
 
@@ -126,11 +131,11 @@ def test_set_disables_a_capability_and_show_reflects_it() -> None:
     "argv",
     [
         ["app", "modelo", "spreadsheet", "push", "--modelo", "303", "--period", "1T", "--year", "2025"],
-        ["app", "modelo", "spreadsheet", "verify", "--modelo", "303", "--period", "1T", "--year", "2025"],
+        ["app", "modelo", "spreadsheet", "publish", "--calculation-revision-id", "0" * 64, "--accept-readable-export"],
         ["config", "profile", "archive", "push"],
         ["config", "google", "probe", "--no-read-only"],
     ],
-    ids=["spreadsheet-push", "spreadsheet-verify", "archive-push", "probe-write"],
+    ids=["spreadsheet-push", "spreadsheet-publish", "archive-push", "probe-write"],
 )
 def test_every_google_write_verb_refuses_when_google_export_disabled(argv: list[str]) -> None:
     """Every Google-write CLI leaf is gated on google_export, not just `export`.
@@ -141,7 +146,7 @@ def test_every_google_write_verb_refuses_when_google_export_disabled(argv: list[
     off = _invoke(["config", "profile", "capabilities", "set", "google_export", "off"])
     assert off.exit_code == 0, off.output
 
-    result = invoke_cached_cli(argv)
+    result = _invoke_as_operator(argv)
     assert result.exit_code != 0, result.output
     combined = result.output + str(result.exception or "")
     assert "Google export is disabled" in combined, combined
