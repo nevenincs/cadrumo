@@ -1,6 +1,5 @@
 import { useDesktopEnvironment } from "./shell/useDesktopEnvironment";
 import { useWindowPresentation } from "./shell/useWindowPresentation";
-import { useHostLogs } from "./shell/useHostLogs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/components/ui/cn";
@@ -32,7 +31,8 @@ import type {
 } from "./ipc/contract";
 import { PaneHeader, type PaneControl } from "./components/PaneHeader";
 import { Rail, type RailItem } from "./components/Rail";
-import { RecordList, type RecordMenuRequest } from "./components/RecordList";
+import { HostRecordList } from "./components/HostRecordList";
+import type { RecordMenuRequest } from "./components/RecordList";
 import {
   DEFAULT_FILTERS,
   levelRank,
@@ -161,7 +161,8 @@ export function App({ host }: { host: Host }) {
   const workspace = useRef<HTMLDivElement>(null);
   const { viewportHeight, viewportWidth, prefersDark } =
     useWindowPresentation(workspace);
-  const { records, dropped, sourceStates } = useHostLogs(host);
+  // How many log records are errors, as the log view reports it.
+  const [errorCount, setErrorCount] = useState(0);
   const initial = useMemo(loadState, []);
   const [prefs, setPrefs] = useState<Prefs>(initial.prefs);
   const [layout, setLayout] = useState<Layout>(initial.layout);
@@ -1575,13 +1576,6 @@ export function App({ host }: { host: Host }) {
   const setPanelHeight = (height: number) =>
     patch({ panelOpen: true, panelRatio: clampPanel(height) / viewportHeight });
 
-  const errorCount = useMemo(
-    () =>
-      (records ?? []).filter(
-        (r) => r.level === "ERROR" || r.level === "CRITICAL",
-      ).length,
-    [records],
-  );
   const tabOpen = (tab: PanelTab) => panelVisible && layout.tab === tab;
   // A column hidden from under the keyboard: focus goes to the TUI while
   // that is shown, else to the first pane, else to the agent, else to the
@@ -2382,10 +2376,9 @@ export function App({ host }: { host: Host }) {
                   <div className="relative flex min-h-0 flex-1">
                     {terminalPane("console", tabOpen("console"))}
                     {terminalPane("python", tabOpen("python"))}
-                    <RecordList
-                      records={records}
-                      sourceStates={sourceStates}
-                      dropped={dropped}
+                    <HostRecordList
+                      host={host}
+                      onErrors={setErrorCount}
                       filters={filters}
                       setFilters={setFilters}
                       onMenu={recordMenu}

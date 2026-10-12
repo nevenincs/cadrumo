@@ -50,6 +50,76 @@ const WINDOW = 400;
 const MAX_SPAN = 5 * WINDOW;
 // How many views from an edge of the drawn span the next span is brought in.
 const SPAN_MARGIN = 3;
+// Records are drawn in blocks of this many sequence numbers. A batch changes
+// the last block, and the keyboard the one or two it moves between; every
+// other block is passed over whole. Under a busy log the drawn span runs to
+// thousands of rows and a batch can come every few tens of milliseconds.
+const BLOCK = 64;
+
+type RowHandlers = {
+  toggle: (seq: number) => void;
+  current: (seq: number) => void;
+  menu: (event: MouseEvent<HTMLElement>, record: LogRecord) => void;
+};
+
+type BlockProps = {
+  records: LogRecord[];
+  /** The records of this block whose detail is open, as their numbers. */
+  opened: string;
+  expanded: ReadonlySet<number>;
+  /** The current record and the tab stop, where they are in this block. */
+  current: number | null;
+  tabStop: number | undefined;
+  pythonLabel: string;
+  hostLabel: string;
+  detailsLabel: string;
+  handlers: RowHandlers;
+};
+
+const sameBlock = (a: BlockProps, b: BlockProps) =>
+  a.opened === b.opened &&
+  a.current === b.current &&
+  a.tabStop === b.tabStop &&
+  a.pythonLabel === b.pythonLabel &&
+  a.hostLabel === b.hostLabel &&
+  a.detailsLabel === b.detailsLabel &&
+  a.handlers === b.handlers &&
+  a.records.length === b.records.length &&
+  a.records.every((record, at) => record === b.records[at]);
+
+// The rows of one block, side by side with every other block's in the list:
+// a fragment, so each row is still a child of the list itself.
+const RecordBlock = memo(function RecordBlock({
+  records,
+  expanded,
+  current,
+  tabStop,
+  pythonLabel,
+  hostLabel,
+  detailsLabel,
+  handlers,
+}: BlockProps) {
+  return records.map((record) => (
+    <RecordRow
+      key={record.seq}
+      record={record}
+      open={expanded.has(record.seq)}
+      current={record.seq === current}
+      tabStop={record.seq === tabStop}
+      sourceLabel={
+        record.source === "python"
+          ? pythonLabel
+          : record.source === "host"
+            ? hostLabel
+            : record.source
+      }
+      detailsLabel={detailsLabel}
+      onToggle={handlers.toggle}
+      onCurrent={handlers.current}
+      onMenu={handlers.menu}
+    />
+  ));
+}, sameBlock);
 
 // Read-only view of the host's log batches. A missing or unreadable source is
 // never presented as an empty log, and an unknown source renders by name.
@@ -521,6 +591,18 @@ export const RecordList = memo(function RecordList({
     }
   };
 
+  // The drawn records by block of sequence numbers, in order.
+  const blocks: LogRecord[][] = [];
+  for (const record of drawn) {
+    const last = blocks.at(-1);
+    if (
+      last?.[0] &&
+      Math.floor(last[0].seq / BLOCK) === Math.floor(record.seq / BLOCK)
+    )
+      last.push(record);
+    else blocks.push([record]);
+  }
+
   const loading = records === null && sourceStates === null;
   const empty =
     states.length > 0 &&
@@ -866,20 +948,29 @@ export const RecordList = memo(function RecordList({
             )}
           </Empty>
         )}
-        {drawn.map((record) => (
-          <RecordRow
-            key={record.seq}
-            record={record}
-            open={expanded.has(record.seq)}
-            current={record.seq === current}
-            tabStop={record.seq === tabStop}
-            sourceLabel={sourceLabel(record.source)}
-            detailsLabel={t("desktop.logs.details")}
-            onToggle={handlers.toggle}
-            onCurrent={handlers.current}
-            onMenu={handlers.menu}
-          />
-        ))}
+        {blocks.map((records) => {
+          const seqs = new Set(records.map((record) => record.seq));
+          const first = records[0]?.seq ?? 0;
+          return (
+            <RecordBlock
+              key={Math.floor(first / BLOCK)}
+              records={records}
+              opened={records
+                .filter((record) => expanded.has(record.seq))
+                .map((record) => record.seq)
+                .join(",")}
+              expanded={expanded}
+              current={current !== null && seqs.has(current) ? current : null}
+              tabStop={
+                tabStop !== undefined && seqs.has(tabStop) ? tabStop : undefined
+              }
+              pythonLabel={t("desktop.logs.source_python")}
+              hostLabel={t("desktop.logs.source_host")}
+              detailsLabel={t("desktop.logs.details")}
+              handlers={handlers}
+            />
+          );
+        })}
       </div>
     </div>
   );

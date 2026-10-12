@@ -1260,11 +1260,13 @@ test("under a fast feed, every key from a record the log has passed takes the vi
 }) => {
   // A batch every thirty milliseconds: one can land between a key and the
   // scroll it causes, which is when the log used to carry on following.
+  // Thirty keys, each looked at, under a feed that keeps the page busy.
+  test.setTimeout(60_000);
   await target.goto(
     "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=3000&feed=30",
   );
   await openLogs(target);
-  const { list, follow } = await overLog(target);
+  const { list } = await overLog(target);
   const seq = await focusNewest(target);
   await expect
     .poll(async () =>
@@ -1280,15 +1282,17 @@ test("under a fast feed, every key from a record the log has passed takes the vi
       return {
         newest: row === element.querySelector(":scope > .record:last-of-type"),
         inView: rect.bottom > box.top && rect.top < box.bottom,
+        // Read in the same moment as the view, not after another batch.
+        following:
+          document
+            .querySelector("[data-follow]")
+            ?.getAttribute("aria-pressed") === "true",
       };
     });
     // On the newest record the log follows again, as it should.
     if (at.newest) break;
     expect(at.inView, `press ${press}`).toBe(true);
-    await expect(follow, `press ${press}`).toHaveAttribute(
-      "aria-pressed",
-      "false",
-    );
+    expect(at.following, `press ${press}`).toBe(false);
   }
 });
 
