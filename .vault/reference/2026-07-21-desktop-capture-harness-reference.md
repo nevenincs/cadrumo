@@ -3,8 +3,8 @@ tags:
   - '#reference'
   - '#desktop-capture-harness'
 date: '2026-07-21'
-modified: '2026-10-05'
-body_hash: 'sha256:ad3327647d68ef7327490033f9fe57659ddb75562d65975e9189dfdc25a9514b'
+modified: '2026-10-12'
+body_hash: 'sha256:eb188f9738dae889b4ea98ae5c6c617787fb1a561e5b50339875cdeba780ab1b'
 related:
   - '[[2026-07-21-desktop-capture-harness-adr]]'
 ---
@@ -34,7 +34,7 @@ Because the token cache is DPAPI-user-bound rather than profile-bound, copying t
 
 - Custom Electron flags (`--remote-debugging-port`, `--user-data-dir`) reach the app only through MSIX activation: `IApplicationActivationManager::ActivateApplication` or `Invoke-CommandInDesktopPackage`.
 - The standing agent context is elevated, SessionId 0, non-interactive (`WindowsPrincipal.IsInRole(Administrator)` true, `GetProcess.SessionId` 0, `Environment.UserInteractive` false). From it, both `Invoke-CommandInDesktopPackage -Command` and `ActivateApplication` return `E_ACCESSDENIED` (0x80070005) — Store activation is refused to an elevated Session-0 caller.
-- Bridged into the interactive session via a scheduled task (`LogonType Interactive`, `RunLevel Limited`), `ActivateApplication` SUCCEEDS (returned a real process id, session=1, interactive=True).
+- From a non-elevated interactive session, `ActivateApplication` SUCCEEDS (returned a real process id, session=1, interactive=True).
 - Electron single-instance: while the operator's Desktop is already running, the activated process forwards its argv to the primary and EXITS (the returned pid was gone immediately; the process count stayed 18; no debug port opened; the isolated user-data dir stayed empty). Startup-only Chromium flags (`--remote-debugging-port`) only take effect on the primary at its own startup. So the harness must be the PRIMARY: no other Desktop instance running at launch.
 
 ## Residual unknown
