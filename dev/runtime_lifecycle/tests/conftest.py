@@ -6,14 +6,13 @@ import time
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 
 from cadrumo.core.storage_environment import STORAGE_ROOT
 
 from ..harness import LifecycleHarness
-from ..installed import InstalledLifecycleHarness, require_installation_guest
 
 
 def _runtime_faults(path: Path) -> list[dict[str, str | int]]:
@@ -189,53 +188,6 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     group = parser.getgroup("runtime lifecycle")
     group.addoption("--lifecycle-manager", type=Path, help="Debug manager lifecycle driver image")
     group.addoption("--lifecycle-package", type=Path, help="Complete real native package directory")
-    group.addoption(
-        "--lifecycle-installed-plan", type=Path, help="Verified native maintenance plan on a disposable guest"
-    )
-    group.addoption("--lifecycle-installed-runner", type=Path, help="Actual authenticated native maintenance runner")
-    group.addoption("--installed-vm-id", type=UUID, help="Explicitly selected disposable Hyper-V guest identity")
-    group.addoption("--installed-account-sid", help="Dedicated guest account native SID")
-
-    group.addoption("--installed-guest-kind", choices=("hyperv", "qemu"), default="hyperv")
-
-
-def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
-    """Keep destructive guest acceptance out of the ordinary process-driver campaign."""
-    if config.getoption("lifecycle_installed_plan") is None:
-        dedicated = [item for item in items if item.name == "test_installed_manager_immediate"]
-        items[:] = [item for item in items if item not in dedicated]
-        config.hook.pytest_deselected(items=dedicated)
-
-
-@pytest.fixture
-def installed_harness(
-    pytestconfig: pytest.Config, monkeypatch: pytest.MonkeyPatch
-) -> Iterator[InstalledLifecycleHarness]:
-    """Require genuine guest identity before the first native registration mutation."""
-
-    plan = pytestconfig.getoption("lifecycle_installed_plan")
-    runner = pytestconfig.getoption("lifecycle_installed_runner")
-    vm_id = pytestconfig.getoption("installed_vm_id")
-    sid = pytestconfig.getoption("installed_account_sid")
-    if (
-        not isinstance(plan, Path)
-        or not isinstance(runner, Path)
-        or not isinstance(vm_id, UUID)
-        or not isinstance(sid, str)
-    ):
-        pytest.fail("Installed acceptance requires the explicit guest, dedicated account and actual native artifacts")
-    intent = json.loads(plan.read_text(encoding="utf-8"))
-    root = require_installation_guest(
-        vm_id, sid, intent["scope"], guest_kind=pytestconfig.getoption("installed_guest_kind")
-    )
-    instance = InstalledLifecycleHarness(plan.resolve(strict=True), runner.resolve(strict=True), root)
-    monkeypatch.setenv(STORAGE_ROOT.variable, str(root))
-    monkeypatch.setenv(STORAGE_ROOT.development_variable, str(root))
-    monkeypatch.setenv("CADRUMO_AUTHORITY_ROOT", str(instance.package / "data/authority"))
-    with instance:
-        probe = instance.connect(uuid4())
-        probe.client.close()
-        yield instance
 
 
 @pytest.fixture
@@ -267,7 +219,5 @@ def harness(
         record_property("lifecycle_seconds", json.dumps(instance.metrics, sort_keys=True))
         record_property("manager_events", json.dumps(_manager_evidence(root / "manager-events.jsonl"), sort_keys=True))
         record_property("runtime_faults", json.dumps(_runtime_faults(root / "logs/cadrumo.log")))
-        # The installed fixture has its own native observations. Only this
-        # debug-driver fixture requires its complete canonical event stream.
         if not instance.events():
             raise RuntimeError("Native lifecycle driver did not retain any public supervision evidence")

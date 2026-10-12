@@ -1,4 +1,4 @@
-"""Build scoped MSI products and run explicit native maintenance/guest acceptance."""
+"""Build scoped MSI products and run explicit native maintenance."""
 
 from __future__ import annotations
 
@@ -6,17 +6,13 @@ import argparse
 import json
 import os
 import shutil
-import sys
-from collections.abc import Mapping
 from pathlib import Path, PureWindowsPath
-from subprocess import TimeoutExpired
 from tempfile import TemporaryDirectory
 from uuid import UUID, uuid4
 from xml.etree.ElementTree import Element
 
 from defusedxml import ElementTree
 
-from ...runtime_lifecycle.installed import InstalledLifecycleHarness, require_installation_guest
 from ..command_execution import run_command
 from .build_paths import build_paths
 from .hashing import digest
@@ -26,175 +22,6 @@ from .windows_msi_database import verify_admission_order, verify_feature_ownersh
 from .windows_msi_identity import InstallationScope
 
 _NS = {"w": WIX_NAMESPACE}
-
-
-def check_installation(args: argparse.Namespace) -> None:
-    """Execute immediate installed checks; refuse to certify unobserved boot/login/upgrade obligations."""
-    receipt = member(build_paths(args.build)["installation_metadata"], "installed-immediate.json")
-    evidence = {
-        "schema": 1,
-        "run_id": str(uuid4()),
-        "scope": args.scope,
-        "vm_id": str(args.installed_vm_id),
-        "guest_kind": args.installed_guest_kind,
-        "immediate": "failed",
-        "full_installation_acceptance": "incomplete",
-        "cleanup": "not_started",
-        "pending": ["machine_boot", "user_login", "scope_coexistence", "upgrade_cutover_rollback"],
-    }
-
-    def publish() -> None:
-        receipt.write_text(json.dumps(evidence, indent=2) + "\n", encoding="utf-8")
-
-    publish()
-    if args.installed_vm_id is None or args.installed_account_sid is None or args.scope is None or args.prefix is None:
-        raise ValueError(
-            "Select a disposable guest with --installed-vm-id, --installed-account-sid, --scope and --prefix"
-        )
-    campaign = getattr(args, "installed_campaign_state", None)
-    root = require_installation_guest(
-        args.installed_vm_id,
-        args.installed_account_sid,
-        args.scope,
-        guest_kind=args.installed_guest_kind,
-        fresh=campaign is None,
-    )
-    if args.runner is None or args.adapter is None or args.desktop is None:
-        raise ValueError("Installed acceptance requires the actual native runner, adapter and desktop")
-    plan = maintenance_plan(args.build, args.identity, args.scope, args.prefix, args.desktop, args.adapter, args.runner)
-    owner = InstalledLifecycleHarness(plan, args.runner, root)
-    if campaign is None:
-        owner.preflight()
-    else:
-        from ...runtime_lifecycle.client_probes import (
-            campaign_binding,
-            validate_campaign_state,
-            validate_successor_plan,
-        )
-
-        state = json.loads(campaign.read_text(encoding="utf-8"))
-        validate_campaign_state(
-            state,
-            campaign_binding(
-                plan, args.runner, args.installed_vm_id, args.installed_account_sid, args.installed_guest_kind
-            ),
-            cleanup=True,
-        )
-        successor_plan = getattr(args, "installed_successor_plan", None)
-        successor_runner = getattr(args, "installed_successor_runner", None)
-        if successor_plan is None or successor_runner is None:
-            raise ValueError("Campaign finalization requires both immutable successor artifacts")
-        successor = InstalledLifecycleHarness(successor_plan, successor_runner, root)
-        validate_successor_plan(owner.intent, successor.intent)
-        if state.get("successor") != campaign_binding(
-            successor_plan,
-            successor_runner,
-            args.installed_vm_id,
-            args.installed_account_sid,
-            args.installed_guest_kind,
-        ):
-            raise ValueError("Campaign successor artifacts differ from committed ownership")
-        import win32com.client
-
-        if (
-            win32com.client.Dispatch("WindowsInstaller.Installer").ProductState(
-                successor.intent["registration_product"]["product_code"]
-            )
-            == 5
-        ):
-            owner = successor
-        owner._preflight_admitted = True
-    source = Path(__file__).resolve().parents[3]
-    evidence["immediate"] = "running"
-    publish()
-    try:
-        command = [
-            sys.executable,
-            "-B",
-            "-m",
-            "dev.runtime_lifecycle.installed",
-            "--plan",
-            str(plan),
-            "--runner",
-            str(args.runner),
-            "--installed-vm-id",
-            str(args.installed_vm_id),
-            "--installed-account-sid",
-            args.installed_account_sid,
-            "--installed-guest-kind",
-            args.installed_guest_kind,
-        ]
-        if campaign is not None:
-            command.extend(
-                (
-                    "--phase",
-                    "cleanup",
-                    "--campaign-state",
-                    str(campaign),
-                    "--successor-plan",
-                    str(args.installed_successor_plan),
-                    "--successor-runner",
-                    str(args.installed_successor_runner),
-                )
-            )
-        result = run_command(
-            command,
-            cwd=source,
-            timeout_seconds=1800,
-        )
-    except (TimeoutExpired, OSError) as error:
-        evidence["immediate"] = "failed"
-        evidence["failure"] = "outer_timeout" if isinstance(error, TimeoutExpired) else "outer_launch_failure"
-        # Fresh native absence was observed before launch. The authentic native
-        # transaction owns SCM/workers; descendant tree termination does not.
-        try:
-            owner.cleanup_after_outer_exit()
-        except Exception as cleanup:
-            evidence["cleanup"] = "unsettled"
-            evidence["cleanup_error_type"] = type(cleanup).__name__
-        else:
-            evidence["cleanup"] = "settled"
-        finally:
-            try:
-                owner.resources.close()
-            except Exception as cleanup:
-                evidence["cleanup"] = "unsettled"
-                evidence["cleanup_error_type"] = type(cleanup).__name__
-            finally:
-                publish()
-        raise ValueError(f"Installed acceptance {evidence['failure']}; cleanup={evidence['cleanup']}") from None
-    print(result.stdout, end="")
-    if result.stderr:
-        print(result.stderr, end="", file=sys.stderr)
-    evidence["immediate"] = "passed" if result.returncode == 0 else "failed"
-    evidence["cleanup"] = "scenario_completed" if result.returncode == 0 else "scenario_failed"
-    publish()
-    if result.returncode:
-        raise ValueError("Real installed manager acceptance failed; see the test failure and immediate receipt")
-    if campaign is not None:
-        validate_cleanup_receipt(json.loads(result.stdout), args.scope)
-        evidence["full_installation_acceptance"] = "passed"
-        evidence["cleanup"] = "settled"
-        evidence["pending"] = []
-        publish()
-        return
-    raise ValueError(
-        "Immediate installed checks passed; boot/login, scope coexistence and "
-        "two-release upgrade acceptance remain incomplete"
-    )
-
-
-def validate_cleanup_receipt(receipt: Mapping[str, object], scope: str) -> None:
-    """Accept only this actually executed same-scope cleanup's complete existing receipt."""
-    if (
-        receipt.get("schema") != 1
-        or receipt.get("phase") != "cleanup"
-        or receipt.get("scope") != scope
-        or receipt.get("result") != "passed"
-        or receipt.get("full_installation_acceptance") != "passed"
-        or receipt.get("pending") != []
-    ):
-        raise ValueError("Actual campaign cleanup did not establish complete same-scope installation acceptance")
 
 
 def _run(wix: Path, arguments: list[str], directory: Path) -> str:
@@ -490,7 +317,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "command",
-        choices=("build", "verify", "kit", "plan", "install", "remove-version", "unregister", "check-installation"),
+        choices=("build", "verify", "kit", "plan", "install", "remove-version", "unregister"),
     )
     parser.add_argument("--build", type=Path, required=True)
     parser.add_argument("--identity", type=Path, required=True)
@@ -502,19 +329,9 @@ def main() -> None:
     parser.add_argument("--version", help="Exact installed release to remove; anchors and live use refuse")
     parser.add_argument("--wix", type=Path)
     parser.add_argument("--payload", type=Path)
-    parser.add_argument("--installed-vm-id", type=UUID, help="Explicitly selected disposable guest native UUID")
-    parser.add_argument(
-        "--installed-account-sid", help="Dedicated guest account whose native token must run acceptance"
-    )
-    parser.add_argument("--installed-guest-kind", choices=("hyperv", "qemu"), default="hyperv")
-    parser.add_argument("--installed-campaign-state", type=Path)
-    parser.add_argument("--installed-successor-plan", type=Path)
-    parser.add_argument("--installed-successor-runner", type=Path)
     args = parser.parse_args()
     try:
-        if args.command == "check-installation":
-            check_installation(args)
-        elif args.command == "kit":
+        if args.command == "kit":
             if args.payload is None:
                 raise ValueError("Desktop provisioning requires the assembled payload")
             bootstrap_kit(

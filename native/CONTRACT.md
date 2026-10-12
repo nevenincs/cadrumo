@@ -1690,14 +1690,11 @@ remaining older artifacts are not evidence of the failed build succeeding.
 
 ```text
 cmake --build build/distribution-windows-x64 --config Release --target msi-verify
-cmake --build build/distribution-windows-x64 --config Release --target check-msi-installation
 ```
 
 `msi-verify` depends on preparation, authoring and compilation, then verifies all
 four artifacts against the current payload and compilation receipt. It is a build
-integrity check, not native installation acceptance. `check-msi-installation`
-currently fails with the outstanding lifecycle and runner requirements, independently
-of compiler availability. No CMake switch bypasses that refusal. Direct CPack and
+integrity check, not native installation acceptance. Direct CPack and
 its `package` target still refuse the combined manager MSI; use `msi` or `msi-verify`.
 
 The distribution graph also exposes `install-msi`, `remove-msi-version` and

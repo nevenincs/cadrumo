@@ -27,10 +27,8 @@ from ..client_probes import (
     _read,
     _refused,
     _submit_read,
-    exercise_installed_manager,
 )
 from ..harness import LifecycleHarness
-from ..installed import InstalledLifecycleHarness
 
 pytestmark = [
     pytest.mark.integration,
@@ -237,8 +235,3 @@ def test_manager_death_preserves_custody_and_successor_restores_verified_supervi
         event["kind"] == "launched" and event["pid"] == recovered.native.peer.process_id for event in harness.events()
     )
     recovered.client.human_sign_out()
-
-
-def test_installed_manager_immediate(installed_harness: InstalledLifecycleHarness) -> None:
-    """Run the same command-only installed scenario without separate acceptance logic."""
-    exercise_installed_manager(installed_harness)

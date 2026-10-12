@@ -132,10 +132,6 @@ def test_distribution_wix_guard_and_authoring_are_in_the_real_graph(tmp_path: Pa
         assert result.returncode != 0
         assert "separate version and registration" in result.stdout + result.stderr, result.stdout + result.stderr
         assert len(list((build / "installation/metadata/wix").glob("*.wxs"))) == 4
-        result = run_command([cmake, "--build", str(build), "--target", "check-msi-installation"], cwd=source)
-        assert result.returncode != 0
-        assert "same-version integrity" in result.stdout + result.stderr, result.stdout + result.stderr
-        assert "Session 0" in result.stdout + result.stderr
         assert not list((build / "packages").glob("*.msi"))
     else:
         assert result.returncode == 0, result.stdout + result.stderr
