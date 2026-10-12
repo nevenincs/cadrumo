@@ -23,7 +23,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.tests.modelo_export_support import isolated_backend_context
 from cadrumo.application.modelo.export_projection import (
     ModeloExportCompleteness,
     ModeloExportEvidenceStatus,
@@ -46,6 +45,8 @@ from cadrumo.domain.filing.software_identity import AeatSoftwareIdentityGrade
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.entrypoints.operation_composition import compose_operation_dependencies
 from cadrumo.entrypoints.tests.profile_persistence.modelo_303_export_support import build_verified_modelo_303_revision
+
+from .runtime_profile_backend import runtime_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -117,7 +118,7 @@ def _operation_result(
 
 def test_the_filing_file_result_states_what_the_command_line_prints(tmp_path: Path) -> None:
     """Revision, format, identity grade, evidence, completeness and fingerprint agree across surfaces."""
-    with isolated_backend_context(tmp_path), bundled_indexed_authority().operation() as operation:
+    with runtime_cli_profile(tmp_path=tmp_path), bundled_indexed_authority().operation() as operation:
         _taxpayer_nif, _bucket_id, verified, *_repositories = build_verified_modelo_303_revision(operation=operation)
         cli_out = tmp_path / "cli-303.txt"
         operation_out = tmp_path / "operation-303.txt"
@@ -169,7 +170,7 @@ def test_the_filing_file_result_states_what_the_command_line_prints(tmp_path: Pa
 
 def test_the_calculation_report_result_states_what_the_command_line_prints(tmp_path: Path) -> None:
     """A report states its format and identity grade as the command line does, and claims no completeness."""
-    with isolated_backend_context(tmp_path), bundled_indexed_authority().operation() as operation:
+    with runtime_cli_profile(tmp_path=tmp_path), bundled_indexed_authority().operation() as operation:
         _taxpayer_nif, _bucket_id, verified, *_repositories = build_verified_modelo_303_revision(operation=operation)
         cli_out = tmp_path / "cli-303-report.csv"
         operation_out = tmp_path / "operation-303-report.csv"
@@ -214,7 +215,7 @@ def test_the_calculation_report_result_states_what_the_command_line_prints(tmp_p
 
 def test_the_calculation_summary_pdf_is_byte_identical_from_either_surface(tmp_path: Path) -> None:
     """One revision exported at one instant is one summary, whichever surface wrote it."""
-    with isolated_backend_context(tmp_path), bundled_indexed_authority().operation() as operation:
+    with runtime_cli_profile(tmp_path=tmp_path), bundled_indexed_authority().operation() as operation:
         _taxpayer_nif, _bucket_id, verified, *_repositories = build_verified_modelo_303_revision(operation=operation)
         cli_out = tmp_path / "cli-303-summary.pdf"
         operation_out = tmp_path / "operation-303-summary.pdf"

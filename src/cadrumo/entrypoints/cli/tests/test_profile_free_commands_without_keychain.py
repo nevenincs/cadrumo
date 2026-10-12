@@ -23,6 +23,7 @@ from ....core.config import load_settings, override_settings
 from ....core.profile_session import ProfileSessionRefusalReason
 from .._profile_session_gate import _interactive_authentication
 from ..config.secure_input import terminal_can_prompt_for_secrets
+from ..config.tests.isolated_storage_fixture import native_profile_view_server
 from .subprocess_cli import run_cadrumo_subprocess
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -36,19 +37,22 @@ def _passphrase() -> str:
 
 
 def _run(storage_root: Path, *args: str, stdin_payload: str | None = None) -> subprocess.CompletedProcess[str]:
-    return run_cadrumo_subprocess(
-        args,
-        settings={
-            "cadrumo_local_storage_root": storage_root,
-            "cadrumo_secret_passphrase": _passphrase(),
-            "cadrumo_output_language": "en",
-            "cadrumo_llm_ollama_chat_url": _CLOSED_RUNTIME,
-        },
-        env_strip_prefixes=("AEAT_", "PYTEST_"),
-        extra_env=_NO_KEYCHAIN,
-        stdin_payload=stdin_payload,
-        timeout=None,
-    )
+    # Profile-bound leaves submit to the runtime that serves the root, which
+    # keychain-less too; profile-free leaves never reach it.
+    with native_profile_view_server(storage_root, keychain_backend=_NO_KEYCHAIN["PYTHON_KEYRING_BACKEND"]):
+        return run_cadrumo_subprocess(
+            args,
+            settings={
+                "cadrumo_local_storage_root": storage_root,
+                "cadrumo_secret_passphrase": _passphrase(),
+                "cadrumo_output_language": "en",
+                "cadrumo_llm_ollama_chat_url": _CLOSED_RUNTIME,
+            },
+            env_strip_prefixes=("AEAT_", "PYTEST_"),
+            extra_env=_NO_KEYCHAIN,
+            stdin_payload=stdin_payload,
+            timeout=None,
+        )
 
 
 @pytest.fixture

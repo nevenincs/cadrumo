@@ -17,7 +17,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.tests.modelo_export_support import isolated_backend_context
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFindingKind
@@ -26,6 +25,8 @@ from cadrumo.entrypoints.tests.profile_persistence.modelo_303_export_support imp
     calculate_and_verify_modelo_303_revision,
 )
 from cadrumo.tests.cli_envelope import require_error_document
+
+from .runtime_profile_backend import runtime_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -43,7 +44,7 @@ def _export(revision_id: str, output: Path):
 
 
 def test_an_autoconsumo_base_refuses_verification_and_export(tmp_path: Path) -> None:
-    with isolated_backend_context(tmp_path), bundled_indexed_authority().operation() as operation:
+    with runtime_cli_profile(tmp_path=tmp_path), bundled_indexed_authority().operation() as operation:
         _nif, _bucket, report, revision, *_repositories = calculate_and_verify_modelo_303_revision(
             autoconsumo_promotor_base=_AUTOCONSUMO_BASE,
             operation=operation,
@@ -78,7 +79,7 @@ def test_an_autoconsumo_base_refuses_verification_and_export(tmp_path: Path) -> 
 
 
 def test_the_same_declaration_without_autoconsumo_verifies_and_exports(tmp_path: Path) -> None:
-    with isolated_backend_context(tmp_path), bundled_indexed_authority().operation() as operation:
+    with runtime_cli_profile(tmp_path=tmp_path), bundled_indexed_authority().operation() as operation:
         _nif, _bucket, report, revision, *_repositories = calculate_and_verify_modelo_303_revision(
             operation=operation,
         )

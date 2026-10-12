@@ -21,7 +21,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.tests.modelo_export_support import isolated_backend_context
 from cadrumo.application.modelo.calculation_report_document import CALCULATION_REPORT_CSV_PREAMBLE_PREFIX
 from cadrumo.application.modelo.operation_definitions import MODELO_EXPORT_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.work_export_contracts import ModeloExportRequest
@@ -36,6 +35,8 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.entrypoints.operation_composition import compose_operation_dependencies
 from cadrumo.entrypoints.tests.profile_persistence.modelo_303_export_support import build_verified_modelo_303_revision
+
+from .runtime_profile_backend import runtime_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -84,7 +85,7 @@ def _export_through_the_operation(
 
 def test_a_modelo_303_revision_exports_identical_bytes_on_both_surfaces(tmp_path: Path) -> None:
     """Both surfaces clear the election precondition and write the same DP30300 envelope."""
-    with isolated_backend_context(tmp_path), bundled_indexed_authority().operation() as operation:
+    with runtime_cli_profile(tmp_path=tmp_path), bundled_indexed_authority().operation() as operation:
         _taxpayer_nif, _bucket_id, verified, *_repositories = build_verified_modelo_303_revision(operation=operation)
         cli_out = tmp_path / "cli-303.txt"
         operation_out = tmp_path / "operation-303.txt"
@@ -126,7 +127,7 @@ def _report_table(path: Path) -> str:
 
 def test_a_modelo_303_calculation_report_carries_the_same_rows_on_both_surfaces(tmp_path: Path) -> None:
     """One revision reported from either surface yields the same rows and the same content digest."""
-    with isolated_backend_context(tmp_path), bundled_indexed_authority().operation() as operation:
+    with runtime_cli_profile(tmp_path=tmp_path), bundled_indexed_authority().operation() as operation:
         _taxpayer_nif, _bucket_id, verified, *_repositories = build_verified_modelo_303_revision(operation=operation)
         cli_out = tmp_path / "cli-303-report.csv"
         operation_out = tmp_path / "operation-303-report.csv"

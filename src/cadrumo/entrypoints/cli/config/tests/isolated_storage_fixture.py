@@ -89,11 +89,11 @@ def config_check_isolated_backend(config_check_backend: None) -> None:
 def declare_operator_terminal(monkeypatch: pytest.MonkeyPatch) -> None:
     """Declare an attached terminal, as the operator's own console would be.
 
-    Only a CLI attached to a terminal resumes a saved sign-in; a host session
-    without a console (an SSH logon, CI) refuses before reading the receipt.
-    `config` verbs read the predicate from ``secure_input`` at call time while
-    the runtime admission module binds it at import, so each lookup site is
-    declared where it is used.
+    Every CLI invocation resumes a live sign-in, terminal or not; the terminal
+    decides only whether a logon without a keychain may be prompted for the
+    password. `config` verbs read the predicate from ``secure_input`` at call
+    time while the runtime admission module binds it at import, so each lookup
+    site is declared where it is used.
     """
     for owner in ("config.secure_input", "runtime_profile_admission"):
         monkeypatch.setattr(f"cadrumo.entrypoints.cli.{owner}.terminal_can_prompt_for_secrets", lambda: True)
