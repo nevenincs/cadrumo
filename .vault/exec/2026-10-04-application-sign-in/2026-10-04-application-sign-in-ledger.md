@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:7beed35b5588dfec748c235be172c8369e1c493a21d168ed901a12285b2f9229'
+body_hash: 'sha256:c94f374c76089845b9ac8876c373c48f345fc1356bcbf0aa76230bad2ee1f8b1'
 related:
   - "[[2026-10-04-application-sign-in-plan]]"
 ---
@@ -268,6 +268,14 @@ related:
 - `S12` `verify:` `just check-types (31 ty findings in dev/ and adapters/local_runtime/tests/test_posix.py, none in this Step's files)` -> `fail`
 - `S12` `verify:` `just check-import-boundaries (unavailable: governed tree changed mid-run)` -> `fail`
 - `S12` `verify:` `ruff check, ruff format --check, ty on the Step's files` -> `pass`
+- `S13` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_login.py`
+- `S13` `verify:` `pytest test_installed_cli_resumes_other_profile_without_retiring_original -n0: 1 passed` -> `pass`
+- `S13` `verify:` `test_interactive_receipt_admission, test_runtime_login in the focused run` -> `pass`
+- `S13` `verify:` `just check-style` -> `pass`
+- `S13` `verify:` `just check-format (4 findings, none in this Step's files)` -> `fail`
+- `S13` `verify:` `just check-types (31 ty findings in dev/ and adapters/local_runtime/tests/test_posix.py, none in this Step's files)` -> `fail`
+- `S13` `verify:` `just check-import-boundaries (unavailable: governed tree changed mid-run)` -> `fail`
+- `S13` `verify:` `ruff check, ruff format --check, ty on the Step's files` -> `pass`
 
 ## Notes
 
@@ -289,3 +297,4 @@ related:
 - `S16` Implemented before this ledger resumed (tui `runtime_session,` app, `runtime_account);` closed on test evidence.
 - `S09` Runtime already carried THROTTLED seconds, `PROFILE_LOCKED,` receipt reasons and binding (generation changed, login mismatch) on the wire, and the TUI shows the typed code; the CLI collapsed them to absent/expired or a bare code. The CLI now names each reason, keeps the runtime code and context the desktop reads, and the throttle diagnostic was already present in `login_throttle.`
 - `S12` The registered in-process profile login/logout operations, the non-runtime unwrap callers and the CLI receipt extension were already retired by commit 5a09ab8082 `(login_handover,` `login_session` in-process paths); no extension code exists anywhere. Closed with the ownership gate over src/cadrumo.
+- `S13` Gate already implemented (custody.py `passphrase_channel_absent,` `runtime_profile_admission` terminal check). Three runtime-login tests expected a non-interactive resume; they now declare a terminal. Two of those hunks were already present uncommitted in the worktree for the same purpose and are committed here.

@@ -8,7 +8,7 @@ related:
   - '[[2026-10-04-application-sign-in-adr]]'
 modified: '2026-10-12'
 body_schema: body-v2
-body_hash: 'sha256:986016765b530c0b79db8d9cf38c019d0549d89959c6d472bf87f90c90214c94'
+body_hash: 'sha256:11817667c9a1f0d4d4c25fd8918a7fb699dfd6f962661c37b610a70fdacebb02'
 ---
 
 # `application-sign-in` plan
@@ -66,7 +66,7 @@ Only the runtime owner mints, extends or deletes a receipt.
 
 Interactive-only automatic resume, global sign-out and the status leaf.
 
-- [ ] `P04.S13` - Gate automatic receipt resume on an interactive terminal and make config login without a secret refuse with passphrase_channel_absent when non-interactive; `src/cadrumo/entrypoints/cli/runtime_profile_admission.py, src/cadrumo/entrypoints/cli/config/custody.py, secure_input.py, owning tests`.
+- [x] `P04.S13` - Gate automatic receipt resume on an interactive terminal and make config login without a secret refuse with passphrase_channel_absent when non-interactive; `src/cadrumo/entrypoints/cli/runtime_profile_admission.py, src/cadrumo/entrypoints/cli/config/custody.py, secure_input.py, owning tests`.
 - [ ] `P04.S14` - Route config logout to the global human sign-out and add the config sign-in-status leaf with its result model, locale keys and regenerated CLI references; `src/cadrumo/entrypoints/cli/config/custody.py, config_payloads.py, command specs, src/cadrumo/locales/ via dev.locales, generated CLI reference, owning tests`.
 
 ### Phase `P05` - TUI
