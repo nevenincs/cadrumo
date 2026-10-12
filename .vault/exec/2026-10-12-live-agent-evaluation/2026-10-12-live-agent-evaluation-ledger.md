@@ -5,7 +5,7 @@ tags:
 date: '2026-10-12'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:58240f38b91335051219365860d8de6d345213ea2fb2ba9b8c772f077ee7476a'
+body_hash: 'sha256:1727ce368e4f1e146d35e9429877aa72b8108ae5c0160b24c7dffe9fe707315e'
 related:
   - "[[2026-10-12-live-agent-evaluation-plan]]"
 ---
@@ -62,7 +62,14 @@ related:
 - `S04` `A` `dev/agent_eval/tests/test_live_scenarios.py`
 - `S04` `verify:` `pytest dev/agent_eval/tests/test_live_scenarios.py` -> `pass`
 - `S04` `verify:` `ruff check, ruff format, ty check on touched files` -> `pass`
+- `S05` `A` `dev/agent_eval/live/drivers.py`
+- `S05` `A` `dev/agent_eval/live/recorder.py`
+- `S05` `A` `dev/agent_eval/tests/test_live_recorder.py`
+- `S05` `verify:` `pytest dev/agent_eval/tests/test_live_recorder.py` -> `pass`
+- `S05` `verify:` `ruff check, ruff format, ty check on touched files` -> `pass`
+- `S05` `verify:` `real packaged MCP session on an isolated root: tool list read, pre-P10 surface flagged as product findings (sign-in tools, secret arguments), scripted client refused authentication_required with no sign-in` -> `pass`
 
 ## Notes
 
 - `S02` import gate failed on findings outside this Step: P10 removing `cadrumo_harness.mcp` `held_secrets,` `session_acts` and `installation_acts` while the gate ran, and stale load-target metadata; no finding names `dev/agent_eval`
+- `S05` the API and claude CLI drivers were not run against a signed-in profile: this SSH logon's credential store refuses stored sign-in; that live run is S11
