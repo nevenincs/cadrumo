@@ -11,11 +11,10 @@ from __future__ import annotations
 
 from typing import Any
 from urllib.parse import urlsplit
-from uuid import uuid4
 
 import pytest
 
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
+from cadrumo_harness.mcp.tests.admitted_lease import admitted_adapter
 
 from ...adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
@@ -164,7 +163,9 @@ def _origin(url: str) -> str:
 
 
 async def _tool_reply(arguments: dict[str, Any]) -> dict[str, Any]:
-    adapter = RuntimeMcpAdapter(profile_id=uuid4(), client=None)
+    # Every tool but status answers only under an admitted session; admission
+    # is not this module's subject, so the tool runs under a live lease.
+    adapter = admitted_adapter()
     try:
         return await adapter.call("authority", arguments)
     finally:

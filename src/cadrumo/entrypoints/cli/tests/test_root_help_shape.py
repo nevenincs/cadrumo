@@ -23,22 +23,22 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from ._profile_storage_fixtures import isolated_profile_storage
 
 __all__ = ["isolated_profile_storage"]
 
-from ....adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from ....application.operator_surface.help import build_help_document
-from ....core.bucket_pointer import BucketPointer, write_pointer
+from ....core.bucket_pointer import BucketPointer, pointer_path, write_pointer
 from ....core.config import Settings, load_settings
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....core.package_version import PACKAGE_VERSION
+from ....core.paths import effective_storage_root
 from ....core.product_identity import PRODUCT_IDENTITY
 from ....core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from ._isolated_profile_storage_fixtures import _isolated_state
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_backend import operator_profile_bound_to_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["_isolated_state"]
@@ -548,19 +548,15 @@ def test_installed_console_profile_create_fails_fast_without_prompt_host(tmp_pat
 
 @pytest.mark.usefixtures("isolated_profile_storage")
 class TestBareInvocationWithActiveProfile:
-    """Tests that call register_minimal_profile need a file-backed storage root.
+    """Each test registers a password-custodied profile in its isolated storage root.
 
-    register_minimal_profile goes through build_lifecycle_service →
-    _secure_objects_for_bucket → runtime.require_ready(), which needs an
-    active bucket session. open_test_profile_session initialises the key
-    material and activates the session for the target profile_id so the
-    call succeeds without a pre-provisioned test bucket in the profile list.
+    Profile-bound commands submit to the runtime, so the profile is one its
+    operator can sign in to, and commands that need the operator run as it.
     """
 
     def test_bare_invocation_reports_profile_state_without_cli_only_storage(self) -> None:
         missing = _invoke([])
-        with open_test_profile_session("11111111-1111-4111-8111-111111111111"):
-            register_minimal_profile(profile_id="11111111-1111-4111-8111-111111111111", display_name="operator")
+        with operator_profile_bound_to_cli(storage_root=effective_storage_root(), label="operator"):
             # `overview status` reads profile-bound storage, so it needs the
             # open session. The landing below deliberately does not: naming the
             # selected profile is a pointer read, and that is the distinction
@@ -596,18 +592,18 @@ class TestBareInvocationWithActiveProfile:
         assert "integrity-warning" not in overview.output
         assert "unreadable_rows" not in overview.output
 
-    def test_bare_invocation_after_logout_points_to_login_not_create(self) -> None:
-        """A registered profile without a selection is a login state, not first run."""
+    def test_bare_invocation_without_a_selection_points_to_login_not_create(self) -> None:
+        """A registered profile without a selection is a login state, not first run.
 
-        with open_test_profile_session("11111111-1111-4111-8111-111111111111"):
-            register_minimal_profile(profile_id="11111111-1111-4111-8111-111111111111", display_name="operator")
-        logged_out = _invoke(["config", "logout"])
+        Signing out keeps the selection, so the selection is removed directly;
+        what sign-out itself answers is held by the logout command's own tests.
+        """
+
+        storage_root = effective_storage_root()
+        with operator_profile_bound_to_cli(storage_root=storage_root, label="operator"):
+            pointer_path(storage_root).unlink()
         landing = _invoke([])
 
-        assert logged_out.exit_code == 0, logged_out.output
-        # This synthetic registration has no readable bucket manifest after
-        # the command boundary; logout truthfully falls back to a redacted ID.
-        assert f"logged_out_profile\t{CLI_PROFILE_ID_PLACEHOLDER}" in logged_out.output
         assert landing.exit_code == 0, landing.output
         assert "aeat config login NAME" in landing.output
         assert "aeat config profile create NAME" not in landing.output
@@ -621,8 +617,9 @@ class TestBareInvocationWithActiveProfile:
         assert help_payload["surface"] == "root"
         assert help_payload["heading"]  # locale-driven; presence is the structural assertion
 
-        with open_test_profile_session("11111111-1111-4111-8111-111111111111"):
-            register_minimal_profile(profile_id="11111111-1111-4111-8111-111111111111", display_name="operator")
+        # Registering selects the profile; the landing then reads the selection alone.
+        with operator_profile_bound_to_cli(storage_root=effective_storage_root(), label="operator"):
+            pass
         active = _invoke(["--format", "json"])
 
         assert active.exit_code == 0, active.output

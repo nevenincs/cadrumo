@@ -20,9 +20,10 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.iva_compensation.carry_forward import IvaCompensationCarryForwardLot, IvaCompensationExpiryReviewState
 from ....domain.iva_compensation.errors import IvaCompensationSeedConflictError
 from ....tests.cli_envelope import require_schema_envelope
-from ._iva_wallet_inspector_support import _NIF, _SEED_BUCKET_ID, _store_profile_with_nif
+from ._iva_wallet_inspector_support import _NIF
 from .cli_runner import invoke_cached_cli
 from .native_profile_cli_support import invoke_native_cli, reauthenticate_native_profile
+from .profile_password_cli import refused_for_want_of_an_operator
 from .runtime_profile_cli_fixture import native_cli_profile_scope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
@@ -151,14 +152,24 @@ def test_seed_iva_compensation_refuses_duplicate(tmp_path: Path) -> None:
 
 def test_cli_seed_verb_refuses_without_confirm(tmp_path: Path) -> None:
     """Seed verb requires --confirm; without it, exit code is non-zero."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SEED_BUCKET_ID):
-        _store_profile_with_nif(_NIF)
-        result = invoke_cached_cli(
-            ["app", "modelo", "iva-wallet", "seed", "--filing-year", "2024", "--period", "4T", "--amount", "1200.00"],
-            env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(label="wallet-seed-unconfirmed", facts={"identity.tax_id": _NIF})
+        result = invoke_native_cli(
+            profile,
+            "app",
+            "modelo",
+            "iva-wallet",
+            "seed",
+            "--filing-year",
+            "2024",
+            "--period",
+            "4T",
+            "--amount",
+            "1200.00",
         )
 
     assert result.exit_code != 0
+    assert not refused_for_want_of_an_operator(result), result.output
 
 
 def test_cli_seed_verb_happy_path(tmp_path: Path, authority_operation: PinnedAuthorityOperation) -> None:
@@ -239,29 +250,31 @@ def test_wallet_amount_accepts_canonical_forms(raw: str, expected: Decimal) -> N
     assert _wallet_amount(raw) == expected
 
 
-def test_cli_seed_verb_refuses_spanish_thousands_amount_and_persists_nothing(tmp_path: Path) -> None:
+def test_cli_seed_verb_refuses_spanish_thousands_amount_and_persists_nothing(
+    tmp_path: Path, authority_operation: PinnedAuthorityOperation
+) -> None:
     """``--amount 1.000`` refuses at the boundary instead of seeding one euro."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SEED_BUCKET_ID):
-        _store_profile_with_nif(_NIF)
-        result = invoke_cached_cli(
-            [
-                "app",
-                "modelo",
-                "iva-wallet",
-                "seed",
-                "--filing-year",
-                "2024",
-                "--period",
-                "4T",
-                "--amount",
-                "1.000",
-                "--confirm",
-            ],
-            env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(label="wallet-seed-thousands", facts={"identity.tax_id": _NIF})
+        result = invoke_native_cli(
+            profile,
+            "app",
+            "modelo",
+            "iva-wallet",
+            "seed",
+            "--filing-year",
+            "2024",
+            "--period",
+            "4T",
+            "--amount",
+            "1.000",
+            "--confirm",
         )
+        reauthenticate_native_profile(profile, authority_operation=authority_operation)
         stored = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2024, "4T"))
 
     assert result.exit_code != 0, result.output
+    assert not refused_for_want_of_an_operator(result), result.output
     assert stored is None, "a refused amount must not persist a carry-forward balance"
 
 
@@ -306,10 +319,11 @@ def test_cli_override_verb_records_taxpayer_override_decision(
 
 def test_cli_override_verb_refuses_without_confirm(tmp_path: Path) -> None:
     """Override verb requires --confirm; without it, exit code is non-zero."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SEED_BUCKET_ID):
-        _store_profile_with_nif(_NIF)
-        result = invoke_cached_cli(
-            [
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(label="wallet-override-unconfirmed", facts={"identity.tax_id": _NIF})
+        result = invoke_native_cli(
+            profile,
+            *(
                 "app",
                 "modelo",
                 "iva-wallet",
@@ -324,19 +338,20 @@ def test_cli_override_verb_refuses_without_confirm(tmp_path: Path) -> None:
                 "x",
                 "--evidence-locator",
                 "y",
-            ],
-            env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
+            ),
         )
 
     assert result.exit_code != 0
+    assert not refused_for_want_of_an_operator(result), result.output
 
 
 def test_cli_override_verb_requires_evidence_locator(tmp_path: Path) -> None:
     """A blank --evidence-locator is refused: provenance is mandatory, not optional."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SEED_BUCKET_ID):
-        _store_profile_with_nif(_NIF)
-        result = invoke_cached_cli(
-            [
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(label="wallet-override-blank-locator", facts={"identity.tax_id": _NIF})
+        result = invoke_native_cli(
+            profile,
+            *(
                 "app",
                 "modelo",
                 "iva-wallet",
@@ -352,11 +367,11 @@ def test_cli_override_verb_requires_evidence_locator(tmp_path: Path) -> None:
                 "--evidence-locator",
                 "   ",
                 "--confirm",
-            ],
-            env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
+            ),
         )
 
     assert result.exit_code != 0
+    assert not refused_for_want_of_an_operator(result), result.output
 
 
 def test_cli_seed_verb_refuses_duplicate(tmp_path: Path, authority_operation: PinnedAuthorityOperation) -> None:

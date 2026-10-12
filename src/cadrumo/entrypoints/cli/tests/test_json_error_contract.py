@@ -111,11 +111,19 @@ def _assert_shared_spine(document: dict[str, object]) -> dict[str, object]:
 
 
 def test_json_usage_error_emits_shared_spine_document() -> None:
-    """A parse-time bad value emits the error document, exit 2 preserved."""
-    result = invoke_cached_cli(["--format", "json", "app", "ledger", "view", "not-hex!"])
+    """A parse-time bad value emits the error document, exit 2 preserved.
+
+    The value is refused by Click while parsing, so no runtime or sign-in is
+    asked for. A malformed ledger handle is not this case: it is a domain
+    refusal reached only after the profile is admitted, and the native
+    companion module holds its envelope.
+    """
+    result = invoke_cached_cli(["--format", "json", "app", "ledger", "list", "--limit", "not-a-number"])
     assert result.exit_code == 2, result.output
     error = _assert_shared_spine(require_error_document(result.output))
     assert error["category"] == "REFUSED"
+    assert error["code"] == "REFUSED_CLI_BOUNDARY", result.output
+    assert "--limit" in str(error["message"]), result.output
     assert "Usage:" not in result.output
 
 

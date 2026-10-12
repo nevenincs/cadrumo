@@ -40,7 +40,7 @@ is live coverage rather than a leftover.
 from __future__ import annotations
 
 import json
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from pathlib import Path
 
 import pytest
@@ -50,8 +50,10 @@ from cadrumo.adapters.persistence.profile.tests.profile_registration import regi
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 
 from ....adapters.persistence.storage.tests.profile_storage_root_fixture import profile_storage_root_fixture
+from ....core.bucket_pointer import pointer_path
 from ....core.config import load_settings
 from ....core.i18n.render import tr
+from ....core.paths import effective_storage_root
 from ....core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from ..config.tests.isolated_storage_fixture import native_profile_view_server
 from ._profile_cli_support import invoke_protected_profile
@@ -68,10 +70,13 @@ _UPDATED = tr("wizard.commands.status.updated", locale="en")
 
 
 @pytest.fixture(autouse=True)
-def _isolated_backend(profile_storage_root: Path) -> Path:
+def _isolated_backend(profile_storage_root: Path) -> Iterator[Path]:
     # open_test_profile_session (called inside seed) resolves the
-    # file-backed master-key provider provisioned by this fixture.
-    return profile_storage_root
+    # file-backed master-key provider provisioned by this fixture. Sign-in and
+    # every profile verb are hosted by the runtime, so the root is served by
+    # native profile workers, one connection per profile as on the desktop.
+    with native_profile_view_server(profile_storage_root):
+        yield profile_storage_root
 
 
 def _invoke_config(args: Sequence[str]) -> Result:
@@ -118,8 +123,14 @@ def _login(name: str) -> Result:
     )
 
 
-def _logout() -> Result:
-    return invoke_cached_cli(("config", "logout"))
+def _clear_selection() -> None:
+    """Leave the registered profiles with none selected.
+
+    Deleting the selected profile is refused, and signing out keeps the
+    selection, so a test that deletes the profile it registered first leaves
+    it unselected; what sign-out answers is held by the logout tests.
+    """
+    pointer_path(effective_storage_root()).unlink()
 
 
 def _invoke_profile(args: Sequence[str]) -> Result:
@@ -188,12 +199,12 @@ def test_registering_a_second_profile_uses_its_own_identity_while_the_first_is_a
     assert " 	alpha" in listing.output
     assert "*	beta" in listing.output
 
-    # One process holds one bound session, so each profile is unlocked
-    # before its own facts are read.
+    # Each profile is signed in, and its facts are read with its own password
+    # proof, as a later process without a saved sign-in reads them.
     assert _login("alpha").exit_code == 0
-    alpha_show = invoke_cached_cli(("--profile", "alpha", "config", "profile", "view"))
+    alpha_show = invoke_protected_profile("alpha", "view")
     assert _login("beta").exit_code == 0
-    beta_show = invoke_cached_cli(("--profile", "beta", "config", "profile", "view"))
+    beta_show = invoke_protected_profile("beta", "view")
     assert alpha_show.exit_code == 0, alpha_show.output
     assert beta_show.exit_code == 0, beta_show.output
 
@@ -292,7 +303,7 @@ def test_config_profile_edit_refuses_missing_profile_without_creating_bucket() -
     assert result.exit_code != 0
     # With no profile registered at all, the refusal is the stable
     # no-active-profile condition rather than localised prose.
-    assert 'failed_condition_id: "profile.active"' in result.output
+    assert 'failed_condition_id: "profile.active.available"' in result.output
     assert read_profile_bucket("ghost") is None
 
 
@@ -333,8 +344,7 @@ def test_config_login_emits_profile_activated_event() -> None:
 def test_config_profile_view_emits_active_profile_facts(_isolated_backend: Path) -> None:
     # Selection supplies the target; password proof authorizes its runtime read.
     register_cli_profile(log_in=False, label="operator", facts={"identity.tax_id": "00000000T"})
-    with native_profile_view_server(_isolated_backend):
-        result = invoke_protected_profile("operator", "view")
+    result = invoke_protected_profile("operator", "view")
     assert result.exit_code == 0, result.output
     assert f"profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}" in result.output
     assert "display_name\toperator" in result.output
@@ -350,8 +360,7 @@ def test_config_profile_view_named_profile_includes_canonical_facts(_isolated_ba
     # A named target is authenticated independently of ambient selection.
     register_cli_profile(log_in=False, label="operator", facts={"identity.tax_id": "00000001R"})
     register_cli_profile(log_in=False, label="spouse", facts={"identity.tax_id": "00000000T"})
-    with native_profile_view_server(_isolated_backend):
-        result = invoke_protected_profile("spouse", "view", "spouse")
+    result = invoke_protected_profile("spouse", "view", "spouse")
     assert result.exit_code == 0, result.output
     assert f"profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}" in result.output
     assert "display_name\tspouse" in result.output
@@ -371,10 +380,10 @@ def test_config_profile_delete_requires_yes() -> None:
 
 
 def test_config_profile_delete_tombstones_with_yes() -> None:
-    # Registration activates the profile, and deleting the ACTIVE profile is
-    # refused, so the session is closed before the verb under test.
+    # Registration selects the profile, and deleting the selected profile is
+    # refused, so the selection is cleared before the verb under test.
     register_cli_profile(log_in=False, label="operator")
-    assert _logout().exit_code == 0
+    _clear_selection()
     result = _invoke_profile_app(("delete", "operator", "--yes"))
     assert result.exit_code == 0, result.output
     assert "deleted\ttrue" in result.output
@@ -390,10 +399,10 @@ def test_config_profile_list_excludes_a_tombstoned_profile() -> None:
     listing, indistinguishable from a live one.
     """
 
-    # Registration activates the profile, and deleting the ACTIVE profile is
-    # refused, so the session is closed before the verb under test.
+    # Registration selects the profile, and deleting the selected profile is
+    # refused, so the selection is cleared before the verb under test.
     register_cli_profile(log_in=False, label="operator")
-    assert _logout().exit_code == 0
+    _clear_selection()
     assert _invoke_profile_app(("delete", "operator", "--yes")).exit_code == 0
     result = _invoke_profile(("list",))
     assert result.exit_code == 0, result.output
@@ -414,7 +423,7 @@ def test_config_login_refuses_a_tombstoned_profile() -> None:
     # session key, not a passphrase-backed custody envelope, so ``config login``
     # has no operator passphrase to accept.
     register_cli_profile(log_in=False, label="operator")
-    assert _logout().exit_code == 0
+    _clear_selection()
     assert _invoke_profile_app(("delete", "operator", "--yes")).exit_code == 0
     result = _login("operator")
     assert result.exit_code != 0, result.output
@@ -427,13 +436,13 @@ def test_config_profile_view_refuses_a_deleted_profile_by_label_and_uuid() -> No
 
     from ....application.workflow.profile_bucket_scan import read_profile_bucket
 
-    # Registration activates the profile, and deleting the ACTIVE profile is
-    # refused, so the session is closed before the verb under test.
+    # Registration selects the profile, and deleting the selected profile is
+    # refused, so the selection is cleared before the verb under test.
     register_cli_profile(log_in=False, label="operator")
     pointer = read_profile_bucket("operator")
     assert pointer is not None
     deleted_uuid = pointer.bucket_id
-    assert _logout().exit_code == 0
+    _clear_selection()
 
     assert _invoke_profile_app(("delete", "operator", "--yes")).exit_code == 0
     by_label = _invoke_profile(("view", "operator"))
@@ -449,8 +458,7 @@ def test_config_profile_view_runs_validation_inline(_isolated_backend: Path) -> 
     # Registered and logged in: `seed` opens a session that closes with its
     # context, leaving the verb with no active profile.
     register_cli_profile(log_in=False, label="operator")
-    with native_profile_view_server(_isolated_backend):
-        result = invoke_protected_profile("operator", "view")
+    result = invoke_protected_profile("operator", "view")
     assert result.exit_code == 0, result.output
     assert f"profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}" in result.output
     assert "display_name\toperator" in result.output
@@ -489,9 +497,8 @@ def test_show_and_status_do_not_contradict_on_a_registered_profile(_isolated_bac
         },
     )
 
-    with native_profile_view_server(_isolated_backend):
-        show_result = invoke_protected_profile("maria", "view", "maria")
-        status_result = invoke_protected_profile("maria", "status")
+    show_result = invoke_protected_profile("maria", "view", "maria")
+    status_result = invoke_protected_profile("maria", "status")
 
     assert show_result.exit_code == 0, show_result.output
     assert status_result.exit_code == 0, status_result.output
@@ -529,21 +536,20 @@ def test_config_profile_edit_quiet_emits_updated_confirmation(_isolated_backend:
     """``profile edit --quiet`` must emit a confirmation line with ``Status\\tupdated``."""
 
     register_cli_profile(log_in=False, label="editme")
-    with native_profile_view_server(_isolated_backend):
-        result = invoke_protected_profile(
-            "editme",
-            "edit",
-            "--quiet",
-            "--tax-id",
-            "12345678Z",
-            "--name",
-            "Edited",
-            "--activity",
-            "Design",
-            "--iva-regime",
-            "GENERAL",
-            language="en",
-        )
+    result = invoke_protected_profile(
+        "editme",
+        "edit",
+        "--quiet",
+        "--tax-id",
+        "12345678Z",
+        "--name",
+        "Edited",
+        "--activity",
+        "Design",
+        "--iva-regime",
+        "GENERAL",
+        language="en",
+    )
 
     assert result.exit_code == 0, result.output
     assert f"{_PROFILE_LABEL}\teditme" in result.output
@@ -562,8 +568,7 @@ def test_config_profile_edit_non_tty_recovery_hint_points_at_edit(_isolated_back
     """
 
     register_cli_profile(log_in=False, label="editme")
-    with native_profile_view_server(_isolated_backend):
-        result = invoke_protected_profile("editme", "edit")
+    result = invoke_protected_profile("editme", "edit")
 
     assert result.exit_code != 0, result.output
     assert "Traceback" not in result.output
