@@ -312,6 +312,7 @@ without its options and arguments.
 | `aeat config profile automation create` | none | the person's act |
 | `aeat config profile automation decline` | `user-profile.automation-decline`, `user-profile.automation-inventory` | the person's act |
 | `aeat config profile automation deny` | none | the person's act |
+| `aeat config profile automation disclosures` | `user-profile.automation-inventory` | the person's act |
 | `aeat config profile automation inspect` | `user-profile.automation-inventory` | the person's act |
 | `aeat config profile automation list` | `user-profile.automation-inventory` | the person's act |
 | `aeat config profile capabilities set` | `user-profile.field-mutation`, `user-profile.view` | none |

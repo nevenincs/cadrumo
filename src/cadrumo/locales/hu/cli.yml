@@ -2350,6 +2350,17 @@ cli:
           target_help: A visszavonandó kulcs vagy jogosultság UUID-azonosítója.
           target_mismatch: Kulcs vagy jogosultság visszavonásához szükséges a cél
             UUID-ja; az all típus nem fogad el célt.
+        disclosures:
+          expected_digest_help: Egy korábbi oldal által kiírt kivonat; az olvasást
+            elutasítja, ha a lista azóta megváltozott.
+          help: Egy engedély vagy függő kérelem kiadott adatainak megszámolása kategóriánként,
+            és a teljes lista egy oldalának kiírása.
+          invalid_page: A --offset legyen nulla vagy nagyobb egész szám, a --expected-digest
+            pedig egy korábbi oldal által kiírt kivonat.
+          offset_help: Az a bejegyzés, amelynél az oldal kezdődik; add meg az előző
+            oldal next_offset értékét.
+          target_help: Annak az engedélynek vagy függő kérelemnek az azonosítója,
+            amelynek kiadott adatait olvasni szeretnéd.
         help: A profil automatizált hozzáférésének kezelése.
         inspect:
           help: A felülvizsgált automatizálási kérelem pontos megjelenítése.

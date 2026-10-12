@@ -13,9 +13,13 @@ def scope_is_subset(child: AccessScope, parent: AccessScope) -> bool:
     A listed disclosure narrows a parent that lists it or grants its whole
     category; a category grant narrows only a parent that grants the same
     category to the same destination, since no list proves a category whole.
+    Operations follow the same rule: a listed operation narrows a parent that
+    lists it or grants every agent operation, and that grant narrows only a
+    parent that grants it too.
     """
     return (
-        child.operations <= parent.operations
+        all(parent.permits(item) for item in child.operations)
+        and (not child.all_agent_operations or parent.all_agent_operations)
         and child.actions <= parent.actions
         and all(parent.discloses(item) for item in child.disclosures)
         and child.disclosure_categories <= parent.disclosure_categories
@@ -29,8 +33,10 @@ def intersect_scopes(scopes: tuple[AccessScope, ...]) -> AccessScope:
     """Intersect explicit permissions; an empty authority chain grants nothing.
 
     A listed disclosure survives when every scope lists it or grants its
-    category. Category grants survive only where every scope grants them, so
-    intersecting with a resolved, listed scope leaves only listed disclosures.
+    category, and a listed operation when every scope lists it or grants every
+    agent operation. Category and operation grants survive only where every
+    scope grants them, so intersecting with a resolved, listed scope leaves
+    only listed permissions.
     """
     if not scopes:
         return AccessScope(
@@ -42,21 +48,22 @@ def intersect_scopes(scopes: tuple[AccessScope, ...]) -> AccessScope:
             allow_delegation=False,
         )
     first, *rest = scopes
-    operations, actions, periods = first.operations, first.actions, first.periods
+    actions, periods = first.actions, first.periods
     categories = first.disclosure_categories
     for scope in rest:
-        operations &= scope.operations
         actions &= scope.actions
         categories &= scope.disclosure_categories
         if scope.periods is not None:
             periods = scope.periods if periods is None else periods & scope.periods
     listed = frozenset(item for scope in scopes for item in scope.disclosures)
+    named = frozenset(item for scope in scopes for item in scope.operations)
     return AccessScope(
-        operations=operations,
+        operations=frozenset(item for item in named if all(scope.permits(item) for scope in scopes)),
         actions=actions,
         disclosures=frozenset(item for item in listed if all(scope.discloses(item) for scope in scopes)),
         periods=periods,
         allow_period_independent=all(scope.allow_period_independent for scope in scopes),
         allow_delegation=all(scope.allow_delegation for scope in scopes),
         disclosure_categories=categories,
+        all_agent_operations=all(scope.all_agent_operations for scope in scopes),
     )

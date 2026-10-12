@@ -30,6 +30,7 @@ from ._profile_support import require_active_profile_pointer
 from .runtime_access_management_payloads import (
     ConfigProfileAutomationDecisionResult,
     ConfigProfileAutomationDenyResult,
+    ConfigProfileAutomationDisclosuresResult,
     ConfigProfileAutomationInspectResult,
     ConfigProfileAutomationListResult,
     ConfigProfileDisclosuresResult,
@@ -175,6 +176,54 @@ def automation_list(ctx: typer.Context, output_language: OutputLanguage | None =
     )
 
 
+def automation_disclosures(
+    ctx: typer.Context,
+    target_id: UUID,
+    offset: int = 0,
+    expected_digest: str | None = None,
+    output_language: OutputLanguage | None = None,
+) -> None:
+    """Count one grant's or pending request's disclosures by category and print one page of the list.
+
+    Each run reads the inventory afresh; ``--expected-digest`` pins a later
+    page to the list an earlier run counted, and is refused if it changed.
+    """
+    client = _client(ctx, requested_language=output_language)
+    try:
+        request = DisclosurePageRequest(offset=offset, expected_digest=expected_digest)
+    except ValueError:
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.profile.automation.disclosures.invalid_page"
+        ) from None
+    try:
+        completed = read_automation_inventory(client, disclosures_of=target_id, disclosure_page=request)
+    except RuntimeFrontendRefusedError as error:
+        raise _refused(error) from error
+    page = completed.projection.disclosure_page
+    if page is None:
+        raise CliRefusedBoundaryError(translated_message="cli.config.profile.automation.review_not_found")
+    emit_envelope(
+        ctx,
+        command="config.profile.automation.disclosures",
+        result=ConfigProfileAutomationDisclosuresResult(
+            profile_id=client.profile_id,
+            inventory_operation_id=completed.operation_id,
+            target_id=target_id,
+            page=page,
+        ),
+        lines=(
+            f"target_id\t{target_id}",
+            f"disclosures\t{page.total}\t{page.disclosure_digest}",
+            *(f"category\t{item.category.value}\t{item.count}" for item in page.disclosure_summary),
+            *(
+                f"disclosure\t{item.category.value}\t{item.projection_id}\t{item.destination_id}"
+                for item in page.entries
+            ),
+            f"page\t{page.offset}\t{page.total}\t{'' if page.next_offset is None else page.next_offset}",
+        ),
+    )
+
+
 def _review(client: RuntimeFrontendClient, request_id: UUID) -> tuple[OperationId, AutomationReviewProjection]:
     """Find one exact currently reviewed request before any approval proof read."""
     try:
@@ -200,13 +249,14 @@ def _scope_lines(scope: AutomationScopeProjection) -> tuple[str, ...]:
         if not scope.periods
         else ",".join(f"{item.filing_year}/{item.code}" for item in scope.periods)
     )
-    disclosures = ",".join(
-        f"{item.destination_id}/{item.projection_id}/{item.category.value}" for item in scope.disclosures
-    )
+    categories = ",".join(f"{item.destination_id}/{item.category.value}" for item in scope.disclosure_categories)
     return (
         f"operations\t{','.join(scope.operations)}",
+        f"all_agent_operations\t{str(scope.all_agent_operations).lower()}",
         f"actions\t{','.join(item.value for item in scope.actions)}",
-        f"disclosures\t{disclosures}",
+        f"disclosures\t{scope.disclosure_count}\t{scope.disclosure_digest}",
+        *(f"disclosure_category_count\t{item.category.value}\t{item.count}" for item in scope.disclosure_summary),
+        f"disclosure_categories\t{categories}",
         f"periods\t{periods}",
         f"allow_period_independent\t{str(scope.allow_period_independent).lower()}",
         f"allow_delegation\t{str(scope.allow_delegation).lower()}",

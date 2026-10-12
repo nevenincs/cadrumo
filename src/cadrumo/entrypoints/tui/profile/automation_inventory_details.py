@@ -22,9 +22,8 @@ def _detail(label: str, value: object) -> str:
 
 
 def _scope(scope: AutomationScopeProjection) -> tuple[str, ...]:
-    disclosures = tuple(
-        f"{item.destination_id}/{item.projection_id}/{item.category.value}" for item in scope.disclosures
-    )
+    counted = ", ".join(f"{item.category.value} {item.count}" for item in scope.disclosure_summary)
+    categories = ", ".join(f"{item.category.value} ({item.destination_id})" for item in scope.disclosure_categories)
     if scope.periods is None:
         periods = tr("tui.automation_inventory.all_periods")
     elif not scope.periods:
@@ -32,9 +31,12 @@ def _scope(scope: AutomationScopeProjection) -> tuple[str, ...]:
     else:
         periods = ", ".join(f"{item.filing_year}/{item.code}" for item in scope.periods)
     return (
-        _detail("operations", ", ".join(scope.operations)),
+        _detail("operations", tr("tui.automation_inventory.all_agent_operations"))
+        if scope.all_agent_operations
+        else _detail("operations", ", ".join(scope.operations)),
         _detail("actions", ", ".join(item.value for item in scope.actions)),
-        _detail("disclosures", ", ".join(disclosures)),
+        _detail("disclosures", f"{scope.disclosure_count} ({counted})" if scope.disclosure_count else "0"),
+        *((_detail("disclosure_categories", categories),) if categories else ()),
         _detail("periods", periods),
         _detail("delegation", scope.allow_delegation),
         _detail("period_independent", scope.allow_period_independent),

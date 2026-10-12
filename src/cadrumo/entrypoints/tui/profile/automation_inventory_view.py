@@ -45,6 +45,7 @@ class AutomationInventoryViewMixin:
     def _clear(self: RuntimeAutomationInventoryScreen) -> None:
         self._inventory = None
         self._selected_review = None
+        self._select_disclosures(None, None)
         for table in self.query("DataTable"):
             cast("DataTable[str]", table).clear()
         for details in self.query(Static):
@@ -73,6 +74,11 @@ class AutomationInventoryViewMixin:
             for item in rows:
                 table.add_row(*_table_row(item))
         self.query_one("#automation-inventory-details", Static).update(_first_detail(inventory))
+        if inventory.grants:
+            self._select_disclosures(inventory.grants[0].grant_id, inventory.grants[0].scope.disclosure_digest)
+        elif inventory.requests:
+            first = inventory.requests[0]
+            self._select_disclosures(first.receipt.request_id, first.proposal.scope.disclosure_digest)
         self.query_one("#automation-inventory-status", Static).update("")
         self._decision_controls()
 
@@ -88,12 +94,18 @@ class AutomationInventoryViewMixin:
         table = cast("DataTable[str]", event.data_table)
         if table.id == "automation-inventory-grants" and index < len(inventory.grants):
             self._selected_review = None
-            details = _grant_detail(inventory.grants[index])
+            grant = inventory.grants[index]
+            self._select_disclosures(grant.grant_id, grant.scope.disclosure_digest)
+            details = _grant_detail(grant)
         elif table.id == "automation-inventory-keys" and index < len(inventory.keys):
             self._selected_review = None
+            self._select_disclosures(None, None)
             details = _key_detail(inventory.keys[index])
         elif table.id == "automation-inventory-requests" and index < len(inventory.requests):
             self._selected_review = inventory.requests[index]
+            self._select_disclosures(
+                self._selected_review.receipt.request_id, self._selected_review.proposal.scope.disclosure_digest
+            )
             details = _request_detail(self._selected_review)
         else:
             return

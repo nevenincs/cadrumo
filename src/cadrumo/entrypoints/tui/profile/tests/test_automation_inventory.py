@@ -26,6 +26,7 @@ from cadrumo.application.user_profile.access_contracts import (
     Availability,
     EffectiveScopeSummary,
     ProfileAccessStatus,
+    disclosure_digest,
 )
 from cadrumo.application.user_profile.access_projections import PublicAccessSession
 from cadrumo.application.user_profile.automation_enrollment import (
@@ -112,7 +113,9 @@ def _inventory(profile_id: UUID) -> AutomationInventoryProjection:
     scope = AutomationScopeProjection(
         operations=("user-profile.field-mutation", "[red]literal-operation[/red]"),
         actions=(),
-        disclosures=(),
+        disclosure_count=0,
+        disclosure_summary=(),
+        disclosure_digest=disclosure_digest(()),
         periods=(AutomationPeriodProjection(filing_year=2026, code="3T"),),
         allow_period_independent=False,
         allow_delegation=False,

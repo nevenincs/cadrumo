@@ -105,6 +105,10 @@ class AccessScope(BaseModel):
     cannot turn a period-restricted grant into unrestricted access.
     ``disclosure_categories`` consents to whole categories for one destination;
     it is absent from every scope that predates it, which consented to none.
+    ``all_agent_operations`` consents to every registered operation an agent
+    may run, the person's own acts excluded; it is false in every scope that
+    predates it, which named its operations one by one. Admission resolves
+    both against the live operation registry, so a lease never carries either.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -116,6 +120,15 @@ class AccessScope(BaseModel):
     allow_period_independent: bool
     allow_delegation: bool
     disclosure_categories: frozenset[DisclosureCategoryGrant] = frozenset[DisclosureCategoryGrant]()
+    all_agent_operations: bool = False
+
+    def permits(self, operation: str) -> bool:
+        """Whether this scope consents to one operation, listed or as one an agent may run.
+
+        Which operations an agent may run is the registry's to say; a scope
+        granting them all is resolved into a list at admission.
+        """
+        return operation in self.operations or self.all_agent_operations
 
     def discloses(self, permission: DisclosurePermission) -> bool:
         """Whether this scope consents to one explicit permission, listed or by its category."""

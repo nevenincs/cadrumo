@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#mcp-parity'
 date: '2026-10-10'
-modified: '2026-10-12'
+modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:4b4da93061ea4d3c16a69c1c3f7d45457cafc99988b861f44432a192ddb8e30c'
+body_hash: 'sha256:0df9fb613330f733260ed68cae7dbd3feaf333c925c0d94325eb11d1f65aeb95'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -2465,6 +2465,32 @@ related:
 - `S72` `verify:` `pytest test_runtime_automation_agent_key_native: skipped, credential store refuses this logon (WinError 1312)` -> `pass`
 - `S72` `verify:` `pytest mcp harness, runtime, cli suites (3379 passed, 2 failed in config sign-in-hold surfaces, not this Step)` -> `fail`
 - `S72` `verify:` `just check-import-boundaries: contracts 15/15 kept; verdict failed on test-scoped findings elsewhere and a tree changed during the run` -> `fail`
+- `S72` `A` `src/cadrumo/entrypoints/tui/profile/automation_inventory_disclosures.py`
+- `S72` `M` `src/cadrumo/application/user_profile/automation_agent_key.py`
+- `S72` `M` `src/cadrumo/application/user_profile/automation_operations.py`
+- `S72` `M` `src/cadrumo/application/user_profile/tests/test_automation_agent_key.py`
+- `S72` `M` `src/cadrumo/adapters/local_runtime/automation_inventory.py`
+- `S72` `M` `src/cadrumo/adapters/local_runtime/tests/test_automation_decision.py`
+- `S72` `M` `src/cadrumo/entrypoints/cli/command_operation_table.py`
+- `S72` `M` `src/cadrumo/entrypoints/cli/config/runtime_access_management.py`
+- `S72` `M` `src/cadrumo/entrypoints/cli/config/runtime_access_management_payloads.py`
+- `S72` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_agent_key.py`
+- `S72` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_decision.py`
+- `S72` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_list.py`
+- `S72` `M` `src/cadrumo/entrypoints/cli/tests/command_frontend_counterparts.py`
+- `S72` `M` `src/cadrumo/entrypoints/tui/profile/automation_inventory.py`
+- `S72` `M` `src/cadrumo/entrypoints/tui/profile/automation_inventory_decisions.py`
+- `S72` `M` `src/cadrumo/entrypoints/tui/profile/automation_inventory_details.py`
+- `S72` `M` `src/cadrumo/entrypoints/tui/profile/automation_inventory_view.py`
+- `S72` `M` `src/cadrumo/entrypoints/tui/profile/tests/test_automation_inventory.py`
+- `S72` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_access_management.py`
+- `S72` `M` `src/cadrumo/entrypoints/cli/tests/command_operation_derivation.py`
+- `S72` `M` `src/cadrumo_harness/_data/agent/reference/command-operations.md`
+- `S72` `verify:` `ruff, ruff format --check, ty on 28 touched files` -> `pass`
+- `S72` `verify:` `test_runtime_automation_agent_key both cases incl. ten agent keys listed, paged and revoked (3 consecutive passes)` -> `pass`
+- `S72` `verify:` `pytest cli/config, user_profile, custody, automation_decision, tui/secret, tui/profile (2121 passed, 140 skipped; the 2 access-management failures then fixed and rerun)` -> `pass`
+- `S72` `verify:` `pytest mcp harness, harness, runtime, cli (3377 passed; join failures fixed and rerun; 2 remaining in config sign-in-hold surfaces, owned by tui-b3)` -> `fail`
+- `S72` `verify:` `just check-types: 26 ty diagnostics, none in this Step's files` -> `fail`
 
 ## Notes
 
@@ -2554,3 +2580,4 @@ related:
 - `S71` harness: 1 failure, `test_installed_sign_in_resume` fresh installed process, outside the disclosure path; sign-in suites: framing and lease-transfer fixtures fixed and rerun green, `mcp_operation_discovery` and `mcp_attended_adapter` pass serially (load timeouts); CLI/TUI: specs test fixed, remaining 4 (installed TUI child AttributeError `subscribe_lifecycle_notices,` native session inventory, `runtime_login` prompt) do not reach the disclosure code; boundaries: 15 contracts kept, 2 new test-scoped sibling edges from `test_disclosure_summary.py` `(cli_runner,` `tui.disclosure_pages)` await ratchet approval, the rest pre-existing; `frontend_client.py` hunks were swept into fa4f7dc9c5 by another session
 - `S71` boundaries: the two `test_disclosure_summary` sibling edges are gone (new unapproved 144 to 142, none disclosure); the remaining failures are 188 hard findings, 142 ratchet occurrences and a `dev.agent_eval.live` `__main__` load failure, none from S71
 - `S72` Inventory and review count-and-page summaries (b) not built: S71's `page_disclosures` is not in HEAD, and an agent key now stores category grants (about 8 KB, mostly the explicit operation list), so the measured blocker is gone; the operation list still caps the inventory at a few agent grants.
+- `S72` Follow-up: an agent key stores one grant of every agent operation; its proposal is 721 bytes (about 47 KB listed, about 8 KB with category grants alone). Inventory and review count disclosures by category and page the full list. Ten-key test once refused an approval with `REFUSED_AUTOMATION_ADMINISTRATION` under heavy concurrent load, as the single-key test did once earlier; not reproduced in 30 later approvals.

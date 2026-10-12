@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from contextlib import suppress
 from typing import ClassVar, cast, override
+from uuid import UUID
 
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -21,11 +22,13 @@ from ....application.user_profile.automation_enrollment import (
     AutomationInventoryProjection,
     AutomationReviewProjection,
 )
+from ....application.user_profile.disclosure_paging import DisclosurePager
 from ....core.async_cleanup import await_cancellation_complete
 from ....core.i18n.render import tr
 from ..bound_session import BoundSession
 from ..components.theme import tokenised
 from .automation_inventory_decisions import AutomationInventoryDecisionMixin
+from .automation_inventory_disclosures import AutomationInventoryDisclosureMixin
 from .automation_inventory_view import AutomationInventoryViewMixin
 
 _STATUS_TASK_NAME = "tui-automation-inventory-status"
@@ -46,6 +49,7 @@ async def _read_inventory(
 
 
 class RuntimeAutomationInventoryScreen(
+    AutomationInventoryDisclosureMixin,
     AutomationInventoryDecisionMixin,
     AutomationInventoryViewMixin,
     ModalScreen[bool | None],
@@ -79,6 +83,9 @@ class RuntimeAutomationInventoryScreen(
         self._binding = BoundSession(client)
         self._inventory: AutomationInventoryProjection | None = None
         self._selected_review: AutomationReviewProjection | None = None
+        self._disclosure_target: UUID | None = None
+        self._disclosure_digest: str | None = None
+        self._disclosure_pager: DisclosurePager | None = None
         self._worker: Worker[None] | None = None
         self._busy = False
         self._live = True
@@ -104,6 +111,7 @@ class RuntimeAutomationInventoryScreen(
                 yield Static("", id="automation-inventory-details", markup=False)
             yield Static("", id="automation-inventory-status", markup=False)
             yield Button(tr("tui.automation_inventory.refresh"), id="automation-inventory-refresh")
+            yield Button(tr("tui.restricted.disclosures_next"), id="automation-inventory-disclosures", disabled=True)
             yield Button(tr("tui.automation_inventory.approve"), id="automation-inventory-approve", disabled=True)
             yield Button(tr("tui.automation_inventory.decline"), id="automation-inventory-decline", disabled=True)
             yield Button(tr("tui.automation_inventory.close"), id="automation-inventory-close")

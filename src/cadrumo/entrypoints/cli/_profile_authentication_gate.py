@@ -300,6 +300,7 @@ _RUNTIME_PROFILE_KEYS = frozenset(
         "config_profile_sessions",
         "config_profile_automation_deny",
         "config_profile_automation_list",
+        "config_profile_automation_disclosures",
         "config_profile_automation_inspect",
         "config_profile_automation_approve",
         "config_profile_automation_decline",

@@ -45,7 +45,7 @@ from cadrumo.application.runtime.operation_access import (
     RuntimeOperationSubmit,
     RuntimeOperationSubmitted,
 )
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
+from cadrumo.application.user_profile.access_contracts import AccessDenialCode, disclosure_digest
 from cadrumo.application.user_profile.automation_enrollment import (
     AutomationProposalProjection,
     AutomationReceiptProjection,
@@ -92,7 +92,9 @@ def _review(profile_id: UUID, *, kind: EnrollmentKind = EnrollmentKind.ENROLL) -
             scope=AutomationScopeProjection(
                 operations=(),
                 actions=(),
-                disclosures=(),
+                disclosure_count=0,
+                disclosure_summary=(),
+                disclosure_digest=disclosure_digest(()),
                 periods=None,
                 allow_period_independent=True,
                 allow_delegation=False,

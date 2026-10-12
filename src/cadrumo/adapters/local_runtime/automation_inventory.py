@@ -16,6 +16,7 @@ from ...application.operations.models import OperationId
 from ...application.operations.registry import OperationPublicDefinitionContractV1
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.deadline_budget import bounded_deadline_after
+from ...application.user_profile.access_contracts import DisclosurePageRequest
 from ...application.user_profile.automation_enrollment import AutomationInventoryProjection
 from ...application.user_profile.automation_operations import (
     AUTOMATION_INVENTORY_OPERATION_DEFINITION_ID,
@@ -106,8 +107,17 @@ def _exact_profile(projection: AutomationInventoryProjection, profile_id: UUID) 
     )
 
 
-def read_automation_inventory(client: RuntimeFrontendClient, *, timeout: float = 60) -> AutomationInventoryCompletion:
+def read_automation_inventory(
+    client: RuntimeFrontendClient,
+    *,
+    timeout: float = 60,
+    disclosures_of: UUID | None = None,
+    disclosure_page: DisclosurePageRequest | None = None,
+) -> AutomationInventoryCompletion:
     """Return only a settled, exact-profile public inventory under human authority.
+
+    Naming a grant or pending request in ``disclosures_of`` also returns one
+    page of its disclosures, from ``disclosure_page`` or the start.
 
     A timeout or refusal after submission carries its operation ID. An observed
     terminal condition/effect is included only when canonical observation
@@ -120,7 +130,12 @@ def read_automation_inventory(client: RuntimeFrontendClient, *, timeout: float =
         pinned,
         definition_id=contract.definition_id,
         subject_ref=subject_ref,
-        payload_json=AutomationOperationRequest(profile_id=profile_id, request_id=uuid4()).model_dump_json(),
+        payload_json=AutomationOperationRequest(
+            profile_id=profile_id,
+            request_id=uuid4(),
+            disclosures_of=disclosures_of,
+            disclosure_page=disclosure_page,
+        ).model_dump_json(),
         deadline=deadline,
     )
     operation_id = submitted.receipt.operation_id

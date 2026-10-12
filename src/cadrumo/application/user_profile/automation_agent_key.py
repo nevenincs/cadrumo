@@ -2,9 +2,10 @@
 
 The person names the key's use and any data categories beyond the profile's
 own values, which an agent key always reads and writes back; every other axis
-of the grant follows from that use. The grant consents to whole categories,
-not to a list of projections, so it stays small enough to review and a
-projection registered later in a category is covered too.
+of the grant follows from that use. The grant consents to whole categories
+and to every operation an agent may run, not to lists of projections and
+operations, so it stays small enough to review and hold many of, and a
+projection or operation registered later is covered too.
 
 The categories name no destination here: the runtime mints the requesting
 connection's client identity when it prepares the enrollment, the grant is
@@ -22,6 +23,7 @@ from datetime import datetime
 from enum import StrEnum
 from uuid import UUID
 
+from ..operations.person_acts import operation_is_persons_act
 from ..operations.registry import OperationPublicContractSetV1
 from .access_contracts import (
     GRANT_DEFAULT_VALIDITY,
@@ -62,18 +64,28 @@ def registered_disclosure_projections(contracts: OperationPublicContractSetV1) -
     )
 
 
+def agent_operations(contracts: OperationPublicContractSetV1) -> frozenset[str]:
+    """Return every registered operation an agent may run: all but the person's own acts."""
+    return frozenset(
+        str(contract.definition_id)
+        for contract in contracts.definitions
+        if not operation_is_persons_act(
+            str(contract.definition_id), ephemeral_secret_required=contract.ephemeral_secret_required
+        )
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class AgentKeyScope:
     """The destination-free scope of an agent key, ready to bind to the minted destination."""
 
-    operations: frozenset[str]
     actions: frozenset[AccessAction]
     categories: frozenset[DisclosureCategory]
 
     def bind(self, destination_id: UUID) -> AccessScope:
-        """Grant each category to the runtime-minted destination."""
+        """Grant every agent operation, and each category to the runtime-minted destination."""
         return AccessScope(
-            operations=self.operations,
+            operations=frozenset(),
             actions=self.actions,
             disclosures=frozenset(),
             periods=None,
@@ -83,23 +95,21 @@ class AgentKeyScope:
                 DisclosureCategoryGrant(destination_id=destination_id, category=category)
                 for category in self.categories
             ),
+            all_agent_operations=True,
         )
 
 
-def agent_key_scope(
-    contracts: OperationPublicContractSetV1, categories: Iterable[DisclosureCategory] = ()
-) -> AgentKeyScope:
-    """Scope a key for an agent to every registered operation, its profile values and the added categories.
+def agent_key_scope(categories: Iterable[DisclosureCategory] = ()) -> AgentKeyScope:
+    """Scope a key for an agent to every agent operation, its profile values and the added categories.
 
-    The agent works at parity inside the profile, so the operations and actions
-    are the owner's whole ceiling. A category outside
+    The agent works at parity inside the profile, so it may run every operation
+    an agent may run, with every action. A category outside
     ``AGENT_OPTIONAL_CATEGORIES`` and the always-granted ones is refused.
     """
     added = frozenset(categories) - AGENT_REQUIRED_CATEGORIES
     if not added <= frozenset(AGENT_OPTIONAL_CATEGORIES):
         raise ValueError("an agent key adds only its optional data categories")
     return AgentKeyScope(
-        operations=frozenset(str(contract.definition_id) for contract in contracts.definitions),
         actions=frozenset(AccessAction),
         categories=AGENT_REQUIRED_CATEGORIES | added,
     )
@@ -130,5 +140,6 @@ __all__ = [
     "AutomationKeyUse",
     "agent_key_proposal",
     "agent_key_scope",
+    "agent_operations",
     "registered_disclosure_projections",
 ]

@@ -17,6 +17,7 @@ from cadrumo.adapters.local_runtime.automation_decision import (
 )
 from cadrumo.adapters.local_runtime.automation_inventory import AutomationInventoryCompletion
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo.application.user_profile.access_contracts import disclosure_digest
 from cadrumo.application.user_profile.automation_enrollment import (
     AutomationInventoryProjection,
     AutomationProposalProjection,
@@ -75,7 +76,9 @@ def _review(profile_id: UUID) -> AutomationReviewProjection:
             scope=AutomationScopeProjection(
                 operations=("user-profile.field-mutation",),
                 actions=(),
-                disclosures=(),
+                disclosure_count=0,
+                disclosure_summary=(),
+                disclosure_digest=disclosure_digest(()),
                 periods=None,
                 allow_period_independent=True,
                 allow_delegation=False,

@@ -1814,6 +1814,7 @@ tui:
   automation_inventory:
     access_lost: Ez a profil-munkamenet már nem érhető el.
     actions: Engedélyezett lépések
+    all_agent_operations: bármely művelet, amelyet egy ügynök futtathat
     all_periods: Minden bevallási időszak
     approve: Kérelem jóváhagyása
     client: Kliens
@@ -1822,6 +1823,7 @@ tui:
     delegation: Továbbadási jog
     destination: Cél
     details: Részletek
+    disclosure_categories: Teljes kategóriák
     disclosures: Hozzáférhető adatok
     empty: Nincs elem
     expires: Lejárat

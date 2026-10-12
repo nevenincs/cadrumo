@@ -72,7 +72,7 @@ from ...application.user_profile.access_contracts import (
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.automation_administration import enrollment_review_digest, inspect_automation_inventory
 from ...application.user_profile.automation_administration_service import AutomationAdministrationService
-from ...application.user_profile.automation_agent_key import registered_disclosure_projections
+from ...application.user_profile.automation_agent_key import agent_operations, registered_disclosure_projections
 from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ...application.user_profile.automation_enrollment import (
     AdministrationFacts,
@@ -436,6 +436,8 @@ class RuntimeProfileHost:
     def scope(self, connection: ProfileConnection) -> AccessScope:
         """Derive the owner ceiling from the current canonical operation contracts."""
         categories = frozenset[DisclosureCategoryGrant]()
+        registered = frozenset(str(item.definition_id) for item in self._contracts.definitions)
+        operations, every_agent_operation = registered, True
         if connection.method == "api_key":
             snapshot = self.store.snapshot()
             grants = tuple(grant for grant in snapshot.grants if grant.client_id == connection.client_id)
@@ -452,6 +454,12 @@ class RuntimeProfileHost:
                 for item in grant.scope.disclosure_categories
                 for projection in projections
             )
+            # A grant of every agent operation is resolved the same way, so an
+            # operation registered later is covered and a person's act never is.
+            operations = registered & frozenset(item for grant in grants for item in grant.scope.operations)
+            if any(grant.scope.all_agent_operations for grant in grants):
+                operations |= agent_operations(self._contracts)
+            every_agent_operation = False
         else:
             permissions = frozenset(
                 DisclosurePermission(destination_id=connection.client_id, projection_id=projection, category=category)
@@ -472,13 +480,14 @@ class RuntimeProfileHost:
                 )
             )
         return AccessScope(
-            operations=frozenset(item.definition_id for item in self._contracts.definitions),
+            operations=operations,
             actions=frozenset(AccessAction),
             disclosures=permissions,
             periods=None,
             allow_period_independent=True,
             allow_delegation=True,
             disclosure_categories=categories,
+            all_agent_operations=every_agent_operation,
         )
 
     def facts(self, connection_id: UUID) -> SessionAuthorityFacts:

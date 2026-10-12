@@ -6,7 +6,8 @@ The agent's MCP server then presents the delivered key by reference only,
 reads a profile value back, patches the profile, mutates a field and adds,
 updates and removes a row, reading each change back, is refused a value
 outside the key's categories, and is refused everything once the person
-revokes the key.
+revokes the key. Ten such keys fit the person's inventory, each counted and
+paged there, and each revocable.
 
 The command line, the runtime, the native transport, the session authority,
 the profile worker, the profile's custody and the MCP server are real. The
@@ -22,9 +23,11 @@ import asyncio
 import json
 import sys
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
 from contextvars import copy_context
+from dataclasses import dataclass
 from importlib.metadata import version
 from pathlib import Path
 from threading import Event
@@ -50,6 +53,7 @@ from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEF
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.contracts import RuntimeClientHello
 from cadrumo.application.user_profile.access_contracts import (
+    AuthorityState,
     Availability,
     DisclosureCategory,
     LoginEligibility,
@@ -78,6 +82,9 @@ pytestmark = [
     pytest.mark.usefixtures("authority_operation"),
 ]
 
+_KEYS = 10
+"""More agent keys than an inventory of listed scopes could hold."""
+
 
 class _LoginObservation:
     login_id = "cli-automation-agent-key-login"
@@ -93,6 +100,22 @@ class _LoginObservation:
         )
 
 
+@dataclass(frozen=True)
+class _Runtime:
+    root: Path
+    endpoint: WindowsRuntimeEndpoint
+    profile_id: UUID
+    store: AutomationControlStore
+    pool: ThreadPoolExecutor
+
+
+@dataclass(frozen=True)
+class _IssuedKey:
+    reference: UUID
+    key_id: UUID
+    grant_id: UUID
+
+
 def _human(endpoint: WindowsRuntimeEndpoint, profile_id: UUID) -> RuntimeFrontendClient:
     """The person's own signed-in connection, separate from the requesting command."""
     raw = VerifiedRuntimeConnection(
@@ -103,6 +126,125 @@ def _human(endpoint: WindowsRuntimeEndpoint, profile_id: UUID) -> RuntimeFronten
     human = RuntimeFrontendClient(raw, profile_id=profile_id, frontend=OperationFrontendProjection.CLI)
     human.login_password(bytearray(PROFILE_INPUT.encode()), timeout=90)
     return human
+
+
+@contextmanager
+def _running_runtime(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[_Runtime]:
+    """Serve one synthetic profile from a real runtime, both native stores held by the test."""
+    with worker_profiles(tmp_path) as (root, targets):
+        profile_id = targets[-1][0].binding.profile_id
+        delete_profile_session(storage_root=root, profile_id=profile_id)
+        endpoint = WindowsRuntimeEndpoint(storage_root=root)
+        installation = runtime_installation(
+            storage_root=root, os_owner_id=owner_id(), storage_identity=endpoint.storage_identity
+        )
+        binding = current_automation_profile_binding(
+            profile_id=profile_id,
+            installation_id=installation.installation_id,
+            os_owner_id=installation.os_owner_id,
+            root=root,
+        )
+        server_native, client_native = MemoryNativePort(), MemoryNativePort()
+        monkeypatch.setattr(runtime_automation_request, "installed_automation_secret_store", lambda: client_native)
+        monkeypatch.setattr(runtime_credentials, "installed_automation_secret_store", lambda: client_native)
+        store = AutomationControlStore(root=root, binding=binding, secrets_store=server_native)
+        stop, boot = Event(), uuid4()
+        profiles = RuntimeProfileConnections(
+            storage_root=root,
+            storage_identity=endpoint.storage_identity,
+            runtime_boot_id=boot,
+            stop=stop,
+            capture_login=lambda _channel: _LoginObservation(),
+            secret_store=lambda: server_native,
+        )
+        profiles.prepare_registry()
+        server = RetainedRuntimeTransportServer(
+            endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
+        )
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            running = pool.submit(server.serve)
+            try:
+                assert server.ready.wait(3)
+                yield _Runtime(root, endpoint, profile_id, store, pool)
+            finally:
+                primary = sys.exception()
+                stop.set()
+                try:
+                    running.result(timeout=20)
+                except Exception:
+                    if primary is None:
+                        raise
+                finally:
+                    endpoint.close()
+
+
+def _issue_agent_key(runtime: _Runtime, *, check_review: bool = False) -> _IssuedKey:
+    """Run the real create command for an agent key and approve it from a separate signed-in connection."""
+
+    def invoke_create() -> Result:
+        with override_settings(
+            cadrumo_local_storage_root=runtime.root,
+            cadrumo_output_language="en",
+            cadrumo_cli_reveal_identifiers=True,
+        ):
+            return invoke_cached_cli(
+                (
+                    "--format",
+                    "json",
+                    "--profile",
+                    str(runtime.profile_id),
+                    "config",
+                    "profile",
+                    "automation",
+                    "create",
+                    "--use",
+                    "agent",
+                )
+            )
+
+    def pending() -> int:
+        return sum(item.stage is EnrollmentStage.REQUESTED for item in runtime.store.enrollment_state().requests)
+
+    creating = runtime.pool.submit(copy_context().run, invoke_create)
+    deadline = time.monotonic() + 60
+    while not pending() and time.monotonic() < deadline:
+        if creating.done():
+            pytest.fail(f"requester exited before a review existed: {creating.result()!r}")
+        time.sleep(0.05)
+    human = _human(runtime.endpoint, runtime.profile_id)
+    try:
+        (review,) = (
+            item
+            for item in read_automation_inventory(human).projection.requests
+            if item.receipt.stage is EnrollmentStage.REQUESTED
+        )
+        if check_review:
+            # The person reviews exactly what the agent's key will release, and to whom.
+            scope = review.proposal.scope
+            assert scope.operations == () and scope.all_agent_operations
+            assert scope.disclosure_count == 0
+            assert {item.category for item in scope.disclosure_categories} == {
+                DisclosureCategory.PROFILE_VALUES,
+                DisclosureCategory.OPERATION_METADATA,
+            }
+            assert {item.destination_id for item in scope.disclosure_categories} == {review.destination_id}
+            assert review.destination_id == review.client_id
+            assert review.proposal.unattended and not review.proposal.allow_os_lock
+        approved = run_automation_decision(
+            human, review, decision="approve", password=bytearray(PROFILE_INPUT.encode())
+        )
+        assert approved.receipt.stage is EnrollmentStage.COMPLETE
+    finally:
+        human.close()
+    created = cast(Result, creating.result(timeout=60))
+    assert created.exit_code == 0, created.output
+    result = json.loads(created.stdout)["result"]
+    assert result["terminal"]["stage"] == "complete"
+    return _IssuedKey(
+        reference=UUID(result["credential_reference"]),
+        key_id=UUID(result["terminal"]["key_id"]),
+        grant_id=UUID(result["terminal"]["grant_id"]),
+    )
 
 
 async def _agent_reads(profile_id: UUID, reference: UUID, revoke: Callable[[], object]) -> None:
@@ -141,113 +283,55 @@ async def _agent_reads(profile_id: UUID, reference: UUID, revoke: Callable[[], o
         await adapter.close()
 
 
+async def _refused_reference(profile_id: UUID, reference: UUID) -> None:
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=None)
+    try:
+        await adapter.bootstrap_reference(reference)
+        async with connected_server_and_client_session(build_server(adapter)) as sdk:
+            refused = await sdk.call_tool("describe", {"definition_id": AUTH_READ_OPERATION_DEFINITION_ID})
+            assert refused.is_error is True, refused.structured_content
+    finally:
+        await adapter.close()
+
+
 def test_a_key_issued_for_an_agent_on_the_command_line_reads_its_category_back_over_mcp(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    with worker_profiles(tmp_path) as (root, targets):
-        profile_id = targets[-1][0].binding.profile_id
-        delete_profile_session(storage_root=root, profile_id=profile_id)
-        endpoint = WindowsRuntimeEndpoint(storage_root=root)
-        installation = runtime_installation(
-            storage_root=root, os_owner_id=owner_id(), storage_identity=endpoint.storage_identity
-        )
-        binding = current_automation_profile_binding(
-            profile_id=profile_id,
-            installation_id=installation.installation_id,
-            os_owner_id=installation.os_owner_id,
-            root=root,
-        )
-        server_native, client_native = MemoryNativePort(), MemoryNativePort()
-        monkeypatch.setattr(runtime_automation_request, "installed_automation_secret_store", lambda: client_native)
-        monkeypatch.setattr(runtime_credentials, "installed_automation_secret_store", lambda: client_native)
-        store = AutomationControlStore(root=root, binding=binding, secrets_store=server_native)
-        stop, boot = Event(), uuid4()
-        profiles = RuntimeProfileConnections(
-            storage_root=root,
-            storage_identity=endpoint.storage_identity,
-            runtime_boot_id=boot,
-            stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
-            secret_store=lambda: server_native,
-        )
-        profiles.prepare_registry()
-        server = RetainedRuntimeTransportServer(
-            endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
-        )
-        with ThreadPoolExecutor(max_workers=2) as pool:
-            running = pool.submit(server.serve)
+    with _running_runtime(tmp_path, monkeypatch) as runtime:
+        issued = _issue_agent_key(runtime, check_review=True)
+
+        def revoke() -> None:
+            person = _human(runtime.endpoint, runtime.profile_id)
             try:
-                assert server.ready.wait(3)
-
-                def invoke_create() -> Result:
-                    with override_settings(
-                        cadrumo_local_storage_root=root,
-                        cadrumo_output_language="en",
-                        cadrumo_cli_reveal_identifiers=True,
-                    ):
-                        return invoke_cached_cli(
-                            (
-                                "--format",
-                                "json",
-                                "--profile",
-                                str(profile_id),
-                                "config",
-                                "profile",
-                                "automation",
-                                "create",
-                                "--use",
-                                "agent",
-                            )
-                        )
-
-                creating = pool.submit(copy_context().run, invoke_create)
-                deadline = time.monotonic() + 60
-                while not store.enrollment_state().requests and time.monotonic() < deadline:
-                    if creating.done():
-                        pytest.fail(f"requester exited before a review existed: {creating.result()!r}")
-                    time.sleep(0.05)
-                human = _human(endpoint, profile_id)
-                try:
-                    review = read_automation_inventory(human).projection.requests[0]
-                    # The person reviews exactly what the agent's key will release, and to whom.
-                    scope = review.proposal.scope
-                    assert not scope.disclosures
-                    assert {item.category for item in scope.disclosure_categories} == {
-                        DisclosureCategory.PROFILE_VALUES,
-                        DisclosureCategory.OPERATION_METADATA,
-                    }
-                    assert {item.destination_id for item in scope.disclosure_categories} == {review.destination_id}
-                    assert review.destination_id == review.client_id
-                    assert review.proposal.unattended and not review.proposal.allow_os_lock
-                    approved = run_automation_decision(
-                        human, review, decision="approve", password=bytearray(PROFILE_INPUT.encode())
-                    )
-                    assert approved.receipt.stage is EnrollmentStage.COMPLETE
-                finally:
-                    human.close()
-                created = cast(Result, creating.result(timeout=60))
-                assert created.exit_code == 0, created.output
-                result = json.loads(created.stdout)["result"]
-                assert result["terminal"]["stage"] == "complete"
-                reference = UUID(result["credential_reference"])
-                key_id = UUID(result["terminal"]["key_id"])
-
-                def revoke() -> None:
-                    person = _human(endpoint, profile_id)
-                    try:
-                        person.deny_automation(AutomationDenialKind.KEY, target_id=key_id)
-                    finally:
-                        person.close()
-
-                with override_settings(cadrumo_local_storage_root=root):
-                    asyncio.run(_agent_reads(profile_id, reference, revoke))
+                person.deny_automation(AutomationDenialKind.KEY, target_id=issued.key_id)
             finally:
-                primary = sys.exception()
-                stop.set()
-                try:
-                    running.result(timeout=20)
-                except Exception:
-                    if primary is None:
-                        raise
-                finally:
-                    endpoint.close()
+                person.close()
+
+        with override_settings(cadrumo_local_storage_root=runtime.root):
+            asyncio.run(_agent_reads(runtime.profile_id, issued.reference, revoke))
+
+
+def test_the_person_lists_inspects_and_revokes_ten_agent_keys(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Ten agent keys fit the inventory, each counted and paged there, and each revocable."""
+    with _running_runtime(tmp_path, monkeypatch) as runtime:
+        issued = [_issue_agent_key(runtime) for _ in range(_KEYS)]
+        person = _human(runtime.endpoint, runtime.profile_id)
+        try:
+            inventory = read_automation_inventory(person).projection
+            grants = {item.grant_id: item for item in inventory.grants}
+            assert {item.grant_id for item in issued} <= grants.keys()
+            assert {item.key_id for item in issued} <= {key.key_id for key in inventory.keys}
+            for key in issued:
+                scope = grants[key.grant_id].scope
+                assert scope.all_agent_operations and scope.operations == () and scope.disclosure_count == 0
+                page = read_automation_inventory(person, disclosures_of=key.grant_id).projection.disclosure_page
+                assert page is not None and page.total == 0 and page.next_offset is None
+                assert page.disclosure_digest == scope.disclosure_digest
+            for key in issued:
+                assert person.deny_automation(AutomationDenialKind.KEY, target_id=key.key_id).access_denied
+            states = {key.key_id: key.state for key in read_automation_inventory(person).projection.keys}
+            assert all(states[key.key_id] is AuthorityState.REVOKED for key in issued), states
+        finally:
+            person.close()
+        with override_settings(cadrumo_local_storage_root=runtime.root):
+            asyncio.run(_refused_reference(runtime.profile_id, issued[-1].reference))

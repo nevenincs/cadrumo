@@ -107,7 +107,6 @@ class RuntimeAutomationRequesterScreen(
         self._reviewer_access_lost = False
         self._secrets_store = secrets_store
         self._journey_timeout = journey_timeout
-        self._contracts = contracts
         self._operation_choices = _requester_setup.operation_choices(contracts)
         self._disclosure_choices = _requester_setup.disclosure_choices(contracts)
         self._periods: set[Period] = set()

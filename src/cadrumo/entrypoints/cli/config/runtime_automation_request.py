@@ -21,7 +21,6 @@ from ....application.operations.registry import OperationFrontendProjection
 from ....application.runtime.deadline_budget import remaining_budget
 from ....application.user_profile.access_contracts import DisclosureCategory
 from ....application.user_profile.automation_agent_key import (
-    AgentKeyScope,
     AutomationKeyUse,
     agent_key_proposal,
     agent_key_scope,
@@ -137,13 +136,6 @@ def refuse_incomplete_create_choice(*, use: object, category: object, proposal_s
         raise CliRefusedBoundaryError(translated_message="cli.config.custody.errors.automation_create_use_conflict")
 
 
-def _agent_key_scope(category: tuple[str, ...]) -> AgentKeyScope:
-    from ...operation_composition import build_production_operation_registry
-
-    contracts = build_production_operation_registry().public_contract_set
-    return agent_key_scope(contracts, (DisclosureCategory(item) for item in category))
-
-
 def _create_proposal(
     use: str | None, category: tuple[str, ...], selection: MachineSecretSelection | None
 ) -> _CreateProposal:
@@ -151,7 +143,7 @@ def _create_proposal(
     if use is not None:
         match AutomationKeyUse(use):
             case AutomationKeyUse.AGENT:
-                agent = _agent_key_scope(category)
+                agent = agent_key_scope(DisclosureCategory(item) for item in category)
                 return lambda destination_id: agent_key_proposal(agent, destination_id=destination_id, now=now())
     if selection is None:
         raise CliRefusedBoundaryError(

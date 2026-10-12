@@ -59,6 +59,7 @@ class ProposalDraft:
     target_key_id: UUID | None
     credential_reference: UUID | None
     categories: frozenset[DisclosureCategory] = frozenset[DisclosureCategory]()
+    all_agent_operations: bool = False
 
     def proposal(self, destination_id: UUID) -> EnrollmentProposal:
         """Bind disclosed schemas to the server-minted destination, not UI input."""
@@ -76,6 +77,7 @@ class ProposalDraft:
                 DisclosureCategoryGrant(destination_id=destination_id, category=category)
                 for category in self.categories
             ),
+            all_agent_operations=self.all_agent_operations,
         )
         return EnrollmentProposal(
             kind=self.kind,

@@ -2380,6 +2380,17 @@ cli:
           target_help: UUID de la clave o concesión que se va a revocar.
           target_mismatch: La revocación de una clave o concesión requiere su UUID;
             all no admite destino.
+        disclosures:
+          expected_digest_help: El resumen criptográfico que mostró una página anterior;
+            la lectura se rechaza si la lista ha cambiado desde entonces.
+          help: Cuenta por categoría los datos divulgados de una concesión o solicitud
+            pendiente y muestra una página de la lista completa.
+          invalid_page: Indica --offset como un número entero igual o mayor que cero
+            y --expected-digest como un resumen que haya mostrado una página anterior.
+          offset_help: La entrada en la que empieza la página; pasa el next_offset
+            de la página anterior.
+          target_help: El ID de la concesión o de la solicitud pendiente cuyos datos
+            divulgados quieres leer.
         help: Gestiona el acceso automatizado de este perfil.
         inspect:
           help: Mostrar la solicitud exacta de automatización revisada.

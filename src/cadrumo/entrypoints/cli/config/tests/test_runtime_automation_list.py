@@ -15,7 +15,7 @@ from cadrumo.adapters.local_runtime.automation_inventory import (
     AutomationInventoryReadError,
 )
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.application.user_profile.access_contracts import AuthorityState
+from cadrumo.application.user_profile.access_contracts import AuthorityState, disclosure_digest
 from cadrumo.application.user_profile.automation_enrollment import (
     AutomationGrantProjection,
     AutomationInventoryProjection,
@@ -51,7 +51,9 @@ def test_list_uses_bound_profile_and_emits_only_public_projection(monkeypatch: p
                 scope=AutomationScopeProjection(
                     operations=("user-profile.automation-inventory",),
                     actions=(),
-                    disclosures=(),
+                    disclosure_count=0,
+                    disclosure_summary=(),
+                    disclosure_digest=disclosure_digest(()),
                     periods=None,
                     allow_period_independent=False,
                     allow_delegation=False,

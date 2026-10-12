@@ -1773,6 +1773,7 @@ tui:
   automation_inventory:
     access_lost: This profile session is no longer available.
     actions: Actions
+    all_agent_operations: every operation an agent may run
     all_periods: All filing periods
     approve: Approve request
     client: Client
@@ -1781,6 +1782,7 @@ tui:
     delegation: Delegation
     destination: Destination
     details: Details
+    disclosure_categories: Whole categories
     disclosures: Disclosures
     empty: No items
     expires: Expires

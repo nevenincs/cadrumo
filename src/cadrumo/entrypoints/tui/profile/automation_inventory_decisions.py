@@ -59,6 +59,8 @@ class AutomationInventoryDecisionMixin:
             self._start_refresh()
         elif button_id in {"automation-inventory-approve", "automation-inventory-decline"}:
             self._start_decision(button_id)
+        elif button_id == "automation-inventory-disclosures":
+            self._start_disclosure_page()
 
     def _start_decision(self: RuntimeAutomationInventoryScreen, button_id: str | None) -> None:
         if self._busy or self._access_lost:

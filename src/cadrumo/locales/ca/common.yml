@@ -1820,6 +1820,7 @@ tui:
   automation_inventory:
     access_lost: Aquesta sessió del perfil ja no està disponible.
     actions: Accions
+    all_agent_operations: qualsevol operació que pugui executar un agent
     all_periods: Tots els períodes de declaració
     approve: Aprovar la sol·licitud
     client: Client
@@ -1828,6 +1829,7 @@ tui:
     delegation: Delegació
     destination: Destinació
     details: Detalls
+    disclosure_categories: Categories completes
     disclosures: Dades que es poden revelar
     empty: No hi ha elements
     expires: Caduca

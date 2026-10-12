@@ -74,6 +74,15 @@ class ConfigProfileAutomationListResult(OutputSchema):
     inventory: AutomationInventoryProjection
 
 
+class ConfigProfileAutomationDisclosuresResult(OutputSchema):
+    """One grant's or pending request's disclosures counted by category, and one page of the list."""
+
+    profile_id: UUID
+    inventory_operation_id: OperationId
+    target_id: UUID
+    page: DisclosurePage
+
+
 class ConfigProfileAutomationInspectResult(OutputSchema):
     """One exact review read from the canonical public inventory."""
 

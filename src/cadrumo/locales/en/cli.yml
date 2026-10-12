@@ -2199,6 +2199,16 @@ cli:
           target_help: Key or grant UUID for a targeted denial.
           target_mismatch: A key or grant denial requires its target UUID; all does
             not accept a target.
+        disclosures:
+          expected_digest_help: The digest an earlier page printed; the read is refused
+            if the list changed since.
+          help: Count one grant's or pending request's disclosures by category and
+            print one page of the full list.
+          invalid_page: Give --offset as a whole number of zero or more and --expected-digest
+            as a digest an earlier page printed.
+          offset_help: The entry to start the page at; pass the next_offset of the
+            previous page.
+          target_help: The grant ID or pending request ID whose disclosures to read.
         help: Manage automation access for this profile.
         inspect:
           help: Show the exact reviewed automation request.

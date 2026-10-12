@@ -28,9 +28,13 @@ from .access_contracts import (
     AuthorityState,
     AutomationGrant,
     DisclosureCategoryGrant,
-    DisclosurePermission,
+    DisclosurePage,
+    DisclosureSummary,
     ProfileAccessBinding,
     ProfileAccessState,
+    disclosure_digest,
+    ordered_disclosures,
+    summarize_disclosures,
 )
 from .access_projections import PublicApiKey, PublicAutomationGrant
 from .automation_custody_port import AutomationKeyVerifier
@@ -207,6 +211,8 @@ class AutomationInventory(BaseModel):
     grants: tuple[PublicAutomationGrant, ...]
     keys: tuple[PublicApiKey, ...]
     requests: tuple[EnrollmentReview, ...]
+    disclosure_page: DisclosurePage | None = None
+    """One page of one grant's or request's disclosures, when the read named one."""
 
 
 class AutomationPeriodProjection(BaseModel):
@@ -219,29 +225,35 @@ class AutomationPeriodProjection(BaseModel):
 
 
 class AutomationScopeProjection(BaseModel):
-    """Typed public scope with explicit stable ordering for allow sets."""
+    """Typed public scope with explicit stable ordering for allow sets.
+
+    Listed disclosures are counted by category, not listed: the full list is
+    read a page at a time by naming the grant or request in an inventory read.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     operations: tuple[str, ...]
     actions: tuple[AccessAction, ...]
-    disclosures: tuple[DisclosurePermission, ...]
+    disclosure_count: Annotated[int, Field(ge=0)]
+    disclosure_summary: DisclosureSummary
+    disclosure_digest: ContentDigest
     periods: tuple[AutomationPeriodProjection, ...] | None
     allow_period_independent: bool
     allow_delegation: bool
     disclosure_categories: tuple[DisclosureCategoryGrant, ...] = ()
+    all_agent_operations: bool = False
 
     @classmethod
     def from_scope(cls, scope: AccessScope) -> Self:
-        """Flatten a domain scope into its stable public ordering."""
+        """Flatten a domain scope into its stable public ordering, its disclosures counted."""
+        ordered = ordered_disclosures(scope.disclosures)
         return cls(
             operations=tuple(sorted(scope.operations)),
             actions=tuple(sorted(scope.actions)),
-            disclosures=tuple(
-                sorted(
-                    scope.disclosures, key=lambda item: (str(item.destination_id), item.projection_id, item.category)
-                )
-            ),
+            disclosure_count=len(ordered),
+            disclosure_summary=summarize_disclosures(ordered),
+            disclosure_digest=disclosure_digest(ordered),
             periods=None
             if scope.periods is None
             else tuple(
@@ -253,6 +265,7 @@ class AutomationScopeProjection(BaseModel):
             disclosure_categories=tuple(
                 sorted(scope.disclosure_categories, key=lambda item: (item.category.value, str(item.destination_id)))
             ),
+            all_agent_operations=scope.all_agent_operations,
         )
 
 
@@ -335,6 +348,7 @@ class AutomationInventoryProjection(BaseModel):
     grants: tuple[AutomationGrantProjection, ...]
     keys: tuple[AutomationKeyProjection, ...]
     requests: tuple[AutomationReviewProjection, ...]
+    disclosure_page: DisclosurePage | None = None
 
 
 class AdministrationFacts(BaseModel):

@@ -1830,6 +1830,7 @@ tui:
   automation_inventory:
     access_lost: Esta sesión del perfil ya no está disponible.
     actions: Acciones
+    all_agent_operations: cualquier operación que pueda ejecutar un agente
     all_periods: Todos los periodos de declaración
     approve: Aprobar solicitud
     client: Cliente
@@ -1838,6 +1839,7 @@ tui:
     delegation: Delegación
     destination: Destino
     details: Detalles
+    disclosure_categories: Categorías completas
     disclosures: Datos que se pueden revelar
     empty: No hay elementos
     expires: Caduca

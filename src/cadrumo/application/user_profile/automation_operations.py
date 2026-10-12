@@ -11,7 +11,7 @@ from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from uuid import UUID
 
-from pydantic import BaseModel, SecretBytes, ValidationError
+from pydantic import BaseModel, SecretBytes, ValidationError, model_validator
 
 from ...core.async_cleanup import await_cancellation_complete, close_async_resources
 from ...core.errors.hierarchy import CadrumoError
@@ -46,8 +46,11 @@ from .access_contracts import (
     AccessDenialCode,
     Availability,
     DisclosureCategory,
+    DisclosurePage,
+    DisclosurePageRequest,
 )
 from .access_errors import ProfileAccessRefusedError
+from .access_projections import page_disclosures
 from .automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from .automation_enrollment import (
     AutomationGrantProjection,
@@ -98,6 +101,28 @@ class AutomationOperationRequest(CredentialFreeOperationRequest):
     profile_id: UUID
     request_id: UUID
     review_digest: ContentDigest | None = None
+    disclosures_of: UUID | None = None
+    """An inventory read's grant or pending request whose disclosures it also pages."""
+    disclosure_page: DisclosurePageRequest | None = None
+
+    @model_validator(mode="after")
+    def _page_names_its_list(self) -> AutomationOperationRequest:
+        if self.disclosure_page is not None and self.disclosures_of is None:
+            raise ValueError("a disclosure page names the grant or request it reads")
+        return self
+
+
+def _inventory_disclosure_page(
+    inventory: AutomationInventory, target: UUID, request: DisclosurePageRequest
+) -> DisclosurePage:
+    """Page the disclosures of one grant or pending request the inventory holds."""
+    grant = next((item for item in inventory.grants if item.grant_id == target), None)
+    if grant is not None:
+        return page_disclosures(grant.scope.disclosures, request)
+    review = next((item for item in inventory.requests if item.receipt.request_id == target), None)
+    if review is None:
+        raise AutomationCustodyError(AutomationCustodyCode.MISSING)
+    return page_disclosures(review.proposal.scope.disclosures, request)
 
 
 #: Outer capabilities receive only the invocation identity, never the executor's
@@ -172,6 +197,7 @@ def project_automation_inventory_result(result: BaseModel, receipt: OperationTer
             )
             for item in result.requests
         ),
+        disclosure_page=result.disclosure_page,
     )
 
 
@@ -257,7 +283,7 @@ class AutomationAdministrationExecutor:
             raise AutomationCustodyError(AutomationCustodyCode.INVALID)
         await context.events.phase(identity + ".execute")
         if identity == AUTOMATION_INVENTORY_OPERATION_DEFINITION_ID:
-            return await self._execute_inventory(payload.profile_id, context)
+            return await self._execute_inventory(payload, context)
         service = await self._service_for_profile(payload.profile_id, context)
         publication = _EnrollmentPublication(context, payload)
         if identity in _PROPOSALS:
@@ -281,7 +307,8 @@ class AutomationAdministrationExecutor:
         await await_cancellation_complete(service.require_profile(profile_id), task_name="automation-profile-binding")
         return service
 
-    async def _execute_inventory(self, profile_id: UUID, context: OperationExecutorContext) -> str:
+    async def _execute_inventory(self, payload: AutomationOperationRequest, context: OperationExecutorContext) -> str:
+        profile_id = payload.profile_id
         if self.inventory_reader is not None:
             inventory = await await_cancellation_complete(
                 self.inventory_reader(context.identity, profile_id), task_name="automation-inventory-reader"
@@ -293,6 +320,11 @@ class AutomationAdministrationExecutor:
         # result store; observing an operation never grants new authority.
         if type(inventory) is not AutomationInventory:
             raise AutomationCustodyError(AutomationCustodyCode.INVALID)
+        if payload.disclosures_of is not None:
+            page = _inventory_disclosure_page(
+                inventory, payload.disclosures_of, payload.disclosure_page or DisclosurePageRequest()
+            )
+            inventory = inventory.model_copy(update={"disclosure_page": page})
         result_ref = await await_cancellation_complete(
             context.operands.put(inventory, written_at=now()), task_name="automation-inventory-result"
         )

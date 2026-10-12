@@ -278,6 +278,7 @@ PERSON_ACT_COMMANDS: Final[Mapping[CliPath, PersonAct]] = MappingProxyType(
         ("config", "profile", "automation", "create"): PersonAct(_KEYS),
         ("config", "profile", "automation", "decline"): PersonAct(_KEYS),
         ("config", "profile", "automation", "deny"): PersonAct(_SESSIONS),
+        ("config", "profile", "automation", "disclosures"): PersonAct(_KEYS),
         ("config", "profile", "automation", "inspect"): PersonAct(_KEYS),
         ("config", "profile", "automation", "list"): PersonAct(_KEYS),
         ("config", "profile", "delete"): PersonAct(_INSTALLATION),

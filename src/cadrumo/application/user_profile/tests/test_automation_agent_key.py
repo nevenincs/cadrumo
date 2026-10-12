@@ -17,7 +17,11 @@ from cadrumo.application.user_profile.access_contracts import (
     DisclosurePermission,
 )
 from cadrumo.application.user_profile.access_policy import intersect_scopes, scope_is_subset
-from cadrumo.application.user_profile.automation_agent_key import agent_key_proposal, agent_key_scope
+from cadrumo.application.user_profile.automation_agent_key import (
+    agent_key_proposal,
+    agent_key_scope,
+    agent_operations,
+)
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentKind
 from cadrumo.application.user_profile.operations import (
     build_user_profile_operation_definitions,
@@ -52,26 +56,34 @@ def _scope(
     )
 
 
-def test_an_agent_key_always_reads_profile_values_and_observes_its_operations(
-    contracts: OperationPublicContractSetV1,
-) -> None:
-    scope = agent_key_scope(contracts)
+def test_an_agent_key_always_reads_profile_values_and_observes_its_operations() -> None:
+    scope = agent_key_scope()
 
     assert scope.categories == {DisclosureCategory.PROFILE_VALUES, DisclosureCategory.OPERATION_METADATA}
-    assert _VIEW in scope.operations
-    assert len(scope.operations) == len(contracts.definitions)
     assert scope.actions == frozenset(AccessAction)
-    assert DisclosureCategory.TAX_VALUES in agent_key_scope(contracts, (DisclosureCategory.TAX_VALUES,)).categories
+    assert DisclosureCategory.TAX_VALUES in agent_key_scope((DisclosureCategory.TAX_VALUES,)).categories
 
 
-def test_naming_the_always_granted_categories_changes_nothing(contracts: OperationPublicContractSetV1) -> None:
-    assert agent_key_scope(contracts, (DisclosureCategory.PROFILE_VALUES,)) == agent_key_scope(contracts)
+def test_naming_the_always_granted_categories_changes_nothing() -> None:
+    assert agent_key_scope((DisclosureCategory.PROFILE_VALUES,)) == agent_key_scope()
 
 
-def test_the_proposal_grants_each_category_to_the_minted_destination(
+def test_an_agent_may_run_every_registered_operation_but_the_persons_own_acts(
     contracts: OperationPublicContractSetV1,
 ) -> None:
-    scope = agent_key_scope(contracts, (DisclosureCategory.TAX_VALUES,))
+    runnable = agent_operations(contracts)
+
+    assert _VIEW in runnable
+    assert "user-profile.patch" in runnable
+    assert "user-profile.automation-approve" not in runnable
+    assert "user-profile.automation-inventory" not in runnable
+    assert not any(
+        str(item.definition_id) in runnable for item in contracts.definitions if item.ephemeral_secret_required
+    )
+
+
+def test_the_proposal_grants_every_agent_operation_and_each_category_to_the_minted_destination() -> None:
+    scope = agent_key_scope((DisclosureCategory.TAX_VALUES,))
     destination = uuid4()
     issued = datetime(2026, 10, 12, 9, 30, tzinfo=UTC)
 
@@ -79,6 +91,8 @@ def test_the_proposal_grants_each_category_to_the_minted_destination(
 
     assert proposal.kind is EnrollmentKind.ENROLL
     assert proposal.target_grant_id is None and proposal.target_key_id is None
+    assert proposal.scope.operations == frozenset()
+    assert proposal.scope.all_agent_operations is True
     assert proposal.scope.disclosures == frozenset()
     assert proposal.scope.disclosure_categories == {
         DisclosureCategoryGrant(destination_id=destination, category=category) for category in scope.categories
@@ -91,6 +105,23 @@ def test_the_proposal_grants_each_category_to_the_minted_destination(
     assert proposal.allow_os_lock is False
     assert proposal.expires_at == issued + GRANT_DEFAULT_VALIDITY
     assert proposal.key_expires_at == proposal.expires_at
+    # The stored consent stays a few hundred bytes however many operations and projections are registered.
+    assert len(proposal.model_dump_json()) < 1024
+
+
+def test_an_operation_grant_covers_listed_operations_and_narrows_only_under_another() -> None:
+    granted = _scope(categories=frozenset()).model_copy(
+        update={"operations": frozenset(), "all_agent_operations": True}
+    )
+    listed = _scope(categories=frozenset())
+
+    assert granted.permits(_VIEW) and granted.permits("anything.registered-later")
+    assert scope_is_subset(listed, granted)
+    assert not scope_is_subset(granted, listed)
+    assert scope_is_subset(granted, granted)
+    lease = intersect_scopes((granted, listed))
+    assert lease.operations == {_VIEW}
+    assert lease.all_agent_operations is False
 
 
 def test_a_category_grant_covers_listed_permissions_of_its_category_and_destination_only() -> None:

@@ -79,12 +79,12 @@ class RequesterDraftMixin:
         own, the key runs as long as its grant.
         """
         raw = cast("SelectionList[str]", self.query_one("#automation-request-categories", SelectionList)).selected
-        scope = agent_key_scope(self._contracts, (DisclosureCategory(value) for value in raw))
+        scope = agent_key_scope(DisclosureCategory(value) for value in raw)
         expiry = datetime.fromisoformat(self.query_one("#automation-request-expiry", Input).value.strip())
         key_raw = self.query_one("#automation-request-key-expiry", Input).value.strip()
         return _contracts.ProposalDraft(
             kind=EnrollmentKind.ENROLL,
-            operations=scope.operations,
+            operations=frozenset(),
             actions=scope.actions,
             disclosures=frozenset(),
             periods=None,
@@ -98,6 +98,7 @@ class RequesterDraftMixin:
             target_key_id=None,
             credential_reference=None,
             categories=scope.categories,
+            all_agent_operations=True,
         )
 
     def _selected_kind(self: RuntimeAutomationRequesterScreen) -> EnrollmentKind:

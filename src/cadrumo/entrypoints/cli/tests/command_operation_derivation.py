@@ -114,6 +114,11 @@ SELECTED_OPERATIONS: Final[tuple[SelectedOperations, ...]] = (
         _AUTOMATION_REASON,
     ),
     SelectedOperations(
+        ("config", "profile", "automation", "disclosures"),
+        frozenset({"user-profile.automation-inventory"}),
+        _AUTOMATION_REASON,
+    ),
+    SelectedOperations(
         ("config", "profile", "automation", "inspect"),
         frozenset({"user-profile.automation-inventory"}),
         _AUTOMATION_REASON,

@@ -34,6 +34,7 @@ from ..runtime_access_management_payloads import (
     ConfigProfileAutomationCreateResult,
     ConfigProfileAutomationDecisionResult,
     ConfigProfileAutomationDenyResult,
+    ConfigProfileAutomationDisclosuresResult,
     ConfigProfileAutomationInspectResult,
     ConfigProfileAutomationListResult,
     ConfigProfileDisclosuresResult,
@@ -60,6 +61,7 @@ def test_live_specs_have_distinct_management_doors_and_no_password_argument() ->
         "config_profile_automation_list",
         "config_profile_automation_create",
         "config_profile_automation_change",
+        "config_profile_automation_disclosures",
         "config_profile_automation_inspect",
         "config_profile_automation_approve",
         "config_profile_automation_decline",
@@ -73,6 +75,7 @@ def test_live_specs_have_distinct_management_doors_and_no_password_argument() ->
         "config_profile_automation_list": ConfigProfileAutomationListResult,
         "config_profile_automation_create": ConfigProfileAutomationCreateResult,
         "config_profile_automation_change": ConfigProfileAutomationChangeResult,
+        "config_profile_automation_disclosures": ConfigProfileAutomationDisclosuresResult,
         "config_profile_automation_inspect": ConfigProfileAutomationInspectResult,
         "config_profile_automation_approve": ConfigProfileAutomationDecisionResult,
         "config_profile_automation_decline": ConfigProfileAutomationDecisionResult,
@@ -144,7 +147,8 @@ def test_session_payload_flattens_periods_and_reports_remaining_access() -> None
     assert projected.scope.periods is not None
     assert {(item.filing_year, item.code) for item in projected.scope.periods} == {(2026, "3T")}
     document = ConfigProfileSessionsResult(profile_id=profile_id, sessions=(projected,)).model_dump(mode="json")
-    assert document["sessions"][0]["scope"]["disclosures"][0]["destination_id"] == str(destination_id)
+    assert document["sessions"][0]["scope"]["disclosure_count"] == 1
+    assert document["sessions"][0]["scope"]["disclosure_summary"] == [{"category": "profile_values", "count": 1}]
     assert not {"secret", "password", "credential", "dek"} & document["sessions"][0].keys()
 
 

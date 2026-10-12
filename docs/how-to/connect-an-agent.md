@@ -194,8 +194,12 @@ List pending requests and inspect the exact request before deciding:
 
 Replace `REQUEST_UUID` with the returned request ID. Review the client and
 destination, operations, actions, disclosures, periods, expiry, unattended access
-and OS-lock permission. Copy the current `review_digest` from that inspection.
-Approve only those reviewed permissions, or decline the request:
+and OS-lock permission. A key for an agent shows `all_agent_operations` and its
+whole data categories instead of long lists. Listed disclosures are counted by
+category; read the full list a page at a time with `aeat config profile
+automation disclosures ID`, naming the request or grant ID, and pass each page's
+`next_offset` back as `--offset`. Copy the current `review_digest` from that
+inspection. Approve only those reviewed permissions, or decline the request:
 
 ```{cli-sequence} connect-an-agent-request-decision
 ```
