@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:e9305c5c53b89031193408f9a6b7bd59d8fb756b06773d34792a3dd89f93fa2a'
+body_hash: 'sha256:aa38bb99ac36e06896649b937336c7269399fb0808a016f689b06f35098e0dff'
 related:
   - "[[2026-10-10-mcp-parity-sign-in-doors-reference]]"
   - "[[2026-10-10-mcp-parity-parity-mechanism-options-research]]"
@@ -219,9 +219,11 @@ adding a parallel one.
   so an operation, its review and any approval of it settle within one sign-in. The key
   route's short lease is lengthened, not removed.
 - A useful MCP session inside Cadrumo therefore depends on the lifetime work of the
-  accepted sign-in record: the idle extension, and the named follow-on decision on where
-  the receipt-sealing key lives during it
-  (`.vault/adr/2026-10-04-application-sign-in-adr.md:97-100`). Until that is built, an
+  accepted sign-in record: the idle extension, with the receipt-sealing key held in the
+  profile worker's memory beside the session's DEK only while a live session exists
+  (`2026-10-04-application-sign-in-adr`, **Lifetime**). (Amended 2026-10-12 on the
+  owner's ruling "i followw your recommedation"; before that where the sealing key lives
+  was a named follow-on decision still to be made.) Until that is built, an
   agent run ends no later than the idle deadline counted from the password sign-in. When
   it is built, two things are settled with it: whether a live MCP session is re-clipped
   to the extended deadline or resumes a new session, and what becomes of an operation

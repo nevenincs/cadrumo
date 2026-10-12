@@ -5,7 +5,7 @@ tags:
 date: '2026-10-12'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:3b2a90200efc805866b9fd95ce21e93fc83fff1ee7db28a484739f6f971b68ce'
+body_hash: 'sha256:492cca50e9dfba8ac51eb4a5c78bb713ef1fc2402a6e420e4eab4ae7e6a534f8'
 related:
   - "[[2026-10-11-mcp-parity-full-parity-adr]]"
   - "[[2026-10-10-mcp-parity-shared-sign-in-door-adr]]"
@@ -68,9 +68,10 @@ Binding:
    - Otherwise it is the profile of the sign-in it first resumes. Inside Cadrumo, the process that starts the server binds it, as `2026-10-10-mcp-parity-shared-sign-in-door-adr` rules.
 
    If the signed-in profile later differs, every call is refused, and the person starts a new agent session. MCP serves no installation acts and no profile acts outside the bound profile. That rules out listing, creating, selecting, deleting or importing profiles, resetting all profiles, and storage administration or repair across profiles. The agent never sees or acts on data outside its profile.
-6. **One signed-in profile, and frontends only under it.** Cadrumo is a GUI application. At most one profile has a live human sign-in on a runtime at a time. The TUI, the CLI and MCP operate on a profile only while the person is signed in to it, or through an API key the person issued for that profile. A person's own password sign-in at the TUI, the CLI or the desktop is the person signing in and stays. The desktop shell shows its sign-in view whenever the sign-in times out, goes inactive or is locked, or when no profile exists.
-7. **API keys stay, managed by the runtime.** A key grants an agent, the CLI, the TUI or another client access to one specific profile. The runtime admits keys and manages that access: issuance, scope, expiry and revocation, as `2026-09-26-mcp-purpose-authentication-profile-access-adr` rules. The person issues, scopes, rotates and revokes keys from a signed-in human session on the CLI, the TUI or the desktop, never from MCP. A key session is not a sign-in, so it does not count against constraint 6. A profile-wide lock still suspends it.
+6. **One signed-in profile, and frontends only under it.** Cadrumo is a GUI application. At most one profile has a live human sign-in on a runtime at a time. The TUI, the CLI and MCP operate on a profile only while the person is signed in to it, or through an API key the person issued for that profile. A person's own password sign-in at the TUI, the CLI or the desktop is the person signing in and stays. A sign-in to profile B while profile A is signed in signs A out everywhere: A's human sessions, the agent sessions that resumed it, and the key sessions that depend on A's sign-in. Keys issued for A that work without a sign-in are not ended by it. (Amended 2026-10-12 on the owner's ruling "i followw your recommedation"; before that whether a second sign-in was refused or ended the first was a hypothesis, and the plan applied ending it as a provisional default.) The desktop shell shows its sign-in view whenever the sign-in times out, goes inactive or is locked, or when no profile exists.
+7. **API keys stay, managed by the runtime.** A key grants an agent, the CLI, the TUI or another client access to one specific profile. The runtime admits keys and manages that access: issuance, scope, expiry and revocation, as `2026-09-26-mcp-purpose-authentication-profile-access-adr` rules. The person issues, scopes, rotates and revokes keys from a signed-in human session on the CLI, the TUI or the desktop, never from MCP. A key session is not a sign-in, so it does not count against constraint 6. A profile-wide lock still suspends it. When the person issues a key with `config automation create`, on the CLI or the TUI, they choose its use, for an agent (MCP), and the data categories it may read. The key itself is the binding: results in those categories are released to whichever local MCP client presents that key. (Amended 2026-10-12 on the owner's ruling "i followw your recommedation"; before that the record did not say where a key's results are released, and a key issued from the CLI carried no disclosure, because the proposal was checked against a destination that `prepare_enrollment` had not yet minted (`src/cadrumo/entrypoints/cli/config/runtime_automation_request.py:108`, `src/cadrumo/application/user_profile/automation_administration_service.py:71`), so its MCP server could submit work but read no value back.)
 8. **Parity inside the profile.** `2026-10-11-mcp-parity-full-parity-adr` holds for every operation inside a signed-in or key-admitted profile. Three kinds of act are not agent operations: authentication, session and access administration, and acts outside the bound profile. Withholding them from MCP is therefore not a parity refusal. The credential acts of constraint 1 are the same.
+9. **Disclosures are summarised, and read in full on request.** The `status` and `session` replies, and any reply of the same kind, carry the count of the session's `effective_scope.disclosures` and a summary by category, not the full list. The full list is read on request through a paged read. Every frontend does the same, so this is parity and not a reduced result for the agent. (Amended 2026-10-12 on the owner's ruling "i followw your recommedation"; before that these replies carried the whole list, about 125,000 characters, over the output limits of agent clients.)
 
 Fixed boundary, unchanged: nothing on any frontend sends anything to the tax agency.
 
@@ -90,7 +91,7 @@ Affected prior rulings, each amended in place on 2026-10-12 with a note of what 
 
 We will remove every credential and authentication act from MCP and bind each MCP server to one profile. The runtime will enforce a single signed-in profile, and the desktop will show its sign-in view on every loss of sign-in.
 
-- **MCP surface.** Remove the `session` tool, the `installation` tool, the `authenticate` tool, and the `secret` and `secret_reference` arguments of `execute`. Remove the in-session enrollment tools as recommended below. Keep `status`, which reports whether a sign-in or key admits the server and, when none does, says to sign in to Cadrumo.
+- **MCP surface.** Remove the `session` tool, the `installation` tool, the `authenticate` tool, and the `secret` and `secret_reference` arguments of `execute`. Remove the in-session enrollment tools, as confirmed below. Keep `status`, which reports whether a sign-in or key admits the server and, when none does, says to sign in to Cadrumo.
 - **Runtime.**
   - Refuse password, key-presentation and enrollment frames from the MCP frontend.
   - Refuse every installation and session-administration request from the MCP frontend.
@@ -100,16 +101,14 @@ We will remove every credential and authentication act from MCP and bind each MC
 - **Desktop.** Show the sign-in view on expiry, inactivity, profile lock and absence, from pushed session events where they exist and from the status poll otherwise.
 - **Tests.** Replace the tests that prove MCP sign-in, sign-out, lock, secret carriage and installation acts with tests that prove their refusal. The live-agent lane (`2026-10-12-live-agent-evaluation-adr`, proposed) exercises API-key access and its management with a live agent: the person issues a key, the agent works with it inside its scope, a call outside the scope is refused, and after revocation the agent is refused. Signing in and issuing the key are done by the harness acting as the person, never by the agent.
 
-Recommendation, to confirm with the owner: **remove the agent-initiated enrollment flow** (`authorization_prepare`, `authorization_request`, `authorization_poll`) from MCP.
+Confirmed by the owner: **remove the agent-initiated enrollment flow** (`authorization_prepare`, `authorization_request`, `authorization_poll`) from MCP. Keys are issued only by the person through `config automation` and given to the MCP server by reference in its launch configuration. (Amended 2026-10-12 on the owner's ruling "i followw your recommedation"; before that this was a recommendation to confirm with the owner, held to constraint 2 until confirmed.) The reasons:
 
 - In it the agent asks for a credential for itself and proposes its own scope (`runtime_adapter.py:758-852`). It can also rotate its key through a grant change. It then names the delivered credential in `authenticate`.
 - The secret itself never reaches the transcript, but the agent obtains, scopes and selects its own authentication. That is managing authentication under constraint 2.
 - The person can already issue a key with `config automation` and start the server with `--credential-reference`, so nothing is lost.
-- Until the owner confirms, the flow is held to constraint 2 as written: it is not served on MCP.
 
 Hypotheses, free to change within the constraints:
 
-- Whether a second profile's sign-in is refused, which the desktop view already assumes by offering another profile only while signed out, or whether it ends the first sign-in.
 - The name and shape of the sign-in-required result.
 - Whether `status` keeps its current name.
 
@@ -129,3 +128,5 @@ The owner ruled it first-hand and in terms that leave no exception. The data sit
 Accepted 2026-10-12 on the owner's first-hand instruction of that day, "Please, on 6, revise all adrs and do not allow this to happen".
 
 Amended 2026-10-12 under `2026-10-12-mcp-parity-attended-live-sign-in-adr`: constraint 2 gains a third way to admit an MCP connection. A person holding a live, unpersisted password sign-in with `aeat config sign-in-hold` approves that exact connection, identified by the process the kernel names, and it receives an attended child of the person's session. The agent still never authenticates, names a credential or sees a secret. The child ends when the person's session ends.
+
+Amended 2026-10-12 on the owner's first-hand ruling "i followw your recommedation", which accepted the orchestrator's recommendations. The four defaults applied while the owner was away are confirmed and no longer provisional: (a) the MCP key-request flow is removed; (b) signing in to profile B signs A out, now in constraint 6, where it replaces the hypothesis that a second sign-in might be refused; (c) with no live sign-in and no valid key MCP answers only the handshake, the tool list and `status`, as constraint 3 says, the public reference and corpus queries included among what is refused; (d) an agent session timing out ends only that agent session, as constraint 4 and the consequences say. Constraint 7 gains the key issued for an agent and its release to the client presenting it, and constraint 9 the summarised disclosures with a paged full read. The off-host consent record keeps its schema: since commit `3f15f3bdcc` MCP cannot give off-host consent, so every recorded off-host consent is the person's. The attended route of `2026-10-12-mcp-parity-attended-live-sign-in-adr` stays as accepted.

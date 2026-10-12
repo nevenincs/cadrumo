@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:70cdfb0f3d977c15885184d86f606c10077291a9817b79f3fe2870201c7963b9'
+body_hash: 'sha256:45902387c927b091707e468ccd71a9bb5fb069d71d1333d8b6c56702116509f7'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -2352,6 +2352,8 @@ related:
 - `S65` `verify:` `pytest test_operation_frontend_parity.py` -> `pass`
 - `S64` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_no_credential_acts.py`
 - `S64` `verify:` `pytest src/cadrumo_harness` -> `pass`
+- `S18` `M` `.vault/adr/2026-10-04-application-sign-in-adr.md`
+- `S18` `verify:` `vault check all` -> `pass`
 
 ## Notes
 
@@ -2437,3 +2439,4 @@ related:
 - `S70` commit a408f4b773; proof sits beside the runtime fixtures; key route proven by the sign-in adapter credential-reference test; harness has 1 keychain-logon environment failure
 - `S65` off-host consent made a person act after live reproduction; commit 3f15f3bdcc; consent surface string unchanged, reported
 - `S64` alias removal after import authority finding; commit 84206fbc9d
+- `S18` vault check all passes for application-sign-in and mcp-purpose-authentication; mcp-parity reports two pre-existing schema errors (agent-inside and attended-live-sign-in ADRs link no evidence record in related)
