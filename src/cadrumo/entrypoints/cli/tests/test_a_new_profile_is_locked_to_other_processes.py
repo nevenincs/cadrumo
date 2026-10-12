@@ -28,6 +28,7 @@ from ....core.i18n.render import tr
 from ....core.profile_session import ProfileSessionRefusalReason
 from ....tests.call_time_refusing_keyring import CALL_TIME_REFUSING_KEYRING
 from ....tests.in_memory_keyring import IN_MEMORY_KEYRING
+from ..config.tests.isolated_storage_fixture import native_profile_view_server
 from .subprocess_cli import run_cadrumo_subprocess
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -48,14 +49,18 @@ def _list_in_a_fresh_process(
     storage_root: Path, *, keychain_backend: str, credential: str | None
 ) -> subprocess.CompletedProcess[str]:
     root_options = ("--profile-secrets-stdin",) if credential is not None else ()
-    return run_cadrumo_subprocess(
-        ("--format", "json", *root_options, "app", "ledger", "list"),
-        settings={"cadrumo_local_storage_root": storage_root, "cadrumo_output_language": "en"},
-        env_strip_prefixes=("AEAT_", "PYTEST_", "CADRUMO_"),
-        extra_env={"PYTHON_KEYRING_BACKEND": keychain_backend},
-        stdin_payload="" if credential is None else json.dumps({"profile_passphrase": credential}),
-        timeout=None,
-    )
+    # The reader submits to the runtime that serves the root, as any other
+    # process would; it is that runtime which must refuse a reader with no
+    # credential.
+    with native_profile_view_server(storage_root, keychain_backend=keychain_backend):
+        return run_cadrumo_subprocess(
+            ("--format", "json", *root_options, "app", "ledger", "list"),
+            settings={"cadrumo_local_storage_root": storage_root, "cadrumo_output_language": "en"},
+            env_strip_prefixes=("AEAT_", "PYTEST_", "CADRUMO_"),
+            extra_env={"PYTHON_KEYRING_BACKEND": keychain_backend},
+            stdin_payload="" if credential is None else json.dumps({"profile_passphrase": credential}),
+            timeout=None,
+        )
 
 
 def _english(key: str) -> str:
