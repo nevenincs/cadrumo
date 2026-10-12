@@ -2146,8 +2146,15 @@ cli:
         NÉV` egy regisztrált profil aktiválásához.'
       profile_session_absent: Nem vagy bejelentkezve. Futtasd az `aeat config login`
         parancsot a profilod feloldásához.
+      profile_session_custody_changed: Megváltozott a profil jelszava vagy helyreállítási
+        beállítása. Futtasd az `aeat config login` parancsot az újbóli bejelentkezéshez.
       profile_session_expired: A profil-munkameneted lejárt. Futtasd az `aeat config
         login` parancsot az újbóli bejelentkezéshez.
+      profile_session_login_mismatch: A mentett bejelentkezésed ennek a számítógépnek
+        egy másik munkamenetéhez tartozik. Futtasd az `aeat config login` parancsot,
+        hogy itt jelentkezz be.
+      profile_session_signed_out: Máshol kijelentkeztettek ebből a profilból. Futtasd
+        az `aeat config login` parancsot az újbóli bejelentkezéshez.
     google:
       detail:
         sync_push_limit_requires_dry_run: A Google sync push csak --dry-run mellett

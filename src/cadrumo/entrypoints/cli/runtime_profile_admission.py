@@ -30,7 +30,12 @@ from ._profile_authentication_contract import (
     root_profile_secret_model,
 )
 from ._profile_authentication_notice import stage_profile_session_not_persisted_notice
-from ._profile_session_gate import bind_profile_target, session_refusal_translation_key
+from ._profile_session_gate import (
+    bind_profile_target,
+    raise_runtime_refusal,
+    session_refusal_context,
+    session_refusal_translation_key,
+)
 from .common import attach_cli_policy_verdict, no_active_profile_refusal, requested_cli_leaf
 from .config.secure_input import (
     ProfileSecretSelection,
@@ -128,7 +133,8 @@ def _authenticate(
             raise KeyringUnavailableError("OS keychain is unavailable for profile-session acceleration") from None
         raise attach_cli_policy_verdict(
             CliRefusedBoundaryError(
-                translated_message=session_refusal_translation_key(refusal), context={"reason": refusal.value}
+                translated_message=session_refusal_translation_key(refusal, error.binding),
+                context=session_refusal_context(refusal, error.binding),
             ),
             verdict=profile_session_failure_verdict(refusal, profile_name=profile_label or str(client.profile_id)),
             requested_leaf=requested_cli_leaf(ctx),
@@ -168,7 +174,7 @@ def activate_runtime_profile(
         bind_profile_client(ctx, client, profile_id=UUID(bucket_id))
     except RuntimeFrontendRefusedError as error:
         client.close()
-        raise CliRefusedBoundaryError(error.reason, context=error.context) from None
+        raise_runtime_refusal(error)
     except BaseException:
         client.close()
         raise

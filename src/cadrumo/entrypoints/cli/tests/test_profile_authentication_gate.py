@@ -104,6 +104,7 @@ def test_every_resume_refusal_reason_has_an_operator_diagnostic() -> None:
         key = session_refusal_translation_key(reason)
         assert key in {
             "cli.config.errors.profile_session_absent",
+            "cli.config.errors.profile_session_custody_changed",
             "cli.config.errors.profile_session_expired",
         }
 

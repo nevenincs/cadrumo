@@ -8,7 +8,7 @@ related:
   - '[[2026-10-04-application-sign-in-adr]]'
 modified: '2026-10-12'
 body_schema: body-v2
-body_hash: 'sha256:be699a58cc115869aa190a2a9c6ec71c7962dc356ba483abff292cf3222d6975'
+body_hash: 'sha256:1f7e80f96869193ee7ee2e58bab2bd96582b82601728b508392492a609c907d2'
 ---
 
 # `application-sign-in` plan
@@ -47,7 +47,7 @@ Runtime-owned shared sign-in: three-state lock observation, durable generation, 
 - [x] `P01.S06` - Advance the generation and delete the receipt on lock everywhere, positive OS lock and logout evidence, password rotation or reset, recovery and profile deletion, and sweep receipts whose bound login is positively gone; `src/cadrumo/application/user_profile/session_authority_lifecycle.py, automation_lifecycle_service.py, src/cadrumo/entrypoints/runtime/profile_host.py, profile_connections.py, owning tests`.
 - [x] `P01.S07` - Add the runtime human_sign_out operation for human-kind sessions or a presented proof, retiring every human and attended session and reporting remaining automation; `src/cadrumo/application/runtime/ contracts and transport, src/cadrumo/entrypoints/runtime/, owning tests`.
 - [x] `P01.S08` - Add the unauthenticated sign_in_status runtime request reporting present, absent or unknown with deadlines, creating no worker and never reading the keychain; `src/cadrumo/application/runtime/ contracts, src/cadrumo/adapters/local_runtime/server dispatch, src/cadrumo/entrypoints/runtime/, owning tests`.
-- [ ] `P01.S09` - Split typed refusals so THROTTLED carries remaining seconds and PROFILE_LOCKED, receipt reasons and generation changed reach clients, and add the throttle unreadable-state diagnostic while it keeps clearing; `src/cadrumo/entrypoints/runtime/profile_login.py, src/cadrumo/application/user_profile/access_contracts.py, src/cadrumo/adapters/persistence/storage/master_key/login_throttle.py, error catalogue, owning tests`.
+- [x] `P01.S09` - Split typed refusals so THROTTLED carries remaining seconds and PROFILE_LOCKED, receipt reasons and generation changed reach clients, and add the throttle unreadable-state diagnostic while it keeps clearing; `src/cadrumo/entrypoints/runtime/profile_login.py, src/cadrumo/application/user_profile/access_contracts.py, src/cadrumo/adapters/persistence/storage/master_key/login_throttle.py, error catalogue, owning tests`.
 
 ### Phase `P02` - Session events
 

@@ -2160,8 +2160,15 @@ cli:
         login NAME' per activar un perfil registrat.
       profile_session_absent: No has iniciat la sessió. Executa `aeat config login`
         per desbloquejar el teu perfil.
+      profile_session_custody_changed: La contrasenya o la configuració de recuperació
+        d'aquest perfil han canviat. Executa `aeat config login` per tornar a iniciar
+        la sessió.
       profile_session_expired: La teva sessió de perfil ha caducat. Executa `aeat
         config login` per tornar a iniciar la sessió.
+      profile_session_login_mismatch: La teva sessió desada pertany a una altra sessió
+        d'aquest ordinador. Executa `aeat config login` per iniciar la sessió aquí.
+      profile_session_signed_out: S'ha tancat la teva sessió en aquest perfil des
+        d'un altre lloc. Executa `aeat config login` per tornar a iniciar la sessió.
     google:
       detail:
         sync_push_limit_requires_dry_run: La sincronització push de Google no pot

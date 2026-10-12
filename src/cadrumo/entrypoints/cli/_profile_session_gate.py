@@ -10,11 +10,12 @@ import typer
 
 from ...application.operator_surface.command_ports import ProfileAuthenticationPosture
 from ...core.errors.hierarchy import InternalInvariantError
-from ...core.profile_session import ProfileSessionRefusalReason
+from ...core.profile_session import ProfileSessionRefusalReason, ReceiptBindingRefusal
 from .command_spec import CommandSpec
 from .state_projection_support import authority_operation
 
 if TYPE_CHECKING:
+    from ...adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
     from ...application.user_profile.login_session import ProfileLoginOutcome
     from ...application.user_profile.session_admission import ProfileCredentialRequestV1
     from .common import RequestedCliLeaf
@@ -46,13 +47,55 @@ _LOGGED_OUT_REFUSALS = frozenset(
 )
 
 
-def session_refusal_translation_key(refusal: ProfileSessionRefusalReason) -> str:
-    """Map every typed resume refusal to its stable operator diagnostic."""
+def session_refusal_translation_key(
+    refusal: ProfileSessionRefusalReason, binding: ReceiptBindingRefusal | None = None
+) -> str:
+    """Map every typed resume refusal to its stable operator diagnostic.
+
+    A receipt refused for the sign-in it belongs to says so: a sign-out
+    elsewhere and a sign-in from another login are not the absence of one.
+    """
+    if binding is ReceiptBindingRefusal.LOGIN_MISMATCH:
+        return "cli.config.errors.profile_session_login_mismatch"
+    if binding is not None:
+        return "cli.config.errors.profile_session_signed_out"
+    if refusal is ProfileSessionRefusalReason.CUSTODY_CHANGED:
+        return "cli.config.errors.profile_session_custody_changed"
     return (
         "cli.config.errors.profile_session_absent"
         if refusal in _LOGGED_OUT_REFUSALS
         else "cli.config.errors.profile_session_expired"
     )
+
+
+def session_refusal_context(
+    refusal: ProfileSessionRefusalReason, binding: ReceiptBindingRefusal | None = None
+) -> dict[str, object]:
+    """Return the refusal's public facts, naming the binding when there is one."""
+    context: dict[str, object] = {"reason": (binding or refusal).value, "sign_in_reason": refusal.value}
+    if binding is not None:
+        context["sign_in_binding"] = binding.value
+    return context
+
+
+def raise_runtime_refusal(error: RuntimeFrontendRefusedError) -> Never:
+    """Carry a runtime sign-in refusal to the operator without collapsing it.
+
+    The runtime's code and context cross unchanged, so a reader of the
+    envelope sees the same facts; the message names the typed reason, and a
+    throttle names the seconds left.
+    """
+    from ...application.user_profile.access_contracts import AccessDenialCode
+
+    sign_in = error.sign_in
+    key: str | None = None
+    if sign_in is not None and sign_in.reason == "throttled":
+        key = "errors.refused.refused_profile_login_throttled"
+    elif sign_in is not None and isinstance(sign_in.reason, ProfileSessionRefusalReason):
+        key = session_refusal_translation_key(sign_in.reason, sign_in.binding)
+    elif error.reason == AccessDenialCode.PROFILE_LOCKED.value:
+        key = "errors.refused.profile_locked"
+    raise CliRefusedBoundaryError(error.reason, context=error.context, translated_message=key) from None
 
 
 def _common() -> Any:
@@ -399,6 +442,8 @@ __all__ = [
     "activate_profile_session",
     "bind_profile_target",
     "normalize_ambient_profile",
+    "raise_runtime_refusal",
+    "session_refusal_context",
     "session_refusal_translation_key",
 ]
 

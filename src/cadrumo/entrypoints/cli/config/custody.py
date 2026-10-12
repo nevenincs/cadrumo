@@ -235,7 +235,9 @@ def _login_through_the_prompt(
             already_authenticated=receipt.resumed,
         )
     except RuntimeFrontendRefusedError as error:
-        raise CliRefusedBoundaryError(error.reason, context=error.context) from None
+        from .._profile_session_gate import raise_runtime_refusal
+
+        raise_runtime_refusal(error)
     finally:
         client.close()
 
@@ -356,7 +358,11 @@ def config_logout(
 
             subscribe_profile_notices(ctx, client)
             outcome = client.human_sign_out()
-        except (RuntimeFrontendRefusedError, ProfileReceiptRefusedError) as error:
+        except RuntimeFrontendRefusedError as error:
+            from .._profile_session_gate import raise_runtime_refusal
+
+            raise_runtime_refusal(error)
+        except ProfileReceiptRefusedError as error:
             raise CliRefusedBoundaryError(str(error.reason), context={"reason": str(error.reason)}) from None
         finally:
             client.close()

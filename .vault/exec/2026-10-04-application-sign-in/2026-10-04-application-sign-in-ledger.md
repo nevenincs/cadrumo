@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:724cedf22d1f59620e15e51134929e73eaed5df923e64c46af2a1843d3513b4c'
+body_hash: 'sha256:44473111ddee46bf971a4ff2ba7e5edf56deeba88dab6891bc178a997811d0ce'
 related:
   - "[[2026-10-04-application-sign-in-plan]]"
 ---
@@ -244,6 +244,22 @@ related:
 - `S16` `verify:` `just check-types (31 ty findings in dev/ and adapters/local_runtime/tests/test_posix.py, none in this Step's files)` -> `fail`
 - `S16` `verify:` `just check-import-boundaries (unavailable: governed tree changed mid-run)` -> `fail`
 - `S16` `verify:` `test_runtime_session, test_runtime_admission, test_runtime_account_factories in that run` -> `pass`
+- `S09` `M` `src/cadrumo/entrypoints/cli/_profile_session_gate.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/runtime_profile_admission.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/config/custody.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_authentication_gate.py`
+- `S09` `A` `src/cadrumo/entrypoints/cli/tests/test_sign_in_refusal_rendering.py`
+- `S09` `M` `src/cadrumo/locales/en/cli.yml`
+- `S09` `M` `src/cadrumo/locales/es/cli.yml`
+- `S09` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S09` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S09` `verify:` `pytest test_sign_in_refusal_rendering + test_profile_authentication_gate: 241 passed` -> `pass`
+- `S09` `verify:` `dev.locales set-batch for three cli.config.errors keys in en es ca hu` -> `pass`
+- `S09` `verify:` `just check-style` -> `pass`
+- `S09` `verify:` `just check-format (4 findings, none in this Step's files)` -> `fail`
+- `S09` `verify:` `just check-types (31 ty findings in dev/ and adapters/local_runtime/tests/test_posix.py, none in this Step's files)` -> `fail`
+- `S09` `verify:` `just check-import-boundaries (unavailable: governed tree changed mid-run)` -> `fail`
+- `S09` `verify:` `ruff check, ruff format --check, ty on the Step's files` -> `pass`
 
 ## Notes
 
@@ -263,3 +279,4 @@ related:
 - `S10` Implemented before this ledger resumed `(session_authority_core` retire point with SessionRetirementKind); closed on test evidence.
 - `S11` Implemented before this ledger resumed `(runtime_frame_io` event frames, `session_events` queue bound 64, `server_connection_handling,` `runtime_verified_transport);` closed on test evidence.
 - `S16` Implemented before this ledger resumed (tui `runtime_session,` app, `runtime_account);` closed on test evidence.
+- `S09` Runtime already carried THROTTLED seconds, `PROFILE_LOCKED,` receipt reasons and binding (generation changed, login mismatch) on the wire, and the TUI shows the typed code; the CLI collapsed them to absent/expired or a bare code. The CLI now names each reason, keeps the runtime code and context the desktop reads, and the throttle diagnostic was already present in `login_throttle.`
