@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from typing import override
 from uuid import UUID, uuid4
 
@@ -18,6 +18,7 @@ from .....adapters.local_runtime.frontend_client_contracts import RuntimeFronten
 from .....application.operations.registry import OperationFrontendProjection
 from .....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from .....application.runtime.profile_access import RuntimeProfileStatus
+from .....application.runtime.session_events import RuntimeLifecycleNotice
 from .....application.user_profile.login_interaction import ProfileLoginChoice
 from .....core.diagnostic_log import DiagnosticFormatter
 from .....core.logging import LOG_FILE_FORMAT, get_logger
@@ -46,6 +47,11 @@ class _Client(RuntimeFrontendClient):
     ) -> RuntimeProfileStatus:
         self.proof = secret
         raise self.error
+
+    @override
+    def subscribe_lifecycle_notices(self, receive: Callable[[RuntimeLifecycleNotice], None]) -> Callable[[], None]:
+        # The screen subscribes before it sends the proof; this port has no runtime to send notices.
+        return lambda: None
 
     @override
     def close(self) -> None:
