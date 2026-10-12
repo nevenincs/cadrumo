@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#mcp-parity'
 date: '2026-10-11'
-modified: '2026-10-11'
+modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:5714284b514be9f6d2c135386c6394037214e8d0afb7bfb2d27e1a0aaaf7b9e7'
+body_hash: 'sha256:92886fb728f3d95392e42b305132a527f6f85863b91d0aef28c7ee64bdff9806'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -186,6 +186,66 @@ Ledger rows give counts such as 7054 of 7058 without naming the tests outside th
 
 The owner ruled on 2026-10-11 that MCP never refuses anything the command line can do and that the three frontends are at parity; `2026-10-11-mcp-parity-full-parity-adr` records it and supersedes the admission rulings. Six reviews recorded here had been read as asking for the opposite, and several resolutions above added a refusal, a withheld part of a result or a held-back variant on the MCP frontend. Those resolutions are reversed in the tree: an operation carries no list of frontends, and no resolver, executor, guard or runtime check decides by frontend. Closed as not applicable, in the part that depended on the frontend: `bulk-classify-second-route`, `split-one-way`, `split-guard-stamp`, `archive-stash-open`, `agent-answers-own-review`, `result-sealing-by-executor`, `refusal-site`, `reader-called-local`, the refusal half of `reader-proxy`, and `capture-output-root`, whose recommendation named a file-exchange record that is rejected. What stands on every frontend alike: the loopback client that ignores proxy settings, the decimal rule, the recorded origin of a classification as a fact that refuses nothing, a confirmation that writes a sealed row back as stored, the session-derived actor, and the typed subject reference. A reviewer's observation that an agent has a second route to an act is a description of parity, not a defect.
 
+### reset-and-storage-acts-root | high | The reset and storage acts took their tree from ambient settings while the fence came from the served root
+
+`src/cadrumo/entrypoints/runtime/installation_reset.py:44` fenced the profiles of the root the runtime serves and then reset the tree `load_settings()` named; `installation_storage.py:47` had the same shape. Review 7, of phases `P08` and `P09`, reopening `S55`. Resolved 2026-10-12: every act runs inside one served-root scope on the exchange, shown with a runtime over one root while ambient settings name another. In an installed runtime the two could not differ, because the manager clears the child's environment and pins the root.
+
+### reset-fallback-on-unavailable | medium | The command line reset in process on any unavailable answer, which three paths give while a runtime is alive
+
+`src/cadrumo/entrypoints/cli/runtime_installation.py:97` and `src/cadrumo/entrypoints/cli/config/reset_cli.py:116`. A busy pipe, missing package metadata and a failed endpoint release all read as no runtime. Review 7. Resolved 2026-10-12: the endpoint reports absent, held or indeterminate, and the command works in process only on absence. Not run on macOS, where a socket left by a crashed runtime reads as indeterminate.
+
+### tui-operations-idempotency-key | medium | The terminal interface's Operations form could not carry the replay key the command line and MCP carry
+
+`src/cadrumo/entrypoints/tui/operations/run_screen.py:410`. Review 7. Resolved 2026-10-12: an optional field, offered for the operations that can take a key.
+
+### plan-prose-contradicts-the-rule | medium | The plan's Verification and Parallelization sections still stated the rejected rules as requirements
+
+Review 7. Resolved 2026-10-12: both sections state the parity criteria.
+
+### decision-coverage | medium | The plan did not link the protocol record this work changed, and four new mechanisms had no record
+
+Review 7. Resolved 2026-10-12 in part: the plan links `2026-07-08-mcp-protocol-hardening-adr` and `2026-07-31-mcp-sdk-major-carry-adr`, and the full-parity record lists the mechanisms in its Implementation section as implementation, not commitments. Open: whether the sessionless installation door, the worker's server-start instruction, the held-secret records and the shipped contract document become commitments of a record of their own.
+
+### once-secret-consumed-early | low | A one-use held secret was deleted before the call naming it was validated or sent, and without a lock
+
+`src/cadrumo_harness/mcp/held_secrets.py:213`. Review 7. Resolved 2026-10-12: taken last, immediately before the send, under the store's cross-process lock.
+
+### door-refusal-read-as-no-effect | low | An error inside an act's handler after its change began was answered as a refusal
+
+`src/cadrumo/entrypoints/runtime/installation_door.py:378`. Review 7. Resolved 2026-10-12: a changing handler marks where its change begins, a later error settles as failed with effect unknown, and a changing act that completes without the mark fails.
+
+### request-fault-message-heuristic | low | The value-free promise of a request fault rested on matching the message against the value
+
+`src/cadrumo/core/request_faults.py:94`. Review 7. Resolved 2026-10-12: a registry-wide test fails on a validator message that interpolates anything but a field name or a constant; eleven offenders were fixed.
+
+### declaration-proof-selection | low | The proof named the actor as the one difference and dropped a second recorded one
+
+`src/cadrumo/entrypoints/tests/test_declaration_through_mcp_equals_command_line.py:92`. Review 7. Resolved 2026-10-12: the origin of a classification is asserted as the second intended difference, and event payloads and notices are compared.
+
+### gate-limits | low | The counterpart gate classified by the first way that applied and checked existence only
+
+`src/cadrumo/entrypoints/cli/tests/command_frontend_counterparts.py:254`. Review 7. Resolved 2026-10-12 in part: each in-process pair names its proving test and the gate fails when it is missing; a reached operation with no resolver fails the gate. Open: the pairs declared unproven, which are the bare command and the session-door commands, and the censo import, proven for refusal only because the shipped parser refuses every document.
+
+### spreadsheet-push-unavailable | medium | The spreadsheet push command names an operation no frontend can submit
+
+`src/cadrumo/entrypoints/cli/command_operation_table.py:231` records that `app modelo spreadsheet push` reaches `export.google-sheets`, which is composed with no access resolver (`src/cadrumo/entrypoints/tests/test_google_review_enrollment.py:17`), so every frontend is answered that the operation is unavailable. Found while resolving `gate-limits`, read from the code and not run. Equal on all three frontends, so not a parity gap. Open: whether the command should submit the reviewed publication instead is a question for the record that governs the Google export.
+
+### input-interaction-wording | low | Two Steps said every interaction kind can be answered; input and choice cannot, on any frontend
+
+`src/cadrumo/application/operations/observation.py:319`. Review 7. Resolved 2026-10-12: the plan's Verification section says so.
+
+### admission-wait-spin | low | The admission wait re-read the profile binding from disk under the connection-wide guard every ten milliseconds
+
+`src/cadrumo/entrypoints/runtime/profile_connection_admission.py:119`. Review 7. Resolved 2026-10-12: it retries only the retirement, backs off, and holds the guard only to notice a removed host.
+
+### placement-and-private-reach | low | A generator of shipped data lived in a tests package, and the installation client drove private members of the connection
+
+Review 7. Resolved 2026-10-12: the writers are under `dev/harness_data`, and the transport has a public held exchange.
+
+### wide-pass-gates | medium | A wide test pass showed four gates failing because of code this work added
+
+Five exception classes rooted only at a builtin base; a test naming a storage location with a path literal; the terminal interface composing the operation registry outside the installed session; a test pinning a refusal's members without the request faults. Found 2026-10-12 after the phase closed. Resolved the same day.
+
 ## Recommendations
 
 - The recommendations below that ask the admission rulings record, the file-exchange record or the approval record for a decision are withdrawn with `refusals-withdrawn`: the first is superseded and the others are rejected, and the owner's ruling leaves no such decision open. `reader-network-fact`, `workflow-run-detail`, `surface-real-policy` and `purchase-link-outside-fingerprint` are unaffected.
@@ -200,3 +260,6 @@ The owner ruled on 2026-10-11 that MCP never refuses anything the command line c
 - For `agent-answers-own-review`: the admission rulings record should say which review responses an agent may give on the MCP frontend and which wait for the person.
 - For `split-guard-stamp`: the rule now enforced is the conservative reading; the admission rulings record carries it as a row for the owner to confirm or relax, together with two neighbours it does not cover: an agent archiving or stashing the person's row, which restore undoes, and an agent replacing a usage ratio the person set, which the profile does not attribute.
 - For `purchase-link-outside-fingerprint`: decide, in the record that governs filing snapshots, whether the fingerprint's field set gains the purchase-evidence link in a new version, so that linking evidence to a sealed row keeps the revision reported as stale.
+- For `decision-coverage`: decide whether the four mechanisms are recorded as commitments, in an amendment to the full-parity record or in records of their own, before another product builds on any of them.
+- For `spreadsheet-push-unavailable`: verify by running the command, and decide in the record that governs the Google export which operation it submits.
+- For `gate-limits`: give the session-door commands a test that holds each command's output to the session tool's reply, so the pairs can leave the unproven list.

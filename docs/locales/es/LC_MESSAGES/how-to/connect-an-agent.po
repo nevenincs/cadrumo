@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-12 00:32+0200\n"
+"POT-Creation-Date: 2026-10-12 02:41+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization team <docs@cadrumo>\n"
 "Language: es\n"
@@ -433,17 +433,24 @@ msgid ""
 "A secret held this way stays until you delete it, so the agent can sign "
 "in again with the same reference after a lock or after your sign-in "
 "reaches its deadline. To hold a secret for one use only, add `--once`. "
-"The first tool call that presents the reference then deletes the secret, "
-"whatever that call answers."
+"The first tool call that sends the secret spends it: the server reads and"
+" deletes the stored copy immediately before sending it to the runtime. A "
+"call that is refused before that point (an invalid argument, a reference "
+"that holds nothing, no running runtime) leaves it held. Once it has been "
+"read it is spent even if the send then fails; hold another to try again."
 msgstr ""
 "Un secreto guardado de esta forma permanece hasta que lo eliminas, de "
 "modo que el agente puede volver a iniciar sesión con la misma referencia "
 "después de un bloqueo o cuando tu inicio de sesión llega a su límite de "
 "tiempo. Para guardar un secreto para un solo uso, añade `--once`. La "
-"primera llamada a una herramienta que presenta la referencia elimina "
-"entonces el secreto, responda lo que responda esa llamada."
+"primera llamada a una herramienta que envía el secreto lo gasta: el "
+"servidor lee y elimina la copia guardada justo antes de enviarla al "
+"entorno de ejecución. Una llamada que se rechaza antes de ese punto (un "
+"argumento no válido, una referencia que no contiene nada, ningún entorno "
+"de ejecución en marcha) lo deja guardado. Una vez leído, queda gastado "
+"aunque el envío falle después; guarda otro para volver a intentarlo."
 
-#: ../../how-to/connect-an-agent.md:192
+#: ../../how-to/connect-an-agent.md:196
 msgid ""
 "`cadrumo-mcp --list-held-secrets` lists what you have entered, by label "
 "and without showing it, and `cadrumo-mcp --delete-held-secret REFERENCE` "
@@ -464,11 +471,11 @@ msgstr ""
 " un secreto que escribas en la conversación; la referencia es la forma "
 "que lo mantiene fuera."
 
-#: ../../how-to/connect-an-agent.md:201
+#: ../../how-to/connect-an-agent.md:205
 msgid "Storage, repair and other work that needs no profile"
 msgstr "Almacenamiento, reparación y otros trabajos que no necesitan un perfil"
 
-#: ../../how-to/connect-an-agent.md:203
+#: ../../how-to/connect-an-agent.md:207
 msgid ""
 "Some work needs no profile and no sign-in: inspecting and reclaiming "
 "storage, resetting all profiles, listing profiles, inspecting and "
@@ -495,7 +502,7 @@ msgstr ""
 "ofrece el mismo trabajo en **Instalación**, que puedes abrir desde la "
 "pantalla de inicio de sesión."
 
-#: ../../how-to/connect-an-agent.md:213
+#: ../../how-to/connect-an-agent.md:217
 msgid ""
 "A destructive action, such as reclaiming storage or resetting all "
 "profiles, takes `confirm`. Unless `confirm` is true it changes nothing: "
@@ -513,11 +520,11 @@ msgstr ""
 "espere tu visto bueno antes de confirmar. En la vista `read-only-local`, "
 "la herramienta ofrece únicamente las lecturas y esos informes."
 
-#: ../../how-to/connect-an-agent.md:221
+#: ../../how-to/connect-an-agent.md:225
 msgid "Read a recovery code that an agent enabled"
 msgstr "Leer un código de recuperación que ha activado un agente"
 
-#: ../../how-to/connect-an-agent.md:223
+#: ../../how-to/connect-an-agent.md:227
 msgid ""
 "An agent can enable a recovery code with the `installation` tool's "
 "`recovery_enroll` action or the `session` tool's `enable_recovery` "
@@ -537,7 +544,7 @@ msgstr ""
 "solo una referencia a ella. Lee el código tú mismo, en una terminal "
 "propia:"
 
-#: ../../how-to/connect-an-agent.md:235
+#: ../../how-to/connect-an-agent.md:239
 msgid ""
 "The command shows what the code was issued for and when, and then the "
 "code itself. Write it down, then type `kept` to delete the stored copy. "
@@ -550,7 +557,7 @@ msgstr ""
 "Hasta que confirmes que lo has guardado, la copia permanece en el almacén"
 " de credenciales."
 
-#: ../../how-to/connect-an-agent.md:240
+#: ../../how-to/connect-an-agent.md:244
 msgid ""
 "To list what is still held without showing any code, or to delete a copy "
 "without reading it:"
@@ -558,7 +565,7 @@ msgstr ""
 "Para enumerar lo que sigue almacenado sin mostrar ningún código, o para "
 "eliminar una copia sin leerla:"
 
-#: ../../how-to/connect-an-agent.md:248
+#: ../../how-to/connect-an-agent.md:252
 msgid ""
 "These commands work only at a terminal. They refuse when their input or "
 "output is redirected, so an agent cannot run them for you. If you delete "
@@ -573,11 +580,11 @@ msgstr ""
 "nuevo. [Proteger el acceso a tus datos](protect-data-access.md) explica "
 "para qué sirve un código de recuperación y cómo usarlo."
 
-#: ../../how-to/connect-an-agent.md:254
+#: ../../how-to/connect-an-agent.md:258
 msgid "Review and manage access as the profile owner"
 msgstr "Revisar y gestionar el acceso como titular del perfil"
 
-#: ../../how-to/connect-an-agent.md:256
+#: ../../how-to/connect-an-agent.md:260
 msgid ""
 "Use a human password-authorized session for the intended profile, as "
 "described in [Set up a profile](profile-setup.md). Approve a request "
@@ -591,13 +598,13 @@ msgstr ""
 "administra a los demás clientes desde tu propia sesión. Comprueba el ID "
 "de perfil en cada resultado."
 
-#: ../../how-to/connect-an-agent.md:261
+#: ../../how-to/connect-an-agent.md:265
 msgid "List pending requests and inspect the exact request before deciding:"
 msgstr ""
 "Enumera las solicitudes pendientes e inspecciona la solicitud exacta "
 "antes de decidir:"
 
-#: ../../how-to/connect-an-agent.md:266
+#: ../../how-to/connect-an-agent.md:270
 msgid ""
 "Replace `REQUEST_UUID` with the returned request ID. Review the client "
 "and destination, operations, actions, disclosures, periods, expiry, "
@@ -612,7 +619,7 @@ msgstr ""
 " de esa inspección. Aprueba únicamente los permisos revisados o rechaza "
 "la solicitud:"
 
-#: ../../how-to/connect-an-agent.md:274
+#: ../../how-to/connect-an-agent.md:278
 msgid ""
 "Run one decision command. Approval asks for a fresh profile password "
 "through a hidden terminal prompt; decline does not. For controlled "
@@ -634,7 +641,7 @@ msgstr ""
 "entrega protegida. El agente debe terminar el sondeo y autenticarse con "
 "la referencia entregada."
 
-#: ../../how-to/connect-an-agent.md:282
+#: ../../how-to/connect-an-agent.md:286
 msgid ""
 "The same review procedure applies to rotation, renewal and scope-change "
 "requests. Enrollment and rotation can deliver a new protected reference; "
@@ -657,13 +664,13 @@ msgstr ""
 "correspondiente en la autorización. Bloquear la sesión actual no revoca "
 "esa autorización independiente."
 
-#: ../../how-to/connect-an-agent.md:291
+#: ../../how-to/connect-an-agent.md:295
 msgid "Use the inventory's non-secret key or grant ID to revoke access:"
 msgstr ""
 "Usa el ID no secreto de clave o autorización del inventario para revocar "
 "el acceso:"
 
-#: ../../how-to/connect-an-agent.md:296
+#: ../../how-to/connect-an-agent.md:300
 msgid ""
 "Check `access_denied` and `cleanup_pending` in text output; in the JSON "
 "result, inspect `receipt.access_denied` and `receipt.cleanup_pending`. "
@@ -676,7 +683,7 @@ msgstr ""
 "credenciales esté pendiente es distinto de que se haya denegado el "
 "acceso."
 
-#: ../../how-to/connect-an-agent.md:300
+#: ../../how-to/connect-an-agent.md:304
 msgid ""
 "List sessions, then choose the intended lock scope. A current-session "
 "lock ends the caller's session; a selected-session lock ends that "
@@ -687,7 +694,7 @@ msgstr ""
 "de una sesión seleccionada termina esa sesión. Un bloqueo de todo el "
 "perfil suspende su automatización."
 
-#: ../../how-to/connect-an-agent.md:308
+#: ../../how-to/connect-an-agent.md:312
 msgid ""
 "To resume, supply the fresh password at the hidden prompt. Add `--grant "
 "GRANT_UUID` for each grant you deliberately reactivate; omitting it "
@@ -698,7 +705,7 @@ msgstr ""
 "reactivar; si lo omites, se restaura el acceso humano sin reactivar "
 "autorizaciones."
 
-#: ../../how-to/connect-an-agent.md:315
+#: ../../how-to/connect-an-agent.md:319
 msgid ""
 "Confirm the returned grant IDs, then let agents reconnect and "
 "authenticate afresh."

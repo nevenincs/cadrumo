@@ -182,8 +182,12 @@ conversation, in a tool result or in a log.
 
 A secret held this way stays until you delete it, so the agent can sign in again
 with the same reference after a lock or after your sign-in reaches its deadline.
-To hold a secret for one use only, add `--once`. The first tool call that
-presents the reference then deletes the secret, whatever that call answers.
+To hold a secret for one use only, add `--once`. The first tool call that sends
+the secret spends it: the server reads and deletes the stored copy immediately
+before sending it to the runtime. A call that is refused before that point (an
+invalid argument, a reference that holds nothing, no running runtime) leaves it
+held. Once it has been read it is spent even if the send then fails; hold another
+to try again.
 
 ```text
 cadrumo-mcp --hold-secret --once

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-12 00:32+0200\n"
+"POT-Creation-Date: 2026-10-12 02:41+0200\n"
 "PO-Revision-Date: 2026-07-19 10:00+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
@@ -434,17 +434,25 @@ msgid ""
 "A secret held this way stays until you delete it, so the agent can sign "
 "in again with the same reference after a lock or after your sign-in "
 "reaches its deadline. To hold a secret for one use only, add `--once`. "
-"The first tool call that presents the reference then deletes the secret, "
-"whatever that call answers."
+"The first tool call that sends the secret spends it: the server reads and"
+" deletes the stored copy immediately before sending it to the runtime. A "
+"call that is refused before that point (an invalid argument, a reference "
+"that holds nothing, no running runtime) leaves it held. Once it has been "
+"read it is spent even if the send then fails; hold another to try again."
 msgstr ""
 "Az így eltárolt titok addig marad meg, amíg nem törlöd, így az ügynök "
 "ugyanazzal a hivatkozással újra be tud jelentkezni zárolás után, vagy "
 "miután a bejelentkezésed elérte a határidejét. Ha csak egyszeri "
 "használatra szeretnél titkot eltárolni, add hozzá a `--once` kapcsolót. "
-"Ekkor az első eszközhívás, amely a hivatkozást megadja, törli a titkot, "
-"bármit válaszol is az a hívás."
+"Az első eszközhívás, amely elküldi a titkot, felhasználja azt: a "
+"kiszolgáló közvetlenül a futtatókörnyezetnek való elküldés előtt "
+"beolvassa és törli a tárolt másolatot. Az a hívás, amelyet e pont előtt "
+"elutasítanak (érvénytelen argumentum, olyan hivatkozás, amely nem "
+"tartalmaz semmit, nincs futó futtatókörnyezet), megőrzi a titkot. Ha "
+"egyszer beolvasták, akkor is elhasználódott, ha a küldés utána meghiúsul;"
+" tárolj el egy másikat, hogy újra próbálkozhass."
 
-#: ../../how-to/connect-an-agent.md:192
+#: ../../how-to/connect-an-agent.md:196
 msgid ""
 "`cadrumo-mcp --list-held-secrets` lists what you have entered, by label "
 "and without showing it, and `cadrumo-mcp --delete-held-secret REFERENCE` "
@@ -466,11 +474,11 @@ msgstr ""
 "beszélgetésbe beírt titkot; a hivatkozás az a mód, amely a beszélgetésen "
 "kívül tartja."
 
-#: ../../how-to/connect-an-agent.md:201
+#: ../../how-to/connect-an-agent.md:205
 msgid "Storage, repair and other work that needs no profile"
 msgstr "Tárolás, javítás és egyéb, profilt nem igénylő munka"
 
-#: ../../how-to/connect-an-agent.md:203
+#: ../../how-to/connect-an-agent.md:207
 msgid ""
 "Some work needs no profile and no sign-in: inspecting and reclaiming "
 "storage, resetting all profiles, listing profiles, inspecting and "
@@ -498,7 +506,7 @@ msgstr ""
 "terminálfelület ugyanezt a munkát a **Telepítés** alatt kínálja, amelyet "
 "a bejelentkezési képernyőről nyithatsz meg."
 
-#: ../../how-to/connect-an-agent.md:213
+#: ../../how-to/connect-an-agent.md:217
 msgid ""
 "A destructive action, such as reclaiming storage or resetting all "
 "profiles, takes `confirm`. Unless `confirm` is true it changes nothing: "
@@ -518,11 +526,11 @@ msgstr ""
 "only-local` nézetben az eszköz csak az olvasásokat és ezeket a "
 "beszámolókat kínálja."
 
-#: ../../how-to/connect-an-agent.md:221
+#: ../../how-to/connect-an-agent.md:225
 msgid "Read a recovery code that an agent enabled"
 msgstr "Az ügynök által engedélyezett helyreállítási kód elolvasása"
 
-#: ../../how-to/connect-an-agent.md:223
+#: ../../how-to/connect-an-agent.md:227
 msgid ""
 "An agent can enable a recovery code with the `installation` tool's "
 "`recovery_enroll` action or the `session` tool's `enable_recovery` "
@@ -541,7 +549,7 @@ msgstr ""
 "tárolójában, és az ügynöknek csak egy rá mutató hivatkozást ad. A kódot "
 "te magad olvasd el, a saját terminálodban:"
 
-#: ../../how-to/connect-an-agent.md:235
+#: ../../how-to/connect-an-agent.md:239
 msgid ""
 "The command shows what the code was issued for and when, and then the "
 "code itself. Write it down, then type `kept` to delete the stored copy. "
@@ -554,7 +562,7 @@ msgstr ""
 "újra elolvashatod. Amíg meg nem erősíted, hogy eltetted a kódot, a "
 "másolat a hitelesítőadat-tárolóban marad."
 
-#: ../../how-to/connect-an-agent.md:240
+#: ../../how-to/connect-an-agent.md:244
 msgid ""
 "To list what is still held without showing any code, or to delete a copy "
 "without reading it:"
@@ -562,7 +570,7 @@ msgstr ""
 "Ha fel szeretnéd sorolni, mi van még eltárolva, anélkül hogy bármelyik "
 "kód megjelenne, vagy olvasatlanul szeretnél törölni egy másolatot:"
 
-#: ../../how-to/connect-an-agent.md:248
+#: ../../how-to/connect-an-agent.md:252
 msgid ""
 "These commands work only at a terminal. They refuse when their input or "
 "output is redirected, so an agent cannot run them for you. If you delete "
@@ -578,11 +586,11 @@ msgstr ""
 "útmutató](protect-data-access.md) elmagyarázza, mire való a "
 "helyreállítási kód, és hogyan használd."
 
-#: ../../how-to/connect-an-agent.md:254
+#: ../../how-to/connect-an-agent.md:258
 msgid "Review and manage access as the profile owner"
 msgstr "Hozzáférés ellenőrzése és kezelése a profil tulajdonosaként"
 
-#: ../../how-to/connect-an-agent.md:256
+#: ../../how-to/connect-an-agent.md:260
 msgid ""
 "Use a human password-authorized session for the intended profile, as "
 "described in [Set up a profile](profile-setup.md). Approve a request "
@@ -596,13 +604,13 @@ msgstr ""
 "pedig a saját munkameneted alól kezeld. Ellenőrizd a profilazonosítót "
 "minden eredményben."
 
-#: ../../how-to/connect-an-agent.md:261
+#: ../../how-to/connect-an-agent.md:265
 msgid "List pending requests and inspect the exact request before deciding:"
 msgstr ""
 "Döntés előtt listázd a függő kérelmeket, és vizsgáld meg a pontos "
 "kérelmet:"
 
-#: ../../how-to/connect-an-agent.md:266
+#: ../../how-to/connect-an-agent.md:270
 msgid ""
 "Replace `REQUEST_UUID` with the returned request ID. Review the client "
 "and destination, operations, actions, disclosures, periods, expiry, "
@@ -617,7 +625,7 @@ msgstr ""
 " az ellenőrzés aktuális `review_digest` értékét. Csak az ellenőrzött "
 "jogosultságokat hagyd jóvá, vagy utasítsd el a kérelmet:"
 
-#: ../../how-to/connect-an-agent.md:274
+#: ../../how-to/connect-an-agent.md:278
 msgid ""
 "Run one decision command. Approval asks for a fresh profile password "
 "through a hidden terminal prompt; decline does not. For controlled "
@@ -639,7 +647,7 @@ msgstr ""
 "ügynöknek be kell fejeznie a lekérdezést, és a kapott hivatkozással "
 "hitelesítenie kell magát."
 
-#: ../../how-to/connect-an-agent.md:282
+#: ../../how-to/connect-an-agent.md:286
 msgid ""
 "The same review procedure applies to rotation, renewal and scope-change "
 "requests. Enrollment and rotation can deliver a new protected reference; "
@@ -662,13 +670,13 @@ msgstr ""
 "szükséges. Az aktuális munkamenet zárolása nem vonja vissza ezt a "
 "független engedélyt."
 
-#: ../../how-to/connect-an-agent.md:291
+#: ../../how-to/connect-an-agent.md:295
 msgid "Use the inventory's non-secret key or grant ID to revoke access:"
 msgstr ""
 "A hozzáférés visszavonásához használd a leltár nem titkos kulcs- vagy "
 "engedélyazonosítóját:"
 
-#: ../../how-to/connect-an-agent.md:296
+#: ../../how-to/connect-an-agent.md:300
 msgid ""
 "Check `access_denied` and `cleanup_pending` in text output; in the JSON "
 "result, inspect `receipt.access_denied` and `receipt.cleanup_pending`. "
@@ -681,7 +689,7 @@ msgstr ""
 "tároló függő fizikai takarítása külön kérdés attól, hogy a hozzáférést "
 "megtagadták-e."
 
-#: ../../how-to/connect-an-agent.md:300
+#: ../../how-to/connect-an-agent.md:304
 msgid ""
 "List sessions, then choose the intended lock scope. A current-session "
 "lock ends the caller's session; a selected-session lock ends that "
@@ -692,7 +700,7 @@ msgstr ""
 "munkamenetét; egy kiválasztott munkamenet zárolása azt a munkamenetet "
 "zárja le. A teljes profil zárolása felfüggeszti az automatizálását."
 
-#: ../../how-to/connect-an-agent.md:308
+#: ../../how-to/connect-an-agent.md:312
 msgid ""
 "To resume, supply the fresh password at the hidden prompt. Add `--grant "
 "GRANT_UUID` for each grant you deliberately reactivate; omitting it "
@@ -703,7 +711,7 @@ msgstr ""
 "meg egy `--grant GRANT_UUID` kapcsolót; ha ezt elhagyod, az emberi "
 "hozzáférés az engedélyek újraaktiválása nélkül áll helyre."
 
-#: ../../how-to/connect-an-agent.md:315
+#: ../../how-to/connect-an-agent.md:319
 msgid ""
 "Confirm the returned grant IDs, then let agents reconnect and "
 "authenticate afresh."

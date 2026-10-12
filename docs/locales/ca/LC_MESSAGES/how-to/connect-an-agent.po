@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-12 00:32+0200\n"
+"POT-Creation-Date: 2026-10-12 02:41+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0000\n"
 "Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -429,17 +429,24 @@ msgid ""
 "A secret held this way stays until you delete it, so the agent can sign "
 "in again with the same reference after a lock or after your sign-in "
 "reaches its deadline. To hold a secret for one use only, add `--once`. "
-"The first tool call that presents the reference then deletes the secret, "
-"whatever that call answers."
+"The first tool call that sends the secret spends it: the server reads and"
+" deletes the stored copy immediately before sending it to the runtime. A "
+"call that is refused before that point (an invalid argument, a reference "
+"that holds nothing, no running runtime) leaves it held. Once it has been "
+"read it is spent even if the send then fails; hold another to try again."
 msgstr ""
 "Un secret desat d'aquesta manera es manté fins que l'elimines, de manera "
 "que l'agent pot tornar a iniciar la sessió amb la mateixa referència "
 "després d'un bloqueig o quan el teu inici de sessió arriba al seu "
 "termini. Per desar un secret per a un sol ús, afegeix-hi `--once`. La "
-"primera crida a una eina que presenta la referència elimina aleshores el "
-"secret, respongui el que respongui aquesta crida."
+"primera crida a una eina que envia el secret el gasta: el servidor "
+"llegeix i elimina la còpia desada just abans d'enviar-la a l'entorn "
+"d'execució. Una crida que es rebutja abans d'aquest punt (un argument no "
+"vàlid, una referència que no conté res, cap entorn d'execució en marxa) "
+"el deixa desat. Un cop llegit, queda gastat encara que l'enviament falli "
+"després; desa'n un altre per tornar-ho a provar."
 
-#: ../../how-to/connect-an-agent.md:192
+#: ../../how-to/connect-an-agent.md:196
 msgid ""
 "`cadrumo-mcp --list-held-secrets` lists what you have entered, by label "
 "and without showing it, and `cadrumo-mcp --delete-held-secret REFERENCE` "
@@ -460,11 +467,11 @@ msgstr ""
 " Un agent continua acceptant un secret que escriguis a la conversa; la "
 "referència és la forma que el manté fora."
 
-#: ../../how-to/connect-an-agent.md:201
+#: ../../how-to/connect-an-agent.md:205
 msgid "Storage, repair and other work that needs no profile"
 msgstr "Emmagatzematge, reparació i altres feines que no necessiten cap perfil"
 
-#: ../../how-to/connect-an-agent.md:203
+#: ../../how-to/connect-an-agent.md:207
 msgid ""
 "Some work needs no profile and no sign-in: inspecting and reclaiming "
 "storage, resetting all profiles, listing profiles, inspecting and "
@@ -491,7 +498,7 @@ msgstr ""
 "feina a **Instal·lació**, que pots obrir des de la pantalla d'inici de "
 "sessió."
 
-#: ../../how-to/connect-an-agent.md:213
+#: ../../how-to/connect-an-agent.md:217
 msgid ""
 "A destructive action, such as reclaiming storage or resetting all "
 "profiles, takes `confirm`. Unless `confirm` is true it changes nothing: "
@@ -509,11 +516,11 @@ msgstr ""
 "vistiplau abans de confirmar. A la vista `read-only-local`, l'eina "
 "ofereix únicament les lectures i aquests informes."
 
-#: ../../how-to/connect-an-agent.md:221
+#: ../../how-to/connect-an-agent.md:225
 msgid "Read a recovery code that an agent enabled"
 msgstr "Llegir un codi de recuperació que ha activat un agent"
 
-#: ../../how-to/connect-an-agent.md:223
+#: ../../how-to/connect-an-agent.md:227
 msgid ""
 "An agent can enable a recovery code with the `installation` tool's "
 "`recovery_enroll` action or the `session` tool's `enable_recovery` "
@@ -532,7 +539,7 @@ msgstr ""
 "l'agent només una referència a aquesta còpia. Llegeix el codi tu mateix, "
 "en un terminal propi:"
 
-#: ../../how-to/connect-an-agent.md:235
+#: ../../how-to/connect-an-agent.md:239
 msgid ""
 "The command shows what the code was issued for and when, and then the "
 "code itself. Write it down, then type `kept` to delete the stored copy. "
@@ -545,7 +552,7 @@ msgstr ""
 "confirmis que l'has guardat, la còpia continua al magatzem de "
 "credencials."
 
-#: ../../how-to/connect-an-agent.md:240
+#: ../../how-to/connect-an-agent.md:244
 msgid ""
 "To list what is still held without showing any code, or to delete a copy "
 "without reading it:"
@@ -553,7 +560,7 @@ msgstr ""
 "Per enumerar el que encara hi ha desat sense mostrar cap codi, o per "
 "eliminar una còpia sense llegir-la:"
 
-#: ../../how-to/connect-an-agent.md:248
+#: ../../how-to/connect-an-agent.md:252
 msgid ""
 "These commands work only at a terminal. They refuse when their input or "
 "output is redirected, so an agent cannot run them for you. If you delete "
@@ -568,11 +575,11 @@ msgstr ""
 "nou. [Protegeix l'accés a les teves dades](protect-data-access.md) "
 "explica per a què serveix un codi de recuperació i com fer-lo servir."
 
-#: ../../how-to/connect-an-agent.md:254
+#: ../../how-to/connect-an-agent.md:258
 msgid "Review and manage access as the profile owner"
 msgstr "Revisar i gestionar l'accés com a titular del perfil"
 
-#: ../../how-to/connect-an-agent.md:256
+#: ../../how-to/connect-an-agent.md:260
 msgid ""
 "Use a human password-authorized session for the intended profile, as "
 "described in [Set up a profile](profile-setup.md). Approve a request "
@@ -586,13 +593,13 @@ msgstr ""
 "seva, i administra els altres clients des de la teva pròpia sessió. "
 "Comprova l'ID de perfil en cada resultat."
 
-#: ../../how-to/connect-an-agent.md:261
+#: ../../how-to/connect-an-agent.md:265
 msgid "List pending requests and inspect the exact request before deciding:"
 msgstr ""
 "Enumera les sol·licituds pendents i inspecciona la sol·licitud exacta "
 "abans de decidir:"
 
-#: ../../how-to/connect-an-agent.md:266
+#: ../../how-to/connect-an-agent.md:270
 msgid ""
 "Replace `REQUEST_UUID` with the returned request ID. Review the client "
 "and destination, operations, actions, disclosures, periods, expiry, "
@@ -606,7 +613,7 @@ msgstr ""
 "bloqueig del sistema operatiu. Copia el `review_digest` actual d'aquesta "
 "inspecció. Aprova només els permisos revisats o rebutja la sol·licitud:"
 
-#: ../../how-to/connect-an-agent.md:274
+#: ../../how-to/connect-an-agent.md:278
 msgid ""
 "Run one decision command. Approval asks for a fresh profile password "
 "through a hidden terminal prompt; decline does not. For controlled "
@@ -627,7 +634,7 @@ msgstr ""
 "demostra per si sola que s'hagi completat el lliurament protegit. L'agent"
 " ha d'acabar el sondeig i autenticar-se amb la referència lliurada."
 
-#: ../../how-to/connect-an-agent.md:282
+#: ../../how-to/connect-an-agent.md:286
 msgid ""
 "The same review procedure applies to rotation, renewal and scope-change "
 "requests. Enrollment and rotation can deliver a new protected reference; "
@@ -650,13 +657,13 @@ msgstr ""
 "l'autorització. Bloquejar la sessió actual no revoca aquesta autorització"
 " independent."
 
-#: ../../how-to/connect-an-agent.md:291
+#: ../../how-to/connect-an-agent.md:295
 msgid "Use the inventory's non-secret key or grant ID to revoke access:"
 msgstr ""
 "Fes servir l'ID no secret de clau o autorització de l'inventari per "
 "revocar l'accés:"
 
-#: ../../how-to/connect-an-agent.md:296
+#: ../../how-to/connect-an-agent.md:300
 msgid ""
 "Check `access_denied` and `cleanup_pending` in text output; in the JSON "
 "result, inspect `receipt.access_denied` and `receipt.cleanup_pending`. "
@@ -669,7 +676,7 @@ msgstr ""
 "credencials estigui pendent és diferent del fet que s'hagi denegat "
 "l'accés."
 
-#: ../../how-to/connect-an-agent.md:300
+#: ../../how-to/connect-an-agent.md:304
 msgid ""
 "List sessions, then choose the intended lock scope. A current-session "
 "lock ends the caller's session; a selected-session lock ends that "
@@ -680,7 +687,7 @@ msgstr ""
 "sessió seleccionada acaba aquella sessió. Un bloqueig de tot el perfil "
 "suspèn la seva automatització."
 
-#: ../../how-to/connect-an-agent.md:308
+#: ../../how-to/connect-an-agent.md:312
 msgid ""
 "To resume, supply the fresh password at the hidden prompt. Add `--grant "
 "GRANT_UUID` for each grant you deliberately reactivate; omitting it "
@@ -691,7 +698,7 @@ msgstr ""
 "reactivar; si l'omets, es restaura l'accés humà sense reactivar "
 "autoritzacions."
 
-#: ../../how-to/connect-an-agent.md:315
+#: ../../how-to/connect-an-agent.md:319
 msgid ""
 "Confirm the returned grant IDs, then let agents reconnect and "
 "authenticate afresh."
