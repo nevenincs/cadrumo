@@ -5,7 +5,7 @@ tags:
 date: '2026-10-12'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:f70ba9eb97aecdfff3af5c0e94c54fba7dd2de9c2c854e776cbaa3c7b4568d24'
+body_hash: 'sha256:4427b38595754bf87bf013b5e1f298e8c135850c28038fe1066a253f8377fa58'
 related:
   - "[[2026-10-12-desktop-agent-host-reference]]"
   - "[[2026-10-04-desktop-shell-adr]]"
@@ -133,9 +133,10 @@ Contract 6, consent (owner: Cadrumo backend, desktop interface):
 
 Contract 7, packaging and compatibility (owner: Cadrumo build; cadrumo-agent):
 
-- cadrumo-agent is a locked dependency in Cadrumo's lock file, installed by the normal provisioning; Cadrumo declares the launcher script; the package manifest carries an agent statement (bundled, distribution version, hosting-contract version, store-format version) checked like the user-docs statement.
+- cadrumo-agent is never published to PyPI or any public index. Owner ruling of 2026-10-12, first-hand: "we will not publish cadrumo agent to pypi, ever. we do not have a settled method of provisioning the repo." How its source is provisioned into Cadrumo's build is open (remaining choice 5). Today's wheel selector admits only hashed PyPI registry wheels, so whichever method is chosen must change that selector deliberately. Once provisioned, Cadrumo declares the launcher script, and the package manifest carries an agent statement (bundled, distribution version, hosting-contract version, store-format version) checked like the user-docs statement.
 - Cadrumo declares the supported agent version range and contract versions; the launcher compares them with the manifest and with `cadrumo-agent version --json` before start.
-- Both products use the latest Anthropic SDK release as their floor (1.13.0 on 2026-10-12), and current Claude model ids, with no compatibility path for older SDK versions or models. Owner ruling of 2026-10-12, first-hand: "ensure we're working against the latest anthropic versions, no backwards or old version support." Parameters the SDK removed, such as `temperature`, are dropped rather than shimmed. Node is not bundled while the Claude Code lane is excluded.
+- Both products use the latest Anthropic SDK release as their floor (1.13.0 on 2026-10-12), with no compatibility path for older SDK versions. Parameters the SDK removed, such as `temperature`, are dropped rather than shimmed. Owner ruling of 2026-10-12, first-hand: "ensure we're working against the latest anthropic versions, no backwards or old version support."
+- Claude model names are never hardcoded. They come from the Anthropic Models API, which gives id, display name, creation time, input and output limits, and a capability tree, and needs are expressed as capability requirements. Owner ruling of 2026-10-12, first-hand: "model names should be derived programmatically from the api!" The API carries no price and no tier, so how a model is chosen per role, and what replaces Cadrumo's per-model price table, is open (remaining choice 6). Node is not bundled while the Claude Code lane is excluded.
 
 Migration implications:
 
@@ -164,7 +165,7 @@ The launcher puts every authority act where authority already lives: in a Cadrum
 - The column can be built now against these contracts, with each capability unavailable until its owner delivers it.
 - Releasing an agent data key to a client process is new and needs the owner's explicit acceptance through the sign-in amendment.
 - The Claude Code lane is unavailable for real data until proven; the direct lane cannot read images or PDFs itself, so document understanding rests on Cadrumo's readers.
-- Conversations end at the sign-in's idle deadline until `2026-10-10-mcp-parity-plan` `P02.S18` lets the person's messages count as activity.
+- The owner ruled on 2026-10-12, under `2026-10-04-application-sign-in-adr`, that a message the person sends to the assistant counts as their activity. Until that extension is built, conversations end at the sign-in's idle deadline.
 
 Remaining architectural choices, each named for the owner:
 
@@ -172,3 +173,5 @@ Remaining architectural choices, each named for the owner:
 2. Launcher identity: a new `agent-host` frontend (proposed) or the CLI frontend with a narrow door.
 3. Cadrumo-side consent granularity: per profile, provider and model (enforceable now) or per conversation, which needs cadrumo-agent to carry the conversation id on its tool connection again.
 4. Implementation owner for the Tauri host: no running session claims `native/desktop/src-tauri`.
+5. How the cadrumo-agent repository is provisioned into Cadrumo's build, given that it is never published to PyPI.
+6. Model selection per role from the live Models API: which model to use when several meet a role's capability needs, and what replaces the per-model price table.

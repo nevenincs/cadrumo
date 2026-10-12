@@ -5,7 +5,7 @@ tags:
 date: '2026-10-12'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:11710816da57a6653d0ebe9c745ff7832d6e42965c74858ea264c5140d8791af'
+body_hash: 'sha256:5fc4804e0cb5c78a56be734636b53cda451b261c86825b7c32838e949a362091'
 related: []
 ---
 
@@ -152,4 +152,36 @@ So one SQLCipher connector can serve every store. Two risks: SQLCipher's error c
 **Consent surfaces:**
 - The CLI asks for off-host consent through flags (`src/cadrumo/entrypoints/cli/_ledger_evidence_cli.py:257-289`).
 - The TUI has no off-host consent screen (`src/cadrumo/entrypoints/tui/runtime_evidence.py:208-225`).
-- Observation needing live verification: `ledger.evidence.extract` takes `acknowledge_off_host` as a request field, is not a person act, and is open on the full MCP surface (`src/cadrumo/application/ledger/invoice_evidence_extract_operation.py:62-81`; `src/cadrumo/application/operations/person_acts.py:70-72`; `src/cadrumo/application/operations/mcp_surfaces.py:136-143`). An MCP agent may therefore supply its own acknowledgement. This was reported to the mcp-parity owner on 2026-10-12.
+- Observation needing live verification: `ledger.evidence.extract` takes `acknowledge_off_host` as a request field, is not a person act, and is open on the full MCP surface (`src/cadrumo/application/ledger/invoice_evidence_extract_operation.py:62-81`; `src/cadrumo/application/operations/person_acts.py:70-72`; `src/cadrumo/application/operations/mcp_surfaces.py:136-143`). An MCP agent may therefore supply its own acknowledgement. This was reported to the mcp-parity owner on 2026-10-12. They confirmed it on a real runtime and fixed it in `3f15f3bdcc`: an off-host extraction requested over MCP now gets the person-act refusal. The consent record still stores the fixed surface string.
+
+### Feasibility (third audit, 2026-10-12)
+
+Only the documentation was read: no SQLCipher code was executed, and `PRAGMA key` with `?mode=ro` and wrong-key behaviour are untested.
+
+**Encryption library.**
+- `sqlcipher3` 0.6.3 (2026-10-04, zlib/libpng) is the only maintained SQLCipher DB-API package with self-contained cp313 wheels for win_amd64, manylinux_2_28 x86_64 and aarch64, and macOS arm64. It bundles SQLCipher 4.12.0 on SQLite 3.51.1, with OpenSSL 3.6.0 statically linked.
+- The wheels meet the release floors (`dev/packaging/runtime_wheelhouse_contract.py:53-75`).
+- SQLCipher Community requires attribution in the application's notices.
+
+**Fitting it to the agent's stack.**
+- It works with aiosqlite through a connector callable, with `AsyncSqliteSaver(conn)`, and with SQLAlchemy `async_creator`.
+- Its exception classes derive from `Exception`, not from `sqlite3`'s. SQLAlchemy's aiosqlite dialect therefore leaves them unwrapped, so the agent's `sqlite3` catch sites need a dialect shim or dual catches.
+- The key must be applied inside the connector, before the agent sets `journal_mode=WAL` (`agent:src/cadrumo_agent/database/session.py:94-100`).
+- WAL and journals are encrypted, but other temp files are not, so temp storage must stay in memory.
+
+**Fallback without a native dependency.** Use application-level AES-GCM through `cryptography` (already locked by both projects), with a LangGraph `EncryptedSerializer` and column TypeDecorators. This leaves ids, statuses, timestamps, workspace paths, nicknames and the LangGraph checkpoint `metadata` column in plaintext. `EncryptedSerializer` also silently accepts unencrypted rows (`langgraph/checkpoint/serde/encrypted.py:28-30`).
+
+**anthropic 1.x.** The upgrade removes `temperature` from `messages.create`. Cadrumo always sends it (`src/cadrumo/adapters/outbound/llm/providers/anthropic.py:146`, `:176-177`, `:282`; the default is `0.0` at `src/cadrumo/core/config_runtime_fields.py:188-189`), so every Anthropic call would raise `TypeError` until the adapter routes it through `extra_body` or declares it unsupported. Two more effects:
+- The type gates on `anthropic.py:282` are likely to fail.
+- `role_fitness.py:168` timeout detection walks `httpx` types, which become `httpx2`.
+
+anthropic is not in Cadrumo's bundled base closure today. Bundling cadrumo-agent adds it together with `jiter`, `docstring-parser`, `distro` and `sniffio`.
+
+**Publishing cadrumo-agent.** It has no releases on PyPI (`https://pypi.org/pypi/cadrumo-agent/json` returns 404). Publishing a pure-Python wheel there needs no change to the wheel selector, which requires a single hashed PyPI registry wheel (`dev/packaging/runtime_wheel_selection.py:193-243`). A path source would be excluded from the constraint export, and would conflict with the product-cohort check (`dev/packaging/native/product.py:101-105`).
+
+**Dependency overlap.** Apart from anthropic, the only resolver conflict is `websockets`:
+- Cadrumo pins 17.2 for the dev-only `sphinx-autobuild` (`pyproject.toml:578`).
+- `langgraph-sdk` requires `<17`.
+- 16.1.1 satisfies both.
+
+Six runtime packages resolve at Cadrumo's older pins, which the agent has not been tested against: pydantic, pydantic-core, sqlalchemy, opentelemetry-api, pycparser and rpds-py. All of the agent's runtime-only native packages have cp313 wheels for the four targets.
