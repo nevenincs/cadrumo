@@ -5,7 +5,7 @@ tags:
 date: '2026-10-12'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:45b84632134acc0670ef6a0a832842a94424e1586994a1d39d2f47e9498929d1'
+body_hash: 'sha256:f887a5c41a82dd7f63d1cce71b5241c062011b11ca699027276aadab4bb39636'
 related:
   - "[[2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr]]"
   - "[[2026-10-10-mcp-parity-shared-sign-in-door-adr]]"
@@ -100,3 +100,18 @@ The accepted access record already names attended delegation as the way an agent
 - Same-user processes can create attendance requests. They grant nothing, are capped and expire, and the operator sees each request's verified process before deciding.
 - Desktop persisted sign-in and its verification are unchanged and stay a separate integration requirement.
 - Accepted 2026-10-12 on the operator's first-hand approval of this text ("Approve as proposed"). Acceptance records the decision; implementation and verification are reported separately.
+
+## Amendments
+
+Amended 2026-10-12 on implementation, within the operator's approval of this record. The rest of the record stands. The changes:
+
+- **Command and password channel (constraint 1).** The hold command is `aeat config sign-in-hold [PROFILE]`, beside `config sign-in-status`. It reads the password once as the first line of standard input, a strict JSON object `{"passphrase": "..."}` parsed by the command line's existing machine-secret parser, rather than from `--secrets-fd`. A descriptor that a Windows parent must pass by handle inheritance was not a portable channel for a harness. The rest of standard input carries one decision object per line, and standard output carries one JSON event per line, followed by the result.
+- **Timing (constraints 2 and 3).** The bounds are recorded:
+  - an ask lapses after 120 seconds unanswered;
+  - at most 8 asks per profile wait at once;
+  - one MCP call waits at most 90 seconds for a decision;
+  - an attended child is a short lease, at most the five-minute maximum of any delegated lease, and is issued again without a new decision to the same approved connection while the parent session lives;
+  - a holder counts as present only while its own connection holds the human session it named when it last listed the asks.
+- **Attended sessions are not automation sessions.** Lease revalidation, status and the operation guard judge an attended child of a person's session by its lineage, without consulting automation custody, wherever no grant names it. Leaving the periodic revalidation unchanged retired every attended child where the native credential store was unavailable. The packaged proof found this on a remote-shell logon.
+- **Disclosure destination.** On approval the attended connection takes the holder's client identity as its disclosure destination, so the child's disclosures are the person's own. The child remains a distinct session on its own connection.
+- **Status.** The MCP `status` tool reports an attended session as `"session": "attended"`.

@@ -282,3 +282,5 @@ Driving the canonical CLI login keeps the desktop free of runtime authority and 
 - WebView secret exposure becomes unacceptable, in which case the view moves to a dedicated window
 - per-session admission changes the Windows binding
 - lock observers arrive for macOS or other Linux desktops
+
+Amended 2026-10-12 under `2026-10-12-mcp-parity-attended-live-sign-in-adr`: the one live human sign-in of a profile may also be a held one, which is never persisted. It lives on the holding process's runtime connection, and ends when that connection closes, the person signs out, the profile is locked, the deadline passes or the runtime stops. `aeat config logout --secrets-stdin` proves the person by password to end a sign-in that no stored receipt can prove.

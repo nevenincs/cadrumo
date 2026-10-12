@@ -1,10 +1,11 @@
 # Connect an agent (MCP)
 
 The installed `cadrumo-mcp` command connects an MCP client to Cadrumo's local
-runtime. A connection works in one of two ways: it follows your own Cadrumo
-sign-in, or it uses a key you issued for one profile. Either way the agent works
-only inside that one profile, never signs in and never handles a secret. With
-neither a live sign-in nor a valid key it answers only its tool list and `status`,
+runtime. A connection works in one of three ways: it follows your own Cadrumo
+sign-in, it uses a key you issued for one profile, or you approve it to follow a
+sign-in you hold open (see "Hold a sign-in for an agent" below). Whichever way,
+the agent works only inside that one profile, never signs in and never handles
+a secret. With none of these it answers only its tool list and `status`,
 which tells it to ask you to sign in to Cadrumo. The client can run only
 operations allowed by its current session and, for a key, its grant.
 
@@ -254,32 +255,88 @@ cadrumo-runtime --configured-root
   `--expected-version VERSION` to refuse, with code 69, a package of another
   version.
 
-Profile passwords, sign-in, enrolled keys and the operations each session may
-run work exactly as they do on your usual data. Pass each secret on the
-command's protected channel and never on the command line. For example, with the
-two settings in the environment of every command:
+Profile passwords, enrolled keys and the operations each session may run work
+exactly as they do on your usual data. Pass each secret on the command's
+protected channel and never on the command line or in an MCP tool call.
+
+### Hold a sign-in for an agent
+
+A sign-in made with `aeat config login` is kept in this computer's protected
+credential store, and `cadrumo-mcp` follows it from there. A logon whose
+credential store is unavailable, such as a remote shell, or a harness that
+should leave nothing behind, holds the sign-in instead:
 
 ```text
-aeat --format json config profile create agent-test --quiet --secrets-stdin
-cadrumo-runtime --configured-root
-aeat --format json config login agent-test --secrets-stdin
-aeat --format json --profile-secrets-stdin config profile status
-cadrumo-mcp
-aeat --format json config logout
+aeat --format json config sign-in-hold agent-test
 ```
 
-`profile create` and `login` each read a JSON object from standard input:
-`{"passphrase": "…", "passphrase_confirmation": "…"}` to create the profile, and
-`{"passphrase": "…"}` to sign in. A command that runs without a terminal
-reads its profile password from the root `--profile-secrets-stdin` channel as
-`{"profile_passphrase": "…"}` when no stored sign-in can be resumed; see
-[Protect access to your data](protect-data-access.md). Start `cadrumo-mcp` as
-an MCP stdio server with the same two settings, either from your MCP client or
-from your harness.
-It follows that sign-in as described in "Following your sign-in" above. A
-stored sign-in uses this computer's protected credential store. A Windows logon
-that holds no credentials cannot use the store: it can still run the runtime,
-but cannot keep a sign-in for `cadrumo-mcp` to follow.
+The command signs in to the profile and keeps that sign-in open, without
+storing it, for as long as its standard input stays open. Nothing in it is
+written to the credential store or to the profile's storage.
 
-When you are done, sign out, stop the runtime and delete the directory. Nothing
-in your usual Cadrumo data is read or changed along the way.
+- **Password.** The first line of standard input is one JSON object,
+  `{"passphrase": "…"}`. It is read once and then discarded.
+- **Events.** Standard output carries one JSON object per line, each naming its
+  `event`:
+  - `held` gives the `profile_id` and the `session_expires_at` deadline.
+  - `attendance_request` reports an MCP connection that asks to follow this
+    sign-in. It gives the `attendance_id`, the `process_id` of the asking
+    process as the operating system reports it, the `frontend`, the `surface`
+    and when the ask lapses (`expires_at`, two minutes after it was made).
+  - `attendance_decided` and `attendance_refused` report your answers.
+  - `signed_out` and `session_ended` report the end of the sign-in.
+  - `ended` comes last, with the `reason`: `input_closed`, `signed_out` or
+    `session_ended`.
+
+  The command's result follows the events.
+- **Decisions.** Each later line of standard input is one JSON object:
+  `{"approve": "ATTENDANCE_ID"}`, `{"decline": "ATTENDANCE_ID"}`, or
+  `{"sign_out": true}`. Approve only an ask whose `process_id` is the
+  `cadrumo-mcp` process you started, or one of its descendants. Nothing else
+  admits a connection: not a profile ID, a storage path, the runtime's
+  endpoint, or an attendance ID copied to another process.
+
+Start `cadrumo-mcp` with the same two settings and without
+`--credential-reference`. When it has no stored sign-in to follow, its first
+call that needs the profile asks the holder to admit it, and waits up to 90
+seconds for the answer. Once approved, its `status` tool reports `"session":
+"attended"`. The agent then works inside that profile, under the served surface
+and the same operation, approval and disclosure checks as any session. An
+operation that only the person may run, such as signing in or managing keys, is
+refused to it. The approval holds for that one MCP connection while the held
+sign-in lives. When its short lease runs out, it is renewed without a new
+decision.
+
+Access ends for every connection that follows the held sign-in when any of these
+happens, and each later call is refused:
+
+- the holder's standard input closes, or the holder exits;
+- you send `{"sign_out": true}` to the holder;
+- another process signs the person out with
+  `aeat --format json config logout --secrets-stdin`, reading
+  `{"passphrase": "…"}`;
+- the profile is locked with `config profile lock --all`;
+- the sign-in reaches its deadline: by default 15 minutes after you entered the
+  password, and agent activity does not extend it;
+- the runtime stops.
+
+A command that runs without a terminal reads its profile password from the root
+`--profile-secrets-stdin` channel as `{"profile_passphrase": "…"}`; see
+[Protect access to your data](protect-data-access.md). It never follows a held
+sign-in. In full, with the two settings in the environment of every command:
+
+```text
+cadrumo-runtime --configured-root
+aeat --format json config profile create agent-test --quiet --secrets-stdin
+aeat --format json config sign-in-hold agent-test
+cadrumo-mcp
+aeat --format json --profile-secrets-stdin config profile status
+```
+
+`profile create` reads `{"passphrase": "…", "passphrase_confirmation": "…"}`.
+Keep the holder's input open while the agent works, and approve its ask when it
+arrives.
+
+When you are done, close the holder's input, close the MCP client, close the
+runtime's standard input and wait for it to exit with code 64, then delete the
+directory. Nothing in your usual Cadrumo data is read or changed along the way.

@@ -8,7 +8,7 @@ related:
   - '[[2026-10-12-mcp-parity-attended-live-sign-in-adr]]'
 modified: '2026-10-12'
 body_schema: body-v2
-body_hash: 'sha256:6081dbe921acc507049cd66601acea7412d316a1648232d5a2b1f9098a7b3cca'
+body_hash: 'sha256:3b8337f981d28ce206ddd34f2fb40ba571eba4ade61b5d60d143c5d65d3d1225'
 ---
 
 <!-- LINK RULES:
@@ -118,8 +118,8 @@ Approved 2026-10-12. The operator approved `2026-10-12-mcp-parity-attended-live-
 ## Steps
 
 - [x] `S01` - Runtime: held human sign-in, MCP attendance request, pending inventory and exact-request decision wired to the authority's delegation with a human parent and no grant; cascade on holder end, sign-out, lock, expiry, stop; `src/cadrumo/application/runtime, src/cadrumo/application/user_profile, src/cadrumo/entrypoints/runtime, src/cadrumo/adapters/local_runtime`.
-- [ ] `S02` - CLI: `config sign-in hold` (password on --secrets-fd, stdin lifetime and decisions, JSON events) and leaf-proven `config logout` for a non-persisted sign-in; `src/cadrumo/entrypoints/cli/config, src/cadrumo/locales`.
-- [ ] `S03` - MCP: request attendance when no key and no receipt resumes; admit only the approved attended child; typed refusals otherwise; `src/cadrumo_harness/mcp`.
+- [x] `S02` - CLI: `config sign-in hold` (password on --secrets-fd, stdin lifetime and decisions, JSON events) and leaf-proven `config logout` for a non-persisted sign-in; `src/cadrumo/entrypoints/cli/config, src/cadrumo/locales`.
+- [x] `S03` - MCP: request attendance when no key and no receipt resumes; admit only the approved attended child; typed refusals otherwise; `src/cadrumo_harness/mcp`.
 - [ ] `S04` - Docs and governance: separate-storage guide setup/teardown contract, amendments to the four related ADRs; `docs/how-to, .vault/adr`.
 - [ ] `S05` - Packaged lifecycle proof: rebuild the bundle and prove operator auth, attended MCP reads, review approval, refusals, logout/lock/expiry, runtime stop and no persistence; `dev/runtime_lifecycle, justfile`.
 

@@ -320,3 +320,5 @@ adding a parallel one.
   each within its scope. The points listed as to be ruled or to confirm stay open and
   gate the work that depends on them. Acceptance records the decision. It is not evidence
   that any of it is built.
+
+Amended 2026-10-12 under `2026-10-12-mcp-parity-attended-live-sign-in-adr`: the delegated-child option rejected here is now the chosen door for one case only. An MCP connection with no key and no stored sign-in to resume asks to be attended by a person's held sign-in, and is admitted only by that person's approval of the exact connection. Resuming the shared sign-in stays the default and is unchanged.

@@ -127,3 +127,5 @@ The owner ruled it first-hand and in terms that leave no exception. The data sit
 - Acceptance records the decision. It is not evidence that any of it is built.
 
 Accepted 2026-10-12 on the owner's first-hand instruction of that day, "Please, on 6, revise all adrs and do not allow this to happen".
+
+Amended 2026-10-12 under `2026-10-12-mcp-parity-attended-live-sign-in-adr`: constraint 2 gains a third way to admit an MCP connection. A person holding a live, unpersisted password sign-in with `aeat config sign-in-hold` approves that exact connection, identified by the process the kernel names, and it receives an attended child of the person's session. The agent still never authenticates, names a credential or sees a secret. The child ends when the person's session ends.

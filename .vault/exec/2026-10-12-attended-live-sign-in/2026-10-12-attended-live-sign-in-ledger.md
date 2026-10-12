@@ -5,7 +5,7 @@ tags:
 date: '2026-10-12'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:2d83e25880d7447c2c93d17db5c2bbac8e23559f7671643a101dd5490ea1a9cb'
+body_hash: 'sha256:81a4b18cf2fae28fd617fe91a89e0276b2d52315c1390e84975df36ca6f98d8e'
 related:
   - "[[2026-10-12-attended-live-sign-in-plan]]"
 ---
@@ -60,3 +60,30 @@ related:
 - `S01` `verify:` `pytest framing + session authority integration (100)` -> `pass`
 - `S01` `verify:` `ruff check, ty check on changed modules` -> `pass`
 - `S01` `by:` `claude`
+- `S02` `A` `src/cadrumo/entrypoints/cli/config/sign_in_hold.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/config/_custody_command_specs.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/config/custody.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/config/custody_payloads.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/command_operation_table.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/command_frontend_counterparts.py`
+- `S02` `M` `src/cadrumo_harness/_data/agent/reference/command-operations.md`
+- `S02` `M` `src/cadrumo/locales/en/cli.yml`
+- `S02` `M` `src/cadrumo/locales/es/cli.yml`
+- `S02` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S02` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S02` `verify:` `aeat config sign-in-hold --help (dev env)` -> `pass`
+- `S02` `verify:` `aeat config logout --help lists --secrets-stdin/--secrets-fd` -> `pass`
+- `S02` `verify:` `pytest test_command_frontend_parity, test_command_operation_reference, test_command_operation_join (61)` -> `pass`
+- `S02` `verify:` `ruff check, ty check on sign_in_hold.py and custody.py` -> `pass`
+- `S02` `by:` `claude`
+- `S03` `M` `src/cadrumo_harness/mcp/runtime_adapter.py`
+- `S03` `M` `src/cadrumo_harness/mcp/runtime_admission.py`
+- `S03` `M` `src/cadrumo_harness/mcp/tests/test_sign_in_resume.py`
+- `S03` `verify:` `pytest src/cadrumo_harness/mcp/tests/test_sign_in_resume.py (27)` -> `pass`
+- `S03` `verify:` `ruff check, ty check on runtime_adapter.py and runtime_admission.py` -> `pass`
+- `S03` `by:` `claude`
+
+## Notes
+
+- `S02` Code was swept into c7fbea9454 by another session's catch-all commit; the counterpart declaration and regenerated reference landed in 9790b9e63c. Command name is config sign-in-hold (ADR hypothesis config sign-in hold); password arrives as the first stdin line, not --secrets-fd; both reconciled in the ADR under S04. Other CLI suites showed 11 failures from `runtime_deadline_exceeded/KDF_RESOURCE_LIMIT` under 100% host CPU from concurrent sessions, not from this change.
+- `S03` Adapter code was swept into c7fbea9454 by another session; test updates committed in 9790b9e63c. Packaged end-to-end proof is S05.

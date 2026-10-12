@@ -89,7 +89,8 @@ class AcceptanceError(AssertionError):
     """A step whose observed outcome contradicts the documented contract."""
 
 
-def _require(condition: bool, message: str) -> None:
+def require(condition: bool, message: str) -> None:
+    """Fail the acceptance with ``message`` unless ``condition`` holds."""
     if not condition:
         raise AcceptanceError(message)
 
@@ -106,7 +107,7 @@ def consumer_environment(root: Path, secret_store: Path) -> dict[str, str]:
     return environment
 
 
-def _cli(
+def run_cli(
     programs: Programs, environment: Mapping[str, str], *arguments: str, secret: Mapping[str, str] | None = None
 ) -> tuple[int, dict[str, Any]]:
     """Run one JSON CLI command; a secret travels only on standard input."""
@@ -128,14 +129,16 @@ def _cli(
     return result.returncode, envelope if isinstance(envelope, dict) else {}
 
 
-def _notice_codes(envelope: Mapping[str, Any]) -> list[str]:
+def notice_codes(envelope: Mapping[str, Any]) -> list[str]:
+    """Return the codes of an envelope's notices."""
     notices = envelope.get("notices")
     if not isinstance(notices, list):
         return []
     return [str(notice.get("code")) for notice in notices if isinstance(notice, dict)]
 
 
-def _error_code(envelope: Mapping[str, Any]) -> str | None:
+def error_code(envelope: Mapping[str, Any]) -> str | None:
+    """Return an error envelope's code, or ``None`` when it carries none."""
     error = envelope.get("error")
     code = error.get("code") if isinstance(error, dict) else None
     return code if isinstance(code, str) else None
@@ -175,9 +178,9 @@ class RuntimeProcess:
         reader = threading.Thread(target=lambda: lines.append(output.readline()), daemon=True)
         reader.start()
         reader.join(_READY_SECONDS)
-        _require(bool(lines) and bool(lines[0]), f"no readiness line; runtime exit {self.process.poll()}")
+        require(bool(lines) and bool(lines[0]), f"no readiness line; runtime exit {self.process.poll()}")
         announcement = json.loads(lines[0])
-        _require(isinstance(announcement, dict), "readiness line is not a JSON object")
+        require(isinstance(announcement, dict), "readiness line is not a JSON object")
         return announcement
 
     def stop(self) -> int:
@@ -213,7 +216,7 @@ async def _mcp_status(programs: Programs, environment: Mapping[str, str], direct
     }
 
 
-def _tree(root: Path) -> dict[str, tuple[int, int]]:
+def file_facts(root: Path) -> dict[str, tuple[int, int]]:
     """Return every entry's size and modification time below ``root``; empty when absent."""
     if not root.exists():
         return {}
@@ -235,11 +238,11 @@ def run(package: Path, scratch: Path) -> Receipt:
     secret_store.mkdir(parents=True)
     environment = consumer_environment(root, secret_store)
     default_root = host_installed_default_root(os.environ)
-    before = _tree(default_root)
+    before = file_facts(default_root)
     receipt.record("default_root_observed", exists=default_root.exists(), entries=len(before))
 
     password = secrets.token_urlsafe(32)
-    code, envelope = _cli(
+    code, envelope = run_cli(
         programs,
         environment,
         "config",
@@ -250,35 +253,35 @@ def run(package: Path, scratch: Path) -> Receipt:
         "--secrets-stdin",
         secret={"passphrase": password, "passphrase_confirmation": password},
     )
-    _require(code == 0 and envelope.get("status") in {"success", "warning"}, f"profile create: {code} {envelope}")
+    require(code == 0 and envelope.get("status") in {"success", "warning"}, f"profile create: {code} {envelope}")
     receipt.record("profile_created", status=envelope.get("status"))
 
-    code, envelope = _cli(
+    code, envelope = run_cli(
         programs, environment, "config", "login", _PROFILE_NAME, "--secrets-stdin", secret={"passphrase": password}
     )
-    _require(_error_code(envelope) == "REFUSED_LOCAL_RUNTIME", f"login without a runtime: {code} {envelope}")
-    receipt.record("login_refused_without_runtime", exit_code=code, code=_error_code(envelope))
+    require(error_code(envelope) == "REFUSED_LOCAL_RUNTIME", f"login without a runtime: {code} {envelope}")
+    receipt.record("login_refused_without_runtime", exit_code=code, code=error_code(envelope))
 
     with caller_owned_runtime(programs, environment, scratch / "runtime-stderr.log") as runtime:
         announcement = runtime.ready()
-        _require(announcement.get("kind") == "runtime_ready", f"readiness: {announcement}")
+        require(announcement.get("kind") == "runtime_ready", f"readiness: {announcement}")
         receipt.record(
             "runtime_ready",
             product_version=announcement.get("product_version"),
             storage_identity=announcement.get("storage_identity"),
         )
 
-        code, envelope = _cli(programs, environment, "config", "sign-in-status")
-        _require(code == 0, f"sign-in-status against the served root: {code} {envelope}")
+        code, envelope = run_cli(programs, environment, "config", "sign-in-status")
+        require(code == 0, f"sign-in-status against the served root: {code} {envelope}")
         receipt.record("runtime_discovered", presence=envelope.get("result", {}).get("status", {}).get("presence"))
 
-        code, envelope = _cli(
+        code, envelope = run_cli(
             programs, environment, "config", "login", _PROFILE_NAME, "--secrets-stdin", secret={"passphrase": password}
         )
-        _require(code == 0 and envelope.get("status") in {"success", "warning"}, f"login: {code} {envelope}")
-        notices = _notice_codes(envelope)
+        require(code == 0 and envelope.get("status") in {"success", "warning"}, f"login: {code} {envelope}")
+        notices = notice_codes(envelope)
         persisted = envelope.get("result", {}).get("session_persisted") is True
-        _require(
+        require(
             persisted is ("config.login.session_not_persisted" not in notices),
             f"session_persisted disagrees with the login notices: {envelope}",
         )
@@ -288,7 +291,7 @@ def run(package: Path, scratch: Path) -> Receipt:
             receipt.unproven.append("stored sign-in: MCP resume and logout need a working native credential store")
 
         # A piped command names its own credential channel; it never borrows the stored sign-in.
-        code, envelope = _cli(
+        code, envelope = run_cli(
             programs,
             environment,
             "--profile-secrets-stdin",
@@ -297,12 +300,12 @@ def run(package: Path, scratch: Path) -> Receipt:
             "status",
             secret={"profile_passphrase": password},
         )
-        _require(code == 0 and envelope.get("status") in {"success", "warning"}, f"profile status: {code} {envelope}")
+        require(code == 0 and envelope.get("status") in {"success", "warning"}, f"profile status: {code} {envelope}")
         receipt.record("profile_read", status=envelope.get("status"))
 
         mcp = asyncio.run(_mcp_status(programs, environment, scratch))
         status = mcp["status"] or {}
-        _require(status.get("profile_id") is not None, f"MCP did not reach the served root: {mcp}")
+        require(status.get("profile_id") is not None, f"MCP did not reach the served root: {mcp}")
         receipt.record(
             "mcp_connected",
             authenticated=status.get("authenticated"),
@@ -315,24 +318,24 @@ def run(package: Path, scratch: Path) -> Receipt:
 
         if persisted:
             # Discovery alone proves nothing: the private read itself must be answered.
-            _require(
+            require(
                 status.get("authenticated") is True
                 and not mcp["observe_error"]
                 and (mcp["observe"] or {}).get("outcome") != "refused",
                 f"MCP did not follow the stored sign-in: {mcp}",
             )
         else:
-            _require(status.get("denial") == "authentication_required", f"MCP without a stored sign-in: {mcp}")
-        code, envelope = _cli(programs, environment, "config", "logout")
+            require(status.get("denial") == "authentication_required", f"MCP without a stored sign-in: {mcp}")
+        code, envelope = run_cli(programs, environment, "config", "logout")
         error = envelope.get("error")
         receipt.record(
             "logout",
             exit_code=code,
             status=envelope.get("status"),
-            code=_error_code(envelope),
+            code=error_code(envelope),
             message=error.get("message") if isinstance(error, dict) else None,
         )
-        _require(code == 0 or not persisted, f"logout: {code} {envelope}")
+        require(code == 0 or not persisted, f"logout: {code} {envelope}")
         if persisted:
             # A new MCP process after sign-out must find nothing to follow.
             after_logout = asyncio.run(_mcp_status(programs, environment, scratch))
@@ -343,22 +346,22 @@ def run(package: Path, scratch: Path) -> Receipt:
                 denial=status.get("denial"),
                 observe=(after_logout["observe"] or {}).get("outcome"),
             )
-            _require(
+            require(
                 status.get("authenticated") is not True
                 and (after_logout["observe_error"] or (after_logout["observe"] or {}).get("outcome") == "refused"),
                 f"MCP still read the profile after sign-out: {after_logout}",
             )
         exit_code = runtime.stop()
-    _require(exit_code == _SUPERVISOR_STOP, f"runtime exit after input closed: {exit_code}")
+    require(exit_code == _SUPERVISOR_STOP, f"runtime exit after input closed: {exit_code}")
     receipt.record("runtime_stopped", exit_code=exit_code)
 
-    code, envelope = _cli(programs, environment, "config", "sign-in-status")
-    _require(_error_code(envelope) == "REFUSED_LOCAL_RUNTIME", f"after stop: {code} {envelope}")
-    receipt.record("runtime_gone", code=_error_code(envelope))
+    code, envelope = run_cli(programs, environment, "config", "sign-in-status")
+    require(error_code(envelope) == "REFUSED_LOCAL_RUNTIME", f"after stop: {code} {envelope}")
+    receipt.record("runtime_gone", code=error_code(envelope))
 
-    after = _tree(default_root)
+    after = file_facts(default_root)
     changed = sorted(name for name in before.keys() | after.keys() if before.get(name) != after.get(name))
-    _require(not changed, f"the installed default root changed: {changed[:20]}")
+    require(not changed, f"the installed default root changed: {changed[:20]}")
     receipt.record("default_root_unchanged", entries=len(after))
     return receipt
 
