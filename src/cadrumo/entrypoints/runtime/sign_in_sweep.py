@@ -94,3 +94,45 @@ def sweep_saved_sign_ins(
                 revoke_profile_sign_in(SignInGenerationCustody(root=root, binding=binding))
                 retired.append(profile_id)
     return tuple(retired)
+
+
+def revoke_other_saved_sign_ins(
+    *,
+    root: Path,
+    installation: RuntimeInstallation,
+    keep: UUID,
+    hosted_profiles: frozenset[UUID] = frozenset(),
+) -> tuple[UUID, ...]:
+    """Sign out every profile but ``keep`` whose sign-in is stored, so that one profile is signed in at a time.
+
+    A hosted profile is signed out by its host, which also retires its live
+    sessions, so it is left out here. Each revocation advances the profile's
+    sign-in generation before its receipt is deleted, as a sign-out does. A
+    profile whose custody cannot be read keeps its receipt: nothing here may
+    delete a receipt it cannot bind to its profile.
+    """
+    directory = keystore_root(root)
+    if not os.path.lexists(directory):
+        return ()
+    retired: list[UUID] = []
+    for entry in directory.iterdir():
+        try:
+            profile_id = UUID(entry.name)
+        except ValueError:
+            continue
+        if str(profile_id) != entry.name or profile_id == keep or profile_id in hosted_profiles:
+            continue
+        if inspect_profile_session(storage_root=root, profile_id=profile_id) is None:
+            continue
+        try:
+            binding = current_automation_profile_binding(
+                root=root,
+                profile_id=profile_id,
+                installation_id=installation.installation_id,
+                os_owner_id=installation.os_owner_id,
+            )
+        except AutomationCustodyError:
+            continue
+        revoke_profile_sign_in(SignInGenerationCustody(root=root, binding=binding))
+        retired.append(profile_id)
+    return tuple(retired)

@@ -127,7 +127,9 @@ class ProfileLoginOutcome(BaseModel):
             session was resumed as a no-op (no re-prompt, no new record).
         closed_previous_bucket_id: Retained result field, always ``None`` for
             the supported candidate and invocation authentication doors. These
-            doors do not retire another profile's shared runtime sign-in.
+            doors retire no other profile's sign-in themselves; the runtime
+            does, when it admits a person's sign-in to a profile, because one
+            profile is signed in at a time.
     """
 
     model_config = _STRICT_FROZEN

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:50c0883fd369cafee5bfe259eef5d41b02d63fd9fcc03fa186c3b88a3b69954e'
+body_hash: 'sha256:0ee1cafd33859b20783f0f41607d4337a62ba22569beb506307e6533fd88a29e'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -2237,6 +2237,17 @@ related:
 - `S65` `verify:` `pytest operation surfaces, catalogue, frontend scan, user_profile, auth and harness` -> `pass`
 - `S65` `verify:` `ruff check and format` -> `pass`
 - `S65` `verify:` `ty check on touched files` -> `pass`
+- `S66` `M` `src/cadrumo/entrypoints/runtime/profile_connection_sessions.py`
+- `S66` `M` `src/cadrumo/entrypoints/runtime/sign_in_sweep.py`
+- `S66` `M` `src/cadrumo/application/user_profile/login_session.py`
+- `S66` `A` `src/cadrumo/entrypoints/runtime/tests/test_one_signed_in_profile.py`
+- `S66` `M` `src/cadrumo/entrypoints/runtime/tests/test_runtime_password_rotation.py`
+- `S66` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_connections.py`
+- `S66` `M` `src/cadrumo/entrypoints/runtime/tests/test_optional_automation_custody.py`
+- `S66` `verify:` `pytest test_one_signed_in_profile and test_runtime_password_rotation` -> `pass`
+- `S66` `verify:` `pytest runtime suite rerun at -n 2` -> `fail`
+- `S66` `verify:` `ruff check and format` -> `pass`
+- `S66` `verify:` `ty check on touched files` -> `pass`
 
 ## Notes
 
@@ -2312,3 +2323,4 @@ related:
 - `S63` Reads answer instead of ending the worker when an access resolver raises: observation, result, result page, review projection and review inspection go through one place. Shown through the real runtime with the work unit removed from the encrypted store behind a running worker, since no frontend act removes one. A plain error from a resolver on a fresh submission answers a bare invalid, shown at the authority level only. Open: start, resume, cancel, detach, apply and reject still end the worker when their access resolution raises.
 - `S64` Pre-existing failures outside MCP in the entrypoints lane (modelo 184/303 calculation, ledger bulk classify) and in `dev/agent_eval/tests/test_mcp_frontend_session_lock_parity.py` (key session expiry precedes the human one); a session-mode discovery search hit `runtime_deadline_exceeded` under load and is reworked in S67
 - `S65` Another session's sweep commit e292d394b3 took this Step's in-progress production changes and `test_mcp_frontend_person_acts.py;` this Step's commit carries the remaining files
+- `S66` Remaining runtime failures are unchanged with the S66 call disabled `(test_grant_change,` provenance) or are deadline and WinError 1312 environment failures; `test_profile_connections` and `test_optional_automation_custody` moved off the MCP frontend after the S65 refusals

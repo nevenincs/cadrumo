@@ -37,8 +37,10 @@ from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.automation_custody_port import (
     AutomationCustodyError,
 )
+from ...application.user_profile.session_retirement import SessionRetirementKind
 from .profile_host import ProfileConnection, RuntimeProfileHost
 from .sign_in_status import observe_sign_in
+from .sign_in_sweep import revoke_other_saved_sign_ins
 
 if TYPE_CHECKING:
     from .profile_connections import RuntimeProfileConnections
@@ -106,7 +108,31 @@ class ProfileConnectionSessionMixin:
                     scope=api_login.scope,
                     surface=connection.surface,
                 )
-        return self._finish_login(connection, host, context, request, admitted)
+        finished = self._finish_login(connection, host, context, request, admitted)
+        if request.method in {"password", "receipt"} and isinstance(finished, RuntimeProfileStatus):
+            self._sign_out_other_profiles(keep=request.profile_id)
+        return finished
+
+    def _sign_out_other_profiles(self: RuntimeProfileConnections, *, keep: UUID) -> None:
+        """Keep one profile signed in: a person's sign-in to ``keep`` signs every other profile out everywhere.
+
+        Each other hosted profile is signed out as the person's sign-out does
+        it: its generation advances, its stored sign-in is deleted and every
+        human session it holds ends, on every frontend, an agent's resumed
+        session included. A key session needs no sign-in and stays. A profile
+        that is not hosted has no live session, so only its stored sign-in is
+        revoked.
+        """
+        with self._guard:
+            hosts = {profile_id: host for profile_id, host in self._profiles.items() if profile_id != keep}
+            installation = self._installation
+        for host in hosts.values():
+            _deletion, retired = host.revoke_human_sign_in(kind=SessionRetirementKind.SIGNED_OUT)
+            self._retired(retired)
+        if installation is not None:
+            revoke_other_saved_sign_ins(
+                root=self.root, installation=installation, keep=keep, hosted_profiles=frozenset(hosts)
+            )
 
     def _admit_human_login(
         self: RuntimeProfileConnections,

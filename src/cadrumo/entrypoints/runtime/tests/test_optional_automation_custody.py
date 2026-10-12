@@ -121,7 +121,7 @@ def test_optional_store_acquisition_cannot_block_password_or_admit_automation(
                 clients.append(requester)
                 enrollment_refused = requester.enrollment_prepare(
                     RuntimeEnrollmentPrepare(
-                        request_id=uuid4(), profile_id=profile_id, frontend=OperationFrontendProjection.MCP
+                        request_id=uuid4(), profile_id=profile_id, frontend=OperationFrontendProjection.TUI
                     ),
                     deadline=time.monotonic() + 10,
                 )

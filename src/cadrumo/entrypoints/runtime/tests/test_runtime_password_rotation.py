@@ -132,11 +132,14 @@ def test_rotation_requires_fresh_successor_login_and_wipes_all_proofs(tmp_path: 
             fresh_client() as sibling,
             _fresh_client(launch, other_profile_id) as other_profile,
         ):
+            other_profile.login_password(bytearray(PROFILE_INPUT.encode()))
+            assert other_profile.status().status.connected
             client.login_password(bytearray(PROFILE_INPUT.encode()))
             sibling.login_password(bytearray(PROFILE_INPUT.encode()))
-            other_profile.login_password(bytearray(PROFILE_INPUT.encode()))
             assert sibling.session_id != client.session_id
-            assert other_profile.status().status.connected
+            # One profile is signed in at a time: signing in to this one signed the other out.
+            with pytest.raises(RuntimeFrontendRefusedError):
+                other_profile.status()
             current = bytearray(PROFILE_INPUT.encode())
             successor = bytearray(_SUCCESSOR)
             confirmation = bytearray(_SUCCESSOR)
@@ -159,7 +162,6 @@ def test_rotation_requires_fresh_successor_login_and_wipes_all_proofs(tmp_path: 
                 client.status()
             with pytest.raises(RuntimeFrontendRefusedError):
                 sibling.status()
-            assert other_profile.status().status.connected
 
         after = current_automation_profile_binding(
             profile_id=profile_id, installation_id=installation_id, os_owner_id=owner_id(), root=root

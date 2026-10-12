@@ -137,7 +137,7 @@ def login(client: VerifiedRuntimeConnection, profile: UUID, method: str, raw: by
             "request_id": uuid4(),
             "profile_id": profile,
             "method": method,
-            "frontend": OperationFrontendProjection.MCP if method == "api_key" else OperationFrontendProjection.CLI,
+            "frontend": OperationFrontendProjection.TUI if method == "api_key" else OperationFrontendProjection.CLI,
         }
     )
     # Admission now completes the worker's one-time public registry graph
