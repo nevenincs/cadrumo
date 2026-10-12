@@ -10,7 +10,7 @@ related:
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
 modified: '2026-10-12'
 body_schema: body-v2
-body_hash: 'sha256:41fdeebd8b6b620c6e627aa75b97c754a62e5bdc8adbbed15ae11d684ffc9654'
+body_hash: 'sha256:7a7a137df769eb878049cf2c84f7e86d87484b17f7c7b32986f757cd9b9486da'
 ---
 
 <!-- LINK RULES:
@@ -129,7 +129,7 @@ Scope bounds: the lane never edits `src/cadrumo_harness/mcp` or runtime code, wh
 - [x] `S04` - Declare the live scenario files, Modelo 130 on the DR 130 worked example first and then Modelo 303 for the same quarter, with their loader and required subsequences; `dev/agent_eval/live/scenarios`.
 - [x] `S05` - Drive the agent through the Anthropic API with an MCP client loop or the authenticated claude CLI fallback, always claude-haiku-5-5, both producing one LiveTrajectory, with turn, token and spend limits; `dev/agent_eval/live/drivers.py`.
 - [x] `S06` - Scrub the stream before anything is written and capture the scrubbed trajectory, receipt and score to .logs/agent-eval/ behind a fail-closed residual scan, with a positive control on a planted secret; `dev/agent_eval/live/capture.py`.
-- [ ] `S07` - Read the oracle through the packaged command line JSON envelopes and the product export parser under the copy's authority, and fail on any disagreement, with a positive control on a planted disagreement; `dev/agent_eval/live/oracle.py`.
+- [x] `S07` - Read the oracle through the packaged command line JSON envelopes and the product export parser under the copy's authority, and fail on any disagreement, with a positive control on a planted disagreement; `dev/agent_eval/live/oracle.py`.
 - [ ] `S08` - Drive the access scenarios from the person's side through the packaged command line: key issue, use in scope, refusal out of scope, revocation mid-run, locked, signed out and expired, each requiring the agent to send the person back to Cadrumo; `dev/agent_eval/live/access.py`.
 - [ ] `S09` - Add the opt-in recipes eval-agent-floor and eval-agent-live with a receipt, the three-run pass rule and distinct outcome classes and exit codes, kept out of every default lane; `justfile`.
 - [ ] `S10` - Run the scripted floor on this host and prove that a refused credential store is classified unavailable, never a pass; `dev/agent_eval/live/floor.py`.

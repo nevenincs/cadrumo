@@ -3,9 +3,16 @@
 # The figures are the published example for estimacion directa, not derived
 # from the formula under test: ingresos 12.000 and gastos 4.000 give a
 # rendimiento neto of 8.000, casilla 04 = 20 % of it = 1.600, and with no
-# earlier instalments or withholdings casilla 07 = 1.600. Last year's net
-# activity income above 12.000 EUR leaves no minoracion, so casilla 13 is zero.
-# The same example grounds dev/agent_eval/tests/test_modelo_130_value_oracle.py.
+# earlier instalments or withholdings casilla 07 = 1.600. The same example
+# grounds dev/agent_eval/tests/test_modelo_130_value_oracle.py.
+#
+# The activity starts in the filing year. The DR 130 example's prior-year net
+# income above 12.000 EUR cannot be verified on an isolated profile: the
+# product then requires the filed 2025 Modelo 100 it comes from, and blocks
+# verification (cross_period_dependency_unclean). With no earlier year the net
+# income of the previous year is 0, so RD 439/2007 art. 110.3 grants the
+# minoracion of 100 EUR for a previous-year net income of 9.000 EUR or less:
+# casilla 13 is 100.
 #
 # The person (the harness) creates and signs in the profile and states the
 # profile facts at the command line. The agent books the two ledger rows and
@@ -33,7 +40,7 @@ tax-id = "12345678Z"
 name = "Daniel"
 surnames = "Persona"
 activity = "consultoria"
-activity-start-date = "2024-01-01"
+activity-start-date = "2026-01-01"
 irpf-income-categories = "actividad_economica"
 irpf-estimation-regime = "directa_normal"
 iva-regime = "GENERAL"
@@ -64,10 +71,11 @@ classification = { business_classification = "BUSINESS", taxable_base = "4000", 
 
 [calculation]
 casillas = { "05" = "0.00", "06" = "0.00" }
-bindings = { "irpf.previous_year_economic_activity_net_income" = "13000", "modelo-130-resultados-negativos-anteriores" = "0", "modelo-130-pagos-fraccionados-anteriores" = "0" }
+bindings = { "irpf.previous_year_economic_activity_net_income" = "0", "modelo-130-resultados-negativos-anteriores" = "0", "modelo-130-pagos-fraccionados-anteriores" = "0" }
 
 [expected]
-casillas = { "04" = "1600.00", "07" = "1600.00", "13" = "0.00" }
+casillas = { "04" = "1600.00", "07" = "1600.00", "13" = "100.00" }
+ledger_sums = { "01" = "INCOMING:taxable_base", "02" = "OUTGOING:taxable_base" }
 
 [prompt]
 system = """
@@ -86,8 +94,9 @@ Please prepare my Modelo 130 for the first quarter of 2026. My profile is alread
    - 2026-02-15, incoming, 12000.00 EUR, "Factura consultoria primer trimestre", counterparty Cliente SA
    - 2026-03-10, outgoing, 4000.00 EUR, "Gastos de la actividad primer trimestre", counterparty Proveedor SA
 2. Create the Modelo 130 work unit for 2026, period 1T.
-3. Calculate it. Facts you will need: last year's net income from the activity was 13000 EUR, I have no negative
-   results from earlier years (0), no earlier instalments this year (0), and casillas 05 and 06 are 0.00.
+3. Calculate it. Facts you will need: I started the activity on 1 January 2026, so last year's net income from it
+   was 0, I have no negative results from earlier years (0), no earlier instalments this year (0), and casillas 05
+   and 06 are 0.00.
 4. Verify the calculation.
 5. Export it to this file: {export_path}
 Then tell me casillas 04, 07 and 13 and confirm the export. Use "Synthetic Person" as the actor where one is asked for.

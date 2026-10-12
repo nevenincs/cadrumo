@@ -5,7 +5,7 @@ tags:
 date: '2026-10-12'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:e949daf21f01c9e848bd9390700d5b5dc84f9dc9775791d3791bddb7ebe57949'
+body_hash: 'sha256:f5095f0e48ec5e11295317f13a058d4281868dd61ebd68faea7c2a01b12148c9'
 related:
   - "[[2026-10-12-live-agent-evaluation-plan]]"
 ---
@@ -72,9 +72,20 @@ related:
 - `S06` `A` `dev/agent_eval/tests/test_live_capture.py`
 - `S06` `verify:` `pytest dev/agent_eval/tests/test_live_capture.py` -> `pass`
 - `S06` `verify:` `ruff check, ruff format, ty check on touched files` -> `pass`
+- `S07` `A` `dev/agent_eval/live/oracle.py`
+- `S07` `A` `dev/agent_eval/tests/test_live_oracle.py`
+- `S07` `M` `dev/agent_eval/live/scenario.py`
+- `S07` `M` `dev/agent_eval/live/scenarios/modelo_130_dr130.toml`
+- `S07` `M` `dev/agent_eval/live/scenarios/modelo_303_quarter.toml`
+- `S07` `M` `dev/agent_eval/tests/test_live_scenarios.py`
+- `S07` `M` `dev/agent_eval/live/isolated_host.py`
+- `S07` `verify:` `pytest dev/agent_eval/tests/test_live_oracle.py dev/agent_eval/tests/test_live_scenarios.py` -> `pass`
+- `S07` `verify:` `ruff check, ruff format, ty check on touched files` -> `pass`
+- `S07` `verify:` `real package: the person prepared Modelo 130 2026 1T through the copy's command line; calculation 04=07=1600.00, 13=100.00; verification passed; export parsed by the product parser; oracle end_state_reached with no disagreement` -> `pass`
 
 ## Notes
 
 - `S02` import gate failed on findings outside this Step: P10 removing `cadrumo_harness.mcp` `held_secrets,` `session_acts` and `installation_acts` while the gate ran, and stale load-target metadata; no finding names `dev/agent_eval`
 - `S05` the API and claude CLI drivers were not run against a signed-in profile: this SSH logon's credential store refuses stored sign-in; that live run is S11
 - `S06` committed after S05, whose recorder imports this scrubber; the S05 commit alone does not import cleanly
+- `S07` the 130 scenario moved to a first year of activity: a prior-year income above 12000 blocks verification on an isolated profile `(cross_period_dependency_unclean` on the unfiled 2025 Modelo 100), so casilla 13 is the 100 EUR minoracion of RD 439/2007 art. 110.3; the 303 scenario is marked provisional after its IVA ledger add ended in `INTERNAL_CLI_UNEXPECTED_BOUNDARY` and its calculation was refused for missing ordinary 303 filing evidence

@@ -290,7 +290,10 @@ class PackageHost:
         try:
             document = json.loads(stream)
         except json.JSONDecodeError:
-            document = {"status": "error", "error": {"code": "UNDECODABLE_ENVELOPE"}}
+            document = {
+                "status": "error",
+                "error": {"code": "UNDECODABLE_ENVELOPE", "context": {"reason": f"exit_{completed.returncode}"}},
+            }
         return CliResult(arguments=tuple(arguments), returncode=completed.returncode, document=document)
 
     def create_person(self, name: str) -> Person:
@@ -309,6 +312,13 @@ class PackageHost:
         # The packaged command line prints identifiers redacted; the package's own pointer names the profile.
         (selected,) = (event for event in self.package_python("active-profile", "--root", str(self.root)))
         return Person(profile_id=str(selected["profile_id"]), password=password)
+
+    def state_profile(self, person: Person, options: Sequence[str]) -> None:
+        """State the profile facts and complete the setup, as the person does at the command line."""
+        for arguments in (("config", "profile", "edit", "--quiet", *options), ("config", "profile", "complete-setup")):
+            result = self.cli(*arguments, profile_secret=person.password)
+            if not result.ok:
+                raise RuntimeError(f"{' '.join(arguments[:3])} refused: {'/'.join(result.error_tokens)}")
 
     def sign_in(self, person: Person) -> CliResult:
         """Sign the person in on the protected channel; a refused credential store is unavailable."""

@@ -63,12 +63,26 @@ class CalculationInputs(BaseModel):
 
 
 class Expected(BaseModel):
-    """The oracle's figures: casilla values from the published example, and IVA agreement keys."""
+    """The oracle's figures, and which ledger sums each casilla must agree with.
+
+    ``ledger_sums`` maps a casilla to ``DIRECTION:field``: the sum of that
+    ledger field over the business rows of that direction, read back through the
+    command line, must equal the exported casilla.
+    """
 
     model_config = _FROZEN
 
     casillas: dict[str, str] = Field(min_length=1)
-    ledger_iva_casillas: dict[str, str] = {}
+    ledger_sums: dict[str, str] = {}
+
+    @field_validator("ledger_sums")
+    @classmethod
+    def _sources(cls, value: dict[str, str]) -> dict[str, str]:
+        for source in value.values():
+            direction, _, field_name = source.partition(":")
+            if direction not in {"INCOMING", "OUTGOING"} or not field_name:
+                raise ValueError(f"a ledger sum is DIRECTION:field, not {source!r}")
+        return value
 
     @field_validator("casillas")
     @classmethod
@@ -112,6 +126,18 @@ class LiveScenario(BaseModel):
     calculation: CalculationInputs
     expected: Expected
     prompt: Prompt
+    provisional: str = ""
+    """Why the scenario cannot run yet; a provisional scenario is reported unavailable, never run."""
+
+    def profile_options(self) -> tuple[str, ...]:
+        """The profile facts spelled as ``config profile edit`` options: a switch for a yes or no."""
+        options: list[str] = []
+        for name, value in self.profile.items():
+            if value in {"true", "false"}:
+                options.append(f"--{name}" if value == "true" else f"--no-{name}")
+            else:
+                options.extend((f"--{name}", value))
+        return tuple(options)
 
     def task(self, export_path: Path) -> str:
         """The agent's task with the run's export path filled in."""

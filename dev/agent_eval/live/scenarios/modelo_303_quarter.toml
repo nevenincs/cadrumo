@@ -10,6 +10,11 @@
 # agent books the row and prepares the declaration up to a local export.
 
 name = "live-modelo-303-quarter"
+# Provisional: through the package on 2026-10-12 the IVA-bearing ledger add ended in an internal
+# command-line error, and the calculation was refused for missing ordinary 303 filing evidence (the
+# 390 exoneration attestation or the joint-return election). The lane reports this scenario
+# unavailable until its inputs are grounded.
+provisional = "the ordinary 303 filing evidence and the IVA ledger row are not yet grounded"
 modelo = "303"
 filing_year = 2026
 period = "1T"
@@ -57,7 +62,7 @@ bindings = {}
 
 [expected]
 casillas = { "07" = "12000.00", "09" = "2520.00", "27" = "2520.00" }
-ledger_iva_casillas = { taxable_base = "07", iva_amount = "09" }
+ledger_sums = { "07" = "INCOMING:taxable_base", "09" = "INCOMING:iva_amount" }
 
 [prompt]
 system = """
