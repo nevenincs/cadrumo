@@ -44,8 +44,12 @@ from ....application.user_profile.access_errors import ProfileAccessRefusedError
 from ....application.user_profile.automation_custody_port import AutomationCustodyError
 from ....core.config import load_settings, override_settings
 from ...runtime.profile_connections import RuntimeProfileConnections
-from .cli_runner import ClickInvokeKwargs, bind_profile_cli
-from .profile_password_cli import invoke_with_profile_password
+from .cli_runner import ClickInvokeKwargs, bind_profile_cli, invoke_unbound_cli
+from .profile_password_cli import (
+    chooses_own_credential_source,
+    invoke_with_profile_password,
+    refused_for_want_of_an_operator,
+)
 
 __all__ = [
     "RuntimeFailureObservation",
@@ -403,9 +407,17 @@ class NativeCliProfileFixture:
         self.scope.enter_context(bind_profile_cli(self))
 
     def invoke(self, args: Sequence[str], **kwargs: Unpack[ClickInvokeKwargs]) -> Result:
-        """Run one command as this profile's operator, sending its password where a sign-in would resume."""
+        """Run one command as given, and again as this profile's operator if it was refused for want of one.
+
+        A command that never needs the operator prints what it always printed;
+        one refused before any effect for want of a sign-in runs again with the
+        password on the protected frame, where a sign-in would resume.
+        """
         if self.label is None:
             raise AssertionError("register the profile before running its commands")
+        first = invoke_unbound_cli(args, **kwargs)
+        if not refused_for_want_of_an_operator(first) or chooses_own_credential_source(args):
+            return first
         return invoke_with_profile_password(args, label=self.label, **kwargs)
 
 

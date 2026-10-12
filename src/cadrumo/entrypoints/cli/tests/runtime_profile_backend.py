@@ -36,7 +36,7 @@ from ....core.storage_taxonomy_locations import storage_location
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from .cli_runner import ClickInvokeKwargs, ProfileCliInvoker, bind_profile_cli, invoke_unbound_cli
 from .portable_human_cli_runtime import PortableHumanCliRuntime, portable_human_cli_runtime
-from .profile_password_cli import chooses_own_credential_source
+from .profile_password_cli import chooses_own_credential_source, refused_for_want_of_an_operator
 
 __all__ = [
     "live_session_operator",
@@ -49,15 +49,6 @@ __all__ = [
 _OPERATOR_LABEL = "operator"
 #: The storage root an isolated world opens beneath its directory.
 _STORAGE_ROOT_NAME = "cadrumo-storage"
-
-
-#: What a command prints when it was refused, with no effect, because no
-#: runtime was reachable or no sign-in or password channel admitted it.
-_OPERATOR_REFUSAL_MARKERS = ("runtime_unavailable", "operator.profile.login", "profile.human.input_channel_available")
-
-
-def _refused_for_want_of_an_operator(result: Result) -> bool:
-    return result.exit_code != 0 and any(marker in result.output for marker in _OPERATOR_REFUSAL_MARKERS)
 
 
 class _RuntimeJoinedOnFirstCommand:
@@ -78,7 +69,7 @@ class _RuntimeJoinedOnFirstCommand:
             # Until a command needs the operator, commands run exactly as given:
             # one that never reaches the runtime prints what it always printed.
             first = invoke_unbound_cli(args, **kwargs)
-            if not _refused_for_want_of_an_operator(first):
+            if not refused_for_want_of_an_operator(first):
                 return first
             self._runtime = self._stack.enter_context(
                 portable_human_cli_runtime(

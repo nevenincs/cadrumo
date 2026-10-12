@@ -14,7 +14,21 @@ from .._profile_authentication_contract import profile_authentication_posture
 from ..command_specs import COMMAND_GRAPH
 from .cli_runner import ClickInvokeKwargs, invoke_unbound_cli
 
-__all__ = ["chooses_own_credential_source", "invoke_with_profile_password"]
+__all__ = [
+    "chooses_own_credential_source",
+    "invoke_with_profile_password",
+    "refused_for_want_of_an_operator",
+]
+
+
+#: What a command prints when it was refused, with no effect, because no
+#: runtime was reachable or no sign-in or password channel admitted it.
+_OPERATOR_REFUSAL_MARKERS = ("runtime_unavailable", "operator.profile.login", "profile.human.input_channel_available")
+
+
+def refused_for_want_of_an_operator(result: Result) -> bool:
+    """Return whether a command was refused before any effect for want of a runtime or a sign-in."""
+    return result.exit_code != 0 and any(marker in result.output for marker in _OPERATOR_REFUSAL_MARKERS)
 
 
 def chooses_own_credential_source(args: Sequence[str]) -> bool:
