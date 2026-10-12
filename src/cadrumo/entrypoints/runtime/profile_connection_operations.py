@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 
 from ...adapters.local_runtime.runtime_frame_io import read_secret, write_document
 from ...application.operations.mcp_surfaces import MCP_SURFACES
+from ...application.operations.person_acts import operation_is_persons_act
 from ...application.runtime.contracts import (
     RuntimeByteChannel,
     RuntimeRefusalCode,
@@ -248,6 +249,11 @@ class ProfileConnectionOperationMixin:
         description = host.owner.operation_worker().describe(request.session_id, request.definition_id)
         contract = description.contract
         _require_surface_admits(connection, contract.definition_id)
+        if operation_is_persons_act(
+            contract.definition_id, ephemeral_secret_required=contract.ephemeral_secret_required
+        ):
+            # The access policy refuses it at submission too; it is not described to an agent either.
+            self._require_persons_frontend(connection.frontend)
         reply = RuntimeOperationContractReply(
             request_id=request.request_id,
             runtime_boot_id=self.boot,

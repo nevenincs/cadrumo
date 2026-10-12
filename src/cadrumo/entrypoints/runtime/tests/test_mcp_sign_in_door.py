@@ -1,4 +1,8 @@
-"""An MCP connection signs in and acts on the person's sessions exactly as the command line does.
+"""An MCP connection resumes the person's sign-in as the command line does, and only the person acts on sessions.
+
+Locking, signing out and signing in by password are the person's acts on the
+command line and the terminal interface; the MCP frontend resumes the stored
+sign-in and is refused every one of them.
 
 The runtime, its connection service, the session authority, the profile worker
 and the stored sign-in are real. Only the native login the runtime observes,
@@ -109,13 +113,16 @@ def test_an_mcp_connection_resumes_the_stored_sign_in_as_the_person_and_extends_
             ("receipt", _MCP),
         ]
 
-        # The password signs the person in on every frontend, to the same kind of lease.
-        for frontend in (_CLI, _TUI, _MCP):
+        # The password signs the person in on the person's frontends, to the same kind of lease.
+        for frontend in (_CLI, _TUI):
             password = runtime.login(
                 runtime.connect(), "password", bytearray(PROFILE_INPUT.encode()), frontend=frontend
             )
             lease = runtime.lease(_admitted(password))
             assert lease.kind is SessionKind.HUMAN and lease.surface is None
+        # Signing in by password is the person's act, so the MCP frontend is refused it.
+        agent = runtime.login(runtime.connect(), "password", bytearray(PROFILE_INPUT.encode()), frontend=_MCP)
+        _refused(agent, AccessDenialCode.PERSON_ACT_REQUIRED)
 
 
 @pytest.mark.parametrize("state", ["never-signed-in", "timed-out"])
@@ -142,8 +149,8 @@ def test_an_mcp_resume_is_refused_exactly_as_the_command_line_is(
         assert runtime.leases() == ()
 
 
-@pytest.mark.parametrize("acting", [_CLI, _TUI, _MCP], ids=["cli", "tui", "mcp"])
-def test_the_persons_session_locks_any_session_and_signs_out_everywhere_from_every_frontend(
+@pytest.mark.parametrize("acting", [_CLI, _TUI], ids=["cli", "tui"])
+def test_the_persons_session_locks_any_session_and_signs_out_everywhere_from_the_persons_frontends(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, acting: OperationFrontendProjection
 ) -> None:
     with stored_sign_in_runtime(tmp_path, monkeypatch) as runtime:
@@ -183,8 +190,8 @@ def test_the_persons_session_locks_any_session_and_signs_out_everywhere_from_eve
         _refused(after, AccessDenialCode.AUTHENTICATION_REQUIRED)
 
 
-@pytest.mark.parametrize("acting", [_CLI, _TUI, _MCP], ids=["cli", "tui", "mcp"])
-def test_the_person_locks_the_profile_and_resumes_it_with_the_password_from_every_frontend(
+@pytest.mark.parametrize("acting", [_CLI, _TUI], ids=["cli", "tui"])
+def test_the_person_locks_the_profile_and_resumes_it_with_the_password_from_the_persons_frontends(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, acting: OperationFrontendProjection
 ) -> None:
     with stored_sign_in_runtime(tmp_path, monkeypatch) as runtime:

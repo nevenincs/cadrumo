@@ -25,10 +25,12 @@ from cadrumo_harness.mcp.protocol_contract import MCP_TOOL_NAMES
 from ...application.operations.access_resolution import ResolvedOperationAccess
 from ...application.operations.mcp_surface_facts import operation_surface_facts
 from ...application.operations.mcp_surfaces import MCP_SURFACES, McpSurfaceName
+from ...application.operations.person_acts import operation_is_persons_act
 from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
 from ...application.user_profile.access_contracts import (
     ACCESS_LEASE_MAXIMUM,
     AccessAction,
+    AccessDenialCode,
     AccessDenied,
     AccessEvaluationContext,
     AccessScope,
@@ -87,6 +89,16 @@ def _registry() -> OperationRegistry:
 @cache
 def _definition_ids() -> tuple[str, ...]:
     return tuple(sorted(item.contract.definition_id for item in _registry().public_registrations))
+
+
+def _is_persons_act(definition_id: str) -> bool:
+    contract = _registry().lookup_public_contract(definition_id)
+    return operation_is_persons_act(definition_id, ephemeral_secret_required=contract.ephemeral_secret_required)
+
+
+def _agent_operation_ids() -> tuple[str, ...]:
+    """Every registered operation an agent may run: all but the person's own acts, which no surface holds."""
+    return tuple(definition_id for definition_id in _definition_ids() if not _is_persons_act(definition_id))
 
 
 @cache
@@ -336,7 +348,9 @@ def _recorded_as_changing_or_reaching(definition_id: str) -> bool:
 
 def _barred_by_the_two_facts() -> list[str]:
     """Every registered operation recorded as changing records or reaching the network."""
-    return [definition_id for definition_id in _definition_ids() if _recorded_as_changing_or_reaching(definition_id)]
+    return [
+        definition_id for definition_id in _agent_operation_ids() if _recorded_as_changing_or_reaching(definition_id)
+    ]
 
 
 def _read_only_local_operations() -> frozenset[str]:
@@ -347,9 +361,9 @@ def _read_only_local_operations() -> frozenset[str]:
 
 def test_without_a_surface_the_session_is_admitted_to_every_registered_operation() -> None:
     """The session used throughout is refused nothing, so each refusal below is a surface's."""
-    assert _definition_ids()
+    assert _agent_operation_ids()
     refused: dict[str, set[str]] = {}
-    for definition_id in _definition_ids():
+    for definition_id in _agent_operation_ids():
         answers = _answers(definition_id, None)
         if answers != {_ALLOWED}:
             refused[definition_id] = answers
@@ -390,7 +404,7 @@ def test_the_read_only_local_surface_refuses_every_operation_that_changes_record
 
 def test_the_read_only_local_surface_refuses_every_operation_outside_its_list() -> None:
     operations = _read_only_local_operations()
-    outside = [definition_id for definition_id in _definition_ids() if definition_id not in operations]
+    outside = [definition_id for definition_id in _agent_operation_ids() if definition_id not in operations]
     assert outside
     admitted: dict[str, set[str]] = {}
     for definition_id in outside:
@@ -466,6 +480,16 @@ def test_a_read_only_surface_refuses_the_commit_section_and_a_submission_that_co
         assert opened == _FRONTEND_DENIED, definition_id
         submitted = _answer(definition_id, _READ_ONLY_LOCAL, resolved=_COMMITTING)
         assert submitted == _FRONTEND_DENIED, definition_id
+
+
+def test_the_persons_acts_are_refused_to_mcp_on_every_surface_and_admitted_to_the_command_line() -> None:
+    """An operation that needs a secret or administers keys is the person's, whatever surface an agent names."""
+    persons = [definition_id for definition_id in _definition_ids() if _is_persons_act(definition_id)]
+    assert persons, "no registered operation is the person's act; the denominator is empty"
+    for definition_id in persons:
+        for surface in (None, _FULL, _READ_ONLY_LOCAL):
+            assert _answers(definition_id, surface) == {AccessDenialCode.PERSON_ACT_REQUIRED.value}, definition_id
+        assert _answer(definition_id, None, frontend=OperationFrontendProjection.CLI) == _ALLOWED, definition_id
 
 
 def test_a_lease_that_names_no_surface_is_held_to_the_surface_its_parent_named() -> None:

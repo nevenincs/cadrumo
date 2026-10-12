@@ -96,7 +96,7 @@ def _perform[ReplyT: RuntimeInstallationCompleted](
 @pytest.mark.windows_only
 @pytest.mark.skipif(sys.platform != "win32", reason="requires real Windows protected pipes")
 @pytest.mark.usefixtures("authority_operation")
-@pytest.mark.parametrize("frontend", list(OperationFrontendProjection))
+@pytest.mark.parametrize("frontend", [OperationFrontendProjection.CLI, OperationFrontendProjection.TUI])
 def test_the_installed_composition_serves_an_act_of_every_family_to_every_frontend(
     tmp_path: Path, frontend: OperationFrontendProjection
 ) -> None:

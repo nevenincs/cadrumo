@@ -17,6 +17,7 @@ test.
 
 from __future__ import annotations
 
+import json
 import sys
 import time
 from pathlib import Path
@@ -31,6 +32,7 @@ from cadrumo.adapters.persistence.storage.custody.automation_store_composition i
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.installation_requests import RuntimeProfileListReply, RuntimeProfileListRequest
+from cadrumo.application.runtime.operation_access import RuntimeOperationSubmit
 from cadrumo.application.runtime.profile_access import RuntimeAccessRefusal
 from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind
@@ -60,8 +62,8 @@ def _resumed(runtime: StoredSignInRuntime, frontend: OperationFrontendProjection
 
 def _persons_act(act: object) -> None:
     """The act is refused with the code that sends the agent to the person."""
-    assert isinstance(act, RuntimeFrontendRefusedError), act
-    assert act.reason == _PERSON
+    assert isinstance(act, RuntimeFrontendRefusedError), repr(act)
+    assert act.reason == _PERSON, (act.reason, act.request_faults)
 
 
 def _refusal_of(call: object) -> object:
@@ -107,6 +109,18 @@ def test_the_mcp_frontend_is_refused_every_sign_in_session_and_key_act_and_keeps
                 lambda: agent.describe(PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID, deadline=time.monotonic() + 30)
             )
         )
+
+        submitted = RuntimeOperationSubmit(
+            request_id=uuid4(),
+            profile_id=runtime.profile_id,
+            session_id=own,
+            definition_id=PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID,
+            subject_ref=f"profile:{runtime.profile_id}",
+            payload_json=json.dumps(
+                {"profile_id": str(runtime.profile_id), "destination": str(tmp_path / "x.bundle"), "purpose": "portable_transfer"}
+            ),
+        )
+        _persons_act(_refusal_of(lambda: agent.operation(submitted, deadline=time.monotonic() + 30)))
 
         # None of it took the agent's own session away, and the stored sign-in stands.
         assert agent.status().status.denial is None

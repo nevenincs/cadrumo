@@ -292,7 +292,7 @@ def test_preunlock_requester_receives_protected_credential_then_fresh_api_login(
                 try:
                     prepared = requester.enrollment_prepare(
                         RuntimeEnrollmentPrepare(
-                            request_id=uuid4(), profile_id=profile_id, frontend=OperationFrontendProjection.MCP
+                            request_id=uuid4(), profile_id=profile_id, frontend=OperationFrontendProjection.TUI
                         ),
                         deadline=time.monotonic() + 5,
                     )
@@ -513,7 +513,7 @@ def test_client_native_store_failure_does_not_complete_enrollment(tmp_path: Path
                 try:
                     prepared = requester.enrollment_prepare(
                         RuntimeEnrollmentPrepare(
-                            request_id=uuid4(), profile_id=profile_id, frontend=OperationFrontendProjection.MCP
+                            request_id=uuid4(), profile_id=profile_id, frontend=OperationFrontendProjection.TUI
                         ),
                         deadline=time.monotonic() + 5,
                     )

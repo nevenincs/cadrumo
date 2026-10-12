@@ -18,7 +18,7 @@ related:
   - '[[2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr]]'
 modified: '2026-10-12'
 body_schema: body-v2
-body_hash: 'sha256:451c528c035cb31657483c9b44132ce255a30bf92a72b29e4a872504577d5878'
+body_hash: 'sha256:b2bd056a1a3b68adc72804c4a3fa07a4ab0aa1787cf2e5bba13a4d48ae9e7f20'
 ---
 
 <!-- RETIRED: P03, P07, S20, S21, S22, S23, S24, S25, S26, S31, S32, S36, S40, S41, S43 -->
@@ -163,7 +163,7 @@ Delivers the rest of parity: about forty-five command-line commands do their wor
 Delivers the owner's ruling of 2026-10-12: MCP carries no secret and offers no authentication, session, access or installation act; the runtime refuses those acts and every operation that needs a typed secret on the MCP frontend; one profile is signed in at a time; an MCP server is bound to one profile and does nothing but answer its handshake, tool list and status without a live sign-in or a key the person configured; and the desktop shows its sign-in view on every loss of sign-in.
 
 - [x] `P10.S64` - Remove from the MCP server every tool and argument that signs in, administers sessions or access, carries or names a secret, or acts outside the bound profile: the session, installation, authenticate and authorization tools, the secret arguments of execute and the held-secret commands, keeping the key named by --credential-reference in the launch configuration, and replace the tests that proved them with tests of their absence; `src/cadrumo_harness/mcp/protocol_contract.py`.
-- [ ] `P10.S65` - Refuse on the MCP frontend, in the runtime, the password login, enrollment, password reset, recovery, profile resume and deletion, session inventory, lock, sign-out, automation denial and installation acts, and every operation whose contract requires a typed secret, with one typed refusal that names the act as the person's, keyed on the act through one predicate the frontend scan lists with its reason; `src/cadrumo/entrypoints/runtime/profile_connection_admission.py`.
+- [x] `P10.S65` - Refuse on the MCP frontend, in the runtime, the password login, enrollment, password reset, recovery, profile resume and deletion, session inventory, lock, sign-out, automation denial and installation acts, and every operation whose contract requires a typed secret, with one typed refusal that names the act as the person's, keyed on the act through one predicate the frontend scan lists with its reason; `src/cadrumo/entrypoints/runtime/profile_connection_admission.py`.
 - [ ] `P10.S66` - Keep one profile signed in at a time: a human sign-in to a profile ends every other profile's stored sign-in and the human sessions resumed from it on every frontend, and leaves key sessions that need no sign-in; `src/cadrumo/application/user_profile/login_session.py`.
 - [ ] `P10.S67` - Bind each MCP server to one profile for its life, the key's or the first resumed sign-in's, refuse every call when the signed-in profile later differs, and answer nothing but the handshake, the tool list and status without a live sign-in or a valid key, with one typed result that tells the person to sign in to Cadrumo; `src/cadrumo_harness/mcp/runtime_adapter.py`.
 - [ ] `P10.S68` - Show the desktop sign-in view on a locked profile instead of handing it to the terminal interface, and on the pushed expiry and lock events as well as the status poll; `native/desktop/frontend/src/shell/signIn.ts`.

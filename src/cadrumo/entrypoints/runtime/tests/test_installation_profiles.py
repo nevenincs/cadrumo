@@ -176,7 +176,7 @@ def test_the_listing_act_answers_every_frontend_with_what_the_command_prints(tmp
 
     with served_installation(tmp_path) as installation:
         printed = command_printed("config", "profile", "list")
-        for frontend in OperationFrontendProjection:
+        for frontend in (OperationFrontendProjection.CLI, OperationFrontendProjection.TUI):
             with installation_client(installation.endpoint) as client:
                 reply = client.perform(
                     RuntimeProfileListRequest(request_id=uuid4(), frontend=frontend), RuntimeProfileListReply
@@ -191,8 +191,8 @@ def test_the_listing_act_answers_every_frontend_with_what_the_command_prints(tmp
             ]
 
     assert str(installation.profile_id) not in json.dumps(printed.default)
-    assert len(answers) == 3
-    assert answers[OperationFrontendProjection.TUI] == answers[_CLI] == answers[OperationFrontendProjection.MCP]
+    assert len(answers) == 2
+    assert answers[OperationFrontendProjection.TUI] == answers[_CLI]
 
 
 def test_the_inspect_act_reports_the_header_the_command_prints_and_refuses_what_is_no_archive(
@@ -282,7 +282,7 @@ def test_an_import_under_a_wrong_passphrase_is_refused_and_publishes_nothing(
             prepared = client.perform(_prepare_request(archive), RuntimeArchiveImportPrepareReply)
             assert isinstance(prepared, RuntimeArchiveImportPrepareReply)
             refused = client.perform(
-                _import_request(archive, prepared.source_digest, OperationFrontendProjection.MCP),
+                _import_request(archive, prepared.source_digest, OperationFrontendProjection.TUI),
                 RuntimeArchiveImportReply,
                 secret=_secret(wrong),
             )
@@ -358,7 +358,7 @@ def test_enrolment_hands_out_a_code_that_resets_the_passphrase_and_answers_what_
         secret = _secret()
         # No profile is named: the act enrols the selected one, as the command does.
         reply = client.perform(
-            RuntimeRecoveryEnrollRequest(request_id=uuid4(), frontend=OperationFrontendProjection.MCP),
+            RuntimeRecoveryEnrollRequest(request_id=uuid4(), frontend=OperationFrontendProjection.TUI),
             RuntimeRecoveryEnrollReply,
             secret=secret,
             hold_secret=hold,

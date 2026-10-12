@@ -446,7 +446,7 @@ def test_unconfirmed_and_unpaired_requests_are_refused_before_any_profile_is_tou
 def test_every_frontend_is_admitted_and_answered_the_same_way(tmp_path: Path) -> None:
     answers: dict[OperationFrontendProjection, dict[str, dict[str, Any]]] = {}
     with _installed(tmp_path) as installation:
-        for frontend in OperationFrontendProjection:
+        for frontend in (OperationFrontendProjection.CLI, OperationFrontendProjection.TUI):
             with _client(installation.endpoint) as client:
                 settled = {
                     "status": client.perform(_status(frontend), RuntimeResetStatusReply),
@@ -458,10 +458,10 @@ def test_every_frontend_is_admitted_and_answered_the_same_way(tmp_path: Path) ->
                 for name, reply in settled.items()
             }
 
-    assert len(answers) == 3
+    assert len(answers) == 2
     assert answers[_CLI]["status"]["operation"] is None
     assert answers[_CLI]["unconfirmed"]["kind"] == "installation_refused"
-    for frontend in OperationFrontendProjection:
+    for frontend in (OperationFrontendProjection.CLI, OperationFrontendProjection.TUI):
         assert answers[frontend] == answers[_CLI]
 
 

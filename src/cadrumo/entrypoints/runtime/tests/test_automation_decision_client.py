@@ -107,7 +107,7 @@ def _requester(
 ) -> tuple[VerifiedRuntimeConnection, NativeEnrollmentClient]:
     connection = _connect(endpoint)
     prepared = connection.enrollment_prepare(
-        RuntimeEnrollmentPrepare(request_id=uuid4(), profile_id=profile_id, frontend=OperationFrontendProjection.MCP),
+        RuntimeEnrollmentPrepare(request_id=uuid4(), profile_id=profile_id, frontend=OperationFrontendProjection.TUI),
         deadline=time.monotonic() + 5,
     )
     assert isinstance(prepared, RuntimeEnrollmentPrepared)

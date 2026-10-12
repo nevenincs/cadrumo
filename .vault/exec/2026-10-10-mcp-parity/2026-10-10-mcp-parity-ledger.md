@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:cd26e2b815893bfee922aa1f4d2b0512062e61a3b091ea1989daf49183a75d90'
+body_hash: 'sha256:50c0883fd369cafee5bfe259eef5d41b02d63fd9fcc03fa186c3b88a3b69954e'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -2206,6 +2206,37 @@ related:
 - `S64` `verify:` `pytest cli parity, reference, entrypoints and operations tests` -> `pass`
 - `S64` `verify:` `ruff check and format` -> `pass`
 - `S64` `verify:` `ty check on touched files` -> `pass`
+- `S65` `M` `src/cadrumo/entrypoints/runtime/profile_connection_operations.py`
+- `S65` `M` `src/cadrumo/entrypoints/runtime/tests/test_automation_decision_client.py`
+- `S65` `M` `src/cadrumo/entrypoints/runtime/tests/test_automation_enrollment.py`
+- `S65` `M` `src/cadrumo/entrypoints/runtime/tests/test_installation_artefacts.py`
+- `S65` `M` `src/cadrumo/entrypoints/runtime/tests/test_installation_door.py`
+- `S65` `M` `src/cadrumo/entrypoints/runtime/tests/test_installation_production_composition.py`
+- `S65` `M` `src/cadrumo/entrypoints/runtime/tests/test_installation_profiles.py`
+- `S65` `M` `src/cadrumo/entrypoints/runtime/tests/test_installation_repair.py`
+- `S65` `M` `src/cadrumo/entrypoints/runtime/tests/test_installation_reset.py`
+- `S65` `M` `src/cadrumo/entrypoints/runtime/tests/test_installation_runtime.py`
+- `S65` `M` `src/cadrumo/entrypoints/runtime/tests/test_installation_storage.py`
+- `S65` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_frontend_person_acts.py`
+- `S65` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_sign_in_door.py`
+- `S65` `M` `src/cadrumo/entrypoints/tests/test_operation_mcp_surfaces.py`
+- `S65` `M` `src/cadrumo/application/user_profile/access_contracts.py`
+- `S65` `M` `src/cadrumo/application/user_profile/operation_access_policy.py`
+- `S65` `M` `src/cadrumo/entrypoints/runtime/bootstrap_delete.py`
+- `S65` `M` `src/cadrumo/entrypoints/runtime/bootstrap_reset.py`
+- `S65` `M` `src/cadrumo/entrypoints/runtime/installation_door.py`
+- `S65` `M` `src/cadrumo/entrypoints/runtime/profile_connection_access.py`
+- `S65` `M` `src/cadrumo/entrypoints/runtime/profile_connection_admission.py`
+- `S65` `M` `src/cadrumo/entrypoints/runtime/profile_connection_sessions.py`
+- `S65` `M` `src/cadrumo/entrypoints/runtime/profile_connections.py`
+- `S65` `M` `src/cadrumo/entrypoints/tests/test_operation_frontend_source_scan.py`
+- `S65` `M` `src/cadrumo_harness/mcp/protocol_contract.py`
+- `S65` `M` `src/cadrumo_harness/mcp/runtime_adapter.py`
+- `S65` `A` `src/cadrumo/entrypoints/runtime/profile_connection_person_acts.py`
+- `S65` `verify:` `pytest runtime person-act, sign-in door, installation and automation suites` -> `pass`
+- `S65` `verify:` `pytest operation surfaces, catalogue, frontend scan, user_profile, auth and harness` -> `pass`
+- `S65` `verify:` `ruff check and format` -> `pass`
+- `S65` `verify:` `ty check on touched files` -> `pass`
 
 ## Notes
 
@@ -2280,3 +2311,4 @@ related:
 - `S63` The financial-input path and an access resolver that raises during admission no longer end the worker; each answers invalid with the registered code and message and the session serves on. Three row validators on the financial path quote the operand's value in their message and are left as they are, since the command line prints them. Open and recorded in the audit: a registered error from a resolver on an action after admission still escapes the loop.
 - `S63` Reads answer instead of ending the worker when an access resolver raises: observation, result, result page, review projection and review inspection go through one place. Shown through the real runtime with the work unit removed from the encrypted store behind a running worker, since no frontend act removes one. A plain error from a resolver on a fresh submission answers a bare invalid, shown at the authority level only. Open: start, resume, cancel, detach, apply and reject still end the worker when their access resolution raises.
 - `S64` Pre-existing failures outside MCP in the entrypoints lane (modelo 184/303 calculation, ledger bulk classify) and in `dev/agent_eval/tests/test_mcp_frontend_session_lock_parity.py` (key session expiry precedes the human one); a session-mode discovery search hit `runtime_deadline_exceeded` under load and is reworked in S67
+- `S65` Another session's sweep commit e292d394b3 took this Step's in-progress production changes and `test_mcp_frontend_person_acts.py;` this Step's commit carries the remaining files

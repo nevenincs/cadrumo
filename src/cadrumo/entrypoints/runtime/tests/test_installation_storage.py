@@ -292,7 +292,7 @@ def test_every_frontend_is_admitted_and_answered_the_same_way(tmp_path: Path) ->
     with _installed(tmp_path) as (endpoint, _root):
         with _client(endpoint) as client:
             client.perform(RuntimeStorageInitRequest(request_id=uuid4(), frontend=_CLI), RuntimeStorageInitReply)
-        for frontend in OperationFrontendProjection:
+        for frontend in (OperationFrontendProjection.CLI, OperationFrontendProjection.TUI):
             with _client(endpoint) as client:
                 settled = {
                     "inventory": client.perform(
@@ -312,10 +312,10 @@ def test_every_frontend_is_admitted_and_answered_the_same_way(tmp_path: Path) ->
                 for name, reply in settled.items()
             }
 
-    assert len(answers) == 3
+    assert len(answers) == 2
     assert answers[_CLI]["check"]["healthy"] is True
     assert answers[_CLI]["unconfirmed"]["kind"] == "installation_refused"
-    for frontend in OperationFrontendProjection:
+    for frontend in (OperationFrontendProjection.CLI, OperationFrontendProjection.TUI):
         assert answers[frontend] == answers[_CLI]
 
 

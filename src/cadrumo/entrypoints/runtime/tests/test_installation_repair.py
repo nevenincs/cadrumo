@@ -534,7 +534,7 @@ def test_every_frontend_is_admitted_and_answered_the_same_way(tmp_path: Path, ki
 
     with _installed(tmp_path, kind) as (endpoint, _root):
         _write_log()
-        for frontend in OperationFrontendProjection:
+        for frontend in (OperationFrontendProjection.CLI, OperationFrontendProjection.TUI):
             with _client(endpoint) as client:
                 logs = _logs(client, 7, frontend)
                 named = client.perform(
@@ -557,8 +557,8 @@ def test_every_frontend_is_admitted_and_answered_the_same_way(tmp_path: Path, ki
             tails.append(logs.lines)
             named_kinds.append(named.kind)
 
-    assert len(answers) == 3
-    assert tails == [_LOG_LINES[-7:]] * 3
-    assert named_kinds == ["repair_profile_reply" if kind == "healthy" else "installation_refused"] * 3
-    for frontend in OperationFrontendProjection:
+    assert len(answers) == 2
+    assert tails == [_LOG_LINES[-7:]] * 2
+    assert named_kinds == ["repair_profile_reply" if kind == "healthy" else "installation_refused"] * 2
+    for frontend in (OperationFrontendProjection.CLI, OperationFrontendProjection.TUI):
         assert answers[frontend] == answers[_CLI], frontend

@@ -165,16 +165,15 @@ def test_every_frontend_gets_the_same_answer_from_the_running_runtime(tmp_path: 
     answers: dict[OperationFrontendProjection, dict[str, object]] = {}
 
     with _running_runtime(tmp_path, _login()) as (endpoint, _root):
-        for frontend in OperationFrontendProjection:
+        for frontend in (OperationFrontendProjection.CLI, OperationFrontendProjection.TUI):
             with _client(endpoint) as client:
                 reply = client.perform(
                     RuntimeStorageCheckRequest(request_id=uuid4(), frontend=frontend), RuntimeStorageCheckReply
                 )
                 answers[frontend] = reply.model_dump(mode="json", exclude={"request_id", "connection_id"})
 
-    assert len(answers) == 3
+    assert len(answers) == 2
     assert answers[OperationFrontendProjection.CLI] == answers[OperationFrontendProjection.TUI]
-    assert answers[OperationFrontendProjection.CLI] == answers[OperationFrontendProjection.MCP]
 
 
 def test_the_client_refuses_to_send_an_act_outside_its_contract(tmp_path: Path) -> None:
@@ -268,7 +267,7 @@ def test_recovery_enrolment_installs_nothing_unless_the_passphrase_and_the_read_
         _client(endpoint) as client,
     ):
         request = RuntimeRecoveryEnrollRequest(
-            request_id=uuid4(), frontend=OperationFrontendProjection.MCP, profile_id=profile
+            request_id=uuid4(), frontend=OperationFrontendProjection.TUI, profile_id=profile
         )
         secret = installation_passphrase_document(bytearray(supplied, "utf-8"))
         if case == "declined":

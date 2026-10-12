@@ -327,7 +327,7 @@ def test_shutdown_holding_the_lifecycle_exclusion_refuses_a_change_and_still_ser
         try:
             assert held.wait(5)
             refused = _settled(
-                door, RuntimeStorageInitRequest(request_id=uuid4(), frontend=OperationFrontendProjection.MCP)
+                door, RuntimeStorageInitRequest(request_id=uuid4(), frontend=OperationFrontendProjection.TUI)
             )
             served = _settled(door, _check_request())
         finally:
@@ -371,7 +371,7 @@ def test_a_registered_error_reaches_the_caller_as_that_error_with_its_public_con
     refused = _settled(
         door,
         RuntimeStorageReclaimRequest(
-            request_id=uuid4(), frontend=OperationFrontendProjection.MCP, area=StorageArea.LOGS
+            request_id=uuid4(), frontend=OperationFrontendProjection.TUI, area=StorageArea.LOGS
         ),
     )
 
@@ -435,7 +435,7 @@ def test_a_handler_that_answers_with_another_acts_reply_fails_its_act(tmp_path: 
     "login",
     [pytest.param(_login(), id="admitted"), pytest.param(_login(lock_state=OsLockState.LOCKED), id="locked")],
 )
-def test_the_same_act_is_admitted_and_answered_identically_whatever_frontend_sends_it(
+def test_the_same_act_is_admitted_and_answered_identically_by_the_persons_frontends_and_refused_to_mcp(
     tmp_path: Path, login: InstallationLogin
 ) -> None:
     door = _door(tmp_path, _checking_registry(), login)
@@ -446,13 +446,10 @@ def test_the_same_act_is_admitted_and_answered_identically_whatever_frontend_sen
         for frontend in OperationFrontendProjection
     }
 
-    assert set(answers) == {
-        OperationFrontendProjection.CLI,
-        OperationFrontendProjection.TUI,
-        OperationFrontendProjection.MCP,
-    }
     assert answers[OperationFrontendProjection.CLI] == answers[OperationFrontendProjection.TUI]
-    assert answers[OperationFrontendProjection.CLI] == answers[OperationFrontendProjection.MCP]
+    # Installation work belongs to no single profile, so it is the person's act and never an agent's.
+    assert answers[OperationFrontendProjection.MCP]["kind"] == "access_refusal"
+    assert answers[OperationFrontendProjection.MCP]["code"] == AccessDenialCode.PERSON_ACT_REQUIRED.value
 
 
 def test_an_inbound_secret_arrives_in_one_secret_frame_and_nowhere_else(
@@ -480,7 +477,7 @@ def test_an_inbound_secret_arrives_in_one_secret_frame_and_nowhere_else(
     caplog.set_level(logging.DEBUG)
     request = RuntimeArchiveImportRequest(
         request_id=uuid4(),
-        frontend=OperationFrontendProjection.MCP,
+        frontend=OperationFrontendProjection.TUI,
         label="Synthetic profile",
         path=str(tmp_path.resolve() / "synthetic.cadrumo"),
         source_digest="cd" * 32,
@@ -627,7 +624,7 @@ def test_an_access_error_raised_before_the_change_begins_is_a_refusal_with_its_c
     registry.register(RuntimeStorageInitRequest, init)
     door = _door(tmp_path, registry)
 
-    refusal = _settled(door, RuntimeStorageInitRequest(request_id=uuid4(), frontend=OperationFrontendProjection.MCP))
+    refusal = _settled(door, RuntimeStorageInitRequest(request_id=uuid4(), frontend=OperationFrontendProjection.TUI))
 
     assert isinstance(refusal, RuntimeAccessRefusal)
     assert refusal.code is code
@@ -654,7 +651,7 @@ def test_an_access_error_raised_after_the_change_began_fails_the_act_with_its_ef
     caplog.set_level(logging.DEBUG)
 
     documents, _channel = _serve(
-        door, RuntimeStorageInitRequest(request_id=uuid4(), frontend=OperationFrontendProjection.MCP)
+        door, RuntimeStorageInitRequest(request_id=uuid4(), frontend=OperationFrontendProjection.TUI)
     )
 
     assert written.exists()
