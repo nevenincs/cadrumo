@@ -5,7 +5,7 @@ tags:
 date: '2026-10-11'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:0fe64d8fd08841b955327a0218606f98524f0fa575e17f8f3def6e24cee6c66e'
+body_hash: 'sha256:ebfcd9f46d1122499fc766b8f71caf7f4bf869da3b768c1323b9dc6f19e05bd6'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -258,6 +258,16 @@ A typed error that is not a validation error escaped the worker's dispatch loop:
 
 `src/cadrumo/entrypoints/cli/tests/portable_human_cli_runtime.py:248`. About 320 command-line tests that sign in failed when the runtime built its worker, and a wide pass run beside other work had made them look like load. Found 2026-10-12. Resolved the same day. A failure is confirmed alone and by its traceback before it is called load.
 
+### cli-tests-without-a-runtime | high | Most command-line tests ran their commands with no runtime joined, so the Verification promise that they pass unchanged did not hold
+
+A run on 2026-10-12 of the command-line tree with every marker (`src/cadrumo/entrypoints/cli`, `src/cadrumo/entrypoints/tests`, the installation command tests and the wizard command helpers) ended 515 failed, 55 errors and 8993 passed; the serial pass was green. By first error line: 368 refused as runtime unavailable, 28 refused a sign-in (no saved sign-in, or no password channel on a host without a console), 113 bare assertions, most later traced to the same cause, 5 runtime transport refusals, 1 keychain error (WinError 1312, environmental) and 55 others. The fixtures registered a profile in process, often a minimal profile with test custody that cannot sign in, and called the command line bare; ledger and modelo commands submit to the runtime since `4fd89a1593` and `3bb3b64787` (2026-09-29 and 2026-09-30), and `src/cadrumo/entrypoints/cli/runtime_profile_binding.py` is unchanged by this plan, so most of these failures predate it rather than being caused by it. The Verification line was claimed without the run that would have shown them.
+
+Three defects reached every frontend. A verification stopped between saving its granting report and locking the revision was refused as `REFUSED_PROFILE_ACCESS`, the verify command that would settle it included. The pre-activity and not-applicable readiness refusals carried only free text, so every frontend showed the generic readiness sentence with an unfilled placeholder. The registered revision read and the filing-record import published no error detail, so verify and file given a work-unit id lost their "calculate it first" action, and the import refused a discarded work unit as an access denial.
+
+Resolved 2026-10-12. The read now reports `ERROR_MODELO_VERIFICATION_OUTCOME_INCOMPLETE` and admits verify to run again (`8e7fc6173f`); both refusals name catalogue messages in four locales (`c5cf297140`); both definitions publish their error detail, the read keeps the declared recovery and the import raises the lifecycle verdict (`5ddbe1e245`). The tests join a real runtime and are admitted with the profile password on the protected frame wherever a sign-in would resume (`4fd5bd8b89`, then the fixture work carried in `e292d394b3` and `c7fbea9454`): one rule for when to send the password, one binding that `invoke_cached_cli` honours, and runtime-backed worlds for the per-test, seed-once and ledger-session fixtures. Across the files that failed, a rerun with that work fixed 277 of the 570.
+
+Open, each evidenced and outside this resolution: admission refuses an absent target or a malformed period inside the caller's own profile as `operation_denied`, so verify, file and review-package lose the declared address verdict, and an application test holds that ruling; the report verb's refusal for a work target with no calculation no longer names its address; a single-file ledger import with an invalid row reports a skipped statement rather than `ERROR_TRANSACTION_VALIDATION`, unchanged since `3bb3b64787`; the Modelo 111 surnames field is owned by another session; two bienes de inversión 303 tests fail on wallet reconciliation on HEAD; and the remaining seed-once and native suites, config profile verbs and subprocess secret-channel tests, several of which also fail under load with `KDF_RESOURCE_LIMIT` or `runtime_deadline_exceeded`.
+
 ## Recommendations
 
 - The recommendations below that ask the admission rulings record, the file-exchange record or the approval record for a decision are withdrawn with `refusals-withdrawn`: the first is superseded and the others are rejected, and the owner's ruling leaves no such decision open. `reader-network-fact`, `workflow-run-detail`, `surface-real-policy` and `purchase-link-outside-fingerprint` are unaffected.
@@ -276,3 +286,4 @@ A typed error that is not a validation error escaped the worker's dispatch loop:
 - For `spreadsheet-push-unavailable`: verify by running the command, and decide in the record that governs the Google export which operation it submits.
 - For `gate-limits`: give the session-door commands a test that holds each command's output to the session tool's reply, so the pairs can leave the unproven list.
 - For `worker-ends-on-registered-error`: decide, in the record that governs the operation supervisor, what a worker answers when an access resolver raises on an action after admission, so that one request cannot end the session for the others.
+- For `cli-tests-without-a-runtime`: decide, in the record that governs operation admission, whether a resolver may report an address error inside the caller's own admitted profile as itself rather than as `operation_denied`, so that the declared verify, file and review-package address verdicts reach every frontend.
