@@ -25,6 +25,8 @@ from cadrumo.application.user_profile.profile_pointer import (
 )
 from cadrumo.core.bucket_pointer import pointer_path
 from cadrumo.core.config import override_settings
+from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.i18n.render import tr
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo.core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
@@ -147,6 +149,9 @@ def test_logout_missing_human_proof_refuses_and_keeps_selection(monkeypatch: pyt
     assert observe_active_profile_pointer() == captured
     assert client.calls == ["sign_out", "close"]
     assert '"already_logged_out": true' not in result.output
+    with override_settings(cadrumo_output_language=OutputLanguage.EN):
+        expected = tr("cli.config.errors.profile_session_logout_unproven", locale="en")
+    assert expected in result.output
 
 
 def test_logout_refuses_corrupt_default_without_claiming_idempotence(_isolated_cli_backend: Path) -> None:

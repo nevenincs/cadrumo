@@ -101,6 +101,47 @@ def test_each_sign_in_refusal_keeps_its_own_message_and_wire_facts(
             assert context["seconds"] == str(sign_in.remaining_seconds)
 
 
+_ACCURATE_REASONS = (
+    (SignInRefusal(reason=ProfileSessionRefusalReason.TAMPERED), "cli.config.errors.profile_session_unreadable"),
+    (SignInRefusal(reason=ProfileSessionRefusalReason.MALFORMED), "cli.config.errors.profile_session_unreadable"),
+    (
+        SignInRefusal(reason=ProfileSessionRefusalReason.SCHEMA_VERSION_MISMATCH),
+        "cli.config.errors.profile_session_outdated",
+    ),
+    (
+        SignInRefusal(reason=ProfileSessionRefusalReason.KEYRING_UNAVAILABLE),
+        "errors.auth.auth_storage_keyring_unavailable",
+    ),
+    (
+        SignInRefusal(reason=ProfileSessionRefusalReason.ABSENT, binding=ReceiptBindingRefusal.GENERATION_MISSING),
+        "cli.config.errors.profile_session_unreadable",
+    ),
+    (
+        SignInRefusal(reason=ProfileSessionRefusalReason.ABSENT, binding=ReceiptBindingRefusal.GENERATION_UNREADABLE),
+        "cli.config.errors.profile_session_unreadable",
+    ),
+    (
+        SignInRefusal(
+            reason=ProfileSessionRefusalReason.ABSENT, binding=ReceiptBindingRefusal.GENERATION_BINDING_MISMATCH
+        ),
+        "cli.config.errors.profile_session_unreadable",
+    ),
+)
+
+
+@pytest.mark.parametrize(("sign_in", "key"), _ACCURATE_REASONS)
+def test_a_damaged_or_older_saved_sign_in_is_not_called_expired(sign_in: SignInRefusal, key: str) -> None:
+    error = _wire_refusal(AccessDenialCode.AUTHENTICATION_REQUIRED, sign_in)
+    with override_settings(cadrumo_output_language=OutputLanguage.EN):
+        rendered = _rendered(error)
+        expected = tr(key, locale="en")
+        expired = tr("cli.config.errors.profile_session_expired", locale="en")
+    assert rendered["message"] == expected
+    assert expected not in {expired, key}
+    assert isinstance(sign_in.reason, ProfileSessionRefusalReason)
+    assert sign_in.reason.value == rendered["context"]["sign_in_reason"]  # type: ignore[index]
+
+
 def test_no_two_refusals_share_one_message() -> None:
     messages = {_rendered(_wire_refusal(code, sign_in))["message"] for code, sign_in, _key in _CASES}
     assert len(messages) == len(_CASES)

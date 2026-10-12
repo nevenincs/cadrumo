@@ -2027,8 +2027,14 @@ cli:
         login` to sign in again.
       profile_session_login_mismatch: Your saved sign-in belongs to another session
         on this computer. Run `aeat config login` to sign in here.
+      profile_session_logout_unproven: Cadrumo can't prove this sign-out without a
+        usable saved sign-in. Run `aeat config login`, then sign out again.
+      profile_session_outdated: Your saved sign-in was made by another version of
+        Cadrumo and can't be used. Run `aeat config login` to sign in again.
       profile_session_signed_out: You were signed out of this profile elsewhere. Run
         `aeat config login` to sign in again.
+      profile_session_unreadable: Your saved sign-in could not be verified, so it
+        was not used. Run `aeat config login` to sign in again.
     google:
       detail:
         sync_push_limit_requires_dry_run: Google sync push cannot use --limit unless

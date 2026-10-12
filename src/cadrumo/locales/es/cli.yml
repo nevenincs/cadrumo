@@ -2182,8 +2182,16 @@ cli:
         login` para volver a iniciar sesión.
       profile_session_login_mismatch: Tu sesión guardada pertenece a otra sesión de
         este equipo. Ejecuta `aeat config login` para iniciar sesión aquí.
+      profile_session_logout_unproven: Cadrumo no puede comprobar este cierre de sesión
+        sin un inicio de sesión guardado que sirva. Ejecuta `aeat config login` y
+        vuelve a cerrar sesión.
+      profile_session_outdated: Tu inicio de sesión guardado lo creó otra versión
+        de Cadrumo y no se puede usar. Ejecuta `aeat config login` para volver a iniciar
+        sesión.
       profile_session_signed_out: Se cerró tu sesión en este perfil desde otro lugar.
         Ejecuta `aeat config login` para volver a iniciar sesión.
+      profile_session_unreadable: No se pudo verificar tu inicio de sesión guardado,
+        así que no se usó. Ejecuta `aeat config login` para volver a iniciar sesión.
     google:
       detail:
         sync_push_limit_requires_dry_run: La sincronización push de Google no puede

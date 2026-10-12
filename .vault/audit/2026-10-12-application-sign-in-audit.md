@@ -5,7 +5,7 @@ tags:
 date: '2026-10-12'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:c0d7caf0eaf7ef235ec7bb9b093acab09d4e0c3a6589ff3d795d0996537b61e8'
+body_hash: 'sha256:401d4f91793582aa4c289ed3a37e0c6e37521086e6d1a74bb458fb2803a2230b'
 related:
   - "[[2026-10-04-application-sign-in-plan]]"
   - "[[2026-10-04-application-sign-in-adr]]"
@@ -42,6 +42,8 @@ The MCP harness answers every refusal with `{"outcome": "refused", "code": ...}`
 
 `test_installed_cli_resumes_other_profile_without_retiring_original` patches `cadrumo.entrypoints.cli.config.secure_input.terminal_can_prompt_for_secrets` (`src/cadrumo/entrypoints/cli/config/tests/test_runtime_login.py:386`). `runtime_profile_admission` binds that name by a from-import at module load (`src/cadrumo/entrypoints/cli/runtime_profile_admission.py:44`, used at `:119`). Once another test has imported the module, the patch misses it. `config profile view` then refuses with `passphrase_channel_absent`, and the test fails under `-n 4` while it passes alone. The product gate is correct. The flaw is in the evidence: the interactive-resume positive control that S13 cites is order-dependent, and the same pattern sits in the other tests that 03acd89702 and 4262d73637 changed. Patch the name where it is used, or route the check through one attribute lookup. This belongs to S13 as a test fix and does not affect the product.
 
+Resolved 2026-10-12: the S13 test now patches the terminal check and the prompt where `runtime_profile_admission` looks them up, and passes under `-n 4` beside its file and alone.
+
 ### door-tui-profile-lock-deadline | medium | Locking the profile from a TUI-frontend session timed out in three of four runs
 
 `test_the_person_locks_the_profile_and_resumes_it_with_the_password_from_every_frontend[tui]` (`src/cadrumo/entrypoints/runtime/tests/test_mcp_sign_in_door.py:186`) raised `runtime_deadline_exceeded` while `deny_automation(PROFILE_LOCK)` waited 10 s for its reply. The reply wait is at `src/cadrumo/adapters/local_runtime/frontend_client.py:469`. The test then hit `TimeoutError` in fixture teardown (`stored_sign_in_runtime.py:289`). It failed under xdist, alone, and in a three-parameter run, and passed once alone in 146 s. Its `cli` and `mcp` parameters always passed. The runtime handler has no frontend branch (`src/cadrumo/entrypoints/runtime/access_management.py:132`), and the long timings point to host load, so a product defect is not established. Lock everywhere is a lock-down path of this plan, however, so the intermittent failure must be explained before the plan closes. The test came from 508d1c3fb0 (mcp-parity). Its owner should reproduce it on a quiet host. S17 also exercises lock everywhere from open TUI windows.
@@ -50,13 +52,19 @@ The MCP harness answers every refusal with `{"outcome": "refused", "code": ...}`
 
 `session_refusal_translation_key` sends every reason other than absent, keychain-entry-missing and custody-changed, when it carries no binding, to `profile_session_expired` (`src/cadrumo/entrypoints/cli/_profile_session_gate.py:50`). Those reasons include `tampered`, `malformed`, `schema_version_mismatch`, `generation_missing`, `generation_unreadable`, `generation_binding_mismatch`, `no_live_capsule`, and `keyring_unavailable` on the `raise_runtime_refusal` path. The context still carries `sign_in_reason`, so nothing is lost on the wire, but the message misstates the cause. An upgrade with an older receipt, for example, tells the person that their session expired.
 
+Resolved 2026-10-12: tampered and malformed receipts, the generation reasons and a schema mismatch each render their own message, and a missing keychain reuses the keychain text, in all four locales; the rendering test covers each.
+
 ### cli-logout-receipt-refusal | low | `config logout` renders a receipt refusal as a bare code and cannot sign out password-only sessions
 
 The receipt-refusal branch raises `CliRefusedBoundaryError(str(error.reason))` with no translation key (`src/cadrumo/entrypoints/cli/config/custody.py:366`), outside S09's rendering. The client can prove itself for sign-out only through the receipt (`src/cadrumo/adapters/local_runtime/frontend_client.py:381`). With no saved receipt, for example a TUI signed in with Stay signed in off, `aeat config logout` refuses `absent` while human sessions stay live. The TUI's own sign-out covers that case, and the ADR admits only a session or a presented proof, so no authority is extended.
 
+Resolved 2026-10-12: the logout receipt refusal now renders a translated message in all four locales. What logout can end is unchanged, and the optional password prompt stays open.
+
 ### receipt-gate-scope | low | The receipt-ownership gate scans only `src/cadrumo`
 
 The gate walks `src/cadrumo` (`src/cadrumo/adapters/persistence/storage/custody/tests/test_receipt_mutation_ownership.py:22`, `:80`). It does not read the shipped MCP harness `src/cadrumo_harness`, and it matches names, so a dynamic import would pass. A grep today finds no receipt mutation in the harness. `dev/runtime_lifecycle` calls `delete_profile_session` for fixture cleanup, which is developer tooling, not product.
+
+Resolved 2026-10-12: the gate now also scans `src/cadrumo_harness`, and planted violations in a harness-shaped fixture are reported.
 
 ### login-mismatch-deletion | low | A same-account resume from another logon still deletes the stored sign-in
 

@@ -2167,8 +2167,17 @@ cli:
         config login` per tornar a iniciar la sessió.
       profile_session_login_mismatch: La teva sessió desada pertany a una altra sessió
         d'aquest ordinador. Executa `aeat config login` per iniciar la sessió aquí.
+      profile_session_logout_unproven: Cadrumo no pot comprovar aquest tancament de
+        sessió sense un inici de sessió desat que serveixi. Executa `aeat config login`
+        i torna a tancar la sessió.
+      profile_session_outdated: El teu inici de sessió desat el va crear una altra
+        versió de Cadrumo i no es pot utilitzar. Executa `aeat config login` per tornar
+        a iniciar la sessió.
       profile_session_signed_out: S'ha tancat la teva sessió en aquest perfil des
         d'un altre lloc. Executa `aeat config login` per tornar a iniciar la sessió.
+      profile_session_unreadable: No s'ha pogut verificar el teu inici de sessió desat,
+        així que no s'ha utilitzat. Executa `aeat config login` per tornar a iniciar
+        la sessió.
     google:
       detail:
         sync_push_limit_requires_dry_run: La sincronització push de Google no pot

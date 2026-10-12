@@ -46,6 +46,8 @@ _LOGGED_OUT_REFUSALS = frozenset(
     {ProfileSessionRefusalReason.ABSENT, ProfileSessionRefusalReason.KEYCHAIN_ENTRY_MISSING}
 )
 
+_UNVERIFIABLE_REFUSALS = frozenset({ProfileSessionRefusalReason.MALFORMED, ProfileSessionRefusalReason.TAMPERED})
+
 
 def session_refusal_translation_key(
     refusal: ProfileSessionRefusalReason, binding: ReceiptBindingRefusal | None = None
@@ -57,10 +59,18 @@ def session_refusal_translation_key(
     """
     if binding is ReceiptBindingRefusal.LOGIN_MISMATCH:
         return "cli.config.errors.profile_session_login_mismatch"
-    if binding is not None:
+    if binding is ReceiptBindingRefusal.GENERATION_CHANGED:
         return "cli.config.errors.profile_session_signed_out"
+    if binding is not None:
+        return "cli.config.errors.profile_session_unreadable"
     if refusal is ProfileSessionRefusalReason.CUSTODY_CHANGED:
         return "cli.config.errors.profile_session_custody_changed"
+    if refusal is ProfileSessionRefusalReason.SCHEMA_VERSION_MISMATCH:
+        return "cli.config.errors.profile_session_outdated"
+    if refusal in _UNVERIFIABLE_REFUSALS:
+        return "cli.config.errors.profile_session_unreadable"
+    if refusal is ProfileSessionRefusalReason.KEYRING_UNAVAILABLE:
+        return "errors.auth.auth_storage_keyring_unavailable"
     return (
         "cli.config.errors.profile_session_absent"
         if refusal in _LOGGED_OUT_REFUSALS

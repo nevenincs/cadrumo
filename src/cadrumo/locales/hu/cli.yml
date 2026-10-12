@@ -2153,8 +2153,16 @@ cli:
       profile_session_login_mismatch: A mentett bejelentkezésed ennek a számítógépnek
         egy másik munkamenetéhez tartozik. Futtasd az `aeat config login` parancsot,
         hogy itt jelentkezz be.
+      profile_session_logout_unproven: A Cadrumo nem tudja igazolni ezt a kijelentkezést
+        használható mentett bejelentkezés nélkül. Futtasd az `aeat config login` parancsot,
+        majd jelentkezz ki újra.
+      profile_session_outdated: A mentett bejelentkezésedet a Cadrumo egy másik verziója
+        hozta létre, ezért nem használható. Futtasd az `aeat config login` parancsot
+        az újbóli bejelentkezéshez.
       profile_session_signed_out: Máshol kijelentkeztettek ebből a profilból. Futtasd
         az `aeat config login` parancsot az újbóli bejelentkezéshez.
+      profile_session_unreadable: A mentett bejelentkezésedet nem sikerült ellenőrizni,
+        ezért nem használtuk. Futtasd az `aeat config login` parancsot az újbóli bejelentkezéshez.
     google:
       detail:
         sync_push_limit_requires_dry_run: A Google sync push csak --dry-run mellett

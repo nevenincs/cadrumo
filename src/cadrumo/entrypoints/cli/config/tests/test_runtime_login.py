@@ -383,10 +383,11 @@ def test_installed_cli_resumes_other_profile_without_retiring_original(
 ) -> None:
     """One process owns the in-memory keyring; runtime, pipes and worker remain real."""
     # Only a CLI attached to a terminal resumes a saved sign-in; prompting would fail the test.
-    monkeypatch.setattr("cadrumo.entrypoints.cli.config.secure_input.terminal_can_prompt_for_secrets", lambda: True)
-    monkeypatch.setattr(
-        "cadrumo.entrypoints.cli.config.secure_input.prompt_secret_no_echo", lambda _: pytest.fail("prompted")
-    )
+    # `config login` reads the names from `secure_input` at call time, while the admission module binds
+    # them at import, so each lookup site is patched where it is used.
+    for owner in ("config.secure_input", "runtime_profile_admission"):
+        monkeypatch.setattr(f"cadrumo.entrypoints.cli.{owner}.terminal_can_prompt_for_secrets", lambda: True)
+        monkeypatch.setattr(f"cadrumo.entrypoints.cli.{owner}.prompt_secret_no_echo", lambda _: pytest.fail("prompted"))
     keyring = _Keyring()
     monkeypatch.setattr(receipt_store, "_keyring", lambda: (keyring, _KeyringError, _KeyringError))
     passphrase = dev_test_database_password()

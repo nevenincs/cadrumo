@@ -363,7 +363,11 @@ def config_logout(
 
             raise_runtime_refusal(error)
         except ProfileReceiptRefusedError as error:
-            raise CliRefusedBoundaryError(str(error.reason), context={"reason": str(error.reason)}) from None
+            raise CliRefusedBoundaryError(
+                str(error.reason),
+                context={"reason": str(error.reason)},
+                translated_message="cli.config.errors.profile_session_logout_unproven",
+            ) from None
         finally:
             client.close()
     # Selection is a non-authoritative login target, not human access. Keep it
