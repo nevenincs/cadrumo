@@ -10,7 +10,9 @@ Nothing here imports the product to reach the runtime. The run:
 2. starts ``cadrumo-runtime --configured-root`` and waits for its readiness line;
 3. signs in through the CLI's secret channel, reads the profile, and opens the
    packaged MCP server against the same root;
-4. signs out, closes the runtime's standard input and requires a drained exit;
+4. signs out, requires a new MCP process to be refused the profile read once a
+   stored sign-in existed, closes the runtime's standard input and requires a
+   drained exit;
 5. requires the person's installed default storage root to be unchanged.
 
 The profile password exists only in this process's memory and the CLI's
@@ -275,8 +277,12 @@ def run(package: Path, scratch: Path) -> Receipt:
         )
         _require(code == 0 and envelope.get("status") in {"success", "warning"}, f"login: {code} {envelope}")
         notices = _notice_codes(envelope)
-        persisted = "config.login.session_not_persisted" not in notices
-        receipt.record("login_authenticated", status=envelope.get("status"), notices=notices)
+        persisted = envelope.get("result", {}).get("session_persisted") is True
+        _require(
+            persisted is ("config.login.session_not_persisted" not in notices),
+            f"session_persisted disagrees with the login notices: {envelope}",
+        )
+        receipt.record("login_authenticated", status=envelope.get("status"), persisted=persisted, notices=notices)
         if not persisted:
             # MCP follows only a stored sign-in, and logout checks it; this logon's credential store refused it.
             receipt.unproven.append("stored sign-in: MCP resume and logout need a working native credential store")
@@ -308,8 +314,11 @@ def run(package: Path, scratch: Path) -> Receipt:
         )
 
         if persisted:
+            # Discovery alone proves nothing: the private read itself must be answered.
             _require(
-                status.get("authenticated") is True and (mcp["observe"] or {}).get("outcome") != "refused",
+                status.get("authenticated") is True
+                and not mcp["observe_error"]
+                and (mcp["observe"] or {}).get("outcome") != "refused",
                 f"MCP did not follow the stored sign-in: {mcp}",
             )
         else:
@@ -324,6 +333,21 @@ def run(package: Path, scratch: Path) -> Receipt:
             message=error.get("message") if isinstance(error, dict) else None,
         )
         _require(code == 0 or not persisted, f"logout: {code} {envelope}")
+        if persisted:
+            # A new MCP process after sign-out must find nothing to follow.
+            after_logout = asyncio.run(_mcp_status(programs, environment, scratch))
+            status = after_logout["status"] or {}
+            receipt.record(
+                "mcp_after_logout",
+                authenticated=status.get("authenticated"),
+                denial=status.get("denial"),
+                observe=(after_logout["observe"] or {}).get("outcome"),
+            )
+            _require(
+                status.get("authenticated") is not True
+                and (after_logout["observe_error"] or (after_logout["observe"] or {}).get("outcome") == "refused"),
+                f"MCP still read the profile after sign-out: {after_logout}",
+            )
         exit_code = runtime.stop()
     _require(exit_code == _SUPERVISOR_STOP, f"runtime exit after input closed: {exit_code}")
     receipt.record("runtime_stopped", exit_code=exit_code)
