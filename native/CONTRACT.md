@@ -485,9 +485,11 @@ enrolled name elsewhere, stops with the enrolled names.
 | `user-docs/stage/` | Shippable documentation subset and its manifest, copied into each staged package |
 
 ZIP names are `CADRUMO-<version>-b<build>-windows-x64-<Config>.zip`, with one
-matching top-level folder. `CADRUMO_BUILD_NUMBER` defaults to the Git commit count;
-`CADRUMO_BUILD_DATE` is a cached UTC configure timestamp, respecting
-`SOURCE_DATE_EPOCH`. CI may explicitly supply both. The version belongs to
+matching top-level folder. `CADRUMO_BUILD_NUMBER` defaults to 1, and
+`CADRUMO_BUILD_DATE` is a UTC timestamp cached at first configure, respecting
+`SOURCE_DATE_EPOCH`; neither changes on a later local rebuild, so a release
+supplies both explicitly. A staged package's exact bytes are identified by the
+SHA-256 of its `data/package-manifest.json`, which hashes every file. The version belongs to
 `pyproject.toml`. The executable banner, Windows version/icon resources and
 `data/build.json` carry the same identity. The icon derives from the existing
 `docs/_static/cadrumo-favicon.svg`.

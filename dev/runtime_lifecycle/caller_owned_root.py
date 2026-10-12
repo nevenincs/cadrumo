@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import hashlib
 import json
 import os
 import secrets
@@ -288,6 +289,15 @@ def run(package: Path, scratch: Path) -> Receipt:
     """Execute the acceptance on a fresh root below ``scratch``."""
     receipt = Receipt()
     programs = Programs.of(package)
+    # The build number and date stay fixed across local rebuilds; the manifest hashes every packaged file.
+    manifest = (package / "data" / "package-manifest.json").read_bytes()
+    build = json.loads(manifest)["build"]
+    receipt.record(
+        "package",
+        version=build.get("version"),
+        build_number=build.get("build_number"),
+        manifest_sha256=hashlib.sha256(manifest).hexdigest(),
+    )
     root, secret_store = scratch / "storage", scratch / "secrets"
     secret_store.mkdir(parents=True)
     environment = consumer_environment(root, secret_store)
