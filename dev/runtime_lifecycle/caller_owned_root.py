@@ -34,6 +34,7 @@ import json
 import os
 import secrets
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -281,7 +282,10 @@ def file_facts(root: Path) -> dict[str, tuple[int, int]]:
             metadata = path.lstat()
         except OSError:
             continue
-        facts[str(path.relative_to(root))] = (metadata.st_size, metadata.st_mtime_ns)
+        # Windows reports a directory's size as 0 or its allocation depending on whether the handle or the
+        # parent listing answered, so only a file's size says anything about its contents.
+        size = -1 if stat.S_ISDIR(metadata.st_mode) else metadata.st_size
+        facts[str(path.relative_to(root))] = (size, metadata.st_mtime_ns)
     return facts
 
 
