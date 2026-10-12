@@ -277,9 +277,9 @@ reads its profile password from the root `--profile-secrets-stdin` channel as
 an MCP stdio server with the same two settings, either from your MCP client or
 from your harness.
 It follows that sign-in as described in "Following your sign-in" above. A
-stored sign-in uses this computer's protected credential store. A logon that
-cannot use the store, such as some remote shell logons, can still run the
-runtime, but cannot keep a sign-in for `cadrumo-mcp` to follow.
+stored sign-in uses this computer's protected credential store. A Windows logon
+that holds no credentials cannot use the store: it can still run the runtime,
+but cannot keep a sign-in for `cadrumo-mcp` to follow.
 
 When you are done, sign out, stop the runtime and delete the directory. Nothing
 in your usual Cadrumo data is read or changed along the way.

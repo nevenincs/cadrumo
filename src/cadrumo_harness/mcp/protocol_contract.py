@@ -73,8 +73,8 @@ _SIGN_IN_REFUSAL: Final = (
     "was refused (absent, expired_idle, throttled and so on); sign_in_binding, why a stored sign-in no longer "
     "counts here (generation_changed after a sign-out or lock elsewhere, login_mismatch when it was made at "
     "another login); sign_in_keychain, why this server's logon cannot use the protected credential store that "
-    "holds a stored sign-in (logon_without_credentials for a Windows logon without credentials, such as an "
-    "OpenSSH key sign-in; no_backend; refused); and seconds, how long a throttled sign-in waits before the "
+    "holds a stored sign-in (logon_without_credentials when the Windows logon holds no credentials; "
+    "no_backend; refused); and seconds, how long a throttled sign-in waits before the "
     "password is tried again. status reports the same facts beside denial"
 )
 
@@ -89,9 +89,10 @@ SIGN_IN_REMEDY: Final = (
 """What a call refused for want of a live sign-in or a configured key tells the agent to do."""
 
 KEYCHAIN_REMEDY: Final = (
-    "This server runs in a logon that cannot use the protected credential store, so no sign-in can be followed "
-    "from it. Ask the person to run Cadrumo and this agent from their desktop session or a logon made with their "
-    "password. You cannot change this, and you never ask for a password, a key or any other secret"
+    "This server runs in a Windows logon without credentials, so it cannot use the protected credential store "
+    "and no sign-in can be followed from it. Ask the person to sign in at the desktop and run Cadrumo and this "
+    "agent from that desktop sign-in. You cannot change this, and you never ask for a password, a key or any "
+    "other secret"
 )
 """What a refusal tells the agent when this server's logon cannot reach the store a stored sign-in needs."""
 

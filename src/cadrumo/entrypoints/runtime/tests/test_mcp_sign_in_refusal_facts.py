@@ -129,7 +129,7 @@ async def test_a_sign_in_past_its_idle_deadline_says_it_expired(
 
 
 class _LogonWithoutCredentials:
-    """The credential store as a Windows logon without credentials, such as an OpenSSH key sign-in, meets it."""
+    """The credential store as a Windows logon that holds no credentials meets it."""
 
     def get_password(self, _service: str, _account: str) -> str | None:
         raise OSError(None, "A specified logon session does not exist", None, 1312)
