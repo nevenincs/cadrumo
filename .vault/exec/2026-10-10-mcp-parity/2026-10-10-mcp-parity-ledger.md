@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:745c4854404cf8fce333bac32f8b78632d4178add64766bdb2637f6527f6b0dc'
+body_hash: 'sha256:70cdfb0f3d977c15885184d86f606c10077291a9817b79f3fe2870201c7963b9'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -2327,6 +2327,31 @@ related:
 - `S69` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-safety-handoff.md`
 - `S69` `verify:` `pytest src/cadrumo_harness/tests` -> `pass`
 - `S69` `verify:` `pytest dev/docs/tests drift, localization and message format` -> `fail`
+- `S69` `M` `src/cadrumo_harness/mcp/protocol_contract.py`
+- `S69` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_sign_in_refusal_facts.py`
+- `S65` `M` `src/cadrumo_harness/mcp/operation_discovery.py`
+- `S65` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_operation_discovery.py`
+- `S65` `A` `src/cadrumo/entrypoints/runtime/tests/test_mcp_attended_adapter.py`
+- `S65` `verify:` `pytest test_mcp_attended_adapter.py test_mcp_operation_discovery.py` -> `pass`
+- `S70` `M` `src/cadrumo_harness/mcp/runtime_adapter.py`
+- `S70` `M` `src/cadrumo_harness/mcp/tests/test_authentication_handover.py`
+- `S70` `M` `src/cadrumo_harness/mcp/tests/test_operation_search_tool.py`
+- `S70` `A` `src/cadrumo/entrypoints/runtime/tests/test_mcp_one_signed_in_profile.py`
+- `S70` `verify:` `pytest MCP real-runtime set` -> `pass`
+- `S70` `verify:` `pytest src/cadrumo_harness` -> `pass`
+- `S65` `M` `src/cadrumo/application/operations/person_acts.py`
+- `S65` `M` `src/cadrumo/application/ledger/invoice_evidence_extract_operation.py`
+- `S65` `M` `src/cadrumo/application/ledger/tests/test_invoice_evidence_extract_frontend_parity.py`
+- `S65` `M` `src/cadrumo/entrypoints/tests/test_operation_frontend_parity.py`
+- `S65` `A` `src/cadrumo/entrypoints/runtime/tests/test_mcp_off_host_consent.py`
+- `S65` `M` `docs/how-to/connect-an-agent.md`
+- `S65` `M` `docs/locales/es/LC_MESSAGES/how-to/connect-an-agent.po`
+- `S65` `M` `docs/locales/ca/LC_MESSAGES/how-to/connect-an-agent.po`
+- `S65` `M` `docs/locales/hu/LC_MESSAGES/how-to/connect-an-agent.po`
+- `S65` `verify:` `pytest test_mcp_off_host_consent.py` -> `pass`
+- `S65` `verify:` `pytest test_operation_frontend_parity.py` -> `pass`
+- `S64` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_no_credential_acts.py`
+- `S64` `verify:` `pytest src/cadrumo_harness` -> `pass`
 
 ## Notes
 
@@ -2407,3 +2432,8 @@ related:
 - `S67` The shipped operation contract document, its generator and the sessionless discovery module are removed: with no session nothing but status answers, so nothing reads them
 - `S69` Docs drift gate still fails on how-to/profile-setup.md and reference/identity-and-naming.md, pages this Step did not touch; connect-an-agent's separate-storage section, added untranslated by another session, is translated here so the page is complete
 - `S69` The surface pins, the agent command reference and the removal of the shipped contract document were regenerated in S64 and S67 where the tool list changed
+- `S69` no-SSH ruling follow-up, commit b71f20ca21
+- `S65` defect fix after close: search failed on person acts; commit 07b729934c; harness 300 pass, 1 keychain-logon env failure
+- `S70` commit a408f4b773; proof sits beside the runtime fixtures; key route proven by the sign-in adapter credential-reference test; harness has 1 keychain-logon environment failure
+- `S65` off-host consent made a person act after live reproduction; commit 3f15f3bdcc; consent surface string unchanged, reported
+- `S64` alias removal after import authority finding; commit 84206fbc9d

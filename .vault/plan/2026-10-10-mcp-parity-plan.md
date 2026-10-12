@@ -18,7 +18,7 @@ related:
   - '[[2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr]]'
 modified: '2026-10-12'
 body_schema: body-v2
-body_hash: 'sha256:812bb0aef302e921d8a723f22bc62ec75747557cd27da61ba0e09bcb6f8e8d63'
+body_hash: 'sha256:73c92c2df3ec08a0646cab340f3f5d841381be10edbb79cac5014dc8ef55f75c'
 ---
 
 <!-- RETIRED: P03, P07, S20, S21, S22, S23, S24, S25, S26, S31, S32, S36, S40, S41, S43 -->
@@ -168,7 +168,7 @@ Delivers the owner's ruling of 2026-10-12: MCP carries no secret and offers no a
 - [x] `P10.S67` - Bind each MCP server to one profile for its life, the key's or the first resumed sign-in's, refuse every call when the signed-in profile later differs, and answer nothing but the handshake, the tool list and status without a live sign-in or a valid key, with one typed result that tells the person to sign in to Cadrumo; `src/cadrumo_harness/mcp/runtime_adapter.py`.
 - [ ] `P10.S68` - Show the desktop sign-in view on a locked profile instead of handing it to the terminal interface, and on the pushed expiry and lock events as well as the status poll; `native/desktop/frontend/src/shell/signIn.ts`.
 - [x] `P10.S69` - Regenerate what derives from the tool list and the surfaces, the surface pins, the shipped contract document and the agent command reference, and rewrite the packaged agent text and user documentation so the agent asks the person to sign in to Cadrumo when refused and never asks for a secret; `src/cadrumo_harness/_data/agent`.
-- [ ] `P10.S70` - Prove against a running runtime with a synthetic encrypted profile that MCP works inside the signed-in profile and through a configured key, is refused without either, after sign-out and after a sign-in to another profile, and cannot reach a credential act; `src/cadrumo_harness/mcp/tests`.
+- [x] `P10.S70` - Prove against a running runtime with a synthetic encrypted profile that MCP works inside the signed-in profile and through a configured key, is refused without either, after sign-out and after a sign-in to another profile, and cannot reach a credential act; `src/cadrumo_harness/mcp/tests`.
 
 ## Parallelization
 
