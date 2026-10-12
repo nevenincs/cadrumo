@@ -36,6 +36,7 @@ from ..runtime_access_management_payloads import (
     ConfigProfileAutomationDenyResult,
     ConfigProfileAutomationInspectResult,
     ConfigProfileAutomationListResult,
+    ConfigProfileDisclosuresResult,
     ConfigProfileLockResult,
     ConfigProfileResumeResult,
     ConfigProfileSessionsResult,
@@ -54,6 +55,7 @@ def test_live_specs_have_distinct_management_doors_and_no_password_argument() ->
     specs = {item.key: item for item in RUNTIME_ACCESS_MANAGEMENT_COMMAND_SPECS}
     assert set(specs) == {
         "config_profile_automation",
+        "config_profile_disclosures",
         "config_profile_sessions",
         "config_profile_automation_list",
         "config_profile_automation_create",
@@ -66,6 +68,7 @@ def test_live_specs_have_distinct_management_doors_and_no_password_argument() ->
         "config_profile_resume",
     }
     for key, result_type in {
+        "config_profile_disclosures": ConfigProfileDisclosuresResult,
         "config_profile_sessions": ConfigProfileSessionsResult,
         "config_profile_automation_list": ConfigProfileAutomationListResult,
         "config_profile_automation_create": ConfigProfileAutomationCreateResult,

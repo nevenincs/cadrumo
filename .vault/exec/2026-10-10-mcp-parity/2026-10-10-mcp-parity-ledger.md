@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:45902387c927b091707e468ccd71a9bb5fb069d71d1333d8b6c56702116509f7'
+body_hash: 'sha256:fb9e4bd353127e9ba10584da8eda0022277b433acf69e9924679e20ca3e93250'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -2354,6 +2354,68 @@ related:
 - `S64` `verify:` `pytest src/cadrumo_harness` -> `pass`
 - `S18` `M` `.vault/adr/2026-10-04-application-sign-in-adr.md`
 - `S18` `verify:` `vault check all` -> `pass`
+- `S71` `M` `dev/acceptance/income_tax/tests/test_installed_tui_child.py`
+- `S71` `M` `dev/quality/metadata/import_load_targets.json`
+- `S71` `M` `src/cadrumo/adapters/local_runtime/frontend_client.py`
+- `S71` `M` `src/cadrumo/adapters/local_runtime/runtime_profile_transport.py`
+- `S71` `M` `src/cadrumo/adapters/local_runtime/server_connection_handling.py`
+- `S71` `M` `src/cadrumo/adapters/local_runtime/tests/test_framing.py`
+- `S71` `M` `src/cadrumo/adapters/local_runtime/tests/test_worker_lease_transfer.py`
+- `S71` `M` `src/cadrumo/application/runtime/profile_access.py`
+- `S71` `M` `src/cadrumo/application/runtime/tests/test_status_admits_session.py`
+- `S71` `M` `src/cadrumo/application/user_profile/access_contracts.py`
+- `S71` `M` `src/cadrumo/application/user_profile/access_projections.py`
+- `S71` `M` `src/cadrumo/application/user_profile/session_authority_access.py`
+- `S71` `M` `src/cadrumo/entrypoints/cli/_profile_authentication_gate.py`
+- `S71` `M` `src/cadrumo/entrypoints/cli/command_operation_table.py`
+- `S71` `M` `src/cadrumo/entrypoints/cli/config/runtime_access_management.py`
+- `S71` `M` `src/cadrumo/entrypoints/cli/config/runtime_access_management_payloads.py`
+- `S71` `M` `src/cadrumo/entrypoints/cli/config/runtime_access_management_specs.py`
+- `S71` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_access_management.py`
+- `S71` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_login.py`
+- `S71` `M` `src/cadrumo/entrypoints/cli/tests/command_frontend_counterparts.py`
+- `S71` `M` `src/cadrumo/entrypoints/runtime/profile_connection_sessions.py`
+- `S71` `M` `src/cadrumo/entrypoints/runtime/tests/stored_sign_in_runtime.py`
+- `S71` `M` `src/cadrumo/entrypoints/runtime/tests/test_automation_approval.py`
+- `S71` `A` `src/cadrumo/entrypoints/runtime/tests/test_disclosure_summary.py`
+- `S71` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_sign_in_door.py`
+- `S71` `A` `src/cadrumo/entrypoints/tui/disclosure_pages.py`
+- `S71` `M` `src/cadrumo/entrypoints/tui/profile/tests/test_automation_inventory.py`
+- `S71` `M` `src/cadrumo/entrypoints/tui/runtime_session.py`
+- `S71` `M` `src/cadrumo/entrypoints/tui/secret/tests/test_automation_requester.py`
+- `S71` `M` `src/cadrumo/entrypoints/tui/secret/tests/test_runtime_login.py`
+- `S71` `M` `src/cadrumo/entrypoints/tui/tests/test_bound_session.py`
+- `S71` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_access_management.py`
+- `S71` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_admission.py`
+- `S71` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_session.py`
+- `S71` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S71` `M` `src/cadrumo/locales/ca/common.yml`
+- `S71` `M` `src/cadrumo/locales/en/cli.yml`
+- `S71` `M` `src/cadrumo/locales/en/common.yml`
+- `S71` `M` `src/cadrumo/locales/es/cli.yml`
+- `S71` `M` `src/cadrumo/locales/es/common.yml`
+- `S71` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S71` `M` `src/cadrumo/locales/hu/common.yml`
+- `S71` `M` `src/cadrumo_harness/_data/agent/README.md`
+- `S71` `M` `src/cadrumo_harness/_data/agent/reference/command-operations.md`
+- `S71` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-orientation-routing.md`
+- `S71` `M` `src/cadrumo_harness/mcp/admitted_operations.py`
+- `S71` `M` `src/cadrumo_harness/mcp/protocol_contract.py`
+- `S71` `M` `src/cadrumo_harness/mcp/tests/admitted_lease.py`
+- `S71` `M` `src/cadrumo_harness/mcp/tests/test_authentication_handover.py`
+- `S71` `M` `src/cadrumo_harness/mcp/tests/test_bootstrap_reference_recovery.py`
+- `S71` `M` `src/cadrumo_harness/mcp/tests/test_operation_search_tool.py`
+- `S71` `M` `src/cadrumo_harness/mcp/tests/test_runtime_protocol.py`
+- `S71` `M` `src/cadrumo_harness/mcp/tests/test_sign_in_resume.py`
+- `S71` `M` `src/cadrumo_harness/mcp/tests/test_surface_tools.py`
+- `S71` `verify:` `pytest runtime/tests/test_disclosure_summary.py real runtime CLI TUI MCP` -> `pass`
+- `S71` `verify:` `pytest tui/tests/test_runtime_session.py` -> `pass`
+- `S71` `verify:` `pytest local_runtime/tests/test_framing.py test_worker_lease_transfer.py` -> `pass`
+- `S71` `verify:` `ruff check and format, ty on touched files` -> `pass`
+- `S71` `verify:` `pytest src/cadrumo_harness` -> `fail`
+- `S71` `verify:` `pytest runtime sign-in suites` -> `fail`
+- `S71` `verify:` `pytest CLI and TUI access suites` -> `fail`
+- `S71` `verify:` `just check-import-boundaries` -> `fail`
 
 ## Notes
 
@@ -2440,3 +2502,4 @@ related:
 - `S65` off-host consent made a person act after live reproduction; commit 3f15f3bdcc; consent surface string unchanged, reported
 - `S64` alias removal after import authority finding; commit 84206fbc9d
 - `S18` vault check all passes for application-sign-in and mcp-purpose-authentication; mcp-parity reports two pre-existing schema errors (agent-inside and attended-live-sign-in ADRs link no evidence record in related)
+- `S71` harness: 1 failure, `test_installed_sign_in_resume` fresh installed process, outside the disclosure path; sign-in suites: framing and lease-transfer fixtures fixed and rerun green, `mcp_operation_discovery` and `mcp_attended_adapter` pass serially (load timeouts); CLI/TUI: specs test fixed, remaining 4 (installed TUI child AttributeError `subscribe_lifecycle_notices,` native session inventory, `runtime_login` prompt) do not reach the disclosure code; boundaries: 15 contracts kept, 2 new test-scoped sibling edges from `test_disclosure_summary.py` `(cli_runner,` `tui.disclosure_pages)` await ratchet approval, the rest pre-existing; `frontend_client.py` hunks were swept into fa4f7dc9c5 by another session

@@ -18,7 +18,7 @@ related:
   - '[[2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr]]'
 modified: '2026-10-12'
 body_schema: body-v2
-body_hash: 'sha256:ce4ef863dc081595e8917266596500a222e3a1801a547f2a80e1d0e3147f2417'
+body_hash: 'sha256:7437faf515933cd9b9cfd19ff7f42ef4f2bbe220f71033e9ef6f7c976239bc30'
 ---
 
 <!-- RETIRED: P03, P07, S20, S21, S22, S23, S24, S25, S26, S31, S32, S36, S40, S41, S43 -->
@@ -176,7 +176,7 @@ Delivers the owner's ruling of 2026-10-12: MCP carries no secret and offers no a
 
 Delivers the owner's ruling of 2026-10-12: replies summarise the session's disclosures with a paged full read on every frontend, and a key the person issues for an agent releases results to the MCP client that presents it, so an agent admitted by a key reads values back.
 
-- [ ] `P11.S71` - Carry in the status, session and similar replies the count and a per-category summary of the session effective_scope disclosures instead of the full list, add a paged read of the full list served alike on the command line, the terminal interface and MCP, and regenerate the contracts, surface pins and agent command reference that derive from them; `src/cadrumo/application/user_profile/access_contracts.py`.
+- [x] `P11.S71` - Carry in the status, session and similar replies the count and a per-category summary of the session effective_scope disclosures instead of the full list, add a paged read of the full list served alike on the command line, the terminal interface and MCP, and regenerate the contracts, surface pins and agent command reference that derive from them; `src/cadrumo/application/user_profile/access_contracts.py`.
 - [ ] `P11.S72` - Let the person issue a key for an agent (MCP) with its data categories from config automation create on the command line and the terminal interface, bind the release destination to the key in the runtime enrollment so results go to whichever local MCP client presents it, and prove against a running runtime with a synthetic encrypted profile that the MCP server of a key issued on the command line reads a profile value back; `src/cadrumo/application/user_profile/automation_administration_service.py`.
 - [ ] `P11.S73` - Extend the live agent lane so the access-api-key phase checks that the agent reads profile values back through the issued key, not only that its submissions are accepted; `dev/agent_eval/live/access.py`.
 

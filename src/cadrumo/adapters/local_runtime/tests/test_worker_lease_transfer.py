@@ -188,7 +188,13 @@ def test_login_status_preserves_full_scope_and_correlates_transfer(fault: str | 
             automation_custody=Availability.NOT_REQUIRED,
             published_authority=Availability.AVAILABLE,
             provider=Availability.NEEDS_USER,
-            effective_scope=EffectiveScopeSummary.summarize(session.scope),
+            # The status counts the disclosures, so it is the operations that outgrow one frame here.
+            effective_scope=EffectiveScopeSummary.summarize(
+                changed(
+                    session.scope,
+                    operations=frozenset(f"synthetic.operation-{index:05d}" for index in range(3_000)),
+                )
+            ),
             denial=None,
         ),
     )

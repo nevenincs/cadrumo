@@ -27,6 +27,7 @@ from .access_contracts import (
     Availability,
     DisclosurePage,
     DisclosurePageRequest,
+    DisclosurePermission,
     EffectiveScopeSummary,
     ProfileAccessState,
     ProfileAccessStatus,
@@ -274,7 +275,17 @@ def project_disclosure_page(
         grant=grant,
         profile=profile,
     )
-    ordered = ordered_disclosures(scope.disclosures)
+    return page_disclosures(scope.disclosures, request)
+
+
+def page_disclosures(disclosures: frozenset[DisclosurePermission], request: DisclosurePageRequest) -> DisclosurePage:
+    """Release one page of any disclosure list, with the count and summary of the whole list.
+
+    Every reply that counts disclosures and lists them on request pages them
+    here, so the order, the digest and the bound are one. A continuation whose
+    list has changed since its digest, or an offset past the end, is refused.
+    """
+    ordered = ordered_disclosures(disclosures)
     digest = disclosure_digest(ordered)
     if (request.expected_digest is not None and request.expected_digest != digest) or (
         request.offset and request.offset >= len(ordered)

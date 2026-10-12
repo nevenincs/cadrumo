@@ -499,6 +499,25 @@ class TransferFaultChannel(CleanupChannel):
         super().write_all(payload, deadline=deadline)
 
 
+def _large_scope() -> AccessScope:
+    """A scope whose operations alone outgrow one frame, and whose disclosures a session inventory lists."""
+    return AccessScope(
+        operations=frozenset(f"synthetic.operation-{index:05d}" for index in range(3_000)),
+        actions=frozenset(),
+        disclosures=frozenset(
+            DisclosurePermission(
+                destination_id=uuid4(),
+                projection_id="synthetic.result",
+                category=DisclosureCategory.TAX_VALUES,
+            )
+            for _ in range(700)
+        ),
+        periods=None,
+        allow_period_independent=False,
+        allow_delegation=False,
+    )
+
+
 def _large_profile_status() -> RuntimeProfileStatus:
     return RuntimeProfileStatus(
         request_id=uuid4(),
@@ -518,23 +537,7 @@ def _large_profile_status() -> RuntimeProfileStatus:
             automation_custody=Availability.NOT_REQUIRED,
             published_authority=Availability.AVAILABLE,
             provider=Availability.NEEDS_USER,
-            effective_scope=EffectiveScopeSummary.summarize(
-                AccessScope(
-                    operations=frozenset(),
-                    actions=frozenset(),
-                    disclosures=frozenset(
-                        DisclosurePermission(
-                            destination_id=uuid4(),
-                            projection_id="synthetic.result",
-                            category=DisclosureCategory.TAX_VALUES,
-                        )
-                        for _ in range(700)
-                    ),
-                    periods=None,
-                    allow_period_independent=False,
-                    allow_delegation=False,
-                )
-            ),
+            effective_scope=EffectiveScopeSummary.summarize(_large_scope()),
             denial=None,
         ),
     )
@@ -588,7 +591,6 @@ async def test_status_transfer_type_refusal_preserves_single_failed_cleanup_owne
 def _large_session_inventory() -> RuntimeSessionInventoryReply:
     status = _large_profile_status()
     assert status.status.profile_id is not None
-    assert status.status.effective_scope is not None
     return RuntimeSessionInventoryReply(
         request_id=status.request_id,
         runtime_boot_id=status.runtime_boot_id,
@@ -603,7 +605,7 @@ def _large_session_inventory() -> RuntimeSessionInventoryReply:
                 key_id=None,
                 kind=SessionKind.HUMAN,
                 state=SessionState.ACTIVE,
-                scope=status.status.effective_scope,
+                scope=_large_scope(),
                 expires_at=datetime(2026, 10, 1, tzinfo=UTC),
             ),
         ),
