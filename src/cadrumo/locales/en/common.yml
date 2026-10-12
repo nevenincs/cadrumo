@@ -562,11 +562,101 @@ desktop:
     zoom_out: Zoom docs out
     zoom_reset: Reset docs zoom
   agent:
-    empty_lead: The agent isn't available in this window yet.
-    empty_title: No agent here yet
+    add_files: Add files
+    agent_replied: Agent replied
+    archive: Archive
+    archived_empty: Nothing archived
+    archived_toggle: Archived ({count})
+    attachments: Files for the next message
+    attachments_refused: 'Refused: {count}'
+    attachments_uploading: 'Uploading: {count}'
+    cancel: Cancel
+    choose_model: Choose a model
+    close_documents: Close the documents
+    collapse_members: Hide the files in {name}
+    consent_allow: Send to {provider}
+    consent_decline: Don't send
+    consent_items: What would be sent
+    consent_lead: To answer, {model} needs the content below. Sending it takes it
+      off this computer to {provider}.
+    consent_note: Nothing is sent until you choose. If you don't send it, it stays
+      on this computer.
+    consent_title: Send this to {provider}?
+    delete: Delete
+    delete_confirm: Delete “{title}” and its documents ({count})? This can't be undone.
+    delete_confirm_bare: Delete “{title}”? This can't be undone.
+    documents: Documents
+    documents_attached: 'In this conversation: {count}'
+    documents_empty: No documents in this conversation yet
+    documents_failed: 'Failed: {count}'
+    documents_review: 'Needs review: {count}'
+    drop_accepts: 'Accepted: {types}'
+    drop_hint: Hold {key} to drop
+    drop_release: Release to add the files
+    drop_release_multiple: Release to add {count} files
+    drop_release_single: Release to add 1 file
+    drop_title: Add to this conversation
+    effort: Effort
+    expand_members: Show the files in {name}
+    files_summary: 'Files: {count} · {size}'
     hide: Hide the agent
+    history: History
+    history_empty: No conversations yet
+    history_no_match: No conversations match “{query}”.
+    members_multiple: '{count} files'
+    members_single: 1 file
+    message_label: Message
+    message_placeholder: Ask about a modelo, a deadline or your records
+    model: Model
+    more_files: +{count} more
+    new_conversation: New conversation
+    no_models: No models to choose from
+    provider: Provider
+    provider_unavailable: '{provider}: {reason}'
+    queued: Waiting to upload
+    ready: Ready
+    refused: Refused
+    remove_all: Remove all
+    remove_document: Remove {name}
+    remove_file: Remove {name}
+    reply_failed: This reply didn't finish.
     resize: Resize the agent
+    restore: Restore
+    retry: Try again
+    role_context: Context
+    role_information: Information
+    role_label: Use as
+    role_ledger: Ledger data
+    row_documents: 'Documents: {count}'
+    search_history: Search conversations
+    send: Send
+    send_nothing: Write a message or add a file first
+    send_waiting: Wait until every file has uploaded
+    sent_files: Files sent with this message
+    settings_label: 'Model and effort: {current}'
+    settings_title: Model settings
     show: Show the agent
+    show_active: Show active
+    status_extracting: Reading
+    status_failed: Failed
+    status_needs_review: Needs review
+    status_ready: Ready
+    status_skipped: Skipped
+    status_uploading: Uploading
+    stop: Stop
+    stopped: Stopped
+    tool_done: Done
+    tool_running: Running
+    transcript: Conversation
+    transcript_empty: No messages yet
+    unavailable: Not available yet
+    uploading: Uploading
+    uploading_name: Uploading {name}
+    welcome_lead: Something tax related? Ask about a modelo or a deadline, or add
+      receipts, invoices and bank exports with +.
+    welcome_title: What are we working on today?
+    working: Working…
+    you_said: You said
   calendar:
     aeat:
       accepted: Accepted

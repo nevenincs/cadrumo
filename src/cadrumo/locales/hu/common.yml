@@ -571,11 +571,102 @@ desktop:
     zoom_out: Dokumentáció kicsinyítése
     zoom_reset: Dokumentáció nagyításának visszaállítása
   agent:
-    empty_lead: Az ügynök ebben az ablakban még nem érhető el.
-    empty_title: Még nincs itt ügynök
+    add_files: Fájlok hozzáadása
+    agent_replied: Az ügynök válasza
+    archive: Archiválás
+    archived_empty: Nincs archivált beszélgetés
+    archived_toggle: Archivált ({count})
+    attachments: Fájlok a következő üzenethez
+    attachments_refused: 'Elutasítva: {count}'
+    attachments_uploading: 'Feltöltés alatt: {count}'
+    cancel: Mégse
+    choose_model: Válassz modellt
+    close_documents: Dokumentumok bezárása
+    collapse_members: 'Fájlok elrejtése: {name}'
+    consent_allow: 'Küldés ide: {provider}'
+    consent_decline: Ne küldd el
+    consent_items: Ezt küldenénk el
+    consent_lead: 'A válaszhoz a modellnek ({model}) szüksége van az alábbi tartalomra.
+      Ha elküldöd, elhagyja ezt a számítógépet, és ide kerül: {provider}.'
+    consent_note: Semmi sem megy el, amíg nem döntesz. Ha nem küldöd el, ezen a számítógépen
+      marad.
+    consent_title: 'Elküldöd ezt ide: {provider}?'
+    delete: Törlés
+    delete_confirm: 'Törlöd ezt: „{title}”, a dokumentumaival együtt ({count})? Ez
+      nem vonható vissza.'
+    delete_confirm_bare: 'Törlöd ezt: „{title}”? Ez nem vonható vissza.'
+    documents: Dokumentumok
+    documents_attached: 'Ebben a beszélgetésben: {count}'
+    documents_empty: Ebben a beszélgetésben még nincs dokumentum
+    documents_failed: 'Hibás: {count}'
+    documents_review: 'Ellenőrzésre vár: {count}'
+    drop_accepts: 'Elfogadott típusok: {types}'
+    drop_hint: 'Elengedéskor tartsd lenyomva: {key}'
+    drop_release: Engedd el a fájlok hozzáadásához
+    drop_release_multiple: Engedd el {count} fájl hozzáadásához
+    drop_release_single: Engedd el 1 fájl hozzáadásához
+    drop_title: Hozzáadás ehhez a beszélgetéshez
+    effort: Ráfordítás
+    expand_members: 'Fájlok megjelenítése: {name}'
+    files_summary: 'Fájlok: {count} · {size}'
     hide: Ügynök elrejtése
+    history: Előzmények
+    history_empty: Még nincs beszélgetés
+    history_no_match: 'Egy beszélgetés sem felel meg ennek: „{query}”.'
+    members_multiple: '{count} fájl'
+    members_single: 1 fájl
+    message_label: Üzenet
+    message_placeholder: Kérdezz egy Modelóról, egy határidőről vagy a nyilvántartásaidról
+    model: Modell
+    more_files: +{count} további
+    new_conversation: Új beszélgetés
+    no_models: Nincs választható modell
+    provider: Szolgáltató
+    provider_unavailable: '{provider}: {reason}'
+    queued: Feltöltésre vár
+    ready: Kész
+    refused: Elutasítva
+    remove_all: Az összes eltávolítása
+    remove_document: 'Eltávolítás: {name}'
+    remove_file: 'Eltávolítás: {name}'
+    reply_failed: Ez a válasz nem készült el.
     resize: Ügynök átméretezése
+    restore: Visszaállítás
+    retry: Próbáld újra
+    role_context: Kontextus
+    role_information: Információ
+    role_label: Felhasználás
+    role_ledger: Főkönyvi adatok
+    row_documents: 'Dokumentumok: {count}'
+    search_history: Keresés a beszélgetésekben
+    send: Küldés
+    send_nothing: Előbb írj üzenetet, vagy adj hozzá fájlt
+    send_waiting: Várd meg, amíg minden fájl feltöltődik
+    sent_files: Az üzenettel küldött fájlok
+    settings_label: 'Modell és ráfordítás: {current}'
+    settings_title: Modellbeállítások
     show: Ügynök megjelenítése
+    show_active: Aktívak megjelenítése
+    status_extracting: Olvasás
+    status_failed: Hibás
+    status_needs_review: Ellenőrzésre vár
+    status_ready: Kész
+    status_skipped: Kihagyva
+    status_uploading: Feltöltés
+    stop: Leállítás
+    stopped: Leállítva
+    tool_done: Kész
+    tool_running: Fut
+    transcript: Beszélgetés
+    transcript_empty: Még nincsenek üzenetek
+    unavailable: Még nem érhető el
+    uploading: Feltöltés
+    uploading_name: 'Feltöltés: {name}'
+    welcome_lead: Adózási kérdésed van? Kérdezz egy Modelóról vagy egy határidőről,
+      vagy adj hozzá nyugtákat, számlákat és banki kivonatokat a + gombbal.
+    welcome_title: Min dolgozunk ma?
+    working: Dolgozik…
+    you_said: Ezt írtad
   calendar:
     aeat:
       accepted: Elfogadva

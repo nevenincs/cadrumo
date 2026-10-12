@@ -18,9 +18,11 @@ const railButton = (target: Page, key: string) =>
 const left = async (target: Page, selector: string) =>
   (await target.locator(selector).boundingBox())?.x ?? Number.NaN;
 
+// A column's own controls are in its header bar; the agent's bar is the
+// conversation's, so they are found within the column.
 const close = (target: Page, pane: string, key: string) =>
   target
-    .locator(`.${pane} .pane-head`)
+    .locator(`.${pane}`)
     .getByRole("button", { name: label(key) })
     .click();
 
@@ -112,7 +114,7 @@ test("a maximized column fills the window and its close restores the rest", asyn
 }) => {
   await open(target);
   await target
-    .locator(".pane-agent .pane-head")
+    .locator(".pane-agent")
     .getByRole("button", { name: label("desktop.pane.maximize_agent") })
     .click();
   await expect(target.locator(".pane-tui")).toBeHidden();
@@ -204,4 +206,118 @@ test("a window too narrow for the agent beside the rest shows it on its own", as
   await railButton(target, "desktop.rail.agent").click();
   await expect(target.locator(".pane-agent")).toBeHidden();
   await expect(target.locator(".pane-tui")).toBeVisible();
+});
+
+test("double-clicking the agent's bar maximizes and restores it, its buttons do not", async ({
+  page: target,
+}) => {
+  await open(target);
+  const title = target
+    .locator(".pane-agent")
+    .getByRole("heading", { name: label("desktop.agent.new_conversation") });
+  await title.dblclick();
+  await expect(target.locator(".pane-tui")).toBeHidden();
+  await title.dblclick();
+  await expect(target.locator(".pane-tui")).toBeVisible();
+  // A double click on one of its buttons is that button's, not the bar's,
+  // even one that is not available yet and takes no click of its own.
+  await target
+    .locator(".pane-agent")
+    .getByRole("button", { name: label("desktop.agent.new_conversation") })
+    .dispatchEvent("dblclick");
+  await expect(target.locator(".pane-tui")).toBeVisible();
+});
+
+test("the agent's message field holds a line even when the column opens after the window", async ({
+  page: target,
+}) => {
+  await seedLayout(target, { layout: { agentShown: false } });
+  await open(target);
+  await railButton(target, "desktop.rail.agent").click();
+  const field = target.getByRole("textbox", {
+    name: label("desktop.agent.message_label"),
+  });
+  await expect(field).toBeVisible();
+  // A line of text and the field's padding, at least: the placeholder shows.
+  const { height, line } = await field.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return {
+      height: element.clientHeight,
+      line:
+        parseFloat(style.lineHeight) +
+        parseFloat(style.paddingTop) +
+        parseFloat(style.paddingBottom),
+    };
+  });
+  expect(height).toBeGreaterThanOrEqual(Math.floor(line));
+});
+
+const agentButton = (target: Page, key: string) =>
+  target
+    .locator(".pane-agent")
+    .getByRole("button", { name: label(key), exact: false })
+    .first();
+
+test("the agent's history lists the host's conversations and opens one with its documents", async ({
+  page: target,
+}) => {
+  await open(target);
+  await agentButton(target, "desktop.agent.history").click();
+  const body = target.locator(".agent-body");
+  await expect(body.getByText("IVA del tercer trimestre")).toBeVisible();
+  // Archived ones wait behind their own toggle.
+  await expect(body.getByText("Alta como autónomo")).toHaveCount(0);
+  await body.getByText("IVA del tercer trimestre").click();
+  await expect(
+    target.locator(".pane-agent").getByRole("heading", {
+      name: "IVA del tercer trimestre",
+    }),
+  ).toBeVisible();
+  // Its turns, as the host's history has them: the person's message with
+  // the files sent with it, the operations the agent called, its reply.
+  const log = body.getByRole("log");
+  await expect(log).toContainText("¿Me preparas el 303?");
+  await expect(log).toContainText("ticket-gasolinera.jpg");
+  await expect(log).toContainText("Registrar la factura 2026-031");
+  await expect(log).toContainText("He leído 42 apuntes del trimestre.");
+  await agentButton(target, "desktop.agent.documents").click();
+  await expect(body.getByText("factura-2026-031.pdf")).toBeVisible();
+  await expect(body.getByText("facturas-proveedores.zip")).toBeVisible();
+  // A new conversation leaves it, with nothing open.
+  await agentButton(target, "desktop.agent.new_conversation").click();
+  await expect(
+    target.locator(".pane-agent").getByRole("heading", {
+      name: label("desktop.agent.new_conversation"),
+    }),
+  ).toBeVisible();
+  await expect(
+    target.getByRole("textbox", {
+      name: label("desktop.agent.message_label"),
+    }),
+  ).toBeVisible();
+});
+
+test("without agent views the column's doors say they are not available yet", async ({
+  page: target,
+}) => {
+  await open(target, "no-views");
+  for (const key of [
+    "desktop.agent.history",
+    "desktop.agent.documents",
+    "desktop.agent.new_conversation",
+  ])
+    await expect(agentButton(target, key)).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+});
+
+test("a refused read of the history says so, never that there are none", async ({
+  page: target,
+}) => {
+  await open(target, "views-refused");
+  await agentButton(target, "desktop.agent.history").click();
+  const body = target.locator(".agent-body");
+  await expect(body.getByRole("alert")).toBeVisible();
+  await expect(body).not.toContainText(label("desktop.agent.history_empty"));
 });

@@ -46,6 +46,11 @@ test("a rail button names itself to a keyboard user", async ({
   page: target,
 }) => {
   await open(target);
+  // The panel opened takes the keyboard as it starts; the rail is focused
+  // after that, or its tooltip closes under the test.
+  await expect(
+    target.locator('[data-terminal="console"] textarea'),
+  ).toBeFocused();
   await rail(target).getByRole("button").first().focus();
   await expect(target.getByRole("tooltip")).toContainText(
     label("desktop.rail.search"),

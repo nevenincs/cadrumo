@@ -588,11 +588,101 @@ desktop:
     zoom_out: Reducir la documentación
     zoom_reset: Restablecer el zoom de la documentación
   agent:
-    empty_lead: El agente aún no está disponible en esta ventana.
-    empty_title: Todavía no hay ningún agente
+    add_files: Añadir archivos
+    agent_replied: El agente respondió
+    archive: Archivar
+    archived_empty: No hay nada archivado
+    archived_toggle: Archivadas ({count})
+    attachments: Archivos para el próximo mensaje
+    attachments_refused: 'Rechazados: {count}'
+    attachments_uploading: 'Subiendo: {count}'
+    cancel: Cancelar
+    choose_model: Elige un modelo
+    close_documents: Cerrar los documentos
+    collapse_members: Ocultar los archivos de {name}
+    consent_allow: Enviar a {provider}
+    consent_decline: No enviar
+    consent_items: Lo que se enviaría
+    consent_lead: Para responder, {model} necesita el contenido de abajo. Si lo envías,
+      sale de este ordenador y va a {provider}.
+    consent_note: No se envía nada hasta que elijas. Si no lo envías, se queda en
+      este ordenador.
+    consent_title: ¿Enviar esto a {provider}?
+    delete: Eliminar
+    delete_confirm: ¿Eliminar «{title}» y sus documentos ({count})? No se puede deshacer.
+    delete_confirm_bare: ¿Eliminar «{title}»? No se puede deshacer.
+    documents: Documentos
+    documents_attached: 'En esta conversación: {count}'
+    documents_empty: Todavía no hay documentos en esta conversación
+    documents_failed: 'Con error: {count}'
+    documents_review: 'Por revisar: {count}'
+    drop_accepts: 'Se aceptan: {types}'
+    drop_hint: Mantén pulsada la tecla {key} para soltar
+    drop_release: Suelta para añadir los archivos
+    drop_release_multiple: Suelta para añadir {count} archivos
+    drop_release_single: Suelta para añadir 1 archivo
+    drop_title: Añadir a esta conversación
+    effort: Esfuerzo
+    expand_members: Mostrar los archivos de {name}
+    files_summary: 'Archivos: {count} · {size}'
     hide: Ocultar el agente
+    history: Historial
+    history_empty: Todavía no hay conversaciones
+    history_no_match: Ninguna conversación coincide con «{query}».
+    members_multiple: '{count} archivos'
+    members_single: 1 archivo
+    message_label: Mensaje
+    message_placeholder: Pregunta por un modelo, un plazo o tus registros
+    model: Modelo
+    more_files: +{count} más
+    new_conversation: Nueva conversación
+    no_models: No hay modelos para elegir
+    provider: Proveedor
+    provider_unavailable: '{provider}: {reason}'
+    queued: Esperando para subir
+    ready: Listo
+    refused: Rechazado
+    remove_all: Quitar todo
+    remove_document: Quitar {name}
+    remove_file: Quitar {name}
+    reply_failed: Esta respuesta no se ha completado.
     resize: Cambiar el tamaño del agente
+    restore: Restaurar
+    retry: Vuelve a intentarlo
+    role_context: Contexto
+    role_information: Información
+    role_label: Usar como
+    role_ledger: Datos del libro
+    row_documents: 'Documentos: {count}'
+    search_history: Buscar conversaciones
+    send: Enviar
+    send_nothing: Escribe un mensaje o añade un archivo primero
+    send_waiting: Espera a que se suban todos los archivos
+    sent_files: Archivos enviados con este mensaje
+    settings_label: 'Modelo y esfuerzo: {current}'
+    settings_title: Ajustes del modelo
     show: Mostrar el agente
+    show_active: Mostrar activas
+    status_extracting: Leyendo
+    status_failed: Con error
+    status_needs_review: Por revisar
+    status_ready: Listo
+    status_skipped: Omitido
+    status_uploading: Subiendo
+    stop: Detener
+    stopped: Detenido
+    tool_done: Hecho
+    tool_running: En curso
+    transcript: Conversación
+    transcript_empty: Aún no hay mensajes
+    unavailable: Aún no está disponible
+    uploading: Subiendo
+    uploading_name: Subiendo {name}
+    welcome_lead: ¿Algo sobre impuestos? Pregunta por un modelo o un plazo, o añade
+      recibos, facturas y extractos bancarios con +.
+    welcome_title: ¿En qué trabajamos hoy?
+    working: Trabajando…
+    you_said: Has dicho
   calendar:
     aeat:
       accepted: Aceptada

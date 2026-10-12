@@ -582,11 +582,102 @@ desktop:
     zoom_out: Redueix la documentació
     zoom_reset: Restableix el zoom de la documentació
   agent:
-    empty_lead: L'agent encara no està disponible en aquesta finestra.
-    empty_title: Encara no hi ha cap agent
+    add_files: Afegeix fitxers
+    agent_replied: L'agent ha respost
+    archive: Arxiva
+    archived_empty: No hi ha res arxivat
+    archived_toggle: Arxivades ({count})
+    attachments: Fitxers per al missatge següent
+    attachments_refused: 'Rebutjats: {count}'
+    attachments_uploading: 'S''estan pujant: {count}'
+    cancel: Cancel·la
+    choose_model: Tria un model
+    close_documents: Tanca els documents
+    collapse_members: Amaga els fitxers de {name}
+    consent_allow: Envia-ho a {provider}
+    consent_decline: No ho enviïs
+    consent_items: Què s'enviaria
+    consent_lead: Per respondre, {model} necessita el contingut següent. Si l'envies,
+      surt d'aquest ordinador i va a {provider}.
+    consent_note: No s'envia res fins que triïs. Si no l'envies, es queda en aquest
+      ordinador.
+    consent_title: Vols enviar això a {provider}?
+    delete: Suprimeix
+    delete_confirm: Vols suprimir «{title}» i els seus documents ({count})? No es
+      pot desfer.
+    delete_confirm_bare: Vols suprimir «{title}»? No es pot desfer.
+    documents: Documents
+    documents_attached: 'En aquesta conversa: {count}'
+    documents_empty: Encara no hi ha documents en aquesta conversa
+    documents_failed: 'Amb error: {count}'
+    documents_review: 'Per revisar: {count}'
+    drop_accepts: 'S''accepten: {types}'
+    drop_hint: Mantén premuda la tecla {key} per deixar anar
+    drop_release: Deixa anar per afegir els fitxers
+    drop_release_multiple: Deixa anar per afegir {count} fitxers
+    drop_release_single: Deixa anar per afegir 1 fitxer
+    drop_title: Afegeix a aquesta conversa
+    effort: Esforç
+    expand_members: Mostra els fitxers de {name}
+    files_summary: 'Fitxers: {count} · {size}'
     hide: Amaga l'agent
+    history: Historial
+    history_empty: Encara no hi ha converses
+    history_no_match: Cap conversa no coincideix amb «{query}».
+    members_multiple: '{count} fitxers'
+    members_single: 1 fitxer
+    message_label: Missatge
+    message_placeholder: Pregunta per un model, un termini o els teus registres
+    model: Model
+    more_files: +{count} més
+    new_conversation: Conversa nova
+    no_models: No hi ha models per triar
+    provider: Proveïdor
+    provider_unavailable: '{provider}: {reason}'
+    queued: Esperant per pujar
+    ready: A punt
+    refused: Rebutjat
+    remove_all: Treu-ho tot
+    remove_document: Treu {name}
+    remove_file: Treu {name}
+    reply_failed: Aquesta resposta no s'ha completat.
     resize: Canvia la mida de l'agent
+    restore: Restaura
+    retry: Torna-ho a provar
+    role_context: Context
+    role_information: Informació
+    role_label: Fes-lo servir com a
+    role_ledger: Dades del llibre
+    row_documents: 'Documents: {count}'
+    search_history: Cerca converses
+    send: Envia
+    send_nothing: Primer escriu un missatge o afegeix un fitxer
+    send_waiting: Espera que es pugin tots els fitxers
+    sent_files: Fitxers enviats amb aquest missatge
+    settings_label: 'Model i esforç: {current}'
+    settings_title: Configuració del model
     show: Mostra l'agent
+    show_active: Mostra les actives
+    status_extracting: S'està llegint
+    status_failed: Amb error
+    status_needs_review: Per revisar
+    status_ready: A punt
+    status_skipped: Omès
+    status_uploading: S'està pujant
+    stop: Atura
+    stopped: Aturat
+    tool_done: Fet
+    tool_running: En curs
+    transcript: Conversa
+    transcript_empty: Encara no hi ha missatges
+    unavailable: Encara no està disponible
+    uploading: S'està pujant
+    uploading_name: S'està pujant {name}
+    welcome_lead: Alguna cosa d'impostos? Pregunta per un model o un termini, o afegeix
+      rebuts, factures i extractes bancaris amb +.
+    welcome_title: En què treballem avui?
+    working: Treballant…
+    you_said: Has dit
   calendar:
     aeat:
       accepted: Acceptada

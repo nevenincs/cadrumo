@@ -31,6 +31,7 @@ import type {
 } from "./ipc/contract";
 import { PaneHeader, type PaneControl } from "./components/PaneHeader";
 import { Rail, type RailItem } from "./components/Rail";
+import { AgentColumn } from "./components/AgentColumn";
 import { HostRecordList } from "./components/HostRecordList";
 import type { RecordMenuRequest } from "./components/RecordList";
 import {
@@ -2062,10 +2063,16 @@ export function App({ host }: { host: Host }) {
   );
   const agentPane = (
     <div className={cn(pane, "pane-agent")}>
-      <PaneHeader
-        title={t("desktop.pane.agent")}
+      {/* One bar: the conversation's own actions, then the column's maximize
+          and close as every column has them. */}
+      <AgentColumn
+        agent={host.agent}
+        reader={reader}
+        shown={agentVisible}
+        locale={locale}
+        body={agentBody}
         onToggleMaximize={() => toggleMaximize("agent")}
-        controls={[
+        trailing={[
           maximizeControl("agent", "desktop.pane.maximize_agent"),
           {
             id: "close",
@@ -2073,23 +2080,19 @@ export function App({ host }: { host: Host }) {
             label: t("desktop.agent.hide"),
             shortcut: primaryChord(byId("agent.toggle")),
             run: () => closeColumn("agent"),
-          },
-        ]}
+          } satisfies PaneControl,
+        ].map((control) => (
+          <IconButton
+            key={control.id}
+            label={control.label}
+            shortcut={control.shortcut}
+            aria-pressed={control.pressed}
+            onClick={control.run}
+          >
+            <Icon name={control.icon} />
+          </IconButton>
+        ))}
       />
-      <section
-        ref={agentBody}
-        tabIndex={-1}
-        aria-label={t("desktop.pane.agent")}
-        className="agent-body flex min-h-0 flex-1 flex-col overflow-y-auto focus-visible:-outline-offset-2"
-      >
-        <Empty role="status">
-          <EmptyMedia>
-            <Icon name="agent" />
-          </EmptyMedia>
-          <EmptyTitle>{t("desktop.agent.empty_title")}</EmptyTitle>
-          <EmptyDescription>{t("desktop.agent.empty_lead")}</EmptyDescription>
-        </Empty>
-      </section>
     </div>
   );
   // Nothing open above the bottom panel: the main area says so, and offers

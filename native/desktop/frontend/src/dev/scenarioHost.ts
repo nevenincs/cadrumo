@@ -15,9 +15,15 @@ import type {
   SignInSignal,
   SignInStatus,
 } from "../ipc/contract";
+import type { AgentViews } from "../shell/agentViews";
 import type { Host } from "../shell/host";
 import type { ProfileAccounts } from "../shell/profiles";
 import type { ProfileViews } from "../shell/views";
+import {
+  FIXTURE_CONVERSATIONS,
+  FIXTURE_DOCUMENTS,
+  FIXTURE_HISTORY,
+} from "./fixtures/agent";
 import { BUSY_CALENDAR } from "./fixtures/calendarBusy";
 import {
   AHEAD_CALENDAR,
@@ -229,9 +235,36 @@ export function scenarioHost(
     },
   };
 
+  // The agent's views go with the profile's: offered, empty, refused or not
+  // offered together. They are read as the signed-in profile's too.
+  const agent: AgentViews = {
+    async conversations() {
+      say("agentConversations");
+      await wait(options.latencyMs);
+      if (!readable()) throw failure("timed_out", "cli");
+      return scenario.views === "empty" ? [] : FIXTURE_CONVERSATIONS;
+    },
+    async history(conversationId) {
+      say(`agentHistory ${conversationId}`);
+      await wait(options.latencyMs);
+      if (!readable()) throw failure("timed_out", "cli");
+      return scenario.views === "empty"
+        ? []
+        : (FIXTURE_HISTORY[conversationId] ?? []);
+    },
+    async documents(conversationId) {
+      say(`agentDocuments ${conversationId}`);
+      await wait(options.latencyMs);
+      if (!readable()) throw failure("timed_out", "cli");
+      return scenario.views === "empty"
+        ? []
+        : (FIXTURE_DOCUMENTS[conversationId] ?? []);
+    },
+  };
+
   return {
     available: true,
-    ...(scenario.views === "none" ? {} : { views }),
+    ...(scenario.views === "none" ? {} : { views, agent }),
     ...(scenario.profiles === "absent" ? {} : { profiles }),
     ...managerCommand,
     ...(supervision

@@ -20,6 +20,7 @@ import type {
   WindowPresentation,
 } from "../ipc/contract";
 import type { ProfileAccounts } from "./profiles";
+import type { AgentViews } from "./agentViews";
 import type { ProfileViews } from "./views";
 
 export type TerminalKind = "console" | "python" | "tui";
@@ -88,6 +89,9 @@ export interface Host {
   /** Read-only views of the signed-in profile, where this host offers any.
    * Without them the shell shows no way into a view. */
   readonly views?: ProfileViews;
+  /** What the agent column reads, where this host serves the agent.
+   * Without it each of the column's views says it is not available yet. */
+  readonly agent?: AgentViews;
 }
 
 export class HostUnavailable extends Error {
