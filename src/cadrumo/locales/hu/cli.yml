@@ -3314,6 +3314,8 @@ cli:
         napja) ebbe az AEAT-időszakba esik: 1T-4T (negyedévek), 0A (éves), 01-12 (hónapok).
         A --year megadása kötelező.'
       provider_help: Kivonatformátum-szolgáltató.
+      statement_refused: 'Kivonat elutasítva: a(z) {file} olyan tételt tartalmaz,
+        amely nem érvényes tranzakció, ezért semmi sem lett importálva.'
       verbose_help: Részletes információ megjelenítése importálás közben.
       verify_help: Tételek ellenőrzése importálás után.
       verify_source_help: Az importált sorok ellenőrzésére használt eredeti fájl.

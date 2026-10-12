@@ -698,7 +698,8 @@ def test_verify_source_hashes_the_named_file_only_when_verify_is_also_set(tmp_pa
     assert verified.exit_code == 0, verified.output
     verified_source = json.loads(verified.output)["result"]["sources"][0]
     assert verified_source["requested"] is True
-    assert verified_source["path"] == str(original.resolve())
+    # The operation returns no caller-controlled path; the digest names the source.
+    assert verified_source["path"] is None
     assert verified_source["sha256"] is not None
     assert verified_source["sha256"] != unverified_source["sha256"]
 

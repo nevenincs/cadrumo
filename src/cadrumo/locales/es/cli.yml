@@ -3367,6 +3367,8 @@ cli:
         en este periodo AEAT: 1T-4T (trimestres), 0A (anual), 01-12 (meses). Requiere
         --year.'
       provider_help: Proveedor del formato del extracto.
+      statement_refused: 'Extracto rechazado: {file} tiene un movimiento que no es
+        una transacción válida, así que no se ha importado nada.'
       verbose_help: Mostrar información detallada durante la importación
       verify_help: Comprobar los apuntes después de la importación
       verify_source_help: Fichero original usado para comprobar las filas importadas.

@@ -254,7 +254,9 @@ LEDGER_OPERATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 multiple=False,
                 count=False,
                 eager=False,
-                constraint=ParameterConstraint(),
+                # Checked where it is parsed, so a mistyped original names
+                # itself instead of reaching the worker as a refused statement.
+                constraint=ParameterConstraint(exists=True, dir_okay=False),
                 show_default=True,
                 hidden=False,
                 transport_locus=TransportLocus.LOCAL_IN,

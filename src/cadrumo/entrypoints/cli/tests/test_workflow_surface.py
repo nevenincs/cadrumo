@@ -362,7 +362,9 @@ def test_app_surface_uses_singular_user_domains() -> None:
         assert removed_command not in result.output
 
 
-def test_modelo_introspection_surface_uses_registry_query_backend() -> None:
+def test_modelo_introspection_surface_uses_registry_query_backend(encrypted_user_cli: Path) -> None:
+    # The binding listing is read inside a profile; the other reads need none.
+    _seed_profile()
     listed = _invoke(["--format", "json", "app", "modelo", "list", "--year", "2026"])
     described = _invoke(
         ["--format", "json", "app", "modelo", "describe", "303", "--year", "2026", "--period", "1T"],
@@ -661,7 +663,8 @@ def test_ledger_import_verify_source_records_original_file_digest(isolated_user_
     assert payload["dry_run"] is True
     assert payload["validations"][0]["valid"] is True
     assert payload["sources"][0]["requested"] is True
-    assert payload["sources"][0]["path"] == str(source.resolve())
+    # The operation returns no caller-controlled path; the digest names the source.
+    assert payload["sources"][0]["path"] is None
     assert payload["sources"][0]["sha256"] == hashlib.sha256(source_bytes).hexdigest()
 
 

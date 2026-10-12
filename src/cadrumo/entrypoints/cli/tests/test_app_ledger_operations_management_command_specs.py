@@ -46,6 +46,13 @@ _DEFAULT_CONSTRAINT: Final[tuple[object, ...]] = (
 _MINIMUM_ONE_CONSTRAINT: Final[tuple[object, ...]] = (1, *_DEFAULT_CONSTRAINT[1:])
 _MINIMUM_ZERO_CONSTRAINT: Final[tuple[object, ...]] = (0, *_DEFAULT_CONSTRAINT[1:])
 _EXISTING_PATH_CONSTRAINT: Final[tuple[object, ...]] = (*_DEFAULT_CONSTRAINT[:4], True, *_DEFAULT_CONSTRAINT[5:])
+_EXISTING_FILE_CONSTRAINT: Final[tuple[object, ...]] = (
+    *_DEFAULT_CONSTRAINT[:4],
+    True,
+    True,
+    False,
+    *_DEFAULT_CONSTRAINT[7:],
+)
 _NO_TRANSPORT: Final[tuple[str, ...]] = ("none", "not_applicable", "not_applicable")
 _LOCAL_IN_FILE_PRIMARY_TRANSPORT: Final[tuple[str, ...]] = ("local_in", "file", "primary")
 _LOCAL_IN_FILE_AUXILIARY_TRANSPORT: Final[tuple[str, ...]] = ("local_in", "file", "auxiliary")
@@ -401,6 +408,7 @@ _EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
                 "--verify-source",
                 "cli.ledger.import.verify_source_help",
                 annotation="pathlib:Path",
+                constraint=_EXISTING_FILE_CONSTRAINT,
                 transport=_LOCAL_IN_FILE_AUXILIARY_TRANSPORT,
             ),
             _expected_option(

@@ -17,7 +17,9 @@ from ...application.ledger.import_operation import (
 )
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
+from ...domain.transactions.errors import TransactionValidationError
 from ._ledger_payloads import LedgerImportPayload
+from ._ledger_support import ledger_transaction_validation_no_recovery
 from .common import bad, emit_envelope
 from .period_parsing import _optional_canonical_period
 from .runtime_ledger_import import import_ledger_sources_for_cli
@@ -147,7 +149,16 @@ def ledger_import(
     )
     result = completed.projection
     if not result.validations and result.refused_files:
-        raise bad(_whole_import_refusal_message(result.refused_files[0], named=file))
+        refusal = result.refused_files[0]
+        if refusal.reason_code == "transaction_validation":
+            # The one statement named was refused whole, so this import read
+            # nothing: the typed refusal it would have raised in process.
+            raise ledger_transaction_validation_no_recovery(
+                TransactionValidationError(
+                    translated_message="cli.ledger.import.statement_refused", context={"file": refusal.file_name}
+                )
+            )
+        raise bad(_whole_import_refusal_message(refusal, named=file))
     report = _import_report(result, verbose=verbose, verify=verify)
     refused = _refused_file_report(result.refused_files)
     report.lines.extend(refused.lines)

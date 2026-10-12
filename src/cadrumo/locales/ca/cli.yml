@@ -3350,6 +3350,8 @@ cli:
         d''aquest període AEAT: 1T-4T (trimestres), 0A (anual), 01-12 (mesos). Requereix
         --year.'
       provider_help: Proveïdor del format de l'extracte.
+      statement_refused: 'Extracte rebutjat: {file} té un moviment que no és una transacció
+        vàlida, així que no s''ha importat res.'
       verbose_help: Mostrar informació detallada durant la importació
       verify_help: Comprovar els apunts després de la importació
       verify_source_help: Fitxer original usat per comprovar les files importades.

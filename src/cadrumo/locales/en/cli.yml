@@ -3113,6 +3113,8 @@ cli:
       period_help: 'Import only rows whose value date (or booking date) falls in this
         AEAT period: 1T-4T (quarters), 0A (annual), 01-12 (months). Requires --year.'
       provider_help: Statement format provider.
+      statement_refused: 'Statement refused: {file} has an entry that is not a valid
+        transaction, so nothing was imported.'
       verbose_help: Show detailed information during import
       verify_help: Check entries after import
       verify_source_help: Original file used to check imported rows.
