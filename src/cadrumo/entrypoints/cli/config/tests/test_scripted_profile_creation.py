@@ -24,6 +24,7 @@ from ...tests.cli_performance import profile_cli_path
 from ...tests.cli_runner import invoke_cached_cli
 from ...tests.password_only_profile import register_password_only_profile
 from ...verb_input_schema import build_verb_input_schemas
+from .isolated_storage_fixture import native_profile_view_server
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -130,10 +131,11 @@ def test_scripted_create_persists_the_field_flags_it_was_given(tmp_path: Path) -
         # in-process session the create span published before invoking it.
         close_active_bucket_session()
 
-        shown = invoke_cached_cli(
-            ("--format", "json", "--profile-secrets-stdin", "config", "profile", "view"),
-            input=json.dumps({"profile_passphrase": _CREDENTIAL_INPUT}),
-        )
+        with native_profile_view_server(tmp_path / "cadrumo-storage"):
+            shown = invoke_cached_cli(
+                ("--format", "json", "--profile-secrets-stdin", "config", "profile", "view"),
+                input=json.dumps({"profile_passphrase": _CREDENTIAL_INPUT}),
+            )
 
     # `show` reports a non-zero code for an INCOMPLETE profile, which this one
     # deliberately is -- a profile is born incomplete and the operator fills in
@@ -184,31 +186,33 @@ def test_scripted_create_records_an_explicit_false_modelo_111_attestation_and_fr
         # The registration process has a live session; close it so both reads
         # below must reopen the encrypted record through the public boundary.
         close_active_bucket_session()
-        shown = invoke_cached_cli(
-            ("--format", "json", "--profile-secrets-stdin", "config", "profile", "view"),
-            input=json.dumps({"profile_passphrase": _CREDENTIAL_INPUT}),
-        )
+        with native_profile_view_server(tmp_path / "cadrumo-storage"):
+            shown = invoke_cached_cli(
+                ("--format", "json", "--profile-secrets-stdin", "config", "profile", "view"),
+                input=json.dumps({"profile_passphrase": _CREDENTIAL_INPUT}),
+            )
         assert shown.exit_code in {0, 2}, shown.output
         assert _fact_values(json.loads(shown.stdout))["withholding.colegio_concertado"] == "false"
         close_active_bucket_session()
 
-        readiness = invoke_cached_cli(
-            (
-                "--format",
-                "json",
-                "--profile-secrets-stdin",
-                "app",
-                "modelo",
-                "readiness",
-                "--modelo",
-                "111",
-                "--year",
-                "2025",
-                "--period",
-                "2T",
-            ),
-            input=json.dumps({"profile_passphrase": _CREDENTIAL_INPUT}),
-        )
+        with native_profile_view_server(tmp_path / "cadrumo-storage"):
+            readiness = invoke_cached_cli(
+                (
+                    "--format",
+                    "json",
+                    "--profile-secrets-stdin",
+                    "app",
+                    "modelo",
+                    "readiness",
+                    "--modelo",
+                    "111",
+                    "--year",
+                    "2025",
+                    "--period",
+                    "2T",
+                ),
+                input=json.dumps({"profile_passphrase": _CREDENTIAL_INPUT}),
+            )
 
     # Other evidence can make the complete target non-ready; this assertion
     # isolates the real Modelo 111 preflight consequence of the attestation.

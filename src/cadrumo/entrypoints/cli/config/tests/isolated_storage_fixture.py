@@ -215,10 +215,12 @@ def profile_cli(*args: str) -> Result:
 
     Registration mints no receipt, and every profile verb reads or writes through
     the runtime, so each is admitted by the password on the verified secret frame
-    for the explicit profile. ``delete`` takes no authentication input: it acts on
-    the label it is given and refuses the selected profile while signed in.
+    for the explicit profile. ``delete`` and ``archive inspect`` take no
+    authentication input: delete acts on the label it is given and refuses the
+    selected profile while signed in, and inspect reads only the unkeyed archive
+    header, so a profile secret is refused there as inapplicable.
     """
-    if args and args[0] == "delete":
+    if args and (args[0] == "delete" or args[:2] == ("archive", "inspect")):
         return invoke_cached_cli(("--format", "json", "config", "profile", *args))
     return invoke_cached_cli(
         (
