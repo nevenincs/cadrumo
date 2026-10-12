@@ -38,12 +38,13 @@ from cadrumo.application.runtime.operation_access import (
     RuntimeOperationSubmit,
     RuntimeOperationSubmitted,
 )
+from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.application.user_profile.operations import (
     USER_PROFILE_OPERATION_DEFINITIONS,
     build_user_profile_operation_registrations,
 )
 from cadrumo.application.user_profile.profile_operation_contracts import PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID
-from cadrumo_harness.mcp.protocol_contract import PERSON_ACT_REMEDY, PERSON_ACT_REQUIRED
+from cadrumo_harness.mcp.protocol_contract import PERSON_ACT_REMEDY
 from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_harness.mcp.server import build_server
 from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
@@ -155,7 +156,7 @@ async def test_an_operation_that_requires_a_secret_is_the_persons_act_and_nothin
     assert called.is_error is True
     assert called.structured_content == {
         "outcome": "refused",
-        "code": PERSON_ACT_REQUIRED,
+        "code": AccessDenialCode.PERSON_ACT_REQUIRED.value,
         "remedy": PERSON_ACT_REMEDY,
     }
     assert "Ask the person to do this in Cadrumo" in PERSON_ACT_REMEDY

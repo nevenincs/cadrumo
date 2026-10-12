@@ -19,9 +19,10 @@ from typing import Any
 import pytest
 
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT
+from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.application.user_profile.profile_operation_contracts import PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID
 from cadrumo.core.config import override_settings
-from cadrumo_harness.mcp.protocol_contract import PERSON_ACT_REMEDY, PERSON_ACT_REQUIRED
+from cadrumo_harness.mcp.protocol_contract import PERSON_ACT_REMEDY
 from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_harness.mcp.server import build_server
 from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
@@ -119,7 +120,11 @@ async def test_no_tool_signs_in_administers_sessions_or_carries_a_secret_and_the
     assert given.is_error is True
     assert given.structured_content == {"outcome": "refused", "code": "invalid_request"}
     assert export.is_error is True
-    assert export.structured_content == {"outcome": "refused", "code": PERSON_ACT_REQUIRED, "remedy": PERSON_ACT_REMEDY}
+    assert export.structured_content == {
+        "outcome": "refused",
+        "code": AccessDenialCode.PERSON_ACT_REQUIRED.value,
+        "remedy": PERSON_ACT_REMEDY,
+    }
     # None of them reached the runtime: no login was asked for, nothing was submitted, and the
     # session the person's sign-in admitted and the stored sign-in are as they were.
     assert logins_after == logins_before

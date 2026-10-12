@@ -78,9 +78,6 @@ _SIGN_IN_REFUSAL: Final = (
     "password is tried again. status reports the same facts beside denial"
 )
 
-PERSON_ACT_REQUIRED: Final = AccessDenialCode.PERSON_ACT_REQUIRED.value
-"""The code of a refusal of an act that only the person takes in Cadrumo, never an agent."""
-
 SIGN_IN_REMEDY: Final = (
     "Nobody is signed in to Cadrumo for this profile, and no key the person configured admits this server. "
     "Ask the person to sign in to Cadrumo, then call again. You cannot sign in, and you never ask for a password, "
@@ -112,7 +109,7 @@ PROFILE_CHANGED_REMEDY: Final = (
 
 _ADMISSION_REFUSALS: Final = frozenset(
     {*(code.value for code in AccessDenialCode), *(code.value for code in AutomationCustodyCode)}
-) - {PERSON_ACT_REQUIRED}
+) - {AccessDenialCode.PERSON_ACT_REQUIRED.value}
 
 
 def sign_in_remedy(code: str, facts: Mapping[str, Any] | None = None) -> str | None:

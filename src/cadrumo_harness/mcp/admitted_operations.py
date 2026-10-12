@@ -53,7 +53,6 @@ from .operation_discovery import search_operations
 from .payload_vocabulary import PAYLOAD_VOCABULARY_MEMBER, payload_vocabulary
 from .protocol_contract import (
     PERSON_ACT_REMEDY,
-    PERSON_ACT_REQUIRED,
     parse_model,
     public_value,
     refusal_code,
@@ -191,7 +190,7 @@ def _execute(client: RuntimeFrontendClient, binding: _Binding, args: dict[str, A
     contract = description.contract
     if operation_is_persons_act(contract.definition_id, ephemeral_secret_required=contract.ephemeral_secret_required):
         # A credential or access act is the person's own; nothing is submitted.
-        return {"outcome": "refused", "code": PERSON_ACT_REQUIRED, "remedy": PERSON_ACT_REMEDY}
+        return {"outcome": "refused", "code": AccessDenialCode.PERSON_ACT_REQUIRED.value, "remedy": PERSON_ACT_REMEDY}
     try:
         submission = _submission(client, contract, args)
     except _ContractRefusedError as refused:

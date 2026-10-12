@@ -33,7 +33,6 @@ from .operation_contract_cache import OperationContractCache
 from .protocol_contract import (
     MCP_TOOL_NAMES,
     PERSON_ACT_REMEDY,
-    PERSON_ACT_REQUIRED,
     public_value,
     refusal_code,
     refusal_facts,
@@ -421,7 +420,7 @@ class RuntimeMcpAdapter:
                 # The runtime has ended the held session, whether or not its notice has arrived yet: let it go,
                 # so this answer sends the agent to the person and the next call asks the runtime once again.
                 await self._release_lease(task_name="mcp-ended-session-close")
-            if code == PERSON_ACT_REQUIRED:
+            if code == AccessDenialCode.PERSON_ACT_REQUIRED.value:
                 # The runtime refused the person's own act; the agent is told to ask the person.
                 reply["remedy"] = PERSON_ACT_REMEDY
             elif remedy := runtime_unavailable_remedy(code):
