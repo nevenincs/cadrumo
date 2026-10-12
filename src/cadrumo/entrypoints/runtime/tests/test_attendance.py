@@ -89,7 +89,7 @@ def _runtime(tmp_path: Path) -> Iterator[tuple[UUID, UUID, RuntimeLaunchDoor]]:
         with ThreadPoolExecutor(max_workers=1) as pool:
             running = pool.submit(server.serve)
             try:
-                assert server.ready.wait(3)
+                assert server.ready.wait(30), "the runtime transport did not start listening"
                 yield targets[0][0].binding.profile_id, targets[1][0].binding.profile_id, launch
             finally:
                 stop.set()

@@ -21,7 +21,6 @@ from .access_contracts import (
     ApiKeyRecord,
     AutomationGrant,
     ProfileAccessBinding,
-    SessionKind,
 )
 from .automation_custody_port import AutomationCustodyError, AutomationCustodyPort, AutomationCustodySnapshot
 from .automation_enrollment import AutomationKeyIssuer
@@ -254,7 +253,8 @@ class SessionAuthorityCore:
     ) -> None:
         if session.session_id not in self._sessions:
             return
-        if session.kind is SessionKind.HUMAN:
+        if not session_requires_grant(session):
+            # A person's session, and an attended child of one, answer to their lineage, not to automation custody.
             self._evaluate(session, facts, None, None)
             return
         if snapshot is None:

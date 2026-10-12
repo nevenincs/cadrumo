@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import sys
 from queue import Empty, Queue
 from threading import Thread
@@ -70,7 +71,8 @@ def config_sign_in_hold(
         target = resolve_login_target(target_name)
     except ProfileNotFoundError:
         raise unknown_profile_refusal(target_name) from None
-    proof = _read_password_line()
+    lines = _InputLines()
+    proof = _read_password_line(lines)
     client = asyncio.run(
         open_installed_runtime_client(profile_id=UUID(target.bucket_id), frontend=OperationFrontendProjection.CLI)
     )
@@ -82,7 +84,7 @@ def config_sign_in_hold(
         _require_current_profile_login(client)
         with active_profile_pointer_transaction() as selection:
             selection.compare_and_select(expected=captured, bucket_id=target.bucket_id)
-        ended, approved, declined = _hold(client)
+        ended, approved, declined = _hold(client, lines)
     except RuntimeFrontendRefusedError as error:
         from .._profile_session_gate import raise_runtime_refusal
 
@@ -101,12 +103,12 @@ def config_sign_in_hold(
     )
 
 
-def _read_password_line() -> bytearray:
+def _read_password_line(lines: _InputLines) -> bytearray:
     """Read the first standard-input line as the strict password object; never echo it."""
     from .custody import LoginSecrets
     from .secure_input import validate_secrets_payload
 
-    raw = bytearray(sys.stdin.buffer.readline(_SECRET_LINE_MAX_BYTES + 1))
+    raw = lines.next(_SECRET_LINE_MAX_BYTES + 1)
     try:
         if len(raw) > _SECRET_LINE_MAX_BYTES:
             from ..errors import CliRefusedBoundaryError
@@ -126,17 +128,18 @@ def _read_password_line() -> bytearray:
         raw[:] = bytes(len(raw))
 
 
-def _hold(client: RuntimeFrontendClient) -> tuple[_Ending, int, int]:
+def _hold(client: RuntimeFrontendClient, lines: _InputLines) -> tuple[_Ending, int, int]:
     """Report asks and apply decisions until input closes, the person signs out, or the session ends."""
     from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+    from ....application.runtime.contracts import RuntimeRefusalError
 
     commands: Queue[bytes] = Queue()
-    Thread(target=_read_commands, args=(commands,), name="sign-in-hold-input", daemon=True).start()
+    Thread(target=_read_commands, args=(lines, commands), name="sign-in-hold-input", daemon=True).start()
     announced: set[UUID] = set()
     approved = declined = 0
     try:
         inventory = client.attendance_inventory()
-    except RuntimeFrontendRefusedError:
+    except (RuntimeFrontendRefusedError, RuntimeRefusalError):
         return "session_ended", approved, declined
     _event("held", profile_id=str(client.profile_id), session_expires_at=inventory.session_expires_at.isoformat())
     while True:
@@ -156,8 +159,9 @@ def _hold(client: RuntimeFrontendClient) -> tuple[_Ending, int, int]:
             declined += outcome == "declined"
         try:
             inventory = client.attendance_inventory()
-        except RuntimeFrontendRefusedError as error:
-            _event("session_ended", code=error.reason)
+        except (RuntimeFrontendRefusedError, RuntimeRefusalError) as error:
+            # The session ended by deadline, lock or sign-out elsewhere, or the runtime itself stopped.
+            _event("session_ended", code=str(error.reason))
             return "session_ended", approved, declined
         for candidate in inventory.candidates:
             if candidate.attendance_id in announced:
@@ -182,7 +186,11 @@ def _apply(client: RuntimeFrontendClient, line: bytes) -> Literal["approved", "d
     except ValueError:
         command = None
     if command == {"sign_out": True}:
-        client.human_sign_out()
+        try:
+            client.human_sign_out()
+        except RuntimeFrontendRefusedError as error:
+            _event("sign_out_refused", code=error.reason)
+            return "refused"
         _event("signed_out")
         return "signed_out"
     decision = _decision(command)
@@ -212,13 +220,40 @@ def _decision(command: object) -> tuple[UUID, bool] | None:
         return None
 
 
-def _read_commands(commands: Queue[bytes]) -> None:
-    try:
-        while line := sys.stdin.buffer.readline(_COMMAND_LINE_MAX_BYTES):
-            if line.strip():
-                commands.put(line)
-    except (OSError, ValueError):
-        pass
+class _InputLines:
+    """Split standard input into lines from its raw descriptor.
+
+    The buffered ``sys.stdin`` reader holds a lock while it blocks, and a
+    daemon thread left blocked on it when the interpreter finalizes can abort
+    the process. The raw descriptor has no such lock, and keeps no line the
+    password read did not consume out of reach of the command reader.
+    """
+
+    def __init__(self) -> None:
+        self._pending = bytearray()
+
+    def next(self, limit: int) -> bytearray:
+        """Return the next line, at most ``limit`` bytes, or an empty one at end of input."""
+        while b"\n" not in self._pending and len(self._pending) < limit:
+            try:
+                chunk = os.read(0, 4096)
+            except OSError:
+                chunk = b""
+            if not chunk:
+                break
+            self._pending += chunk
+        end = self._pending.find(b"\n")
+        size = min(limit, len(self._pending) if end < 0 else end + 1)
+        line = self._pending[:size]
+        self._pending[:size] = bytes(size)
+        del self._pending[:size]
+        return line
+
+
+def _read_commands(lines: _InputLines, commands: Queue[bytes]) -> None:
+    while line := lines.next(_COMMAND_LINE_MAX_BYTES):
+        if line.strip():
+            commands.put(bytes(line))
     commands.put(_INPUT_CLOSED)
 
 
