@@ -8,7 +8,7 @@ related:
   - '[[2026-10-04-application-sign-in-adr]]'
 modified: '2026-10-12'
 body_schema: body-v2
-body_hash: 'sha256:213a8dbc735477003d5a2aaadd108724132f43e9b1092365984570073594eadf'
+body_hash: 'sha256:3e9bd854ff64388cd1a552455232c1a66379bdb1799079c6256999342a5274ff'
 ---
 
 # `application-sign-in` plan
@@ -81,7 +81,7 @@ Resume first, opt-in persistence, event-driven clearing and global sign-out.
 Cross-surface acceptance and integrated review against the ADR.
 
 - [ ] `P06.S17` - Run the acceptance matrix for lock-down events against open TUI and CLI windows, sign-out racing resume, crash around mint, reboot, a Windows RDP or SSH second session, unknown lock state, upgrade with a live older receipt, keychain unavailability, throttling and non-interactive CLI; `runtime, CLI and TUI integration suites, disposable Windows host, feature audit`.
-- [ ] `P06.S18` - Review the integrated sign-in model against the accepted ADR and its amendments and record findings; `feature audit`.
+- [x] `P06.S18` - Review the integrated sign-in model against the accepted ADR and its amendments and record findings; `feature audit`.
 
 ## Parallelization
 

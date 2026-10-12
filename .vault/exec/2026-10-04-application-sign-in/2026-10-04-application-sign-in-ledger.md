@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:2b9e6f0304a3016a1e37835891ef3ad0bf17249629f188be65e216245d7a5609'
+body_hash: 'sha256:d4adcfe017371af6609eb4761fae2bd28e569b8aec59e7409b0a030e6761b72e'
 related:
   - "[[2026-10-04-application-sign-in-plan]]"
 ---
@@ -293,6 +293,9 @@ related:
 - `S15` `verify:` `just check-types (31 ty findings in dev/ and adapters/local_runtime/tests/test_posix.py, none in this Step's files)` -> `fail`
 - `S15` `verify:` `just check-import-boundaries (unavailable: governed tree changed mid-run)` -> `fail`
 - `S15` `verify:` `ruff check, ruff format --check, ty on the Step's files` -> `pass`
+- `S18` `A` `.vault/audit/2026-10-12-application-sign-in-audit.md`
+- `S18` `verify:` `integrated review against sign-in ADR, parity and door ADRs: no critical/high, 7 lower findings in 2026-10-12-application-sign-in-audit` -> `pass`
+- `S18` `verify:` `focused sign-in pytest 35 modules -m '' -n 4: 633 passed 2 failed (CLI terminal-patch order dependence passes alone; TUI profile-lock deadline intermittent, recorded medium)` -> `fail`
 
 ## Notes
 
@@ -317,3 +320,4 @@ related:
 - `S13` Gate already implemented (custody.py `passphrase_channel_absent,` `runtime_profile_admission` terminal check). Three runtime-login tests expected a non-interactive resume; they now declare a terminal. Two of those hunks were already present uncommitted in the worktree for the same purpose and are committed here.
 - `S14` Generated CLI reference already current for config logout and config sign-in-status; regeneration shows unrelated drift (config google folder organize, schema paths) owned by other lanes, not committed. `command_operation_table` lists `human_sign_out` under config login because rows are a generated upper bound over the shared handler module, not a defect.
 - `S15` Resume-first ran only with a preselected profile and reported an ordinary no-saved-sign-in as a refusal. Absent and missing-keychain-entry now fall back quietly to the password; binding, expiry and keyring refusals still show their code. Resume stays off for an explicit profile choice (change user locks the session first). Stay signed in default-off already present.
+- `S18` Review gate passes; plan completion pending on P06.S17 disposable-host acceptance. `os_keychain` tests environmental here (WinError 1312). Discovery without semantic search (index updating).
