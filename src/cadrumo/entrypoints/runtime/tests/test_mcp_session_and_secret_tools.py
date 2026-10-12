@@ -155,7 +155,12 @@ async def test_the_session_tool_signs_the_person_out_everywhere(
             assert after.structured_content["session"] == "none"
             assert after.structured_content["denial"] == "authentication_required"
             assert listed.is_error is True
-            assert listed.structured_content == {"outcome": "refused", "code": "authentication_required"}
+            # No sign-in is left to present, which the reply names as the command line does.
+            assert listed.structured_content == {
+                "outcome": "refused",
+                "code": "authentication_required",
+                "sign_in_reason": "absent",
+            }
         finally:
             await adapter.close()
 

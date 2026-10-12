@@ -79,7 +79,7 @@ from cadrumo.entrypoints.tui.operations.run_screen import OperationRunScreen
 from cadrumo.entrypoints.tui.operations.runtime_controller import RuntimeOperationController
 from cadrumo_harness.mcp.admitted_operations import call_admitted_operation
 from cadrumo_harness.mcp.operation_contract_cache import OperationContractCache
-from cadrumo_harness.mcp.runtime_admission import McpAdmission
+from cadrumo_harness.mcp.runtime_admission import AdmissionDenial, McpAdmission
 
 from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 
@@ -201,7 +201,7 @@ class _McpConnection:
         self.profile_id: UUID | None = client.profile_id
         self.admission: McpAdmission | None = McpAdmission.TYPED_SIGN_IN
         self.surface = mcp_surface(DEFAULT_MCP_SURFACE)
-        self._admission_denial: str | None = None
+        self._admission_denial: AdmissionDenial | None = None
         self._contracts = OperationContractCache()
 
     def _admitted(self) -> RuntimeFrontendClient:

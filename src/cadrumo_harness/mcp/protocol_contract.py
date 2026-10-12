@@ -21,6 +21,7 @@ from cadrumo.application.runtime.installation_requests import (
 )
 from cadrumo.application.runtime.projection_pages import ProjectionPage
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
+from cadrumo.application.user_profile.sign_in_refusals import SignInRefusal
 from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.core.operations import OperationEffect, OperationLifecycle
@@ -93,6 +94,15 @@ _SECRET_FORMS: Final = (
     "leaves it held. "
     "The reference of a secret a tool handed to the person, such as a recovery code, is accepted too, and "
     "using it neither shows the secret nor deletes it"
+)
+
+_SIGN_IN_REFUSAL: Final = (
+    "A call refused because the runtime would not sign this connection in answers with the runtime's code and, "
+    "where the runtime gave them, the facts the command line reports with it: sign_in_reason, why the sign-in "
+    "was refused (absent, expired_idle, throttled and so on); sign_in_binding, why a stored sign-in no longer "
+    "counts here (generation_changed after a sign-out or lock elsewhere, login_mismatch when it was made at "
+    "another login); and seconds, how long a throttled sign-in waits before the password is tried again. "
+    "status reports the same facts beside denial"
 )
 
 _UNKNOWN_OUTCOME: Final = (
@@ -266,7 +276,7 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         "a sign-in nor a running Cadrumo: search and describe answer either way, as authority and corpus_search "
         "do, so what can be run is readable first. A notice member carries the runtime's lifecycle "
         "notice: upgrade_pending says an update is ready and the runtime restarts for it once idle, after which "
-        "the next call re-establishes the session",
+        f"the next call re-establishes the session. {_SIGN_IN_REFUSAL}",
         _schema({}),
         _reads("Session and profile status"),
     ),
@@ -497,7 +507,8 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         "new_secret_confirmation_reference in its place; new_secret_reference and "
         "new_secret_confirmation_reference may name the same held secret. reset_password's secret_reference "
         "also takes the secret_reference enable_recovery answered with: the held recovery code is used without "
-        f"being shown, and stays held until the person reads it or deletes it. {_SECRET_FORMS}. {_UNKNOWN_OUTCOME}",
+        f"being shown, and stays held until the person reads it or deletes it. {_SECRET_FORMS}. {_SIGN_IN_REFUSAL}. "
+        f"{_UNKNOWN_OUTCOME}",
         _schema(
             {
                 "action": {
@@ -632,6 +643,30 @@ def refusal_code(error: Exception) -> str:
     if isinstance(error, (ValidationError, ValueError, TypeError, KeyError)):
         return "invalid_request"
     return "runtime_unavailable"
+
+
+def sign_in_refusal_facts(sign_in: SignInRefusal | None) -> dict[str, Any]:
+    """Return a sign-in refusal's public facts by the names the command line reports them under.
+
+    They are the typed reason, the receipt binding when the sign-in no longer
+    belongs to this login or generation, and the seconds a throttle has left.
+    None is a secret or an identifier.
+    """
+    if sign_in is None:
+        return {}
+    facts: dict[str, Any] = {"sign_in_reason": str(sign_in.reason)}
+    if sign_in.binding is not None:
+        facts["sign_in_binding"] = sign_in.binding.value
+    if sign_in.remaining_seconds is not None:
+        facts["seconds"] = sign_in.remaining_seconds
+    return facts
+
+
+def refusal_facts(error: Exception) -> dict[str, Any]:
+    """Return the public facts a refusal carries beside its code, so no sign-in refusal collapses to it."""
+    if isinstance(error, RuntimeFrontendRefusedError):
+        return sign_in_refusal_facts(error.sign_in)
+    return {}
 
 
 def _result_object(value: object) -> dict[str, Any] | None:

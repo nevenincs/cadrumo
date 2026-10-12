@@ -131,6 +131,12 @@ def test_a_fresh_server_process_with_no_key_and_no_stored_sign_in_answers_authen
                 "session": "none",
                 "surface": "full",
                 "denial": "authentication_required",
+                # No sign-in is stored, as the command line reports beside the same code.
+                "sign_in_reason": "absent",
             }, arguments
             assert private_error is True, arguments
-            assert private == {"outcome": "refused", "code": "authentication_required"}, arguments
+            assert private == {
+                "outcome": "refused",
+                "code": "authentication_required",
+                "sign_in_reason": "absent",
+            }, arguments

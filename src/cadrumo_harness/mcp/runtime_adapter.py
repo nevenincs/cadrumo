@@ -58,10 +58,12 @@ from .protocol_contract import (
     parse_model,
     public_value,
     refusal_code,
+    refusal_facts,
     validate_tool_arguments,
 )
 from .public_operation_discovery import SESSIONLESS_DISCOVERY_TOOLS, discover_public_operations
 from .runtime_admission import (
+    AdmissionDenial,
     McpAdmission,
     require_exact_admitted_status,
     resume_shared_sign_in,
@@ -144,7 +146,7 @@ class RuntimeMcpAdapter:
         self._enrollment: NativeEnrollmentClient | None = None
         self._enrollment_reference: UUID | None = None
         self._requester: AutomationRequesterJourney | None = None
-        self._admission_denial: str | None = None
+        self._admission_denial: AdmissionDenial | None = None
         self._contracts = OperationContractCache()
         self._retiring_resources: dict[int, AsyncCloseable] = {}
         self._notices = LifecycleNoticeBoard()
@@ -156,7 +158,7 @@ class RuntimeMcpAdapter:
         if result.get("outcome") == "authenticated":
             return
         code = result.get("code")
-        self._admission_denial = code if isinstance(code, str) else "runtime_unavailable"
+        self._admission_denial = AdmissionDenial(code if isinstance(code, str) else "runtime_unavailable")
 
     def _retirement(self, client: RuntimeFrontendClient | RuntimeInstallationClient) -> AsyncCloseable:
         identity = id(client)
@@ -310,7 +312,7 @@ class RuntimeMcpAdapter:
         try:
             await self._authenticate({"credential_reference": str(reference)}, await self._bound_profile())
         except Exception as error:
-            self._admission_denial = refusal_code(error)
+            self._admission_denial = AdmissionDenial.of(error)
 
     async def _hold_session(self) -> None:
         """Hold a session for the bound profile, asking the runtime at most once to resume the sign-in.
@@ -327,7 +329,7 @@ class RuntimeMcpAdapter:
                 self.client, self._retired = await self._open_signed_in_client(profile_id)
                 self.admission = McpAdmission.SIGN_IN
         except Exception as error:
-            self._admission_denial = refusal_code(error)
+            self._admission_denial = AdmissionDenial.of(error)
             return
         self._admission_denial = None
 
@@ -400,7 +402,7 @@ class RuntimeMcpAdapter:
 
     def _admitted(self) -> RuntimeFrontendClient:
         if self.client is None:
-            raise RuntimeFrontendRefusedError(self._admission_denial or "authentication_required")
+            raise (self._admission_denial or AdmissionDenial(AccessDenialCode.AUTHENTICATION_REQUIRED.value)).refusal()
         return self.client
 
     def held_secret(self, reference: UUID) -> bytearray:
@@ -477,7 +479,8 @@ class RuntimeMcpAdapter:
             return refused.reply()
         except Exception as error:
             code = refusal_code(error)
-            reply: dict[str, Any] = {"outcome": "refused", "code": code}
+            # A sign-in refusal keeps its reason, binding and wait, as the command line reports them.
+            reply: dict[str, Any] = {"outcome": "refused", "code": code, **refusal_facts(error)}
             if isinstance(error, RuntimeFrontendRefusedError) and error.request_faults:
                 # The runtime said why, in a registered error's code and message; every tool passes that on.
                 reply["faults"] = [public_value(fault) for fault in error.request_faults]

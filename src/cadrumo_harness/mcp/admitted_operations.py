@@ -53,7 +53,7 @@ from .operation_discovery import search_operations
 from .payload_vocabulary import PAYLOAD_VOCABULARY_MEMBER, payload_vocabulary
 from .protocol_contract import BY_REFERENCE_SUFFIX, parse_model, public_value, refusal_code
 from .result_request import resolve_result_request, stopped_operation_detail
-from .runtime_admission import McpAdmission, status_on_surface
+from .runtime_admission import AdmissionDenial, McpAdmission, status_on_surface
 from .session_acts import NO_SESSION, act_on_sessions
 
 _TIMEOUT = 30.0
@@ -65,7 +65,7 @@ class _AdmittedConnection(Protocol):
     client: RuntimeFrontendClient | None
     admission: McpAdmission | None
     surface: McpSurface
-    _admission_denial: str | None
+    _admission_denial: AdmissionDenial | None
     _contracts: OperationContractCache
 
     def _admitted(self) -> RuntimeFrontendClient: ...
@@ -125,9 +125,11 @@ def _unauthenticated_status(connection: _AdmittedConnection) -> dict[str, Any]:
         "authenticated": False,
         "session": NO_SESSION,
         "surface": connection.surface.name.value,
-        "denial": denial or "authentication_required",
+        "denial": "authentication_required" if denial is None else denial.code,
     }
-    if remedy := runtime_unavailable_remedy(denial):
+    if denial is not None:
+        reply.update(denial.facts())
+    if remedy := runtime_unavailable_remedy(None if denial is None else denial.code):
         reply["remedy"] = remedy
     return reply
 

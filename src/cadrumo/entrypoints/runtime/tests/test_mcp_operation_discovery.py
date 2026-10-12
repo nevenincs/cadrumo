@@ -100,7 +100,7 @@ async def test_with_nobody_signed_in_operations_are_found_and_described_and_the_
         assert _described(answers["patch"]) == _registry().describe_public_definition(_PATCH)
         assert answers["patch"]["payload_vocabulary"]["questions"]
         assert answers["unregistered"] == {"outcome": "refused", "code": "operation_denied"}
-        assert private == {"outcome": "refused", "code": "authentication_required"}
+        assert private == {"outcome": "refused", "code": "authentication_required", "sign_in_reason": "absent"}
         # Reading what exists presented no proof and was given no lease.
         assert runtime.profiles.logins == [] and runtime.leases() == ()
         assert adapter.client is None

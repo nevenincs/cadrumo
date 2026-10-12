@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
-from typing import Final
+from typing import Any, Final
 from uuid import UUID
 
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
@@ -14,10 +15,13 @@ from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.profile_access import status_admits_session
 from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode, ProfileAccessStatus
 from cadrumo.application.user_profile.login_session import ProfileReceiptRefusedError
+from cadrumo.application.user_profile.sign_in_refusals import SignInRefusal
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.errors.hierarchy import ActiveProfilePointerError
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo.core.time.clock import now
+
+from .protocol_contract import refusal_code, sign_in_refusal_facts
 
 
 class McpAdmission(StrEnum):
@@ -29,6 +33,32 @@ class McpAdmission(StrEnum):
     """Authenticated by an enrolled key, under the grant approved for it."""
     TYPED_SIGN_IN = "typed_sign_in"
     """Signed in with the profile password given to this connection; it is the person's session."""
+
+
+@dataclass(frozen=True, slots=True)
+class AdmissionDenial:
+    """Why the runtime last refused to admit a connection: its code and the sign-in facts it gave.
+
+    It is kept instead of the refusal itself, so a later call answers with
+    the same code and facts and holds no frame of the call that was refused.
+    """
+
+    code: str
+    sign_in: SignInRefusal | None = None
+
+    @classmethod
+    def of(cls, error: Exception) -> AdmissionDenial:
+        """Keep the public code and sign-in facts of one refused admission."""
+        sign_in = error.sign_in if isinstance(error, RuntimeFrontendRefusedError) else None
+        return cls(refusal_code(error), sign_in)
+
+    def facts(self) -> dict[str, Any]:
+        """Return the sign-in facts a reply carries beside the code."""
+        return sign_in_refusal_facts(self.sign_in)
+
+    def refusal(self) -> RuntimeFrontendRefusedError:
+        """Return a fresh refusal with the code and facts the runtime gave."""
+        return RuntimeFrontendRefusedError(self.code, sign_in=self.sign_in)
 
 
 _UNPRESENTED_SIGN_IN_REFUSALS: Final[dict[ProfileSessionRefusalReason, AccessDenialCode]] = {
@@ -118,7 +148,8 @@ def resume_shared_sign_in(client: RuntimeFrontendClient, *, profile_id: UUID) ->
     The client presents the stored proof and the runtime alone decides; its
     refusal is raised with the code it gave. Where there is no proof to
     present the runtime is not asked, and the refusal carries the code the
-    runtime gives a sign-in that is absent. No password travels here.
+    runtime gives a sign-in that is absent, with the reason and binding the
+    stored sign-in was refused for. No password travels here.
     """
     try:
         client.resume_receipt()
@@ -127,7 +158,10 @@ def resume_shared_sign_in(client: RuntimeFrontendClient, *, profile_id: UUID) ->
         if isinstance(answered, RuntimeFrontendRefusedError):
             raise answered from None
         denial = _UNPRESENTED_SIGN_IN_REFUSALS.get(refused.reason, AccessDenialCode.AUTHENTICATION_REQUIRED)
-        raise RuntimeFrontendRefusedError(denial.value) from None
+        # The reason the proof was not presented is told as the command line tells it.
+        raise RuntimeFrontendRefusedError(
+            denial.value, sign_in=SignInRefusal(reason=refused.reason, binding=refused.binding)
+        ) from None
     return require_exact_admitted_status(client, profile_id=profile_id, admission=McpAdmission.SIGN_IN)
 
 

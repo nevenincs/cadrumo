@@ -198,7 +198,7 @@ def _selection(root: Path, profile_id: UUID | None) -> AbstractContextManager[Se
     return override_settings(cadrumo_local_storage_root=root, cadrumo_active_profile=selected)
 
 
-def _no_session(profile_id: UUID | None, denial: str) -> dict[str, object]:
+def _no_session(profile_id: UUID | None, denial: str, **facts: object) -> dict[str, object]:
     return {
         "outcome": "status",
         "profile_id": None if profile_id is None else str(profile_id),
@@ -206,11 +206,12 @@ def _no_session(profile_id: UUID | None, denial: str) -> dict[str, object]:
         "session": "none",
         "surface": "full",
         "denial": denial,
+        **facts,
     }
 
 
-def _refused(code: str) -> dict[str, object]:
-    return {"outcome": "refused", "code": code}
+def _refused(code: str, **facts: object) -> dict[str, object]:
+    return {"outcome": "refused", "code": code, **facts}
 
 
 def test_the_selected_profile_is_read_from_the_installation_and_a_named_one_only_guards_it(tmp_path: Path) -> None:
@@ -264,55 +265,62 @@ async def test_the_tool_list_and_public_queries_answer_with_no_profile_and_nobod
 
 @pytest.mark.anyio
 @pytest.mark.parametrize(
-    ("refusal", "code"),
+    ("refusal", "code", "facts"),
     [
         pytest.param(
             _runtime_refusal(ProfileSessionRefusalReason.ABSENT, "authentication_required"),
             "authentication_required",
+            {},
             id="runtime-finds-no-sign-in",
         ),
         pytest.param(
             _runtime_refusal(ProfileSessionRefusalReason.EXPIRED_IDLE, "session_expired"),
             "session_expired",
+            {},
             id="runtime-finds-the-sign-in-timed-out",
         ),
         pytest.param(
             _runtime_refusal(ProfileSessionRefusalReason.CUSTODY_CHANGED, "custody_changed"),
             "custody_changed",
+            {},
             id="runtime-finds-custody-changed",
         ),
-        pytest.param(RuntimeFrontendRefusedError("needs_user"), "needs_user", id="runtime-needs-the-person"),
-        pytest.param(RuntimeRefusalError(RuntimeRefusalCode.DRAINING), "runtime_draining", id="runtime-draining"),
+        pytest.param(RuntimeFrontendRefusedError("needs_user"), "needs_user", {}, id="runtime-needs-the-person"),
+        pytest.param(RuntimeRefusalError(RuntimeRefusalCode.DRAINING), "runtime_draining", {}, id="runtime-draining"),
+        # A refusal met before the runtime is asked keeps its reason, as the command line reports it.
         pytest.param(
             ProfileReceiptRefusedError(ProfileSessionRefusalReason.ABSENT),
             "authentication_required",
+            {"sign_in_reason": "absent"},
             id="no-proof-to-present",
         ),
         pytest.param(
             ProfileReceiptRefusedError(ProfileSessionRefusalReason.KEYCHAIN_ENTRY_MISSING),
             "authentication_required",
+            {"sign_in_reason": "keychain_entry_missing"},
             id="proof-missing-from-the-keychain",
         ),
         pytest.param(
             ProfileReceiptRefusedError(ProfileSessionRefusalReason.KEYRING_UNAVAILABLE),
             "custody_unavailable",
+            {"sign_in_reason": "keyring_unavailable"},
             id="keychain-unavailable",
         ),
     ],
 )
 async def test_a_profile_call_with_nobody_signed_in_returns_the_refusal_after_one_attempt(
-    tmp_path: Path, runtime: _Runtime, refusal: Exception, code: str
+    tmp_path: Path, runtime: _Runtime, refusal: Exception, code: str, facts: dict[str, object]
 ) -> None:
     profile_id = uuid4()
     runtime.refusal = refusal
     adapter = _adapter()
     try:
         with _selection(tmp_path, profile_id):
-            assert await adapter.call(*_PROFILE_CALL) == _refused(code)
+            assert await adapter.call(*_PROFILE_CALL) == _refused(code, **facts)
             assert runtime.attempts == (1, 1)
             assert runtime.opened[0].close_count == 1
             assert adapter.client is None and adapter.admission is None
-            assert await adapter.call("status", {}) == _no_session(profile_id, code)
+            assert await adapter.call("status", {}) == _no_session(profile_id, code, **facts)
             # The status call needed the profile too, so it asked once more and no more than once.
             assert runtime.attempts == (2, 2)
             # Discovery asks the runtime for the session once as well, and answers without one.
