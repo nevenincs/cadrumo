@@ -130,6 +130,15 @@ class VerificationReportNotFoundError(ModeloError):
     """Raised when a verification report lookup fails."""
 
 
+class VerificationOutcomeIncompleteError(ModeloError):
+    """Raised when a revision's granting report was saved but the revision was never marked verified.
+
+    Verification persists its report before it locks the revision, so a run that
+    stops between the two leaves a draft beside a grant. Its outcome is not known
+    to have completed; running verification again settles it.
+    """
+
+
 class AmendmentEvidenceMissingError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when the modelo-amend path lacks imported official evidence."""
 
@@ -583,6 +592,7 @@ __all__ = [
     "ModeloRequiredBindingsMissingError",
     "ModeloWorkflowGateError",
     "StoredCalculationDriftError",
+    "VerificationOutcomeIncompleteError",
     "VerificationReportNotFoundError",
     "WorkUnitAlreadyDiscardedError",
     "WorkUnitMutationRefusedError",

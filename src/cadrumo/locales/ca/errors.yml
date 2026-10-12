@@ -289,6 +289,9 @@ errors:
       bloquejat: cal la reconciliació del wallet d''IVA'
     error_modelo_metadata_run: L’operació sobre les metadades del treball no ha retornat
       cap resultat confirmat. Consulta’n l’identificador abans de tornar-ho a provar.
+    error_modelo_verification_outcome_incomplete: 'La verificació d''aquesta revisió
+      de càlcul no va acabar: se''n va desar l''informe, però la revisió no es va
+      arribar a marcar com a verificada. Torna a executar la verificació per resoldre-ho.'
     error_modelo_verification_report_not_found: No s'ha trobat l'informe de verificació
       sol·licitat.
     error_modelo_work_unit_already_discarded: La unitat de treball ja està descartada.

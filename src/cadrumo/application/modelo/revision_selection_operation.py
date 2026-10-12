@@ -47,6 +47,7 @@ from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .action_errors import VerificationOutcomeIncompleteError
 from .metadata_projection import ModeloWorkMetadataSnapshot
 from .selectors import (
     ModeloCalculationRevisionDefault,
@@ -220,6 +221,11 @@ def _filed_amendment_without_grant(revision: CalculationRevision, granting: tupl
     )
 
 
+def _verification_left_incomplete(revision: CalculationRevision, granting: tuple[VerificationReport, ...]) -> bool:
+    """Recognize a verification that saved its grant and stopped before locking the revision."""
+    return len(granting) == 1 and revision.state is CalculationRevisionState.BORRADOR and revision.verified_at is None
+
+
 def _require_selected_revision_grant_evidence(
     revision: CalculationRevision,
     unit: WorkUnit,
@@ -277,6 +283,16 @@ def _capture(
         bundle.verification.load(operation=operation.authority_operation), operation=operation.authority_operation
     ).for_calculation_revision(revision.calculation_revision_id)
     granting = tuple(report for report in reports if report.granted_verificado_completo)
+    if _verification_left_incomplete(revision, granting):
+        # The revision is the caller's own and its outcome is not known to have
+        # completed, so this is not an access denial. Verification settles it by
+        # running again on the draft; every other use is told that outcome.
+        if payload.default_for != "verify":
+            raise VerificationOutcomeIncompleteError(
+                translated_message="errors.error.error_modelo_verification_outcome_incomplete",
+                context={"calculation_revision_id": revision.calculation_revision_id},
+            )
+        granting = ()
     _require_selected_revision_grant_evidence(revision, unit, bundle, payload.profile_id, granting)
     return ModeloWorkRevisionProjection(
         profile_id=payload.profile_id,

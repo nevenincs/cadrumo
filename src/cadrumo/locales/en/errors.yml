@@ -267,6 +267,9 @@ errors:
       IVA wallet reconciliation is required'
     error_modelo_metadata_run: The work metadata operation did not return a confirmed
       result. Inspect its operation ID before retrying.
+    error_modelo_verification_outcome_incomplete: 'Verification of this calculation
+      revision did not finish: its report was saved, but the revision was never marked
+      verified. Run verify again to settle it.'
     error_modelo_verification_report_not_found: The requested verification report
       was not found.
     error_modelo_work_unit_already_discarded: The work unit is already discarded.

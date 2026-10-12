@@ -276,6 +276,9 @@ errors:
       az IVA tárca egyeztetése szükséges'
     error_modelo_metadata_run: A munka metaadatain végzett művelet nem adott megerősített
       eredményt. Újrapróbálás előtt ellenőrizd a művelet azonosítóját.
+    error_modelo_verification_outcome_incomplete: 'A számítás-revízió ellenőrzése
+      nem fejeződött be: a jelentése elmentődött, de a revíziót nem jelölte meg ellenőrzöttként.
+      Futtasd újra az ellenőrzést a rendezéséhez.'
     error_modelo_verification_report_not_found: A kért ellenőrzési jelentés nem található.
     error_modelo_work_unit_already_discarded: A munkajegység már el van vetve.
     error_modelo_work_unit_mutation_refused: Egy elvetett munkajegység nem módosítható.

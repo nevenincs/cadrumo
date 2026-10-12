@@ -287,6 +287,9 @@ errors:
       bloqueado: se requiere la reconciliación del wallet de IVA'
     error_modelo_metadata_run: La operación sobre los metadatos del trabajo no devolvió
       un resultado confirmado. Consulta su identificador antes de volver a intentarlo.
+    error_modelo_verification_outcome_incomplete: 'La verificación de esta revisión
+      de cálculo no terminó: su informe se guardó, pero la revisión no llegó a marcarse
+      como verificada. Vuelve a ejecutar la verificación para resolverlo.'
     error_modelo_verification_report_not_found: No se encontró el informe de verificación
       solicitado.
     error_modelo_work_unit_already_discarded: La unidad de trabajo ya está descartada.
