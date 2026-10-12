@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:b60c2dc71d70c75ce3181bc511b2e5cb94230ce4dd9d07d664bf3d4703de6029'
+body_hash: 'sha256:2ea92809efafa0b9c7f7b85cf7588f3854f15b49f479d52f611379a3f035fe9a'
 related:
   - "[[2026-10-04-application-sign-in-plan]]"
 ---
@@ -232,6 +232,12 @@ related:
 - `S10` `verify:` `just check-types (31 ty findings in dev/ and adapters/local_runtime/tests/test_posix.py, none in this Step's files)` -> `fail`
 - `S10` `verify:` `just check-import-boundaries (unavailable: governed tree changed mid-run)` -> `fail`
 - `S10` `verify:` `test_session_authority, test_session_events (runtime), test_recovery_revocation in that run` -> `pass`
+- `S11` `verify:` `focused sign-in pytest over 28 runtime/adapter/CLI/TUI modules -n 4: 343 passed 7 failed; 6 of 7 pass rerun -n0 (load deadline timeouts), 1 fixed under S13` -> `pass`
+- `S11` `verify:` `just check-style` -> `pass`
+- `S11` `verify:` `just check-format (4 findings, none in this Step's files)` -> `fail`
+- `S11` `verify:` `just check-types (31 ty findings in dev/ and adapters/local_runtime/tests/test_posix.py, none in this Step's files)` -> `fail`
+- `S11` `verify:` `just check-import-boundaries (unavailable: governed tree changed mid-run)` -> `fail`
+- `S11` `verify:` `adapters/local_runtime test_session_events and entrypoints/runtime test_session_events in that run` -> `pass`
 
 ## Notes
 
@@ -249,3 +255,4 @@ related:
 - `S07` Implemented before this ledger resumed `(profile_connection_sessions` human sign-out, `application/runtime/sign_in.py,` `frontend_client` `human_sign_out);` closed on test evidence.
 - `S08` Implemented before this ledger resumed `(profile_connection_sessions,` `entrypoints/runtime/sign_in_status.py);` closed on test evidence.
 - `S10` Implemented before this ledger resumed `(session_authority_core` retire point with SessionRetirementKind); closed on test evidence.
+- `S11` Implemented before this ledger resumed `(runtime_frame_io` event frames, `session_events` queue bound 64, `server_connection_handling,` `runtime_verified_transport);` closed on test evidence.

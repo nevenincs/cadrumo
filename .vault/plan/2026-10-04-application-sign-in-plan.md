@@ -8,7 +8,7 @@ related:
   - '[[2026-10-04-application-sign-in-adr]]'
 modified: '2026-10-12'
 body_schema: body-v2
-body_hash: 'sha256:5ccc47ceb529dc8502f9574396a5e9ce2a8e3b379c2f45bf52e90bef03fb8236'
+body_hash: 'sha256:3ad7fb69cf33eff50754394fe2cac4481b142f1bea42e1dabdce987a97de49d0'
 ---
 
 # `application-sign-in` plan
@@ -54,7 +54,7 @@ Runtime-owned shared sign-in: three-state lock observation, durable generation, 
 Pushed revocation events from a single reason-carrying retire point over a new event frame kind.
 
 - [x] `P02.S10` - Carry a reason through the session retire point, including lazy retirements, so every retirement is observable once; `src/cadrumo/application/user_profile/session_authority_core.py, src/cadrumo/entrypoints/runtime/profile_connection_sessions.py, owning tests`.
-- [ ] `P02.S11` - Add the session event frame kind with client-side demultiplexing and a bounded non-blocking per-connection queue that emits after commit and closes the connection on overflow; `src/cadrumo/adapters/local_runtime/framing.py, server_connection_handling.py, runtime_client.py, frontend_client.py, owning tests`.
+- [x] `P02.S11` - Add the session event frame kind with client-side demultiplexing and a bounded non-blocking per-connection queue that emits after commit and closes the connection on overflow; `src/cadrumo/adapters/local_runtime/framing.py, server_connection_handling.py, runtime_client.py, frontend_client.py, owning tests`.
 
 ### Phase `P03` - Legacy retirement
 
