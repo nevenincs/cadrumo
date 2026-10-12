@@ -5,7 +5,7 @@ tags:
 date: '2026-10-11'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:92886fb728f3d95392e42b305132a527f6f85863b91d0aef28c7ee64bdff9806'
+body_hash: 'sha256:0fe64d8fd08841b955327a0218606f98524f0fa575e17f8f3def6e24cee6c66e'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -246,6 +246,18 @@ Review 7. Resolved 2026-10-12: the writers are under `dev/harness_data`, and the
 
 Five exception classes rooted only at a builtin base; a test naming a storage location with a path literal; the terminal interface composing the operation registry outside the installed session; a test pinning a refusal's members without the request faults. Found 2026-10-12 after the phase closed. Resolved the same day.
 
+### validator-wording-taken-from-the-command-line | high | Closing a low finding reworded eleven request validators and took their guidance from the command line
+
+`request-fault-message-heuristic` above was first closed by a registry-wide scan and by rewording eleven validators so that their messages quote no refused value, among them `src/cadrumo/application/modelo/query_read_contracts.py`, `src/cadrumo/domain/calculations/registry/tax_id_format.py` and `src/cadrumo/core/parsing/dates.py`. Those messages are what a person at the command line reads, and several were registered errors with guidance: a retired period token on `app modelo bindings list` lost the token to use instead and ended in the crash funnel. Found 2026-10-12 by a wide test pass. Resolved the same day: each validator is restored byte for byte, the scan is deleted, and a request fault carries the validator's own message, the text the command line shows, on every frontend; it never attaches pydantic's input, context or link. This supersedes the resolution recorded under `request-fault-message-heuristic`. The lesson is the one the owner gave: nothing is taken from any frontend to tighten another.
+
+### worker-ends-on-registered-error | high | A registered error raised while a worker decoded or admitted a request ended the profile worker
+
+A typed error that is not a validation error escaped the worker's dispatch loop: `src/cadrumo/entrypoints/runtime/operation_host.py:652` on a request payload and on a financial operand, and `src/cadrumo/entrypoints/runtime/operation_authority.py:366` when an access resolver raised one during admission, as `modelo.work.rename` does for a work unit that does not exist. The client was told the connection had closed and every later call on the session failed. Predates this work; reachable from any frontend that submits directly. Found 2026-10-12. Resolved the same day for a fresh submission: the worker answers invalid with one fault carrying the error's registered code and the message the command line prints, and the session serves on. Open: a registered error from an access resolver on a later action, start, resume, observe, result or respond, and a plain `ValueError` or `KeyError` from a resolver, still escape the loop; converting them inside an executor's commit guard would change the recorded error, so that is a decision for the record that governs the operation supervisor.
+
+### worker-stand-in-signature | medium | The command-line tests' worker stand-in rejected the argument the wiring added
+
+`src/cadrumo/entrypoints/cli/tests/portable_human_cli_runtime.py:248`. About 320 command-line tests that sign in failed when the runtime built its worker, and a wide pass run beside other work had made them look like load. Found 2026-10-12. Resolved the same day. A failure is confirmed alone and by its traceback before it is called load.
+
 ## Recommendations
 
 - The recommendations below that ask the admission rulings record, the file-exchange record or the approval record for a decision are withdrawn with `refusals-withdrawn`: the first is superseded and the others are rejected, and the owner's ruling leaves no such decision open. `reader-network-fact`, `workflow-run-detail`, `surface-real-policy` and `purchase-link-outside-fingerprint` are unaffected.
@@ -263,3 +275,4 @@ Five exception classes rooted only at a builtin base; a test naming a storage lo
 - For `decision-coverage`: decide whether the four mechanisms are recorded as commitments, in an amendment to the full-parity record or in records of their own, before another product builds on any of them.
 - For `spreadsheet-push-unavailable`: verify by running the command, and decide in the record that governs the Google export which operation it submits.
 - For `gate-limits`: give the session-door commands a test that holds each command's output to the session tool's reply, so the pairs can leave the unproven list.
+- For `worker-ends-on-registered-error`: decide, in the record that governs the operation supervisor, what a worker answers when an access resolver raises on an action after admission, so that one request cannot end the session for the others.

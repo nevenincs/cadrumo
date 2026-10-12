@@ -6,8 +6,8 @@ Core types: :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator
-from contextlib import ExitStack, asynccontextmanager
+from collections.abc import AsyncGenerator, Generator
+from contextlib import ExitStack, asynccontextmanager, contextmanager
 from datetime import timedelta
 from math import isfinite
 from typing import TYPE_CHECKING
@@ -93,6 +93,29 @@ if TYPE_CHECKING:
 _PROJECTION_DOCUMENT = TypeAdapter(dict[str, JsonValue])
 _log = get_logger(__name__)
 _PRIVATE_RESULT_RELEASE_ACTIONS = frozenset({AccessAction.RESULT, AccessAction.REVIEW})
+
+
+@contextmanager
+def _refusing_what_its_readers_refuse() -> Generator[None]:
+    """Answer whatever refuses a caller's document while it is read as an invalid request that says why.
+
+    Every frontend is told what the validator said, as the command line shows
+    it. A validator can also refuse with a registered error the model does not
+    wrap: that is the same refusal, with the error's code and message, and it
+    must not end the worker that every session of the profile shares.
+    """
+    try:
+        yield
+    except ValidationError as refused:
+        faults = request_faults(refused)
+        raise AutomationCustodyError(AutomationCustodyCode.INVALID, request_faults=faults) from None
+    except (AutomationCustodyError, ProfileAccessRefusedError):
+        raise
+    except CadrumoError as refused:
+        faults = (registered_error_fault(refused),)
+        raise AutomationCustodyError(AutomationCustodyCode.INVALID, request_faults=faults) from None
+    except (ValueError, TypeError, RecursionError):
+        raise AutomationCustodyError(AutomationCustodyCode.INVALID) from None
 
 
 class ProfileWorkerOperationHost:
@@ -590,16 +613,14 @@ class ProfileWorkerOperationHost:
         contract = self.contract(session_id, definition_id)
         if contract.transient_financial_operand is None:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-        try:
-            with validating_governed_facts(self._pinned()):
-                prepared = prepare_modelo_edit_operand(
-                    definition_id=definition_id,
-                    profile_id=self.custody.identity.binding.profile_id,
-                    subject_ref=subject_ref,
-                    input_json=input_json,
-                )
-        except (ValueError, TypeError, RecursionError, OperationFinancialOperandRefusedError):
-            raise AutomationCustodyError(AutomationCustodyCode.INVALID) from None
+        # A fault of the operand is a validator's message and never the operand itself.
+        with _refusing_what_its_readers_refuse(), validating_governed_facts(self._pinned()):
+            prepared = prepare_modelo_edit_operand(
+                definition_id=definition_id,
+                profile_id=self.custody.identity.binding.profile_id,
+                subject_ref=subject_ref,
+                input_json=input_json,
+            )
         input_json = ""
 
         async def transfer() -> OperationSubmission:
@@ -620,9 +641,10 @@ class ProfileWorkerOperationHost:
                 supervisor = self._composed().submission.supervisor
                 try:
                     await supervisor.bind_typed_financial_operand(submitted.receipt.operation_id, operand)
-                except OperationFinancialOperandRefusedError:
+                except OperationFinancialOperandRefusedError as refused:
                     await supervisor.refuse_unstarted_financial_input(submitted.receipt.operation_id)
-                    raise AutomationCustodyError(AutomationCustodyCode.INVALID) from None
+                    faults = (registered_error_fault(refused),)
+                    raise AutomationCustodyError(AutomationCustodyCode.INVALID, request_faults=faults) from None
                 finally:
                     del operand
                 return submitted
@@ -645,22 +667,8 @@ class ProfileWorkerOperationHost:
         self.contract(session_id, definition_id)
         if self._execution is None:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        try:
-            with validating_governed_facts(self._pinned()):
-                payload = self._execution.registry.decode_request_payload(definition_id, payload_json)
-        except ValidationError as refused:
-            # Every frontend is told what the validator said, as the command line shows it.
-            faults = request_faults(refused)
-            raise AutomationCustodyError(AutomationCustodyCode.INVALID, request_faults=faults) from None
-        except (AutomationCustodyError, ProfileAccessRefusedError):
-            raise
-        except CadrumoError as refused:
-            # A validator can refuse with a registered error the model does not wrap. It is the
-            # request that is refused, with that error's code and message, and the worker serves on.
-            faults = (registered_error_fault(refused),)
-            raise AutomationCustodyError(AutomationCustodyCode.INVALID, request_faults=faults) from None
-        except (ValueError, TypeError, RecursionError):
-            raise AutomationCustodyError(AutomationCustodyCode.INVALID) from None
+        with _refusing_what_its_readers_refuse(), validating_governed_facts(self._pinned()):
+            payload = self._execution.registry.decode_request_payload(definition_id, payload_json)
         return await self.submit(
             session_id=session_id,
             frontend=frontend,

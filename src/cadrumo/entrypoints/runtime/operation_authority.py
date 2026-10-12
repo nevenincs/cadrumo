@@ -14,6 +14,7 @@ from pydantic import BaseModel, SecretBytes
 
 from ...adapters.local_runtime.worker_authorization_client import WorkerAuthorizationClient
 from ...adapters.local_runtime.worker_authorization_lease import WorkerAuthorizationLease
+from ...adapters.persistence.storage.errors import StorageError
 from ...adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
 from ...application.auth.operation_definitions import (
     PROFILE_ROTATION_OPERATION_DEFINITION_ID,
@@ -49,6 +50,7 @@ from ...application.user_profile.access_contracts import (
     SessionKind,
 )
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
+from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ...application.user_profile.automation_enrollment import AutomationInventory, EnrollmentTransition
 from ...application.user_profile.automation_operations import (
     AUTOMATION_APPROVE_OPERATION_DEFINITION_ID,
@@ -63,8 +65,10 @@ from ...application.workbench_generation_operation import (
 )
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.diagnostic_log import diagnostic_scope, diagnostic_timing_event
+from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import content_hash_hex
 from ...core.logging import get_logger
+from ...core.request_faults import registered_error_fault
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 
@@ -360,21 +364,31 @@ class ProfileWorkerOperationAuthority:
         # Resolving persisted scope can decode governed facts before the
         # execution guard is entered. It uses the same retained publication
         # as execution, including repository validation of calculation rows.
-        with validating_governed_facts(self._authority_operation):
-            return resolve_operation_access(
-                registry=self.registry,
-                request=request,
-                context=OperationAccessContext(
-                    profile_id=self.custody.identity.binding.profile_id,
-                    destination_id=lease.client_id,
-                    action=action,
-                    frontend=binding.frontend,
-                    contract=contract,
-                    published_authority=Availability.AVAILABLE,
-                    admitted_request=provenance.admitted_request if provenance is not None else None,
-                    authority_operation=self._authority_operation,
-                ),
-            )
+        try:
+            with validating_governed_facts(self._authority_operation):
+                return resolve_operation_access(
+                    registry=self.registry,
+                    request=request,
+                    context=OperationAccessContext(
+                        profile_id=self.custody.identity.binding.profile_id,
+                        destination_id=lease.client_id,
+                        action=action,
+                        frontend=binding.frontend,
+                        contract=contract,
+                        published_authority=Availability.AVAILABLE,
+                        admitted_request=provenance.admitted_request if provenance is not None else None,
+                        authority_operation=self._authority_operation,
+                    ),
+                )
+        except (ProfileAccessRefusedError, AutomationCustodyError, StorageError):
+            raise
+        except CadrumoError as refused:
+            if action is not AccessAction.SUBMIT or provenance is not None:
+                raise
+            # Nothing is admitted or recorded yet, so a registered error about what the request
+            # names refuses the request, with its own code and message, and the worker serves on.
+            faults = (registered_error_fault(refused),)
+            raise AutomationCustodyError(AutomationCustodyCode.INVALID, request_faults=faults) from None
 
     def _require_current_scope(
         self,

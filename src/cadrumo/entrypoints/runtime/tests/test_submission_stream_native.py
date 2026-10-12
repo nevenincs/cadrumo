@@ -40,6 +40,10 @@ from cadrumo.application.modelo.edit_models import (
 from cadrumo.application.modelo.edit_operator_input import ModeloEditOperatorInputV2
 from cadrumo.application.modelo.operation_definitions import MODELO_WORK_RENAME_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.work_change_contracts import ModeloWorkRenamePublicResultV2, ModeloWorkRenameRequest
+from cadrumo.application.operations.financial_operand_contract import (
+    OperationFinancialOperandRefusalCode,
+    OperationFinancialOperandRefusedError,
+)
 from cadrumo.application.operations.frontend_requests import (
     OPERATION_OBSERVATION_PROJECTION_ID,
     OperationObservationRequestV1,
@@ -85,8 +89,11 @@ from cadrumo.application.user_profile.access_contracts import (
     DisclosureCategory,
     DisclosurePermission,
 )
+from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
+from cadrumo.core.errors.error_codes import build_error_envelope
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
+from cadrumo.core.request_faults import RequestFault
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
@@ -558,3 +565,56 @@ def test_native_financial_batch_uses_volatile_intake_and_amount_free_journals(
                 assert "9876.54" not in text and "scalar_intents" not in text and "binding_intents" not in text
     finally:
         client.close()
+
+
+@pytest.mark.parametrize("native_bulk_runtime", ("financial",), indirect=True)
+def test_native_financial_input_its_readers_refuse_is_answered_with_their_reasons_and_the_session_serves_on(
+    native_bulk_runtime: _NativeBulkRuntime,
+) -> None:
+    """A refused operand comes back as faults that never hold the operand, and the worker keeps serving."""
+    runtime = native_bulk_runtime
+    encoded = runtime.edit_input
+    assert encoded is not None
+    unread = json.loads(encoded.model_dump_json())
+    unread["submission"]["binding_intents"][0]["synthetic_member"] = "synthetic"
+    client = _connect(runtime.endpoint)
+    try:
+        session_id = _admit(client, runtime.profile_id, method="password", proof=PROFILE_INPUT.encode())
+
+        def submit(subject_ref: str, payload_json: str) -> RuntimeOperationSubmitted | RuntimeAccessRefusal:
+            reply = client.operation(
+                RuntimeOperationFinancialInput(
+                    request_id=uuid4(),
+                    profile_id=runtime.profile_id,
+                    session_id=session_id,
+                    definition_id="modelo.edit.preflight",
+                    subject_ref=subject_ref,
+                    payload_json=payload_json,
+                ),
+                deadline=time.monotonic() + 20,
+            )
+            assert isinstance(reply, RuntimeOperationSubmitted | RuntimeAccessRefusal), reply
+            return reply
+
+        by_the_model = submit(runtime.work_unit.work_unit_id, json.dumps(unread))
+        # The operand is whole, and its baseline belongs to another work unit than the one addressed.
+        by_a_registered_error = submit("f" * 64, encoded.model_dump_json())
+        accepted = submit(runtime.work_unit.work_unit_id, encoded.model_dump_json())
+    finally:
+        client.close()
+
+    assert isinstance(by_the_model, RuntimeAccessRefusal), by_the_model
+    assert by_the_model.code is AutomationCustodyCode.INVALID
+    assert [(fault.location, fault.type) for fault in by_the_model.request_faults] == [
+        (("submission", "binding_intents", 0, "synthetic_member"), "extra_forbidden")
+    ]
+    assert "9876.54" not in by_the_model.model_dump_json()
+    printed = build_error_envelope(
+        OperationFinancialOperandRefusedError(OperationFinancialOperandRefusalCode.WRONG_BASELINE)
+    )
+    assert isinstance(by_a_registered_error, RuntimeAccessRefusal), by_a_registered_error
+    assert by_a_registered_error.code is AutomationCustodyCode.INVALID
+    assert by_a_registered_error.request_faults == (
+        RequestFault(location=(), type=printed.code, message=printed.message),
+    )
+    assert isinstance(accepted, RuntimeOperationSubmitted), accepted

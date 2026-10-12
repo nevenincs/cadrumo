@@ -23,6 +23,8 @@ import pytest
 
 from cadrumo.application.ledger.classify_requests import LEDGER_CLASSIFY_OPERATION_DEFINITION_ID
 from cadrumo.application.ledger.own_account_operation import LEDGER_OWN_ACCOUNT_OPERATION_DEFINITION_ID
+from cadrumo.application.modelo.action_errors import WorkUnitNotFoundError
+from cadrumo.application.modelo.operation_definitions import MODELO_WORK_RENAME_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.query_read_contracts import ModeloBindingsListRequest
 from cadrumo.application.modelo.query_read_operation import MODELO_BINDINGS_LIST_OPERATION_DEFINITION_ID
 from cadrumo.core.config import override_settings
@@ -177,6 +179,45 @@ async def test_a_registered_refusal_raised_while_a_request_is_read_reaches_the_c
     assert (printed.code, "EVENT-N" in printed.message) == ("INTEGRITY_PERIOD", True)
     assert _faults(refused) == {(): (printed.code, printed.message)}
     assert again == refused
+
+
+@pytest.mark.anyio
+async def test_a_registered_refusal_about_what_a_request_names_is_answered_and_the_session_serves_on(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    unknown = "synthetic-unit-that-does-not-exist"
+    with (
+        stored_sign_in_runtime(tmp_path, monkeypatch) as runtime,
+        override_settings(cadrumo_active_profile=str(runtime.profile_id)),
+    ):
+        adapter = _adapter()
+        try:
+            # The request fits its model; resolving whose work it names is what refuses it.
+            refused = await adapter.call(
+                "execute",
+                {
+                    "definition_id": MODELO_WORK_RENAME_OPERATION_DEFINITION_ID,
+                    "payload": {
+                        "work_unit_id": unknown,
+                        "new_name": "synthetic new name",
+                        "observed_name": "synthetic old name",
+                        "observed_updated_at": "2026-01-01T00:00:00Z",
+                        "actor": "synthetic-actor",
+                    },
+                },
+            )
+            served = await _execute(adapter, runtime, MODELO_BINDINGS_LIST_OPERATION_DEFINITION_ID, catalogue_only=True)
+        finally:
+            await adapter.close()
+        printed = build_error_envelope(
+            WorkUnitNotFoundError(
+                translated_message="application.modelo.errors.work_unit_not_found", context={"work_unit_id": unknown}
+            )
+        )
+
+    assert printed.code == "ERROR_MODELO_WORK_UNIT_NOT_FOUND"
+    assert _faults(refused) == {(): (printed.code, printed.message)}
+    assert served["outcome"] == "submitted", served
 
 
 @pytest.mark.anyio
