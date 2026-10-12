@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-12 18:03+0200\n"
+"POT-Creation-Date: 2026-10-12 20:05+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0000\n"
 "Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -25,25 +25,28 @@ msgstr "Connectar un agent (MCP)"
 #: ../../how-to/connect-an-agent.md:3
 msgid ""
 "The installed `cadrumo-mcp` command connects an MCP client to Cadrumo's "
-"local runtime. A connection works in one of two ways: it follows your own"
-" Cadrumo sign-in, or it uses a key you issued for one profile. Either way"
-" the agent works only inside that one profile, never signs in and never "
-"handles a secret. With neither a live sign-in nor a valid key it answers "
-"only its tool list and `status`, which tells it to ask you to sign in to "
-"Cadrumo. The client can run only operations allowed by its current "
-"session and, for a key, its grant."
+"local runtime. A connection works in one of three ways: it follows your "
+"own Cadrumo sign-in, it uses a key you issued for one profile, or you "
+"approve it to follow a sign-in you hold open (see \"Hold a sign-in for an"
+" agent\" below). Whichever way, the agent works only inside that one "
+"profile, never signs in and never handles a secret. With none of these it"
+" answers only its tool list and `status`, which tells it to ask you to "
+"sign in to Cadrumo. The client can run only operations allowed by its "
+"current session and, for a key, its grant."
 msgstr ""
 "L'ordre instal·lada `cadrumo-mcp` connecta un client MCP a l'entorn local"
-" de Cadrumo. Una connexió funciona d'una de dues maneres: segueix el teu "
-"propi inici de sessió a Cadrumo o fa servir una clau que vas emetre per a"
-" un perfil. En tots dos casos l'agent treballa només dins d'aquest "
-"perfil, mai no inicia sessió i mai no gestiona cap secret. Sense un inici"
-" de sessió vigent ni una clau vàlida només respon a la seva llista "
-"d'eines i a `status`, que li indica que et demani que iniciïs sessió a "
-"Cadrumo. El client només pot executar les operacions que permet la seva "
-"sessió actual i, amb una clau, la seva concessió."
+" de Cadrumo. Una connexió funciona d'una de tres maneres: segueix el teu "
+"propi inici de sessió a Cadrumo, fa servir una clau que vas emetre per a "
+"un perfil, o l'aproves perquè segueixi un inici de sessió que mantens "
+"obert (consulta «Mantenir un inici de sessió per a un agent» més avall). "
+"Sigui com sigui, l'agent treballa només dins d'aquest perfil, mai no "
+"inicia sessió i mai no gestiona cap secret. Sense cap d'elles només "
+"respon a la seva llista d'eines i a `status`, que li indica que et demani"
+" que iniciïs sessió a Cadrumo. El client només pot executar les "
+"operacions que permet la seva sessió actual i, amb una clau, la seva "
+"concessió."
 
-#: ../../how-to/connect-an-agent.md:11
+#: ../../how-to/connect-an-agent.md:12
 msgid ""
 "Before connecting an agent or managing its access, set up the intended "
 "profile using [Set up a profile](profile-setup.md) and sign in to it. "
@@ -53,11 +56,11 @@ msgstr ""
 "desitjat seguint [Configura un perfil](profile-setup.md) i inicia-hi la "
 "sessió. Comprovar la instal·lació no requereix autenticar-se al perfil."
 
-#: ../../how-to/connect-an-agent.md:15
+#: ../../how-to/connect-an-agent.md:16
 msgid "Check the installation"
 msgstr "Comprovar la instal·lació"
 
-#: ../../how-to/connect-an-agent.md:21
+#: ../../how-to/connect-an-agent.md:22
 msgid ""
 "If `cadrumo-mcp` is unavailable, install Cadrumo first; see [Get "
 "Cadrumo](../download.md). The command and the `aeat` CLI ship in the same"
@@ -72,11 +75,11 @@ msgstr ""
 "és de confiança, la connexió es rebutja; connectar-se no instal·la ni "
 "inicia cap servei."
 
-#: ../../how-to/connect-an-agent.md:27
+#: ../../how-to/connect-an-agent.md:28
 msgid "Register the server"
 msgstr "Registrar el servidor"
 
-#: ../../how-to/connect-an-agent.md:29
+#: ../../how-to/connect-an-agent.md:30
 msgid ""
 "The `--profile-id` argument is optional; see \"Following your sign-in\" "
 "below. To name a profile, find its ID in Cadrumo. CLI output hides "
@@ -93,7 +96,7 @@ msgstr ""
 "revela els ID opacs de perfil i dipòsit; les credencials continuen "
 "ocultes."
 
-#: ../../how-to/connect-an-agent.md:38
+#: ../../how-to/connect-an-agent.md:39
 msgid ""
 "Register `cadrumo-mcp` as a stdio server in your MCP client. For clients "
 "that accept a JSON server definition:"
@@ -101,7 +104,7 @@ msgstr ""
 "Registra `cadrumo-mcp` com a servidor stdio al teu client MCP. Per als "
 "clients que accepten una definició de servidor en JSON:"
 
-#: ../../how-to/connect-an-agent.md:52
+#: ../../how-to/connect-an-agent.md:53
 msgid ""
 "Use a separate server entry for each profile you name. Keep credentials "
 "out of the configuration and out of the conversation. The agent never "
@@ -118,7 +121,7 @@ msgstr ""
 "per a ell. Que iniciïs el servidor amb `--credential-reference` decideix "
 "com es connecta."
 
-#: ../../how-to/connect-an-agent.md:59
+#: ../../how-to/connect-an-agent.md:60
 msgid ""
 "**Following your sign-in.** Start the server without `--credential-"
 "reference`. It follows your own Cadrumo sign-in. While nobody is signed "
@@ -149,7 +152,7 @@ msgstr ""
 "rebutja amb `profile_mismatch` i comences una nova sessió d'agent per a "
 "l'altre perfil."
 
-#: ../../how-to/connect-an-agent.md:71
+#: ../../how-to/connect-an-agent.md:72
 msgid ""
 "Your sign-in governs this session. When you sign out, lock, sign in to "
 "another profile, or the sign-in reaches its deadline, the session ends "
@@ -168,7 +171,7 @@ msgstr ""
 "en un altre perfil tanca la del primer arreu, incloses les seves sessions"
 " d'agent."
 
-#: ../../how-to/connect-an-agent.md:78
+#: ../../how-to/connect-an-agent.md:79
 msgid ""
 "**With a key you issued.** Start the server with `--profile-id` and "
 "`--credential-reference`. Issue the key yourself with `aeat config "
@@ -193,7 +196,7 @@ msgstr ""
 "restableix l'accés o emet una clau de substitució i canvia la "
 "configuració."
 
-#: ../../how-to/connect-an-agent.md:89
+#: ../../how-to/connect-an-agent.md:90
 msgid ""
 "Either way, the `status` tool reports whether the connection's session is"
 " `none`, `sign_in` or `key`, and which surface it serves."
@@ -201,7 +204,7 @@ msgstr ""
 "En qualsevol cas, l'eina `status` informa de si la sessió de la connexió "
 "és `none`, `sign_in` o `key`, i de quina superfície serveix."
 
-#: ../../how-to/connect-an-agent.md:92
+#: ../../how-to/connect-an-agent.md:93
 msgid ""
 "The optional `--surface NAME` argument pins the view of the server that "
 "the connection is served. Without it the server uses `full`, which "
@@ -224,7 +227,7 @@ msgstr ""
 "mode de només lectura. Un nom desconegut atura el servidor en arrencar, "
 "abans de cap connexió, i l'error enumera les vistes disponibles."
 
-#: ../../how-to/connect-an-agent.md:101
+#: ../../how-to/connect-an-agent.md:102
 msgid ""
 "Under a session, `corpus_search` searches the bundled BOE/AEAT corpus and"
 " approved tax terminology. Supply `query` and optionally `limit` (1–50). "
@@ -239,11 +242,11 @@ msgstr ""
 "coincidències de terminologia. La resposta identifica la generació de "
 "publicació utilitzada per cercar la cita."
 
-#: ../../how-to/connect-an-agent.md:107
+#: ../../how-to/connect-an-agent.md:108
 msgid "Work through the connection"
 msgstr "Treballa a través de la connexió"
 
-#: ../../how-to/connect-an-agent.md:109
+#: ../../how-to/connect-an-agent.md:110
 msgid ""
 "`search` ranks the operations the session may use by the query, using "
 "their current contracts and request vocabulary; omit the query to list "
@@ -280,7 +283,7 @@ msgstr ""
 "`error_detail` el codi, el missatge i el context registrats, com els "
 "imprimeix la línia d'ordres."
 
-#: ../../how-to/connect-an-agent.md:124
+#: ../../how-to/connect-an-agent.md:125
 msgid ""
 "Read a settled operation's approved projection with `result`. For a large"
 " result, use `result_page` with the same result request and an initial "
@@ -299,7 +302,7 @@ msgstr ""
 "autorització vigent; un bloqueig o una revocació poden impedir rebre les "
 "pàgines restants. Un document incomplet no és un resultat complet."
 
-#: ../../how-to/connect-an-agent.md:131
+#: ../../how-to/connect-an-agent.md:132
 msgid ""
 "An agent connected through MCP can run every operation the command line "
 "can run inside its profile, with the same results, under the session it "
@@ -319,11 +322,11 @@ msgstr ""
 "agent no autoritza la presentació davant l'AEAT. Revisa tu la declaració "
 "preparada com es descriu a la [guia de presentació](file-at-aeat.md)."
 
-#: ../../how-to/connect-an-agent.md:139
+#: ../../how-to/connect-an-agent.md:140
 msgid "Acts that stay yours"
 msgstr "Actes que continuen sent teus"
 
-#: ../../how-to/connect-an-agent.md:141
+#: ../../how-to/connect-an-agent.md:142
 msgid ""
 "Some acts are yours alone, and the agent is refused them with "
 "`person_act_required` and a `remedy` that tells it to ask you: signing in"
@@ -331,9 +334,12 @@ msgid ""
 "rotating or revoking keys, changing or resetting the password, enabling "
 "or using recovery, and any operation that needs a password, a key or "
 "another secret, such as configuring a certificate secret or exporting the"
-" profile bundle. So is work that belongs to no single profile: inspecting"
-" and reclaiming storage, resetting all profiles, listing profiles, "
-"inspecting and importing a profile archive, diagnosing and repairing the "
+" profile bundle. So is your consent to send a stored document to a hosted"
+" model: the agent may ask for the extraction that stays on this computer,"
+" but an extraction off it carries your acknowledgement, which you give "
+"yourself. So is work that belongs to no single profile: inspecting and "
+"reclaiming storage, resetting all profiles, listing profiles, inspecting "
+"and importing a profile archive, diagnosing and repairing the "
 "installation, and verifying a review package or a calculation summary "
 "that you hold. Do these with the matching `aeat` command, or in the "
 "terminal interface, which offers the installation work in "
@@ -346,7 +352,10 @@ msgstr ""
 "contrasenya, activar o fer servir la recuperació, i qualsevol operació "
 "que necessiti una contrasenya, una clau o un altre secret, com configurar"
 " el secret d'un certificat o exportar el paquet del perfil. També ho és "
-"la feina que no pertany a un sol perfil: inspeccionar i recuperar "
+"el teu consentiment per enviar un document desat a un model allotjat: "
+"l'agent pot demanar l'extracció que es queda en aquest ordinador, però "
+"una extracció fora d'ell porta la teva confirmació, que dones tu. També "
+"ho és la feina que no pertany a un sol perfil: inspeccionar i recuperar "
 "emmagatzematge, restablir tots els perfils, llistar perfils, inspeccionar"
 " i importar un arxiu de perfil, diagnosticar i reparar la instal·lació, i"
 " verificar un paquet de revisió o un resum de càlcul que tinguis. Fes-los"
@@ -354,11 +363,11 @@ msgstr ""
 "ofereix la feina d'instal·lació a **Instal·lació** des de la pantalla "
 "d'inici de sessió."
 
-#: ../../how-to/connect-an-agent.md:153
+#: ../../how-to/connect-an-agent.md:157
 msgid "Review and manage access as the profile owner"
 msgstr "Revisar i gestionar l'accés com a titular del perfil"
 
-#: ../../how-to/connect-an-agent.md:155
+#: ../../how-to/connect-an-agent.md:159
 msgid ""
 "Use a human password-authorized session for the intended profile, as "
 "described in [Set up a profile](profile-setup.md). Issue a key with `aeat"
@@ -373,13 +382,13 @@ msgstr ""
 " sol·licita, aprova ni canvia cap clau. Comprova l'identificador del "
 "perfil a cada resultat."
 
-#: ../../how-to/connect-an-agent.md:161
+#: ../../how-to/connect-an-agent.md:165
 msgid "List pending requests and inspect the exact request before deciding:"
 msgstr ""
 "Enumera les sol·licituds pendents i inspecciona la sol·licitud exacta "
 "abans de decidir:"
 
-#: ../../how-to/connect-an-agent.md:166
+#: ../../how-to/connect-an-agent.md:170
 msgid ""
 "Replace `REQUEST_UUID` with the returned request ID. Review the client "
 "and destination, operations, actions, disclosures, periods, expiry, "
@@ -393,7 +402,7 @@ msgstr ""
 "bloqueig del sistema operatiu. Copia el `review_digest` actual d'aquesta "
 "inspecció. Aprova només els permisos revisats o rebutja la sol·licitud:"
 
-#: ../../how-to/connect-an-agent.md:174
+#: ../../how-to/connect-an-agent.md:178
 msgid ""
 "Run one decision command. Approval asks for a fresh profile password "
 "through a hidden terminal prompt; decline does not. For controlled "
@@ -416,7 +425,7 @@ msgstr ""
 " la referència lliurada a la configuració del servidor MCP amb "
 "`--credential-reference`."
 
-#: ../../how-to/connect-an-agent.md:182
+#: ../../how-to/connect-an-agent.md:186
 msgid ""
 "The same review procedure applies to rotation, renewal and scope-change "
 "requests. Enrollment and rotation can deliver a new protected reference; "
@@ -439,13 +448,13 @@ msgstr ""
 "l'autorització. Bloquejar la sessió actual no revoca aquesta autorització"
 " independent."
 
-#: ../../how-to/connect-an-agent.md:191
+#: ../../how-to/connect-an-agent.md:195
 msgid "Use the inventory's non-secret key or grant ID to revoke access:"
 msgstr ""
 "Fes servir l'ID no secret de clau o autorització de l'inventari per "
 "revocar l'accés:"
 
-#: ../../how-to/connect-an-agent.md:196
+#: ../../how-to/connect-an-agent.md:200
 msgid ""
 "Check `access_denied` and `cleanup_pending` in text output; in the JSON "
 "result, inspect `receipt.access_denied` and `receipt.cleanup_pending`. "
@@ -458,7 +467,7 @@ msgstr ""
 "credencials estigui pendent és diferent del fet que s'hagi denegat "
 "l'accés."
 
-#: ../../how-to/connect-an-agent.md:200
+#: ../../how-to/connect-an-agent.md:204
 msgid ""
 "List sessions, then choose the intended lock scope. A current-session "
 "lock ends the caller's session; a selected-session lock ends that "
@@ -469,7 +478,7 @@ msgstr ""
 "sessió seleccionada acaba aquella sessió. Un bloqueig de tot el perfil "
 "suspèn la seva automatització."
 
-#: ../../how-to/connect-an-agent.md:208
+#: ../../how-to/connect-an-agent.md:212
 msgid ""
 "To resume, supply the fresh password at the hidden prompt. Add `--grant "
 "GRANT_UUID` for each grant you deliberately reactivate; omitting it "
@@ -480,7 +489,7 @@ msgstr ""
 "reactivar; si l'omets, es restaura l'accés humà sense reactivar "
 "autoritzacions."
 
-#: ../../how-to/connect-an-agent.md:215
+#: ../../how-to/connect-an-agent.md:219
 msgid ""
 "Confirm the returned grant IDs. An agent's next call then resumes your "
 "sign-in, or authenticates again with its configured key."
@@ -489,11 +498,11 @@ msgstr ""
 " agent reprèn llavors el teu inici de sessió o torna a autenticar-se amb "
 "la seva clau configurada."
 
-#: ../../how-to/connect-an-agent.md:218
+#: ../../how-to/connect-an-agent.md:222
 msgid "Run an agent on separate storage"
 msgstr "Executa un agent sobre un emmagatzematge a part"
 
-#: ../../how-to/connect-an-agent.md:220
+#: ../../how-to/connect-an-agent.md:224
 msgid ""
 "An agent harness, an evaluation or a test can use its own Cadrumo data, "
 "kept apart from yours. Choose a new, empty directory for it. Give every "
@@ -509,7 +518,7 @@ msgstr ""
 "`CADRUMO_SECRET_STORE_DIR` anomena un directori per al seu magatzem "
 "xifrat de secrets. Tots dos han de ser camins absoluts."
 
-#: ../../how-to/connect-an-agent.md:226
+#: ../../how-to/connect-an-agent.md:230
 msgid ""
 "Cadrumo's own background service serves only your usual data. For a "
 "separate directory, your harness starts Cadrumo's runtime itself and "
@@ -521,7 +530,7 @@ msgstr ""
 "l'entorn de Cadrumo i decideix quan s'atura. L'ordre `cadrumo-runtime` és"
 " al mateix directori `bin` que `aeat` i `cadrumo-mcp`:"
 
-#: ../../how-to/connect-an-agent.md:235
+#: ../../how-to/connect-an-agent.md:239
 msgid ""
 "**Start.** Run the command with the two settings in its environment and "
 "with its standard input and standard output connected to your process. It"
@@ -535,7 +544,7 @@ msgstr ""
 "`aeat`, la interfície de terminal i `cadrumo-mcp`, iniciats amb els "
 "mateixos dos paràmetres, el troben per si sols."
 
-#: ../../how-to/connect-an-agent.md:240
+#: ../../how-to/connect-an-agent.md:244
 #, python-brace-format
 msgid ""
 "**Ready.** When clients can connect, it writes one line of JSON to "
@@ -550,7 +559,7 @@ msgstr ""
 " No hi escriu res més. `aeat --format json config sign-in-status`, "
 "executat amb els mateixos paràmetres, també té èxit un cop està a punt."
 
-#: ../../how-to/connect-an-agent.md:245
+#: ../../how-to/connect-an-agent.md:249
 msgid ""
 "**Stop.** Close its standard input. It finishes the work in progress and "
 "exits with code 64. If your process ends, its standard input closes too, "
@@ -564,7 +573,7 @@ msgstr ""
 "l'entrada estàndard des del dispositiu nul, perquè llavors s'atura de "
 "seguida. En un terminal, Ctrl+C l'atura amb el codi 65."
 
-#: ../../how-to/connect-an-agent.md:250
+#: ../../how-to/connect-an-agent.md:254
 msgid ""
 "**Refusals.** It exits with code 68 and prints `runtime_root_mismatch` "
 "when `CADRUMO_LOCAL_STORAGE_ROOT` is not set, or when the directory is "
@@ -580,57 +589,167 @@ msgstr ""
 "directori. Afegeix `--expected-version VERSION` per rebutjar, amb el codi"
 " 69, un paquet d'una altra versió."
 
-#: ../../how-to/connect-an-agent.md:257
+#: ../../how-to/connect-an-agent.md:261
 msgid ""
-"Profile passwords, sign-in, enrolled keys and the operations each session"
-" may run work exactly as they do on your usual data. Pass each secret on "
-"the command's protected channel and never on the command line. For "
-"example, with the two settings in the environment of every command:"
+"Profile passwords, enrolled keys and the operations each session may run "
+"work exactly as they do on your usual data. Pass each secret on the "
+"command's protected channel and never on the command line or in an MCP "
+"tool call."
 msgstr ""
-"Les contrasenyes de perfil, l'inici de sessió, les claus inscrites i les "
-"operacions que cada sessió pot executar funcionen exactament igual que "
-"amb les teves dades habituals. Passa cada secret pel canal protegit de "
-"l'ordre i mai a la línia d'ordres. Per exemple, amb els dos paràmetres a "
-"l'entorn de cada ordre:"
+"Les contrasenyes de perfil, les claus inscrites i les operacions que cada"
+" sessió pot executar funcionen exactament igual que amb les teves dades "
+"habituals. Passa cada secret pel canal protegit de l'ordre i mai a la "
+"línia d'ordres ni en una crida a una eina MCP."
 
-#: ../../how-to/connect-an-agent.md:271
+#: ../../how-to/connect-an-agent.md:265
+msgid "Hold a sign-in for an agent"
+msgstr ""
+
+#: ../../how-to/connect-an-agent.md:267
+msgid ""
+"A sign-in made with `aeat config login` is kept in this computer's "
+"protected credential store, and `cadrumo-mcp` follows it from there. A "
+"Windows logon that holds no credentials cannot use that store; there, or "
+"in a harness that should leave nothing behind, hold the sign-in instead:"
+msgstr ""
+
+#: ../../how-to/connect-an-agent.md:276
+msgid ""
+"The command signs in to the profile and keeps that sign-in open, without "
+"storing it, for as long as its standard input stays open. Nothing in it "
+"is written to the credential store or to the profile's storage."
+msgstr ""
+
+#: ../../how-to/connect-an-agent.md:280
 #, python-brace-format
 msgid ""
-"`profile create` and `login` each read a JSON object from standard input:"
-" `{\"passphrase\": \"…\", \"passphrase_confirmation\": \"…\"}` to create "
-"the profile, and `{\"passphrase\": \"…\"}` to sign in. A command that "
-"runs without a terminal reads its profile password from the root "
-"`--profile-secrets-stdin` channel as `{\"profile_passphrase\": \"…\"}` "
-"when no stored sign-in can be resumed; see [Protect access to your data"
-"](protect-data-access.md). Start `cadrumo-mcp` as an MCP stdio server "
-"with the same two settings, either from your MCP client or from your "
-"harness. It follows that sign-in as described in \"Following your sign-"
-"in\" above. A stored sign-in uses this computer's protected credential "
-"store. A Windows logon that holds no credentials cannot use the store: it"
-" can still run the runtime, but cannot keep a sign-in for `cadrumo-mcp` "
-"to follow."
+"**Password.** The first line of standard input is one JSON object, "
+"`{\"passphrase\": \"…\"}`. It is read once and then discarded."
 msgstr ""
-"`profile create` i `login` llegeixen cadascun un objecte JSON de "
-"l'entrada estàndard: `{\"passphrase\": \"…\", "
-"\"passphrase_confirmation\": \"…\"}` per crear el perfil i "
-"`{\"passphrase\": \"…\"}` per iniciar sessió. Una ordre que s'executa "
-"sense terminal llegeix la contrasenya del seu perfil del canal arrel "
-"`--profile-secrets-stdin` com a `{\"profile_passphrase\": \"…\"}` quan no"
-" es pot reprendre cap inici de sessió desat; consulta [Protegeix l'accés "
-"a les teves dades](protect-data-access.md). Inicia `cadrumo-mcp` com a "
-"servidor MCP stdio amb els mateixos dos paràmetres, des del teu client "
-"MCP o des del teu arnès. Segueix aquell inici de sessió com es descriu "
-"més amunt a «Seguint el teu inici de sessió». Un inici de sessió desat fa"
-" servir el magatzem protegit de credencials d'aquest ordinador. Una "
-"sessió de Windows que no té credencials no pot fer servir el magatzem: "
-"pot executar igualment l'entorn, però no pot desar un inici de sessió que"
-" `cadrumo-mcp` pugui seguir."
+
+#: ../../how-to/connect-an-agent.md:282
+msgid ""
+"**Events.** Standard output carries one JSON object per line, each naming"
+" its `event`:"
+msgstr ""
 
 #: ../../how-to/connect-an-agent.md:284
-msgid ""
-"When you are done, sign out, stop the runtime and delete the directory. "
-"Nothing in your usual Cadrumo data is read or changed along the way."
+msgid "`held` gives the `profile_id` and the `session_expires_at` deadline."
 msgstr ""
-"Quan acabis, tanca la sessió, atura l'entorn i esborra el directori. Res "
-"de les teves dades habituals de Cadrumo no es llegeix ni es canvia durant"
-" el procés."
+
+#: ../../how-to/connect-an-agent.md:285
+msgid ""
+"`attendance_request` reports an MCP connection that asks to follow this "
+"sign-in. It gives the `attendance_id`, the `process_id` of the asking "
+"process as the operating system reports it, the `frontend`, the `surface`"
+" and when the ask lapses (`expires_at`, two minutes after it was made)."
+msgstr ""
+
+#: ../../how-to/connect-an-agent.md:289
+msgid "`attendance_decided` and `attendance_refused` report your answers."
+msgstr ""
+
+#: ../../how-to/connect-an-agent.md:290
+msgid "`signed_out` and `session_ended` report the end of the sign-in."
+msgstr ""
+
+#: ../../how-to/connect-an-agent.md:291
+msgid ""
+"`ended` comes last, with the `reason`: `input_closed`, `signed_out` or "
+"`session_ended`."
+msgstr ""
+
+#: ../../how-to/connect-an-agent.md:294
+msgid "The command's result follows the events."
+msgstr ""
+
+#: ../../how-to/connect-an-agent.md:295
+#, python-brace-format
+msgid ""
+"**Decisions.** Each later line of standard input is one JSON object: "
+"`{\"approve\": \"ATTENDANCE_ID\"}`, `{\"decline\": \"ATTENDANCE_ID\"}`, "
+"or `{\"sign_out\": true}`. Approve only an ask whose `process_id` is the "
+"`cadrumo-mcp` process you started, or one of its descendants. Nothing "
+"else admits a connection: not a profile ID, a storage path, the runtime's"
+" endpoint, or an attendance ID copied to another process."
+msgstr ""
+
+#: ../../how-to/connect-an-agent.md:302
+msgid ""
+"Start `cadrumo-mcp` with the same two settings and without `--credential-"
+"reference`. When it has no stored sign-in to follow, its first call that "
+"needs the profile asks the holder to admit it, and waits up to 90 seconds"
+" for the answer. Once approved, its `status` tool reports `\"session\": "
+"\"attended\"`. The agent then works inside that profile, under the served"
+" surface and the same operation, approval and disclosure checks as any "
+"session. An operation that only the person may run, such as signing in or"
+" managing keys, is refused to it. The approval holds for that one MCP "
+"connection while the held sign-in lives. When its short lease runs out, "
+"it is renewed without a new decision."
+msgstr ""
+
+#: ../../how-to/connect-an-agent.md:313
+msgid ""
+"Access ends for every connection that follows the held sign-in when any "
+"of these happens, and each later call is refused:"
+msgstr ""
+
+#: ../../how-to/connect-an-agent.md:316
+msgid "the holder's standard input closes, or the holder exits;"
+msgstr ""
+
+#: ../../how-to/connect-an-agent.md:317
+#, python-brace-format
+msgid "you send `{\"sign_out\": true}` to the holder;"
+msgstr ""
+
+#: ../../how-to/connect-an-agent.md:318
+#, python-brace-format
+msgid ""
+"another process signs the person out with `aeat --format json config "
+"logout --secrets-stdin`, reading `{\"passphrase\": \"…\"}`;"
+msgstr ""
+
+#: ../../how-to/connect-an-agent.md:321
+msgid "the profile is locked with `config profile lock --all`;"
+msgstr ""
+
+#: ../../how-to/connect-an-agent.md:322
+msgid ""
+"the sign-in reaches its deadline: by default 15 minutes after you entered"
+" the password, and agent activity does not extend it;"
+msgstr ""
+
+#: ../../how-to/connect-an-agent.md:324
+msgid "the runtime stops."
+msgstr ""
+
+#: ../../how-to/connect-an-agent.md:326
+#, python-brace-format
+msgid ""
+"A command that runs without a terminal reads its profile password from "
+"the root `--profile-secrets-stdin` channel as `{\"profile_passphrase\": "
+"\"…\"}`; see [Protect access to your data](protect-data-access.md). It "
+"never follows a held sign-in. In full, with the two settings in the "
+"environment of every command:"
+msgstr ""
+
+#: ../../how-to/connect-an-agent.md:339
+#, python-brace-format
+msgid ""
+"`profile create` reads `{\"passphrase\": \"…\", "
+"\"passphrase_confirmation\": \"…\"}`. Keep the holder's input open while "
+"the agent works, and approve its ask when it arrives."
+msgstr ""
+
+#: ../../how-to/connect-an-agent.md:343
+msgid ""
+"When you are done, close the holder's input, close the MCP client, close "
+"the runtime's standard input and wait for it to exit with code 64, then "
+"delete the directory. Nothing in your usual Cadrumo data is read or "
+"changed along the way."
+msgstr ""
+"Quan acabis, tanca l'entrada de qui manté l'inici de sessió, tanca el "
+"client MCP, tanca l'entrada estàndard de l'entorn i espera que acabi amb "
+"el codi 64; després esborra el directori. Res de les teves dades "
+"habituals de Cadrumo no es llegeix ni es canvia durant el procés."

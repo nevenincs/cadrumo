@@ -1,9 +1,11 @@
-"""A stored document is read under the same access whichever frontend asks for the read.
+"""A stored document is read under the same access whichever of the person's frontends asks for the read.
 
 The registered resolver is asked for the read that stays on this machine and
 for the read that sends the document to a hosted model, at every access a
-session can ask for. The policy it grants names no frontend: the consent to an
-off-host read travels in the request, in the same fields for every caller.
+session can ask for. The read that stays here is granted the same policy on
+every frontend. The consent to an off-host read is the person's own act: it
+travels in the request, in the same fields on every frontend the person uses,
+and the agent's frontend is refused it.
 """
 
 from __future__ import annotations
@@ -22,7 +24,8 @@ from ...operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
-from ...user_profile.access_contracts import AccessAction, Availability, OperationAccessPolicy
+from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability, OperationAccessPolicy
+from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import invoice_evidence_extract_operation as extract_operation
 from .. import invoice_evidence_operation as operation_ports
 
@@ -78,18 +81,30 @@ def _granted(*, off_host: bool, frontend: OperationFrontendProjection, action: A
     return resolved.policy
 
 
+_PERSONS_FRONTENDS = [
+    frontend for frontend in OperationFrontendProjection if frontend is not OperationFrontendProjection.MCP
+]
+
+
 @pytest.mark.parametrize("action", _ACCESSES)
 @pytest.mark.parametrize("off_host", [False, True], ids=["on-host", "off-host"])
-def test_a_read_is_granted_the_same_policy_on_every_frontend(off_host: bool, action: AccessAction) -> None:
-    policies = {
-        frontend: _granted(off_host=off_host, frontend=frontend, action=action)
-        for frontend in OperationFrontendProjection
-    }
+def test_a_read_is_granted_the_same_policy_on_every_frontend_that_may_ask_for_it(
+    off_host: bool, action: AccessAction
+) -> None:
+    frontends = _PERSONS_FRONTENDS if off_host else list(OperationFrontendProjection)
+    policies = {frontend: _granted(off_host=off_host, frontend=frontend, action=action) for frontend in frontends}
 
-    assert len(policies) == len(OperationFrontendProjection)
+    assert len(policies) == len(frontends) > 1
     assert len(set(policies.values())) == 1
     for policy in policies.values():
         assert policy.requires_human is False
         # Sending a document off the machine is a write to the consent ledger, so it sits
         # behind the commit door for every caller; the read that stays here does not.
         assert (AccessAction.COMMIT in policy.actions) is off_host
+
+
+@pytest.mark.parametrize("action", _ACCESSES)
+def test_the_agents_frontend_is_refused_the_consent_to_an_off_host_read(action: AccessAction) -> None:
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        _granted(off_host=True, frontend=OperationFrontendProjection.MCP, action=action)
+    assert refused.value.reason == AccessDenialCode.PERSON_ACT_REQUIRED.value

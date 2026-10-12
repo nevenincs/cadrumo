@@ -1,5 +1,10 @@
 """Every registered operation is answered alike on the command line, the terminal interface and MCP.
 
+The one exception is the person's own act: a credential or access act, or a
+request carrying the person's consent to send a stored document off this
+machine. It is answered alike on the person's frontends, and on MCP it is
+either answered the same or refused with the typed person-act refusal.
+
 No definition declares the frontends it is open to: every registered
 operation is open to all three. What a submission is answered is decided in
 two places, the operation's own access resolver and the access policy that
@@ -36,9 +41,11 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
+from ...application.ledger.invoice_evidence_extract_operation import LedgerEvidenceExtractRequest
 from ...application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...application.operations.models import OperationRequest
 from ...application.operations.operation_definition import OperationDefinition
+from ...application.operations.person_acts import operation_is_persons_act
 from ...application.operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionContractV1,
@@ -48,6 +55,7 @@ from ...application.operations.registry import (
 from ...application.operations.subject_reference import expected_operation_subject
 from ...application.user_profile.access_contracts import (
     AccessAction,
+    AccessDenialCode,
     AccessDenied,
     Availability,
     OperationAccessPolicy,
@@ -177,16 +185,27 @@ def _widest_submission(
 
 
 def test_every_registered_definition_is_submittable_from_every_frontend_by_either_kind_of_session() -> None:
-    """The access policy admits a submission of each operation from each frontend, with no surface named."""
+    """The access policy admits a submission of each operation from each frontend, with no surface named.
+
+    A person's own act is the one exception, and only on the agent's frontend, where it is refused, typed.
+    """
     refused: dict[str, str] = {}
+    persons_acts: set[str] = set()
     for definition_id in _definition_ids():
+        contract = _registry().lookup_public_contract(definition_id)
+        persons = operation_is_persons_act(definition_id, ephemeral_secret_required=contract.ephemeral_secret_required)
         for frontend in _FRONTENDS:
             request, policy = _widest_submission(definition_id, frontend)
             for human in (True, False):
                 answer = _session_answer(request, policy, human=human, registry=_registry())
+                if persons and frontend is _AGENT and answer == _PERSON_ACT_REQUIRED:
+                    persons_acts.add(definition_id)
+                    continue
                 if answer != _ALLOWED:
                     refused[f"{definition_id} on {frontend.value}, {'human' if human else 'key'} session"] = answer
     assert not refused, f"submissions the access policy refuses for a frontend: {refused}"
+    # The exception is exercised, so a person's act left open to the agent would show here.
+    assert persons_acts
 
 
 # ---------------------------------------------------------------------------
@@ -567,6 +586,53 @@ def _answers_on(
     }
 
 
+_AGENT = OperationFrontendProjection.MCP
+_PERSON_ACT_REQUIRED = AccessDenialCode.PERSON_ACT_REQUIRED.value
+_REFUSED_AS_PERSONS_ACT = f"refused:{_PERSON_ACT_REQUIRED}"
+
+
+def _is_persons_act(request: OperationRequest[BaseModel]) -> bool:
+    """Tell whether a request is the person's own act, as the person-acts module and the consent rule name it."""
+    contract = _registry().lookup_public_contract(request.definition_id)
+    if operation_is_persons_act(request.definition_id, ephemeral_secret_required=contract.ephemeral_secret_required):
+        return True
+    # The acknowledgement of an off-host read is the person's consent to send the document off this machine.
+    payload = request.payload
+    return isinstance(payload, LedgerEvidenceExtractRequest) and payload.off_host_provider is not None
+
+
+def _refused_as_persons_act(agent: object, person: object) -> bool:
+    """Tell whether the agent got the person's answer or the typed person-act refusal, wherever they differ."""
+    if agent == person:
+        return True
+    if isinstance(agent, _Decision) and isinstance(person, _Decision):
+        if agent.resolution == _REFUSED_AS_PERSONS_ACT:
+            return True
+        return (
+            (agent.resolution, agent.policy, agent.request) == (person.resolution, person.policy, person.request)
+            and agent.human_session in {person.human_session, _PERSON_ACT_REQUIRED}
+            and agent.key_session in {person.key_session, _PERSON_ACT_REQUIRED}
+        )
+    if isinstance(agent, Mapping) and isinstance(person, Mapping):
+        return agent.keys() == person.keys() and all(_refused_as_persons_act(agent[key], person[key]) for key in agent)
+    return agent == _REFUSED_AS_PERSONS_ACT
+
+
+def _on_the_persons_frontends[AnswerT](
+    by_frontend: Mapping[OperationFrontendProjection, AnswerT], request: OperationRequest[BaseModel]
+) -> Mapping[OperationFrontendProjection, AnswerT]:
+    """Leave the agent's frontend out of the comparison for a person's act, once its answer is shown to be typed.
+
+    The agent is answered either as the person is, where a later door refuses
+    it, or with the person-act refusal; never with anything else.
+    """
+    if not _is_persons_act(request):
+        return by_frontend
+    agent = by_frontend[_AGENT]
+    assert _refused_as_persons_act(agent, by_frontend[_CLI]), (request.definition_id, agent)
+    return {frontend: answer for frontend, answer in by_frontend.items() if frontend is not _AGENT}
+
+
 def _differing(answers: Mapping[OperationFrontendProjection, object]) -> dict[str, object] | None:
     """The answers by frontend where they are not all the same, else ``None``."""
     values = list(answers.values())
@@ -584,7 +650,7 @@ def test_every_schema_built_request_is_answered_alike_on_every_frontend() -> Non
         for index, request in enumerate(_probe_requests(definition_id)):
             by_frontend = {frontend: _answers_on(registration, request, frontend) for frontend in _FRONTENDS}
             admitted += _RESOLVED in by_frontend[_CLI].values()
-            found = _differing(by_frontend)
+            found = _differing(_on_the_persons_frontends(by_frontend, request))
             if found is not None:
                 differing[f"{definition_id}, request {index}"] = found
     assert not differing, f"resolvers that answer one frontend differently from another: {differing}"
@@ -628,7 +694,7 @@ def test_every_written_out_request_is_answered_alike_on_every_frontend(operation
                 by_frontend = {
                     frontend: _answers_on(registration, request, frontend, operation) for frontend in _FRONTENDS
                 }
-                found = _differing(by_frontend)
+                found = _differing(_on_the_persons_frontends(by_frontend, request))
                 if found is not None:
                     differing[label] = found
                 submitted = by_frontend[_CLI]["submit"]
@@ -705,7 +771,7 @@ def _held_context(
     )
 
 
-type _Answers = dict[AccessAction, dict[OperationFrontendProjection, _Decision]]
+type _Answers = dict[AccessAction, Mapping[OperationFrontendProjection, _Decision]]
 
 
 def _answers_at_every_judged_access(
@@ -715,23 +781,26 @@ def _answers_at_every_judged_access(
     profile_id: UUID,
     operation: PinnedAuthorityOperation,
 ) -> _Answers:
-    """What each frontend is answered for one request, at each judged access."""
+    """What each frontend is answered for one request, at each judged access, the agent's apart for a person's act."""
     return {
-        action: {
-            frontend: _decision(
-                registry,
-                request,
-                _held_context(
+        action: _on_the_persons_frontends(
+            {
+                frontend: _decision(
                     registry,
-                    request.definition_id,
-                    profile_id=profile_id,
-                    frontend=frontend,
-                    action=action,
-                    operation=operation,
-                ),
-            )
-            for frontend in _FRONTENDS
-        }
+                    request,
+                    _held_context(
+                        registry,
+                        request.definition_id,
+                        profile_id=profile_id,
+                        frontend=frontend,
+                        action=action,
+                        operation=operation,
+                    ),
+                )
+                for frontend in _FRONTENDS
+            },
+            request,
+        )
         for action in _JUDGED_ACTIONS
     }
 

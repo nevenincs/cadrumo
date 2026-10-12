@@ -2,19 +2,23 @@
 
 An agent works inside the one profile the person signed in to, or one the
 person issued a key for. Inside it, every registered operation is open to it
-as to the command line. Three kinds of act are not agent operations, because
-taking one would let an agent authenticate, handle a secret or reach outside
-its profile:
+as to the command line. Four kinds of act are not agent operations, because
+taking one would let an agent authenticate, handle a secret, reach outside
+its profile or disclose the profile's data in the person's name:
 
 - an operation whose contract requires a secret, which only the person types;
 - the administration of access to the profile: requesting, approving,
   declining, scoping, renewing, rotating and listing its automation keys;
 - the runtime requests that sign in, sign out, lock, list or deny sessions,
   reset or change a password, enrol or use recovery, delete a profile, or do
-  installation work that belongs to no single profile.
+  installation work that belongs to no single profile;
+- the consent to send a stored document off this machine to a hosted model,
+  which an operation's request carries as its acknowledgement. An agent may
+  ask for the same operation's reading that stays on this machine.
 
-This module names them. It refuses nothing itself: the MCP harness offers no
-tool that sends one, and the runtime refuses each on the MCP frontend.
+This module names them, and says which frontend never takes one. It refuses
+nothing itself: the MCP harness offers no tool that sends one, and the runtime
+refuses each on the MCP frontend.
 
 Operations are named by definition id text. This package owns no feature
 package's constants, and importing them would invert the dependency.
@@ -23,6 +27,8 @@ package's constants, and importing them would invert the dependency.
 from __future__ import annotations
 
 from typing import Final
+
+from .registry import OperationFrontendProjection
 
 ACCESS_ADMINISTRATION_OPERATIONS: Final = frozenset(
     {
@@ -72,8 +78,14 @@ def operation_is_persons_act(definition_id: str, *, ephemeral_secret_required: b
     return ephemeral_secret_required or definition_id in ACCESS_ADMINISTRATION_OPERATIONS
 
 
+def persons_act_refused_on(frontend: OperationFrontendProjection) -> bool:
+    """Tell whether a person's act arriving on ``frontend`` is refused: it is, on the agent's frontend only."""
+    return frontend is OperationFrontendProjection.MCP
+
+
 __all__ = [
     "ACCESS_ADMINISTRATION_OPERATIONS",
     "PERSON_RUNTIME_REQUESTS",
     "operation_is_persons_act",
+    "persons_act_refused_on",
 ]

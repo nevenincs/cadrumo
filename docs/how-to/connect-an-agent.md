@@ -144,10 +144,13 @@ Some acts are yours alone, and the agent is refused them with
 locking, listing or denying sessions, requesting, approving, rotating or revoking
 keys, changing or resetting the password, enabling or using recovery, and any
 operation that needs a password, a key or another secret, such as configuring a
-certificate secret or exporting the profile bundle. So is work that belongs to no
-single profile: inspecting and reclaiming storage, resetting all profiles, listing
-profiles, inspecting and importing a profile archive, diagnosing and repairing the
-installation, and verifying a review package or a calculation summary that you
+certificate secret or exporting the profile bundle. So is your consent to send a
+stored document to a hosted model: the agent may ask for the extraction that stays
+on this computer, but an extraction off it carries your acknowledgement, which you
+give yourself. So is work that belongs to no single profile: inspecting and
+reclaiming storage, resetting all profiles, listing profiles, inspecting and
+importing a profile archive, diagnosing and repairing the installation, and
+verifying a review package or a calculation summary that you
 hold. Do these with the matching `aeat` command, or in the terminal interface,
 which offers the installation work in **Installation** from the sign-in screen.
 
@@ -262,9 +265,9 @@ protected channel and never on the command line or in an MCP tool call.
 ### Hold a sign-in for an agent
 
 A sign-in made with `aeat config login` is kept in this computer's protected
-credential store, and `cadrumo-mcp` follows it from there. A logon whose
-credential store is unavailable, such as a remote shell, or a harness that
-should leave nothing behind, holds the sign-in instead:
+credential store, and `cadrumo-mcp` follows it from there. A Windows logon that
+holds no credentials cannot use that store; there, or in a harness that should
+leave nothing behind, hold the sign-in instead:
 
 ```text
 aeat --format json config sign-in-hold agent-test

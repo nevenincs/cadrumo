@@ -20,6 +20,7 @@ from ..operations.access_resolution import OperationAccessContext, ResolvedOpera
 from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
+from ..operations.person_acts import persons_act_refused_on
 from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
@@ -278,6 +279,9 @@ def _resolve_extract_access(
         or type(request.payload) is not LedgerEvidenceExtractRequest
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    if request.payload.off_host_provider is not None and persons_act_refused_on(context.frontend):
+        # The acknowledgement is the person's consent to send the document off this machine; no agent gives it.
+        raise ProfileAccessRefusedError(AccessDenialCode.PERSON_ACT_REQUIRED)
     resolve = resolve_ledger_read_access if request.payload.off_host_provider is None else resolve_ledger_commit_access
     return resolve(request, context, profile_id=request.payload.profile_id, periods=frozenset())
 
