@@ -21,6 +21,7 @@ from typing import Any
 import pytest
 
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
+from cadrumo.application.operations.person_acts import operation_is_persons_act
 from cadrumo.application.operations.registry import OperationPublicDefinitionDescriptionV1, OperationRegistry
 from cadrumo.application.user_profile.access_contracts import ProfileAccessStatus
 from cadrumo.application.user_profile.profile_operation_contracts import PROFILE_PATCH_OPERATION_DEFINITION_ID
@@ -61,10 +62,24 @@ def _described(reply: dict[str, Any]) -> OperationPublicDefinitionDescriptionV1:
     return OperationPublicDefinitionDescriptionV1.model_validate_json(json.dumps(reply["description"]))
 
 
+def _persons_act(definition_id: str) -> bool:
+    contract = _registry().describe_public_definition(definition_id).contract
+    return operation_is_persons_act(definition_id, ephemeral_secret_required=contract.ephemeral_secret_required)
+
+
+async def _ranked(adapter: RuntimeMcpAdapter, args: dict[str, Any]) -> dict[str, Any]:
+    """Search by query as an agent does: a search that ran out of time resumes from the contracts it read."""
+    for _attempt in range(10):
+        reply = await adapter.call("search", args)
+        if reply.get("code") != "runtime_deadline_exceeded":
+            return reply
+    return reply
+
+
 async def _discover(adapter: RuntimeMcpAdapter) -> dict[str, dict[str, Any]]:
     """Make the same discovery calls, whatever session the adapter holds."""
     return {
-        "ranked": await adapter.call("search", {"query": _READ, "limit": 3}),
+        "ranked": await _ranked(adapter, {"query": _READ, "limit": 3}),
         "family": await adapter.call("search", {"family": "auth", "limit": 200}),
         "read": await adapter.call("describe", {"definition_id": _READ}),
         "patch": await adapter.call("describe", {"definition_id": _PATCH}),
@@ -123,7 +138,9 @@ async def test_under_a_session_the_runtime_answers_with_the_registrys_descriptio
     assert set(under["patch"]) == {"outcome", "description", "payload_vocabulary"}
     assert under["ranked"]["operations"][0]["definition_id"] == _READ
     listed = [row["definition_id"] for row in under["family"]["operations"]]
-    assert listed == sorted(item for item in scope.operations if item.startswith("auth."))
+    # Every operation of the family in scope, except the person's own acts, which no agent is offered.
+    assert listed == sorted(item for item in scope.operations if item.startswith("auth.") and not _persons_act(item))
+    assert len(listed) < len([item for item in scope.operations if item.startswith("auth.")])
     for name, definition_id in (("read", _READ), ("patch", _PATCH)):
         assert _described(under[name]) == _registry().describe_public_definition(definition_id)
     assert under["patch"]["payload_vocabulary"]["questions"]

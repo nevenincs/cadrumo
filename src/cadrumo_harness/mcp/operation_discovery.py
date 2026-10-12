@@ -1,8 +1,7 @@
-"""List and rank the registered operations a connection may use, a page at a time.
+"""List and rank the registered operations an admitted session may use, a page at a time.
 
-An admitted session is shown the operations its scope and its surface keep,
-read from the runtime. A connection with no session is shown every registered
-operation its surface keeps, from the public contracts already in hand.
+The session is shown the operations its scope and its surface keep, read from
+the runtime. The person's own acts are never among them.
 """
 
 from __future__ import annotations
@@ -15,6 +14,7 @@ from uuid import UUID
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.application.operations.mcp_surfaces import McpSurface
+from cadrumo.application.operations.person_acts import operation_is_persons_act
 from cadrumo.application.operations.registry import OperationPublicDefinitionDescriptionV1
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.user_profile.access_contracts import AccessDenialCode
@@ -24,8 +24,15 @@ from .operation_search import rank_operations
 from .protocol_contract import SEARCH_PAGE_DEFAULT, refusal_code
 from .runtime_admission import McpAdmission, require_exact_admitted_status
 
-# An operation outside the connection's surface or the session's scope is simply not offered.
-_NOT_OFFERED = frozenset({AccessDenialCode.FRONTEND_DENIED.value, AccessDenialCode.OPERATION_DENIED.value})
+# An operation outside the connection's surface or the session's scope is simply not offered, and
+# neither is a person's own act, which the runtime describes to no agent.
+_NOT_OFFERED = frozenset(
+    {
+        AccessDenialCode.FRONTEND_DENIED.value,
+        AccessDenialCode.OPERATION_DENIED.value,
+        AccessDenialCode.PERSON_ACT_REQUIRED.value,
+    }
+)
 # These refusals concern one operation, so the others are still worth listing.
 _UNAVAILABLE_OPERATION = frozenset(
     {
@@ -68,51 +75,19 @@ def search_operations(
     """
     status = require_exact_admitted_status(client, profile_id=profile_id, admission=admission)
     family = args.get("family", "").strip()
-    granted = sorted(item for item in status.effective_scope.operations if surface.admits(item))
+    # An act known to be the person's by its id is not even asked about; one known only by its
+    # contract's secret is refused at its description and left out there.
+    granted = sorted(
+        item
+        for item in status.effective_scope.operations
+        if surface.admits(item) and not operation_is_persons_act(item, ephemeral_secret_required=False)
+    )
     scope = [definition_id for definition_id in granted if _in_family(definition_id, family)]
     limit = args.get("limit", SEARCH_PAGE_DEFAULT)
     cursor = args.get("cursor")
     if args.get("query", "").strip():
         return _ranked_page(client, contracts, scope, args["query"], cursor, limit, deadline)
     return _listed_page(client, contracts, scope, cursor, limit, deadline)
-
-
-def search_public_operations(
-    descriptions: Sequence[OperationPublicDefinitionDescriptionV1], args: dict[str, Any], surface: McpSurface
-) -> dict[str, Any]:
-    """Return one page of every registered operation the surface keeps, for a connection with no session.
-
-    The pages, their cursors and their order are those of a session's own
-    search. Nothing is read here: the descriptions are the public set already
-    in hand, so no operation is reported unavailable.
-    """
-    family = args.get("family", "").strip()
-    scope = sorted(
-        (
-            description
-            for description in descriptions
-            if surface.admits(description.contract.definition_id)
-            and _in_family(description.contract.definition_id, family)
-        ),
-        key=lambda description: description.contract.definition_id,
-    )
-    limit = args.get("limit", SEARCH_PAGE_DEFAULT)
-    cursor = args.get("cursor")
-    if args.get("query", "").strip():
-        offset = _offset(cursor)
-        ranked = rank_operations(args["query"], scope)
-        page = _found(ranked[offset : offset + limit], [])
-        if offset + limit < len(ranked):
-            page["next_cursor"] = str(offset + limit)
-        return page
-    if cursor is not None and cursor.isdecimal():
-        raise ValueError("cursor does not belong to an unranked listing")
-    pending = [description for description in scope if cursor is None or description.contract.definition_id > cursor]
-    rows = pending[:limit]
-    page = _found(rows, [])
-    if len(rows) < len(pending):
-        page["next_cursor"] = rows[-1].contract.definition_id
-    return page
 
 
 def _in_family(definition_id: str, family: str) -> bool:
