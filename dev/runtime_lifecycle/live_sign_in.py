@@ -278,7 +278,12 @@ async def _admit(holder: Holder, session: McpSession, profile: Profile, receipt:
     return read
 
 
-def _create(programs: Programs, environment: Mapping[str, str], name: str) -> Profile:
+def _create(programs: Programs, environment: Mapping[str, str], name: str, log: Path) -> Profile:
+    """Create a profile, then learn its id from the ``held`` event of a brief hold.
+
+    Command output hides profile identifiers, so the id comes from the one
+    public interface that names it to the person holding the sign-in.
+    """
     password = secrets.token_urlsafe(32)
     code, envelope = run_cli(
         programs,
@@ -292,13 +297,19 @@ def _create(programs: Programs, environment: Mapping[str, str], name: str) -> Pr
         secret={"passphrase": password, "passphrase_confirmation": password},
     )
     require(code == 0 and envelope.get("status") in {"success", "warning"}, f"profile create: {code} {envelope}")
-    # Identifiers are hidden from command output unless the caller asks for them.
-    revealing = {**environment, "CADRUMO_CLI_REVEAL_IDENTIFIERS": "1"}
-    code, listing = run_cli(programs, revealing, "config", "profile", "list")
-    profiles = (listing.get("result") or {}).get("profiles") or []
-    identity = next((item.get("bucket_id") for item in profiles if item.get("name") == name), None)
-    require(code == 0 and isinstance(identity, str), f"profile list named no id for {name}: {listing}")
-    return Profile(name, password, UUID(str(identity)))
+    return Profile(name, password, UUID(int=0))
+
+
+def _identify(programs: Programs, environment: Mapping[str, str], profile: Profile, log: Path) -> Profile:
+    holder = Holder(programs, environment, profile, log)
+    try:
+        held = holder.event("held")
+        holder.close_input()
+        reason, exit_code = holder.finish()
+        require(reason == "input_closed" and exit_code == 0, f"brief hold of {profile.name}: {reason} {exit_code}")
+    finally:
+        holder.stop()
+    return Profile(profile.name, profile.password, UUID(str(held["profile_id"])))
 
 
 def _identity(package: Path | None) -> dict[str, object]:
@@ -349,13 +360,16 @@ async def run(programs: Programs, package: Path | None, scratch: Path, *, expiry
     require(help_run.returncode == 0 and "sign-in-hold" in help_run.stdout, f"no sign-in-hold: {help_run.stderr}")
     receipt.record("command_registered", command="config sign-in-hold")
 
-    other = _create(programs, environment, _OTHER_PROFILE)
-    profile = _create(programs, environment, _PROFILE)
+    other = _create(programs, environment, _OTHER_PROFILE, log)
+    profile = _create(programs, environment, _PROFILE, log)
     receipt.record("profiles_created", profiles=2)
 
     with caller_owned_runtime(programs, environment, scratch / "runtime-stderr.log") as runtime:
         ready = runtime.ready()
         receipt.record("runtime_ready", product_version=ready.get("product_version"))
+        other = _identify(programs, environment, other, log)
+        profile = _identify(programs, environment, profile, log)
+        receipt.record("profiles_identified_by_held_events", profiles=2)
 
         async with mcp_session(programs, environment, scratch) as agent:
             code = await _require_refused(agent, receipt, "refused_before_any_sign_in")

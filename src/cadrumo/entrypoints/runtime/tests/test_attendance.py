@@ -97,7 +97,9 @@ def _runtime(tmp_path: Path) -> Iterator[tuple[UUID, UUID, RuntimeLaunchDoor]]:
                 endpoint.close()
 
 
-def _client(launch: RuntimeLaunchDoor, profile_id: UUID, frontend: OperationFrontendProjection) -> RuntimeFrontendClient:
+def _client(
+    launch: RuntimeLaunchDoor, profile_id: UUID, frontend: OperationFrontendProjection
+) -> RuntimeFrontendClient:
     return asyncio.run(RuntimeFrontendClient.open(launch, profile_id=profile_id, frontend=frontend))
 
 
@@ -118,6 +120,34 @@ def _eventually_refused(call: object, *, seconds: float = 15) -> str:
         except RuntimeFrontendRefusedError as refused:
             return refused.reason
         assert time.monotonic() < deadline, "the attended session outlived the person's closed connection"
+        time.sleep(0.1)
+
+
+_SESSION_OVER = frozenset(
+    {
+        AccessDenialCode.AUTHENTICATION_REQUIRED.value,
+        AccessDenialCode.SESSION_INACTIVE.value,
+        # The runtime's answer once the connection no longer holds the session it names.
+        AccessDenialCode.CONNECTION_MISMATCH.value,
+    }
+)
+
+
+def _session_over(client: RuntimeFrontendClient, *, seconds: float = 15) -> str:
+    """Return how the runtime says ``client``'s session ended: refused outright, or reported denied.
+
+    Until the retirement notice reaches the client, the runtime answers its
+    status with the denial; after it, the client refuses without asking.
+    """
+    deadline = time.monotonic() + seconds
+    while True:
+        try:
+            denial = client.status().status.denial
+        except RuntimeFrontendRefusedError as refused:
+            return refused.reason
+        if denial is not None:
+            return denial.value
+        assert time.monotonic() < deadline, "the attended session outlived the person's session"
         time.sleep(0.1)
 
 
@@ -163,8 +193,10 @@ def test_an_ask_is_admitted_only_by_the_persons_approval_and_ends_with_their_ses
 
             # Ending the person's session ends the attended one, and the approval with it.
             holder.lock()
-            assert _refusal(agent.status) == AccessDenialCode.AUTHENTICATION_REQUIRED.value
-            assert _refusal(agent.request_attendance) == AccessDenialCode.AUTHENTICATION_REQUIRED.value
+            assert _session_over(agent) in _SESSION_OVER
+            with _client(launch, profile_id, mcp) as later:
+                # A new ask, on a fresh connection as the MCP server makes it, finds no held sign-in.
+                assert _refusal(later.request_attendance) == AccessDenialCode.AUTHENTICATION_REQUIRED.value
 
 
 def test_a_declined_ask_admits_nothing_and_closing_the_holder_ends_attendance(tmp_path: Path) -> None:
@@ -191,10 +223,10 @@ def test_a_declined_ask_admits_nothing_and_closing_the_holder_ends_attendance(tm
                 holder.decide_attendance(ask.attendance_id, approve=True)
                 assert isinstance(agent.attendance_status(ask.attendance_id), RuntimeProfileStatus)
                 holder.close()
-                assert _eventually_refused(agent.status) in {
-                    AccessDenialCode.AUTHENTICATION_REQUIRED.value,
-                    AccessDenialCode.SESSION_INACTIVE.value,
-                }
-                assert _refusal(agent.request_attendance) == AccessDenialCode.AUTHENTICATION_REQUIRED.value
+                assert _session_over(agent) in _SESSION_OVER
+                with _client(launch, profile_id, mcp) as later:
+                    assert _eventually_refused(later.request_attendance) == (
+                        AccessDenialCode.AUTHENTICATION_REQUIRED.value
+                    )
         finally:
             holder.close()

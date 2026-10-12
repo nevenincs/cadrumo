@@ -309,6 +309,40 @@ Upgrade/cutover/rollback requires two real compatible canonical release cohorts.
 Restore the powered-off guest baseline
 between independent installation scopes; unregister preserves taxpayer storage.
 
+## Prove caller-owned storage and the held sign-in
+
+Two drivers exercise a built package the way an external consumer does: only its
+own programs (`bin/aeat`, `bin/cadrumo-runtime`, `bin/cadrumo-mcp`), on a fresh
+root, with no manager, no login registration and no substituted OS or credential
+store:
+
+```powershell
+just verify-caller-owned-runtime build/windows-x64/stage/Release/app
+just verify-live-sign-in build/windows-x64/stage/Release/app
+```
+
+`verify-caller-owned-runtime` checks `cadrumo-runtime --configured-root`: its
+readiness line, client discovery, password sign-in, stop when its stdin closes
+(exit 64), and an unchanged installed default root. It reports `incomplete`
+(exit 3) on a logon whose credential store refuses to keep a sign-in.
+
+`verify-live-sign-in` checks `aeat config sign-in-hold` and attended MCP
+admission, under `build/acceptance`:
+- the command is registered, and MCP is refused before any sign-in;
+- a declined ask and a connection naming another profile are refused;
+- an approved ask is admitted, after checking that the asking process descends
+  from the harness, and reads the profile's own data as `attended`;
+- access ends after the holder signs out, the holder's stdin closes, a
+  password-proven `config logout`, a profile-wide lock, the sign-in deadline, and
+  runtime stop;
+- no stored sign-in is left, the default root is unchanged, and no started process
+  survives.
+
+It waits out the sign-in deadline (about 15 minutes); `--skip-expiry` leaves that
+step out and reports `incomplete`. A step it cannot prove, such as a reviewed
+operation where none runs without a remote service or a model, is reported
+`incomplete`, never passed.
+
 ## Inspect timing evidence
 
 Open `build/windows-x64/testing/lifecycle.xml`. Each test's `lifecycle_seconds`
