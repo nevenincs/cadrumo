@@ -176,7 +176,7 @@ browser = [
 # Direct Anthropic-API LLM classification provider (distinct from the
 # subprocess CLI providers, which need no Python SDK).
 anthropic = [
-  "anthropic>=0.74.1,<1",
+  "anthropic>=1.13.0,<2",
 ]
 # OFX/QFX bank-statement import. ofxtools is the maintained, strict OFX-spec
 # parser (ships py.typed), but it is GPL-3.0-only; gating it behind this extra
@@ -505,7 +505,7 @@ dev = [
   "google-api-python-client>=2.195.0,<3",
   "playwright>=1.58.0",
   "playwright-stealth>=2.0.3,<3",
-  "anthropic>=0.74.1,<1",
+  "anthropic>=1.13.0,<2",
   "ofxtools>=1.1,<2",
   # The `llm` extra's exclusive requirement, and therefore the module the
   # extra's probe resolves against. Without it here the probe reads ABSENT in

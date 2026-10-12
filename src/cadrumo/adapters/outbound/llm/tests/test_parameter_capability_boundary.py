@@ -10,21 +10,35 @@ without telling anyone; one was sent without asking.
 The claim under test is ABSENCE FROM THE WIRE SHAPE, not a defaulted value. A
 defaulted parameter and an omitted one are different requests, and only the
 second is accepted by the models that refuse it. Nothing here is mocked: the
-payload asserted is the payload the adapter actually builds, reachable with no
-API key, no network, and no SDK.
+payload asserted is the payload the adapter actually builds, and the wire case
+reads the JSON body the real SDK sends to a loopback endpoint.
+
+The Anthropic SDK's ``messages.create`` accepts no sampling parameters at all,
+so for that adapter ``temperature`` is unsupported for every model and must
+never reach the wire, whatever the operator configured.
 """
 
 from __future__ import annotations
 
-from typing import override
+import asyncio
+import inspect
+from collections.abc import Generator, Mapping
+from contextlib import contextmanager
+from http import HTTPStatus
+from queue import Queue
+from typing import Final, override
 
 import pytest
 
+from .....tests.loopback_llm import SilentLoopbackHandler, read_json_body, serving_loopback, write_json_response
 from ..client import LLMClient
-from ..providers.anthropic import build_message_kwargs
+from ..providers.anthropic import AnthropicAdapter, build_message_kwargs
 from ..providers.base import ProviderAdapter, ProviderCompletion, ProviderRequest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+_SAMPLING_PARAMETERS: Final = frozenset({"temperature", "top_p", "top_k"})
+_MESSAGES_PATH: Final = "/v1/messages"
 
 
 def _request(
@@ -80,16 +94,110 @@ def test_an_omitted_temperature_is_absent_from_the_wire_shape() -> None:
     assert "temperature" not in kwargs
 
 
-def test_a_supplied_temperature_does_reach_the_wire_shape() -> None:
-    """Positive control.
+def test_a_supplied_temperature_never_reaches_the_anthropic_wire_shape() -> None:
+    """The builder carries no sampling key even when the request holds one.
 
-    Without it, a builder that never emitted ``temperature`` under any
-    circumstance would satisfy the absence assertion and look correct while
-    silently discarding an operator's explicit setting.
+    The SDK's ``messages.create`` has no ``temperature``, ``top_p`` or ``top_k``
+    parameter, so a payload carrying one would raise ``TypeError`` at the call.
+    The operator's setting is cleared at dispatch through the adapter's declared
+    capability, asserted separately below.
     """
     kwargs = build_message_kwargs(_request(temperature=0.25))
 
-    assert kwargs["temperature"] == 0.25
+    assert _SAMPLING_PARAMETERS.isdisjoint(kwargs)
+
+
+def test_every_payload_key_is_a_parameter_the_installed_sdk_accepts() -> None:
+    """The payload matches the real ``messages.create`` signature, key for key.
+
+    The independent oracle is the installed SDK itself: a key it does not
+    declare is a ``TypeError`` at the call site, and the sampling parameters
+    must be absent from both sides.
+    """
+    from anthropic.resources.messages import AsyncMessages
+
+    accepted = frozenset(inspect.signature(AsyncMessages.create).parameters)
+    kwargs = build_message_kwargs(_request(system="be terse", temperature=0.25))
+
+    assert frozenset(kwargs) <= accepted
+    assert _SAMPLING_PARAMETERS.isdisjoint(accepted)
+
+
+def test_the_anthropic_adapter_declares_temperature_unsupported_for_every_model() -> None:
+    """The adapter states the SDK's constraint through the capability axis.
+
+    Checked across model identities because the declaration is adapter-wide:
+    no Anthropic model can receive a parameter the SDK cannot send.
+    """
+    adapter = AnthropicAdapter(api_key="sk-test-not-a-key", timeout_s=30)
+
+    for model in ("claude-sonnet-4-6", "claude-opus-4-1", "any-future-model"):
+        assert "temperature" in adapter.unsupported_parameters(model)
+
+
+def test_the_dispatch_point_clears_temperature_for_the_anthropic_adapter() -> None:
+    """The client's single omission path clears the operator's temperature."""
+    adapter = AnthropicAdapter(api_key="sk-test-not-a-key", timeout_s=30)
+    request = _request(model="claude-sonnet-4-6", temperature=0.7)
+
+    cleared = LLMClient._omit_unsupported_parameters(adapter, request)
+
+    assert cleared.temperature is None
+
+
+@contextmanager
+def _serve_anthropic_messages() -> Generator[tuple[str, Queue[Mapping[str, object]]]]:
+    """Serve a Messages-API-shaped endpoint that records every request body."""
+    bodies: Queue[Mapping[str, object]] = Queue()
+
+    class _MessagesEndpoint(SilentLoopbackHandler):
+        @override
+        def do_POST(self) -> None:
+            bodies.put(read_json_body(self))
+            write_json_response(
+                self,
+                {
+                    "id": "msg_loopback",
+                    "type": "message",
+                    "role": "assistant",
+                    "model": "claude-sonnet-4-6",
+                    "content": [{"type": "text", "text": " read "}],
+                    "stop_reason": "end_turn",
+                    "stop_sequence": None,
+                    "usage": {"input_tokens": 7, "output_tokens": 2},
+                },
+                status=HTTPStatus.OK,
+            )
+
+    with serving_loopback(_MessagesEndpoint, path=_MESSAGES_PATH) as endpoint:
+        yield endpoint.removesuffix(_MESSAGES_PATH), bodies
+
+
+def test_the_anthropic_request_body_on_the_wire_carries_no_sampling_parameter(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The JSON the real SDK sends holds no ``temperature``, ``top_p`` or ``top_k``.
+
+    Crosses the production dispatch clearing, the adapter, the SDK and its HTTP
+    transport against a loopback endpoint, so the assertion is on the bytes that
+    actually left the process rather than on a builder's return value.
+    """
+    with _serve_anthropic_messages() as (base_url, bodies):
+        monkeypatch.setenv("ANTHROPIC_BASE_URL", base_url)
+        adapter = AnthropicAdapter(api_key="sk-test-not-a-key", timeout_s=5)
+        request = LLMClient._omit_unsupported_parameters(
+            adapter,
+            _request(model="claude-sonnet-4-6", system="be terse", temperature=0.7),
+        )
+        completion = asyncio.run(adapter.complete(request))
+
+    assert bodies.qsize() == 1
+    body = bodies.get_nowait()
+    assert _SAMPLING_PARAMETERS.isdisjoint(body)
+    assert body["model"] == "claude-sonnet-4-6"
+    assert body["system"] == "be terse"
+    assert completion.text == "read"
+    assert completion.provider_request_id == "msg_loopback"
 
 
 def test_the_dispatch_point_clears_a_parameter_the_model_refuses() -> None:
@@ -112,14 +220,13 @@ def test_the_dispatch_point_leaves_a_parameter_the_model_accepts() -> None:
 
     A dispatch that cleared every parameter unconditionally would satisfy the
     previous case. This pins that the model identity is what decides, so the
-    same adapter carries the parameter for a model that accepts it.
+    same adapter keeps the parameter for a model that accepts it.
     """
     request = _request(model="tolerant-model", temperature=0.7)
 
     kept = LLMClient._omit_unsupported_parameters(_RefusesTemperature(), request)
 
     assert kept.temperature == 0.7
-    assert build_message_kwargs(kept)["temperature"] == 0.7
 
 
 def test_an_adapter_declares_no_unsupported_parameters_by_default() -> None:
@@ -146,8 +253,7 @@ def test_the_system_prompt_is_omitted_rather_than_sent_as_null() -> None:
     """The same absence rule the collapsed call sites used to express as a branch.
 
     ``system`` was previously handled by duplicating the whole ``messages.create``
-    call. That duplication is why ``temperature`` appeared at two sites, and why
-    changing one would have left the other sending it.
+    call; the builder now expresses its absence by omitting the key.
     """
     without = build_message_kwargs(_request())
     with_system = build_message_kwargs(_request(system="be terse"))

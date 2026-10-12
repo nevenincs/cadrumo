@@ -130,11 +130,16 @@ def build_user_content(request: ProviderRequest) -> str | list[ImageBlockParam |
 class _MessageCreateKwargs(TypedDict):
     """The exact keyword payload sent to ``messages.create``.
 
-    ``system`` and ``temperature`` are ``NotRequired`` because absence here is a
-    real wire distinction, not a default: the SDK forwards an explicit ``None``
-    as a JSON ``null``, which newer models reject. ``NotRequired`` is precisely
-    that claim at the type level, so the payload stays a plain dict the tests can
-    assert against while the overload on ``messages.create`` still resolves.
+    ``system`` is ``NotRequired`` because absence here is a real wire
+    distinction, not a default: the SDK forwards an explicit ``None`` as a JSON
+    ``null``. ``NotRequired`` is precisely that claim at the type level, so the
+    payload stays a plain dict the tests can assert against while the overload on
+    ``messages.create`` still resolves.
+
+    There is no sampling key at all. The SDK's ``messages.create`` accepts no
+    ``temperature``, ``top_p`` or ``top_k``: current models do not use them, and
+    the adapter declares ``temperature`` unsupported so the client clears it
+    before dispatch rather than this builder silently discarding it.
     """
 
     model: str
@@ -143,7 +148,6 @@ class _MessageCreateKwargs(TypedDict):
     metadata: MetadataParam
     timeout: float
     system: NotRequired[str]
-    temperature: NotRequired[float]
 
 
 def build_message_kwargs(request: ProviderRequest) -> _MessageCreateKwargs:
@@ -161,8 +165,10 @@ def build_message_kwargs(request: ProviderRequest) -> _MessageCreateKwargs:
     value and draws the same rejection the number would.
 
     Also collapses the system/no-system branch this call site used to duplicate.
-    That duplication is why ``temperature`` appeared twice, and why changing it
-    once would have left the other path sending it.
+
+    ``request.temperature`` is never read here. The SDK's ``messages.create`` has
+    no sampling parameters, and :meth:`AnthropicAdapter.unsupported_parameters`
+    declares ``temperature`` so the client clears it at dispatch.
     """
     kwargs: _MessageCreateKwargs = {
         "model": request.model,
@@ -173,8 +179,6 @@ def build_message_kwargs(request: ProviderRequest) -> _MessageCreateKwargs:
     }
     if request.system is not None:
         kwargs["system"] = request.system
-    if request.temperature is not None:
-        kwargs["temperature"] = request.temperature
     return kwargs
 
 
@@ -247,6 +251,18 @@ class AnthropicAdapter(ProviderAdapter):
         self._client = self._sdk.AsyncAnthropic(api_key=api_key, timeout=timeout_s)
 
     @override
+    def unsupported_parameters(self, model: str) -> frozenset[str]:
+        """Declare ``temperature`` unsupported for every Anthropic model.
+
+        The SDK's ``messages.create`` accepts no sampling parameters, so no model
+        this adapter serves can receive one. Declaring it here lets the client's
+        single dispatch point clear it, the same path any model-specific refusal
+        takes.
+        """
+        del model
+        return frozenset({"temperature"})
+
+    @override
     async def complete(self, request: ProviderRequest) -> ProviderCompletion:
         """Execute a completion request against Anthropic and normalize the result.
 
@@ -257,8 +273,8 @@ class AnthropicAdapter(ProviderAdapter):
 
         Args:
             request: Normalized provider request carrying the model id,
-                prompt, optional system prompt, sampling parameters, and
-                a request-id used as Anthropic ``metadata.user_id``.
+                prompt, optional system prompt, and a request-id used as
+                Anthropic ``metadata.user_id``.
 
         Returns:
             A :class:`ProviderCompletion` with the joined text, model id
