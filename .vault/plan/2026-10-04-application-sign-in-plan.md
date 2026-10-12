@@ -8,7 +8,7 @@ related:
   - '[[2026-10-04-application-sign-in-adr]]'
 modified: '2026-10-12'
 body_schema: body-v2
-body_hash: 'sha256:1f7e80f96869193ee7ee2e58bab2bd96582b82601728b508392492a609c907d2'
+body_hash: 'sha256:986016765b530c0b79db8d9cf38c019d0549d89959c6d472bf87f90c90214c94'
 ---
 
 # `application-sign-in` plan
@@ -60,7 +60,7 @@ Pushed revocation events from a single reason-carrying retire point over a new e
 
 Only the runtime owner mints, extends or deletes a receipt.
 
-- [ ] `P03.S12` - Retire the registered in-process login and logout operations and the non-runtime CLI receipt extension, and add a gate test that no other code mutates receipts; `src/cadrumo/application/auth/operation_definitions.py, src/cadrumo/application/user_profile/operations.py, profile_operation_execution.py, session_admission.py, login_session.py, owning tests`.
+- [x] `P03.S12` - Retire the registered in-process login and logout operations and the non-runtime CLI receipt extension, and add a gate test that no other code mutates receipts; `src/cadrumo/application/auth/operation_definitions.py, src/cadrumo/application/user_profile/operations.py, profile_operation_execution.py, session_admission.py, login_session.py, owning tests`.
 
 ### Phase `P04` - CLI
 

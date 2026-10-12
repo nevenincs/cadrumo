@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:44473111ddee46bf971a4ff2ba7e5edf56deeba88dab6891bc178a997811d0ce'
+body_hash: 'sha256:7beed35b5588dfec748c235be172c8369e1c493a21d168ed901a12285b2f9229'
 related:
   - "[[2026-10-04-application-sign-in-plan]]"
 ---
@@ -260,6 +260,14 @@ related:
 - `S09` `verify:` `just check-types (31 ty findings in dev/ and adapters/local_runtime/tests/test_posix.py, none in this Step's files)` -> `fail`
 - `S09` `verify:` `just check-import-boundaries (unavailable: governed tree changed mid-run)` -> `fail`
 - `S09` `verify:` `ruff check, ruff format --check, ty on the Step's files` -> `pass`
+- `S12` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/test_receipt_mutation_ownership.py`
+- `S12` `verify:` `pytest test_receipt_mutation_ownership: 6 passed, including 4 planted second owners caught in isolated fixtures` -> `pass`
+- `S12` `verify:` `census: auth.session.acquire/logout are AEAT provider sessions (login_operator_auth, certificate/browser), not profile sign-in; left untouched` -> `pass`
+- `S12` `verify:` `just check-style` -> `pass`
+- `S12` `verify:` `just check-format (4 findings, none in this Step's files)` -> `fail`
+- `S12` `verify:` `just check-types (31 ty findings in dev/ and adapters/local_runtime/tests/test_posix.py, none in this Step's files)` -> `fail`
+- `S12` `verify:` `just check-import-boundaries (unavailable: governed tree changed mid-run)` -> `fail`
+- `S12` `verify:` `ruff check, ruff format --check, ty on the Step's files` -> `pass`
 
 ## Notes
 
@@ -280,3 +288,4 @@ related:
 - `S11` Implemented before this ledger resumed `(runtime_frame_io` event frames, `session_events` queue bound 64, `server_connection_handling,` `runtime_verified_transport);` closed on test evidence.
 - `S16` Implemented before this ledger resumed (tui `runtime_session,` app, `runtime_account);` closed on test evidence.
 - `S09` Runtime already carried THROTTLED seconds, `PROFILE_LOCKED,` receipt reasons and binding (generation changed, login mismatch) on the wire, and the TUI shows the typed code; the CLI collapsed them to absent/expired or a bare code. The CLI now names each reason, keeps the runtime code and context the desktop reads, and the throttle diagnostic was already present in `login_throttle.`
+- `S12` The registered in-process profile login/logout operations, the non-runtime unwrap callers and the CLI receipt extension were already retired by commit 5a09ab8082 `(login_handover,` `login_session` in-process paths); no extension code exists anywhere. Closed with the ownership gate over src/cadrumo.
