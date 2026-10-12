@@ -29,6 +29,7 @@ from typing import Any, Final
 from cadrumo.adapters.local_runtime.windows_process import WindowsProcessScope
 from dev.packaging.command_execution import run_command
 
+from .capture import Scrubber
 from .outcome import UnavailableError
 from .package_host import READY_FILE, STOP_FILE, STOPPED_FILE
 
@@ -127,6 +128,10 @@ class CliResult:
     arguments: tuple[str, ...]
     returncode: int
     document: dict[str, Any]
+    stream: str = "stdout"
+    """Which stream carried the envelope: ``stdout``, ``stderr`` or ``none`` when neither decoded."""
+    stdout_head: str = ""
+    stderr_head: str = ""
 
     @property
     def ok(self) -> bool:
@@ -162,6 +167,58 @@ class Person:
         return (self.password,)
 
 
+HEAD_CHARACTERS: Final = 2000
+
+
+@dataclass(frozen=True, slots=True)
+class FailedCall:
+    """One command-line call that failed: its name, never its arguments, and the heads of its streams."""
+
+    command: str
+    returncode: int
+    stream: str
+    stdout_head: str
+    stderr_head: str
+
+
+def command_name(arguments: Sequence[str]) -> str:
+    """The leading subcommand words of a call: at most three plain words, stopping at an option or a value."""
+    words: list[str] = []
+    for argument in arguments[:3]:
+        if (
+            argument.startswith("-")
+            or not argument.isascii()
+            or not argument.replace("-", "").isalpha()
+            or argument != argument.lower()
+        ):
+            break
+        words.append(argument)
+    return " ".join(words)
+
+
+def decode_envelope(stdout: str, stderr: str, returncode: int) -> tuple[dict[str, Any] | None, str]:
+    """Decode the JSON envelope from whichever stream carries it, and say which.
+
+    A success writes it to stdout and a refusal historically to stderr, but a
+    registered refusal can be written to either, and a process that exits
+    early may carry it on the other. The stream the exit status points at is
+    tried first. ``(None, "none")`` means neither decodes.
+    """
+    ordered = (("stdout", stdout), ("stderr", stderr)) if returncode == 0 else (("stderr", stderr), ("stdout", stdout))
+    for name, text in ordered:
+        candidates = [text.strip(), *[line for line in reversed(text.splitlines()) if line.startswith("{")][:1]]
+        for candidate in candidates:
+            if not candidate:
+                continue
+            try:
+                document = json.loads(candidate)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(document, dict):
+                return document, name
+    return None, "none"
+
+
 def _decoded_events(stdout: str) -> list[dict[str, Any]]:
     return [json.loads(line) for line in stdout.splitlines() if line.startswith("{")]
 
@@ -169,8 +226,16 @@ def _decoded_events(stdout: str) -> list[dict[str, Any]]:
 class PackageHost:
     """The copied package hosted on one fresh root, until :meth:`close`."""
 
-    def __init__(self, package: Path, run: RunDirectory, *, ambient: Mapping[str, str]) -> None:
-        """Remember the copy and the run directory; nothing starts until :meth:`start`."""
+    def __init__(
+        self, package: Path, run: RunDirectory, *, ambient: Mapping[str, str], scrubber: Scrubber | None = None
+    ) -> None:
+        """Remember the copy and the run directory; nothing starts until :meth:`start`.
+
+        ``scrubber`` cleans the stream heads kept on a call's result and in
+        :attr:`failed_calls`; the profile password is added when the person is created.
+        """
+        self.scrubber = scrubber if scrubber is not None else Scrubber(())
+        self.failed_calls: list[FailedCall] = []
         self.package = package
         self.run = run
         self.root = run.root
@@ -286,15 +351,35 @@ class PackageHost:
             errors="replace",
             input_text=None if payload is None else json.dumps(payload),
         )
-        stream = completed.stdout if completed.returncode == 0 else completed.stderr or completed.stdout
-        try:
-            document = json.loads(stream)
-        except json.JSONDecodeError:
+        stdout_head = self.scrubber.scrub(completed.stdout[:HEAD_CHARACTERS])
+        stderr_head = self.scrubber.scrub(completed.stderr[:HEAD_CHARACTERS])
+        decoded, stream = decode_envelope(completed.stdout, completed.stderr, completed.returncode)
+        document = decoded
+        if document is None:
             document = {
                 "status": "error",
-                "error": {"code": "UNDECODABLE_ENVELOPE", "context": {"reason": f"exit_{completed.returncode}"}},
+                "error": {
+                    "code": "UNDECODABLE_ENVELOPE",
+                    "context": {
+                        "reason": f"exit_{completed.returncode}",
+                        "stdout_head": stdout_head,
+                        "stderr_head": stderr_head,
+                    },
+                },
             }
-        return CliResult(arguments=tuple(arguments), returncode=completed.returncode, document=document)
+        result = CliResult(
+            arguments=tuple(arguments),
+            returncode=completed.returncode,
+            document=document,
+            stream=stream,
+            stdout_head=stdout_head,
+            stderr_head=stderr_head,
+        )
+        if not result.ok:
+            self.failed_calls.append(
+                FailedCall(command_name(arguments), completed.returncode, stream, stdout_head, stderr_head)
+            )
+        return result
 
     def create_person(self, name: str) -> Person:
         """Create a synthetic profile with a random password the agent never sees."""
@@ -311,6 +396,7 @@ class PackageHost:
             raise RuntimeError(f"profile creation refused: {'/'.join(created.error_tokens)}")
         # The packaged command line prints identifiers redacted; the package's own pointer names the profile.
         (selected,) = (event for event in self.package_python("active-profile", "--root", str(self.root)))
+        self.scrubber.add("profile_password", password)
         return Person(profile_id=str(selected["profile_id"]), password=password)
 
     def state_profile(self, person: Person, options: Sequence[str]) -> None:

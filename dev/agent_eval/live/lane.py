@@ -48,6 +48,7 @@ from .drivers import (
     select_driver,
     wait_for_admission,
 )
+from .evidence import settle_run_root
 from .isolated_host import (
     CliResult,
     PackageHost,
@@ -56,7 +57,6 @@ from .isolated_host import (
     host_values_outside_allowlist,
     mcp_launch,
     new_run_directory,
-    remove_run_directory,
 )
 from .oracle import judge as judge_oracle
 from .oracle import read_oracle
@@ -134,9 +134,11 @@ class _Run:
     def __init__(self, identity: PackageIdentity, ambient: Mapping[str, str]) -> None:
         self.ambient = ambient
         self.run: RunDirectory = new_run_directory(lane_root() / "runs")
-        self.host = PackageHost(Path(identity.root), self.run, ambient=ambient)
+        self.host = PackageHost(Path(identity.root), self.run, ambient=ambient, scrubber=_scrubber(None, ambient))
         self.person: Person | None = None
         self.signed_in: CliResult | None = None
+        self.keep_reason: str | None = None
+        """``harness_error`` or ``product_finding`` when this run's evidence must outlive its root."""
 
     def open(self, profile_options: tuple[str, ...]) -> Person:
         self.host.start()
@@ -147,8 +149,20 @@ class _Run:
         self.signed_in = self.host.sign_in(person)
         return person
 
-    def close(self) -> None:
-        """Sign out, remove the stored sign-in, stop the package and remove the root.
+    def _settle(self, capture: Path, index: int, evidence: list[dict[str, Any]]) -> None:
+        kept = settle_run_root(
+            self.run,
+            lane_root() / "runs",
+            keep_reason=self.keep_reason,
+            directory=capture / f"run-{index}-evidence",
+            scrubber=_scrubber(self.person, self.ambient),
+            failures=self.host.failed_calls,
+        )
+        if kept is not None:
+            evidence.append({"run_index": index} | kept)
+
+    def close(self, capture: Path, index: int, evidence: list[dict[str, Any]]) -> None:
+        """Sign out, remove the stored sign-in, stop the package, keep evidence if owed and remove the root.
 
         Each step is attempted whatever the others did, and a failed step is
         reported on standard error without hiding the run's own outcome: on a
@@ -161,10 +175,7 @@ class _Run:
                 ("sign out", self.host.sign_out),
                 ("stored sign-in", lambda: self.host.delete_stored_sign_in(person)),
             ]
-        steps += [
-            ("package host", self.host.close),
-            ("run root", lambda: remove_run_directory(self.run, lane_root() / "runs")),
-        ]
+        steps += [("package host", self.host.close), ("run root", lambda: self._settle(capture, index, evidence))]
         for label, step in steps:
             try:
                 step()
@@ -250,6 +261,7 @@ def _work_run(
     driver: DriverKind,
     index: int,
     capture: Path,
+    evidence: list[dict[str, Any]],
 ) -> RunRecord:
     ambient = dict(sys_environment())
     started = time.monotonic()
@@ -327,9 +339,16 @@ def _work_run(
         write_capture(capture, f"run-{index}-trajectory.json", trajectory.model_dump(mode="json"), scrubber)
         write_capture(capture, f"run-{index}-score.json", score.model_dump(mode="json"), scrubber)
         write_capture(capture, f"run-{index}-oracle.json", asdict(reading) | {"judgement": asdict(judgement)}, scrubber)
+        if verdict.product_finding:
+            run.keep_reason = "product_finding"
         return RunRecord(index, verdict, asdict(report), time.monotonic() - started)
+    except UnavailableError:
+        raise
+    except BaseException:
+        run.keep_reason = "harness_error"
+        raise
     finally:
-        run.close()
+        run.close(capture, index, evidence)
 
 
 def _access_run(
@@ -339,6 +358,7 @@ def _access_run(
     driver: DriverKind,
     index: int,
     capture: Path,
+    evidence: list[dict[str, Any]],
 ) -> RunRecord:
     ambient = dict(sys_environment())
     started = time.monotonic()
@@ -436,9 +456,16 @@ def _access_run(
         verdict = RunVerdict(
             run_index=index, invariant_failures=tuple(failures), end_state_reached=reached, notes=tuple(notes)
         )
+        if verdict.product_finding:
+            run.keep_reason = "product_finding"
         return RunRecord(index, verdict, asdict(report), time.monotonic() - started)
+    except UnavailableError:
+        raise
+    except BaseException:
+        run.keep_reason = "harness_error"
+        raise
     finally:
-        run.close()
+        run.close(capture, index, evidence)
 
 
 def sys_environment() -> dict[str, str]:
@@ -459,6 +486,7 @@ def run_lane(request: LaneRequest) -> LaneVerdict:
         "limits": asdict(request.limits),
     }
     records: list[RunRecord] = []
+    evidence: list[dict[str, Any]] = []
     identity: PackageIdentity | None = None
     try:
         if sys.platform != "win32":
@@ -477,9 +505,9 @@ def run_lane(request: LaneRequest) -> LaneVerdict:
         require_current(comparison, measure_stale=request.measure_stale_package)
         for index in range(request.runs):
             if work is not None:
-                record = _work_run(request, work, identity, driver, index, capture)
+                record = _work_run(request, work, identity, driver, index, capture, evidence)
             elif access is not None:
-                record = _access_run(request, access, identity, driver, index, capture)
+                record = _access_run(request, access, identity, driver, index, capture, evidence)
             else:
                 raise UnavailableError("scenario_unknown", request.scenario)
             records.append(record)
@@ -505,6 +533,7 @@ def run_lane(request: LaneRequest) -> LaneVerdict:
         }
         for record in records
     ]
+    receipt["evidence"] = evidence
     receipt["verdict"] = verdict.model_dump(mode="json") | {"exit_code": verdict.exit_code}
     receipt["finished_at"] = datetime.now(UTC).isoformat()
     write_capture(capture, "receipt.json", receipt, _scrubber(None, ambient))

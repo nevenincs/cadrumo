@@ -5,6 +5,9 @@ this file with the copy's ``python.exe -I``, so ``cadrumo`` below is the
 package's, and the file imports nothing from ``dev``. Its short subcommands
 print one JSON object per line on standard output.
 
+``run-runtime`` is the relay ``serve`` puts between itself and the runtime so
+the runtime's standard streams land in files in the control directory.
+
 ``serve`` records the runtime installation on the run's fresh root and launches
 the packaged runtime the way the manager does, with the manager's arguments
 except ``--supervised``, inside a kill-on-close job this process owns. It
@@ -23,7 +26,9 @@ at teardown. No secret is read or printed here.
 from __future__ import annotations
 
 import argparse
+import asyncio
 import json
+import subprocess
 import sys
 import time
 from contextlib import ExitStack
@@ -37,6 +42,8 @@ _POLL_SECONDS = 0.25
 READY_FILE = "ready.json"
 STOP_FILE = "stop"
 STOPPED_FILE = "stopped.json"
+RUNTIME_STDOUT_FILE = "runtime.stdout"
+RUNTIME_STDERR_FILE = "runtime.stderr"
 
 
 def _emit(event: dict[str, Any]) -> None:
@@ -102,9 +109,17 @@ def serve(root: Path, package: Path, control: Path) -> int:
             storage_root=root, os_owner_id=endpoint.os_owner_id, storage_identity=endpoint.storage_identity
         )
         image = _runtime_image(package)
+        # The launcher hands its child no standard streams, so the runtime runs under a relay in the same job
+        # that points them at files in the control area; the relay's exit status is the runtime's.
         process = scope.launch(
-            executable=image,
+            executable=Path(sys.executable),
             arguments=(
+                "-I",
+                str(Path(__file__).resolve()),
+                "run-runtime",
+                str(control / RUNTIME_STDOUT_FILE),
+                str(control / RUNTIME_STDERR_FILE),
+                str(image),
                 "--storage-root",
                 str(root),
                 "--storage-identity",
@@ -142,6 +157,17 @@ def serve(root: Path, package: Path, control: Path) -> int:
                 return 1
     _publish(control / STOPPED_FILE, {"event": "stopped"})
     return 0
+
+
+def run_runtime(stdout: Path, stderr: Path, command: list[str]) -> int:
+    """Run the packaged runtime with its standard streams in files, and return its exit status."""
+
+    async def relay() -> int:
+        with stdout.open("wb") as out, stderr.open("wb") as err:
+            child = await asyncio.create_subprocess_exec(*command, stdin=subprocess.DEVNULL, stdout=out, stderr=err)
+            return await child.wait()
+
+    return asyncio.run(relay())
 
 
 def surface() -> int:
@@ -215,6 +241,10 @@ def main() -> int:
     serving.add_argument("--root", type=Path, required=True)
     serving.add_argument("--package", type=Path, required=True)
     serving.add_argument("--control", type=Path, required=True)
+    relaying = commands.add_parser("run-runtime")
+    relaying.add_argument("stdout", type=Path)
+    relaying.add_argument("stderr", type=Path)
+    relaying.add_argument("command_line", nargs=argparse.REMAINDER)
     commands.add_parser("surface")
     parsing = commands.add_parser("parse-export")
     parsing.add_argument("--file", type=Path, required=True)
@@ -232,6 +262,8 @@ def main() -> int:
             return serve(
                 args.root.resolve(strict=True), args.package.resolve(strict=True), args.control.resolve(strict=True)
             )
+        if args.command == "run-runtime":
+            return run_runtime(args.stdout, args.stderr, args.command_line)
         if args.command == "surface":
             return surface()
         if args.command == "parse-export":
