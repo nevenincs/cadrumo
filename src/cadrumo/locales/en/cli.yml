@@ -2085,13 +2085,10 @@ cli:
         session_not_persisted: No usable OS keychain found, so this command authenticated
           only its own process; supply profile authentication again to the next process.
         session_not_persisted_logon: 'Signed in for this command only: Windows Credential
-          Manager refused this logon session (error 1312), as it does for a logon
-          that holds no Windows credentials, such as an OpenSSH public-key sign-in
-          or a service or batch logon. No process in such a logon can keep or follow
-          a sign-in, so cadrumo-mcp and later commands cannot use it. Run the runtime,
-          the commands and cadrumo-mcp from this account''s interactive desktop session
-          or from a logon made with the account password, or pass the profile password
-          to each command with --profile-secrets-stdin.'
+          Manager refused this logon session (error 1312) because it holds no Windows
+          credentials, so no process in it can keep or follow a sign-in, and cadrumo-mcp
+          and later commands cannot use it. Run Cadrumo from your Windows desktop
+          sign-in, or pass the profile password to each command with --profile-secrets-stdin.'
         session_not_persisted_no_backend: 'Signed in for this command only: no OS
           keychain is available to this process, so the sign-in cannot be kept for
           cadrumo-mcp or later commands. Enable the system keychain for this account,
@@ -2563,6 +2560,11 @@ cli:
         stays setup-incomplete; `aeat config profile complete-setup` names the facts
         it still needs. Sufficient on its own; combine with --accept-defaults to fill
         the rest from descriptor defaults.
+    sign_in_hold:
+      help: Hold a profile's sign-in, unsaved, while standard input stays open, and
+        approve which agent connections follow it.
+      name_help: Profile UUID or exact label to sign in to; omit to use the selected
+        profile
     sign_in_status:
       help: Check your sign-in status without resuming or extending it.
     status:

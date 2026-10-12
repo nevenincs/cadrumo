@@ -1,5 +1,6 @@
 import { openPanelTab } from "../support/panel";
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { seedLayout } from "../support/layout";
 import { label } from "../support/strings";
 import { useDomTerminal } from "../support/terminal";
 
@@ -1398,6 +1399,7 @@ test("Follow is reached by the keyboard where the eye finds it, in each shape of
 test("maximizing the bottom panel over the pane that holds the keyboard takes it into the panel", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await open(target, "signed-in");
   await expect(target.locator(".docs-frame")).toBeVisible();
   for (const from of ["tui", "docs"] as const) {
@@ -1466,6 +1468,7 @@ test("Space on a record with no detail does not scroll the log", async ({
 test("a pane's note that is cut for want of room still says all of itself", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   // A window at 200 percent, in the language with the longest words: the
   // note beside the TUI's title has room for a few letters.
   await target.setViewportSize({ width: 640, height: 450 });
@@ -1495,6 +1498,7 @@ test("a pane's note that is cut for want of room still says all of itself", asyn
 test("hiding the TUI from inside it leaves the keyboard in the window", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await open(target, "signed-in");
   await expect(target.locator(".docs-frame")).toBeVisible();
   await target.locator('[data-terminal="tui"] .xterm-screen').click();
@@ -2067,12 +2071,14 @@ test("the rail keeps its order: search, window toggles, shortcuts, panel toggle"
     .evaluateAll((buttons) =>
       buttons.map((button) => button.getAttribute("aria-label") ?? ""),
     );
-  // The packaged run reaches search and docs home by these two positions.
+  // The packaged run reaches search by its position. The window's columns
+  // follow in the order they are laid out by default.
   expect(names.map((name) => name.split(",")[0])).toEqual(
     [
       "desktop.rail.search",
-      "desktop.rail.docs_home",
+      "desktop.rail.agent",
       "desktop.rail.tui",
+      "desktop.rail.docs",
       "desktop.calendar.title",
       "desktop.rail.messages",
       "desktop.rail.aeat",
@@ -2103,6 +2109,7 @@ const FIXTURE_DAY = new Date(2026, 9, 6, 12);
 test("the filing calendar is a page of the first pane, read when it is shown", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await target.clock.setFixedTime(FIXTURE_DAY);
   await open(target, "signed-in");
   const pane = target.locator(".pane-docs");
@@ -2911,6 +2918,7 @@ test("the months come back to the month the reader left them on, in a pane and b
 test("the reader's month does not drift however often the months are laid out anew", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await target.setViewportSize({ width: 1600, height: 900 });
   await open(target, "signed-in");
   await calendarButton(target).click();
@@ -3894,6 +3902,7 @@ test("the calendar is not read again for being put away and brought back", async
 test("the documentation keeps its place under the calendar", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await open(target, "signed-in");
   const frame = target.frameLocator(".docs-frame");
   await frame.getByRole("link", { name: "Second page" }).click();
@@ -4134,6 +4143,7 @@ test("the calendar chosen while the TUI is maximized takes the keyboard", async 
 test("putting the calendar away from the rail leaves the keyboard on the rail", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await open(target, "signed-in");
   await calendarButton(target).focus();
   await target.keyboard.press("Enter");
@@ -4552,6 +4562,7 @@ test("a view asked for as a sign-in is admitted gets the keyboard, not the TUI",
 test("with the TUI hidden, the sign-in dialog leaves the keyboard in the documentation", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   // The window was last used with the TUI hidden.
   await open(target, "signed-in");
   await target.locator('[data-terminal="tui"] .xterm-screen').click();
@@ -4572,22 +4583,33 @@ test("with the TUI hidden, the sign-in dialog leaves the keyboard in the documen
   await expect(target.locator(".docs-frame")).toBeFocused();
 });
 
-test("a calendar put away with no documentation behind it leaves the keyboard on the rail", async ({
-  page: target,
-}) => {
-  await open(target, "error");
-  await expect(target.locator(".sign-in")).toBeVisible();
-  await target.keyboard.press("Escape");
-  await expect(target.locator(".docs-frame")).toHaveCount(0);
-  await target.keyboard.press("ControlOrMeta+Shift+D");
-  await expect(
-    target.getByRole("region", { name: label("desktop.calendar.title") }),
-  ).toBeFocused();
-  await target.keyboard.press("ControlOrMeta+Shift+D");
-  await expect(target.locator(".calendar-page")).toHaveCount(0);
-  // The rail hands focus given to it on to its own tab stop.
-  await expect(target.locator(".rail :focus")).toHaveCount(1);
-});
+for (const [beside, layout] of [
+  ["the rail", { agentShown: false, tuiShown: false }],
+  ["the TUI's way in", { agentShown: false }],
+] as const)
+  test(`a calendar put away with no documentation behind it leaves the keyboard on ${beside}`, async ({
+    page: target,
+  }) => {
+    // The calendar's pane goes with it: the keyboard goes to the next column
+    // on screen with something to focus, else to the rail.
+    await seedLayout(target, { layout });
+    await open(target, "error");
+    await expect(target.locator(".sign-in")).toBeVisible();
+    await target.keyboard.press("Escape");
+    await expect(target.locator(".docs-frame")).toHaveCount(0);
+    await target.keyboard.press("ControlOrMeta+Shift+D");
+    await expect(
+      target.getByRole("region", { name: label("desktop.calendar.title") }),
+    ).toBeFocused();
+    await target.keyboard.press("ControlOrMeta+Shift+D");
+    await expect(target.locator(".calendar-page")).toHaveCount(0);
+    // The rail hands focus given to it on to its own tab stop.
+    await expect(
+      target.locator(
+        layout.tuiShown === false ? ".rail :focus" : ".pane-tui :focus",
+      ),
+    ).toHaveCount(1);
+  });
 
 test("a calendar shown again after a failed read says the new failure once", async ({
   page: target,

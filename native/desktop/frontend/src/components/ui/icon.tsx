@@ -4,6 +4,7 @@ import {
   ArrowRight,
   BookA,
   BookOpen,
+  Bot,
   CalendarDays,
   ChevronDown,
   ChevronLeft,
@@ -34,6 +35,7 @@ import {
   Settings,
   SquareTerminal,
   Square,
+  SquareDashed,
   TriangleAlert,
   Unplug,
   UserPlus,
@@ -71,11 +73,13 @@ function PythonMark(props: React.ComponentProps<"svg">) {
  * imports it, so a name maps to one glyph everywhere.
  */
 const ICONS = {
+  agent: Bot,
   alert: TriangleAlert,
   arrow: ArrowRight,
   back: ChevronLeft,
   book: BookOpen,
   calendar: CalendarDays,
+  canvas: SquareDashed,
   check: CircleCheck,
   chevronDown: ChevronDown,
   chevronUp: ChevronUp,

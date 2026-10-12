@@ -206,7 +206,7 @@ CONFIG_CUSTODY_COMMAND_SPECS = (
         help_key=TranslationKey("cli.config.logout.help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
-        parameters=(_OUTPUT_LANGUAGE,),
+        parameters=(*_MACHINE_SECRET_OPTIONS, _OUTPUT_LANGUAGE),
         policy=BOOTSTRAP_DESTRUCTIVE,
         handler=LazyBinding.available(DeferredTarget(".custody", "config_logout", __package__)),
         result_schema=ResultSchemaSpec(
@@ -214,6 +214,41 @@ CONFIG_CUSTODY_COMMAND_SPECS = (
             target=DeferredTarget(".custody_payloads", "ConfigLogoutResult", __package__),
             identity="config.logout",
         ),
+        machine_secret=MachineSecretSpec(
+            (
+                MachineSecretVariantSpec(
+                    "passphrase",
+                    (MachineSecretFieldSpec("passphrase"),),
+                    DeferredTarget(".custody", "LoginSecrets", __package__),
+                ),
+            )
+        ),
+    ),
+    CommandSpec(
+        "config_sign_in_hold",
+        "config",
+        "sign-in-hold",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.config.sign_in_hold.help"),
+        short_help_key=None,
+        invocation=InvocationSpec(context_parameter="ctx"),
+        parameters=(
+            ArgumentSpec(
+                name="name",
+                value=ValueContract(DeferredTarget("builtins", "str")),
+                default=ParameterDefault.value(None),
+                help_key=TranslationKey("cli.config.sign_in_hold.name_help"),
+            ),
+            _OUTPUT_LANGUAGE,
+        ),
+        policy=BOOTSTRAP_WRITE,
+        handler=LazyBinding.available(DeferredTarget(".sign_in_hold", "config_sign_in_hold", __package__)),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            target=DeferredTarget(".custody_payloads", "ConfigSignInHoldResult", __package__),
+            identity="config.sign-in-hold",
+        ),
+        profile_authentication=ProfileAuthenticationPosture.SELF_AUTHENTICATING,
     ),
 )
 

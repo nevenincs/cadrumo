@@ -21,7 +21,6 @@ from ._ledger_llm_support import _import_one_transaction
 from .cli_runner import invoke_cached_cli
 from .runtime_profile_backend import operator_profile_bound_to_cli
 
-_PROFILE_ID = "9e0f3a2b-5d1c-4a77-9b2d-27ed6d6c7f10"
 _PROFILE_LABEL = "tester"
 
 

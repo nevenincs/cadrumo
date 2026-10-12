@@ -1,7 +1,7 @@
 import type { TerminalKind } from "./host";
 
 export type PanelTab = Exclude<TerminalKind, "tui"> | "logs";
-export type Maximized = "docs" | "tui" | "panel" | null;
+export type Maximized = "agent" | "docs" | "tui" | "panel" | null;
 
 export type TerminalFontSize = "small" | "medium" | "large" | "x-large";
 
@@ -29,7 +29,12 @@ export type Prefs = {
 };
 
 export type Layout = {
+  /** The agent column, always beside the rail. */
+  agentShown: boolean;
+  /** The agent column's share of the window width. */
+  agentRatio: number;
   tuiShown: boolean;
+  docsShown: boolean;
   /** The documentation pane's share of the split. */
   splitRatio: number;
   panelOpen: boolean;
@@ -44,12 +49,17 @@ export const DEFAULT_PREFS: Prefs = {
   language: FOLLOW_LANGUAGE,
   terminals: "match",
   orientation: "row",
-  order: "docs",
+  order: "tui",
   fontSize: "medium",
 };
 
 export const DEFAULT_LAYOUT: Layout = {
+  agentShown: true,
+  agentRatio: 0.24,
   tuiShown: true,
+  // The documentation is opened on request: an empty first pane is not a
+  // reason to show it.
+  docsShown: false,
   splitRatio: 0.56,
   panelOpen: false,
   panelRatio: 0.3,
@@ -115,14 +125,29 @@ export function loadState(): { prefs: Prefs; layout: Layout } {
         ["row", "column"] as const,
         DEFAULT_PREFS.orientation,
       ),
-      order: pick(p.order, ["docs", "tui"] as const, DEFAULT_PREFS.order),
+      // A shell from before the documentation could be put away stored the
+      // documentation first as its default, not as anybody's choice: the
+      // order it saved gives way to today's default.
+      order:
+        typeof l.docsShown === "boolean"
+          ? pick(p.order, ["docs", "tui"] as const, DEFAULT_PREFS.order)
+          : DEFAULT_PREFS.order,
       // An older shell stored a numeric point size (12/13/14/16); that no
       // longer matches a named step, so it falls back to the default here.
       fontSize: pick(p.fontSize, TERMINAL_FONT_SIZES, DEFAULT_PREFS.fontSize),
     },
     layout: {
+      agentShown:
+        typeof l.agentShown === "boolean"
+          ? l.agentShown
+          : DEFAULT_LAYOUT.agentShown,
+      agentRatio: share(l.agentRatio, DEFAULT_LAYOUT.agentRatio, 0.1, 0.9),
       tuiShown:
         typeof l.tuiShown === "boolean" ? l.tuiShown : DEFAULT_LAYOUT.tuiShown,
+      docsShown:
+        typeof l.docsShown === "boolean"
+          ? l.docsShown
+          : DEFAULT_LAYOUT.docsShown,
       splitRatio: share(l.splitRatio, DEFAULT_LAYOUT.splitRatio, 0.1, 0.9),
       // The panel is opened explicitly in each window, even if an older
       // shell saved it open. Its selected tab and dimensions are retained.
@@ -137,7 +162,10 @@ export function loadState(): { prefs: Prefs; layout: Layout } {
 export function saveState(prefs: Prefs, layout: Layout): void {
   try {
     const persistedLayout: Omit<Layout, "panelOpen"> = {
+      agentShown: layout.agentShown,
+      agentRatio: layout.agentRatio,
       tuiShown: layout.tuiShown,
+      docsShown: layout.docsShown,
       splitRatio: layout.splitRatio,
       panelRatio: layout.panelRatio,
       tab: layout.tab,

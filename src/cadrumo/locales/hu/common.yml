@@ -570,6 +570,12 @@ desktop:
     zoom_in: Dokumentáció nagyítása
     zoom_out: Dokumentáció kicsinyítése
     zoom_reset: Dokumentáció nagyításának visszaállítása
+  agent:
+    empty_lead: Az ügynök ebben az ablakban még nem érhető el.
+    empty_title: Még nincs itt ügynök
+    hide: Ügynök elrejtése
+    resize: Ügynök átméretezése
+    show: Ügynök megjelenítése
   calendar:
     aeat:
       accepted: Elfogadva
@@ -614,11 +620,17 @@ desktop:
     view_months: Naptár
     warnings: Hiányoznak profiladatok, ezért ezek a dátumok alapértékeket használnak.
     window_unknown: A kezdő dátum nincs megadva
+  canvas:
+    lead: Nyisd meg az ügynököt, a TUI-t vagy a dokumentációt az oldalsávról vagy
+      innen.
+    title: Nincs semmi megnyitva
   docs:
     frame_title: Cadrumo-dokumentáció
+    hide: Dokumentáció elrejtése
     loading: A dokumentáció betöltése…
     not_bundled: A Cadrumo ezen példánya dokumentáció nélkül készült. Minden más a
       megszokott módon működik.
+    show: Dokumentáció megjelenítése
     unavailable: A dokumentációt nem sikerült megnyitni. Minden más a megszokott módon
       működik.
   host:
@@ -678,7 +690,9 @@ desktop:
     type_to_search: Írj a kereséshez.
     unavailable: A dokumentáció keresése nem érhető el.
   pane:
+    agent: Ügynök
     docs: Dokumentáció
+    maximize_agent: Ügynök teljes méretben
     maximize_docs: Dokumentáció teljes méretben
     maximize_focused: Aktív terület teljes méretben
     maximize_panel: Alsó panel teljes méretben
@@ -692,7 +706,9 @@ desktop:
     show: Alsó panel megjelenítése
   rail:
     aeat: Az AEAT honlapja
+    agent: Ügynök
     console: Konzol
+    docs: Dokumentáció
     docs_home: Dokumentáció kezdőlapja
     label: Munkaterület
     logs: Naplók

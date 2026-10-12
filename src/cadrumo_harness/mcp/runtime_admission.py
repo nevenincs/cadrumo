@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
+from time import monotonic, sleep
 from typing import Any, Final
 from uuid import UUID
 
@@ -12,6 +13,7 @@ from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.application.operations.mcp_surfaces import McpSurface
 from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.application.runtime.attendance import RuntimeAttendancePending
 from cadrumo.application.runtime.profile_access import status_admits_session
 from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode, ProfileAccessStatus
 from cadrumo.application.user_profile.login_session import ProfileReceiptRefusedError
@@ -31,6 +33,8 @@ class McpAdmission(StrEnum):
     """Resumed from the person's sign-in; it ends when that sign-in ends."""
     KEY = "key"
     """Authenticated by an enrolled key the person configured at launch, under the grant approved for it."""
+    ATTENDED = "attended"
+    """Admitted by the person's own decision under the sign-in they hold; it ends when that sign-in ends."""
 
 
 NO_SESSION: Final = "none"
@@ -166,6 +170,35 @@ def resume_shared_sign_in(client: RuntimeFrontendClient, *, profile_id: UUID) ->
             sign_in=SignInRefusal(reason=refused.reason, binding=refused.binding, keychain=refused.keychain),
         ) from None
     return require_exact_admitted_status(client, profile_id=profile_id, admission=McpAdmission.SIGN_IN)
+
+
+ATTENDANCE_WAIT_SECONDS: Final = 90.0
+"""How long one call waits for the person to decide an ask before it is answered as refused."""
+
+_ATTENDANCE_POLL_SECONDS: Final = 0.25
+
+ATTENDABLE_REFUSALS: Final = frozenset(
+    {AccessDenialCode.AUTHENTICATION_REQUIRED.value, AccessDenialCode.CUSTODY_UNAVAILABLE.value}
+)
+"""Refusals of a resume that leave the person's held sign-in as the remaining way in."""
+
+
+def attend_held_sign_in(client: RuntimeFrontendClient, *, profile_id: UUID) -> ProfileAccessStatus:
+    """Ask the person holding the sign-in to admit this connection, and wait for their decision.
+
+    The ask carries no secret and the agent names no credential: the runtime
+    shows the person this process as the kernel names it, and only their
+    approval of this exact ask admits the connection. A decline, a lapsed ask,
+    or no held sign-in at all is the runtime's refusal, raised with its code.
+    """
+    deadline = monotonic() + ATTENDANCE_WAIT_SECONDS
+    reply = client.request_attendance()
+    while isinstance(reply, RuntimeAttendancePending):
+        if monotonic() >= deadline:
+            raise RuntimeFrontendRefusedError(AccessDenialCode.AUTHENTICATION_REQUIRED.value)
+        sleep(_ATTENDANCE_POLL_SECONDS)
+        reply = client.attendance_status(reply.attendance_id)
+    return require_exact_admitted_status(client, profile_id=profile_id, admission=McpAdmission.ATTENDED)
 
 
 def status_on_surface(status: ProfileAccessStatus, surface: McpSurface) -> ProfileAccessStatus:

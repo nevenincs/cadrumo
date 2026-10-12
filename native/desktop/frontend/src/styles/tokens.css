@@ -102,6 +102,9 @@
   --split-min-b-row: 20rem;
   --split-min-b-col: 10rem;
   --panel-collapse-threshold: 3.75rem;
+  /* The agent column beside the rail: its floor, and the width it opens at. */
+  --agent-min: 15rem;
+  --agent-w: 22.5rem;
   --resize-step: 1.5rem;
   /* How close to its end the log still counts as following the newest record. */
   --log-follow-slack: 1.5rem;

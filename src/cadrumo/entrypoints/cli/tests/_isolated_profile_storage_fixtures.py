@@ -9,12 +9,10 @@ from typing import TypedDict
 import pytest
 
 from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
-    active_profile_isolated_backend_fixture,
     module_scoped_profile_isolated_backend_fixture,
 )
 from ....adapters.persistence.storage.tests.secure_sql import isolated_sessionless_storage_root
-from ....adapters.persistence.storage.tests.seeded_isolated_backend_fixture import seeded_isolated_backend_fixture
-from .runtime_profile_backend import runtime_profile_backend_fixture
+from .runtime_profile_backend import runtime_profile_backend_fixture, runtime_seeded_profile_backend_fixture
 
 
 @pytest.fixture(autouse=True)
@@ -60,7 +58,7 @@ _RECORDED_FX_BACKEND_ARGUMENTS: _RecordedFxBackendArguments = {
     "settings_overrides": _RECORDED_FX_SETTINGS,
 }
 
-recorded_fx_isolated_backend = active_profile_isolated_backend_fixture(**_RECORDED_FX_BACKEND_ARGUMENTS)
+recorded_fx_isolated_backend = runtime_profile_backend_fixture(settings_overrides=_RECORDED_FX_SETTINGS)
 
 #: The same seeded world, built once per file instead of once per test, for
 #: suites whose every test only reads it.
@@ -86,9 +84,8 @@ def recorded_fx_seeded_backend(
     say) binds this twice and states a distinct ``name``/``origin_name`` pair
     for each, as the factory's own signature requires.
     """
-    return seeded_isolated_backend_fixture(
+    return runtime_seeded_profile_backend_fixture(
         seed=seed,
-        bucket_id=_RECORDED_FX_BUCKET_ID,
         settings_overrides=_RECORDED_FX_SETTINGS,
         autouse=autouse,
         name=name,

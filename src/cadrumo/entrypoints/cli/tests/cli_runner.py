@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator, Mapping, Sequence
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from contextvars import ContextVar
 from functools import cache
 from typing import NotRequired, Protocol, Unpack, cast
@@ -98,13 +98,66 @@ def bind_profile_cli(invoker: ProfileCliInvoker) -> Iterator[None]:
         _BOUND_PROFILE.reset(token)
 
 
+#: The refusal reason of a command that found no runtime to submit to.
+_RUNTIME_UNAVAILABLE = "runtime_unavailable"
+
+_OPERATOR_SCOPE: ContextVar[ExitStack | None] = ContextVar("cli-test-operator-scope", default=None)
+
+
+@contextmanager
+def operator_runtime_scope() -> Iterator[None]:
+    """Own, for one test phase, the runtime a live in-process profile session is joined to.
+
+    Registering or unlocking a profile in a test leaves that profile's session
+    live in the process, and commands once ran inside it. They now submit to
+    the runtime, so a command refused for want of one joins that profile's
+    runtime and binds it, as its operator would be admitted; the runtime is
+    retired when the phase ends.
+    """
+    with ExitStack() as stack:
+        token = _OPERATOR_SCOPE.set(stack)
+        try:
+            yield
+        finally:
+            _OPERATOR_SCOPE.reset(token)
+
+
+def _join_live_session() -> ProfileCliInvoker | None:
+    """Bind the live profile session's runtime inside the test's operator scope, if both exist."""
+    scope = _OPERATOR_SCOPE.get()
+    if scope is None:
+        return None
+    from ....adapters.persistence.storage.master_key.active_session import current_active_bucket_session
+
+    session = current_active_bucket_session()
+    if session is None:
+        return None
+    from .runtime_profile_backend import live_session_operator
+
+    operator = live_session_operator(scope, session.bucket_id)
+    if operator is not None:
+        scope.enter_context(bind_profile_cli(operator))
+    return operator
+
+
 def invoke_cached_cli(args: Sequence[str], **kwargs: Unpack[ClickInvokeKwargs]) -> Result:
     """Invoke the cached Cadrumo Click command, as the bound profile's operator when one is bound.
 
-    See :func:`invoke_unbound_cli` for the invocation itself.
+    With no profile bound, a command refused because no runtime is reachable,
+    which therefore had no effect, is run again once as the operator of a
+    profile session left live in the process, through
+    :func:`operator_runtime_scope`. A test that already serves its profile from
+    a runtime never reaches that path. See :func:`invoke_unbound_cli` for the
+    invocation itself.
     """
     bound = _BOUND_PROFILE.get()
-    return invoke_unbound_cli(args, **kwargs) if bound is None else bound.invoke(args, **kwargs)
+    if bound is not None:
+        return bound.invoke(args, **kwargs)
+    result = invoke_unbound_cli(args, **kwargs)
+    if result.exit_code == 0 or _RUNTIME_UNAVAILABLE not in result.output:
+        return result
+    joined = _join_live_session()
+    return result if joined is None else joined.invoke(args, **kwargs)
 
 
 def invoke_unbound_cli(args: Sequence[str], **kwargs: Unpack[ClickInvokeKwargs]) -> Result:

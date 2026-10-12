@@ -131,10 +131,15 @@ const failure = (status: TerminalStatus): string | undefined =>
 
 type Area = Exclude<Maximized, null>;
 
+/** The columns of the workspace, each shown and put away on its own. */
+const COLUMNS = ["agent", "tui", "docs"] as const;
+type Column = (typeof COLUMNS)[number];
+
 /** The workspace area that holds focus, the documentation frame included. */
 const focusedArea = (): Area | "rail" | null => {
   const element = document.activeElement;
   if (!element || element === document.body) return null;
+  if (element.closest(".pane-agent")) return "agent";
   if (element.closest(".pane-docs")) return "docs";
   if (element.closest(".pane-tui")) return "tui";
   if (element.closest(".panel")) return "panel";
@@ -165,6 +170,10 @@ export function App({ host }: { host: Host }) {
   // where the host offers one. The documentation stays loaded underneath.
   const [page, setPage] = useState<"docs" | "calendar">("docs");
   const calendarPage = useRef<HTMLElement>(null);
+  // The agent column was asked for: it takes focus once it is laid out.
+  const wantsAgent = useRef(false);
+  const agentColumn = useRef<HTMLElement>(null);
+  const agentBody = useRef<HTMLElement>(null);
   // The calendar was asked for: it takes focus once it is laid out.
   const wantsCalendar = useRef(false);
   // What held focus when the sign-in dialog was asked for, and whether
@@ -204,6 +213,7 @@ export function App({ host }: { host: Host }) {
   const splitMinBRow = useMetric("--split-min-b-row", 320);
   const splitMinBCol = useMetric("--split-min-b-col", 160);
   const railWidth = useMetric("--rail-w", 48);
+  const agentMin = useMetric("--agent-min", 240);
   const panelResizeStep = useMetric("--resize-step", 24);
   const panelCollapseThreshold = useMetric("--panel-collapse-threshold", 60);
   const terminalFontSize = useTerminalFontSize(prefs.fontSize);
@@ -213,6 +223,12 @@ export function App({ host }: { host: Host }) {
       setLayout((current) => ({ ...current, ...change })),
     [],
   );
+  // The documentation asked for by name: its pane is shown first.
+  const showDocs = useCallback(() => {
+    setPage("docs");
+    setMaximized((area) => (area === "docs" ? area : null));
+    patch({ docsShown: true });
+  }, [patch]);
 
   const unsaved = useRef({ prefs, layout });
   useEffect(() => {
@@ -264,9 +280,29 @@ export function App({ host }: { host: Host }) {
   const mayEnterPassword = account.canSignIn;
 
   const views = host.views;
-  const firstPaneShown = maximized !== "tui" && maximized !== "panel";
+  // What is on screen: a maximized area alone, otherwise every area that is
+  // shown. The first pane holds the documentation or a view of the profile,
+  // and is on screen while either is asked for.
+  const unhidden = (area: Area) => maximized === null || maximized === area;
   const calendarOn = views !== undefined && page === "calendar";
+  const firstPaneShown =
+    (layout.docsShown || calendarOn || maximized === "docs") &&
+    unhidden("docs");
+  const docsVisible = firstPaneShown && !calendarOn;
   const calendarVisible = calendarOn && firstPaneShown;
+  const tuiVisible =
+    (layout.tuiShown || maximized === "tui") && unhidden("tui");
+  const panelVisible = layout.panelOpen && unhidden("panel");
+  // The room beside the rail. A window too narrow for the agent column's
+  // floor beside the main area's shows the agent only on its own: alone in
+  // the window, or maximized.
+  const besideRail = Math.max(0, viewportWidth - railWidth);
+  const agentFits = besideRail >= agentMin + splitMinA;
+  const mainOccupied = firstPaneShown || tuiVisible || panelVisible;
+  const agentVisible =
+    (layout.agentShown || maximized === "agent") &&
+    unhidden("agent") &&
+    (maximized === "agent" || agentFits || !mainOccupied);
   // Whose views are read: the signed-in profile's. Where the platform signs
   // in inside the TUI the shell cannot tell, so it asks and shows the answer.
   const reader =
@@ -571,12 +607,82 @@ export function App({ host }: { host: Host }) {
         setMaximized(null);
         return;
       }
+      if (area === "agent" && !layout.agentShown) patch({ agentShown: true });
       if (area === "tui" && !layout.tuiShown) patch({ tuiShown: true });
+      if (area === "docs" && !layout.docsShown && !calendarOn)
+        patch({ docsShown: true });
       if (area === "panel" && !layout.panelOpen) patch({ panelOpen: true });
       setMaximized(area);
       if (area === "tui") focusView("tui");
     },
-    [maximized, layout.tuiShown, layout.panelOpen, patch, focusView],
+    [
+      maximized,
+      layout.agentShown,
+      layout.tuiShown,
+      layout.docsShown,
+      layout.panelOpen,
+      calendarOn,
+      patch,
+      focusView,
+    ],
+  );
+
+  // A column's own close: put away, and the layout restored if it was the
+  // one maximized.
+  const closeColumn = useCallback(
+    (column: Column) => {
+      setMaximized((area) => (area === column ? null : area));
+      if (column === "docs") {
+        // The first pane shows the calendar where it was asked for; closed,
+        // the calendar goes with the pane.
+        setPage("docs");
+        patch({ docsShown: false });
+      } else
+        patch(column === "agent" ? { agentShown: false } : { tuiShown: false });
+    },
+    [patch],
+  );
+  // A column asked for from the rail, the palette or a shortcut: put away
+  // when it is on screen, else shown with the layout restored around it.
+  const toggleColumn = useCallback(
+    (column: Column) => {
+      const onScreen =
+        column === "agent"
+          ? agentVisible
+          : column === "tui"
+            ? tuiVisible
+            : docsVisible;
+      if (onScreen && maximized === null) return closeColumn(column);
+      if (column === "agent" && !agentFits) {
+        // Too narrow to sit beside anything: the agent takes the window.
+        if (onScreen) return closeColumn(column);
+        patch({ agentShown: true });
+        setMaximized(mainOccupied ? "agent" : null);
+        wantsAgent.current = true;
+        return;
+      }
+      setMaximized(null);
+      if (column === "docs") showDocs();
+      else if (column === "agent") {
+        patch({ agentShown: true });
+        wantsAgent.current = true;
+      } else {
+        patch({ tuiShown: true });
+        focusView("tui");
+      }
+    },
+    [
+      agentVisible,
+      agentFits,
+      mainOccupied,
+      tuiVisible,
+      docsVisible,
+      maximized,
+      closeColumn,
+      showDocs,
+      patch,
+      focusView,
+    ],
   );
 
   // The keyboard's way between the areas of the window, in the order they
@@ -584,35 +690,30 @@ export function App({ host }: { host: Host }) {
   // focus leaves one.
   const cycleFocus = useCallback(
     (step: 1 | -1) => {
-      const tuiOn =
-        (layout.tuiShown || maximized === "tui") &&
-        maximized !== "docs" &&
-        maximized !== "panel";
-      const panelOn =
-        layout.panelOpen && maximized !== "docs" && maximized !== "tui";
-      const stops: [Area | "rail", boolean, () => void][] = [
-        [
-          "docs",
-          maximized !== "tui" &&
-            maximized !== "panel" &&
-            (calendarPage.current !== null || !!docs.current),
-          () => (calendarPage.current ?? docs.current)?.focus(),
-        ],
-        [
-          "tui",
-          // Only where the pane holds something to focus: the way in while
-          // signed out, or a session.
-          tuiOn &&
-            (signInButton.current !== null ||
-              (!gated && status.tui.phase !== "unavailable")),
-          () =>
-            signInButton.current
-              ? signInButton.current.focus()
-              : terminals.current.tui?.focus(),
-        ],
+      type Stop = [Area | "rail", boolean, () => void];
+      const docsStop: Stop = [
+        "docs",
+        firstPaneShown && (calendarPage.current !== null || !!docs.current),
+        () => (calendarPage.current ?? docs.current)?.focus(),
+      ];
+      const tuiStop: Stop = [
+        "tui",
+        // Only where the pane holds something to focus: the way in while
+        // signed out, or a session.
+        tuiVisible &&
+          (signInButton.current !== null ||
+            (!gated && status.tui.phase !== "unavailable")),
+        () =>
+          signInButton.current
+            ? signInButton.current.focus()
+            : terminals.current.tui?.focus(),
+      ];
+      const stops: Stop[] = [
+        ["agent", agentVisible, () => agentBody.current?.focus()],
+        ...(prefs.order === "tui" ? [tuiStop, docsStop] : [docsStop, tuiStop]),
         [
           "panel",
-          panelOn,
+          panelVisible,
           () => {
             if (layout.tab === "logs")
               document
@@ -637,10 +738,12 @@ export function App({ host }: { host: Host }) {
       shown[to]?.[2]();
     },
     [
-      layout.tuiShown,
-      layout.panelOpen,
+      agentVisible,
+      firstPaneShown,
+      tuiVisible,
+      panelVisible,
+      prefs.order,
       layout.tab,
-      maximized,
       gated,
       status,
       focusRail,
@@ -668,16 +771,16 @@ export function App({ host }: { host: Host }) {
   );
 
   const goHome = useCallback(() => {
-    setPage("docs");
+    showDocs();
     if (docs.current?.home()) return;
     // A documentation page without the home command still reloads its entry.
     const frame = document.querySelector<HTMLIFrameElement>(".docs-frame");
     if (frame && docsEntry) frame.src = docsEntry.entry;
-  }, [docsEntry]);
+  }, [docsEntry, showDocs]);
 
   const openDoc = useCallback(
     (url: string) => {
-      setPage("docs");
+      showDocs();
       if (docs.current?.navigate(url)) return;
       const frame = document.querySelector<HTMLIFrameElement>(".docs-frame");
       if (
@@ -695,7 +798,7 @@ export function App({ host }: { host: Host }) {
       }
       if (origin === environment.value.docs.origin) frame.src = url;
     },
-    [environment],
+    [environment, showDocs],
   );
 
   // The single action registry.
@@ -781,9 +884,22 @@ export function App({ host }: { host: Host }) {
         run: () => patch({ zoom: 1 }),
       },
       {
+        id: "agent.toggle",
+        label:
+          agentVisible && !maximized
+            ? t("desktop.agent.hide")
+            : t("desktop.agent.show"),
+        group: "layout",
+        icon: "agent",
+        chords: [
+          { mod: true, shift: true, code: "KeyA", key: "A", scope: "global" },
+        ],
+        run: () => toggleColumn("agent"),
+      },
+      {
         id: "tui.toggle",
         label:
-          layout.tuiShown && !maximized
+          tuiVisible && !maximized
             ? t("desktop.tui.hide")
             : t("desktop.tui.show"),
         group: "layout",
@@ -791,12 +907,21 @@ export function App({ host }: { host: Host }) {
         chords: [
           { mod: true, shift: true, code: "KeyT", key: "T", scope: "global" },
         ],
-        run: () => {
-          const shown = maximized ? true : !layout.tuiShown;
-          if (maximized) setMaximized(null);
-          patch({ tuiShown: shown });
-          if (shown) focusView("tui");
-        },
+        run: () => toggleColumn("tui"),
+      },
+      {
+        id: "docs.toggle",
+        label:
+          docsVisible && !maximized
+            ? t("desktop.docs.hide")
+            : t("desktop.docs.show"),
+        group: "layout",
+        icon: "book",
+        keywords: "documentation help manual",
+        chords: [
+          { mod: true, shift: true, code: "KeyH", key: "H", scope: "global" },
+        ],
+        run: () => toggleColumn("docs"),
       },
       {
         id: "view.maximize",
@@ -811,8 +936,26 @@ export function App({ host }: { host: Host }) {
         run: () => {
           if (maximized) return setMaximized(null);
           const area = focusedArea();
-          toggleMaximize(area && area !== "rail" ? area : "docs");
+          toggleMaximize(
+            area && area !== "rail"
+              ? area
+              : (COLUMNS.find((column) =>
+                  column === "agent"
+                    ? agentVisible
+                    : column === "tui"
+                      ? tuiVisible
+                      : firstPaneShown,
+                ) ?? "docs"),
+          );
         },
+      },
+      {
+        id: "view.maximizeAgent",
+        label: t("desktop.pane.maximize_agent"),
+        group: "layout",
+        icon: "maximize",
+        enabled: () => maximized !== "agent",
+        run: () => toggleMaximize("agent"),
       },
       {
         id: "view.maximizeDocs",
@@ -1108,7 +1251,11 @@ export function App({ host }: { host: Host }) {
     ],
     [
       t,
-      layout.tuiShown,
+      agentVisible,
+      tuiVisible,
+      docsVisible,
+      firstPaneShown,
+      toggleColumn,
       layout.panelOpen,
       layout.tab,
       layout.zoom,
@@ -1137,7 +1284,6 @@ export function App({ host }: { host: Host }) {
       openLink,
       goHome,
       patch,
-      focusView,
       toggleMaximize,
       openTab,
       copy,
@@ -1436,39 +1582,60 @@ export function App({ host }: { host: Host }) {
       ).length,
     [records],
   );
-  const tabOpen = (tab: PanelTab) =>
-    layout.panelOpen &&
-    layout.tab === tab &&
-    maximized !== "docs" &&
-    maximized !== "tui";
-  const tuiVisible =
-    (layout.tuiShown || maximized === "tui") && maximized !== "docs";
-  const panelVisible =
-    layout.panelOpen && maximized !== "docs" && maximized !== "tui";
-  // The TUI hidden from under the keyboard: focus goes to the first pane
-  // while that is shown, else to the rail, never to nothing.
-  const tuiWasVisible = useRef(tuiVisible);
+  const tabOpen = (tab: PanelTab) => panelVisible && layout.tab === tab;
+  // A column hidden from under the keyboard: focus goes to the TUI while
+  // that is shown, else to the first pane, else to the agent, else to the
+  // rail, never to nothing. The bottom panel maximized over them hands
+  // focus on by itself.
+  const columnsWere = useRef<Record<Column, boolean>>({
+    agent: agentVisible,
+    tui: tuiVisible,
+    docs: firstPaneShown,
+  });
   useEffect(() => {
-    const hidden = tuiWasVisible.current && !tuiVisible;
-    tuiWasVisible.current = tuiVisible;
-    // Only when it has just been hidden: a window that starts without the
-    // TUI moves no focus. What held focus inside it is still named as the
-    // focused element for a moment after it stops being shown.
+    const now = { agent: agentVisible, tui: tuiVisible, docs: firstPaneShown };
+    const gone = COLUMNS.filter(
+      (column) => columnsWere.current[column] && !now[column],
+    );
+    columnsWere.current = now;
+    // Only when one has just been hidden: a window that starts without a
+    // column moves no focus. What held focus inside it is still named as
+    // the focused element for a moment after it stops being shown.
     const held = document.activeElement;
     if (
-      !hidden ||
+      gone.length === 0 ||
+      maximized === "panel" ||
       (held !== null &&
         held !== document.body &&
-        held.closest(".pane-tui") === null)
+        !gone.some((column) => held.closest(`.pane-${column}`) !== null))
     )
       return;
-    const first = firstPaneShown
-      ? (calendarPage.current ?? docs.current)
-      : null;
-    (
-      first ?? document.querySelector<HTMLElement>(".rail [role=toolbar]")
-    )?.focus();
-  }, [tuiVisible, firstPaneShown]);
+    // Only where the TUI's pane holds something to focus: the way in while
+    // signed out, or a session.
+    const tuiFocusable =
+      signInButton.current !== null ||
+      (!gated && status.tui.phase !== "unavailable");
+    if (tuiVisible && tuiFocusable) focusView("tui");
+    else if (firstPaneShown && (calendarPage.current ?? docs.current))
+      (calendarPage.current ?? docs.current)?.focus();
+    else if (agentVisible) agentBody.current?.focus();
+    else focusRail();
+  }, [
+    agentVisible,
+    tuiVisible,
+    firstPaneShown,
+    maximized,
+    gated,
+    status.tui.phase,
+    focusView,
+    focusRail,
+  ]);
+  useEffect(() => {
+    if (agentVisible && wantsAgent.current) {
+      wantsAgent.current = false;
+      agentBody.current?.focus();
+    }
+  }, [agentVisible]);
   // The bottom panel maximized over the panes above it: focus held in one
   // of them goes into the panel, to the view its tab shows.
   const panelMaximized = maximized === "panel";
@@ -1481,7 +1648,7 @@ export function App({ host }: { host: Host }) {
       !covered ||
       (held !== null &&
         held !== document.body &&
-        held.closest(".main-area") === null)
+        held.closest(".main-area, .pane-agent") === null)
     )
       return;
     focusView(layout.tab);
@@ -1510,36 +1677,51 @@ export function App({ host }: { host: Host }) {
       run: () => toggleMaximize(area),
     };
   };
+  // The agent column's width, as a share of the room beside the rail. A
+  // window too narrow for its floor and the split's shares the room between
+  // them in proportion, as the bottom panel shares the height.
+  const clampAgent = (width: number) =>
+    besideRail < agentMin + splitMinA
+      ? Math.round((besideRail * agentMin) / (agentMin + splitMinA))
+      : Math.max(agentMin, Math.min(besideRail - splitMinA, width));
+  const agentWidth = clampAgent(Math.round(layout.agentRatio * besideRail));
+  const setAgentWidth = (width: number) =>
+    besideRail > 0 &&
+    patch({ agentShown: true, agentRatio: clampAgent(width) / besideRail });
+
   // Side by side needs room for both panes' minimums; a narrower window
   // stacks them without changing the remembered preference.
   const orientation =
     prefs.orientation === "row" &&
-    viewportWidth - railWidth < splitMinA + splitMinBRow
+    besideRail - (agentVisible && !maximized ? agentWidth : 0) <
+      splitMinA + splitMinBRow
       ? "column"
       : prefs.orientation;
 
-  const splitControls: PaneControl[] = maximized
-    ? []
-    : [
-        {
-          id: "swap",
-          icon: "swap",
-          label: t("desktop.split.swap"),
-          run: () => runAction("split.swap"),
-        },
-        // While the window forces stacking, the orientation choice would
-        // change nothing visible, so it is not offered.
-        ...(orientation === prefs.orientation
-          ? [
-              {
-                id: "orientation",
-                icon: byId("split.orientation")?.icon ?? "splitColumn",
-                label: byId("split.orientation")?.label ?? "",
-                run: () => runAction("split.orientation"),
-              },
-            ]
-          : []),
-      ];
+  // The split's own controls, only while it holds both panes.
+  const splitControls: PaneControl[] =
+    maximized || !(firstPaneShown && tuiVisible)
+      ? []
+      : [
+          {
+            id: "swap",
+            icon: "swap",
+            label: t("desktop.split.swap"),
+            run: () => runAction("split.swap"),
+          },
+          // While the window forces stacking, the orientation choice would
+          // change nothing visible, so it is not offered.
+          ...(orientation === prefs.orientation
+            ? [
+                {
+                  id: "orientation",
+                  icon: byId("split.orientation")?.icon ?? "splitColumn",
+                  label: byId("split.orientation")?.label ?? "",
+                  run: () => runAction("split.orientation"),
+                },
+              ]
+            : []),
+        ];
 
   const railTop: RailItem[] = [
     {
@@ -1550,13 +1732,15 @@ export function App({ host }: { host: Host }) {
       expanded: paletteOpen,
       onClick: () => runAction("palette.open"),
     },
+    // The window's columns, in the order they are laid out by default.
     {
-      id: "home",
-      icon: "book",
-      label: t("desktop.rail.docs_home"),
-      shortcut: primaryChord(byId("docs.home")),
+      id: "agent",
+      icon: "agent",
+      label: t("desktop.rail.agent"),
+      shortcut: primaryChord(byId("agent.toggle")),
+      pressed: agentVisible,
       divided: true,
-      onClick: () => runAction("docs.home"),
+      onClick: () => runAction("agent.toggle"),
     },
     {
       id: "tui",
@@ -1565,6 +1749,14 @@ export function App({ host }: { host: Host }) {
       shortcut: primaryChord(byId("tui.toggle")),
       pressed: tuiVisible,
       onClick: () => runAction("tui.toggle"),
+    },
+    {
+      id: "docs",
+      icon: "book",
+      label: t("desktop.rail.docs"),
+      shortcut: primaryChord(byId("docs.toggle")),
+      pressed: docsVisible,
+      onClick: () => runAction("docs.toggle"),
     },
     // Shortcuts, between the window's own toggles and the bottom panel's:
     // the profile's views where the host offers them, then the ways out of
@@ -1704,20 +1896,23 @@ export function App({ host }: { host: Host }) {
           ),
           // The split's controls are on the TUI's header too: narrow, this
           // header gives them up before it cuts its title.
-          ...(tuiVisible
-            ? splitControls.map((control) => ({ ...control, yields: true }))
-            : []),
-          // The calendar is put away as the TUI is: by its pane's close.
-          ...(calendarOn
-            ? [
-                {
-                  id: "close",
-                  icon: "close",
-                  label: t("desktop.calendar.close"),
-                  run: () => setPage("docs"),
-                } satisfies PaneControl,
-              ]
-            : []),
+          ...splitControls.map((control) => ({ ...control, yields: true })),
+          // Every column is put away by its own close. The calendar's puts
+          // the calendar away, back to the documentation where that is shown.
+          calendarOn
+            ? {
+                id: "close",
+                icon: "close",
+                label: t("desktop.calendar.close"),
+                run: () => setPage("docs"),
+              }
+            : {
+                id: "close",
+                icon: "close",
+                label: t("desktop.docs.hide"),
+                shortcut: primaryChord(byId("docs.toggle")),
+                run: () => closeColumn("docs"),
+              },
         ]}
       />
       {calendarOn && (
@@ -1851,7 +2046,7 @@ export function App({ host }: { host: Host }) {
             icon: "close",
             label: t("desktop.tui.hide"),
             shortcut: primaryChord(byId("tui.toggle")),
-            run: () => runAction("tui.toggle"),
+            run: () => closeColumn("tui"),
           },
         ]}
       />
@@ -1870,6 +2065,67 @@ export function App({ host }: { host: Host }) {
         )
       )}
     </div>
+  );
+  const agentPane = (
+    <div className={cn(pane, "pane-agent")}>
+      <PaneHeader
+        title={t("desktop.pane.agent")}
+        onToggleMaximize={() => toggleMaximize("agent")}
+        controls={[
+          maximizeControl("agent", "desktop.pane.maximize_agent"),
+          {
+            id: "close",
+            icon: "close",
+            label: t("desktop.agent.hide"),
+            shortcut: primaryChord(byId("agent.toggle")),
+            run: () => closeColumn("agent"),
+          },
+        ]}
+      />
+      <section
+        ref={agentBody}
+        tabIndex={-1}
+        aria-label={t("desktop.pane.agent")}
+        className="agent-body flex min-h-0 flex-1 flex-col overflow-y-auto focus-visible:-outline-offset-2"
+      >
+        <Empty role="status">
+          <EmptyMedia>
+            <Icon name="agent" />
+          </EmptyMedia>
+          <EmptyTitle>{t("desktop.agent.empty_title")}</EmptyTitle>
+          <EmptyDescription>{t("desktop.agent.empty_lead")}</EmptyDescription>
+        </Empty>
+      </section>
+    </div>
+  );
+  // Nothing open above the bottom panel: the main area says so, and offers
+  // each column back.
+  const canvasShown = !firstPaneShown && !tuiVisible;
+  const canvas = (
+    <Empty className="canvas bg-background">
+      <EmptyMedia>
+        <Icon name="canvas" />
+      </EmptyMedia>
+      <EmptyTitle>{t("desktop.canvas.title")}</EmptyTitle>
+      <EmptyDescription>{t("desktop.canvas.lead")}</EmptyDescription>
+      <div className="flex flex-wrap justify-center gap-2">
+        {(
+          [
+            ["agent.toggle", "agent", "desktop.agent.show", !agentVisible],
+            ["tui.toggle", "tui", "desktop.tui.show", true],
+            ["docs.toggle", "book", "desktop.docs.show", true],
+          ] as const
+        ).map(
+          ([id, icon, labelKey, offered]) =>
+            offered && (
+              <Button key={id} variant="outline" onClick={() => runAction(id)}>
+                <Icon name={icon} />
+                {t(labelKey)}
+              </Button>
+            ),
+        )}
+      </div>
+    </Empty>
   );
   const panelMax = maximizeControl("panel", "desktop.pane.maximize_panel");
 
@@ -1903,173 +2159,241 @@ export function App({ host }: { host: Host }) {
               top={railTop}
               bottom={railBottom}
             />
-            <div className="flex min-h-0 min-w-0 flex-col">
-              <main
-                className="main-area flex min-h-0 flex-auto"
-                hidden={maximized === "panel"}
-              >
-                <Split
-                  orientation={orientation}
-                  reversed={prefs.order === "tui"}
-                  ratio={layout.splitRatio}
-                  onRatio={(ratio) => patch({ splitRatio: ratio })}
-                  minA={splitMinA}
-                  minB={orientation === "row" ? splitMinBRow : splitMinBCol}
-                  a={docsPane}
-                  b={tuiPane}
-                  aShown={maximized !== "tui"}
-                  bShown={tuiVisible}
-                  label={t("desktop.split.resize")}
-                />
-              </main>
-              <section
+            <div className="flex min-h-0 min-w-0">
+              {/* The agent column, always beside the rail, the full height of
+                the window under the title bar. */}
+              <aside
+                ref={agentColumn}
                 className={cn(
-                  // A container in both dimensions: its content answers to its width
-                  // and, in the log's bar, to its height.
-                  "panel flex min-h-0 flex-col bg-chrome [container:panel/size]",
-                  maximized === "panel" ? "flex-auto" : "flex-none",
+                  "agent-column flex min-h-0 min-w-0 bg-background",
+                  maximized === "agent" ? "flex-1" : "flex-none",
                 )}
-                hidden={!panelVisible}
+                hidden={!agentVisible}
                 style={
-                  maximized === "panel" ? undefined : { height: panelHeight }
+                  maximized === "agent" ? undefined : { width: agentWidth }
                 }
-                aria-label={t("desktop.panel.label")}
+                aria-label={t("desktop.pane.agent")}
               >
-                {layout.panelOpen && !maximized && (
+                {agentPane}
+                {/* Inside the column, so the splitter is part of the area it
+                    resizes. */}
+                {agentVisible && !maximized && (
                   <ResizeHandle
-                    className="panel-separator"
-                    orientation="horizontal"
-                    aria-label={t("desktop.panel.resize")}
-                    value={(panelHeight / viewportHeight) * 100}
-                    // The panel sits on the window's bottom edge, so its height
-                    // is what lies below the pointer. Dragged well past its
-                    // smallest size, it collapses.
-                    onDrag={({ y }) => {
+                    className="agent-separator"
+                    orientation="vertical"
+                    aria-label={t("desktop.agent.resize")}
+                    value={besideRail > 0 ? (agentWidth / besideRail) * 100 : 0}
+                    // The column starts at the rail, so its width is what lies
+                    // left of the pointer. Dragged well past its smallest size,
+                    // it collapses.
+                    onDrag={({ x }) => {
                       const next =
-                        (workspace.current?.getBoundingClientRect().bottom ??
-                          window.innerHeight) - y;
-                      if (next < panelMin - panelCollapseThreshold)
-                        patch({ panelOpen: false });
-                      else setPanelHeight(next);
+                        x -
+                        (agentColumn.current?.getBoundingClientRect().left ??
+                          0);
+                      if (next < agentMin - panelCollapseThreshold)
+                        patch({ agentShown: false });
+                      else setAgentWidth(next);
                     }}
                     onStep={(direction) =>
-                      setPanelHeight(panelHeight - direction * panelResizeStep)
+                      setAgentWidth(agentWidth + direction * panelResizeStep)
                     }
                     onLimit={(limit) =>
-                      setPanelHeight(
-                        limit === "min" ? panelMin : viewportHeight - docsMin,
+                      setAgentWidth(
+                        limit === "min" ? agentMin : besideRail - splitMinA,
                       )
                     }
                     onReset={() =>
-                      setPanelHeight(DEFAULT_LAYOUT.panelRatio * viewportHeight)
+                      setAgentWidth(DEFAULT_LAYOUT.agentRatio * besideRail)
                     }
                   />
                 )}
-                <Tabs
-                  value={layout.tab}
-                  // Arrow keys move through the tabs and choose; a click or
-                  // Enter also hands the keyboard to the chosen view.
-                  onValueChange={(tab) => patch({ tab: tab as PanelTab })}
-                  className="tabstrip h-control-lg shrink-0 flex-row items-center border-b pr-1.5 pl-1"
-                  onDoubleClick={(event) => {
-                    if (!(event.target as HTMLElement).closest("button"))
-                      toggleMaximize("panel");
-                  }}
+              </aside>
+              <div
+                className="flex min-h-0 min-w-0 flex-1 flex-col"
+                hidden={maximized === "agent"}
+              >
+                <main
+                  className="main-area flex min-h-0 flex-auto"
+                  hidden={maximized === "panel"}
                 >
-                  <TabsList
-                    aria-label={t("desktop.panel.label")}
-                    className="h-full"
+                  {/* Kept mounted while the canvas shows: neither the
+                    documentation nor a live terminal is ever reloaded. */}
+                  <div
+                    className="flex min-h-0 min-w-0 flex-1"
+                    hidden={canvasShown}
                   >
-                    {TABS.map(([tab, labelKey, icon]) => (
-                      <TabsTrigger
-                        key={tab}
-                        value={tab}
-                        id={`tab-${tab}`}
-                        aria-controls={`panel-${tab}`}
-                        title={t(labelKey)}
-                        onClick={() => openTab(tab, { toggle: false })}
-                        onKeyDown={(event) => {
-                          // Enter and Space choose a tab without a click, so
-                          // they hand the keyboard over here.
-                          if (event.key === "Enter" || event.key === " ")
-                            openTab(tab, { toggle: false });
-                        }}
-                      >
-                        <Icon name={icon} />
-                        {/* In a narrow panel the tab keeps its name, not its
+                    <Split
+                      orientation={orientation}
+                      reversed={prefs.order === "tui"}
+                      ratio={layout.splitRatio}
+                      onRatio={(ratio) => patch({ splitRatio: ratio })}
+                      minA={splitMinA}
+                      minB={orientation === "row" ? splitMinBRow : splitMinBCol}
+                      a={docsPane}
+                      b={tuiPane}
+                      aShown={firstPaneShown}
+                      bShown={tuiVisible}
+                      label={t("desktop.split.resize")}
+                    />
+                  </div>
+                  {canvasShown && canvas}
+                </main>
+                <section
+                  className={cn(
+                    // A container in both dimensions: its content answers to its width
+                    // and, in the log's bar, to its height.
+                    "panel flex min-h-0 flex-col bg-chrome [container:panel/size]",
+                    maximized === "panel" ? "flex-auto" : "flex-none",
+                  )}
+                  hidden={!panelVisible}
+                  style={
+                    maximized === "panel" ? undefined : { height: panelHeight }
+                  }
+                  aria-label={t("desktop.panel.label")}
+                >
+                  {layout.panelOpen && !maximized && (
+                    <ResizeHandle
+                      className="panel-separator"
+                      orientation="horizontal"
+                      aria-label={t("desktop.panel.resize")}
+                      value={(panelHeight / viewportHeight) * 100}
+                      // The panel sits on the window's bottom edge, so its height
+                      // is what lies below the pointer. Dragged well past its
+                      // smallest size, it collapses.
+                      onDrag={({ y }) => {
+                        const next =
+                          (workspace.current?.getBoundingClientRect().bottom ??
+                            window.innerHeight) - y;
+                        if (next < panelMin - panelCollapseThreshold)
+                          patch({ panelOpen: false });
+                        else setPanelHeight(next);
+                      }}
+                      onStep={(direction) =>
+                        setPanelHeight(
+                          panelHeight - direction * panelResizeStep,
+                        )
+                      }
+                      onLimit={(limit) =>
+                        setPanelHeight(
+                          limit === "min" ? panelMin : viewportHeight - docsMin,
+                        )
+                      }
+                      onReset={() =>
+                        setPanelHeight(
+                          DEFAULT_LAYOUT.panelRatio * viewportHeight,
+                        )
+                      }
+                    />
+                  )}
+                  <Tabs
+                    value={layout.tab}
+                    // Arrow keys move through the tabs and choose; a click or
+                    // Enter also hands the keyboard to the chosen view.
+                    onValueChange={(tab) => patch({ tab: tab as PanelTab })}
+                    className="tabstrip h-control-lg shrink-0 flex-row items-center border-b pr-1.5 pl-1"
+                    onDoubleClick={(event) => {
+                      if (!(event.target as HTMLElement).closest("button"))
+                        toggleMaximize("panel");
+                    }}
+                  >
+                    <TabsList
+                      aria-label={t("desktop.panel.label")}
+                      className="h-full"
+                    >
+                      {TABS.map(([tab, labelKey, icon]) => (
+                        <TabsTrigger
+                          key={tab}
+                          value={tab}
+                          id={`tab-${tab}`}
+                          aria-controls={`panel-${tab}`}
+                          title={t(labelKey)}
+                          onClick={() => openTab(tab, { toggle: false })}
+                          onKeyDown={(event) => {
+                            // Enter and Space choose a tab without a click, so
+                            // they hand the keyboard over here.
+                            if (event.key === "Enter" || event.key === " ")
+                              openTab(tab, { toggle: false });
+                          }}
+                        >
+                          <Icon name={icon} />
+                          {/* In a narrow panel the tab keeps its name, not its
                           width. */}
-                        <span className="@max-md/panel:sr-only">
-                          {t(labelKey)}
-                        </span>
-                        {tab !== "logs" &&
-                          exitCode(status[tab]) !== undefined && (
-                            <span className="text-xs font-normal text-faint">
-                              {t("desktop.session.exited", {
-                                code: exitCode(status[tab]) ?? "?",
-                              })}
-                            </span>
-                          )}
-                        {tab !== "logs" &&
-                          failure(status[tab]) !== undefined && (
+                          <span className="@max-md/panel:sr-only">
+                            {t(labelKey)}
+                          </span>
+                          {tab !== "logs" &&
+                            exitCode(status[tab]) !== undefined && (
+                              <span className="text-xs font-normal text-faint">
+                                {t("desktop.session.exited", {
+                                  code: exitCode(status[tab]) ?? "?",
+                                })}
+                              </span>
+                            )}
+                          {tab !== "logs" &&
+                            failure(status[tab]) !== undefined && (
+                              <>
+                                <Icon
+                                  name="alert"
+                                  size="xs"
+                                  className="text-destructive"
+                                />
+                                <span className="sr-only">
+                                  {t("desktop.session.failed", {
+                                    reason: failure(status[tab]) ?? "",
+                                  })}
+                                </span>
+                              </>
+                            )}
+                          {tab === "logs" && errorCount > 0 && (
                             <>
-                              <Icon
-                                name="alert"
-                                size="xs"
-                                className="text-destructive"
-                              />
+                              <Badge variant="count" aria-hidden="true">
+                                {errorCount > COUNT_LIMIT
+                                  ? `${COUNT_LIMIT}+`
+                                  : errorCount}
+                              </Badge>
                               <span className="sr-only">
-                                {t("desktop.session.failed", {
-                                  reason: failure(status[tab]) ?? "",
+                                {t("desktop.logs.errors", {
+                                  count: errorCount,
                                 })}
                               </span>
                             </>
                           )}
-                        {tab === "logs" && errorCount > 0 && (
-                          <>
-                            <Badge variant="count" aria-hidden="true">
-                              {errorCount > COUNT_LIMIT
-                                ? `${COUNT_LIMIT}+`
-                                : errorCount}
-                            </Badge>
-                            <span className="sr-only">
-                              {t("desktop.logs.errors", { count: errorCount })}
-                            </span>
-                          </>
-                        )}
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-                  <span className="flex-1 self-stretch" />
-                  <IconButton
-                    label={panelMax.label}
-                    shortcut={panelMax.shortcut}
-                    aria-pressed={panelMax.pressed}
-                    onClick={panelMax.run}
-                  >
-                    <Icon name={panelMax.icon} />
-                  </IconButton>
-                  <IconButton
-                    label={t("desktop.panel.hide")}
-                    shortcut={primaryChord(byId("panel.toggle"))}
-                    onClick={() => runAction("panel.toggle")}
-                  >
-                    <Icon name="chevronDown" />
-                  </IconButton>
-                </Tabs>
-                <div className="relative flex min-h-0 flex-1">
-                  {terminalPane("console", tabOpen("console"))}
-                  {terminalPane("python", tabOpen("python"))}
-                  <RecordList
-                    records={records}
-                    sourceStates={sourceStates}
-                    dropped={dropped}
-                    filters={filters}
-                    setFilters={setFilters}
-                    onMenu={recordMenu}
-                    shown={tabOpen("logs")}
-                  />
-                </div>
-              </section>
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                    <span className="flex-1 self-stretch" />
+                    <IconButton
+                      label={panelMax.label}
+                      shortcut={panelMax.shortcut}
+                      aria-pressed={panelMax.pressed}
+                      onClick={panelMax.run}
+                    >
+                      <Icon name={panelMax.icon} />
+                    </IconButton>
+                    <IconButton
+                      label={t("desktop.panel.hide")}
+                      shortcut={primaryChord(byId("panel.toggle"))}
+                      onClick={() => runAction("panel.toggle")}
+                    >
+                      <Icon name="chevronDown" />
+                    </IconButton>
+                  </Tabs>
+                  <div className="relative flex min-h-0 flex-1">
+                    {terminalPane("console", tabOpen("console"))}
+                    {terminalPane("python", tabOpen("python"))}
+                    <RecordList
+                      records={records}
+                      sourceStates={sourceStates}
+                      dropped={dropped}
+                      filters={filters}
+                      setFilters={setFilters}
+                      onMenu={recordMenu}
+                      shown={tabOpen("logs")}
+                    />
+                  </div>
+                </section>
+              </div>
             </div>
 
             {settingsOpen && (

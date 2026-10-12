@@ -68,10 +68,8 @@ class KeychainUnavailability(StrEnum):
     """The Windows credential store refused this process's logon session.
 
     Windows answers ``ERROR_NO_SUCH_LOGON_SESSION`` (1312) to a logon that
-    holds no credentials of its own: an OpenSSH public-key sign-in, a service
-    or batch logon, or a token made for a user without their password. The
-    same account's interactive desktop logon, or a logon made with the
-    account password, can use the store.
+    holds no credentials of its own, such as a service or batch logon. The
+    same account's desktop sign-in can use the store.
     """
 
     REFUSED = "refused"

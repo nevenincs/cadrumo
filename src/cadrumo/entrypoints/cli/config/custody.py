@@ -356,10 +356,20 @@ def config_sign_in_status(
 
 def config_logout(
     ctx: typer.Context,
+    secrets_stdin: bool = False,
+    secrets_fd: int | None = None,
     output_language: OutputLanguage | None = None,
 ) -> None:
-    """Revoke the selected profile's human sign-in through the runtime owner."""
+    """Revoke the selected profile's human sign-in through the runtime owner.
+
+    With no stored sign-in to resume, a password given on the machine-secret
+    channel proves the person for this sign-out. That is how a sign-in that
+    was never persisted, such as a held one, is ended from another process.
+    """
     _activate_subcommand_output_language(ctx, output_language)
+    from .secure_input import read_machine_secret_payload, select_machine_secret_channel
+
+    machine_secret = select_machine_secret_channel(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
     from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
 
     from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
@@ -380,6 +390,16 @@ def config_logout(
             from ..runtime_profile_binding import subscribe_profile_notices
 
             subscribe_profile_notices(ctx, client)
+            if machine_secret is not None:
+                payload = read_machine_secret_payload(LoginSecrets, selection=machine_secret)
+                try:
+                    proof = bytearray(payload.passphrase.get_secret_value(), "utf-8")
+                finally:
+                    del payload
+                try:
+                    client.login_password(proof, persist_receipt=False)
+                finally:
+                    proof[:] = bytes(len(proof))
             outcome = client.human_sign_out()
         except RuntimeFrontendRefusedError as error:
             from .._profile_session_gate import raise_runtime_refusal

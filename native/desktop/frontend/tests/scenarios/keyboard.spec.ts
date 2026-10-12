@@ -1,5 +1,6 @@
 import { openPanelTab } from "../support/panel";
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { seedLayout } from "../support/layout";
 import { label } from "../support/strings";
 
 // The shell by keyboard alone: tab stops, arrow-key patterns, shortcuts, and
@@ -79,6 +80,7 @@ test("the panel tabs follow the arrow keys and keep focus in the row", async ({
 test("both splitters move by the arrow keys and report their position", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await open(target);
   // Each reports the share of the area it sizes: the documentation pane for
   // the split, which the left arrow narrows, and the bottom panel for its
@@ -276,6 +278,7 @@ test("in settings taller than the window, the keyboard is never on something out
 test("F6 reaches the calendar where the documentation would be", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   // Short enough that the calendar has more than it can show at once.
   await target.setViewportSize({ width: 1280, height: 520 });
   await open(target);
@@ -350,6 +353,7 @@ test("F6 reaches the calendar where the documentation would be", async ({
 test("the calendar's chord shows it from a terminal and puts it away again", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await open(target);
   await target.locator('[data-terminal="tui"] .xterm-screen').click();
   await expect(target.locator('[data-terminal="tui"] textarea')).toBeFocused();
@@ -373,6 +377,7 @@ test("the calendar's chord shows it from a terminal and puts it away again", asy
 test("the calendar's chord does nothing on a host without profile views", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await open(target, "no-views");
   await expect(target.locator(".docs-frame")).toBeVisible();
   await rail(target).getByRole("button").first().focus();
@@ -382,6 +387,7 @@ test("the calendar's chord does nothing on a host without profile views", async 
 });
 
 test("F6 moves focus from area to area and back", async ({ page: target }) => {
+  await seedLayout(target);
   await open(target);
   await expect(target.locator(".docs-frame")).toBeVisible();
   await rail(target).getByRole("button").first().focus();
@@ -827,6 +833,7 @@ test("the arrow keys move on from a record's detail toggle", async ({
 test("a press in the documentation while a menu is open keeps focus there", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await open(target);
   await openPanelTab(target, "logs");
   await target

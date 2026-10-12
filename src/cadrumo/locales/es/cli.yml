@@ -2250,15 +2250,11 @@ cli:
           así que este comando solo autenticó su propio proceso; vuelve a proporcionar
           la autenticación del perfil al proceso siguiente.
         session_not_persisted_logon: 'Sesión iniciada solo para este comando: el Administrador
-          de credenciales de Windows rechazó esta sesión de Windows (error 1312),
-          como hace con un inicio de sesión que no guarda credenciales de Windows,
-          por ejemplo un acceso OpenSSH con clave pública o un inicio de sesión de
-          servicio o por lotes. Ningún proceso de ese inicio de sesión puede conservar
-          ni seguir un inicio de sesión, así que cadrumo-mcp y los comandos siguientes
-          no pueden usarlo. Ejecuta el runtime, los comandos y cadrumo-mcp desde la
-          sesión interactiva de escritorio de esta cuenta o desde un inicio de sesión
-          hecho con la contraseña de la cuenta, o pasa la contraseña del perfil a
-          cada comando con --profile-secrets-stdin.'
+          de credenciales de Windows rechazó esta sesión de Windows (error 1312) porque
+          no contiene credenciales de Windows, así que ningún proceso de esa sesión
+          puede conservar ni seguir un inicio de sesión, y cadrumo-mcp y los comandos
+          siguientes no pueden usarlo. Ejecuta Cadrumo desde tu sesión de escritorio
+          de Windows o pasa la contraseña del perfil a cada comando con --profile-secrets-stdin.'
         session_not_persisted_no_backend: 'Sesión iniciada solo para este comando:
           este proceso no tiene ningún almacén de claves del sistema disponible, así
           que el inicio de sesión no se puede conservar para cadrumo-mcp ni para los
@@ -2775,6 +2771,11 @@ cli:
         config profile complete-setup` indica los datos que aún le faltan. Suficiente
         por sí solo; combínalo con --accept-defaults para rellenar el resto con los
         valores por defecto.
+    sign_in_hold:
+      help: Mantén la sesión de un perfil, sin guardarla, mientras la entrada estándar
+        siga abierta, y aprueba qué conexiones de agentes la siguen.
+      name_help: UUID o etiqueta exacta del perfil en el que iniciar sesión; omítelo
+        para usar el perfil seleccionado
     sign_in_status:
       help: Comprueba si has iniciado sesión sin reanudarla ni prolongarla.
     status:

@@ -20,9 +20,7 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from ....adapters.persistence.storage.tests.seeded_isolated_backend_fixture import seeded_isolated_backend_fixture
 from ._ledger_validation_support import (
-    _PROFILE_ID,
     _PROFILE_LABEL,
     _add_eligible_mixed_expense,
     _assert_pipeline_managed_state_refusal,
@@ -31,6 +29,7 @@ from ._ledger_validation_support import (
     _invoke,
     import_validation_transaction,
 )
+from .runtime_profile_backend import runtime_seeded_profile_backend_fixture
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -49,10 +48,9 @@ def _assert_negative_amount_refusal(result: Result) -> None:
 #: its ledger. Seeding once and handing each test a filesystem copy keeps the
 #: isolation exactly as it was -- every test still gets its own storage root,
 #: and the cases that import or add rows cannot reach each other.
-_seeded_bucket_origin, _open_bucket_session = seeded_isolated_backend_fixture(
+_seeded_bucket_origin, _open_bucket_session = runtime_seeded_profile_backend_fixture(
     seed=_declare_general_regime_iva_profile,
-    bucket_id=_PROFILE_ID,
-    display_name=_PROFILE_LABEL,
+    label=_PROFILE_LABEL,
     settings_overrides={"cadrumo_output_language": "en"},
     name="_open_bucket_session",
     origin_name="_seeded_bucket_origin",

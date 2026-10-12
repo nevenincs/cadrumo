@@ -2221,14 +2221,11 @@ cli:
           meg a profilhitelesítést.
         session_not_persisted_logon: 'Csak ehhez a parancshoz jelentkeztél be: a Windows
           Hitelesítőadat-kezelő elutasította ezt a Windows-munkamenetet (1312-es hiba),
-          ahogy minden olyan bejelentkezést, amely nem tárol Windows-hitelesítőadatokat,
-          például egy nyilvános kulcsos OpenSSH-bejelentkezést vagy egy szolgáltatás-
-          vagy kötegelt bejelentkezést. Egy ilyen bejelentkezésben egyetlen folyamat
-          sem tudja megőrizni vagy követni a bejelentkezést, így a cadrumo-mcp és
-          a későbbi parancsok sem használhatják. Futtasd a runtime-ot, a parancsokat
-          és a cadrumo-mcp-t ennek a fióknak az interaktív asztali munkamenetéből
-          vagy a fiók jelszavával létrehozott bejelentkezésből, vagy add meg a profil
-          jelszavát minden parancsnak a --profile-secrets-stdin kapcsolóval.'
+          mert nem tartalmaz Windows-hitelesítőadatokat, így egyetlen folyamata sem
+          tudja megőrizni vagy követni a bejelentkezést, és a cadrumo-mcp és a későbbi
+          parancsok sem használhatják. Futtasd a Cadrumót a Windows asztali bejelentkezésedből,
+          vagy add meg a profil jelszavát minden parancsnak a --profile-secrets-stdin
+          kapcsolóval.'
         session_not_persisted_no_backend: 'Csak ehhez a parancshoz jelentkeztél be:
           ennek a folyamatnak nincs elérhető rendszerkulcstára, így a bejelentkezés
           nem őrizhető meg a cadrumo-mcp és a későbbi parancsok számára. Kapcsold
@@ -2741,6 +2738,11 @@ cli:
         profil beállítása befejezetlen marad; az `aeat config profile complete-setup`
         megmutatja, mely adatok hiányoznak még. Önmagában is elég; kombináld az --accept-defaults
         kapcsolóval, hogy a többi értéket a leíró alapértékeivel töltsd ki.
+    sign_in_hold:
+      help: Tartsd fenn egy profil bejelentkezését mentés nélkül, amíg a szabványos
+        bemenet nyitva van, és hagyd jóvá, mely ügynökkapcsolatok követhetik.
+      name_help: A profil UUID-ja vagy pontos címkéje, amelybe bejelentkezel; hagyd
+        ki a kiválasztott profil használatához
     sign_in_status:
       help: Ellenőrizd a bejelentkezésed állapotát anélkül, hogy folytatnád vagy meghosszabbítanád.
     status:

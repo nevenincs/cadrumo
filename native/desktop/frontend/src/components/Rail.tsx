@@ -43,6 +43,8 @@ function RailButton({ item }: { item: RailItem }) {
           aria-pressed={item.pressed}
           aria-expanded={item.expanded}
           aria-haspopup={item.expanded === undefined ? undefined : "dialog"}
+          // A locale-independent handle for drivers outside the shell.
+          data-rail={item.id}
           onClick={item.onClick}
           // The chosen item carries a bar on the rail's edge as well as its
           // surface, so the choice does not rest on a tint alone. A button

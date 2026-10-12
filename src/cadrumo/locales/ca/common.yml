@@ -581,6 +581,12 @@ desktop:
     zoom_in: Amplia la documentació
     zoom_out: Redueix la documentació
     zoom_reset: Restableix el zoom de la documentació
+  agent:
+    empty_lead: L'agent encara no està disponible en aquesta finestra.
+    empty_title: Encara no hi ha cap agent
+    hide: Amaga l'agent
+    resize: Canvia la mida de l'agent
+    show: Mostra l'agent
   calendar:
     aeat:
       accepted: Acceptada
@@ -624,11 +630,16 @@ desktop:
     view_months: Calendari
     warnings: Falten dades del perfil; aquestes dates fan servir valors per defecte.
     window_unknown: Data d'obertura no indicada
+  canvas:
+    lead: Obre l'agent, la TUI o la documentació des de la barra lateral o aquí.
+    title: No hi ha res obert
   docs:
     frame_title: Documentació de Cadrumo
+    hide: Amaga la documentació
     loading: S'està carregant la documentació…
     not_bundled: Aquesta còpia de Cadrumo s'ha compilat sense la documentació. Tota
       la resta funciona amb normalitat.
+    show: Mostra la documentació
     unavailable: No s'ha pogut obrir la documentació. Tota la resta funciona amb normalitat.
   host:
     failed: Aquesta part no s'ha pogut carregar.
@@ -687,7 +698,9 @@ desktop:
     type_to_search: Escriu per cercar.
     unavailable: La cerca a la documentació no està disponible.
   pane:
+    agent: Agent
     docs: Documentació
+    maximize_agent: Maximitza l'agent
     maximize_docs: Maximitza la documentació
     maximize_focused: Maximitza l'àrea activa
     maximize_panel: Maximitza el panell inferior
@@ -701,7 +714,9 @@ desktop:
     show: Mostra el panell inferior
   rail:
     aeat: Seu de l'AEAT
+    agent: Agent
     console: Consola
+    docs: Documentació
     docs_home: Inici de la documentació
     label: Espai de treball
     logs: Registres

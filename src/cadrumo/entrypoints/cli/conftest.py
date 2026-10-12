@@ -16,6 +16,30 @@ from ...core.i18n.render import clear_output_language_cache
 from ...tests.env import temporary_env
 
 
+@pytest.hookimpl(wrapper=True)
+def pytest_runtest_setup(item: pytest.Item) -> object:
+    """Retire a live profile session's runtime joined during setup before the test body runs."""
+    from .tests.cli_runner import operator_runtime_scope
+
+    del item
+    with operator_runtime_scope():
+        return (yield)
+
+
+@pytest.hookimpl(wrapper=True)
+def pytest_runtest_call(item: pytest.Item) -> object:
+    """Retire a live profile session's runtime joined by the test body before its fixtures unwind.
+
+    The runtime must close while the storage root and the session it serves
+    still exist, so its scope is the test call rather than an outer fixture.
+    """
+    from .tests.cli_runner import operator_runtime_scope
+
+    del item
+    with operator_runtime_scope():
+        return (yield)
+
+
 @pytest.fixture(scope="session", autouse=True)
 def _published_authority_lease() -> Iterator[None]:
     """Release the per-worker published authority lease that seeded CLI fixtures take."""

@@ -561,6 +561,12 @@ desktop:
     zoom_in: Zoom docs in
     zoom_out: Zoom docs out
     zoom_reset: Reset docs zoom
+  agent:
+    empty_lead: The agent isn't available in this window yet.
+    empty_title: No agent here yet
+    hide: Hide the agent
+    resize: Resize the agent
+    show: Show the agent
   calendar:
     aeat:
       accepted: Accepted
@@ -604,11 +610,16 @@ desktop:
     view_months: Calendar
     warnings: Some profile details are missing, so these dates use defaults.
     window_unknown: Opening date not reported
+  canvas:
+    lead: Open the agent, the TUI or the docs from the side bar, or here.
+    title: Nothing open
   docs:
     frame_title: Cadrumo documentation
+    hide: Hide the docs
     loading: Loading the documentation…
     not_bundled: This copy of Cadrumo was built without the documentation. Everything
       else works as usual.
+    show: Show the docs
     unavailable: The documentation couldn't be opened. Everything else works as usual.
   host:
     failed: This part couldn't load.
@@ -667,7 +678,9 @@ desktop:
     type_to_search: Type to search.
     unavailable: Docs search isn't available.
   pane:
+    agent: Agent
     docs: Docs
+    maximize_agent: Maximize the agent
     maximize_docs: Maximize the docs
     maximize_focused: Maximize the focused area
     maximize_panel: Maximize the bottom panel
@@ -681,7 +694,9 @@ desktop:
     show: Show the bottom panel
   rail:
     aeat: AEAT website
+    agent: Agent
     console: Console
+    docs: Docs
     docs_home: Docs home
     label: Workspace
     logs: Logs

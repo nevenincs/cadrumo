@@ -6,7 +6,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:cd24ca684ec414c789aba2a08b333e749928a44af51da612639734baef2146e3'
+body_hash: 'sha256:7b90b7a7a0e53efa0d32b2cbfbf13ad5c300e16d18d3418488a96abfb754a209'
 related:
   - '[[2026-10-10-mcp-parity-admission-rulings-adr]]'
   - '[[2026-10-10-mcp-parity-admitted-surface-defects-reference]]'
@@ -30,6 +30,7 @@ related:
   - '[[2026-10-11-mcp-parity-audit]]'
   - '[[2026-10-11-mcp-parity-full-parity-adr]]'
   - '[[2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr]]'
+  - '[[2026-10-12-mcp-parity-attended-live-sign-in-adr]]'
 ---
 
 # `mcp-parity` feature index
@@ -49,6 +50,7 @@ Auto-generated index of all documents tagged with `#mcp-parity`.
 - `2026-10-10-mcp-parity-shared-sign-in-door-adr` - `mcp-parity` adr: `The MCP server resumes the shared sign-in exactly as the command line and terminal interface do, with the enrolled key as the single exception` | (**status:** `accepted`)
 - `2026-10-11-mcp-parity-full-parity-adr` - `mcp-parity` adr: `The command line, the terminal interface and MCP are at parity, and no frontend is refused what another can do` | (**status:** `accepted`)
 - `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr` - `mcp-parity` adr: `The agent works only inside the one signed-in profile and never handles authentication` | (**status:** `accepted`)
+- `2026-10-12-mcp-parity-attended-live-sign-in-adr` - `mcp-parity` adr: `MCP follows an operator-held live sign-in by attended delegation, without a persisted credential` | (**status:** `{proposed|accepted|rejected|superseded|deprecated}`)
 
 ### audit
 

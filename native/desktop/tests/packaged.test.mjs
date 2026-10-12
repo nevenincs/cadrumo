@@ -669,6 +669,9 @@ test("packaged desktop window", { timeout: 45 * 60 * 1000 }, async (t) => {
     );
 
     // Documentation: CSP, search and a localized root ---------------------------
+    // The documentation is put away by default: it is shown before it is read.
+    if (!(await page.locator(".pane-docs").isVisible()))
+      await page.locator('.rail [data-rail="docs"]').click();
     const shown = session.docsFrame()?.url();
     const shownEntry = entries.find((language) => language.entry === shown);
     const localized = entries.find(

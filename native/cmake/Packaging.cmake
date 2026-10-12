@@ -34,7 +34,7 @@ if(CADRUMO_PACKAGE_USER_DOCS)
 else()
   set(user_docs_args --without-user-docs)
   cadrumo_build_fact("User documentation"
-    "not bundled, so the release targets refuse (CADRUMO_PACKAGE_USER_DOCS=OFF)")
+    "not bundled; the package manifest states it (CADRUMO_PACKAGE_USER_DOCS=OFF)")
 endif()
 # Application images are native executables that are not interpreter hosts, declared by the
 # platform mapping. Each names its CMake target and the variable that holds its artifact path,
@@ -200,33 +200,15 @@ if(WIN32 AND desktop_image_staged)
   set_tests_properties(bundle.installer-bootstrap PROPERTIES
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" RESOURCE_LOCK package_inventory TIMEOUT 900
     FAIL_REGULAR_EXPRESSION "running 0 tests;test result: FAILED")
-  set(CADRUMO_INSTALLED_GUEST_CONFIG "" CACHE FILEPATH
-    "Private pinned disposable Windows guest and immutable P1/P2 cohort configuration")
-  find_program(CADRUMO_INSTALLED_GUEST_POWERSHELL NAMES pwsh
-    DOC "PowerShell 7 host for disposable Windows guest acceptance transport")
-  if(CADRUMO_INSTALLED_GUEST_POWERSHELL)
-    set(installed_delivery_check COMMAND "${CADRUMO_INSTALLED_GUEST_POWERSHELL}"
-      -NoLogo -NoProfile -NonInteractive -File
-      "${PROJECT_SOURCE_DIR}/dev/runtime_lifecycle/windows-guest/acceptance.ps1"
-      -Config "${CADRUMO_INSTALLED_GUEST_CONFIG}"
-      -Stage "${CADRUMO_PATH_STAGE}/$<CONFIG>" -Source "${PROJECT_SOURCE_DIR}"
-      -Output "${CADRUMO_PATH_TESTING}/$<CONFIG>/installed-guest")
-  else()
-    # Candidate payload/kit targets remain usable without the acceptance host.
-    set(installed_delivery_check COMMAND "${CMAKE_COMMAND}" -E echo
-      "[cadrumo:bundle] error: Installed acceptance requires PowerShell 7 and CADRUMO_INSTALLED_GUEST_CONFIG"
-      COMMAND "${CMAKE_COMMAND}" -E false)
-  endif()
   set(desktop_delivery_check COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.package_launch_smoke --kit
     "${CADRUMO_PATH_STAGE}/$<CONFIG>/app"
     COMMAND "${CMAKE_CTEST_COMMAND}" --test-dir "${PROJECT_BINARY_DIR}" -C "$<CONFIG>"
       --output-on-failure --no-tests=error -R "^bundle[.]installer-bootstrap$"
     COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.package_launch_smoke --health
-    "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/${desktop_package_path}" "${CADRUMO_STORAGE_ROOT_VARIABLE}"
-    ${installed_delivery_check})
+    "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/${desktop_package_path}" "${CADRUMO_STORAGE_ROOT_VARIABLE}")
 endif()
 if(desktop_delivery_check)
-  set(bundle_summary "the assembled payload, after its desktop delivery and installed acceptance checks")
+  set(bundle_summary "the assembled payload, after its desktop delivery checks")
 else()
   set(bundle_summary "the assembled payload")
 endif()
@@ -236,6 +218,29 @@ add_custom_target(bundle ALL ${desktop_delivery_check} DEPENDS app-payload
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
 cadrumo_build_step(step_comment app-distro GROUP assembly SUMMARY "alias of bundle")
 add_custom_target(app-distro DEPENDS bundle COMMENT "${step_comment}")
+if(WIN32 AND desktop_image_staged)
+  # Installation is its own step: only an explicit build of this target touches a guest.
+  set(CADRUMO_INSTALLED_GUEST_CONFIG "" CACHE FILEPATH
+    "Private pinned disposable Windows guest and immutable P1/P2 cohort configuration")
+  find_program(CADRUMO_INSTALLED_GUEST_POWERSHELL NAMES pwsh
+    DOC "PowerShell 7 host for disposable Windows guest acceptance transport")
+  if(CADRUMO_INSTALLED_GUEST_POWERSHELL)
+    set(installed_guest_command COMMAND "${CADRUMO_INSTALLED_GUEST_POWERSHELL}"
+      -NoLogo -NoProfile -NonInteractive -File
+      "${PROJECT_SOURCE_DIR}/dev/runtime_lifecycle/windows-guest/acceptance.ps1"
+      -Config "${CADRUMO_INSTALLED_GUEST_CONFIG}"
+      -Stage "${CADRUMO_PATH_STAGE}/$<CONFIG>" -Source "${PROJECT_SOURCE_DIR}"
+      -Output "${CADRUMO_PATH_TESTING}/$<CONFIG>/installed-guest")
+  else()
+    set(installed_guest_command COMMAND "${CMAKE_COMMAND}" -E echo
+      "[cadrumo:installed-guest-acceptance] error: requires PowerShell 7 and CADRUMO_INSTALLED_GUEST_CONFIG"
+      COMMAND "${CMAKE_COMMAND}" -E false)
+  endif()
+  cadrumo_build_step(step_comment installed-guest-acceptance GROUP installation
+    SUMMARY "install the assembled package into the configured disposable Windows guest and accept it")
+  add_custom_target(installed-guest-acceptance ${installed_guest_command} DEPENDS bundle
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
+endif()
 if(TARGET desktop-headless-test)
   add_dependencies(desktop-headless-test bundle)
 endif()

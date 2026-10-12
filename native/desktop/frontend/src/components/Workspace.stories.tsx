@@ -39,8 +39,13 @@ function useRailItems(chosen: string, errors = 0, messages?: Messages) {
   });
   const top: RailItem[] = [
     item("search", "search", "desktop.rail.search", "Ctrl+K"),
-    item("docs", "book", "desktop.rail.docs_home", "Alt+Home"),
+    // The window's columns, in their default order.
+    {
+      ...item("agent", "agent", "desktop.rail.agent", "Ctrl+Shift+A"),
+      divided: true,
+    },
     item("tui", "tui", "desktop.rail.tui", "Ctrl+Shift+T"),
+    item("docs", "book", "desktop.rail.docs", "Ctrl+Shift+H"),
     // The profile's views, where the host offers them, lead the shortcuts.
     ...(messages === undefined
       ? []

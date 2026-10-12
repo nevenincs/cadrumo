@@ -89,12 +89,13 @@ delete only the verified guest build directory for the accompanying artifacts.
 
 ## Canonical installed acceptance
 
-On Windows, the default `bundle` target runs `acceptance.ps1` synchronously after
-the public kit and shipping Cadrumo runtime-recovery checks. It fails when the
-guest configuration or either immutable cohort is absent, and when any actual
-native phase fails. `app-payload` and `msi-bootstrap-kit` remain candidate producer
-targets; they do not claim installed acceptance. No saved acceptance receipt can
-substitute for this invocation's native phases.
+Installed acceptance is a separate installation step, never part of building the
+package. On Windows, the `installed-guest-acceptance` target builds `bundle` and
+then runs `acceptance.ps1` synchronously. It fails when the guest configuration or
+either immutable cohort is absent, and when any actual native phase fails.
+`app-payload`, `bundle` and `msi-bootstrap-kit` produce and check the package; they
+do not claim installed acceptance. No saved acceptance receipt can substitute for
+this invocation's native phases.
 
 Set `CADRUMO_INSTALLED_GUEST_CONFIG` to a private JSON file with `schema: 1`.
 `CADRUMO_INSTALLED_GUEST_POWERSHELL` selects the PowerShell 7 executable; configure

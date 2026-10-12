@@ -1,3 +1,4 @@
+import { seedLayout } from "./support/layout";
 import { openPanelTab, panelToggle } from "./support/panel";
 import { expect, test, type Frame, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
@@ -995,6 +996,7 @@ async function serveDocs(target: Page) {
 }
 
 async function openWithDocs(target: Page) {
+  await seedLayout(target);
   await serveDocs(target);
   await target.goto(`/?docs=${encodeURIComponent(`${DOCS}/index.html`)}`);
   await expect(target.frameLocator(".docs-frame").locator("h1")).toHaveText(
@@ -1027,7 +1029,10 @@ test("without a host the shell lays out every area and invents nothing", async (
   const rail = target.getByRole("navigation", {
     name: label("desktop.rail.label"),
   });
-  await expect(rail.getByRole("button")).toHaveCount(6);
+  await expect(rail.getByRole("button")).toHaveCount(7);
+  // The agent and the TUI are shown; the documentation waits to be asked for.
+  await expect(target.locator(".pane-agent")).toBeVisible();
+  await expect(target.locator(".pane-docs")).toBeHidden();
   await expect(target.locator(".pane-docs")).toContainText(
     label("desktop.host.unavailable"),
   );
@@ -1111,6 +1116,7 @@ test("maximize, swap, orientation and hide never reload the documentation", asyn
 test("a window too narrow for side by side stacks without changing the choice", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await target.goto("/");
   const docsHead = target.locator(".pane-docs .pane-head");
   const stack = docsHead.getByRole("button", {

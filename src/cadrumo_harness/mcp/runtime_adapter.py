@@ -41,8 +41,10 @@ from .protocol_contract import (
     validate_tool_arguments,
 )
 from .runtime_admission import (
+    ATTENDABLE_REFUSALS,
     AdmissionDenial,
     McpAdmission,
+    attend_held_sign_in,
     require_exact_admitted_status,
     resume_shared_sign_in,
     selected_profile_id,
@@ -280,8 +282,7 @@ class RuntimeMcpAdapter:
                 await self._release_lease(task_name="mcp-retired-session-close")
             await self._require_selected(profile_id)
             if self.client is None:
-                self.client, self._retired = await self._open_signed_in_client(profile_id)
-                self.admission = McpAdmission.SIGN_IN
+                self.client, self._retired, self.admission = await self._open_signed_in_client(profile_id)
                 # Bound for its life to the profile of the sign-in it resumed.
                 self._named_profile_id = profile_id
         except Exception as error:
@@ -289,7 +290,8 @@ class RuntimeMcpAdapter:
             return
         self._admission_denial = None
 
-    async def _open_signed_in_client(self, profile_id: UUID) -> tuple[RuntimeFrontendClient, Event]:
+    async def _open_signed_in_client(self, profile_id: UUID) -> tuple[RuntimeFrontendClient, Event, McpAdmission]:
+        """Resume the person's stored sign-in; with none to resume, ask the person holding it to admit this one."""
         client = await self._open_unadmitted_client(profile_id, on_surface=True)
 
         def resume() -> Event:
@@ -297,9 +299,25 @@ class RuntimeMcpAdapter:
             return self._watch(client)
 
         try:
-            return client, await self._wire(resume)
+            return client, await self._wire(resume), McpAdmission.SIGN_IN
         except BaseException as error:
             await self._retire_client(client, task_name="mcp-sign-in-resume-close", primary_error=error)
+            if not isinstance(error, RuntimeFrontendRefusedError) or error.reason not in ATTENDABLE_REFUSALS:
+                raise
+            refused = error
+        attended = await self._open_unadmitted_client(profile_id, on_surface=True)
+
+        def attend() -> Event:
+            attend_held_sign_in(attended, profile_id=profile_id)
+            return self._watch(attended)
+
+        try:
+            return attended, await self._wire(attend), McpAdmission.ATTENDED
+        except BaseException as error:
+            await self._retire_client(attended, task_name="mcp-attendance-close", primary_error=error)
+            if isinstance(error, RuntimeFrontendRefusedError) and error.reason in ATTENDABLE_REFUSALS:
+                # Nobody admitted this connection: answer as the stored sign-in's refusal said.
+                raise refused from None
             raise
 
     async def _retire_client(

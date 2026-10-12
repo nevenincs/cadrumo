@@ -43,6 +43,20 @@ class ConfigSignInStatusResult(OutputSchema):
     status: SignInStatus
 
 
+class ConfigSignInHoldResult(OutputSchema):
+    """How a held sign-in ended, after its event lines.
+
+    The sign-in itself was never persisted. ``ended`` names what ended it:
+    the caller closing standard input, the person signing out, or the
+    session's own end by deadline, lock or sign-out elsewhere.
+    """
+
+    profile_id: BucketId
+    ended: Literal["input_closed", "signed_out", "session_ended"]
+    approved: int
+    declined: int
+
+
 class ConfigLogoutResult(OutputSchema):
     """Global human sign-out; automation and receipt cleanup remain explicit."""
 
