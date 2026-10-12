@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-shell'
 date: '2026-10-04'
-modified: '2026-10-09'
+modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:4eb668f11573e99c012be6b757766b00eb1736c275c001bdcc3844df9685cbc1'
+body_hash: 'sha256:cba5445fcc1e6c8027482852905b8304360d06b177f599f964252a6087c2a822'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -106,6 +106,16 @@ Amendment approved 2026-10-07 under the user's environment-readiness instruction
 ### 2026-10-09 authorized scoped installation command
 
 The operator authorizes token-checked manager installation for user/machine scope and missing-installation recovery under 2026-10-09-desktop-service-installation-adr. This extends the shell's manager-start surface to verified native installation followed by shell dispatch of the published manager. Machine scope elevates the installer only. Runtime transport, profile and supervision authority remain excluded.
+
+### 2026-10-12 sign-in view on every loss of sign-in
+
+The owner ruled first-hand on 2026-10-12 that Cadrumo is a GUI application with only one active, signed-in profile, and that the shell shows the sign-in screen when the profile sign-in times out, goes inactive, or no profile exists (`2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`). This amends when the sign-in view of `2026-10-04-application-sign-in-adr` is shown. Before, it was shown only before the TUI pane starts while the active profile has no live sign-in.
+
+- The shell withholds the TUI and shows the sign-in view whenever the sign-in expires by its idle or absolute deadline, is signed out, is locked, or is lost to lock-down, and whenever no profile exists.
+- It learns of each from the runtime's pushed session events where they reach it, and otherwise from the `sign-in-status` read it already polls. It never infers a sign-in from its own state.
+- A locked profile shows the sign-in view. Whether resuming a locked profile happens in the view or is handed to the TUI's flow stays as `2026-10-04-application-sign-in-adr` rules.
+- The view offers another profile only while signed out, because only one profile is signed in at a time.
+- The shell still holds no session, receipt, credential or runtime connection. It never signs in on an agent's behalf.
 
 ## Implementation
 

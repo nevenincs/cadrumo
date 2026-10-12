@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#mcp-protocol-hardening'
 date: '2026-07-08'
-modified: '2026-10-05'
-body_hash: 'sha256:1c0f668356f10509afdf6414c1c2063e36bab4a95da3938153b7473e78c59654'
+modified: '2026-10-12'
+body_hash: 'sha256:175d28e83afab708aad8800dd0f2d5ea3d80585b60b8aeb7b207a2d267584653'
 related:
   - "[[2026-07-08-mcp-protocol-hardening-research]]"
   - "[[2026-07-02-agent-harness-refoundation-adr]]"
@@ -149,11 +149,16 @@ recorded nowhere. This ADR decides each so the paired plan can close them.
   (`config auth certificate secret set`) into encrypted storage; NO secret
   ever rides any MCP channel, form or URL. Recorded as the decided
   alternative so the unused spec feature reads as a choice, not a gap.
-- *Amended 2026-10-11:* the sentence that no secret ever rides any MCP
-  channel yields to `2026-10-11-mcp-parity-full-parity-adr`, on the owner's
-  ruling that MCP carries whatever the command line carries. A tool call
-  may carry a typed secret to the runtime's protected frame, or name one
-  the person stored at a terminal by reference. Elicitation stays unused.
+- *Amended 2026-10-12, restoring the ruling:* no secret ever rides any MCP
+  channel, as text or by reference, under
+  `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`. No tool argument
+  carries or names a secret, and an operation that needs one is the
+  person's at the CLI, the TUI or the desktop. Elicitation stays unused.
+  An enrolled key reaches the server only through the person's launch
+  configuration, by reference. (From 2026-10-11 to that amendment, under
+  `2026-10-11-mcp-parity-full-parity-adr`, a tool call could carry a typed
+  secret to the runtime's protected frame, or name one the person stored at
+  a terminal by reference.)
 
 ### H9 — Capability and SDK posture
 

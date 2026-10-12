@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:ef1b9711d5650b6a9858b2615680f3f0f28441613a6cce429fca33cd5f79f0eb'
+body_hash: 'sha256:7dbd53d89f0c093d3199c710f10159474800c3c8b69c3faaa343c280702ed5aa'
 related:
   - "[[2026-10-10-mcp-parity-parity-mechanism-options-research]]"
   - "[[2026-10-10-mcp-parity-surfaces-and-registry-reference]]"
@@ -113,9 +113,14 @@ Binding:
   surface's whole operation list at every Cadrumo release, because the list can grow
   under an unchanged name.
 - Parity is defined and measured per registered operation, not per command or screen.
-- Every registered operation is admitted on every frontend, MCP included, and the
-  definition keeps no per-operation frontend list. A check fails when an operation the
-  command line can submit is not submittable on MCP. (Amended 2026-10-12 under
+- Every registered operation inside a signed-in or key-admitted profile is admitted on
+  every frontend, MCP included, and the definition keeps no per-operation frontend list.
+  A check fails when such an operation the command line can submit is not submittable on
+  MCP. Authentication, session and access administration, installation acts, acts
+  outside the bound profile and operations that require a secret are not agent
+  operations: MCP does not serve them, and a check fails if it does. (Amended again
+  2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`; before that the rule
+  reached every registered operation.) (Amended 2026-10-12 under
   `2026-10-11-mcp-parity-full-parity-adr`; before that admission stayed opt-in per
   definition, each operation carrying a recorded MCP decision, admitted with the evidence
   of a checklist or excluded with a reason.)
@@ -131,11 +136,12 @@ Binding:
 - A capability the command line or terminal interface performs in process, and that an
   MCP client needs, becomes a registered operation or a sub-query of the public reference
   tool. It is not reached by a command-line call.
-- Storage administration is served on MCP exactly as the command line serves it.
-  (Amended 2026-10-12 under `2026-10-11-mcp-parity-full-parity-adr`; on 2026-10-10 the
-  owner had said "Storage administration should not be an MCP responsibility", and the
-  ruling of 2026-10-11 that MCP never refuses anything the command line can do replaced
-  it.) Starting, stopping and supervising the runtime stays outside every frontend's
+- Storage administration is not served on MCP: it acts on the installation and across
+  profiles, outside the profile the agent is bound to. (Amended again 2026-10-12 under
+  `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`. Earlier that day, under
+  `2026-10-11-mcp-parity-full-parity-adr`, it was served on MCP exactly as the command line
+  serves it; on 2026-10-10 the owner had said "Storage administration should not be an MCP
+  responsibility".) Starting, stopping and supervising the runtime stays outside every frontend's
   operations, the command line's included.
 - Fixed boundary, set by the owner and not open to any decision: nothing is designed,
   built or shipped that sends data to the tax authority and changes its state, and no
@@ -156,8 +162,10 @@ for the mechanism itself. How an MCP session
 is authenticated is decided in
 `2026-10-10-mcp-parity-shared-sign-in-door-adr`. Which operations are admitted,
 and how an agent's write is authorised, are separate decisions not made here; both are
-now made by `2026-10-11-mcp-parity-full-parity-adr`: every operation, with the same
-authority as on the command line.
+now made by `2026-10-11-mcp-parity-full-parity-adr`: every operation inside the bound
+profile, with the same authority as on the command line, and no authentication, session
+administration or act outside the profile, under
+`2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr` (amended 2026-10-12).
 
 One sentence of the accepted agent-harness record needs an amendment the owner approves.
 Its 2026-09-26 amendment says "The agent still sees a confined deterministic tool

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#application-sign-in'
 date: '2026-10-04'
-modified: '2026-10-06'
+modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:44e89a6d8fb4814f47baa4a4790399b8e9ac2864f28822b2a00730ff8b8aa175'
+body_hash: 'sha256:5fc5886d5139f7de87e364e4019925fdb621693bd06f1ce490bd235360b6e11c'
 related:
   - "[[2026-10-04-application-sign-in-reference]]"
   - "[[2026-09-26-mcp-purpose-authentication-profile-access-adr]]"
@@ -59,7 +59,7 @@ This record decides the sign-in model, its owner, its lifecycle and synchronizat
 
 - **Runtime-owned shared sign-in, hardened from the receipt, with the desktop driving the canonical CLI login.** Chosen. It needs no transport client, no delegation and no desktop authority.
 - **The desktop holds a session and issues one-time child tickets to each TUI.** Rejected for now: the tickets are unimplemented, and the desktop would need a persistent runtime connection. It remains open if per-window scoping is ever required.
-- **Sign in once and every client is admitted.** Rejected as ambient authority. Limiting automatic reuse to interactive surfaces keeps non-interactive clients on API keys.
+- **Sign in once and every client is admitted.** Rejected as ambient authority. Limiting automatic reuse to interactive surfaces keeps non-interactive clients on API keys, except the MCP server, which resumes the sign-in under `2026-10-10-mcp-parity-shared-sign-in-door-adr`.
 - **TUI-only sign-in, resuming first.** Insufficient on its own. It is kept as the TUI's behaviour.
 - **The manager tray signs the user in.** Rejected: the manager holds no authority.
 
@@ -70,7 +70,7 @@ This record decides the sign-in model, its owner, its lifecycle and synchronizat
 - A frontend may read only the keychain-held proof and the receipt locator, in order to present the proof. It never unwraps, extends or deletes a receipt, and never handles the DEK.
 
 **The shared sign-in.**
-- Each profile has one live human sign-in per OS user's runtime, persisted as the receipt.
+- At most one profile has a live human sign-in on an OS user's runtime at a time, persisted as the receipt. Cadrumo is a GUI application with one active, signed-in profile. (Amended 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`; before that each profile could hold its own live sign-in at the same time.)
 - Signing in again from another login replaces it. Each client still admits its own session on its own connection by presenting the proof. Nothing is delegated or shared.
 - The receipt's authenticated data binds the originating `login_id` and a durable per-profile sign-in generation.
 - On Windows, `login_id` is the logon of the runtime's own desktop. Same-account sessions elsewhere bind to it until the runtime-manager ADR's per-session admission follow-on is decided, and this record follows that decision.
@@ -89,12 +89,13 @@ This record decides the sign-in model, its owner, its lifecycle and synchronizat
 
 **Automatic reuse.**
 - Only the TUI and a CLI attached to an interactive terminal resume a live sign-in automatically. `aeat config login` resumes it first unless a secret is supplied.
+- The MCP server resumes a live sign-in when it holds no enrolled credential reference in its launch configuration. It never authenticates by password, never presents or names a key from a tool call, and carries no secret. (Amended 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`. Earlier that day, under `2026-10-11-mcp-parity-full-parity-adr`, it could also authenticate by password carried as a typed secret; before that it never authenticated by password.)
 - Non-interactive CLI invocations do not resume automatically: pipes and scripts. They authenticate with a password on the secret channel, or with an enrolled API key. `aeat config login` with no secret in a non-interactive context refuses with `passphrase_channel_absent` instead of resuming.
 - This gate is a client-side default, not an authority control. It stops accidental reuse by pipes and scripts. Any same-user process can allocate a pseudo-terminal or declare a frontend, and the runtime cannot verify either.
 
 **Lifetime.**
 - The configured idle and absolute deadlines stay as they are: 15 minutes and 4 hours by default.
-- The idle deadline is extended by the runtime on one event only: an operation submission from a human-kind session whose operation definition is declared interactive. The rate is bounded.
+- The idle deadline is extended by the runtime on one event only: an operation submission, on the TUI or the CLI, from a human-kind session whose operation definition is declared interactive. A submission on the MCP frontend never extends it. The rate is bounded.
 - Observe, result, page, status, contract and event traffic never extend it.
 - Whether live sessions are re-clipped to an extended deadline is settled in the plan.
 - Where the receipt-sealing key lives during extension is a named follow-on decision, because it is a security trade-off. One option is runtime memory for up to the absolute lifetime. The other is the runtime reading the keychain, which contradicts the current proof-presentation rule. Until that decision is made, the receipt is not extended, and the session deadline governs.
@@ -106,7 +107,7 @@ This record decides the sign-in model, its owner, its lifecycle and synchronizat
   3. Retire every human and attended session of the profile.
 - It reports the automation that remains enabled.
 - API grants and AEAT authority sessions are untouched.
-- A human-kind session, or a presented proof, may request it. An API-key session may not.
+- A human-kind session on the TUI, the CLI or the desktop, or a presented proof, may request it. An API-key session may not, and neither may any session on the MCP frontend, which signs no one out and locks no session, its own included. (Amended 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`. Earlier that day, under `2026-10-11-mcp-parity-full-parity-adr`, a human-kind session on any frontend could request it; from 2026-10-10 a session on the MCP frontend could end only itself.)
 - "Lock this window" remains as the per-session lock, and closing a window ends only that window's session.
 - The desktop Sign out, the TUI sign-out and `aeat config logout` invoke the global operation.
 
@@ -151,7 +152,7 @@ This record decides the sign-in model, its owner, its lifecycle and synchronizat
 - The throttle keeps clearing on missing or corrupt state, as the custody ADR requires, and reports a typed unreadable-state diagnostic.
 
 **Desktop sign-in view.**
-- It lives in the shell's own origin, never in the documentation frame. It is shown before the TUI pane starts whenever the active profile has no live sign-in.
+- It lives in the shell's own origin, never in the documentation frame. It is shown before the TUI pane starts whenever the active profile has no live sign-in. It is shown again whenever the sign-in times out, goes inactive or is locked, or when no profile exists. (Amended 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`; before that only the absence of a live sign-in was named.)
 - One dedicated token-checked host command takes the password in a raw IPC body. It spawns a fresh `aeat config login --secrets-stdin --json` with a piped stdin, which is closed after writing. The host zeroizes its own buffers, and stdout is kept out of diagnostics.
 - Tauri and WebView2 copies of the password cannot be wiped, and the record says so.
 - The command runs as the CLI frontend. The shell holds no session, receipt or credential, never retries automatically and has DevTools disabled in release builds.
@@ -164,7 +165,7 @@ This record decides the sign-in model, its owner, its lifecycle and synchronizat
 - Sign-in may name a profile. The sign-in host command passes the profile's label as the positional argument of `aeat config login`, after `--` so that no label is read as an option, with the password on the same piped stdin as before. The product selects that profile only after its login succeeds. With several profiles and none selected, the view sends nothing until one is chosen.
 - The view creates a profile, on first run and beside existing ones. One further dedicated token-checked host command takes the name and the password in a raw IPC body and spawns a fresh `aeat config profile create --quiet --secrets-stdin -- NAME`, writing the password and its confirmation to a piped stdin that is closed after writing. The rules of the sign-in command apply unchanged: zeroized host buffers, stdout kept out of diagnostics, one submission, no automatic retry, typed refusals shown undiminished. The name travels as an argument and is never logged.
 - Creation leaves the new profile selected and signed out, as the product does. Whether the host goes on to sign in from the same buffer, so that the password is typed once, is a *hypothesis* left open; until it is decided the view asks for the password again.
-- Signing in to another profile does not sign the previous one out, and `aeat config logout` acts on the selected profile only. The view therefore offers another profile only while signed out: the person signs out, then chooses.
+- Only one profile is signed in at a time. A sign-in to another profile does not stand beside the previous one. Whether the runtime refuses it until the person signs out or ends the previous sign-in first is settled in the plan, and refusal is recommended. `aeat config logout` acts on the signed-in profile. The view offers another profile only while signed out: the person signs out, then chooses. (Amended 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`; before that signing in to another profile did not sign the previous one out, and both stayed signed in.)
 - Recovery enrolment is not part of the view.
 - The shell still holds no session, receipt, credential or runtime connection.
 
@@ -191,6 +192,22 @@ This record decides the sign-in model, its owner, its lifecycle and synchronizat
 - Afterwards, no code other than the runtime owner mints, extends or deletes a receipt.
 
 **Out of scope:** cross-client delegation, automation access, and ending AEAT authority sessions on sign-out.
+
+### 2026-10-09 authorized admission amendment
+
+The user explicitly removed desktop/logon launch-context admission. Earlier requirements to reject Session 0, missing desktop witnesses, or elevated launch contexts are superseded within Windows manager/runtime operation. A verified same-account native process and its actual token logon may authenticate without a desktop. Desktop lock observation remains applicable when a desktop is positively bound; a native non-desktop logon has no screen-lock surface. Passwords, receipts and enrolled keys remain required; an MCP connection presents a receipt proof, or an enrolled key the person configured by reference in its launch configuration, and never a password. (Amended 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`. Earlier that day it read "a receipt proof, a password carried as a typed secret, or an approved exact-profile grant"; before that, "Passwords, receipts and approved exact-profile MCP grants remain required".) Native peer identity, executable verification, storage ownership, credential revocation and process ownership are unchanged. Runtime recovery follows the owning manager lifetime until explicit stop or session-end, rather than requiring an active WTS desktop. Evidence and implementation: `2026-10-09-runtime-process-lifecycle-plan`.
+
+### 2026-10-10 authorized MCP resume amendment
+
+On 2026-10-10 the operator ruled that MCP is coupled to the user's login state exactly as the CLI and TUI are: "I confirm MCP should resume the shared sign-in like CLI and TUI." That supersedes the 2026-10-04 choice that only interactive surfaces reuse a sign-in automatically, for the MCP server alone; pipes and scripts stay gated as before. The MCP server resumes a live sign-in when it holds no enrolled credential reference and never authenticates by password. A submission on the MCP frontend never extends the idle deadline. The enrolled API key remains the single way to work with no signed-in person. The operator also ruled that day that an MCP client may end only its own session: it may not request the global sign-out or lock a session other than its own. (Since 2026-10-12, under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`, an MCP client ends no session by request, its own included; the sign-out constraint above says so.) Decision and evidence: `2026-10-10-mcp-parity-shared-sign-in-door-adr`.
+
+### 2026-10-12 parity amendment
+
+On 2026-10-11 the operator ruled that the CLI, TUI and MCP are at parity and that MCP never refuses anything the CLI can do (`2026-10-11-mcp-parity-full-parity-adr`). As first applied here, two lines of the 2026-10-10 amendment yielded to it: the MCP server could authenticate by password, carried as a typed secret to the runtime's protected frame, and a human-kind session on the MCP frontend could request the global sign-out and lock another session, as on the CLI. Both are withdrawn by the amendment below. Resume without an enrolled credential reference, the rule that a submission on the MCP frontend never extends the idle deadline, and the enrolled key as the single way to work with no signed-in person are unchanged.
+
+### 2026-10-12 one signed-in profile, and no authentication by the agent
+
+On 2026-10-12 the owner ruled first-hand that the agent never authenticates or manages authentication, that no secret travels through MCP, that the agent works only inside one signed-in profile, and that Cadrumo has only one active, signed-in profile (`2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`). Reworded in place above, each with a note of what it said before: the shared sign-in, now at most one profile at a time; the MCP line of automatic reuse; the sign-out line; when the desktop sign-in view is shown; the 2026-10-06 rule on signing in to another profile; and the MCP sentence of the 2026-10-09 amendment. Parity of operations holds inside the signed-in profile. Authentication, sign-out, lock and acts outside the profile are not agent operations. The TUI, the CLI and MCP operate on a profile only while the person is signed in to it, or through an API key the person issued for it. The person's own password sign-in at the TUI, the CLI or the desktop is unchanged.
 
 ## Implementation
 
@@ -239,7 +256,7 @@ Driving the canonical CLI login keeps the desktop free of runtime authority and 
 **Benefits:**
 - One sign-in, in the desktop, an interactive CLI or the TUI, opens every interactive window until it expires or the user signs out or locks.
 - Sign-out and lock-down take effect everywhere.
-- Pipes and scripts stop reusing a sign-in by accident, which steers agents toward API keys.
+- Pipes and scripts stop reusing a sign-in by accident, which steers agents toward API keys, except the MCP server, which resumes the sign-in under `2026-10-10-mcp-parity-shared-sign-in-door-adr`.
 
 **Accepted costs:**
 - New runtime state (the generation), operations and an event protocol.

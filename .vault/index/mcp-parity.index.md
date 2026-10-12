@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#mcp-parity'
 date: '2026-10-10'
-modified: '2026-10-11'
+modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:24ba0762387c33c7f606cd94778bc53ef6d31b9a2fb4ab08f5492a30f7256205'
+body_hash: 'sha256:cd24ca684ec414c789aba2a08b333e749928a44af51da612639734baef2146e3'
 related:
   - '[[2026-10-10-mcp-parity-admission-rulings-adr]]'
   - '[[2026-10-10-mcp-parity-admitted-surface-defects-reference]]'
@@ -29,6 +29,7 @@ related:
   - '[[2026-10-10-mcp-parity-surfaces-and-registry-reference]]'
   - '[[2026-10-11-mcp-parity-audit]]'
   - '[[2026-10-11-mcp-parity-full-parity-adr]]'
+  - '[[2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr]]'
 ---
 
 # `mcp-parity` feature index
@@ -47,6 +48,7 @@ Auto-generated index of all documents tagged with `#mcp-parity`.
 - `2026-10-10-mcp-parity-replay-identity-adr` - `mcp-parity` adr: `An agent's effectful submission carries the caller's own replay identity, and a key answers only while its operation could have changed something` | (**status:** `rejected`)
 - `2026-10-10-mcp-parity-shared-sign-in-door-adr` - `mcp-parity` adr: `The MCP server resumes the shared sign-in exactly as the command line and terminal interface do, with the enrolled key as the single exception` | (**status:** `accepted`)
 - `2026-10-11-mcp-parity-full-parity-adr` - `mcp-parity` adr: `The command line, the terminal interface and MCP are at parity, and no frontend is refused what another can do` | (**status:** `accepted`)
+- `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr` - `mcp-parity` adr: `The agent works only inside the one signed-in profile and never handles authentication` | (**status:** `accepted`)
 
 ### audit
 

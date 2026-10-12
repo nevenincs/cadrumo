@@ -5,7 +5,7 @@ tags:
 date: '2026-09-26'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:5e5a2655594690f257d9859f7f7c63f2cef7996c0538c199b3f429ed1b2b474a'
+body_hash: 'sha256:e0882755e89dbd065e3fdcf3d5e09b6c7ba4ac965070f81a691e3befefa48af0'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-reference]]"
   - "[[2026-09-26-mcp-purpose-authentication-research]]"
@@ -86,7 +86,7 @@ No MCP tool exposes arbitrary shell execution, SQL, raw secure references, DEKs 
 
 ### Runtime ownership and connection
 
-One runtime instance owns each OS user and canonical Cadrumo storage root. OS login-session provenance is distinct from application-session identity; multiple login contexts may belong to the same runtime owner. Multiple profiles may be served, with independent bindings and no implicit cross-profile authority. Separate OS users run separate instances and credential stores.
+One runtime instance owns each OS user and canonical Cadrumo storage root. OS login-session provenance is distinct from application-session identity; multiple login contexts may belong to the same runtime owner. Multiple profiles may be served, with independent bindings and no implicit cross-profile authority, but at most one of them has a live human sign-in at a time. Any other profile is served only to an API key the person issued for it. (Amended 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`; before that several profiles could be signed in at once.) Separate OS users run separate instances and credential stores.
 
 An MCP host starts a small local stdio adapter. The adapter and CLI/TUI connect to the same owner-controlled runtime through the verified local endpoint. Runtime launch policy belongs to the per-user runtime manager in `2026-10-04-runtime-manager-architecture-adr`. The runtime starts without profiles unlocked. The API-key ADR governs subsequent credential proof and storage access.
 
@@ -158,7 +158,7 @@ Use a small stable orientation/status and authorization-request surface, publish
 
 Every tool path, execute-style call, private resource and operation-result read passes the same admission and disclosure checks. MCP never reconstructs application verdicts from localized CLI text. It reports the existing typed envelope semantics with stable codes and operation references.
 
-Local read permission and consent to send a projection to an agent host are separate. Enrollment names the destination and allowed categories. Source evidence bytes and raw secure payloads do not enter MCP results, as they enter no frontend's ordinary output. A password or key enters MCP only as a typed secret argument carried to the runtime's protected frame, or named by reference, as the CLI takes one on its secret channel. (Amended 2026-10-12 under `2026-10-11-mcp-parity-full-parity-adr`; before that passwords and keys did not enter MCP at all.) Only registered authorized output projections may cross that boundary, and a projection a session may read on the CLI it may read on MCP. Human screen visibility does not authorize off-host transfer.
+Local read permission and consent to send a projection to an agent host are separate. Enrollment names the destination and allowed categories. Source evidence bytes and raw secure payloads do not enter MCP results, as they enter no frontend's ordinary output. Passwords, keys and other secrets do not enter MCP at all, as text or by reference, and an operation that requires one is not served there. An enrolled key reaches the MCP server only through the person's launch configuration, by reference. (Amended 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`. Earlier that day, under `2026-10-11-mcp-parity-full-parity-adr`, a password or key could enter MCP as a typed secret argument carried to the runtime's protected frame, or named by reference; before that passwords and keys did not enter MCP at all.) Only registered authorized output projections may cross that boundary, and a projection a session may read on the CLI it may read on MCP. Human screen visibility does not authorize off-host transfer.
 
 Delete the displaced identity-flag admission, password-file bootstrap, retained-password forwarding, CLI-wrapper execution path and unsafe timeout/process assumptions as the replacement is integrated. Remove their command/configuration options, tests and generated documentation through owning generators. Do not retain a compatibility mode. Actual code census determines deletions; names such as inprocess are not evidence of behavior.
 
