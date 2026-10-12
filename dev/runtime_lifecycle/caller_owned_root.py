@@ -15,6 +15,11 @@ Nothing here imports the product to reach the runtime. The run:
 
 The profile password exists only in this process's memory and the CLI's
 standard input. Run it with ``just verify-caller-owned-runtime PACKAGE``.
+
+Exit 0 means every step held. Exit 1 names the contradicted step. Exit 3 means
+every step that ran held, but the logon's native credential store refused the
+stored sign-in, so MCP resume and logout could not be shown; run it again from
+an interactive desktop logon.
 """
 
 from __future__ import annotations
@@ -69,6 +74,7 @@ class Receipt:
     """Credential-free facts of one acceptance run."""
 
     steps: list[dict[str, Any]] = field(default_factory=list)
+    unproven: list[str] = field(default_factory=list)
 
     def record(self, step: str, **facts: Any) -> None:
         """Append one step's facts and echo them for the operator."""
@@ -114,10 +120,17 @@ def _cli(
     )
     text = result.stdout.strip() or result.stderr.strip()
     try:
-        envelope = json.loads(text.splitlines()[-1] if text else "{}")
+        envelope = json.loads(text or "{}")
     except ValueError:
         envelope = {"unparsed_output": True}
     return result.returncode, envelope if isinstance(envelope, dict) else {}
+
+
+def _notice_codes(envelope: Mapping[str, Any]) -> list[str]:
+    notices = envelope.get("notices")
+    if not isinstance(notices, list):
+        return []
+    return [str(notice.get("code")) for notice in notices if isinstance(notice, dict)]
 
 
 def _error_code(envelope: Mapping[str, Any]) -> str | None:
@@ -261,9 +274,23 @@ def run(package: Path, scratch: Path) -> Receipt:
             programs, environment, "config", "login", _PROFILE_NAME, "--secrets-stdin", secret={"passphrase": password}
         )
         _require(code == 0 and envelope.get("status") in {"success", "warning"}, f"login: {code} {envelope}")
-        receipt.record("login_authenticated", status=envelope.get("status"))
+        notices = _notice_codes(envelope)
+        persisted = "config.login.session_not_persisted" not in notices
+        receipt.record("login_authenticated", status=envelope.get("status"), notices=notices)
+        if not persisted:
+            # MCP follows only a stored sign-in, and logout checks it; this logon's credential store refused it.
+            receipt.unproven.append("stored sign-in: MCP resume and logout need a working native credential store")
 
-        code, envelope = _cli(programs, environment, "config", "profile", "status")
+        # A piped command names its own credential channel; it never borrows the stored sign-in.
+        code, envelope = _cli(
+            programs,
+            environment,
+            "--profile-secrets-stdin",
+            "config",
+            "profile",
+            "status",
+            secret={"profile_passphrase": password},
+        )
         _require(code == 0 and envelope.get("status") in {"success", "warning"}, f"profile status: {code} {envelope}")
         receipt.record("profile_read", status=envelope.get("status"))
 
@@ -280,8 +307,23 @@ def run(package: Path, scratch: Path) -> Receipt:
             observe_code=(mcp["observe"] or {}).get("code"),
         )
 
+        if persisted:
+            _require(
+                status.get("authenticated") is True and (mcp["observe"] or {}).get("outcome") != "refused",
+                f"MCP did not follow the stored sign-in: {mcp}",
+            )
+        else:
+            _require(status.get("denial") == "authentication_required", f"MCP without a stored sign-in: {mcp}")
         code, envelope = _cli(programs, environment, "config", "logout")
-        receipt.record("logout", exit_code=code, status=envelope.get("status"), code=_error_code(envelope))
+        error = envelope.get("error")
+        receipt.record(
+            "logout",
+            exit_code=code,
+            status=envelope.get("status"),
+            code=_error_code(envelope),
+            message=error.get("message") if isinstance(error, dict) else None,
+        )
+        _require(code == 0 or not persisted, f"logout: {code} {envelope}")
         exit_code = runtime.stop()
     _require(exit_code == _SUPERVISOR_STOP, f"runtime exit after input closed: {exit_code}")
     receipt.record("runtime_stopped", exit_code=exit_code)
@@ -307,13 +349,17 @@ def main(arguments: list[str] | None = None) -> int:
     options = parser.parse_args(arguments)
     scratch = Path(tempfile.mkdtemp(prefix="cadrumo-co-"))
     try:
-        run(options.package.resolve(strict=True), scratch)
+        receipt = run(options.package.resolve(strict=True), scratch)
     except AcceptanceError as failure:
         # A failed root is kept: its runtime log is the diagnosis.
         print(json.dumps({"step": "failed", "reason": str(failure), "kept_root": str(scratch)}), flush=True)
         return 1
     if not options.keep:
         shutil.rmtree(scratch, ignore_errors=True)
+    if receipt.unproven:
+        # Everything that ran held; the listed parts could not run on this logon.
+        print(json.dumps({"step": "incomplete", "unproven": receipt.unproven}), flush=True)
+        return 3
     print(json.dumps({"step": "passed"}), flush=True)
     return 0
 

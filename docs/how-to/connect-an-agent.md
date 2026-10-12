@@ -366,15 +366,19 @@ two settings in the environment of every command:
 aeat --format json config profile create agent-test --quiet --secrets-stdin
 cadrumo-runtime --configured-root
 aeat --format json config login agent-test --secrets-stdin
-aeat --format json config profile status
+aeat --format json --profile-secrets-stdin config profile status
 cadrumo-mcp
 aeat --format json config logout
 ```
 
 `profile create` and `login` each read a JSON object from standard input:
 `{"passphrase": "…", "passphrase_confirmation": "…"}` to create the profile, and
-`{"passphrase": "…"}` to sign in. Start `cadrumo-mcp` as an MCP stdio server
-with the same two settings, either from your MCP client or from your harness.
+`{"passphrase": "…"}` to sign in. A command that runs without a terminal
+reads its profile password from the root `--profile-secrets-stdin` channel as
+`{"profile_passphrase": "…"}` when no stored sign-in can be resumed; see
+[Protect access to your data](protect-data-access.md). Start `cadrumo-mcp` as
+an MCP stdio server with the same two settings, either from your MCP client or
+from your harness.
 It follows that sign-in as described in "Following your sign-in" above. A
 stored sign-in uses this computer's protected credential store. A logon that
 cannot use the store, such as some remote shell logons, can still run the
