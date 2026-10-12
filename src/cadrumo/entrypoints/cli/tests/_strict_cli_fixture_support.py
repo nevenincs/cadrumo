@@ -15,6 +15,7 @@ from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_s
 from ....core.config import override_settings
 from ._cli_surface_support import isolated_cli_surface_backend
 from .modelo_profile_seed import ProfileSeeder
+from .runtime_profile_backend import runtime_profile_backend_fixture
 
 _DIAGNOSTICS_BUCKET_ID = "22222222-3333-4444-8555-666666666666"
 
@@ -52,11 +53,5 @@ def cli_surface_isolated_backend(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-@pytest.fixture(name="_isolated_backend", autouse=True)
-def inventory_isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        open_test_profile_session("00000000-0000-4000-8000-000000000000"),
-    ):
-        register_minimal_profile(profile_id="00000000-0000-4000-8000-000000000000")
-        yield
+#: One password-custodied operator profile whose runtime admits every command.
+inventory_isolated_backend = runtime_profile_backend_fixture()

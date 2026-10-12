@@ -29,7 +29,10 @@ from click.testing import Result
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage
+from ....core.bucket_pointer import pointer_path
 from ....core.config import load_settings
+from ....core.paths import effective_storage_root
+from ..config.tests.isolated_storage_fixture import native_profile_view_server
 from .cli_runner import invoke_cached_cli
 
 __all__ = ["isolated_profile_storage"]
@@ -57,6 +60,16 @@ def _invoke(args: Sequence[str]) -> Result:
     return invoke_cached_cli(args)
 
 
+def _clear_selection() -> None:
+    """Leave the registered profiles with none selected.
+
+    Signing out keeps the selection, so a test whose subject is the
+    no-selection state clears it directly; what sign-out answers is held by
+    the logout tests.
+    """
+    pointer_path(effective_storage_root()).unlink()
+
+
 def _dev_passphrase() -> str:
     """The secret the isolated backend seeds custody envelopes with."""
     return load_settings().cadrumo_dev_test_database_password.get_secret_value()
@@ -74,8 +87,12 @@ def _per_bucket_backend(tmp_path: Path) -> Iterator[Path]:
     use create_profile_via_cli.
     """
     # isolated_profile_storage already set
-    # cadrumo_local_storage_root to tmp_path / "cadrumo-storage".
-    yield load_settings().cadrumo_local_storage_root
+    # cadrumo_local_storage_root to tmp_path / "cadrumo-storage". Sign-in and
+    # every profile verb are hosted by the runtime, so native profile workers
+    # serve the root, one connection per profile as on the desktop.
+    root = load_settings().cadrumo_local_storage_root
+    with native_profile_view_server(root):
+        yield root
 
 
 # --- the retired rename verb stays unregistered ---
@@ -129,9 +146,8 @@ def test_delete_active_profile_is_refused_and_survivors_stay_reachable(
 
     deleted = _invoke(("config", "profile", "delete", "alpha", "--yes"))
     assert deleted.exit_code != 0, deleted.output
-    flat = deleted.output.lower()
-    assert "eliminar el perfil activo" in flat or "active profile" in flat
-    assert "config logout" in deleted.output
+    # Signing out keeps the selection, so the refusal's action is signing in to another profile.
+    assert "operator.profile.login" in deleted.output
 
     # The refusal is a projection: the target profile still resolves.
     survivor = read_profile_bucket("alpha")
@@ -148,15 +164,15 @@ def test_first_switch_from_a_no_active_profile_state_succeeds(
 ) -> None:
     """``switch`` works from a cold no-active-profile state.
 
-    ``create`` lands a profile and leaves it active; logging out clears
-    the pointer so no session resolves at root-callback time. ``switch``
+    ``create`` lands a profile and leaves it active; clearing the selection
+    leaves no session to resolve at root-callback time. ``switch``
     must still open its own session and activate the named profile.
     """
     from ....core.bucket_pointer import resolve_active_bucket_id
 
     create_profile_via_cli("solo", log_in=False)
 
-    assert _invoke(("config", "logout")).exit_code == 0
+    _clear_selection()
     assert resolve_active_bucket_id() is None
 
     switched = _invoke(("config", "login", "solo"))
@@ -177,7 +193,7 @@ def test_list_and_status_work_from_a_no_active_session_state(
 
     create_profile_via_cli("alpha", log_in=False)
 
-    assert _invoke(("config", "logout")).exit_code == 0
+    _clear_selection()
 
     listed = _invoke(("config", "profile", "list"))
     assert listed.exit_code == 0, listed.output
@@ -207,8 +223,7 @@ def test_delete_active_profile_refuses_and_keeps_the_pointer_intact(
     deleted = _invoke(("config", "profile", "delete", "alpha", "--yes"))
     assert deleted.exit_code != 0, deleted.output
     assert "deleted\ttrue" not in deleted.output
-    flat = deleted.output.lower()
-    assert "eliminar el perfil activo" in flat or "active profile" in flat
+    assert "operator.profile.login" in deleted.output
     assert resolve_active_bucket_id() == pointer_before
 
 
@@ -224,7 +239,7 @@ def test_delete_non_active_profile_omits_the_cleared_pointer_notice(
 
     create_profile_via_cli("alpha", log_in=False)
     create_profile_via_cli("beta", log_in=False)
-    assert _invoke(("config", "logout")).exit_code == 0
+    _clear_selection()
 
     deleted = _invoke(("config", "profile", "delete", "alpha", "--yes"))
     assert deleted.exit_code == 0, deleted.output
@@ -245,7 +260,7 @@ def test_delete_unknown_profile_refuses_with_an_unknown_profile_message(
 
     create_profile_via_cli("alpha", log_in=False)
 
-    assert _invoke(("config", "logout")).exit_code == 0
+    _clear_selection()
 
     refused = _invoke(("config", "profile", "delete", "ghost", "--yes"))
     assert refused.exit_code != 0, refused.output
@@ -270,7 +285,7 @@ def test_delete_valid_profile_with_no_active_session_succeeds(
 
     create_profile_via_cli("alpha", log_in=False)
 
-    assert _invoke(("config", "logout")).exit_code == 0
+    _clear_selection()
 
     deleted = _invoke(("config", "profile", "delete", "alpha", "--yes"))
     assert deleted.exit_code == 0, deleted.output
@@ -295,7 +310,7 @@ def test_deleted_profile_name_is_reusable_by_create(
     # must be born through the scripted CLI door.
     create_profile_via_cli("operator", log_in=False)
     create_profile_via_cli("other", log_in=False)
-    assert _invoke(("config", "logout")).exit_code == 0
+    _clear_selection()
     _deleted = _invoke(("config", "profile", "delete", "operator", "--yes"))
     assert _deleted.exit_code == 0, _deleted.output
 
