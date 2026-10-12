@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#registry-workbook-compiler'
 date: '2026-10-05'
-modified: '2026-10-05'
+modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:2d2b15e22535490e3697e316b225df0f0b65510a633ad7f46cfa7199d4a55a94'
+body_hash: 'sha256:0ed3be58c0120de87ab43201cc0fe82664d78854f1b0d4e1d9b28d59f5a0e1e9'
 related:
   - '[[2026-10-05-registry-workbook-compiler-audit]]'
   - '[[2026-10-05-registry-workbook-compiler-ledger]]'
@@ -21,7 +21,7 @@ Auto-generated index of all documents tagged with `#registry-workbook-compiler`.
 
 ### audit
 
-- `2026-10-05-registry-workbook-compiler-audit` - `registry-workbook-compiler` audit: `Registry workbook compiler verification`
+- `2026-10-05-registry-workbook-compiler-audit` - `registry-workbook-compiler` audit: typed form compiler and demonstration verification
 
 ### exec
 

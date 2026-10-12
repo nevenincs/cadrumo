@@ -55,6 +55,7 @@ from .profile_connection_access import ProfileConnectionAccessMixin
 from .profile_connection_admission import ProfileConnectionAdmissionMixin
 from .profile_connection_drain import ProfileConnectionDrainMixin, ProfileDrainRecord
 from .profile_connection_operations import ProfileConnectionOperationMixin
+from .profile_connection_person_acts import ProfileConnectionPersonActMixin
 from .profile_connection_sessions import ProfileConnectionSessionMixin
 from .profile_host import ProfileConnection, RuntimeProfileHost
 from .session_events import RuntimeSessionEvents
@@ -71,6 +72,7 @@ class RuntimeProfileConnections(
     RuntimeBootstrapMixin,
     RuntimeBootstrapDeleteMixin,
     RuntimeInstallationDoorMixin,
+    ProfileConnectionPersonActMixin,
     ProfileConnectionAdmissionMixin,
     ProfileConnectionAccessMixin,
     ProfileConnectionSessionMixin,

@@ -44,8 +44,7 @@ from ....application.user_profile.access_errors import ProfileAccessRefusedError
 from ....application.user_profile.automation_custody_port import AutomationCustodyError
 from ....core.config import load_settings, override_settings
 from ...runtime.profile_connections import RuntimeProfileConnections
-from .cli_runner import ClickInvokeKwargs
-from .modelo_profile_seed import bind_profile_cli
+from .cli_runner import ClickInvokeKwargs, bind_profile_cli
 from .profile_password_cli import invoke_with_profile_password
 
 __all__ = [

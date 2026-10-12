@@ -1,3 +1,4 @@
+import { openPanelTab } from "../support/panel";
 import { expect, test } from "@playwright/test";
 import { label } from "../support/strings";
 import { identity } from "../../../scripts/configuration.mjs";
@@ -81,7 +82,7 @@ test("header sizing leaves the workspace and panel inside the client window", as
   page,
 }) => {
   await page.goto("/scenarios.html?scenario=signed-in&bar=off&latency=0");
-  await page.getByRole("button", { name: label("desktop.rail.logs") }).click();
+  await openPanelTab(page, "logs");
   await page.evaluate(() =>
     document.documentElement.style.setProperty("--titlebar-height", "4rem"),
   );

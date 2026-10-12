@@ -16,20 +16,16 @@ import pytest
 from click.testing import Result
 from openpyxl import load_workbook
 
-from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
-    active_profile_isolated_backend_fixture,
-)
 from ....tests.inventory import FIXTURES_DIR
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_backend import runtime_profile_backend_fixture
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _CORPUS = FIXTURES_DIR / "financial" / "ledger-corpus"
 _BBVA = _CORPUS / "bbva-business-eur.csv"
 
-_isolated_backend = active_profile_isolated_backend_fixture(
-    bucket_id="00000000-0000-4000-8000-000000000000",
-    dispose_engine_around=True,
+_isolated_backend = runtime_profile_backend_fixture(
     settings_overrides={"cadrumo_output_language": "en"},
 )
 

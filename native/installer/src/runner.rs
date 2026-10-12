@@ -6,7 +6,7 @@ use crate::{
 use cadrumo_application::{
     error::Error,
     installation::{
-        DiscoveryContract,
+        CandidateRejection, DiscoveryContract,
         maintenance::{Identity, NativeOwner, NativeProductInventory, RegistrationPhase, Store},
         version,
     },
@@ -24,8 +24,10 @@ const ARTIFACT_LIMIT: u64 = 16 * 1024 * 1024 * 1024;
 
 mod already_installed;
 pub mod bootstrap;
+mod phase;
 mod recovery;
 mod removal;
+mod rollback_candidate;
 pub use removal::{remove_version, unregister};
 
 #[derive(Deserialize, Serialize)]
@@ -69,16 +71,32 @@ pub struct MaintenanceResult {
     schema: u32,
     outcome: Outcome,
     code: &'static str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    cause: Option<&'static str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    candidate_rejection: Option<CandidateRejection>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    service_restore: Option<&'static str>,
 }
 impl MaintenanceResult {
+    fn restore_services(mut self, held: &mut [crate::registration::service::RestartGuard]) -> Self {
+        for guard in held {
+            if guard.restore().is_err() {
+                self.service_restore = Some("native_service_restart_failed");
+            }
+        }
+        self
+    }
+
     pub fn succeeded(&self) -> bool {
-        matches!(
-            self.outcome,
-            Outcome::Published
-                | Outcome::AlreadyPublishedVerified
-                | Outcome::Removed
-                | Outcome::Unregistered
-        )
+        self.service_restore.is_none()
+            && matches!(
+                self.outcome,
+                Outcome::Published
+                    | Outcome::AlreadyPublishedVerified
+                    | Outcome::Removed
+                    | Outcome::Unregistered
+            )
     }
 }
 
@@ -87,6 +105,9 @@ fn report(outcome: Outcome, code: &'static str) -> MaintenanceResult {
         schema: 1,
         outcome,
         code,
+        cause: None,
+        candidate_rejection: None,
+        service_restore: None,
     }
 }
 
@@ -374,6 +395,7 @@ fn artifact(
 /// A successful native commit is irreversible; any later publication failure is
 /// reported as committed-but-pending and never represented as a native rollback.
 pub fn install(path: &Path) -> MaintenanceResult {
+    let phase_started = std::time::Instant::now();
     let plan = match read_plan(path) {
         Ok(plan) => plan,
         Err(_) => return report(Outcome::Refused, "invalid_plan"),
@@ -435,6 +457,24 @@ pub fn install(path: &Path) -> MaintenanceResult {
             Ok(value) => value,
             Err(_) => return report(Outcome::Refused, "artifact_or_owner_refused"),
         };
+    for (artifact, custody) in [
+        (&plan.version_product, &_version_file),
+        (&plan.registration_product, &_registration_file),
+    ] {
+        if let Err(refusal) =
+            windows::verify_installation_destinations(&artifact.path, &plan.prefix, custody)
+        {
+            return report(
+                Outcome::Refused,
+                match refusal {
+                    windows::DestinationRefusal::Inventory => {
+                        "installation_destination_inventory_refused"
+                    }
+                    windows::DestinationRefusal::TooLong => "installation_destination_too_long",
+                },
+            );
+        }
+    }
     // Legacy/unowned products remain unconditionally blocked. New owned products
     // require native scope and owner authentication before any file changes.
     // This does not establish signing or disposable-host release acceptance.
@@ -534,6 +574,7 @@ pub fn install(path: &Path) -> MaintenanceResult {
         Ok(guards) => guards,
         Err(_) => return rollback(transaction, "native_preparation_refused"),
     };
+    let mut service_restart = Vec::new();
     let broker = match crate::owner::Broker::bind(
         owner.context().clone(),
         transaction.ownership(),
@@ -556,6 +597,7 @@ pub fn install(path: &Path) -> MaintenanceResult {
                 transaction,
                 reservation,
                 &plan.contract,
+                &mut service_restart,
                 "native_owner_unavailable",
             );
         }
@@ -601,29 +643,38 @@ pub fn install(path: &Path) -> MaintenanceResult {
             transaction,
             reservation,
             &plan.contract,
+            &mut service_restart,
             "version_in_use_or_unknown",
         );
     }
-    if install(&plan.version_product, crate::owner::Role::Version).is_err() {
-        return rollback_prepared(
-            transaction,
-            reservation,
-            &plan.contract,
-            "version_installation_failed",
-        );
-    }
-    // Verify while Pending. Publication is deliberately deferred until commit.
-    if plan
-        .contract
-        .verify_candidate(&package, &plan.version)
-        .is_err()
+    if phase::run(phase::Phase::VersionInstall, phase_started, || {
+        install(&plan.version_product, crate::owner::Role::Version)
+    })
+    .is_err()
     {
         return rollback_prepared(
             transaction,
             reservation,
             &plan.contract,
-            "version_inventory_failed",
+            &mut service_restart,
+            "version_installation_failed",
         );
+    }
+    // Verify while Pending. Publication is deliberately deferred until commit.
+    if let Err(rejection) = phase::run(phase::Phase::CandidateVerification, phase_started, || {
+        plan.contract
+            .verify_candidate_diagnostic(&package, &plan.version)
+    }) {
+        let mut result = rollback_candidate::rollback(
+            transaction,
+            broker,
+            reservation,
+            &plan,
+            &admission,
+            &mut service_restart,
+        );
+        result.candidate_rejection = Some(rejection);
+        return result;
     }
     let stable_manager = match plan.contract.manager_member() {
         Ok(member) => member.under(&plan.prefix),
@@ -632,6 +683,7 @@ pub fn install(path: &Path) -> MaintenanceResult {
                 transaction,
                 reservation,
                 &plan.contract,
+                &mut service_restart,
                 "registration_entrypoint_invalid",
             );
         }
@@ -639,6 +691,16 @@ pub fn install(path: &Path) -> MaintenanceResult {
     let stable_available = (|| -> Result<bool, Error> {
         if !stable_manager.try_exists()? {
             return Ok(true);
+        }
+        if let Some(registration) = store.snapshot()?.registration() {
+            let (definition, _custody) = windows::cached_product(&registration.owner)?;
+            let description = definition
+                .registration
+                .as_ref()
+                .ok_or_else(|| Error::Integrity("cached service inventory is missing".into()))?;
+            description
+                .stop_service(&registration.owner, &mut service_restart)
+                .map_err(native_error)?;
         }
         Ok(windows::file_users(std::slice::from_ref(&stable_manager))
             .map_err(native_error)?
@@ -649,19 +711,26 @@ pub fn install(path: &Path) -> MaintenanceResult {
             transaction,
             reservation,
             &plan.contract,
+            &mut service_restart,
             "shared_registration_in_use_or_unknown",
         );
     }
-    if install(&plan.registration_product, crate::owner::Role::Registration).is_err() {
+    if phase::run(phase::Phase::RegistrationInstall, phase_started, || {
+        install(&plan.registration_product, crate::owner::Role::Registration)
+    })
+    .is_err()
+    {
         return rollback_prepared(
             transaction,
             reservation,
             &plan.contract,
+            &mut service_restart,
             "registration_installation_failed",
         );
     }
-    if transaction.commit().is_err() {
-        return report(Outcome::NativeUnsettled, "native_commit_failed");
+    if phase::run(phase::Phase::Commit, phase_started, || transaction.commit()).is_err() {
+        return report(Outcome::NativeUnsettled, "native_commit_failed")
+            .restore_services(&mut service_restart);
     }
     let published = (|| -> Result<(), Error> {
         // Native file creation must preserve the admitted inherited ACLs. A
@@ -675,24 +744,54 @@ pub fn install(path: &Path) -> MaintenanceResult {
             .expect("validated publication")
             .under(&plan.prefix);
         let _postinstall_namespace =
-            crate::publication::prepare(&plan.prefix, &publication, owner.context())
-                .map_err(native_error)?;
-        if MsiInventory.locate(&owner)?.as_ref() != Some(&owner)
-            || MsiInventory.locate(&registration_owner)?.as_ref() != Some(&registration_owner)
-        {
-            return Err(Error::Integrity(
-                "committed native ownership differs".into(),
-            ));
-        }
-        store.publish_registered(
-            &plan.version,
-            &package,
-            &plan.contract,
-            plan.desktop_present,
-            registration_owner,
-        )
+            phase::run(phase::Phase::PublicationAdmission, phase_started, || {
+                crate::publication::prepare(&plan.prefix, &publication, owner.context())
+                    .map_err(native_error)
+            })?;
+        phase::run(phase::Phase::ProductVerification, phase_started, || {
+            if MsiInventory.locate(&owner)?.as_ref() != Some(&owner)
+                || MsiInventory.locate(&registration_owner)?.as_ref() != Some(&registration_owner)
+            {
+                return Err(Error::Integrity(
+                    "committed native ownership differs".into(),
+                ));
+            }
+            Ok(())
+        })?;
+        let _registration = phase::run(
+            phase::Phase::RegistrationVerification,
+            phase_started,
+            || {
+                let (definition, cached) = windows::cached_product(&registration_owner)?;
+                let description = definition.registration.as_ref().ok_or_else(|| {
+                    Error::Integrity("committed registration inventory is missing".into())
+                })?;
+                if description.schema != 2 {
+                    return Err(Error::Integrity(
+                        "new registration lacks service ownership evidence".into(),
+                    ));
+                }
+                let resources = description
+                    .verify(&registration_owner)
+                    .map_err(native_error)?;
+                description
+                    .verify_service_running(&registration_owner)
+                    .map_err(native_error)?;
+                // Retain cached metadata and resource custody through publication.
+                Ok::<_, Error>((definition, cached, resources))
+            },
+        )?;
+        phase::run(phase::Phase::PublicationHash, phase_started, || {
+            store.publish_registered(
+                &plan.version,
+                &package,
+                &plan.contract,
+                plan.desktop_present,
+                registration_owner,
+            )
+        })
     })();
-    if published.is_err() {
+    let result = if published.is_err() {
         report(
             Outcome::CommittedPublicationPending,
             "native_publication_incomplete",
@@ -706,7 +805,8 @@ pub fn install(path: &Path) -> MaintenanceResult {
                 "installation_published"
             },
         )
-    }
+    };
+    result.restore_services(&mut service_restart)
 }
 
 fn rollback(transaction: Transaction, code: &'static str) -> MaintenanceResult {
@@ -721,19 +821,52 @@ fn rollback_prepared(
     transaction: Transaction,
     reservation: cadrumo_application::installation::maintenance::Preparation<'_>,
     contract: &DiscoveryContract,
+    held: &mut [crate::registration::service::RestartGuard],
     code: &'static str,
 ) -> MaintenanceResult {
     if transaction.rollback().is_err() {
-        return report(Outcome::NativeUnsettled, "native_rollback_unsettled");
+        let mut result = report(Outcome::NativeUnsettled, "native_rollback_unsettled");
+        result.cause = Some(code);
+        return result.restore_services(held);
     }
+    rollback_publication(reservation, contract, held, code)
+}
+
+fn rollback_publication(
+    reservation: cadrumo_application::installation::maintenance::Preparation<'_>,
+    contract: &DiscoveryContract,
+    held: &mut [crate::registration::service::RestartGuard],
+    code: &'static str,
+) -> MaintenanceResult {
     if matches!(
         reservation.rollback(contract, &MsiInventory),
         Err(_) | Ok(cadrumo_application::installation::maintenance::RollbackPublication::PendingRetained)
     ) {
-        return report(
-            Outcome::RolledBackPublicationPending,
-            "rollback_publication_fenced",
-        );
+        let mut result = report(Outcome::RolledBackPublicationPending, "rollback_publication_fenced");
+        result.cause = Some(code);
+        return result.restore_services(held);
     }
-    report(Outcome::NativeRolledBack, code)
+    report(Outcome::NativeRolledBack, code).restore_services(held)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn service_restoration_failure_preserves_the_transaction_failure_and_rejects_success() {
+        let mut result = report(
+            Outcome::NativeRolledBack,
+            "registration_installation_failed",
+        );
+        result.service_restore = Some("native_service_restart_failed");
+        let receipt = serde_json::to_value(&result).unwrap();
+        assert_eq!(receipt["code"], "registration_installation_failed");
+        assert_eq!(receipt["service_restore"], "native_service_restart_failed");
+        assert!(!result.succeeded());
+        result.outcome = Outcome::Published;
+        assert!(!result.succeeded());
+        result.service_restore = None;
+        assert!(result.succeeded());
+    }
 }

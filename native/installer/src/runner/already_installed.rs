@@ -1,4 +1,4 @@
-//! Exact anchored-install verification before any native transaction or mutation.
+//! Exact anchored-install verification and verified service-start repair before MSI mutation.
 use super::*;
 use cadrumo_application::installation::maintenance::Lease;
 use cadrumo_application::installation::maintenance::Phase;
@@ -86,7 +86,17 @@ impl Observation for NativeObservation {
         description: &crate::registration::Description,
         registration: &NativeOwner,
     ) -> Result<Vec<crate::custody::FileCustody>, Error> {
-        description.verify(registration).map_err(native_error)
+        let custody = description.verify(registration).map_err(native_error)?;
+        // Reinstall repairs a stopped, unchanged broker without replacing its registration.
+        // Resource custody above rejects altered configuration before any start is attempted.
+        for service in &description.services {
+            crate::registration::service::start_existing(service, registration.prefix())
+                .map_err(native_error)?;
+        }
+        description
+            .verify_service_running(registration)
+            .map_err(native_error)?;
+        Ok(custody)
     }
     fn recheck(
         &mut self,

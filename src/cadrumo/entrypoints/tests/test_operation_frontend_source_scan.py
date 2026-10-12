@@ -47,6 +47,20 @@ _ALLOWED_FUNCTIONS: Mapping[tuple[str, str], str] = {
         "src/cadrumo/entrypoints/runtime/operation_authority.py",
         "ProfileWorkerOperationAuthority.execution_caller",
     ): "keeps an execution attributed to the MCP session that submitted it when another session re-enters it",
+    (
+        "src/cadrumo/application/user_profile/operation_access_policy.py",
+        "_persons_act_refusal",
+    ): (
+        "refuses an agent an operation that needs a secret or administers keys, which are the person's acts "
+        "under 2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr, constraints 1 and 2"
+    ),
+    (
+        "src/cadrumo/entrypoints/runtime/profile_connection_person_acts.py",
+        "ProfileConnectionPersonActMixin._require_persons_frontend",
+    ): (
+        "refuses an agent the requests that sign in, administer sessions, keys or the profile, or do installation "
+        "work, which are the person's acts under 2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr"
+    ),
 }
 """Functions that name a frontend without refusing or changing an operation for it."""
 

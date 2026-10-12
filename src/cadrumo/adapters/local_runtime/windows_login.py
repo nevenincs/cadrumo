@@ -1,4 +1,4 @@
-"""Native login provenance, bounded inventory and exact desktop generation admission."""
+"""Native login provenance with optional desktop lifetime and lock observation."""
 
 from __future__ import annotations
 
@@ -6,6 +6,7 @@ import sys
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 from typing import cast
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
@@ -33,6 +34,7 @@ class WindowsLoginBinding:
     authentication_id: int
     session_id: int
     desktop_logon_time: int
+    desktop_bound: bool = True
 
     @property
     def login_id(self) -> str:
@@ -67,11 +69,11 @@ def _same_desktop(before: WindowsDesktopObservation, after: WindowsDesktopObserv
 
 
 def capture_windows_login(process_handle: int, *, expected_owner: str) -> WindowsLoginBinding:
-    """Admit same-account peers from any session onto the runtime's desktop.
+    """Capture verified same-account peers without requiring a runtime desktop.
 
     The retained peer token establishes account ownership. The runtime's
-    interactive desktop supplies login lifetime and browser presentation,
-    including when a client connects from a noninteractive Session 0.
+    interactive desktop supplies lock observation when available. Otherwise
+    the peer's actual token logon supplies identity and lifetime.
     """
     if sys.platform != "win32":
         raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
@@ -85,18 +87,28 @@ def capture_windows_login(process_handle: int, *, expected_owner: str) -> Window
         try:
             identity = read_windows_token_identity(token)
             logon = read_windows_logon(identity.authentication_id)
-            if (
-                identity.owner != expected_owner
-                or logon.owner != identity.owner
-                or logon.session != identity.session_id
-            ):
+            # CreateProcessWithTokenW can place this native logon in the caller's
+            # process session. The LUID and account establish logon provenance;
+            # its LSA session remains the coordinate for desktop lock observation.
+            if identity.owner != expected_owner or logon.owner != identity.owner:
                 raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
-            witness = current_windows_desktop_logon()
-            desktop_identity = WindowsTokenIdentity(witness.os_owner_id, witness.authentication_id, witness.session_id)
-            desktop_logon = read_windows_logon(witness.authentication_id)
-            _require_capture_identity(desktop_identity, desktop_logon, expected_owner)
-            _require_logon_time(desktop_logon)
-            observation = windows_desktop_observation(witness.session_id)
+            try:
+                witness = current_windows_desktop_logon()
+                desktop_identity = WindowsTokenIdentity(
+                    witness.os_owner_id, witness.authentication_id, witness.session_id
+                )
+                desktop_logon = read_windows_logon(witness.authentication_id)
+                _require_capture_identity(desktop_identity, desktop_logon, expected_owner)
+                _require_logon_time(desktop_logon)
+                observation = windows_desktop_observation(witness.session_id)
+            except RuntimeRefusalError:
+                binding = _native_login_binding(identity.authentication_id, logon)
+                if (
+                    read_windows_logon(identity.authentication_id) != logon
+                    or read_windows_token_identity(token) != identity
+                ):
+                    raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE) from None
+                return binding
             if observation.os_owner_id != identity.owner:
                 raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
             verified = windows_desktop_observation(witness.session_id)
@@ -123,6 +135,20 @@ def observe_windows_login(binding: WindowsLoginBinding, *, credential_facilities
     import pywintypes
 
     try:
+        if not binding.desktop_bound:
+            logon = read_windows_logon(binding.authentication_id)
+            valid = (
+                _native_login_binding(binding.authentication_id, logon) == binding
+                and read_windows_logon(binding.authentication_id) == logon
+            )
+            return OsLoginContext(
+                login_id=binding.login_id,
+                os_owner_id=binding.os_owner_id,
+                active=valid,
+                lock_state=_native_lock_state(logon) if valid else OsLockState.UNKNOWN,
+                unattended=LoginEligibility.ELIGIBLE if valid else LoginEligibility.INELIGIBLE,
+                credential_facilities=credential_facilities,
+            )
         witness = current_windows_desktop_logon()
         logon = read_windows_logon(binding.authentication_id)
         _require_logon_time(logon)
@@ -176,8 +202,11 @@ def windows_login_inventory(*, expected_owner: str) -> RuntimeLoginInventory:
     deadline = time.monotonic() + _INVENTORY_SECONDS
     try:
         before = windows_logon_ids()
+        try:
+            witness = current_windows_desktop_logon()
+        except RuntimeRefusalError:
+            return _native_login_inventory(before, expected_owner, deadline)
         desktops_before = windows_desktop_sessions()
-        witness = current_windows_desktop_logon()
         if witness.os_owner_id != expected_owner:
             return unknown
         desktop_ids = {session for session, _ in desktops_before}
@@ -193,6 +222,43 @@ def windows_login_inventory(*, expected_owner: str) -> RuntimeLoginInventory:
         return RuntimeLoginInventory(logins, complete and current_verified)
     except (pywintypes.error, RuntimeRefusalError, KeyError, TypeError, ValueError, OverflowError):
         return unknown
+
+
+def _native_login_binding(authentication_id: int, logon: WindowsLogonRecord) -> WindowsLoginBinding:
+    """Bind a real token logon without claiming a desktop or an unlocked screen."""
+    if logon.logon_time is None:
+        raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+    ticks = ((logon.logon_time - datetime(1601, 1, 1, tzinfo=UTC)) // timedelta(microseconds=1)) * 10
+    return WindowsLoginBinding(logon.owner, authentication_id, logon.session, ticks, desktop_bound=False)
+
+
+def _native_lock_state(logon: WindowsLogonRecord) -> OsLockState:
+    """Non-desktop logons have no lock surface; desktops retain real WTS lock evidence."""
+    if logon.session == 0 or logon.kind not in (2, 10, 11, 12):
+        return OsLockState.NOT_APPLICABLE
+    observed = windows_desktop_observation(logon.session)
+    verified = windows_desktop_observation(logon.session)
+    valid = _same_desktop(observed, verified) and verified.os_owner_id == logon.owner
+    return _desktop_lock_state(valid, verified)
+
+
+def _native_login_inventory(before: tuple[int, ...], expected_owner: str, deadline: float) -> RuntimeLoginInventory:
+    """Retain positive same-account native logons without inventing complete desktop absence."""
+    import pywintypes
+
+    logins: list[WindowsLoginBinding] = []
+    for authentication_id in before:
+        if time.monotonic() >= deadline:
+            return RuntimeLoginInventory((), False)
+        try:
+            logon = read_windows_logon(authentication_id)
+            if logon.owner == expected_owner and read_windows_logon(authentication_id) == logon:
+                logins.append(_native_login_binding(authentication_id, logon))
+        except (pywintypes.error, RuntimeRefusalError, KeyError, TypeError, ValueError, OverflowError):
+            continue
+    if windows_logon_ids() != before or time.monotonic() >= deadline:
+        return RuntimeLoginInventory((), False)
+    return RuntimeLoginInventory(tuple(logins), False)
 
 
 def _require_capture_identity(identity: WindowsTokenIdentity, logon: WindowsLogonRecord, expected_owner: str) -> None:

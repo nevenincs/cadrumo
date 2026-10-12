@@ -366,7 +366,7 @@ fn a_stale_session_that_cannot_settle_stays_owned() {
 /// A launch whose sessions cannot start: every path is absolute and the
 /// interpreter does not exist, so an open that is wrongly admitted fails to
 /// spawn rather than starting a process.
-fn unit_launch() -> crate::environment::Launch {
+pub(crate) fn unit_launch() -> crate::environment::Launch {
     let directory = std::fs::canonicalize(std::env::temp_dir()).unwrap();
     let contract: serde_json::Value =
         serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json"))).unwrap();
@@ -382,8 +382,10 @@ fn unit_launch() -> crate::environment::Launch {
         diagnostics: Arc::new(Diagnostics::default()),
         console_workspace: directory.clone(),
         package_root: directory.clone(),
-        docs_root: directory.clone(),
-        docs_manifest: directory.join("manifest.json"),
+        docs: crate::environment::PackagedDocs::Bundled(crate::environment::DocsLocation {
+            root: directory.clone(),
+            manifest: directory.join("manifest.json"),
+        }),
         log_file: directory.join("cadrumo.log"),
         manager_log_file: directory.join("cadrumo-manager.log"),
         log_format: String::new(),

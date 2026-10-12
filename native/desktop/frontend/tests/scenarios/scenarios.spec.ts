@@ -1,3 +1,4 @@
+import { openPanelTab } from "../support/panel";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { label } from "../support/strings";
 import { useDomTerminal } from "../support/terminal";
@@ -7,8 +8,11 @@ import { useDomTerminal } from "../support/terminal";
 // tests prove the scenarios present what they are named for. They are
 // presentation evidence only; no host, runtime or sign-in is behind them.
 
-const open = (target: Page, scenario: string, extra = "") =>
-  target.goto(`/scenarios.html?scenario=${scenario}&latency=0${extra}`);
+const open = async (target: Page, scenario: string, extra = "") => {
+  await target.goto(`/scenarios.html?scenario=${scenario}&latency=0${extra}`);
+  // Panel interaction tests open it explicitly after each fresh launch.
+  await target.keyboard.press("Control+Backquote");
+};
 
 const password = (target: Page) =>
   target.getByLabel(label("desktop.signin.password"), { exact: true });
@@ -29,22 +33,13 @@ const calls = (target: Page, call: string) => () =>
     call,
   );
 
-const openLogs = (target: Page) =>
-  target
-    .getByRole("navigation", { name: label("desktop.rail.label") })
-    .getByRole("button", { name: label("desktop.rail.logs") })
-    .click();
+const openLogs = (target: Page) => openPanelTab(target, "logs");
 
 test.beforeEach(async ({ page: target }) => {
   await useDomTerminal(target);
   await target.addInitScript(() => {
     if (sessionStorage.getItem("layout-cleared")) return;
     localStorage.clear();
-    // Exercise the full panel layout as a returning user's saved choice.
-    localStorage.setItem(
-      "cadrumo-shell-layout",
-      JSON.stringify({ layout: { panelOpen: true } }),
-    );
     sessionStorage.setItem("layout-cleared", "1");
   });
 });
@@ -2061,7 +2056,7 @@ test("signing out leaves no running session showing in the TUI's header", async 
   );
 });
 
-test("the rail keeps its order: search, window toggles, shortcuts, panel toggles", async ({
+test("the rail keeps its order: search, window toggles, shortcuts, panel toggle", async ({
   page: target,
 }) => {
   await open(target, "signed-in");
@@ -2081,9 +2076,7 @@ test("the rail keeps its order: search, window toggles, shortcuts, panel toggles
       "desktop.calendar.title",
       "desktop.rail.messages",
       "desktop.rail.aeat",
-      "desktop.rail.console",
-      "desktop.rail.python",
-      "desktop.rail.logs",
+      "desktop.panel.label",
     ].map((key) => label(key)),
   );
 });

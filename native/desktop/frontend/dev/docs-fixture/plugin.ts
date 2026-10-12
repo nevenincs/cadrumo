@@ -6,8 +6,8 @@
 // It listens on a port of its own beside the development server, on the same
 // address. The same host name with another port is another origin, and it is
 // reachable from wherever the development server is, so the fixture works on
-// the machine itself and from another device alike. The port is assigned by
-// the operating system and handed to the development entry through the
+// the machine itself and from another device alike. The fixed port comes from
+// the development server contract and is handed to the development entry through the
 // `virtual:docs-fixture` module.
 //
 // It is a fixture: a few static pages and a search that answers from a fixed
@@ -19,6 +19,7 @@ import type { AddressInfo } from "node:net";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildPath } from "../../../scripts/build-paths.mjs";
+import { server as serverConfiguration } from "../../../scripts/configuration.mjs";
 import type { Plugin } from "vite";
 
 export const DOCS_FIXTURE_LANGUAGES = ["en", "es", "ca", "hu"] as const;
@@ -147,7 +148,10 @@ function answer(path: string): { type: string; body: string } | null {
   return body === null ? null : { type: "text/html", body };
 }
 
-function listen(host: string | undefined): {
+function listen(
+  host: string | undefined,
+  fixedPort: number,
+): {
   server: Server;
   port: Promise<number>;
 } {
@@ -168,7 +172,7 @@ function listen(host: string | undefined): {
   });
   const port = new Promise<number>((resolve, reject) => {
     server.once("error", reject);
-    server.listen(0, host, () =>
+    server.listen(fixedPort, host, () =>
       resolve((server.address() as AddressInfo).port),
     );
   });
@@ -181,13 +185,15 @@ export function docsFixture(): Plugin {
     name: "development-docs-fixture",
     // The fixture exists only beside a development server. A build of the
     // development entry gets no port, and so no documentation.
-    configureServer(vite) {
+    async configureServer(vite) {
       const configured = vite.config.server.host;
       const fixture = listen(
         typeof configured === "string" ? configured : undefined,
+        serverConfiguration().docsPort,
       );
       port = fixture.port;
       vite.httpServer?.once("close", () => fixture.server.close());
+      await port;
     },
     resolveId(id) {
       if (id === MODULE) return RESOLVED;

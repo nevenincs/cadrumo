@@ -15,12 +15,14 @@ from dev.corpus.artifact_catalogue import (
 )
 
 from .. import sync_aeat_record_design_corpus as record_design_sync
+from ..record_design_acquisition import _store_acquired_payload
 from ..record_design_inventory import (
     _EXTRACTION_SIDECAR_DERIVATIONS,
     _PAGES,
     _REQUIRED,
     _STATIC,
     UNATTESTED_CORPUS_FILES,
+    _RequiredArtifact,
 )
 from ..record_design_manifests import _Artifact, _Manifest, _root_aggregate
 from ..sync_aeat_record_design_corpus import (
@@ -35,6 +37,31 @@ from ..sync_aeat_record_design_corpus import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.mark.parametrize("extension", [".pdf", ".xlsx", ".txt"])
+def test_acquisition_bounds_the_complete_stem_and_preserves_source_bytes(tmp_path: Path, extension: str) -> None:
+    required = _RequiredArtifact("999", "Árbol " * 40, "fixture" + extension, "100")
+    payload = b"official source fixture"
+    digest = hashlib.sha256(payload).hexdigest()
+    previous = _artefact("files/999-old.pdf", "https://example.test/old.pdf")
+    stored = _store_acquired_payload(tmp_path, extension, payload, digest, [previous], required)
+    assert stored.name.startswith("1000-arbol-")
+    assert len(stored.stem) <= 48
+    assert stored.suffix == extension
+    assert stored.read_bytes() == payload
+    assert _store_acquired_payload(tmp_path, extension, payload, digest, [previous], required) == stored
+
+
+@pytest.mark.parametrize("suffix", ["", ".extracted.json", ".record-design-correction.json"])
+def test_acquisition_refuses_case_insensitive_artifact_and_sidecar_collisions(tmp_path: Path, suffix: str) -> None:
+    existing = tmp_path / ("01-FIXTURE.PDF" + suffix)
+    existing.write_bytes(b"preserve existing")
+    required = _RequiredArtifact("999", "fixture", "fixture.pdf", "100")
+    with pytest.raises(ValueError, match="collides"):
+        _store_acquired_payload(tmp_path, ".pdf", b"new source", "0" * 64, [], required)
+    assert existing.read_bytes() == b"preserve existing"
+    assert list(tmp_path.iterdir()) == [existing]
 
 
 def test_supported_record_design_corpus_is_complete_and_current() -> None:

@@ -6,7 +6,7 @@ import sys
 
 import pytest
 
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo.application.runtime.contracts import RuntimeRefusalError
 from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility, OsLockState
 
 from ..windows_login import WindowsLoginBinding, capture_windows_login, observe_windows_login
@@ -19,7 +19,7 @@ pytestmark = [
 ]
 
 
-def test_runtime_requires_a_real_interactive_desktop() -> None:
+def test_real_native_logon_is_accepted_without_requiring_a_desktop() -> None:
     import win32api
     import win32security
 
@@ -31,16 +31,11 @@ def test_runtime_requires_a_real_interactive_desktop() -> None:
         stats = win32security.GetTokenInformation(token, win32security.TokenStatistics)
         logon: object = win32security.LsaGetLogonSessionData(int(stats["AuthenticationId"]))
         assert isinstance(logon, dict)
-        if logon["LogonType"] not in (2, 10, 11, 12) or logon["Session"] <= 0:
-            with pytest.raises(RuntimeRefusalError) as refused:
-                capture_windows_login(process, expected_owner=owner)
-            assert refused.value.reason is RuntimeRefusalCode.UNAVAILABLE
-        else:
-            binding = capture_windows_login(process, expected_owner=owner)
-            observed = observe_windows_login(binding, credential_facilities=Availability.UNAVAILABLE)
-            assert observed.active and observed.unattended is LoginEligibility.ELIGIBLE
-            assert observed.credential_facilities is Availability.UNAVAILABLE
-            assert observed.login_id == binding.login_id
+        binding = capture_windows_login(process, expected_owner=owner)
+        observed = observe_windows_login(binding, credential_facilities=Availability.UNAVAILABLE)
+        assert observed.active and observed.unattended is LoginEligibility.ELIGIBLE
+        assert observed.credential_facilities is Availability.UNAVAILABLE
+        assert observed.login_id == binding.login_id
         with pytest.raises(RuntimeRefusalError):
             capture_windows_login(process, expected_owner="S-1-0-0")
     finally:

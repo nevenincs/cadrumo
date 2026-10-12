@@ -38,7 +38,18 @@ def _store_acquired_payload(
             for artifact in artifacts
             if (match := re.match(r"files/(\d+)-", str(artifact["stored_path"])))
         ]
-        local_match = files_dir / (f"{max(indexes, default=0) + 1:02d}-{_slug(required.title)}{extension}")
+        ordinal = f"{max(indexes, default=0) + 1:02d}"
+        slug = _slug(required.title)[: 48 - len(ordinal) - 1].rstrip("-")
+        if not slug or len(ordinal) >= 47:
+            raise ValueError("Record-design artifact needs a bounded readable filename")
+        filename = f"{ordinal}-{slug}{extension}"
+        if any(
+            candidate.name.casefold() == filename.casefold()
+            or candidate.name.casefold().startswith(filename.casefold() + ".")
+            for candidate in iter_directory(files_dir)
+        ):
+            raise ValueError("Record-design filename collides with an existing artifact or sidecar")
+        local_match = files_dir / filename
         local_match.write_bytes(data)
     return local_match
 

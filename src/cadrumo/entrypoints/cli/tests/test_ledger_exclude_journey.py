@@ -5,8 +5,8 @@ it, and assert the uniform mutation quintet comes back with ``review_status``
 ``excluded`` and a ``ledger.transaction.reviewed_excluded`` event id, and that
 the excluded row then reads as ``excluded`` in the review queue.
 
-Harness mirrors the restore-journey suite: an isolated profile backend built
-from :func:`~cadrumo.adapters.persistence.storage.tests.active_profile_isolated_backend_fixture.active_profile_isolated_backend_fixture`.
+Harness: an isolated profile backend whose runtime admits each command, built
+from :func:`~cadrumo.entrypoints.cli.tests.runtime_profile_backend.runtime_profile_backend_fixture`.
 """
 
 from __future__ import annotations
@@ -17,18 +17,13 @@ from collections.abc import Sequence
 import pytest
 from click.testing import Result
 
-from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
-    active_profile_isolated_backend_fixture,
-)
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_backend import runtime_profile_backend_fixture
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_PROFILE_ID = "00000000-0000-4000-8000-000000000000"
 
-_isolated_backend = active_profile_isolated_backend_fixture(
-    bucket_id=_PROFILE_ID,
-    dispose_engine_around=True,
+_isolated_backend = runtime_profile_backend_fixture(
     settings_overrides={"cadrumo_output_language": "en"},
 )
 

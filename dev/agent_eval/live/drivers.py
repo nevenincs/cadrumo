@@ -60,13 +60,17 @@ class DriverKind(StrEnum):
     CLAUDE_CLI = "claude_cli"
 
 
+DEFAULT_MAX_USD: Final = 1.00
+"""Spend bound per run; the 2026-10-12 haiku runs cost about 0.03 USD each."""
+
+
 @dataclass(frozen=True, slots=True)
 class Limits:
     """Per-run bounds on the agent's turns, tokens, spend and wall time."""
 
     max_turns: int = 80
     max_tokens: int = 4_000_000
-    max_usd: float = 1.00
+    max_usd: float = DEFAULT_MAX_USD
     max_seconds: float = 1_200.0
 
 
@@ -390,6 +394,7 @@ async def run_api_agent(
     for index, prompt in enumerate(phases):
         if index and between is not None:
             await between(index)
+        tools.recorder.begin_phase()
         messages.append({"role": "user", "content": prompt})
         while True:
             report.limit_hit = _over(report, limits, started)
@@ -545,6 +550,7 @@ def run_cli_agent(
         for index, prompt in enumerate(phases):
             if index and between is not None:
                 between(index)
+            recorder.begin_phase()
             report.limit_hit = _over(report, limits, started)
             if report.limit_hit:
                 break

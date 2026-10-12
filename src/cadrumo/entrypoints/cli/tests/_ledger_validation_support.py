@@ -8,11 +8,7 @@ from pathlib import Path
 
 from click.testing import Result
 
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    open_test_profile_session,
-    set_active_test_profile_facts,
-)
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
@@ -23,6 +19,7 @@ from ....domain.user_profile.values import UserProfileFact
 from ._cli_json_support import _json_object
 from ._ledger_llm_support import _import_one_transaction
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_backend import operator_profile_bound_to_cli
 
 _PROFILE_ID = "9e0f3a2b-5d1c-4a77-9b2d-27ed6d6c7f10"
 _PROFILE_LABEL = "tester"
@@ -34,7 +31,11 @@ def _invoke(args: Sequence[str], *, env: Mapping[str, str] | None = None) -> Res
 
 @contextmanager
 def open_bucket_session(tmp_path: Path) -> Generator[None]:
-    """Open the shared real-CLI ledger session against an isolated storage root.
+    """Open the shared real-CLI ledger session against an isolated storage root and its joined runtime.
+
+    The profile is registered with genuine password custody and its runtime is
+    joined and bound, so every command runs as that profile's operator and
+    reaches the same registered operations an operator's command reaches.
 
     The registered profile is minimal PLUS a declared IVA block, and the second
     half is load-bearing rather than convenience. Every ledger path that
@@ -54,13 +55,13 @@ def open_bucket_session(tmp_path: Path) -> Generator[None]:
     dispose_engine()
     with (
         override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        open_test_profile_session(_PROFILE_ID),
+        isolated_profile_storage_root(tmp_path=tmp_path) as storage_root,
     ):
-        register_minimal_profile(profile_id=_PROFILE_ID, display_name=_PROFILE_LABEL)
-        _declare_general_regime_iva_profile()
         try:
-            yield
+            with operator_profile_bound_to_cli(
+                storage_root=storage_root, label=_PROFILE_LABEL, prepare=_declare_general_regime_iva_profile
+            ):
+                yield
         finally:
             dispose_engine()
 

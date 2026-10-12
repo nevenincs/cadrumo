@@ -628,6 +628,13 @@ def test_attended_expiry_and_independent_password_access(scenario: Scenario) -> 
         grant=changed(scenario.grant, unattended=False, allow_os_lock=False),
     )
     assert isinstance(attended_subject.evaluate(), AccessAllowed)
+    native_login = changed(scenario.context.login_contexts[0], lock_state=OsLockState.NOT_APPLICABLE)
+    native_context = changed(scenario.context, login_contexts=(native_login,))
+    assert isinstance(replace(attended_subject, context=native_context).evaluate(), AccessAllowed)
+    assert_denied(
+        replace(attended_subject, context=native_context, ancestors=(changed(human, state=SessionState.REVOKED),)),
+        AccessDenialCode.SESSION_INACTIVE,
+    )
     assert_denied(
         replace(attended_subject, ancestors=(changed(human, expires_at=NOW + timedelta(minutes=1)),)),
         AccessDenialCode.PRIVILEGE_EXPANSION,

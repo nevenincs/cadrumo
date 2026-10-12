@@ -514,6 +514,7 @@ export function SignedOut({
     return (
       <AccountLoading
         starting={account.phase === "starting" || account.startingServices}
+        recovering={account.recoveringServices}
         quiet={quiet}
       />
     );

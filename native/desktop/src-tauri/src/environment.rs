@@ -90,15 +90,28 @@ pub struct Launch {
     /// Operator workspace for all terminals; separate from encrypted profile custody.
     pub console_workspace: PathBuf,
     pub package_root: PathBuf,
-    /// The packaged user documentation and its manifest inside the package.
-    pub docs_root: PathBuf,
-    pub docs_manifest: PathBuf,
+    /// What the package manifest states about the optional user documentation.
+    pub docs: PackagedDocs,
     /// The Python log file and the line format Python writes it with.
     pub log_file: PathBuf,
     pub manager_log_file: PathBuf,
     pub log_format: String,
     /// The output language Settings resolved, for the shell chrome.
     pub output_language: String,
+}
+
+/// The package manifest's statement about the optional user documentation.
+pub enum PackagedDocs {
+    Bundled(DocsLocation),
+    NotBundled,
+    /// The manifest does not say; the documentation is treated as unavailable.
+    Undeclared,
+}
+
+/// The packaged user documentation tree and its manifest inside the package.
+pub struct DocsLocation {
+    pub root: PathBuf,
+    pub manifest: PathBuf,
 }
 
 /// The environment and working directory the host was started with.
@@ -136,12 +149,21 @@ pub async fn resolve(
     let publication = admission
         .acquire_package(&root)
         .map_err(|e| failure(ErrorCode::PackageUnavailable).caused_by(e))?;
-    let (executable, projection, layout) = project(&root, parent, &diagnostics).await?;
-    let docs_root = layout
-        .user_docs
-        .directory
-        .under(&layout.paths.docs.under(&root));
-    let docs_manifest = layout.user_docs.manifest.under(&docs_root);
+    let (executable, projection, layout, bundled) = project(&root, parent, &diagnostics).await?;
+    let docs = match bundled {
+        Some(true) => {
+            let root = layout
+                .user_docs
+                .directory
+                .under(&layout.paths.docs.under(&root));
+            PackagedDocs::Bundled(DocsLocation {
+                manifest: layout.user_docs.manifest.under(&root),
+                root,
+            })
+        }
+        Some(false) => PackagedDocs::NotBundled,
+        None => PackagedDocs::Undeclared,
+    };
     if let Err(error) = diagnostics.configure(
         &projection.logs,
         projection.log_max_bytes,
@@ -167,8 +189,7 @@ pub async fn resolve(
         diagnostics,
         console_workspace: projection.console_workspace,
         package_root: root,
-        docs_root,
-        docs_manifest,
+        docs,
         log_file: projection.log_file,
         manager_log_file: projection.manager_log_file,
         log_format: projection.log_format,
@@ -177,12 +198,13 @@ pub async fn resolve(
 }
 
 /// Verifies the package interpreter and runs the fixed projection query with
-/// the parent's environment and working directory.
+/// the parent's environment and working directory. Also returns the package
+/// manifest's statement of whether the optional user documentation is bundled.
 async fn project(
     root: &Path,
     parent: &Parent,
     diagnostics: &Diagnostics,
-) -> Result<(PathBuf, Projection, Layout)> {
+) -> Result<(PathBuf, Projection, Layout, Option<bool>)> {
     let invalid = || ApplicationError::new(ErrorCode::PackageUnavailable, Operation::Package);
     let contract: Contract =
         serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json")))
@@ -193,6 +215,7 @@ async fn project(
     if manifest.layout.platform != layout.platform || manifest.layout.abi != layout.abi {
         return Err(invalid());
     }
+    let bundled = manifest.user_docs.as_ref().map(|statement| statement.bundled);
     let executable = layout.paths.executable.under(root);
     let digest = manifest
         .files
@@ -211,7 +234,7 @@ async fn project(
         &contract.desktop_defaults,
         &contract.storage_environment_allowlist,
     )? {
-        return Ok((executable, projection, layout));
+        return Ok((executable, projection, layout, bundled));
     }
     let mut command = tokio::process::Command::new(&executable);
     command
@@ -293,7 +316,7 @@ async fn project(
         if !admissible(&projection, &contract.storage_environment_allowlist) {
             return Err(failure(ErrorCode::EnvironmentFailed));
         }
-        Ok((executable, projection, layout))
+        Ok((executable, projection, layout, bundled))
     }
     .await;
     if let Err(error) = &result {
@@ -555,7 +578,7 @@ mod tests {
         ));
         let started = std::time::Instant::now();
         let diagnostics = Diagnostics::default();
-        let (executable, native, _) = project(&root, &parent, &diagnostics).await.unwrap();
+        let (executable, native, _, _) = project(&root, &parent, &diagnostics).await.unwrap();
         assert!(
             diagnostics
                 .snapshot(0)
@@ -570,10 +593,35 @@ mod tests {
         let python_elapsed = started.elapsed();
         assert!(output.status.success(), "canonical Python query failed");
         let python: Projection = serde_json::from_slice(&output.stdout).unwrap();
+        // CPython omits Windows' hidden =C: drive-directory entries from
+        // os.environ. Native child creation must retain those inherited entries.
+        let visible_environment: BTreeMap<_, _> = native
+            .environment
+            .iter()
+            .filter(|(name, _)| !name.starts_with('='))
+            .map(|(name, value)| (name.clone(), value.clone()))
+            .collect();
         // Never print either environment: inherited values can contain secrets.
         assert!(
-            native.environment == python.environment,
-            "prepared environments differ"
+            visible_environment == python.environment,
+            "prepared environments differ; changed names: {:?}",
+            visible_environment
+                .keys()
+                .chain(python.environment.keys())
+                .filter(|name| visible_environment.get(*name) != python.environment.get(*name))
+                .collect::<std::collections::BTreeSet<_>>()
+        );
+        assert!(
+            parent
+                .environment
+                .iter()
+                .filter(|(name, _)| name.to_string_lossy().starts_with('='))
+                .all(|(name, value)| native
+                    .environment
+                    .get(&name.to_string_lossy().to_uppercase())
+                    .map(String::as_str)
+                    == value.to_str()),
+            "native projection changed inherited drive-directory entries"
         );
         macro_rules! same {
             ($($field:ident),+ $(,)?) => {$(
@@ -617,7 +665,7 @@ mod tests {
             .environment
             .push((log_variable.into(), explicit_logs.clone().into_os_string()));
         let diagnostics = Diagnostics::default();
-        let (_, explicit, _) = project(&root, &parent, &diagnostics).await.unwrap();
+        let (_, explicit, _, _) = project(&root, &parent, &diagnostics).await.unwrap();
         assert!(
             explicit.logs == explicit_logs,
             "Settings lost the explicit log directory"
@@ -757,7 +805,7 @@ mod tests {
         let contract: serde_json::Value =
             serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json"))).unwrap();
         let parent = Parent::current().unwrap();
-        let (_, projection, _) = project(&root, &parent, &Diagnostics::default())
+        let (_, projection, _, _) = project(&root, &parent, &Diagnostics::default())
             .await
             .unwrap();
         assert!(

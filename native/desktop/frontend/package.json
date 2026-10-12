@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "bootstrap": "node scripts/bootstrap.mjs",
-    "dev": "vite",
+    "dev": "node scripts/dev.mjs",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "check": "tsc --noEmit && eslint . && node --test dev/eslint/tests/*.test.mjs && node --check ../scripts/tauri.mjs && prettier --check . ../scripts ../tests ../CMakeLists.txt --ignore-unknown",

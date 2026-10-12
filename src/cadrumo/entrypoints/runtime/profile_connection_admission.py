@@ -157,6 +157,9 @@ class ProfileConnectionAdmissionMixin:
         request: RuntimeProfileLogin,
     ) -> tuple[ProfileConnection, RuntimeProfileHost]:
         self._validate_login_request(request)
+        if request.method == "password":
+            # Signing in by password is the person's act, never an agent's.
+            self._require_persons_frontend(request.frontend)
         surface = self._login_surface(request)
         connection = self._existing_or_captured_connection(context, channel, request, surface)
         host = self._host(request.profile_id, context)
@@ -270,6 +273,8 @@ class ProfileConnectionAdmissionMixin:
         request: RuntimeEnrollmentPrepare,
     ) -> tuple[ProfileConnection, RuntimeProfileHost]:
         """Bind a new recipient or the exact currently authenticated root key."""
+        # Requesting or changing a key is the person's act, never an agent's.
+        self._require_persons_frontend(request.frontend)
         if request.session_id is None:
             return self._prepare_unadmitted(context, channel, request, method="enrollment")
         if context.runtime_boot_id != self.boot or context.peer != channel.peer:

@@ -1,0 +1,914 @@
+---
+tags:
+  - '#exec'
+  - '#runtime-process-lifecycle'
+date: '2026-10-09'
+modified: '2026-10-12'
+body_schema: 'body-v2'
+body_hash: 'sha256:acd9d7a2ff26478b8a7adafb438cfbc2a8badad58f5f7951ffb8c0e09cb3ce80'
+related:
+  - "[[2026-10-09-runtime-process-lifecycle-plan]]"
+---
+
+<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
+     on first use and appends every row; never hand-edit it. Add no
+     frontmatter fields. Wiki-links belong in `related:` only.
+
+     ONE ledger per plan, the only execution artifact. Each row's first
+     column names its Step. -->
+
+# `runtime-process-lifecycle` ledger
+
+## Changes
+
+<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
+     by `--row`:
+       - `S##` `A` `path`   added
+       - `S##` `M` `path`   modified
+       - `S##` `D` `path`   deleted
+       - `S##` `R` `old` -> `new`   renamed
+     Paths are repo-relative, in backticks. No prose: the Step row states the
+     intent and the commit carries the diff.
+
+     Optional per-Step rows, written by `--verify` and `--by`:
+       - `S##` `verify:` `<command>` -> `pass` | `fail`
+       - `S##` `by:` `<persona>`
+
+     Rows are appended in Step order and never rewritten. Only rows in this
+     section register a Step as covered. `--note` adds a `## Notes` section
+     ONLY on exception (data loss, skipped work, a scaffold left in code, a
+     persistent failure), one `S##`-prefixed line each; it is otherwise
+     omitted. -->
+
+- `S01` `M` `.importlinter`
+- `S01` `M` `native/cmake/Manager.cmake`
+- `S01` `M` `native/manager/Cargo.toml`
+- `S01` `M` `native/manager/src/supervision/environment.rs`
+- `S01` `A` `native/manager/tests/fixture/lifecycle.rs`
+- `S01` `A` `dev/runtime_lifecycle/__init__.py`
+- `S01` `A` `dev/runtime_lifecycle/harness.py`
+- `S01` `A` `dev/runtime_lifecycle/tests/__init__.py`
+- `S01` `A` `dev/runtime_lifecycle/tests/conftest.py`
+- `S01` `A` `dev/runtime_lifecycle/tests/test_lifecycle.py`
+- `S01` `A` `dev/runtime_lifecycle/README.md`
+- `S01` `verify:` `cmake --build build/windows-x64 --config Debug --target rust_manager_lifecycle` -> `pass`
+- `S01` `verify:` `cmake --build build/windows-x64 --config Debug --target check_manager_lifecycle` -> `pass`
+- `S01` `verify:` `pinned Rust 1.96 rustfmt --edition 2024 --check lifecycle.rs environment.rs` -> `pass`
+- `S01` `verify:` `uv run --no-sync ruff check dev/runtime_lifecycle` -> `pass`
+- `S01` `verify:` `uv run --no-sync ruff format --check dev/runtime_lifecycle` -> `pass`
+- `S01` `verify:` `uv run --no-sync ty check dev/runtime_lifecycle` -> `pass`
+- `S01` `verify:` `just check-types` -> `pass`
+- `S01` `verify:` `uv run --no-sync pytest -n0 -m unit dev/quality/tests/test_no_git_cli.py src/cadrumo/adapters/local_runtime/tests/test_boot_record.py src/cadrumo/adapters/local_runtime/tests/test_framing.py src/cadrumo/entrypoints/runtime/tests/test_login_lifecycle.py src/cadrumo/entrypoints/runtime/tests/test_lifecycle_guard.py` -> `pass`
+- `S01` `verify:` `uv run --no-sync pytest -n0 -m integration dev/runtime_lifecycle/tests --lifecycle-manager build/windows-x64/cargo/native/manager-lifecycle/x86_64-pc-windows-msvc/debug/cadrumo-manager-lifecycle.exe --lifecycle-package build/windows-x64/stage/Release/app --junitxml build/windows-x64/testing/lifecycle.xml -o junit_family=legacy` -> `fail`
+- `S01` `M` `dev/quality/metadata/import_load_targets.json`
+- `S01` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S01` `verify:` `just generate-import-load-targets` -> `pass`
+- `S01` `verify:` `just check-import-boundaries` -> `fail`
+- `S01` `verify:` `uv run --no-sync vaultspec-core vault plan check runtime-process-lifecycle` -> `pass`
+- `S02` `M` `dev/runtime_lifecycle/harness.py`
+- `S02` `M` `dev/runtime_lifecycle/tests/conftest.py`
+- `S02` `M` `dev/runtime_lifecycle/tests/test_lifecycle.py`
+- `S02` `A` `dev/runtime_lifecycle/tests/test_clients.py`
+- `S02` `M` `dev/runtime_lifecycle/README.md`
+- `S02` `M` `native/cmake/Packaging.cmake`
+- `S02` `M` `native/cmake/ReleaseVerification.cmake`
+- `S02` `verify:` `uv run --no-sync ruff check dev/runtime_lifecycle` -> `pass`
+- `S02` `verify:` `uv run --no-sync ty check dev/runtime_lifecycle` -> `pass`
+- `S02` `verify:` `ctest --test-dir build/windows-x64 -C Release -R ^bundle.runtime-lifecycle$ --output-on-failure` -> `fail`
+- `S02` `verify:` `ctest --test-dir build/windows-x64 -C Debug -R ^manager.supervision$ --output-on-failure` -> `pass`
+- `S03` `A` `native/desktop/src-tauri/src/shell/sign_in/observation.rs`
+- `S03` `M` `native/desktop/src-tauri/src/shell/sign_in/mod.rs`
+- `S03` `M` `native/desktop/src-tauri/src/shell/sign_in/wire.rs`
+- `S03` `M` `native/desktop/src-tauri/src/app.rs`
+- `S03` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S03` `M` `native/desktop/frontend/src/shell/host.ts`
+- `S03` `M` `native/desktop/frontend/src/shell/tauriHost.ts`
+- `S03` `M` `native/desktop/frontend/src/shell/signIn.ts`
+- `S03` `M` `native/desktop/frontend/src/components/SignIn.tsx`
+- `S03` `M` `native/desktop/frontend/tests/desktop.spec.ts`
+- `S03` `M` `native/desktop/frontend/README.md`
+- `S03` `verify:` `native/desktop/tests/run-backend.ps1 -BuildDirectory build/windows-x64 -Mode Unit -Filter shell::sign_in -RustBin pinned-1.96` -> `pass`
+- `S03` `verify:` `native/desktop/tests/run-backend.ps1 -BuildDirectory build/windows-x64 -Mode Clippy -RustBin pinned-1.96` -> `pass`
+- `S03` `verify:` `frontend tsc --noEmit and scoped eslint` -> `pass`
+- `S03` `verify:` `frontend product public sign-in signals browser test against freshly built assets` -> `pass`
+- `S04` `D` `native/manager/src/admission.rs`
+- `S04` `M` `native/manager/src/lib.rs`
+- `S04` `M` `native/manager/src/main.rs`
+- `S04` `M` `native/manager/src/diagnostics.rs`
+- `S04` `M` `native/manager/src/windows_lifecycle.rs`
+- `S04` `M` `native/manager/src/supervision/adoption.rs`
+- `S04` `M` `native/manager/tests/entrypoint.rs`
+- `S04` `M` `native/manager/src/bin/cadrumo-manager-lifecycle.rs`
+- `S04` `M` `src/cadrumo/entrypoints/runtime/main.py`
+- `S04` `M` `src/cadrumo/entrypoints/runtime/profile_host.py`
+- `S04` `M` `src/cadrumo/adapters/local_runtime/windows_login.py`
+- `S04` `M` `src/cadrumo/adapters/local_runtime/windows_token_elevation.py`
+- `S04` `M` `src/cadrumo/application/user_profile/access_contracts.py`
+- `S04` `M` `dev/runtime_lifecycle/harness.py`
+- `S04` `M` `dev/runtime_lifecycle/tests/test_lifecycle.py`
+- `S04` `M` `dev/runtime_lifecycle/tests/test_clients.py`
+- `S04` `M` `dev/runtime_lifecycle/README.md`
+- `S04` `M` `.vaultspec/rules/04-external-integrations-and-local-runtime.md`
+- `S04` `M` `.vaultspec/skills/cadrumo-start/references/04-external-integrations-and-local-runtime.md`
+- `S04` `verify:` `cmake check_manager_lifecycle pinned Clippy` -> `pass`
+- `S04` `verify:` `ctest manager.supervision` -> `pass`
+- `S04` `verify:` `pytest runtime supervisor integration 9 cases` -> `pass`
+- `S04` `verify:` `pytest Windows native login and token integration 4 cases` -> `pass`
+- `S04` `verify:` `pytest Windows login inventory 44 cases` -> `pass`
+- `S04` `verify:` `ruff check and format dev/runtime_lifecycle` -> `pass`
+- `S04` `verify:` `ty check dev/runtime_lifecycle` -> `pass`
+- `S04` `verify:` `vaultspec-core sync codex` -> `pass`
+- `S04` `M` `native/manager/tests/fixture/lifecycle.rs`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_sign_in_native.py`
+- `S04` `M` `src/cadrumo/adapters/local_runtime/tests/test_windows_login.py`
+- `S04` `M` `src/cadrumo/adapters/local_runtime/tests/test_windows_login_inventory.py`
+- `S04` `verify:` `cmake --build build/windows-x64 --config Release --target verify-app-distro` -> `fail`
+- `S04` `verify:` `pytest packaged client focused final working tree` -> `fail`
+- `S04` `verify:` `pytest login_logout protected read before receipt assertion` -> `fail`
+- `S04` `verify:` `ruff check and format dev/runtime_lifecycle final` -> `pass`
+- `S04` `verify:` `ty check dev/runtime_lifecycle final` -> `pass`
+- `S04` `verify:` `git diff --check` -> `pass`
+- `S04` `verify:` `vaultspec-core check runtime-process-lifecycle` -> `pass`
+- `S01` `M` `src/cadrumo/entrypoints/runtime/worker_service.py`
+- `S01` `M` `src/cadrumo/entrypoints/runtime/tests/test_worker_exit_cleanup.py`
+- `S01` `M` `dev/runtime_lifecycle/tests/conftest.py`
+- `S01` `verify:` `pytest worker_exit_cleanup 34 cases` -> `pass`
+- `S01` `verify:` `run-backend.ps1 -Filter manager:: 22 cases` -> `pass`
+- `S01` `verify:` `ruff check scoped worker and lifecycle` -> `pass`
+- `S01` `verify:` `ruff format scoped worker and lifecycle` -> `pass`
+- `S01` `verify:` `ty check scoped worker and lifecycle` -> `pass`
+- `S01` `verify:` `git diff --check` -> `pass`
+- `S01` `M` `src/cadrumo/entrypoints/runtime/worker.py`
+- `S01` `verify:` `ruff check worker.py task provenance` -> `pass`
+- `S01` `verify:` `ruff format worker.py task provenance` -> `pass`
+- `S01` `verify:` `ty check worker.py task provenance` -> `pass`
+- `S01` `verify:` `native same-account command-only credential facility probe` -> `pass`
+- `S01` `verify:` `pytest worker_exit_cleanup after task diagnostics 34 cases` -> `pass`
+- `S01` `M` `native/manager/tests/fixture/lifecycle.rs`
+- `S01` `verify:` `cmake check_manager_lifecycle validated root spelling` -> `pass`
+- `S01` `verify:` `cmake bundle worker task diagnostics` -> `pass`
+- `S01` `verify:` `pytest packaged worker task diagnostic network logon` -> `fail`
+- `S04` `verify:` `pytest windows_login_inventory cross-session regression 45 cases` -> `pass`
+- `S04` `verify:` `pytest real Windows login cross-session native context 2 cases` -> `pass`
+- `S04` `verify:` `ruff check cross-session login change` -> `pass`
+- `S04` `verify:` `ruff format cross-session login change` -> `pass`
+- `S04` `verify:` `ty check cross-session login change` -> `pass`
+- `S04` `M` `native/desktop/src-tauri/src/python/manager_dispatch.py`
+- `S04` `verify:` `ruff check manager_dispatch elevation removal` -> `pass`
+- `S04` `verify:` `ruff format manager_dispatch elevation removal` -> `pass`
+- `S04` `verify:` `ty check manager_dispatch elevation removal` -> `pass`
+- `S04` `verify:` `run-backend manager after desktop helper removal 22 cases` -> `pass`
+- `S02` `M` `dev/runtime_lifecycle/tests/test_clients.py`
+- `S02` `verify:` `ctest application.package Release build context` -> `pass`
+- `S02` `verify:` `ruff lifecycle harness JSON/grant corrections` -> `pass`
+- `S02` `verify:` `ty lifecycle harness JSON/grant corrections` -> `pass`
+- `S01` `M` `dev/runtime_lifecycle/tests/test_lifecycle.py`
+- `S01` `verify:` `ctest Release bundle canonical final 8 checks` -> `pass`
+- `S01` `verify:` `pytest native lifecycle final 4 scenarios` -> `pass`
+- `S01` `verify:` `pytest worker exit cleanup 34 cases` -> `pass`
+- `S01` `verify:` `git diff --check final lifecycle working tree` -> `pass`
+- `S02` `verify:` `ctest bundle.runtime-lifecycle packaged client matrix final` -> `pass`
+- `S02` `verify:` `ctest application.package Release build context final` -> `pass`
+- `S04` `verify:` `ctest native command-only gate-free final acceptance` -> `pass`
+- `S05` `M` `dev/runtime_lifecycle/tests/test_clients.py`
+- `S05` `verify:` `ctest bundle.runtime-lifecycle new recovery cases` -> `fail`
+- `S06` `M` `dev/runtime_lifecycle/harness.py`
+- `S06` `M` `native/manager/tests/fixture/lifecycle.rs`
+- `S06` `M` `dev/runtime_lifecycle/tests/test_lifecycle.py`
+- `S06` `verify:` `real native five-case CTest manager death/adoption case` -> `pass`
+- `S06` `verify:` `uv run ruff check dev/runtime_lifecycle` -> `pass`
+- `S06` `verify:` `uv run ruff format --check dev/runtime_lifecycle` -> `pass`
+- `S06` `verify:` `uv run ty check dev/runtime_lifecycle` -> `pass`
+- `S07` `M` `dev/runtime_lifecycle/tests/test_lifecycle.py`
+- `S07` `M` `dev/runtime_lifecycle/tests/test_clients.py`
+- `S07` `M` `dev/runtime_lifecycle/README.md`
+- `S07` `M` `native/manager/tests/fixture/lifecycle.rs`
+- `S07` `M` `native/cmake/Packaging.cmake`
+- `S07` `verify:` `cmake --build build/windows-x64 --config Release --target rust_manager_lifecycle check_manager_lifecycle` -> `pass`
+- `S07` `verify:` `uv run ruff check dev/runtime_lifecycle` -> `pass`
+- `S07` `verify:` `uv run ruff format --check dev/runtime_lifecycle` -> `pass`
+- `S07` `verify:` `uv run ty check dev/runtime_lifecycle` -> `pass`
+- `S05` `M` `dev/runtime_lifecycle/README.md`
+- `S05` `verify:` `canonical bundle.runtime-lifecycle packaged-client case native repeat` -> `pass`
+- `S05` `verify:` `uv run ruff check dev/runtime_lifecycle` -> `pass`
+- `S05` `verify:` `uv run ruff format --check dev/runtime_lifecycle` -> `pass`
+- `S05` `verify:` `uv run ty check dev/runtime_lifecycle` -> `pass`
+- `S07` `verify:` `canonical bundle.runtime-lifecycle expired-owner recovery case` -> `pass`
+- `S07` `verify:` `cmake --build build/windows-x64 --config Release --target rust_manager_lifecycle check_manager_lifecycle` -> `pass`
+- `S07` `verify:` `uv run ruff check dev/runtime_lifecycle` -> `pass`
+- `S07` `verify:` `uv run ruff format --check dev/runtime_lifecycle` -> `pass`
+- `S07` `verify:` `uv run ty check dev/runtime_lifecycle` -> `pass`
+- `S07` `verify:` `vaultspec check runtime-process-lifecycle` -> `pass`
+- `S07` `M` `dev/runtime_lifecycle/harness.py`
+- `S07` `verify:` `ctest --test-dir build/windows-x64 -C Release --output-on-failure --no-tests=error -R ^bundle[.]runtime-lifecycle$` -> `pass`
+- `S07` `verify:` `git diff --check` -> `pass`
+- `S10` `A` `dev/packaging/native/process_quiescence.py`
+- `S10` `A` `dev/packaging/native/tests/test_process_quiescence.py`
+- `S10` `M` `dev/packaging/native/cmake_build.py`
+- `S10` `M` `native/cmake/Packaging.cmake`
+- `S10` `M` `native/CONTRACT.md`
+- `S10` `verify:` `pytest -n 0 dev/packaging/native/tests/test_process_quiescence.py dev/packaging/native/tests/test_cmake_installer_flow.py` -> `pass`
+- `S10` `verify:` `ruff check and format --check six modified native packaging Python files` -> `pass`
+- `S10` `verify:` `ty check six modified native packaging Python files` -> `pass`
+- `S09` `M` `native/desktop/src-tauri/src/main.rs`
+- `S09` `M` `native/desktop/src-tauri/src/manager.rs`
+- `S09` `M` `native/desktop/src-tauri/src/launch.rs`
+- `S09` `M` `native/desktop/src-tauri/src/shell/sign_in/mod.rs`
+- `S09` `M` `native/desktop/src-tauri/src/shell/sign_in/wire.rs`
+- `S09` `M` `native/desktop/src-tauri/src/shell/single_instance/mod.rs`
+- `S09` `M` `native/desktop/src-tauri/src/environment.rs`
+- `S09` `M` `native/desktop/src-tauri/src/terminal/tests/live.rs`
+- `S09` `M` `native/platform/src/lib.rs`
+- `S09` `M` `native/cmake/Packaging.cmake`
+- `S09` `verify:` `CMake-configured native test-package native_defaults_match_the_real_python_projection under CMD` -> `pass`
+- `S09` `verify:` `CMake-configured CMD native test-package full native suite` -> `pass`
+- `S10` `M` `dev/packaging/native/process_quiescence.py`
+- `S10` `verify:` `pytest -n 0 dev/packaging/native/tests/test_process_quiescence.py after progress messages` -> `pass`
+- `S10` `verify:` `canonical CMake native-process-quiesce dependency and assemble shutdown guard before stage replacement` -> `pass`
+- `S09` `verify:` `rebuilt staged cadrumo.exe --check-health through canonical CMake environment` -> `fail`
+- `S08` `M` `native/cmake/Packaging.cmake`
+- `S08` `M` `native/cmake/InstallerFlow.cmake`
+- `S08` `M` `dev/packaging/native/package_launch_smoke.py`
+- `S08` `M` `dev/packaging/native/artifact_verify.py`
+- `S08` `M` `dev/packaging/native/tests/test_cmake_installer_flow.py`
+- `S08` `M` `native/CONTRACT.md`
+- `S08` `verify:` `cmake --build build/windows-x64 --config Release --target desktop-host-clippy bundle --parallel 4` -> `pass`
+- `S08` `verify:` `CTest bundle inventory executable images entrypoints and direct-CMD launch subset` -> `pass`
+- `S08` `verify:` `pytest incomplete and stale kit plus CMake installer graph regression cases` -> `pass`
+- `S09` `verify:` `CTest selecting bundle.runtime-lifecycle alone with absent installed manager` -> `fail`
+- `S11` `A` `native/manager/src/desktop_host.rs`
+- `S11` `M` `native/manager/src/background.rs`
+- `S11` `M` `native/desktop/src-tauri/src/manager.rs`
+- `S11` `M` `native/desktop/src-tauri/src/app.rs`
+- `S11` `M` `native/desktop/scripts/backend-snapshot.mjs`
+- `S11` `M` `native/desktop/scripts/tauri.mjs`
+- `S11` `M` `native/manager/tests/fixture/lifecycle.rs`
+- `S11` `M` `dev/runtime_lifecycle/tests/test_lifecycle.py`
+- `S11` `verify:` `configured Tauri test-package with live-package-tests` -> `pass`
+- `S11` `verify:` `Node desktop snapshot/configuration tests` -> `pass`
+- `S11` `verify:` `Ruff and ty focused lifecycle/build checks` -> `pass`
+- `S12` `A` `native/manager/src/service_windows.rs`
+- `S12` `A` `native/installer/src/registration_service.rs`
+- `S12` `M` `native/installer/src/registration.rs`
+- `S12` `M` `native/installer/src/runner/already_installed.rs`
+- `S12` `M` `native/installer/src/runner.rs`
+- `S12` `M` `native/installer/src/runner/removal.rs`
+- `S12` `M` `dev/packaging/native/windows_msi.py`
+- `S12` `M` `dev/packaging/native/process_quiescence.py`
+- `S12` `verify:` `focused MSI authoring tests` -> `pass`
+- `S12` `verify:` `real isolated WiX compile/decompile fixtures` -> `pass`
+- `S12` `verify:` `canonical manager Release and lifecycle build with Clippy` -> `pass`
+- `S12` `verify:` `CTest manager.rust and installer.rust` -> `pass`
+- `S12` `verify:` `CTest manager.supervision` -> `fail`
+- `S13` `M` `native/cmake/Packaging.cmake`
+- `S13` `M` `dev/packaging/native/package_launch_smoke.py`
+- `S13` `M` `dev/runtime_lifecycle/harness.py`
+- `S13` `M` `dev/runtime_lifecycle/README.md`
+- `S13` `M` `native/CONTRACT.md`
+- `S13` `verify:` `final CTest manager.supervision` -> `pass`
+- `S13` `verify:` `configured desktop Clippy` -> `pass`
+- `S13` `verify:` `frontend TypeScript and ESLint with corrected Prettier` -> `pass`
+- `S13` `verify:` `focused package health Ruff and ty` -> `pass`
+- `S13` `M` `dev/packaging/native/tests/test_cmake_installer_flow.py`
+- `S13` `verify:` `pytest -n0 dev/packaging/native/tests/test_cmake_installer_flow.py (actual --kit subprocess)` -> `pass`
+- `S13` `verify:` `ruff check package_launch_smoke.py and test_cmake_installer_flow.py` -> `pass`
+- `S13` `verify:` `generated bundle.vcxproj --kit and --health exit propagation review` -> `pass`
+- `S13` `verify:` `canonical bundle latest attempt (source changed during documentation and product build)` -> `fail`
+- `S13` `verify:` `cmake rust_manager_lifecycle final refresh` -> `pass`
+- `S13` `verify:` `ctest manager.rust final IPC checks` -> `pass`
+- `S13` `verify:` `ty check package_launch_smoke.py and test_cmake_installer_flow.py` -> `pass`
+- `S13` `verify:` `ruff format --check package_launch_smoke.py and test_cmake_installer_flow.py` -> `pass`
+- `S13` `verify:` `canonical bundle fourth attempt (enrolled CLI source deleted during build)` -> `fail`
+- `S13` `verify:` `canonical bundle retry requested October 10 at 23:40 (product inputs changed during build)` -> `fail`
+- `S13` `verify:` `real assembled cadrumo.exe --check-health via owned native scope` -> `pass`
+- `S13` `verify:` `real package lifecycle suite in network-logon runner` -> `fail`
+- `S13` `M` `dev/runtime_lifecycle/tests/test_clients.py`
+- `S13` `M` `dev/runtime_lifecycle/tests/test_lifecycle.py`
+- `S13` `verify:` `ruff check dev/runtime_lifecycle/harness.py dev/runtime_lifecycle/tests/test_clients.py dev/runtime_lifecycle/tests/test_lifecycle.py` -> `pass`
+- `S13` `verify:` `ruff format --check dev/runtime_lifecycle/harness.py dev/runtime_lifecycle/tests/test_clients.py dev/runtime_lifecycle/tests/test_lifecycle.py` -> `pass`
+- `S13` `verify:` `ty check dev/runtime_lifecycle/harness.py dev/runtime_lifecycle/tests/test_clients.py dev/runtime_lifecycle/tests/test_lifecycle.py` -> `pass`
+- `S13` `verify:` `interactive-token existing five-case lifecycle suite` -> `fail`
+- `S13` `verify:` `isolated hardlinked real package minus bin/cadrumo-runtime.exe health rejection` -> `pass`
+- `S13` `verify:` `cmake --build build/windows-x64 --config Release --target bundle --parallel 4` -> `fail`
+- `S13` `verify:` `standalone fresh staged app package_launch_smoke --health after canonical failure` -> `pass`
+- `S13` `verify:` `interactive-token refined CLI TUI MCP client matrix` -> `fail`
+- `S13` `verify:` `ruff and ty focused diagnostic refinements` -> `pass`
+- `S13` `verify:` `interactive-token two-case diagnostic lifecycle run` -> `fail`
+- `S13` `verify:` `exact generated CMD builder Python package health` -> `pass`
+- `S13` `verify:` `cmake --build build/windows-x64 --config Release --target bundle -- /p:BuildProjectReferences=false` -> `pass`
+- `S13` `verify:` `actual missing-runtime isolated package with bounded native diagnostics` -> `pass`
+- `S13` `verify:` `ruff and ty final test correction checks` -> `pass`
+- `S13` `verify:` `interactive-token final existing packaged CLI TUI MCP authentication and profile-scope case` -> `pass`
+- `S13` `verify:` `interactive-token final two-case client matrix and manager-death successor supervision` -> `pass`
+- `S13` `verify:` `canonical original-checkout bundle producer retry with concurrent source changes` -> `fail`
+- `S13` `verify:` `immutable snapshot cmake --preset windows-x64` -> `pass`
+- `S13` `verify:` `isolated snapshot canonical cmake --build --preset release --target bundle initial WiX discovery` -> `fail`
+- `S13` `verify:` `isolated snapshot canonical cmake --build --preset release --target bundle with verified WiX 5.0.2 on process PATH` -> `pass`
+- `S13` `M` `.vault/audit/2026-10-09-runtime-process-lifecycle-audit.md`
+- `S13` `verify:` `snapshot CMake Debug rust_manager_lifecycle target` -> `pass`
+- `S13` `verify:` `snapshot pytest existing packaged_client_authentication_and_profile_scope genuine interactive isolated run` -> `pass`
+- `S13` `verify:` `independent final package/client evidence review` -> `pass`
+- `S11` `A` `native/desktop/src-tauri/src/manager/observation.rs`
+- `S11` `M` `native/desktop/src-tauri/src/manager/tests.rs`
+- `S11` `verify:` `generated Release CMake environment tauri.mjs test-unit manager against frozen source overlay (34 tests)` -> `pass`
+- `S11` `verify:` `generated Release CMake environment tauri.mjs test-unit against frozen source overlay (229 tests)` -> `pass`
+- `S11` `verify:` `generated Release CMake environment tauri.mjs clippy-backend -D warnings against frozen source overlay` -> `pass`
+- `S11` `verify:` `git diff --check bounded native manager observation and CMake files` -> `pass`
+- `S11` `M` `native/desktop/frontend/src/shell/signIn.ts`
+- `S11` `M` `native/desktop/frontend/src/App.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/SignIn.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/AccountLoading.tsx`
+- `S11` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S11` `M` `native/desktop/frontend/src/shell/host.ts`
+- `S11` `M` `native/desktop/frontend/src/shell/tauriHost.ts`
+- `S11` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S11` `M` `native/desktop/frontend/src/dev/scenarios.ts`
+- `S11` `M` `native/desktop/frontend/tests/scenarios/manager.spec.ts`
+- `S11` `M` `native/desktop/frontend/tests/desktop.spec.ts`
+- `S11` `M` `native/desktop/frontend/tests/window-controls.spec.ts`
+- `S11` `M` `native/desktop/frontend/tests/terminal-theme.spec.ts`
+- `S11` `M` `native/desktop/frontend/tests/terminal-rendering.spec.ts`
+- `S11` `M` `native/desktop/frontend/README.md`
+- `S11` `M` `dev/locales/desktop_chrome.py`
+- `S11` `M` `src/cadrumo/locales/en/common.yml`
+- `S11` `M` `src/cadrumo/locales/es/common.yml`
+- `S11` `M` `src/cadrumo/locales/ca/common.yml`
+- `S11` `M` `src/cadrumo/locales/hu/common.yml`
+- `S11` `verify:` `frontend npm run check TypeScript ESLint architecture rules Prettier` -> `pass`
+- `S11` `verify:` `frontend affected six failures repeated three times 24 cases` -> `pass`
+- `S11` `verify:` `frontend eight-file integrated product/scenario manager regression 115 cases` -> `pass`
+- `S11` `verify:` `existing native packaging test_cmake_installer_flow.py 6 cases` -> `pass`
+- `S11` `M` `native/desktop/src-tauri/src/main.rs`
+- `S11` `M` `native/desktop/src-tauri/src/launch.rs`
+- `S11` `M` `native/desktop/src-tauri/src/shell/single_instance/mod.rs`
+- `S11` `M` `dev/packaging/native/package_launch_smoke.py`
+- `S11` `M` `native/cmake/Packaging.cmake`
+- `S11` `verify:` `generated CMake desktop environment cargo unit test -p cadrumo-desktop --lib: 230 passed, 0 failures, 0 ignored; shipping-recovery-all-unit-retry.log` -> `pass`
+- `S11` `verify:` `generated CMake desktop environment cargo clippy --all-targets -- -D warnings; shipping-recovery-clippy.log` -> `pass`
+- `S13` `M` `dev/runtime_lifecycle/client_probes.py`
+- `S13` `M` `dev/runtime_lifecycle/installed.py`
+- `S13` `M` `dev/packaging/command_execution.py`
+- `S13` `M` `dev/packaging/native/windows_msi_build.py`
+- `S13` `M` `dev/packaging/tests/test_windows_msi.py`
+- `S13` `verify:` `focused Windows MSI installed/held-phase policy tests: 38 passed, 49 deselected` -> `pass`
+- `S13` `verify:` `configured Ruff lint/format and Ty for assigned installed acceptance owners` -> `pass`
+- `S13` `verify:` `shipping CPython -I imports seven transferred test-owner modules without pytest, dev._paths or cadrumo.tests` -> `pass`
+- `S13` `verify:` `snapshot builder python -B -m pytest -n 0 -o addopts= dev/packaging/tests/test_windows_msi.py -k 'installed_guest_policy or installed_dispatcher or installed_raw_token_policy or installed_credential_preflight or installed_timeout_cleanup or installed_campaign or installed_takeover or installed_scope' -q: 59 passed, 49 deselected` -> `pass`
+- `S13` `verify:` `assigned installed takeover and scope owners Ruff lint/format, Ty and diff checks` -> `pass`
+- `S13` `verify:` `independent integrated review of exact installed-manager loss/Cadrumo takeover and opposite-scope refusal/standard-token continuation` -> `pass`
+- `S13` `M` `native/cmake/distribution/CMakeLists.txt`
+- `S13` `verify:` `70 installed policy cases plus 1 encrypted continuation policy case plus 11 finalization receipt cases` -> `pass`
+- `S13` `verify:` `changed Python owner Ruff format Ty and diff checks` -> `pass`
+- `S13` `verify:` `independent integrated upgrade rollback machine replacement cleanup and CMake interface review` -> `pass`
+- `S13` `verify:` `canonical Release bundle shipping-recovery-package-build.log` -> `fail`
+- `S13` `verify:` `unchanged shipping health retained diagnostic exact runtime crash/recovery` -> `pass`
+- `S13` `verify:` `seven-module shipped Python -I minimal import without pytest/dev._paths/product tests` -> `pass`
+- `S11` `verify:` `pinned rustfmt --edition2024 --check manager.rs` -> `pass`
+- `S11` `verify:` `independent five-line readiness ordering review` -> `pass`
+- `S13` `verify:` `pytest test_windows_msi.py -k ordinary_gui-or-least_gui-or-gui_counterpart-or-credential_facility (43 cases)` -> `pass`
+- `S13` `verify:` `pytest -m windows_only test_windows_msi.py -k installed_raw_token_policy (5 cases)` -> `pass`
+- `S13` `verify:` `independent ordinary-user GUI campaign UAC linked-token correction re-review` -> `pass`
+- `S13` `verify:` `shipping Python -I seven-helper minimal import c9d9622610c945ddb4d3d6dd550c051c` -> `pass`
+- `S13` `verify:` `.venv Python pytest -n 0 test_windows_msi.py -k installed_ (106 passed,68 deselected)` -> `pass`
+- `S13` `verify:` `canonical CMake windows-x64 Release bundle shipping-recovery-package-retry.log` -> `pass`
+- `S13` `verify:` `fresh shipping package missing installation-kit and runtime negative acceptance` -> `pass`
+- `S13` `verify:` `canonical distribution CMake generates held-campaign three arguments and refuses successor without state` -> `pass`
+- `S13` `verify:` `canonical CMake rust_manager_lifecycle fresh driver build` -> `pass`
+- `S13` `verify:` `canonical CMake check_manager_lifecycle Clippy -D warnings` -> `pass`
+- `S13` `verify:` `registered CTest manager.rust Release current native manager` -> `pass`
+- `S13` `verify:` `immutable canonical P1 cohort0.6.0 seal and installation artifact SHA validation` -> `pass`
+- `S13` `M` `dev/packaging/native/tests/test_bootstrap_kit.py`
+- `S13` `verify:` `genuine LeastPrivilege registered CTest launch/health/runtime-lifecycle (private kit ACL)` -> `fail`
+- `S13` `verify:` `canonical --kit under producer token rejects actual protected kit descriptor` -> `pass`
+- `S13` `verify:` `pytest -n0 -m unit native/tests/test_bootstrap_kit.py (3cases including real Windows restricted-token read)` -> `pass`
+- `S13` `verify:` `public kit publisher and protected-ACL gate independent source review` -> `pass`
+- `S12` `M` `dev/runtime_lifecycle/installed.py`
+- `S12` `M` `dev/packaging/tests/test_windows_msi.py`
+- `S12` `verify:` `original pytest -n0 -m unit dev/packaging/tests/test_windows_msi.py canonical_pin/default_destination/fresh_storage/guest_policy/least_gui_guard 20 cases` -> `pass`
+- `S12` `verify:` `independent review native canonical storage destination and empty bootstrap scratch` -> `pass`
+- `S12` `verify:` `original .venv python -B -m pytest -n0 -m unit dev/packaging/tests/test_windows_msi.py -k installed_ 140 cases` -> `pass`
+- `S12` `verify:` `independent guard freshness-before-COM re-review` -> `pass`
+- `S12` `M` `dev/runtime_lifecycle/README.md`
+- `S12` `verify:` `actual restored QEMU Windows shipping-native abc56df guard with genuine RDP token and fresh canonical storage` -> `pass`
+- `S12` `verify:` `actual restored guest arbitrary storage pin refusal` -> `pass`
+- `S12` `verify:` `original pytest -n0 -m unit dev/packaging/tests/test_windows_msi.py -k installed_ final channel 154 cases` -> `pass`
+- `S12` `verify:` `independent final verified manifest channel and README review` -> `pass`
+- `S13` `M` `native/desktop/src-tauri/src/manager.rs`
+- `S13` `verify:` `corrected canonical cmake --build build/windows-x64 --config Release --target bundle --parallel4` -> `pass`
+- `S13` `verify:` `corrected exact missing installation kit package refusal and restoration` -> `pass`
+- `S13` `verify:` `corrected exact missing runtime executable package refusal and restoration` -> `pass`
+- `S13` `verify:` `shipping Python isolated final seven-helper import without pytest/dev._paths/product tests` -> `pass`
+- `S13` `verify:` `actual six published installation kit files inherit NTFS permissions` -> `pass`
+- `S13` `verify:` `Corrected frozen canonical CMake Release desktop test-unit: 230 passed, zero failed or ignored (shipping-acl-fixed-native-unit.log)` -> `pass`
+- `S13` `verify:` `Corrected frozen canonical CMake Release desktop clippy-backend all-targets -D warnings (shipping-acl-fixed-native-clippy.log)` -> `pass`
+- `S13` `verify:` `Corrected immutable 0.6.0-acl-fixed seal, authenticated kit artifact hashes and actual canonical health prerequisite (seal_lifecycle_cohort.py)` -> `pass`
+- `S13` `verify:` `Selected disposable Windows guest corrected P1 exact archive digest/bytes, eleven critical file hashes, genuine relocated scope plans and WXS metadata (corrected-P1-transfer.json and corrected-P1-plan-proof.json)` -> `pass`
+- `S13` `verify:` `Actual corrected P1 genuine Least InteractiveToken CTest bundle.launch (9.31s) and bundle.health (81.67s)` -> `pass`
+- `S13` `verify:` `Actual registered bundle.runtime-lifecycle five distinct real pytest nodes (3 failures,4 errors,0 skips,0 fully passing nodes; run b96a0f3090fb4a16b92e448e7de6c7b5)` -> `fail`
+- `S13` `M` `native/manager/tests/fixture/lifecycle.rs`
+- `S13` `M` `dev/runtime_lifecycle/tests/conftest.py`
+- `S13` `verify:` `Three bounded nonsecret manager evidence security/limit/read-failure policy cases` -> `pass`
+- `S13` `verify:` `Original driver rustfmt1.96 and conftest Ruff formatting/lint/Ty checks` -> `pass`
+- `S13` `verify:` `Guarded reviewed diagnostic-only snapshot overlay and canonical CMake rust_manager_lifecycle compilation14.54 seconds plus check_manager_lifecycle Clippy7.48 seconds (shipping-driver-diagnostics-build.log)` -> `pass`
+- `S13` `verify:` `Actual genuine Least focused login/logout diagnostic bc3890b90a68441a92db94b04ff7537c: one exact node, zero failure/error/skip, both shipping fixtures, native image settlement and new owned storage cleanup` -> `pass`
+- `S13` `verify:` `Final fourteen existing bounded diagnostic and canonical lifecycle sequence policy cases` -> `pass`
+- `S13` `verify:` `Final original cursor owner Rust formatting, Python Ruff lint/format and production harness/conftest Ty` -> `pass`
+- `S13` `verify:` `cmake --build build/windows-x64 --config Release --target rust_manager_lifecycle check_manager_lifecycle --parallel 4` -> `pass`
+- `S13` `verify:` `actual full b716 registered CTest fixtures and five lifecycle cases` -> `pass`
+- `S13` `verify:` `b716 outer settlement/storage boundary` -> `fail`
+- `S13` `verify:` `corrected canonical CTest lifecycle e90e33b311194f99be7c33104d5a8767` -> `fail`
+- `S13` `verify:` `focused client diagnostic 764ba18b1ca543bfa01ffdcb9c6c6aa9 preflight` -> `fail`
+- `S13` `verify:` `elevated focused registered CTest client diagnostic 4e3b8886aa114297bf3fb99c5cf3f2a2` -> `pass`
+- `S13` `verify:` `native ordinary-user installed guest hold 30d9d41987214e07afc5ab56c5c08dca` -> `fail`
+- `S13` `verify:` `19 runtime fault export policy cases` -> `pass`
+- `S13` `verify:` `focused Ruff format/check and conftest Ty` -> `pass`
+- `S13` `verify:` `isolated successor version authorities, offline locked uv and scoped diff check` -> `pass`
+- `S13` `M` `dev/packaging/native/windows_msi.py`
+- `S13` `M` `native/installer/src/windows.rs`
+- `S13` `M` `native/installer/src/runner.rs`
+- `S13` `M` `native/installer/src/registration_service.rs`
+- `S13` `M` `native/cmake/Installer.cmake`
+- `S13` `M` `dev/corpus/record_design_acquisition.py`
+- `S13` `M` `dev/corpus/tests/test_record_design_support.py`
+- `S13` `verify:` `cmake --build build/windows-x64 --config Release --target check_installer` -> `fail`
+- `S13` `verify:` `cmake --build build/windows-x64 --config Release --target check_installer after corrections` -> `pass`
+- `S13` `verify:` `ctest --test-dir build/windows-x64 -C Release -R ^installer[.]rust$ --output-on-failure` -> `pass`
+- `S13` `verify:` `cmake --build build/windows-x64 --config Release --target registry_authority_rebuild --parallel 4` -> `pass`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_180/files/01-180-orden-hap-1732-2014-actualizado-por-orden-hfp-1284-2023-de-28-de-noviembre-251-kb-pdf.pdf` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_180/files/01-180-orden-hap-1732-2014-actualizado-por-orden.pdf`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_180/files/01-180-orden-hap-1732-2014-actualizado-por-orden-hfp-1284-2023-de-28-de-noviembre-251-kb-pdf.pdf.extracted.json` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_180/files/01-180-orden-hap-1732-2014-actualizado-por-orden.pdf.extracted.json`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_180/files/01-180-orden-hap-1732-2014-actualizado-por-orden-hfp-1284-2023-de-28-de-noviembre-251-kb-pdf.pdf.extracted.md` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_180/files/01-180-orden-hap-1732-2014-actualizado-por-orden.pdf.extracted.md`
+- `S13` `R` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_180/files/01-180-orden-hap-1732-2014-actualizado-por-orden-hfp-1284-2023-de-28-de-noviembre-251-kb-pdf.pdf.corpus_text.json` -> `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_180/files/01-180-orden-hap-1732-2014-actualizado-por-orden.pdf.corpus_text.json`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_182/files/03-182-orden-eha-3021-2007-actualizado-por-orden-hfp-1351-2021-de-1-de-diciembre.pdf` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_182/files/03-182-orden-eha-3021-2007-actualizado-por-orden.pdf`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_182/files/03-182-orden-eha-3021-2007-actualizado-por-orden-hfp-1351-2021-de-1-de-diciembre.pdf.extracted.json` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_182/files/03-182-orden-eha-3021-2007-actualizado-por-orden.pdf.extracted.json`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_182/files/03-182-orden-eha-3021-2007-actualizado-por-orden-hfp-1351-2021-de-1-de-diciembre.pdf.extracted.md` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_182/files/03-182-orden-eha-3021-2007-actualizado-por-orden.pdf.extracted.md`
+- `S13` `R` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_182/files/03-182-orden-eha-3021-2007-actualizado-por-orden-hfp-1351-2021-de-1-de-diciembre.pdf.corpus_text.json` -> `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_182/files/03-182-orden-eha-3021-2007-actualizado-por-orden.pdf.corpus_text.json`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/01-184-ejercicio-2025-y-siguientes-modificados-por-orden-hac-1430-2025-de-3-de-diciembre-365-kb.pdf` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/01-184-ejercicio-2025-y-siguientes-modificados-p.pdf`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/01-184-ejercicio-2025-y-siguientes-modificados-por-orden-hac-1430-2025-de-3-de-diciembre-365-kb.pdf.extracted.json` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/01-184-ejercicio-2025-y-siguientes-modificados-p.pdf.extracted.json`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/01-184-ejercicio-2025-y-siguientes-modificados-por-orden-hac-1430-2025-de-3-de-diciembre-365-kb.pdf.extracted.md` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/01-184-ejercicio-2025-y-siguientes-modificados-p.pdf.extracted.md`
+- `S13` `R` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_184/files/01-184-ejercicio-2025-y-siguientes-modificados-por-orden-hac-1430-2025-de-3-de-diciembre-365-kb.pdf.corpus_text.json` -> `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_184/files/01-184-ejercicio-2025-y-siguientes-modificados-p.pdf.corpus_text.json`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/02-184-orden-hap-2250-2015-actualizado-por-orden-hfp-1284-2023-de-28-de-noviembre-263-kb-pdf.pdf` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/02-184-orden-hap-2250-2015-actualizado-por-orden.pdf`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/02-184-orden-hap-2250-2015-actualizado-por-orden-hfp-1284-2023-de-28-de-noviembre-263-kb-pdf.pdf.extracted.json` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/02-184-orden-hap-2250-2015-actualizado-por-orden.pdf.extracted.json`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/02-184-orden-hap-2250-2015-actualizado-por-orden-hfp-1284-2023-de-28-de-noviembre-263-kb-pdf.pdf.extracted.md` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/02-184-orden-hap-2250-2015-actualizado-por-orden.pdf.extracted.md`
+- `S13` `R` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_184/files/02-184-orden-hap-2250-2015-actualizado-por-orden-hfp-1284-2023-de-28-de-noviembre-263-kb-pdf.pdf.corpus_text.json` -> `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_184/files/02-184-orden-hap-2250-2015-actualizado-por-orden.pdf.corpus_text.json`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_189/files/02-189-orden-eha-3481-2008-de-1-de-diciembre-actualizada-por-la-orden-hfp-115-2022-de-23-de-febrero.pdf` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_189/files/02-189-orden-eha-3481-2008-de-1-de-diciembre-act.pdf`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_189/files/02-189-orden-eha-3481-2008-de-1-de-diciembre-actualizada-por-la-orden-hfp-115-2022-de-23-de-febrero.pdf.extracted.json` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_189/files/02-189-orden-eha-3481-2008-de-1-de-diciembre-act.pdf.extracted.json`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_189/files/02-189-orden-eha-3481-2008-de-1-de-diciembre-actualizada-por-la-orden-hfp-115-2022-de-23-de-febrero.pdf.extracted.md` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_189/files/02-189-orden-eha-3481-2008-de-1-de-diciembre-act.pdf.extracted.md`
+- `S13` `R` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_189/files/02-189-orden-eha-3481-2008-de-1-de-diciembre-actualizada-por-la-orden-hfp-115-2022-de-23-de-febrero.pdf.corpus_text.json` -> `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_189/files/02-189-orden-eha-3481-2008-de-1-de-diciembre-act.pdf.corpus_text.json`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_190/files/01-190-orden-eha-3127-2009-de-10-de-noviembre-actualizada-por-orden-hac-1431-2025-de-3-de-dicie.pdf` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_190/files/01-190-orden-eha-3127-2009-de-10-de-noviembre-ac.pdf`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_190/files/01-190-orden-eha-3127-2009-de-10-de-noviembre-actualizada-por-orden-hac-1431-2025-de-3-de-dicie.pdf.extracted.json` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_190/files/01-190-orden-eha-3127-2009-de-10-de-noviembre-ac.pdf.extracted.json`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_190/files/01-190-orden-eha-3127-2009-de-10-de-noviembre-actualizada-por-orden-hac-1431-2025-de-3-de-dicie.pdf.extracted.md` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_190/files/01-190-orden-eha-3127-2009-de-10-de-noviembre-ac.pdf.extracted.md`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_190/files/01-190-orden-eha-3127-2009-de-10-de-noviembre-actualizada-por-orden-hac-1431-2025-de-3-de-dicie.pdf.record-design-correction.json` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_190/files/01-190-orden-eha-3127-2009-de-10-de-noviembre-ac.pdf.record-design-correction.json`
+- `S13` `R` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_190/files/01-190-orden-eha-3127-2009-de-10-de-noviembre-actualizada-por-orden-hac-1431-2025-de-3-de-dicie.pdf.corpus_text.json` -> `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_190/files/01-190-orden-eha-3127-2009-de-10-de-noviembre-ac.pdf.corpus_text.json`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_190/files/03-190-orden-eha-3127-2009-de-10-de-noviembre-actualizada-por-orden-hac-1432-2024-de-11-de-dici.pdf` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_190/files/03-190-orden-eha-3127-2009-de-10-de-noviembre-ac.pdf`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_190/files/03-190-orden-eha-3127-2009-de-10-de-noviembre-actualizada-por-orden-hac-1432-2024-de-11-de-dici.pdf.extracted.json` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_190/files/03-190-orden-eha-3127-2009-de-10-de-noviembre-ac.pdf.extracted.json`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_190/files/03-190-orden-eha-3127-2009-de-10-de-noviembre-actualizada-por-orden-hac-1432-2024-de-11-de-dici.pdf.extracted.md` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_190/files/03-190-orden-eha-3127-2009-de-10-de-noviembre-ac.pdf.extracted.md`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_190/files/03-190-orden-eha-3127-2009-de-10-de-noviembre-actualizada-por-orden-hac-1432-2024-de-11-de-dici.pdf.record-design-correction.json` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_190/files/03-190-orden-eha-3127-2009-de-10-de-noviembre-ac.pdf.record-design-correction.json`
+- `S13` `R` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_190/files/03-190-orden-eha-3127-2009-de-10-de-noviembre-actualizada-por-orden-hac-1432-2024-de-11-de-dici.pdf.corpus_text.json` -> `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_190/files/03-190-orden-eha-3127-2009-de-10-de-noviembre-ac.pdf.corpus_text.json`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_190/files/04-190-orden-eha-3127-2009-de-10-de-noviembre-actualizada-por-orden-hfp-1286-2023-de-28-de-novi.pdf` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_190/files/04-190-orden-eha-3127-2009-de-10-de-noviembre-ac.pdf`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_190/files/04-190-orden-eha-3127-2009-de-10-de-noviembre-actualizada-por-orden-hfp-1286-2023-de-28-de-novi.pdf.extracted.json` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_190/files/04-190-orden-eha-3127-2009-de-10-de-noviembre-ac.pdf.extracted.json`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_190/files/04-190-orden-eha-3127-2009-de-10-de-noviembre-actualizada-por-orden-hfp-1286-2023-de-28-de-novi.pdf.extracted.md` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_190/files/04-190-orden-eha-3127-2009-de-10-de-noviembre-ac.pdf.extracted.md`
+- `S13` `R` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_190/files/04-190-orden-eha-3127-2009-de-10-de-noviembre-actualizada-por-orden-hfp-1286-2023-de-28-de-novi.pdf.corpus_text.json` -> `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_190/files/04-190-orden-eha-3127-2009-de-10-de-noviembre-ac.pdf.corpus_text.json`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_193/files/01-193-orden-eha-3377-2011-actualizado-por-orden-hac-1430-2025-de-3-de-diciembre-357-kb-pdf.pdf` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_193/files/01-193-orden-eha-3377-2011-actualizado-por-orden.pdf`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_193/files/01-193-orden-eha-3377-2011-actualizado-por-orden-hac-1430-2025-de-3-de-diciembre-357-kb-pdf.pdf.extracted.json` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_193/files/01-193-orden-eha-3377-2011-actualizado-por-orden.pdf.extracted.json`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_193/files/01-193-orden-eha-3377-2011-actualizado-por-orden-hac-1430-2025-de-3-de-diciembre-357-kb-pdf.pdf.extracted.md` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_193/files/01-193-orden-eha-3377-2011-actualizado-por-orden.pdf.extracted.md`
+- `S13` `R` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_193/files/01-193-orden-eha-3377-2011-actualizado-por-orden-hac-1430-2025-de-3-de-diciembre-357-kb-pdf.pdf.corpus_text.json` -> `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_193/files/01-193-orden-eha-3377-2011-actualizado-por-orden.pdf.corpus_text.json`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_193/files/02-193-orden-eha-3377-2011-actualizado-por-orden-hac-1504-2024-de-26-de-diciembre-352-kb-pdf.pdf` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_193/files/02-193-orden-eha-3377-2011-actualizado-por-orden.pdf`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_193/files/02-193-orden-eha-3377-2011-actualizado-por-orden-hac-1504-2024-de-26-de-diciembre-352-kb-pdf.pdf.extracted.json` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_193/files/02-193-orden-eha-3377-2011-actualizado-por-orden.pdf.extracted.json`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_193/files/02-193-orden-eha-3377-2011-actualizado-por-orden-hac-1504-2024-de-26-de-diciembre-352-kb-pdf.pdf.extracted.md` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_193/files/02-193-orden-eha-3377-2011-actualizado-por-orden.pdf.extracted.md`
+- `S13` `R` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_193/files/02-193-orden-eha-3377-2011-actualizado-por-orden-hac-1504-2024-de-26-de-diciembre-352-kb-pdf.pdf.corpus_text.json` -> `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_193/files/02-193-orden-eha-3377-2011-actualizado-por-orden.pdf.corpus_text.json`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_202/files/06-202-orden-hac-941-2018-ejercicios-2019-y-siguientes-actualizado-septiembre-2019-128-kb-xlsx.xlsx` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_202/files/06-202-orden-hac-941-2018-ejercicios-2019-y-sigu.xlsx`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_202/files/06-202-orden-hac-941-2018-ejercicios-2019-y-siguientes-actualizado-septiembre-2019-128-kb-xlsx.xlsx.extracted.json` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_202/files/06-202-orden-hac-941-2018-ejercicios-2019-y-sigu.xlsx.extracted.json`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_202/files/06-202-orden-hac-941-2018-ejercicios-2019-y-siguientes-actualizado-septiembre-2019-128-kb-xlsx.xlsx.extracted.md` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_202/files/06-202-orden-hac-941-2018-ejercicios-2019-y-sigu.xlsx.extracted.md`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/04-303-ejercicio-2024-a-partir-de-periodos-09-y-3t-y-siguientes-actualizado-29-11-24-381-kb-xls.xlsx` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/04-303-ejercicio-2024-a-partir-de-periodos-09-y.xlsx`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/04-303-ejercicio-2024-a-partir-de-periodos-09-y-3t-y-siguientes-actualizado-29-11-24-381-kb-xls.xlsx.extracted.json` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/04-303-ejercicio-2024-a-partir-de-periodos-09-y.xlsx.extracted.json`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/04-303-ejercicio-2024-a-partir-de-periodos-09-y-3t-y-siguientes-actualizado-29-11-24-381-kb-xls.xlsx.extracted.md` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/04-303-ejercicio-2024-a-partir-de-periodos-09-y.xlsx.extracted.md`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/08-303-orden-hac-646-2021-ejercicio-2021-desde-periodo-07-actualizado-22-12-2021-334-kb-xlsx.xlsx` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/08-303-orden-hac-646-2021-ejercicio-2021-desde-p.xlsx`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/08-303-orden-hac-646-2021-ejercicio-2021-desde-periodo-07-actualizado-22-12-2021-334-kb-xlsx.xlsx.extracted.json` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/08-303-orden-hac-646-2021-ejercicio-2021-desde-p.xlsx.extracted.json`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/08-303-orden-hac-646-2021-ejercicio-2021-desde-periodo-07-actualizado-22-12-2021-334-kb-xlsx.xlsx.extracted.md` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/08-303-orden-hac-646-2021-ejercicio-2021-desde-p.xlsx.extracted.md`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/13-303-orden-hap-2373-2014-de-9-de-diciembre-ejercicio-2018-salvo-ultimo-periodo-12m-4t-de-2018.xlsx` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/13-303-orden-hap-2373-2014-de-9-de-diciembre-eje.xlsx`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/13-303-orden-hap-2373-2014-de-9-de-diciembre-ejercicio-2018-salvo-ultimo-periodo-12m-4t-de-2018.xlsx.extracted.json` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/13-303-orden-hap-2373-2014-de-9-de-diciembre-eje.xlsx.extracted.json`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/13-303-orden-hap-2373-2014-de-9-de-diciembre-ejercicio-2018-salvo-ultimo-periodo-12m-4t-de-2018.xlsx.extracted.md` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/13-303-orden-hap-2373-2014-de-9-de-diciembre-eje.xlsx.extracted.md`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/15-303-orden-hap-2373-2014-de-9-de-diciembre-ejercicio-2021-hasta-periodo-06-actualizado-27-04.xlsx` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/15-303-orden-hap-2373-2014-de-9-de-diciembre-eje.xlsx`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/15-303-orden-hap-2373-2014-de-9-de-diciembre-ejercicio-2021-hasta-periodo-06-actualizado-27-04.xlsx.extracted.json` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/15-303-orden-hap-2373-2014-de-9-de-diciembre-eje.xlsx.extracted.json`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/15-303-orden-hap-2373-2014-de-9-de-diciembre-ejercicio-2021-hasta-periodo-06-actualizado-27-04.xlsx.extracted.md` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/15-303-orden-hap-2373-2014-de-9-de-diciembre-eje.xlsx.extracted.md`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_347/files/01-347-ejercicio-2025-y-siguientes-modificados-por-orden-hac-1431-2025-de-3-de-diciembre-332-kb.pdf` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_347/files/01-347-ejercicio-2025-y-siguientes-modificados-p.pdf`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_347/files/01-347-ejercicio-2025-y-siguientes-modificados-por-orden-hac-1431-2025-de-3-de-diciembre-332-kb.pdf.extracted.json` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_347/files/01-347-ejercicio-2025-y-siguientes-modificados-p.pdf.extracted.json`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_347/files/01-347-ejercicio-2025-y-siguientes-modificados-por-orden-hac-1431-2025-de-3-de-diciembre-332-kb.pdf.extracted.md` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_347/files/01-347-ejercicio-2025-y-siguientes-modificados-p.pdf.extracted.md`
+- `S13` `R` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_347/files/01-347-ejercicio-2025-y-siguientes-modificados-por-orden-hac-1431-2025-de-3-de-diciembre-332-kb.pdf.corpus_text.json` -> `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_347/files/01-347-ejercicio-2025-y-siguientes-modificados-p.pdf.corpus_text.json`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_349/files/01-349-orden-hac-174-2020-de-4-de-febrero-ejercicio-2020-y-siguientes-894-kb-pdf.pdf` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_349/files/01-349-orden-hac-174-2020-de-4-de-febrero-ejerci.pdf`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_349/files/01-349-orden-hac-174-2020-de-4-de-febrero-ejercicio-2020-y-siguientes-894-kb-pdf.pdf.extracted.json` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_349/files/01-349-orden-hac-174-2020-de-4-de-febrero-ejerci.pdf.extracted.json`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_349/files/01-349-orden-hac-174-2020-de-4-de-febrero-ejercicio-2020-y-siguientes-894-kb-pdf.pdf.extracted.md` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_349/files/01-349-orden-hac-174-2020-de-4-de-febrero-ejerci.pdf.extracted.md`
+- `S13` `R` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_349/files/01-349-orden-hac-174-2020-de-4-de-febrero-ejercicio-2020-y-siguientes-894-kb-pdf.pdf.corpus_text.json` -> `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_349/files/01-349-orden-hac-174-2020-de-4-de-febrero-ejerci.pdf.corpus_text.json`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_369/files/01-369-regimenes-especiales-aplicables-a-los-servicios-prestados-a-personas-que-no-tengan-la-co.xlsx` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_369/files/01-369-regimenes-especiales-aplicables-a-los-ser.xlsx`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_369/files/01-369-regimenes-especiales-aplicables-a-los-servicios-prestados-a-personas-que-no-tengan-la-co.xlsx.extracted.json` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_369/files/01-369-regimenes-especiales-aplicables-a-los-ser.xlsx.extracted.json`
+- `S13` `R` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_369/files/01-369-regimenes-especiales-aplicables-a-los-servicios-prestados-a-personas-que-no-tengan-la-co.xlsx.extracted.md` -> `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_369/files/01-369-regimenes-especiales-aplicables-a-los-ser.xlsx.extracted.md`
+- `S13` `M` `dev/registry/pipeline/source_defects.py`
+- `S13` `M` `dev/registry/tests/test_record_design_369_envelope.py`
+- `S13` `M` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_180/manifest.json`
+- `S13` `M` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_182/manifest.json`
+- `S13` `M` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/manifest.json`
+- `S13` `M` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_189/manifest.json`
+- `S13` `M` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_190/manifest.json`
+- `S13` `M` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_193/manifest.json`
+- `S13` `M` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_202/manifest.json`
+- `S13` `M` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/manifest.json`
+- `S13` `M` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_347/manifest.json`
+- `S13` `M` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_349/manifest.json`
+- `S13` `M` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_369/manifest.json`
+- `S13` `M` `src/cadrumo/_data/registry/aeat/legal/atribucion-rentas.toml`
+- `S13` `M` `src/cadrumo/_data/registry/aeat/legal/irpf.toml`
+- `S13` `M` `src/cadrumo/_data/registry/aeat/legal/is.toml`
+- `S13` `M` `src/cadrumo/_data/registry/aeat/legal/iva.toml`
+- `S13` `M` `src/cadrumo/_data/registry/aeat/legal/modelo-182.toml`
+- `S13` `M` `src/cadrumo/_data/registry/aeat/legal/modelo-189.toml`
+- `S13` `M` `src/cadrumo/_data/registry/aeat/legal/operaciones-terceros.toml`
+- `S13` `M` `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2024/revision.toml`
+- `S13` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2022/extraction_profiles/0001-declarations.toml`
+- `S13` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2025-y-siguientes/casillas/0001-declarations.toml`
+- `S13` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/casillas/0001-declarations.toml`
+- `S13` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/extraction_profiles/0001-declarations.toml`
+- `S13` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/casillas/0001-declarations.toml`
+- `S13` `M` `src/cadrumo/tests/fixtures/justificantes/_generate_misc_b.py`
+- `S13` `M` `src/cadrumo/adapters/inbound/declaracion/tests/test_parser_synthetic_fixtures_m184.py`
+- `S13` `M` `src/cadrumo/adapters/inbound/declaracion/tests/test_parser_synthetic_fixtures_m347.py`
+- `S13` `M` `build/runtime-lifecycle-windows-guest/controller/guest-controller.ps1`
+- `S13` `verify:` `PowerShell parser plus local read-only version-binding probes on controller c9c8e519e76302286f313d81f9c1c354eb7c69c59d4c47ddfe2628869cf23188` -> `pass`
+- `S13` `A` `build/runtime-lifecycle-windows-guest/baseline/restore-20261011-before-path-fixed-P1.json`
+- `S13` `A` `build/runtime-lifecycle-windows-guest/path-fixed-P1-clean-readiness.json`
+- `S13` `M` `build/seal_lifecycle_cohort.py`
+- `S13` `verify:` `exact-owned guest native graceful shutdown and container exit0` -> `pass`
+- `S13` `verify:` `offline clean qcow2 baseline restore plus firmware hashes and qemu-img check` -> `pass`
+- `S13` `verify:` `fresh native boot UAC clock and absent product/service/autostart/paths readiness` -> `pass`
+- `S13` `verify:` `canonical cmake build bundle0.6.1 shipping-path-repair-bundle.log` -> `fail`
+- `S13` `verify:` `ruff check format and ty health smoke owner` -> `pass`
+- `S13` `verify:` `existing genuine compiled four-MSI tamper rejects bootstrap publication test` -> `pass`
+- `S13` `verify:` `actual shipping kit and health recheck (shipping-publication-health-recheck.log)` -> `pass`
+- `S13` `verify:` `test_native_admission_dll_is_embedded_in_all_four_verified_products with precompile changed staged-manager refusal (msi-precompile-admission-refinement.xml)` -> `pass`
+- `S13` `verify:` `cmake --build build/windows-x64 --config Release --target bundle --parallel 4 (shipping-publication-repaired-bundle.log, session48933 actual exit0)` -> `pass`
+- `S13` `verify:` `immutable 0.6.1-path-fixed seal (seal_lifecycle_cohort.py actual exit0)` -> `pass`
+- `S13` `verify:` `guarded P2 two-file overlay matching original source and continuation inventory` -> `pass`
+- `S13` `verify:` `isolated 0.6.1 to 0.6.2 seven-authority preparation plus uv lock --offline and --locked --offline` -> `pass`
+- `S13` `verify:` `exact four-local-version-only parsed lockfile equality and existing release version parity` -> `pass`
+- `S13` `verify:` `canonical 0.6.1 bundle and actual runtime crash health` -> `pass`
+- `S13` `verify:` `sealed 0.6.1 complete inventory and all file hashes` -> `pass`
+- `S13` `verify:` `guest 0.6.1 Least user hold` -> `fail`
+- `S13` `verify:` `same-token native repair diagnostic` -> `fail`
+- `S13` `verify:` `installed.py bounded typed cause Ruff format ty` -> `pass`
+- `S13` `verify:` `clean-baseline genuine Least direct shipping native install` -> `fail`
+- `S13` `M` `native/application/src/installation.rs`
+- `S13` `verify:` `bounded candidate diagnostic independent diff review` -> `pass`
+- `S13` `verify:` `candidate diagnostic exact rustfmt` -> `pass`
+- `S13` `verify:` `sealedP1 native MSI destination expanded inventory parity` -> `pass`
+- `S13` `verify:` `sealedP1 native MSI FileSize and available native hash metadata parity` -> `pass`
+- `S13` `verify:` `sealedP1 large sequence schema and active FeatureComponents membership` -> `pass`
+- `S13` `verify:` `guarded three-owner diagnostic snapshot overlay` -> `pass`
+- `S13` `verify:` `canonical 0.6.2 prediagnostic bundle actual runtime recovery` -> `pass`
+- `S13` `verify:` `diagnostic CTest installer.rust` -> `pass`
+- `S13` `verify:` `diagnostic CTest application.rust` -> `pass`
+- `S13` `verify:` `sealedP1 selective manager CAB byte parity` -> `pass`
+- `S13` `verify:` `diagnostic canonical check_installer Clippy warnings denied` -> `pass`
+- `S13` `verify:` `.venv/Scripts/python.exe -m pytest dev/packaging/tests/test_windows_msi.py -k 'precommit_rollback or exact_msi_state_observation' -n 0 -m unit -q` -> `pass`
+- `S13` `verify:` `.venv/Scripts/python.exe -m ruff check dev/runtime_lifecycle/installed.py dev/packaging/tests/test_windows_msi.py` -> `pass`
+- `S13` `verify:` `.venv/Scripts/python.exe -m ruff format dev/runtime_lifecycle/installed.py dev/packaging/tests/test_windows_msi.py` -> `pass`
+- `S13` `verify:` `.venv/Scripts/python.exe -m ty check dev/runtime_lifecycle/installed.py` -> `pass`
+- `S13` `verify:` `cmake --build build/windows-x64 --config Release --target bundle --parallel 4 [runtime-health-build-20261011 shipping-candidate-diagnostic-bundle.log]` -> `pass`
+- `S13` `verify:` `sealed diagnostic 0.6.2 guest transfer archive and 11 critical hashes` -> `pass`
+- `S13` `verify:` `shipping native user install task670ec8c4b56a4497abf94d9db4ba8915 [guest]` -> `fail`
+- `S13` `verify:` `same sealed 0.6.2 native user install with guest-only MSI verbose logging taskce21010f6a6144788070539db1aa5f39` -> `fail`
+- `S13` `M` `dev/packaging/native/windows_msi_database.py`
+- `S13` `verify:` `ctest --test-dir build/windows-x64 -C Release -R ^installer[.]rust$ --output-on-failure` -> `pass`
+- `S13` `verify:` `cmake --build build/windows-x64 --config Release --target check_installer --parallel 4` -> `pass`
+- `S13` `verify:` `cmake --build build/windows-x64 --config Release --target rust_installer --parallel 4` -> `pass`
+- `S13` `verify:` `pytest test_windows_msi actual four compiled products mandatory feature disabled mutation -m empty -n 0` -> `pass`
+- `S13` `A` `dev/runtime_lifecycle/windows-guest/acceptance.ps1`
+- `S13` `A` `dev/runtime_lifecycle/windows-guest/transport.ps1`
+- `S13` `A` `dev/runtime_lifecycle/windows-guest/phase-task.ps1`
+- `S13` `M` `dev/runtime_lifecycle/windows-guest/compose.yaml`
+- `S13` `M` `dev/runtime_lifecycle/windows-guest/README.md`
+- `S13` `A` `dev/runtime_lifecycle/windows-guest/tests/test_acceptance.py`
+- `S13` `verify:` `11 offline Windows guest configuration and PowerShell parse policy tests` -> `pass`
+- `S13` `verify:` `Ruff format/check and Ty for guest acceptance policy owner` -> `pass`
+- `S13` `verify:` `Independent final integrated default bundle guest gate source review` -> `pass`
+- `S13` `verify:` `Existing MSI grouping boundary/nonreference/idempotency cases (1600/1601/3201)` -> `pass`
+- `S13` `verify:` `Ruff format/check and Ty reviewed linear grouping` -> `pass`
+- `S13` `verify:` `Independent source review of frozen linear grouping` -> `pass`
+- `S13` `verify:` `0.6.2 real native-installer candidate producer and kit verification` -> `pass`
+- `S13` `verify:` `0.6.2 shipping verified IPC and exact runtime crash recovery with canonical storage variable` -> `pass`
+- `S13` `verify:` `Initial follow-up health invocation with incorrect CADRUMO_STORAGE_ROOT` -> `fail`
+- `S13` `verify:` `Focused precommit bounded-diagnostics and strict rollback evidence checks16cases` -> `pass`
+- `S13` `verify:` `Ruff format/check and Ty installed owner` -> `pass`
+- `S13` `verify:` `Independent diagnostic review after malformed SHA correction` -> `pass`
+- `S13` `verify:` `Genuine Windows least user precommit task ebfa202e1c1e42a980eb2c43060159ed` -> `fail`
+- `S13` `M` `.vault/adr/2026-10-07-application-distribution-windows-versioned-msi-adr.md`
+- `S13` `verify:` `pytest Windows MSI unit lane 228 tests` -> `pass`
+- `S13` `verify:` `ctest installer.rust first fixture schema run` -> `fail`
+- `S13` `verify:` `ctest installer.rust corrected real readonly fixture` -> `pass`
+- `S13` `verify:` `canonical check_installer and rust_installer` -> `pass`
+- `S13` `verify:` `Ruff format lint Ty and diff check` -> `pass`
+- `S13` `verify:` `actual failed 0.6.2 MSI readonly component budget refusal` -> `pass`
+- `S13` `verify:` `independent grouped component source review` -> `pass`
+- `S13` `verify:` `actual new four-MSI compiled grouping keypath and native admission test` -> `pass`
+- `S13` `verify:` `four-MSI initial missing configured Wix PATH` -> `fail`
+- `S13` `M` `dev/runtime_lifecycle/windows-guest/transport.ps1`
+- `S13` `M` `dev/runtime_lifecycle/windows-guest/acceptance.ps1`
+- `S13` `M` `dev/runtime_lifecycle/windows-guest/tests/test_acceptance.py`
+- `S13` `verify:` `actual old MSI read-only costing refusal` -> `pass`
+- `S13` `verify:` `actual four compiled Windows MSI tables and admission` -> `pass`
+- `S13` `verify:` `native CMake installer Rust tests after fixture correction` -> `pass`
+- `S13` `verify:` `native CMake installer clippy and binary build` -> `pass`
+- `S13` `verify:` `228 existing Windows MSI unit tests` -> `pass`
+- `S13` `verify:` `guest logoff/reboot parser and real mocked poll owner two tests` -> `pass`
+- `S13` `verify:` `executable and extensionless desktop/manager grouping exclusions two focused cases` -> `pass`
+- `S13` `verify:` `native failure projection and primary/cleanup exception preservation 22 focused cases` -> `pass`
+- `S13` `verify:` `native failure runtime owners Ruff/check/format/Ty/diff` -> `pass`
+- `S13` `verify:` `independent integrated failure-owner source review` -> `pass`
+- `S13` `verify:` `actual bounded receipt collector selection/refusal and parser five cases` -> `pass`
+- `S13` `verify:` `actual AST task start evidence-boundary ordering` -> `pass`
+- `S13` `verify:` `receipt collector Ruff/check/format/Ty/diff` -> `pass`
+- `S13` `verify:` `real guest user hold0.6.3 task9eaf7839e045473fb842ac1447761777` -> `fail`
+- `S13` `verify:` `focused native environment2cases, Ruff format/check and Ty installed owner` -> `pass`
+- `S13` `verify:` `independent native environment source review` -> `pass`
+- `S13` `M` `native/desktop/src-tauri/src/main.rs`
+- `S13` `M` `native/desktop/src-tauri/src/manager/tests.rs`
+- `S13` `M` `native/desktop/src-tauri/Cargo.toml`
+- `S13` `verify:` `original canonical desktop-host-test documentation input-stability check (health-error-preservation-desktop-test.log)` -> `fail`
+- `S13` `verify:` `private 0.6.4 native-installer producer and actual staged package health (shipping-0.6.4-component-fixed-successor.log)` -> `pass`
+- `S13` `verify:` `actual corrected-native-environment P1 user hold ea9bd4e031bb46fa9fd8e6b15109a526 native install and cleanup` -> `fail`
+- `S13` `verify:` `canonical frozen desktop-host-test readiness-hardened 252 tests` -> `pass`
+- `S13` `verify:` `canonical frozen desktop-host-clippy readiness-hardened test-module placement` -> `fail`
+- `S13` `A` `native/installer/src/runner/phase.rs`
+- `S13` `M` `dev/packaging/tests/test_command_execution.py`
+- `S13` `verify:` `actual real-process timeout stream retention and exact grandchild termination (20261011T225754.293883Z-pytest-77752-c0734952 two tests)` -> `pass`
+- `S13` `verify:` `bounded native timeout receipt and precommit policy (20261011T225754.231479Z-pytest-64944-b6c1f552 ten tests)` -> `pass`
+- `S13` `verify:` `diagnostics Ruff check and format four files Ty two owners Rustfmt1.96 and diffcheck` -> `pass`
+- `S13` `verify:` `canonical frozen desktop-host-clippy corrected test-module placement (readiness-hardened-desktop-clippy-corrected.log)` -> `pass`
+- `S13` `verify:` `ordinary precommit finite phase receipt seven actual policy cases (20261011T230239.563744Z-pytest-4664-c1c91d99)` -> `pass`
+- `S13` `verify:` `canonical installer.rust phase diagnostics (39 passed one preexisting ignored)` -> `pass`
+- `S13` `verify:` `canonical check_installer phase diagnostics Clippy` -> `pass`
+- `S13` `verify:` `snapshot canonical native-installer 0.6.4 producer with native phase diagnostics` -> `pass`
+- `S13` `verify:` `snapshot 0.6.4 complete bootstrap kit hash and public ACL admission` -> `pass`
+- `S13` `verify:` `snapshot actual packaged 0.6.4 verified runtime IPC and exact runtime crash recovery` -> `pass`
+- `S13` `verify:` `immutable 0.6.4 native phase archive and kit binding` -> `pass`
+- `S13` `verify:` `actual sealed C path 0.6.4 packaged verified-runtime health` -> `fail`
+- `S11` `M` `native/manager/src/desktop_host.rs`
+- `S11` `M` `native/manager/src/installed.rs`
+- `S11` `M` `native/application/src/runtime.rs`
+- `S11` `verify:` `frozen initial cancellation patch canonical manager.rust` -> `pass`
+- `S11` `verify:` `unchanged cancellable identity patch canonical application.rust` -> `pass`
+- `S11` `verify:` `initial named check_application target invocation` -> `fail`
+- `S11` `verify:` `ctest --test-dir build/windows-x64 -C Release -R ^manager[.]rust$ --output-on-failure (clean cancellation refinement)` -> `pass`
+- `S11` `verify:` `CMake-projected manager clippy --all-targets -- -D warnings (before lexical test-module correction)` -> `fail`
+- `S11` `verify:` `CMake-projected manager and application clippy --all-targets -- -D warnings (corrected)` -> `pass`
+- `S13` `verify:` `cmake --build build/windows-x64 --config Release --target app-payload (host cancellation diagnostic)` -> `pass`
+- `S13` `verify:` `cmake -S . -B build/windows-x64 and actual configured CTest health TIMEOUT 360 verification` -> `pass`
+- `S13` `M` `native/manager/src/desktop_host.rs`
+- `S13` `M` `native/manager/src/installed.rs`
+- `S13` `verify:` `actual copied C-path host-cancellation diagnostic packaged IPC and recovery health` -> `fail`
+- `S11` `M` `native/application/src/package.rs`
+- `S11` `A` `native/application/src/package/verification.rs`
+- `S11` `M` `native/application/tests/package_inspection.rs`
+- `S11` `verify:` `ctest --test-dir build/windows-x64 -C Release -R ^(application|manager)[.]rust$ --output-on-failure (final bounded verifier)` -> `pass`
+- `S11` `verify:` `CMake-projected application and manager clippy --all-targets -- -D warnings (final bounded verifier)` -> `pass`
+- `S11` `verify:` `rustfmt 1.96 and git diff --check (final bounded verifier)` -> `pass`
+- `S13` `M` `native/application/src/package.rs`
+- `S13` `A` `native/application/src/package/verification.rs`
+- `S13` `M` `native/application/tests/package_inspection.rs`
+- `S13` `verify:` `cmake --build build/windows-x64 --config Release --target app-payload (final bounded verifier)` -> `pass`
+- `S13` `verify:` `actual fresh copied C-path final bounded-verifier packaged health, verified IPC and exact runtime crash recovery` -> `pass`
+- `S13` `verify:` `ctest --test-dir build/windows-x64 -C Release -R ^installer[.]rust$ --output-on-failure (registration phase coverage)` -> `pass`
+- `S13` `verify:` `cmake --build build/windows-x64 --config Release --target check_installer (registration phase coverage)` -> `pass`
+- `S13` `verify:` `rustfmt 1.96 and git diff --check (registration phase coverage)` -> `pass`
+- `S13` `verify:` `canonical builder package_launch_smoke --health current staged 0.6.4 with CADRUMO_LOCAL_STORAGE_ROOT` -> `pass`
+- `S13` `verify:` `cmake --build build/windows-x64 --config Release --target native-installer final bounded verifier and registration phase coverage` -> `pass`
+- `S13` `verify:` `canonical builder package_launch_smoke --kit current stage/Release/app` -> `pass`
+- `S13` `verify:` `canonical sealer current 0.6.4-parallel-verification-candidate` -> `pass`
+- `S13` `verify:` `canonical builder sealed C-path package_launch_smoke --kit` -> `pass`
+- `S13` `verify:` `canonical builder sealed C-path package_launch_smoke --health with CADRUMO_LOCAL_STORAGE_ROOT` -> `pass`
+- `S13` `verify:` `Stage-GuestCohort repaired 0.6.4 archive identity and version` -> `pass`
+- `S13` `verify:` `Copy-GuestCohort repaired P1 archive, actual product versions and eleven critical owners` -> `pass`
+- `S13` `verify:` `guest current phase-task SHA256 ownership check` -> `pass`
+- `S13` `verify:` `actual repaired 0.6.4 user hold task 6485e5bcc6594fa9afb4235f3500f680` -> `fail`
+- `S13` `verify:` `native unregister cleanup after repaired user hold` -> `fail`
+- `S13` `verify:` `owned PID6520 native Job membership observation` -> `pass`
+- `S13` `verify:` `owned PID6520 static-window startup-failure observation` -> `pass`
+- `S13` `verify:` `pytest offline guest transport and canonical manager dispatcher (26 tests)` -> `pass`
+- `S13` `verify:` `Ruff format lint and Ty changed Python scope` -> `pass`
+- `S13` `verify:` `installed Explorer-started exact same-logon manager and verified runtime IPC diagnostic` -> `pass`
+- `S13` `verify:` `canonical dispatcher file and exact GUI -c invocation 15-second settlement` -> `fail`
+- `S13` `M` `native/manager/src/windows_tray.rs`
+- `S13` `verify:` `pytest windows-guest acceptance plus existing canonical manager-dispatch tests (26 cases)` -> `pass`
+- `S13` `verify:` `ruff lint format and ty installed lifecycle owner` -> `pass`
+- `S13` `verify:` `canonical shipping Explorer helper under revised 60-second allowance (28.060 seconds EOF exit0)` -> `pass`
+- `S13` `verify:` `canonical shipping Explorer helper after stranded graceful settlement under original 15-second allowance` -> `fail`
+- `S13` `verify:` `configured CMake desktop-host-test and desktop-host-clippy` -> `pass`
+- `S13` `verify:` `configured manager.rust CTest (40.96 seconds)` -> `pass`
+- `S13` `verify:` `pinned rustfmt changed native dispatcher callers` -> `pass`
+- `S13` `verify:` `authentic native user unregister then retained manager90s wait` -> `fail`
+- `S13` `M` `native/manager/src/windows_lifecycle.rs`
+- `S13` `verify:` `Configured CTest Release manager.rust popup shutdown and cancelled-logoff regression` -> `pass`
+- `S13` `verify:` `Configured CMake Release check_manager_lifecycle` -> `pass`
+- `S13` `verify:` `Ruff check and format installed popup cleanup owners` -> `pass`
+- `S13` `verify:` `Ty check installed popup cleanup owners` -> `pass`
+- `S13` `verify:` `pytest windows guest acceptance and native manager dispatch 26 cases` -> `pass`
+- `S13` `verify:` `Ruff check and format cleanup retention owners and existing policy tests` -> `pass`
+- `S13` `verify:` `Ty check cleanup retention owners` -> `pass`
+- `S13` `verify:` `pytest existing installed timeout cleanup policy six parametrized cases` -> `pass`
+- `S13` `verify:` `Independent corrected cleanup retention review` -> `pass`
+- `S13` `verify:` `Canonical CMake Release native-installer popup correction producer` -> `pass`
+- `S13` `verify:` `Actual staged package_launch_smoke installation kit` -> `pass`
+- `S13` `verify:` `actual packaged 0.6.4 supervision IPC and exact runtime crash recovery` -> `pass`
+- `S13` `verify:` `pytest existing precommit rollback settlement 8 cases` -> `pass`
+- `S13` `verify:` `ruff check and format installed.py and test_windows_msi.py; ty installed.py` -> `pass`
+- `S13` `verify:` `independent startup_review precommit evidence retention` -> `pass`
+- `S13` `verify:` `real user precommit rollback 88c9f8872e2a42258b8d08c42c8efa28` -> `fail`
+- `S13` `M` `native/application/src/installation/maintenance.rs`
+- `S13` `M` `native/application/tests/installation.rs`
+- `S13` `A` `native/installer/src/runner/rollback_candidate.rs`
+- `S13` `verify:` `pinned Rust 1.96 format and scoped diff check` -> `pass`
+- `S13` `verify:` `independent startup_review fresh-only compensation and corrected broker lifetime` -> `pass`
+- `S13` `verify:` `real repeated user rollback ead0f0bc1eb64427b1f7c705c1901e72` -> `fail`
+- `S13` `verify:` `configured original Release installer.rust and application.rust` -> `pass`
+- `S13` `verify:` `configured original Release check_installer Clippy` -> `pass`
+- `S13` `verify:` `original BUILD_TESTING OFF exact mandatory native assembled kit both scopes` -> `pass`
+- `S13` `verify:` `actual Cargo zero tests exit0 rejected by CTest failure guard exit8` -> `pass`
+- `S13` `verify:` `normal BUILD_TESTING ON restored and bootstrap TIMEOUT900 registered` -> `pass`
+- `S13` `verify:` `independent startup_review mandatory bootstrap source wiring` -> `pass`
+- `S13` `verify:` `snapshot CTest Release application.rust and installer.rust (140.23s)` -> `pass`
+- `S13` `verify:` `corrected snapshot 0.6.5 CMake Release native-installer (WinError112 disk full; exit1)` -> `fail`
+- `S13` `verify:` `existing package_launch_smoke --kit incomplete snapshot stage (required services kit absent; exit1)` -> `fail`
+
+## Notes
+
+- `S01` S01 remains open: all three actual authenticated lifecycle scenarios fail native desktop/logon preflight with `runtime_unavailable` in this command runner before launching processes. No skips or authentication bypass. Rerun README command on admitted unelevated signed-in desktop; complete integration verification before closing or claiming acceptance.
+- `S01` Checked current uncommitted lifecycle files; native build/Clippy and focused Python quality pass. Focused supporting units: 94 passed, 25 deselected. Final real acceptance log: var/storage/development/.logs/test-runs/2026-10-09/20261009T091043.274737Z-pytest-63148-4ffa09d5/run.log, JUnit build/windows-x64/testing/lifecycle.xml. Results cover debug-only admitted manager supervisor core and real packaged runtime, not shipping manager entry/tray/autostart or remote AEAT sessions.
+- `S01` Integrated source review checked retained kernel identity plus Job membership before termination, new verified boot with cycle-scoped manager events, server-originated old session and receipt refusal, real auth.local-read operations and settled operation observation, and cleanup ownership. Documentation technical/editorial reviews corrected median calculation, refusal diagnostics, shell wording and `BUILD_TESTING` prerequisite. Required process behavior remains unverified; no final code-review PASS.
+- `S01` Import gate rerun: all 15 dependency contracts kept and 4546 governed non-test modules loaded. It fails for two pre-existing `PRIVATE_CROSS_PACKAGE` findings outside lifecycle scope: `dev/packaging/native/tests/test_linux_desktop_runtime.py:32` and `dev/packaging/tests/test_windows_msi.py:19.` No source-tree race on rerun. Artifact var/storage/development/.logs/test-runs/2026-10-09/20261009T091257.326812Z-check-import-boundaries-22136-67216d42/artifacts/import-health.json. Canonical generator enrolled new lifecycle modules and two already-existing packaging modules whose metadata was stale.
+- `S01` Post-gate source review corrected the test denial allowlist for real `CONNECTION_MISMATCH,` `SESSION_INACTIVE` and `RUNTIME_CHANGED` refusals. No imports or package inventory changed. Scoped lint/format/types passed after correction; actual acceptance still cannot advance past native desktop/logon preflight. Step remains open; no commit or final audit PASS.
+- `S02` Packaged acceptance remains PENDING: all four tests fail native desktop/logon preflight with `runtime_unavailable` before any launch. CTest correctly includes the matrix and fails verification. Report: build/windows-x64/testing/Release/lifecycle.xml; pytest log var/storage/development/.logs/test-runs/2026-10-09/20261009T094949.087433Z-pytest-52568-565bd74a/run.log.
+- `S02` Existing manager supervision initially failed `quit_during_backoff_suppresses_the_restart_and_releases_the_claim` while other cold compilers ran; unchanged rerun after compilers settled passed in 21.6 seconds. This timing-sensitive case is not new acceptance evidence of a product defect.
+- `S02` Review confirms existing supervision checks initial package/image identity, readiness and 5-second heartbeats with 30-second staleness/accept-loop bounds, graceful stop and bounded backoff. Native verified MSI maintenance owns installation/unregistration; user/machine scope admission remains independent of unelevated interactive manager. SCM services remain prohibited. No host installation or registration was performed.
+- `S03` Focused native sign-in tests: 46 passed; browser signal presentation: 1 passed. Browser check validates the real frontend adapter against a transport-boundary fixture, not real authentication. The existing fixed preview port was occupied and served different assets, so fresh compiled product assets were served by a temporary stdlib HTTP server on a dynamically selected port without driving Tauri or replacing the other server.
+- `S03` The broader desktop-host-test Debug run compiled successfully but failed 18 live package/PTY tests because stage/Debug/app could not be verified; 218 passed. This does not replace missing packaged acceptance. Focused native backend checks use the existing helper and exclude live-package-tests.
+- `S03` A stale Refusal component name in shared SignIn.tsx was corrected to its existing AccountRefusal owner so frontend compilation passes; all unrelated edits were preserved.
+- `S03` Integrated S03 review PASS; whole lifecycle objective remains PENDING S01/S02 native admitted acceptance. Review recorded in runtime-process-lifecycle audit. Step commit deferred because shared tracked desktop files contain unrelated in-flight operator work; no unrelated code was staged or committed.
+- `S02` Final launch-context check: tool PowerShell process is in Windows SessionId 0, as observed dynamically with Get-Process -Id $PID. Native admission excludes Session 0. The refusal therefore has a confirmed runner-context limitation; no session identifier is hardcoded in the harness and no missing-import or missing-binary claim is being made. Latest scoped Ruff/format/ty checks and diff whitespace check pass after typed CLI stderr refusal parsing refinement.
+- `S04` Latest operator authorization removes desktop, Session 0 and elevation launch admission. Native same-account peers, package identity, passwords, receipt custody and MCP grants remain verified.
+- `S04` Command-only package acceptance now launches and authenticates real passwords in Session 0. Native Credential Manager returns WinError 1312 on this network logon; persisted receipt acceptance remains failed, not skipped or replaced with mock custody. S01/S02/S04 remain open pending their required acceptance.
+- `S04` Correction: the driver change is native/manager/tests/fixture/lifecycle.rs, not the previously logged nonexistent src/bin path.
+- `S04` Rebuilt canonical package: 8 of 9 CTest cases passed; bundle.runtime-lifecycle had 1 passed, 3 failed and 2 teardown errors. Wrong-password refusal passed. Persisted receipts and cleanup failed native Credential Manager error 1312; the headless TUI harness also exposed an async/sync invocation defect subsequently corrected. A focused rerun owns the changed harness verification.
+- `S04` Final packaged-client rerun now passes unauthenticated CLI and headless TUI refusals, initializes the real packaged MCP stdio client and confirms its unauthenticated refusal. Real CLI password login runs, but subsequent protected CLI view exits 2; native receipt cleanup still returns WinError 1312. No positive protected access or MCP grant acceptance is claimed. Log: var/storage/development/.logs/test-runs/2026-10-09/20261009T111310.951487Z-pytest-42416-407ebdf6/run.log.
+- `S04` Focused direct login/read rerun returns `runtime_connection_closed` at first protected profile-view operation; this remains an unresolved acceptance failure, separately recorded in the audit. All test scratch was removed and owning ExitStack Job cleanup completed; native receipt cleanup confirmation remains failed.
+- `S04` Vault health check has 0 errors and 4 existing template/format warnings.
+- `S01` Semantic discovery service is not running; bounded inspection reused the already identified worker, custody, manager and client owners.
+- `S01` Real packaged password login with `persist_receipt=False` still closes the worker operation channel. Owned runtime logs identify worker idle-custody failure but previously swallowed its original exception. The revised loop preserves the task failure and emits only error type and source location; JUnit retains bounded nonsecret error fields before test scratch removal.
+- `S01` Native read-only Credential Manager probe returns 1312 in the runner network logon and 1168 (target absent, facility usable) under an existing verified same-account native logon. A disposable build-tree launch probe confirms command processes can use that real native logon without GUI interaction, credentials in arguments, registration, or a product authentication override.
+- `S01` Correction to the preceding idle-custody inference: the operation task shares the failure flag and the latest packaged report contains no original idle-custody exception. Added existing retained task failures to safe diagnostics; root cause remains unconfirmed until the rebuilt package runs.
+- `S01` Disposable build-only native launcher now creates isolated storage under the real same-account native token. A random absent Credential Manager target returns native 1168, proving facility availability without reading any stored credential. No GUI interaction, product credential fallback, admission gate, or host registration is involved.
+- `S01` Final diagnostics-source cleanup run: 34 passed; var/storage/development/.logs/test-runs/2026-10-09/20261009T115929.000566Z-pytest-72260-2636c5ab/run.log. Package compilation is still running; native acceptance has not yet been rerun on the newest diagnostics.
+- `S01` The original worker task error is StorageError at sql/engine.py:230. A bounded packaged engine probe against a genuinely CLI-published synthetic profile reproduces it only for Windows verbatim root spelling; the cause is OSError from mkdir after SQLite URL parsing treats the namespace question mark as query syntax. The debug driver now uses existing `cadrumo_platform::storage::validated_absolute_path,` matching the production root resolver while retaining link refusal, absolute-root validation and the owned-root marker. No SQL database/authentication substitute was introduced.
+- `S01` Network-logon diagnostic report: build/windows-x64/testing/Release/worker-task-diagnostic.xml; real password authentication succeeds, first read fails from the driver root spelling and receipt cleanup separately reports native 1312.
+- `S04` Actual native CreateProcessWithTokenW launch produces token process-session 0 with a real LSA interactive logon in session 1 and usable native credential facilities. Microsoft documents this caller-session behavior. Removed the remaining token-session == LSA-session admission assumption; retained native account/LUID, stable token and logon bookends, lifetime and the LSA logon's real WTS lock surface. No privileges or session identifiers are changed.
+- `S04` The initial native unit invocation selected zero tests due the repository's default unit filter; corrected -m integration invocation executed and passed both actual native cases. Packaged acceptance waits for the current canonical rebuild.
+- `S04` Removed the remaining TokenElevationTypeFull refusal from Cadrumo's existing Explorer manager-launch helper. The desktop still requests the installed manager via the existing shell dispatch owner and receives typed native failures; it does not own or supervise runtime children. The ongoing bundle started before this helper edit, so its desktop binary will be refreshed through another incremental canonical bundle build before acceptance.
+- `S02` Native canonical package-health run executed all four lifecycle cases: 1 pass, 3 failures, no teardown errors; other 7 bundle tests passed. Authenticated CLI and headless TUI reads succeeded for both profiles. Strict JSON projections were incorrectly validated as Python objects; corrected to `model_validate_json.` Unauthenticated connection is refused by `_connected` with `credential_rejected;` added that authentication denial. Real MCP API-key admission refused `grant_inactive` because harness proposal incorrectly set unattended=False; corrected the real human-approved grant to unattended=True, preserving exact scope and `allow_os_lock=False.` Native package-consumer compiler cache had Administrators-owned artifact ACLs; unchanged application.package passes in the build context (30.54s). Final native matrix rerun pending, no completion claimed.
+- `S01` Final canonical ctest -R `^bundle[.]` passed 8/8 (465.51s); bundle.runtime-lifecycle executed 4/4 with zero failures/errors (450.47s). JUnit build/windows-x64/testing/Release/lifecycle.xml; archived stdout build/windows-x64/testing/native-evidence/canonical-bundle.log and native run logs under native-evidence/68ea6a4ddedc47c1aae0e0136593e39d. Actual same-account native logon with real Windows credential storage, no GUI interaction. Both exact runtime crash cycles passed private auth.local-read responses, settled-operation observation, old-session refusal and supervisor events/new IPC boot. Startup 43.0-43.9s; detection 0.111s; reconnect 9.26/10.14s; request median 0.0614s; max 0.301s. Cleanup passed without teardown errors. Diagnostic launcher/probe files removed. Recursive deletion of owned outer native diagnostic log/cache roots was blocked by execution policy without detailed reason, including explicit literal targets; roots retained, no alternate deletion attempted. Historical native logs copied into build/windows-x64/testing/native-evidence by root suffix before cleanup attempts.
+- `S02` The real packaged CLI/TUI/MCP case passes: unauthenticated denial, protected reads for both human profiles, separate real human-approved MCP credential delivery/API grant, pinned profile A while human selector is B, cross-profile refusal, logout denial and manager/runtime stopped denial. The canonical bundle lane passes in actual credential-capable logon; native package consumer passes in the original build context. Compilation-cache permissions are not authentication policy. No host installation or login registration was performed; installed entrypoint/MSI provisioning/unregistration and remote AEAT remain outside this isolated supervisor-core acceptance.
+- `S04` No desktop/session/elevation admission prerequisite remains on manager/runtime startup or native peer capture. Same-owner identity, real LUID/logon lifetime, positive WTS lock evidence when applicable and native credential facilities remain authoritative. Final real credential matrix and native regression evidence pass. Session 0 network logon can start and password-authenticate, but Windows Credential Manager error 1312 remains a genuine native custody limitation, not an admission rejection or mocked success.
+- `S05` First five-case real native run: 2 passed, 3 failed. MCP reauthentication and contract discovery succeed after runtime restart, protected execution reports `runtime_connection_closed.` S06 missing SYNCHRONIZE and S07 nonresumable auth.local-read harness choices corrected; no authentication bypass or production scope expansion. Failed JUnit and stdout retained under `build/windows-x64/testing/hardening-first-failure.*.`
+- `S06` Second run 4 passed / 1 failed, 630.14s. S06 verifies authenticated survivor response, same boot/process adoption without competing launch, then successor-owned replacement after exact runtime kill. S07 immediate-resume refusal traced to unexpired production ten-minute lease and corrected to bounded canonical takeover. S05 passed without product change; first intermittent MCP closure retained as unresolved risk and requires another run.
+- `S07` Existing `_LEASE_DURATION` is ten minutes; `_continue_operation` requires exact live owner or canonical expired-lease takeover. Refine acceptance to bounded refusal while CREATED and later typed result plus exactly one diagnostics execution event. Existing driver and CTest watchdogs extended only for this real interval. Full canonical native rerun active, no checks closed yet.
+- `S05` Third real native run client case passed in 192.43s; second run passed in 178.23s. Both require authenticated CLI/TUI/MCP reads after exact managed runtime crash, not merely readiness/authentication. First `runtime_connection_closed` failure remains documented as intermittent, unexplained; passing repeats do not claim root-cause repair. Full third run still active for real ten-minute operation lease recovery.
+- `S07` Third native run crash/durable-work case passed in 654.22s. Existing ten-minute lease refused early takeover while CREATED; canonical expiry/resume produced typed diagnostics result with one execution event. Second exact runtime crash preserved terminal result and single event. No shortened lease, synthetic time, storage editing or auth policy change. Vault has zero errors and four existing annotation/blank-line warnings. Final two cases still running.
+- `S07` Final canonical CTest passed 1/1 in 1261.19s; pytest 5 passed, zero failures/errors/skips in 1259.175s. JUnit and stdout retained at build/windows-x64/testing/native-evidence/hardening-canonical.xml and hardening-canonical.log. Exact-runtime detection 0.115/0.122s, reconnection 10.668/9.557s; pending operation authenticated recovery 578.927s after prior lease time already elapsed. Manager adoption case repeated pass 99.765s. Scratch removed and owned process Jobs/credentials released; disposable ignored native-context launcher scripts removed. Native outer diagnostic logs/cache retained as evidence. Original intermittent MCP closure remains documented, not claimed fixed.
+- `S10` Nine tests passed; real graceful Windows window shutdown and deadline escalation with child reaping preserve an unrelated process. Default graceful and forced-exit deadlines are each ten seconds. Verified surviving or respawned owners refuse replacement. Canonical full package rebuild remains in progress; S10 is open pending integrated build evidence.
+- `S09` The new --check-health path never opens Tauri UI or provisions host installation. It uses real existing-manager dispatch and requires a successful, settled native runtime status; refusal envelopes cannot count as readiness. CTest fixtures chain complete delivery and installed runtime readiness before manager-core lifecycle acceptance. Fresh installation and successful installed-manager startup evidence remain pending; S09 is open. A CMD-only projection failure was reproduced and fixed by normalizing the Windows executable before preparing PATH and authority pins; the parity test separately verifies inherited hidden drive entries. Full 240 native cases are running on the correction.
+- `S09` 240 passed, zero failed or ignored; build/windows-x64/desktop-native-tests.log. Corrected the native Windows projection to normalize supplied executable paths before deriving authority and PATH pins. Hidden-drive entries are tested separately from Python-visible environment parity. The TUI probe verifies workspace CWD and pinned storage independently. Native unit/live package success does not establish successful installed-manager dispatch or fresh provisioning; S09 remains open.
+- `S10` The canonical Release bundle rebuild has rebuilt product executables and entered stage replacement successfully after its shutdown checks. No new host installation was performed. Full installation-kit completion belongs to S08 and remains in progress. The shutdown helper reports graceful and force phases explicitly; each has a ten-second default deadline.
+- `S09` The rebuilt production executable returns exit 1 with `package_unavailable` during manager discovery; build/windows-x64/application-health.log. It never claimed a ready runtime. S09 remains open because a verified applicable installed-manager target and positive runtime startup have not been established in this command-runner context. The probe never provisioned or registered a host installation. Full installation-kit delivery remains in progress separately under S08.
+- `S08` Canonical bundle now builds and verifies the adjacent services kit; public app-distro delegates to complete bundle, while app-payload is internal. The actual staged kit contains the authenticated maintenance runner and user/machine version/registration MSI products tied by SHA256 to the exact application manifest. CTest overall remains FAILED (7 passed, 1 failed): bundle.health.cadrumo.exe reports `package_unavailable` during manager discovery. Public registry reads establish no registered EntryPoint in this runner's user or machine scope. Delivery completeness is verified; successful installed-manager startup remains S09, not established by build or launch probes. Build/package evidence: build/windows-x64/desktop-bundle-rebuild.log and package-acceptance.log.
+- `S09` The acceptance chain behaves as required: actual complete-package direct/CMD launch passes; actual shipping --check-health fails with `package_unavailable` during manager discovery; the isolated lifecycle test is NOT RUN because its shipping-health fixture failed, and CTest exits 8. Evidence: build/windows-x64/lifecycle-acceptance-gate.log. Read-only public EntryPoint discovery found no registration in either current-user or machine scope in this runner. No installation/login-start registration was performed on this development host. Successful installed dispatch/provisioning acceptance remains pending under S09.
+- `S11` 242 desktop tests passed in 222.81 seconds; source snapshot predates final adopted-core restoration, service rollback and tray changes. Those changed crates require final central compilation and checks. Nine Node tests pass. S11 actual freshly packaged optional-installation startup and takeover acceptance pending; not closed.
+- `S11` Independent review returned adoption/control, isolated root dispatch and producer health gaps; source fixes now implemented, real executable evidence pending.
+- `S12` 45 MSI unit cases and two actual fixture compilation/decompile cases passed without host installation. Machine boot broker uses genuine WTS user tokens and native SCM configuration verification; user login remains optional scoped registration. Installer rollback preserves original failure and explicitly reports service restoration failure.
+- `S12` Manager/installer full CTest run253.25 seconds: manager.rust34.38s and installer.rust19.95s passed, manager.supervision failed existing quit-during-backoff asynchronous test; executor investigating. S12/S13 actual installed boot/login, user-token worker startup, stopped-service repair and uninstall remain pending. No production boot/login registrations created on developer host.
+- `S13` manager.supervision passed66.34s after deterministic fixture launch-boundary correction. Configured desktop Clippy passed6.34s. Canonical bundle Release build running in build/windows-x64/manager-startup-package-build.log; package completion and executable health not yet claimed.
+- `S13` Health wrapper reuses canonical STRICT child environment with isolatedroot and cleared host overrides; bundle now gates actual shipping --check-health independent of `BUILD_TESTING.` Residual native IPC elevation rejection removed and existing identity test expanded; final package/native checks must include that source.
+- `S13` Do not close S13 or installed S12 from source review/compile/XML alone. Real client authentication/logout/profile-switch/crash/recovery matrix must run with final Background owner and freshly assembled package.
+- `S13` Replaced CMake semicolon-split Python -c kit validator with explicit module --kit; strengthened existing five defect cases to exercise actual module entrypoint. Six focused tests passed. Reviewer confirmed generated commands and nonzero propagation.
+- `S13` Three canonical bundle attempts refused changing shared checkout Python source. No fresh stage package or executable runtime health acceptance claimed; independent source edits remain outside this work's ownership. Installed SCM boot/login acceptance remains pending.
+- `S13` Final manager.rust passed in 57.20 seconds; driver rebuilt. Fourth canonical package attempt compiled documentation successfully in 259 seconds, then refused publication because another writer deleted `src/cadrumo/entrypoints/cli/operation_submission_flow.py` during the build. Product input fingerprint refused same deletion.
+- `S13` Package health, restored real CLI/TUI/MCP matrix and installed SCM boot/login acceptance remain pending. No current staged executable declared functional or updated. Requested pause of unrelated shared checkout editing through async user input; no response received.
+- `S13` Retry regenerated current input enrollment and compiled manager/Tauri successfully; Python product receipt refused when `src/cadrumo/entrypoints/cli/command_operation_table.py` was modified at 23:43:41 after build launch. No accepted fresh package or runtime health result. Remaining documentation job awaited before final build result.
+- `S13` Current Oct11 canonical retry assembled application payload and passed real headless embedded supervision/native IPC health with no service installation; scope confirmed no owned descendants after exit.
+- `S13` Original five-case suite ended four failures, one pass and four teardown errors in403.17s. Network logon has no Windows credentialset: login degraded process-only, reusable receipts unavailable, retirement cleanup correctly preserved unresolved custody. Not accepted as authenticated client/recovery proof.
+- `S13` Agent is rerunning unchanged suite using exact temporary no-trigger interactive-token task, dynamically discovered same-owner session and verified actual SID/LUID/interactive logon plus CredRead1168facility. No passwords/S4U/UI-driving/auth bypass, isolated runnerstorage, exacttask/bootstrap cleanup. Installer kit build remains active.
+- `S13` Real interactive-token run: login/logout/profile switching, exact-runtime crash recovery with durable operation continuation, and wrong-password refusal passed. Client matrix and manager-death case failed at old piped CLI profile-view calls without the accepted root profile-secrets-stdin channel. Existing cases refined to current CLI/MCP authentication policy; two-case rerun pending. Default shared MCP follows human selector; explicitly enrolled key remains pinned and unattended scope is checked. Runtime-down CLI assertion supplies real root credentials so absent secret input cannot mask unavailable runtime. Canonical bundle MSI generation and installed service acceptance remain pending. No authentication admission bypass introduced.
+- `S13` Canonical bundle completed installation kit delivery and validation, then correctly returned failure at mandatory real runtime health exit1. Same fresh image passed standalone health before and afterward; failing temporary-root native diagnostics were not retained. Existing health wrapper now includes bounded sanitized native failure codes before cleanup, preserving failure exit. Refined client test passed real CLI/TUI/shared-MCP A-to-B reads but failed a terminal operation immediately after A-only human signout while B remained selected. No production cause inferred or assertions weakened; diagnostic assertion now reports public terminal condition/error code and selected two-case rerun is pending. Isolated missing-runtime package test rejected actual image exit1 and cleaned temporary clone without changing shipping artifacts.
+- `S13` Diagnostic rerun passed the earlier intermittent shared-B terminal step but failed inapplicable root-secret input to bootstrap-destructive logout; corrected to the genuine receipt-resume logout path and requires `human_receipt_revoked` true. Manager takeover reached replacement readiness; stale-request assertion had called cleared frontend session accessor before raw request. Saved original session before manager death so raw old-wire request is now tested. Independent review found both corrections valid and strengthening coverage. Final two-case run pending. Native missing-runtime rejection now reports `cleanup_failed/manager` before temporary-root cleanup. CMD and CMake/MSBuild mandatory kit/health checks passed against the same freshly assembled package without rerunning dependency builds; complete producer first attempt remains recorded as failed, transient cause unresolved. Installed SCM boot/login proof remains pending.
+- `S13` Final matrix call255.846159s passed with real packaged binaries, genuine dynamically selected interactive token and working native Credential Manager. Covered private authenticated CLI/TUI/shared-MCP access, A-to-B selection, cross-profile refusals, explicit unattended API-key A exception, A-only signout preserving sharedB, runtime crash and manager recovery with verified new boot, logout server revocation, shared-access denial after logout, independent approved-key scope, and runtime-offline refusal. Earlier intermittent terminal failure not reproduced in two later runs without production changes; preserved failing evidence and strengthened public terminal diagnostics. Final manager-death case remains running; full producer retry awaits owned-process cleanup.
+- `S13` Final two-case run exit0: packaged client matrix call255.846159s, manager-death successor case call140.792879s; JUnit lifecycle-interactive-final.xml. Native genuine SID/dynamic session/logon2/working Credential Manager verified. Tests proved actual raw stale request refusal and runtime-confirmed human logout. Startup58.681/57.829s, cleanup0.050/1.642s. Exact temporary Task Scheduler tasks/scripts removed, scratch removed and owned process checks empty. Three unchanged native cases previously passed same payload/cohort/context, so all five cases have valid scoped passing evidence across runs; this is not a single green full-suite invocation. Full canonical producer retry started after process cleanup. Historical intermittent MCP terminal operation failure and first producer health failure remain preserved and unexplained; strengthened diagnostics available. Installed SCM boot/login acceptance still pending.
+- `S13` Two canonical producer retries correctly refused completion when another session changed enrolled product/documentation inputs. No consistency gate was bypassed.
+- `S13` Created detached isolated snapshot Y:/code/cadrumo-worktrees/runtime-health-build-20261011 at cf02c41d351ea740500521fcaff58750594e7742 with 201 authored paths; coherent inventory SHA256 6e187719f388b8b8a62ffe20c72f85f5a92dd3485b298f40027fb0b8aaf7cf16; private prerequisites copied without secret output and caches independent of original.
+- `S13` Canonical snapshot bundle started; result pending. Review found unchanged native/auth/profile/private-read behavior; ledger composition changed, so fresh existing client matrix planned on new packaged cohort. Installed boot/login service acceptance remains pending.
+- `S13` Snapshot producer first failed correctly at missing WiX compiler discovery, preserving build/snapshot-package-build.log. Verified existing installed WiX 5.0.2+aa65968c and provided compiler folder on build-process PATH; no source or admission checks changed.
+- `S13` Canonical snapshot retry exited0; log build/snapshot-package-build-retry.log explicitly confirms packaged supervision and verified runtime IPC without installation. Generated Release bundle command executes installation-kit validation then actual packaged cadrumo.exe --check-health via isolated native process scope; four MSI products compiled/decompiled and delivered sibling services/kit.json.
+- `S13` New package path Y:/code/cadrumo-worktrees/runtime-health-build-20261011/build/windows-x64/stage/Release/app/cadrumo.exe. Single existing fresh-cohort client matrix dispatched using snapshot-own builder and genuine interactive user context; result pending. Do not infer installed boot/login service acceptance or full GUI interaction coverage.
+- `S13` Fresh cohort JUnit build/windows-x64/testing/Release/lifecycle-fresh-cohort.xml: 1 test, 0 failures/errors/skips; suite270.648s, testcase267.348s, startup58.029s, cleanup0.057s. Real client private access/profile switch/logout/runtime crash recovery/offline refusal pass, packaged TUI adapter scope only.
+- `S13` Exact temporary task/scripts/scratch/owned processes cleaned. Snapshot own builder/source imports/driver and full package verified; shipping exe SHA25635d284278ab9c6a76fabf49651b78d37381ec61a09304972b8836ba4aaaf633a.
+- `S13` Final review PASS bounded package/client scope; overall plan stays PENDING installed SCM boot/login/repair/removal and GUI signal/subscriber/popup acceptance. Historical failures preserved and not claimed diagnosed by new passes.
+- `S11` Original-workspace authored backend changes copied into owned frozen snapshot runtime-health-build-20261011; source hashes build/manager-signals-source-inventory.json; results build/manager-signals-unit.log, manager-signals-all-unit.log and manager-signals-clippy.log. No bare Cargo or host installation. These backend checks do not establish new GUI package or installed-manager boot/login acceptance; S11 remains open pending integrated frontend and real package checks.
+- `S11` Final frontend evidence build/windows-x64/desktop/test-results/manager-integrated-final.log and manager-integrated-final-results.json. Browser presentation proof is separate from native authenticated IPC and shipping package execution. StrictMode replays retain pending read for unchanged Host; transport replacement detaches, stale queued reads refuse before dispatch. Missing manager immediately gates private badge and views; ready requires fresh canonical authentication. Earlier 109 pass/6 fail retained in manager-integrated-regression.log, resolved in final run. S11 remains open pending shipping package and actual supervision acceptance.
+- `S11` Full frozen authored source inventory records 24239 source files; current canonical CMake bundle producer remains active. Actual shipping crash-recovery health and missing-runtime rejection evidence remain pending; S11 remains open.
+- `S13` Independent review passes corrected native caller/worker token admission, timeout owner cleanup, prelogin inventory fence and retained cleanup ownership. This is policy/unit/import evidence only; actual disposable guest execution and boot/login/scope/upgrade/rollback remain pending. S13 remains open.
+- `S13` Mandatory immediate/hold campaign now exercises shipping Cadrumo takeover with real fault, verified Cadrumo parent/token/Job custody, boot lifecycle confirmation and authenticated protected clients; scope phase uses authentic existing native unsuccessful receipt and absent candidate resources. This is reviewed implementation/policy evidence; guest is completing OS setup and no live installation acceptance is claimed. Upgrade refinement is in progress. S13 remains open.
+- `S13` Private actual P1/P2 campaign source frozen; actual real guest execution and canonical producer remain pending. Full same-scope acceptance can pass only from actual final cleanup after all required phases and settled native resources. CMake cache finalization argument generation awaits serialized configure verification. Windows first login had no HTTPS channel and failed graceful shutdown; exact-owned QEMU quit and offline storage migration are diagnostic recovery, not clean baseline evidence. No host product installation performed.
+- `S13` Actual canonical health refused public CLI helper execution timeout30seconds before crash injection; duplicated failure entries may name one child. Unchanged package reproduction passed, cause unproven; failure reporter now includes existing public helper PID/timings without relaxing deadlines. Canonical producer retry is running. Docker/QEMU LTSC clean baseline verified native UTC across real reboot, UAC1, valid pinnedHTTPS, helper absence, genuine ACPI stop; no product installed. Required installed user/machine boot/login/upgrade acceptance remains pending.
+- `S11` Actual retained shipping trace revealed eight startupCLIhelpers while supervisionStarting. Originalsource now waits actualRunning beforecanonicalstatusread and rechecks supervisor afterawait, preserving90/30second deadlines/typederrors/installedverifiedStatus. This reduces measured unnecessarywork and preventsstaleRunning readiness; priorintermittentCLIstall cause remainsunproven. SnapshotP1producer unchanged; overlay/nativeunit+Clippy+actualP2health/publiceventorder and missingruntime refusal pending. No generic test seam, protocol or authmock added.
+- `S13` Original-only helper writes frozen at reviewed SHA receipts; snapshot overlay waits for active canonical producer. Shipping import verified no `pytest/dev._paths/product` tests are available. Initial default-marker raw-token selection executed zero cases and is not evidence; corrected explicit `windows_only` selection passed. Docker Windows guest warm baseline authenticated native identity/UAC/time/product absence passed; no product campaign acceptance yet. Full installed boot/login/ordinary-user takeover/upgrade/cleanup remain pending; no Step closure.
+- `S13` Integrated installed-policy lane rerun after linked-token correction passed in2.68s; evidence build/ordinary-gui-integrated-policy.log and run20261011T085024.168670Z-pytest-26568-f7e84f9e. Deselected lanes and real guest campaign are not claimed.
+- `S13` Complete producer exited0 and actual packaged verified IPC/exact runtime crash recovery passed. Missing kit/runtime each produced exit1; exact components restored. Configuration proof initially asserted unnormalized wrapped CMake diagnostic text and failed; corrected whitespace-aware observer reran positive/negative/default-restoration checks successfully. No installation target executed on host. Four independently reviewed helper owners overlaid with SHA checks; all7match actual shipping minimal-import receipt. Immutable P1 seal and current lifecycle-driver/native manager checks running; real Windows campaigns pending.
+- `S13` ImmutableP1archive SHA762dbf3bce934a989ea7c22db9a18c7b14d8ad2a5eaeece1c5eeb9b4c88731d5 bytes1966872113. Originalbuild/runtime-lifecycle-cohorts/0.6.0/cohort.json binds actualappmanifestd5b66d3725164aefa60033ed98314bacefdbdade93f1f250138636afceac5c64 and reviewed7helpers. Exact hostInteractiveToken CTest and guestusercampaign now authorized/running; no fullacceptanceclaim, no hostserviceinstall. P2source/binaries remain untouched untilhostP1checkssettle.
+- `S13` Actual host launch fixture failed PermissionError13 reading kit.json; health and5lifecyclecases blocked/notrun, notaccepted. All6publishedkitfiles hadprotectedOW/SY/BA ACLs from promotedprivateTemporaryDirectory. ExacthostTasksettledandremoved; noappnativeprocesses orhostproductinstallation. Fixnormal-inheritedUUIDscratchandalwaysreplaceverifiedcopiesinclmatchedbytes; descriptorlast/ownedcleanup. Canonicalkitgate nowrefusesprotectedpublickitfiles beforeparse/hash. Frozenoriginalpublisher/test hashes aaf734.../59b6d4... overlaid; fullcanonicalcorrectedP1producer84235running. Originalreviewed5linemanagerreadiness alsooverlaid afterfailedhosttaskfullysettled, SHA13ceb2ae0ba2dc95981c1c41ee82ec4b7c92e5a82cce32b2c68525584b1ab574; nativechecks/health/retestpending. OldsealedP1archive retainedfailed-permissions evidence; guestnoinstall/preflightnotpassed, Windowscampaignpending.
+- `S12` Actual genuine RDP guest raw token/LSA kind10 and nonexistent CredRead1168 passed, but previous installed guard refused shipping-native bootstrap default pin before any installation; preserved native-guard-bootstrap-pin evidence. Reviewed correction frozen e591006deed13b3e9cbcc88b90b851ef76eb2ce1c925d0af0732ba67b851820d; guest guard-only candidate proof pending. No product installed; S12 remains open.
+- `S12` Final reviewed original hashes installed.py abc56df13ca66d785b79f929dfa6949b630c7e8c0c1a62a20699f619c8084aae and `test_windows_msi.py45e6ecc55e5b97e4155390389d8146f25113e69359511629b7f778b7d95fbb51.` Real candidate pin passed, freshness refused cache/pywin32 generated by first guard's win32com.client import; no data deleted or cache permitted. Freshness now runs before COM discovery. Original build/installed-guard-integrated-policy.log; run20261011T093121.235478Z-pytest-32648-f95b7324. Actual selected guest clean offline snapshot and firmware restore passed after ACPI exit0; genuine restored guest guard-only proof pending, no product installation.
+- `S12` Candidate-only proof exit0 at09:38:35Z, evidence guard-candidate-abc56df/f9318f04c8194aad856c27f61b6bc42a; selected UUID/SID/elevation/raw interactive LSA/CredRead checked internally, task settled/deleted. installation=false and `cohort_accepted=false.` Old failed package used only as interpreter infrastructure. Freshness checked before cache-producing COM import; no cache deleted/allowed. Second offline clean restore required before accepted hold; actual product installation still pending. Preview-channel canonical-path refinement separately in review, current stable candidate unaffected.
+- `S12` Final frozen installed.py e3ca1fec4f033e21f97562e1b87c22fb237643e799f14819c9d7edf2eefd1055; `test_windows_msi.pyca5b39843298939f022c9073edd94a223c7c999a6f22fd1fa75319135bed45c9;` READMEc7b98d1c6e87b61ebe61ed3a9a77a9396103f95bf67a962832b543e8cccfeb86. Guard derives selected shipping package manifest stable/preview channel via already verified bootstrap layout, preserving exact native KnownFolder destination and fresh-before-COM. Sourcebuilder without pin stays stable. Actual priorstable abc56 guest proof retained separately; final held install must use final helper hash. build/installed-guard-final-channel-policy.log run20261011T094138.446293Z-pytest-3548-185e7955. Corrected producer84235 active; snapshot not mutated.
+- `S13` Corrected producer84235 exit0: build/shipping-acl-fixed-package-build.log actual packaged supervision+verified runtime IPC without installation, exact runtime crash recovered. Final manifest1eeef6657c72d088d5203935279b2b11b6a367f702419a7b04ba45672e67ee19. Real missing kit/runtime verification exit1, durations1.225s/19.754s, both restored; shipping-missing-components.json refreshed. Final minimal import proof original build/runtime-lifecycle-minimal-import/ac9d3a7f7e51407599b07ae05275eb20/minimal-import.json and all7snapshot owner/nativePython/manifest hashes reverified after producer. Three reviewed final guard/test/README owners overlaid with bounded SHA inventory. Native230 unit and Clippy session93405 active; genuine LeastPrivilege host CTest and immutable seal/guest install still pending. S13 remains open.
+- `S13` Actual ordinary-user bundle.launch fixture passed 9.31 seconds and bundle.health passed 81.67 seconds in run b96a0f3090fb4a16b92e448e7de6c7b5; full five-case lifecycle and cleanup remain in flight. No installed acceptance claim or Step closure.
+- `S13` Sealed ZIP SHA25622d2018df8b5095a17ef141dc77f525172ecd72bf3cb4355d0e860c8bed58f50,1966764157 bytes. Final installed guard e3ca1fec verified in transferred owners. Product hold has not started; host five-case final verdict remains pending, operation-lease timing concern unproven until JUnit. No Step closure.
+- `S13` No guest installation or P2 build. Shipping health success is insufficient for authenticated lifecycle acceptance. MCP admission and profile-view submit timed out; two later setups missed verified readiness; final manager adoption missed verified readiness. Driver exit69/cleanup deadline35s are failures too. Actual stdout, outer and inner JUnit, runtime-fault and timing properties retained for focused diagnosis.
+- `S13` Driver failure events preserve original failure even if evidence writing fails. Existing manager event file is retained through bounded whitelisted JUnit properties before private scratch cleanup. Focused actual login/logout run bc3890b90a68441a92db94b04ff7537c is diagnostic=true acceptance=false, final result pending. Shipping stage and all production authentication/control deadlines are unchanged. Automatic approval review rejected deletion of prior failed root with generic blocked-by-policy; root retained, no credential cleanup claim.
+- `S13` Diagnostic receipt acceptance=false. No production operational change occurred; failed full b96 remains unresolved, not reclassified. Focused startup44.9526,password9.5303,logout0.3509,cleanup1.5861 seconds; new JUnit `manager_events` retained last64 public facts with zero invalid lines and no `driver_failed.` New full5 run b716114f4d2d494aa2b0adc89c5d5422 starts with build/archive/guest mutations idle. Full and installed acceptance remain pending.
+- `S13` Concrete driver defect: diagnostics.snapshot(after) retains lifecycle history; old consumer replayed/flushed retained facts every50ms and timestamped them again. Final original fixture fe1848... consumes actualcore sequences once; harness113361..., conftestc1169..., policyd22b... enforce monotonic unique u64 facts, legitimate gaps, sequenceless terminal failures and nonempty debug evidence. This proves a driver bookkeeping defect, not the runtime deadline cause. Current old-binary full b716 continues unchanged; final corrected native compilation/real acceptance pending.
+- `S13` Corrected driver frozen owners fe1848/113361/c1169/d22b guarded into snapshot and compiled; build/shipping-driver-cursor-overlay.json and shipping-driver-cursor-build.log. b716 inner five cases/zero failures/errors/skips plus three CTest fixtures passed, measured pending operation continuation579.774s and exact runtime detections0.191/0.547s; outer adapter FAILED after CTest with masked RuntimeError, root retained and no acceptance claim. Exact task removed and all native names zero. Existing ignored adapter now preserves `ctest_returncode,` `failure_stage` and public `error_code` without loosening guards; actual corrected full rerun pending. Installed sealed seven-owner reuse is applicable: only harness.events changed and installed campaigns never call it, other six owners identical; retain immutable old owner provenance. S09/S11/S12/S13 remain open; no guest product installation, reboot/login/upgrade acceptance yet.
+- `S13` Corrected e90 full run settled: launch and actual shipping health passed; runtime lifecycle 4/5 passed, zero errors/skips; CTest return8 and outer `required_cases_not_passed` rejection. MCP `authorization_poll` `runtime_deadline_exceeded` plus secondary approval refusal remain unresolved. Strict core event streams valid across all five; exact task removed and failed evidence retained.
+- `S13` Reviewed diagnostic-only `test_clients` SHA5fc346 original/snapshot preserves execution deadline/auth/assertions and records both actual requester/approval failures with bounded public fields. Overlay receipt build/shipping-mcp-diagnostics-overlay.json in isolated snapshot.
+- `S13` Ignored local adapter now checks all eight manifest executable images plus debug driver, exact one existing client-matrix node, both fixtures, diagnostic=true acceptance=false. Focused764 actual LSA/CredRead passed but initial WMI `native_image_unobservable` guard failed before CTest or test execution. Native limited-query image observation correction assigned; no authentication bypass, ownership weakening, foreign termination, or failed-root cleanup retry.
+- `S13` Existing immutable installed-campaign seal remains applicable: updated events() is not called by installed campaigns, other six helpers unchanged. Windows guest still paused before any product installation. S09/S11/S12/S13 remain open.
+- `S13` 4e diagnostic exact1 client node/3CTest fixtures, zero failure/error/skip; genuine Highest token/LSA2 LUID36849311, real credential facility. Actual key enrollment/private clients/crash recovery passed; strict15event stream and all9imageabsence proved, exacttask and markerownedroot removed. diagnostic=true acceptance=false, e90 ordinary-user full failed verdict unchanged.
+- `S13` Existing bounded conftest exporter now preserves only known static origin owner/function/positive line, no rawpath/privatecontext. Reviewed originals SHA3b4b92/953897, guarded copy receipt isolated build/shipping-runtime-faults-overlay.json. No protocol/timeouts/auth/production changed. Actual4e TimeoutError origin unattributed; logs gone at prior successful teardown, no invented causality.
+- `S13` Genuine Least user installation on exactDocker/QEMU guest passed native/fresh root gates then failed before ownershipcommit: `version_installation_failed,` native Windows Installer1304 writing verified packaged correction JSON at absoluteUTF16length261; finalMSI1603. `Secondarycleanupnative_removal_owner_unknown` retained. ExistingNTFSLongPathsEnabled0; survivingprefix actualSIDFullControl/noDENY/no reparse, removedancestorACL unknown. Preserve failedguest/task/run/encryptedcampaign/MSIevents, no retry/reset or installedacceptance claim. Native/packaging path remedy under read-only investigation.
+- `S13` Prepared private snapshot0.6.1 successor only sixauthorities+uv.lock with exactpreimageguards; actualoffline lock changedonlyfourfirstpartyversions, canonical versionparityPASS. Originalworkspace and sealedP1 unchanged; canonicalsuccessorbuild pending. Broader snapshotdiffcheck found unrelated existing Hungariantranslation EOF issue; touchedsurface scopedcheck passed. S09/S11/S12/S13 remainopen.
+- `S13` S13 remains open. User-authorized bounded physical corpus basenames are governed by the dated 2026-10-11 product-packaging and corpus-companion amendments. Binary source bytes and source authority unchanged. Guarded 97 matching migration preimages and 101 verified postimages overlaid only into isolated runtime-health-build-20261011 snapshot; receipt build/shipping-corpus-path-repair-overlay.json. Native 36 tests passed, 0 failed, 1 pre-existing ignored installed-kit case; no installed acceptance inferred.
+- `S13` Initial Clippy check failed on an existing alignment expression and new fixture tuple complexity; both corrected without suppression. Canonical authority publication passed with identity ed2920f96eaa2c3ae6edca8b02327897d032eccb139de1d5c9c36efa550cb4ba. New canonical bundle build is pending; old 0.6.0 seals and genuine MSI installation failure retained. Shared installed MCP key enrollment added to existing helper and selected policy checks passed, but genuine guest execution remains pending.
+- `S13` Migration path ledger records the authorized 68 exact corpus/companion renames and 29 locator rewrites from the retained receipt; source bytes unchanged. Scope remains pending installed acceptance.
+- `S13` Controller transport refinement requires explicit ExpectedVersion; verifies digest-bound cohort version, new transport receipt, application manifest and kit before plans. Existing P1/P2 campaign roles remain, hardcoded product-version mapping removed. Root reviewed bounded ZIP inventory reader and exact guest transfer flow. Agent executed local read-only negative checks only; no guest transfer, reset or product mutation. Failed campaign stdout/stderr/status/request additionally copied to retained host evidence before future offline reset.
+- `S13` Preserved all failed30d9 installation streams/status/request/events before exact disposable guest baseline reset. This reset is not successful native uninstall/credential cleanup evidence. Product installation remains pending canonical0.6.1 bundle and new immutable seal. Private sealer compression level1 applies only to new archives; prior immutable cohorts preserved.
+- `S13` Actual initial native boot confirmed39892; injected death observed and manager launched67060; endpoint HELLO preceded atomic boot publication (retained .tmp with absent boot.json). Harness now converges under existing deadline before native ownership actions and confirmed recovery; never accepts mismatch. TemporaryDirectory preserves primary and storage on failure; cleanup remains required on success. Existing bootstrap verifies products itself; remove duplicate msi-verify dependency only. Guarded3-source snapshot overlay receipt and failed log/root retained. Actual shipping health recheck running; no seal or installed acceptance claimed.
+- `S13` Shipping health now waits within its existing deadline for verified IPC peer and boot publication to converge; failed storage is retained, successful owned scope is cleaned. Actual direct health recheck passed, canonical bundle 48933 still pending; no installed acceptance claimed.
+- `S13` P2-only original CMake msi now depends on `installation_prepare` because `compile_products` owns admission and authoring at entry plus final readmission. Exact four-MSI positive compilation and modified payload refusal before any WiX or published/authoring byte mutation passed. This second refinement is deliberately not overlaid into the running P1 snapshot.
+- `S13` Repaired 0.6.1 canonical shipping cohort passed kit admission plus actual packaged embedded supervision, verified native runtime peer, exact runtime termination, manager-owned recovered boot publication and successful owned-scope/storage cleanup. Sealing underway, installed campaigns still pending.
+- `S13` Disposable guest froze before product transfer: clock frozen, busy vCPU0/blocked vCPU1, no OOM, pinned transport unreachable. Exact fixture bounded ACPI timeout105s then QEMU SIGTERM/container exit143; offline clean snapshot1+firmware/MAC guard+qemu-imgcheck passed. Private one-CPU diagnostic override only; original compose remains two CPUs. Native initial clock/one-CPU/boot and genuine RDP dedicated owner observed, sustained stability and installed acceptance not yet claimed.
+- `S13` P1 canonical actual exit0 and immutable seal exit0 secured before changing snapshot; archive SHA8603ebc07a8f208031f5466dfb6f5bad7fc52f7137b42f8bb53b5201e3ec008a bytes1151383003. Transfer underway; user installed hold pending.
+- `S13` P2 private snapshot guarded overlays and seven-authority version update preserve preimages in shipping-successor-admission-refinement-preimages and successor-0.6.2-version-preimages with distinct receipts and continuation digests. Original release version0.6.0 unchanged. P2 canonical bundle started; no completion or installed acceptance claimed.
+- `S13` Actual guest version MSI installed status0 then `rollback_publication_fenced;` unmanaged product State5 remains while version tree absent and publication Pending. Original cause not retained by old helper. Repair returned `native_preparation_refused.` Neither installed lifecycle nor cleanup passed; all failure evidence retained. One-vCPU fixture is a diagnostic experiment, not proof of the previous two-vCPU freeze cause.
+- `S13` Retained exact native stdout from diagnostic fccf4eaaccaa440b97571f45126690d4 identifies original cause `version_inventory_failed,` with `rollback_publication_fenced.` Candidate verification before registration rejects actual installed files; package ZIP hash pass did not establish installed integrity. Exact settled task removed after streams/status/request retention. No acceptance or native cleanup claimed.
+- `S13` New diagnostic native compilation/tests pending serial canonical build. Actual native installation remains `version_inventory_failed.` MSI metadata/source binding checks exclude naming, ordinary unversioned stale inputs, feature and large-sequence omissions; 97 versioned files lack MsiFileHash so no whole-cabinet byte proof. Runner digest bound into every MSI prohibits substituting a new diagnostic exe into immutableP1. Coherent runner/MSI rebuild required.
+- `S13` Native suites actual exit0: installer36 passed and1preexisting ignored; application diagnostic/privacy cases and integration groups passed. No installed acceptance inferred. Initial native candidate rejection remains unresolved; coherent diagnostic rebuild and actual fresh guest execution pending.
+- `S13` Actual configured CMake Clippy exited0, checking application and installer after diagnostic overlay. Coherent canonical runner/MSI bundle rebuild now running; fresh installed candidate result still pending.
+- `S13` New separate precommit-rollback phase preserves shipping artifacts and changes only copied contract ABI. Thirteen policy cases pass with zero failures/skips; independent review PASS. Original owner hashes installed.py29f4a78ef2ac99304b3a1aba87e8335200d6e9b701f7ac11c6ff25a2c2b26488 and `test_windows_msi.pye39223e797098fa179c5fa948a2dc5e23c0e6d7f758cb76c9bfd7348b467e6bd.` Real exact-SID/context MSI rollback remains pending; source snapshot and immutable cohorts unchanged. Private existing transport enum/state path refinement parses cleanly; guest phase cannot run until a coherent sealed owner cohort includes the new phase.
+- `S13` Native candidate failure `manifest/io_not_found` retained before `rollback_publication_fenced;` exact corrected SID context2 product remains State5 while files absent and publication Pending. Postfailure first manual unbraced-GUID query returned87, preserved and superseded by corrected exact products receipt. No installed acceptance Step closes.
+- `S13` Complete107774346-byte native MSI log retained sha25634feccd8ba9e6d55fe1440df0db83bf3971bd232ed16c0d634d0c116709a2c8d. Manifest correct target but ActionNull; actual35640-component singlefeature violates documented1600limit. Rollback1402 native5 proven. Testowner implements bounded mandatory features and actualdatabase/native preflight rejection; no installed Step closes.
+- `S13` Five-owner frozen integrated review PASS, 1600-feature component bound enforced in actual compiled tables and held native pretransaction MSI; exact new user install and native rollback still pending. Corrected Clippy `manual_dangling_ptr` with `without_provenance::<u16>(1)` preserving transactional open numeric mode. First four-product invocation selected zero external-tool tests and exit5; explicit -m empty rerun executed one real external-tool test, pass7.12sec; report var/storage/development/.logs/test-runs/2026-10-11/20261011T175849.651927Z-pytest-68532-dd75156b/run.log. No accepted package or installed readiness claim.
+- `S13` Source/config-only results reuse gate author run43.66sec at var/storage/development/.logs/test-runs/2026-10-11/20261011T175844.124373Z-pytest-35268-935ef5d2/run.log and corrected parser check. Synchronous default Windows desktop bundle requires selected pinned guest/config, genuine fresh current-P2 precommit failure/rollback, full P1-to-P2 user and machine installed campaigns and native cleanup, no Pending obligations, exact task/RDP/guest settlement. Same-invocation ZIP app/services byte/name binding bookends execution; all seven campaign owner source hashes bind both immutable cohorts. No arbitrary saved receipt satisfies acceptance; independent candidate producers remain buildable. Corrections retained complete failed native task/boot evidence before removal and exact RDP container custody after client exit. Live CMake failure propagation and installed campaigns remain PENDING; no completion claim.
+- `S13` Installation acceptance remains pending; native State5 rollback failure retained. Original-only grouping refinement subsequently guarded into snapshot after immutable 0.6.2 seal. No step closure.
+- `S13` User-directed cleanup: canonical cargo clean on exact inactive debug fixture targets; no shipping release directories, packages or retained logs removed. Archive relocation cancelled before move.
+- `S13` Actual State5 context2 exactSID, missing release files and Pending reservation retained; installation is incomplete. Source diagnostic refinement does not repair native rollback and does not rewrite failed evidence.
+- `S13` Malformed SHA normalized into expected ABI rejection was caught in review and corrected; native finite diagnostic allowlists preserve failures without paths/arbitrary text. Required installed steps remain open.
+- `S13` Fresh guest native e326 install still failed with manifest `io_not_found` after all features selected; retained evidence and exact task deletion plus guest stop receipts. Producer and native preflight now refuse the observed over-budget package. Four compiled products and fresh higher-version installed acceptance remain pending; do not close S09/S11/S12/S13.
+- `S13` Corrected invocation used the existing CMake-configured pinned WiX5.0.2 directory only; all four genuine compiled MSIs and mandatory-selection defect regression passed. Canonical 0.6.3 producer with full kit and shipping IPC health started; full installed default-build acceptance remains pending.
+- `S13` Fresh corrected full package build remains running; actual guest installation, reboot/login, upgrade and native cleanup remain pending. S09/S11/S12/S13 remain open.
+- `S13` All four corrected full 0.6.3 MSI products compiled and actual database guards passed; installation kit producer and shipping health remain running. No guest installation or full acceptance inferred; all four outstanding steps remain open.
+- `S13` Installed failure retained; canonical native launch test environment corrected; actual repeated installed acceptance remains pending.
+- `S13` Installed acceptance remains open: the actual native install timed out after900 seconds and cleanup returned `native_removal_owner_unknown.` Frozen canonical desktop checks are in progress; the passed producer predates the new readiness refinement and is not installed acceptance.
+- `S13` Clippy identified `items_after_test_module` in the new health test module. Correcting placement without suppressions; unchanged252 behavioral checks are reusable. Installed acceptance still fails.
+- `S13` Native phase compilation and real installed rerun remain pending. The initial real command test invocation failed only its platform newline expectation; corrected portable assertions passed with genuine captured output. No900-second increase or integrity-check removal.
+- `S13` Only test-module placement changed; reused the unchanged252 passing behavioral tests. Shipping binary rebuild and real installed acceptance remain pending.
+- `S13` The new phase test ran in native installer.rust; no new skip or expected-failure marker. Actual next shipping and installed run remain pending.
+- `S13` Producer and headless shipping health passed; genuine installed boot/login/two-version acceptance remains open.
+- `S13` Source-stage health passed; preserved C-path health failed manager `timed_out` and secondary `cleanup_failed.` Genuine guest installation is withheld; retained finite facts in var/storage/tmp/cadrumo-package-health-2fhi8py9/health-failure.json and build/sealed-0.6.4-native-phase-candidate-health.log.
+- `S11` Independent scoped source review passed final cancellation/primary-failure handling. Named Clippy targets absent; correcting through existing CMake-projected Cargo commands. Final manager refinement checks and actual copied-path replay pending. Existing180/900 budgets and all package/authentication admission remain unchanged.
+- `S11` App-payload diagnostic rebuild and actual copied-path startup replay remain pending; original sealed 0.6.4 C-path health failed and remains unaccepted.
+- `S13` App-only diagnostic image is not an accepted full installer cohort; copied-path actual health running. Initial copy receipt check used nonexistent bin/cadrumo-manager.exe and failed before launch; corrected actual root manager path hashes pass.
+- `S13` Primary remains manager `timed_out` at180 seconds; new phase diagnostics isolate full PackageManifest inspection before identity or launch. Exact-owned host now `stops~0.1` seconds after timeout, with no `cleanup_failed.` Failed image/evidence preserved; no installed gate claim.
+- `S11` Initial independent review found a worker-panic lost-result deadlock despite passing baseline tests; corrected with per-task bounded panic result and deterministic drain regression. Final independent source review passes. Actual fresh copied-path health and installed campaign still required; no performance improvement claimed.
+- `S13` Full installer kit/default synchronous installed campaign still pending; app-only diagnostic health pass does not close S13 or supersede failed immutable installer cohorts.
+- `S13` Independent phase/custody/order review passes; full repaired four-product kit producer is running, and actual user/machine installed acceptance remains pending.
+- `S13` Actual shipping health log build/shipping-0.6.4-parallel-verification-health-canonical.log belongs to the current settled application payload; installer producer and installed-service acceptance remain pending.
+- `S13` An earlier manual health invocation used `CADRUMO_STORAGE_ROOT` instead of configured `CADRUMO_LOCAL_STORAGE_ROOT` and failed before launching the application; retained as build/shipping-0.6.4-parallel-verification-health.log. This invocation error is not application acceptance.
+- `S13` Explicit native-installer producer and kit checks passed with current four MSI products and native runner; this is not default bundle or installed campaign acceptance. New immutable 0.6.4-parallel-verification-candidate sealing is in progress.
+- `S13` New immutable repaired cohort archive SHA256 42c64f7e26728ff18585de271aacc04c2ac5b11ab2317c8b745b4ec255e50361, 1148612026 bytes. Copied C-path supervision now passes; guest copy, installed publication and both-scope full acceptance remain pending.
+- `S13` Actual fresh-guest user hold task 6485e5bcc6594fa9afb4235f3500f680 started 2026-10-12T02:10:48.6989659Z, native maintenance PID 5044 in genuine session 1 began 02:11:16.433709Z. Campaign remains running; a successful MSI product event is not installed runtime or full acceptance.
+- `S13` Real user hold completed exit1 at2026-10-12T02:21:18.794Z: no kernel-verified installed same-logon version manager appeared. Native unregister returned `native_rolled_back/native_removal_refused.` Retained task streams/status/campaign/native failure, manager modules/thread and Job/window observations under build/runtime-lifecycle-windows-guest/evidence/parallel-verification-pilot/user-hold-6485e5bcc6594fa9afb4235f3500f680. Static owned window `manager_startup_failed` confirms explicit product error, not missing PE imports. Native publication succeeded but supervision did not; no accepted package/P2/full campaign is claimed.
+- `S13` Initial activation source refinement remains under investigation: launch acknowledgement is rejected when actual helper settlement fails. Immutable original failed user installation and native unregister receipts preserved. No full installed campaign, P2 or default bundle acceptance claim.
+- `S13` Only Explorer helper completion allowances changed to 60 seconds after timed native ShellExecute evidence; existing manager90/readiness180 budgets and all authenticated ownership checks retained. Fresh installed full acceptance and rebuilt product checks pending; S09 S11 S12 S13 remain open.
+- `S13` Authentic unregister/resources-absent succeeded but exact versionmanager6588 stayed alive after its runtime468 exited. Actual ownedwindow observation shows sessionwindow and no static failure/modal text; stable registration entry absent. Failure retained for implementation diagnosis; no gate relaxation or Step closure.
+- `S13` Exact manager6588 recovered through guarded `WM_CLOSE` without forced termination; original native unregister manager-exit acceptance remains fail. Shipping producer rebuild and genuine installed popup/unregister replay pending. No Step closure.
+- `S13` Existing user cleanup now reuses canonical activation against retained manager, observes exact manager-owned native popup and requires fact before reporting cleanup passed; authentic unregister still executes if observation fails and retains original failure. Normal two-CPU exact fixture recreated, baseline restored, pinned native identity/readiness passed; initial controller port0 readiness failure retained. Actual shipping/installed replay remains pending.
+- `S13` Retain the original popup observation error even when authentic unregister also fails; type-only cleanup note. Real native producer/installed popup replay remain pending.
+- `S13` Complete current0.6.4 private package rebuilt; real executable health and fresh immutable cohort seal running. Default ALL installed acceptance remains pending; no Step closure.
+- `S13` Exact MSI user unmanaged State5 persists with absent candidate files and Pending publication; fixture reset is recovery only. P2 producer and installed campaign remain pending; all four open steps remain open.
+- `S13` Fresh-only native compensation is source-reviewed; configured Rust tests, Clippy, rebuilt immutable cohort and actual compensating transaction are pending. Original cause and Pending fence remain on all uncertainties. Full user/machine acceptance and four plan steps stay open.
+- `S13` Native kit check uses existing staged 0.6.0 package without installation. Source-reviewed compensation still requires fresh sealed snapshot cohort and genuine guest rollback. Old 0.6.5 producer remains unsealed. Auto-review rejected removal of settled proof scratch with blocked by policy; evidence retained. No Step closed.
+- `S13` Guarded seven-owner overlay with retained preimages completed after prior unsealed producer settled. Corrected 0.6.5 native-installer producer running; installed compensation and full acceptance remain pending. Retired Rust Debug cache deletion rejected by automatic review with blocked by policy; caches retained. No Step closed.
+- `S13` Application and native binaries rebuilt, but installer preparation failed copying its fresh temporary payload. Failed temporary copy is absent; no corrected immutable cohort was sealed. Source correction and native suites remain passing. Real guest UUID/SID/two-CPU clean baseline and genuine login are ready; actual compensation and full acceptance pending. Y drive reached only a few MiB and now lacks rebuild capacity. Automatic review refused confirmed cache/temp deletion with blocked by policy; those paths remain unchanged. User asked for at least6GiB free before retry. S09/S11/S12/S13 remain open.

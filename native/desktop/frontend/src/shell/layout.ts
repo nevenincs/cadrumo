@@ -124,10 +124,9 @@ export function loadState(): { prefs: Prefs; layout: Layout } {
       tuiShown:
         typeof l.tuiShown === "boolean" ? l.tuiShown : DEFAULT_LAYOUT.tuiShown,
       splitRatio: share(l.splitRatio, DEFAULT_LAYOUT.splitRatio, 0.1, 0.9),
-      panelOpen:
-        typeof l.panelOpen === "boolean"
-          ? l.panelOpen
-          : DEFAULT_LAYOUT.panelOpen,
+      // The panel is opened explicitly in each window, even if an older
+      // shell saved it open. Its selected tab and dimensions are retained.
+      panelOpen: DEFAULT_LAYOUT.panelOpen,
       panelRatio: share(l.panelRatio, DEFAULT_LAYOUT.panelRatio, 0.1, 0.9),
       tab: pick(l.tab, TABS, DEFAULT_LAYOUT.tab),
       zoom: share(l.zoom, DEFAULT_LAYOUT.zoom, 0.5, 2),
@@ -137,7 +136,17 @@ export function loadState(): { prefs: Prefs; layout: Layout } {
 
 export function saveState(prefs: Prefs, layout: Layout): void {
   try {
-    localStorage.setItem(STORE, JSON.stringify({ prefs, layout }));
+    const persistedLayout: Omit<Layout, "panelOpen"> = {
+      tuiShown: layout.tuiShown,
+      splitRatio: layout.splitRatio,
+      panelRatio: layout.panelRatio,
+      tab: layout.tab,
+      zoom: layout.zoom,
+    };
+    localStorage.setItem(
+      STORE,
+      JSON.stringify({ prefs, layout: persistedLayout }),
+    );
   } catch {
     // The defaults apply next launch.
   }

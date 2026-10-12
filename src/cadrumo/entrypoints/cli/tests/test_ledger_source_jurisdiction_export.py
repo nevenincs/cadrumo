@@ -8,19 +8,14 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
-    active_profile_isolated_backend_fixture,
-)
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_backend import runtime_profile_backend_fixture
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_PROFILE_ID = "55555555-5555-4555-8555-555555555555"
 _EXPORT_FORMATS = ("csv", "jsonl")
 
-_isolated_backend = active_profile_isolated_backend_fixture(
-    bucket_id=_PROFILE_ID,
-    dispose_engine_around=True,
+_isolated_backend = runtime_profile_backend_fixture(
     settings_overrides={"cadrumo_output_language": "en"},
     profile_overrides={
         "taxpayer_type.fiscal_residency": "non_resident_irnr",

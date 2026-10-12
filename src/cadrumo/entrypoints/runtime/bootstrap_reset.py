@@ -45,6 +45,11 @@ class RuntimeBootstrapMixin:
         request: RuntimePasswordResetPrepare | RuntimePasswordReset,
     ) -> None:
         """Never admit a session or send a profile key through this proof-only door."""
+        named = request.frontend if isinstance(request, RuntimePasswordResetPrepare) else None
+        if self._refused_as_persons_act(
+            context, channel, request_id=request.request_id, frontend=named or self._connection_frontend(context)
+        ):
+            return
         coordinates = dict(
             request_id=request.request_id,
             runtime_boot_id=self.boot,

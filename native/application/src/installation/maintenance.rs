@@ -227,6 +227,23 @@ pub enum RollbackPublication {
 }
 
 impl Preparation<'_> {
+    /// Authorize recovery of only this invocation's fresh, unanchored candidate.
+    /// Retain this reservation and the maintenance lease through native settlement.
+    pub fn fresh_rollback_owner(&self) -> Result<Option<NativeOwner>, Error> {
+        let _writer = lock(&self.store.root.join("transaction.lock"), false, false)?;
+        let state = self.store.read()?;
+        if state.versions.get(&self.release) != Some(&self.product)
+            || state.manager_anchor.as_deref() == Some(&self.release)
+            || state.desktop_anchor.as_deref() == Some(&self.release)
+            || self.product.phase != Phase::Pending
+        {
+            return Err(Error::Integrity(
+                "fresh rollback reservation changed".into(),
+            ));
+        }
+        Ok(self.previous.is_none().then(|| self.product.owner.clone()))
+    }
+
     pub fn rollback(
         self,
         contract: &DiscoveryContract,
@@ -962,4 +979,80 @@ fn validate_product_code(code: &str) -> Result<(), Error> {
         return Err(Error::Invalid("invalid native product identity".into()));
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn fresh_rollback_authority_excludes_prior_reservations_and_changed_publication() {
+        let root = tempfile::tempdir().unwrap();
+        let store = Store::new(
+            root.path().join("publication"),
+            Identity {
+                application_id: "rollback-test".into(),
+                channel: "stable".into(),
+                platform: "windows-x64".into(),
+            },
+            4,
+        )
+        .unwrap();
+        store.initialize().unwrap();
+        let owner = NativeOwner::new(
+            "12345678-1234-1234-1234-123456789abc".into(),
+            NativeContext::Machine,
+            root.path().to_owned(),
+        )
+        .unwrap();
+        let digest = Sha256Digest::new("a".repeat(64)).unwrap();
+        let mut reservation = store
+            .prepare_transaction("1.0.0", owner.clone(), digest)
+            .unwrap();
+        assert_eq!(reservation.fresh_rollback_owner().unwrap(), Some(owner));
+        assert!(store.exclusive_maintenance().is_ok());
+        assert!(store.begin_removal("1.0.0").is_err());
+        for phase in [Phase::Pending, Phase::Ready] {
+            let mut prior = reservation.product.clone();
+            prior.phase = phase;
+            reservation.previous = Some(prior);
+            assert_eq!(reservation.fresh_rollback_owner().unwrap(), None);
+        }
+        reservation.previous = None;
+        let original = store.read().unwrap();
+        let copy = || State {
+            schema: original.schema,
+            identity: original.identity.clone(),
+            versions: original.versions.clone(),
+            manager_anchor: original.manager_anchor.clone(),
+            desktop_anchor: original.desktop_anchor.clone(),
+            registration: original.registration.clone(),
+        };
+        let mut changed = copy();
+        changed.versions.get_mut("1.0.0").unwrap().manifest_sha256 =
+            Sha256Digest::new("b".repeat(64)).unwrap();
+        store.write(&changed).unwrap();
+        assert!(reservation.fresh_rollback_owner().is_err());
+        let mut changed = copy();
+        changed.versions.get_mut("1.0.0").unwrap().owner = NativeOwner::new(
+            "12345678-1234-1234-1234-123456789abd".into(),
+            NativeContext::Machine,
+            root.path().to_owned(),
+        )
+        .unwrap();
+        store.write(&changed).unwrap();
+        assert!(reservation.fresh_rollback_owner().is_err());
+        for manager in [true, false] {
+            let mut anchored = copy();
+            if manager {
+                anchored.manager_anchor = Some("1.0.0".into());
+            } else {
+                anchored.desktop_anchor = Some("1.0.0".into());
+            }
+            store.write(&anchored).unwrap();
+            assert!(reservation.fresh_rollback_owner().is_err());
+        }
+        store.write(&original).unwrap();
+        assert!(reservation.fresh_rollback_owner().unwrap().is_some());
+    }
 }

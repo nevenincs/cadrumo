@@ -20,6 +20,7 @@ from ...application.runtime.contracts import (
     RuntimeRefusalError,
 )
 from ...application.runtime.enrollment_access import (
+    RuntimeEnrollmentPrepare,
     RuntimeEnrollmentReconcile,
     RuntimeEnrollmentRecorded,
     RuntimeEnrollmentRequest,
@@ -160,6 +161,11 @@ class ProfileConnectionAccessMixin:
         request: RuntimeAccessManagementRequest,
     ) -> None:
         """Project the existing exact-profile security services over native transport."""
+        named = request.frontend if isinstance(request, RuntimeProfileRecoveryPrepare | RuntimeProfileResume) else None
+        if self._refused_as_persons_act(
+            context, channel, request_id=request.request_id, frontend=named or self._connection_frontend(context)
+        ):
+            return
         self._management.handle(context, channel, request)
 
     def enrollment(
@@ -171,6 +177,11 @@ class ProfileConnectionAccessMixin:
         """Dispatch the bounded pre-unlock request and protected client delivery door."""
         if context.runtime_boot_id != self.boot:
             raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+        named = request.frontend if isinstance(request, RuntimeEnrollmentPrepare) else None
+        if self._refused_as_persons_act(
+            context, channel, request_id=request.request_id, frontend=named or self._connection_frontend(context)
+        ):
+            return
         if isinstance(request, RuntimeEnrollmentReconcile):
             self._reconcile_enrollment(context, channel, request)
             return

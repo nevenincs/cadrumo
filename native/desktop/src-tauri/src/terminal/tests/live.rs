@@ -382,9 +382,10 @@ async fn python_kind_is_a_repl_in_workspace_with_the_pinned_storage_root() {
 }
 
 #[tokio::test]
-async fn tui_kind_draws_the_alternate_screen_from_the_storage_root() {
+async fn tui_kind_draws_the_alternate_screen_from_the_workspace_with_pinned_storage() {
     let launch = launch().await;
     let storage = launch.working_directory.clone();
+    let workspace = launch.console_workspace.clone();
     let state = TerminalState::new(launch);
     let (sink, frames) = collector();
     let id = state
@@ -419,7 +420,7 @@ async fn tui_kind_draws_the_alternate_screen_from_the_storage_root() {
     let probe = Session::start(program, 1000, 40, sink, state.launch.diagnostics.clone()).unwrap();
     let mut screen = Screen::new(frames, &probe);
     assert_eq!(screen.exit(WAIT), Some(0));
-    assert!(same_path(Path::new(&screen.value("CWD=")), &storage));
+    assert!(same_path(Path::new(&screen.value("CWD=")), &workspace));
     assert!(same_path(Path::new(&screen.value("ROOT=")), &storage));
 }
 

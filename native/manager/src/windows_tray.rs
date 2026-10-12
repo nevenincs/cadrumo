@@ -359,6 +359,13 @@ impl Tray {
     }
 
     fn open(&self, path: &std::path::Path) -> io::Result<()> {
+        if crate::service_windows::in_service_job()
+            && self.configuration.desktop.as_deref() == Some(path)
+        {
+            // Explorer owns the desktop launch. The GUI must survive broker job
+            // termination so it can claim supervision after the worker stops.
+            return self.open_desktop_via_explorer(path);
+        }
         let operation = wide("open");
         let path: Vec<u16> = path.as_os_str().encode_wide().chain([0]).collect();
         // SAFETY: only the admitted desktop image or the canonical log directory is
@@ -377,6 +384,48 @@ impl Tray {
             Err(io::ErrorKind::Other.into())
         } else {
             Ok(())
+        }
+    }
+
+    fn open_desktop_via_explorer(&self, desktop: &std::path::Path) -> io::Result<()> {
+        use std::{os::windows::process::CommandExt, process::Stdio, time::Duration};
+        let package = desktop.parent().ok_or(io::ErrorKind::InvalidData)?;
+        // The configured image belongs to the already inspected manager package.
+        // Use its prepared Python environment and the existing fixed COM helper.
+        let child = cadrumo_application::child::ChildConfiguration::new(
+            package.join(crate::contract::EXECUTABLE),
+            package.to_path_buf(),
+            crate::supervision::environment::runtime_environment(
+                &self.configuration.root,
+                Some(package),
+                std::env::vars_os(),
+            )?
+            .into_iter()
+            .collect(),
+        )
+        .map_err(io::Error::other)?;
+        let mut helper = child
+            .command()
+            .args([
+                std::ffi::OsStr::new("-I"),
+                std::ffi::OsStr::new("-c"),
+                std::ffi::OsStr::new(include_str!(
+                    "../../desktop/src-tauri/src/python/manager_dispatch.py"
+                )),
+                desktop.as_os_str(),
+            ])
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .creation_flags(0x0800_0000)
+            .spawn()?;
+        match crate::activation_probe::wait_exit(&mut helper, Duration::from_secs(60)) {
+            Ok(status) if status.success() => Ok(()),
+            Ok(_) => Err(io::ErrorKind::Other.into()),
+            Err(error) => {
+                crate::activation_probe::cleanup(&mut helper)?;
+                Err(error)
+            }
         }
     }
 }

@@ -1,5 +1,87 @@
 use super::*;
 
+#[cfg(windows)]
+#[tokio::test(start_paused = true)]
+async fn readiness_preserves_public_observation_after_former_startup_boundary() {
+    let started = tokio::time::Instant::now();
+    let observed = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let progress = observed.clone();
+    let ready = wait_for_readiness(async move {
+        tokio::time::sleep(Duration::from_millis(89_800)).await;
+        progress.store(1, Ordering::Release);
+        tokio::time::sleep(Duration::from_secs(5)).await;
+        progress.store(2, Ordering::Release);
+        Ok(())
+    });
+    tokio::pin!(ready);
+    tokio::select! {
+        result = &mut ready => panic!("admission finished before public observation: {result:?}"),
+        _ = tokio::time::sleep(Duration::from_secs(90)) => {}
+    }
+    assert_eq!(observed.load(Ordering::Acquire), 1);
+    ready.await.unwrap();
+    assert_eq!(observed.load(Ordering::Acquire), 2);
+    assert_eq!(started.elapsed(), Duration::from_millis(94_800));
+}
+
+#[cfg(windows)]
+#[tokio::test(start_paused = true)]
+async fn readiness_expiry_and_public_refusal_remain_failures() {
+    let started = tokio::time::Instant::now();
+    let error = wait_for_readiness(std::future::pending())
+        .await
+        .unwrap_err();
+    assert_eq!(error.code, ErrorCode::TimedOut);
+    assert_eq!(error.operation, Operation::Manager);
+    assert_eq!(
+        started.elapsed(),
+        cadrumo_manager::supervision::supervisor::SupervisorConfig::default().readiness_ceiling
+    );
+    let error = wait_for_readiness(async {
+        tokio::time::sleep(Duration::from_secs(95)).await;
+        Err(failure(ErrorCode::ReadFailed))
+    })
+    .await
+    .unwrap_err();
+    assert_eq!(error.code, ErrorCode::ReadFailed);
+    assert_eq!(error.operation, Operation::Manager);
+}
+
+#[tokio::test]
+async fn failed_start_is_a_typed_public_status_and_close_still_settles() {
+    let manager = fixture(Ok(None));
+    manager
+        .start_with(false, |_| async {
+            Err(failure(ErrorCode::PackageUnavailable))
+        })
+        .await
+        .unwrap_err();
+    let status = manager.read_status().unwrap();
+    assert_eq!(status.state, ManagerState::Failed);
+    assert_eq!(status.failure.unwrap().code, ErrorCode::PackageUnavailable);
+    manager.close_checked().await.unwrap();
+    assert_eq!(manager.read_status().unwrap().state, ManagerState::Stopped);
+}
+
+#[tokio::test]
+async fn isolated_root_activation_never_inspects_or_dispatches_the_installed_manager() {
+    let manager = fixture(Err(failure(ErrorCode::ManagerUnavailable)));
+    let package = PathBuf::from("unusable package");
+    for retry in [false, true] {
+        assert_eq!(
+            manager
+                .activate_installed(false, package.clone(), retry)
+                .await
+                .unwrap(),
+            None
+        );
+    }
+    let snapshot = manager.diagnostics.snapshot(0);
+    assert!(snapshot.processes.is_empty());
+    assert!(snapshot.events.is_empty());
+    assert!(manager.attempt.lock().await.is_none());
+}
+
 #[test]
 fn dispatch_command_preserves_only_explicit_recovery_intent() {
     use std::ffi::OsString;
@@ -79,6 +161,7 @@ fn fixture(target: Result<Option<PathBuf>>) -> Arc<ManagerStart> {
             Default::default(),
         )
         .unwrap(),
+        storage_root: std::env::temp_dir(),
         diagnostics: Arc::new(Diagnostics::default()),
         attempt: Arc::new(tokio::sync::Mutex::new(None)),
         generation: AtomicU64::new(0),
@@ -86,6 +169,9 @@ fn fixture(target: Result<Option<PathBuf>>) -> Arc<ManagerStart> {
         cancellation: Arc::new(Cancellation::default()),
         spawn_fence: Arc::new(Mutex::new(())),
         closing: tokio::sync::Notify::new(),
+        observation: observation::Observer::new(cfg!(windows)),
+        #[cfg(windows)]
+        host: Mutex::new(None),
     })
 }
 
@@ -321,7 +407,10 @@ async fn overlapping_retries_share_one_attempt_instead_of_forming_a_launch_queue
     .await;
     drop(held);
     for request in requests {
-        assert_eq!(request.await.unwrap(), StartOutcome::Unmanaged);
+        assert_eq!(
+            request.await.unwrap_err().code,
+            ErrorCode::ManagerUnavailable
+        );
     }
     let starts = manager
         .diagnostics
@@ -357,8 +446,8 @@ async fn initial_calls_share_the_failure_but_explicit_retry_records_a_new_attemp
     assert_eq!(starts(), 2);
     let unmanaged = fixture(Ok(None));
     assert_eq!(
-        unmanaged.start(false).await.unwrap(),
-        StartOutcome::Unmanaged
+        unmanaged.start(false).await.unwrap_err().code,
+        ErrorCode::ManagerUnavailable
     );
     assert!(unmanaged.diagnostics.snapshot(0).processes.is_empty());
 }

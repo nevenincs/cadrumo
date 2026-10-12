@@ -4,9 +4,11 @@ import { useStrings } from "../shell/strings";
 export function AccountLoading({
   starting = false,
   quiet = false,
+  recovering = false,
 }: {
   starting?: boolean;
   quiet?: boolean;
+  recovering?: boolean;
 }) {
   const t = useStrings();
   return (
@@ -20,9 +22,11 @@ export function AccountLoading({
         className="text-sm text-muted-foreground"
       >
         {t(
-          starting
-            ? "desktop.signin.starting_services"
-            : "desktop.signin.checking",
+          recovering
+            ? "desktop.signin.recovering_services"
+            : starting
+              ? "desktop.signin.starting_services"
+              : "desktop.signin.checking",
         )}
       </p>
       <div

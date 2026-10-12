@@ -10,7 +10,10 @@ import type {
   ContextMenuItem,
   DesktopEnvironment,
   LogBatch,
+  ManagerStatus,
+  ManagerSignal,
   SignInStatus,
+  SignInSignal,
   SignInResult,
   SignOutResult,
   WindowAction,
@@ -48,11 +51,17 @@ export interface Host {
   readonly nativeMenus: boolean;
   environment(): Promise<DesktopEnvironment>;
   signInStatus(): Promise<SignInStatus>;
+  /** Public observations only; cleanup cannot remove a newer subscriber. */
+  observeSignIn?(listener: (signal: SignInSignal) => void): Promise<() => void>;
+  managerStatus?(): Promise<ManagerStatus>;
+  observeManager?(
+    listener: (signal: ManagerSignal) => void,
+  ): Promise<() => void>;
   /** Requests the independent manager, without authenticating or owning the runtime. */
-  startManager?(): Promise<"dispatched" | "unmanaged" | "unsupported">;
+  startManager?(): Promise<"dispatched" | "unsupported">;
   installManager?(
     scope: "user" | "machine",
-  ): Promise<"dispatched" | "unmanaged" | "unsupported">;
+  ): Promise<"dispatched" | "unsupported">;
   /** Signs in to `profile`, by its label, or to the profile the product
    * has selected where none is named. */
   signIn(password: Uint8Array, profile?: string): Promise<SignInResult>;
@@ -107,6 +116,7 @@ export function browserHost(location: Location): Host {
       return Promise.resolve({
         outputLanguage: lang,
         docs: {
+          state: "bundled",
           origin: entry.origin,
           languages: [{ code: lang, entry: entry.href }],
         },

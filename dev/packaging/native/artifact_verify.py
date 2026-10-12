@@ -17,7 +17,8 @@ from .build_timing import BuildTimings, measure_build
 from .cmake_build import reset
 from .cpp_abi_inputs import verify_linux_cpp_abi_inputs
 from .hashing import digest
-from .layout import backend, load_layout
+from .layout import backend, desktop_image, load_layout
+from .package_launch_smoke import verify_installation_kit
 from .release import verify_release
 from .verify import verify
 
@@ -51,12 +52,17 @@ def _check(build: Path, configuration: str, application_probe: list[str] | None,
     external.mkdir()
     target = artifacts["target"]
     contract = load_layout(target)
+    if contract["backend"] == "windows" and (package / "app").is_dir():
+        package /= "app"
     environment = dict(os.environ)
     environment.update(CADRUMO_LOCAL_STORAGE_ROOT=str(destination / "state"), CADRUMO_EXTERNAL_BIN_DIRS=str(external))
     manifest_path = package / contract["files"]["package_manifest"]
     if digest(manifest_path) != artifacts["manifest_sha256"]:
         raise AssertionError("ZIP manifest differs from the packaged artifact locator")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    desktop = desktop_image(contract)
+    if contract["backend"] == "windows" and desktop is not None and desktop.package_path in manifest["files"]:
+        verify_installation_kit(package)
     if manifest["build"]["target"] != target:
         raise AssertionError("ZIP target differs from the packaged artifact locator")
     expectation = dict(artifacts["release"], manifest_sha256=artifacts["manifest_sha256"])

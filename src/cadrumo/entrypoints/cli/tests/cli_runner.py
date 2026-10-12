@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
+from contextlib import contextmanager
+from contextvars import ContextVar
 from functools import cache
-from typing import NotRequired, Unpack, cast
+from typing import NotRequired, Protocol, Unpack, cast
 
 import click
 from click.testing import CliRunner, Result
@@ -70,8 +72,43 @@ def invoke_uncached_typer_app(
     return _RUNNER.invoke(cast(click.Command, get_command(typer_app)), list(args), **kwargs)
 
 
+class ProfileCliInvoker(Protocol):
+    """A test-owned profile whose joined runtime admits the commands a test runs."""
+
+    def invoke(self, args: Sequence[str], **kwargs: Unpack[ClickInvokeKwargs]) -> Result:
+        """Run one command as the profile's operator."""
+        ...
+
+
+_BOUND_PROFILE: ContextVar[ProfileCliInvoker | None] = ContextVar("cli-test-bound-profile", default=None)
+
+
+@contextmanager
+def bind_profile_cli(invoker: ProfileCliInvoker) -> Iterator[None]:
+    """Run every :func:`invoke_cached_cli` call as ``invoker``'s operator until the scope ends.
+
+    A fixture that registers a profile and joins its runtime binds it, so a
+    test runs its commands the way that profile's operator would, exactly as
+    the session that registration left live in the test process once did.
+    """
+    token = _BOUND_PROFILE.set(invoker)
+    try:
+        yield
+    finally:
+        _BOUND_PROFILE.reset(token)
+
+
 def invoke_cached_cli(args: Sequence[str], **kwargs: Unpack[ClickInvokeKwargs]) -> Result:
-    """Invoke the cached Cadrumo Click command.
+    """Invoke the cached Cadrumo Click command, as the bound profile's operator when one is bound.
+
+    See :func:`invoke_unbound_cli` for the invocation itself.
+    """
+    bound = _BOUND_PROFILE.get()
+    return invoke_unbound_cli(args, **kwargs) if bound is None else bound.invoke(args, **kwargs)
+
+
+def invoke_unbound_cli(args: Sequence[str], **kwargs: Unpack[ClickInvokeKwargs]) -> Result:
+    """Invoke the cached Cadrumo Click command exactly as given.
 
     Typer's test runner rebuilds the full Click command tree on every
     invocation. The Cadrumo tree is large enough that repeated materialization

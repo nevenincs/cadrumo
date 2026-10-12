@@ -139,7 +139,7 @@ pub fn run(launch: Launch) -> Result<i32> {
     )?;
     let builder = tauri::Builder::default()
         .plugin(terminal::plugin(&launch))
-        .plugin(docs::plugin(&launch)?)
+        .plugin(docs::plugin(&launch))
         .plugin(logs::plugin(&launch))
         .plugin(shell::plugin(&launch))
         .plugin(shell::clipboard_plugin());
@@ -154,10 +154,29 @@ pub fn run(launch: Launch) -> Result<i32> {
         .invoke_handler(handler)
         .channel_interceptor(shell::channel::interceptor(diagnostics.clone()))
         .setup(move |app| {
-            tauri::async_runtime::spawn(async move {
-                // Failures are retained in diagnostics; the window remains usable.
-                let _ = startup_manager.start(false).await;
-            });
+            #[cfg(windows)]
+            {
+                let sign_in = app.state::<Arc<shell::sign_in::SignIn>>().inner().clone();
+                if let Err(error) =
+                    tauri::async_runtime::block_on(startup_manager.ensure_ready(&sign_in))
+                {
+                    setup_diagnostics.failure(error);
+                    tauri::async_runtime::block_on(startup_manager.close());
+                    let _ = tauri::async_runtime::block_on(sign_in.stop());
+                    app.handle().exit(1);
+                    return Ok(());
+                }
+            }
+            #[cfg(not(windows))]
+            {
+                let manager = startup_manager.clone();
+                let diagnostics = setup_diagnostics.clone();
+                tauri::async_runtime::spawn(async move {
+                    if let Err(error) = manager.start(false).await {
+                        diagnostics.failure(error);
+                    }
+                });
+            }
             let outcome = (|| {
                 let config = app.config().app.windows.first().ok_or_else(|| {
                     ApplicationError::new(ErrorCode::InvalidArguments, Operation::Webview)
@@ -196,9 +215,14 @@ pub fn run(launch: Launch) -> Result<i32> {
             let state = window.state::<Arc<TerminalState>>();
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                 let manager = window.state::<Arc<ManagerStart>>();
-                tauri::async_runtime::block_on(manager.close());
+                if let Err(error) = tauri::async_runtime::block_on(manager.close_checked()) {
+                    api.prevent_close();
+                    state.launch.diagnostics.failure(error);
+                    window.app_handle().exit(1);
+                    return;
+                }
                 let sign_in = window.state::<Arc<shell::sign_in::SignIn>>();
-                if let Err(error) = sign_in.children.stop() {
+                if let Err(error) = tauri::async_runtime::block_on(sign_in.stop()) {
                     api.prevent_close();
                     state.launch.diagnostics.failure(error);
                 }
@@ -218,17 +242,91 @@ pub fn run(launch: Launch) -> Result<i32> {
         })?;
     let sign_in = app.state::<Arc<shell::sign_in::SignIn>>().inner().clone();
     let manager = app.state::<Arc<ManagerStart>>().inner().clone();
+    #[cfg(windows)]
+    let monitoring = {
+        let watched = manager.clone();
+        let host = app.handle().clone();
+        let watched_diagnostics = diagnostics.clone();
+        tauri::async_runtime::spawn(async move {
+            let mut lost_since = None;
+            while !watched.is_closed() {
+                let now = std::time::Instant::now();
+                if let Err(error) =
+                    supervision_continues(watched.supervision_status(), &mut lost_since, now)
+                {
+                    watched.report_failure(error.clone());
+                    watched_diagnostics.failure(error);
+                    host.exit(1);
+                    break;
+                }
+                tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+            }
+        })
+    };
     let code = app.run_return(|_, _| {});
-    tauri::async_runtime::block_on(manager.close());
-    let sign_in_cleanup = sign_in.children.stop();
+    #[cfg(windows)]
+    monitoring.abort();
+    let manager_cleanup = tauri::async_runtime::block_on(manager.close_checked());
+    let sign_in_cleanup = tauri::async_runtime::block_on(sign_in.stop());
     let terminal_cleanup = state.stop();
+    manager_cleanup?;
     sign_in_cleanup?;
     terminal_cleanup?;
     Ok(code)
 }
 
+pub(crate) fn supervision_continues(
+    status: Result<bool>,
+    lost_since: &mut Option<std::time::Instant>,
+    now: std::time::Instant,
+) -> Result<()> {
+    if status? {
+        *lost_since = None;
+    } else if now.duration_since(*lost_since.get_or_insert(now))
+        >= std::time::Duration::from_secs(90)
+    {
+        return Err(ApplicationError::new(
+            ErrorCode::ManagerUnavailable,
+            Operation::Manager,
+        ));
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn healthy_gui_allows_bounded_repair_but_fails_prolonged_or_terminal_supervision_loss() {
+        use super::*;
+        use std::time::{Duration, Instant};
+        let now = Instant::now();
+        let mut lost = None;
+        supervision_continues(Ok(true), &mut lost, now).unwrap();
+        supervision_continues(Ok(false), &mut lost, now).unwrap();
+        supervision_continues(Ok(false), &mut lost, now + Duration::from_secs(89)).unwrap();
+        assert_eq!(
+            supervision_continues(Ok(false), &mut lost, now + Duration::from_secs(90))
+                .unwrap_err()
+                .code,
+            ErrorCode::ManagerUnavailable
+        );
+        supervision_continues(Ok(true), &mut lost, now + Duration::from_secs(91)).unwrap();
+        assert!(lost.is_none());
+        supervision_continues(Ok(false), &mut lost, now + Duration::from_secs(92)).unwrap();
+        assert_eq!(
+            supervision_continues(
+                Err(ApplicationError::new(
+                    ErrorCode::ManagerUnavailable,
+                    Operation::Manager
+                )),
+                &mut lost,
+                now + Duration::from_secs(93)
+            )
+            .unwrap_err()
+            .code,
+            ErrorCode::ManagerUnavailable
+        );
+    }
     use super::*;
     use tauri::{
         WebviewWindowBuilder,

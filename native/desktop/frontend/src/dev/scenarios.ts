@@ -4,7 +4,14 @@
 // summaries are tool text for developers, not product chrome, so they are not
 // in the locale catalogues.
 
-import type { HostErrorCode, HostFailure, SignInStatus } from "../ipc/contract";
+import type {
+  HostErrorCode,
+  HostFailure,
+  ManagerSignal,
+  ManagerStatus,
+  SignInSignal,
+  SignInStatus,
+} from "../ipc/contract";
 
 /** What a submitted password meets. */
 export type SubmitOutcome =
@@ -56,6 +63,20 @@ export type Scenario = {
    * missing or unreadable source, or a subscription that never answers. */
   logs: "records" | "empty" | "missing" | "unreadable" | "pending";
   managerLog?: "missing" | "unreadable" | "rejected";
+  /** Synthetic observation timelines; these never run in a packaged host. */
+  supervision?: {
+    initial: ManagerStatus;
+    submitDelayMs?: number;
+    events: {
+      afterMs: number;
+      manager?: ManagerSignal;
+      signIn?: SignInSignal;
+      presence?: SignInStatus["state"];
+      statusDelayMs?: number;
+      statusFailure?: HostErrorCode;
+      deliverAfterUnsubscribe?: boolean;
+    }[];
+  };
   /** Terminal sessions: fixture output, a session that starts and prints
    * nothing, one that starts and then fails, one that fails to start, or one
    * that never starts. */
@@ -69,12 +90,7 @@ export type Scenario = {
     installResult?: "dispatched" | "pending" | { code: HostErrorCode };
     /** Simulate the native host's automatic dispatch before React mounts. */
     autoDispatched?: boolean;
-    result:
-      | "dispatched"
-      | "pending"
-      | "unmanaged"
-      | "unsupported"
-      | { code: HostErrorCode };
+    result: "dispatched" | "pending" | "unsupported" | { code: HostErrorCode };
     /** Fixed dispatch-answer delay, independent of profile/sign-in latency. */
     delayMs?: number;
     /** Status reads after dispatch before the runtime becomes available. */
@@ -118,6 +134,173 @@ const base = {
 } as const satisfies Partial<Scenario>;
 
 export const SCENARIOS: readonly Scenario[] = [
+  {
+    ...base,
+    id: "manager-observed-recovery",
+    title: "Observed supervisor recovery",
+    summary:
+      "A signed-in view is withheld on supervision loss; ready still waits for fresh authentication.",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      submit: { kind: "accept" },
+    },
+    supervision: {
+      initial: { state: "ready", failure: null },
+      events: [
+        {
+          afterMs: 1000,
+          manager: {
+            kind: "manager-state",
+            revision: 2,
+            status: { state: "recovering", failure: null },
+          },
+        },
+        {
+          afterMs: 2000,
+          manager: {
+            kind: "manager-state",
+            revision: 1,
+            status: { state: "ready", failure: null },
+          },
+        },
+        {
+          afterMs: 3000,
+          presence: "absent",
+          statusDelayMs: 2000,
+          manager: {
+            kind: "manager-state",
+            revision: 3,
+            status: { state: "ready", failure: null },
+          },
+        },
+      ],
+    },
+  },
+  {
+    ...base,
+    id: "manager-observation-failed",
+    title: "Supervisor observation failed",
+    summary:
+      "A public observation failure withholds stale signed-in views and displays only safe failure metadata.",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      submit: { kind: "accept" },
+    },
+    supervision: {
+      initial: { state: "ready", failure: null },
+      events: [
+        {
+          afterMs: 1000,
+          manager: {
+            kind: "manager-observation-failed",
+            revision: 1,
+            error: {
+              code: "read_failed",
+              operation: "manager",
+              message: "private supervisor path and exception payload",
+            },
+          },
+        },
+      ],
+    },
+  },
+  {
+    ...base,
+    id: "manager-auth-read-retry",
+    title: "Fresh authentication read retries",
+    summary:
+      "A transient fresh read fails after manager recovery; a later account observation re-arms the canonical read.",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      submit: { kind: "accept" },
+    },
+    supervision: {
+      initial: { state: "ready", failure: null },
+      events: [
+        {
+          afterMs: 1000,
+          manager: {
+            kind: "manager-state",
+            revision: 1,
+            status: { state: "recovering", failure: null },
+          },
+        },
+        {
+          afterMs: 2000,
+          presence: "absent",
+          statusFailure: "read_failed",
+          manager: {
+            kind: "manager-state",
+            revision: 2,
+            status: { state: "ready", failure: null },
+          },
+        },
+        {
+          afterMs: 3000,
+          signIn: {
+            kind: "sign-in-state",
+            revision: 1,
+            status: {
+              ...signedOut,
+              state: "present",
+              active_profile: "Old queued profile",
+            },
+          },
+        },
+      ],
+    },
+  },
+  {
+    ...base,
+    id: "manager-late-submission",
+    title: "Late sign-in acknowledgement",
+    summary:
+      "A sign-in answer arrives after supervision loss; it cannot restore the old authentication presentation.",
+    signIn: { status: signedOut, submit: { kind: "accept" } },
+    supervision: {
+      initial: { state: "ready", failure: null },
+      submitDelayMs: 4000,
+      events: [
+        {
+          afterMs: 1000,
+          manager: {
+            kind: "manager-state",
+            revision: 1,
+            status: { state: "recovering", failure: null },
+          },
+        },
+      ],
+    },
+  },
+  {
+    ...base,
+    id: "manager-late-host",
+    title: "Old host observation",
+    summary:
+      "A retired scenario host delivers a late manager event; the new host must ignore it.",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      submit: { kind: "accept" },
+    },
+    supervision: {
+      initial: { state: "ready", failure: null },
+      events: [
+        {
+          afterMs: 3000,
+          deliverAfterUnsubscribe: true,
+          manager: {
+            kind: "manager-observation-failed",
+            revision: 1,
+            error: {
+              code: "spawn_failed",
+              operation: "manager",
+              message: "old host",
+            },
+          },
+        },
+      ],
+    },
+  },
   {
     ...base,
     id: "signed-out",
@@ -439,13 +622,13 @@ export const SCENARIOS: readonly Scenario[] = [
   {
     ...base,
     id: "manager-unmanaged",
-    title: "Manager unavailable in an unmanaged package",
+    title: "Manager unavailable in an invalid package",
     summary:
-      "The manager-start request reports an unmanaged package; services remain down.",
+      "The manager-start request refuses an invalid package; services remain down.",
     signIn: servicesDown,
     profiles: "one",
     terminals: "silent",
-    manager: { result: "unmanaged" },
+    manager: { result: { code: "manager_unavailable" } },
   },
   {
     ...base,

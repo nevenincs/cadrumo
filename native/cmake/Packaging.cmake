@@ -34,31 +34,27 @@ if(CADRUMO_PACKAGE_USER_DOCS)
 else()
   set(user_docs_args --without-user-docs)
   cadrumo_build_fact("User documentation"
-    "not bundled, so desktop payloads refuse it (CADRUMO_PACKAGE_USER_DOCS=OFF)")
+    "not bundled, so the release targets refuse (CADRUMO_PACKAGE_USER_DOCS=OFF)")
 endif()
 # Application images are native executables that are not interpreter hosts, declared by the
 # platform mapping. Each names its CMake target and the variable that holds its artifact path,
-# defined in this scope or the native directory's; the layout owner decides which images stage.
-if(CADRUMO_PACKAGE_USER_DOCS)
-  set(images_with_docs True)
-else()
-  set(images_with_docs False)
-endif()
+# defined in this scope or the native directory's. The layout owner only reports the declarations;
+# CMake stages every declared image, and user documentation never decides which images ship.
 execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -c
-  "import json; from dataclasses import asdict; from dev.packaging.native.layout import application_images, load_layout, staged_application_images; layout = load_layout('${CADRUMO_TARGET}'); staged = staged_application_images(layout, user_docs=${images_with_docs}); print(json.dumps([dict(asdict(image), package_path=image.package_path, staged=image in staged) for image in application_images(layout)]))"
+  "import json; from dataclasses import asdict; from dev.packaging.native.layout import application_images, load_layout; print(json.dumps([dict(asdict(image), package_path=image.package_path) for image in application_images(load_layout('${CADRUMO_TARGET}'))]))"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" OUTPUT_VARIABLE application_images
   OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
 # The desktop project defines desktop-host-build and the variable naming its host image.
-# It needs Node.js and npm, so it is configured only when a desktop image is staged.
+# It needs Node.js and npm, so it is configured only when the platform declares a desktop image.
 set(desktop_image_staged FALSE)
 string(JSON image_count LENGTH "${application_images}")
 if(image_count GREATER 0)
   math(EXPR image_last "${image_count} - 1")
   foreach(index RANGE ${image_last})
     string(JSON image_desktop GET "${application_images}" ${index} desktop)
-    string(JSON image_staged GET "${application_images}" ${index} staged)
-    if(image_desktop AND image_staged)
+    if(image_desktop)
       set(desktop_image_staged TRUE)
+      string(JSON desktop_package_path GET "${application_images}" ${index} package_path)
     endif()
   endforeach()
 endif()
@@ -75,13 +71,9 @@ string(JSON image_count LENGTH "${application_images}")
 if(image_count GREATER 0)
   math(EXPR image_last "${image_count} - 1")
   foreach(index RANGE ${image_last})
-    foreach(key file target artifact staged desktop)
+    foreach(key file target artifact desktop)
       string(JSON image_${key} GET "${application_images}" ${index} ${key})
     endforeach()
-    if(NOT image_staged)
-      message(STATUS "Application image ${image_file}: omitted; the desktop application needs bundled user documentation")
-      continue()
-    endif()
     set(image_path "${${image_artifact}}")
     if(image_path STREQUAL "")
       get_directory_property(image_path DIRECTORY "${PROJECT_SOURCE_DIR}/native" DEFINITION "${image_artifact}")
@@ -107,13 +99,19 @@ if(image_count GREATER 0)
         "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/${image_package_path}" ${image_arguments})
       set_tests_properties(bundle.image.${image_file} PROPERTIES RESOURCE_LOCK package_inventory)
       if(WIN32 AND image_desktop)
+        add_test(NAME bundle.health.${image_file} COMMAND "${CADRUMO_DEV_PYTHON}" -B -m
+          dev.packaging.native.package_launch_smoke --health
+          "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/${image_package_path}" "${CADRUMO_STORAGE_ROOT_VARIABLE}")
+        set_tests_properties(bundle.health.${image_file} PROPERTIES RESOURCE_LOCK package_inventory
+          FIXTURES_REQUIRED desktop_package_ready FIXTURES_SETUP desktop_runtime_ready TIMEOUT 360
+          WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
         add_test(NAME bundle.launch.${image_file} COMMAND "${CMAKE_COMMAND}" -E env
           "${CADRUMO_STORAGE_ROOT_VARIABLE}=${CADRUMO_PATH_TESTING}/$<CONFIG>/storage"
           "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.package_launch_smoke
           "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/${image_package_path}" "${CADRUMO_VERSION}"
           "${CADRUMO_STORAGE_ROOT_VARIABLE}" "${CADRUMO_PATH_TESTING}/$<CONFIG>")
         set_tests_properties(bundle.launch.${image_file} PROPERTIES RESOURCE_LOCK package_inventory TIMEOUT 600
-          WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+          FIXTURES_SETUP desktop_package_ready WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
       endif()
     endif()
   endforeach()
@@ -154,11 +152,23 @@ foreach(input uv.lock pyproject.toml dev/packaging/release-python-version
   list(APPEND assembly_inputs "${PROJECT_SOURCE_DIR}/${input}")
 endforeach()
 cadrumo_cached_command(assembly_command bundle INPUTS ${assembly_inputs}
-  OUTPUTS "${CADRUMO_PATH_STAGE}/$<CONFIG>")
-cadrumo_build_step(step_comment app-distro GROUP assembly
+  OUTPUTS "${CADRUMO_PATH_STAGE}/$<CONFIG>/app" "${CADRUMO_PATH_STAGE}/$<CONFIG>/ready")
+cadrumo_build_step(step_comment native-process-quiesce GROUP assembly
+  SUMMARY "stop Cadrumo processes running from this build before its images are replaced")
+add_custom_target(native-process-quiesce
+  COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.process_quiescence
+    --build "${PROJECT_BINARY_DIR}" --target "${CADRUMO_TARGET}"
+  DEPENDS native_contract WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
+foreach(product_target cadrumo_python cadrumo_python_bridge ${CADRUMO_ENTRYPOINT_TARGETS}
+    ${application_image_dependencies} ${development_target})
+  if(TARGET "${product_target}")
+    add_dependencies("${product_target}" native-process-quiesce)
+  endif()
+endforeach()
+cadrumo_build_step(step_comment app-payload GROUP assembly
   SUMMARY "assemble the application payload: interpreter, product, native images and documentation"
   OUTPUTS "${CADRUMO_PATH_STAGE}/$<CONFIG>/app")
-add_custom_target(app-distro ALL
+add_custom_target(app-payload
   COMMAND ${assembly_command} ${CADRUMO_HELPER} assemble --build "${PROJECT_BINARY_DIR}" --config "$<CONFIG>" ${development_args}
     ${user_docs_args} ${application_image_args}
   DEPENDS cadrumo_python cadrumo_python_bridge ${CADRUMO_ENTRYPOINT_TARGETS} ${application_image_dependencies}
@@ -171,10 +181,61 @@ add_custom_target(app-distro ALL
     "${package_bootstrap}"
   BYPRODUCTS "${CADRUMO_PATH_STAGE}/$<CONFIG>/ready"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
-add_dependencies(app-distro rust_application)
-cadrumo_build_step(step_comment bundle GROUP assembly SUMMARY "alias of app-distro"
+add_dependencies(app-payload rust_application)
+set(desktop_delivery_check)
+if(WIN32 AND desktop_image_staged)
+  # Bootstrap admission is required for delivery even when optional tests are off.
+  # Exercise the existing native test against this exact assembled app/kit pair.
+  enable_testing()
+  set(installer_bootstrap_test
+    "runner::bootstrap::tests::assembled_kit_admits_both_scopes_and_refuses_wrong_native_role_without_installing")
+  cadrumo_cargo_command(installer_bootstrap_cargo
+    --env "CADRUMO_BOOTSTRAP_TEST_PACKAGE=${CADRUMO_PATH_STAGE}/$<CONFIG>/app"
+    --env "CADRUMO_NATIVE_CONTRACT=${CADRUMO_PATH_GENERATED}/contract.json")
+  add_test(NAME bundle.installer-bootstrap
+    COMMAND ${installer_bootstrap_cargo} test --locked --lib
+      --manifest-path "${PROJECT_SOURCE_DIR}/native/installer/Cargo.toml"
+      --target "${CADRUMO_PIN_rust_target}" --profile "$<IF:$<CONFIG:Debug>,dev,release>"
+      "${installer_bootstrap_test}" -- --ignored --exact)
+  set_tests_properties(bundle.installer-bootstrap PROPERTIES
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" RESOURCE_LOCK package_inventory TIMEOUT 900
+    FAIL_REGULAR_EXPRESSION "running 0 tests;test result: FAILED")
+  set(CADRUMO_INSTALLED_GUEST_CONFIG "" CACHE FILEPATH
+    "Private pinned disposable Windows guest and immutable P1/P2 cohort configuration")
+  find_program(CADRUMO_INSTALLED_GUEST_POWERSHELL NAMES pwsh
+    DOC "PowerShell 7 host for disposable Windows guest acceptance transport")
+  if(CADRUMO_INSTALLED_GUEST_POWERSHELL)
+    set(installed_delivery_check COMMAND "${CADRUMO_INSTALLED_GUEST_POWERSHELL}"
+      -NoLogo -NoProfile -NonInteractive -File
+      "${PROJECT_SOURCE_DIR}/dev/runtime_lifecycle/windows-guest/acceptance.ps1"
+      -Config "${CADRUMO_INSTALLED_GUEST_CONFIG}"
+      -Stage "${CADRUMO_PATH_STAGE}/$<CONFIG>" -Source "${PROJECT_SOURCE_DIR}"
+      -Output "${CADRUMO_PATH_TESTING}/$<CONFIG>/installed-guest")
+  else()
+    # Candidate payload/kit targets remain usable without the acceptance host.
+    set(installed_delivery_check COMMAND "${CMAKE_COMMAND}" -E echo
+      "[cadrumo:bundle] error: Installed acceptance requires PowerShell 7 and CADRUMO_INSTALLED_GUEST_CONFIG"
+      COMMAND "${CMAKE_COMMAND}" -E false)
+  endif()
+  set(desktop_delivery_check COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.package_launch_smoke --kit
+    "${CADRUMO_PATH_STAGE}/$<CONFIG>/app"
+    COMMAND "${CMAKE_CTEST_COMMAND}" --test-dir "${PROJECT_BINARY_DIR}" -C "$<CONFIG>"
+      --output-on-failure --no-tests=error -R "^bundle[.]installer-bootstrap$"
+    COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.package_launch_smoke --health
+    "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/${desktop_package_path}" "${CADRUMO_STORAGE_ROOT_VARIABLE}"
+    ${installed_delivery_check})
+endif()
+if(desktop_delivery_check)
+  set(bundle_summary "the assembled payload, after its desktop delivery and installed acceptance checks")
+else()
+  set(bundle_summary "the assembled payload")
+endif()
+cadrumo_build_step(step_comment bundle GROUP assembly SUMMARY "${bundle_summary}"
   OUTPUTS "${CADRUMO_PATH_STAGE}/$<CONFIG>/app")
-add_custom_target(bundle DEPENDS app-distro COMMENT "${step_comment}")
+add_custom_target(bundle ALL ${desktop_delivery_check} DEPENDS app-payload
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
+cadrumo_build_step(step_comment app-distro GROUP assembly SUMMARY "alias of bundle")
+add_custom_target(app-distro DEPENDS bundle COMMENT "${step_comment}")
 if(TARGET desktop-headless-test)
   add_dependencies(desktop-headless-test bundle)
 endif()
@@ -192,7 +253,25 @@ if(BUILD_TESTING)
     set_tests_properties(bundle.entrypoint.${entrypoint} PROPERTIES RESOURCE_LOCK package_inventory)
   endforeach()
 endif()
-install(DIRECTORY "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/" DESTINATION . USE_SOURCE_PERMISSIONS)
+if(BUILD_TESTING AND WIN32)
+  # Exercise the assembled clients and real supervisor through the existing harness.
+  add_test(NAME bundle.runtime-lifecycle COMMAND "${CADRUMO_DEV_PYTHON}" -B -m pytest
+    -n 0 -m integration "${PROJECT_SOURCE_DIR}/dev/runtime_lifecycle/tests"
+    --lifecycle-manager "${CADRUMO_PATH_CARGO}/manager-lifecycle/${CADRUMO_PIN_rust_target}/debug/cadrumo-manager-lifecycle.exe"
+    --lifecycle-package "${CADRUMO_PATH_STAGE}/$<CONFIG>/app"
+    --junitxml "${CADRUMO_PATH_TESTING}/$<CONFIG>/lifecycle.xml" -o junit_family=legacy)
+  set_tests_properties(bundle.runtime-lifecycle PROPERTIES RESOURCE_LOCK package_inventory
+    RUN_SERIAL TRUE TIMEOUT 1800 WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+  if(desktop_image_staged)
+    set_tests_properties(bundle.runtime-lifecycle PROPERTIES FIXTURES_REQUIRED "desktop_package_ready;desktop_runtime_ready")
+  endif()
+endif()
+if(WIN32 AND desktop_image_staged)
+  # Preserve the app/services relationship used by desktop provisioning.
+  install(DIRECTORY "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/" DESTINATION app USE_SOURCE_PERMISSIONS)
+else()
+  install(DIRECTORY "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/" DESTINATION . USE_SOURCE_PERMISSIONS)
+endif()
 set(CPACK_GENERATOR ZIP)
 set(CPACK_VERBATIM_VARIABLES YES)
 set(CPACK_PACKAGE_NAME "${CADRUMO_ID_NAME}")
@@ -213,6 +292,9 @@ set(CPACK_POST_BUILD_SCRIPTS "${PROJECT_BINARY_DIR}/Artifact.cmake")
 set(CPACK_PROJECT_CONFIG_FILE "${PROJECT_BINARY_DIR}/CPackProject.cmake")
 include(CPack)
 set(native_verification_targets rust_platform rust_platform_consumer rust_application)
+if(BUILD_TESTING AND WIN32)
+  list(APPEND native_verification_targets rust_manager_lifecycle)
+endif()
 foreach(consumer platform_static_consumer platform_dll_consumer)
   if(TARGET ${consumer})
     list(APPEND native_verification_targets ${consumer})
@@ -221,17 +303,26 @@ endforeach()
 cadrumo_build_step(step_comment verify GROUP verification
   SUMMARY "build the bundle and native verification targets, then run every CTest test")
 add_custom_target(verify
-  COMMAND "${CMAKE_CTEST_COMMAND}" --test-dir "${PROJECT_BINARY_DIR}" -C "$<CONFIG>" --output-on-failure
+  COMMAND "${CMAKE_CTEST_COMMAND}" --test-dir "${PROJECT_BINARY_DIR}" -C "$<CONFIG>" --output-on-failure --no-tests=error
   DEPENDS bundle ${native_verification_targets}
   COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
 cadrumo_build_step(step_comment verify-app-distro GROUP verification
   SUMMARY "run the bundle and application package CTest tests")
 add_custom_target(verify-app-distro
   COMMAND "${CMAKE_CTEST_COMMAND}" --test-dir "${PROJECT_BINARY_DIR}" -C "$<CONFIG>"
-    --output-on-failure -R "^(bundle[.]|application[.]package$)"
-  DEPENDS app-distro COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
+    --output-on-failure --no-tests=error -R "^(bundle[.]|application[.]package$)"
+  DEPENDS bundle COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
+if(BUILD_TESTING AND WIN32)
+  add_dependencies(verify-app-distro rust_manager_lifecycle)
+endif()
+set(zip_delivery_inputs)
+if(WIN32 AND desktop_image_staged)
+  string(JSON zip_bootstrap_directory GET "${package_layout}" installation bootstrap directory)
+  list(APPEND zip_delivery_inputs "${CADRUMO_PATH_STAGE}/$<CONFIG>/${zip_bootstrap_directory}")
+endif()
 cadrumo_cached_command(zip_command zip
   INPUTS "${CADRUMO_PATH_STAGE}/$<CONFIG>/app" "${PROJECT_BINARY_DIR}/CPackConfig.cmake"
+    ${zip_delivery_inputs}
     "${PROJECT_BINARY_DIR}/CPackProject.cmake" "${PROJECT_BINARY_DIR}/Artifact.cmake"
     "${PROJECT_BINARY_DIR}/cmake_install.cmake" "${CADRUMO_PATH_GENERATED}/contract.json"
     "${PROJECT_SOURCE_DIR}/LICENSE" "${CMAKE_CPACK_COMMAND}"

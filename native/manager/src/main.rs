@@ -1,6 +1,6 @@
 //! Entrypoint of the per-user runtime manager image.
 //!
-//! Native admission precedes package probing, ownership and runtime supervision.
+//! Package verification and ownership precede runtime supervision.
 #![windows_subsystem = "windows"]
 
 #[cfg(windows)]
@@ -21,8 +21,6 @@ use std::{
 
 const USAGE_ERROR: u8 = 2;
 const STARTUP_FAILED: u8 = 69;
-#[cfg(windows)]
-const ADMISSION_REFUSED: u8 = 77;
 
 fn start(
     breakaway_attempted: bool,
@@ -35,13 +33,6 @@ fn start(
     diagnostics.host_event(EventKind::HostStarted, HostStage::Admission);
     #[cfg(windows)]
     diagnostics.host_event(EventKind::StageStarted, HostStage::Admission);
-    #[cfg(windows)]
-    if let Err(refusal) = cadrumo_manager::admission::require_current() {
-        cadrumo_manager::diagnostics::admission_refused(&diagnostics, refusal);
-        diagnostics.host_stopped(i32::from(ADMISSION_REFUSED));
-        let _ = writeln!(io::stderr(), "{}", refusal.code());
-        return ExitCode::from(ADMISSION_REFUSED);
-    }
     #[cfg(windows)]
     diagnostics.host_outcome(HostStage::Admission, HostOutcome::Ready);
     #[cfg(windows)]
@@ -152,7 +143,7 @@ fn run_windows(
     }
     let preferences =
         cadrumo_manager::preferences::Preferences::read(installation.locations().storage_root())?;
-    if intent == Intent::SignIn && !preferences.start_at_sign_in {
+    if matches!(intent, Intent::SignIn | Intent::Recovery) && !preferences.start_at_sign_in {
         return Ok(());
     }
     let tray =
@@ -179,6 +170,8 @@ fn run_windows(
         diagnostics.clone(),
         if intent == Intent::SignIn {
             cadrumo_manager::session::ownership::StartKind::SignIn
+        } else if intent == Intent::Recovery {
+            cadrumo_manager::session::ownership::StartKind::Recovery
         } else {
             cadrumo_manager::session::ownership::StartKind::Manual
         },
@@ -201,6 +194,35 @@ fn run_windows(
 fn main() -> ExitCode {
     let arguments: Vec<_> = env::args_os().skip(1).collect();
     match Invocation::parse(&arguments) {
+        #[cfg(windows)]
+        Ok(Invocation::Service) => match cadrumo_manager::service_windows::run() {
+            Ok(()) => ExitCode::SUCCESS,
+            Err(_) => {
+                let _ = writeln!(io::stderr(), "manager_service_failed");
+                ExitCode::from(STARTUP_FAILED)
+            }
+        },
+        #[cfg(windows)]
+        Ok(Invocation::ServiceWorker { sign_in }) => {
+            if cadrumo_manager::service_windows::admit_worker().is_err() {
+                let _ = writeln!(io::stderr(), "manager_service_worker_refused");
+                return ExitCode::from(STARTUP_FAILED);
+            }
+            start(
+                true,
+                if sign_in {
+                    Intent::SignIn
+                } else {
+                    Intent::Recovery
+                },
+                None,
+            )
+        }
+        #[cfg(not(windows))]
+        Ok(Invocation::Service | Invocation::ServiceWorker { .. }) => {
+            let _ = writeln!(io::stderr(), "manager_platform_unavailable");
+            ExitCode::from(STARTUP_FAILED)
+        }
         Ok(Invocation::Start { intent, breakaway }) => start(breakaway, intent, None),
         Ok(Invocation::Cutover(designation)) => start(false, Intent::Manual, Some(designation)),
         Ok(Invocation::SupportsRetry) => ExitCode::SUCCESS,

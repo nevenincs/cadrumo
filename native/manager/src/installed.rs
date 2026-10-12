@@ -6,8 +6,11 @@ use crate::supervision::{
     launch::{LaunchTarget, runtime_image},
     supervisor::VersionProbe,
 };
+#[cfg(windows)]
+use cadrumo_application::diagnostics::{Diagnostics, EventKind, HostStage};
 use cadrumo_application::{
     child::ChildConfiguration,
+    component::Cancellation,
     diagnostics::lifecycle::InspectionRefusal,
     error::Error as ApplicationCause,
     package::{PackageManifest, Readiness},
@@ -28,6 +31,16 @@ impl InspectionFailure {
     }
     fn refused(refusal: InspectionRefusal) -> Self {
         Self::new(refusal, io::ErrorKind::InvalidData.into())
+    }
+
+    #[cfg(any(windows, test))]
+    pub(crate) fn is_cancelled(&self) -> bool {
+        matches!(
+            self.cause
+                .get_ref()
+                .and_then(|cause| cause.downcast_ref::<ApplicationCause>()),
+            Some(ApplicationCause::Cancelled)
+        )
     }
 }
 impl fmt::Display for InspectionFailure {
@@ -65,6 +78,24 @@ impl InstalledRuntime {
         Self::prepare(locations)
     }
 
+    #[cfg(windows)]
+    pub(crate) fn inspect_for_host(
+        locations: &ManagedLocations,
+        cancellation: &Cancellation,
+        diagnostics: &Diagnostics,
+    ) -> Result<Self, InspectionFailure> {
+        require_no_failed_marker(locations.storage_root())?;
+        diagnostics.host_event(EventKind::StageStarted, HostStage::Package);
+        require_package_cancellable(locations.package_root(), cancellation)?;
+        diagnostics.host_event(EventKind::StageCompleted, HostStage::Package);
+        diagnostics.host_event(EventKind::StageStarted, HostStage::Environment);
+        let result = Self::prepare_cancellable(locations, cancellation);
+        if result.is_ok() {
+            diagnostics.host_event(EventKind::StageCompleted, HostStage::Environment);
+        }
+        result
+    }
+
     /// Consume catalogue admission for this manager; runtime identity is still probed.
     #[cfg(windows)]
     pub fn from_admitted(
@@ -78,6 +109,13 @@ impl InstalledRuntime {
     }
 
     fn prepare(locations: &ManagedLocations) -> Result<Self, InspectionFailure> {
+        Self::prepare_cancellable(locations, &Cancellation::default())
+    }
+
+    fn prepare_cancellable(
+        locations: &ManagedLocations,
+        cancellation: &Cancellation,
+    ) -> Result<Self, InspectionFailure> {
         let package = locations.package_root();
         let query = ChildConfiguration::new(
             package.join(crate::contract::EXECUTABLE),
@@ -95,7 +133,7 @@ impl InstalledRuntime {
                 io::Error::other(cause),
             )
         })?;
-        let identity = probe(&query).map_err(|cause| {
+        let identity = probe_cancellable(&query, cancellation).map_err(|cause| {
             InspectionFailure::new(InspectionRefusal::RuntimeProbeFailed, cause)
         })?;
         require_identity(&identity, locations.storage_root())?;
@@ -129,11 +167,19 @@ fn require_no_failed_marker(root: &Path) -> Result<(), InspectionFailure> {
 }
 
 fn require_package(package: &Path) -> Result<(), InspectionFailure> {
+    require_package_cancellable(package, &Cancellation::default())
+}
+
+fn require_package_cancellable(
+    package: &Path,
+    cancellation: &Cancellation,
+) -> Result<(), InspectionFailure> {
     #[cfg(test)]
     PACKAGE_INSPECTIONS.with(|count| count.set(count.get() + 1));
     let manifest_path =
         RelativePath::new(crate::contract::MODE_PACKAGE_MANIFEST).map_err(package_failure)?;
-    let manifest = PackageManifest::read(package, &manifest_path).map_err(package_failure)?;
+    let manifest = PackageManifest::read_cancellable(package, &manifest_path, cancellation)
+        .map_err(package_failure)?;
     let contract: cadrumo_application::installation::DiscoveryContract =
         serde_json::from_str(crate::contract::INSTALLATION_CONTRACT).map_err(|cause| {
             InspectionFailure::new(
@@ -142,11 +188,12 @@ fn require_package(package: &Path) -> Result<(), InspectionFailure> {
             )
         })?;
     let inspection = manifest
-        .inspect(
+        .inspect_cancellable(
             package,
             &manifest_path,
             &contract.layout.platform,
             crate::contract::ABI,
+            cancellation,
         )
         .map_err(package_failure)?;
     match inspection.readiness {
@@ -184,10 +231,21 @@ fn require_identity(
 }
 
 fn probe(query: &ChildConfiguration) -> io::Result<runtime::RuntimeIdentity> {
+    probe_cancellable(query, &Cancellation::default())
+}
+
+fn probe_cancellable(
+    query: &ChildConfiguration,
+    cancellation: &Cancellation,
+) -> io::Result<runtime::RuntimeIdentity> {
     tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()?
-        .block_on(runtime::identity(query, Duration::from_secs(30)))
+        .block_on(runtime::identity_cancellable(
+            query,
+            Duration::from_secs(30),
+            cancellation,
+        ))
         .map_err(io::Error::other)
 }
 
@@ -330,6 +388,24 @@ mod tests {
             serde_json::json!(format!("{:x}", Sha256::digest(b"synthetic-private-file")));
         fs::write(&manifest, serde_json::to_vec(&document).unwrap()).unwrap();
         require_package(&package).unwrap();
+        let cancellation = Cancellation::default();
+        cancellation.cancel();
+        let cancelled = require_package_cancellable(&package, &cancellation).unwrap_err();
+        assert!(cancelled.is_cancelled());
+        assert!(
+            !package_failure(ApplicationCause::Io(io::Error::other(
+                ApplicationCause::Cancelled
+            )))
+            .is_cancelled()
+        );
+        // Cancellation must win before native manifest access, without accepting
+        // the incomplete package on a later uncancelled admission.
+        fs::remove_file(package.join("fixture.bin")).unwrap();
+        assert!(require_package_cancellable(&package, &cancellation).is_err());
+        let missing = require_package(&package).unwrap_err();
+        assert_eq!(missing.refusal, InspectionRefusal::PackageIncomplete);
+        assert!(!missing.is_cancelled());
+        fs::write(package.join("fixture.bin"), b"synthetic-private-file").unwrap();
         document["layout"]["platform"] = serde_json::json!("different-build-target");
         fs::write(&manifest, serde_json::to_vec(&document).unwrap()).unwrap();
         assert_eq!(

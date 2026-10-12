@@ -16,7 +16,8 @@ import pytest
 from click.testing import Result
 
 from ....tests.cli_envelope import require_schema_envelope
-from .modelo_profile_seed import ProfileSeeder, invoke_seeded_profile_cli, seed_profile
+from .cli_runner import invoke_cached_cli
+from .modelo_profile_seed import ProfileSeeder, seed_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["seed_profile"]
@@ -29,7 +30,7 @@ def _isolated_backend(seed_profile: ProfileSeeder) -> None:
 
 
 def _invoke_invoice(args: Sequence[str]) -> Result:
-    return invoke_seeded_profile_cli(["app", "ledger", "invoice", *args])
+    return invoke_cached_cli(["app", "ledger", "invoice", *args])
 
 
 def _add_args(
@@ -178,7 +179,7 @@ def test_invoice_add_accepts_ordered_json_lines_and_reads_back_canonical_documen
         },
     )
 
-    added = invoke_seeded_profile_cli(
+    added = invoke_cached_cli(
         [
             "--format",
             "json",
@@ -217,7 +218,7 @@ def test_invoice_add_accepts_ordered_json_lines_and_reads_back_canonical_documen
     assert add_payload["iva_total"] == "2.60"
     assert add_payload["grand_total"] == "17.60"
 
-    viewed = invoke_seeded_profile_cli(
+    viewed = invoke_cached_cli(
         ["--format", "json", "app", "ledger", "invoice", "view", invoice_id],
     )
     assert viewed.exit_code == 0, viewed.output
@@ -238,7 +239,7 @@ def test_invoice_add_accepts_ordered_json_lines_and_reads_back_canonical_documen
     ),
 )
 def test_invoice_add_refuses_invalid_structured_line_without_mutation(line: str) -> None:
-    refused = invoke_seeded_profile_cli(
+    refused = invoke_cached_cli(
         [
             "--format",
             "json",
@@ -264,7 +265,7 @@ def test_invoice_add_refuses_invalid_structured_line_without_mutation(line: str)
     )
     assert refused.exit_code != 0
 
-    listed = invoke_seeded_profile_cli(["--format", "json", "app", "ledger", "invoice", "list"])
+    listed = invoke_cached_cli(["--format", "json", "app", "ledger", "invoice", "list"])
     assert listed.exit_code == 0, listed.output
     assert require_schema_envelope(listed.output)["count"] == 0
 
@@ -280,7 +281,7 @@ def test_invoice_add_refuses_mixed_scalar_and_structured_input_before_mutation()
             "iva_amount": "2.10",
         },
     )
-    refused = invoke_seeded_profile_cli(
+    refused = invoke_cached_cli(
         [
             "--format",
             "json",
@@ -308,7 +309,7 @@ def test_invoice_add_refuses_mixed_scalar_and_structured_input_before_mutation()
     )
     assert refused.exit_code != 0
 
-    listed = invoke_seeded_profile_cli(["--format", "json", "app", "ledger", "invoice", "list"])
+    listed = invoke_cached_cli(["--format", "json", "app", "ledger", "invoice", "list"])
     assert listed.exit_code == 0, listed.output
     assert require_schema_envelope(listed.output)["count"] == 0
 

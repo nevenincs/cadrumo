@@ -1,0 +1,7 @@
+{
+  "host": "0.0.0.0",
+  "devPort": 15370,
+  "previewPort": 15371,
+  "docsPort": 15372,
+  "cataloguePort": 6006
+}

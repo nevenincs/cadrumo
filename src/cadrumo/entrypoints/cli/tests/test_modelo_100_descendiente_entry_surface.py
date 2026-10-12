@@ -26,21 +26,20 @@ encrypted profile and a native worker with synthetic OS/store observations:
 from __future__ import annotations
 
 import sys
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from click.testing import Result
 
 from ....domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
+from .cli_runner import invoke_cached_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
-from .modelo_profile_seed import invoke_seeded_profile_cli
 from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 pytestmark = [
@@ -121,11 +120,6 @@ def _seed_natural_person_profile(runtime_profile: NativeCliProfileFixture) -> No
             "renta_filing.declaration_type": "1",
         },
     )
-
-
-def invoke_cached_cli(args: Sequence[str]) -> Result:
-    """Run each command as the registered profile's operator, through its joined runtime."""
-    return invoke_seeded_profile_cli(args)
 
 
 def _registry_first_tranche(year: int) -> Decimal:

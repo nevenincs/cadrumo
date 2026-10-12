@@ -134,6 +134,7 @@ function crates(t) {
     "application",
     "platform",
     "installer",
+    "manager",
     "desktop/src-tauri",
   ]) {
     mkdirSync(join(native, crate, "src"), { recursive: true });
@@ -155,6 +156,7 @@ test("a full host snapshot drops renamed sources and keeps generated files", (t)
     "application",
     "platform",
     "installer",
+    "manager",
     "desktop/src-tauri",
   ])
     renameSync(

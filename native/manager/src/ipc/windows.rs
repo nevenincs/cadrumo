@@ -250,7 +250,7 @@ fn inspect_peer(pid: u32, expected: &ManagerSession, images: &[PathBuf]) -> io::
     // SAFETY: process remains held throughout inspection and token receives one handle.
     checked(unsafe { OpenProcessToken(raw(&process), 8, &mut token) })?;
     let token = owned(token)?;
-    if token_number(&token, 12)?.to_string() != expected.session || token_number(&token, 18)? == 2 {
+    if token_number(&token, 12)?.to_string() != expected.session {
         return Err(io::ErrorKind::PermissionDenied.into());
     }
     // TOKEN_USER fits in a bounded buffer (a Windows SID is at most 68 bytes).
@@ -442,6 +442,23 @@ impl Server {
     /// Call only after package admission. Image members come from the same
     /// generated layout used to verify the admitted manager package.
     pub fn bind_installed(package: &Path) -> io::Result<Self> {
+        Self::bind_package(package, false)
+    }
+
+    /// A verified desktop package may host the same owner/session supervisor.
+    pub fn bind_embedded(package: &Path) -> io::Result<Self> {
+        Self::bind_package(package, true)
+    }
+
+    pub fn bind_embedded_root(package: &Path, manager_id: &str) -> io::Result<Self> {
+        Self::bind_package_named(package, true, manager_id)
+    }
+
+    fn bind_package(package: &Path, embedded: bool) -> io::Result<Self> {
+        Self::bind_package_named(package, embedded, crate::identity::MANAGER_ID)
+    }
+
+    fn bind_package_named(package: &Path, embedded: bool, manager_id: &str) -> io::Result<Self> {
         let contract: cadrumo_application::installation::DiscoveryContract =
             serde_json::from_str(crate::contract::INSTALLATION_CONTRACT)
                 .map_err(io::Error::other)?;
@@ -451,7 +468,8 @@ impl Server {
                 .map_err(io::Error::other)?
                 .under(package),
         )?;
-        if manager != fs::canonicalize(std::env::current_exe()?)? {
+        let current = fs::canonicalize(std::env::current_exe()?)?;
+        if !embedded && manager != current {
             return Err(io::ErrorKind::PermissionDenied.into());
         }
         let mut images = vec![manager.clone()];
@@ -474,11 +492,14 @@ impl Server {
                 images.push(fs::canonicalize(path)?);
             }
         }
+        if embedded && (current == manager || !images.contains(&current)) {
+            return Err(io::ErrorKind::PermissionDenied.into());
+        }
         Self::bind(
-            crate::identity::MANAGER_ID,
+            manager_id,
             ManagerSession::current()?,
             images,
-            manager,
+            if embedded { current } else { manager },
         )
     }
 
@@ -662,7 +683,35 @@ impl Server {
 /// A caller supplies an already-admitted exact manager image. A pipe name alone
 /// never authenticates the server. No automatic runtime/manager launch occurs.
 pub fn request(manager: &Path, request: &Request) -> io::Result<Response> {
-    request_to(crate::identity::MANAGER_ID, manager, request)
+    request_host(crate::identity::MANAGER_ID, manager, request)
+}
+
+/// Qualified embedded roots use the same exact package-image peer admission.
+pub fn request_host(manager_id: &str, manager: &Path, request: &Request) -> io::Result<Response> {
+    match request_to(manager_id, manager, request) {
+        Err(error) if error.kind() == io::ErrorKind::PermissionDenied => {
+            // Package admission remains the caller's responsibility. A desktop
+            // fallback is admitted only at its exact generated image member,
+            // with the same native owner/session verification as the manager.
+            let contract: cadrumo_application::installation::DiscoveryContract =
+                serde_json::from_str(crate::contract::INSTALLATION_CONTRACT)
+                    .map_err(io::Error::other)?;
+            let package = manager.parent().ok_or(io::ErrorKind::InvalidInput)?;
+            let desktop = contract
+                .layout
+                .application_images
+                .iter()
+                .find(|image| image.target == "desktop-host-build" && image.placement == ".")
+                .ok_or(io::ErrorKind::PermissionDenied)?;
+            let member = cadrumo_application::value::RelativePath::new(format!(
+                "{}{}",
+                desktop.name, contract.layout.entrypoint_suffix
+            ))
+            .map_err(io::Error::other)?;
+            request_to(manager_id, &member.under(package), request)
+        }
+        result => result,
+    }
 }
 
 fn request_to(manager_id: &str, manager: &Path, request: &Request) -> io::Result<Response> {
@@ -801,6 +850,28 @@ mod tests {
     #[test]
     fn native_pipe_verifies_both_images_before_performing_retry() {
         let image = std::env::current_exe().unwrap();
+        let current = ManagerSession::current().unwrap();
+        // Native identity admits this real token regardless of its elevation.
+        // Changing expected owner/session must still refuse the same process.
+        assert!(inspect_peer(std::process::id(), &current, std::slice::from_ref(&image)).is_ok());
+        for expected in [
+            ManagerSession {
+                user: "S-1-0-0".into(),
+                session: current.session.clone(),
+            },
+            ManagerSession {
+                user: current.user.clone(),
+                session: format!("{}-other", current.session),
+            },
+        ] {
+            assert_eq!(
+                inspect_peer(std::process::id(), &expected, std::slice::from_ref(&image))
+                    .err()
+                    .unwrap()
+                    .kind(),
+                io::ErrorKind::PermissionDenied
+            );
+        }
         let (response, retries) = exchange(true, image.clone());
         assert_eq!(response.unwrap().outcome, Outcome::ReEvaluated);
         assert_eq!(retries, 1);

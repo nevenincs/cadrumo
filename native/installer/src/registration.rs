@@ -16,6 +16,9 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[path = "registration_service.rs"]
+pub mod service;
+
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Description {
@@ -29,6 +32,8 @@ pub struct Description {
     pub shortcuts: Vec<Shortcut>,
     pub absent_registry: Vec<AbsentRegistry>,
     pub absent_shortcuts: Vec<String>,
+    #[serde(default)]
+    pub services: Vec<service::Description>,
 }
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -62,7 +67,7 @@ impl Description {
             return Err(Refusal::InvalidRequest);
         }
         let description: Self = serde_json::from_str(value).map_err(|_| Refusal::InvalidRequest)?;
-        if description.schema != 1
+        if !matches!(description.schema, 1 | 2)
             || description.files.len() != 4
             || description.components.len() > 16
             || description.components.is_empty()
@@ -71,8 +76,24 @@ impl Description {
             || description.shortcuts.len() > 1
             || description.absent_registry.len() > 2
             || description.absent_shortcuts.len() > 1
+            || description.services.len() > 1
         {
             return Err(Refusal::InvalidRequest);
+        }
+        if description.schema == 2 {
+            let machine = description.scope == Scope::Machine;
+            if description.services.len() != usize::from(machine) {
+                return Err(Refusal::InvalidRequest);
+            }
+        } else if !description.services.is_empty() {
+            return Err(Refusal::InvalidRequest);
+        }
+        for service in &description.services {
+            service.validate(
+                &description.application_id,
+                &description.components,
+                &description.files,
+            )?;
         }
         for path in description
             .files
@@ -127,6 +148,9 @@ impl Description {
         for expected in &self.registry {
             observation.registry(expected)?;
         }
+        for expected in &self.services {
+            service::verify(expected, owner.prefix())?;
+        }
         for expected in &self.shortcuts {
             held.push(observation.shortcut(expected)?);
         }
@@ -143,6 +167,33 @@ impl Description {
             }
         }
         Ok(held)
+    }
+
+    /// A machine service must release its stable image before native removal.
+    pub fn stop_service(
+        &self,
+        owner: &NativeOwner,
+        held: &mut Vec<service::RestartGuard>,
+    ) -> Result<(), Refusal> {
+        for expected in &self.services {
+            service::stop(expected, owner.prefix(), held)?;
+        }
+        Ok(())
+    }
+
+    pub fn verify_service_removed(&self) -> Result<(), Refusal> {
+        for expected in &self.services {
+            service::verify_absent(&expected.name)?;
+        }
+        Ok(())
+    }
+
+    /// Operational health is distinct from custody of a stopped installation.
+    pub fn verify_service_running(&self, owner: &NativeOwner) -> Result<(), Refusal> {
+        for expected in &self.services {
+            service::verify_running(expected, owner.prefix())?;
+        }
+        Ok(())
     }
 
     pub(crate) fn verify_files(&self, owner: &NativeOwner) -> Result<Vec<FileCustody>, Refusal> {
@@ -547,6 +598,31 @@ mod tests {
         value["files"].as_object_mut().unwrap().remove("../escape");
         value["files"]["safe"] = serde_json::json!("a".repeat(64));
         assert!(Description::parse(&value.to_string()).is_ok());
+        let mut modern = value.clone();
+        modern["schema"] = serde_json::json!(2);
+        modern["scope"] = serde_json::json!("user");
+        modern["services"] = serde_json::json!([]);
+        assert!(Description::parse(&modern.to_string()).is_ok());
+        modern["scope"] = serde_json::json!("machine");
+        assert!(Description::parse(&modern.to_string()).is_err());
+        modern["services"] = serde_json::json!([{
+            "component":"12345678-1234-1234-1234-123456789ABC", "name":"test.manager",
+            "binary":"[INSTALL_ROOT]safe", "arguments":"--service", "account":"LocalSystem", "start":"auto"
+        }]);
+        assert!(Description::parse(&modern.to_string()).is_ok());
+        for (key, wrong) in [
+            ("name", "other.manager"),
+            ("account", "LocalService"),
+            ("start", "demand"),
+            ("arguments", "--retry"),
+            ("binary", "[INSTALL_ROOT]unowned"),
+        ] {
+            let mut changed = modern.clone();
+            changed["services"][0][key] = serde_json::json!(wrong);
+            assert!(Description::parse(&changed.to_string()).is_err(), "{key}");
+        }
+        modern["scope"] = serde_json::json!("user");
+        assert!(Description::parse(&modern.to_string()).is_err());
         for path in ["../escape.lnk", "C:/escape.lnk", "bad\\leaf.lnk"] {
             let mut changed = value.clone();
             changed["absent_shortcuts"] = serde_json::json!([path]);

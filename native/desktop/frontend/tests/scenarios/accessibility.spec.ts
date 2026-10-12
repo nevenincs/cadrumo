@@ -1,3 +1,4 @@
+import { openPanelTab } from "../support/panel";
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -145,10 +146,7 @@ const SURFACES: {
     name: "a record's menu",
     scenario: "signed-in",
     reach: async (target) => {
-      await target
-        .getByRole("navigation", { name: label("desktop.rail.label") })
-        .getByRole("button", { name: label("desktop.rail.logs") })
-        .click();
+      await openPanelTab(target, "logs");
       await target.locator(".record").first().click({ button: "right" });
       await expect(target.getByRole("menu")).toBeVisible();
     },
@@ -161,10 +159,7 @@ const SURFACES: {
     name: "an empty log",
     scenario: "empty",
     reach: async (target) => {
-      await target
-        .getByRole("navigation", { name: label("desktop.rail.label") })
-        .getByRole("button", { name: label("desktop.rail.logs") })
-        .click();
+      await openPanelTab(target, "logs");
       await expect(target.locator(".logview-list")).toContainText(
         label("desktop.logs.empty"),
       );
@@ -309,10 +304,7 @@ const SURFACES: {
     name: "the log view",
     scenario: "signed-in",
     reach: async (target) => {
-      await target
-        .getByRole("navigation", { name: label("desktop.rail.label") })
-        .getByRole("button", { name: label("desktop.rail.logs") })
-        .click();
+      await openPanelTab(target, "logs");
       await expect(target.locator(".record").first()).toBeVisible();
     },
   },
@@ -322,10 +314,7 @@ const SURFACES: {
     reach: async (target) => {
       await expect(target.locator(".sign-in")).toBeVisible();
       await target.keyboard.press("Escape");
-      await target
-        .getByRole("navigation", { name: label("desktop.rail.label") })
-        .getByRole("button", { name: label("desktop.rail.logs") })
-        .click();
+      await openPanelTab(target, "logs");
       await expect(target.locator(".source-banner")).toBeVisible();
     },
   },

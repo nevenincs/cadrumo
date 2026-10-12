@@ -166,7 +166,7 @@ pub fn admit(mode: &Mode) -> Result<Admission> {
 }
 
 fn admit_with(mode: &Mode, family: impl FnOnce() -> Result<String>) -> Result<Admission> {
-    if let Mode::Cli(_) = mode {
+    if matches!(mode, Mode::Cli(_) | Mode::Health { .. }) {
         return Ok(Admission::Headless);
     }
     let admission = claim(&family()?)?;
@@ -505,11 +505,16 @@ $held.Dispose()
         });
         let activations = holding.recv().unwrap();
         // The passthrough never resolves the key, so it cannot reach the lock.
-        let headless = admit_with(&Mode::Cli(vec!["--version".into()]), || {
-            panic!("the headless passthrough resolved the lock key")
-        })
-        .unwrap();
-        assert!(matches!(headless, Admission::Headless));
+        for mode in [
+            Mode::Cli(vec!["--version".into()]),
+            Mode::Health { hold_seconds: 0 },
+        ] {
+            let headless = admit_with(&mode, || {
+                panic!("a headless invocation resolved the lock key")
+            })
+            .unwrap();
+            assert!(matches!(headless, Admission::Headless));
+        }
         assert_eq!(activations.load(Ordering::SeqCst), 0);
         // Control: a GUI launch with the same key does contend.
         let gui = admit_with(&Mode::Gui, || Ok(family.clone())).unwrap();

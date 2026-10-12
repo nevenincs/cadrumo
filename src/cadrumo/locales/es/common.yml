@@ -634,6 +634,10 @@ desktop:
   docs:
     frame_title: Documentación de Cadrumo
     loading: Cargando la documentación…
+    not_bundled: Esta copia de Cadrumo se ha compilado sin la documentación. Todo
+      lo demás funciona con normalidad.
+    unavailable: No se ha podido abrir la documentación. Todo lo demás funciona con
+      normalidad.
   host:
     failed: Esta parte no se ha podido cargar.
     unavailable: Esta parte necesita la aplicación de escritorio.
@@ -754,6 +758,7 @@ desktop:
     password: Contraseña
     profile: Perfil
     profiles_unread: No se han podido leer los perfiles de este equipo.
+    recovering_services: Recuperando los servicios en segundo plano…
     recovery_hint: ¿Has perdido la contraseña o el perfil está bloqueado? Usa la TUI.
     refused:
       custody_changed: La contraseña o la configuración de recuperación de este perfil
@@ -781,6 +786,8 @@ desktop:
       receipt_expired: Tu sesión ha caducado. Vuelve a iniciar sesión.
       runtime_unavailable: Los servicios en segundo plano de Cadrumo no están en marcha.
       throttled: Demasiados intentos. Podrás volver a intentarlo en {seconds} s.
+    services_recovered: Los servicios en segundo plano están listos. Comprobando el
+      inicio de sesión…
     show_password: Mostrar la contraseña
     signed_out_lead: Inicia sesión para abrir tu espacio de trabajo en la TUI.
     start_services: Iniciar servicios en segundo plano
@@ -2081,13 +2088,13 @@ tui:
     aeat_sync: Sincronización AEAT
     declarations: Declaraciones
     home: Inicio
-    ledger: Registros
-    profile: Perfil
-    withholding: Retenciones
     installation: Instalación
+    ledger: Registros
     operations: Operaciones
-  home:
+    profile: Perfil
     reference: Referencia
+    withholding: Retenciones
+  home:
     account_fallback: Cuenta
     action:
       context_across_records: En todos los registros
@@ -2326,12 +2333,12 @@ tui:
       invalid: No válido.
       outcome: 'Resultado de la verificación: {outcome}'
       valid: Válido.
-      entries: Apuntes
-      evidence: Justificantes
-      import: Importación
   ledger:
     area:
       classification: Clasificación
+      entries: Apuntes
+      evidence: Justificantes
+      import: Importación
       overview: Resumen
       reconciliation: Conciliación
       review: Revisión
@@ -3583,12 +3590,12 @@ tui:
         uuid: Identificador
       invalid: La solicitud aún no es válida. No se ha enviado nada.
       profile: Perfil
-      required: obligatorio
-      secret: Secreto (oculto al escribir, se envía aparte de la solicitud)
-      secret_required: Esta operación necesita su secreto. Introdúcelo y vuelve a
       replay_key: Clave de repetición (opcional)
       replay_key_hint: Envía la misma clave otra vez con la misma solicitud para recuperar
         la primera operación en lugar de iniciar una nueva.
+      required: obligatorio
+      secret: Secreto (oculto al escribir, se envía aparte de la solicitud)
+      secret_required: Esta operación necesita su secreto. Introdúcelo y vuelve a
         ejecutar. No se ha enviado nada.
       session: Sesión
       subject: Sujeto
@@ -3701,12 +3708,12 @@ tui:
       support_matrix: 'Lo que Cadrumo puede hacer con cada modelo: calcular, exportar,
         leer copias presentadas.'
     title: Referencia
-    availability: 'Disponibilidad - almacenamiento: {storage}; autoridad: {authority};
-      proveedor: {provider}'
-    change_user: Cambiar de usuario
   restricted:
     actions: 'Acciones permitidas: {values}'
     all_periods: Todos los períodos
+    availability: 'Disponibilidad - almacenamiento: {storage}; autoridad: {authority};
+      proveedor: {provider}'
+    change_user: Cambiar de usuario
     close: Cerrar
     grant: 'Concesión válida: {valid}; vence: {expires_at}'
     lock: Bloquear esta sesión
@@ -3829,13 +3836,13 @@ tui:
       aeat_sync: Abrir Sincronización AEAT
       declarations: Abrir Declaraciones
       home: Abrir Inicio
-      ledger: Abrir Registros
-      profile: Abrir Perfil
-      unknown: Abrir área
       installation: Abrir Instalación
+      ledger: Abrir Registros
       operations: Abrir Operaciones
-      withholding: Abrir Retenciones
+      profile: Abrir Perfil
       reference: Abrir Referencia
+      unknown: Abrir área
+      withholding: Abrir Retenciones
     destination_help:
       aeat_sync: Lo que se ha leído de la AEAT y lo que se puede leer a continuación
       declarations: Declaraciones, cálculos anteriores, historial de presentaciones
@@ -3848,12 +3855,12 @@ tui:
         rellenarlas y ejecutarlas
       profile: Los datos de este perfil y los orígenes que los completan
       reference: Modelos, casillas, categorías, portales y métodos de acceso
-      refresh_failed: La última actualización no pudo reconstruir el índice.
-      unavailable: La búsqueda no está disponible en esta sesión
-      unknown: No se ha podido preparar la búsqueda.
       withholding: Registrar y consultar retenciones de facturas del ejercicio seleccionado
     refusal:
       not_composed: Todavía no se han podido leer todas las áreas.
+      refresh_failed: La última actualización no pudo reconstruir el índice.
+      unavailable: La búsqueda no está disponible en esta sesión
+      unknown: No se ha podido preparar la búsqueda.
     result:
       address: Modelo %{modelo} · %{filing_year} · %{period}
       label:

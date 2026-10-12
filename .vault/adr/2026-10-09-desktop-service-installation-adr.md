@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-service-installation'
 date: '2026-10-09'
-modified: '2026-10-09'
+modified: '2026-10-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:401e90fcc9f30df9b5d32991265400c3bc90c18eee72e60423d30b9d4663e470'
+body_hash: 'sha256:d968ec2cc09c215b44771818450290a82ce5a8cd9abcc419263a09ec8af40315'
 related:
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
   - "[[2026-10-07-application-distribution-windows-versioned-msi-adr]]"
@@ -36,6 +36,11 @@ Authorized 2026-10-09 by the operator's explicit implementation request. This sc
 The desktop may install or ensure the manager through a token-checked internal command with a closed user/machine scope. The command admits a companion kit against the actively running package identity and inventory, verifies the runner and MSI artifacts before execution, and never takes executable paths from the webview. User installation is unelevated; machine installation uses the native elevation prompt. Native commitment plus catalogue rediscovery is required before success. Cancellation or ambiguous maintenance never implies publication. Runtime and manager remain unelevated interactive-user processes; profile, password and runtime transport authority are excluded.
 
 The kit lives beside the immutable package, since embedding a release MSI inside the package it installs would create a recursive inventory. Layout declares the sibling directory and descriptor. Default launch ensures user installation only when manager discovery finds no usable installation; a user can explicitly request machine installation. Existing valid installations are started without installation. Development or storage/authority overrides remain unmanaged.
+
+### 2026-10-10 authorized startup ownership and optional-installation amendment
+
+Accepted under the user's explicit instruction that installation is optional, admin installation supplies a machine-start platform manager, user installation supplies login startup, and every running Cadrumo GUI must establish runtime supervision. This supersedes the earlier exclusions of desktop-owned supervision and Windows SCM hosting for this scope. A boot-time Windows service is a lifecycle broker only: it launches and watches per-user managers using genuine user logon tokens; it never owns profile credentials or runs a taxpayer runtime as SYSTEM. User-only installation retains unprivileged login startup. Cadrumo embeds the existing manager supervision core as a fallback when no installed session manager owns supervision, with the same native ownership lock, runtime start claim, process identity verification, heartbeat/recovery and authenticated client readiness. Existing installed managers retain ownership; a running GUI watches their liveness and takes over after ownership is released. Installation registration, dispatch acknowledgement, a PID or a supervisor ready line alone never establishes application readiness. CLI, TUI and MCP remain connect-only. Build and command acceptance exercise the shipped Cadrumo startup path and fail when supervision or real native IPC readiness fails. No development-host boot/login registration is required to test GUI fallback. Real installed boot/login acceptance remains separately reported until exercised on a disposable host. Detailed prior evidence: 2026-10-09-runtime-process-lifecycle-audit.
+
 
 ## Implementation
 

@@ -5,6 +5,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import sys
+from collections.abc import Iterable
 from pathlib import Path, PurePath, PurePosixPath, PureWindowsPath
 from typing import Any
 from xml.etree.ElementTree import Element, SubElement, tostring
@@ -19,6 +21,34 @@ from .windows_msi_identity import InstallationScope, MsiIdentity, ProductRole, m
 WIX_NAMESPACE = "http://wixtoolset.org/schemas/v4/wxs"
 MAINTENANCE_GATE = "Native MSI transaction, scope admission and safe maintenance are not yet integrated."
 OWNER_GATE = "Installation requires the authenticated native maintenance owner."
+
+
+def verify_destination_lengths(prefix: PureWindowsPath, members: Iterable[str]) -> None:
+    """Admit every installed destination within the legacy MSI path budget."""
+    if not prefix.is_absolute() or ".." in prefix.parts:
+        raise ValueError("MSI destination requires an absolute Windows installation prefix")
+    for relative in members:
+        member_path = PurePosixPath(relative)
+        if member_path.is_absolute() or ".." in member_path.parts or "\\" in relative or ":" in relative:
+            raise ValueError("MSI destination member must remain relative to its installation prefix")
+        destination = prefix / member_path
+        if len(str(destination).encode("utf-16-le")) // 2 >= 260:
+            raise ValueError(f"MSI installed destination exceeds 259 UTF-16 units: {relative}")
+
+
+def default_installation_prefixes(name: str) -> tuple[PureWindowsPath, PureWindowsPath]:
+    """Resolve MSI folder owners; portable authoring checks nominal Windows defaults."""
+    if sys.platform == "win32":
+        from win32com.shell import shell, shellcon
+
+        user = shell.SHGetKnownFolderPath(shellcon.FOLDERID_LocalAppData, 0, None)
+        machine = shell.SHGetKnownFolderPath(shellcon.FOLDERID_ProgramFilesX64, 0, None)
+    else:
+        # Cross-host authoring cannot attest the eventual account's known folders.
+        # Native maintenance must validate its actual selected prefix as well.
+        user = "C:/Users/Default/AppData/Local"
+        machine = "C:/Program Files"
+    return PureWindowsPath(user) / name, PureWindowsPath(machine) / name
 
 
 def _staged_manifest(build: Path) -> tuple[Path, dict[str, str], Path, dict[str, Any]]:
@@ -91,16 +121,28 @@ def _files(
     stage: Path,
     members: dict[str, str],
     native_marker: tuple[str, Path, str],
+    individual_names: set[str],
 ) -> Element:
     standard = SubElement(package, "StandardDirectory", Id=product.root_directory)
     root = SubElement(standard, "Directory", Id="INSTALL_ROOT", Name=_literal(value.name))
     directories = {"": root}
     seen: set[str] = set()
+    groups: dict[str, list[str]] = {}
+    separate_extensions = {".exe", ".dll", ".pyd", ".ocx", ".sys", ".drv", ".com", ".scr", ".cpl", ".hlp", ".chm"}
     for relative in sorted(members):
         if relative.casefold() in seen:
             raise ValueError("MSI resources collide in the Windows filename namespace")
         seen.add(relative.casefold())
         path = PurePosixPath(relative)
+        grouped = (
+            product.scope == "user"
+            and product.role == "version"
+            and path.name not in individual_names
+            and path.suffix.lower() not in separate_extensions
+        )
+        groups.setdefault("directory/" + str(path.parent) if grouped else "file/" + relative, []).append(relative)
+    for relatives in groups.values():
+        path = PurePosixPath(relatives[0])
         parent = root
         for index, name in enumerate(path.parts[:-1]):
             directory = "/".join(path.parts[: index + 1])
@@ -110,19 +152,28 @@ def _files(
                     parent, "Directory", Id="D_" + code.replace("-", ""), Name=_literal(name)
                 )
             parent = directories[directory]
-        resource = relative
+        resource = relatives[0]
         if product.role == "version":
-            resource = relative.removeprefix(f"{product.version_directory}/{value.version}/")
+            resource = resource.removeprefix(f"{product.version_directory}/{value.version}/")
+        if len(relatives) > 1:
+            inventory = "\0".join(relative.casefold() for relative in relatives).encode("utf-8")
+            resource = f"msi-directory-data/{PurePosixPath(resource).parent}/{hashlib.sha256(inventory).hexdigest()}"
         component = _component(parent, feature, product, resource)
-        file_id = "F_" + component.attrib["Id"][2:]
-        SubElement(
-            component,
-            "File",
-            Id=file_id,
-            Name=_literal(path.name),
-            Source=_source_path(native_marker[1] if relative == native_marker[0] else member(stage, relative)),
-            KeyPath="no" if product.scope == "user" else "yes",
-        )
+        for relative in relatives:
+            resource = (
+                relative.removeprefix(f"{product.version_directory}/{value.version}/")
+                if product.role == "version"
+                else relative
+            )
+            file_id = "F_" + product.component_code(resource).replace("-", "")
+            SubElement(
+                component,
+                "File",
+                Id=file_id,
+                Name=_literal(PurePosixPath(relative).name),
+                Source=_source_path(native_marker[1] if relative == native_marker[0] else member(stage, relative)),
+                KeyPath="no" if product.scope == "user" else "yes",
+            )
         if product.scope == "user":
             SubElement(
                 component,
@@ -135,6 +186,33 @@ def _files(
                 KeyPath="yes",
             )
     return root
+
+
+def _machine_service(component: Element, value: DistributionIdentity) -> None:
+    SubElement(
+        component,
+        "ServiceInstall",
+        Id="CadrumoMachineManager",
+        Name=value.manager_id,
+        DisplayName=_literal(value.manager_name),
+        Description="Starts and supervises Cadrumo managers in their real user logons.",
+        Type="ownProcess",
+        Start="auto",
+        ErrorControl="normal",
+        Account="LocalSystem",
+        Arguments="--service",
+        Vital="yes",
+    )
+    SubElement(
+        component,
+        "ServiceControl",
+        Id="CadrumoMachineManagerControl",
+        Name=value.manager_id,
+        Start="install",
+        Stop="both",
+        Remove="uninstall",
+        Wait="yes",
+    )
 
 
 def _registration(
@@ -165,17 +243,18 @@ def _registration(
             Value=text,
             KeyPath="yes" if name == "InstallLocation" else "no",
         )
-    login = _component(root, feature, product, "registry/login")
-    SubElement(
-        login,
-        "RegistryValue",
-        Root=product.registry_root,
-        Key="Software\\Microsoft\\Windows\\CurrentVersion\\Run",
-        Name=value.application_id,
-        Type="string",
-        Value='"[INSTALL_ROOT]' + manager + '" --sign-in',
-        KeyPath="yes",
-    )
+    if product.scope == "user":
+        login = _component(root, feature, product, "registry/login")
+        SubElement(
+            login,
+            "RegistryValue",
+            Root=product.registry_root,
+            Key="Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+            Name=value.application_id,
+            Type="string",
+            Value='"[INSTALL_ROOT]' + manager + '" --sign-in',
+            KeyPath="yes",
+        )
     if desktop:
         menu = SubElement(package, "StandardDirectory", Id="ProgramMenuFolder")
         folder = SubElement(menu, "Directory", Id="CADRUMO_MENU", Name=_literal(value.name))
@@ -275,19 +354,79 @@ def _source(
             AllowSameVersionUpgrades="no",
             DowngradeErrorMessage="A later shared registration product is already installed.",
         )
-    feature = SubElement(package, "Feature", Id="ProductFeature", Title=_literal(value.name), Level="1")
-    root = _files(package, feature, product, value, stage, files, native_marker)
+    feature = SubElement(
+        package,
+        "Feature",
+        Id="ProductFeature",
+        Title=_literal(value.name),
+        Level="1",
+        Display="hidden",
+        InstallDefault="local",
+        AllowAdvertise="no",
+        AllowAbsent="no",
+    )
+    root = _files(
+        package,
+        feature,
+        product,
+        value,
+        stage,
+        files,
+        native_marker,
+        {name for name in (manager, desktop) if name is not None},
+    )
     if role == "registration":
+        if scope == "machine":
+            components = [
+                component
+                for component in root.iter("Component")
+                if any(file.attrib["Name"] == manager for file in component.findall("File"))
+            ]
+            if len(components) != 1:
+                raise ValueError("Machine service requires one verified stable manager component")
+            _machine_service(components[0], value)
         _registration(package, feature, root, product, value, manager, desktop)
         description = _registration_description(package, product, value, files, stage, native_marker)
         # Preserve the literal template inside JSON without WiX treating it as a
         # Property-table reference. The native JSON decoder restores the token.
         encoded = json.dumps(description, separators=(",", ":")).replace("[INSTALL_ROOT]", "\\u005bINSTALL_ROOT\\u005d")
         SubElement(package, "Property", Id="CadrumoRegistration", Value=encoded)
+    components = list(package.iter("Component"))
+    if (
+        len(components)
+        + sum(
+            any(entry.attrib.get("KeyPath") == "yes" for entry in component.findall("RegistryValue"))
+            for component in components
+        )
+        > 65535
+    ):
+        raise ValueError("MSI component costing budget exceeds 65535 entries")
+    _partition_features(feature)
     content = tostring(wix, encoding="utf-8", xml_declaration=True)
     if not isinstance(content, bytes):
         raise TypeError("WiX source serialization did not produce UTF-8 bytes")
     return content
+
+
+def _partition_features(feature: Element) -> None:
+    """Keep every mandatory component within MSI's 1600-per-feature limit."""
+    references = feature.findall("ComponentRef")
+    relocated = set(references[1600:])
+    if not relocated:
+        return
+    feature[:] = [child for child in feature if child not in relocated]
+    for offset in range(1600, len(references), 1600):
+        child = SubElement(
+            feature,
+            "Feature",
+            Id=f"PayloadFeature{offset // 1600:04d}",
+            Level="1",
+            Display="hidden",
+            InstallDefault="followParent",
+            AllowAdvertise="no",
+            AllowAbsent="no",
+        )
+        child.extend(references[offset : offset + 1600])
 
 
 def _registration_description(
@@ -323,7 +462,7 @@ def _registration_description(
                 }
             )
     return {
-        "schema": 1,
+        "schema": 2,
         "application_id": value.application_id,
         "version": value.version,
         "scope": product.scope,
@@ -333,6 +472,19 @@ def _registration_description(
         },
         "components": [component.attrib["Guid"] for component in components],
         "registry": registry,
+        "services": [
+            {
+                "component": component.attrib["Guid"],
+                "name": service.attrib["Name"],
+                "binary": "[INSTALL_ROOT]" + file.attrib["Name"],
+                "arguments": service.attrib["Arguments"],
+                "account": service.attrib["Account"],
+                "start": service.attrib["Start"],
+            }
+            for component in components
+            for service in component.findall("ServiceInstall")
+            for file in component.findall("File")
+        ],
         "shortcuts": shortcuts,
         "absent_registry": []
         if shortcuts
@@ -452,6 +604,8 @@ def author(
     expected_shared = {manager, definition["marker"], "docs/licenses/CADRUMO.txt", "docs/licenses/NOTICE.txt"}
     if set(shared_files) != expected_shared or digest(member(stage, manager)) != digest(member(package, manager)):
         raise ValueError("MSI shared resources differ from the canonical registration owner")
+    for destination in default_installation_prefixes(value.name):
+        verify_destination_lengths(destination, owned)
     metadata = build_paths(build)["installation_metadata"]
     directory = member(metadata, "wix")
     # Native eligibility is an installer-owned overlay. Archive staging and its

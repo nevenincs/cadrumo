@@ -11,14 +11,9 @@ from typing import Any
 import pytest
 
 from dev.packaging.command_execution import CommandResult
-from dev.packaging.native.assemble import image_artifact, stage_application_images
+from dev.packaging.native.assemble import image_artifact, named_application_images, stage_application_images
 from dev.packaging.native.hashing import digest
-from dev.packaging.native.layout import (
-    application_images,
-    desktop_image,
-    load_layout,
-    staged_application_images,
-)
+from dev.packaging.native.layout import application_images, desktop_image, load_layout
 from dev.packaging.native.platforms.windows_verify import verify_application_images
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -169,14 +164,28 @@ def test_a_placement_outside_the_package_root_is_not_implemented(tmp_path: Path)
         load_layout("windows-x64", root=root)
 
 
-def test_only_the_desktop_image_needs_bundled_documentation(tmp_path: Path) -> None:
+def test_the_assembler_stages_exactly_the_images_cmake_names(tmp_path: Path) -> None:
     layout = load_layout("windows-x64", root=_checkout(tmp_path, [_desktop(), _manager()]))
+    both = {"cadrumo-manager.exe": tmp_path / "m.exe", "cadrumo.exe": tmp_path / "d.exe"}
 
-    with_docs = [image.file for image in staged_application_images(layout, user_docs=True)]
-    without_docs = [image.file for image in staged_application_images(layout, user_docs=False)]
+    assert [image.file for image in named_application_images(layout, both)] == ["cadrumo.exe", "cadrumo-manager.exe"]
+    assert [image.file for image in named_application_images(layout, {"cadrumo.exe": tmp_path / "d.exe"})] == [
+        "cadrumo.exe"
+    ]
+    assert named_application_images(layout, {}) == ()
 
-    assert with_docs == ["cadrumo.exe", "cadrumo-manager.exe"]
-    assert without_docs == ["cadrumo-manager.exe"]
+
+def test_staging_the_desktop_image_does_not_depend_on_documentation(tmp_path: Path) -> None:
+    binary, package, layout = _staging(tmp_path)
+    artifacts = {
+        "cadrumo.exe": binary / "cargo/release/cadrumo.exe",
+        "cadrumo-manager.exe": binary / "cargo/release/cadrumo-manager.exe",
+    }
+
+    staged = stage_application_images(package, named_application_images(layout, artifacts), artifacts, binary)
+
+    assert staged == ["cadrumo.exe", "cadrumo-manager.exe"]
+    assert not (package / "docs").exists()
 
 
 def _staging(tmp_path: Path) -> tuple[Path, Path, dict[str, Any]]:
@@ -206,7 +215,7 @@ def test_staging_copies_each_image_from_its_artifact(tmp_path: Path) -> None:
 
 def test_staging_refuses_a_missing_artifact(tmp_path: Path) -> None:
     binary, package, layout = _staging(tmp_path)
-    images = staged_application_images(layout, user_docs=False)
+    images = tuple(image for image in application_images(layout) if not image.desktop)
     absent = {"cadrumo-manager.exe": binary / "cargo/release/absent.exe"}
 
     with pytest.raises(FileNotFoundError, match=r"artifact is missing.*build rust_manager"):
@@ -220,7 +229,7 @@ def test_staging_refuses_a_missing_artifact(tmp_path: Path) -> None:
 
 def test_staging_refuses_unstaged_and_foreign_artifacts(tmp_path: Path) -> None:
     binary, package, layout = _staging(tmp_path)
-    images = staged_application_images(layout, user_docs=False)
+    images = tuple(image for image in application_images(layout) if not image.desktop)
     manager = {"cadrumo-manager.exe": binary / "cargo/release/cadrumo-manager.exe"}
 
     with pytest.raises(ValueError, match=r"does not stage: \['cadrumo.exe'\]"):
@@ -242,13 +251,16 @@ def test_image_arguments_need_both_sides(argument: str) -> None:
         image_artifact(argument)
 
 
-def _package(tmp_path: Path, *, bundled: bool, startup: list[str] | None = None) -> tuple[Path, dict[str, Any]]:
+def _package(
+    tmp_path: Path, *, bundled: bool, startup: list[str] | None = None, desktop: bool = True
+) -> tuple[Path, dict[str, Any]]:
     root = tmp_path / "package"
     root.mkdir()
     layout = load_layout("windows-x64", root=_checkout(tmp_path / "checkout", [_desktop(), _manager()]))
     files: dict[str, str] = {}
-    staged = staged_application_images(layout, user_docs=bundled)
-    for image in staged:
+    for image in application_images(layout):
+        if image.desktop and not desktop:
+            continue
         (root / image.package_path).write_bytes(image.name.encode())
         files[image.package_path] = digest(root / image.package_path)
     if bundled:
@@ -289,14 +301,23 @@ def test_the_verifier_runs_each_staged_image_for_its_version(tmp_path: Path) -> 
     assert observed["cadrumo.exe"]["startup_file"] is False
 
 
-def test_the_verifier_requires_the_desktop_image_to_be_absent_without_documentation(tmp_path: Path) -> None:
+def test_the_verifier_runs_the_desktop_image_without_documentation(tmp_path: Path) -> None:
     root, manifest = _package(tmp_path, bundled=False)
+
+    observed = verify_application_images(root, manifest, _result)
+
+    assert observed["cadrumo.exe"]["staged"] is True
+    assert observed["cadrumo-manager.exe"]["staged"] is True
+
+
+def test_the_verifier_takes_the_staged_images_from_the_package_manifest(tmp_path: Path) -> None:
+    root, manifest = _package(tmp_path, bundled=True, desktop=False)
 
     observed = verify_application_images(root, manifest, _result)
 
     assert observed["cadrumo.exe"] == {"staged": False}
     (root / "cadrumo.exe").write_bytes(b"shipped anyway")
-    with pytest.raises(AssertionError, match=re.escape("cadrumo.exe ships in a package that may not stage it")):
+    with pytest.raises(AssertionError, match=re.escape("cadrumo.exe ships outside the package manifest")):
         verify_application_images(root, manifest, _result)
 
 

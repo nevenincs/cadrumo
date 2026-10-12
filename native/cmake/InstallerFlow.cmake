@@ -35,8 +35,7 @@ if(image_count GREATER 0)
   math(EXPR distribution_image_last "${image_count} - 1")
   foreach(index RANGE ${distribution_image_last})
     string(JSON desktop GET "${application_images}" ${index} desktop)
-    string(JSON staged GET "${application_images}" ${index} staged)
-    if(desktop AND staged)
+    if(desktop)
       string(JSON distribution_desktop GET "${application_images}" ${index} package_path)
     endif()
   endforeach()
@@ -44,7 +43,7 @@ endif()
 # Always pass the empty value too: a previous desktop build must not leak into a
 # later runtime-only package through the distribution CMake cache.
 list(APPEND distribution_arguments "-DCADRUMO_DESKTOP_EXECUTABLE:STRING=${distribution_desktop}")
-set(distribution_dependencies bundle)
+set(distribution_dependencies app-payload)
 if(WIN32)
   list(APPEND distribution_dependencies rust_installer)
   foreach(variable CADRUMO_MSI_ADAPTER CADRUMO_MSI_RUNNER)
@@ -94,6 +93,10 @@ add_custom_target(native-installer
 if(WIN32 AND distribution_desktop)
   file(READ "${PROJECT_SOURCE_DIR}/native/package-layout.json" installer_layout)
   string(JSON bootstrap_directory GET "${installer_layout}" installation bootstrap directory)
+  # A desktop bundle must carry the provisioning artifacts its startup consumes.
+  add_dependencies(bundle native-installer)
+  install(DIRECTORY "${CADRUMO_PATH_STAGE}/$<CONFIG>/${bootstrap_directory}/"
+    DESTINATION "${bootstrap_directory}" USE_SOURCE_PERMISSIONS)
   cadrumo_register_clean(TARGET native-installer
     PATHS "${CADRUMO_PATH_STAGE}/$<CONFIG>/${bootstrap_directory}")
 else()

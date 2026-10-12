@@ -29,12 +29,25 @@ test("window controls use authenticated commands and native presentation", async
           if (command.startsWith("shell_window_"))
             state.tokens.push(args.token);
           switch (command) {
+            case "manager_status":
+              return { state: "ready", failure: null };
+            case "manager_subscribe":
+              (
+                args.updates as { onmessage: (signal: unknown) => void }
+              ).onmessage({
+                kind: "manager-state",
+                revision: 1,
+                status: { state: "ready", failure: null },
+              });
+              return ++id;
+            case "manager_unsubscribe":
+              return null;
             case "shell_window_subscribe": {
               const channel = args.updates as {
                 onmessage: typeof state.publish;
                 id: number;
               };
-              state.publish = (next) => channel.onmessage(next);
+              state.publish = (next) => channel.onmessage({ ...next });
               state.publish(state);
               return channel.id;
             }
@@ -55,7 +68,7 @@ test("window controls use authenticated commands and native presentation", async
               return {
                 supported: false,
                 state: "unknown",
-                runtimeAvailable: false,
+                runtimeAvailable: true,
                 active_profile: null,
                 refusal: null,
               };

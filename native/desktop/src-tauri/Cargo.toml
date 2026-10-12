@@ -35,8 +35,10 @@ opener = "0.9"
 
 [dev-dependencies]
 tauri = { version = "2", features = ["test"] }
+tokio = { version = "1", features = ["test-util"] }
 
 [target.'cfg(windows)'.dependencies]
+cadrumo-manager = { path = "../../manager" }
 cadrumo-platform = { path = "../../platform", features = ["webview2"] }
 cadrumo-installer = { path = "../../installer" }
 

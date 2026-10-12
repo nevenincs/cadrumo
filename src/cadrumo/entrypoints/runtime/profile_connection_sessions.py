@@ -190,6 +190,9 @@ class ProfileConnectionSessionMixin:
         with host.guard:
             if not self._admitting():
                 raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
+            if request.action in {"session_lock", "human_sign_out"}:
+                # Locking a session and signing the person out are the person's acts, never an agent's.
+                self._require_persons_frontend(connection.frontend)
             if request.action == "session_lock":
                 return self._lock_session(connection, host, context, request)
             if request.target_session_id is not None:

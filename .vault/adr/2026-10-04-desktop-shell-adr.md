@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:cba5445fcc1e6c8027482852905b8304360d06b177f599f964252a6087c2a822'
+body_hash: 'sha256:2fb6a24bedf54f53423448636e42628dc6baf6f3f7ba66eb2db5cca3754e5b32'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -17,7 +17,6 @@ related:
   - '[[2026-10-04-runtime-manager-architecture-adr]]'
   - '[[2026-10-04-application-sign-in-adr]]'
 ---
-
 # `desktop-shell` adr: `Desktop shell` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -99,13 +98,23 @@ Evidence is in `2026-10-04-desktop-shell-reference`.
 - Shell settings are frontend preferences only. They never write product Settings or reach the backend.
 - This record replaces these items in `2026-10-03-application-packaging-adr`: the separate Tauri `index.html` landing page, `docs/index.html` exposed through asset integration, and the runtime-control UI listed for desktop integration, which moves to the runtime manager. That record's author reconciles the wording.
 
-
 Amendment approved 2026-10-07 under the user's environment-readiness instruction: the earlier requirement for console and Python REPL to start in the generic user home is replaced by a dedicated console workspace declared in the canonical storage taxonomy beneath the resolved CADRUMO root. This workspace is for operator-authored scripts and scratch files, not encrypted profile custody. All desktop terminal kinds use this workspace and the same pinned storage/environment and bundled command search path. Standalone command invocations retain the caller's cwd for relative arguments. Authentication still uses native peer verification and the existing profile receipt flow; profile identifiers or credentials are not conveyed through new environment variables. Runtime start/supervision remains with the manager. This amendment also supersedes the home-cwd sentence in the terminal implementation specification below; all other shell authority constraints stand.
-
 
 ### 2026-10-09 authorized scoped installation command
 
 The operator authorizes token-checked manager installation for user/machine scope and missing-installation recovery under 2026-10-09-desktop-service-installation-adr. This extends the shell's manager-start surface to verified native installation followed by shell dispatch of the published manager. Machine scope elevates the installer only. Runtime transport, profile and supervision authority remain excluded.
+
+### 2026-10-10 authorized startup ownership and optional-installation amendment
+
+Accepted under the user's explicit instruction that installation is optional, admin installation supplies a machine-start platform manager, user installation supplies login startup, and every running Cadrumo GUI must establish runtime supervision. This supersedes the earlier exclusions of desktop-owned supervision and Windows SCM hosting for this scope. A boot-time Windows service is a lifecycle broker only: it launches and watches per-user managers using genuine user logon tokens; it never owns profile credentials or runs a taxpayer runtime as SYSTEM. User-only installation retains unprivileged login startup. Cadrumo embeds the existing manager supervision core as a fallback when no installed session manager owns supervision, with the same native ownership lock, runtime start claim, process identity verification, heartbeat/recovery and authenticated client readiness. Existing installed managers retain ownership; a running GUI watches their liveness and takes over after ownership is released. Installation registration, dispatch acknowledgement, a PID or a supervisor ready line alone never establishes application readiness. CLI, TUI and MCP remain connect-only. Build and command acceptance exercise the shipped Cadrumo startup path and fail when supervision or real native IPC readiness fails. No development-host boot/login registration is required to test GUI fallback. Real installed boot/login acceptance remains separately reported until exercised on a disposable host. Detailed prior evidence: 2026-10-09-runtime-process-lifecycle-audit.
+
+### 2026-10-12 desktop without bundled documentation
+
+Operator direction 2026-10-12: the documentation is not a critical component; the Tauri application must be fully functional with or without it, and must understand that the documentation is not bundled and behave accordingly. This amends the window "built around the bundled user documentation" so that the documentation is optional.
+
+- The package manifest's `user_docs` statement governs the documentation state; file presence alone never decides. `bundled: false` is reported as `notBundled`. A bundled tree, media-type table or documentation policy that cannot be admitted, or a manifest with no statement, is recorded as a diagnostic failure and reported as `unavailable`. None of these refuses the launch.
+- Whenever no documentation is served, the host registers the documentation scheme so that it refuses every request under the closed policy, and `desktop_environment` reports the state instead of an origin and languages. Admission of a served tree keeps its existing checks. The WebView2 interface requirement and every shell authority constraint above still apply.
+- The shell keeps every other function unchanged: the TUI, console and Python terminals, logs, calendar, sign-in, manager start, settings and palette actions. The documentation pane states that this copy was built without the documentation, or that it could not be opened, instead of loading a frame; documentation search and the documentation language list are empty. The adversarial isolation proof applies whenever documentation is bundled.
 
 ### 2026-10-12 sign-in view on every loss of sign-in
 
@@ -132,7 +141,7 @@ We will build the desktop window as a React shell at the app origin. A left icon
   - Search, which opens the palette
   - Docs home
   - TUI, which toggles the TUI pane
-  - Console, Python and Logs. Each opens the bottom panel on its tab, and clicking the active one collapses the panel. Logs carries an error-count badge.
+  - One bottom-panel toggle, carrying the log error-count badge. It opens the remembered Console, Python or Logs tab and collapses the panel when open; tab selection remains inside the panel and in the existing shortcuts and palette actions.
   - Settings at the bottom
 
   Every rail item shows a tooltip with its label and shortcut.
@@ -251,7 +260,7 @@ shell to documentation:
 **Persistence.**
 
 - Window size, position and maximized state go through a host window-state module. It stores them as `window-state.json` in the declared webview location, restores them on window ready within the visible monitors, and saves them atomically on close, with no JavaScript command. The window-state plugin was set aside because it creates an undeclared `%APPDATA%` directory, which `2026-10-04-canonical-environment-adr` forbids.
-- Settings, the split ratio, whether the TUI is shown, panel open, panel share, active tab and documentation zoom go in shell localStorage.
+- Settings, the split ratio, whether the TUI is shown, panel share, active tab and documentation zoom go in shell localStorage. Panel visibility is transient: every application launch starts collapsed, including when an older saved layout says the panel was open.
 - Every read is guarded, so the layout falls back to defaults.
 
 ### Embedded terminal appearance amendment (2026-10-07)
@@ -299,3 +308,7 @@ The user's layout puts the two most useful surfaces, the documentation and the T
 - a close prompt keyed to a fact the TUI reports, that it has an open interaction, rather than to runtime state
 
 Acceptance (user, 2026-10-04) doesn't mean that any part of this is implemented.
+
+### Bottom-panel rail simplification amendment (2026-10-09)
+
+Authorized by the user's request for one sidebar toggle instead of Console, Python and Logs buttons, retained notification counts, and a collapsed panel at application startup. The three rail buttons become one panel toggle using the existing panel-toggle action and shortcut. The existing log error count moves to this button, while the message notification count stays on Messages. Console, Python and Logs remain tabs in the panel, with their existing keyboard and palette actions. The active tab and panel size are remembered; open/closed state is local to the running window and is no longer restored or saved. Opening and collapsing preserve mounted terminal sessions within the same window. This refines frontend layout only and adds no host or runtime authority. Implementation: `native/desktop/frontend/src/App.tsx`, `src/shell/layout.ts`; browser assertions cover legacy saved-open startup, one toggle, both counts, tab retention and terminal reuse.

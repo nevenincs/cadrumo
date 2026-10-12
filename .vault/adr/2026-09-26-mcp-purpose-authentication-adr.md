@@ -5,7 +5,7 @@ tags:
 date: '2026-09-26'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:e0882755e89dbd065e3fdcf3d5e09b6c7ba4ac965070f81a691e3befefa48af0'
+body_hash: 'sha256:374ea531caeacc1672344720cc7f8305394d4766c85829f02875adfb2989e5b8'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-reference]]"
   - "[[2026-09-26-mcp-purpose-authentication-research]]"
@@ -58,6 +58,10 @@ The following predecessor clauses are replaced through focused accepted amendmen
 Do not supersede these multi-decision records wholesale. The focused amendments preserve unrelated accepted decisions; older process code and naming are not target requirements.
 
 The runtime cannot certify currently unvalidated durable-backend, calculation or filing edges. Ordinary automation does not gain live filing authority. No system-wide daemon, remote network service, pre-OS-login execution or bundled LLM scheduler is in scope.
+
+### 2026-10-10 authorized Windows optional-installation amendment
+
+The user's explicit continuation accepts the revised topology in 2026-10-04-runtime-manager-architecture-adr: optional machine installation owns an automatic SCM lifecycle broker, user installation owns unprivileged login startup, and a running GUI hosts the shared manager core when no installed manager owns its session. This supersedes earlier no-service, mandatory-installation and separate-manager-only statements within Windows product startup. The boot broker launches only verified machine-installed manager workers using genuine per-user logon tokens and owns no taxpayer runtime or credentials as SYSTEM. Native authentication, profile/session binding, runtime supervisor framing, operation custody and connect-only CLI/TUI/MCP remain unchanged. Registered service existence is distinct from running state and authenticated runtime readiness. Actual boot/login/service acceptance must be reported independently from authored metadata and command-only package fallback evidence.
 
 ## Implementation
 

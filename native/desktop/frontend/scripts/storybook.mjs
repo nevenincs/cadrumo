@@ -9,9 +9,9 @@ import { buildPath } from "../../scripts/build-paths.mjs";
 import { server } from "../../scripts/configuration.mjs";
 
 const frontend = fileURLToPath(new URL("..", import.meta.url));
-const { values, positionals } = parseArgs({
+const { positionals } = parseArgs({
   allowPositionals: true,
-  options: { port: { type: "string", default: "6006" } },
+  options: {},
 });
 const [command = "dev"] = positionals;
 
@@ -23,7 +23,15 @@ const args =
         resolve(buildPath("desktop_testing"), "storybook"),
       ]
     : command === "dev"
-      ? ["dev", "--host", server().host, "--port", values.port, "--no-open"]
+      ? [
+          "dev",
+          "--host",
+          server().host,
+          "--port",
+          String(server().cataloguePort),
+          "--exact-port",
+          "--no-open",
+        ]
       : null;
 if (!args) throw new Error(`Unknown catalogue command: ${command}`);
 

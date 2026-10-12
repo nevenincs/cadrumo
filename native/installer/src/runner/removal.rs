@@ -173,6 +173,7 @@ fn remove(path: &Path, release: Option<&str>) -> MaintenanceResult {
     if absent {
         return recover_absence(transaction, guard, &plan, &inventory, release.is_some());
     }
+    let mut service_restart = Vec::new();
     let prepared = (|| -> Result<_, Error> {
         let owner = guard.owner();
         if owner.context() != &context || owner.prefix() != plan.prefix {
@@ -248,6 +249,17 @@ fn remove(path: &Path, release: Option<&str>) -> MaintenanceResult {
         }
         let manifest: cadrumo_application::package::PackageManifest =
             serde_json::from_slice(&bytes)?;
+        let service_description = if release.is_none() {
+            let description = definition.registration.as_ref().ok_or_else(|| {
+                Error::Integrity("registration service inventory is missing".into())
+            })?;
+            description
+                .stop_service(owner, &mut service_restart)
+                .map_err(native_error)?;
+            Some(description.clone())
+        } else {
+            None
+        };
         let files = if release.is_some() {
             manifest
                 .files
@@ -270,12 +282,18 @@ fn remove(path: &Path, release: Option<&str>) -> MaintenanceResult {
             metadata.publication.clone(),
         )
         .map_err(native_error)?;
-        Ok((custody, role, broker))
+        Ok((custody, role, broker, service_description))
     })();
-    let (_cache, role, broker) = match prepared {
+    let (_cache, role, broker, service_description) = match prepared {
         Ok(prepared) => prepared,
         Err(_) => {
-            return rollback_removal(transaction, guard, &plan.contract, "native_removal_refused");
+            return rollback_removal(
+                transaction,
+                guard,
+                &plan.contract,
+                &mut service_restart,
+                "native_removal_refused",
+            );
         }
     };
     let removed = (|| {
@@ -289,22 +307,41 @@ fn remove(path: &Path, release: Option<&str>) -> MaintenanceResult {
         transaction.remove(guard.owner(), broker.endpoint())
     })();
     if removed.is_err() {
-        return rollback_removal(transaction, guard, &plan.contract, "native_removal_failed");
+        return rollback_removal(
+            transaction,
+            guard,
+            &plan.contract,
+            &mut service_restart,
+            "native_removal_failed",
+        );
     }
     if transaction.commit().is_err() {
-        return report(Outcome::NativeUnsettled, "native_commit_failed");
+        return report(Outcome::NativeUnsettled, "native_commit_failed")
+            .restore_services(&mut service_restart);
+    }
+    if service_description
+        .as_ref()
+        .is_some_and(|description| description.verify_service_removed().is_err())
+    {
+        return report(
+            Outcome::CommittedPublicationPending,
+            "native_service_removal_unconfirmed",
+        )
+        .restore_services(&mut service_restart);
     }
     if guard.complete().is_err() {
         return report(
             Outcome::CommittedPublicationPending,
             "native_removal_publication_incomplete",
-        );
+        )
+        .restore_services(&mut service_restart);
     }
-    if release.is_some() {
+    let result = if release.is_some() {
         report(Outcome::Removed, "version_removed")
     } else {
         report(Outcome::Unregistered, "registration_absent")
-    }
+    };
+    result.restore_services(&mut service_restart)
 }
 
 /// Publication-only reconciliation: no cached product resurrection or file deletion.
@@ -320,6 +357,13 @@ fn recover_absence(
     let ready = (|| -> Result<(), Error> {
         prove_absence(inventory, guard.owner(), &MsiInventory)?;
         if !version {
+            if plan.scope == Scope::Machine {
+                crate::registration::service::verify_absent(&format!(
+                    "{}.manager",
+                    plan.contract.installation_identity.application_id
+                ))
+                .map_err(native_error)?;
+            }
             // Native absence does not authorize deleting a surviving stable image.
             match std::fs::symlink_metadata(plan.contract.manager_member()?.under(&plan.prefix)) {
                 Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
@@ -380,18 +424,23 @@ fn rollback_removal(
     transaction: Transaction,
     guard: Guard<'_>,
     contract: &DiscoveryContract,
+    held: &mut [crate::registration::service::RestartGuard],
     code: &'static str,
 ) -> MaintenanceResult {
     if transaction.rollback().is_err() {
-        return report(Outcome::NativeUnsettled, "native_rollback_unsettled");
+        let mut result = report(Outcome::NativeUnsettled, "native_rollback_unsettled");
+        result.cause = Some(code);
+        return result.restore_services(held);
     }
     if guard.rollback(contract).is_err() {
-        return report(
+        let mut result = report(
             Outcome::RolledBackPublicationPending,
             "rollback_publication_fenced",
         );
+        result.cause = Some(code);
+        return result.restore_services(held);
     }
-    report(Outcome::NativeRolledBack, code)
+    report(Outcome::NativeRolledBack, code).restore_services(held)
 }
 
 #[cfg(test)]

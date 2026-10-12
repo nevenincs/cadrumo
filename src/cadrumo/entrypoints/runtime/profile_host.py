@@ -573,7 +573,7 @@ class RuntimeProfileHost:
                 )
             }
             unlocked = {
-                login.login_id for login in observed if login.active and login.lock_state is OsLockState.UNLOCKED
+                login.login_id for login in observed if login.active and login.unlocked
             }
             self._locked_logins.difference_update(unlocked)
             if positive <= self._locked_logins:

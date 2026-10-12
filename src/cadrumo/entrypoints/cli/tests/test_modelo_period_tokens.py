@@ -7,7 +7,7 @@ import typer
 
 from ._modelo_work_ux_support import operator_profile_facts
 from .cli_runner import invoke_cached_cli
-from .modelo_profile_seed import ProfileSeeder, invoke_seeded_profile_cli, seed_profile
+from .modelo_profile_seed import ProfileSeeder, seed_profile
 
 __all__ = ["seed_profile"]
 
@@ -63,7 +63,7 @@ def test_work_create_year_repeated_into_period_explains_composition(seed_profile
     """
 
     seed_profile(label="operator", facts=operator_profile_facts())
-    result = invoke_seeded_profile_cli(
+    result = invoke_cached_cli(
         [
             "app",
             "modelo",

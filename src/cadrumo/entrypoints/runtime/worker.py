@@ -283,6 +283,14 @@ def _run_process(
         _run_worker(options, resources, composition_factory)
     except (RuntimeRefusalError, AutomationCustodyError) as error:
         refusal = error
+        for failure in _collect_worker_failures(error)[1:]:
+            diagnostic_event(
+                _LOGGER,
+                "profile_worker_task_failed",
+                fields=diagnostic_error_fields(failure),
+                level=40,
+                primary_error=error,
+            )
         diagnostic_event(
             _LOGGER,
             "profile_worker_admission_refused",

@@ -3,7 +3,7 @@ use cadrumo_application::error::application::{ApplicationError, ErrorCode, Resul
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-#[derive(Debug, Serialize, PartialEq)]
+#[derive(Clone, Debug, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Refusal {
     pub code: String,
@@ -22,7 +22,7 @@ impl From<ApplicationError> for CommandFailure {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum Presence {
     Present,
@@ -30,7 +30,7 @@ pub enum Presence {
     Unknown,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, PartialEq)]
 pub struct SignInStatus {
     pub supported: bool,
     pub state: Presence,
@@ -40,6 +40,13 @@ pub struct SignInStatus {
     pub refusal: Option<Refusal>,
 }
 impl SignInStatus {
+    pub fn runtime_ready(&self) -> bool {
+        self.supported
+            && self.runtime_available
+            && self.refusal.is_none()
+            && self.state != Presence::Unknown
+    }
+
     pub fn unsupported() -> Self {
         Self {
             supported: false,
@@ -452,6 +459,7 @@ mod tests {
         assert_eq!(status.state, Presence::Unknown);
         assert_eq!(status.active_profile.as_deref(), Some("My profile"));
         assert!(status.runtime_available);
+        assert!(!status.runtime_ready());
     }
 
     #[test]
@@ -466,6 +474,29 @@ mod tests {
         .unwrap();
         assert_eq!(status.state, Presence::Unknown);
         assert!(!status.runtime_available);
+        assert!(!status.runtime_ready());
+    }
+
+    #[test]
+    fn runtime_readiness_requires_a_successful_settled_status_not_an_error_envelope() {
+        for presence in ["present", "absent"] {
+            let observed = status(Outcome::Success {
+                result: serde_json::json!({"status":{"presence":presence}}),
+                active_profile: None,
+            })
+            .unwrap();
+            assert!(observed.runtime_ready());
+        }
+        let observed = status(Outcome::Refused {
+            refusal: Refusal {
+                code: "protocol_mismatch".into(),
+                retry_after_seconds: None,
+            },
+            active_profile: None,
+        })
+        .unwrap();
+        assert!(observed.runtime_available);
+        assert!(!observed.runtime_ready());
     }
 
     #[test]

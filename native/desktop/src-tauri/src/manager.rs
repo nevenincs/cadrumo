@@ -1,4 +1,4 @@
-//! The desktop requests manager launch; the manager alone owns runtime lifetime.
+//! The desktop establishes verified supervision using the shared manager core.
 
 use crate::environment::Launch;
 use cadrumo_application::{
@@ -22,14 +22,27 @@ use std::{
 use tauri::State;
 use tokio::io::AsyncReadExt;
 
+mod observation;
+pub use observation::{ManagerState, ManagerStatus};
+
 const DISPATCH: &str = include_str!("python/manager_dispatch.py");
-const DEADLINE: Duration = Duration::from_secs(15);
+const DEADLINE: Duration = Duration::from_secs(60);
+
+async fn wait_for_readiness(ready: impl std::future::Future<Output = Result<()>>) -> Result<()> {
+    #[cfg(windows)]
+    let bound =
+        cadrumo_manager::supervision::supervisor::SupervisorConfig::default().readiness_ceiling;
+    #[cfg(not(windows))]
+    let bound = Duration::from_secs(90);
+    tokio::time::timeout(bound, ready)
+        .await
+        .map_err(|_| failure(ErrorCode::TimedOut))?
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum StartOutcome {
     Dispatched,
-    Unmanaged,
     Unsupported,
 }
 
@@ -48,6 +61,7 @@ struct Attempt {
 pub struct ManagerStart {
     package_root: Result<Option<PathBuf>>,
     child: ChildConfiguration,
+    storage_root: PathBuf,
     diagnostics: Arc<Diagnostics>,
     attempt: Arc<tokio::sync::Mutex<Option<Attempt>>>,
     generation: AtomicU64,
@@ -55,6 +69,9 @@ pub struct ManagerStart {
     cancellation: Arc<Cancellation>,
     spawn_fence: Arc<Mutex<()>>,
     closing: tokio::sync::Notify,
+    observation: observation::Observer,
+    #[cfg(windows)]
+    host: Mutex<Option<cadrumo_manager::desktop_host::DesktopHost>>,
 }
 
 impl ManagerStart {
@@ -63,6 +80,7 @@ impl ManagerStart {
             package_root: managed(launch)
                 .map(|managed| managed.then(|| launch.package_root.clone())),
             child: launch.child.clone(),
+            storage_root: launch.working_directory.clone(),
             diagnostics: launch.diagnostics.clone(),
             attempt: Arc::new(tokio::sync::Mutex::new(None)),
             generation: AtomicU64::new(0),
@@ -70,15 +88,54 @@ impl ManagerStart {
             cancellation: Arc::new(Cancellation::default()),
             spawn_fence: Arc::new(Mutex::new(())),
             closing: tokio::sync::Notify::new(),
+            observation: observation::Observer::new(cfg!(windows)),
+            #[cfg(windows)]
+            host: Mutex::new(None),
         }
     }
 
     /// Concurrent callers share the initial attempt; retries are explicit.
     pub async fn start(self: &Arc<Self>, retry: bool) -> Result<StartOutcome> {
-        self.start_with(
-            retry,
-            move |owner| async move { owner.dispatch(retry).await },
-        )
+        self.start_with(retry, move |owner| async move {
+            owner.dispatch(retry, true).await
+        })
+        .await
+    }
+
+    /// Health uses the same supervised fallback without installing or registering.
+    pub async fn start_existing(self: &Arc<Self>) -> Result<StartOutcome> {
+        self.start_with(false, move |owner| async move {
+            owner.dispatch(false, false).await
+        })
+        .await
+    }
+
+    /// GUI startup and headless package acceptance use the same verified gate.
+    pub async fn ensure_ready(
+        self: &Arc<Self>,
+        sign_in: &Arc<crate::shell::sign_in::SignIn>,
+    ) -> Result<()> {
+        wait_for_readiness(async {
+            if self.start_existing().await? != StartOutcome::Dispatched {
+                return Err(failure(ErrorCode::ManagerUnavailable));
+            }
+            loop {
+                if !self.supervision_status()? {
+                    tokio::time::sleep(Duration::from_millis(500)).await;
+                    continue;
+                }
+                let status = sign_in.read_status().await?;
+                if status.runtime_ready() && self.supervision_status()? {
+                    self.diagnostics
+                        .host_outcome(HostStage::Manager, HostOutcome::Ready);
+                    return Ok(());
+                }
+                if status.runtime_available && status.refusal.is_some() {
+                    return Err(failure(ErrorCode::ReadFailed));
+                }
+                tokio::time::sleep(Duration::from_millis(500)).await;
+            }
+        })
         .await
     }
 
@@ -92,8 +149,17 @@ impl ManagerStart {
         tokio::spawn(async move {
             owner
                 .complete_attempt(previous, false, async {
-                    let target = owner.install_target(scope).await?;
-                    owner.dispatch_target(target, false).await
+                    owner.stop_owned().await?;
+                    let target = match owner.install_target(scope).await {
+                        Ok(target) => target,
+                        Err(error) => {
+                            // Failed/cancelled optional installation restores GUI ownership.
+                            let _ = owner.dispatch(false, false).await;
+                            return Err(error);
+                        }
+                    };
+                    drop(target);
+                    owner.dispatch(false, false).await
                 })
                 .await
         })
@@ -138,20 +204,29 @@ impl ManagerStart {
     ) -> Result<StartOutcome> {
         self.diagnostics
             .host_event(EventKind::StageStarted, HostStage::Manager);
+        if let Err(error) = self.observation.observe(ManagerState::Starting) {
+            self.observation.observation_failed(error);
+        }
         let outcome = work.await;
         match &outcome {
             Ok(StartOutcome::Dispatched) => self
                 .diagnostics
                 .host_outcome(HostStage::Manager, HostOutcome::Dispatched),
-            Ok(StartOutcome::Unmanaged) => self
-                .diagnostics
-                .host_outcome(HostStage::Manager, HostOutcome::SkippedUnmanaged),
             Ok(StartOutcome::Unsupported) => self
                 .diagnostics
                 .host_outcome(HostStage::Manager, HostOutcome::Unavailable),
             Err(error) => self
                 .diagnostics
                 .host_failure(HostStage::Manager, error.clone()),
+        }
+        match &outcome {
+            Ok(StartOutcome::Unsupported) => {
+                if let Err(error) = self.observation.set_state(ManagerState::Unsupported) {
+                    self.observation.observation_failed(error);
+                }
+            }
+            Err(error) => self.report_failure(error.clone()),
+            Ok(StartOutcome::Dispatched) => {}
         }
         *previous = Some(Attempt {
             outcome: outcome.clone(),
@@ -165,6 +240,16 @@ impl ManagerStart {
     /// Blocking OS calls themselves cannot be forcibly interrupted.
     /// No manager or runtime process handle is owned or stopped here.
     pub async fn close(&self) {
+        if let Err(error) = self.close_checked().await {
+            self.diagnostics.host_failure(HostStage::Shutdown, error);
+        }
+    }
+
+    pub async fn close_checked(&self) -> Result<()> {
+        if let Err(error) = self.observation.set_state(ManagerState::Stopping) {
+            self.observation.observation_failed(error);
+        }
+        self.observation.close();
         {
             let _fence = self
                 .spawn_fence
@@ -175,28 +260,190 @@ impl ManagerStart {
         }
         self.closing.notify_waiters();
         let _settled = self.attempt.lock().await;
+        let result = self.stop_owned().await;
+        match &result {
+            Ok(()) => {
+                let _ = self.observation.set_state(ManagerState::Stopped);
+            }
+            Err(error) => self.report_failure(error.clone()),
+        }
+        self.observation.close();
+        result
     }
 
-    async fn dispatch(&self, retry: bool) -> Result<StartOutcome> {
+    /// Wait for this host's actual supervisor worker and owned runtime settlement.
+    pub async fn stop_owned(&self) -> Result<()> {
+        #[cfg(windows)]
+        {
+            let host = self
+                .host
+                .lock()
+                .map_err(|_| failure(ErrorCode::Panic))?
+                .take();
+            if let Some(host) = host {
+                tokio::task::spawn_blocking(move || host.close())
+                    .await
+                    .map_err(|_| failure(ErrorCode::Panic))?
+                    .map_err(|error| failure(ErrorCode::CleanupFailed).caused_by(error))?;
+            }
+        }
+        Ok(())
+    }
+
+    pub fn supervision_status(&self) -> Result<bool> {
+        #[cfg(windows)]
+        {
+            let host = self.host.lock().map_err(|_| {
+                let error = failure(ErrorCode::LockPoisoned);
+                self.observation.observation_failed(error.clone());
+                error
+            })?;
+            let status = host
+                .as_ref()
+                .map(cadrumo_manager::desktop_host::DesktopHost::status);
+            if status.is_none() {
+                let previous = self
+                    .observation
+                    .status()
+                    .inspect_err(|error| self.observation.observation_failed(error.clone()))?;
+                if let Some(error) = previous.failure {
+                    return Err(error);
+                }
+            }
+            if status == Some(cadrumo_manager::ipc::Outcome::Unavailable) {
+                let error = failure(ErrorCode::ManagerUnavailable);
+                self.report_failure(error.clone());
+                return Err(error);
+            }
+            use cadrumo_manager::ipc::Outcome;
+            self.observation
+                .observe(match status {
+                    Some(Outcome::Running) => ManagerState::Ready,
+                    Some(Outcome::Stopping) => ManagerState::Stopping,
+                    Some(Outcome::Starting) | None => ManagerState::Starting,
+                    _ => ManagerState::Waiting,
+                })
+                .inspect_err(|error| self.observation.observation_failed(error.clone()))?;
+            Ok(status == Some(cadrumo_manager::ipc::Outcome::Running))
+        }
+        #[cfg(not(windows))]
+        Ok(false)
+    }
+
+    pub fn read_status(&self) -> Result<ManagerStatus> {
+        if !self.is_closed() {
+            // Terminal manager failure is a status; observer failure remains an error.
+            if let Err(error) = self.supervision_status()
+                && error.code == ErrorCode::LockPoisoned
+            {
+                return Err(error);
+            }
+        }
+        self.observation.status()
+    }
+
+    pub fn report_failure(&self, error: ApplicationError) {
+        if error.code == ErrorCode::LockPoisoned {
+            self.observation.observation_failed(error);
+        } else {
+            self.observation.failed(error);
+        }
+    }
+
+    pub fn is_closed(&self) -> bool {
+        self.closed.load(Ordering::Acquire)
+    }
+
+    async fn dispatch(&self, retry: bool, _provision: bool) -> Result<StartOutcome> {
         if !cfg!(windows) {
             return Ok(StartOutcome::Unsupported);
         }
         let Some(package_root) = self.package_root.as_ref().map_err(Clone::clone)? else {
-            return Ok(StartOutcome::Unmanaged);
+            return Err(failure(ErrorCode::ManagerUnavailable));
         };
         let package_root = package_root.clone();
-        // Recheck package bytes on every actual attempt, off the GUI/runtime thread.
-        let selected = self
-            .resolve_with(move |cancellation| target(&package_root, &cancellation))
-            .await;
-        let target = match selected {
-            Ok(target) => target,
-            Err(error) if error.code == ErrorCode::PackageUnavailable => {
-                self.install_target(InstallScope::User).await?
+        #[cfg(windows)]
+        let default_root = cadrumo_manager::supervision::environment::ManagedLocations::for_host(
+            &std::env::current_exe()
+                .map_err(|error| failure(ErrorCode::EnvironmentFailed).caused_by(error))?,
+            &package_root,
+            &self.storage_root,
+        )
+        .map_err(|error| failure(ErrorCode::EnvironmentFailed).caused_by(error))?
+        .is_default_root();
+        #[cfg(not(windows))]
+        let default_root = false;
+        #[cfg(windows)]
+        if retry {
+            let finished = self
+                .host
+                .lock()
+                .map_err(|_| failure(ErrorCode::Panic))?
+                .as_ref()
+                .is_some_and(cadrumo_manager::desktop_host::DesktopHost::finished);
+            if finished {
+                // A failed worker has already drained its owned runtime. Retain
+                // its failure evidence, then allow an explicit retry to re-admit.
+                if let Err(error) = self.stop_owned().await {
+                    self.diagnostics.host_failure(HostStage::Manager, error);
+                }
+                cadrumo_manager::failed_versions::FailedVersions::retry(&self.storage_root)
+                    .map_err(|error| failure(ErrorCode::ManagerUnavailable).caused_by(error))?;
             }
-            Err(error) => return Err(error),
-        };
-        self.dispatch_target(target, retry).await
+        }
+        // Recheck package bytes on every actual attempt, off the GUI/runtime thread.
+        let manager = self
+            .activate_installed(default_root, package_root.clone(), retry)
+            .await?;
+        #[cfg(windows)]
+        {
+            let mut host = self.host.lock().map_err(|_| failure(ErrorCode::Panic))?;
+            if let Some(host) = host.as_ref() {
+                if retry {
+                    host.retry()
+                        .map_err(|error| failure(ErrorCode::ManagerUnavailable).caused_by(error))?;
+                }
+            } else {
+                *host = Some(
+                    cadrumo_manager::desktop_host::DesktopHost::start(
+                        &package_root,
+                        &self.storage_root,
+                        manager,
+                        self.diagnostics.clone(),
+                    )
+                    .map_err(|error| failure(ErrorCode::ManagerUnavailable).caused_by(error))?,
+                );
+            }
+        }
+        Ok(StartOutcome::Dispatched)
+    }
+
+    async fn activate_installed(
+        &self,
+        default_root: bool,
+        discovery_package: PathBuf,
+        retry: bool,
+    ) -> Result<Option<PathBuf>> {
+        if !default_root {
+            // A selected isolated root has its own supervisor claim and endpoint.
+            // Never activate a catalogue manager against the real user's root.
+            return Ok(None);
+        }
+        let selected = self
+            .resolve_with(move |cancellation| target(&discovery_package, &cancellation))
+            .await;
+        Ok(match selected {
+            Ok(target) => {
+                let manager = target.manager.clone();
+                // Dispatch is only an activation attempt; embedded arbitration
+                // verifies the manager endpoint and takes over when it is absent.
+                if let Err(error) = self.dispatch_target(target, retry).await {
+                    self.diagnostics.host_failure(HostStage::Manager, error);
+                }
+                Some(manager)
+            }
+            Err(_) => None,
+        })
     }
 
     async fn install_target(&self, scope: InstallScope) -> Result<Selection> {
@@ -486,9 +733,9 @@ fn target_from(
 
 #[cfg(windows)]
 fn managed(launch: &Launch) -> Result<bool> {
-    use cadrumo_platform::storage::{self, Mode, RootSource};
+    use cadrumo_platform::storage::{self, Mode};
     if storage::authority_override_present(std::env::vars_os()) {
-        return Ok(false);
+        return Err(failure(ErrorCode::EnvironmentFailed));
     }
     let executable = std::env::current_exe()
         .map_err(|error| failure(ErrorCode::EnvironmentFailed).caused_by(error))?;
@@ -506,9 +753,6 @@ fn managed(launch: &Launch) -> Result<bool> {
     }
     let resolved = storage::resolve_storage_root(&evidence)
         .map_err(|_| failure(ErrorCode::EnvironmentFailed))?;
-    if resolved.source != RootSource::InstalledDefault {
-        return Ok(false);
-    }
     Ok(std::fs::canonicalize(&resolved.root)
         .map_err(|error| failure(ErrorCode::EnvironmentFailed).caused_by(error))?
         == std::fs::canonicalize(&launch.working_directory)
@@ -521,7 +765,32 @@ fn managed(_: &Launch) -> Result<bool> {
 }
 
 pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
-    crate::app::commands![manager_start, manager_install]
+    crate::app::commands![
+        manager_start,
+        manager_install,
+        manager_status,
+        manager_subscribe,
+        manager_unsubscribe
+    ]
+}
+
+#[tauri::command]
+fn manager_status(state: State<'_, Arc<ManagerStart>>) -> Result<ManagerStatus> {
+    state.read_status()
+}
+
+#[tauri::command]
+fn manager_subscribe(
+    state: State<'_, Arc<ManagerStart>>,
+    updates: tauri::ipc::Channel<observation::Signal>,
+) -> Result<u32> {
+    state.read_status()?;
+    state.observation.subscribe(updates)
+}
+
+#[tauri::command]
+fn manager_unsubscribe(state: State<'_, Arc<ManagerStart>>, subscription: u32) -> Result<()> {
+    state.observation.unsubscribe(subscription)
 }
 
 #[tauri::command]

@@ -96,8 +96,9 @@ from .._modelo_amend_wizard_cli import (
     _values_kind_reason_definition,
 )
 from ._modelo_work_ux_support import _create_m130_work_unit, _create_m303_work_unit, load_work_unit_by_id
+from .cli_runner import invoke_cached_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
-from .modelo_profile_seed import ProfileSeeder, invoke_seeded_profile_cli, seed_profile
+from .modelo_profile_seed import ProfileSeeder, seed_profile
 from .portable_human_cli_runtime import PortableHumanCliRuntime
 
 __all__ = ["_isolated_cli_backend", "seed_profile"]
@@ -216,7 +217,7 @@ _AMEND_PARITY_SPINE = (
 
 
 def _invoke(args: list[str], *, runtime_profile: PortableHumanCliRuntime | None = None):
-    return invoke_seeded_profile_cli(args) if runtime_profile is None else runtime_profile.invoke(args)
+    return invoke_cached_cli(args) if runtime_profile is None else runtime_profile.invoke(args)
 
 
 def _payload_string(output: str, key: str) -> str:

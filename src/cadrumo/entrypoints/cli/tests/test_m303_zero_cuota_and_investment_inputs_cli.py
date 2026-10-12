@@ -47,7 +47,8 @@ from ....tests.cli_envelope import (
 )
 from ._m303_ordinary_cli_support import joint_return_options
 from ._modelo_work_ux_support import operator_profile_facts
-from .modelo_profile_seed import ProfileSeeder, invoke_seeded_profile_cli, seed_profile
+from .cli_runner import invoke_cached_cli
+from .modelo_profile_seed import ProfileSeeder, seed_profile
 
 __all__ = ["_isolated_cli_backend", "seed_profile"]
 
@@ -83,7 +84,7 @@ def _profile_facts() -> dict[str, str]:
 
 
 def _invoke(args: list[str]) -> Result:
-    return invoke_seeded_profile_cli(["--format", "json", *args])
+    return invoke_cached_cli(["--format", "json", *args])
 
 
 def _added_transaction_id(result: Result) -> str:

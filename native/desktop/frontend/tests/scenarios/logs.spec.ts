@@ -1,3 +1,4 @@
+import { openPanelTab } from "../support/panel";
 import { expect, test } from "@playwright/test";
 import { FIXTURE_RECORDS } from "../../src/dev/fixtures/logs";
 import { recordLine } from "../../src/shell/records";
@@ -10,10 +11,7 @@ for (const kind of ["missing", "unreadable", "rejected"] as const) {
     page,
   }) => {
     await page.goto(`/scenarios.html?scenario=manager-log-${kind}&latency=0`);
-    await page
-      .getByRole("navigation", { name: label("desktop.rail.label") })
-      .getByRole("button", { name: label("desktop.rail.logs") })
-      .click();
+    await openPanelTab(page, "logs");
     const banner = page.locator(`.source-banner.state-${kind}`);
     await expect(banner).toHaveCount(1);
     await expect(banner).toHaveAttribute("data-source", "manager");
@@ -33,10 +31,7 @@ test("log timestamps use the viewer timezone and preserve legacy wall times", as
   page,
 }) => {
   await page.goto("/scenarios.html?scenario=signed-in&latency=0");
-  await page
-    .getByRole("navigation", { name: label("desktop.rail.label") })
-    .getByRole("button", { name: label("desktop.rail.logs") })
-    .click();
+  await openPanelTab(page, "logs");
   await expect(page.locator('.record[data-seq="1"] time')).toHaveText(
     "10:14:05.120",
   );
@@ -56,10 +51,7 @@ test("log diagnostics show process identity and filter correlation metadata", as
   page,
 }) => {
   await page.goto("/scenarios.html?scenario=signed-in&latency=0");
-  await page
-    .getByRole("navigation", { name: label("desktop.rail.label") })
-    .getByRole("button", { name: label("desktop.rail.logs") })
-    .click();
+  await openPanelTab(page, "logs");
   const filter = page.getByLabel(label("desktop.logs.filter"));
   await filter.fill("fixture-attempt-9");
   const row = page.locator(".record");

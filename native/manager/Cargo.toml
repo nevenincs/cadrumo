@@ -25,6 +25,10 @@ tokio = { version = "1", features = ["rt", "time", "process"] }
 # Descriptor-relative, no-follow calls for the custody primitives.
 libc = "0.2"
 
+[target.'cfg(windows)'.dependencies]
+cadrumo-installer = { path = "../installer" }
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_System_Services", "Win32_System_RemoteDesktop", "Win32_System_Threading", "Win32_System_Environment", "Win32_System_JobObjects", "Win32_Security", "Win32_Security_Authorization", "Win32_System_Memory"] }
+
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = { version = "0.6.4", default-features = false, features = ["std"] }
 objc2-app-kit = { version = "0.3.2", default-features = false, features = ["std", "NSApplication", "NSResponder", "NSWorkspace", "NSMenu", "NSMenuItem", "NSStatusBar", "NSStatusItem", "NSStatusBarButton", "NSButton", "NSCell", "NSControl", "NSView", "objc2-core-foundation"] }
@@ -48,6 +52,11 @@ required-features = ["fixture-test-mode"]
 [[test]]
 name = "supervision"
 path = "tests/supervision.rs"
+required-features = ["fixture-test-mode"]
+
+[[bin]]
+name = "cadrumo-manager-lifecycle"
+path = "tests/fixture/lifecycle.rs"
 required-features = ["fixture-test-mode"]
 
 [lints.rust]

@@ -350,6 +350,8 @@ class RuntimeInstallationDoorMixin:
         request: RuntimeInstallationActRequest,
     ) -> None:
         """Serve one act, taking the lifecycle exclusion first when it changes records."""
+        if self._refused_as_persons_act(context, channel, request_id=request.request_id, frontend=request.frontend):
+            return
         lifecycle = _LifecycleHold(self, held=False)
         if installation_request_facts(request).changes_records:
             lifecycle.held = self._drain_guard.acquire_delete()

@@ -355,6 +355,17 @@ fn quit_suppresses_automatic_starts_until_the_same_user_signs_in() {
     assert_eq!(outcome(&other.ownership.reassess()), "wait Quit");
     let mut quitter = quitter;
     assert_eq!(outcome(&quitter.ownership.reassess()), "wait Quit");
+    // Service/broker recovery in an existing logon never impersonates a fresh sign-in.
+    assert_eq!(
+        outcome(
+            &quitter
+                .ownership
+                .begin(StartKind::Recovery)
+                .expect("recover")
+        ),
+        "wait Quit"
+    );
+    assert_eq!(read_quit_marker(&root.0), QuitState::Present(marker));
     // A sign-in of another user leaves this user's Quit in force.
     let mut stranger = session(&root.0, &world, "S-1-5-21-9-9-9-1002", "3");
     assert_eq!(

@@ -23,10 +23,6 @@ from ...adapters.local_runtime.runtime_transport_cleanup import RuntimeTransport
 from ...adapters.local_runtime.server import RuntimeTransportServer
 from ...adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from ...adapters.local_runtime.windows_login import windows_login_inventory
-from ...adapters.local_runtime.windows_token_elevation import (
-    current_process_token_elevation_type,
-    supervised_elevation_refused,
-)
 from ...application.runtime.contracts import (
     RuntimeExitReason,
     RuntimeRefusalCode,
@@ -42,6 +38,7 @@ from ...core.diagnostic_log import diagnostic_error_fields, diagnostic_event, di
 from ...core.logging import configure_logging, get_logger
 from ...core.startup_phase_log import startup_phase
 from ...domain.calculations.registry.authority_location import published_authority_generation
+from .caller_owned import CallerOwnedRuntime, configured_storage_root
 from .profile_connections import RuntimeProfileConnections
 from .shutdown import RuntimeShutdownEvent, RuntimeShutdownWatchdog, RuntimeStop, terminate_runtime
 from .supervised_channel import (
@@ -67,12 +64,6 @@ def _accept_console_interrupts() -> None:
     # itself ignored Ctrl+C, would otherwise leave every console stop unseen.
     if not kernel32.SetConsoleCtrlHandler(None, False):
         _LOGGER.warning("runtime could not restore console Ctrl+C processing")
-
-
-def _supervised_token_refused() -> bool:
-    if sys.platform != "win32":
-        return False
-    return supervised_elevation_refused(current_process_token_elevation_type())
 
 
 def _configure_runtime_logging(root: Path) -> None:
@@ -129,9 +120,9 @@ def _serve_runtime_endpoint(
     installed_version: str,
     stop: RuntimeStop,
     previous: Mapping[signal.Signals, Any],
-    supervision: SupervisedRuntime | None,
+    supervision: SupervisedRuntime | CallerOwnedRuntime | None,
 ) -> None:
-    if endpoint.storage_identity != options.storage_identity:
+    if options.storage_identity is not None and endpoint.storage_identity != options.storage_identity:
         raise RuntimeRefusalError(RuntimeRefusalCode.ROOT_MISMATCH)
     _configure_runtime_logging(root)
     for number in previous:
@@ -154,7 +145,14 @@ def _serve_runtime_endpoint(
     )
     attach = None
     publication = None
-    if supervision is not None:
+    if isinstance(supervision, CallerOwnedRuntime):
+        attach = partial(
+            supervision.attach,
+            pid=os.getpid(),
+            version=installed_version,
+            storage_identity=endpoint.storage_identity,
+        )
+    elif supervision is not None:
         ready = RuntimeReady(
             boot_id=boot_id,
             pid=os.getpid(),
@@ -215,12 +213,12 @@ def _run_runtime_owner(
     options: argparse.Namespace,
     stop: RuntimeStop,
     previous: Mapping[signal.Signals, Any],
-    supervision: SupervisedRuntime | None,
+    supervision: SupervisedRuntime | CallerOwnedRuntime | None,
 ) -> RuntimeExitReason:
     installed_version = version("cadrumo")
-    if options.expected_version != installed_version:
+    if options.expected_version is not None and options.expected_version != installed_version:
         raise RuntimeRefusalError(RuntimeRefusalCode.VERSION_MISMATCH)
-    root = Path(options.storage_root)
+    root = configured_storage_root() if options.configured_root else Path(options.storage_root)
     if not root.is_absolute():
         raise RuntimeRefusalError(RuntimeRefusalCode.ROOT_MISMATCH)
     endpoint = (
@@ -271,6 +269,10 @@ def run(options: argparse.Namespace) -> int:
 def _run_process(options: argparse.Namespace) -> int:
     _accept_console_interrupts()
     stop = RuntimeStop()
+    if options.configured_root:
+        caller = CallerOwnedRuntime(stop)
+        caller.start()
+        return _run_runtime(options, stop, caller)
     if not options.supervised:
         return _run_runtime(options, stop, None)
     # The manager's console stop must reach this process alone.
@@ -282,12 +284,7 @@ def _run_process(options: argparse.Namespace) -> int:
         supervision = SupervisedRuntime(stop, SupervisorChannel(take_supervisor_streams(), logger=_LOGGER))
         route_diagnostics_to_redacted_logging(_LOGGER)
         supervision.start()
-        if _supervised_token_refused():
-            # Refused before the endpoint is claimed; the supervisor stands down on this reason.
-            _LOGGER.error("supervised runtime refused a full UAC-elevated token")
-            exit_code = int(RuntimeExitReason.ELEVATED_TOKEN_REFUSED)
-        else:
-            exit_code = _run_runtime(options, stop, supervision)
+        exit_code = _run_runtime(options, stop, supervision)
     except Exception as error:
         # The supervisor receives only the reason code; the redacted log keeps the cause.
         _LOGGER.error("supervised runtime ended by an unexpected failure", exc_info=error)
@@ -296,7 +293,9 @@ def _run_process(options: argparse.Namespace) -> int:
     return exit_code
 
 
-def _run_runtime(options: argparse.Namespace, stop: RuntimeStop, supervision: SupervisedRuntime | None) -> int:
+def _run_runtime(
+    options: argparse.Namespace, stop: RuntimeStop, supervision: SupervisedRuntime | CallerOwnedRuntime | None
+) -> int:
     previous = {number: signal.getsignal(number) for number in (signal.SIGINT, signal.SIGTERM)}
     try:
         return int(_run_runtime_owner(options, stop, previous, supervision))

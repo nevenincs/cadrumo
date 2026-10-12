@@ -2,7 +2,9 @@ import { Channel, invoke } from "@tauri-apps/api/core";
 import type {
   ContextMenuItem,
   LogBatch,
+  ManagerSignal,
   ShellToken,
+  SignInSignal,
   WindowPresentation,
 } from "../ipc/contract";
 import type { Host } from "./host";
@@ -65,6 +67,29 @@ export function tauriHost(): Host {
     },
     environment: () => call("desktop_environment", {}),
     signInStatus: () => call("sign_in_status", {}),
+    managerStatus: () => call("manager_status", {}),
+    async observeManager(listener) {
+      const updates = new Channel<ManagerSignal>();
+      updates.onmessage = listener;
+      const subscription = await call("manager_subscribe", { updates });
+      return () => {
+        updates.onmessage = () => undefined;
+        void call("manager_unsubscribe", { subscription }).catch(
+          () => undefined,
+        );
+      };
+    },
+    async observeSignIn(listener) {
+      const updates = new Channel<SignInSignal>();
+      updates.onmessage = listener;
+      const subscription = await call("sign_in_subscribe", { updates });
+      return () => {
+        updates.onmessage = () => undefined;
+        void call("sign_in_unsubscribe", { subscription }).catch(
+          () => undefined,
+        );
+      };
+    },
     startManager: () => call("manager_start", {}),
     installManager: (scope) => call("manager_install", { scope }),
     signOut: () => call("sign_out", {}),

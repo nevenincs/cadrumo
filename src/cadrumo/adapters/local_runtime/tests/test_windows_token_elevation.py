@@ -1,4 +1,4 @@
-"""A supervised runtime refuses only the elevated half of a split UAC token."""
+"""Native UAC elevation decoding remains separate from runtime admission."""
 
 from __future__ import annotations
 
@@ -14,7 +14,6 @@ from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRef
 from ..windows_token_elevation import (
     WindowsTokenElevationType,
     current_process_token_elevation_type,
-    supervised_elevation_refused,
     windows_token_elevation_type,
 )
 
@@ -28,12 +27,12 @@ _TOKEN_ELEVATION_CLASS = 20
 
 @pytest.mark.unit
 @pytest.mark.parametrize(
-    ("value", "refused"),
-    [(1, False), (2, True), (3, False)],
+    "value",
+    [1, 2, 3],
     ids=["default-uac-disabled", "full-elevated", "limited-filtered"],
 )
-def test_only_the_full_elevation_type_is_refused(value: int, refused: bool) -> None:
-    assert supervised_elevation_refused(windows_token_elevation_type(value)) is refused
+def test_native_elevation_types_are_decoded(value: int) -> None:
+    assert windows_token_elevation_type(value).value == value
 
 
 @pytest.mark.unit
@@ -75,14 +74,13 @@ def _token_dword(information_class: int) -> int:
 @pytest.mark.integration
 @pytest.mark.windows_only
 @pytest.mark.skipif(sys.platform != "win32", reason="requires the native Windows token")
-def test_the_current_token_reads_as_the_native_type_and_passes_unless_fully_elevated() -> None:
+def test_the_current_token_reads_as_the_native_type() -> None:
     elevation = current_process_token_elevation_type()
     assert elevation.value == _token_dword(_TOKEN_ELEVATION_TYPE_CLASS)
     is_elevated = bool(_token_dword(_TOKEN_ELEVATION_CLASS))
     # A full token is always elevated; a default token may be elevated when UAC is disabled.
     if elevation is WindowsTokenElevationType.FULL:
         assert is_elevated
-    assert supervised_elevation_refused(elevation) is (elevation is WindowsTokenElevationType.FULL)
 
 
 @pytest.mark.unit

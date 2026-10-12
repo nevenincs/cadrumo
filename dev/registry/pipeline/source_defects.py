@@ -91,7 +91,7 @@ class SupplementalBlankRunDeclaration(BaseModel):
 _SUPPLEMENTAL_BLANK_RUNS_BY_REF: dict[str, SupplementalBlankRunDeclaration] = {
     "aeat-dr-349-2020-current": SupplementalBlankRunDeclaration(
         source_ref="aeat-dr-349-2020-current",
-        pdf_filename="01-349-orden-hac-174-2020-de-4-de-febrero-ejercicio-2020-y-siguientes-894-kb-pdf.pdf",
+        pdf_filename="01-349-orden-hac-174-2020-de-4-de-febrero-ejerci.pdf",
         pdf_byte_count=915219,
         source_sha256="874db49c9aff4d9c024bdee52f869123a9815c09272a0066cf81421ace1a8335",
         sheet="Tipo 2 - Registro De Operador Intracomunitario",

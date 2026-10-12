@@ -196,6 +196,7 @@ impl Background {
         {
             self.uninstall()?;
         }
+        self.restore_adopted_control()?;
         if let Some(running) = &mut self.running {
             drain_events(
                 running,
@@ -223,6 +224,27 @@ impl Background {
                     }
                 }
                 Err(error) => {
+                    if running.worker_finished() {
+                        // Join before discarding a terminal worker error. A
+                        // separate cleanup-only supervisor re-admits the exact
+                        // boot/image/process identity; it never starts a runtime.
+                        let _ = running.join();
+                        self.running = None;
+                        self.quitting = true;
+                        self.suspended = true;
+                        if self.observation.pid.is_some() && !self.settlement_error_reported {
+                            self.running = Some(startup::stop_adopting(
+                                self.installed.target.clone(),
+                                SupervisorConfig::default(),
+                                Collaborators {
+                                    session: (self.activity)(),
+                                    probe: Box::new(self.installed.clone()),
+                                    versions: Box::new(self.installed.clone()),
+                                    stop_signal: Box::new(PlatformStopSignal::default()),
+                                },
+                            )?);
+                        }
+                    }
                     if !self.settlement_error_reported {
                         self.settlement_error_reported = true;
                         return report_failure(&self.diagnostics, Err(error));
@@ -329,9 +351,36 @@ impl Background {
         Ok(())
     }
 
+    /// An adopted survivor has no heartbeat channel. Drain its verified process
+    /// before launching a fresh incarnation with the canonical control channel.
+    fn restore_adopted_control(&mut self) -> io::Result<()> {
+        if !self.quitting
+            && !self.suspended
+            && self.observation.adopted
+            && !self.observation.recovery_requested
+        {
+            if let Err(error) = self.restart() {
+                if error.kind() == io::ErrorKind::WouldBlock {
+                    return Ok(());
+                }
+                return Err(error);
+            }
+            self.observation.recovery_requested = true;
+        }
+        Ok(())
+    }
+
     /// Suppress automatic starts before asking only our owned supervisor to stop.
     pub fn quit(&mut self) -> io::Result<()> {
         self.ownership.record_quit()?;
+        self.close_host()
+    }
+
+    /// Window close drains its owned runtime without persisting a user Quit choice.
+    pub fn close_host(&mut self) -> io::Result<()> {
+        if self.quitting {
+            return Ok(());
+        }
         if let Some(running) = &self.running
             && !running.handle.request(Request::Stop)
         {
@@ -359,23 +408,14 @@ impl Background {
         if self.waiting.is_some() {
             return "waiting";
         }
-        for event in self.diagnostics.snapshot(u64::MAX).events.iter().rev() {
-            match event.lifecycle {
-                Some(LifecycleFact::Ready { .. }) => return "running",
-                Some(
-                    LifecycleFact::SupervisorStarted { .. }
-                    | LifecycleFact::Launched { .. }
-                    | LifecycleFact::RestartScheduled { .. },
-                ) => return "starting",
-                Some(LifecycleFact::StopRequested { .. }) => return "stopping",
-                Some(
-                    LifecycleFact::HangDetected { .. }
-                    | LifecycleFact::Exited { .. }
-                    | LifecycleFact::ChannelClosed { .. }
-                    | LifecycleFact::Failed { .. },
-                ) => return "unavailable",
-                _ => {}
-            }
+        if self.running.is_some() {
+            return if self.observation.adopted {
+                "adopted"
+            } else if self.observation.ready && self.observation.confirmed {
+                "running"
+            } else {
+                "starting"
+            };
         }
         "waiting"
     }
@@ -452,6 +492,8 @@ struct Observation {
     confirmed: bool,
     reported_launch: bool,
     reported_ready: bool,
+    adopted: bool,
+    recovery_requested: bool,
 }
 impl Observation {
     fn observe(&mut self, event: &Event) {
@@ -464,6 +506,16 @@ impl Observation {
             }
             Event::Ready { pid, .. } if self.pid == Some(*pid) => self.ready = true,
             Event::BootRecordConfirmed { pid } if self.pid == Some(*pid) => self.confirmed = true,
+            Event::Adopted { pid, .. } => {
+                *self = Self {
+                    pid: Some(*pid),
+                    adopted: true,
+                    ..Self::default()
+                };
+            }
+            Event::ChannelClosed { .. } | Event::HangDetected { .. } | Event::Exited { .. } => {
+                self.ready = false;
+            }
             _ => {}
         }
     }
@@ -571,6 +623,39 @@ mod tests {
     use super::*;
     use cadrumo_application::diagnostics::DiagnosticSource;
     use std::sync::mpsc;
+
+    #[test]
+    fn readiness_requires_current_launch_and_boot_record_and_is_retired_on_channel_loss() {
+        let mut observed = Observation::default();
+        observed.observe(&Event::Launched {
+            pid: 7,
+            version: "1".into(),
+        });
+        observed.observe(&Event::Ready {
+            pid: 8,
+            boot_id: "stale".into(),
+        });
+        assert!(!observed.ready);
+        observed.observe(&Event::Ready {
+            pid: 7,
+            boot_id: "current".into(),
+        });
+        assert!(observed.ready && !observed.confirmed);
+        observed.observe(&Event::BootRecordConfirmed { pid: 7 });
+        assert!(observed.ready && observed.confirmed);
+        observed.observe(&Event::ChannelClosed { pid: 7 });
+        assert!(!observed.ready);
+        observed.observe(&Event::Adopted {
+            pid: 7,
+            version: "1".into(),
+        });
+        assert!(observed.adopted && !observed.ready && !observed.confirmed);
+        observed.observe(&Event::Launched {
+            pid: 9,
+            version: "1".into(),
+        });
+        assert!(!observed.adopted && !observed.ready && !observed.confirmed);
+    }
 
     #[test]
     fn session_end_is_idempotent_and_cancellation_preserves_user_quit() {

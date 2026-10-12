@@ -33,7 +33,8 @@ from ....domain.user_profile.values import UserProfileFact
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ._modelo_review_package_support import build_review_package_via_cli, seed_exportable_modelo_revision
 from ._strict_cli_fixture_support import seeded_runtime_backend
-from .modelo_profile_seed import invoke_seeded_profile_cli, seed_profile
+from .cli_runner import invoke_cached_cli
+from .modelo_profile_seed import seed_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -41,7 +42,7 @@ __all__ = ["seed_profile", "seeded_runtime_backend"]
 
 
 def _invoke(args: Sequence[str]) -> Result:
-    return invoke_seeded_profile_cli(args)
+    return invoke_cached_cli(args)
 
 
 def _set_export_profile_name() -> None:

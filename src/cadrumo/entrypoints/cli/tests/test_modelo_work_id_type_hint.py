@@ -29,7 +29,8 @@ from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ._strict_cli_fixture_support import seeded_runtime_backend
-from .modelo_profile_seed import invoke_seeded_profile_cli, seed_profile
+from .cli_runner import invoke_cached_cli
+from .modelo_profile_seed import seed_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -83,7 +84,7 @@ def test_verify_with_work_unit_id_hints_at_calculate() -> None:
     recovery action that produces one.
     """
     work_unit_id = _seed_work_unit_without_revision()
-    result = invoke_seeded_profile_cli(["--language", "en", "app", "modelo", "work", "verify", work_unit_id])
+    result = invoke_cached_cli(["--language", "en", "app", "modelo", "work", "verify", work_unit_id])
 
     assert result.exit_code != 0, result.output
     collapsed = " ".join(result.output.split())
@@ -96,7 +97,7 @@ def test_verify_with_work_unit_id_hints_at_calculate() -> None:
 def test_file_with_work_unit_id_hints_at_calculate() -> None:
     """``work file`` given a work-unit id gets the same instructive id-type hint."""
     work_unit_id = _seed_work_unit_without_revision()
-    result = invoke_seeded_profile_cli(["--language", "en", "app", "modelo", "work", "file", work_unit_id])
+    result = invoke_cached_cli(["--language", "en", "app", "modelo", "work", "file", work_unit_id])
 
     assert result.exit_code != 0, result.output
     collapsed = " ".join(result.output.split())
@@ -116,7 +117,7 @@ def test_verify_with_unknown_id_keeps_plain_not_found() -> None:
     every not-found.
     """
     unknown_id = "f" * 64
-    result = invoke_seeded_profile_cli(["app", "modelo", "work", "verify", unknown_id])
+    result = invoke_cached_cli(["app", "modelo", "work", "verify", unknown_id])
 
     assert result.exit_code != 0, result.output
     collapsed = " ".join(result.output.split())

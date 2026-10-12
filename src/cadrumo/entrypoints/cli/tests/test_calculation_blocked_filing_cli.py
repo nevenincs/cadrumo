@@ -42,7 +42,8 @@ from ....domain.modelos.work_unit import WorkUnitCatalogue
 from ....tests.cli_envelope import require_error_document
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ._modelo_work_ux_support import operator_profile_facts
-from .modelo_profile_seed import ProfileSeeder, invoke_seeded_profile_cli, seed_profile
+from .cli_runner import invoke_cached_cli
+from .modelo_profile_seed import ProfileSeeder, seed_profile
 
 __all__ = ["_isolated_cli_backend", "seed_profile"]
 
@@ -83,7 +84,7 @@ def _english_sentence() -> str:
 
 def _calculate_and_verify() -> tuple[str, str]:
     """Create, calculate and verify the Modelo 130 declaration through the CLI."""
-    created = invoke_seeded_profile_cli(
+    created = invoke_cached_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "create",
@@ -99,11 +100,11 @@ def _calculate_and_verify() -> tuple[str, str]:
 
 
 def _recalculate(work_unit_id: str, prior_year_income: str) -> str:
-    calculated = invoke_seeded_profile_cli(
+    calculated = invoke_cached_cli(
         ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id, *_calculate_options(prior_year_income)]
     )
     assert calculated.exit_code == 0, calculated.output
-    verified = invoke_seeded_profile_cli(
+    verified = invoke_cached_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "verify",
@@ -169,7 +170,7 @@ def _plant_current(work_unit_id: str, base_revision_id: str, issues: tuple[Calcu
 
 def _export(work_unit_id: str, output: Path, *, revision_id: str | None = None) -> tuple[int, str]:
     revision_options = ["--revision", revision_id] if revision_id is not None else []
-    exported = invoke_seeded_profile_cli(
+    exported = invoke_cached_cli(
         [
             "--format",
             "json",
@@ -214,7 +215,7 @@ def test_a_blocking_note_refuses_export_and_filing_until_a_recalculation_clears_
     blocked_revision_id = _plant_current(work_unit_id, clean_revision_id, (_BLOCKING_ISSUE,))
     assert blocked_revision_id != clean_revision_id
 
-    verification = invoke_seeded_profile_cli(
+    verification = invoke_cached_cli(
         [
             "--format",
             "json",
@@ -250,17 +251,17 @@ def test_a_blocking_note_refuses_export_and_filing_until_a_recalculation_clears_
     _assert_unverified(exit_code, output, revision_id=blocked_revision_id)
     assert not refused_output.exists()
 
-    filed = invoke_seeded_profile_cli(
+    filed = invoke_cached_cli(
         ["--format", "json", "--language", "en", "app", "modelo", "work", "file", blocked_revision_id],
     )
     _assert_unverified(filed.exit_code, filed.output, revision_id=blocked_revision_id)
-    status = invoke_seeded_profile_cli(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
+    status = invoke_cached_cli(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
     assert status.exit_code == 0, status.output
     assert _payload(status.output)["filed_calculation_revision_id"] is None
 
     cleared_revision_id = _recalculate(work_unit_id, _LATER_PRIOR_YEAR_INCOME)
     assert cleared_revision_id not in {blocked_revision_id, clean_revision_id}
-    status = invoke_seeded_profile_cli(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
+    status = invoke_cached_cli(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
     assert status.exit_code == 0, status.output
     assert _payload(status.output)["current_calculation_revision_id"] == cleared_revision_id
 

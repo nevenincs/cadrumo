@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#product-packaging'
 date: '2026-06-28'
-modified: '2026-10-07'
-body_hash: 'sha256:15338ab0dee8850c212f4a767062272cc3312b5c4c7e39d9ac113021926b591b'
+modified: '2026-10-11'
+body_hash: 'sha256:f7b9ccb8e9e37902403d494a9ec3bc93d6bd456ce91d705819c01522ed492261'
 related:
   - '[[2026-06-28-product-packaging-research]]'
   - '[[2026-06-28-product-packaging-reference]]'
@@ -133,3 +133,15 @@ ruling records authority, not completed rollout or a foreign source-write releas
 Explicitly approved by the user and accepted in `2026-10-07-broad-test-failure-repair-corpus-companion-adr`. This ruling controls current implementation within its stated scope; the preceding text is preserved as decision history.
 
 The mandatory exact-version Python cohort now contains four distributions: cadrumo and three data companions. cadrumo-data-manuals owns manuals binaries; cadrumo-data-official owns aeat_official and eu_official binaries; cadrumo-data-normatives owns only corpus/normatives binaries. The root requires all three companions at its exact version. All four distributions share the version. Companion ownership remains disjoint and exhaustive; all resource paths, source bytes, namespace and immutable-cohort verification constraints remain binding. Prior references to two companions and three distributions describe the earlier partition.
+
+## Scoped amendment (2026-10-11): Windows corpus destination paths
+
+Accepted under the operator's explicit continuation authorization to fix complete application packaging, make real installation and runtime failures fail acceptance, and refine existing checks without duplicate harnesses. This amendment refines physical resource placement for that repair; it grants no release publication or host installation authority.
+
+The real disposable Windows guest's user MSI failed with error 1304 while writing an exact manifest-owned corpus correction sidecar whose destination contains 261 UTF-16 code units; Windows Installer reported final error 1603 before installation ownership committed. Measured payload destinations also exceed the legacy path budget at supported default user and machine roots. This is a package-layout defect independently of the still-unproved precise native error cause. The failed immutable cohort and private failure evidence remain retained in the runtime-process-lifecycle audit.
+
+Permit bounded physical corpus basenames in a new versioned cohort, within the existing resource directory layout and companion ownership. Retain every binary and its byte count and SHA-256, official URL and aliases, original filename, title, retrieval metadata and declared stable source identifier. Update all manifest stored_path and registry corpus_path references coherently. Re-render affected extraction sidecar pairs through their existing canonical owner with preserved extraction units, source digest and attribution; update correction locators and derived identities coherently. No stale aliases, missing evidence, network reacquisition, payload exclusions, semantic edits or mixed-cohort references may conceal relocation.
+
+This is the sole exception to the 2026-10-07 amendment's preservation of all resource paths. Namespace, directory ownership, exact-version pins, exhaustive source coverage, package budgets, canonical resource access and immutable-cohort verification remain binding. Existing accepted history remains intact. Recompute affected legal-input and physical authority identities through complete canonical publication before packaging.
+
+The existing MSI producer must reject excessive installed UTF-16 destination lengths including sidecar suffixes at supported default roots. The actual native maintenance admission must reject an unsupported selected prefix before creating or mutating installation state; producer checks against one builder's defaults do not prove another user's redirected root. Do not shorten the acceptance root, enable OS long-path policy or use unproved MSI extended-prefix/short-name behavior as the repair. Acceptance requires the new complete cohort's actual MSI installation and manager/native authenticated client operation in both scopes; this decision itself claims neither successful installation nor completed rollout.

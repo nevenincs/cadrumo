@@ -17,7 +17,7 @@ import { dirname, isAbsolute, relative, resolve } from "node:path";
 // and no copy lands beside the directory the build declares.
 const HOST_CRATE = "desktop/src-tauri";
 const HOST_CRATE_ENTRIES = ["Cargo.toml", "Cargo.lock", "build.rs", "src"];
-const PATH_CRATES = ["application", "platform", "installer"];
+const PATH_CRATES = ["application", "platform", "installer", "manager"];
 
 export function hostSnapshot(root) {
   return {

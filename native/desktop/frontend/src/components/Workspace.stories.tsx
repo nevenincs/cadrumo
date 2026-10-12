@@ -81,12 +81,8 @@ function useRailItems(chosen: string, errors = 0, messages?: Messages) {
       divided: messages === undefined,
     },
     {
-      ...item("console", "console", "desktop.rail.console", "Ctrl+Shift+1"),
+      ...item("panel", "console", "desktop.panel.label", "Ctrl+`"),
       divided: true,
-    },
-    item("python", "python", "desktop.rail.python", "Ctrl+Shift+2"),
-    {
-      ...item("logs", "logs", "desktop.rail.logs", "Ctrl+Shift+3"),
       badge: errors || undefined,
       badgeLabel: errors
         ? t("desktop.logs.errors", { count: errors })
@@ -119,12 +115,12 @@ export const RailStates: Story = {
   render: () => (
     <Specimen
       title="Rail"
-      note="One tab stop; the arrow keys, Home and End move within it. Search, the window's toggles, shortcuts, then the panel's toggles. A chosen item carries a bar as well as its surface, and a count is said in its name."
+      note="One tab stop; the arrow keys, Home and End move within it. Search, the window's toggles, shortcuts, then one panel toggle. A chosen item carries a bar as well as its surface. The error count stays visible when the panel is collapsed and is said in the button's name."
       className="items-start gap-8"
     >
       <RailSpecimen chosen="tui" />
-      <RailSpecimen chosen="console" errors={3} />
-      <RailSpecimen chosen="logs" errors={128} />
+      <RailSpecimen chosen="panel" errors={3} />
+      <RailSpecimen chosen="tui" errors={128} />
     </Specimen>
   ),
 };

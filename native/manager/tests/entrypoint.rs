@@ -31,32 +31,15 @@ fn version_reports_the_projected_manager_name_and_version() {
 }
 
 #[test]
-fn bare_start_refuses_noninteractive_or_unsupported_hosts() {
-    #[cfg(windows)]
-    {
-        let Err(refusal) = cadrumo_manager::admission::require_current() else {
-            // Ordinary tests never start a manager against the interactive
-            // user's real storage. Admitted package acceptance is opt-in.
-            return;
-        };
-        let output = Command::new(MANAGER).output().expect("run the manager");
-        assert_eq!(output.status.code(), Some(77), "{output:?}");
-        assert!(output.stdout.is_empty(), "{output:?}");
-        assert_eq!(
-            String::from_utf8(output.stderr).unwrap(),
-            format!("{}\n", refusal.code())
-        );
-    }
-    #[cfg(not(windows))]
-    {
-        let output = Command::new(MANAGER).output().expect("run the manager");
-        assert_eq!(output.status.code(), Some(69), "{output:?}");
-        assert!(output.stdout.is_empty(), "{output:?}");
-        assert_eq!(
-            String::from_utf8(output.stderr).unwrap(),
-            "manager_platform_unavailable\n"
-        );
-    }
+#[cfg(not(windows))]
+fn bare_start_refuses_unsupported_platforms() {
+    let output = Command::new(MANAGER).output().expect("run the manager");
+    assert_eq!(output.status.code(), Some(69), "{output:?}");
+    assert!(output.stdout.is_empty(), "{output:?}");
+    assert_eq!(
+        String::from_utf8(output.stderr).unwrap(),
+        "manager_platform_unavailable\n"
+    );
 }
 
 #[test]
@@ -77,26 +60,6 @@ fn unknown_arguments_are_refused() {
             .expect("run the manager");
         assert_eq!(output.status.code(), Some(2), "{arguments:?}: {output:?}");
         assert!(output.stdout.is_empty(), "{arguments:?}: {output:?}");
-    }
-}
-
-#[cfg(windows)]
-#[test]
-fn explicit_recovery_keeps_native_admission_before_storage_or_dispatch() {
-    let Err(refusal) = cadrumo_manager::admission::require_current() else {
-        return;
-    };
-    for arguments in [&["--retry"][..], &["--breakaway-attempt", "--retry"]] {
-        let output = Command::new(MANAGER)
-            .args(arguments)
-            .output()
-            .expect("run manager recovery");
-        assert_eq!(output.status.code(), Some(77), "{arguments:?}: {output:?}");
-        assert!(output.stdout.is_empty());
-        assert_eq!(
-            String::from_utf8(output.stderr).unwrap(),
-            format!("{}\n", refusal.code())
-        );
     }
 }
 

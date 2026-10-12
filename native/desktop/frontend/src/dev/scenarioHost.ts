@@ -11,6 +11,8 @@ import type {
   DocsLanguage,
   HostFailure,
   LogBatch,
+  ManagerStatus,
+  SignInSignal,
   SignInStatus,
 } from "../ipc/contract";
 import type { Host } from "../shell/host";
@@ -97,6 +99,12 @@ export function scenarioHost(
   let managerDispatched = scenario.manager?.autoDispatched ?? false;
   let managerReads = 0;
   let clipboard = "";
+  const supervision = scenario.supervision;
+  let observedManager: ManagerStatus | undefined = supervision?.initial;
+  let managerRevision = 0;
+  let signInListener: ((signal: SignInSignal) => void) | null = null;
+  let statusDelayMs = 0;
+  let statusFailure: HostFailure["code"] | undefined;
 
   // The profiles of this made-up computer, and the one that is selected.
   // A host with no profile commands still has the one its status names.
@@ -226,6 +234,54 @@ export function scenarioHost(
     ...(scenario.views === "none" ? {} : { views }),
     ...(scenario.profiles === "absent" ? {} : { profiles }),
     ...managerCommand,
+    ...(supervision
+      ? {
+          managerStatus() {
+            say("managerStatus");
+            return Promise.resolve(observedManager!);
+          },
+          observeManager: ((listener) => {
+            say("observeManager");
+            listener({
+              kind: "manager-state",
+              revision: 0,
+              status: observedManager!,
+            });
+            const timers = supervision.events.map((event) => ({
+              late: event.deliverAfterUnsubscribe,
+              timer: window.setTimeout(() => {
+                if (event.presence) presence = event.presence;
+                if (event.statusDelayMs !== undefined)
+                  statusDelayMs = event.statusDelayMs;
+                statusFailure = event.statusFailure;
+                if (event.manager) {
+                  if (event.manager.revision > managerRevision) {
+                    managerRevision = event.manager.revision;
+                    observedManager =
+                      event.manager.kind === "manager-state"
+                        ? event.manager.status
+                        : { state: "failed", failure: event.manager.error };
+                    runtimeAvailable = observedManager.state === "ready";
+                  }
+                  listener(event.manager);
+                }
+                if (event.signIn) signInListener?.(event.signIn);
+              }, event.afterMs),
+            }));
+            return Promise.resolve(() => {
+              say("managerUnsubscribe");
+              for (const timer of timers)
+                if (!timer.late) window.clearTimeout(timer.timer);
+            });
+          }) satisfies NonNullable<Host["observeManager"]>,
+          observeSignIn: ((listener) => {
+            signInListener = listener;
+            return Promise.resolve(() => {
+              if (signInListener === listener) signInListener = null;
+            });
+          }) satisfies NonNullable<Host["observeSignIn"]>,
+        }
+      : {}),
     ...(manager?.installResult
       ? {
           async installManager(scope: "user" | "machine") {
@@ -251,12 +307,24 @@ export function scenarioHost(
         return Promise.reject(failure("environment_failed", "environment"));
       return Promise.resolve({
         outputLanguage: options.language,
-        docs: options.docs,
+        docs: { state: "bundled", ...options.docs },
       });
     },
 
     signInStatus() {
       say("signInStatus");
+      if (statusFailure) {
+        const code = statusFailure;
+        statusFailure = undefined;
+        return Promise.reject(failure(code, "cli"));
+      }
+      if (statusDelayMs) {
+        const captured = status();
+        return wait(statusDelayMs).then(() => {
+          say("managerAuthResolved");
+          return captured;
+        });
+      }
       if (scenario.signIn.statusPending) return never();
       if (scenario.signIn.statusFailure)
         return Promise.reject(
@@ -294,8 +362,11 @@ export function scenarioHost(
       const named = accounts.indexOf(profile ?? "");
       if (profile !== undefined) say(`signInProfile ${named + 1}`);
       const outcome = scenario.signIn.submit;
+      const acknowledged = supervision
+        ? { ...status(), state: "present" as const }
+        : null;
       if (outcome.kind === "pending") return never();
-      await wait(options.latencyMs);
+      await wait(supervision?.submitDelayMs ?? options.latencyMs);
       if (outcome.kind === "fail") throw failure(outcome.code, "cli");
       if (outcome.kind === "refuse")
         return {
@@ -306,7 +377,7 @@ export function scenarioHost(
       // A sign-in that is accepted is what selects the profile.
       if (named >= 0) active = accounts[named] ?? active;
       presence = "present";
-      return { kind: "signed-in", status: status() };
+      return { kind: "signed-in", status: acknowledged ?? status() };
     },
 
     async signOut() {

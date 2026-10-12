@@ -1,3 +1,4 @@
+import { openPanelTab } from "../support/panel";
 import { expect, test, type Page } from "@playwright/test";
 import { label } from "../support/strings";
 
@@ -14,8 +15,11 @@ test.use({
 // The smallest side a control may have under a finger.
 const FINGER = 44;
 
-const open = (target: Page, scenario = "signed-in") =>
-  target.goto(`/scenarios.html?scenario=${scenario}&latency=0&bar=off`);
+const open = async (target: Page, scenario = "signed-in") => {
+  await target.goto(`/scenarios.html?scenario=${scenario}&latency=0&bar=off`);
+  // Panel interaction tests open it explicitly after each fresh launch.
+  await target.keyboard.press("Control+Backquote");
+};
 
 const overflowing = (target: Page) =>
   target.evaluate(
@@ -26,11 +30,6 @@ test.beforeEach(async ({ page: target }) => {
   await target.addInitScript(() => {
     if (sessionStorage.getItem("layout-cleared")) return;
     localStorage.clear();
-    // Exercise the full panel layout as a returning user's saved choice.
-    localStorage.setItem(
-      "cadrumo-shell-layout",
-      JSON.stringify({ layout: { panelOpen: true } }),
-    );
     sessionStorage.setItem("layout-cleared", "1");
   });
 });
@@ -42,10 +41,7 @@ test("the pointer is coarse and every control is finger sized", async ({
   expect(
     await target.evaluate(() => matchMedia("(pointer: coarse)").matches),
   ).toBe(true);
-  await target
-    .getByRole("navigation", { name: label("desktop.rail.label") })
-    .getByRole("button", { name: label("desktop.rail.logs") })
-    .tap();
+  await openPanelTab(target, "logs", { touch: true });
   const controls = target.locator(
     ".rail button, .pane-head button, .tabstrip button, .logview button, .logview input, .logview select",
   );
@@ -75,8 +71,7 @@ for (const language of ["en", "hu"])
     await target.goto(
       `/scenarios.html?scenario=signed-in&latency=0&bar=off&lang=${language}`,
     );
-    // By its tab, which no language renames.
-    await target.locator("#tab-logs").tap();
+    await openPanelTab(target, "logs", { touch: true, locale: language });
     const list = target.locator(".logview-list");
     // The newest record: the log follows its end.
     await expect(list.locator(".record").last()).toBeVisible();
@@ -282,10 +277,7 @@ test("a tap reaches the rail, the tabs and the log filters", async ({
   page: target,
 }) => {
   await open(target);
-  await target
-    .getByRole("navigation", { name: label("desktop.rail.label") })
-    .getByRole("button", { name: label("desktop.rail.logs") })
-    .tap();
+  await openPanelTab(target, "logs", { touch: true });
   await expect(
     target.getByRole("tab", { name: label("desktop.rail.logs") }),
   ).toHaveAttribute("aria-selected", "true");
@@ -304,7 +296,7 @@ test("a finger drawn down the log leaves its end, and the bar is one row", async
   await target.goto(
     "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=2000&feed=200",
   );
-  await target.locator("#tab-logs").tap();
+  await openPanelTab(target, "logs", { touch: true });
   const list = target.locator(".logview-list");
   const follow = target.getByRole("button", {
     name: label("desktop.logs.follow"),

@@ -145,11 +145,6 @@ def application_images(layout: dict[str, Any]) -> tuple[ApplicationImage, ...]:
     return tuple(images)
 
 
-def staged_application_images(layout: dict[str, Any], *, user_docs: bool) -> tuple[ApplicationImage, ...]:
-    """Return the images a package stages; the desktop image serves the bundled docs, so it needs them."""
-    return tuple(image for image in application_images(layout) if user_docs or not image.desktop)
-
-
 def desktop_image(layout: dict[str, Any]) -> ApplicationImage | None:
     """Return the one image that receives desktop registration, when the platform declares one."""
     return next((image for image in application_images(layout) if image.desktop), None)

@@ -56,11 +56,28 @@ def test_owner_arguments_are_parsed_without_materializing_storage(tmp_path: Path
     assert not root.exists()
 
 
+@pytest.mark.parametrize("expected_version", [None, "synthetic-version"])
+def test_a_caller_owned_launch_names_no_root_and_may_pin_its_version(expected_version: str | None) -> None:
+    arguments = ["--configured-root"]
+    if expected_version is not None:
+        arguments += ["--expected-version", expected_version]
+    options = parse_runtime_arguments(arguments)
+    assert options.configured_root is True
+    assert options.storage_root is None
+    assert options.storage_identity is None
+    assert options.expected_version == expected_version
+    assert options.supervised is False
+
+
 @pytest.mark.parametrize(
     ("arguments", "exit_code", "message"),
     [
         (["--help"], 0, "--storage-identity"),
-        ([], 2, "the following arguments are required"),
+        ([], 2, "one of the arguments --storage-root --configured-root is required"),
+        (_OWNER_ARGUMENTS[:2], 2, "the following arguments are required: --storage-identity, --expected-version"),
+        ([*_OWNER_ARGUMENTS, "--configured-root"], 2, "not allowed with argument"),
+        (["--configured-root", "--storage-identity", "x"], 2, "--configured-root takes neither"),
+        (["--configured-root", "--supervised"], 2, "--configured-root takes neither"),
         ([*_OWNER_ARGUMENTS, "--bogus"], 2, "unrecognized arguments: --bogus"),
         ([*_OWNER_ARGUMENTS, "--storage-id", "other"], 2, "unrecognized arguments: --storage-id other"),
         (["--storage-root"], 2, "expected one argument"),

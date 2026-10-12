@@ -229,7 +229,10 @@ pub fn prepared_environment(
             .find(|(key, _)| matches(key, name))
             .map(|(_, value)| value.clone())
     };
-    let ctx = context_for(executable, &lookup)?;
+    // Match the native interpreter's current_exe path representation even when
+    // callers supply a Windows executable using forward slashes.
+    let executable = normalize_absolute_path(executable).map_err(|error| error.to_string())?;
+    let ctx = context_for(&executable, &lookup)?;
     let search = executable_search_path(&ctx, &lookup)?;
     for path in [&ctx.paths[1], &ctx.paths[8]] {
         create_private_directory(path).map_err(|e| e.to_string())?;

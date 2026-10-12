@@ -11,6 +11,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
+import { developmentServer } from "../../scripts/development-server.mjs";
 
 const desktop = fileURLToPath(new URL("../..", import.meta.url));
 
@@ -51,13 +52,12 @@ function run(args) {
   if (result.status !== 0) process.exit(result.status ?? 1);
 }
 
-function main() {
+export function bootstrap() {
+  const ports = developmentServer();
   const { values } = parseArgs({
     options: {
       "build-dir": { type: "string" },
-      host: { type: "string", default: "127.0.0.1" },
-      "dev-port": { type: "string", default: "15370" },
-      "preview-port": { type: "string", default: "15371" },
+      host: { type: "string", default: ports.host },
     },
   });
 
@@ -73,29 +73,27 @@ function main() {
     desktop,
     ...(preset ? ["--preset", preset.name] : ["-B", buildDir]),
     `-DCADRUMO_DESKTOP_BIND_ADDRESS=${values.host}`,
-    `-DCADRUMO_DESKTOP_DEV_PORT=${values["dev-port"]}`,
-    `-DCADRUMO_DESKTOP_PREVIEW_PORT=${values["preview-port"]}`,
   ]);
   run(["--build", buildDir, "--target", "desktop-frontend-generated"]);
 
   console.log(
     [
       "",
-      "The build directory is ready. Select it for this shell, then start the server:",
+      "The build directory is ready. Start the development display with just dev.",
+      "For check, build, test and catalogue commands, select this directory:",
       "",
       `  PowerShell   $env:CADRUMO_CMAKE_BINARY_DIR = '${buildDir}'`,
       `  POSIX shell  export CADRUMO_CMAKE_BINARY_DIR='${buildDir}'`,
       "",
-      "  npm run dev",
-      "",
-      `Application  http://${open}:${values["dev-port"]}/`,
-      `Scenarios    http://${open}:${values["dev-port"]}/scenarios.html`,
+      `Application  http://${open}:${ports.devPort}/`,
+      `Scenarios    http://${open}:${ports.devPort}/scenarios.html`,
     ].join("\n"),
   );
+  return buildDir;
 }
 
 if (
   process.argv[1] &&
   resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 )
-  main();
+  bootstrap();

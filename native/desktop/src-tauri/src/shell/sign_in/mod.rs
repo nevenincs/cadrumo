@@ -1,6 +1,11 @@
 //! Short-lived canonical CLI invocations. No runtime connection or credential is retained.
+mod observation;
 mod process;
 mod wire;
+use observation::{
+    __cmd__sign_in_subscribe, __cmd__sign_in_unsubscribe, __tauri_command_name_sign_in_subscribe,
+    __tauri_command_name_sign_in_unsubscribe, sign_in_subscribe, sign_in_unsubscribe,
+};
 
 use crate::environment::Launch;
 use cadrumo_application::{
@@ -101,6 +106,7 @@ struct Files {
 pub struct SignIn {
     child: Result<ChildConfiguration>,
     pub children: Children,
+    observation: observation::Observer,
 }
 
 impl SignIn {
@@ -108,7 +114,24 @@ impl SignIn {
         Self {
             child: resolve_cli(launch),
             children: Children::new(launch.diagnostics.clone()),
+            observation: observation::Observer::default(),
         }
+    }
+
+    pub(crate) async fn read_status(self: &Arc<Self>) -> Result<SignInStatus> {
+        if !supported() {
+            return Ok(SignInStatus::unsupported());
+        }
+        let state = self.clone();
+        super::blocking(move || wire::status(state.run(&STATUS, None, None)?)).await
+    }
+
+    pub async fn stop(&self) -> Result<()> {
+        self.observation.close();
+        let result = self.children.stop();
+        let joined = self.observation.join().await;
+        result?;
+        joined
     }
 
     fn run(
@@ -201,6 +224,8 @@ fn supported() -> bool {
 pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
     crate::app::commands![
         sign_in_status,
+        sign_in_subscribe,
+        sign_in_unsubscribe,
         sign_in_submit,
         sign_out,
         profile_list,
@@ -219,11 +244,7 @@ pub async fn sign_in_status(
     // Dispatch completion is not runtime readiness. The canonical CLI below
     // remains the only authority on availability and authentication.
     let started = manager.start(false).await;
-    let state = state.inner().clone();
-    status_after_manager(
-        started,
-        super::blocking(move || wire::status(state.run(&STATUS, None, None)?)).await,
-    )
+    status_after_manager(started, state.inner().read_status().await)
 }
 
 fn status_after_manager(
@@ -437,10 +458,9 @@ mod tests {
     }
 
     #[test]
-    fn successful_or_unmanaged_dispatch_never_claims_runtime_readiness() {
+    fn successful_or_unsupported_dispatch_never_claims_runtime_readiness() {
         for outcome in [
             crate::manager::StartOutcome::Dispatched,
-            crate::manager::StartOutcome::Unmanaged,
             crate::manager::StartOutcome::Unsupported,
         ] {
             let status = status_after_manager(Ok(outcome), status_observation(false)).unwrap();
@@ -626,7 +646,7 @@ mod tests {
         std::fs::create_dir_all(&own).unwrap();
         let mut pinned = 0;
         for (_, value) in &mut parent.environment {
-            if PathBuf::from(&*value) == shared {
+            if std::path::Path::new(&*value) == shared {
                 *value = own.clone().into_os_string();
                 pinned += 1;
             }

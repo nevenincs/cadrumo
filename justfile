@@ -86,6 +86,13 @@ export CADRUMO_AUTHORITY_ROOT := if authority_root == "" {
 default:
     @just --list
 
+# One entry for the desktop development display. All fixed listener assignments
+# are owned by native/desktop/development-server.json; occupied ports are errors.
+[doc('Start the desktop development display on its fixed ports, generating inputs without compiling the desktop.')]
+[group('dev')]
+dev:
+    node native/desktop/frontend/scripts/dev.mjs
+
 # ── Bootstrap / Install ──────────────────────────────────────────────────────
 
 # Complete new-worktree provisioning. The first command owns the locked Python
@@ -681,6 +688,14 @@ test-native-package CONFIGURATION="Release": (_native-configure CONFIGURATION)
 test-native-release CONFIGURATION="Release": (_native-configure CONFIGURATION)
     cmake --build --preset {{native_build_preset_prefix}}{{lowercase(CONFIGURATION)}} --target verify-release
 
+# Drives only the package's own programs on a disposable root: profile, sign-in,
+# CLI and MCP reads, stdin-closed stop, and an unchanged installed default root.
+# Stored sign-ins need a logon whose native credential store works.
+[doc('Accept the caller-owned runtime (cadrumo-runtime --configured-root) of a built package on a disposable storage root.')]
+[group('test')]
+verify-caller-owned-runtime PACKAGE:
+    uv run --no-sync python -m dev.runtime_lifecycle.caller_owned_root --package {{quote(PACKAGE)}}
+
 # ── Devcontainer ─────────────────────────────────────────────────────────────
 
 # Two questions about the same artifacts. actionlint asks whether the YAML is
@@ -1267,6 +1282,24 @@ test-os-keychain:
 [group('test')]
 test-runtime-auth:
     uv run --no-sync pytest -v -n0 -m os_keychain src/cadrumo/entrypoints/cli/tests/test_runtime_sign_in_native.py
+
+# The live agent lane runs against a verified, unmodified copy of the bundle
+# `build-native Release bundle` stages. It is opt-in and reached only from these
+# two recipes: no default lane, workflow or gate calls them. Exit status names
+# the outcome: 0 passed, 1 agent failure, 2 product finding, 3 unavailable
+# (missing model credential, credential store, current package, or a
+# provisional scenario), 4 harness error. Receipts go to .logs/agent-eval.
+# FLAGS pass through, e.g. --measure-stale-package to measure a package that
+# differs from the checkout, which the receipt then records.
+[doc('Run a live-agent scenario with the scripted MCP client and no model, against a verified copy of the built bundle (signed-in Windows desktop).')]
+[group('test')]
+eval-agent-floor SCENARIO="modelo_130_dr130" RUNS="1" *FLAGS:
+    uv run --no-sync python -m dev.agent_eval.live floor {{quote(SCENARIO)}} {{RUNS}} {{FLAGS}}
+
+[doc('Run a live-agent scenario RUNS times with claude-haiku-5-5 over the MCP server of the built bundle; spends model credit (signed-in Windows desktop).')]
+[group('test')]
+eval-agent-live SCENARIO="modelo_130_dr130" RUNS="3" *FLAGS:
+    uv run --no-sync python -m dev.agent_eval.live live {{quote(SCENARIO)}} {{RUNS}} {{FLAGS}}
 
 [doc('Reindex the running resident search service, then run its retrieval contracts.')]
 [group('test')]

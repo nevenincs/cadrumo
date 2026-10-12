@@ -52,6 +52,8 @@ class RuntimeBootstrapDeleteMixin:
         request: RuntimeProfileDeletePrepare | RuntimeProfileDelete,
     ) -> None:
         """Serialize containment with polling and shutdown; never wait inside root."""
+        if self._refused_as_persons_act(context, channel, request_id=request.request_id, frontend=request.frontend):
+            return
         if not self._drain_guard.acquire_delete():
             write_document(
                 channel,

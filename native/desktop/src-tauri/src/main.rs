@@ -70,6 +70,9 @@ fn run(diagnostics: Arc<Diagnostics>) -> Result<i32> {
     }
     match mode? {
         launch::Mode::Gui => app::run(launch),
+        launch::Mode::Health { hold_seconds } => {
+            tauri::async_runtime::block_on(check_health(&launch, hold_seconds))
+        }
         launch::Mode::Cli(arguments) => {
             diagnostics.event(EventKind::HeadlessSelected, None, None);
             let configuration = headless(&launch, parent.working_directory)?;
@@ -84,6 +87,60 @@ fn run(diagnostics: Arc<Diagnostics>) -> Result<i32> {
         }
     }
 }
+
+async fn check_health(launch: &environment::Launch, hold_seconds: u64) -> Result<i32> {
+    let manager = Arc::new(manager::ManagerStart::new(launch));
+    let sign_in = Arc::new(shell::sign_in::SignIn::new(launch));
+    let outcome = async {
+        manager.ensure_ready(&sign_in).await?;
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(hold_seconds);
+        let mut lost_since = None;
+        loop {
+            let supervised = manager.supervision_status()?;
+            app::supervision_continues(Ok(supervised), &mut lost_since, std::time::Instant::now())?;
+            if std::time::Instant::now() >= deadline {
+                // Supervision ready is not authentication. Require a fresh
+                // canonical public runtime observation before health succeeds.
+                let status = sign_in.read_status().await?;
+                if !status.runtime_ready() || !manager.supervision_status()? {
+                    return Err(ApplicationError::new(
+                        ErrorCode::ManagerUnavailable,
+                        Operation::Manager,
+                    ));
+                }
+                return Ok(0);
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+        }
+    }
+    .await;
+    if let Err(error) = &outcome {
+        launch
+            .diagnostics
+            .host_failure(HostStage::Manager, error.clone());
+    }
+    let stopped = sign_in.stop().await;
+    let supervision = manager.stop_owned().await;
+    let closed = manager.close_checked().await;
+    complete_health(outcome, [stopped, supervision, closed], &launch.diagnostics)
+}
+
+fn complete_health(
+    mut outcome: Result<i32>,
+    cleanup: [Result<()>; 3],
+    diagnostics: &Diagnostics,
+) -> Result<i32> {
+    for result in cleanup {
+        if let Err(error) = result {
+            diagnostics.host_failure(HostStage::Shutdown, error.clone());
+            if outcome.is_ok() {
+                outcome = Err(error);
+            }
+        }
+    }
+    outcome
+}
+
 /// The CLI passthrough keeps the caller's directory; the pinned storage root in
 /// the child environment keeps its storage independent of that directory.
 fn headless(launch: &environment::Launch, directory: PathBuf) -> Result<ChildConfiguration> {
@@ -128,4 +185,52 @@ fn main() {
     };
     diagnostics.host_stopped(code);
     std::process::exit(code);
+}
+
+#[cfg(test)]
+mod health_tests {
+    use super::*;
+
+    #[test]
+    fn startup_failure_remains_primary_when_each_cleanup_also_fails() {
+        let outcome = complete_health(
+            Err(ApplicationError::new(
+                ErrorCode::TimedOut,
+                Operation::Manager,
+            )),
+            std::array::from_fn(|_| {
+                Err(ApplicationError::new(
+                    ErrorCode::CleanupFailed,
+                    Operation::Shutdown,
+                ))
+            }),
+            &Diagnostics::default(),
+        );
+        assert_eq!(outcome.unwrap_err().code, ErrorCode::TimedOut);
+    }
+
+    #[test]
+    fn otherwise_successful_health_rejects_each_cleanup_failure() {
+        for failed in 0..3 {
+            let outcome = complete_health(
+                Ok(0),
+                std::array::from_fn(|index| {
+                    if index == failed {
+                        Err(ApplicationError::new(
+                            ErrorCode::CleanupFailed,
+                            Operation::Shutdown,
+                        ))
+                    } else {
+                        Ok(())
+                    }
+                }),
+                &Diagnostics::default(),
+            );
+            assert_eq!(outcome.unwrap_err().code, ErrorCode::CleanupFailed);
+        }
+        assert_eq!(
+            complete_health(Ok(0), [Ok(()), Ok(()), Ok(())], &Diagnostics::default()).unwrap(),
+            0
+        );
+    }
 }

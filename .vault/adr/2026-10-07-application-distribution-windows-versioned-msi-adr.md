@@ -3,16 +3,15 @@ tags:
   - '#adr'
   - '#application-distribution'
 date: '2026-10-07'
-modified: '2026-10-09'
+modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:3e3d26df14febf3df6d0c36ee7ead3925ba82967249c4952e7cc624e4799f0a9'
+body_hash: 'sha256:6196808693551147b516d1a36b85cc0f64cb424a7bf380010410d93a606211ca'
 related:
   - "[[2026-10-04-application-distribution-adr]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
   - "[[2026-10-05-runtime-manager-architecture-audit]]"
   - "[[2026-10-04-application-distribution-audit]]"
 ---
-
 # `application-distribution` adr: `Windows immutable version products and stable registration` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -44,6 +43,10 @@ Authorized 2026-10-07: after reviewing the concrete Windows ownership proposal a
 9. Uninstall removes the scoped shared registrations and stable entry, then permits running managers to detect removal and drain gracefully. In-use version products remain for safe deferred native removal; user state is preserved. Directly deleting program directories is not a substitute for native package ownership.
 10. Signing, matching WiX tools/extensions, any applicable tool terms, real release-payload proof and disposable-host acceptance remain separate gates. An artifact with no such evidence is not manager-shippable.
 
+### 2026-10-10 authorized Windows optional-installation amendment
+
+The user's explicit continuation accepts the revised topology in 2026-10-04-runtime-manager-architecture-adr: optional machine installation owns an automatic SCM lifecycle broker, user installation owns unprivileged login startup, and a running GUI hosts the shared manager core when no installed manager owns its session. This supersedes earlier no-service, mandatory-installation and separate-manager-only statements within Windows product startup. The boot broker launches only verified machine-installed manager workers using genuine per-user logon tokens and owns no taxpayer runtime or credentials as SYSTEM. Native authentication, profile/session binding, runtime supervisor framing, operation custody and connect-only CLI/TUI/MCP remain unchanged. Registered service existence is distinct from running state and authenticated runtime readiness. Actual boot/login/service acceptance must be reported independently from authored metadata and command-only package fallback evidence.
+
 ## Implementation
 
 We will author two MSI roles through the existing CMake distribution graph and its Python identity/layout owners. A custom WiX template removes cross-release RemoveExistingProducts behavior from version products. The registration product handles only its shared resources and scoped registration. The operator explicitly selected MSI delivery on 2026-10-07. Deliver the two roles as native MSI artifacts with an ordered installation and maintenance workflow; an EXE bootstrapper is not the requested format. Product sequencing and rollback still require the installer-owned publication protocol described above; this delivery choice does not establish its implementation or acceptance. Generated product locators and native maintenance status belong to the installation contract, not duplicated manager or desktop declarations.
@@ -72,7 +75,6 @@ The user's continuing authorization to complete unsigned installation code inclu
 
 The existing MSI authoring owner projects a bounded, typed registration-resource description into its immutable registration MSI: shared file hashes including the native marker bytes, scoped registry values and component identity, and desktop shortcut semantics. Installer verification consumes that same bound description and reads actual native resources without invoking repair, launching a shortcut, changing publication, or opening a native installation transaction. Missing, legacy, damaged or ambiguous evidence refuses no-op admission; normal ordered maintenance retains its own existing admission rules. A distinct successful result must identify that an already-published installation was verified, not claim that native installation or repair ran. No-op verification may coexist with readers of unchanged version files while retaining maintenance exclusion and file/version custody through its observation.
 
-
 ### 2026-10-09 authorized companion installation kit
 
 The operator's desktop installation-command request extends delivery with a portable companion kit outside the immutable application inventory, binding both scoped MSI pairs and the exact maintenance runner to the active package manifest and identity. The desktop invokes the existing transaction runner through shared native admission under 2026-10-09-desktop-service-installation-adr. Native MSI roles, transaction commitment/publication, removal and disposable-host acceptance remain binding.
@@ -80,6 +82,16 @@ The operator's desktop installation-command request extends delivery with a port
 ### 2026-10-09 scoped desktop installation admission
 
 The operator requests a usable internal desktop installer for both scopes. Products authored with the established authenticated native owner and adapter may replace the unconditional literal-false LaunchCondition with mandatory native owner/scope callbacks, so the owning transaction runner can install them. Products without that owner remain unconditionally blocked; unauthenticated standalone requests fail before file ownership changes. This supersedes the source-only unconditional block for owned products, not signing, transactional publication or disposable-host release acceptance obligations.
+
+### 2026-10-11 component granularity clarification
+
+The operator's authorized complete-package and installed-health repair stays within unique path-derived version ownership. Immutable per-user version products may group non-executable payload files within one physical destination directory. Group identity binds scope, channel, target, release location, selected keypath and deterministic member inventory. Changed membership or keypath receives a distinct component GUID; published per-file identities are never reinterpreted. Executable images, native libraries, compiled help and declared launch targets retain individual components. Per-user components retain HKCU registry keypaths. Machine payload granularity, shared registration ownership and complete manifest-based file verification remain unchanged. Producer and actual read-only native database preflight reserve authored component entries plus one entry for each registry-keypath component within a 65,535 costing budget. This is a conservative guard grounded in the retained native costing failure, not a claim that the exact Windows synthetic-component algorithm is documented. A fresh distinct release and genuine installed acceptance must prove complete file delivery, upgrade and rollback; authored counts or native MSI return success alone are insufficient.
+
+### 2026-10-12 fresh candidate rollback compensation clarification
+
+The user's continuing installation-hardening authorization permits one private compensating native removal only after candidate-verification rejection, successful native rollback and before any registration attempt, for the exact version reservation created by this attempt with no previous product (`previous=None`). The retained genuine user rollback trace recorded in `2026-10-09-runtime-process-lifecycle-audit` demonstrates that native rollback success can leave registered product ownership despite absent candidate files; neither API success nor file absence may clear Pending.
+
+Retain maintenance and version exclusion and prove absence of live consumers. Bind the exact cached/source MSI version role, product/family, scope, SID and prefix under existing admission and custody, then use a fresh authenticated native MSI transaction with only the exact Remove Version claim. Compensation changes no files, registry entries or ACLs directly, obtains no additional elevation and introduces no retry loop. Only successful native commit followed by exact MSI-product absence and candidate-directory absence permits the unchanged reservation rollback owner to remove the reservation. Unknown evidence, failed settlement or incomplete absence retains Pending and prior anchors. Existing versions, previous Pending reservations, shared registration products and ordinary remove-version requests are ineligible. Real compensation and both-scope installed acceptance remain pending; this clarification establishes no successful repair or completed acceptance.
 
 ## Rationale
 

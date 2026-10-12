@@ -20,9 +20,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal, cast
 
-from dev._paths import UTF_8
+from cadrumo.core.external_constants import UTF_8_ENCODING
 
-_UTF_8 = UTF_8
 # How long a killed command's pipes may take to close. A tree kill closes them
 # at once; the bound only matters when a descendant escaped the kill.
 _POST_KILL_DRAIN_SECONDS = 10.0
@@ -160,13 +159,14 @@ async def _run_process(
         stderr=output,
         **cast(Any, _inheritance_options(inherited_descriptors)),
     )
-    encoded_input = None if input_text is None else input_text.encode(_UTF_8)
+    encoded_input = None if input_text is None else input_text.encode(UTF_8_ENCODING)
+    communication = asyncio.create_task(process.communicate(encoded_input))
     try:
-        stdout_bytes, stderr_bytes = await asyncio.wait_for(process.communicate(encoded_input), timeout_seconds)
+        stdout_bytes, stderr_bytes = await asyncio.wait_for(asyncio.shield(communication), timeout_seconds)
     except TimeoutError as exc:
         await _terminate_tree(process)
         try:
-            stdout_bytes, stderr_bytes = await asyncio.wait_for(process.communicate(), _POST_KILL_DRAIN_SECONDS)
+            stdout_bytes, stderr_bytes = await asyncio.wait_for(communication, _POST_KILL_DRAIN_SECONDS)
         except TimeoutError:
             # A descendant the kill could not reach still holds the captured
             # pipes; the timeout is reported without the output it withholds.
@@ -174,6 +174,10 @@ async def _run_process(
         if timeout_seconds is None:
             raise RuntimeError("process timed out without a configured timeout") from exc
         raise subprocess.TimeoutExpired(command, timeout_seconds, output=stdout_bytes, stderr=stderr_bytes) from exc
+    finally:
+        if not communication.done():
+            communication.cancel()
+        await asyncio.gather(communication, return_exceptions=True)
     returncode = process.returncode
     if returncode is None:
         raise RuntimeError("process completed without a return code")
@@ -238,7 +242,7 @@ def _decode_output(payload: bytes | None, *, errors: Literal["strict", "replace"
     """Match ``subprocess.run(text=True)`` universal-newline decoding; inherited streams are empty."""
     if payload is None:
         return ""
-    return payload.decode(_UTF_8, errors=errors).replace("\r\n", "\n").replace("\r", "\n")
+    return payload.decode(UTF_8_ENCODING, errors=errors).replace("\r\n", "\n").replace("\r", "\n")
 
 
 __all__ = ["CommandResult", "run_command"]

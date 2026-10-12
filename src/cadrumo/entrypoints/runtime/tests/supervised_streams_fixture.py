@@ -134,7 +134,7 @@ def _elevated(root: Path, arguments: list[str]) -> None:
         return RuntimeExitReason.SUPERVISOR_STOP
 
     # No test host can be given a full elevated token on demand, so the native
-    # read is replaced in this disposable process; the refusal routing is real.
+    # reader is replaced in this disposable process. It must not gate ownership.
     vars(runtime_main)["current_process_token_elevation_type"] = lambda: WindowsTokenElevationType.FULL
     vars(runtime_main)["_run_runtime_owner"] = recording_owner
     raise SystemExit(runtime_main.run(parse_runtime_arguments(arguments)))

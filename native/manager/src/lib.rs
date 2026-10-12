@@ -8,11 +8,12 @@ compile_error!("release builds refuse the fixture test mode");
 #[cfg(windows)]
 pub mod activation_probe;
 #[cfg(any(windows, test))]
-pub mod admission;
 pub mod background;
 pub mod contract;
 pub mod custody;
 pub mod diagnostics;
+#[cfg(windows)]
+pub mod desktop_host;
 pub mod identity;
 #[cfg(windows)]
 pub mod installation;
@@ -22,6 +23,8 @@ pub mod ipc;
 pub mod lifecycle;
 pub mod preferences;
 pub mod session;
+#[cfg(windows)]
+pub mod service_windows;
 pub mod startup;
 pub mod strings;
 pub mod supervision;

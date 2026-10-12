@@ -10,7 +10,11 @@ mod site;
 mod tests;
 mod webview;
 
-use crate::{app::Commands, environment::Launch, shell};
+use crate::{
+    app::Commands,
+    environment::{Launch, PackagedDocs},
+    shell,
+};
 use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation, Result};
 use serde::Serialize;
 use site::Site;
@@ -26,15 +30,23 @@ use tauri::{AppHandle, Manager, Runtime, Url, plugin::TauriPlugin};
 const DEVELOPMENT_ROOT: &str = "CADRUMO_DESKTOP_DOCS_ROOT";
 
 /// The documentation the shell may open: the origin the host serves it on
-/// and each language's entry page as a URL on that origin.
+/// and each language's entry page as a URL on that origin, or the package's
+/// statement that it carries no documentation.
 #[derive(Clone, Serialize)]
-pub struct Published {
-    origin: String,
-    languages: Vec<Language>,
+#[serde(tag = "state", rename_all = "camelCase")]
+pub enum Published {
+    Bundled {
+        origin: String,
+        languages: Vec<Language>,
+    },
+    NotBundled,
+    /// The package carries documentation this launch could not admit, or does
+    /// not state whether it carries any.
+    Unavailable,
 }
 
 #[derive(Clone, Serialize)]
-struct Language {
+pub struct Language {
     code: String,
     entry: String,
 }
@@ -60,33 +72,85 @@ fn published(site: &Site, origin: &str) -> Result<Published> {
             })
         })
         .collect::<Result<_>>()?;
-    Ok(Published {
+    Ok(Published::Bundled {
         origin: origin.to_owned(),
         languages,
     })
 }
 
-/// The scheme plugin. The media-type table and the documentation tree are
-/// admitted here, once; a malformed table or tree refuses the plugin.
-pub fn plugin<R: Runtime>(launch: &Launch) -> Result<TauriPlugin<R>> {
-    let media = Arc::new(media::MediaTypes::declared()?);
+/// The scheme plugin. The documentation is optional: a package that states it
+/// carries none, a tree or media-type table that cannot be admitted, or a shell
+/// policy that cannot frame it leaves the documentation unavailable and every
+/// documentation request refused under the closed policy. The rest of the
+/// application is unaffected; the shell is told which state applies.
+pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
     let development = std::env::var_os(DEVELOPMENT_ROOT).filter(|_| tauri::is_dev());
-    let site = Arc::new(open(
-        &launch.package_root,
-        &launch.docs_root,
-        &launch.docs_manifest,
-        development,
-    )?);
+    let opened = available(launch, development)
+        .and_then(|site| site.map(|site| Ok((site, media::MediaTypes::declared()?))).transpose());
+    let state = match opened {
+        Ok(Some((site, media))) => return serving(launch, site, media),
+        Ok(None) if matches!(launch.docs, PackagedDocs::NotBundled) => Published::NotBundled,
+        Ok(None) => Published::Unavailable,
+        Err(error) => {
+            launch.diagnostics.failure(error);
+            Published::Unavailable
+        }
+    };
+    absent(launch, state)
+}
+
+/// The documentation this launch serves: a development override, else the
+/// package's own tree when its manifest states the tree is bundled.
+fn available(launch: &Launch, development: Option<OsString>) -> Result<Option<Site>> {
+    let packaged = match &launch.docs {
+        PackagedDocs::Bundled(docs) => Some(docs),
+        PackagedDocs::NotBundled | PackagedDocs::Undeclared => None,
+    };
+    if development.as_ref().is_some_and(|value| !value.is_empty()) {
+        let (root, manifest) = packaged.map_or_else(
+            || (launch.package_root.clone(), launch.package_root.join("manifest.json")),
+            |docs| (docs.root.clone(), docs.manifest.clone()),
+        );
+        return open(&launch.package_root, &root, &manifest, development).map(Some);
+    }
+    packaged
+        .map(|docs| open(&launch.package_root, &docs.root, &docs.manifest, None))
+        .transpose()
+}
+
+/// No documentation to serve: every documentation request is refused under
+/// the closed policy, and the environment reports the state.
+fn absent<R: Runtime>(launch: &Launch, state: Published) -> TauriPlugin<R> {
+    let builder = tauri::plugin::Builder::new("cadrumo-docs")
+        .setup(move |app, _| {
+            app.manage(state);
+            Ok(())
+        })
+        .register_asynchronous_uri_scheme_protocol(policy::SCHEME, |_, _, responder| {
+            responder.respond(request::refusal(
+                tauri::http::StatusCode::NOT_FOUND,
+                policy::CLOSED,
+            ));
+        });
+    with_interfaces(launch, builder).build()
+}
+
+fn serving<R: Runtime>(launch: &Launch, site: Site, media: media::MediaTypes) -> TauriPlugin<R> {
+    let media = Arc::new(media);
+    let site = Arc::new(site);
     let policy = Arc::new(OnceLock::<String>::new());
     let diagnostics = launch.diagnostics.clone();
     let served = site.clone();
     let issued = policy.clone();
     let builder = tauri::plugin::Builder::new("cadrumo-docs")
         .setup(move |app, _| {
-            prepare(app, &site, &policy).map_err(|error| {
-                diagnostics.failure(error.clone());
-                Box::new(error) as Box<dyn std::error::Error>
-            })
+            // A policy that cannot be fixed leaves the documentation closed,
+            // never the application.
+            if let Err(error) = prepare(app, &site, &policy) {
+                diagnostics.failure(error);
+                app.manage(Published::Unavailable);
+            }
+            Ok(())
         })
         .register_asynchronous_uri_scheme_protocol(policy::SCHEME, move |_, request, responder| {
             let site = served.clone();
@@ -98,14 +162,26 @@ pub fn plugin<R: Runtime>(launch: &Launch) -> Result<TauriPlugin<R>> {
                 responder.respond(request::respond(&site, &media, policy, &request));
             });
         });
+    with_interfaces(launch, builder).build()
+}
+
+/// The WebView2 interface requirement holds whether or not documentation is served.
+fn with_interfaces<R: Runtime>(
+    launch: &Launch,
+    builder: tauri::plugin::Builder<R>,
+) -> tauri::plugin::Builder<R> {
     #[cfg(windows)]
-    let builder = {
+    {
         let diagnostics = launch.diagnostics.clone();
         builder.on_webview_ready(move |webview| {
             webview::require_interfaces(&webview, diagnostics.clone());
         })
-    };
-    Ok(builder.build())
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = launch;
+        builder
+    }
 }
 
 pub fn commands<R: Runtime>() -> Commands<R> {

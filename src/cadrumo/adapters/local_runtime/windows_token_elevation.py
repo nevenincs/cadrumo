@@ -1,8 +1,6 @@
 """The UAC elevation type of this process's own Windows token.
 
-A supervised runtime refuses to serve from a full UAC-elevated token. Only a
-split token's elevated half is refused: an account with UAC disabled runs with
-the default type and is accepted, whatever its group membership.
+Elevation is an observed fact, not a runtime admission condition.
 """
 
 from __future__ import annotations
@@ -33,11 +31,6 @@ def windows_token_elevation_type(value: object) -> WindowsTokenElevationType:
     return WindowsTokenElevationType(value)
 
 
-def supervised_elevation_refused(elevation: WindowsTokenElevationType) -> bool:
-    """Report whether a supervised runtime must refuse to serve from ``elevation``."""
-    return elevation is WindowsTokenElevationType.FULL
-
-
 def current_process_token_elevation_type() -> WindowsTokenElevationType:
     """Read this process's token elevation type through a query-only token handle."""
     if sys.platform != "win32":
@@ -58,6 +51,5 @@ def current_process_token_elevation_type() -> WindowsTokenElevationType:
 __all__ = [
     "WindowsTokenElevationType",
     "current_process_token_elevation_type",
-    "supervised_elevation_refused",
     "windows_token_elevation_type",
 ]

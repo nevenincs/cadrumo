@@ -47,6 +47,7 @@ from ...application.runtime.profile_worker import (
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ...core.async_cleanup import await_cancellation_complete, close_async_resources
+from ...core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from ...core.logging import get_logger
 from ...core.startup_phase_log import startup_phase
 from . import worker_cleanup as _worker_cleanup
@@ -86,9 +87,16 @@ async def _expire_custody(
             live_sessions = await asyncio.to_thread(custody.live_sessions)
             uploads.expire(live_sessions=live_sessions)
             await asyncio.to_thread(human.expire)
-        except Exception:
+        except Exception as error:
             failed.set()
-            return
+            diagnostic_event(
+                _log,
+                "profile_worker_custody_observation_failed",
+                fields=diagnostic_error_fields(error),
+                level=40,
+                primary_error=error,
+            )
+            raise
 
 
 async def _handle_custody_control(context: _WorkerControl, request: object) -> _ControlDisposition | None:

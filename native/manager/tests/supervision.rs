@@ -128,6 +128,7 @@ struct Case {
     installed: bool,
     initial_permit: bool,
     end_before_start: bool,
+    activity: Option<Box<dyn SessionActivity>>,
 }
 
 impl Default for Case {
@@ -154,6 +155,7 @@ impl Default for Case {
             installed: true,
             initial_permit: false,
             end_before_start: false,
+            activity: None,
         }
     }
 }
@@ -167,7 +169,7 @@ struct Seen {
 impl Case {
     /// Run the core on `root`, letting `script` answer events, until an outcome.
     fn run(
-        self,
+        mut self,
         root: &Root,
         mut script: impl FnMut(&Event, &SupervisorHandle),
     ) -> (Vec<Seen>, Outcome) {
@@ -179,7 +181,10 @@ impl Case {
         )
         .expect("fixture target");
         let collaborators = Collaborators {
-            session: Box::new(Session(self.session)),
+            session: self
+                .activity
+                .take()
+                .unwrap_or_else(|| Box::new(Session(self.session))),
             probe: Box::new(Probe(self.probe)),
             versions: Box::new(Catalogue(self.installed)),
             stop_signal: Box::new(PlatformStopSignal::default()),
@@ -209,7 +214,11 @@ impl Case {
         let started = Instant::now();
         let mut seen = Vec::new();
         loop {
-            assert!(started.elapsed() < CASE_LIMIT, "the case did not end");
+            assert!(
+                started.elapsed() < CASE_LIMIT,
+                "the case did not end: {:?}",
+                self::events(&seen)
+            );
             match observed.recv_timeout(Duration::from_millis(10)) {
                 Ok(event) => {
                     script(&event, &handle);
@@ -576,8 +585,30 @@ fn a_contended_restart_claim_never_launches_again() {
 
 #[test]
 fn quit_during_backoff_suppresses_the_restart_and_releases_the_claim() {
+    struct QuitBeforeRecheck {
+        assessments: AtomicUsize,
+        written: mpsc::Receiver<()>,
+    }
+    impl SessionActivity for QuitBeforeRecheck {
+        fn is_active(&self) -> bool {
+            // Ownership checks activity before and under its restart claim.
+            // Gate its later pre-launch recheck until the observer publishes
+            // Quit, even when the test observer is scheduled after backoff.
+            if self.assessments.fetch_add(1, Ordering::SeqCst) == 2 {
+                self.written
+                    .recv_timeout(Duration::from_secs(10))
+                    .expect("Quit published before launch recheck");
+            }
+            true
+        }
+    }
     let root = Root::new(&["exit code=3221225477 after_ready", "serve"]);
     let mut case = Case::default();
+    let (published, written) = mpsc::channel();
+    case.activity = Some(Box::new(QuitBeforeRecheck {
+        assessments: AtomicUsize::new(0),
+        written,
+    }));
     case.config.restart.initial_backoff = Duration::from_millis(500);
     case.config.restart.maximum_backoff = Duration::from_millis(500);
     let (_, outcome) = case.run(&root, |event, _| {
@@ -591,6 +622,7 @@ fn quit_during_backoff_suppresses_the_restart_and_releases_the_claim() {
                 },
             )
             .unwrap();
+            published.send(()).unwrap();
         }
     });
     assert_eq!(outcome, Outcome::RestartDeferred(WaitReason::Quit));

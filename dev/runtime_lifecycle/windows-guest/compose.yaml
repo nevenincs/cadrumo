@@ -1,0 +1,43 @@
+name: cadrumo-runtime-windows-guest
+services:
+  windows:
+    image: docker.io/dockurr/windows@sha256:59f8bed19cfd49cf1701debe34f9df6311e61a4e2ae68aa9f41206e2184e31cc
+    container_name: cadrumo-runtime-windows-guest
+    labels:
+      cadrumo.fixture: runtime-lifecycle-windows-guest
+      cadrumo.guest.uuid: ${CADRUMO_WINDOWS_GUEST_UUID:?Provide the disposable guest UUID}
+    environment:
+      VERSION: "11l"
+      HOST: CadrumoGuest
+      USERNAME: CadrumoTest
+      PASSWORD: ${CADRUMO_WINDOWS_GUEST_PASSWORD:?Provide a private generated guest password}
+      UUID: ${CADRUMO_WINDOWS_GUEST_UUID:?Provide the disposable guest UUID}
+      ARGUMENTS: "-smbios type=1,manufacturer=QEMU,product=CadrumoRuntimeGuest,version=1.0"
+      CPU_CORES: "2"
+      RAM_SIZE: "4G"
+      DISK_SIZE: "64G"
+      DISK_FMT: qcow2
+      KVM: "Y"
+      AUTOLOGIN: "Y"
+    devices:
+      - /dev/kvm
+      - /dev/net/tun
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "127.0.0.1:18006:8006"
+      - "127.0.0.1:13389:3389/tcp"
+      - "127.0.0.1:15986:5986/tcp"
+    volumes:
+      - guest-storage:/storage
+      - ${CADRUMO_WINDOWS_GUEST_STORAGE:?Provide isolated guest storage}/custom.iso:/custom.iso:ro
+      - ${CADRUMO_WINDOWS_GUEST_EXCHANGE:?Provide isolated artifact exchange}:/shared
+      - ./oem:/oem:ro
+    cpus: 2
+    mem_limit: 6g
+    restart: "no"
+    stop_grace_period: 2m
+volumes:
+  guest-storage:
+    external: true
+    name: ${CADRUMO_WINDOWS_GUEST_VOLUME:?Provide the labelled disposable guest volume}

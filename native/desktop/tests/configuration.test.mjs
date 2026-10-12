@@ -9,6 +9,7 @@ import {
 import { isAbsolute, resolve, sep } from "node:path";
 import test from "node:test";
 import { buildPath } from "../scripts/build-paths.mjs";
+import { developmentServer } from "../scripts/development-server.mjs";
 import {
   docsOrigin,
   frontendDirectory,
@@ -55,6 +56,8 @@ test("generated identity, server settings and artifact paths have no product fal
       name: "Configured application",
       application_id: "org.example.configured",
       version: "3.2.1",
+      manager_id: "org.example.configured.manager",
+      manager_name: "Configured manager",
     };
     writeFileSync(
       resolve(root, "generated/identity.json"),
@@ -77,7 +80,7 @@ test("generated identity, server settings and artifact paths have no product fal
     assert.equal(config.version, product.version);
     assert.equal(config.app.windows[0].title, product.name);
     assert.equal(config.app.windows[0].create, false);
-    const ports = { host: "0.0.0.0", devPort: 25420, previewPort: 25421 };
+    const ports = developmentServer();
     writeFileSync(
       resolve(root, "generated/desktop-server.json"),
       JSON.stringify(ports),
@@ -88,6 +91,11 @@ test("generated identity, server settings and artifact paths have no product fal
       JSON.stringify({ ...ports, previewPort: 0 }),
     );
     assert.throws(server, /Invalid frontend/);
+    writeFileSync(
+      resolve(root, "generated/desktop-server.json"),
+      JSON.stringify({ ...ports, devPort: ports.devPort + 10 }),
+    );
+    assert.throws(server, /Stale frontend devPort; run just dev/);
     const artifact = resolve(root, "compiler/release/from-cargo-metadata.exe");
     writeFileSync(
       resolve(root, "generated/desktop-Release.json"),

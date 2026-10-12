@@ -76,6 +76,20 @@ export default defineConfig(({ mode }) => {
     },
     resolve: { alias: { "@": source } },
     plugins: [
+      {
+        name: "desktop-server-ports",
+        configResolved(config) {
+          if (
+            config.server.port !== ports.devPort ||
+            config.preview.port !== ports.previewPort ||
+            config.server.strictPort !== true ||
+            config.preview.strictPort !== true
+          )
+            throw new Error(
+              "Desktop server ports are fixed by just dev; port overrides and fallback are not supported.",
+            );
+        },
+      },
       react(),
       tailwindcss(),
       docsFixture(),

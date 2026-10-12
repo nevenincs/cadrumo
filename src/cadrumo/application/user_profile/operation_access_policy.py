@@ -5,6 +5,7 @@ from __future__ import annotations
 from ...core.operations import OperationInteractionKind
 from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ..operations.mcp_surfaces import MCP_SURFACES, McpSurface
+from ..operations.person_acts import operation_is_persons_act
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1, OperationRegistry
 from .access_contracts import (
     AccessAction,
@@ -199,7 +200,23 @@ def _registered_contract_or_refusal(
         return AccessDenied(code=AccessDenialCode.OPERATION_UNAVAILABLE)
     if policy.requires_human and session.kind is not SessionKind.HUMAN:
         return AccessDenied(code=AccessDenialCode.HUMAN_AUTHORITY_REQUIRED)
+    persons = _persons_act_refusal(request, contract)
+    if persons is not None:
+        return persons
     return contract
+
+
+def _persons_act_refusal(
+    request: OperationAccessRequest, contract: OperationPublicDefinitionContractV1
+) -> AccessDenied | None:
+    """Refuse to an agent an operation that is the person's own act: one that needs a secret, or administers keys."""
+    if not operation_is_persons_act(
+        contract.definition_id, ephemeral_secret_required=contract.ephemeral_secret_required
+    ):
+        return None
+    if request.frontend is not OperationFrontendProjection.MCP:
+        return None
+    return AccessDenied(code=AccessDenialCode.PERSON_ACT_REQUIRED)
 
 
 def _surface_refusal(

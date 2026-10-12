@@ -17,16 +17,13 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
-    active_profile_isolated_backend_fixture,
-)
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_backend import runtime_profile_backend_fixture
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_PROFILE_ID = "11111111-1111-4111-8111-111111111111"
 
-_isolated_backend = active_profile_isolated_backend_fixture(bucket_id=_PROFILE_ID)
+_isolated_backend = runtime_profile_backend_fixture()
 """Give every case an active profile.
 
 Without it the command refuses on "no active profile" and exits before the

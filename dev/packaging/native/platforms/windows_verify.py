@@ -15,8 +15,7 @@ from cadrumo.core.storage_environment import storage_directory
 
 from ...command_execution import CommandResult, run_command
 from ..hashing import digest
-from ..layout import application_images, entrypoint_files, staged_application_images
-from ..package_inventory import user_docs_bundled
+from ..layout import application_images, entrypoint_files
 from ..verification_paths import relocated_verification_package, verification_destination
 
 PROBE = r"""
@@ -233,16 +232,18 @@ def verify_entrypoints(
 def verify_application_images(
     destination: Path, manifest: dict[str, Any], execute: Callable[[list[str]], CommandResult]
 ) -> dict[str, Any]:
-    """Prove each staged application image is hashed, opts into startup as declared and reports the version."""
+    """Prove each staged application image is hashed, opts into startup as declared and reports the version.
+
+    The package manifest's inventory is the build's statement of which images it staged.
+    """
     layout, files = manifest["layout"], manifest["files"]
-    staged = staged_application_images(layout, user_docs=user_docs_bundled(manifest))
     version = str(manifest["build"]["version"])
     observed: dict[str, Any] = {}
     for image in application_images(layout):
         path = destination / image.package_path
-        if image not in staged:
-            if path.exists() or image.package_path in files:
-                raise AssertionError(f"Application image {image.file} ships in a package that may not stage it")
+        if image.package_path not in files:
+            if path.exists():
+                raise AssertionError(f"Application image {image.file} ships outside the package manifest")
             observed[image.file] = {"staged": False}
             continue
         if not path.is_file() or files.get(image.package_path) != digest(path):

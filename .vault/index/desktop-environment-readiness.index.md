@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#desktop-environment-readiness'
 date: '2026-10-07'
-modified: '2026-10-07'
+modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:5386f66e9ae53cca9f5fc7daf739098b18e6e5845360e732fe0eee748f5fa627'
+body_hash: 'sha256:bf360c62153db97766b671b550db9cf4630bce0ab4ac8822ca5787beb671aec7'
 related:
   - '[[2026-10-07-desktop-environment-readiness-audit]]'
   - '[[2026-10-07-desktop-environment-readiness-ledger]]'
@@ -21,7 +21,7 @@ Auto-generated index of all documents tagged with `#desktop-environment-readines
 
 ### audit
 
-- `2026-10-07-desktop-environment-readiness-audit` - `desktop-environment-readiness` audit: `Desktop environment readiness review`
+- `2026-10-07-desktop-environment-readiness-audit` - Desktop environment readiness audit
 
 ### exec
 

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#application-distribution'
 date: '2026-10-04'
-modified: '2026-10-08'
+modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:e87612c4a2912de0aa003e17297b55bab1265d9e4ba5b3abd3f518f36a28a896'
+body_hash: 'sha256:627cf7be7fd4aa8f5030dcd05cf503ad2d6427fbec459b970ecd793296f7d029'
 related:
   - '[[2026-10-04-application-distribution-research]]'
   - '[[2026-10-03-application-packaging-interpreter-foundation-adr]]'
@@ -37,6 +37,10 @@ Reuse the canonical four-target inventory and declared deployment floors. CMake 
 
 Installation manages immutable program files. User data stays under the existing Settings/storage owner and is preserved on uninstall. No service, scheduled task or storage migration is introduced. Login start for the runtime manager is registered in the installation scope. Signing is explicit and must not claim publisher verification without actual credentials and verification.
 
+### 2026-10-10 authorized Windows optional-installation amendment
+
+The user's explicit continuation accepts the revised topology in 2026-10-04-runtime-manager-architecture-adr: optional machine installation owns an automatic SCM lifecycle broker, user installation owns unprivileged login startup, and a running GUI hosts the shared manager core when no installed manager owns its session. This supersedes earlier no-service, mandatory-installation and separate-manager-only statements within Windows product startup. The boot broker launches only verified machine-installed manager workers using genuine per-user logon tokens and owns no taxpayer runtime or credentials as SYSTEM. Native authentication, profile/session binding, runtime supervisor framing, operation custody and connect-only CLI/TUI/MCP remain unchanged. Registered service existence is distinct from running state and authenticated runtime readiness. Actual boot/login/service acceptance must be reported independently from authored metadata and command-only package fallback evidence.
+
 ## Implementation
 
 Generate shared identity into CMake and native metadata from Python owners. Populate project version, description, homepage and license. Include source, target, channel and interpreter identities in build evidence. Project platform-native desktop metadata and installer configuration. Package MSI on Windows, DEB/RPM and archives on Linux, and an application bundle/DMG on macOS. Offer all-users and this-user installation scopes for MSI/DEB/RPM, Applications-folder bundle installation on macOS, and explicit prefix installation for development/archives. Install versions side by side under a version-independent entry point per `2026-10-04-runtime-manager-architecture-adr`. Native package managers own uninstall. Prefix uninstall is manifest-bound and preserves unowned or modified files and user data.
@@ -64,6 +68,16 @@ The initial locked Rust dependency graph requires GTK 3.24, GLib/GObject/GIO 2.7
 This refinement settles the previously open Linux desktop-prerequisite boundary. It does not change the accepted interpreter foundation, application identity, manager authority, installation scope, storage policy, signing requirements, or native lifecycle ownership. Fully bundled GTK/WebKit delivery would require a separate decision covering complete resources, helper relocation, GPU/system boundaries, licenses, security updates, and graphical acceptance.
 
 Authorization: the user's continuing instruction to code and build everything except signing certificates, with dependency installation authorized, covers this native package dependency refinement. It is accepted as a refinement of the existing distribution decision; it does not authorize installation or lifecycle tests on the two non-disposable hosts. Grounding: the measured Linux dependency-closure failure and provider investigation recorded in 2026-10-04-application-distribution-audit, the locked Cargo feature evidence under build/windows-installers-x64/verification/manylinux-gtk324, and Tauri's native Debian/RPM dependency documentation (https://v2.tauri.app/distribute/debian/ and https://v2.tauri.app/distribute/rpm/). Cross-reference preview was bounded (33 judged candidates, 23 clipped); direct inspection of the distribution, interpreter foundation, proposed composition and desktop-shell decisions found no accepted obligation to bundle the Linux desktop browser stack.
+
+### CMake package composition and user documentation, 2026-10-12
+
+Operator direction 2026-10-12: CMake is the only surface that controls the build, the package and its layout must be buildable without the user documentation, and the runtime, manager, desktop and console interfaces must be fully functional in that package. The user documentation is an optional component: CMake builds it by default, but neither CMake nor the native and desktop code treat it as critical. This amendment records those commitments.
+
+- CMake decides package composition. `CADRUMO_PACKAGE_USER_DOCS` and the set of staged application images are CMake decisions, passed to the helpers explicitly (`--user-docs` or `--without-user-docs`, and one `--image FILE=ARTIFACT` per staged image). Python packaging helpers read declarations (`native/package-layout.json` and the platform mappings) and return data; they never select which images or components ship. The assembler stages exactly the images CMake names, refusing an undeclared image or a named image without an artifact, and records the result in the package manifest. Verifiers compare the package against its manifest's statement, not against a re-derived policy.
+- User documentation never gates an application image. With `CADRUMO_PACKAGE_USER_DOCS=OFF` CMake stages every declared image, including the desktop image, and neither the documentation build nor its staging runs; the package manifest states `user_docs.bundled: false`. Payload validation does not refuse a desktop payload for lacking documentation.
+- The documentation is optional in every target. `ON` remains the default, and with `ON` the release verification also runs the documentation checks. With `OFF` every target, release targets included, builds and verifies the package without it. All outputs of either configuration stay in the canonical build tree.
+
+This supersedes the earlier packaging behaviour in which a package assembled without documentation omitted the desktop image ("desktop payloads refuse it"). It does not change identity, installation scopes, signing, lifecycle ownership or the Linux runtime-prerequisite contract. The desktop's behaviour without documentation is recorded in the 2026-10-12 amendment of `2026-10-04-desktop-shell-adr`.
 
 ## Rationale
 

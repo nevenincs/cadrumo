@@ -28,6 +28,7 @@ from .build_timing import BuildTimings, measure_build
 from .build_toolchain import builder_inputs, native_toolchain_identity, selected_uv
 from .docs_stage import RECONFIGURE
 from .layout import backend, load_layout
+from .process_quiescence import quiesce
 from .product import build_product
 from .provision import provision, provisioning_tools
 from .target import toolchain_for_target
@@ -349,6 +350,7 @@ def build_action(build: Path, arguments: argparse.Namespace, *, timings: BuildTi
             raise ValueError("assemble requires --config")
         if not arguments.without_user_docs and "user_docs_stage" not in paths:
             raise SystemExit(RECONFIGURE)
+        quiesce(build, arguments.target)
         destination = reset(build, str((paths["stage"] / arguments.config).relative_to(build)))
         assemble(
             sdk,

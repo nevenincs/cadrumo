@@ -8,6 +8,8 @@ pub enum Intent {
     Manual,
     SignIn,
     Retry,
+    /// An automatic recovery never clears an explicit Quit marker.
+    Recovery,
 }
 
 impl Intent {
@@ -16,6 +18,7 @@ impl Intent {
             Self::Manual => None,
             Self::SignIn => Some("--sign-in"),
             Self::Retry => Some("--retry"),
+            Self::Recovery => Some("--service-worker"),
         }
     }
 
@@ -23,6 +26,7 @@ impl Intent {
         match self {
             Self::Manual => Some(Request::Reveal { schema: 1 }),
             Self::SignIn => None,
+            Self::Recovery => None,
             Self::Retry => Some(Request::Retry { schema: 1 }),
         }
     }
@@ -30,6 +34,8 @@ impl Intent {
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum Invocation {
+    Service,
+    ServiceWorker { sign_in: bool },
     Start { intent: Intent, breakaway: bool },
     Cutover(crate::cutover::Designation),
     Version,
@@ -43,6 +49,13 @@ impl Invocation {
             _ => (arguments, false),
         };
         let intent = match arguments {
+            [flag] if flag == "--service" && !breakaway => return Ok(Self::Service),
+            [flag] if flag == "--service-worker" && !breakaway => {
+                return Ok(Self::ServiceWorker { sign_in: false });
+            }
+            [flag] if flag == "--service-sign-in" && !breakaway => {
+                return Ok(Self::ServiceWorker { sign_in: true });
+            }
             [] => Intent::Manual,
             [flag] if flag == "--sign-in" => Intent::SignIn,
             [flag] if flag == "--retry" => Intent::Retry,
@@ -124,6 +137,21 @@ mod tests {
 
     #[test]
     fn version_and_cutover_keep_their_closed_grammar() {
+        assert_eq!(
+            Invocation::parse(&["--service".into()]).unwrap(),
+            Invocation::Service
+        );
+        assert_eq!(
+            Invocation::parse(&["--service-worker".into()]).unwrap(),
+            Invocation::ServiceWorker { sign_in: false }
+        );
+        assert_eq!(
+            Invocation::parse(&["--service-sign-in".into()]).unwrap(),
+            Invocation::ServiceWorker { sign_in: true }
+        );
+        for arguments in [["--service", "extra"], ["--breakaway-attempt", "--service"]] {
+            assert!(Invocation::parse(&arguments.map(Into::into)).is_err());
+        }
         assert_eq!(
             Invocation::parse(&["--version".into()]).unwrap(),
             Invocation::Version

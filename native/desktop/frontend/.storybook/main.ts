@@ -9,12 +9,13 @@ const docsStatic = fileURLToPath(
 );
 
 // The catalogue renders the application's own components with the
-// application's own Vite configuration, theme and generated strings. Two of
-// that configuration's plugins are not for it: the product boundary, which
-// refuses stories in a build, and the documentation fixture server.
+// application's own Vite configuration, theme and generated strings. It omits
+// the product boundary, the documentation fixture server and the application
+// server's port guard; its own fixed port is enforced by the catalogue runner.
 const NOT_FOR_THE_CATALOGUE = new Set([
   "product-boundary",
   "development-docs-fixture",
+  "desktop-server-ports",
 ]);
 
 const config: StorybookConfig = {

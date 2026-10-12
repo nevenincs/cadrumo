@@ -25,7 +25,8 @@ from ....domain.modelos.calculation_repository import upsert_calculation_revisio
 from ....domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ....tests.cli_envelope import require_error_document
 from ._modelo_review_package_support import seed_exportable_modelo_revision
-from .modelo_profile_seed import ProfileSeeder, invoke_seeded_profile_cli, seed_profile
+from .cli_runner import invoke_cached_cli
+from .modelo_profile_seed import ProfileSeeder, seed_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -60,7 +61,7 @@ def _interrupted_verification(operation: PinnedAuthorityOperation) -> tuple[str,
 
 
 def _error(args: list[str]) -> dict[str, Any]:
-    result = invoke_seeded_profile_cli(["--format", "json", *args])
+    result = invoke_cached_cli(["--format", "json", *args])
     assert result.exit_code != 0, result.output
     error = require_error_document(result.output)["error"]
     assert isinstance(error, dict)
@@ -87,9 +88,7 @@ def test_verify_is_admitted_to_run_again_on_an_unfinished_verification(*, operat
     """Selection hands the draft to verification instead of refusing the one command that settles it."""
     _work_unit_id, calculation_revision_id = _interrupted_verification(operation)
 
-    verified = invoke_seeded_profile_cli(
-        ["--format", "json", "app", "modelo", "work", "verify", calculation_revision_id]
-    )
+    verified = invoke_cached_cli(["--format", "json", "app", "modelo", "work", "verify", calculation_revision_id])
 
     document = json.loads(verified.output)
     error = document.get("error")

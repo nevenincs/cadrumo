@@ -617,6 +617,10 @@ desktop:
   docs:
     frame_title: Cadrumo-dokumentáció
     loading: A dokumentáció betöltése…
+    not_bundled: A Cadrumo ezen példánya dokumentáció nélkül készült. Minden más a
+      megszokott módon működik.
+    unavailable: A dokumentációt nem sikerült megnyitni. Minden más a megszokott módon
+      működik.
   host:
     failed: Ezt a részt nem sikerült betölteni.
     unavailable: Ehhez a részhez az asztali alkalmazás kell.
@@ -736,6 +740,7 @@ desktop:
     password: Jelszó
     profile: Profil
     profiles_unread: A számítógépen lévő profilokat nem sikerült beolvasni.
+    recovering_services: Háttérszolgáltatások helyreállítása…
     recovery_hint: Elvesztetted a jelszót, vagy zárolva van a profil? Használd a TUI-t.
     refused:
       custody_changed: A profil jelszava vagy helyreállítási beállításai megváltoztak.
@@ -762,6 +767,7 @@ desktop:
       receipt_expired: A bejelentkezésed lejárt. Jelentkezz be újra.
       runtime_unavailable: A Cadrumo háttérszolgáltatásai nem futnak.
       throttled: Túl sok próbálkozás. {seconds} mp múlva próbálhatod újra.
+    services_recovered: A háttérszolgáltatások készen állnak. Bejelentkezés ellenőrzése…
     show_password: Jelszó megjelenítése
     signed_out_lead: Jelentkezz be, hogy megnyisd a munkaterületedet a TUI-ban.
     start_services: Háttérszolgáltatások indítása
@@ -2063,11 +2069,11 @@ tui:
     aeat_sync: AEAT-szinkron
     declarations: Bevallások
     home: Kezdőlap
-    ledger: Nyilvántartás
-    profile: Profil
     installation: Telepítés
-    reference: Kézikönyv
+    ledger: Nyilvántartás
     operations: Műveletek
+    profile: Profil
+    reference: Kézikönyv
     withholding: Levonások
   home:
     account_fallback: Fiók
@@ -2306,10 +2312,10 @@ tui:
       invalid: Nem érvényes.
       outcome: 'Az ellenőrzés eredménye: {outcome}'
       valid: Érvényes.
-      classification: Besorolás
-      entries: Tételek
   ledger:
     area:
+      classification: Besorolás
+      entries: Tételek
       evidence: Bizonylatok
       import: Importálás
       overview: Áttekintés
@@ -3573,11 +3579,11 @@ tui:
         uuid: Azonosító
       invalid: A kérés még nem érvényes. Semmi sem lett elküldve.
       profile: Profil
-      required: kötelező
-      secret: Titok (gépelés közben rejtve, a kéréstől külön kerül elküldésre)
       replay_key: Ismétlési kulcs (opcionális)
       replay_key_hint: Küldd el ugyanazt a kulcsot ugyanazzal a kéréssel még egyszer,
         és az első műveletet kapod vissza új indítása helyett.
+      required: kötelező
+      secret: Titok (gépelés közben rejtve, a kéréstől külön kerül elküldésre)
       secret_required: Ehhez a művelethez meg kell adnod a titkot. Írd be, és futtasd
         újra. Semmi sem lett elküldve.
       session: Munkamenet
@@ -3688,10 +3694,10 @@ tui:
       support_matrix: 'Mire képes a Cadrumo az egyes nyomtatványokkal: számítás, exportálás,
         benyújtott példányok olvasása.'
     title: Referencia
-    all_periods: Minden időszak
-    availability: 'Elérhetőség - tároló: {storage}; jogosultság: {authority}; szolgáltató:
   restricted:
     actions: 'Engedélyezett tevékenységek: {values}'
+    all_periods: Minden időszak
+    availability: 'Elérhetőség - tároló: {storage}; jogosultság: {authority}; szolgáltató:
       {provider}'
     change_user: Felhasználóváltás
     close: Bezárás
@@ -3817,11 +3823,11 @@ tui:
       aeat_sync: AEAT-szinkron megnyitása
       declarations: Bevallások megnyitása
       home: Kezdőlap megnyitása
-      ledger: Nyilvántartás megnyitása
-      profile: Profil megnyitása
       installation: Telepítés megnyitása
-      reference: Kézikönyv megnyitása
+      ledger: Nyilvántartás megnyitása
       operations: Műveletek megnyitása
+      profile: Profil megnyitása
+      reference: Kézikönyv megnyitása
       unknown: Terület megnyitása
       withholding: Levonások megnyitása
     destination_help:
@@ -3834,10 +3840,10 @@ tui:
         futtatható'
       profile: A profil adatai és az azokat kitöltő források
       reference: Modelók, rovatok, kategóriák, portálok és bejelentkezési módok
-      not_composed: Még nem sikerült minden területet beolvasni.
-      refresh_failed: A legutóbbi frissítés nem tudta újraépíteni az indexet.
       withholding: Számla-levonások rögzítése és megtekintése a kiválasztott adóévben
     refusal:
+      not_composed: Még nem sikerült minden területet beolvasni.
+      refresh_failed: A legutóbbi frissítés nem tudta újraépíteni az indexet.
       unavailable: A keresés nem érhető el ebben a munkamenetben
       unknown: A keresést nem sikerült előkészíteni.
     result:

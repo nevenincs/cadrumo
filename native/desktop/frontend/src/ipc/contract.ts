@@ -146,12 +146,20 @@ export type DocsLanguage = {
 export type DesktopEnvironment = {
   /** The output language Settings resolved for this profile. */
   outputLanguage: string;
-  docs: {
-    /** The documentation origin, computed by the host for this platform. */
-    origin: string;
-    languages: DocsLanguage[];
-  };
+  /** The package's statement of whether it carries the documentation. */
+  docs: DesktopDocs;
 };
+
+export type DesktopDocs =
+  | {
+      state: "bundled";
+      /** The documentation origin, computed by the host for this platform. */
+      origin: string;
+      languages: DocsLanguage[];
+    }
+  | { state: "notBundled" }
+  /** Bundled, but this launch could not open it; everything else still works. */
+  | { state: "unavailable" };
 
 // ---------------------------------------------------------------------------
 // Logs (logs_subscribe, logs_unsubscribe)
@@ -595,6 +603,37 @@ export type SignInStatus = {
   refusal: SignInRefusal | null;
 };
 
+/** Public presence and runtime/profile changes; never session authority. */
+export type SignInSignal =
+  | { kind: "sign-in-state"; revision: number; status: SignInStatus }
+  | {
+      kind: "sign-in-observation-failed";
+      revision: number;
+      error: HostFailure;
+    };
+
+/** Supervisor readiness is public availability, never profile authentication. */
+export type ManagerStatus = {
+  state:
+    | "unsupported"
+    | "starting"
+    | "ready"
+    | "recovering"
+    | "waiting"
+    | "stopping"
+    | "stopped"
+    | "failed";
+  failure: HostFailure | null;
+};
+
+export type ManagerSignal =
+  | { kind: "manager-state"; revision: number; status: ManagerStatus }
+  | {
+      kind: "manager-observation-failed";
+      revision: number;
+      error: HostFailure;
+    };
+
 /** sign_in_submit uses a raw UTF-8 password body and x-cadrumo-token header. */
 export type SignInResult =
   | { kind: "signed-in"; status: SignInStatus }
@@ -648,13 +687,30 @@ export interface HostCommands {
   };
   manager_install: {
     args: Authorized<{ scope: "user" | "machine" }>;
-    result: "dispatched" | "unmanaged" | "unsupported";
+    result: "dispatched" | "unsupported";
   };
   manager_start: {
     args: Authorized;
-    result: "dispatched" | "unmanaged" | "unsupported";
+    result: "dispatched" | "unsupported";
+  };
+  manager_status: { args: Authorized; result: ManagerStatus };
+  manager_subscribe: {
+    args: Authorized<{ updates: Channel<ManagerSignal> }>;
+    result: number;
+  };
+  manager_unsubscribe: {
+    args: Authorized<{ subscription: number }>;
+    result: null;
   };
   sign_in_status: { args: Authorized; result: SignInStatus };
+  sign_in_subscribe: {
+    args: Authorized<{ updates: Channel<SignInSignal> }>;
+    result: number;
+  };
+  sign_in_unsubscribe: {
+    args: Authorized<{ subscription: number }>;
+    result: null;
+  };
   sign_out: { args: Authorized; result: SignOutResult };
   /** Needs no password, session or runtime, and changes nothing. */
   profile_list: { args: Authorized; result: ProfileList };
@@ -812,7 +868,7 @@ export type DocsSearchResult = {
   ranges: Array<readonly [start: number, end: number]>;
   /**
    * The controller's localized category line, such as
-   * `Casilla Â· Modelo 200 Â· 00562`; empty when it has none. Every page that
+   * `Casilla · Modelo 200 · 00562`; empty when it has none. Every page that
    * answers `search` sends it.
    */
   crumb?: string;

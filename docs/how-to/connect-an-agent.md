@@ -317,3 +317,68 @@ without reactivating grants.
 ```
 
 Confirm the returned grant IDs, then let agents reconnect and authenticate afresh.
+
+## Run an agent on separate storage
+
+An agent harness, an evaluation or a test can use its own Cadrumo data, kept
+apart from yours. Choose a new, empty directory for it. Give every Cadrumo
+program you start for it the same two settings: `CADRUMO_LOCAL_STORAGE_ROOT`
+names the directory, and `CADRUMO_SECRET_STORE_DIR` names a directory for its
+encrypted secret store. Both must be absolute paths.
+
+Cadrumo's own background service serves only your usual data. For a separate
+directory, your harness starts Cadrumo's runtime itself and decides when it
+stops. The `cadrumo-runtime` command is in the same `bin` directory as `aeat`
+and `cadrumo-mcp`:
+
+```text
+cadrumo-runtime --configured-root
+```
+
+- **Start.** Run the command with the two settings in its environment and with
+  its standard input and standard output connected to your process. It serves
+  the directory that `CADRUMO_LOCAL_STORAGE_ROOT` names. `aeat`, the terminal
+  interface and `cadrumo-mcp`, started with the same two settings, find it on
+  their own.
+- **Ready.** When clients can connect, it writes one line of JSON to standard
+  output, for example
+  `{"kind":"runtime_ready","pid":4242,"product_version":"…","storage_identity":"…"}`.
+  It writes nothing else there. `aeat --format json config sign-in-status`,
+  run with the same settings, also succeeds once it is ready.
+- **Stop.** Close its standard input. It finishes the work in progress and exits
+  with code 64. If your process ends, its standard input closes too, so the
+  runtime does not outlive it. Do not start it with standard input from the null
+  device, because then it stops at once. At a terminal, Ctrl+C stops it with
+  code 65.
+- **Refusals.** It exits with code 68 and prints `runtime_root_mismatch` when
+  `CADRUMO_LOCAL_STORAGE_ROOT` is not set, or when the directory is your usual
+  Cadrumo data directory, lies inside it or contains it. It creates nothing
+  then. It exits with code 67 when a runtime already serves the directory. Add
+  `--expected-version VERSION` to refuse, with code 69, a package of another
+  version.
+
+Profile passwords, sign-in, enrolled keys and the operations each session may
+run work exactly as they do on your usual data. Pass each secret on the
+command's protected channel and never on the command line. For example, with the
+two settings in the environment of every command:
+
+```text
+aeat --format json config profile create agent-test --quiet --secrets-stdin
+cadrumo-runtime --configured-root
+aeat --format json config login agent-test --secrets-stdin
+aeat --format json config profile status
+cadrumo-mcp
+aeat --format json config logout
+```
+
+`profile create` and `login` each read a JSON object from standard input:
+`{"passphrase": "…", "passphrase_confirmation": "…"}` to create the profile, and
+`{"passphrase": "…"}` to sign in. Start `cadrumo-mcp` as an MCP stdio server
+with the same two settings, either from your MCP client or from your harness.
+It follows that sign-in as described in "Following your sign-in" above. A
+stored sign-in uses this computer's protected credential store. A logon that
+cannot use the store, such as some remote shell logons, can still run the
+runtime, but cannot keep a sign-in for `cadrumo-mcp` to follow.
+
+When you are done, sign out, stop the runtime and delete the directory. Nothing
+in your usual Cadrumo data is read or changed along the way.

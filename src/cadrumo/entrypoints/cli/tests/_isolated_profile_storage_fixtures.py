@@ -14,6 +14,7 @@ from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixt
 )
 from ....adapters.persistence.storage.tests.secure_sql import isolated_sessionless_storage_root
 from ....adapters.persistence.storage.tests.seeded_isolated_backend_fixture import seeded_isolated_backend_fixture
+from .runtime_profile_backend import runtime_profile_backend_fixture
 
 
 @pytest.fixture(autouse=True)
@@ -22,21 +23,16 @@ def _isolated_state(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-active_profile_isolated_backend = active_profile_isolated_backend_fixture()
+active_profile_isolated_backend = runtime_profile_backend_fixture()
 
 
-_LLM_PROFILE_BUCKET_ID = "00000000-0000-4000-8000-000000000000"
 _LLM_PROFILE_SETTINGS = {"cadrumo_output_language": "en"}
 
-llm_profile_isolated_backend = active_profile_isolated_backend_fixture(
-    bucket_id=_LLM_PROFILE_BUCKET_ID,
-    settings_overrides=_LLM_PROFILE_SETTINGS,
-)
+llm_profile_isolated_backend = runtime_profile_backend_fixture(settings_overrides=_LLM_PROFILE_SETTINGS)
 
 #: The same profile, opened only for the tests that request it by name, for
 #: suites that mix profile-bound CLI cases with pure contract checks.
-llm_profile_backend_on_request = active_profile_isolated_backend_fixture(
-    bucket_id=_LLM_PROFILE_BUCKET_ID,
+llm_profile_backend_on_request = runtime_profile_backend_fixture(
     settings_overrides=_LLM_PROFILE_SETTINGS,
     autouse=False,
     name="llm_profile_backend",

@@ -182,7 +182,7 @@ fn delegated_inventory_refuses_escapes_and_collisions() {
 }
 
 #[test]
-fn documentation_absence_must_be_stated_and_agree_with_the_inventory() {
+fn a_documentation_statement_is_optional_but_must_agree_with_the_inventory() {
     let temp = directory();
     let listed = serde_json::json!({"index.html": sha256_hex(b"apex")});
     let path = delegated_package(temp.path(), listed);
@@ -197,7 +197,15 @@ fn documentation_absence_must_be_stated_and_agree_with_the_inventory() {
         .as_object_mut()
         .unwrap()
         .remove("delegated_inventories");
-    for manifest in [unstated, claimed_absent, claimed_without_inventory] {
+    // The documentation is optional: a manifest that makes no statement is
+    // checked by its inventory alone.
+    fs::write(
+        temp.path().join("manifest.json"),
+        serde_json::to_vec(&unstated).unwrap(),
+    )
+    .unwrap();
+    assert!(delegated_readiness(temp.path(), &path).is_ok());
+    for manifest in [claimed_absent, claimed_without_inventory] {
         fs::write(
             temp.path().join("manifest.json"),
             serde_json::to_vec(&manifest).unwrap(),

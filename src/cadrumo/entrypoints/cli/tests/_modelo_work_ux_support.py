@@ -26,8 +26,9 @@ from ....domain.calculations.registry.tests.registry_tree import bundled_registr
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ....domain.modelos.work_unit import WorkUnit
 from ....tests.cli_envelope import unwrap_schema_envelope
+from .cli_runner import invoke_cached_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
-from .modelo_profile_seed import invoke_seeded_profile_cli, seed_test_profile
+from .modelo_profile_seed import seed_test_profile
 
 _WIZARD_REGISTRATION_MODULES = (_wizard_catalogue, _wizard_persistence)
 _M111_PROFESSIONAL_NIF = "B12345674"
@@ -41,7 +42,7 @@ _PROFILE_ID = "6f1d2c3a-4b5e-4f60-8a71-9c2d3e4f5a6b"
 
 
 def _invoke(args: list[str]):
-    return invoke_seeded_profile_cli(args)
+    return invoke_cached_cli(args)
 
 
 def operator_profile_facts(*, activity_start_date: str | None = None) -> dict[str, str]:

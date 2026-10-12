@@ -57,6 +57,23 @@ if(COMMAND cadrumo_register_clean)
 endif()
 
 if(BUILD_TESTING)
+  cadrumo_build_step(manager_comment rust_manager_lifecycle GROUP verification
+    SUMMARY "compile the fixture-mode manager the lifecycle tests drive"
+    OUTPUTS "${CADRUMO_PATH_CARGO}/manager-lifecycle")
+  add_custom_target(rust_manager_lifecycle
+    COMMAND ${manager_cargo} build --locked --features fixture-test-mode --profile dev
+      --bin cadrumo-manager-lifecycle --target-dir "${CADRUMO_PATH_CARGO}/manager-lifecycle"
+      --manifest-path "${manager_cargo_manifest}" --target "${CADRUMO_PIN_rust_target}"
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${manager_comment}" VERBATIM)
+  add_dependencies(rust_manager_lifecycle native_contract)
+  cadrumo_build_step(manager_comment check_manager_lifecycle GROUP verification
+    SUMMARY "lint the fixture-mode manager with clippy, warnings denied")
+  add_custom_target(check_manager_lifecycle
+    COMMAND ${manager_cargo} clippy --locked --features fixture-test-mode --profile dev
+      --bin cadrumo-manager-lifecycle --target-dir "${CADRUMO_PATH_CARGO}/manager-lifecycle"
+      --manifest-path "${manager_cargo_manifest}" --target "${CADRUMO_PIN_rust_target}" -- -D warnings
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${manager_comment}" VERBATIM)
+  add_dependencies(check_manager_lifecycle native_contract)
   # Covers the projected names, --version, and on Windows the GUI subsystem, the
   # System32-only DependentLoadFlags and the version resource of the linked image.
   add_test(NAME manager.rust

@@ -25,7 +25,7 @@ _SOURCE_PATH = bundled_path(
     "disenos_registro",
     "modelo_369",
     "files",
-    "01-369-regimenes-especiales-aplicables-a-los-servicios-prestados-a-personas-que-no-tengan-la-co.xlsx",
+    "01-369-regimenes-especiales-aplicables-a-los-ser.xlsx",
 )
 
 

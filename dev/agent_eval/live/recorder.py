@@ -96,6 +96,19 @@ class TrajectoryRecorder:
     calls: list[LiveToolCallRecord] = field(default_factory=list)
     narrations: list[LiveNarrationRecord] = field(default_factory=list)
     failures: list[InvariantFailure] = field(default_factory=list)
+    phase_starts: list[tuple[int, int]] = field(default_factory=list)
+    """Where each phase began, as (tool-call index, narration index)."""
+
+    def begin_phase(self) -> None:
+        """Mark the start of a phase, after the person has acted between two of the agent's turns."""
+        self.phase_starts.append((len(self.calls), len(self.narrations)))
+
+    def phase(self, index: int) -> tuple[list[LiveToolCallRecord], list[LiveNarrationRecord]]:
+        """The calls and narrations of one phase; the whole session when no phase was marked."""
+        starts = self.phase_starts or [(0, 0)]
+        call_start, narration_start = starts[index]
+        call_end, narration_end = starts[index + 1] if index + 1 < len(starts) else (None, None)
+        return self.calls[call_start:call_end], self.narrations[narration_start:narration_end]
 
     def _carries_secret(self, text: str) -> bool:
         return any(secret and secret in text for secret in self.known_secrets)

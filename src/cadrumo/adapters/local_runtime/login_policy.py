@@ -15,7 +15,7 @@ from ...core.config import load_settings
 from .login import capture_runtime_login
 
 type RuntimeAdmissionPolicy = Literal["native", "development"]
-"""Whether login capture requires a native desktop witness or the development override."""
+"""Whether login capture uses verified native provenance or the development override."""
 
 
 @dataclass(frozen=True)

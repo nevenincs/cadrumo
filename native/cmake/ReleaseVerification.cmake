@@ -4,7 +4,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/BuildLog.cmake")
 cadrumo_build_step(release_comment verify-release GROUP verification
   SUMMARY "run every CTest test, then verify the extracted release ZIP")
 add_custom_target(verify-release
-  COMMAND "${CMAKE_CTEST_COMMAND}" --test-dir "${PROJECT_BINARY_DIR}" -C "$<CONFIG>" --output-on-failure
+  COMMAND "${CMAKE_CTEST_COMMAND}" --test-dir "${PROJECT_BINARY_DIR}" -C "$<CONFIG>" --output-on-failure --no-tests=error
   COMMAND ${CADRUMO_HELPER} run -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.artifact_verify
     --build "${PROJECT_BINARY_DIR}" --config "$<CONFIG>"
     --application-probe-command "${CADRUMO_APPLICATION_ARTIFACT_PROBE_FILE}"

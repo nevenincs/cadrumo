@@ -5,6 +5,13 @@ the same components that run inside the Tauri window run on a Vite development
 server, against a simulated host, with hot reload. Compiling the desktop host,
 assembling a package or building the documentation is not needed to edit it.
 
+From the repository root, run `just dev`. It prepares the host's desktop build
+directory and starts the existing development display at
+`http://localhost:15370/scenarios.html`.
+The fixed listener assignments live in `../development-server.json`: display
+15370, test preview 15371, documentation fixture 15372, and Storybook 6006.
+An occupied port is an error; no server moves to another port.
+
 ## Prerequisites
 
 - Node.js and npm, with dependencies installed by `npm ci` in this directory.
@@ -30,17 +37,18 @@ under `build/` at the repository root: `build/desktop-windows-x64` on Windows.
 Then it runs the two generators. It compiles nothing and takes a few seconds.
 Options:
 
-| Option                  | Default           | Meaning                                                |
-| ----------------------- | ----------------- | ------------------------------------------------------ |
-| `--build-dir <path>`    | the host preset's | Another build directory, configured without the preset |
-| `--host <address>`      | `127.0.0.1`       | The address the servers bind                           |
-| `--dev-port <port>`     | `15370`           | The development server port                            |
-| `--preview-port <port>` | `15371`           | The port that serves the production build to the tests |
+| Option               | Default           | Meaning                                                |
+| -------------------- | ----------------- | ------------------------------------------------------ |
+| `--build-dir <path>` | the host preset's | Another build directory, configured without the preset |
+| `--host <address>`   | `0.0.0.0`         | The address the servers bind                           |
 
-Pass options after `--`, for example `npm run bootstrap -- --dev-port 15380`.
+Ports cannot be overridden. Pass other bootstrap options after `--`, for
+example `npm run bootstrap -- --host 127.0.0.1`.
 Run it again after a locale catalogue or the documentation theme changes.
 
-Every other command here needs the build directory named in the environment:
+Check, build, test and catalogue commands need the build directory named in
+the environment. `just dev` and `npm run dev` select and prepare the host's
+desktop preset themselves:
 
 ```sh
 # PowerShell
@@ -52,7 +60,7 @@ export CADRUMO_CMAKE_BINARY_DIR='<absolute path to the build directory>'
 ## Develop in a browser
 
 ```sh
-npm run dev
+just dev
 ```
 
 The server offers two pages.
@@ -119,15 +127,15 @@ The terminals show deterministic fixture sessions in the real xterm view: type
 see an exited session, then Enter to restart it.
 
 The documentation pane shows a stand-in documentation site. The development
-server starts it beside itself, on the same address and a port the operating
-system assigns. The same host name with another port is a different origin, as
+server starts it beside itself, on the same address and fixed port 15372.
+The same host name with another port is a different origin, as
 the documentation is in the desktop window, and it is reachable from wherever
 the page is opened, another device included. Its pages load the real desktop
 bridge script from `docs/_static/`, so navigation, search, appearance, zoom,
 shortcuts and context menus cross a real `postMessage` boundary.
 
-To open the page from another device, bootstrap with an address that device can
-reach, for example `npm run bootstrap -- --host 0.0.0.0`, and name the host in
+To open the page from another device, use the server's default `0.0.0.0` binding
+and name the host in
 `CADRUMO_DESKTOP_ALLOWED_HOSTS`, a comma-separated list read from the
 environment or from `.env.local`.
 
@@ -151,8 +159,8 @@ refuses any module under `src/dev/` or `dev/` and any story
 npm run storybook
 ```
 
-The catalogue is Storybook on the shell's own theme, at port 6006 of the
-bootstrapped address (`-- --port <port>` chooses another). Its toolbar switches
+The catalogue is Storybook on the shell's own theme, at fixed port 6006 of the
+bootstrapped address. An occupied port is an error. Its toolbar switches
 the colour scheme and the chrome language, and every story is drawn on a real
 shell surface inside the application's own providers.
 
@@ -519,6 +527,47 @@ packaged assertion was changed.
 
 That run's result files were removed with its build directory, so this table
 is from the notes taken when it was read; a fresh run replaces it.
+
+## Account and runtime signals
+
+The native host exposes public account observations through
+`sign_in_subscribe({ token, updates: Channel<SignInSignal> })`, returning a numeric
+subscription. Dispose it with `sign_in_unsubscribe({ token, subscription })`.
+The shell adapter offers this as `Host.observeSignIn(listener)` and returns a
+cleanup function. The same document token and origin checks as other shell
+commands apply; there is one current listener per host document.
+
+| Signal `kind`                | Payload                                                                               | Design response                                                                                                                                                                                                                                                                          |
+| ---------------------------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sign-in-state`              | `revision`, `status: { supported, state, active_profile, runtimeAvailable, refusal }` | Update account and runtime indicators. `present` releases the account gate; `absent` offers sign-in for the selected profile; `unknown` shows uncertainty. A changed `active_profile` invalidates displayed profile data. `runtimeAvailable: false` offers Background Services recovery. |
+| `manager-state`              | `revision`, `status: { state, failure }`                                              | Supervisor availability: `unsupported`, `starting`, `ready`, `recovering`, `waiting`, `stopping`, `stopped`, or `failed`. Recovery immediately gates private views, passwords and TUI access. Returning to `ready` requires a fresh canonical sign-in read before releasing that gate.   |
+| `manager-observation-failed` | `revision`, `error: HostFailure`                                                      | Gate account access and show the public failure code; do not display private diagnostic messages.                                                                                                                                                                                        |
+| `sign-in-observation-failed` | `revision`, `error: HostFailure`                                                      | Show the safe failure code and a retry/recovery prompt; do not display a signed-in state from an older snapshot.                                                                                                                                                                         |
+
+The token-gated `manager_status`, `manager_subscribe({ updates })`, and
+`manager_unsubscribe({ subscription })` commands supply these supervisor signals.
+Subscriptions publish initial state and changes from the existing native watchdog;
+the frontend adds no supervisor poller. Each host subscription rejects old revisions
+and late answers after replacement or readiness loss. Recovery and failure use the
+existing toast and account loading presentation. Fatal startup failures before the
+window opens exit unsuccessfully rather than showing a window without supervision.
+The manager browser scenarios verify presentation only; packaged native lifecycle
+tests establish real authenticated IPC and recovery.
+
+A subscription receives its first snapshot immediately, then changed snapshots
+from the canonical CLI status producer, sampled every two seconds while
+subscribed. Identical snapshots and failures are coalesced. Revision numbers
+increase within a subscription and reset for a replacement listener. Failed
+delivery removes the listener; an old document's cleanup cannot remove its
+replacement. Host shutdown stops and joins the observer and its CLI children.
+
+`active_profile` is a public label. Signals contain no credential, receipt,
+profile UUID or runtime session capability. They inform presentation; a client
+still authenticates independently over verified IPC. The shell consumes them
+without needing focus or an additional status request for each notification.
+The existing `logs_subscribe` channel separately supplies diagnostic batches;
+manager records have `source: "manager"` and scrubbed lifecycle facts in
+`context.lifecycle_event`. Diagnostic messages are not authentication triggers.
 
 ## Layout
 

@@ -230,7 +230,8 @@ if(CADRUMO_TARGET STREQUAL "windows-x86-64")
       SUMMARY "build the scoped MSI with WiX" OUTPUTS "${CADRUMO_PATH_PACKAGES}/msi")
     add_custom_target(msi
       COMMAND ${msi_build_helper} build ${msi_build_arguments} --wix "${CADRUMO_WIX_EXECUTABLE}"
-      DEPENDS msi-author WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
+      DEPENDS installation_prepare WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}"
+      COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
     cadrumo_build_step(step_comment msi-verify GROUP verification SUMMARY "verify the built MSI")
     add_custom_target(msi-verify
       COMMAND ${msi_build_helper} verify ${msi_build_arguments}
@@ -240,7 +241,7 @@ if(CADRUMO_TARGET STREQUAL "windows-x86-64")
         SUMMARY "assemble the desktop bootstrap kit around the verified MSI")
       add_custom_target(msi-bootstrap-kit
         COMMAND ${msi_build_helper} kit ${msi_build_arguments} --payload "${CADRUMO_PAYLOAD}"
-        DEPENDS msi-verify WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
+        DEPENDS msi WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
       cadrumo_build_step(step_comment native-package GROUP package
         SUMMARY "the native Windows package: verified MSI and desktop bootstrap kit")
       add_custom_target(native-package DEPENDS msi-bootstrap-kit COMMENT "${step_comment}")
@@ -271,12 +272,38 @@ if(CADRUMO_TARGET STREQUAL "windows-x86-64")
       COMMAND ${msi_build_helper} unregister ${msi_build_arguments}
         --scope "${CADRUMO_MSI_SCOPE}" --prefix "${CADRUMO_MSI_PREFIX}"
       DEPENDS msi-verify WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
-    # Readiness is an independent refusal, so missing compilers do not hide the
-    # lifecycle blockers. It never installs products or changes login registration.
+    set(CADRUMO_MSI_TEST_VM_ID "" CACHE STRING "Explicit disposable guest UUID for installed acceptance")
+    set(CADRUMO_MSI_TEST_ACCOUNT_SID "" CACHE STRING "Dedicated guest account SID for installed acceptance")
+    set(CADRUMO_MSI_TEST_GUEST_KIND "hyperv" CACHE STRING "Installed acceptance guest platform: hyperv or qemu")
+    set_property(CACHE CADRUMO_MSI_TEST_GUEST_KIND PROPERTY STRINGS hyperv qemu)
+    set(CADRUMO_MSI_TEST_CAMPAIGN_STATE "" CACHE FILEPATH "Held installed acceptance campaign to finalize")
+    set(CADRUMO_MSI_TEST_SUCCESSOR_PLAN "" CACHE FILEPATH "Authentic successor maintenance plan for installed acceptance")
+    set(CADRUMO_MSI_TEST_SUCCESSOR_RUNNER "" CACHE FILEPATH "Authentic successor maintenance runner for installed acceptance")
+    if((CADRUMO_MSI_TEST_SUCCESSOR_PLAN OR CADRUMO_MSI_TEST_SUCCESSOR_RUNNER)
+        AND NOT CADRUMO_MSI_TEST_CAMPAIGN_STATE)
+      message(FATAL_ERROR "Installed acceptance successor artifacts require CADRUMO_MSI_TEST_CAMPAIGN_STATE")
+    endif()
+    set(msi_campaign_arguments)
+    if(CADRUMO_MSI_TEST_CAMPAIGN_STATE)
+      list(APPEND msi_campaign_arguments --installed-campaign-state "${CADRUMO_MSI_TEST_CAMPAIGN_STATE}")
+      if(CADRUMO_MSI_TEST_SUCCESSOR_PLAN)
+        list(APPEND msi_campaign_arguments --installed-successor-plan "${CADRUMO_MSI_TEST_SUCCESSOR_PLAN}")
+      endif()
+      if(CADRUMO_MSI_TEST_SUCCESSOR_RUNNER)
+        list(APPEND msi_campaign_arguments --installed-successor-runner "${CADRUMO_MSI_TEST_SUCCESSOR_RUNNER}")
+      endif()
+    endif()
+    # Empty or mismatched guest/account identities refuse before maintenance.
+    # Immediate installation evidence does not satisfy boot/login/upgrade gates.
     cadrumo_build_step(step_comment check-msi-installation GROUP installation
-      SUMMARY "check MSI installation readiness without installing anything")
+      SUMMARY "check an installed MSI in the configured disposable guest")
     add_custom_target(check-msi-installation
       COMMAND ${msi_build_helper} check-installation ${msi_build_arguments}
+        --scope "${CADRUMO_MSI_SCOPE}" --prefix "${CADRUMO_MSI_PREFIX}"
+        --installed-vm-id "${CADRUMO_MSI_TEST_VM_ID}"
+        --installed-account-sid "${CADRUMO_MSI_TEST_ACCOUNT_SID}"
+        --installed-guest-kind "${CADRUMO_MSI_TEST_GUEST_KIND}"
+        ${msi_campaign_arguments}
       WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${step_comment}" VERBATIM)
     cadrumo_register_clean(TARGET msi PATHS "${CADRUMO_PATH_PACKAGES}/msi")
   else()

@@ -1,5 +1,5 @@
+import { openPanelTab } from "../support/panel";
 import { expect, test } from "@playwright/test";
-import { label } from "../support/strings";
 
 test("dialog limits respond to the shared overlay gutter", async ({ page }) => {
   await page.setViewportSize({ width: 400, height: 700 });
@@ -16,10 +16,7 @@ test("dialog limits respond to the shared overlay gutter", async ({ page }) => {
 
 test("log column widths follow their shared token", async ({ page }) => {
   await page.goto("/scenarios.html?scenario=signed-in&latency=0&bar=off");
-  await page
-    .getByRole("navigation", { name: label("desktop.rail.label") })
-    .getByRole("button", { name: label("desktop.rail.logs") })
-    .click();
+  await openPanelTab(page, "logs");
   const grid = page.locator(".log-record-grid").first();
   await expect(grid).toBeVisible();
   await page.evaluate(() =>

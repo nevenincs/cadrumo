@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 
-def _sequence_rows(artifact: Path) -> dict[str, tuple[int, str]]:
+def _table_rows(artifact: Path, query: str, columns: int) -> list[tuple[str, ...]]:
     """Query the MSI database in read-only mode, closing every native handle."""
     if sys.platform != "win32":
         raise ValueError("MSI database verification requires a native Windows host")
@@ -36,34 +36,114 @@ def _sequence_rows(artifact: Path) -> dict[str, tuple[int, str]]:
     check(msi.MsiOpenDatabaseW(str(artifact.resolve(strict=True)), None, ctypes.byref(database)))
     try:
         view = handle()
-        check(
-            msi.MsiDatabaseOpenViewW(
-                database, "SELECT `Action`, `Sequence`, `Condition` FROM `InstallExecuteSequence`", ctypes.byref(view)
-            )
-        )
+        check(msi.MsiDatabaseOpenViewW(database, query, ctypes.byref(view)))
         try:
             check(msi.MsiViewExecute(view, 0))
-            actions: dict[str, tuple[int, str]] = {}
+            rows: list[tuple[str, ...]] = []
             while True:
                 record = handle()
                 status = msi.MsiViewFetch(view, ctypes.byref(record))
                 if status == 259:  # ERROR_NO_MORE_ITEMS
-                    return actions
+                    return rows
                 check(status)
                 try:
-                    size = handle(256)
-                    action = ctypes.create_unicode_buffer(size.value)
-                    check(msi.MsiRecordGetStringW(record, 1, action, ctypes.byref(size)))
-                    size = handle(4096)
-                    condition = ctypes.create_unicode_buffer(size.value)
-                    check(msi.MsiRecordGetStringW(record, 3, condition, ctypes.byref(size)))
-                    actions[action.value] = (int(msi.MsiRecordGetInteger(record, 2)), condition.value)
+                    values = []
+                    for column in range(1, columns + 1):
+                        size = handle(4096)
+                        value = ctypes.create_unicode_buffer(size.value)
+                        check(msi.MsiRecordGetStringW(record, column, value, ctypes.byref(size)))
+                        values.append(value.value)
+                    rows.append(tuple(values))
                 finally:
                     msi.MsiCloseHandle(record)
         finally:
             msi.MsiCloseHandle(view)
     finally:
         msi.MsiCloseHandle(database)
+
+
+def _sequence_rows(artifact: Path) -> dict[str, tuple[int, str]]:
+    return {
+        action: (int(sequence), condition)
+        for action, sequence, condition in _table_rows(
+            artifact, "SELECT `Action`, `Sequence`, `Condition` FROM `InstallExecuteSequence`", 3
+        )
+    }
+
+
+def _verify_feature_rows(
+    features: list[tuple[str, ...]], components: list[tuple[str, ...]], links: list[tuple[str, ...]]
+) -> None:
+    """Require complete, mandatory local feature ownership in the actual tables."""
+    tree = {row[0]: row[1:] for row in features}
+    owned = {row[0] for row in components}
+    if not tree or len(tree) != len(features) or not owned or len(owned) != len(components):
+        raise ValueError("MSI feature/component inventory is incomplete")
+    counts = dict.fromkeys(tree, 0)
+    enrolled: set[str] = set()
+    for feature, component in links:
+        if feature not in tree or component not in owned or component in enrolled:
+            raise ValueError("MSI feature component ownership is unknown or repeated")
+        enrolled.add(component)
+        counts[feature] += 1
+        if counts[feature] > 1600:
+            raise ValueError("MSI feature exceeds 1600 components")
+    if enrolled != owned:
+        raise ValueError("MSI components are detached from mandatory features")
+    for name, (parent, display, level, attributes) in tree.items():
+        if display not in {"", "0"} or level != "1" or attributes != ("26" if parent else "24"):
+            raise ValueError("MSI feature can be deselected or installed outside local storage")
+        visited = {name}
+        while parent:
+            if parent not in tree or parent in visited or len(visited) >= 16:
+                raise ValueError("MSI feature parent inventory is unknown or cyclic")
+            visited.add(parent)
+            parent = tree[parent][0]
+        if visited.isdisjoint({"ProductFeature"}) or tree["ProductFeature"][0]:
+            raise ValueError("MSI feature is detached from the mandatory product root")
+
+
+def _verify_component_rows(components: list[tuple[str, ...]], registry: list[tuple[str, ...]]) -> None:
+    """Reserve one costing entry per registry keypath in addition to authored components."""
+    keys = {row[0]: row[1:] for row in registry}
+    if len(keys) != len(registry) or len({row[0] for row in components}) != len(components):
+        raise ValueError("MSI component keypath inventory is repeated")
+    costed = len(components)
+    for component, attributes, keypath in components:
+        if not attributes.isdigit() or int(attributes) > 65535:
+            raise ValueError("MSI component attributes are invalid")
+        if int(attributes) & 4:
+            if (
+                keypath not in keys
+                or keys[keypath][1] != component
+                or keys[keypath][0] not in {"-1", "0", "1", "2", "3"}
+            ):
+                raise ValueError("MSI component registry keypath ownership is invalid")
+            costed += 1
+    if costed > 65535:
+        raise ValueError("MSI component costing budget exceeds 65535 entries")
+
+
+def verify_feature_ownership(artifact: Path) -> None:
+    """Reject oversized or unselected actual MSI features before publication."""
+    components = _table_rows(artifact, "SELECT `Component`, `Attributes`, `KeyPath` FROM `Component`", 3)
+    tables = {row[0] for row in _table_rows(artifact, "SELECT `Name` FROM `_Tables`", 1)}
+    _verify_component_rows(
+        components,
+        _table_rows(artifact, "SELECT `Registry`, `Root`, `Component_` FROM `Registry`", 3)
+        if "Registry" in tables
+        else [],
+    )
+    _verify_feature_rows(
+        _table_rows(artifact, "SELECT `Feature`, `Feature_Parent`, `Display`, `Level`, `Attributes` FROM `Feature`", 5),
+        [(row[0],) for row in components],
+        _table_rows(artifact, "SELECT `Feature_`, `Component_` FROM `FeatureComponents`", 2),
+    )
+    if "Condition" in tables and _table_rows(artifact, "SELECT `Feature_` FROM `Condition`", 1):
+        raise ValueError("MSI mandatory feature selection can be changed by a condition")
+    levels = _table_rows(artifact, "SELECT `Value` FROM `Property` WHERE `Property` = 'INSTALLLEVEL'", 1)
+    if any(not row[0].isdigit() or int(row[0]) < 1 for row in levels):
+        raise ValueError("MSI installation level disables mandatory features")
 
 
 def action_sequence(artifact: Path) -> dict[str, int]:

@@ -17,6 +17,7 @@ from dev._paths import REPO_ROOT
 from dev.packaging.native.hashing import digest
 from dev.packaging.native.identity import identity
 from dev.packaging.native.installation import validate_payload
+from dev.packaging.native.layout import load_layout
 from dev.packaging.native.package_inventory import checked_member, package_inventory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -36,6 +37,7 @@ def _write_package(root: Path, docs: dict[str, str], *, listed: dict[str, str] |
     (root / MEMBER).write_text(json.dumps({"files": nested}), encoding="utf-8")
     manifest = {
         "build": asdict(identity("windows-x86-64")),
+        "layout": load_layout("windows-x64"),
         "files": {"python.exe": digest(root / "python.exe"), MEMBER: digest(root / MEMBER)},
         "delegated_inventories": {PREFIX: MEMBER},
         "user_docs": {"directory": PREFIX, "bundled": True},
@@ -50,6 +52,7 @@ def _write_docsless_package(root: Path) -> dict[str, Any]:
     (root / "python.exe").write_text("synthetic interpreter", encoding="utf-8")
     manifest = {
         "build": asdict(identity("windows-x86-64")),
+        "layout": load_layout("windows-x64"),
         "files": {"python.exe": digest(root / "python.exe")},
         "delegated_inventories": {},
         "user_docs": {"directory": PREFIX, "bundled": False},
@@ -211,7 +214,8 @@ def test_a_package_assembled_without_documentation_verifies_only_because_it_says
     manifest = _write_docsless_package(root)
     assert package_inventory(root, manifest) == manifest["files"]
     validate_payload(root, _identity(tmp_path))
-    with pytest.raises(ValueError, match="requires bundled user documentation"):
+    # Documentation never gates the desktop; only the declared desktop image may register.
+    with pytest.raises(ValueError, match="Only the desktop application image"):
         validate_payload(root, _identity(tmp_path), desktop="python.exe")
     (root / PREFIX).mkdir(parents=True)
     (root / PREFIX / "index.html").write_text("stale copy", encoding="utf-8")

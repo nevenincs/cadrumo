@@ -1,11 +1,15 @@
+import { openPanelTab } from "../support/panel";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { label } from "../support/strings";
 
 // The shell by keyboard alone: tab stops, arrow-key patterns, shortcuts, and
 // where focus goes when a surface opens and closes.
 
-const open = (target: Page, scenario = "signed-in") =>
-  target.goto(`/scenarios.html?scenario=${scenario}&latency=0&bar=off`);
+const open = async (target: Page, scenario = "signed-in") => {
+  await target.goto(`/scenarios.html?scenario=${scenario}&latency=0&bar=off`);
+  // Panel interaction tests open it explicitly after each fresh launch.
+  await target.keyboard.press("Control+Backquote");
+};
 
 const rail = (target: Page) =>
   target.getByRole("navigation", { name: label("desktop.rail.label") });
@@ -16,11 +20,6 @@ test.beforeEach(async ({ page: target }) => {
   await target.addInitScript(() => {
     if (sessionStorage.getItem("layout-cleared")) return;
     localStorage.clear();
-    // Exercise the full panel layout as a returning user's saved choice.
-    localStorage.setItem(
-      "cadrumo-shell-layout",
-      JSON.stringify({ layout: { panelOpen: true } }),
-    );
     sessionStorage.setItem("layout-cleared", "1");
   });
 });
@@ -552,9 +551,7 @@ test("a log record's detail opens and closes by keyboard", async ({
   page: target,
 }) => {
   await open(target);
-  await rail(target)
-    .getByRole("button", { name: label("desktop.rail.logs") })
-    .click();
+  await openPanelTab(target, "logs");
   const toggle = target.locator('.record[data-seq="9"]').getByRole("button", {
     name: label("desktop.logs.details"),
   });
@@ -574,9 +571,7 @@ test("log records are reached, marked and given their menu by keyboard", async (
   page: target,
 }) => {
   await open(target);
-  await rail(target)
-    .getByRole("button", { name: label("desktop.rail.logs") })
-    .click();
+  await openPanelTab(target, "logs");
   const rows = target.locator(".logview-list .record");
   const count = await rows.count();
   expect(count).toBeGreaterThan(3);
@@ -639,9 +634,7 @@ test("log records are reached, marked and given their menu by keyboard", async (
 
 test("Enter on a record opens its detail", async ({ page: target }) => {
   await open(target);
-  await rail(target)
-    .getByRole("button", { name: label("desktop.rail.logs") })
-    .click();
+  await openPanelTab(target, "logs");
   const row = target.locator('.logview-list .record[data-seq="9"]');
   await row.focus();
   await target.keyboard.press("Enter");
@@ -654,9 +647,7 @@ test("the menu stand-in follows the arrow keys and closes on Escape", async ({
   page: target,
 }) => {
   await open(target);
-  await rail(target)
-    .getByRole("button", { name: label("desktop.rail.logs") })
-    .click();
+  await openPanelTab(target, "logs");
   await target.locator(".record").first().click({ button: "right" });
   const menu = target.getByRole("menu");
   await expect(menu).toBeVisible();
@@ -731,9 +722,7 @@ test("a press outside a record's menu keeps what it pressed", async ({
   page: target,
 }) => {
   await open(target);
-  await rail(target)
-    .getByRole("button", { name: label("desktop.rail.logs") })
-    .click();
+  await openPanelTab(target, "logs");
   const rows = target.locator(".logview-list .record");
   const menu = target.getByRole("menu");
   await rows.nth(1).click({ button: "right" });
@@ -759,9 +748,7 @@ test("the log is one tab stop however many records have a detail", async ({
   await target.goto(
     "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=2000",
   );
-  await rail(target)
-    .getByRole("button", { name: label("desktop.rail.logs") })
-    .click();
+  await openPanelTab(target, "logs");
   const list = target.locator(".logview-list");
   await expect(list.locator(".record").first()).toBeAttached();
   const stops = await list.evaluate(
@@ -779,9 +766,7 @@ test("bringing in earlier records leaves the view on the record it was on", asyn
   await target.goto(
     "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=3000",
   );
-  await rail(target)
-    .getByRole("button", { name: label("desktop.rail.logs") })
-    .click();
+  await openPanelTab(target, "logs");
   const list = target.locator(".logview-list");
   const rows = list.locator(".record");
   await expect(rows).toHaveCount(400);
@@ -828,9 +813,7 @@ test("the arrow keys move on from a record's detail toggle", async ({
   page: target,
 }) => {
   await open(target);
-  await rail(target)
-    .getByRole("button", { name: label("desktop.rail.logs") })
-    .click();
+  await openPanelTab(target, "logs");
   const rows = target.locator(".logview-list .record");
   const withDetail = rows.filter({ has: target.locator("[aria-expanded]") });
   // A click leaves focus on the toggle; the keyboard carries on from there.
@@ -845,9 +828,7 @@ test("a press in the documentation while a menu is open keeps focus there", asyn
   page: target,
 }) => {
   await open(target);
-  await rail(target)
-    .getByRole("button", { name: label("desktop.rail.logs") })
-    .click();
+  await openPanelTab(target, "logs");
   await target
     .locator(".logview-list .record")
     .nth(1)

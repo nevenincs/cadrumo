@@ -2,44 +2,25 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator, Mapping, Sequence
-from contextlib import ExitStack, contextmanager
+from collections.abc import Callable, Iterator, Mapping
+from contextlib import ExitStack
 from contextvars import ContextVar
 from pathlib import Path
-from typing import TYPE_CHECKING, Protocol, Unpack
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 import pytest
-from click.testing import Result
 
 from ....adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from .cli_runner import ClickInvokeKwargs, invoke_cached_cli
+from .cli_runner import bind_profile_cli
 
 if TYPE_CHECKING:
     from .portable_human_cli_runtime import PortableHumanCliRuntime
 
-__all__ = [
-    "ProfileCliInvoker",
-    "ProfileSeeder",
-    "bind_profile_cli",
-    "invoke_seeded_profile_cli",
-    "seed_profile",
-    "seed_test_profile",
-]
+__all__ = ["ProfileSeeder", "seed_profile", "seed_test_profile"]
 
 type ProfileSeeder = Callable[..., PortableHumanCliRuntime]
-
-
-class ProfileCliInvoker(Protocol):
-    """A test-owned profile whose joined runtime admits the commands a test runs."""
-
-    def invoke(self, args: Sequence[str], **kwargs: Unpack[ClickInvokeKwargs]) -> Result:
-        """Run one command as the profile's operator."""
-        ...
-
-
-_CURRENT_RUNTIME: ContextVar[ProfileCliInvoker | None] = ContextVar("modelo-seeded-human-runtime", default=None)
 
 
 _CURRENT_SEEDER: ContextVar[ProfileSeeder | None] = ContextVar("modelo-profile-seeder", default=None)
@@ -57,22 +38,6 @@ def seed_test_profile(
     if seeder is None:
         raise AssertionError("request the seed_profile fixture before registering a profile for CLI commands")
     return seeder(label=label, facts=facts, complete=complete)
-
-
-@contextmanager
-def bind_profile_cli(invoker: ProfileCliInvoker) -> Iterator[None]:
-    """Route :func:`invoke_seeded_profile_cli` through one registered profile until the scope ends."""
-    token = _CURRENT_RUNTIME.set(invoker)
-    try:
-        yield
-    finally:
-        _CURRENT_RUNTIME.reset(token)
-
-
-def invoke_seeded_profile_cli(args: Sequence[str], **kwargs: Unpack[ClickInvokeKwargs]) -> Result:
-    """Use the seeded human's credential transport, retaining public calls without a seed."""
-    runtime = _CURRENT_RUNTIME.get()
-    return invoke_cached_cli(args, **kwargs) if runtime is None else runtime.invoke(args, **kwargs)
 
 
 @pytest.fixture

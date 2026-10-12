@@ -431,8 +431,13 @@ are prohibited. Build directories contain
 only declared build products and tool-managed intermediate files.
 
 CMake owns the build graph. Python helpers perform portable filesystem and wheel
-operations; PowerShell is not part of the build. The separate Windows `platforms/windows_trace.ps1`
-helper is an OS diagnostics tool. Linux/macOS adapters compile the enrolled native
+operations. Windows package acceptance uses PowerShell only to transport the real
+installed lifecycle campaign to an explicitly configured disposable guest; it
+does not generate product payloads or install services on the build host. The
+default Windows desktop `bundle` fails unless both installed user and machine
+campaigns complete in that invocation. Candidate payload and installer targets
+remain independently buildable before acceptance. The separate Windows
+`platforms/windows_trace.ps1` helper is an OS diagnostics tool. Linux/macOS adapters compile the enrolled native
 hosts through explicit target toolchains; actual runner acceptance remains
 separately recorded. Windows toolchain selection is scoped by
 `native/cmake/WindowsToolchain.cmake`; Cargo gets explicit compiler-library and
@@ -497,10 +502,12 @@ divergence before staging. ZIP acceptance also checks the reported Windows versi
 
 | Target | Operation |
 | --- | --- |
-| default / `app-distro` | Build the complete runnable directory at `stage/<Config>/app`, including application images, runtime and documentation |
-| `bundle` | Compatibility alias for `app-distro` |
-| `verify-app-distro` | Build the app directory, run its smoke tests and inspect the complete package inventory, without ZIP or release verification |
-| `zip` | Build `app-distro`, then create its install-based ZIP |
+| default / `bundle` | Build the application payload and, for Windows desktop deliveries, its matching background-services installation kit at `stage/<Config>/services` |
+| `app-distro` | Compatibility target for the complete `bundle` |
+| `app-payload` | Internal payload assembly at `stage/<Config>/app`, including application images, runtime and documentation; a Windows desktop payload alone is not a complete delivery |
+| `native-process-quiesce` | Before replacing product images, request shutdown of verified running product processes and children, wait 10 seconds, then terminate survivors and refuse replacement if any remain alive |
+| `verify-app-distro` | Build the complete bundle, run its smoke tests and inspect the package inventory, without ZIP or release verification |
+| `zip` | Build the complete bundle, then create its install-based ZIP; Windows desktop archives retain sibling `app` and `services` directories |
 | `release` / `verify-release` | Build the ZIP and run native, extracted-artifact and live documentation verification |
 | `setup-native-builder` | Converge the configure-owned builder or validate the selected external interpreter |
 | `registry_authority` | Reuse the existing publication; compile when its descriptor or selected database is missing |
@@ -531,6 +538,16 @@ divergence before staging. ZIP acceptance also checks the reported Windows versi
 | `clean-docs` | Remove documentation build roots, work state and the staged subset |
 | `clean-<target>` | Remove the target's owned outputs; keep shared prerequisites and other configurations |
 | `clean-all` | Remove enrolled outputs in every configuration and bounded cleanup groups; retain configuration, builder and installation receipts |
+
+`cadrumo --check-health` opens no window. It uses the same supervision startup
+as the GUI: an existing installed manager keeps ownership, otherwise the host
+acquires ownership and runs the shared manager core for the packaged runtime.
+The canonical sign-in status helper must receive a verified runtime response
+within 90 seconds. Supervisor or IPC failure returns nonzero. The check never
+installs products or registers login start, and it drains and joins only its
+own supervisor before returning. `bundle.health.cadrumo.exe` runs this check
+and gates the lifecycle fixture. Installation is optional for this acceptance;
+the installation kit is checked separately before the functional check.
 
 Explicit cleanup never removes source files, the installed application or an
 arbitrary path. It validates the CMake source owner and each resolved child path.
@@ -1136,11 +1153,13 @@ with exit status 1.
 The desktop holds no runtime connection and no runtime authority, and keeps no
 session, receipt or credential. The TUI tab runs the TUI process and shows only
 its output, including the reason the TUI writes on standard error and its exit
-when no runtime admits it. On supported managed Windows installations, the desktop
-requests the independent manager at startup and observes runtime availability
-through the canonical account-status command. A launch acknowledgement is not a
-readiness or authentication claim. The manager alone starts and supervises the
-runtime; closing a console or desktop window does not stop it. Development runs
+when no runtime admits it. On Windows, the desktop establishes supervision at
+startup and observes runtime availability through the canonical account-status
+command. An installed manager keeps ownership; when none owns the session, the
+desktop hosts the same supervision core and watches for crashes and hangs.
+A launch acknowledgement is not a readiness or authentication claim. Closing
+the desktop drains its own supervisor and leaves an external manager untouched.
+Development runs
 with explicit storage overrides use an explicitly started runtime for that root.
 
 The console starts with the same storage identity as desktop sign-in. Interactive
@@ -1424,10 +1443,24 @@ not change this record and grant no process or package deletion authority.
 
 ### Startup lifetime
 
-The Windows manager refuses `TokenElevationTypeFull`, permits Default tokens
-(including UAC-disabled accounts), requires an interactive session, escapes a parent
-job once when permitted, and retains its session lock while its hidden top-level
-window runs. Startup verifies the selected package and queries its installed
+Windows machine registration owns an automatic SCM lifecycle broker. It runs at
+machine boot and launches user manager workers only with genuine logged-in user
+tokens; SYSTEM never hosts a taxpayer runtime or profile credentials. User
+registration instead starts the manager at that user's login. Installation is
+optional: the desktop hosts the same manager core when no verified external
+owner responds, and keeps checking ownership and runtime readiness while open.
+An adopted runtime without a heartbeat channel must settle and restart before
+the desktop reports full supervision. Terminal or prolonged supervision loss
+fails the desktop process. Headless package health uses isolated storage and
+never activates an installed manager for the user's default storage.
+
+The Windows manager places no launch-context condition on its own start: it does
+not refuse a process for its token elevation type, for running in Session 0 or for
+lacking an interactive desktop. It escapes a parent job once when permitted, and
+retains its session lock while its hidden top-level window runs. The tray is
+configured only when a desktop is available. Recovery follows the manager process
+lifetime until an explicit stop or session end; it does not consult the session's
+connection state. Startup verifies the selected package and queries its installed
 interpreter for the canonical physical storage identity and application version.
 The query uses the same strict child environment as runtime launch and acquires
 no runtime endpoint. Ownership supplies either a start permit, direct same-session
@@ -1459,14 +1492,14 @@ complete package inventory and manager executable, and selects the newest numeri
 version. Incomplete or incompatible versions do not win. The stable entry must
 match a manager in a complete compatible version. These consistency checks do not
 authenticate a publisher or sandbox a concurrent same-user file writer.
-The desktop dispatches the verified stable entry. After native admission and job
-escape, that entry (or an older version's manager) redirects to the selected
-version before taking the session lock or runtime ownership. The successor repeats
-admission and resolves the canonical installed default; an override never becomes
+The desktop dispatches the verified stable entry. After job escape, that entry (or
+an older version's manager) redirects to the selected version before taking the
+session lock or runtime ownership. The successor repeats job escape and catalogue
+verification and resolves the canonical installed default; an override never becomes
 managed through environment clearing. Dispatch still acknowledges launch only.
 
 The exact metadata argument `--supports-retry` returns exit code zero without
-output, before native admission, package discovery or runtime launch. Combined
+output, before job escape, package discovery or runtime launch. Combined
 arguments are refused. Before explicit Retry redirects to a different verified
 manager image, the dispatcher probes this argument with a strict cleared
 environment, null streams, the selected package working directory and a retained
@@ -1522,8 +1555,8 @@ event kinds and mismatched connection/boot identity remain protocol failures.
 Obsolete native-product cleanup and interactive two-release installer acceptance
 remain separate completion evidence. Headless notice checks do not prove attended
 OS delivery during a real installed upgrade.
-GUI-subsystem startup failure is visible after interactive admission;
-session 0 remains refused without UI. Tests of the hidden window's own queue do
+GUI-subsystem startup failure is shown only when a desktop is available; without
+one it reaches the exit code and diagnostics alone. Tests of the hidden window's own queue do
 not constitute real session-1 logoff or desktop package acceptance.
 
 ## Native distribution definitions
@@ -1628,10 +1661,13 @@ Build `msi-author` to validate the stage and emit `user-version.wxs`,
 `machine-version.wxs`, `user-registration.wxs` and `machine-registration.wxs`
 under `installation/metadata/wix`. `clean-msi-author` owns those generated sources.
 Version sources own only the immutable release subtree. Registration sources own
-the stable manager, marker, notices, shortcuts and scoped login registration,
+the stable manager, marker, notices, shortcuts and scoped startup registration,
 including which versions supply the manager and desktop anchors. User sources
-use HKCU and LocalAppData; machine sources use HKLM and Program Files. No installer
-launches the manager or runtime during installation. Explicit `UpgradeStrategy`
+use HKCU and LocalAppData with user-login startup; machine sources use HKLM and
+Program Files with an automatic LocalSystem SCM lifecycle broker. Machine
+registration starts the broker after installing its verified payload. Its user
+workers supply runtime supervision without using SYSTEM taxpayer credentials.
+Explicit `UpgradeStrategy`
 authoring requires WiX 5 or newer: version products disable automatic major
 upgrades; registration uses its own family and shared component identities.
 

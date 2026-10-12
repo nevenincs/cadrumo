@@ -14,6 +14,7 @@ use std::{
 };
 
 pub mod release;
+mod verification;
 
 /// Consumed fields of the assembler's existing manifest; no parallel file inventory.
 #[derive(Debug, Deserialize)]
@@ -120,24 +121,22 @@ impl PackageManifest {
         if self.files.is_empty() || self.files.contains_key(manifest_path) {
             return Err(Error::Invalid("invalid package file inventory".into()));
         }
-        // Documentation may be absent only because the manifest says so.
-        let Some(docs) = &self.user_docs else {
-            return Err(Error::Invalid(
-                "package manifest does not state whether user documentation is bundled; rebuild the package"
-                    .into(),
-            ));
-        };
-        let prefix = format!("{}/", docs.directory.as_str());
-        if docs.bundled != self.delegated_inventories.contains_key(&docs.directory)
-            || (!docs.bundled
-                && self
-                    .files
-                    .keys()
-                    .any(|name| name.as_str().starts_with(&prefix)))
-        {
-            return Err(Error::Invalid(
-                "package documentation statement disagrees with its inventory".into(),
-            ));
+        // The user documentation is optional. A statement about it must agree
+        // with the inventory; a package that makes none is checked by its
+        // inventory alone.
+        if let Some(docs) = &self.user_docs {
+            let prefix = format!("{}/", docs.directory.as_str());
+            if docs.bundled != self.delegated_inventories.contains_key(&docs.directory)
+                || (!docs.bundled
+                    && self
+                        .files
+                        .keys()
+                        .any(|name| name.as_str().starts_with(&prefix)))
+            {
+                return Err(Error::Invalid(
+                    "package documentation statement disagrees with its inventory".into(),
+                ));
+            }
         }
         let mut inventory = self.files.clone();
         let mut admitted_manifests = BTreeMap::new();
@@ -173,62 +172,63 @@ impl PackageManifest {
                 inventory.insert(joined, expected);
             }
         }
-        let mut pending = vec![root.to_path_buf()];
-        while let Some(directory) = pending.pop() {
-            cancellation.check()?;
-            for entry in fs::read_dir(directory)? {
+        verification::with_verifier(cancellation, |verifier| {
+            let mut pending = vec![root.to_path_buf()];
+            while let Some(directory) = pending.pop() {
                 cancellation.check()?;
-                let path = entry?.path();
-                // Ancestors were admitted when entering the root and each
-                // descended directory. Check this entry without following it.
-                let metadata = fs::symlink_metadata(&path)?;
-                filesystem::refuse_metadata_links(&metadata)?;
-                let relative = path
-                    .strip_prefix(root)
-                    .map_err(|_| Error::Invalid("package path escaped".into()))?;
-                if metadata.is_dir() {
-                    // Directories need not be inventoried. A nonportable name
-                    // cannot match an inventoried regular file; keep descending
-                    // as before, with strict relative-path checks on every leaf.
-                    if let Ok(relative) = RelativePath::from_native(relative)
-                        && inventory.contains_key(&relative)
-                    {
-                        return Ok(Readiness::Incompatible(relative.as_str().into()));
-                    }
-                    pending.push(path);
-                    continue;
-                }
-                let relative = RelativePath::from_native(relative)?;
-                let Some(expected) = inventory.remove(&relative) else {
-                    if relative == *manifest_path && metadata.is_file() {
+                for entry in fs::read_dir(directory)? {
+                    cancellation.check()?;
+                    let path = entry?.path();
+                    // Ancestors were admitted when entering the root and each
+                    // descended directory. Check this entry without following it.
+                    let metadata = fs::symlink_metadata(&path)?;
+                    filesystem::refuse_metadata_links(&metadata)?;
+                    let relative = path
+                        .strip_prefix(root)
+                        .map_err(|_| Error::Invalid("package path escaped".into()))?;
+                    if metadata.is_dir() {
+                        // Directories need not be inventoried. A nonportable name
+                        // cannot match an inventoried regular file; keep descending
+                        // as before, with strict relative-path checks on every leaf.
+                        if let Ok(relative) = RelativePath::from_native(relative)
+                            && inventory.contains_key(&relative)
+                        {
+                            return Ok(Readiness::Incompatible(relative.as_str().into()));
+                        }
+                        pending.push(path);
                         continue;
                     }
-                    return Ok(Readiness::Incompatible(format!(
-                        "unexpected file: {}",
-                        relative.as_str()
-                    )));
-                };
-                if !metadata.is_file() {
-                    return Ok(Readiness::Incompatible(relative.as_str().into()));
-                }
-                // Delegated bytes were already hashed before expansion. They
-                // still pass this traversal's own-entry link and type checks.
-                if admitted_manifests.get(&relative) == Some(&expected) {
-                    continue;
-                }
-                let mut file = match open_regular(&path, &relative)? {
-                    Admission::Admitted(file) => file,
-                    Admission::Refused(readiness) => return Ok(readiness),
-                };
-                if filesystem::digest_reader(&mut file, cancellation)? != expected {
-                    return Ok(Readiness::Incompatible(relative.as_str().into()));
+                    let relative = RelativePath::from_native(relative)?;
+                    let Some(expected) = inventory.remove(&relative) else {
+                        if relative == *manifest_path && metadata.is_file() {
+                            continue;
+                        }
+                        return Ok(Readiness::Incompatible(format!(
+                            "unexpected file: {}",
+                            relative.as_str()
+                        )));
+                    };
+                    if !metadata.is_file() {
+                        return Ok(Readiness::Incompatible(relative.as_str().into()));
+                    }
+                    // Delegated bytes were already hashed before expansion. They
+                    // still pass this traversal's own-entry link and type checks.
+                    if admitted_manifests.get(&relative) == Some(&expected) {
+                        continue;
+                    }
+                    if let Some(readiness) = verifier.submit(path, relative, expected)? {
+                        return Ok(readiness);
+                    }
                 }
             }
-        }
-        if let Some((missing, _)) = inventory.into_iter().next() {
-            return Ok(Readiness::Missing(missing.as_str().into()));
-        }
-        Ok(Readiness::Ready)
+            if let Some(readiness) = verifier.flush()? {
+                return Ok(readiness);
+            }
+            if let Some((missing, _)) = inventory.into_iter().next() {
+                return Ok(Readiness::Missing(missing.as_str().into()));
+            }
+            Ok(Readiness::Ready)
+        })
     }
 }
 

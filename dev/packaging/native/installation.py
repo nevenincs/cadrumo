@@ -21,7 +21,7 @@ from .installation_filesystem import file_identity, remove_owned_file
 from .layout import application_images, desktop_image, load_layout
 from .linux_desktop_runtime import validate_payload as validate_linux_desktop_runtime
 from .macos_launchagent import author_agent, verify_agent
-from .package_inventory import package_inventory, user_docs_bundled
+from .package_inventory import package_inventory
 
 
 def member(root: Path, relative: str) -> Path:
@@ -59,11 +59,6 @@ def validate_payload(root: Path, identity_file: Path, desktop: str | None = None
             raise ValueError(f"Payload file is missing or modified: {name}")
     if desktop and desktop not in manifest["files"]:
         raise ValueError("Desktop executable must belong to the verified payload inventory")
-    if desktop and not user_docs_bundled(manifest):
-        raise ValueError(
-            "A desktop payload requires bundled user documentation; this package was assembled without it "
-            "(CADRUMO_PACKAGE_USER_DOCS=OFF)"
-        )
     declared = desktop_image(manifest["layout"]) if desktop else None
     if desktop and (declared is None or desktop != declared.package_path):
         raise ValueError(

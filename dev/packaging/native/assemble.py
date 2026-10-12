@@ -23,7 +23,7 @@ from .build_log import BuildLog, display_path
 from .build_timing import BuildTimings
 from .docs_stage import verified_stage
 from .hashing import digest
-from .layout import ApplicationImage, backend, entrypoint_files, load_layout, staged_application_images
+from .layout import ApplicationImage, application_images, backend, entrypoint_files, load_layout
 from .linux_desktop_runtime import stage as stage_linux_desktop_runtime
 from .package_inventory import DELEGATED_INVENTORIES, USER_DOCS, package_inventory
 from .stdlib import bundle as bundle_stdlib
@@ -36,6 +36,15 @@ def image_artifact(argument: str) -> tuple[str, Path]:
     if not separator or not name or not artifact:
         raise ValueError(f"Application image arguments take FILE=ARTIFACT: {argument!r}")
     return name, Path(artifact)
+
+
+def named_application_images(layout: Mapping[str, Any], artifacts: Mapping[str, Path]) -> tuple[ApplicationImage, ...]:
+    """Return the declared images CMake named with an artifact, in declaration order.
+
+    CMake alone decides which images a package stages; an artifact for an undeclared
+    image is refused when staging.
+    """
+    return tuple(image for image in application_images(dict(layout)) if image.file in artifacts)
 
 
 def stage_application_images(
@@ -252,7 +261,7 @@ def assemble(
     for relative in entrypoints:
         shutil.copy2(build / Path(relative).name, root / relative)
     # Application images are not interpreter hosts; each enters the startup check only by opting in.
-    staged_images = () if interpreter else staged_application_images(contract, user_docs=user_docs is not None)
+    staged_images = () if interpreter else named_application_images(contract, images)
     stage_application_images(root, staged_images, images, binary_dir)
     if not interpreter:
         stage_linux_desktop_runtime(root, contract)

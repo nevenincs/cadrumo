@@ -556,6 +556,7 @@ fn install_rollback_restores_only_prior_verified_ready_state_and_forgets_proved_
     let fresh = store
         .prepare_transaction("1.0.0", owner.clone(), manifest.clone())
         .unwrap();
+    assert_eq!(fresh.fresh_rollback_owner().unwrap(), Some(owner.clone()));
     assert_eq!(
         fresh
             .rollback(&fixture.contract, &Inventory(false))
@@ -566,11 +567,13 @@ fn install_rollback_restores_only_prior_verified_ready_state_and_forgets_proved_
     let fresh = store
         .prepare_transaction("1.0.0", owner.clone(), manifest.clone())
         .unwrap();
+    assert_eq!(fresh.fresh_rollback_owner().unwrap(), Some(owner.clone()));
     assert!(fresh.rollback(&fixture.contract, &Inventory(true)).is_err());
     assert!(store.acquire("1.0.0", &manifest).is_err());
     let interrupted = store
         .prepare_transaction("1.0.0", owner.clone(), manifest.clone())
         .unwrap();
+    assert_eq!(interrupted.fresh_rollback_owner().unwrap(), None);
     assert_eq!(
         interrupted
             .rollback(&fixture.contract, &Inventory(true))
@@ -582,6 +585,7 @@ fn install_rollback_restores_only_prior_verified_ready_state_and_forgets_proved_
     let repair = store
         .prepare_transaction("1.0.0", owner.clone(), manifest.clone())
         .unwrap();
+    assert_eq!(repair.fresh_rollback_owner().unwrap(), None);
     assert!(store.acquire("1.0.0", &manifest).is_err());
     assert_eq!(
         repair

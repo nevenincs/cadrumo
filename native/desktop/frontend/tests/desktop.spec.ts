@@ -1,3 +1,4 @@
+import { openPanelTab, panelToggle } from "./support/panel";
 import { expect, test, type Frame, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -13,6 +14,7 @@ async function signInHost(
   supported = true,
   deferInitial = false,
   deferInitialList = false,
+  bundled = true,
 ) {
   await target.addInitScript(
     ({ supported, docs, deferInitial, deferInitialList }) => {
@@ -52,6 +54,7 @@ async function signInHost(
         deferList: deferInitialList,
         releaseList: null as (() => void) | null,
         exitTui: null as (() => void) | null,
+        signInUpdate: null as ((signal: unknown) => void) | null,
       };
       let id = 0;
       Object.assign(window, {
@@ -67,13 +70,42 @@ async function signInHost(
             options?: { headers?: Record<string, string> },
           ) {
             switch (command) {
+              case "manager_status":
+                return { state: "ready", failure: null };
+              case "manager_subscribe":
+                if (!(args instanceof Uint8Array))
+                  (
+                    args.updates as { onmessage: (signal: unknown) => void }
+                  ).onmessage({
+                    kind: "manager-state",
+                    revision: 1,
+                    status: { state: "ready", failure: null },
+                  });
+                return ++id;
+              case "manager_unsubscribe":
+                return null;
+              case "sign_in_subscribe":
+                if (!(args instanceof Uint8Array))
+                  state.signInUpdate = (signal) =>
+                    (
+                      args.updates as { onmessage: (signal: unknown) => void }
+                    ).onmessage(signal);
+                return ++id;
+              case "sign_in_unsubscribe":
+                state.signInUpdate = null;
+                return null;
               case "desktop_environment":
                 return {
                   outputLanguage: "en",
-                  docs: {
-                    origin: docs,
-                    languages: [{ code: "en", entry: `${docs}/index.html` }],
-                  },
+                  docs: docs
+                    ? {
+                        state: "bundled",
+                        origin: docs,
+                        languages: [
+                          { code: "en", entry: `${docs}/index.html` },
+                        ],
+                      }
+                    : { state: "notBundled" },
                 };
               case "sign_in_status": {
                 ++state.statusReads;
@@ -226,7 +258,7 @@ async function signInHost(
         },
       });
     },
-    { supported, docs: DOCS, deferInitial, deferInitialList },
+    { supported, docs: bundled ? DOCS : null, deferInitial, deferInitialList },
   );
   await serveDocs(target);
   await target.goto("/");
@@ -239,6 +271,76 @@ const signInState = (target: Page) =>
         .__signInTest,
   );
 
+test("public sign-in signals update the gate without focus or another status read", async ({
+  page,
+}) => {
+  await signInHost(page);
+  await expect(page.locator(".sign-in")).toBeVisible();
+  const before = (await signInState(page)).statusReads;
+  let revision = 0;
+  const emit = async (
+    state: string,
+    runtimeAvailable: boolean,
+    active_profile: string,
+  ) => {
+    await page.evaluate(
+      ({ state, runtimeAvailable, active_profile, revision }) => {
+        const host = (
+          window as unknown as {
+            __signInTest: {
+              signInUpdate: (signal: unknown) => void;
+            };
+          }
+        ).__signInTest;
+        host.signInUpdate({
+          kind: "sign-in-state",
+          revision,
+          status: {
+            supported: true,
+            state,
+            runtimeAvailable,
+            active_profile,
+            refusal: null,
+          },
+        });
+      },
+      { state, runtimeAvailable, active_profile, revision: ++revision },
+    );
+  };
+  await emit("present", true, "Other profile");
+  await expect(page.locator(".sign-in")).toHaveCount(0);
+  await emit("absent", true, "Test profile");
+  await expect(
+    page.getByLabel(label("desktop.signin.password"), { exact: true }),
+  ).toBeVisible();
+  await emit("unknown", false, "Test profile");
+  await expect(
+    page.getByLabel(label("desktop.signin.password"), { exact: true }),
+  ).toHaveCount(0);
+  expect((await signInState(page)).statusReads).toBe(before);
+});
+
+test("a package without documentation says so and keeps every terminal working", async ({
+  page: target,
+}) => {
+  await signInHost(target, true, false, false, false);
+  await expect(target.locator(".pane-docs")).toContainText(
+    label("desktop.docs.not_bundled"),
+  );
+  await expect(target.locator(".docs-frame")).toHaveCount(0);
+  await target.keyboard.press("Escape");
+  for (const kind of ["console", "python"] as const) {
+    await openPanelTab(target, kind);
+    await expect(
+      target.locator(`[data-terminal="${kind}"]`).locator("textarea"),
+    ).toBeFocused();
+  }
+  expect((await signInState(target)).terminalStarts).toEqual([
+    "console",
+    "python",
+  ]);
+});
+
 test("optional terminals start on first opening and survive hiding and switching", async ({
   page: target,
 }) => {
@@ -248,29 +350,20 @@ test("optional terminals start on first opening and survive hiding and switching
   await expect(target.locator("section.panel")).toBeHidden();
   await expect(target.locator(".xterm")).toHaveCount(0);
   await target.keyboard.press("Escape");
-  const rail = target.getByRole("navigation", {
-    name: label("desktop.rail.label"),
-  });
   for (const kind of ["console", "python"] as const) {
-    await rail
-      .getByRole("button", { name: label(`desktop.rail.${kind}`) })
-      .click();
+    await openPanelTab(target, kind);
     const pane = target.locator(`[data-terminal="${kind}"]`);
     await expect(pane.locator("textarea")).toBeFocused();
     await expect(pane.locator(".xterm")).toHaveCount(1);
     await pane.locator(".xterm").evaluate((element) => {
       element.setAttribute("data-session-marker", "retained");
     });
-    await rail
-      .getByRole("button", { name: label(`desktop.rail.${kind}`) })
-      .click();
+    await panelToggle(target).click();
     await expect(pane).toBeHidden();
     await expect(pane.locator("textarea")).not.toBeFocused();
   }
   for (const kind of ["console", "python"] as const) {
-    await rail
-      .getByRole("button", { name: label(`desktop.rail.${kind}`) })
-      .click();
+    await openPanelTab(target, kind);
     const pane = target.locator(`[data-terminal="${kind}"]`);
     await expect(pane.locator("textarea")).toBeFocused();
     await expect(pane.locator(".xterm")).toHaveAttribute(
@@ -285,7 +378,7 @@ test("optional terminals start on first opening and survive hiding and switching
   expect((await signInState(target)).terminalCloses).toBe(0);
 });
 
-test("a remembered open terminal starts without opening the other tab", async ({
+test("a previously open panel starts collapsed and retains its chosen tab", async ({
   page: target,
 }) => {
   await target.addInitScript(() => {
@@ -296,6 +389,13 @@ test("a remembered open terminal starts without opening the other tab", async ({
   });
   await signInHost(target);
   await expect(target.locator(".sign-in")).toBeVisible();
+  await expect(target.locator("section.panel")).toBeHidden();
+  expect((await signInState(target)).terminalStarts).toEqual([]);
+  await expect(
+    target.getByLabel(label("desktop.signin.password"), { exact: true }),
+  ).toBeFocused();
+  await target.keyboard.press("Escape");
+  await panelToggle(target).click();
   await expect
     .poll(async () => (await signInState(target)).terminalStarts)
     .toEqual(["python"]);
@@ -303,8 +403,8 @@ test("a remembered open terminal starts without opening the other tab", async ({
     0,
   );
   await expect(
-    target.getByLabel(label("desktop.signin.password"), { exact: true }),
-  ).toBeFocused();
+    target.getByRole("tab", { name: label("desktop.rail.python") }),
+  ).toHaveAttribute("aria-selected", "true");
 });
 
 test("startup focus events share one pending sign-in status read", async ({
@@ -927,7 +1027,7 @@ test("without a host the shell lays out every area and invents nothing", async (
   const rail = target.getByRole("navigation", {
     name: label("desktop.rail.label"),
   });
-  await expect(rail.getByRole("button")).toHaveCount(8);
+  await expect(rail.getByRole("button")).toHaveCount(6);
   await expect(target.locator(".pane-docs")).toContainText(
     label("desktop.host.unavailable"),
   );
@@ -939,7 +1039,7 @@ test("without a host the shell lays out every area and invents nothing", async (
     label("desktop.host.unavailable"),
   );
   await expect(target.locator(".pane-tui .terminal-host")).toBeHidden();
-  await rail.getByRole("button", { name: label("desktop.rail.logs") }).click();
+  await openPanelTab(target, "logs");
   await expect(
     target.getByRole("tab", { name: label("desktop.rail.logs") }),
   ).toHaveAttribute("aria-selected", "true");
@@ -949,7 +1049,7 @@ test("without a host the shell lays out every area and invents nothing", async (
   await expect(target.locator(".record")).toHaveCount(0);
 });
 
-test("the rail opens and closes the panel tabs and the TUI pane", async ({
+test("the single rail toggle opens and closes the panel and preserves its tab", async ({
   page: target,
 }) => {
   await target.goto("/");
@@ -957,16 +1057,13 @@ test("the rail opens and closes the panel tabs and the TUI pane", async ({
     name: label("desktop.rail.label"),
   });
   const panel = target.locator("section.panel");
-  await rail
-    .getByRole("button", { name: label("desktop.rail.python") })
-    .click();
+  await expect(panel).toBeHidden();
+  await openPanelTab(target, "python");
   await expect(panel).toBeVisible();
   await expect(
     target.getByRole("tab", { name: label("desktop.rail.python") }),
   ).toHaveAttribute("aria-selected", "true");
-  await rail
-    .getByRole("button", { name: label("desktop.rail.python") })
-    .click();
+  await panelToggle(target).click();
   await expect(panel).toBeHidden();
   await target.keyboard.press("Control+Backquote");
   await expect(panel).toBeVisible();
@@ -1099,12 +1196,20 @@ test("the remembered layout survives a reload", async ({ page: target }) => {
     .click();
   await expect(target.locator(".split")).toHaveClass(/split-column/);
   await target.keyboard.press("Escape");
-  await target
-    .getByRole("navigation", { name: label("desktop.rail.label") })
-    .getByRole("button", { name: label("desktop.rail.python") })
-    .click();
+  await openPanelTab(target, "python");
+  await expect
+    .poll(() =>
+      target.evaluate(
+        () =>
+          JSON.parse(localStorage.getItem("cadrumo-shell-layout") ?? "null")
+            ?.layout?.tab,
+      ),
+    )
+    .toBe("python");
   await target.reload();
   await expect(target.locator(".split")).toHaveClass(/split-column/);
+  await expect(target.locator("section.panel")).toBeHidden();
+  await panelToggle(target).click();
   await expect(
     target.getByRole("tab", { name: label("desktop.rail.python") }),
   ).toHaveAttribute("aria-selected", "true");
@@ -1273,10 +1378,7 @@ test("the shell runs under the window's content security policy without a violat
   await expect(target.frameLocator(".docs-frame").locator("h1")).toHaveText(
     "Stand-in documentation",
   );
-  await target
-    .getByRole("navigation", { name: label("desktop.rail.label") })
-    .getByRole("button", { name: label("desktop.rail.console") })
-    .click();
+  await openPanelTab(target, "console");
   await expect(target.locator(".xterm").first()).toBeVisible();
   expect(
     await target.evaluate(

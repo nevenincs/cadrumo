@@ -100,6 +100,8 @@ import pathlib, subprocess, sys, time
 
 grandchild = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(120)"])
 pathlib.Path(sys.argv[1]).write_text(str(grandchild.pid))
+print('native-phase-entered', file=sys.stderr, flush=True)
+print('native-before-timeout', flush=True)
 time.sleep(120)
 """
 
@@ -112,11 +114,13 @@ def test_run_command_timeout_kills_the_grandchild_holding_the_captured_stream(tm
     """
     pid_file = tmp_path / "grandchild.pid"
     started = time.monotonic()
-    with pytest.raises(subprocess.TimeoutExpired):
+    with pytest.raises(subprocess.TimeoutExpired) as caught:
         run_command(
             (sys.executable, "-c", _SPAWN_A_GRANDCHILD_HOLDING_STDOUT, str(pid_file)), cwd=tmp_path, timeout_seconds=5
         )
     elapsed = time.monotonic() - started
+    assert caught.value.stderr.splitlines() == [b"native-phase-entered"]
+    assert caught.value.output.splitlines() == [b"native-before-timeout"]
 
     grandchild_pid = int(pid_file.read_text())
     try:

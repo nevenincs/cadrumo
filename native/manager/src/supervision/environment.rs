@@ -14,9 +14,37 @@ use std::path::{Path, PathBuf};
 pub struct ManagedLocations {
     package: PathBuf,
     storage: PathBuf,
+    default_root: bool,
 }
 
 impl ManagedLocations {
+    /// Admit a packaged desktop host's actual canonical root, including an
+    /// explicit operator-selected root. This does not manufacture installation
+    /// evidence or convert an authority override into trusted package authority.
+    pub fn for_host(executable: &Path, package: &Path, root: &Path) -> io::Result<Self> {
+        if !executable.is_absolute() || !package.is_absolute() || !root.is_absolute() {
+            return Err(io::ErrorKind::InvalidInput.into());
+        }
+        if storage::authority_override_present(std::env::vars_os()) {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "host authority override is unsupported",
+            ));
+        }
+        let evidence = storage::detect_mode(executable).map_err(io::Error::other)?;
+        let resolved = storage::resolve_storage_root(&evidence).map_err(io::Error::from)?;
+        if evidence.mode != Mode::Installed
+            || std::fs::canonicalize(&evidence.package)? != std::fs::canonicalize(package)?
+            || std::fs::canonicalize(&resolved.root)? != std::fs::canonicalize(root)?
+        {
+            return Err(io::ErrorKind::PermissionDenied.into());
+        }
+        Ok(Self {
+            package: evidence.package,
+            storage: resolved.root,
+            default_root: resolved.source == RootSource::InstalledDefault,
+        })
+    }
     /// Resolve once from executable package evidence and canonical OS defaults.
     /// This does not create directories or launch an interpreter.
     pub fn resolve(executable: &Path) -> io::Result<Self> {
@@ -47,11 +75,12 @@ impl ManagedLocations {
         Ok(Self {
             package: evidence.package,
             storage: resolved.root,
+            default_root: true,
         })
     }
 
-    #[cfg(all(windows, test))]
-    pub(crate) fn fixture(package: PathBuf, storage: PathBuf) -> io::Result<Self> {
+    #[cfg(all(windows, any(test, feature = "fixture-test-mode")))]
+    pub fn fixture(package: PathBuf, storage: PathBuf) -> io::Result<Self> {
         Self::from_resolved(
             Evidence {
                 mode: Mode::Installed,
@@ -70,6 +99,9 @@ impl ManagedLocations {
     }
     pub fn storage_root(&self) -> &Path {
         &self.storage
+    }
+    pub fn is_default_root(&self) -> bool {
+        self.default_root
     }
 }
 
@@ -112,6 +144,27 @@ pub fn runtime_environment(
 mod tests {
     use super::*;
     use crate::contract::ROOT_VARIABLE;
+
+    #[test]
+    fn host_cannot_turn_relative_paths_into_package_or_storage_authority() {
+        let absolute = std::env::temp_dir();
+        for (executable, package, root) in [
+            (
+                Path::new("python.exe"),
+                absolute.as_path(),
+                absolute.as_path(),
+            ),
+            (absolute.as_path(), Path::new("package"), absolute.as_path()),
+            (absolute.as_path(), absolute.as_path(), Path::new("storage")),
+        ] {
+            assert_eq!(
+                ManagedLocations::for_host(executable, package, root)
+                    .unwrap_err()
+                    .kind(),
+                io::ErrorKind::InvalidInput
+            );
+        }
+    }
 
     #[test]
     fn only_an_installed_default_is_managed() {

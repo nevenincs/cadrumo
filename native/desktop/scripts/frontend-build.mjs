@@ -65,11 +65,13 @@ inputs.push(
     "content-build.mjs",
     "build-paths.mjs",
     "configuration.mjs",
+    "development-server.mjs",
   ].map((name) => resolve(desktop, "scripts", name)),
   ...readdirSync(resolve(desktop, "../../docs/_static"))
     .filter((name) => name.endsWith(".woff2"))
     .map((name) => resolve(desktop, "../../docs/_static", name)),
   resolve(desktop, "../../docs/_static/cadrumo-favicon.svg"),
+  resolve(desktop, "development-server.json"),
   buildPath("desktop_frontend_generated"),
   resolve(buildPath("generated"), "identity.json"),
   resolve(buildPath("generated"), "desktop-server.json"),

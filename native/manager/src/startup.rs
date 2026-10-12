@@ -25,6 +25,14 @@ pub struct Running {
 }
 
 impl Running {
+    /// A terminal error does not establish that the worker returned. Cleanup
+    /// may release its resources only after this native thread observation.
+    pub fn worker_finished(&self) -> bool {
+        self.completion
+            .worker
+            .as_ref()
+            .is_none_or(JoinHandle::is_finished)
+    }
     pub fn join(&mut self) -> io::Result<()> {
         self.completion.join()
     }
@@ -142,6 +150,24 @@ pub fn start(
         },
         receive_events,
     )
+}
+
+/// Cleanup after a failed supervising worker: adopt an existing verified runtime
+/// and stop it. This path never launches a replacement runtime.
+pub fn stop_adopting(
+    target: LaunchTarget,
+    config: SupervisorConfig,
+    collaborators: Collaborators,
+) -> io::Result<Running> {
+    let (events, receive_events) = mpsc::sync_channel(EVENT_QUEUE);
+    let supervisor = Supervisor::new(config, target, collaborators, events);
+    supervisor
+        .handle()
+        .request(crate::supervision::supervisor::Request::Stop);
+    match spawn(supervisor, Mode::Adopting, receive_events)? {
+        Start::Running(running) => Ok(running),
+        Start::Waiting(_) => Err(io::ErrorKind::WouldBlock.into()),
+    }
 }
 
 enum Mode {

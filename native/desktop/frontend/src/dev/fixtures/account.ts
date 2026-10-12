@@ -38,6 +38,8 @@ export function accountFixture(
   const target = offering ? targetOf(profiles, null) : null;
   const refusal = rest.refusal ?? status?.refusal ?? null;
   return {
+    manager: null,
+    recoveringServices: false,
     refusal,
     retrySeconds: 0,
     busy: false,

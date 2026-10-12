@@ -296,7 +296,13 @@ export function App({ host }: { host: Host }) {
     calendarVisible,
     recheckAccount,
   );
-  const messages = useMessages(views, reader, recheckAccount);
+  const observedMessages = useMessages(views, reader, recheckAccount);
+  // Withhold private counts in the same render as the account gate. The
+  // existing hook settles old reads and clears its cache in its effect.
+  const messages = useMemo(
+    () => (reader === null ? { kind: "unknown" as const } : observedMessages),
+    [reader, observedMessages],
+  );
   // The keyboard goes to the calendar when it was asked for and is laid
   // out. Put away, focus stays where it is, unless it was in the page: then
   // it goes to what the pane shows instead.
@@ -341,7 +347,8 @@ export function App({ host }: { host: Host }) {
   // is bundled in it, otherwise the language Cadrumo reports.
   const languages = useMemo(
     () =>
-      environment.state === "ready"
+      environment.state === "ready" &&
+      environment.value.docs.state === "bundled"
         ? environment.value.docs.languages.map((language) => language.code)
         : [],
     [environment],
@@ -369,7 +376,9 @@ export function App({ host }: { host: Host }) {
 
   const docsEntry = useMemo(() => {
     if (environment.state !== "ready") return null;
-    const { languages: bundled } = environment.value.docs;
+    const docs = environment.value.docs;
+    if (docs.state !== "bundled") return null;
+    const { languages: bundled } = docs;
     return (
       bundled.find((language) => language.code === locale) ?? bundled[0] ?? null
     );
@@ -380,6 +389,25 @@ export function App({ host }: { host: Host }) {
     window.clearTimeout(toastTimer.current);
     toastTimer.current = window.setTimeout(() => setToast(null), TOAST_MS);
   }, []);
+
+  const previousManager = useRef(account.manager?.state);
+  useEffect(() => {
+    const state = account.manager?.state;
+    const previous = previousManager.current;
+    previousManager.current = state;
+    if (!state || state === previous) return;
+    if (state === "recovering" || state === "waiting")
+      say(t("desktop.signin.recovering_services"));
+    else if (state === "failed" || state === "stopped")
+      say(
+        `${t("desktop.account.services_down")}: ${failureCode(account.manager?.failure)}`,
+      );
+    else if (
+      state === "ready" &&
+      (previous === "recovering" || previous === "waiting")
+    )
+      say(t("desktop.signin.services_recovered"));
+  }, [account.manager, say, t]);
 
   // An address opened in the system browser. A refusal is said aloud: the
   // person must not wait for a page that is not coming.
@@ -652,7 +680,12 @@ export function App({ host }: { host: Host }) {
       setPage("docs");
       if (docs.current?.navigate(url)) return;
       const frame = document.querySelector<HTMLIFrameElement>(".docs-frame");
-      if (!frame || environment.state !== "ready") return;
+      if (
+        !frame ||
+        environment.state !== "ready" ||
+        environment.value.docs.state !== "bundled"
+      )
+        return;
       // Only a documentation-origin address ever becomes the frame's source.
       let origin: string;
       try {
@@ -1587,31 +1620,15 @@ export function App({ host }: { host: Host }) {
       onClick: () => runAction("link.aeat"),
     },
     {
-      id: "console",
+      id: "panel",
       icon: "console",
-      label: t("desktop.rail.console"),
-      shortcut: primaryChord(byId("panel.console")),
-      pressed: tabOpen("console"),
+      label: t("desktop.panel.label"),
+      shortcut: primaryChord(byId("panel.toggle")),
+      pressed: panelVisible,
       divided: true,
-      onClick: () => openTab("console"),
-    },
-    {
-      id: "python",
-      icon: "python",
-      label: t("desktop.rail.python"),
-      shortcut: primaryChord(byId("panel.python")),
-      pressed: tabOpen("python"),
-      onClick: () => openTab("python"),
-    },
-    {
-      id: "logs",
-      icon: "logs",
-      label: t("desktop.rail.logs"),
-      shortcut: primaryChord(byId("panel.logs")),
-      pressed: tabOpen("logs"),
       badge: errorCount,
       badgeLabel: t("desktop.logs.errors", { count: errorCount }),
-      onClick: () => openTab("logs"),
+      onClick: () => runAction("panel.toggle"),
     },
   ];
   const railBottom: RailItem[] = [
@@ -1745,7 +1762,9 @@ export function App({ host }: { host: Host }) {
       )}
       {/* Put aside, not unloaded: the page it was on is there on return. */}
       <div className={calendarOn ? "hidden" : "contents"}>
-        {environment.state === "ready" && docsEntry ? (
+        {environment.state === "ready" &&
+        environment.value.docs.state === "bundled" &&
+        docsEntry ? (
           <DocsFrame
             ref={docs}
             origin={environment.value.docs.origin}
@@ -1765,6 +1784,22 @@ export function App({ host }: { host: Host }) {
             }
             onMenu={docsMenu}
           />
+        ) : environment.state === "ready" &&
+          environment.value.docs.state !== "bundled" ? (
+          // The documentation is optional: without it the window says so
+          // and every other part works as usual.
+          <Empty role="status">
+            <EmptyMedia>
+              <Icon name="tui" />
+            </EmptyMedia>
+            <EmptyDescription>
+              {t(
+                environment.value.docs.state === "notBundled"
+                  ? "desktop.docs.not_bundled"
+                  : "desktop.docs.unavailable",
+              )}
+            </EmptyDescription>
+          </Empty>
         ) : environment.state === "unavailable" ? (
           <Empty role="status">
             <EmptyMedia>

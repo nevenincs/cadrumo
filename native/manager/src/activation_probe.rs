@@ -39,7 +39,7 @@ pub fn require_retry_support(manager: &Path, package: &Path) -> io::Result<()> {
     }
 }
 
-fn wait_exit(child: &mut Child, bound: Duration) -> io::Result<ExitStatus> {
+pub(crate) fn wait_exit(child: &mut Child, bound: Duration) -> io::Result<ExitStatus> {
     let deadline = Instant::now() + bound;
     loop {
         if let Some(status) = child.try_wait()? {
@@ -53,7 +53,7 @@ fn wait_exit(child: &mut Child, bound: Duration) -> io::Result<ExitStatus> {
     }
 }
 
-fn cleanup(child: &mut Child) -> io::Result<()> {
+pub(crate) fn cleanup(child: &mut Child) -> io::Result<()> {
     if matches!(child.try_wait(), Ok(Some(_))) {
         return Ok(());
     }

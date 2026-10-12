@@ -398,6 +398,30 @@ def test_idle_custody_validation_keeps_worker_loop_responsive() -> None:
     asyncio.run(exercise())
 
 
+def test_idle_custody_failure_retains_original_error_and_fences_work() -> None:
+    async def exercise() -> None:
+        failure = OSError("custody observation failed")
+        failed = asyncio.Event()
+
+        class Custody(_ServeCustody):
+            @override
+            def live_sessions(self) -> tuple[UUID, ...]:
+                raise failure
+
+        with pytest.raises(OSError) as caught:
+            await worker_service._expire_custody(
+                asyncio.Event(),
+                failed,
+                cast(ProfileWorkerCustody, Custody()),
+                cast(worker_service.WorkerSubmissionStaging, object()),
+                cast(ProfileWorkerHumanLogin, object()),
+            )
+        assert caught.value is failure
+        assert failed.is_set()
+
+    asyncio.run(exercise())
+
+
 @pytest.mark.parametrize("failures", [1, 2])
 @pytest.mark.parametrize("cancelled", [False, True])
 @pytest.mark.parametrize("frame_kind", ["malformed", "control-transfer"])
@@ -503,9 +527,13 @@ def test_operation_frame_failure_keeps_actual_cleanup_owner_after_worker_loop_cl
 async def test_serve_clean_stop_drains_once_and_keeps_native_and_custody_ownership_with_caller(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    class IdleRelease(_Release):
+        def expire(self, *, live_sessions: tuple[UUID, ...] = ()) -> None:
+            assert live_sessions == ()
+
     control, operation = _Channel(), _Channel()
     control.queue(ProfileWorkerRequest(root=ProfileWorkerControlRequest(action="stop", request_id=uuid4())))
-    custody, human, uploads = _ServeCustody(), _Release(), _Release()
+    custody, human, uploads = _ServeCustody(), IdleRelease(), IdleRelease()
     operations = _Operations(0)
     monkeypatch.setattr(worker_service, "WorkerSubmissionStaging", lambda: uploads)
     await worker_service._serve(

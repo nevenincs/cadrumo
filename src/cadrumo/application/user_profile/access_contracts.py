@@ -290,12 +290,13 @@ class OsLockState(StrEnum):
     """Native screen-lock observation of one login.
 
     ``LOCKED`` is positive evidence that the login was locked. ``UNKNOWN``
-    covers observer errors, incomplete transitions and platforms without a
-    lock observer; it is neither lock evidence nor proof of attendance.
+    covers observer errors and incomplete transitions. ``NOT_APPLICABLE``
+    identifies a verified native non-desktop logon with no screen-lock surface.
     """
 
     LOCKED = "locked"
     UNLOCKED = "unlocked"
+    NOT_APPLICABLE = "not_applicable"
     UNKNOWN = "unknown"
 
 
@@ -318,8 +319,8 @@ class OsLoginContext(BaseModel):
 
     @property
     def unlocked(self) -> bool:
-        """Only a positive unlocked observation admits attended work; unknown refuses like locked."""
-        return self.lock_state is OsLockState.UNLOCKED
+        """Admit an unlocked desktop or a verified native logon without a lock surface."""
+        return self.lock_state in (OsLockState.UNLOCKED, OsLockState.NOT_APPLICABLE)
 
 
 class AccessEvaluationContext(BaseModel):
@@ -434,6 +435,8 @@ class AccessDenialCode(StrEnum):
     HUMAN_AUTHORITY_REQUIRED = "human_authority_required"
     FRESH_PASSWORD_REQUIRED = "fresh_password_required"  # noqa: S105 -- public refusal code.
     ADMINISTRATION_DENIED = "administration_denied"
+    PERSON_ACT_REQUIRED = "person_act_required"
+    """The act is the person's own in Cadrumo: signing in, sessions, keys, secrets or work outside the profile."""
 
 
 class AccessDenied(BaseModel):

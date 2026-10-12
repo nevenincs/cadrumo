@@ -226,6 +226,54 @@ def test_locked_and_disconnected_owner_login_remains_a_positive_witness(
     assert not native.allocations and len(native.freed) == native.query_reads
 
 
+@pytest.mark.parametrize("kind", [3, 4, 5])
+def test_native_noninteractive_logon_needs_no_desktop(
+    native: _Native, monkeypatch: pytest.MonkeyPatch, kind: int
+) -> None:
+    native.peer_session = 0
+    native.rows[101] = native.row(101, kind=kind, session=0)
+
+    def no_desktop() -> WindowsDesktopLogon:
+        raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+
+    monkeypatch.setattr(windows_login, "current_windows_desktop_logon", no_desktop)
+    binding = capture_windows_login(42, expected_owner=_OWNER)
+    assert binding == WindowsLoginBinding(_OWNER, 101, 0, _TICKS, desktop_bound=False)
+    observed = binding.observe(credential_facilities=Availability.AVAILABLE)
+    assert observed.active and observed.unlocked
+    assert observed.lock_state is OsLockState.NOT_APPLICABLE
+    inventory = windows_login_inventory(expected_owner=_OWNER)
+    assert inventory.logins == (binding,) and not inventory.complete
+    assert inventory.eligibility is LoginEligibility.ELIGIBLE
+    assert native.query_reads == 0 and native.wts_enumerations == 0
+    with pytest.raises(RuntimeRefusalError) as refused:
+        capture_windows_login(42, expected_owner=_OTHER)
+    assert refused.value.reason is RuntimeRefusalCode.PEER_UNTRUSTED
+    native.rows[101] = {**native.row(101, kind=kind, session=0), "LogonTime": _TIME + timedelta(seconds=1)}
+    assert not binding.observe(credential_facilities=Availability.AVAILABLE).active
+
+
+def test_native_logon_in_another_process_session_retains_its_real_lock_surface(
+    native: _Native, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    native.peer_session = 0
+
+    def no_process_desktop() -> WindowsDesktopLogon:
+        raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+
+    monkeypatch.setattr(windows_login, "current_windows_desktop_logon", no_process_desktop)
+    binding = capture_windows_login(42, expected_owner=_OWNER)
+    assert binding == WindowsLoginBinding(_OWNER, 101, 1, _TICKS, desktop_bound=False)
+    assert binding.observe(credential_facilities=Availability.AVAILABLE).lock_state is OsLockState.UNLOCKED
+    native.flags = 0
+    assert binding.observe(credential_facilities=Availability.AVAILABLE).lock_state is OsLockState.LOCKED
+    with pytest.raises(RuntimeRefusalError) as refused:
+        capture_windows_login(42, expected_owner=_OTHER)
+    assert refused.value.reason is RuntimeRefusalCode.PEER_UNTRUSTED
+    native.rows[101] = {**native.row(101), "LogonTime": _TIME + timedelta(seconds=1)}
+    assert not binding.observe(credential_facilities=Availability.AVAILABLE).active
+
+
 @pytest.mark.parametrize("kind", ["empty", "foreign", "noninteractive", "absent_desktop"])
 def test_current_only_witness_cannot_prove_complete_absence(native: _Native, kind: str) -> None:
     if kind == "empty":

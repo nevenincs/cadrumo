@@ -5,13 +5,12 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:30150bd6d07abecc8952b8423e713e65e774fa5d907c3e8c920f4cc797a0ce17'
+body_hash: 'sha256:d20fa38c49c0a58cb96cbeb2023fe6d9d7b380022981dfa403503774093de2a3'
 related:
   - "[[2026-10-05-desktop-design-system-reference]]"
   - "[[2026-10-04-desktop-shell-adr]]"
   - "[[2026-10-04-application-sign-in-adr]]"
 ---
-
 # `desktop-design-system` adr: `Desktop shell design system and browser development loop` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -139,3 +138,7 @@ Authorized by the user on 2026-10-06, who asked for the side rail to read: searc
 The first rail group's order becomes search, docs home, TUI, then the shortcuts group, then console, Python and logs; settings stays alone in the last group. Search and docs home keep the first two positions, which are the only positions the packaged acceptance suite reaches by index (`native/desktop/tests/packaged/docs-ui.mjs:22`, `:102`), so no packaged assertion changes. The shortcuts group opens with one element that needs nothing from the host beyond `open_external`: the tax agency's electronic office, whose address is the product's own constant and is held to it by a test. Further shortcuts that need data or actions the host does not offer today (notifications, the profile's Drive folder, sync counts, the filing calendar) are not part of this amendment: each needs its own decision on how the shell may read profile data.
 
 The stable-hooks commitment is otherwise unchanged.
+
+### Amendment 2026-10-09: one bottom-panel rail toggle
+
+Authorized by the user's sidebar simplification request. The 2026-10-06 rail-order amendment is refined: after the shortcuts group, one bottom-panel toggle replaces the Console, Python and Logs rail buttons. Search and documentation home retain their first two positions, Settings remains in the last group, and the panel retains its three tabs and action-registry shortcuts. The log error badge moves to the single toggle; the Messages notification badge stays unchanged. The application starts with the panel collapsed on each launch, retaining its tab and size preferences, as the desktop-shell amendment now specifies. This authorizes the corresponding browser presentation selectors and rail-count assertions to follow the new visible controls; packaged assertions that address Search and Docs home by position stay unchanged. Shared primitives, token ownership and native host boundaries remain binding.

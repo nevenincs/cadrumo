@@ -12,9 +12,6 @@ from pydantic import ValidationError
 
 from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 
-from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
-    active_profile_isolated_backend_fixture,
-)
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.invoices.enums import PaymentStatus
 from ....domain.invoices.errors import InvoiceValidationError
@@ -23,12 +20,11 @@ from ....domain.iva.classification import InvoiceKind
 from .._ledger_support import ledger_invoice_validation_no_recovery
 from ..common import cli_policy_refusal_projection
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_backend import runtime_profile_backend_fixture
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_isolated_backend = active_profile_isolated_backend_fixture(
-    bucket_id="00000000-0000-4000-8000-000000000130",
-)
+_isolated_backend = runtime_profile_backend_fixture()
 
 _EXPECTED_ACTION = {
     "failed_condition_id": "cli.ledger.invoice.valid",

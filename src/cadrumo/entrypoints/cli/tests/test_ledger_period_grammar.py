@@ -27,12 +27,10 @@ from pathlib import Path
 import pytest
 import typer
 
-from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
-    active_profile_isolated_backend_fixture,
-)
 from ....core.period import Period, StandardPeriodCode
 from ..period_parsing import _canonical_period, _LedgerPeriodRefusal
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_backend import runtime_profile_backend_fixture
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -212,7 +210,7 @@ def test_empty_period_refuses() -> None:
 # --- End-to-end: real ledger command takes --period AEAT token + --year -------
 
 
-_isolated_backend = active_profile_isolated_backend_fixture(autouse=False)
+_isolated_backend = runtime_profile_backend_fixture(autouse=False)
 
 
 def _add_business_row_missing_facts() -> None:

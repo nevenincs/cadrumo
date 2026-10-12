@@ -57,6 +57,11 @@ const environment = {
       : buildPath("desktop_cargo"),
   CADRUMO_NATIVE_CONTRACT: contract,
   CADRUMO_CONTRACT_RS: resolve(contract, "../contract.rs"),
+  CADRUMO_ID_NAME: identity.name,
+  CADRUMO_ID_APPLICATION_ID: identity.application_id,
+  CADRUMO_ID_VERSION: identity.version,
+  CADRUMO_ID_MANAGER_ID: identity.manager_id,
+  CADRUMO_ID_MANAGER_NAME: identity.manager_name,
 };
 if (process.env.CADRUMO_DESKTOP_RUST_BIN) {
   const pathKey =

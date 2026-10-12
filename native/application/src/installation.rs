@@ -11,11 +11,185 @@ use crate::{
     value::{RelativePath, Sha256Digest},
 };
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::{
     fs,
     path::{Path, PathBuf},
     sync::Arc,
 };
+
+/// Bounded native installer diagnostics: no filesystem coordinates or error text.
+#[derive(Debug, Serialize)]
+pub struct CandidateRejection {
+    stage: CandidateStage,
+    kind: CandidateKind,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    member_sha256: Option<String>,
+}
+
+#[derive(Clone, Copy, Debug, Serialize)]
+#[serde(rename_all = "snake_case")]
+enum CandidateStage {
+    Release,
+    Root,
+    Manifest,
+    VersionIdentity,
+    Inventory,
+    Manager,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "snake_case")]
+enum CandidateKind {
+    Missing,
+    Incompatible,
+    NeedsUser,
+    IoNotFound,
+    IoPermissionDenied,
+    IoOther,
+    Json,
+    Archive,
+    Invalid,
+    Integrity,
+    Busy,
+    Cancelled,
+    LimitExceeded,
+    Download,
+    TimedOut,
+    ProbeFailed,
+}
+
+struct CandidateFailure {
+    error: Error,
+    rejection: CandidateRejection,
+}
+
+impl CandidateFailure {
+    fn new(error: Error, stage: CandidateStage) -> Self {
+        let kind = match &error {
+            Error::Io(error) => match error.kind() {
+                std::io::ErrorKind::NotFound => CandidateKind::IoNotFound,
+                std::io::ErrorKind::PermissionDenied => CandidateKind::IoPermissionDenied,
+                _ => CandidateKind::IoOther,
+            },
+            Error::Json(_) => CandidateKind::Json,
+            Error::Archive(_) => CandidateKind::Archive,
+            Error::Invalid(_) => CandidateKind::Invalid,
+            Error::Incompatible(_) => CandidateKind::Incompatible,
+            Error::Integrity(_) => CandidateKind::Integrity,
+            Error::Busy => CandidateKind::Busy,
+            Error::Cancelled => CandidateKind::Cancelled,
+            Error::LimitExceeded => CandidateKind::LimitExceeded,
+            Error::Download => CandidateKind::Download,
+            Error::TimedOut => CandidateKind::TimedOut,
+            Error::ProbeFailed => CandidateKind::ProbeFailed,
+        };
+        Self {
+            error,
+            rejection: CandidateRejection {
+                stage,
+                kind,
+                member_sha256: None,
+            },
+        }
+    }
+
+    fn readiness(readiness: &Readiness) -> Self {
+        let (kind, member) = match readiness {
+            Readiness::Missing(member) => (CandidateKind::Missing, Some(member.as_str())),
+            Readiness::Incompatible(reason) if reason == "package target or ABI differs" => {
+                (CandidateKind::Incompatible, None)
+            }
+            Readiness::Incompatible(member) => (
+                CandidateKind::Incompatible,
+                Some(member.strip_prefix("unexpected file: ").unwrap_or(member)),
+            ),
+            Readiness::NeedsUser(_) => (CandidateKind::NeedsUser, None),
+            Readiness::Ready => (CandidateKind::Integrity, None),
+        };
+        let member_sha256 = member
+            .and_then(|member| RelativePath::new(member).ok())
+            .map(|member| format!("{:x}", Sha256::digest(member.as_str().as_bytes())));
+        Self {
+            error: Error::Integrity("incomplete installed version".into()),
+            rejection: CandidateRejection {
+                stage: CandidateStage::Inventory,
+                kind,
+                member_sha256,
+            },
+        }
+    }
+}
+
+#[cfg(test)]
+mod candidate_diagnostic_tests {
+    use super::*;
+
+    #[test]
+    fn readiness_rejection_retains_only_the_relative_member_digest() {
+        let member = "cadrumo/private-member.json";
+        let checksum = format!("{:x}", Sha256::digest(member.as_bytes()));
+        for (readiness, kind) in [
+            (Readiness::Missing(member.into()), "missing"),
+            (Readiness::Incompatible(member.into()), "incompatible"),
+            (
+                Readiness::Incompatible(format!("unexpected file: {member}")),
+                "incompatible",
+            ),
+        ] {
+            let failure = CandidateFailure::readiness(&readiness);
+            let value = serde_json::to_value(failure.rejection).unwrap();
+            assert_eq!(value["stage"], "inventory");
+            assert_eq!(value["kind"], kind);
+            assert_eq!(value["member_sha256"], checksum);
+            assert!(!value.to_string().contains(member));
+        }
+        for readiness in [
+            Readiness::Incompatible("package target or ABI differs".into()),
+            Readiness::Missing(r"C:\private\member.json".into()),
+            Readiness::Missing("../private.json".into()),
+            Readiness::NeedsUser("private arbitrary explanation".into()),
+        ] {
+            let value =
+                serde_json::to_value(CandidateFailure::readiness(&readiness).rejection).unwrap();
+            assert!(value.get("member_sha256").is_none());
+            assert!(!value.to_string().contains("private"));
+        }
+    }
+
+    #[test]
+    fn native_error_projection_has_finite_kinds_without_error_display() {
+        for (error, kind) in [
+            (
+                Error::Io(std::io::Error::new(
+                    std::io::ErrorKind::NotFound,
+                    "private missing path",
+                )),
+                "io_not_found",
+            ),
+            (
+                Error::Io(std::io::Error::new(
+                    std::io::ErrorKind::PermissionDenied,
+                    "private permission detail",
+                )),
+                "io_permission_denied",
+            ),
+            (
+                Error::Io(std::io::Error::other("private detail")),
+                "io_other",
+            ),
+            (Error::Invalid("private input".into()), "invalid"),
+            (Error::Integrity("private integrity".into()), "integrity"),
+        ] {
+            let failure = CandidateFailure::new(error, CandidateStage::Manifest);
+            let value = serde_json::to_value(failure.rejection).unwrap();
+            assert_eq!(value["stage"], "manifest");
+            assert_eq!(value["kind"], kind);
+            assert!(value.get("member_sha256").is_none());
+            assert!(!value.to_string().contains("private"));
+        }
+    }
+}
 
 #[derive(Deserialize, Serialize)]
 pub struct DiscoveryContract {
@@ -410,6 +584,19 @@ impl DiscoveryContract {
             .map(|_| ())
     }
 
+    /// Same candidate inspection, projected without arbitrary error or path text.
+    pub fn verify_candidate_diagnostic(
+        &self,
+        package: &Path,
+        release: &str,
+    ) -> Result<(), CandidateRejection> {
+        version(release)
+            .map_err(|error| CandidateFailure::new(error, CandidateStage::Release).rejection)?;
+        self.inspect_package_diagnostic(package, release, &Cancellation::default())
+            .map(|_| ())
+            .map_err(|failure| failure.rejection)
+    }
+
     pub(crate) fn manifest_digest(
         &self,
         package: &Path,
@@ -426,12 +613,24 @@ impl DiscoveryContract {
         name: &str,
         cancellation: &Cancellation,
     ) -> Result<(PathBuf, Sha256Digest), Error> {
-        filesystem::absolute_root(package)?;
+        self.inspect_package_diagnostic(package, name, cancellation)
+            .map_err(|failure| failure.error)
+    }
+
+    fn inspect_package_diagnostic(
+        &self,
+        package: &Path,
+        name: &str,
+        cancellation: &Cancellation,
+    ) -> Result<(PathBuf, Sha256Digest), CandidateFailure> {
+        filesystem::absolute_root(package)
+            .map_err(|error| CandidateFailure::new(error, CandidateStage::Root))?;
         let layout = &self.layout;
         let manifest: VersionManifest = filesystem::json_file_cancellable(
             &layout.files.package_manifest.under(package),
             cancellation,
-        )?;
+        )
+        .map_err(|error| CandidateFailure::new(error, CandidateStage::Manifest))?;
         let target = if layout.platform == "windows-x64" {
             "windows-x86-64"
         } else {
@@ -442,29 +641,49 @@ impl DiscoveryContract {
             || manifest.build.version != name
             || manifest.build.target != target
         {
-            return Err(Error::Incompatible("version identity differs".into()));
+            return Err(CandidateFailure::new(
+                Error::Incompatible("version identity differs".into()),
+                CandidateStage::VersionIdentity,
+            ));
         }
-        let inspected = manifest.package.inspect_cancellable(
-            package,
-            &layout.files.package_manifest,
-            &layout.platform,
-            layout.abi,
-            cancellation,
-        )?;
+        let inspected = manifest
+            .package
+            .inspect_cancellable(
+                package,
+                &layout.files.package_manifest,
+                &layout.platform,
+                layout.abi,
+                cancellation,
+            )
+            .map_err(|error| CandidateFailure::new(error, CandidateStage::Inventory))?;
         if inspected.readiness != Readiness::Ready {
-            return Err(Error::Integrity("incomplete installed version".into()));
+            return Err(CandidateFailure::readiness(&inspected.readiness));
         }
-        let member = self.manager_member()?;
+        let member = self
+            .manager_member()
+            .map_err(|error| CandidateFailure::new(error, CandidateStage::Manager))?;
         let digest = inspected
             .manifest
             .files
             .get(&member)
-            .ok_or_else(|| Error::Invalid("manager absent from inventory".into()))?
+            .ok_or_else(|| {
+                CandidateFailure::new(
+                    Error::Invalid("manager absent from inventory".into()),
+                    CandidateStage::Manager,
+                )
+            })?
             .clone();
         let manager = member.under(package);
-        cancellation.check()?;
-        binary::verify(&manager, &digest, BinaryExpectation::host()?)?;
-        cancellation.check()?;
+        cancellation
+            .check()
+            .map_err(|error| CandidateFailure::new(error, CandidateStage::Manager))?;
+        let expected = BinaryExpectation::host()
+            .map_err(|error| CandidateFailure::new(error, CandidateStage::Manager))?;
+        binary::verify(&manager, &digest, expected)
+            .map_err(|error| CandidateFailure::new(error, CandidateStage::Manager))?;
+        cancellation
+            .check()
+            .map_err(|error| CandidateFailure::new(error, CandidateStage::Manager))?;
         Ok((manager, digest))
     }
 }

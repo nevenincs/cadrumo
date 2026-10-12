@@ -257,7 +257,7 @@ class PackageHost:
     def cli(
         self,
         *arguments: str,
-        secret: Mapping[str, str] | None = None,
+        secret: Mapping[str, Any] | None = None,
         profile_secret: str | None = None,
         timeout: float = _CLI_SECONDS,
     ) -> CliResult:
@@ -270,7 +270,7 @@ class PackageHost:
         if secret is not None and profile_secret is not None:
             raise ValueError("one protected channel per invocation")
         root_options: list[str] = ["--format", "json"]
-        payload: dict[str, str] | None = None
+        payload: dict[str, Any] | None = None
         tail = list(arguments)
         if profile_secret is not None:
             root_options.append("--profile-secrets-stdin")

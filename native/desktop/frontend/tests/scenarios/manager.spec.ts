@@ -89,7 +89,7 @@ test("availability reads recover the sign-in form after one manager dispatch", a
 
 for (const [scenario, code] of [
   ["manager-failed", "spawn_failed"],
-  ["manager-unmanaged", "manager_unmanaged"],
+  ["manager-unmanaged", "manager_unavailable"],
   ["manager-unsupported", "manager_unsupported"],
 ] as const) {
   test(`manager refusal ${code} remains visible and permits a later request`, async ({
@@ -222,4 +222,105 @@ test("an initial unreadable status keeps the existing unknown-state form", async
   await expect(page.locator(".sign-in")).toContainText("timed_out");
   expect(await calls(page, "startManager")).toBe(0);
   expect(await calls(page, "signIn")).toBe(0);
+});
+
+const password = (page: Page) =>
+  page.getByLabel(label("desktop.signin.password"), { exact: true });
+
+async function observedClock(page: Page) {
+  const time = new Date("2026-10-11T00:00:00Z");
+  await page.clock.install({ time });
+  await page.clock.pauseAt(time);
+}
+
+test("supervisor loss gates signed-in views without focus and ready waits for fresh authentication", async ({
+  page,
+}) => {
+  await observedClock(page);
+  await page.goto(
+    "/scenarios.html?scenario=manager-observed-recovery&latency=0",
+  );
+  await expect(page.locator('[data-slot="account-loading"]')).toHaveCount(0);
+  await page.clock.runFor(1);
+  const privateBadge = page
+    .getByRole("button", {
+      name: new RegExp(`^${label("desktop.rail.messages")}(?:,|$)`),
+    })
+    .locator('[data-slot="badge"]');
+  await expect(privateBadge).toBeVisible();
+  await page.clock.runFor(1_100);
+  await expect(privateBadge).toHaveCount(0);
+  await expect(page.locator('[data-slot="account-loading"]')).toContainText(
+    label("desktop.signin.recovering_services"),
+  );
+  await expect(password(page)).toHaveCount(0);
+  await page.clock.runFor(1_000);
+  await expect(page.locator('[data-slot="account-loading"]')).toBeVisible();
+  await page.clock.runFor(1_000);
+  await expect(password(page)).toHaveCount(0);
+  expect(await calls(page, "managerAuthResolved")).toBe(0);
+  await page.clock.runFor(2_000);
+  await expect(password(page)).toBeVisible();
+  expect(await calls(page, "signIn")).toBe(0);
+});
+
+test("supervisor observation failure gates private access and exposes only a public code", async ({
+  page,
+}) => {
+  await observedClock(page);
+  await page.goto(
+    "/scenarios.html?scenario=manager-observation-failed&latency=0",
+  );
+  await page.clock.runFor(1_100);
+  await expect(password(page)).toHaveCount(0);
+  await expect(page.locator(".sign-in")).toContainText("read_failed");
+  await expect(page.locator("body")).not.toContainText(
+    "private supervisor path",
+  );
+  expect(await calls(page, "signIn")).toBe(0);
+});
+
+test("a new auth observation re-arms a failed recovery read without trusting its queued snapshot", async ({
+  page,
+}) => {
+  await observedClock(page);
+  await page.goto("/scenarios.html?scenario=manager-auth-read-retry&latency=0");
+  await page.clock.runFor(2_100);
+  await expect(password(page)).toHaveCount(0);
+  const reads = await calls(page, "signInStatus");
+  await page.clock.runFor(1_000);
+  await expect(password(page)).toBeVisible();
+  expect(await calls(page, "signInStatus")).toBeGreaterThan(reads);
+  await expect(page.locator("body")).not.toContainText("Old queued profile");
+});
+
+test("a delayed accepted submission cannot revive authentication after supervisor loss", async ({
+  page,
+}) => {
+  await observedClock(page);
+  await page.goto("/scenarios.html?scenario=manager-late-submission&latency=0");
+  await password(page).fill("synthetic presentation password");
+  await page
+    .locator(".sign-in")
+    .getByRole("button", { name: label("desktop.signin.submit"), exact: true })
+    .click();
+  await page.clock.runFor(5_000);
+  expect(await calls(page, "signIn")).toBe(1);
+  await expect(password(page)).toHaveCount(0);
+  await expect(page.locator('[data-slot="account-loading"]')).toBeVisible();
+});
+
+test("replacing a host unsubscribes and rejects its late supervisor signal", async ({
+  page,
+}) => {
+  await observedClock(page);
+  await page.goto("/scenarios.html?scenario=manager-late-host&latency=0");
+  await page.locator(".scenario-bar").click();
+  await page
+    .getByRole("button", { name: "Runtime unavailable", exact: true })
+    .click();
+  await page.clock.runFor(4_000);
+  expect(await calls(page, "managerUnsubscribe")).toBe(1);
+  await expect(page.locator("body")).not.toContainText("spawn_failed");
+  await expect(password(page)).toHaveCount(0);
 });

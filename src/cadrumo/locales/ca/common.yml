@@ -627,6 +627,9 @@ desktop:
   docs:
     frame_title: Documentació de Cadrumo
     loading: S'està carregant la documentació…
+    not_bundled: Aquesta còpia de Cadrumo s'ha compilat sense la documentació. Tota
+      la resta funciona amb normalitat.
+    unavailable: No s'ha pogut obrir la documentació. Tota la resta funciona amb normalitat.
   host:
     failed: Aquesta part no s'ha pogut carregar.
     unavailable: Aquesta part necessita l'aplicació d'escriptori.
@@ -748,6 +751,7 @@ desktop:
     password: Contrasenya
     profile: Perfil
     profiles_unread: No s'han pogut llegir els perfils d'aquest equip.
+    recovering_services: S’estan recuperant els serveis en segon pla…
     recovery_hint: Has perdut la contrasenya o el perfil està bloquejat? Fes servir
       la TUI.
     refused:
@@ -776,6 +780,8 @@ desktop:
       receipt_expired: La teva sessió ha caducat. Torna a iniciar la sessió.
       runtime_unavailable: Els serveis en segon pla de Cadrumo no estan en marxa.
       throttled: Massa intents. Podràs tornar-ho a provar d'aquí a {seconds} s.
+    services_recovered: Els serveis en segon pla estan preparats. S’està comprovant
+      l’inici de sessió…
     show_password: Mostra la contrasenya
     signed_out_lead: Inicia la sessió per obrir el teu espai de treball a la TUI.
     start_services: Inicia els serveis en segon pla
@@ -2071,13 +2077,13 @@ tui:
     aeat_sync: Sincronització AEAT
     declarations: Declaracions
     home: Inici
-    ledger: Registres
-    profile: Perfil
-    withholding: Retencions
     installation: Instal·lació
+    ledger: Registres
     operations: Operacions
-  home:
+    profile: Perfil
     reference: Referència
+    withholding: Retencions
+  home:
     account_fallback: Compte
     action:
       context_across_records: A tots els registres
@@ -2316,12 +2322,12 @@ tui:
       invalid: No vàlid.
       outcome: 'Resultat de la verificació: {outcome}'
       valid: Vàlid.
-      entries: Apunts
-      evidence: Justificants
-      import: Importació
   ledger:
     area:
       classification: Classificació
+      entries: Apunts
+      evidence: Justificants
+      import: Importació
       overview: Resum
       reconciliation: Conciliació
       review: Revisió
@@ -3584,12 +3590,12 @@ tui:
         uuid: Identificador
       invalid: La sol·licitud encara no és vàlida. No s'ha enviat res.
       profile: Perfil
-      required: obligatori
-      secret: Secret (ocult en escriure, s'envia a part de la sol·licitud)
-      secret_required: Aquesta operació necessita el seu secret. Introdueix-lo i torna
       replay_key: Clau de repetició (opcional)
       replay_key_hint: Envia la mateixa clau una altra vegada amb la mateixa sol·licitud
         per recuperar la primera operació en lloc d'iniciar-ne una de nova.
+      required: obligatori
+      secret: Secret (ocult en escriure, s'envia a part de la sol·licitud)
+      secret_required: Aquesta operació necessita el seu secret. Introdueix-lo i torna
         a executar. No s'ha enviat res.
       session: Sessió
       subject: Subjecte
@@ -3700,12 +3706,12 @@ tui:
       support_matrix: 'El que Cadrumo pot fer amb cada model: calcular, exportar,
         llegir còpies presentades.'
     title: Referència
-    availability: 'Disponibilitat - emmagatzematge: {storage}; autoritat: {authority};
-      proveïdor: {provider}'
-    change_user: Canvia d’usuari
   restricted:
     actions: 'Accions permeses: {values}'
     all_periods: Tots els períodes
+    availability: 'Disponibilitat - emmagatzematge: {storage}; autoritat: {authority};
+      proveïdor: {provider}'
+    change_user: Canvia d’usuari
     close: Tanca
     grant: 'Concessió vàlida: {valid}; venç: {expires_at}'
     lock: Bloqueja aquesta sessió
@@ -3828,13 +3834,13 @@ tui:
       aeat_sync: Obre Sincronització AEAT
       declarations: Obre Declaracions
       home: Obre Inici
-      ledger: Obre Registres
-      profile: Obre Perfil
-      unknown: Obre l'àrea
       installation: Obre Instal·lació
+      ledger: Obre Registres
       operations: Obre Operacions
-      withholding: Obre Retencions
+      profile: Obre Perfil
       reference: Obre Referència
+      unknown: Obre l'àrea
+      withholding: Obre Retencions
     destination_help:
       aeat_sync: El que s'ha llegit de l'AEAT i el que es pot llegir a continuació
       declarations: Declaracions, càlculs anteriors, historial de presentacions i
@@ -3847,12 +3853,12 @@ tui:
         i executar-les
       profile: Les dades d'aquest perfil i els orígens que les completen
       reference: Models, caselles, categories, portals i mètodes d'accés
-      refresh_failed: La darrera actualització no ha pogut reconstruir l'índex.
-      unavailable: La cerca no està disponible en aquesta sessió
-      unknown: No s'ha pogut preparar la cerca.
       withholding: Registra i consulta les retencions de factures de l'exercici seleccionat
     refusal:
       not_composed: Encara no s'han pogut llegir totes les àrees.
+      refresh_failed: La darrera actualització no ha pogut reconstruir l'índex.
+      unavailable: La cerca no està disponible en aquesta sessió
+      unknown: No s'ha pogut preparar la cerca.
     result:
       address: Model %{modelo} · %{filing_year} · %{period}
       label:

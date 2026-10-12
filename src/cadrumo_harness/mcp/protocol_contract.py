@@ -15,6 +15,7 @@ from cadrumo.application.corpus_search.errors import CorpusSearchError
 from cadrumo.application.operations.frontend_requests import OperationResultProjectionRefusalV1
 from cadrumo.application.runtime.contracts import RuntimeRefusalError
 from cadrumo.application.runtime.projection_pages import ProjectionPage
+from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
 from cadrumo.application.user_profile.sign_in_refusals import SignInRefusal
 from cadrumo.core.errors.hierarchy import InternalInvariantError
@@ -75,7 +76,7 @@ _SIGN_IN_REFUSAL: Final = (
     "status reports the same facts beside denial"
 )
 
-PERSON_ACT_REQUIRED: Final = "person_act_required"
+PERSON_ACT_REQUIRED: Final = AccessDenialCode.PERSON_ACT_REQUIRED.value
 """The code of a refusal of an act that only the person takes in Cadrumo, never an agent."""
 
 SIGN_IN_REMEDY: Final = (

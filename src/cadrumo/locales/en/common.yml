@@ -607,6 +607,9 @@ desktop:
   docs:
     frame_title: Cadrumo documentation
     loading: Loading the documentation…
+    not_bundled: This copy of Cadrumo was built without the documentation. Everything
+      else works as usual.
+    unavailable: The documentation couldn't be opened. Everything else works as usual.
   host:
     failed: This part couldn't load.
     unavailable: This part needs the desktop application.
@@ -725,6 +728,7 @@ desktop:
     password: Password
     profile: Profile
     profiles_unread: The profiles on this computer could not be read.
+    recovering_services: Recovering background services…
     recovery_hint: Lost the password, or the profile is locked? Use the TUI.
     refused:
       custody_changed: This profile's password or recovery settings changed. Sign
@@ -750,6 +754,7 @@ desktop:
       receipt_expired: Your sign-in expired. Sign in again.
       runtime_unavailable: Cadrumo's background services aren't running.
       throttled: Too many attempts. You can try again in {seconds} s.
+    services_recovered: Background services are ready. Checking sign-in…
     show_password: Show password
     signed_out_lead: Sign in to open your workspace in the TUI.
     start_services: Start background services
@@ -2021,11 +2026,11 @@ tui:
     aeat_sync: AEAT Sync
     declarations: Declarations
     home: Home
-    ledger: Records
-    profile: Profile
     installation: Installation
-    reference: Reference
+    ledger: Records
     operations: Operations
+    profile: Profile
+    reference: Reference
     withholding: Withholding
   home:
     account_fallback: Account
@@ -2259,10 +2264,10 @@ tui:
       invalid: Not valid.
       outcome: 'Verification result: {outcome}'
       valid: Valid.
-      classification: Classification
-      entries: Entries
   ledger:
     area:
+      classification: Classification
+      entries: Entries
       evidence: Supporting documents
       import: Import
       overview: Overview
@@ -3499,11 +3504,11 @@ tui:
         uuid: Identifier
       invalid: The request is not valid yet. Nothing was sent.
       profile: Profile
-      required: required
-      secret: Secret (hidden as you type, sent apart from the request)
       replay_key: Replay key (optional)
       replay_key_hint: Send the same key again with the same request to get the first
         operation back instead of starting a new one.
+      required: required
+      secret: Secret (hidden as you type, sent apart from the request)
       secret_required: This operation needs its secret. Enter it and run again. Nothing
         was sent.
       session: Session
@@ -3614,10 +3619,10 @@ tui:
       support_matrix: 'What Cadrumo can do with each modelo: calculate, export, read
         filed copies.'
     title: Reference
-    all_periods: All periods
-    availability: 'Availability - storage: {storage}; authority: {authority}; provider:
   restricted:
     actions: 'Allowed actions: {values}'
+    all_periods: All periods
+    availability: 'Availability - storage: {storage}; authority: {authority}; provider:
       {provider}'
     change_user: Change user
     close: Close
@@ -3742,22 +3747,22 @@ tui:
       aeat_sync: Open AEAT Sync
       declarations: Open Declarations
       home: Open Home
-      ledger: Open Records
-      profile: Open Profile
       installation: Open Installation
-      reference: Open Reference
+      ledger: Open Records
       operations: Open Operations
+      profile: Open Profile
+      reference: Open Reference
       unknown: Open area
       withholding: Open Withholding
     destination_help:
       aeat_sync: What has been read from the AEAT and what can be read next
       declarations: Declarations, earlier calculations, filing history and calendar
       home: Next actions, declarations and deadlines at a glance
-      ledger: Entries, review, classification and supporting documents
-      profile: This profile's details and the sources that fill them in
       installation: Storage, repair, reset and the profiles on this computer
-      reference: Modelos, casillas, categories, portals and sign-in methods
+      ledger: Entries, review, classification and supporting documents
       operations: Every operation Cadrumo can run, to search, fill in and run
+      profile: This profile's details and the sources that fill them in
+      reference: Modelos, casillas, categories, portals and sign-in methods
       withholding: Capture and inspect invoice withholding for a selected filing year
     refusal:
       not_composed: Not every area could be read yet.

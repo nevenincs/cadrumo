@@ -99,7 +99,7 @@ pub(crate) fn admit_selection(
         .ok_or_else(|| io::Error::from(io::ErrorKind::PermissionDenied))
 }
 
-/// Every successor repeats native admission, job escape and catalogue verification.
+/// Every successor repeats native ownership, job escape and catalogue verification.
 /// Dispatch acknowledgement conveys no runtime readiness or ownership.
 pub fn dispatch_newest(
     image: &Path,

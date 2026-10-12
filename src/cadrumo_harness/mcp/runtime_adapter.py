@@ -33,6 +33,8 @@ from .lifecycle_notices import LifecycleNoticeBoard
 from .operation_contract_cache import OperationContractCache
 from .protocol_contract import (
     MCP_TOOL_NAMES,
+    PERSON_ACT_REMEDY,
+    PERSON_ACT_REQUIRED,
     public_value,
     refusal_code,
     refusal_facts,
@@ -378,7 +380,10 @@ class RuntimeMcpAdapter:
             if isinstance(error, RuntimeFrontendRefusedError) and error.request_faults:
                 # The runtime said why, in a registered error's code and message; every tool passes that on.
                 reply["faults"] = [public_value(fault) for fault in error.request_faults]
-            if remedy := runtime_unavailable_remedy(code):
+            if code == PERSON_ACT_REQUIRED:
+                # The runtime refused the person's own act; the agent is told to ask the person.
+                reply["remedy"] = PERSON_ACT_REMEDY
+            elif remedy := runtime_unavailable_remedy(code):
                 reply["remedy"] = remedy
             return reply
 
