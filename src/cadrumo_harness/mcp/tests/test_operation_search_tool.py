@@ -25,7 +25,6 @@ from cadrumo.application.ledger.attachment_mutation_operation import (
     build_ledger_detach_definition,
     build_ledger_detach_registration,
 )
-from cadrumo.application.operations.mcp_surfaces import MCP_SURFACES, McpSurfaceName
 from cadrumo.application.operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionDescriptionV1,
@@ -42,9 +41,9 @@ from cadrumo.core.time.clock import now
 from cadrumo_harness.mcp import admitted_operations
 from cadrumo_harness.mcp import runtime_adapter as mcp_runtime
 from cadrumo_harness.mcp.operation_contract_cache import OperationContractCache
-from cadrumo_harness.mcp.public_operation_discovery import discover_public_operations, shipped_public_descriptions
 from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_harness.mcp.server import build_server
+from cadrumo_harness.mcp.tests.admitted_lease import public_descriptions
 from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
@@ -447,14 +446,15 @@ class _WideScopeClient(_AdmittedClient):
     def describe(self, definition_id: str, *, deadline: float) -> OperationPublicDefinitionDescriptionV1:
         assert deadline > 0
         self.described.append(definition_id)
-        return shipped_public_descriptions()[definition_id]
+        return public_descriptions()[definition_id]
 
 
 @pytest.mark.anyio
 async def test_a_search_that_names_no_limit_returns_a_page_of_ten_and_the_rest_by_cursor() -> None:
-    """Under a session as without one, the page is small by default and no operation is out of reach."""
+    """The page is small by default and no operation in scope is out of reach."""
     profile_id = uuid4()
-    in_scope = sorted(shipped_public_descriptions())[:25]
+    in_scope = sorted(public_descriptions())
+    assert len(in_scope) > 10, "too few operations to fill more than one page"
     client = _WideScopeClient(profile_id, in_scope)
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
     listed: list[str] = []
@@ -474,8 +474,6 @@ async def test_a_search_that_names_no_limit_returns_a_page_of_ten_and_the_rest_b
     assert first["next_cursor"] == in_scope[9]
     assert listed == in_scope
     assert [row["definition_id"] for row in widest["operations"]] == in_scope and "next_cursor" not in widest
-    without_a_session = discover_public_operations("search", {}, MCP_SURFACES[McpSurfaceName.FULL])
-    assert len(without_a_session["operations"]) == 10 and "next_cursor" in without_a_session
 
 
 @pytest.mark.anyio

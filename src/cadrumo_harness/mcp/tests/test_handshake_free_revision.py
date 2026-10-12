@@ -19,7 +19,7 @@ from mcp.types import LATEST_PROTOCOL_VERSION, CallToolResult, Tool
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
 from cadrumo.application.runtime.operation_access import RuntimeOperationControl, RuntimeOperationSubmit
-from cadrumo_harness.mcp.protocol_contract import MCP_TOOL_CATALOGUE
+from cadrumo_harness.mcp.protocol_contract import MCP_TOOL_CATALOGUE, SIGN_IN_REMEDY
 from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_harness.mcp.server import build_server
 from cadrumo_harness.mcp.tests.session import connected_handshake_free_client, connected_server_and_client_session
@@ -98,7 +98,7 @@ async def test_the_server_tells_a_discovering_client_that_it_serves_tools() -> N
 async def _read_calls(
     profile_id: UUID, *, handshake_free: _Negotiation | None
 ) -> dict[str, tuple[bool, Any, list[str]]]:
-    """Make the same calls with no session held: two reads, a refusal, and an argument the contract refuses."""
+    """Make the same calls with no session held: status, two refusals, and an argument the contract refuses."""
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=None)
     try:
         server = build_server(adapter)
@@ -136,10 +136,10 @@ async def test_a_read_tool_and_a_refusal_answer_a_handshake_free_client_as_they_
     assert is_error is False and status["outcome"] == "status" and status["profile_id"] == str(profile_id)
     assert status["session"] == "none" and len(text) == 1
     # A refusal is an error result on this revision too, and so is an argument the wire contract refuses.
-    found_is_error, found, _found_text = modern["search"]
-    assert found_is_error is False and (found["outcome"], found["session"]) == ("found", "none")
-    assert len(found["operations"]) == 2
-    assert modern["observe"][:2] == (True, {"outcome": "refused", "code": "authentication_required"})
+    # With no session, search is refused as observe is: only status answers.
+    refused = {"outcome": "refused", "code": "authentication_required", "remedy": SIGN_IN_REMEDY}
+    assert modern["search"][:2] == (True, refused)
+    assert modern["observe"][:2] == (True, refused)
     assert modern["mistyped"][:2] == (True, {"outcome": "refused", "code": "invalid_request"})
 
 

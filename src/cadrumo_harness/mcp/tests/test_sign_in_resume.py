@@ -43,8 +43,12 @@ from cadrumo_harness.mcp import main as mcp_main
 from cadrumo_harness.mcp import runtime_adapter as mcp_runtime
 from cadrumo_harness.mcp import server as mcp_server
 from cadrumo_harness.mcp.operation_discovery import operation_summary
-from cadrumo_harness.mcp.protocol_contract import MCP_TOOL_CATALOGUE
-from cadrumo_harness.mcp.public_operation_discovery import shipped_public_descriptions
+from cadrumo_harness.mcp.protocol_contract import (
+    MCP_TOOL_CATALOGUE,
+    PROFILE_CHANGED_REMEDY,
+    SIGN_IN_REMEDY,
+    sign_in_remedy,
+)
 from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_harness.mcp.runtime_admission import (
     McpAdmission,
@@ -53,6 +57,7 @@ from cadrumo_harness.mcp.runtime_admission import (
     status_on_surface,
 )
 from cadrumo_harness.mcp.server import build_server
+from cadrumo_harness.mcp.tests.admitted_lease import public_descriptions
 from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -61,7 +66,7 @@ _FULL = MCP_SURFACES[McpSurfaceName.FULL]
 _READ_ONLY_LOCAL = MCP_SURFACES[McpSurfaceName.READ_ONLY_LOCAL]
 _READ = AUTH_READ_OPERATION_DEFINITION_ID
 _WRITE = LEDGER_ATTACH_OPERATION_DEFINITION_ID
-_FOUND = {"outcome": "found", "operations": [operation_summary(shipped_public_descriptions()[_READ])]}
+_FOUND = {"outcome": "found", "operations": [operation_summary(public_descriptions()[_READ])]}
 _MCP = OperationFrontendProjection.MCP
 _PROFILE_CALL: tuple[str, dict[str, object]] = ("observe", {"observation": {}})
 """A tool that reads the profile's own operations, so it is answered only under a session."""
@@ -150,7 +155,7 @@ class _SignInConnection:
     def describe(self, definition_id: str, *, deadline: float) -> OperationPublicDefinitionDescriptionV1:
         assert self.close_count == 0 and deadline > 0
         self.described.append(definition_id)
-        return shipped_public_descriptions()[definition_id]
+        return public_descriptions()[definition_id]
 
     def subscribe_lifecycle_notices(self, receive: object) -> None:
         """The runtime sends this double no lifecycle notice."""
@@ -198,6 +203,12 @@ def _selection(root: Path, profile_id: UUID | None) -> AbstractContextManager[Se
     return override_settings(cadrumo_local_storage_root=root, cadrumo_active_profile=selected)
 
 
+def _told(code: str) -> dict[str, object]:
+    """The remedy a reply carries when nothing admits the server: ask the person to sign in, for an admission refusal."""
+    remedy = sign_in_remedy(code)
+    return {} if remedy is None else {"remedy": remedy}
+
+
 def _no_session(profile_id: UUID | None, denial: str, **facts: object) -> dict[str, object]:
     return {
         "outcome": "status",
@@ -207,11 +218,13 @@ def _no_session(profile_id: UUID | None, denial: str, **facts: object) -> dict[s
         "surface": "full",
         "denial": denial,
         **facts,
+        **_told(denial),
     }
 
 
 def _refused(code: str, **facts: object) -> dict[str, object]:
-    return {"outcome": "refused", "code": code, **facts}
+    """A refusal with no session held, which says what the agent is to do."""
+    return {"outcome": "refused", "code": code, **facts, **_told(code)}
 
 
 def test_the_selected_profile_is_read_from_the_installation_and_a_named_one_only_guards_it(tmp_path: Path) -> None:
@@ -230,7 +243,7 @@ def test_the_selected_profile_is_read_from_the_installation_and_a_named_one_only
 
 
 @pytest.mark.anyio
-async def test_the_tool_list_and_public_queries_answer_with_no_profile_and_nobody_signed_in(
+async def test_with_no_profile_and_nobody_signed_in_only_the_tool_list_and_status_answer(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, runtime: _Runtime
 ) -> None:
     monkeypatch.setattr(mcp_runtime, "authority_query", lambda _args: {"outcome": "published", "report": {}})
@@ -248,17 +261,13 @@ async def test_the_tool_list_and_public_queries_answer_with_no_profile_and_nobod
             await adapter.close()
 
     assert names == [name for name, _description, _schema in MCP_TOOL_CATALOGUE]
-    assert published.is_error is False
-    assert published.structured_content == {"outcome": "published", "report": {}}
     assert status.is_error is False
     assert status.structured_content == _no_session(None, "authentication_required")
-    assert private.is_error is True
-    assert private.structured_content == _refused("authentication_required")
-    # Which operations exist is no profile's data: both answer from the contracts this package ships.
-    assert found.is_error is False and described.is_error is False
-    assert found.structured_content["session"] == "none" and described.structured_content["session"] == "none"
-    assert [row["definition_id"] for row in found.structured_content["operations"]] == [_READ]
-    assert described.structured_content["description"]["contract"]["definition_id"] == _READ
+    assert status.structured_content["remedy"] == SIGN_IN_REMEDY
+    # Nothing else answers without a sign-in: reference data, discovery and the profile's operations alike.
+    for refused in (published, private, found, described):
+        assert refused.is_error is True
+        assert refused.structured_content == _refused("authentication_required")
     # With no profile selected there is no runtime connection to open, and none was opened.
     assert runtime.attempts == (0, 0)
 
@@ -323,9 +332,8 @@ async def test_a_profile_call_with_nobody_signed_in_returns_the_refusal_after_on
             assert await adapter.call("status", {}) == _no_session(profile_id, code, **facts)
             # The status call needed the profile too, so it asked once more and no more than once.
             assert runtime.attempts == (2, 2)
-            # Discovery asks the runtime for the session once as well, and answers without one.
-            described = await adapter.call("describe", {"definition_id": _READ})
-            assert (described["outcome"], described["session"]) == ("described", "none")
+            # Discovery asks the runtime for the session once as well, and is refused without one.
+            assert await adapter.call("describe", {"definition_id": _READ}) == _refused(code, **facts)
             assert runtime.attempts == (3, 3)
     finally:
         await adapter.close()
@@ -455,21 +463,28 @@ async def test_a_named_profile_is_served_by_the_sign_in_only_while_it_is_the_sel
 
 
 @pytest.mark.anyio
-async def test_a_connection_that_names_no_profile_follows_the_selection(tmp_path: Path, runtime: _Runtime) -> None:
+async def test_a_connection_that_names_no_profile_is_bound_to_the_first_sign_in_it_resumes(
+    tmp_path: Path, runtime: _Runtime
+) -> None:
     first, second = uuid4(), uuid4()
     adapter = _adapter()
     try:
-        with _selection(tmp_path, first):
-            assert await adapter.call("search", {}) == _FOUND
-        with _selection(tmp_path, second):
-            assert await adapter.call("search", {}) == _FOUND
-            assert adapter.profile_id == second
-        assert [connection.profile_id for connection in runtime.opened] == [first, second]
-        assert [connection.close_count for connection in runtime.opened] == [1, 0]
-        assert adapter.client is runtime.opened[1]
         with _selection(tmp_path, None):
             assert await adapter.call("status", {}) == _no_session(None, "authentication_required")
-        assert [connection.close_count for connection in runtime.opened] == [1, 1]
+        with _selection(tmp_path, first):
+            assert await adapter.call("search", {}) == _FOUND
+            assert adapter.profile_id == first
+        with _selection(tmp_path, second):
+            # The person is on another profile now: the agent session never follows, and is refused every call.
+            assert await adapter.call("search", {}) == _refused("profile_mismatch")
+            assert _refused("profile_mismatch")["remedy"] == PROFILE_CHANGED_REMEDY
+            assert await adapter.call("status", {}) == _no_session(first, "profile_mismatch")
+        assert [connection.profile_id for connection in runtime.opened] == [first]
+        assert runtime.opened[0].close_count == 1 and adapter.client is None
+        with _selection(tmp_path, first):
+            # Back on its own profile it resumes the sign-in again, and nothing of the other was opened.
+            assert await adapter.call("search", {}) == _FOUND
+        assert [connection.profile_id for connection in runtime.opened] == [first, first]
         assert runtime.resumes == 2
     finally:
         await adapter.close()

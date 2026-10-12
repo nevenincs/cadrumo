@@ -21,6 +21,7 @@ from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.session_events import RuntimeLifecycleNotice
 from cadrumo_harness.mcp import runtime_adapter as mcp_runtime
 from cadrumo_harness.mcp.lifecycle_notices import LifecycleNoticeBoard
+from cadrumo_harness.mcp.protocol_contract import sign_in_remedy
 from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_harness.mcp.tests.test_authentication_handover import _Client
 
@@ -169,4 +170,4 @@ async def test_a_key_session_the_runtime_ended_is_authenticated_anew_and_the_run
         # The runtime's own refusal is the answer, no session is held, and each call asked once.
         assert len(opened) == 1 and len(asked) == 3 and adapter.client is None
         assert status["session"] == "none" and status["denial"] == refusal
-        assert refused == {"outcome": "refused", "code": refusal}
+        assert refused == {"outcome": "refused", "code": refusal, "remedy": sign_in_remedy(refusal)}

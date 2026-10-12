@@ -25,8 +25,8 @@ async def test_unavailable_adapter_returns_remedy_without_automatic_request() ->
     assert "manager" in status["remedy"]
     assert reply["outcome"] == "refused" and reply["code"] == "runtime_unavailable"
     assert "manager" in reply["remedy"]
-    # Finding an operation needs no runtime, so there is nothing to remedy in its answer.
-    assert (found["outcome"], found["session"]) == ("found", "none") and "remedy" not in found
+    # Finding an operation needs the session too, so it is refused the same way and names the manager.
+    assert found["outcome"] == "refused" and found["code"] == "runtime_unavailable" and "manager" in found["remedy"]
     assert adapter.client is None
     assert "remedy" not in await adapter.call("unknown_tool", {})
     await adapter.close()

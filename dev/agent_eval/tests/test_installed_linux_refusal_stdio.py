@@ -39,6 +39,7 @@ from cadrumo.application.user_profile.automation_custody_port import (
     NativeSecretBackend,
 )
 from cadrumo.entrypoints.runtime.tests.test_installed_runtime import connect, launch
+from cadrumo_harness.mcp.protocol_contract import SIGN_IN_REMEDY
 
 pytestmark = [
     pytest.mark.integration,
@@ -148,8 +149,9 @@ async def test_installed_linux_native_reference_refusal_preserves_public_stdio(t
                         "profile_id": str(profile_id),
                         "authenticated": False,
                         "denial": denial,
+                        "remedy": SIGN_IN_REMEDY,
                     }
-                    refusal = {"outcome": "refused", "code": denial}
+                    refusal = {"outcome": "refused", "code": denial, "remedy": SIGN_IN_REMEDY}
                     for name, arguments in (
                         ("search", {"query": "auth.local-read"}),
                         ("describe", {"definition_id": "auth.local-read"}),
@@ -168,10 +170,10 @@ async def test_installed_linux_native_reference_refusal_preserves_public_stdio(t
                         private = await client.call_tool(name, arguments)
                         assert private.is_error is True, name
                         assert private.structured_content == refusal, name
+                    # Reference data is read inside the person's profile too, so it is refused like the rest.
                     public = await client.call_tool("authority", {"query": "modelos"})
-                    assert public.is_error is False
-                    assert isinstance(public.structured_content, dict)
-                    assert public.structured_content["outcome"] == "published"
+                    assert public.is_error is True
+                    assert public.structured_content == refusal
                     retried = await client.call_tool("authenticate", {"credential_reference": str(reference)})
                     assert retried.is_error is True
                     assert retried.structured_content == {"outcome": "refused", "code": "unknown_tool"}

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:0ee1cafd33859b20783f0f41607d4337a62ba22569beb506307e6533fd88a29e'
+body_hash: 'sha256:a6953e4958ead1c4ff27d8e0ec12dfb1824b5b61e3c429b645e2c02919a49c0f'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -2248,6 +2248,57 @@ related:
 - `S66` `verify:` `pytest runtime suite rerun at -n 2` -> `fail`
 - `S66` `verify:` `ruff check and format` -> `pass`
 - `S66` `verify:` `ty check on touched files` -> `pass`
+- `S67` `M` `dev/agent_eval/tests/test_installed_failed_reference_stdio.py`
+- `S67` `M` `dev/agent_eval/tests/test_installed_linux_refusal_stdio.py`
+- `S67` `D` `dev/harness_data/operation_contract_document.py`
+- `S67` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_operation_discovery.py`
+- `S67` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_sign_in_adapter.py`
+- `S67` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_sign_in_refusal_facts.py`
+- `S67` `D` `src/cadrumo/entrypoints/tests/operation_contract_document.py`
+- `S67` `D` `src/cadrumo/entrypoints/tests/test_operation_contract_document.py`
+- `S67` `D` `src/cadrumo_harness/_data/operation_contracts/app.jsonl`
+- `S67` `D` `src/cadrumo_harness/_data/operation_contracts/auth.jsonl`
+- `S67` `D` `src/cadrumo_harness/_data/operation_contracts/browser-runtime.jsonl`
+- `S67` `D` `src/cadrumo_harness/_data/operation_contracts/config.jsonl`
+- `S67` `D` `src/cadrumo_harness/_data/operation_contracts/diagnostics.jsonl`
+- `S67` `D` `src/cadrumo_harness/_data/operation_contracts/export.jsonl`
+- `S67` `D` `src/cadrumo_harness/_data/operation_contracts/ledger.jsonl`
+- `S67` `D` `src/cadrumo_harness/_data/operation_contracts/live.jsonl`
+- `S67` `D` `src/cadrumo_harness/_data/operation_contracts/local-reader.jsonl`
+- `S67` `D` `src/cadrumo_harness/_data/operation_contracts/modelo.jsonl`
+- `S67` `D` `src/cadrumo_harness/_data/operation_contracts/overview.jsonl`
+- `S67` `D` `src/cadrumo_harness/_data/operation_contracts/profile.jsonl`
+- `S67` `D` `src/cadrumo_harness/_data/operation_contracts/user-profile.jsonl`
+- `S67` `D` `src/cadrumo_harness/_data/operation_contracts/workbench.jsonl`
+- `S67` `D` `src/cadrumo_harness/_data/operation_contracts/workflow.jsonl`
+- `S67` `M` `src/cadrumo_harness/mcp/admitted_operations.py`
+- `S67` `M` `src/cadrumo_harness/mcp/protocol_contract.py`
+- `S67` `D` `src/cadrumo_harness/mcp/public_operation_discovery.py`
+- `S67` `M` `src/cadrumo_harness/mcp/runtime_adapter.py`
+- `S67` `M` `src/cadrumo_harness/mcp/runtime_admission.py`
+- `S67` `M` `src/cadrumo_harness/mcp/tests/test_authentication_handover.py`
+- `S67` `M` `src/cadrumo_harness/mcp/tests/test_corpus_search_tool.py`
+- `S67` `M` `src/cadrumo_harness/mcp/tests/test_handshake_free_revision.py`
+- `S67` `M` `src/cadrumo_harness/mcp/tests/test_installed_sign_in_resume.py`
+- `S67` `M` `src/cadrumo_harness/mcp/tests/test_installed_stdio.py`
+- `S67` `M` `src/cadrumo_harness/mcp/tests/test_lifecycle_notice_tool.py`
+- `S67` `M` `src/cadrumo_harness/mcp/tests/test_operation_search_tool.py`
+- `S67` `D` `src/cadrumo_harness/mcp/tests/test_public_operation_discovery.py`
+- `S67` `M` `src/cadrumo_harness/mcp/tests/test_runtime_authority.py`
+- `S67` `M` `src/cadrumo_harness/mcp/tests/test_runtime_manager_remedy.py`
+- `S67` `M` `src/cadrumo_harness/mcp/tests/test_runtime_protocol.py`
+- `S67` `M` `src/cadrumo_harness/mcp/tests/test_sign_in_resume.py`
+- `S67` `M` `src/cadrumo_harness/tests/test_harness_data_ships.py`
+- `S67` `M` `src/cadrumo_harness/tests/test_plugin_workspace.py`
+- `S67` `M` `src/cadrumo_harness/tests/test_workspace.py`
+- `S67` `A` `src/cadrumo_harness/mcp/tests/admitted_lease.py`
+- `S67` `M` `dev/quality/metadata/import_load_targets.cadrumo_harness.json`
+- `S67` `M` `dev/quality/metadata/import_load_targets.json`
+- `S67` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S67` `verify:` `pytest src/cadrumo_harness -m 'unit or integration'` -> `pass`
+- `S67` `verify:` `pytest runtime MCP sign-in adapter, refusal facts, discovery and sign-in door` -> `pass`
+- `S67` `verify:` `ruff check and format` -> `pass`
+- `S67` `verify:` `ty check on touched files` -> `pass`
 
 ## Notes
 
@@ -2324,3 +2375,5 @@ related:
 - `S64` Pre-existing failures outside MCP in the entrypoints lane (modelo 184/303 calculation, ledger bulk classify) and in `dev/agent_eval/tests/test_mcp_frontend_session_lock_parity.py` (key session expiry precedes the human one); a session-mode discovery search hit `runtime_deadline_exceeded` under load and is reworked in S67
 - `S65` Another session's sweep commit e292d394b3 took this Step's in-progress production changes and `test_mcp_frontend_person_acts.py;` this Step's commit carries the remaining files
 - `S66` Remaining runtime failures are unchanged with the S66 call disabled `(test_grant_change,` provenance) or are deadline and WinError 1312 environment failures; `test_profile_connections` and `test_optional_automation_custody` moved off the MCP frontend after the S65 refusals
+- `S67` Folds in the orchestrator-requested keychain fact and remedy from tui-c2 (31def9f426): `runtime_admission` carries SignInRefusal.keychain, `sign_in_refusal_facts` reports `sign_in_keychain,` and a refusal that names it carries the logon remedy instead of the sign-in one; `sign_in_remedy` takes the reply's facts to choose
+- `S67` The shipped operation contract document, its generator and the sessionless discovery module are removed: with no session nothing but status answers, so nothing reads them

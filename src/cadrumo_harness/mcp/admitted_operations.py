@@ -51,7 +51,14 @@ from cadrumo.core.time.clock import now
 from .operation_contract_cache import OperationContractCache
 from .operation_discovery import search_operations
 from .payload_vocabulary import PAYLOAD_VOCABULARY_MEMBER, payload_vocabulary
-from .protocol_contract import PERSON_ACT_REMEDY, PERSON_ACT_REQUIRED, parse_model, public_value, refusal_code
+from .protocol_contract import (
+    PERSON_ACT_REMEDY,
+    PERSON_ACT_REQUIRED,
+    parse_model,
+    public_value,
+    refusal_code,
+    sign_in_remedy,
+)
 from .result_request import resolve_result_request, stopped_operation_detail
 from .runtime_admission import NO_SESSION, AdmissionDenial, McpAdmission, status_on_surface
 
@@ -114,7 +121,9 @@ def _unauthenticated_status(connection: _AdmittedConnection) -> dict[str, Any]:
     }
     if denial is not None:
         reply.update(denial.facts())
-    if remedy := runtime_unavailable_remedy(None if denial is None else denial.code):
+    # Without a sign-in or a key nothing else answers, so status says what the agent is to do.
+    code = AccessDenialCode.AUTHENTICATION_REQUIRED.value if denial is None else denial.code
+    if remedy := runtime_unavailable_remedy(code) or sign_in_remedy(code, reply):
         reply["remedy"] = remedy
     return reply
 

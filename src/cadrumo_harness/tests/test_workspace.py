@@ -16,9 +16,7 @@ import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 
-from .._resources import packaged_data
 from .._workspace import materialise_workspace
-from ..mcp.public_operation_discovery import CONTRACT_DOCUMENT_DIRECTORY
 from ..resources import harness_root, iter_operator_rules, iter_personas, iter_reference_documents
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
@@ -95,18 +93,3 @@ def test_manifest_counts_match_written_files(tmp_path: Path) -> None:
     assert len(list(scan_directory(claude / "rules", pattern="*.md"))) == manifest.rules_written
     assert len(list(scan_directory(claude / "agents", pattern="*.md"))) == manifest.personas_written
     assert len(list((claude / "skills").glob("*/SKILL.md"))) == manifest.skills_written
-
-
-def test_the_server_s_contract_document_stays_in_the_package_and_is_not_written_to_the_workspace(
-    tmp_path: Path,
-) -> None:
-    """The workspace is what the agent reads. The MCP server reads its contracts from the package it runs from."""
-    shipped = {part.name for part in packaged_data(CONTRACT_DOCUMENT_DIRECTORY).iterdir() if part.is_file()}
-    assert shipped, "the operation contract document does not ship; nothing was judged"
-
-    materialise_workspace(tmp_path)
-
-    written = {path.name for path in tmp_path.rglob("*")}
-    # A copy here would be one no server reads and no regeneration renews.
-    assert CONTRACT_DOCUMENT_DIRECTORY not in written
-    assert not shipped & written

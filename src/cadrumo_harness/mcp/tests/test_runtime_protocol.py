@@ -17,6 +17,7 @@ from cadrumo.application.user_profile.access_contracts import (
 )
 from cadrumo.core.time.clock import now
 from cadrumo_harness.mcp import runtime_adapter as mcp_runtime
+from cadrumo_harness.mcp.protocol_contract import SIGN_IN_REMEDY
 from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_harness.mcp.server import build_server
 from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
@@ -52,11 +53,16 @@ async def test_fresh_adapter_orients_without_claiming_profile_access() -> None:
             "session": "none",
             "surface": "full",
             "denial": "authentication_required",
+            "remedy": SIGN_IN_REMEDY,
         }
 
         private = await client.call_tool("observe", {"observation": {}})
         assert private.is_error is True
-        assert private.structured_content == {"outcome": "refused", "code": "authentication_required"}
+        assert private.structured_content == {
+            "outcome": "refused",
+            "code": "authentication_required",
+            "remedy": SIGN_IN_REMEDY,
+        }
 
         invalid = await client.call_tool("control", {"action": "erase", "operation_id": "unsafe"})
         assert invalid.is_error is True

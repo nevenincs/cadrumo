@@ -32,7 +32,7 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.operations import profile_operation_subject
 from cadrumo.core.time.clock import now
-from cadrumo_harness.mcp.protocol_contract import MCP_TOOL_CATALOGUE
+from cadrumo_harness.mcp.protocol_contract import MCP_TOOL_CATALOGUE, sign_in_remedy
 from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_harness.mcp.runtime_admission import McpAdmission
 from cadrumo_harness.mcp.server import build_server
@@ -88,6 +88,7 @@ def _no_session(runtime: StoredSignInRuntime, denial: str, **facts: object) -> d
         "surface": "full",
         "denial": denial,
         **facts,
+        "remedy": sign_in_remedy(denial),
     }
 
 
@@ -116,7 +117,12 @@ async def test_with_nobody_signed_in_the_adapter_serves_its_tools_and_refuses_th
         assert status.is_error is False
         assert status.structured_content == _no_session(runtime, "authentication_required", **_ABSENT)
         assert private.is_error is True
-        assert private.structured_content == {"outcome": "refused", "code": "authentication_required", **_ABSENT}
+        assert private.structured_content == {
+            "outcome": "refused",
+            "code": "authentication_required",
+            **_ABSENT,
+            "remedy": sign_in_remedy("authentication_required"),
+        }
         # No sign-in is stored, so there was no proof to present and the runtime admitted nobody.
         assert _logins(runtime) == []
         assert runtime.leases() == ()
@@ -174,7 +180,11 @@ async def test_the_adapter_resumes_a_live_sign_in_once_and_loses_it_when_the_run
             # The sign-in times out: the runtime passes its deadlines and retires every session under it.
             runtime.clock.ahead = timedelta(days=2)
             assert await asyncio.to_thread(adapter._retired.wait, 10)
-            assert await adapter.call(*_PROFILE_CALL) == {"outcome": "refused", "code": "session_expired"}
+            assert await adapter.call(*_PROFILE_CALL) == {
+                "outcome": "refused",
+                "code": "session_expired",
+                "remedy": sign_in_remedy("session_expired"),
+            }
             assert adapter.client is None and adapter.admission is None
             assert _logins(runtime)[3:] == _ONE_MCP_RESUME
             # Each later call asks once more and is refused again; nothing is retried in between.
@@ -231,7 +241,12 @@ async def test_after_the_person_signs_out_the_adapter_is_refused_until_a_new_sig
             assert await asyncio.to_thread(adapter._retired.wait, 10)
 
             # The sign-in and its proof are gone, so the adapter has nothing to present and submits nothing.
-            absent = {"outcome": "refused", "code": "authentication_required", **_ABSENT}
+            absent = {
+                "outcome": "refused",
+                "code": "authentication_required",
+                **_ABSENT,
+                "remedy": sign_in_remedy("authentication_required"),
+            }
             assert await adapter.call(*_PROFILE_CALL) == absent
             assert await adapter.call("execute", _read_status_submission(runtime)) == absent
             assert await adapter.call("status", {}) == _no_session(runtime, "authentication_required", **_ABSENT)
@@ -265,12 +280,17 @@ async def test_when_the_runtime_passes_the_idle_deadline_it_ends_the_adapter_ses
             runtime.clock.ahead = idle - now() + timedelta(minutes=1)
             assert await asyncio.to_thread(adapter._retired.wait, 10)
 
-            assert await adapter.call(*_PROFILE_CALL) == {"outcome": "refused", "code": "session_expired"}
+            assert await adapter.call(*_PROFILE_CALL) == {
+                "outcome": "refused",
+                "code": "session_expired",
+                "remedy": sign_in_remedy("session_expired"),
+            }
             assert adapter.client is None and adapter.admission is None and runtime.leases() == ()
             # Each later call asks once more and is refused again: nothing the person left behind revives the session.
             assert await adapter.call("execute", _read_status_submission(runtime)) == {
                 "outcome": "refused",
                 "code": "session_expired",
+                "remedy": sign_in_remedy("session_expired"),
             }
             assert _mcp_logins(runtime) == 3
         finally:
@@ -295,6 +315,7 @@ async def test_a_sign_in_past_its_idle_deadline_is_retired_and_only_a_new_one_le
                 "outcome": "refused",
                 "code": "session_expired",
                 "sign_in_reason": "expired_idle",
+                "remedy": sign_in_remedy("session_expired"),
             }
             # The custody that holds the sign-in found it timed out and removed it, so it is not offered again.
             assert runtime.stored_sign_in() is None
@@ -302,6 +323,7 @@ async def test_a_sign_in_past_its_idle_deadline_is_retired_and_only_a_new_one_le
                 "outcome": "refused",
                 "code": "authentication_required",
                 **_ABSENT,
+                "remedy": sign_in_remedy("authentication_required"),
             }
             assert _mcp_logins(runtime) == 1
             assert runtime.leases() == ()
@@ -373,8 +395,14 @@ async def test_a_proof_the_runtime_finds_no_sign_in_for_is_refused_and_nothing_i
                 "code": "authentication_required",
                 "sign_in_reason": "absent",
                 "sign_in_binding": "generation_changed",
+                "remedy": sign_in_remedy("authentication_required"),
             }
-            absent = {"outcome": "refused", "code": "authentication_required", **_ABSENT}
+            absent = {
+                "outcome": "refused",
+                "code": "authentication_required",
+                **_ABSENT,
+                "remedy": sign_in_remedy("authentication_required"),
+            }
             assert await adapter.call(*_PROFILE_CALL) == absent
             assert await adapter.call("status", {}) == _no_session(runtime, "authentication_required", **_ABSENT)
             # The runtime was asked once and removed the record it refused, so the later calls had nothing to present.
@@ -387,7 +415,7 @@ async def test_a_proof_the_runtime_finds_no_sign_in_for_is_refused_and_nothing_i
 
 
 @pytest.mark.anyio
-async def test_with_no_profile_selected_the_tool_list_and_public_queries_answer_and_the_runtime_is_not_asked(
+async def test_with_no_profile_selected_only_the_tool_list_and_status_answer_and_the_runtime_is_not_asked(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     with (
@@ -408,8 +436,12 @@ async def test_with_no_profile_selected_the_tool_list_and_public_queries_answer_
             await adapter.close()
 
         assert names == [name for name, _description, _schema in MCP_TOOL_CATALOGUE]
-        assert support.is_error is False and support.structured_content is not None
-        assert support.structured_content["outcome"] == "published"
+        assert support.is_error is True
+        assert support.structured_content == {
+            "outcome": "refused",
+            "code": "authentication_required",
+            "remedy": sign_in_remedy("authentication_required"),
+        }
         assert status.is_error is False
         assert status.structured_content == {
             "outcome": "status",
@@ -418,8 +450,13 @@ async def test_with_no_profile_selected_the_tool_list_and_public_queries_answer_
             "session": "none",
             "surface": "full",
             "denial": "authentication_required",
+            "remedy": sign_in_remedy("authentication_required"),
         }
-        assert private.structured_content == {"outcome": "refused", "code": "authentication_required"}
+        assert private.structured_content == {
+            "outcome": "refused",
+            "code": "authentication_required",
+            "remedy": sign_in_remedy("authentication_required"),
+        }
         # A sign-in is stored, and still nothing resumed it: there was no profile to resume it for.
         assert runtime.stored_sign_in() is not None
         assert _logins(runtime) == [] and runtime.leases() == ()

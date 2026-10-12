@@ -16,7 +16,7 @@ from cadrumo.application.operations.frontend_requests import OperationResultProj
 from cadrumo.application.runtime.contracts import RuntimeRefusalError
 from cadrumo.application.runtime.projection_pages import ProjectionPage
 from cadrumo.application.user_profile.access_contracts import AccessDenialCode
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
+from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.sign_in_refusals import SignInRefusal
 from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
@@ -72,8 +72,10 @@ _SIGN_IN_REFUSAL: Final = (
     "where the runtime gave them, the facts the command line reports with it: sign_in_reason, why the sign-in "
     "was refused (absent, expired_idle, throttled and so on); sign_in_binding, why a stored sign-in no longer "
     "counts here (generation_changed after a sign-out or lock elsewhere, login_mismatch when it was made at "
-    "another login); and seconds, how long a throttled sign-in waits before the password is tried again. "
-    "status reports the same facts beside denial"
+    "another login); sign_in_keychain, why this server's logon cannot use the protected credential store that "
+    "holds a stored sign-in (logon_without_credentials for a Windows logon without credentials, such as an "
+    "OpenSSH key sign-in; no_backend; refused); and seconds, how long a throttled sign-in waits before the "
+    "password is tried again. status reports the same facts beside denial"
 )
 
 PERSON_ACT_REQUIRED: Final = AccessDenialCode.PERSON_ACT_REQUIRED.value
@@ -86,12 +88,47 @@ SIGN_IN_REMEDY: Final = (
 )
 """What a call refused for want of a live sign-in or a configured key tells the agent to do."""
 
+KEYCHAIN_REMEDY: Final = (
+    "This server runs in a logon that cannot use the protected credential store, so no sign-in can be followed "
+    "from it. Ask the person to run Cadrumo and this agent from their desktop session or a logon made with their "
+    "password. You cannot change this, and you never ask for a password, a key or any other secret"
+)
+"""What a refusal tells the agent when this server's logon cannot reach the store a stored sign-in needs."""
+
 PERSON_ACT_REMEDY: Final = (
     "Ask the person to do this in Cadrumo. Signing in or out, locking, passwords, recovery, keys and their grants, "
     "and anything outside this profile are the person's acts, and you never ask for a password, a key or any "
     "other secret"
 )
 """What a call refused as the person's own act tells the agent to do."""
+
+PROFILE_CHANGED_REMEDY: Final = (
+    "The person is now signed in to another profile than the one this agent session served, so this session is "
+    "over and nothing of either profile is reachable through it. Ask the person to start a new agent session "
+    "in Cadrumo"
+)
+"""What a call refused because the signed-in profile changed under a bound connection tells the agent to do."""
+
+_ADMISSION_REFUSALS: Final = frozenset(
+    {*(code.value for code in AccessDenialCode), *(code.value for code in AutomationCustodyCode)}
+) - {PERSON_ACT_REQUIRED}
+
+
+def sign_in_remedy(code: str, facts: Mapping[str, Any] | None = None) -> str | None:
+    """Return what to tell the agent when nothing admits the server and the runtime refused with ``code``.
+
+    Only a refusal of admission sends the agent to the person; a runtime that
+    is not running or is draining, or a malformed call, says something else.
+    A profile other than the connection's being the one signed in to ends the
+    agent session, which only a new one started by the person replaces.
+    """
+    if code == AccessDenialCode.PROFILE_MISMATCH.value:
+        return PROFILE_CHANGED_REMEDY
+    if facts and "sign_in_keychain" in facts:
+        # No sign-in can be followed from this logon, so signing in again would change nothing.
+        return KEYCHAIN_REMEDY
+    return SIGN_IN_REMEDY if code in _ADMISSION_REFUSALS else None
+
 
 _UNKNOWN_OUTCOME: Final = (
     "An answer whose outcome is unresolved is not an error: it says the effect is not known, and its "
@@ -132,11 +169,12 @@ def _acts(title: str, *, destructive: bool, open_world: bool) -> ToolHints:
 _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
     (
         "status",
-        "Current exact-profile authorization and availability. Finding and describing operations needs neither "
-        "a sign-in nor a running Cadrumo: search and describe answer either way, as authority and corpus_search "
-        "do, so what can be run is readable first. A notice member carries the runtime's lifecycle "
-        "notice: upgrade_pending says an update is ready and the runtime restarts for it once idle, after which "
-        f"the next call re-establishes the session. {_SIGN_IN_REFUSAL}",
+        "Current exact-profile authorization and availability. You work only inside the one profile the person "
+        "signed in to in Cadrumo, or the one a key the person configured is for, and every tool but this one "
+        "needs that: with neither, each answers refused, and remedy says to ask the person to sign in to Cadrumo. "
+        "You never sign in, and never ask for a password, a key or any other secret. A notice member carries the "
+        "runtime's lifecycle notice: upgrade_pending says an update is ready and the runtime restarts for it once "
+        f"idle, after which the next call re-establishes the session. {_SIGN_IN_REFUSAL}",
         _schema({}),
         _reads("Session and profile status"),
     ),
@@ -204,9 +242,7 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         "The contract and the request schema are not in a row: pass a small limit, then describe the operation "
         f"you pick. A page holds {SEARCH_PAGE_DEFAULT} rows when limit is omitted and at most {SEARCH_PAGE_MAX}: "
         "pass a returned next_cursor as cursor for the next page, and family to narrow to one definition "
-        "family. It needs neither a sign-in nor a running Cadrumo: with no session the reply "
-        "says session none and covers every registered operation on this connection's surface, where a session "
-        "covers those in its scope",
+        "family. The rows cover the operations in this session's scope",
         _schema(
             {},
             {
@@ -226,9 +262,7 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         "a transient_financial_operand is described with operator_input_json_schema, the typed input execute "
         "submits for it. A contract whose payload names values its schema cannot enumerate is described with "
         "payload_vocabulary: for user-profile.patch, every question_id it may set, with its meaning and, where "
-        "the answer is a choice, the values it takes, as the command line lists them in its help. It needs "
-        "neither a sign-in nor a running Cadrumo: with no session it answers with the same contract, schema and "
-        "vocabulary, and the reply says session none",
+        "the answer is a choice, the values it takes, as the command line lists them in its help",
         _schema({"definition_id": _TEXT}),
         _reads("Describe an operation"),
     ),
@@ -421,6 +455,8 @@ def sign_in_refusal_facts(sign_in: SignInRefusal | None) -> dict[str, Any]:
     facts: dict[str, Any] = {"sign_in_reason": str(sign_in.reason)}
     if sign_in.binding is not None:
         facts["sign_in_binding"] = sign_in.binding.value
+    if sign_in.keychain is not None:
+        facts["sign_in_keychain"] = sign_in.keychain.value
     if sign_in.remaining_seconds is not None:
         facts["seconds"] = sign_in.remaining_seconds
     return facts

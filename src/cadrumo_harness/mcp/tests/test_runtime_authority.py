@@ -7,7 +7,6 @@ from collections.abc import Callable
 from dataclasses import replace
 from datetime import date
 from pathlib import Path
-from uuid import uuid4
 
 import pytest
 
@@ -33,8 +32,10 @@ from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import 
     minimal_revision,
     synthetic_legal_identity,
 )
+from cadrumo_harness.mcp.protocol_contract import SIGN_IN_REMEDY
 from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_harness.mcp.server import build_server
+from cadrumo_harness.mcp.tests.admitted_lease import admitted_adapter
 from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
@@ -66,12 +67,11 @@ async def _assert_all_advertised_authority_queries_refuse(adapter: RuntimeMcpAda
             refused = await client.call_tool("authority", {"query": query, **requests[query]})
             assert refused.is_error is True
             assert refused.structured_content == {"outcome": "refused", "code": code}
-    assert adapter.client is None
 
 
 @pytest.mark.anyio
 async def test_public_authority_queries_preserve_coordinates_and_support_projection() -> None:
-    adapter = RuntimeMcpAdapter(profile_id=uuid4(), client=None)
+    adapter = admitted_adapter()
     try:
         described = await adapter.call(
             "authority",
@@ -85,7 +85,6 @@ async def test_public_authority_queries_preserve_coordinates_and_support_project
         )
 
         assert described["outcome"] == "published"
-        assert adapter.client is None
         assert described["report"]["code"] == "100"
         assert described["report"]["filing_year"] == 2024
         assert described["report"]["period"] == "0A"
@@ -105,15 +104,13 @@ async def test_public_authority_queries_preserve_coordinates_and_support_project
 
         assert support["outcome"] == "published"
         assert support["report"] == canonical_support
-        assert adapter.client is None
     finally:
         await adapter.close()
 
 
 @pytest.mark.anyio
-async def test_public_authority_answers_a_connection_with_no_key_no_profile_and_nobody_signed_in(
-    tmp_path: Path,
-) -> None:
+async def test_authority_is_refused_to_a_connection_with_no_key_and_nobody_signed_in(tmp_path: Path) -> None:
+    """Reference data is read inside the person's profile like everything else; with no session nothing answers."""
     with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
         adapter = RuntimeMcpAdapter(profile_id=None, client=None, resumes_sign_in=True)
         try:
@@ -124,10 +121,10 @@ async def test_public_authority_answers_a_connection_with_no_key_no_profile_and_
             await adapter.close()
 
     assert {"status", "authority", "corpus_search", "search", "execute"} <= names
-    assert support.is_error is False
+    assert support.is_error is True
     assert isinstance(support.structured_content, dict)
-    assert support.structured_content["outcome"] == "published"
-    # A public query binds no profile and asks the runtime for nothing.
+    assert support.structured_content["code"] == "authentication_required"
+    assert support.structured_content["remedy"] == SIGN_IN_REMEDY
     assert adapter.client is None and adapter.profile_id is None
 
 
@@ -156,7 +153,7 @@ async def test_authority_response_provenance_matches_the_pin_passed_to_the_real_
         )
 
     monkeypatch.setattr(reference_catalogue, "registry_describe_modelo_for_registry_scope", record_pin_and_run_query)
-    adapter = RuntimeMcpAdapter(profile_id=uuid4(), client=None)
+    adapter = admitted_adapter()
     try:
         result = await adapter.call(
             "authority",
@@ -177,7 +174,7 @@ async def test_missing_configured_authority_refuses_without_packaged_fallback(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(authority_module, "_bundled_indexed_authority", None)
-    adapter = RuntimeMcpAdapter(profile_id=uuid4(), client=None)
+    adapter = admitted_adapter()
     try:
         with override_settings(cadrumo_authority_root=tmp_path):
             await _assert_all_advertised_authority_queries_refuse(adapter, "published_authority_unavailable")
@@ -211,7 +208,7 @@ async def test_corrupt_configured_database_refuses_without_packaged_fallback(
     _copy_and_corrupt_published_database(source_descriptor, tmp_path)
     monkeypatch.setattr(authority_module, "_bundled_indexed_authority", None)
 
-    adapter = RuntimeMcpAdapter(profile_id=uuid4(), client=None)
+    adapter = admitted_adapter()
     try:
         with override_settings(cadrumo_authority_root=tmp_path):
             await _assert_all_advertised_authority_queries_refuse(adapter, "published_authority_invalid")
@@ -257,7 +254,7 @@ async def test_sdk_query_finishes_on_held_publication_across_descriptor_cutover(
 
     monkeypatch.setattr(authority_module, "_bundled_indexed_authority", authority)
     monkeypatch.setattr(reference_catalogue, "registry_support_matrix", cut_over_and_query)
-    adapter = RuntimeMcpAdapter(profile_id=uuid4(), client=None)
+    adapter = admitted_adapter()
     try:
         async with connected_server_and_client_session(build_server(adapter)) as client:
             result = await client.call_tool("authority", {"query": "support"})

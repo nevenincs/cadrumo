@@ -162,7 +162,8 @@ def resume_shared_sign_in(client: RuntimeFrontendClient, *, profile_id: UUID) ->
         denial = _UNPRESENTED_SIGN_IN_REFUSALS.get(refused.reason, AccessDenialCode.AUTHENTICATION_REQUIRED)
         # The reason the proof was not presented is told as the command line tells it.
         raise RuntimeFrontendRefusedError(
-            denial.value, sign_in=SignInRefusal(reason=refused.reason, binding=refused.binding)
+            denial.value,
+            sign_in=SignInRefusal(reason=refused.reason, binding=refused.binding, keychain=refused.keychain),
         ) from None
     return require_exact_admitted_status(client, profile_id=profile_id, admission=McpAdmission.SIGN_IN)
 

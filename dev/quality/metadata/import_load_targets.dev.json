@@ -423,7 +423,6 @@
         "dev.first_party_source",
         "dev.harness_data",
         "dev.harness_data.command_operation_reference",
-        "dev.harness_data.operation_contract_document",
         "dev.identity",
         "dev.identity.__main__",
         "dev.identity._tree_scan",

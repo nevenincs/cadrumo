@@ -16,7 +16,6 @@ from cadrumo.adapters.local_runtime.runtime_credentials import open_installed_cr
 from cadrumo.application.operations.mcp_surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES, McpSurface
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.operator_output.runtime_remedies import runtime_unavailable_remedy
-from cadrumo.application.runtime.contracts import RuntimeRefusalError
 from cadrumo.application.runtime.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
 from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.core.async_cleanup import (
@@ -38,9 +37,9 @@ from .protocol_contract import (
     public_value,
     refusal_code,
     refusal_facts,
+    sign_in_remedy,
     validate_tool_arguments,
 )
-from .public_operation_discovery import SESSIONLESS_DISCOVERY_TOOLS, discover_public_operations
 from .runtime_admission import (
     AdmissionDenial,
     McpAdmission,
@@ -81,9 +80,12 @@ class RuntimeMcpAdapter:
         it. With it the connection also asks the runtime to resume the
         person's sign-in whenever a call needs the profile and no session is
         held, and only for the installation's selected profile. A named
-        ``profile_id`` still binds the connection, so the sign-in is resumed
-        only while that profile is the selected one; with none named, the
-        connection acts for whichever profile is selected at each call.
+        ``profile_id`` binds the connection, so the sign-in is resumed only
+        while that profile is the selected one. With none named, the
+        connection is bound to the profile of the first sign-in it resumes,
+        and from then on it is refused every call while another profile is
+        selected: an agent session never follows the person to another
+        profile.
 
         The surface decides which tools answer and which operations search and
         describe reveal. That is a convenience: every admission this adapter
@@ -172,12 +174,11 @@ class RuntimeMcpAdapter:
             raise
 
     async def _bound_profile(self) -> UUID:
-        """Return the profile this connection acts for, following the selection when none was named.
+        """Return the profile this connection acts for, following the selection only until it is bound.
 
-        The selection is then read at every call that needs the profile, as
-        each command reads it. Whatever this connection holds for another
-        profile is released before the new one is bound, and with no profile
-        selected it holds nothing.
+        Until a sign-in is first resumed the selection is read at every call,
+        as each command reads it, and with no profile selected nothing is
+        held. Once one is resumed the connection is bound to its profile.
         """
         if self._named_profile_id is not None:
             return self._named_profile_id
@@ -281,6 +282,8 @@ class RuntimeMcpAdapter:
             if self.client is None:
                 self.client, self._retired = await self._open_signed_in_client(profile_id)
                 self.admission = McpAdmission.SIGN_IN
+                # Bound for its life to the profile of the sign-in it resumed.
+                self._named_profile_id = profile_id
         except Exception as error:
             self._admission_denial = AdmissionDenial.of(error)
             return
@@ -362,16 +365,21 @@ class RuntimeMcpAdapter:
             return reply
 
     async def _answer(self, name: str, args: dict[str, Any]) -> dict[str, Any]:
-        """Serve one tool call, turning every failure into its stable refusal."""
+        """Serve one tool call, turning every failure into its stable refusal.
+
+        ``status`` answers whatever holds; every other tool needs a session
+        the person's live sign-in or configured key admitted, and without one
+        it is refused with the remedy that sends the agent to the person.
+        """
         try:
             validate_tool_arguments(name, args)
+            await self._hold_or_restore_session()
+            if name != "status":
+                self._admitted()
             if name == "authority":
                 return await self._wire(lambda: authority_query(args))
             if name == "corpus_search":
                 return await self._wire(lambda: corpus_query(args))
-            await self._hold_or_restore_session()
-            if name in SESSIONLESS_DISCOVERY_TOOLS:
-                return await self._wire(lambda: self._discover(name, args))
             return await self._wire(lambda: call_admitted_operation(self, name, args))
         except Exception as error:
             code = refusal_code(error)
@@ -385,36 +393,10 @@ class RuntimeMcpAdapter:
                 reply["remedy"] = PERSON_ACT_REMEDY
             elif remedy := runtime_unavailable_remedy(code):
                 reply["remedy"] = remedy
+            elif self.client is None and (told := sign_in_remedy(code, reply)) is not None:
+                # Nothing admits this server: no live sign-in and no configured key.
+                reply["remedy"] = told
             return reply
-
-    def _discover(self, name: str, args: dict[str, Any]) -> dict[str, Any]:
-        """Answer ``search`` or ``describe`` from the runtime under a live session, and without one all the same.
-
-        With no session the answer is read from the contracts this package
-        ships, so it needs neither a sign-in nor a running runtime. A lease the
-        runtime no longer admits is no session, as ``status`` reports it, and a
-        lease whose runtime is gone cannot be asked: both are answered from the
-        shipped contracts too. A refusal under a live session stands, because it
-        is that session's own: an operation outside its scope, say.
-        """
-        if self.client is not None:
-            try:
-                return call_admitted_operation(self, name, args)
-            except (RuntimeFrontendRefusedError, RuntimeRefusalError):
-                if self._session_is_live():
-                    raise
-        return discover_public_operations(name, args, self.surface)
-
-    def _session_is_live(self) -> bool:
-        """Say whether the runtime still admits the lease held, by the witness every admission is held to."""
-        client, profile_id, admission = self.client, self.profile_id, self.admission
-        if client is None or profile_id is None or admission is None:
-            return False
-        try:
-            require_exact_admitted_status(client, profile_id=profile_id, admission=admission)
-        except (RuntimeFrontendRefusedError, RuntimeRefusalError):
-            return False
-        return True
 
     async def _hold_or_restore_session(self) -> None:
         if self._resumes_sign_in:

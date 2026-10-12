@@ -18,6 +18,7 @@ from cadrumo.application.user_profile.automation_custody_port import (
 )
 from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 from cadrumo.entrypoints.cli.tests.native_api_cli_support import native_api_cli_session
+from cadrumo_harness.mcp.protocol_contract import SIGN_IN_REMEDY
 
 from .test_installed_authenticated_stdio import (
     _installed_mcp_executable,
@@ -101,22 +102,24 @@ async def test_installed_missing_reference_keeps_public_stdio_and_fences_private
                 denial = status["denial"]
                 assert denial in expected_denials, f"{backend.value} denial was {denial!r}"
 
+                refused = {"outcome": "refused", "code": denial, "remedy": SIGN_IN_REMEDY}
+                assert status["remedy"] == SIGN_IN_REMEDY
                 public = await client.call_tool("authority", {"query": "modelos"})
-                assert public.is_error is False, _object(public.structured_content)
-                assert _object(public.structured_content)["outcome"] == "published"
+                assert public.is_error is True
+                assert public.structured_content == refused
                 # No tool names another key: only the person's launch configuration does.
                 recovery = await client.call_tool("authorization_prepare", {"credential_reference": str(reference)})
                 assert recovery.is_error is True
                 assert recovery.structured_content == {"outcome": "refused", "code": "unknown_tool"}
 
-                # Which operations exist is no profile's data, so both still answer, under no session.
+                # With no session nothing but status answers: discovery and reference data are refused too.
                 for name, args in (
                     ("search", {"query": "auth.local-read", "limit": 1}),
                     ("describe", {"definition_id": "auth.local-read"}),
                 ):
                     discovered = await client.call_tool(name, args)
-                    assert discovered.is_error is False, name
-                    assert _object(discovered.structured_content)["session"] == "none", name
+                    assert discovered.is_error is True, name
+                    assert discovered.structured_content == refused, name
                 for name, args in (
                     (
                         "execute",
@@ -132,7 +135,7 @@ async def test_installed_missing_reference_keeps_public_stdio_and_fences_private
                 ):
                     private = await client.call_tool(name, args)
                     assert private.is_error is True, name
-                    assert private.structured_content == {"outcome": "refused", "code": denial}, name
+                    assert private.structured_content == refused, name
 
                 retried = await client.call_tool("authenticate", {"credential_reference": str(reference)})
                 assert retried.is_error is True
