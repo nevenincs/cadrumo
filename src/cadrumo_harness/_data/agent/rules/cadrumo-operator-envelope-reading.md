@@ -32,8 +32,9 @@ any nested operation response before deciding what happened.
   line prints for the same refusal. Report them. A reply without `error_detail`
   leaves the code the observation carries as `refusal_ref` or
   `failure_error_code`.
-- `status`, discovery, authorization, authentication, and `authority` have their
-  own result shapes. Read the fields actually returned by that tool.
+- `status`, discovery and `authority` have their own result shapes. Read the
+  fields actually returned by that tool. A refusal for want of a sign-in, or of an
+  act that is the person's, carries a `remedy`: pass it on to the person.
 
 The MCP error indicator marks a refused response and never an unresolved one: an
 outcome that is not known is not an error, and is not to be retried as one. Read

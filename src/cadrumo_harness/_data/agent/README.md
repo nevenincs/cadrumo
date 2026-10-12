@@ -23,51 +23,44 @@ Subtrees:
 - `reference/`: generated documents a rule sends the agent to. `command-operations.md`
   lists, for every command a skill names, the tools that do its work through MCP: the
   registered operations the command submits, which `execute` runs, and every other
-  route, which is an operation for `execute`, an act for `installation`, a query for
-  `authority` or an action for `session`. Only the four commands that print help or
-  start the terminal interface have none.
+  route, which is an operation for `execute` or a query for `authority`. A command
+  whose work is the person's own act says so instead: signing in or out, locking,
+  sessions, keys, passwords and other secrets, recovery, and installation work such as
+  the profile list, storage, repair and resetting every profile. Only the four
+  commands that print help or start the terminal interface have no route at all.
 
-Start with MCP `status`, then `search` and `describe` for the registered
-operations. Both answer before anyone has signed in and with Cadrumo not
-running, from every operation on the connection's surface, and with a session
-from the operations it may use. Every
-operation the command line can run is among them, with the same
-results. Public tax queries use `authority`. A connection is either under
-the person's own Cadrumo sign-in or under an enrolled key, and `status` says which:
-its session is `sign_in`, `typed_sign_in`, `key` or `none`, and it names the
-surface the connection serves. Take a password or any other secret by reference:
-ask the person to run `cadrumo-mcp --hold-secret` in a terminal of their own and to
-give you only the reference it prints, which goes in `secret_reference`,
-`new_secret_reference` or `new_secret_confirmation_reference`. Do not ask for a secret to be typed into the conversation, and never
-repeat one there. A secret the person types anyway goes in the secret argument of
-that one call and nowhere else.
+You work only inside the one Cadrumo profile the person is signed in to, or the
+profile a key the person issued and configured for this server is for. Start with
+MCP `status`. It says whether a session admits this server: its session is
+`sign_in` when the person's own sign-in is resumed, `key` when the configured key
+admitted it, or `none`, and it names the surface the connection serves. With
+`none`, every tool but `status` is refused, reference data and operation discovery
+included, and the reply's `remedy` says what to do: ask the person to sign in to
+Cadrumo, then call again. Under a session, `search` and `describe` find the
+registered operations and `authority` answers public tax queries. Every operation
+the command line can run inside the profile is among them, with the same results.
 
-Under the person's sign-in, a profile tool is refused with `authentication_required`
-when nobody is signed in to Cadrumo. Tell the person to sign in to Cadrumo, then
-call again, or sign the connection in with the `session` tool's `sign_in` action
-and a held password's reference. The session ends when the person signs out, locks, or the sign-in
-reaches its deadline, which by default is 15 minutes after the password was
-entered. Activity through MCP does not extend it. To work while nobody is signed in,
-prepare an authorization request for human approval, which enrolls a key.
+You never sign in, sign out, lock, list or deny sessions, request or approve a key,
+change or reset a password, enrol recovery, or act outside your profile, and you
+never ask for a password, a key or any other secret. No tool takes one. An operation
+whose contract needs a secret or administers keys is the person's own act: it is
+refused with `person_act_required`, and its `remedy` says to ask the person to do it
+in Cadrumo. Tell the person what is needed and stop that step.
 
-Under an enrolled key, configure MCP with the exact profile ID and the credential
-reference. Approved protected credential references support fresh admission while
-the grant, installation and login policy remain valid. Leave the credential
-reference empty for first enrollment, use `authorization_prepare` and
-`authorization_request`, and have the user review the requested operations,
-periods and disclosures in CLI or TUI. `authorization_poll` completes protected
-delivery; `authenticate` uses the returned nonsecret credential reference. Reuse
-that reference for later sessions only while the grant remains valid. Session
-locking ends that session; revoking the key or suspending the profile prevents
-renewed access under the affected authority. An unattended grant does not
-override those controls.
+The session resumed from the person's sign-in ends when the person signs out,
+locks, signs in to another profile, or the sign-in reaches its deadline, which by
+default is 15 minutes after the password was entered. Activity through MCP does not
+extend it. A refused call after that is answered with the same remedy; a call made
+after the person signs in again resumes the new sign-in. If the person signed in to
+another profile, the remedy says this agent session is over: the person starts a new
+one.
 
-For rotation, renewal or a scope change, pass the existing protected
-`credential_reference` to `authorization_prepare`, then submit the change with
-`authorization_request`. This binds the request to that key's existing grant.
-Human approval is still required. Poll for the terminal receipt and authenticate
-again afterward; rotation returns a new credential reference. An unresolved
-reply retains the request ID for reconciliation and does not mean approval failed.
+To work while nobody is signed in, the person issues a key for the profile with
+`aeat config profile automation` and starts the MCP server with `--profile-id` and
+`--credential-reference`. The server authenticates with that key on every call while
+its grant, the installation and the login policy remain valid. Revoking the key or
+locking the profile ends that access. Requesting, renewing, rotating or changing the
+scope of a key is the person's act in Cadrumo, never yours.
 
 A lost reply is not proof that an operation failed or settled. Retain operation
 receipts and reconcile uncertain effects after reconnecting.

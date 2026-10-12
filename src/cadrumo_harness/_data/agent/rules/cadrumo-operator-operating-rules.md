@@ -47,39 +47,32 @@ operation that matches each one with `search`. Never construct a tool name or
 operation payload from a CLI command's spelling. If an operation you need is not
 found, or a call is refused, report exactly what you searched and what came back.
 
-A connection is either under the person's own Cadrumo sign-in or under an enrolled
-key for one exact profile UUID. Use `status` to inspect current authority: it
-reports whether the session is `sign_in`, `typed_sign_in`, `key` or `none`. Under
-the sign-in, a refusal with `authentication_required` means nobody is signed in to
-Cadrumo. The person can sign in to Cadrumo themselves, after which you call again,
-or you can sign the connection in with the `session` tool's `sign_in` action, which
-takes the profile password. `search`, `describe`, `authority` and `corpus_search`
-need neither a session nor a running Cadrumo, and `installation` needs no
-session, so read what the work needs before you ask.
+You work only inside the one Cadrumo profile the person is signed in to, or the
+profile a key the person issued and configured for this server is for. Use `status`
+to inspect current authority: it reports whether the session is `sign_in`, `key` or
+`none`. With `none`, every other tool is refused, reference data and operation
+discovery included, and the reply's `remedy` tells you what to do. Usually that is to
+ask the person to sign in to Cadrumo and then call again. If the person signed in to
+another profile, this agent session is over and the person starts a new one.
 
-Take a password, a recovery code or any other secret by reference. Do not ask the
-person to type it into the conversation: whatever is typed there has passed through
-you and the host's transcript before it reaches Cadrumo. Ask them to run
-`cadrumo-mcp --hold-secret` in a terminal of their own, enter the secret there, and
-give you only the reference it prints. Put that reference in `secret_reference`,
-`new_secret_reference` or `new_secret_confirmation_reference`, whichever stands
-for the secret argument the action takes, and leave that secret argument out; a
-call gives one form or the other, never both. A secret held that way stays until the
-person deletes it, so keep the reference and use it again after a lock or an
-expiry. One held with `--once` is spent by the first call that sends it, even
-if that send then fails; a call refused before it is sent leaves it held. Do not
-run `cadrumo-mcp --hold-secret` yourself: it works only at a person's terminal. If
-the person gives you the secret as text anyway, put it in the secret argument of
-that one call and nowhere else, and never repeat it.
+You never sign in, sign out, lock, list or deny sessions, request, approve, rotate or
+revoke a key, change or reset a password, enrol or use recovery, or work outside your
+profile, such as listing, importing, deleting or resetting profiles, or repairing or
+reclaiming storage. Those are the person's acts in Cadrumo. A call or operation that
+would take one is refused with `person_act_required`; ask the person to do it in
+Cadrumo and stop that step. Never ask for a password, a recovery code, a key or any
+other secret, and never repeat one: no tool takes a secret, and whatever is typed
+into the conversation passes through you and the host's transcript. If the person
+types one anyway, do not use it or repeat it, and tell them to enter it in Cadrumo
+instead.
 
-The sign-in session ends with the person's sign-out, lock or sign-in deadline. To
-work while nobody is signed in without any password, use
-`authorization_prepare`, `authorization_request`, and `authorization_poll` for
-human-approved enrollment of a key, then `authenticate` with the delivered
-protected credential reference.
-Keep API secrets in protected storage; only the nonsecret credential reference
-belongs in agent configuration. A grant can permit fresh admission after an
-earlier key session expires; expiry, revocation and profile-wide lock still apply.
+The sign-in session ends with the person's sign-out, lock, sign-in to another
+profile or sign-in deadline. Activity through MCP does not extend it. To let you work
+while nobody is signed in, the person issues a key with `aeat config profile
+automation` and configures it, by its nonsecret credential reference, in this
+server's launch configuration. Only the person does that. A key's grant can admit
+fresh sessions after an earlier one expires; expiry, revocation and a profile-wide
+lock still end its access.
 
 ## Respect mutability
 

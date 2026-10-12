@@ -160,10 +160,9 @@ This is a portability gap, not a recovery one. Backup and recovery are
 unaffected and run through `aeat config profile archive export` and
 `aeat config profile archive import`, which operate on the sealed profile capsule.
 The terminal interface offers inspecting and restoring an archive in
-**Installation**, and an agent uses the `installation` tool's `archive_inspect`,
-`archive_import_prepare` and `archive_import` actions with the profile
-passphrase by reference. Both need Cadrumo's runtime running and name the
-archive by its absolute path.
+**Installation**; it needs Cadrumo's runtime running and names the archive by its
+absolute path. An agent connected through MCP never imports an archive: it takes
+the profile passphrase and works outside any one profile.
 
 The sealed custody archive is an encrypted profile backup, not a structured,
 readable copy of one profile's records. It excludes recovery material,

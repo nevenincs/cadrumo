@@ -9,12 +9,12 @@ Cadrumo, so you can learn what a piece of work needs first.
 
 ## Capability and shape questions
 
-- "Which operations can this agent use?" → MCP `search`, then `describe`.
-  Under a session `search` lists the operations that session may use; a reply
-  that says `session` `none` lists every registered operation, and which of
-  them you may run is settled when a session is held. Read the registered
-  contract and schema before calling `execute`; never infer permission from a
-  persona name or the human's active profile.
+- "Which operations can this agent use?" → MCP `search`, then `describe`,
+  under a session: `search` lists the operations that session may use. With no
+  session both are refused, and the reply's `remedy` says to ask the person to
+  sign in to Cadrumo. Read the registered contract and schema before calling
+  `execute`; never infer permission from a persona name or the human's active
+  profile.
 - "How do I read the result of any command?" → the envelope-reading rule; every
   `--format json` response shares one spine.
 
@@ -100,8 +100,8 @@ official source rather than treating a product command as legal authority.
   `aeat config profile view`.
 - "Configure AEAT read access" → the `aeat config` provider and certificate
   operations. Tell the person what you are about to change and wait for their
-  go-ahead; a password, key or certificate secret goes through a protected channel
-  and never through the conversation.
+  go-ahead. An operation that takes a password, key or certificate secret is the
+  person's act: they do it in Cadrumo, and no secret goes through the conversation.
 
 ## Storage and disk-space questions
 
@@ -130,58 +130,26 @@ official source rather than treating a product command as legal authority.
   category with `aeat config storage view <area>` first; `reclaim` is not a
   general "clean up" verb.
 
-## Storage, repair and profile-list work through MCP
+## Storage, repair, profile-list and verification work is the person's
 
-Work that needs no profile and no sign-in is not a registered operation, so
-`search` does not list it. Through MCP it is the `installation` tool, one
-`action` per act, served by the running runtime:
-
-- Storage: `storage_inventory` (what `storage list` and `storage view` show),
-  `storage_check`, `storage_init`, `storage_reclaim`.
-- Repair: `repair_report` (bare `aeat config repair`), `repair_logs`,
-  `repair_profile`.
-- Profiles: `profile_list`, `archive_inspect`, `archive_import_prepare` then
-  `archive_import` with the digest the first returned, and `recovery_enroll`
-  (also `session` with `enable_recovery`, which resolves the profile by name).
-- The reset of all profiles: `reset_start`, `reset_status`, `reset_resume`.
-- Verification of a file the person holds: `review_package_verify`,
-  `review_package_verify_signature`, `review_package_verify_receipt`,
-  `report_verify_document`.
-
-Read the tool's own description for each action's arguments; name every file by
-its absolute path. An action that takes `confirm` only reports until `confirm`
-is true, exactly as the command does without its confirmation flag: tell the
-person what it would destroy and wait for their go-ahead before you confirm. A
-password goes by reference in `secret_reference`, after the person has entered it
-with `cadrumo-mcp --hold-secret` in their own terminal; one the person typed into
-the conversation anyway goes in `secret` and nowhere else. `recovery_enroll` never returns the
-recovery code. The runtime does not store it; the MCP server holds one copy in
-this machine's protected credential store, and the reply carries
-`secret_reference` and, in `secret_retrieval`, the command the person runs in
-their own terminal to read it (`cadrumo-mcp --show-held-secret REFERENCE`). The
-copy stays held until the person has read it and confirmed they kept it, and is
-then deleted; `cadrumo-mcp --list-held-secrets` lists what is still held without
-showing it, and `cadrumo-mcp --delete-held-secret REFERENCE` deletes one unread.
-Pass the sentence on to the person and do not run these commands yourself: they
-work only at a person's terminal. The same `secret_reference` is accepted wherever
-a secret is taken by reference, so `session` with `reset_password` can use the
-held code before the person has read it. That sends the code to the runtime and
-shows it to nobody; it stays held until the person reads it or deletes it.
+Work that belongs to no single profile is not yours: the storage tree, repair, the
+profile list, profile archives, recovery enrolment, the reset of all profiles, and
+verifying review packages and calculation reports the person holds. The commands for
+it say "the person's act" in `command-operations.md`, and MCP offers no tool for it.
+When a piece of work needs one, tell the person which command to run in Cadrumo, and
+what it would change, and continue once they have.
 
 ## Discovering registered operations through MCP
 
 The MCP server exposes a fixed protocol surface. Use `status` to inspect whether
 this connection is admitted for its bound profile. Use `search` to find
 operations, then `describe` with the returned `definition_id` to inspect an
-operation's contract and input schema. Both answer with or without a session,
-and whether or not Cadrumo is running. With no session they cover every
-registered operation on the connection's surface and their reply says
-`session` `none`; with one, they cover the operations that session may use. So
-find the operations a piece of work needs
-and read their contracts before you ask the person to sign in, and ask only
-when the first operation has to run. Review a contract before submitting work
-with `execute`, which requires a session, the `definition_id` and a payload
-matching the described schema.
+operation's contract and input schema. Both need a session, as every tool but
+`status` does, and cover the operations that session may use. With no session,
+ask the person to sign in to Cadrumo first. Review a contract before submitting
+work with `execute`, which needs the `definition_id` and a payload matching the
+described schema. An operation that needs a secret or administers keys is the
+person's act and is refused with `person_act_required`.
 
 The contract's `subject_reference` says what the operation's subject is, and
 the server derives it: the admitted profile (`profile`), the payload field its
@@ -192,9 +160,10 @@ of the work unit that owns the stored record its `payload_path` names. A
 `subject_ref` that contradicts the contract is refused before anything is
 submitted.
 
-The MCP server may take a profile ID at launch, which an enrolled key requires
-together with its protected credential reference. It does not translate shell verbs to tool
-names or activate per-domain tool sets.
+The MCP server may take a profile ID at launch, which a key the person configured
+requires together with its protected credential reference; only the person sets
+these. It does not translate shell verbs to tool names or activate per-domain tool
+sets.
 
 The workflow skills, and the tables above, name command-line commands. Through
 MCP you do a command's work with the tools its row names in the reference
@@ -209,10 +178,9 @@ columns of routes:
   and then the write that takes it.
 - Every other route to its work, each a tool and what the tool is given: an
   operation for `execute`, where the command does that work in its own process
-  and the operation does the same work for you; an act for the `installation`
-  tool, as its `action`; a query for the `authority` tool, as its `query`; an
-  action for the `session` tool; or a tool that takes no such name, such as the
-  `authorization_*` tools that enrol a key.
+  and the operation does the same work for you; or a query for the `authority`
+  tool, as its `query`. A row whose third column says "the person's act" is work
+  only the person does in Cadrumo: ask them to, and never try another route to it.
 
 Four commands have `none` in both columns, because they have no work to do for
 you: `aeat app`, `aeat config` and `aeat app diagnostics` print help, and the

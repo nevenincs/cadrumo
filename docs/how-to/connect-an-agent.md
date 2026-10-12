@@ -2,11 +2,11 @@
 
 The installed `cadrumo-mcp` command connects an MCP client to Cadrumo's local
 runtime. A connection works in one of two ways: it follows your own Cadrumo
-sign-in, or it uses an enrolled key. The client can run only operations allowed
-by its current session and, for a key, its grant. It can read which operations
-exist, and what each one needs, before anyone signs in and while Cadrumo is not
-running. A connection started with a profile ID is not retargeted by a later
-switch of the human active profile.
+sign-in, or it uses a key you issued for one profile. Either way the agent works
+only inside that one profile, never signs in and never handles a secret. With
+neither a live sign-in nor a valid key it answers only its tool list and `status`,
+which tells it to ask you to sign in to Cadrumo. The client can run only
+operations allowed by its current session and, for a key, its grant.
 
 Before connecting an agent or managing its access, set up the intended profile
 using [Set up a profile](profile-setup.md) and sign in to it. Checking
@@ -50,40 +50,44 @@ accept a JSON server definition:
 ```
 
 Use a separate server entry for each profile you name. Keep credentials out of
-the configuration. The server asks for no password when it starts. An agent can
-sign in with your profile password through the `session` tool, either typed into
-the call or by reference; the section "Give an agent a secret by reference"
-below explains the form that keeps it out of the conversation. Whether you
-start the server with `--credential-reference` decides how it connects.
+the configuration and out of the conversation. The agent never signs in and never
+handles a password, a key or any other secret: no tool takes one. It works only
+inside the one profile you are signed in to, or the profile of a key you issued
+and configured for it. Whether you start the server with `--credential-reference`
+decides how it connects.
 
 **Following your sign-in.** Start the server without `--credential-reference`.
-It follows your own Cadrumo sign-in for the selected profile. It answers
-initialization, its tool list, the public tools (`authority` and
-`corpus_search`) and operation discovery (`search` and `describe`) while nobody
-is signed in. A tool that needs the profile makes
-one attempt to resume your stored sign-in. With a live sign-in the call works.
-With none it is refused with `authentication_required`: sign in to Cadrumo, then
-call again. `--profile-id` is optional. Given alone, it is honoured only while
-that profile is the selected one; otherwise profile calls return
-`profile_mismatch`. Without it, the server acts for whichever profile is
-selected.
+It follows your own Cadrumo sign-in. While nobody is signed in it answers only
+its tool list and `status`, which says to sign in to Cadrumo; every other tool,
+including `authority`, `corpus_search`, `search` and `describe`, is refused with
+`authentication_required` and a `remedy` that tells the agent to ask you to sign
+in. A tool call makes one attempt to resume your stored sign-in; with a live
+sign-in the call works. `--profile-id` is optional. Given, it is honoured only
+while that profile is the selected one. Without it, the server is bound to the
+profile of the first sign-in it resumes and stays bound to it: if you then sign in
+to another profile, every call is refused with `profile_mismatch`, and you start a
+new agent session for the other profile.
 
-Your sign-in governs this session. When you sign out, lock, or the sign-in
-reaches its deadline, the session ends with it and profile calls are refused
-until you sign in again. By default a sign-in ends 15 minutes after you enter
-the password, and activity through MCP does not extend it.
+Your sign-in governs this session. When you sign out, lock, sign in to another
+profile, or the sign-in reaches its deadline, the session ends with it and calls
+are refused until you sign in again. By default a sign-in ends 15 minutes after
+you enter the password, and activity through MCP does not extend it. Only one
+profile is signed in at a time: signing in to another profile signs the first out
+everywhere, its agent sessions included.
 
-**With an enrolled key.** Start the server with `--profile-id` and
-`--credential-reference`. An approved protected credential reference, delivered
-by the authorization flow below, can be supplied for a later connection while
-its grant and the profile remain eligible. The server authenticates with the
-enrolled key for that profile and works whether or not anyone is signed in.
-`--credential-reference` without `--profile-id` is refused at start-up.
+**With a key you issued.** Start the server with `--profile-id` and
+`--credential-reference`. Issue the key yourself with `aeat config profile
+automation create`, review and approve it as described below, and put the
+protected credential reference it delivers in the server's configuration. The
+server authenticates with that key on every call while the key's grant and the
+profile remain eligible, whether or not anyone is signed in.
+`--credential-reference` without `--profile-id` is refused at start-up. If the
+key cannot authenticate, the server keeps answering `status` with the refusal and
+refuses everything else; restore access, or issue a replacement key and change the
+configuration.
 
-Either way, the `status` tool reports whether the connection's session is
-`none`, `sign_in`, `typed_sign_in` or `key`, and which surface it serves.
-`typed_sign_in` is a session the agent started with your profile password
-through the `session` tool.
+Either way, the `status` tool reports whether the connection's session is `none`,
+`sign_in` or `key`, and which surface it serves.
 
 The optional `--surface NAME` argument pins the view of the server that the
 connection is served. Without it the server uses `full`, which advertises every
@@ -94,48 +98,28 @@ local runtime enforces the surface when an operation is submitted, so hiding a
 tool is not what keeps the agent read-only. An unknown name stops the server at
 start-up, before any connection, and the error lists the surfaces available.
 
-If the configured reference cannot authenticate, the MCP connection stays open.
-Use `status` to inspect the refusal; private operations remain unavailable.
-Restore access to the protected store or obtain an approved replacement reference,
-then call `authenticate` explicitly. Public `authority` queries remain available.
+Under a session, `corpus_search` searches the bundled BOE/AEAT corpus and approved
+tax terminology. Supply `query` and optionally `limit` (1–50). An exact citation
+ID returns its published verbatim text; other queries return ranked offline
+evidence and terminology matches. The response identifies the publication
+generation used for citation lookup.
 
-Before authentication, `corpus_search` searches the bundled BOE/AEAT corpus
-and approved tax terminology. Supply `query` and optionally `limit` (1–50).
-An exact citation ID returns its published verbatim text; other queries return
-ranked offline evidence and terminology matches. The response identifies the
-publication generation used for citation lookup. This public search reads no
-profile data.
+## Work through the connection
 
-## Authorize the connection
-
-A connection that follows your sign-in needs no key. To let an agent work while
-nobody is signed in, enroll one. On a first connection, ask the agent to use
-`status`, then `authorization_prepare` and `authorization_request` for the
-operations, periods and disclosures it needs. Review and approve that request in
-Cadrumo's CLI or TUI. The agent uses `authorization_poll` to receive the
-protected reference and `authenticate` to start an independently tracked
-session. The `session` tool can instead sign the connection in with your profile
-password, typed or by reference. That session is your own sign-in, with its
-deadline, and not an independently tracked key session.
-
-`search` ranks operations by the query, using their current contracts and
-request vocabulary; omit the query to list them. `describe` shows a registered
-operation's input contract. Both answer before admission too, and while Cadrumo
-is not running: they then cover every registered operation on the connection's
-surface and say `session` `none`, and after admission they cover the operations
-the session may use. `search` returns ten summaries at a time; pass its
-`next_cursor` back as `cursor` for the next page, and use `describe` for one
-operation's full contract.
-After admission, `execute` submits an operation and `observe`
-tracks its result. The separate `authority` tool reads published tax authority
-data. Operation grants, session locks, profile suspension, provider checks and
-human review still apply. Retain operation IDs and reconcile uncertain effects
-after a disconnect instead of submitting the same effect blindly. A call whose
-outcome is not known is answered as unknown, not as an error, and its
+`search` ranks the operations the session may use by the query, using their
+current contracts and request vocabulary; omit the query to list them. `describe`
+shows a registered operation's input contract. `search` returns ten summaries at
+a time; pass its `next_cursor` back as `cursor` for the next page, and use
+`describe` for one operation's full contract. `execute` submits an operation and
+`observe` tracks its result. The separate `authority` tool reads published tax
+authority data. Operation grants, session locks, profile suspension, provider
+checks and human review still apply. Retain operation IDs and reconcile uncertain
+effects after a disconnect instead of submitting the same effect blindly. A call
+whose outcome is not known is answered as unknown, not as an error, and its
 `unknown_outcome` member says how to read what happened; do not repeat such a
 call. For an operation that settled refused or failed, `result` returns the
-recorded code, message and context in `error_detail`, as the command line
-prints them.
+recorded code, message and context in `error_detail`, as the command line prints
+them.
 
 Read a settled operation's approved projection with `result`. For a large result,
 use `result_page` with the same result request and an initial page offset of zero.
@@ -144,123 +128,35 @@ first page as `expected_digest`. Assemble and verify the complete document befor
 using it. Each page requires current authorization; a lock or revocation can stop
 the remaining pages. An incomplete document is not a complete result.
 
-To rotate or narrow an existing grant, reconnect with its protected credential
-reference and prepare a new authorization request. Human approval is required
-for the change. Revoking the grant prevents future admission under that key.
-
-Discover the operations with `search`. An agent connected through MCP can run
-every operation the command line can, with the same results, under the session it
-holds. The packaged agent guidance has the agent tell you what it is about to do
-before anything destructive or hard to reverse, and wait for your go-ahead in the
+An agent connected through MCP can run every operation the command line can run
+inside its profile, with the same results, under the session it holds. The
+packaged agent guidance has the agent tell you what it is about to do before
+anything destructive or hard to reverse, and wait for your go-ahead in the
 conversation. Calculations use Cadrumo's deterministic engine and published tax
 authority. Connecting an agent does not authorize submission to AEAT. Review the
 prepared filing yourself as described in the [filing guide](file-at-aeat.md).
 
-## Give an agent a secret by reference
+## Acts that stay yours
 
-Some tools take a secret. The `session` tool takes your profile password to sign
-in, to resume a locked profile or to change the password. The `installation`
-tool takes it to import a profile archive or to enable recovery. The `execute`
-tool takes one for an operation whose contract asks for it. A secret that you
-type into the conversation has passed through the model and the client's
-transcript before it reaches Cadrumo. To keep it out of the conversation, enter
-it yourself, in a terminal of your own:
-
-```text
-cadrumo-mcp --hold-secret
-```
-
-The command asks for a label, so that you can recognise the secret in a listing,
-and then for the secret twice, without showing what you type. It keeps the
-secret in this computer's protected credential store and prints a reference.
-Give the agent only that reference. The agent puts it in the argument whose name
-ends in `_reference` (`secret_reference`, `new_secret_reference` or
-`new_secret_confirmation_reference`) in place of the secret. The MCP server
-reads the secret from the store and sends it to the local runtime on the same
-protected channel that a typed secret uses. The secret never appears in the
-conversation, in a tool result or in a log.
-
-A secret held this way stays until you delete it, so the agent can sign in again
-with the same reference after a lock or after your sign-in reaches its deadline.
-To hold a secret for one use only, add `--once`. The first tool call that sends
-the secret spends it: the server reads and deletes the stored copy immediately
-before sending it to the runtime. A call that is refused before that point (an
-invalid argument, a reference that holds nothing, no running runtime) leaves it
-held. Once it has been read it is spent even if the send then fails; hold another
-to try again.
-
-```text
-cadrumo-mcp --hold-secret --once
-```
-
-`cadrumo-mcp --list-held-secrets` lists what you have entered, by label and
-without showing it, and `cadrumo-mcp --delete-held-secret REFERENCE` deletes one.
-A secret that you entered is never shown back to you. A reference works only on
-this computer and under your user account. While a secret is held, an agent
-connected to this MCP server can use it by naming its reference, so delete a
-password that you no longer want an agent to use. An agent still accepts a
-secret that you type into the conversation; the reference is the form that keeps
-it out.
-
-## Storage, repair and other work that needs no profile
-
-Some work needs no profile and no sign-in: inspecting and reclaiming storage,
-resetting all profiles, listing profiles, inspecting and importing a profile
-archive, enabling a recovery code, diagnosing and repairing the installation,
-and verifying a review package or a calculation summary that you hold. The
-`installation` tool does this work through the running local runtime, with one
-`action` for each act, and gives the same result as the matching `aeat` command.
-It is not a registered operation, so `search` does not list it; the tool's own
-description names every action and its arguments. The terminal interface offers
-the same work in **Installation**, which you can open from the sign-in screen.
-
-A destructive action, such as reclaiming storage or resetting all profiles,
-takes `confirm`. Unless `confirm` is true it changes nothing: it reports what it
-would do, or refuses and says so, exactly as the command does without its
-confirmation flag. The packaged agent
-guidance has the agent show you that report and wait for your go-ahead before it
-confirms. On the `read-only-local` surface the tool offers only the reads and
-those reports.
-
-### Read a recovery code that an agent enabled
-
-An agent can enable a recovery code with the `installation` tool's
-`recovery_enroll` action or the `session` tool's `enable_recovery` action. There
-is no terminal to show the code on, and the code never appears in the
-conversation or in a tool result. Cadrumo's runtime and the profile do not store
-it. The MCP server keeps one copy in this computer's protected credential store
-and gives the agent only a reference to it. Read the code yourself, in a
-terminal of your own:
-
-```text
-cadrumo-mcp --show-held-secret REFERENCE
-```
-
-The command shows what the code was issued for and when, and then the code
-itself. Write it down, then type `kept` to delete the stored copy. Press Enter
-alone to leave it stored and read it again later. Until you confirm that you
-have kept it, the copy stays in the credential store.
-
-To list what is still held without showing any code, or to delete a copy
-without reading it:
-
-```text
-cadrumo-mcp --list-held-secrets
-cadrumo-mcp --delete-held-secret REFERENCE
-```
-
-These commands work only at a terminal. They refuse when their input or output
-is redirected, so an agent cannot run them for you. If you delete a code that
-nobody has kept, it is lost: disable recovery and enable it again to get a new
-one. [Protect access to your data](protect-data-access.md) explains what a
-recovery code is for and how to use it.
+Some acts are yours alone, and the agent is refused them with
+`person_act_required` and a `remedy` that tells it to ask you: signing in or out,
+locking, listing or denying sessions, requesting, approving, rotating or revoking
+keys, changing or resetting the password, enabling or using recovery, and any
+operation that needs a password, a key or another secret, such as configuring a
+certificate secret or exporting the profile bundle. So is work that belongs to no
+single profile: inspecting and reclaiming storage, resetting all profiles, listing
+profiles, inspecting and importing a profile archive, diagnosing and repairing the
+installation, and verifying a review package or a calculation summary that you
+hold. Do these with the matching `aeat` command, or in the terminal interface,
+which offers the installation work in **Installation** from the sign-in screen.
 
 ## Review and manage access as the profile owner
 
 Use a human password-authorized session for the intended profile, as described
-in [Set up a profile](profile-setup.md). Approve a request yourself
-rather than leaving the agent to approve its own, and administer other clients from
-your own session. Check the profile ID in each result.
+in [Set up a profile](profile-setup.md). Issue a key with `aeat config profile
+automation create`, approve it yourself, and administer every client from your own
+session; an agent never requests, approves or changes a key. Check the profile ID
+in each result.
 
 List pending requests and inspect the exact request before deciding:
 
@@ -280,8 +176,8 @@ hidden terminal prompt; decline does not. For controlled automation, approval an
 profile recovery also accept `--secrets-stdin` or `--secrets-fd DESCRIPTOR` using
 the command's machine-secret schema. Keep secret values out of command arguments,
 environment variables, chat and ordinary output. Inspect the returned receipt:
-a recorded decision alone does not prove completed protected delivery. The agent
-must finish polling and authenticate with the delivered reference.
+a recorded decision alone does not prove completed protected delivery. Put the
+delivered reference in the MCP server's configuration with `--credential-reference`.
 
 The same review procedure applies to rotation, renewal and scope-change requests.
 Enrollment and rotation can deliver a new protected reference; renewal and scope
@@ -316,7 +212,8 @@ without reactivating grants.
 ```{cli-sequence} connect-an-agent-profile-resume
 ```
 
-Confirm the returned grant IDs, then let agents reconnect and authenticate afresh.
+Confirm the returned grant IDs. An agent's next call then resumes your sign-in, or
+authenticates again with its configured key.
 
 ## Run an agent on separate storage
 

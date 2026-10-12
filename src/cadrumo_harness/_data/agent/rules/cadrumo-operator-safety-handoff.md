@@ -51,7 +51,7 @@ go-ahead. A clean verify informs the decision and never stands in for it.
 The local filed marker records that the person has filed outside the application. It
 is recorded after the person files, never to assert AEAT acceptance.
 
-Configuring the AEAT provider, or any authentication, certificate, key or grant, is
-access administration. Tell the person what you would change and wait for their
-go-ahead, and never ask for or repeat a password, key or certificate secret in the
-conversation.
+Configuring the AEAT provider is access administration: tell the person what you
+would change and wait for their go-ahead. Signing in, keys, grants, passwords and
+certificate secrets are the person's own acts in Cadrumo; never take one, and never
+ask for or repeat a password, key or certificate secret in the conversation.

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:a6953e4958ead1c4ff27d8e0ec12dfb1824b5b61e3c429b645e2c02919a49c0f'
+body_hash: 'sha256:745c4854404cf8fce333bac32f8b78632d4178add64766bdb2637f6527f6b0dc'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -2299,6 +2299,34 @@ related:
 - `S67` `verify:` `pytest runtime MCP sign-in adapter, refusal facts, discovery and sign-in door` -> `pass`
 - `S67` `verify:` `ruff check and format` -> `pass`
 - `S67` `verify:` `ty check on touched files` -> `pass`
+- `S69` `M` `docs/how-to/connect-an-agent.md`
+- `S69` `M` `docs/how-to/protect-data-access.md`
+- `S69` `M` `docs/how-to/troubleshooting.md`
+- `S69` `M` `docs/locales/ca/LC_MESSAGES/how-to/connect-an-agent.po`
+- `S69` `M` `docs/locales/ca/LC_MESSAGES/how-to/protect-data-access.po`
+- `S69` `M` `docs/locales/ca/LC_MESSAGES/how-to/troubleshooting.po`
+- `S69` `M` `docs/locales/ca/LC_MESSAGES/reference/import-export-and-evidence.po`
+- `S69` `M` `docs/locales/es/LC_MESSAGES/how-to/connect-an-agent.po`
+- `S69` `M` `docs/locales/es/LC_MESSAGES/how-to/protect-data-access.po`
+- `S69` `M` `docs/locales/es/LC_MESSAGES/how-to/troubleshooting.po`
+- `S69` `M` `docs/locales/es/LC_MESSAGES/reference/import-export-and-evidence.po`
+- `S69` `M` `docs/locales/hu/LC_MESSAGES/how-to/connect-an-agent.po`
+- `S69` `M` `docs/locales/hu/LC_MESSAGES/how-to/protect-data-access.po`
+- `S69` `M` `docs/locales/hu/LC_MESSAGES/how-to/troubleshooting.po`
+- `S69` `M` `docs/locales/hu/LC_MESSAGES/reference/import-export-and-evidence.po`
+- `S69` `M` `docs/reference/import-export-and-evidence.md`
+- `S69` `M` `docs/technical/architecture.md`
+- `S69` `M` `docs/technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md`
+- `S69` `M` `docs/technical/articles/187-filing-skills-and-the-mcp-operator-harness.md`
+- `S69` `M` `docs/technical/assessments/product-capability-map.md`
+- `S69` `M` `docs/technical/topics/runtime-tui-and-agent-harness.md`
+- `S69` `M` `src/cadrumo_harness/_data/agent/README.md`
+- `S69` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-envelope-reading.md`
+- `S69` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-operating-rules.md`
+- `S69` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-orientation-routing.md`
+- `S69` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-safety-handoff.md`
+- `S69` `verify:` `pytest src/cadrumo_harness/tests` -> `pass`
+- `S69` `verify:` `pytest dev/docs/tests drift, localization and message format` -> `fail`
 
 ## Notes
 
@@ -2377,3 +2405,5 @@ related:
 - `S66` Remaining runtime failures are unchanged with the S66 call disabled `(test_grant_change,` provenance) or are deadline and WinError 1312 environment failures; `test_profile_connections` and `test_optional_automation_custody` moved off the MCP frontend after the S65 refusals
 - `S67` Folds in the orchestrator-requested keychain fact and remedy from tui-c2 (31def9f426): `runtime_admission` carries SignInRefusal.keychain, `sign_in_refusal_facts` reports `sign_in_keychain,` and a refusal that names it carries the logon remedy instead of the sign-in one; `sign_in_remedy` takes the reply's facts to choose
 - `S67` The shipped operation contract document, its generator and the sessionless discovery module are removed: with no session nothing but status answers, so nothing reads them
+- `S69` Docs drift gate still fails on how-to/profile-setup.md and reference/identity-and-naming.md, pages this Step did not touch; connect-an-agent's separate-storage section, added untranslated by another session, is translated here so the page is complete
+- `S69` The surface pins, the agent command reference and the removal of the shipped contract document were regenerated in S64 and S67 where the tool list changed

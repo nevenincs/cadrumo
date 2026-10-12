@@ -199,14 +199,14 @@ the full local report, and the secure-object integrity check.
 
 `overview status` reports your profile, records, and modelo readiness; `profile status` reports the active profile. Together they tell you whether the problem is your setup or your data. `repair logs` prints the log file path and the most recent lines. Use `--lines` to control how many. `integrity objects` checks the security seals on your encrypted records. `aeat config repair` with no subcommand prints the full local report: package and Python versions, profile and authentication state, the tax rule definitions, and the same secure-object check. If a check fails, the report names the affected item. Take that report to the issue tracker rather than editing stored data by hand.
 
-The terminal interface and MCP do the same work. In the terminal interface,
-**Installation** offers the full report (**Diagnose the installation**), the log
-lines, the active-profile repair and the storage inventory and check. You can
-open it from the sign-in screen with nobody signed in, and it needs Cadrumo's
-runtime running. An agent uses the `installation` tool's `repair_report`,
-`repair_logs`, `repair_profile`, `storage_inventory` and `storage_check`
-actions. The secure-object check, the quarantine, the connectivity probe and the
-clearing of interrupted-command progress need a signed-in profile; run them from
+The terminal interface does the same work. Its **Installation** destination
+offers the full report (**Diagnose the installation**), the log lines, the
+active-profile repair and the storage inventory and check. You can open it from
+the sign-in screen with nobody signed in, and it needs Cadrumo's runtime running.
+Repair and storage work belongs to no single profile, so an agent connected
+through MCP never does it: it asks you to. The secure-object check, the
+quarantine, the connectivity probe and the clearing of interrupted-command
+progress need a signed-in profile; run them from
 **Operations** in the terminal interface, or have an agent find them with
 `search` and run them with `execute`.
 
