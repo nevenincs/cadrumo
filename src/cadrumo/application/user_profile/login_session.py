@@ -26,7 +26,7 @@ from ...core.identity.bucket import BucketId
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.paths import effective_storage_root
-from ...core.profile_session import ProfileSessionRefusalReason, ReceiptBindingRefusal
+from ...core.profile_session import KeychainUnavailability, ProfileSessionRefusalReason, ReceiptBindingRefusal
 from ...core.time.clock import now as _now
 from ...domain.user_profile.errors import ProfileNotFoundError, UserProfileError
 from .authentication import ProfilePasswordProofOperation
@@ -217,10 +217,17 @@ class ProfileHumanLoginReceipt(BaseModel):
 class ProfileReceiptRefusedError(CadrumoError):
     """A human receipt did not prove the exact current capsule and deadline."""
 
-    def __init__(self, reason: ProfileSessionRefusalReason, *, binding: ReceiptBindingRefusal | None = None) -> None:
-        """Preserve the core refusal without exposing receipt material."""
+    def __init__(
+        self,
+        reason: ProfileSessionRefusalReason,
+        *,
+        binding: ReceiptBindingRefusal | None = None,
+        keychain: KeychainUnavailability | None = None,
+    ) -> None:
+        """Preserve the core refusal, and why the keychain could not be used, without receipt material."""
         self.reason = reason
         self.binding = binding
+        self.keychain = keychain
         super().__init__(reason.value)
 
 
@@ -528,6 +535,17 @@ def _persist_candidate_receipt(
         return candidate.receipt_persisted
 
 
+def profile_session_keychain_unavailability() -> KeychainUnavailability | None:
+    """Return why this process cannot keep or present a sign-in, or ``None`` when it can.
+
+    A sign-in that was not persisted, or cannot be followed, is explained by
+    this before anything else: the proof lives in the OS keychain, and a
+    process that cannot read the keychain can neither store nor present one.
+    The probe reads only an account no receipt names.
+    """
+    return _profile_login_sessions().probe_keychain()
+
+
 @contextmanager
 def borrow_profile_receipt_key(*, bucket_id: UUID) -> Generator[bytearray]:
     """Borrow only the keychain-held proof that the receipt locator names.
@@ -544,7 +562,9 @@ def borrow_profile_receipt_key(*, bucket_id: UUID) -> Generator[bytearray]:
     if not outcome.resumed or key is None:
         if key is not None:
             _profile_login_sessions().zeroise_owned_buffer(key)
-        raise ProfileReceiptRefusedError(outcome.refusal or ProfileSessionRefusalReason.ABSENT, binding=outcome.binding)
+        raise ProfileReceiptRefusedError(
+            outcome.refusal or ProfileSessionRefusalReason.ABSENT, binding=outcome.binding, keychain=outcome.keychain
+        )
     try:
         yield key
     finally:
@@ -817,6 +837,7 @@ __all__ = [
     "authenticate_profile_for_invocation",
     "borrow_profile_receipt_key",
     "close_profile_session_artefacts",
+    "profile_session_keychain_unavailability",
     "publish_created_profile_session",
     "remove_profile_session_acceleration_for_custody_delete",
     "resume_profile_candidate",

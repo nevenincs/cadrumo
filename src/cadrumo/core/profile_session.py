@@ -51,6 +51,33 @@ class ProfileSessionRefusalReason(StrEnum):
     """AEAD tag verification failed (metadata or ciphertext altered)."""
 
 
+class KeychainUnavailability(StrEnum):
+    """Why this process cannot use the OS keychain that holds sign-in proof.
+
+    A stored sign-in is split between a receipt on disk and a key in the OS
+    keychain, and every process that stores or follows one needs the keychain
+    itself. Each value names a different failed prerequisite with a different
+    remedy, so a refusal that only said "unavailable" left the operator unable
+    to tell a missing backend from a logon the backend will not serve.
+    """
+
+    NO_BACKEND = "no_backend"
+    """No usable keychain backend is installed or configured for this process."""
+
+    LOGON_WITHOUT_CREDENTIALS = "logon_without_credentials"
+    """The Windows credential store refused this process's logon session.
+
+    Windows answers ``ERROR_NO_SUCH_LOGON_SESSION`` (1312) to a logon that
+    holds no credentials of its own: an OpenSSH public-key sign-in, a service
+    or batch logon, or a token made for a user without their password. The
+    same account's interactive desktop logon, or a logon made with the
+    account password, can use the store.
+    """
+
+    REFUSED = "refused"
+    """The keychain backend refused or failed the operation for another reason."""
+
+
 class ReceiptBindingRefusal(StrEnum):
     """Why a receipt no longer belongs to the expected sign-in."""
 
@@ -95,4 +122,9 @@ class ProfileRecordUnavailability(StrEnum):
     """A session is authenticated, but for a different profile identity."""
 
 
-__all__ = ["ProfileRecordUnavailability", "ProfileSessionRefusalReason", "ReceiptBindingRefusal"]
+__all__ = [
+    "KeychainUnavailability",
+    "ProfileRecordUnavailability",
+    "ProfileSessionRefusalReason",
+    "ReceiptBindingRefusal",
+]

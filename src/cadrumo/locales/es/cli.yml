@@ -2249,6 +2249,28 @@ cli:
         session_not_persisted: No hay un almacén de claves del sistema utilizable,
           así que este comando solo autenticó su propio proceso; vuelve a proporcionar
           la autenticación del perfil al proceso siguiente.
+        session_not_persisted_logon: 'Sesión iniciada solo para este comando: el Administrador
+          de credenciales de Windows rechazó esta sesión de Windows (error 1312),
+          como hace con un inicio de sesión que no guarda credenciales de Windows,
+          por ejemplo un acceso OpenSSH con clave pública o un inicio de sesión de
+          servicio o por lotes. Ningún proceso de ese inicio de sesión puede conservar
+          ni seguir un inicio de sesión, así que cadrumo-mcp y los comandos siguientes
+          no pueden usarlo. Ejecuta el runtime, los comandos y cadrumo-mcp desde la
+          sesión interactiva de escritorio de esta cuenta o desde un inicio de sesión
+          hecho con la contraseña de la cuenta, o pasa la contraseña del perfil a
+          cada comando con --profile-secrets-stdin.'
+        session_not_persisted_no_backend: 'Sesión iniciada solo para este comando:
+          este proceso no tiene ningún almacén de claves del sistema disponible, así
+          que el inicio de sesión no se puede conservar para cadrumo-mcp ni para los
+          comandos siguientes. Activa el almacén de claves del sistema para esta cuenta
+          o pasa la contraseña del perfil a cada comando con --profile-secrets-stdin.'
+        session_not_persisted_unconfirmed: 'Sesión iniciada solo para este comando:
+          el runtime no conservó este inicio de sesión, aunque este proceso puede
+          usar el almacén de claves del sistema. O bien el inicio de sesión cambió
+          mientras terminaba este acceso, o bien el runtime se ejecuta en un inicio
+          de sesión que no puede usar el almacén de claves. Vuelve a iniciar sesión;
+          si se repite, inicia el runtime desde el mismo inicio de sesión que este
+          comando.'
       passphrase_channel_absent: No hay ningún canal de contraseña disponible. Ejecuta
         este verbo en un terminal o usa --secrets-stdin o --secrets-fd.
       passphrase_prompt: 'Contraseña del perfil: '

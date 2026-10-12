@@ -2219,6 +2219,27 @@ cli:
         session_not_persisted: Nincs használható rendszerkulcstár, ezért ez a parancs
           csak a saját folyamatát hitelesítette; a következő folyamatnak ismét add
           meg a profilhitelesítést.
+        session_not_persisted_logon: 'Csak ehhez a parancshoz jelentkeztél be: a Windows
+          Hitelesítőadat-kezelő elutasította ezt a Windows-munkamenetet (1312-es hiba),
+          ahogy minden olyan bejelentkezést, amely nem tárol Windows-hitelesítőadatokat,
+          például egy nyilvános kulcsos OpenSSH-bejelentkezést vagy egy szolgáltatás-
+          vagy kötegelt bejelentkezést. Egy ilyen bejelentkezésben egyetlen folyamat
+          sem tudja megőrizni vagy követni a bejelentkezést, így a cadrumo-mcp és
+          a későbbi parancsok sem használhatják. Futtasd a runtime-ot, a parancsokat
+          és a cadrumo-mcp-t ennek a fióknak az interaktív asztali munkamenetéből
+          vagy a fiók jelszavával létrehozott bejelentkezésből, vagy add meg a profil
+          jelszavát minden parancsnak a --profile-secrets-stdin kapcsolóval.'
+        session_not_persisted_no_backend: 'Csak ehhez a parancshoz jelentkeztél be:
+          ennek a folyamatnak nincs elérhető rendszerkulcstára, így a bejelentkezés
+          nem őrizhető meg a cadrumo-mcp és a későbbi parancsok számára. Kapcsold
+          be a rendszerkulcstárat ehhez a fiókhoz, vagy add meg a profil jelszavát
+          minden parancsnak a --profile-secrets-stdin kapcsolóval.'
+        session_not_persisted_unconfirmed: 'Csak ehhez a parancshoz jelentkeztél be:
+          a runtime nem őrizte meg ezt a bejelentkezést, pedig ez a folyamat eléri
+          a rendszerkulcstárat. Vagy megváltozott a bejelentkezés, amíg ez a belépés
+          befejeződött, vagy a runtime olyan bejelentkezésben fut, amely nem éri el
+          a kulcstárat. Jelentkezz be újra; ha ez ismétlődik, indítsd a runtime-ot
+          ugyanabból a bejelentkezésből, mint ezt a parancsot.'
       passphrase_channel_absent: Nem érhető el jelszócsatorna. Futtasd ezt a parancsot
         terminálban, vagy használd a --secrets-stdin vagy --secrets-fd kapcsolót.
       passphrase_prompt: 'Profil jelszava: '

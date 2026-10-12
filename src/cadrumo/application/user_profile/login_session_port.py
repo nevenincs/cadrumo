@@ -20,7 +20,7 @@ from uuid import UUID
 from ...core.errors.hierarchy import InternalInvariantError
 
 if TYPE_CHECKING:
-    from ...core.profile_session import ProfileSessionRefusalReason, ReceiptBindingRefusal
+    from ...core.profile_session import KeychainUnavailability, ProfileSessionRefusalReason, ReceiptBindingRefusal
     from .access_contracts import ProfileAccessBinding
 
 
@@ -144,6 +144,11 @@ class ProfileSessionResumeOutcomePort(Protocol):
     @property
     def record(self) -> ProfilePersistedSessionPort | None:
         """The evaluated receipt, present whether or not it was accepted."""
+        ...
+
+    @property
+    def keychain(self) -> KeychainUnavailability | None:
+        """Why the reading process cannot use the keychain, when it cannot."""
         ...
 
 
@@ -277,6 +282,10 @@ class ProfileLoginSessionPort(Protocol):
 
     def delete_acceleration_receipt(self, *, storage_root: Path, profile_id: UUID) -> None:
         """Revoke one profile's split-knowledge acceleration receipt."""
+        ...
+
+    def probe_keychain(self) -> KeychainUnavailability | None:
+        """Return why this process cannot use the keychain, or ``None``; read-only."""
         ...
 
     def zeroise_owned_buffer(self, buffer: bytearray) -> None:

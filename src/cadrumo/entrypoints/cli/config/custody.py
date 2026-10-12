@@ -137,15 +137,38 @@ def _login_notices(outcome: ProfileLoginOutcome) -> tuple[Notice, ...]:
             ),
         )
     if not outcome.session_persisted:
-        notices.append(
-            Notice(
-                severity=NoticeSeverity.WARNING,
-                code="config.login.session_not_persisted",
-                message=tr("cli.config.login.notices.session_not_persisted"),
-                context={"profile_id": outcome.bucket_id},
-            ),
-        )
+        notices.append(_session_not_persisted_notice(outcome))
     return tuple(notices)
+
+
+def _session_not_persisted_notice(outcome: ProfileLoginOutcome) -> Notice:
+    """Name the prerequisite that kept this sign-in from being stored, and what to do instead.
+
+    The runtime reports only that it kept nothing. This process then asks the
+    keychain itself: every later command and ``cadrumo-mcp`` must read the
+    proof from it too, so a keychain this process cannot use explains the
+    outcome and decides the remedy. A usable keychain here leaves the cause
+    with the runtime, and the message says so rather than blaming the keychain.
+    """
+    from ....application.user_profile.login_session import profile_session_keychain_unavailability
+    from ....core.profile_session import KeychainUnavailability
+
+    keychain = profile_session_keychain_unavailability()
+    message_key = {
+        None: "cli.config.login.notices.session_not_persisted_unconfirmed",
+        KeychainUnavailability.LOGON_WITHOUT_CREDENTIALS: "cli.config.login.notices.session_not_persisted_logon",
+        KeychainUnavailability.NO_BACKEND: "cli.config.login.notices.session_not_persisted_no_backend",
+        KeychainUnavailability.REFUSED: "cli.config.login.notices.session_not_persisted",
+    }[keychain]
+    context: dict[str, str] = {"profile_id": outcome.bucket_id}
+    if keychain is not None:
+        context["keychain"] = keychain.value
+    return Notice(
+        severity=NoticeSeverity.WARNING,
+        code="config.login.session_not_persisted",
+        message=tr(message_key),
+        context=context,
+    )
 
 
 def _login_through_the_prompt(

@@ -16,10 +16,12 @@ from ....application.user_profile.login_session_port import (
     ProfileSessionResumeOutcomePort,
     ProfileSignInGenerationPort,
 )
+from ....core.profile_session import KeychainUnavailability
 from .custody.acceleration_receipt import (
     borrow_profile_session_key,
     delete_profile_session,
     mint_profile_session,
+    probe_profile_session_keychain,
     profile_session_path,
     resume_profile_session_with_key,
 )
@@ -167,6 +169,9 @@ class _PersistenceProfileLoginSession:
 
     def delete_acceleration_receipt(self, *, storage_root: Path, profile_id: UUID) -> None:
         delete_profile_session(storage_root=storage_root, profile_id=profile_id)
+
+    def probe_keychain(self) -> KeychainUnavailability | None:
+        return probe_profile_session_keychain()
 
     def zeroise_owned_buffer(self, buffer: bytearray) -> None:
         zeroise(buffer)

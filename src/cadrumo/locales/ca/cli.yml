@@ -2236,6 +2236,27 @@ cli:
         session_not_persisted: No hi ha cap magatzem de claus del sistema utilitzable,
           així que aquesta ordre només ha autenticat el seu propi procés; torna a
           proporcionar l'autenticació del perfil al procés següent.
+        session_not_persisted_logon: 'Sessió iniciada només per a aquesta ordre: l''Administrador
+          de credencials de Windows ha rebutjat aquesta sessió de Windows (error 1312),
+          com fa amb un inici de sessió que no conté credencials de Windows, per exemple
+          un accés OpenSSH amb clau pública o un inici de sessió de servei o per lots.
+          Cap procés d''aquest inici de sessió no pot conservar ni seguir un inici
+          de sessió, així que cadrumo-mcp i les ordres següents no el poden fer servir.
+          Executa el runtime, les ordres i cadrumo-mcp des de la sessió interactiva
+          d''escriptori d''aquest compte o des d''un inici de sessió fet amb la contrasenya
+          del compte, o passa la contrasenya del perfil a cada ordre amb --profile-secrets-stdin.'
+        session_not_persisted_no_backend: 'Sessió iniciada només per a aquesta ordre:
+          aquest procés no té cap magatzem de claus del sistema disponible, així que
+          l''inici de sessió no es pot conservar per a cadrumo-mcp ni per a les ordres
+          següents. Activa el magatzem de claus del sistema per a aquest compte o
+          passa la contrasenya del perfil a cada ordre amb --profile-secrets-stdin.'
+        session_not_persisted_unconfirmed: 'Sessió iniciada només per a aquesta ordre:
+          el runtime no ha conservat aquest inici de sessió, tot i que aquest procés
+          pot fer servir el magatzem de claus del sistema. O bé l''inici de sessió
+          ha canviat mentre acabava aquest accés, o bé el runtime s''executa en un
+          inici de sessió que no pot fer servir el magatzem de claus. Torna a iniciar
+          la sessió; si es repeteix, inicia el runtime des del mateix inici de sessió
+          que aquesta ordre.'
       passphrase_channel_absent: No hi ha cap canal de contrasenya disponible. Executa
         aquest verb en un terminal o fes servir --secrets-stdin o --secrets-fd.
       passphrase_prompt: 'Contrasenya del perfil: '

@@ -18,12 +18,17 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from ......application.user_profile.login_session import ProfileReceiptRefusedError, borrow_profile_receipt_key
+from ......application.user_profile.login_session import (
+    ProfileReceiptRefusedError,
+    borrow_profile_receipt_key,
+    profile_session_keychain_unavailability,
+)
 from ......application.user_profile.login_session_port import bind_profile_login_session_port
 from ......core.base64_codec import b64_encode
 from ......core.config import override_settings
 from ......core.hashing import canonical_json_bytes
-from ......core.profile_session import ProfileSessionRefusalReason
+from ......core.profile_session import KeychainUnavailability, ProfileSessionRefusalReason
+from ...errors import KeyringUnavailableError
 from ...profile_login_session import build_profile_login_session_port
 from .. import acceleration_receipt as receipt
 from ..acceleration_receipt_crypto import PersistedProfileSession
@@ -41,6 +46,15 @@ class _KeyringError(Exception):
     """Controlled keychain failure."""
 
 
+class _Win32CredentialError(Exception):
+    """The Windows credential store's error shape: the Win32 code first, then the call and its text."""
+
+
+_NO_SUCH_LOGON_SESSION = _Win32CredentialError(
+    1312, "CredRead", "A specified logon session does not exist. It may already have been terminated"
+)
+
+
 class _RecordingKeyring:
     """Exact service/account store that records every mutation it receives."""
 
@@ -48,8 +62,11 @@ class _RecordingKeyring:
         self.entries: dict[tuple[str, str], str] = {}
         self.mutations: list[str] = []
         self.unavailable = False
+        self.failure: Exception | None = None
 
     def get_password(self, service_name: str, username: str) -> str | None:
+        if self.failure is not None:
+            raise self.failure
         if self.unavailable:
             raise _KeyringError("unavailable")
         return self.entries.get((service_name, username))
@@ -290,3 +307,88 @@ def test_an_interrupted_key_swap_is_left_by_the_borrow_and_settled_by_the_runtim
     assert not journal.exists() and path.exists()
     receipt._zeroise(dek)
     receipt._zeroise(key)
+
+
+class NoKeyringError(Exception):
+    """Named as the keyring library names its missing-backend error."""
+
+
+def _raised_from(error: Exception, cause: Exception) -> Exception:
+    try:
+        raise error from cause
+    except Exception as raised:
+        return raised
+
+
+@pytest.mark.parametrize(
+    ("error", "expected"),
+    [
+        (_NO_SUCH_LOGON_SESSION, KeychainUnavailability.LOGON_WITHOUT_CREDENTIALS),
+        (
+            _raised_from(_KeyringError("wrapped"), _NO_SUCH_LOGON_SESSION),
+            KeychainUnavailability.LOGON_WITHOUT_CREDENTIALS,
+        ),
+        (_Win32CredentialError(5, "CredWrite", "Access is denied"), KeychainUnavailability.REFUSED),
+        (NoKeyringError("no backend"), KeychainUnavailability.NO_BACKEND),
+        (
+            KeyringUnavailableError("typed", unavailability=KeychainUnavailability.NO_BACKEND),
+            KeychainUnavailability.NO_BACKEND,
+        ),
+        (_KeyringError("anything else"), KeychainUnavailability.REFUSED),
+    ],
+    ids=["logon_1312", "logon_1312_wrapped", "other_win32_code", "no_backend", "typed", "other"],
+)
+def test_a_keychain_failure_names_its_failed_prerequisite(error: Exception, expected: KeychainUnavailability) -> None:
+    assert receipt.keychain_unavailability(error) is expected
+
+
+def test_the_probe_reads_one_unnamed_account_and_changes_nothing(keychain: _RecordingKeyring) -> None:
+    assert receipt.probe_profile_session_keychain() is None
+    keychain.failure = _NO_SUCH_LOGON_SESSION
+    assert receipt.probe_profile_session_keychain() is KeychainUnavailability.LOGON_WITHOUT_CREDENTIALS
+    assert keychain.entries == {} and keychain.mutations == []
+
+
+def test_the_probe_reports_a_missing_backend(monkeypatch: pytest.MonkeyPatch) -> None:
+    def no_backend() -> None:
+        raise KeyringUnavailableError("none", unavailability=KeychainUnavailability.NO_BACKEND)
+
+    monkeypatch.setattr(receipt, "_keyring", no_backend)
+    assert receipt.probe_profile_session_keychain() is KeychainUnavailability.NO_BACKEND
+
+
+def test_an_absent_receipt_names_a_keychain_this_process_cannot_use(
+    tmp_path: Path, keychain: _RecordingKeyring
+) -> None:
+    profile_id = uuid4()
+    outcome, key = receipt.borrow_profile_session_key(storage_root=tmp_path, profile_id=profile_id)
+    # Absence stays the reason; a usable keychain adds nothing to it.
+    assert outcome.refusal is ProfileSessionRefusalReason.ABSENT and outcome.keychain is None and key is None
+
+    keychain.failure = _NO_SUCH_LOGON_SESSION
+    outcome, key = receipt.borrow_profile_session_key(storage_root=tmp_path, profile_id=profile_id)
+    assert outcome.refusal is ProfileSessionRefusalReason.ABSENT and key is None
+    assert outcome.keychain is KeychainUnavailability.LOGON_WITHOUT_CREDENTIALS
+    assert keychain.mutations == [] and not any(tmp_path.iterdir())
+
+
+def test_an_unreadable_proof_names_why_the_keychain_refused(tmp_path: Path, keychain: _RecordingKeyring) -> None:
+    profile_id = uuid4()
+    _mint(tmp_path, profile_id)
+    keychain.failure = _NO_SUCH_LOGON_SESSION
+    outcome, key = receipt.borrow_profile_session_key(storage_root=tmp_path, profile_id=profile_id)
+    assert outcome.refusal is ProfileSessionRefusalReason.KEYRING_UNAVAILABLE and key is None
+    assert outcome.keychain is KeychainUnavailability.LOGON_WITHOUT_CREDENTIALS
+
+
+def test_the_application_borrow_carries_the_keychain_reason(tmp_path: Path, keychain: _RecordingKeyring) -> None:
+    keychain.failure = _NO_SUCH_LOGON_SESSION
+    with (
+        override_settings(cadrumo_local_storage_root=tmp_path),
+        bind_profile_login_session_port(build_profile_login_session_port()),
+    ):
+        assert profile_session_keychain_unavailability() is KeychainUnavailability.LOGON_WITHOUT_CREDENTIALS
+        with pytest.raises(ProfileReceiptRefusedError) as refused, borrow_profile_receipt_key(bucket_id=uuid4()):
+            pass
+    assert refused.value.reason is ProfileSessionRefusalReason.ABSENT
+    assert refused.value.keychain is KeychainUnavailability.LOGON_WITHOUT_CREDENTIALS

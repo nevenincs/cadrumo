@@ -5,7 +5,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.profile_session import ProfileSessionRefusalReason, ReceiptBindingRefusal
+from ...core.profile_session import KeychainUnavailability, ProfileSessionRefusalReason, ReceiptBindingRefusal
 
 
 class SignInRefusal(BaseModel):
@@ -16,6 +16,8 @@ class SignInRefusal(BaseModel):
     reason: ProfileSessionRefusalReason | Literal["throttled"]
     binding: ReceiptBindingRefusal | None = None
     remaining_seconds: int | None = Field(default=None, ge=0)
+    keychain: KeychainUnavailability | None = None
+    """Why the refused process cannot use the keychain holding sign-in proof, when it cannot."""
 
     @model_validator(mode="after")
     def _throttle_time(self) -> "SignInRefusal":
