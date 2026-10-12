@@ -478,6 +478,9 @@ class RuntimeMcpAdapter:
         except Exception as error:
             code = refusal_code(error)
             reply: dict[str, Any] = {"outcome": "refused", "code": code}
+            if isinstance(error, RuntimeFrontendRefusedError) and error.request_faults:
+                # The runtime said why, in a registered error's code and message; every tool passes that on.
+                reply["faults"] = [public_value(fault) for fault in error.request_faults]
             if remedy := runtime_unavailable_remedy(code):
                 reply["remedy"] = remedy
             return reply

@@ -4,15 +4,18 @@ from __future__ import annotations
 
 import asyncio
 import time
-from contextlib import ExitStack
+from collections.abc import AsyncGenerator
+from contextlib import ExitStack, asynccontextmanager
+from typing import TypeGuard
 from uuid import UUID
 
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from ...adapters.local_runtime.runtime_frame_io import read_document, read_secret, write_document
 from ...adapters.local_runtime.runtime_transport_cleanup import close_runtime_transport_after_failure
 from ...adapters.local_runtime.worker_lease_transfer import read_worker_lease
 from ...adapters.local_runtime.worker_transport import WorkerChannel
+from ...application.operations.frontend_requests import OperationResponseControlRequestV1
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.operation_access import operation_management_action
 from ...application.runtime.profile_worker import (
@@ -44,7 +47,9 @@ from ...application.user_profile.access_contracts import AccessAction, AccessDen
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ...core.async_cleanup import await_cancellation_complete
+from ...core.errors.hierarchy import CadrumoError
 from ...core.logging import get_logger
+from ...core.request_faults import registered_error_fault
 from .operation_host import ProfileWorkerOperationHost
 from .worker_submission_staging import StagedSubmission, WorkerSubmissionStaging
 
@@ -130,14 +135,12 @@ async def _dispatch_request(
     if isinstance(request, ProfileWorkerOperationRequest | ProfileWorkerResumeRequest):
         await _handle_operation(channel, operations, request)
         return
-    if isinstance(request, ProfileWorkerObserveRequest):
-        await _handle_observation(channel, operations, request)
-        return
-    if isinstance(request, ProfileWorkerProjectRequest | ProfileWorkerProjectPageRequest):
-        await _handle_projection(channel, operations, request)
+    if _is_read(request):
+        await _serve_read(channel, operations, request)
         return
     if isinstance(request, ProfileWorkerManageRequest):
-        await _handle_management(channel, operations, request)
+        async with _management_reply(operations, request) as reply:
+            write_document(channel, reply, deadline=time.monotonic() + 5)
         return
     raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
 
@@ -300,55 +303,112 @@ async def _handle_operation(
         )
 
 
-async def _handle_observation(
-    channel: WorkerChannel, operations: ProfileWorkerOperationHost, request: ProfileWorkerObserveRequest
-) -> None:
-    async with operations.observe(request.session_id, request.observation, frontend=request.frontend) as (
-        observation,
-        release,
-    ):
-        write_document(
-            channel,
-            ProfileWorkerObservation(
+type _ReadRequest = (
+    ProfileWorkerObserveRequest
+    | ProfileWorkerProjectRequest
+    | ProfileWorkerProjectPageRequest
+    | ProfileWorkerManageRequest
+)
+
+
+def _is_read(request: object) -> TypeGuard[_ReadRequest]:
+    """Tell whether a request only reads: an observation, a projection, a page, or the inspection of a review."""
+    if isinstance(request, ProfileWorkerManageRequest):
+        # Applying and rejecting a review extend this request type; only the type itself inspects.
+        return type(request.management) is OperationResponseControlRequestV1
+    return isinstance(
+        request, ProfileWorkerObserveRequest | ProfileWorkerProjectRequest | ProfileWorkerProjectPageRequest
+    )
+
+
+def read_refusal(fault: Exception) -> AutomationCustodyError | ProfileAccessRefusedError | None:
+    """Return the refusal that answers what stopped a read, or ``None`` for what must still end the channel.
+
+    A registered error is answered with its own code and the message the
+    command line prints for it. An unregistered lookup, value or type fault is
+    answered with the generic refusal of a read and no text, because its
+    message is wording nobody chose and may hold anything; its type is logged.
+    A typed refusal already answers, and a transport refusal says the channel
+    this worker asks the runtime for authority on can no longer be trusted, so
+    neither is replaced.
+    """
+    if isinstance(fault, AutomationCustodyError | ProfileAccessRefusedError | ValidationError | RuntimeRefusalError):
+        return None
+    if isinstance(fault, CadrumoError):
+        return AutomationCustodyError(AutomationCustodyCode.INVALID, request_faults=(registered_error_fault(fault),))
+    if isinstance(fault, ValueError | LookupError | TypeError):
+        _LOGGER.error("worker read stopped by an unexpected fault exception_type=%s", type(fault).__name__)
+        return ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    return None
+
+
+async def _serve_read(channel: WorkerChannel, operations: ProfileWorkerOperationHost, request: _ReadRequest) -> None:
+    """Answer one read, turning whatever stops it before its reply into a refusal.
+
+    A read changes nothing, so whatever stops it leaves no outcome to
+    misreport and a refusal is always a true answer: the worker that every
+    session of the profile shares serves on. An act that starts, resumes,
+    answers or stops an operation can fail after it took effect, where a
+    refusal would deny an effect that exists, so those are not answered here.
+    Once the reply is being written the fault belongs to the channel and is
+    not answered a second time.
+    """
+    prepared = False
+    try:
+        async with _read_reply(operations, request) as reply:
+            prepared = True
+            write_document(channel, reply, deadline=time.monotonic() + 5)
+    except Exception as fault:
+        refusal = None if prepared else read_refusal(fault)
+        if refusal is None:
+            raise
+        raise refusal from None
+
+
+@asynccontextmanager
+async def _read_reply(operations: ProfileWorkerOperationHost, request: _ReadRequest) -> AsyncGenerator[BaseModel]:
+    """Lend the reply of one read while its disclosure guard is held."""
+    if isinstance(request, ProfileWorkerManageRequest):
+        async with _management_reply(operations, request) as managed:
+            yield managed
+        return
+    if isinstance(request, ProfileWorkerObserveRequest):
+        async with operations.observe(request.session_id, request.observation, frontend=request.frontend) as (
+            observation,
+            release,
+        ):
+            yield ProfileWorkerObservation(
                 identity=operations.custody.identity,
                 request_id=request.request_id,
                 observation=observation,
                 release=release,
-            ),
-            deadline=time.monotonic() + 5,
-        )
-
-
-async def _handle_projection(
-    channel: WorkerChannel,
-    operations: ProfileWorkerOperationHost,
-    request: ProfileWorkerProjectRequest | ProfileWorkerProjectPageRequest,
-) -> None:
+            )
+        return
     async with operations.project(request.session_id, request.projection, frontend=request.frontend) as (
         document,
         release,
     ):
-        projected = (
-            ProfileWorkerProjectionPage(
+        if isinstance(request, ProfileWorkerProjectPageRequest):
+            yield ProfileWorkerProjectionPage(
                 identity=operations.custody.identity,
                 request_id=request.request_id,
                 page=project_document_page(document, request.page),
                 release=release,
             )
-            if isinstance(request, ProfileWorkerProjectPageRequest)
-            else ProfileWorkerProjection(
+        else:
+            yield ProfileWorkerProjection(
                 identity=operations.custody.identity,
                 request_id=request.request_id,
                 document=document,
                 release=release,
             )
-        )
-        write_document(channel, projected, deadline=time.monotonic() + 5)
 
 
-async def _handle_management(
-    channel: WorkerChannel, operations: ProfileWorkerOperationHost, request: ProfileWorkerManageRequest
-) -> None:
+@asynccontextmanager
+async def _management_reply(
+    operations: ProfileWorkerOperationHost, request: ProfileWorkerManageRequest
+) -> AsyncGenerator[ProfileWorkerProjection]:
+    """Lend the reply of one control or response request while its guard is held."""
     async with operations.manage(request.session_id, request.management, frontend=request.frontend) as (
         document,
         release,
@@ -358,13 +418,9 @@ async def _handle_management(
             or release.request.action is not operation_management_action(request.management)
         ):
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-        write_document(
-            channel,
-            ProfileWorkerProjection(
-                identity=operations.custody.identity,
-                request_id=request.request_id,
-                document=document,
-                release=release,
-            ),
-            deadline=time.monotonic() + 5,
+        yield ProfileWorkerProjection(
+            identity=operations.custody.identity,
+            request_id=request.request_id,
+            document=document,
+            release=release,
         )

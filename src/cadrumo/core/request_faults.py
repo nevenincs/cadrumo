@@ -10,6 +10,10 @@ does: where, what kind, and the validator's own message. It never attaches the
 refused object: the input, the error context and the documentation link of the
 model's report stay behind, because an input can be a whole nested payload and
 none of it is wording anyone chose.
+
+A registered error that refuses a request, or stops a read, without a model
+report is one fault of the same shape: its code and the message the command
+line prints for it.
 """
 
 from __future__ import annotations
@@ -71,11 +75,13 @@ def request_faults(error: ValidationError) -> tuple[RequestFault, ...]:
 
 
 def registered_error_fault(error: CadrumoError) -> RequestFault:
-    """Return the one fault of a registered error a validator raised and the request model did not wrap.
+    """Return the one fault of a registered error that no request model reported.
 
-    Such an error refuses the whole request, so the fault has no location. Its
-    kind is the error's registered code and its message is the one the command
-    line prints for the same error.
+    A validator can raise one the model does not wrap, and so can the
+    resolution of what a request names or the serving of a read. It is about
+    the whole request, so the fault has no location. Its kind is the error's
+    registered code and its message is the one the command line prints for
+    the same error.
     """
     code = get_registered_error_code(error)
     return RequestFault(

@@ -15,7 +15,7 @@ returns are tested through a real one.
 from __future__ import annotations
 
 import json
-from typing import Any, NoReturn, cast
+from typing import Any, NoReturn, cast, override
 from uuid import UUID, uuid4
 
 import pytest
@@ -34,6 +34,7 @@ from cadrumo.application.operations.registry import (
 from cadrumo.application.runtime.operation_access import (
     RuntimeOperationAcknowledged,
     RuntimeOperationControl,
+    RuntimeOperationObserve,
     RuntimeOperationSubmit,
     RuntimeOperationSubmitted,
 )
@@ -47,6 +48,7 @@ from cadrumo.application.user_profile.profile_operation_contracts import (
     PROFILE_PATCH_OPERATION_DEFINITION_ID,
 )
 from cadrumo.core.hashing import sha256_hex
+from cadrumo.core.request_faults import RequestFault
 from cadrumo_harness.mcp.protocol_contract import MCP_TOOL_CATALOGUE
 from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_harness.mcp.server import build_server
@@ -193,6 +195,40 @@ async def test_another_refusal_of_the_runtime_is_not_explained_as_a_fault_of_the
     is_error, refused = await _execute(lease, AUTH_READ_OPERATION_DEFINITION_ID, {"kind": "status"})
 
     assert (is_error, refused) == (True, {"outcome": "refused", "code": "operation_denied"})
+
+
+class _RefusingObservation(_DecodingLease):
+    """A lease whose runtime refuses an observation and says why, as it does for a read it cannot serve."""
+
+    reason = RequestFault(location=(), type="ERROR_SYNTHETIC_SUBJECT_GONE", message="the synthetic subject has gone")
+
+    @override
+    def operation(self, request: object, *, deadline: float) -> object:
+        if isinstance(request, RuntimeOperationObserve):
+            raise RuntimeFrontendRefusedError(AutomationCustodyCode.INVALID.value, request_faults=(self.reason,))
+        return super().operation(request, deadline=deadline)
+
+
+@pytest.mark.anyio
+async def test_a_refusal_of_any_tool_that_says_why_is_passed_on_with_its_faults() -> None:
+    lease = _RefusingObservation(uuid4())
+    adapter = RuntimeMcpAdapter(profile_id=lease.profile_id, client=cast(RuntimeFrontendClient, lease))
+    try:
+        async with connected_server_and_client_session(build_server(adapter)) as sdk:
+            called = await sdk.call_tool(
+                "observe", {"observation": {"operation_id": "a" * 64, "after_cursor": 0, "page_limit": 8}}
+            )
+    finally:
+        await adapter.close()
+
+    assert called.is_error is True
+    assert called.structured_content == {
+        "outcome": "refused",
+        "code": "invalid",
+        "faults": [
+            {"location": [], "type": "ERROR_SYNTHETIC_SUBJECT_GONE", "message": "the synthetic subject has gone"}
+        ],
+    }
 
 
 def test_the_execute_tool_says_what_faults_names() -> None:

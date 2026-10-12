@@ -422,7 +422,9 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
     ),
     (
         "observe",
-        "Read a currently authorized operation observation",
+        "Read a currently authorized operation observation. A read that a registered error stops, here or in "
+        "result, result_page, review or respond with action inspect, is answered refused with code invalid, and "
+        "faults carries that error's code as its type and the message the command line prints for it",
         _schema({"observation": _DOC}),
         _reads("Observe an operation"),
     ),

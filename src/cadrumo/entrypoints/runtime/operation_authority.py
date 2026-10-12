@@ -389,6 +389,13 @@ class ProfileWorkerOperationAuthority:
             # names refuses the request, with its own code and message, and the worker serves on.
             faults = (registered_error_fault(refused),)
             raise AutomationCustodyError(AutomationCustodyCode.INVALID, request_faults=faults) from None
+        except (ValueError, LookupError, TypeError) as fault:
+            if action is not AccessAction.SUBMIT or provenance is not None:
+                raise
+            # Equally before anything is admitted. An unregistered fault's text is wording nobody
+            # chose and may hold anything, so the request is refused without it and its type logged.
+            _LOGGER.error("fresh submission stopped by an unexpected fault exception_type=%s", type(fault).__name__)
+            raise AutomationCustodyError(AutomationCustodyCode.INVALID) from None
 
     def _require_current_scope(
         self,

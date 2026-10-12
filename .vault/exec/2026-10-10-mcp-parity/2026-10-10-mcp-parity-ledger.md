@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:b13b39ae38608e643c4ff05429ea0c4c2db3c62fe8bfeedef5e9e38532d3736b'
+body_hash: 'sha256:ca518f199bc95857a754da06a74bd1f496dcce7c7a44c24ad16183ed5dbc6627'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -2135,6 +2135,15 @@ related:
 - `S63` `verify:` `pytest seven authority and host files and the frontend source scan (32)` -> `pass`
 - `S63` `verify:` `lint-imports (15 contracts)` -> `pass`
 - `S63` `verify:` `ruff, format, ty, basedpyright and pyrefly on the four files` -> `pass`
+- `S63` `M` `src/cadrumo/entrypoints/runtime/tests/test_operation_scope_resolution.py`
+- `S63` `A` `src/cadrumo/entrypoints/runtime/tests/test_worker_outlives_refused_reads.py`
+- `S63` `A` `src/cadrumo/entrypoints/runtime/tests/test_worker_read_refusal.py`
+- `S63` `verify:` `pytest runtime request fault tests and the four added or changed files, serially (46)` -> `pass`
+- `S63` `verify:` `pytest authority, host and frontend source scan (23); projection pages (5), submission stream (3), modelo metadata (2), profile connections (4), each alone` -> `pass`
+- `S63` `verify:` `pytest application operations (647)` -> `pass`
+- `S63` `verify:` `pytest harness tool suite and the two carrier files (461, 3 skipped for the credential store)` -> `pass`
+- `S63` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S63` `verify:` `ruff, format and ty on the eleven files; pyrefly on the seven production files` -> `pass`
 
 ## Notes
 
@@ -2207,3 +2216,4 @@ related:
 - `S63` Review follow-up. A registry-wide test fails on a request validator whose message interpolates anything but a field name or a constant; it found eleven and each now names the field and the rule without the value, among them the tax identity and date parsers many request models share.
 - `S63` Reversal of the validator rewording logged above under this Step: the twelve files are byte-identical to their content before it, checked by object hash, and the scan is deleted. A fault carries the validator's message as the command line shows it and never pydantic's input, context or link. A registered error raised while a worker decodes a request no longer ends the worker; it is answered as invalid with the error's code and message. Left as it was: when the command line builds a request in process and pydantic wraps the refusal, it prints its generic validation boundary with the path and the kind of rule, which predates this work.
 - `S63` The financial-input path and an access resolver that raises during admission no longer end the worker; each answers invalid with the registered code and message and the session serves on. Three row validators on the financial path quote the operand's value in their message and are left as they are, since the command line prints them. Open and recorded in the audit: a registered error from a resolver on an action after admission still escapes the loop.
+- `S63` Reads answer instead of ending the worker when an access resolver raises: observation, result, result page, review projection and review inspection go through one place. Shown through the real runtime with the work unit removed from the encrypted store behind a running worker, since no frontend act removes one. A plain error from a resolver on a fresh submission answers a bare invalid, shown at the authority level only. Open: start, resume, cancel, detach, apply and reject still end the worker when their access resolution raises.

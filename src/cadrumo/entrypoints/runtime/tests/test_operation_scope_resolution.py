@@ -8,6 +8,7 @@ no native permission or encrypted-storage integrity.
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 from collections.abc import AsyncGenerator, Generator
 from contextlib import asynccontextmanager, contextmanager
@@ -60,7 +61,8 @@ from cadrumo.application.user_profile.access_contracts import (
 )
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
-from cadrumo.core.period import Period
+from cadrumo.core.period import Period, PeriodError
+from cadrumo.core.request_faults import RequestFault
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from cadrumo.entrypoints.runtime.operation_authority import ProfileWorkerOperationAuthority, WorkerOperationBinding
@@ -154,6 +156,7 @@ class _ScopeRead:
         self.loop_thread: int | None = None
         self.denied = False
         self.failure: ProfileAccessRefusedError | None = None
+        self.stopped_by: Exception | None = None
 
     def hold(self) -> None:
         self.loop, self.loop_thread = asyncio.get_running_loop(), get_ident()
@@ -165,6 +168,8 @@ class _ScopeRead:
         assert governed_facts_in_scope() is self.operation
         self.calls.append(context.action)
         self.contexts.append(_CARRIED_CONTEXT.get())
+        if self.stopped_by is not None:
+            raise self.stopped_by
         if self.loop is not None:
             # Refuse a loop-blocking implementation immediately rather than
             # deadlocking the test on a control task it cannot schedule.
@@ -376,6 +381,62 @@ async def test_every_action_and_held_require_resolves_freshly_without_lending_pe
     assert harness.reader.calls == [AccessAction.SUBMIT, action, action, action, action]
     assert harness.custody.section_tasks == [caller, caller]
     assert harness.client.released == 3
+
+
+_PRIVATE_TEXT = "synthetic-private-text-41c7"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("require_only", [False, True])
+@pytest.mark.parametrize("fault_type", [ValueError, KeyError, LookupError, TypeError])
+async def test_an_unregistered_fault_of_a_fresh_submissions_resolver_refuses_the_request_without_its_text(
+    harness: _Harness, fault_type: type[Exception], require_only: bool, caplog: pytest.LogCaptureFixture
+) -> None:
+    harness.reader.stopped_by = fault_type(_PRIVATE_TEXT)
+
+    with caplog.at_level(logging.ERROR), pytest.raises(AutomationCustodyError) as refused:
+        await (_require(harness) if require_only else _guard(harness))
+
+    assert (refused.value.reason, refused.value.request_faults) == (AutomationCustodyCode.INVALID, ())
+    assert refused.value.__cause__ is None and refused.value.__suppress_context__
+    logged = [record.getMessage() for record in caplog.records]
+    assert logged == [f"fresh submission stopped by an unexpected fault exception_type={fault_type.__name__}"]
+    assert not harness.client.requests and not harness.custody.section_tasks
+
+
+@pytest.mark.asyncio
+async def test_a_registered_error_of_a_fresh_submissions_resolver_refuses_the_request_with_its_code_and_message(
+    harness: _Harness,
+) -> None:
+    harness.reader.stopped_by = PeriodError("a synthetic period refusal with its guidance")
+
+    with pytest.raises(AutomationCustodyError) as refused:
+        await _guard(harness)
+
+    assert refused.value.reason is AutomationCustodyCode.INVALID
+    assert refused.value.request_faults == (
+        RequestFault(location=(), type="INTEGRITY_PERIOD", message="a synthetic period refusal with its guidance"),
+    )
+    assert not harness.client.requests
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("action", [AccessAction.START, AccessAction.COMMIT])
+@pytest.mark.parametrize("fault", [KeyError(_PRIVATE_TEXT), PeriodError("a synthetic period refusal")])
+async def test_a_fault_of_an_admitted_operations_resolver_is_not_answered_as_a_refused_request(
+    harness: _Harness, action: AccessAction, fault: Exception
+) -> None:
+    """Once admitted, an act may already have taken effect, so its fault is never turned into a refusal here."""
+    async with harness.authority.guard(harness.identity, AccessAction.SUBMIT):
+        harness.authority.capture_provenance(harness.identity)
+    harness.reader.stopped_by = fault
+
+    with pytest.raises(type(fault)) as raised:
+        async with harness.authority.guard(harness.identity, action):
+            pytest.fail("the guard must not be entered")
+
+    assert raised.value is fault
+    assert len(harness.client.requests) == 1
 
 
 def test_the_execution_caller_is_the_frontend_and_live_session_that_admitted_the_invocation(harness: _Harness) -> None:
