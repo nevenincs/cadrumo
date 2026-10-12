@@ -59,7 +59,7 @@ def enrollment_review_digest(record: EnrollmentRecord) -> ContentDigest:
     """Bind immutable consent, with deterministic encoding of the scope allow sets."""
     proposal = record.proposal.model_dump(mode="json")
     scope = record.proposal.scope.model_dump(mode="json")
-    for name in ("operations", "actions", "disclosures", "periods"):
+    for name in ("operations", "actions", "disclosures", "disclosure_categories", "periods"):
         if scope[name] is not None:
             scope[name] = sorted(scope[name], key=canonical_json_bytes)
     proposal["scope"] = scope

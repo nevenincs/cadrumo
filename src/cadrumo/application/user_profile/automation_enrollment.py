@@ -27,6 +27,7 @@ from .access_contracts import (
     AccessSession,
     AuthorityState,
     AutomationGrant,
+    DisclosureCategoryGrant,
     DisclosurePermission,
     ProfileAccessBinding,
     ProfileAccessState,
@@ -228,6 +229,7 @@ class AutomationScopeProjection(BaseModel):
     periods: tuple[AutomationPeriodProjection, ...] | None
     allow_period_independent: bool
     allow_delegation: bool
+    disclosure_categories: tuple[DisclosureCategoryGrant, ...] = ()
 
     @classmethod
     def from_scope(cls, scope: AccessScope) -> Self:
@@ -248,6 +250,9 @@ class AutomationScopeProjection(BaseModel):
             ),
             allow_period_independent=scope.allow_period_independent,
             allow_delegation=scope.allow_delegation,
+            disclosure_categories=tuple(
+                sorted(scope.disclosure_categories, key=lambda item: (item.category.value, str(item.destination_id)))
+            ),
         )
 
 

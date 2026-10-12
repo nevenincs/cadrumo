@@ -2053,8 +2053,12 @@ cli:
           a kért jogosultságmódosítással.
         automation_change_proposal_required: A jogosultságmódosítási kérelmet a --secrets-stdin
           vagy --secrets-fd csatornán add meg.
-        automation_create_proposal_required: A jogosultsági kérelmet a --secrets-stdin
-          vagy --secrets-fd csatornán add meg.
+        automation_create_agent_categories: A --category csak a --use agent kapcsolóval
+          együtt érvényes.
+        automation_create_proposal_required: Válaszd a --use agent kapcsolót, vagy
+          add meg a jogosultsági kérelmet a --secrets-stdin vagy --secrets-fd csatornán.
+        automation_create_use_conflict: A --use agent maga állítja össze a kérelmet;
+          ne adj meg mellé másikat a --secrets-stdin vagy --secrets-fd csatornán.
         echo_suppression_unavailable: Ez a terminál nem tudja elrejteni a beírt szöveget,
           így a titok láthatóvá válna a képernyőn; használd a --secrets-stdin vagy
           --secrets-fd kapcsolót.
@@ -2327,8 +2331,14 @@ cli:
             kérelmezése.
           kind_help: 'A módosítás típusa: rotate, renew vagy change_scope.'
         create:
-          help: API-jogosultság kérelmezése és a hitelesítő adat átvétele védett tárolóba,
-            külön felhasználói jóváhagyás után.
+          category_help: 'További adatkategória, amelyet az ügynök olvashat: tax_values.'
+          help: API-kulcs kiadása. A --use agent kapcsolóval MCP-n keresztül dolgozó
+            ügynöknek szóló kulcs, amely olvassa és módosítja a profil adatait, valamint
+            az általad hozzáadott --category kategóriákat; egyébként teljes kérelmet
+            adj meg a --secrets-stdin vagy --secrets-fd csatornán. A kulcs a külön
+            jóváhagyásod után kerül a védett tárolóba.
+          use_help: 'Mire szól a kulcs: agent, MCP-n keresztül dolgozó ügynöknek szóló
+            kulcs. Mindig olvassa és módosítja a profil adatait.'
         decline:
           digest_help: Az inspect által megjelenített pontos felülvizsgálati kivonat.
           help: A felülvizsgált kérelem elutasítása.
@@ -2477,6 +2487,12 @@ cli:
         remove_help: Egy leszármazott eltávolítása 0-alapú index szerint az aktív
           profilról.
         remove_index_help: Az eltávolítandó leszármazott 0-alapú indexe.
+      disclosures:
+        help: Kategóriánként megszámolja, mit fedhet fel ez a munkamenet, és kiírja
+          a teljes lista egy oldalát.
+        offset_help: Az a tétel, amelynél az oldal kezdődik; add meg az előző oldal
+          next_offset értékét. A parancs minden futása külön munkamenet, ezért a tételei
+          ezt a munkamenetet nevezik meg célként.
       edit_help: A varázsló újrafuttatása meglévő profil ellen, értékek frissítése
         helyben.
       edit_row:
@@ -2489,12 +2505,6 @@ cli:
           {valid}.'
         invalid_timestamp: 'A(z) {flag} értékének ISO-8601 időbélyegnek kell lennie
           (pl. 2026-04-01T00:00:00+00:00); kapott: {raw}.'
-      disclosures:
-        help: Kategóriánként megszámolja, mit fedhet fel ez a munkamenet, és kiírja
-          a teljes lista egy oldalát.
-        offset_help: Az a tétel, amelynél az oldal kezdődik; add meg az előző oldal
-          next_offset értékét. A parancs minden futása külön munkamenet, ezért a tételei
-          ezt a munkamenetet nevezik meg célként.
         since_after_until: --since értékének korábbinak vagy egyenlőnek kell lennie
           az --until értékénél.
       history_actor_help: Az előzmények szűrése egy adott aktor által rögzített eseményekre

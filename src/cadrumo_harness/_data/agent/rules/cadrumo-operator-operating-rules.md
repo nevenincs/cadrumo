@@ -69,8 +69,10 @@ instead.
 The sign-in session ends with the person's sign-out, lock, sign-in to another
 profile or sign-in deadline. Activity through MCP does not extend it. To let you work
 while nobody is signed in, the person issues a key with `aeat config profile
-automation` and configures it, by its nonsecret credential reference, in this
-server's launch configuration. Only the person does that. A key's grant can admit
+automation create --use agent` and configures it, by its nonsecret credential
+reference, in this server's launch configuration. Only the person does that. The key
+reads and changes the profile's values, and reads tax values only when the person
+added them. A key's grant can admit
 fresh sessions after an earlier one expires; expiry, revocation and a profile-wide
 lock still end its access.
 

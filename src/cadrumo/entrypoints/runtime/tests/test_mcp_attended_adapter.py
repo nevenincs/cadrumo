@@ -36,6 +36,7 @@ from cadrumo_harness.mcp.protocol_contract import PERSON_ACT_REMEDY, sign_in_rem
 from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_harness.mcp.runtime_admission import McpAdmission
 from cadrumo_harness.mcp.server import build_server
+from cadrumo_harness.mcp.tests.agent_key_reads import edit_profile_and_read_back
 from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
 
 from .stored_sign_in_runtime import StoredSignInRuntime, stored_sign_in_runtime
@@ -211,3 +212,26 @@ async def test_a_declined_ask_leaves_only_status_and_sends_the_agent_to_the_pers
         assert private.is_error is True
         assert private.structured_content["code"] == "authentication_required"
         assert private.structured_content["remedy"] == remedy
+
+
+@pytest.mark.anyio
+async def test_an_approved_attended_connection_edits_the_profile_and_reads_each_change_back(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """An agent inside the person's held sign-in patches the profile, mutates a field and edits rows."""
+    with (
+        stored_sign_in_runtime(tmp_path, monkeypatch, signed_in=False) as runtime,
+        override_settings(cadrumo_active_profile=str(runtime.profile_id)),
+    ):
+        holder = await _holding(runtime)
+        try:
+            adapter = _adapter()
+            try:
+                async with connected_server_and_client_session(build_server(adapter)) as sdk:
+                    status = await _status_while_deciding(sdk, holder, approve=True)
+                    assert status.structured_content["session"] == McpAdmission.ATTENDED.value, status
+                    await edit_profile_and_read_back(sdk, runtime.profile_id)
+            finally:
+                await adapter.close()
+        finally:
+            await asyncio.to_thread(holder.close)

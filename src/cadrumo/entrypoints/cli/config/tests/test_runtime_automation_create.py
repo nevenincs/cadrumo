@@ -15,6 +15,7 @@ from cadrumo.application.user_profile.automation_enrollment import (
     EnrollmentProposal,
     EnrollmentStage,
 )
+from cadrumo.core.config import override_settings
 from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.cli.config.runtime_access_management_payloads import ConfigProfileAutomationCreateResult
 from cadrumo.entrypoints.cli.config.runtime_automation_request import AutomationCreateInput
@@ -118,3 +119,38 @@ def test_create_parser_requires_explicit_protected_channel_before_admission() ->
     assert envelope["command"] == "config.profile.automation.create"
     assert envelope["error"]["code"] == "REFUSED_CLI_BOUNDARY"
     assert envelope["error"]["context"] is None
+
+
+@pytest.mark.parametrize(
+    ("arguments", "stdin", "message"),
+    [
+        (("--category", "tax_values"), None, "--category applies only with --use agent"),
+        (
+            ("--use", "agent", "--secrets-stdin"),
+            json.dumps({"proposal": _proposal().model_dump(mode="json")}),
+            "--use agent builds the proposal itself",
+        ),
+        ((), None, "Choose --use agent, or supply the enrollment proposal"),
+    ],
+    ids=["category_without_use", "agent_and_proposal", "neither"],
+)
+def test_create_refuses_an_incomplete_or_mixed_key_choice_before_admission(
+    arguments: tuple[str, ...], stdin: str | None, message: str
+) -> None:
+    """Each refusal names what to choose, and is given before any runtime is asked."""
+    with override_settings(cadrumo_output_language="en"):
+        refused = invoke_cached_cli(
+            ("--format", "json", "config", "profile", "automation", "create", *arguments), input=stdin
+        )
+    assert refused.exit_code != 0
+    envelope = json.loads(refused.output)
+    assert envelope["command"] == "config.profile.automation.create"
+    assert envelope["error"]["code"] == "REFUSED_CLI_BOUNDARY"
+    assert message in envelope["error"]["message"]
+
+
+def test_create_help_offers_the_agent_use_and_its_data_categories() -> None:
+    help_result = invoke_cached_cli(("config", "profile", "automation", "create", "--help"))
+    assert help_result.exit_code == 0, help_result.output
+    for option in ("--use", "--category", "tax_values"):
+        assert option in help_result.output

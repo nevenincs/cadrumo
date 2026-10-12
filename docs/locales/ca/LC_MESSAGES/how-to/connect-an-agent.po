@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-12 20:05+0200\n"
+"POT-Creation-Date: 2026-10-12 23:19+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0000\n"
 "Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -174,9 +174,9 @@ msgstr ""
 #: ../../how-to/connect-an-agent.md:79
 msgid ""
 "**With a key you issued.** Start the server with `--profile-id` and "
-"`--credential-reference`. Issue the key yourself with `aeat config "
-"profile automation create`, review and approve it as described below, and"
-" put the protected credential reference it delivers in the server's "
+"`--credential-reference`. Issue the key yourself for an agent, review and"
+" approve it as described in \"Issue a key for an agent\" below, and put "
+"the protected credential reference it delivers in the server's "
 "configuration. The server authenticates with that key on every call while"
 " the key's grant and the profile remain eligible, whether or not anyone "
 "is signed in. `--credential-reference` without `--profile-id` is refused "
@@ -185,8 +185,8 @@ msgid ""
 " issue a replacement key and change the configuration."
 msgstr ""
 "**Amb una clau que vas emetre.** Inicia el servidor amb `--profile-id` i "
-"`--credential-reference`. Emet tu la clau amb `aeat config profile "
-"automation create`, revisa-la i aprova-la com es descriu més avall, i "
+"`--credential-reference`. Emet tu la clau per a un agent, revisa-la i "
+"aprova-la com es descriu a \"Emet una clau per a un agent\" més avall, i "
 "posa a la configuració del servidor la referència de credencial protegida"
 " que lliura. El servidor s'autentica amb aquesta clau a cada crida mentre"
 " la concessió de la clau i el perfil continuïn sent vàlids, tant si algú "
@@ -383,12 +383,65 @@ msgstr ""
 "perfil a cada resultat."
 
 #: ../../how-to/connect-an-agent.md:165
+msgid "Issue a key for an agent"
+msgstr "Emet una clau per a un agent"
+
+#: ../../how-to/connect-an-agent.md:167
+msgid "Issue it with:"
+msgstr "Emet-la amb:"
+
+#: ../../how-to/connect-an-agent.md:173
+msgid ""
+"A key for an agent can run every operation inside the profile, reads and "
+"changes the profile's values, and sees the progress of its own "
+"operations. To let it read tax values too, add `--category tax_values`. "
+"The command waits while you review and approve the request from a signed-"
+"in session, as described below, and then prints the protected "
+"`credential_reference` to put in the server's configuration. Results in "
+"the key's categories are released to the local MCP server that presents "
+"the key, and to nothing else; a value outside them is refused. The key "
+"runs for 365 days unless you revoke it sooner, keeps working while nobody"
+" is signed in, and stops while the computer is locked."
+msgstr ""
+"Una clau per a un agent pot executar qualsevol operació dins del perfil, "
+"llegeix i canvia els valors del perfil i veu el progrés de les seves "
+"pròpies operacions. Perquè també llegeixi els valors fiscals, afegeix "
+"`--category tax_values`. L'ordre espera mentre revises i aproves la "
+"sol·licitud des d'una sessió iniciada, com es descriu més avall, i "
+"després mostra la `credential_reference` protegida que has de posar a la "
+"configuració del servidor. Els resultats de les categories de la clau es "
+"lliuren al servidor MCP local que presenta la clau, i a res més; un valor"
+" fora d'aquestes categories es rebutja. La clau dura 365 dies tret que la"
+" revoquis abans, continua funcionant encara que ningú no hagi iniciat "
+"sessió i s'atura mentre l'ordinador està bloquejat."
+
+#: ../../how-to/connect-an-agent.md:183
+msgid ""
+"The terminal interface offers the same choice: in the access request, "
+"choose **For an agent (MCP)** as the key's use, and tick tax values if "
+"the agent should read them."
+msgstr ""
+"La interfície de terminal ofereix la mateixa opció: a la sol·licitud "
+"d'accés, tria **Per a un agent (MCP)** com a ús de la clau i marca els "
+"valors fiscals si l'agent els ha de llegir."
+
+#: ../../how-to/connect-an-agent.md:187
+msgid ""
+"To issue a key with any other scope, leave out `--use` and supply the "
+"whole proposal on the protected channel with `--secrets-stdin` or "
+"`--secrets-fd`."
+msgstr ""
+"Per emetre una clau amb qualsevol altre abast, omet `--use` i proporciona"
+" la proposta completa pel canal protegit amb `--secrets-stdin` o "
+"`--secrets-fd`."
+
+#: ../../how-to/connect-an-agent.md:190
 msgid "List pending requests and inspect the exact request before deciding:"
 msgstr ""
 "Enumera les sol·licituds pendents i inspecciona la sol·licitud exacta "
 "abans de decidir:"
 
-#: ../../how-to/connect-an-agent.md:170
+#: ../../how-to/connect-an-agent.md:195
 msgid ""
 "Replace `REQUEST_UUID` with the returned request ID. Review the client "
 "and destination, operations, actions, disclosures, periods, expiry, "
@@ -402,7 +455,7 @@ msgstr ""
 "bloqueig del sistema operatiu. Copia el `review_digest` actual d'aquesta "
 "inspecció. Aprova només els permisos revisats o rebutja la sol·licitud:"
 
-#: ../../how-to/connect-an-agent.md:178
+#: ../../how-to/connect-an-agent.md:203
 msgid ""
 "Run one decision command. Approval asks for a fresh profile password "
 "through a hidden terminal prompt; decline does not. For controlled "
@@ -425,7 +478,7 @@ msgstr ""
 " la referència lliurada a la configuració del servidor MCP amb "
 "`--credential-reference`."
 
-#: ../../how-to/connect-an-agent.md:186
+#: ../../how-to/connect-an-agent.md:211
 msgid ""
 "The same review procedure applies to rotation, renewal and scope-change "
 "requests. Enrollment and rotation can deliver a new protected reference; "
@@ -448,13 +501,13 @@ msgstr ""
 "l'autorització. Bloquejar la sessió actual no revoca aquesta autorització"
 " independent."
 
-#: ../../how-to/connect-an-agent.md:195
+#: ../../how-to/connect-an-agent.md:220
 msgid "Use the inventory's non-secret key or grant ID to revoke access:"
 msgstr ""
 "Fes servir l'ID no secret de clau o autorització de l'inventari per "
 "revocar l'accés:"
 
-#: ../../how-to/connect-an-agent.md:200
+#: ../../how-to/connect-an-agent.md:225
 msgid ""
 "Check `access_denied` and `cleanup_pending` in text output; in the JSON "
 "result, inspect `receipt.access_denied` and `receipt.cleanup_pending`. "
@@ -467,7 +520,7 @@ msgstr ""
 "credencials estigui pendent és diferent del fet que s'hagi denegat "
 "l'accés."
 
-#: ../../how-to/connect-an-agent.md:204
+#: ../../how-to/connect-an-agent.md:229
 msgid ""
 "List sessions, then choose the intended lock scope. A current-session "
 "lock ends the caller's session; a selected-session lock ends that "
@@ -478,7 +531,7 @@ msgstr ""
 "sessió seleccionada acaba aquella sessió. Un bloqueig de tot el perfil "
 "suspèn la seva automatització."
 
-#: ../../how-to/connect-an-agent.md:212
+#: ../../how-to/connect-an-agent.md:237
 msgid ""
 "To resume, supply the fresh password at the hidden prompt. Add `--grant "
 "GRANT_UUID` for each grant you deliberately reactivate; omitting it "
@@ -489,7 +542,7 @@ msgstr ""
 "reactivar; si l'omets, es restaura l'accés humà sense reactivar "
 "autoritzacions."
 
-#: ../../how-to/connect-an-agent.md:219
+#: ../../how-to/connect-an-agent.md:244
 msgid ""
 "Confirm the returned grant IDs. An agent's next call then resumes your "
 "sign-in, or authenticates again with its configured key."
@@ -498,11 +551,11 @@ msgstr ""
 " agent reprèn llavors el teu inici de sessió o torna a autenticar-se amb "
 "la seva clau configurada."
 
-#: ../../how-to/connect-an-agent.md:222
+#: ../../how-to/connect-an-agent.md:247
 msgid "Run an agent on separate storage"
 msgstr "Executa un agent sobre un emmagatzematge a part"
 
-#: ../../how-to/connect-an-agent.md:224
+#: ../../how-to/connect-an-agent.md:249
 msgid ""
 "An agent harness, an evaluation or a test can use its own Cadrumo data, "
 "kept apart from yours. Choose a new, empty directory for it. Give every "
@@ -518,7 +571,7 @@ msgstr ""
 "`CADRUMO_SECRET_STORE_DIR` anomena un directori per al seu magatzem "
 "xifrat de secrets. Tots dos han de ser camins absoluts."
 
-#: ../../how-to/connect-an-agent.md:230
+#: ../../how-to/connect-an-agent.md:255
 msgid ""
 "Cadrumo's own background service serves only your usual data. For a "
 "separate directory, your harness starts Cadrumo's runtime itself and "
@@ -530,7 +583,7 @@ msgstr ""
 "l'entorn de Cadrumo i decideix quan s'atura. L'ordre `cadrumo-runtime` és"
 " al mateix directori `bin` que `aeat` i `cadrumo-mcp`:"
 
-#: ../../how-to/connect-an-agent.md:239
+#: ../../how-to/connect-an-agent.md:264
 msgid ""
 "**Start.** Run the command with the two settings in its environment and "
 "with its standard input and standard output connected to your process. It"
@@ -544,7 +597,7 @@ msgstr ""
 "`aeat`, la interfície de terminal i `cadrumo-mcp`, iniciats amb els "
 "mateixos dos paràmetres, el troben per si sols."
 
-#: ../../how-to/connect-an-agent.md:244
+#: ../../how-to/connect-an-agent.md:269
 #, python-brace-format
 msgid ""
 "**Ready.** When clients can connect, it writes one line of JSON to "
@@ -559,7 +612,7 @@ msgstr ""
 " No hi escriu res més. `aeat --format json config sign-in-status`, "
 "executat amb els mateixos paràmetres, també té èxit un cop està a punt."
 
-#: ../../how-to/connect-an-agent.md:249
+#: ../../how-to/connect-an-agent.md:274
 msgid ""
 "**Stop.** Close its standard input. It finishes the work in progress and "
 "exits with code 64. If your process ends, its standard input closes too, "
@@ -573,7 +626,7 @@ msgstr ""
 "l'entrada estàndard des del dispositiu nul, perquè llavors s'atura de "
 "seguida. En un terminal, Ctrl+C l'atura amb el codi 65."
 
-#: ../../how-to/connect-an-agent.md:254
+#: ../../how-to/connect-an-agent.md:279
 msgid ""
 "**Refusals.** It exits with code 68 and prints `runtime_root_mismatch` "
 "when `CADRUMO_LOCAL_STORAGE_ROOT` is not set, or when the directory is "
@@ -589,7 +642,7 @@ msgstr ""
 "directori. Afegeix `--expected-version VERSION` per rebutjar, amb el codi"
 " 69, un paquet d'una altra versió."
 
-#: ../../how-to/connect-an-agent.md:261
+#: ../../how-to/connect-an-agent.md:286
 msgid ""
 "Profile passwords, enrolled keys and the operations each session may run "
 "work exactly as they do on your usual data. Pass each secret on the "
@@ -601,11 +654,11 @@ msgstr ""
 "habituals. Passa cada secret pel canal protegit de l'ordre i mai a la "
 "línia d'ordres ni en una crida a una eina MCP."
 
-#: ../../how-to/connect-an-agent.md:265
+#: ../../how-to/connect-an-agent.md:290
 msgid "Hold a sign-in for an agent"
 msgstr ""
 
-#: ../../how-to/connect-an-agent.md:267
+#: ../../how-to/connect-an-agent.md:292
 msgid ""
 "A sign-in made with `aeat config login` is kept in this computer's "
 "protected credential store, and `cadrumo-mcp` follows it from there. A "
@@ -613,31 +666,31 @@ msgid ""
 "in a harness that should leave nothing behind, hold the sign-in instead:"
 msgstr ""
 
-#: ../../how-to/connect-an-agent.md:276
+#: ../../how-to/connect-an-agent.md:301
 msgid ""
 "The command signs in to the profile and keeps that sign-in open, without "
 "storing it, for as long as its standard input stays open. Nothing in it "
 "is written to the credential store or to the profile's storage."
 msgstr ""
 
-#: ../../how-to/connect-an-agent.md:280
+#: ../../how-to/connect-an-agent.md:305
 #, python-brace-format
 msgid ""
 "**Password.** The first line of standard input is one JSON object, "
 "`{\"passphrase\": \"…\"}`. It is read once and then discarded."
 msgstr ""
 
-#: ../../how-to/connect-an-agent.md:282
+#: ../../how-to/connect-an-agent.md:307
 msgid ""
 "**Events.** Standard output carries one JSON object per line, each naming"
 " its `event`:"
 msgstr ""
 
-#: ../../how-to/connect-an-agent.md:284
+#: ../../how-to/connect-an-agent.md:309
 msgid "`held` gives the `profile_id` and the `session_expires_at` deadline."
 msgstr ""
 
-#: ../../how-to/connect-an-agent.md:285
+#: ../../how-to/connect-an-agent.md:310
 msgid ""
 "`attendance_request` reports an MCP connection that asks to follow this "
 "sign-in. It gives the `attendance_id`, the `process_id` of the asking "
@@ -645,25 +698,25 @@ msgid ""
 " and when the ask lapses (`expires_at`, two minutes after it was made)."
 msgstr ""
 
-#: ../../how-to/connect-an-agent.md:289
+#: ../../how-to/connect-an-agent.md:314
 msgid "`attendance_decided` and `attendance_refused` report your answers."
 msgstr ""
 
-#: ../../how-to/connect-an-agent.md:290
+#: ../../how-to/connect-an-agent.md:315
 msgid "`signed_out` and `session_ended` report the end of the sign-in."
 msgstr ""
 
-#: ../../how-to/connect-an-agent.md:291
+#: ../../how-to/connect-an-agent.md:316
 msgid ""
 "`ended` comes last, with the `reason`: `input_closed`, `signed_out` or "
 "`session_ended`."
 msgstr ""
 
-#: ../../how-to/connect-an-agent.md:294
+#: ../../how-to/connect-an-agent.md:319
 msgid "The command's result follows the events."
 msgstr ""
 
-#: ../../how-to/connect-an-agent.md:295
+#: ../../how-to/connect-an-agent.md:320
 #, python-brace-format
 msgid ""
 "**Decisions.** Each later line of standard input is one JSON object: "
@@ -674,7 +727,7 @@ msgid ""
 " endpoint, or an attendance ID copied to another process."
 msgstr ""
 
-#: ../../how-to/connect-an-agent.md:302
+#: ../../how-to/connect-an-agent.md:327
 msgid ""
 "Start `cadrumo-mcp` with the same two settings and without `--credential-"
 "reference`. When it has no stored sign-in to follow, its first call that "
@@ -688,43 +741,43 @@ msgid ""
 "it is renewed without a new decision."
 msgstr ""
 
-#: ../../how-to/connect-an-agent.md:313
+#: ../../how-to/connect-an-agent.md:338
 msgid ""
 "Access ends for every connection that follows the held sign-in when any "
 "of these happens, and each later call is refused:"
 msgstr ""
 
-#: ../../how-to/connect-an-agent.md:316
+#: ../../how-to/connect-an-agent.md:341
 msgid "the holder's standard input closes, or the holder exits;"
 msgstr ""
 
-#: ../../how-to/connect-an-agent.md:317
+#: ../../how-to/connect-an-agent.md:342
 #, python-brace-format
 msgid "you send `{\"sign_out\": true}` to the holder;"
 msgstr ""
 
-#: ../../how-to/connect-an-agent.md:318
+#: ../../how-to/connect-an-agent.md:343
 #, python-brace-format
 msgid ""
 "another process signs the person out with `aeat --format json config "
 "logout --secrets-stdin`, reading `{\"passphrase\": \"…\"}`;"
 msgstr ""
 
-#: ../../how-to/connect-an-agent.md:321
+#: ../../how-to/connect-an-agent.md:346
 msgid "the profile is locked with `config profile lock --all`;"
 msgstr ""
 
-#: ../../how-to/connect-an-agent.md:322
+#: ../../how-to/connect-an-agent.md:347
 msgid ""
 "the sign-in reaches its deadline: by default 15 minutes after you entered"
 " the password, and agent activity does not extend it;"
 msgstr ""
 
-#: ../../how-to/connect-an-agent.md:324
+#: ../../how-to/connect-an-agent.md:349
 msgid "the runtime stops."
 msgstr ""
 
-#: ../../how-to/connect-an-agent.md:326
+#: ../../how-to/connect-an-agent.md:351
 #, python-brace-format
 msgid ""
 "A command that runs without a terminal reads its profile password from "
@@ -734,7 +787,7 @@ msgid ""
 "environment of every command:"
 msgstr ""
 
-#: ../../how-to/connect-an-agent.md:339
+#: ../../how-to/connect-an-agent.md:364
 #, python-brace-format
 msgid ""
 "`profile create` reads `{\"passphrase\": \"…\", "
@@ -742,7 +795,7 @@ msgid ""
 "the agent works, and approve its ask when it arrives."
 msgstr ""
 
-#: ../../how-to/connect-an-agent.md:343
+#: ../../how-to/connect-an-agent.md:368
 msgid ""
 "When you are done, close the holder's input, close the MCP client, close "
 "the runtime's standard input and wait for it to exit with code 64, then "

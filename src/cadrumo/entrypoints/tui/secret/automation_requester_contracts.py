@@ -12,10 +12,17 @@ from ....application.user_profile.access_contracts import (
     AccessAction,
     AccessScope,
     DisclosureCategory,
+    DisclosureCategoryGrant,
     DisclosurePermission,
 )
 from ....application.user_profile.automation_enrollment import EnrollmentKind, EnrollmentProposal, EnrollmentStage
 from ....core.period import Period
+
+REQUEST_USE_AGENT = "agent"
+"""A first enrollment for an agent over MCP: the person chooses only its data categories."""
+REQUEST_USE_CUSTOM = "custom"
+"""A request whose every scope field the person sets."""
+REQUEST_USES: tuple[str, ...] = (REQUEST_USE_CUSTOM, REQUEST_USE_AGENT)
 
 type RequesterClientOpener = Callable[[UUID], Awaitable[RuntimeFrontendClient]]
 type FreshCredentialClientOpener = Callable[[UUID, UUID, float], RuntimeFrontendClient]
@@ -51,6 +58,7 @@ class ProposalDraft:
     target_grant_id: UUID | None
     target_key_id: UUID | None
     credential_reference: UUID | None
+    categories: frozenset[DisclosureCategory] = frozenset[DisclosureCategory]()
 
     def proposal(self, destination_id: UUID) -> EnrollmentProposal:
         """Bind disclosed schemas to the server-minted destination, not UI input."""
@@ -64,6 +72,10 @@ class ProposalDraft:
             periods=self.periods,
             allow_period_independent=self.period_independent,
             allow_delegation=self.delegation,
+            disclosure_categories=frozenset(
+                DisclosureCategoryGrant(destination_id=destination_id, category=category)
+                for category in self.categories
+            ),
         )
         return EnrollmentProposal(
             kind=self.kind,

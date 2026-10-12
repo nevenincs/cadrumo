@@ -2064,8 +2064,11 @@ cli:
           amb el canvi d'autorització sol·licitat.
         automation_change_proposal_required: Proporciona la proposta de canvi mitjançant
           --secrets-stdin o --secrets-fd.
-        automation_create_proposal_required: Proporciona la proposta d'autorització
-          mitjançant --secrets-stdin o --secrets-fd.
+        automation_create_agent_categories: --category només s'aplica amb --use agent.
+        automation_create_proposal_required: Tria --use agent, o proporciona la proposta
+          d'autorització mitjançant --secrets-stdin o --secrets-fd.
+        automation_create_use_conflict: --use agent construeix la proposta per si
+          mateix; no en proporcionis una altra mitjançant --secrets-stdin o --secrets-fd.
         echo_suppression_unavailable: Aquest terminal no pot ocultar el que s'escriu,
           de manera que el secret quedaria visible a la pantalla; utilitza --secrets-stdin
           o --secrets-fd.
@@ -2344,8 +2347,14 @@ cli:
             API existent.
           kind_help: 'Canvi d''autorització: rotate, renew o change_scope.'
         create:
-          help: Sol·licita una autorització API i rep-ne la credencial en emmagatzematge
-            protegit després de l'aprovació humana per separat.
+          category_help: 'Una altra categoria de dades que l''agent pot llegir: tax_values.'
+          help: Emet una clau API. Amb --use agent és una clau per a un agent per
+            MCP que llegeix i canvia els valors del perfil, més qualsevol --category
+            que afegeixis; si no, proporciona una proposta completa mitjançant --secrets-stdin
+            o --secrets-fd. La clau arriba a l'emmagatzematge protegit després de
+            la teva aprovació per separat.
+          use_help: 'Per a què és la clau: agent, una clau per a un agent per MCP.
+            Sempre llegeix i canvia els valors del perfil.'
         decline:
           digest_help: Empremta exacta de revisió mostrada per inspect.
           help: Rebutjar la sol·licitud exacta revisada.
@@ -2488,6 +2497,12 @@ cli:
         list_help: Llista els descendents declarats al perfil actiu.
         remove_help: Elimina un descendent per índex (base 0) del perfil actiu.
         remove_index_help: Índex (base 0) del descendent a eliminar.
+      disclosures:
+        help: Compta per categoria les dades que aquesta sessió pot revelar i imprimeix
+          una pàgina de la llista completa.
+        offset_help: L'entrada on comença la pàgina; passa el next_offset de la pàgina
+          anterior. Cada execució de l'ordre és una sessió pròpia, així que les seves
+          entrades anomenen aquesta sessió com a destinació.
       edit_help: Torna a executar l'assistent sobre un perfil existent
       edit_row:
         clear_help: Camp declarat que es buida explícitament; repeteix-lo si cal.
@@ -2499,12 +2514,6 @@ cli:
           vàlids: {valid}.'
         invalid_timestamp: '{flag} ha de ser una marca de temps ISO-8601 (p. ex. 2026-04-01T00:00:00+00:00);
           s''ha rebut {raw}.'
-      disclosures:
-        help: Compta per categoria les dades que aquesta sessió pot revelar i imprimeix
-          una pàgina de la llista completa.
-        offset_help: L'entrada on comença la pàgina; passa el next_offset de la pàgina
-          anterior. Cada execució de l'ordre és una sessió pròpia, així que les seves
-          entrades anomenen aquesta sessió com a destinació.
         since_after_until: --since ha de ser anterior o igual a --until.
       history_actor_help: Filtrar l'historial a esdeveniments registrats per un actor
         concret (coincidència exacta)

@@ -15,7 +15,8 @@ from textual.widgets import Button, Checkbox, Input, Label, Select, SelectionLis
 
 from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ....application.operations.registry import OperationPublicContractSetV1
-from ....application.user_profile.access_contracts import GRANT_DEFAULT_VALIDITY, AccessAction
+from ....application.user_profile.access_contracts import GRANT_DEFAULT_VALIDITY, AccessAction, DisclosureCategory
+from ....application.user_profile.automation_agent_key import AGENT_OPTIONAL_CATEGORIES
 from ....application.user_profile.automation_custody_port import AutomationSecretStore
 from ....application.user_profile.automation_enrollment import (
     AutomationReceiptProjection,
@@ -38,6 +39,13 @@ _KIND_LOCALE_KEYS = {
     EnrollmentKind.ROTATE: "tui.automation_request.rotate",
     EnrollmentKind.RENEW: "tui.automation_request.renew",
     EnrollmentKind.CHANGE_SCOPE: "tui.automation_request.change_scope",
+}
+_USE_LOCALE_KEYS = {
+    _requester_contracts.REQUEST_USE_AGENT: "tui.automation_request.use_agent",
+    _requester_contracts.REQUEST_USE_CUSTOM: "tui.automation_request.use_custom",
+}
+_CATEGORY_LOCALE_KEYS = {
+    DisclosureCategory.TAX_VALUES: "tui.automation_request.category_tax_values",
 }
 _PERIOD_LOCALE_KEYS = {
     "none": "tui.automation_inventory.no_periods",
@@ -65,7 +73,9 @@ class RuntimeAutomationRequesterScreen(
         background: $surface;
     }
     #automation-request-form { height: 1fr; }
-    #automation-request-operations, #automation-request-actions, #automation-request-disclosures {
+    #automation-request-agent, #automation-request-custom, #automation-request-custom-access { height: auto; }
+    #automation-request-operations, #automation-request-actions, #automation-request-disclosures,
+    #automation-request-categories {
         height: auto;
         max-height: $cadrumo-log-max-height;
     }
@@ -97,6 +107,7 @@ class RuntimeAutomationRequesterScreen(
         self._reviewer_access_lost = False
         self._secrets_store = secrets_store
         self._journey_timeout = journey_timeout
+        self._contracts = contracts
         self._operation_choices = _requester_setup.operation_choices(contracts)
         self._disclosure_choices = _requester_setup.disclosure_choices(contracts)
         self._periods: set[Period] = set()
@@ -125,42 +136,27 @@ class RuntimeAutomationRequesterScreen(
                     allow_blank=False,
                     id="automation-request-kind",
                 )
-                yield Label(tr("tui.automation_request.operations"))
-                yield SelectionList[str](
-                    *((item, item, False) for item in self._operation_choices), id="automation-request-operations"
-                )
-                yield Label(tr("tui.automation_request.actions"))
-                yield SelectionList[str](
-                    *((item.value, item.value, False) for item in AccessAction),
-                    id="automation-request-actions",
-                )
-                yield Label(tr("tui.automation_request.disclosures"))
-                yield SelectionList[str](
-                    *(
-                        (f"{schema} / {category.value}", f"{schema}|{category.value}", False)
-                        for schema, category in self._disclosure_choices
-                    ),
-                    id="automation-request-disclosures",
-                )
-                yield Label(tr("tui.automation_request.period_mode"))
+                yield Label(tr("tui.automation_request.use"))
                 yield Select[str](
-                    [(tr(_PERIOD_LOCALE_KEYS[mode]), mode) for mode in ("none", "all", "selected")],
-                    value="none",
+                    [(tr(_USE_LOCALE_KEYS[use]), use) for use in _requester_contracts.REQUEST_USES],
+                    value=_requester_contracts.REQUEST_USE_CUSTOM,
                     allow_blank=False,
-                    id="automation-request-period-mode",
+                    id="automation-request-use",
                 )
-                with Horizontal():
-                    yield Input(placeholder=tr("tui.automation_request.period_year"), id="automation-request-year")
-                    yield Input(placeholder=tr("tui.automation_request.period_code"), id="automation-request-code")
-                    yield Button(tr("tui.automation_request.period_add"), id="automation-request-period-add")
-                yield Static("", id="automation-request-periods", markup=False)
-                yield Checkbox(tr("tui.automation_request.period_independent"), id="automation-request-independent")
-                yield Checkbox(tr("tui.automation_request.delegation"), id="automation-request-delegation")
+                with Vertical(id="automation-request-agent"):
+                    yield Label(tr("tui.automation_request.categories"))
+                    yield SelectionList[str](
+                        *((tr(_CATEGORY_LOCALE_KEYS[item]), item.value, False) for item in AGENT_OPTIONAL_CATEGORIES),
+                        id="automation-request-categories",
+                    )
+                with Vertical(id="automation-request-custom"):
+                    yield from self._compose_custom_scope()
                 yield Input(placeholder=tr("tui.automation_request.grant_expiry"), id="automation-request-expiry")
                 yield Input(placeholder=tr("tui.automation_request.key_expiry"), id="automation-request-key-expiry")
-                yield Checkbox(tr("tui.automation_request.unattended"), id="automation-request-unattended")
-                yield Static(tr("tui.automation_inventory.unattended_notice"), markup=False)
-                yield Checkbox(tr("tui.automation_request.os_lock"), id="automation-request-os-lock")
+                with Vertical(id="automation-request-custom-access"):
+                    yield Checkbox(tr("tui.automation_request.unattended"), id="automation-request-unattended")
+                    yield Static(tr("tui.automation_inventory.unattended_notice"), markup=False)
+                    yield Checkbox(tr("tui.automation_request.os_lock"), id="automation-request-os-lock")
                 yield Input(placeholder=tr("tui.automation_request.target_grant"), id="automation-request-grant")
                 yield Input(placeholder=tr("tui.automation_request.target_key"), id="automation-request-key")
                 yield Input(
@@ -175,6 +171,39 @@ class RuntimeAutomationRequesterScreen(
                         tr("tui.runtime_access.view_automation"), id="automation-request-review", disabled=True
                     )
                 yield Button(tr("tui.runtime_access.close"), id="automation-request-close")
+
+    def _compose_custom_scope(self) -> ComposeResult:
+        yield Label(tr("tui.automation_request.operations"))
+        yield SelectionList[str](
+            *((item, item, False) for item in self._operation_choices), id="automation-request-operations"
+        )
+        yield Label(tr("tui.automation_request.actions"))
+        yield SelectionList[str](
+            *((item.value, item.value, False) for item in AccessAction),
+            id="automation-request-actions",
+        )
+        yield Label(tr("tui.automation_request.disclosures"))
+        yield SelectionList[str](
+            *(
+                (f"{schema} / {category.value}", f"{schema}|{category.value}", False)
+                for schema, category in self._disclosure_choices
+            ),
+            id="automation-request-disclosures",
+        )
+        yield Label(tr("tui.automation_request.period_mode"))
+        yield Select[str](
+            [(tr(_PERIOD_LOCALE_KEYS[mode]), mode) for mode in ("none", "all", "selected")],
+            value="none",
+            allow_blank=False,
+            id="automation-request-period-mode",
+        )
+        with Horizontal():
+            yield Input(placeholder=tr("tui.automation_request.period_year"), id="automation-request-year")
+            yield Input(placeholder=tr("tui.automation_request.period_code"), id="automation-request-code")
+            yield Button(tr("tui.automation_request.period_add"), id="automation-request-period-add")
+        yield Static("", id="automation-request-periods", markup=False)
+        yield Checkbox(tr("tui.automation_request.period_independent"), id="automation-request-independent")
+        yield Checkbox(tr("tui.automation_request.delegation"), id="automation-request-delegation")
 
     async def on_unmount(self) -> None:
         """Finish the task before closing its owned requester connection."""
@@ -219,11 +248,27 @@ class RuntimeAutomationRequesterScreen(
                 self.query_one("#automation-request-expiry", Input).value = (now() + GRANT_DEFAULT_VALIDITY).isoformat()
 
     def on_select_changed(self, event: Select.Changed) -> None:
-        """Clear fields that no longer belong to the selected proposal kind."""
-        if event.select.id == "automation-request-kind" and not self._busy and isinstance(event.value, EnrollmentKind):
+        """Clear fields that no longer belong to the selected proposal kind or key use."""
+        if self._busy:
+            return
+        if event.select.id == "automation-request-kind" and isinstance(event.value, EnrollmentKind):
             self._show_kind(event.value)
+        elif event.select.id == "automation-request-use" and isinstance(event.value, str):
+            self._show_use(event.value)
+
+    def _show_use(self, use: str) -> None:
+        """An agent key takes only its data categories; a custom scope takes every field."""
+        agent = use == _requester_contracts.REQUEST_USE_AGENT
+        self.query_one("#automation-request-agent", Vertical).display = agent
+        for container in ("#automation-request-custom", "#automation-request-custom-access"):
+            self.query_one(container, Vertical).display = not agent
 
     def _show_kind(self, kind: EnrollmentKind) -> None:
+        use = cast("Select[str]", self.query_one("#automation-request-use", Select))
+        use.display = kind is EnrollmentKind.ENROLL
+        if kind is not EnrollmentKind.ENROLL:
+            use.value = _requester_contracts.REQUEST_USE_CUSTOM
+        self._show_use(str(use.value))
         visible = {
             "key-expiry": kind in {EnrollmentKind.ENROLL, EnrollmentKind.ROTATE},
             "grant": kind is not EnrollmentKind.ENROLL,

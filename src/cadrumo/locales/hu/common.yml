@@ -1857,6 +1857,8 @@ tui:
     actions: Tevékenységek
     capability_note: A felsorolt műveletek képességeket írnak le, nem az aktuális
       rendelkezésre állást.
+    categories: 'Az ügynök olvassa és módosítja a profil adatait. Ezt is olvashatja:'
+    category_tax_values: Adóadatok
     change_scope: Hatókör módosítása
     complete: Jóváhagyva és befejezve
     credential_reference: Meglévő védett hitelesítőadat-hivatkozás UUID-ja
@@ -1888,6 +1890,9 @@ tui:
     title: API-hozzáférés kérése
     unattended: Felügyelet nélküli használat engedélyezése
     uncertain: Ismeretlen eredmény; őrizd meg a kérelem azonosítóját
+    use: A kulcs felhasználása
+    use_agent: Ügynöknek (MCP)
+    use_custom: Egyéni hatókör
     waiting: Kérelem beküldése folyamatban
   declarations:
     availability:
@@ -3808,17 +3813,17 @@ tui:
       {provider}'
     change_user: Felhasználóváltás
     close: Bezárás
+    disclosure_page: 'Felfedhető adatok: {first}–{last} / {total}'
+    disclosure_page_empty: Ez a munkamenet semmit sem fedhet fel.
+    disclosure_page_stale: A felfedhető adatok megváltoztak, mióta megszámoltuk őket.
+      Várd meg, amíg az állapot frissül, majd olvasd be őket újra.
+    disclosures_next: Felfedhető adatok, következő oldal
     grant: 'Engedély érvényes: {valid}; lejár: {expires_at}'
     lock: Munkamenet zárolása
     'no': Nem
     none: Nincs
     operations: 'Engedélyezett műveletek: {values}'
     periods: 'Időszakok: {values}; időszaktól független munka: {independent}'
-    disclosure_page: 'Felfedhető adatok: {first}–{last} / {total}'
-    disclosure_page_empty: Ez a munkamenet semmit sem fedhet fel.
-    disclosure_page_stale: A felfedhető adatok megváltoztak, mióta megszámoltuk őket.
-      Várd meg, amíg az állapot frissül, majd olvasd be őket újra.
-    disclosures_next: Felfedhető adatok, következő oldal
     profile: 'Profil: {label} ({profile_id})'
     session_expiry: 'A munkamenet lejár: {expires_at}'
     title: Korlátozott API-munkamenet

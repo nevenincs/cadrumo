@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:b7ce67210ad481cf89adec7755e24623d69b826a4943661bbb4b118bc3de2035'
+body_hash: 'sha256:4b4da93061ea4d3c16a69c1c3f7d45457cafc99988b861f44432a192ddb8e30c'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -2422,6 +2422,49 @@ related:
 - `S71` `verify:` `pytest entrypoints/tests/test_disclosure_summary.py test_runtime_session.py test_command_frontend_parity.py test_command_operation_reference.py` -> `pass`
 - `S71` `verify:` `ruff and ty on moved files` -> `pass`
 - `S71` `verify:` `just check-import-boundaries` -> `fail`
+- `S72` `A` `src/cadrumo/application/user_profile/automation_agent_key.py`
+- `S72` `A` `src/cadrumo/application/user_profile/tests/test_automation_agent_key.py`
+- `S72` `A` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_agent_key.py`
+- `S72` `A` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_agent_key_native.py`
+- `S72` `A` `src/cadrumo_harness/mcp/tests/agent_key_reads.py`
+- `S72` `M` `src/cadrumo/application/user_profile/access_contracts.py`
+- `S72` `M` `src/cadrumo/application/user_profile/access_policy.py`
+- `S72` `M` `src/cadrumo/application/user_profile/automation_administration.py`
+- `S72` `M` `src/cadrumo/application/user_profile/automation_administration_service.py`
+- `S72` `M` `src/cadrumo/application/user_profile/automation_enrollment.py`
+- `S72` `M` `src/cadrumo/entrypoints/runtime/profile_host.py`
+- `S72` `M` `src/cadrumo/entrypoints/cli/config/runtime_automation_request.py`
+- `S72` `M` `src/cadrumo/entrypoints/cli/config/runtime_access_management_specs.py`
+- `S72` `M` `src/cadrumo/entrypoints/cli/_profile_authentication_gate.py`
+- `S72` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_create.py`
+- `S72` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_attended_adapter.py`
+- `S72` `M` `src/cadrumo/entrypoints/tui/secret/automation_requester.py`
+- `S72` `M` `src/cadrumo/entrypoints/tui/secret/automation_requester_draft.py`
+- `S72` `M` `src/cadrumo/entrypoints/tui/secret/automation_requester_contracts.py`
+- `S72` `M` `src/cadrumo/locales/en/cli.yml`
+- `S72` `M` `src/cadrumo/locales/es/cli.yml`
+- `S72` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S72` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S72` `M` `src/cadrumo/locales/en/common.yml`
+- `S72` `M` `src/cadrumo/locales/es/common.yml`
+- `S72` `M` `src/cadrumo/locales/ca/common.yml`
+- `S72` `M` `src/cadrumo/locales/hu/common.yml`
+- `S72` `M` `docs/how-to/connect-an-agent.md`
+- `S72` `M` `docs/locales/es/LC_MESSAGES/how-to/connect-an-agent.po`
+- `S72` `M` `docs/locales/ca/LC_MESSAGES/how-to/connect-an-agent.po`
+- `S72` `M` `docs/locales/hu/LC_MESSAGES/how-to/connect-an-agent.po`
+- `S72` `M` `src/cadrumo_harness/_data/agent/README.md`
+- `S72` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-operating-rules.md`
+- `S72` `M` `.vault/adr/2026-09-26-mcp-purpose-authentication-profile-access-adr.md`
+- `S72` `M` `.vault/adr/2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr.md`
+- `S72` `verify:` `ruff check, ruff format --check, ty on 19 touched files` -> `pass`
+- `S72` `verify:` `just check-types` -> `pass`
+- `S72` `verify:` `pytest cli/config, user_profile, custody, tui/secret, tui/profile (2110 passed, 140 skipped)` -> `pass`
+- `S72` `verify:` `pytest test_runtime_automation_agent_key (CLI-issued agent key: MCP read, patch, field and row edits read back, out-of-category refused, revocation)` -> `pass`
+- `S72` `verify:` `pytest test_mcp_attended_adapter edit round trip` -> `pass`
+- `S72` `verify:` `pytest test_runtime_automation_agent_key_native: skipped, credential store refuses this logon (WinError 1312)` -> `pass`
+- `S72` `verify:` `pytest mcp harness, runtime, cli suites (3379 passed, 2 failed in config sign-in-hold surfaces, not this Step)` -> `fail`
+- `S72` `verify:` `just check-import-boundaries: contracts 15/15 kept; verdict failed on test-scoped findings elsewhere and a tree changed during the run` -> `fail`
 
 ## Notes
 
@@ -2510,3 +2553,4 @@ related:
 - `S18` vault check all passes for application-sign-in and mcp-purpose-authentication; mcp-parity reports two pre-existing schema errors (agent-inside and attended-live-sign-in ADRs link no evidence record in related)
 - `S71` harness: 1 failure, `test_installed_sign_in_resume` fresh installed process, outside the disclosure path; sign-in suites: framing and lease-transfer fixtures fixed and rerun green, `mcp_operation_discovery` and `mcp_attended_adapter` pass serially (load timeouts); CLI/TUI: specs test fixed, remaining 4 (installed TUI child AttributeError `subscribe_lifecycle_notices,` native session inventory, `runtime_login` prompt) do not reach the disclosure code; boundaries: 15 contracts kept, 2 new test-scoped sibling edges from `test_disclosure_summary.py` `(cli_runner,` `tui.disclosure_pages)` await ratchet approval, the rest pre-existing; `frontend_client.py` hunks were swept into fa4f7dc9c5 by another session
 - `S71` boundaries: the two `test_disclosure_summary` sibling edges are gone (new unapproved 144 to 142, none disclosure); the remaining failures are 188 hard findings, 142 ratchet occurrences and a `dev.agent_eval.live` `__main__` load failure, none from S71
+- `S72` Inventory and review count-and-page summaries (b) not built: S71's `page_disclosures` is not in HEAD, and an agent key now stores category grants (about 8 KB, mostly the explicit operation list), so the measured blocker is gone; the operation list still caps the inventory at a few agent grants.

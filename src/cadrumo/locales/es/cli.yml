@@ -2079,8 +2079,11 @@ cli:
           con el cambio de autorización solicitado.
         automation_change_proposal_required: Proporciona la propuesta de cambio mediante
           --secrets-stdin o --secrets-fd.
-        automation_create_proposal_required: Proporciona la propuesta de autorización
-          mediante --secrets-stdin o --secrets-fd.
+        automation_create_agent_categories: --category solo se aplica con --use agent.
+        automation_create_proposal_required: Elige --use agent, o proporciona la propuesta
+          de autorización mediante --secrets-stdin o --secrets-fd.
+        automation_create_use_conflict: --use agent construye la propuesta por sí
+          mismo; no proporciones otra mediante --secrets-stdin o --secrets-fd.
         echo_suppression_unavailable: Esta terminal no puede ocultar lo que se escribe,
           por lo que el secreto quedaría visible en pantalla; usa --secrets-stdin
           o --secrets-fd.
@@ -2359,8 +2362,14 @@ cli:
             API existente.
           kind_help: 'Cambio de autorización: rotate, renew o change_scope.'
         create:
-          help: Solicita una autorización API y recibe su credencial en almacenamiento
-            protegido tras la aprobación humana por separado.
+          category_help: 'Otra categoría de datos que el agente puede leer: tax_values.'
+          help: Emite una clave API. Con --use agent es una clave para un agente por
+            MCP que lee y cambia los valores del perfil, más cualquier --category
+            que añadas; si no, proporciona una propuesta completa mediante --secrets-stdin
+            o --secrets-fd. La clave llega al almacenamiento protegido tras tu aprobación
+            por separado.
+          use_help: 'Para qué es la clave: agent, una clave para un agente por MCP.
+            Siempre lee y cambia los valores del perfil.'
         decline:
           digest_help: Huella exacta de revisión mostrada por inspect.
           help: Rechazar la solicitud exacta revisada.
@@ -2508,6 +2517,12 @@ cli:
         list_help: Listar los descendientes declarados en el perfil activo.
         remove_help: Eliminar un descendiente por índice (base 0) del perfil activo.
         remove_index_help: Índice (base 0) del descendiente a eliminar.
+      disclosures:
+        help: Cuenta por categoría los datos que esta sesión puede revelar e imprime
+          una página de la lista completa.
+        offset_help: La entrada en la que empieza la página; pasa el next_offset de
+          la página anterior. Cada ejecución del comando es una sesión propia, así
+          que sus entradas nombran esa sesión como destino.
       edit_help: Vuelve a ejecutar el asistente sobre un perfil existente
       edit_row:
         clear_help: Campo declarado que se vacía de forma explícita; repítalo si es
@@ -2519,12 +2534,6 @@ cli:
         invalid_event_type: 'Tipo de evento desconocido: {value}. Tipos de evento
           válidos: {valid}.'
         invalid_timestamp: '{flag} debe ser una marca de tiempo ISO-8601 (p. ej. 2026-04-01T00:00:00+00:00);
-      disclosures:
-        help: Cuenta por categoría los datos que esta sesión puede revelar e imprime
-          una página de la lista completa.
-        offset_help: La entrada en la que empieza la página; pasa el next_offset de
-          la página anterior. Cada ejecución del comando es una sesión propia, así
-          que sus entradas nombran esa sesión como destino.
           se recibió {raw}.'
         since_after_until: --since debe ser anterior o igual a --until.
       history_actor_help: Filtrar el historial a eventos registrados por un actor

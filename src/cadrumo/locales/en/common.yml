@@ -1813,6 +1813,8 @@ tui:
   automation_request:
     actions: Actions
     capability_note: Listed operations describe capabilities, not current readiness.
+    categories: 'The agent reads and changes the profile''s values. Also let it read:'
+    category_tax_values: Tax values
     change_scope: Change scope
     complete: Approved and completed
     credential_reference: Existing protected credential reference UUID
@@ -1844,6 +1846,9 @@ tui:
     title: Request API access
     unattended: Allow unattended use
     uncertain: Outcome unknown; retain request ID
+    use: Key use
+    use_agent: For an agent (MCP)
+    use_custom: Custom scope
     waiting: Submitting request
   declarations:
     availability:
@@ -3731,17 +3736,17 @@ tui:
       {provider}'
     change_user: Change user
     close: Close
+    disclosure_page: Disclosures {first} to {last} of {total}
+    disclosure_page_empty: This session may disclose nothing.
+    disclosure_page_stale: The disclosures changed since they were counted. Wait for
+      the status to refresh, then read them again.
+    disclosures_next: Disclosures, next page
     grant: 'Grant valid: {valid}; expires: {expires_at}'
     lock: Lock this session
     'no': 'No'
     none: None
     operations: 'Allowed operations: {values}'
     periods: 'Periods: {values}; period-independent work: {independent}'
-    disclosure_page: Disclosures {first} to {last} of {total}
-    disclosure_page_empty: This session may disclose nothing.
-    disclosure_page_stale: The disclosures changed since they were counted. Wait for
-      the status to refresh, then read them again.
-    disclosures_next: Disclosures, next page
     profile: 'Profile: {label} ({profile_id})'
     session_expiry: 'Session expires: {expires_at}'
     title: Restricted API session

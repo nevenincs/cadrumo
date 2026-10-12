@@ -1873,6 +1873,8 @@ tui:
     actions: Acciones
     capability_note: Las operaciones enumeradas describen capacidades, no su disponibilidad
       actual.
+    categories: 'El agente lee y cambia los valores del perfil. Déjale leer también:'
+    category_tax_values: Valores fiscales
     change_scope: Cambiar alcance
     complete: Aprobado y completado
     credential_reference: UUID de la referencia de credencial protegida existente
@@ -1904,6 +1906,9 @@ tui:
     title: Solicitar acceso a la API
     unattended: Permitir uso desatendido
     uncertain: Resultado desconocido; conserva el ID de solicitud
+    use: Uso de la clave
+    use_agent: Para un agente (MCP)
+    use_custom: Alcance personalizado
     waiting: Enviando solicitud
   declarations:
     availability:
@@ -3820,17 +3825,17 @@ tui:
       proveedor: {provider}'
     change_user: Cambiar de usuario
     close: Cerrar
+    disclosure_page: Datos revelables {first} a {last} de {total}
+    disclosure_page_empty: Esta sesión no puede revelar nada.
+    disclosure_page_stale: Los datos revelables cambiaron desde que se contaron. Espera
+      a que se actualice el estado y vuelve a leerlos.
+    disclosures_next: Datos revelables, página siguiente
     grant: 'Concesión válida: {valid}; vence: {expires_at}'
     lock: Bloquear esta sesión
     'no': 'No'
     none: Ninguno
     operations: 'Operaciones permitidas: {values}'
     periods: 'Períodos: {values}; trabajo sin período: {independent}'
-    disclosure_page: Datos revelables {first} a {last} de {total}
-    disclosure_page_empty: Esta sesión no puede revelar nada.
-    disclosure_page_stale: Los datos revelables cambiaron desde que se contaron. Espera
-      a que se actualice el estado y vuelve a leerlos.
-    disclosures_next: Datos revelables, página siguiente
     profile: 'Perfil: {label} ({profile_id})'
     session_expiry: 'La sesión vence: {expires_at}'
     title: Sesión API restringida

@@ -62,8 +62,11 @@ another profile, the remedy says this agent session is over: the person starts a
 one.
 
 To work while nobody is signed in, the person issues a key for the profile with
-`aeat config profile automation` and starts the MCP server with `--profile-id` and
-`--credential-reference`. The server authenticates with that key on every call while
+`aeat config profile automation create --use agent` and starts the MCP server with
+`--profile-id` and `--credential-reference`. Such a key runs every operation inside the
+profile and reads and changes the profile's values; it reads tax values only when the
+person added them, and a result outside its categories is refused. The server
+authenticates with that key on every call while
 its grant, the installation and the login policy remain valid. Revoking the key or
 locking the profile ends that access. Requesting, renewing, rotating or changing the
 scope of a key is the person's act in Cadrumo, never yours.

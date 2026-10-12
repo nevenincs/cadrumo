@@ -62,6 +62,7 @@ from ...application.user_profile.access_contracts import (
     AccessScope,
     Availability,
     DisclosureCategory,
+    DisclosureCategoryGrant,
     DisclosurePermission,
     LoginEligibility,
     OperationResponseScopeAllowed,
@@ -71,6 +72,7 @@ from ...application.user_profile.access_contracts import (
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.automation_administration import enrollment_review_digest, inspect_automation_inventory
 from ...application.user_profile.automation_administration_service import AutomationAdministrationService
+from ...application.user_profile.automation_agent_key import registered_disclosure_projections
 from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ...application.user_profile.automation_enrollment import (
     AdministrationFacts,
@@ -167,7 +169,14 @@ class RuntimeAutomationAdministrationOwner(RuntimeAutomationInventoryOwner):
                 for permission in current.profile.scope.disclosures
                 if permission.destination_id == current.context.authenticated_client_id
             )
-            scope = current.profile.scope.model_copy(update={"disclosures": permissions})
+            categories = frozenset(
+                grant.model_copy(update={"destination_id": record.requester.destination_id})
+                for grant in current.profile.scope.disclosure_categories
+                if grant.destination_id == current.context.authenticated_client_id
+            )
+            scope = current.profile.scope.model_copy(
+                update={"disclosures": permissions, "disclosure_categories": categories}
+            )
             return current.model_copy(update={"profile": current.profile.model_copy(update={"scope": scope})})
 
     def requester(self) -> EnrollmentRequester:
@@ -426,26 +435,31 @@ class RuntimeProfileHost:
 
     def scope(self, connection: ProfileConnection) -> AccessScope:
         """Derive the owner ceiling from the current canonical operation contracts."""
+        categories = frozenset[DisclosureCategoryGrant]()
         if connection.method == "api_key":
             snapshot = self.store.snapshot()
+            grants = tuple(grant for grant in snapshot.grants if grant.client_id == connection.client_id)
+            # A category grant is resolved against the operations registered now,
+            # so the lease lists every projection the category covers today.
+            projections = registered_disclosure_projections(self._contracts) | {OPERATION_OBSERVATION_PROJECTION_ID}
             permissions = frozenset(
-                permission
-                for grant in snapshot.grants
-                if grant.client_id == connection.client_id
-                for permission in grant.scope.disclosures
+                permission for grant in grants for permission in grant.scope.disclosures
+            ) | frozenset(
+                DisclosurePermission(
+                    destination_id=item.destination_id, projection_id=projection, category=item.category
+                )
+                for grant in grants
+                for item in grant.scope.disclosure_categories
+                for projection in projections
             )
         else:
             permissions = frozenset(
-                DisclosurePermission(
-                    destination_id=connection.client_id, projection_id=schema.schema_id, category=category
-                )
-                for contract in self._contracts.definitions
-                for schema in (
-                    contract.result_schema,
-                    contract.review_projection_schema,
-                    contract.workspace_refresh_target_schema,
-                )
-                if schema is not None
+                DisclosurePermission(destination_id=connection.client_id, projection_id=projection, category=category)
+                for projection in registered_disclosure_projections(self._contracts)
+                for category in DisclosureCategory
+            )
+            categories = frozenset(
+                DisclosureCategoryGrant(destination_id=connection.client_id, category=category)
                 for category in DisclosureCategory
             )
             permissions |= frozenset(
@@ -464,6 +478,7 @@ class RuntimeProfileHost:
             periods=None,
             allow_period_independent=True,
             allow_delegation=True,
+            disclosure_categories=categories,
         )
 
     def facts(self, connection_id: UUID) -> SessionAuthorityFacts:
@@ -572,9 +587,7 @@ class RuntimeProfileHost:
                     or (not login.active and login.unattended is LoginEligibility.INELIGIBLE)
                 )
             }
-            unlocked = {
-                login.login_id for login in observed if login.active and login.unlocked
-            }
+            unlocked = {login.login_id for login in observed if login.active and login.unlocked}
             self._locked_logins.difference_update(unlocked)
             if positive <= self._locked_logins:
                 return ()

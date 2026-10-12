@@ -77,9 +77,9 @@ profile is signed in at a time: signing in to another profile signs the first ou
 everywhere, its agent sessions included.
 
 **With a key you issued.** Start the server with `--profile-id` and
-`--credential-reference`. Issue the key yourself with `aeat config profile
-automation create`, review and approve it as described below, and put the
-protected credential reference it delivers in the server's configuration. The
+`--credential-reference`. Issue the key yourself for an agent, review and approve
+it as described in "Issue a key for an agent" below, and put the protected
+credential reference it delivers in the server's configuration. The
 server authenticates with that key on every call while the key's grant and the
 profile remain eligible, whether or not anyone is signed in.
 `--credential-reference` without `--profile-id` is refused at start-up. If the
@@ -161,6 +161,31 @@ in [Set up a profile](profile-setup.md). Issue a key with `aeat config profile
 automation create`, approve it yourself, and administer every client from your own
 session; an agent never requests, approves or changes a key. Check the profile ID
 in each result.
+
+### Issue a key for an agent
+
+Issue it with:
+
+```text
+aeat config profile automation create --use agent
+```
+
+A key for an agent can run every operation inside the profile, reads and changes
+the profile's values, and sees the progress of its own operations. To let it read
+tax values too, add `--category tax_values`. The command waits while you review
+and approve the request from a signed-in session, as described below, and then
+prints the protected `credential_reference` to put in the server's configuration.
+Results in the key's categories are released to the local MCP server that
+presents the key, and to nothing else; a value outside them is refused. The key
+runs for 365 days unless you revoke it sooner, keeps working while nobody is
+signed in, and stops while the computer is locked.
+
+The terminal interface offers the same choice: in the access request, choose
+**For an agent (MCP)** as the key's use, and tick tax values if the agent should
+read them.
+
+To issue a key with any other scope, leave out `--use` and supply the whole
+proposal on the protected channel with `--secrets-stdin` or `--secrets-fd`.
 
 List pending requests and inspect the exact request before deciding:
 

@@ -1934,8 +1934,11 @@ cli:
           requested grant change.
         automation_change_proposal_required: Supply the grant-change proposal through
           --secrets-stdin or --secrets-fd.
-        automation_create_proposal_required: Supply the enrollment proposal through
-          --secrets-stdin or --secrets-fd.
+        automation_create_agent_categories: --category applies only with --use agent.
+        automation_create_proposal_required: Choose --use agent, or supply the enrollment
+          proposal through --secrets-stdin or --secrets-fd.
+        automation_create_use_conflict: --use agent builds the proposal itself; do
+          not also supply one through --secrets-stdin or --secrets-fd.
         echo_suppression_unavailable: This terminal cannot suppress echo, so the secret
           would be visible on screen; use --secrets-stdin or --secrets-fd instead.
         new_passphrase_mismatch: The new passphrase and confirmation do not match.
@@ -2179,8 +2182,13 @@ cli:
           help: Request rotation, renewal or a scope change for an existing API grant.
           kind_help: 'The grant change: rotate, renew or change_scope.'
         create:
-          help: Request an API grant and receive its credential in protected storage
-            after separate human approval.
+          category_help: 'A further data category the agent may read: tax_values.'
+          help: Issue an API key. With --use agent it is a key for an agent over MCP
+            that reads and changes the profile's values, plus any --category you add;
+            otherwise supply a full proposal through --secrets-stdin or --secrets-fd.
+            The key reaches protected storage after your separate approval.
+          use_help: 'What the key is for: agent, a key for an agent over MCP. It always
+            reads and changes the profile''s values.'
         decline:
           digest_help: Exact review digest shown by inspect.
           help: Decline the exact reviewed request.
@@ -2319,6 +2327,12 @@ cli:
         list_help: List descendants declared on the active profile.
         remove_help: Remove one descendant by 0-based index from the active profile.
         remove_index_help: 0-based index of the descendant to remove.
+      disclosures:
+        help: Count this session's disclosures by category and print one page of the
+          full list.
+        offset_help: The entry to start the page at; pass the next_offset of the previous
+          page. Each run of the command is a session of its own, so its entries name
+          that session as their destination.
       edit_help: Re-run the wizard against an existing profile and update values in
         place
       edit_row:
@@ -2329,12 +2343,6 @@ cli:
       history:
         invalid_event_type: 'Unknown event type: {value}. Valid event types: {valid}.'
         invalid_timestamp: '{flag} must be an ISO-8601 timestamp (e.g. 2026-04-01T00:00:00+00:00);
-      disclosures:
-        help: Count this session's disclosures by category and print one page of the
-          full list.
-        offset_help: The entry to start the page at; pass the next_offset of the previous
-          page. Each run of the command is a session of its own, so its entries name
-          that session as their destination.
           got {raw}.'
         since_after_until: --since must be before or equal to --until.
       history_actor_help: Filter the history to events recorded by a specific actor

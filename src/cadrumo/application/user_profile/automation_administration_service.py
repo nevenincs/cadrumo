@@ -69,6 +69,7 @@ def _proposal_is_allowed(
         and proposal.expires_at > facts.context.now
         and (proposal.key_expires_at is None or proposal.key_expires_at > facts.context.now)
         and all(item.destination_id == requester.destination_id for item in proposal.scope.disclosures)
+        and all(item.destination_id == requester.destination_id for item in proposal.scope.disclosure_categories)
     )
 
 

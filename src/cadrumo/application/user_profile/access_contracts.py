@@ -78,12 +78,33 @@ class DisclosurePermission(BaseModel):
     category: DisclosureCategory
 
 
+class DisclosureCategoryGrant(BaseModel):
+    """Consent for every registered projection in one category, to one enrolled destination.
+
+    A stored grant names the category and not its projections, so a projection
+    registered in that category later is covered too. Admission resolves it
+    against the live operation registry into explicit permissions; a session's
+    lease never carries one.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    destination_id: UUID
+    category: DisclosureCategory
+
+    def covers(self, permission: DisclosurePermission) -> bool:
+        """Whether this grant consents to one explicit permission."""
+        return permission.destination_id == self.destination_id and permission.category is self.category
+
+
 class AccessScope(BaseModel):
     """Explicit allow sets; no operation wildcard or implicit all-profile scope.
 
     ``periods=None`` explicitly permits all periods. An empty set permits none.
     Period-independent work has its own permission, so omitting a tax coordinate
     cannot turn a period-restricted grant into unrestricted access.
+    ``disclosure_categories`` consents to whole categories for one destination;
+    it is absent from every scope that predates it, which consented to none.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -94,6 +115,11 @@ class AccessScope(BaseModel):
     periods: frozenset[Period] | None
     allow_period_independent: bool
     allow_delegation: bool
+    disclosure_categories: frozenset[DisclosureCategoryGrant] = frozenset[DisclosureCategoryGrant]()
+
+    def discloses(self, permission: DisclosurePermission) -> bool:
+        """Whether this scope consents to one explicit permission, listed or by its category."""
+        return permission in self.disclosures or any(item.covers(permission) for item in self.disclosure_categories)
 
 
 DISCLOSURE_PAGE_ENTRIES = 100
@@ -555,6 +581,8 @@ class AccessDenialCode(StrEnum):
     STORAGE_UNAVAILABLE = "storage_unavailable"
     CUSTODY_UNAVAILABLE = "custody_unavailable"
     OPERATION_UNAVAILABLE = "operation_unavailable"
+    SUBJECT_BUSY = "subject_busy"
+    """An earlier operation of the same definition on the same subject has not settled."""
     FRONTEND_DENIED = "frontend_denied"
     OPERATION_DENIED = "operation_denied"
     DISCLOSURE_DENIED = "disclosure_denied"

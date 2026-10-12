@@ -1863,6 +1863,9 @@ tui:
     actions: Accions
     capability_note: Les operacions llistades descriuen capacitats, no la disponibilitat
       actual.
+    categories: 'L''agent llegeix i canvia els valors del perfil. Deixa''l llegir
+      també:'
+    category_tax_values: Valors fiscals
     change_scope: Canvia l'abast
     complete: Aprovat i completat
     credential_reference: UUID de la referència de credencial protegida existent
@@ -1894,6 +1897,9 @@ tui:
     title: Sol·licita accés a l'API
     unattended: Permet l'ús sense supervisió
     uncertain: Resultat desconegut; conserva l'ID de la sol·licitud
+    use: Ús de la clau
+    use_agent: Per a un agent (MCP)
+    use_custom: Abast personalitzat
     waiting: S'està enviant la sol·licitud
   declarations:
     availability:
@@ -3819,17 +3825,17 @@ tui:
       proveïdor: {provider}'
     change_user: Canvia d’usuari
     close: Tanca
+    disclosure_page: Dades revelables {first} a {last} de {total}
+    disclosure_page_empty: Aquesta sessió no pot revelar res.
+    disclosure_page_stale: Les dades revelables han canviat des que es van comptar.
+      Espera que s'actualitzi l'estat i torna-les a llegir.
+    disclosures_next: Dades revelables, pàgina següent
     grant: 'Concessió vàlida: {valid}; venç: {expires_at}'
     lock: Bloqueja aquesta sessió
     'no': 'No'
     none: Cap
     operations: 'Operacions permeses: {values}'
     periods: 'Períodes: {values}; treball sense període: {independent}'
-    disclosure_page: Dades revelables {first} a {last} de {total}
-    disclosure_page_empty: Aquesta sessió no pot revelar res.
-    disclosure_page_stale: Les dades revelables han canviat des que es van comptar.
-      Espera que s'actualitzi l'estat i torna-les a llegir.
-    disclosures_next: Dades revelables, pàgina següent
     profile: 'Perfil: {label} ({profile_id})'
     session_expiry: 'La sessió venç: {expires_at}'
     title: Sessió API restringida
