@@ -1410,6 +1410,12 @@ application:
         vagy jelöld halasztottként a számítás előtt.'
       profile_readiness_missing: 'A profil hiányos a Modelo %{modelo} (%{filing_year},
         %{period}) bevalláshoz; előbb töltsd ki ezeket a profiladatokat: %{profile_requirements}.'
+      profile_readiness_not_applicable: 'A Modelo %{modelo} nem alkalmazható az aktív
+        profilra (%{applicability_verdict}); jogszabályi hivatkozások: %{legal_refs}.'
+      profile_readiness_pre_activity: A Modelo %{modelo} (%{filing_year}, %{period})
+        a profil tevékenységkezdési dátuma (%{activity_start_date}) előtti; a bevallási
+        időszak vége %{period_end_date}, ezért ebben a tevékenység előtti időszakban
+        egyetlen Modelo %{modelo} munkaegység, számítás vagy ellenőrzés sem folytatódhat.
       profile_readiness_profile_missing: Nincs mentett aktív profil ehhez a bevalláshoz;
         folytatás előtt hozd létre vagy javítsd a profilt.
       profile_readiness_setup_incomplete: A profil beállítását még nem nyilvánították

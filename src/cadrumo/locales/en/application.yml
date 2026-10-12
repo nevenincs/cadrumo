@@ -1356,6 +1356,12 @@ application:
         calculating.'
       profile_readiness_missing: 'Profile is incomplete for Modelo %{modelo} %{filing_year}
         %{period}; complete these profile facts first: %{profile_requirements}.'
+      profile_readiness_not_applicable: 'Modelo %{modelo} is not applicable to the
+        active profile (%{applicability_verdict}); legal references: %{legal_refs}.'
+      profile_readiness_pre_activity: Modelo %{modelo} %{filing_year} %{period} is
+        before the profile activity-start date %{activity_start_date}; the filing
+        period ends on %{period_end_date}, so no Modelo %{modelo} work unit, calculation,
+        or verification may proceed for this pre-activity period.
       profile_readiness_profile_missing: No persisted active profile exists for this
         modelo work target; create or repair the profile before continuing.
       profile_readiness_setup_incomplete: Profile setup has not yet been declared

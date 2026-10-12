@@ -1456,6 +1456,13 @@ application:
         com a ajornat abans de calcular.'
       profile_readiness_missing: 'El perfil és incomplet per al model %{modelo} %{filing_year}
         %{period}; completa abans aquestes dades de perfil: %{profile_requirements}.'
+      profile_readiness_not_applicable: 'El model %{modelo} no és aplicable al perfil
+        actiu (%{applicability_verdict}); referències legals: %{legal_refs}.'
+      profile_readiness_pre_activity: El model %{modelo} %{filing_year} %{period}
+        és anterior a la data d'inici d'activitat del perfil, %{activity_start_date};
+        el període de declaració acaba el %{period_end_date}, de manera que cap unitat
+        de treball, càlcul ni verificació del model %{modelo} no pot avançar en aquest
+        període anterior a l'activitat.
       profile_readiness_profile_missing: No existeix cap perfil actiu persistit per
         a aquest treball de model; crea o repara el perfil abans de continuar.
       profile_readiness_setup_incomplete: La configuració del perfil encara no s'ha

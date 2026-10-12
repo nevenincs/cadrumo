@@ -1457,6 +1457,13 @@ application:
         como diferido antes de calcular.'
       profile_readiness_missing: 'El perfil está incompleto para el Modelo %{modelo}
         %{filing_year} %{period}; completa antes estos datos de perfil: %{profile_requirements}.'
+      profile_readiness_not_applicable: 'El Modelo %{modelo} no es aplicable al perfil
+        activo (%{applicability_verdict}); referencias legales: %{legal_refs}.'
+      profile_readiness_pre_activity: El Modelo %{modelo} %{filing_year} %{period}
+        es anterior a la fecha de inicio de actividad del perfil, %{activity_start_date};
+        el periodo de declaración termina el %{period_end_date}, así que ninguna unidad
+        de trabajo, cálculo ni verificación del Modelo %{modelo} puede avanzar en
+        este periodo anterior a la actividad.
       profile_readiness_profile_missing: No existe un perfil activo persistido para
         este trabajo de modelo; crea o repara el perfil antes de continuar.
       profile_readiness_setup_incomplete: La configuración del perfil aún no se ha
