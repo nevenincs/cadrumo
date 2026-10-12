@@ -211,17 +211,36 @@ async def _mcp_status(programs: Programs, environment: Mapping[str, str], direct
         ):
             await client.initialize()
             status = await client.call_tool("status", {})
-            read = await _private_read(client)
+            read = await _private_read(client, _status_view(status.structured_content or {})["profile_id"])
     return {"status": status.structured_content, "status_error": status.is_error, "read": read}
 
 
-async def _private_read(client: ClientSession) -> dict[str, Any]:
+def _status_view(status: Mapping[str, Any]) -> dict[str, Any]:
+    """Read the MCP status reply in either shape: unauthenticated, or a held session with its access status."""
+    held = status.get("status")
+    if not isinstance(held, dict):
+        return {
+            "profile_id": status.get("profile_id"),
+            "authenticated": status.get("authenticated"),
+            "denial": status.get("denial"),
+        }
+    # A held session's lease is live only while the runtime reports no denial for it.
+    return {
+        "profile_id": held.get("profile_id"),
+        "authenticated": status.get("session") not in {None, "none"} and held.get("denial") is None,
+        "denial": held.get("denial"),
+    }
+
+
+async def _private_read(client: ClientSession, profile_id: str | None) -> dict[str, Any]:
     """Run one registered profile read and wait for its result; only outcome codes are kept."""
-    executed = await client.call_tool("execute", {"definition_id": _PRIVATE_READ, "payload": {"kind": "status"}})
+    payload = {"kind": "status", "profile_id": profile_id}
+    executed = await client.call_tool("execute", {"definition_id": _PRIVATE_READ, "payload": payload})
     submitted = executed.structured_content or {}
     facts: dict[str, Any] = {
         "execute": submitted.get("outcome"),
         "execute_code": submitted.get("code"),
+        "execute_faults": submitted.get("faults"),
         "answered": False,
     }
     receipt = submitted.get("receipt")
@@ -244,9 +263,8 @@ def _mcp_facts(mcp: Mapping[str, Any]) -> dict[str, Any]:
     """Return the credential-free facts of one MCP connection, without the granted scope listing."""
     status = mcp["status"] or {}
     return {
-        "authenticated": status.get("authenticated"),
+        **_status_view(status),
         "session": status.get("session"),
-        "denial": status.get("denial"),
         "sign_in_reason": status.get("sign_in_reason"),
         **mcp["read"],
     }
@@ -340,19 +358,18 @@ def run(package: Path, scratch: Path) -> Receipt:
         receipt.record("profile_read", status=envelope.get("status"))
 
         mcp = asyncio.run(_mcp_status(programs, environment, scratch))
-        status = mcp["status"] or {}
         connected = _mcp_facts(mcp)
-        require(status.get("profile_id") is not None, f"MCP did not reach the served root: {connected}")
+        require(connected["profile_id"] is not None, f"MCP did not reach the served root: {connected}")
         receipt.record("mcp_connected", **connected)
 
         if persisted:
             # Discovery alone proves nothing: a registered read of the profile must be answered.
             require(
-                status.get("authenticated") is True and mcp["read"]["answered"],
+                connected["authenticated"] is True and connected["answered"],
                 f"MCP did not follow the stored sign-in: {connected}",
             )
         else:
-            require(status.get("denial") == "authentication_required", f"MCP without a stored sign-in: {connected}")
+            require(connected["denial"] == "authentication_required", f"MCP without a stored sign-in: {connected}")
         code, envelope = run_cli(programs, environment, "config", "logout")
         error = envelope.get("error")
         receipt.record(
