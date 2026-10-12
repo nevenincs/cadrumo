@@ -33,6 +33,7 @@ from ..modelo.registry_discovery import (
     registry_list_modelos,
     registry_support_matrix,
 )
+from ..reference_catalogue_contracts import ModeloSupportMatrixResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -380,3 +381,28 @@ def test_the_restored_fields_are_named_per_query(operation: PinnedAuthorityOpera
     assert {"section", "data_type", "binding", "formula", "form_number"} <= set(casillas.rows[0].model_dump())
     assert {"code", "filing_period"} <= set(casilla.model_dump())
     assert "filing_period" in formulas.model_dump()
+
+
+def test_a_pinned_reference_read_reports_the_generation_its_reader_was_given(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    seen: list[PinnedAuthorityOperation] = []
+
+    def read(pinned: PinnedAuthorityOperation) -> ModeloSupportMatrixResult:
+        seen.append(pinned)
+        return catalogue.read_support_matrix(operation=pinned)
+
+    answer = catalogue.read_pinned_reference(read)
+
+    assert len(seen) == 1
+    assert answer.generation == seen[0].generation
+    # The fixture holds an independent pin of the same publication, so both name one generation.
+    assert answer.generation.logical_generation == operation.generation.logical_generation
+    assert answer.report == catalogue.read_support_matrix(operation=operation)
+
+
+def test_a_pinned_reference_read_lets_the_readers_refusal_through_unchanged() -> None:
+    with pytest.raises(catalogue.CededAutonomicModeloError):
+        catalogue.read_pinned_reference(
+            lambda pinned: catalogue.describe_modelo(_CEDED[0], year=None, period=None, as_of=None, operation=pinned)
+        )

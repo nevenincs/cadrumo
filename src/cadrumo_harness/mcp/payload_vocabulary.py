@@ -29,33 +29,32 @@ def _profile_questions() -> dict[str, Any]:
 
     Imported on use, so that describing any other operation loads none of it.
     """
+    from cadrumo.application.reference_catalogue import read_pinned_reference
     from cadrumo.application.wizard.catalogue import build_setup_flow
     from cadrumo.core.i18n.render import tr
-    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
-    with bundled_indexed_authority().operation() as operation:
-        flow = build_setup_flow(operation)
-        questions = [
-            {
-                "question_id": question.id,
-                "meaning": tr(question.prompt),
-                "required": question.required,
-                **(
-                    {"choices": [{"value": choice.value, "meaning": tr(choice.label)} for choice in question.choices]}
-                    if question.choices
-                    else {}
-                ),
-            }
-            for section in flow.sections
-            for question in section.questions
-            # A question that stores nothing is asked only to route the interactive flow.
-            if question.profile_key is not None
-        ]
-        return {
-            "path": _PROFILE_ANSWER_PATH,
-            "logical_generation": operation.generation.logical_generation,
-            "questions": questions,
+    flow = read_pinned_reference(build_setup_flow)
+    questions = [
+        {
+            "question_id": question.id,
+            "meaning": tr(question.prompt),
+            "required": question.required,
+            **(
+                {"choices": [{"value": choice.value, "meaning": tr(choice.label)} for choice in question.choices]}
+                if question.choices
+                else {}
+            ),
         }
+        for section in flow.report.sections
+        for question in section.questions
+        # A question that stores nothing is asked only to route the interactive flow.
+        if question.profile_key is not None
+    ]
+    return {
+        "path": _PROFILE_ANSWER_PATH,
+        "logical_generation": flow.generation.logical_generation,
+        "questions": questions,
+    }
 
 
 def payload_vocabulary(definition_id: str) -> dict[str, Any] | None:

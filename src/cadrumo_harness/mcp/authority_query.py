@@ -14,12 +14,11 @@ from typing import Any, cast
 
 from cadrumo.application import reference_catalogue as catalogue
 from cadrumo.application.modelo.registry_discovery import registry_bindings_for_year
-from cadrumo.application.reference_catalogue import ReferenceQueryError
+from cadrumo.application.reference_catalogue import PinnedReferenceRead, ReferenceQueryError
 from cadrumo.core.errors.error_codes import resolve_error_message
 from cadrumo.core.errors.hierarchy import CoreValidationError
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.tax_domain import TaxDomain
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.portals.categories import PortalCategory
 from cadrumo.domain.portals.errors import PortalRegistryError
@@ -72,62 +71,75 @@ def _identifier[IdentifierT](build: Callable[[str], IdentifierT], value: str) ->
         raise ValueError("invalid authority query coordinates") from error
 
 
-def _authority_report(
-    query: str, args: dict[str, Any], as_of: date | None, operation: PinnedAuthorityOperation
-) -> object:
+def _pinned_report(query: str, args: dict[str, Any], as_of: date | None) -> PinnedReferenceRead[object]:
     if query == "bindings":
-        return registry_bindings_for_year(
-            args["modelo"], filing_year=args["filing_year"], as_of=as_of, operation=operation
+        return catalogue.read_pinned_reference(
+            lambda operation: registry_bindings_for_year(
+                args["modelo"], filing_year=args["filing_year"], as_of=as_of, operation=operation
+            )
         )
     if query == "support":
-        return catalogue.read_support_matrix(operation=operation)
+        return catalogue.read_pinned_reference(lambda operation: catalogue.read_support_matrix(operation=operation))
     if query == "modelos":
         domain = _identifier(TaxDomain, args["domain"]) if "domain" in args else None
-        return catalogue.list_modelos(year=args.get("filing_year"), domain=domain, operation=operation)
+        return catalogue.read_pinned_reference(
+            lambda operation: catalogue.list_modelos(year=args.get("filing_year"), domain=domain, operation=operation)
+        )
     if query in {"describe", "casillas", "casilla", "formulas"}:
-        return _scoped_authority_report(query, args, as_of, operation)
-    return _reference_report(query, args, operation)
+        return _scoped_report(query, args, as_of)
+    return _reference_report(query, args)
 
 
-def _scoped_authority_report(
-    query: str, args: dict[str, Any], as_of: date | None, operation: PinnedAuthorityOperation
-) -> object:
+def _scoped_report(query: str, args: dict[str, Any], as_of: date | None) -> PinnedReferenceRead[object]:
     modelo, year, period = args["modelo"], args.get("filing_year"), args.get("period")
     if query == "describe":
-        return catalogue.describe_modelo(modelo, year=year, period=period, as_of=as_of, operation=operation)
+        return catalogue.read_pinned_reference(
+            lambda operation: catalogue.describe_modelo(
+                modelo, year=year, period=period, as_of=as_of, operation=operation
+            )
+        )
     if query == "casillas":
-        return catalogue.list_casillas(
-            modelo,
-            year=year,
-            period=period,
-            as_of=as_of,
-            input_kind=InputKind(args["input_kind"]) if "input_kind" in args else None,
-            required=args.get("required", False),
-            form_number=args.get("form_number"),
-            casilla_number=args.get("casilla_number"),
-            operation=operation,
+        input_kind = InputKind(args["input_kind"]) if "input_kind" in args else None
+        return catalogue.read_pinned_reference(
+            lambda operation: catalogue.list_casillas(
+                modelo,
+                year=year,
+                period=period,
+                as_of=as_of,
+                input_kind=input_kind,
+                required=args.get("required", False),
+                form_number=args.get("form_number"),
+                casilla_number=args.get("casilla_number"),
+                operation=operation,
+            )
         )
     if query == "casilla":
-        return catalogue.describe_casilla(
-            modelo, args["casilla"], year=year, period=period, as_of=as_of, operation=operation
+        return catalogue.read_pinned_reference(
+            lambda operation: catalogue.describe_casilla(
+                modelo, args["casilla"], year=year, period=period, as_of=as_of, operation=operation
+            )
         )
-    return catalogue.list_formulas(modelo, year=year, period=period, as_of=as_of, operation=operation)
+    return catalogue.read_pinned_reference(
+        lambda operation: catalogue.list_formulas(modelo, year=year, period=period, as_of=as_of, operation=operation)
+    )
 
 
-def _reference_report(query: str, args: dict[str, Any], operation: PinnedAuthorityOperation) -> object:
+def _reference_report(query: str, args: dict[str, Any]) -> PinnedReferenceRead[object]:
+    # These catalogues ship beside the authority; the answer still names the generation it was read under.
     if query == "categories":
-        return catalogue.read_ledger_categories()
+        return catalogue.read_pinned_reference(lambda _operation: catalogue.read_ledger_categories())
     if query == "portals":
-        return catalogue.list_portals(
-            category=PortalCategory(args["category"]) if "category" in args else None,
-            modelo=_identifier(Modelo, args["modelo"]) if "modelo" in args else None,
+        category = PortalCategory(args["category"]) if "category" in args else None
+        modelo = _identifier(Modelo, args["modelo"]) if "modelo" in args else None
+        return catalogue.read_pinned_reference(
+            lambda _operation: catalogue.list_portals(category=category, modelo=modelo)
         )
     if query == "portal":
-        return catalogue.view_portal(args["portal"])
+        return catalogue.read_pinned_reference(lambda _operation: catalogue.view_portal(args["portal"]))
     if query == "auth_providers":
-        return catalogue.list_auth_providers()
+        return catalogue.read_pinned_reference(lambda _operation: catalogue.list_auth_providers())
     if query == "apoderado_scopes":
-        return catalogue.list_apoderado_scopes(operation=operation)
+        return catalogue.read_pinned_reference(lambda operation: catalogue.list_apoderado_scopes(operation=operation))
     raise ValueError("unknown authority query")
 
 
@@ -138,19 +150,17 @@ def _refusal(code: str, message: str) -> dict[str, Any]:
 def authority_query(args: dict[str, Any]) -> dict[str, Any]:
     """Return one canonical public report under a single publication pin."""
     query, as_of = _validated_query(args)
-    with bundled_indexed_authority().operation() as operation:
-        try:
-            report = _authority_report(query, args, as_of, operation)
-        except catalogue.CededAutonomicModeloError as error:
-            return _refusal("ceded_autonomic_modelo", str(error))
-        except ReferenceQueryError as error:
-            return _refusal("invalid_request", str(error))
-        except PortalRegistryError as error:
-            return _refusal("portal_registry_refused", resolve_error_message(error))
-        pin = operation.generation
-        return {
-            "outcome": "published",
-            "logical_generation": pin.logical_generation,
-            "reader_incarnation": pin.reader_incarnation,
-            "report": public_value(report),
-        }
+    try:
+        answer = _pinned_report(query, args, as_of)
+    except catalogue.CededAutonomicModeloError as error:
+        return _refusal("ceded_autonomic_modelo", str(error))
+    except ReferenceQueryError as error:
+        return _refusal("invalid_request", str(error))
+    except PortalRegistryError as error:
+        return _refusal("portal_registry_refused", resolve_error_message(error))
+    return {
+        "outcome": "published",
+        "logical_generation": answer.generation.logical_generation,
+        "reader_incarnation": answer.generation.reader_incarnation,
+        "report": public_value(answer.report),
+    }

@@ -14,6 +14,7 @@ period token alone selects the latest revision; a year alone is incomplete.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
 
@@ -23,7 +24,8 @@ from ..core.modelo import Modelo
 from ..core.period import Period, PeriodError, is_filing_period_token
 from ..core.tax_domain import TaxDomain
 from ..domain.auth.apoderamientos.catalogue import load_default_catalogue
-from ..domain.calculations.registry.authority import PinnedAuthorityOperation
+from ..domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ..domain.calculations.registry.authority_artifact import AuthorityGenerationPin
 from ..domain.calculations.registry.query_reports import ModeloCasillasReport, ModeloListRow
 from ..domain.calculations.registry.schema_input_kind import InputKind
 from ..domain.portals.categories import PortalCategory
@@ -139,6 +141,25 @@ class PortalFilterConflictError(ReferenceQueryError):
     def __init__(self) -> None:
         """Say that the two filters exclude each other."""
         super().__init__(tr("cli.app.live.portals.category_modelo_exclusive"))
+
+
+@dataclass(frozen=True, slots=True)
+class PinnedReferenceRead[ReportT]:
+    """A public reference report and the published generation that answered it."""
+
+    report: ReportT
+    generation: AuthorityGenerationPin
+
+
+def read_pinned_reference[ReportT](read: Callable[[PinnedAuthorityOperation], ReportT]) -> PinnedReferenceRead[ReportT]:
+    """Answer one public reference read under a single pin of the published authority.
+
+    The generation is taken while the pin is still held, so the report and the
+    provenance it is returned with always name the same publication. A missing
+    or corrupt publication refuses here; no source tree is read in its place.
+    """
+    with bundled_indexed_authority().operation() as operation:
+        return PinnedReferenceRead(report=read(operation), generation=operation.generation)
 
 
 @dataclass(frozen=True, slots=True)
