@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#mcp-purpose-authentication'
 date: '2026-09-26'
-modified: '2026-10-10'
+modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:301478f1c34fe8e4917f98580a029930445e3802d0c2ea893d418a2ce1a12152'
+body_hash: 'sha256:fa1db26e04bf0433815f02645d4b6da6d94156e35ae982e7b0ec6283c8135a2d'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-reference]]"
   - "[[2026-09-26-mcp-purpose-authentication-research]]"
@@ -69,7 +69,7 @@ Effective permission is the intersection of grant, child/session restrictions, c
 | --- | --- | --- |
 | Public capability discovery and tax-authority queries | Local connection; applicable valid publication for tax facts | Public access only |
 | Human CLI/TUI profile login | Explicit profile and password; bounded valid human receipt may resume | Human session with its own timeout |
-| MCP server without an enrolled key | Resume of a bounded valid human receipt for the exact profile; never a password | A human-kind session that ends with the sign-in, limited by per-operation MCP admission and the served surface |
+| MCP server without an enrolled key | Resume of a bounded valid human receipt for the exact profile, or a password carried as a typed secret, as on the CLI | A human-kind session that ends with the sign-in, limited only by the served surface the person chose |
 | Attended agent access | Explicit delegation tied to a valid human authorization | Access ending no later than that authorization |
 | Unattended agent, machine CLI or restricted TUI login | Active enrolled API key/grant plus available protected unlock capability | Fresh bounded session for the exact profile |
 | Key enrollment, rotation, grant renewal or expansion | Fresh profile-password proof and exact local consent | Only the reviewed change; never implicit elevation |
@@ -82,13 +82,13 @@ Effective permission is the intersection of grant, child/session restrictions, c
 
 1. A new adapter or machine client can connect without an unlocked profile and inspect non-private status. Requesting private work with neither a matching key nor a live sign-in to resume returns an authorization-required result.
 2. Cadrumo creates a bounded single-use request binding the requesting connection, enrolled-client candidate, exact profile, requested scopes, output destination and duration. A pending request ID is safe to show; it is not authorization.
-3. The user opens either trusted CLI or TUI, inspects that request and proves the profile password through the dedicated secret channel. A password login elsewhere does not approve a waiting request.
+3. The user, in a human-kind session on any frontend, inspects that request and proves the profile password through that frontend's dedicated secret channel; on MCP that is a typed secret carried to the runtime's protected frame. A password login elsewhere does not approve a waiting request. (Amended 2026-10-12 under `2026-10-11-mcp-parity-full-parity-adr`; before that only the CLI or TUI could.)
 4. The user approves attended access or explicitly enables unattended access, including whether it may continue during OS lock. Approval binds the exact request and reviewed permissions. Decline, expiry, mismatch and cancellation leave no active grant.
 5. For unattended enrollment, Cadrumo stages the grant, verifier and separately protected profile unlock material. The API key is delivered directly into the enrolled client's approved secret store, or through an explicit one-time protected channel. Normal results contain only a credential reference.
 6. Activation occurs only when enrollment and protected delivery are consistent. Request identity provides idempotency. Delivery failure rolls back or leaves a non-usable recoverable enrollment; it must not expose an active orphan credential.
 7. The client proves possession to the authenticated local runtime. Grant identity, target profile, OS/installation binding, scope, expiry, revocation and custody generations are checked before data access. The runtime then issues a fresh session.
 
-Passwords, keys, recovery values and unlock material never enter MCP arguments/results, elicitation forms, chat, ordinary JSON/text output, argv, environment values, clipboard defaults, logs or plaintext temporary files. MCP configuration contains an opaque credential reference. CLI secret input composes the existing bounded stdin/descriptor protocol; key delivery is a separate protected output capability, never the general stdout envelope. TUI uses masked secret entry and protected-store selection. Exact channel ownership and inherited-handle behavior must be proven on each OS.
+Passwords, keys, recovery values and unlock material never enter elicitation forms, chat, ordinary JSON/text output, argv, environment values, clipboard defaults, logs or plaintext temporary files. An MCP tool call may carry one as a typed secret argument that goes only to the runtime's protected frame, or name one by reference to a record in the machine's protected credential store, as the CLI takes one on its secret channel; a recovery code may be held there for the person to read. (Amended 2026-10-12 under `2026-10-11-mcp-parity-full-parity-adr`; before that none entered MCP arguments or results.) MCP configuration contains an opaque credential reference. CLI secret input composes the existing bounded stdin/descriptor protocol; key delivery is a separate protected output capability, never the general stdout envelope. TUI uses masked secret entry and protected-store selection. Exact channel ownership and inherited-handle behavior must be proven on each OS.
 
 ### Protected automation custody
 
@@ -204,3 +204,5 @@ Local API authentication cannot guarantee perpetual AEAT authentication, filing 
 Amendment accepted 2026-10-04 under the operator's acceptance of `2026-10-04-application-sign-in-adr`. The human login receipt is the runtime-owned shared sign-in. It is bound to the originating login and to a durable sign-in generation, and revoked by human sign-out and positive lock-down. Automatic resume defaults to interactive surfaces and to the MCP server when it holds no enrolled credential reference (`2026-10-10-mcp-parity-shared-sign-in-door-adr`). That is a client-side default, not an authority control. With no signed-in person an agent authenticates with an enrolled API key. Attended delegation remains defined and is not used by the MCP server.
 
 Amendment accepted 2026-10-10 under the acceptance of `2026-10-10-mcp-parity-shared-sign-in-door-adr`, on the operator's ruling of that day that MCP resumes the shared sign-in as the CLI and TUI do. It changed the sentence above, added the MCP row to the capability matrix, reworded enrollment step 1, and extended the four-lifetimes rule to submissions on the MCP frontend. The rejected option of extending the human login stands: the login is not extended, and an MCP session ends with it. The enrolled API key remains the only way to work with no signed-in person.
+
+Amendment accepted 2026-10-12 under `2026-10-11-mcp-parity-full-parity-adr`, on the operator's ruling of 2026-10-11 that the CLI, TUI and MCP are at parity. It reworded the MCP row of the capability matrix, enrollment step 3 and the secret-channel paragraph, each noting what it said before. The mandatory CLI/TUI feature parity above extends to MCP: no row is refused on MCP that a human-kind session can do on the CLI.

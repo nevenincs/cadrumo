@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#claude-ecosystem-packaging'
 date: '2026-07-03'
-modified: '2026-07-16'
-body_hash: 'sha256:5d8b73001d8810486ece14ca2a5d8f0eb361261b071553d5a15af1cd0237502e'
+modified: '2026-10-12'
+body_hash: 'sha256:e15bef3a5f2793ace3508457f0bc15e7fffc30fe0203e6cc82b45dcdf1937ac0'
 related:
   - "[[2026-07-03-claude-ecosystem-packaging-research]]"
   - "[[2026-07-02-agent-harness-refoundation-adr]]"
@@ -295,3 +295,7 @@ tree unchanged). The accepted
 this ADR's optional dependency/public slim-only ruling and local publication
 authority while preserving the non-conflicting plugin, physical-split,
 resource-resolution, and integrity decisions.
+
+## Amendment 2026-10-12: gates withdrawn by parity
+
+Accepted under `2026-10-11-mcp-parity-full-parity-adr` and the 2026-10-12 amendment of `2026-07-02-agent-harness-refoundation-adr`. Of the safety rails this record carries over, never-live-submit is unchanged. The CONFIRM, faithfulness-block and persona gates of R6 are no longer product gates, so the CONFIRM hardening item does not make a human gate bypass-proof: a client confirmation annotation is a hint to the client and never authority. Packaging must not narrow what the MCP server serves below what the CLI can do.

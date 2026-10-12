@@ -13,8 +13,8 @@ related:
 supersedes:
   - '2026-06-30-agent-harness-adr'
   - '2026-07-01-agent-harness-adr'
-modified: '2026-10-10'
-body_hash: 'sha256:78118c9f4ade6bd67b619230d92b243a2e26a902c3858ae2a6ef67841008b0bd'
+modified: '2026-10-12'
+body_hash: 'sha256:1236ca2a74c33030dedae241e0b8002c678d7a2cec5aeebaf8f15bf02cd7ac27'
 ---
 # `agent-harness-refoundation` adr: `black-box tool universe, situation-keyed skills, and the MCP operating console` | (**status:** `accepted`)
 
@@ -93,11 +93,13 @@ harness targets the user's existing client rather than a bespoke runtime.
 - **D2:** live reads that write derived local state remain
   `LOCAL_STATE_MUTATING`; the unused `LIVE_READ` fork is retired after a
   zero-consumer check.
-- **D3:** export and the record marker belong to the person. An agent performs either
-  only after the person approves that exact act in Cadrumo. A verifier's clean result
-  informs that approval and does not stand in for it; the same agent run a second time
-  is not an independent verifier. (Amended 2026-10-10; before that the verifier owned
-  both so the preparer could not self-certify the irreversible handoff.)
+- **D3:** an agent may export and record the filed marker exactly as the command line
+  can. Telling the person before the hand-off, and having an independent verifier check
+  the work first, is conduct the packaged agent text describes, not a product gate; the
+  same agent run a second time is not an independent verifier. (Amended 2026-10-12 under
+  `2026-10-11-mcp-parity-full-parity-adr`. On 2026-10-10 an agent performed either act
+  only after the person approved that exact act in Cadrumo; before that the verifier
+  owned both so the preparer could not self-certify the irreversible handoff.)
 - **D4:** rules separate behavioural invariants, manifest-derived orientation,
   and lifecycle ordering; a manifest-derived negative gate rejects internal
   package, private-module, and test names in operator rules.
@@ -112,7 +114,7 @@ harness targets the user's existing client rather than a bespoke runtime.
 
 ### R2 — Console tool architecture
 
-**Status: AMENDED by the proposed `2026-07-08-mcp-progressive-discovery-adr` (P1–P4).**
+**Status: AMENDED by the accepted `2026-07-08-mcp-progressive-discovery-adr` (P1–P4).**
 The 2026-07-08 review found R2's toolsets shipped as grouping metadata that never
 reaches the protocol — `tools/list` still returns the full flat verb surface, the
 exact posture R2 rejected. The amending ADR retires the flat listing as the
@@ -172,7 +174,7 @@ storage-root promises. The original ruling follows for the decision trail.
 
 *Leave the gates nominal (status quo):* rejected — the CONFIRM tier and the faithfulness check are computed but never wired into the serving path, so only the permanent live-write block is real.
 
-**Chosen — wire all three, floor-aware.** (i) The approval of a reserved act is taken in Cadrumo and enforced by Cadrumo's runtime. An elicitation answer or a client's confirmation hint is not that approval. Until the step exists for an operation submitted through MCP, reserved operations do not admit the MCP frontend. (Amended 2026-10-10; before that the CONFIRM tier was enforced via MCP elicitation, falling back to `destructiveHint`-driven client confirmation.) (ii) The `faithfulness_check` is wired into the live serving path as an advisory notice on narration mismatch, escalating to a **hard block at the export / record-marker boundary**. (iii) Persona scope stays family-granular at serve, **but the console adds per-verb deny rules for the handoff boundary**, closing the proposed ADR's D3 caveat (family scope cannot separate preparer/verifier/reconciler) structurally rather than by prose. (iv) Never-live-submit stays enforced as "no such tool exists" — the strongest form. A hard spec constraint binds (i): **elicitation must never request sensitive information**, so evidence bytes stay on-host and are never elicited.
+**Chosen — wire all three, floor-aware.** (i) No product approval gate stands in front of any operation on MCP; every operation is served there as on the command line. An elicitation answer or a client's confirmation hint is never treated as authority. (Amended 2026-10-12 under `2026-10-11-mcp-parity-full-parity-adr`. On 2026-10-10 reserved operations did not admit the MCP frontend until a runtime approval step existed; before that the CONFIRM tier was enforced via MCP elicitation, falling back to `destructiveHint`-driven client confirmation.) (ii) The `faithfulness_check` is an advisory notice on narration mismatch and a measure in R7's live harness. (Amended 2026-10-12; its escalation to a hard block at the export / record-marker boundary is withdrawn, because it would refuse on MCP what the command line does.) (iii) Persona scope narrows what is presented, never what is admitted. (Amended 2026-10-12; the per-verb deny rules the console was to add for the handoff boundary are withdrawn with D3's gate.) (iv) Never-live-submit stays enforced as "no such tool exists" — the strongest form. A hard spec constraint binds (i): **elicitation must never request sensitive information**, so evidence bytes stay on-host and are never elicited.
 
 ### R7 — Measurement and live verification
 
@@ -254,10 +256,14 @@ enter model context.
 
 Accepted under the operator's instruction to continue the presented mcp-purpose-authentication plan. 2026-09-26-mcp-purpose-authentication-adr replaces the CLI-subprocess-only parts of R1, Q1, the CLI-as-contract consideration and their dependent implementation prose. The application operation/action authorities supply typed contracts and policy; CLI JSON, TUI and MCP are projections over the shared local runtime.
 
-Through the MCP server the agent sees a confined deterministic tool universe: the server offers no arbitrary code, SQL or shell capability and performs no work by invoking the command line. What an assistant does with a terminal of its own is outside this record. MCP may call the public application operation boundary without going through command functions or an aeat subprocess. Catalogue-derived discovery, operating-layer content, provenance, human approval where required and the applicable never-live-submit/data-disclosure rules survive.
+Through the MCP server the agent sees a confined deterministic tool universe: the server offers no arbitrary code, SQL or shell capability and performs no work by invoking the command line. What an assistant does with a terminal of its own is outside this record. MCP may call the public application operation boundary without going through command functions or an aeat subprocess. Catalogue-derived discovery, operating-layer content, provenance, human approval where the operation itself requires it on every frontend and the applicable never-live-submit/data-disclosure rules survive.
 
-Persona/tool filtering can narrow presentation but cannot grant authority. Runtime credential, profile, scope and disclosure checks remain mandatory on every path. Client confirmation hints and an LLM's claimed approval never replace application authorization. API-key enrollment and secret collection use trusted local CLI/TUI channels governed by 2026-09-26-mcp-purpose-authentication-profile-access-adr; this does not reopen unrelated skill taxonomy or distribution decisions.
+Persona/tool filtering can narrow presentation but cannot grant authority. Runtime credential, profile, scope and disclosure checks remain mandatory on every path. Client confirmation hints and an LLM's claimed approval never replace application authorization. API-key enrollment and secret collection are governed by 2026-09-26-mcp-purpose-authentication-profile-access-adr; since 2026-10-12 an MCP tool call may also carry a typed secret to the runtime's protected frame, or name one by reference, as `2026-10-11-mcp-parity-full-parity-adr` rules (before that, trusted local CLI/TUI channels only). This does not reopen unrelated skill taxonomy or distribution decisions.
 
 ## Amendment 2026-10-10: the hand-off belongs to the person
 
 Accepted under the acceptance of `2026-10-10-mcp-parity-admission-rulings-adr` and `2026-10-10-mcp-parity-parity-mechanism-adr`, on the operator's rulings of that day. D3 and R6(i) are reworded in place, each with a note of what it said before. The hand-off rule is kept in intent and applied to a single agent: export and the record marker are the person's to approve, in Cadrumo, each time, and the runtime enforces it. R6(iii)'s per-verb deny rules for the hand-off are met by keeping reserved operations off the MCP frontend until that approval step exists. The implementation line that wires the CONFIRM tier to elicitation is superseded with R6(i). R6(iv), the hard block at the hand-off and the invariant of zero submission attempts are unchanged. The first sentence of the second paragraph of the 2026-09-26 amendment is reworded: the confinement it states is a property of the MCP server, and the operator has ruled that an assistant may also hold Cadrumo's command line and Python as a door of its own.
+
+## Amendment 2026-10-12: parity of the three frontends
+
+Accepted under `2026-10-11-mcp-parity-full-parity-adr`, which supersedes `2026-10-10-mcp-parity-admission-rulings-adr` on the owner's ruling that MCP never refuses anything the command line can do. D3, R6(i), R6(ii), R6(iii) and the 2026-09-26 amendment's secret-collection sentence are reworded in place, each with a note of what it said before. The 2026-10-10 amendment above is history: the person's approval of export and the record marker, and keeping reserved operations off the MCP frontend until an approval step exists, no longer apply. What remains of the hand-off rule is the agent's conduct as the packaged rules, personas and skills describe it. R6(iv), never-live-submit, and R7's invariant of zero submission attempts are unchanged.

@@ -10,9 +10,9 @@ related:
   - '[[2026-07-08-mcp-protocol-hardening-adr]]'
 supersedes:
   - '2026-10-10-mcp-parity-admission-rulings-adr'
-modified: '2026-10-11'
+modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:631daf563ae7966f2218f839955f0f97c797951f6c746681311c4aaedbcd51ff'
+body_hash: 'sha256:929b4936c2e502e8d65fa7f7a365c9ed83dc86b1c235cf9cdd54f22ba897f2a2'
 ---
 
 # `mcp-parity` adr: `The command line, the terminal interface and MCP are at parity, and no frontend is refused what another can do` | (**status:** `accepted`)
@@ -57,6 +57,8 @@ Affected prior rulings:
 - `2026-10-10-mcp-parity-shared-sign-in-door-adr` stays accepted for how an MCP connection obtains a session. Two of its lines yield to constraint 2: that a session on the MCP frontend may end only itself, and that the runtime refuses on the MCP frontend what it admits on the command line for a session of the same kind. A session of the human kind does on MCP what it does on the command line.
 - `2026-10-10-mcp-parity-parity-mechanism-adr` stays accepted: parity is reached through the operation registry and the generic tools.
 - `2026-07-08-mcp-protocol-hardening-adr` stays accepted. One sentence of its ruling H8 yields to constraint 2: that no secret ever rides any MCP channel. The command line takes a typed secret from the person, so an MCP connection carries one too, from the tool call to the runtime's protected frame. What H8 decided about the protocol's own credential elicitation is untouched: Cadrumo still does not use it. H8's purpose, that a secret need not pass through a model, is served by adding a form and removing none: a secret the person stores at a terminal of their own and the tool call names by reference, beside the typed argument. Its ruling H9 on the SDK version was already replaced by `2026-07-31-mcp-sdk-major-carry-adr`.
+
+Reconciled 2026-10-12: the wording of the accepted records that still described an MCP-only refusal, an approval gate, opt-in admission or a secret barred from MCP was amended in place, each with a note of what it said before: `2026-10-10-mcp-parity-shared-sign-in-door-adr`, `2026-10-10-mcp-parity-parity-mechanism-adr`, `2026-07-02-agent-harness-refoundation-adr` (D3, R6, the 2026-09-26 amendment), `2026-09-26-mcp-purpose-authentication-adr`, `2026-09-26-mcp-purpose-authentication-profile-access-adr`, `2026-10-04-application-sign-in-adr`, `2026-07-08-mcp-progressive-discovery-adr`, `2026-07-08-mcp-identity-linked-operation-adr` and `2026-07-03-claude-ecosystem-packaging-adr`.
 
 ## Implementation
 

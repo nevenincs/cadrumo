@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#mcp-parity'
 date: '2026-10-10'
-modified: '2026-10-10'
+modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:9e415f20cf466973b247c06a191c62e9ff2dd3ae99f150b100433b2344e1303e'
+body_hash: 'sha256:ef1b9711d5650b6a9858b2615680f3f0f28441613a6cce429fca33cd5f79f0eb'
 related:
   - "[[2026-10-10-mcp-parity-parity-mechanism-options-research]]"
   - "[[2026-10-10-mcp-parity-surfaces-and-registry-reference]]"
@@ -80,7 +80,8 @@ Records named `2026-10-10-cadrumo-integration-...` belong to the vault of the ca
   sub-query.
 - **Admit every operation to MCP unless an exclusion is recorded.** Rejected as a default:
   it inverts the registry's rule that a frontend is never granted silently, and makes
-  adding MCP the cheap way to pass a check.
+  adding MCP the cheap way to pass a check. (Overtaken on 2026-10-11:
+  `2026-10-11-mcp-parity-full-parity-adr` admits every operation, with no exclusion.)
 - **The operation registry behind the existing generic tools, with admission decided and
   recorded per operation.** Chosen.
 
@@ -112,24 +113,30 @@ Binding:
   surface's whole operation list at every Cadrumo release, because the list can grow
   under an unchanged name.
 - Parity is defined and measured per registered operation, not per command or screen.
-- Admission stays opt-in per definition. Every registered operation carries a recorded
-  MCP decision in one of two directions: admitted, with the evidence of an admission
-  checklist, or excluded, with a reason. A check fails when a definition has neither, and
-  when a recorded reason is no longer true.
-- The recorded decision of an admitted operation also states two facts: whether the
-  operation can change the profile's records, and whether it reaches the network. A
-  surface's claim to be read-only or to stay on the machine is derived from those facts
-  and tested against them.
-- "Admitted" is proved by an admission through the operation's real access resolver, not
-  by reading its declared frontend list, because some resolvers compare the frontend
-  themselves.
-- A safeguard that lives in a command handler or a screen moves into the operation before
-  the operation it guards is admitted.
+- Every registered operation is admitted on every frontend, MCP included, and the
+  definition keeps no per-operation frontend list. A check fails when an operation the
+  command line can submit is not submittable on MCP. (Amended 2026-10-12 under
+  `2026-10-11-mcp-parity-full-parity-adr`; before that admission stayed opt-in per
+  definition, each operation carrying a recorded MCP decision, admitted with the evidence
+  of a checklist or excluded with a reason.)
+- A surface's claim to be read-only or to stay on the machine is derived from what each
+  operation on it can do, through the operation's own resolution of the request, and
+  tested against it. (Amended 2026-10-12; before that it was derived from facts stated in
+  each recorded MCP decision.)
+- Parity is proved by an admission through the operation's real access resolver, not by
+  reading a declared list, and no resolver compares the frontend.
+- A safeguard that lives in a command handler or a screen moves into the operation, so
+  that every frontend has it. (Amended 2026-10-12; before that it moved there before the
+  operation it guards was admitted to MCP.)
 - A capability the command line or terminal interface performs in process, and that an
   MCP client needs, becomes a registered operation or a sub-query of the public reference
   tool. It is not reached by a command-line call.
-- Storage and machine administration are not an MCP responsibility. The owner, 2026-10-10:
-  "Storage administration should not be an MCP responsibility".
+- Storage administration is served on MCP exactly as the command line serves it.
+  (Amended 2026-10-12 under `2026-10-11-mcp-parity-full-parity-adr`; on 2026-10-10 the
+  owner had said "Storage administration should not be an MCP responsibility", and the
+  ruling of 2026-10-11 that MCP never refuses anything the command line can do replaced
+  it.) Starting, stopping and supervising the runtime stays outside every frontend's
+  operations, the command line's included.
 - Fixed boundary, set by the owner and not open to any decision: nothing is designed,
   built or shipped that sends data to the tax authority and changes its state, and no
   support is given for doing so. The owner, 2026-10-10: "we won't build or ship code that
@@ -148,7 +155,9 @@ record (`.vault/adr/2026-09-26-mcp-purpose-authentication-adr.md`) and needs no 
 for the mechanism itself. How an MCP session
 is authenticated is decided in
 `2026-10-10-mcp-parity-shared-sign-in-door-adr`. Which operations are admitted,
-and how an agent's write is authorised, are separate decisions not made here.
+and how an agent's write is authorised, are separate decisions not made here; both are
+now made by `2026-10-11-mcp-parity-full-parity-adr`: every operation, with the same
+authority as on the command line.
 
 One sentence of the accepted agent-harness record needs an amendment the owner approves.
 Its 2026-09-26 amendment says "The agent still sees a confined deterministic tool
@@ -171,7 +180,8 @@ the command line.
   the discovery limits recorded in the defects reference.
 - Then operations are admitted family by family, each through the checklist, with one
   contract cutover per family because the frontend set is part of the definition's
-  contract digest.
+  contract digest. (Overtaken on 2026-10-11: under `2026-10-11-mcp-parity-full-parity-adr`
+  every definition is submittable from every frontend and keeps no frontend list.)
 - The order of families and the steps belong in a plan, not in this record.
 
 ## Rationale

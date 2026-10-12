@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#mcp-parity'
 date: '2026-10-10'
-modified: '2026-10-10'
+modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:319132e3a198fa960f5503f1a8461eb960a5cac62d9a78c09c670b7f306c12a1'
+body_hash: 'sha256:b0e12bd64e31c712069a18badccd19b34373452d5c1d3af12bcc92488c883a6d'
 related:
   - "[[2026-10-10-mcp-parity-sign-in-doors-reference]]"
   - "[[2026-10-10-mcp-parity-parity-mechanism-options-research]]"
@@ -81,8 +81,11 @@ Code facts are in `2026-10-10-mcp-parity-sign-in-doors-reference`.
 Binding:
 
 - Inside Cadrumo the MCP server logs in by resuming the shared sign-in for the exact
-  profile: the same request the command line and the terminal interface make. It never
-  logs in by password, because no secret travels through MCP.
+  profile: the same request the command line and the terminal interface make. It may
+  also sign in by password, as the command line does, with the password carried as a
+  typed secret to the runtime's protected frame. (Amended 2026-10-12 under
+  `2026-10-11-mcp-parity-full-parity-adr`; before that it never logged in by password,
+  because no secret travelled through MCP.)
 - The runtime decides, not the adapter. With no valid signed-in session for the profile,
   no MCP call reaches user data.
 - The server answers initialization, the tool list and public queries with no session
@@ -99,11 +102,13 @@ Binding:
   which another component requests the dialog is designed.
 - The enrolled long-lived key issued against a profile remains, as the single exception.
   It authenticates without a signed-in person.
-- Because a sign-in session has no grant to narrow it, what limits an MCP client is the
-  per-operation admission list and, within it, the named surface served to that client.
-  An operation with a human-only policy admits the MCP frontend only behind the person's
-  approval of the exact act, as `2026-10-10-mcp-parity-admission-rulings-adr` rules it,
-  and the admission check of `2026-10-10-mcp-parity-parity-mechanism-adr` asserts that.
+- Because a sign-in session has no grant to narrow it, what limits an MCP client beyond
+  what limits the command line is only the named surface the person chose to serve that
+  client; the default surface is everything. (Amended 2026-10-12 under
+  `2026-10-11-mcp-parity-full-parity-adr`; before that a per-operation admission list
+  also limited it, and an operation with a human-only policy admitted the MCP frontend
+  only behind the person's approval of the exact act, under the superseded
+  `2026-10-10-mcp-parity-admission-rulings-adr`.)
 - Activity by an MCP client does not extend the person's idle deadline. Cadrumo's accepted
   record says agent activity never prolongs the human sign-in; that property is kept when
   the MCP session becomes a sign-in session. Today nothing extends that deadline for
@@ -138,13 +143,12 @@ sign-out and lock rulings on that pair without a new identity. The pair does not
 the hosted assistant. An editor's MCP client that resumes the sign-in is the same pair,
 and the frontend is declared by the client
 (`.vault/adr/2026-10-04-application-sign-in-adr.md:93`), so a same-account process that
-declares the command line is not caught by it. The refusal of reserved operations to the
-hosted assistant is keyed on its process tree, as the owner ruled, not on this pair. A
-command run in the assistant's terminal reaches the runtime from inside that tree. A call
-through the relay does not: the runtime's peer is then the Cadrumo process serving the
-surface, which is the one that checked the relay's connection came from inside the tree,
-so that process has to carry the fact forward. How it does so is designed with the
-approval step.
+declares the command line is not caught by it. (Amended 2026-10-12 under
+`2026-10-11-mcp-parity-full-parity-adr`: the sign-out and lock rulings are no longer keyed
+on that pair, and the refusal of reserved operations to the hosted assistant, keyed on
+its process tree, and the approval step that was to carry that fact through the relay are
+withdrawn. The process tree still matters only for telling the assistant's own activity
+apart from the person's, under the idle-deadline ruling recorded below.)
 
 ## Implementation
 
@@ -152,8 +156,9 @@ We will admit Cadrumo's MCP frontend to the shared sign-in resume, so that the M
 used inside Cadrumo holds the person's own session and loses it when the person signs out
 or times out.
 
-- The runtime accepts the resume method from the MCP frontend; the password method stays
-  refused there.
+- The runtime accepts the resume method from the MCP frontend. (Amended 2026-10-12: the
+  password method is accepted there too, as on every frontend; before that it stayed
+  refused there.)
 - The adapter resumes the sign-in when it has no credential reference, and reports the
   runtime's refusal unchanged when there is none to resume. For an assistant that Cadrumo
   hosts, the process that resumes and holds the session is the Cadrumo process serving
@@ -172,10 +177,12 @@ adding a parallel one.
 - MCP inside Cadrumo works only while the person is signed in, and stops when they are
   not.
 - The grant approval step disappears for in-app use. What it gave, a scope the person
-  approved and a consent to disclose to an agent host, has to come from the admission
-  list and from a consent given elsewhere.
-- Sensitive operations that already admit MCP become reachable with no approval step, so
-  guarding or closing them comes first.
+  approved and a consent to disclose to an agent host, has to come from the surface the
+  person chooses when starting the server and from a consent given elsewhere.
+- Sensitive operations are reachable on MCP with no approval step. Their safeguards are
+  the ones inside the operations, the same on every frontend. (Amended 2026-10-12 under
+  `2026-10-11-mcp-parity-full-parity-adr`; before that guarding or closing them on MCP
+  came first.)
 - The session does not last longer by itself, and today it cannot be renewed. A sign-in
   session's expiry is fixed when it is admitted, at the sooner of the sign-in's idle and
   absolute deadlines, and refresh exists only for a root key session
@@ -274,7 +281,10 @@ adding a parallel one.
 - Ruled by the owner on 2026-10-10: an MCP client may end only its own session ("agreed
   only self session"). It may not sign the person out or lock a session other than its
   own. Today it could, because those handlers are not keyed on frontend, so the handlers
-  refuse both to a session on the MCP frontend.
+  refuse both to a session on the MCP frontend. Superseded on 2026-10-11 by the owner's
+  parity ruling in `2026-10-11-mcp-parity-full-parity-adr`, constraint 2: a session of
+  the human kind signs the person out and locks other sessions on MCP exactly as on the
+  command line, and the handlers are again keyed on the kind of session alone.
 - Reconsider if a narrower scope for the in-app agent is wanted after all; the delegated
   child session is then the route.
 - Accepted 2026-10-10. The owner confirmed the door first-hand that day ("I confirm MCP

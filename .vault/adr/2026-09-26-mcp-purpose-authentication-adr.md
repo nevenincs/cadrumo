@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#mcp-purpose-authentication'
 date: '2026-09-26'
-modified: '2026-10-04'
+modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:a4c0bab9bda3baa2953035bd77c2165d32a12fcd7524b4b8348de854fcadbcc7'
+body_hash: 'sha256:5e5a2655594690f257d9859f7f7c63f2cef7996c0538c199b3f429ed1b2b474a'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-reference]]"
   - "[[2026-09-26-mcp-purpose-authentication-research]]"
@@ -158,7 +158,7 @@ Use a small stable orientation/status and authorization-request surface, publish
 
 Every tool path, execute-style call, private resource and operation-result read passes the same admission and disclosure checks. MCP never reconstructs application verdicts from localized CLI text. It reports the existing typed envelope semantics with stable codes and operation references.
 
-Local read permission and consent to send a projection to an agent host are separate. Enrollment names the destination and allowed categories. Source evidence bytes, passwords, keys and raw secure payloads do not enter MCP. Only registered authorized output projections may cross that boundary. Human screen visibility does not authorize off-host transfer.
+Local read permission and consent to send a projection to an agent host are separate. Enrollment names the destination and allowed categories. Source evidence bytes and raw secure payloads do not enter MCP results, as they enter no frontend's ordinary output. A password or key enters MCP only as a typed secret argument carried to the runtime's protected frame, or named by reference, as the CLI takes one on its secret channel. (Amended 2026-10-12 under `2026-10-11-mcp-parity-full-parity-adr`; before that passwords and keys did not enter MCP at all.) Only registered authorized output projections may cross that boundary, and a projection a session may read on the CLI it may read on MCP. Human screen visibility does not authorize off-host transfer.
 
 Delete the displaced identity-flag admission, password-file bootstrap, retained-password forwarding, CLI-wrapper execution path and unsafe timeout/process assumptions as the replacement is integrated. Remove their command/configuration options, tests and generated documentation through owning generators. Do not retain a compatibility mode. Actual code census determines deletions; names such as inprocess are not evidence of behavior.
 
@@ -170,7 +170,7 @@ Use the existing real operation, storage and authority boundaries. Prove idempot
 
 ### Authenticated local workbench projections
 
-The shared-runtime decision replaces the in-process topology assumption in 2026-09-04-tui-architecture-authenticated-tui-visibility-adr. An exact-profile, password-authenticated human CLI/TUI session may receive a registered owner-workbench projection through the verified local transport. Custody remains in the profile worker. The frontend receives display and navigation data without a DEK, direct repository access or execution authority derived from those values. Enrollment or API-key authentication does not confer this full-owner projection; MCP and other off-host destinations cannot request it.
+The shared-runtime decision replaces the in-process topology assumption in 2026-09-04-tui-architecture-authenticated-tui-visibility-adr. An exact-profile, password-authenticated human CLI/TUI session may receive a registered owner-workbench projection through the verified local transport. Custody remains in the profile worker. The frontend receives display and navigation data without a DEK, direct repository access or execution authority derived from those values. Enrollment or API-key authentication does not confer this full-owner projection. A human-kind session on MCP receives it as the CLI does. (Amended 2026-10-12 under `2026-10-11-mcp-parity-full-parity-adr`; before that MCP and other off-host destinations could not request it.)
 
 The projection has an explicit current strict schema and is retained only through canonical encrypted result custody. Its contract may carry the reviewed domain identities needed for profile binding, work-unit/revision/filing/lifecycle joins and truthful amendment display, plus catalogue-declared recovery actions. These are data and addresses, never admission or response capabilities. Existing exclusions in other canonical serializers remain unchanged. Every included excluded field must be individually declared and tested; new excluded fields fail projection conformance until separately reviewed. Credentials, raw secure references, source evidence bytes and response bearers remain absent.
 
