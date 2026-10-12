@@ -42,10 +42,9 @@ from click.testing import Result
 
 from ....core.config import load_settings, override_settings
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from ....tests.cli_envelope import unwrap_envelope_notices
+from ....tests.cli_envelope import require_schema_envelope, unwrap_envelope_notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from .cli_runner import invoke_cached_cli as _invoke_cached_cli
-from .modelo_cli import create_modelo_work_unit_via_cli
 from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 pytestmark = [
@@ -126,16 +125,31 @@ def _seed_natural_person_profile(runtime_profile: NativeCliProfileFixture) -> No
 
 
 def invoke_cached_cli(args: Sequence[str]) -> Result:
-    """Supply a fresh verified password only for descendant runtime verbs."""
-    target = ("config", "profile", "descendiente")
-    if any(tuple(args[index : index + 3]) == target for index in range(len(args) - 2)):
-        return _invoke_cached_cli(
-            ("--profile", _PROFILE_LABEL, "--profile-secrets-stdin", *args),
-            input=json.dumps(
-                {"profile_passphrase": load_settings().cadrumo_dev_test_database_password.get_secret_value()}
-            ),
-        )
-    return _invoke_cached_cli(args)
+    """Run one verb against the registered profile, admitted by its password on the secret frame.
+
+    Registration mints no receipt and every profile-bound verb is hosted by the
+    runtime, so each invocation names the profile and supplies the password
+    exactly as the registered secret transport does.
+    """
+    return _invoke_cached_cli(
+        ("--profile", _PROFILE_LABEL, "--profile-secrets-stdin", *args),
+        input=json.dumps({"profile_passphrase": load_settings().cadrumo_dev_test_database_password.get_secret_value()}),
+    )
+
+
+def _create_work_unit() -> str:
+    """Create a fresh M100 2024 work unit through the real verb and return its id."""
+    created = invoke_cached_cli(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "100", "--year", "2024", "--period", "0A", "--revision", "2024",
+        ],
+    )  # fmt: skip
+    assert created.exit_code == 0, created.output
+    work_unit_id = require_schema_envelope(created.output).get("work_unit_id")
+    assert isinstance(work_unit_id, str) and work_unit_id, created.output
+    return work_unit_id
 
 
 def _declare(*descendiente_specs: str) -> None:
@@ -149,7 +163,7 @@ def _declare(*descendiente_specs: str) -> None:
 
 def _calculate(*extra_flags: str) -> tuple[int, str]:
     """Calculate a fresh M100 2024 work unit, returning the exit code and output."""
-    work_unit_id = create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
+    work_unit_id = _create_work_unit()
     result = invoke_cached_cli(
         [
             "--format", "json",

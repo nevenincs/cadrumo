@@ -16,8 +16,9 @@ from pydantic import TypeAdapter
 from ...tests.cli_runner import invoke_cached_cli
 from .isolated_storage_fixture import CREDENTIAL_INPUT, profile_cli
 from .isolated_storage_fixture import live_cli_profile as live_cli_profile
+from .isolated_storage_fixture import native_cli_profile_view as native_cli_profile_view
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("live_cli_profile")]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("native_cli_profile_view")]
 
 _UNKNOWN = "Nobody"
 _ERROR_OBJECT: TypeAdapter[dict[str, object]] = TypeAdapter(dict[str, object])
@@ -66,15 +67,16 @@ def test_every_verb_answers_an_unknown_profile_the_same_way() -> None:
 
 
 def test_deleting_the_selected_profile_names_the_command_that_unblocks_it() -> None:
-    """Closing the session is a real next step, so it rides the action channel.
+    """Signing out keeps the selection, so only selecting another profile unblocks the delete.
 
-    Reproduction: the refusal explained in prose that the operator must run
-    ``config logout`` first, while the action channel carried nothing, so an
-    automated operator had only the sentence to parse.
+    Reproduction: the refusal once pointed at ``config logout``, which leaves
+    the profile selected and the delete still refused. The action channel now
+    names ``config login`` for the profile to select instead.
     """
     error = _error(profile_cli("delete", "Editor", "--yes"))
 
-    assert _action_id(error) == "operator.profile.logout"
+    assert _action_id(error) == "operator.profile.login"
+    assert error["context"] == {"name": "Editor", "profile_id": "<profile-id>"}
 
 
 def test_a_valid_descendant_is_added() -> None:

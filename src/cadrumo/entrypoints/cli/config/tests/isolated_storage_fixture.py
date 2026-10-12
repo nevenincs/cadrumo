@@ -86,16 +86,31 @@ def config_check_isolated_backend(config_check_backend: None) -> None:
     return config_check_backend
 
 
+def declare_operator_terminal(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Declare an attached terminal, as the operator's own console would be.
+
+    Only a CLI attached to a terminal resumes a saved sign-in; a host session
+    without a console (an SSH logon, CI) refuses before reading the receipt.
+    `config` verbs read the predicate from ``secure_input`` at call time while
+    the runtime admission module binds it at import, so each lookup site is
+    declared where it is used.
+    """
+    for owner in ("config.secure_input", "runtime_profile_admission"):
+        monkeypatch.setattr(f"cadrumo.entrypoints.cli.{owner}.terminal_can_prompt_for_secrets", lambda: True)
+
+
 @pytest.fixture
-def live_cli_profile(tmp_path: Path) -> Iterator[None]:
+def live_cli_profile(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     """Create one incomplete profile through the real ``create`` verb.
 
     ``create`` leaves the new profile's session live in this process, so every
     later command in the test authenticates exactly as the operator's own
     session would, and reads records under the same pinned authority the CLI
     uses. Registering through a test-only authority instead binds the record to
-    a different generation, which the CLI then refuses to read.
+    a different generation, which the CLI then refuses to read. The operator's
+    terminal is declared for the same reason: the session is the operator's own.
     """
+    declare_operator_terminal(monkeypatch)
     overrides = {
         "cadrumo_local_storage_root": tmp_path / "cadrumo-storage",
         "cadrumo_secret_passphrase": CREDENTIAL_INPUT,
@@ -196,24 +211,28 @@ def native_cli_profile_view(live_cli_profile: None, tmp_path: Path) -> Iterator[
 
 
 def profile_cli(*args: str) -> Result:
-    """Run one ``config profile`` verb in JSON mode against the live profile."""
-    if args == ("view",) or (args and args[0] in {"edit", "complete-setup"}):
-        # Registration mints no receipt. This password is consumed only on
-        # the verified secret frame for the explicit profile.
-        return invoke_cached_cli(
-            (
-                "--format",
-                "json",
-                "--profile",
-                "Editor",
-                "--profile-secrets-stdin",
-                "config",
-                "profile",
-                *args,
-            ),
-            input=json.dumps({"profile_passphrase": CREDENTIAL_INPUT}),
-        )
-    return invoke_cached_cli(("--format", "json", "config", "profile", *args))
+    """Run one ``config profile`` verb in JSON mode against the live profile.
+
+    Registration mints no receipt, and every profile verb reads or writes through
+    the runtime, so each is admitted by the password on the verified secret frame
+    for the explicit profile. ``delete`` takes no authentication input: it acts on
+    the label it is given and refuses the selected profile while signed in.
+    """
+    if args and args[0] == "delete":
+        return invoke_cached_cli(("--format", "json", "config", "profile", *args))
+    return invoke_cached_cli(
+        (
+            "--format",
+            "json",
+            "--profile",
+            "Editor",
+            "--profile-secrets-stdin",
+            "config",
+            "profile",
+            *args,
+        ),
+        input=json.dumps({"profile_passphrase": CREDENTIAL_INPUT}),
+    )
 
 
 def profile_view_document() -> dict[str, object]:
@@ -250,6 +269,7 @@ __all__ = [
     "CREDENTIAL_INPUT",
     "config_check_backend",
     "config_check_isolated_backend",
+    "declare_operator_terminal",
     "live_cli_profile",
     "native_cli_profile_view",
     "native_profile_view_server",

@@ -15,6 +15,7 @@ from ...tests.cli_runner import invoke_cached_cli
 from ..profile_command_specs import PROFILE_COMMAND_SPECS
 from .isolated_storage_fixture import (
     COMPLETE_NATURAL_PERSON_FLAGS,
+    CREDENTIAL_INPUT,
     profile_cli,
     profile_view_document,
 )
@@ -51,7 +52,10 @@ def test_status_and_overview_answer_for_a_completed_profile() -> None:
     assert status.exit_code == 0, status.output
     assert json.loads(status.stdout)["result"]["configured"] is True
 
-    overview = invoke_cached_cli(("--format", "json", "app", "overview", "status"))
+    overview = invoke_cached_cli(
+        ("--format", "json", "--profile", "Editor", "--profile-secrets-stdin", "app", "overview", "status"),
+        input=json.dumps({"profile_passphrase": CREDENTIAL_INPUT}),
+    )
     assert overview.exit_code == 0, overview.output
 
 
