@@ -6,9 +6,9 @@ date: '2026-10-04'
 tier: L2
 related:
   - '[[2026-10-04-application-sign-in-adr]]'
-modified: '2026-10-05'
+modified: '2026-10-12'
 body_schema: body-v2
-body_hash: 'sha256:c99babadea2c1808ab561e5e9da48552aa133cac9a3126b041c52d4c4c6a7cb5'
+body_hash: 'sha256:0035bdc623d0ea26fb93f7f90f6525b37a45b8a75462afd5450d97a9e19b3942'
 ---
 
 # `application-sign-in` plan
@@ -44,7 +44,7 @@ Runtime-owned shared sign-in: three-state lock observation, durable generation, 
 - [x] `P01.S03` - Bind the receipt to the originating login_id and sign-in generation under a new schema_version in session.v2.json, keeping the v2 keychain service and sending older schemas to the delete-only path; `src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt.py, acceleration_receipt_crypto.py, the mint chain (entrypoints/runtime/profile_login.py, application/user_profile/login_session.py, login_session_port.py, adapters/persistence/storage/profile_login_session.py) with legacy in-process login no longer persisting receipts, owning tests`.
 - [x] `P01.S04` - Mint the receipt only after session publication, under the admission guard, stamped with the generation captured at publication and discarded if the session is no longer published; `src/cadrumo/entrypoints/runtime/session_owner.py, profile_login.py, worker_service.py, application/user_profile session_authority_admission.py and session_authority_contracts.py, application/runtime/profile_worker.py worker request, local_runtime/profile_worker_human_admission.py, the mint chain (login_session, port, adapter, acceleration_receipt, sign_in_generation require_current), owning tests`.
 - [x] `P01.S05` - Make receipt borrowing proof-only so clients read only the keychain proof and locator while the runtime verifies, unwraps and deletes; `src/cadrumo/adapters/local_runtime/frontend_client.py, acceleration_receipt.py, src/cadrumo/application/user_profile/login_session.py, owning tests`.
-- [ ] `P01.S06` - Advance the generation and delete the receipt on lock everywhere, positive OS lock and logout evidence, password rotation or reset, recovery and profile deletion, and sweep receipts whose bound login is positively gone; `src/cadrumo/application/user_profile/session_authority_lifecycle.py, automation_lifecycle_service.py, src/cadrumo/entrypoints/runtime/profile_host.py, profile_connections.py, owning tests`.
+- [x] `P01.S06` - Advance the generation and delete the receipt on lock everywhere, positive OS lock and logout evidence, password rotation or reset, recovery and profile deletion, and sweep receipts whose bound login is positively gone; `src/cadrumo/application/user_profile/session_authority_lifecycle.py, automation_lifecycle_service.py, src/cadrumo/entrypoints/runtime/profile_host.py, profile_connections.py, owning tests`.
 - [ ] `P01.S07` - Add the runtime human_sign_out operation for human-kind sessions or a presented proof, retiring every human and attended session and reporting remaining automation; `src/cadrumo/application/runtime/ contracts and transport, src/cadrumo/entrypoints/runtime/, owning tests`.
 - [ ] `P01.S08` - Add the unauthenticated sign_in_status runtime request reporting present, absent or unknown with deadlines, creating no worker and never reading the keychain; `src/cadrumo/application/runtime/ contracts, src/cadrumo/adapters/local_runtime/server dispatch, src/cadrumo/entrypoints/runtime/, owning tests`.
 - [ ] `P01.S09` - Split typed refusals so THROTTLED carries remaining seconds and PROFILE_LOCKED, receipt reasons and generation changed reach clients, and add the throttle unreadable-state diagnostic while it keeps clearing; `src/cadrumo/entrypoints/runtime/profile_login.py, src/cadrumo/application/user_profile/access_contracts.py, src/cadrumo/adapters/persistence/storage/master_key/login_throttle.py, error catalogue, owning tests`.

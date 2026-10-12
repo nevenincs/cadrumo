@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#application-sign-in'
 date: '2026-10-04'
-modified: '2026-10-05'
+modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:eac53fd594b06f24f196f08249dd058c1bb4d38fc384887ed3f988b87cff20a9'
+body_hash: 'sha256:f064594b83c41b5e109ce77be5e71c666be2224635bf2d559839ab645425d3de'
 related:
   - "[[2026-10-04-application-sign-in-plan]]"
 ---
@@ -208,6 +208,12 @@ related:
 - `S12` `M` `dev/quality/metadata/import_load_targets.dev.json`
 - `S12` `verify:` `principal-import-boundaries-final 20261005T173955.188479Z-principal-import-boundaries-final-44480-f3f817e0` -> `pass`
 - `S12` `verify:` `registration integration 20261005T173251.115363Z-pytest-524-88363ecb` -> `pass`
+- `S06` `verify:` `focused sign-in pytest over 28 runtime/adapter/CLI/TUI modules -n 4: 343 passed 7 failed; 6 of 7 pass rerun -n0 (load deadline timeouts), 1 fixed under S13` -> `pass`
+- `S06` `verify:` `test_recovery_revocation, test_sign_in_sweep_contention, test_session_authority, test_runtime_password_rotation, test_enrollment_lifecycle in that run` -> `pass`
+- `S06` `verify:` `just check-style` -> `pass`
+- `S06` `verify:` `just check-format (4 findings, none in this Step's files)` -> `fail`
+- `S06` `verify:` `just check-types (31 ty findings in dev/ and adapters/local_runtime/tests/test_posix.py, none in this Step's files)` -> `fail`
+- `S06` `verify:` `just check-import-boundaries (unavailable: governed tree changed mid-run)` -> `fail`
 
 ## Notes
 
@@ -221,3 +227,4 @@ related:
 - `S15` Principal supplied translated `tui.runtime_login.stay_signed_in` in all four locales through dev.locales. Default-off checkbox and persistence request integration remain B4-owned; Step stays open.
 - `S12` Principal integration: corrected defining-module import and retired stale selection-revokes-receipt assertions. Two real-storage cases passed; three native-keyring cases skipped because Windows refused this logon. Entire stable import gate passed with no hard findings. Step remains open for runtime custody cleanup and real-keyring acceptance; shared B4 changes remain uncommitted.
 - `S14` B4 revision 9 reset notice correction applied through dev.locales in all four languages: saved human sign-in ends; recovery code and prior archive passphrases retain their existing scope. Strict rendering and fresh CLI logout help pass. Overall Step stays open.
+- `S06` Implementation landed in earlier commits outside this ledger `(profile_host` `observe_human_lock_down` and `revoke_human_sign_in,` `sign_in_sweep,` `passphrase_rotation,` `automation_lifecycle_service,` `custody_service` `fence_human_sign_in);` closed on test evidence only. Windows positive OS logout and lock acceptance remain with P06.S17.
