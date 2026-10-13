@@ -4,6 +4,10 @@
 // It has its own source snapshot and Cargo directory under the desktop testing
 // directory, so it never replaces the image desktop-host-build declares for
 // packaging, and it is never staged, packaged or distributed.
+//
+// `--served` builds a second such host whose shell is served by the desktop
+// development server instead of embedded, for iterating on the shell against
+// a real host. It has a directory of its own beside the first.
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
@@ -20,13 +24,22 @@ import {
   profile,
   tauriConfig,
 } from "../../scripts/configuration.mjs";
+import { developmentServer } from "../../scripts/development-server.mjs";
 
 export const FEATURE = "webview2-remote-debugging";
 const BINARY = "cadrumo";
 
+/** The two test hosts: the shell embedded, or served by the development server. */
+export const VARIANTS = Object.freeze({
+  embedded: "packaged",
+  served: "served",
+});
+
 /** The directories this test host owns, all inside the desktop testing directory. */
-export function packagedHostPaths() {
-  const root = resolve(buildPath("desktop_testing"), "packaged");
+export function packagedHostPaths(variant = VARIANTS.embedded) {
+  if (!Object.values(VARIANTS).includes(variant))
+    throw new Error(`Unknown packaged test host: ${variant}`);
+  const root = resolve(buildPath("desktop_testing"), variant);
   const snapshot = resolve(root, "host");
   return {
     root,
@@ -39,8 +52,8 @@ export function packagedHostPaths() {
 }
 
 /** The test host recorded by the last build, refused when it no longer matches. */
-export function packagedHost() {
-  const { record, cargo } = packagedHostPaths();
+export function packagedHost(variant = VARIANTS.embedded) {
+  const { record, cargo } = packagedHostPaths(variant);
   const value = JSON.parse(readFileSync(record, "utf8"));
   if (
     typeof value.executable !== "string" ||
@@ -74,10 +87,17 @@ function compiledFeatures(cargo, directory) {
   return [...found].map((text) => JSON.parse(text));
 }
 
-function build() {
+/** The development server's shell address, which a served host loads. */
+export function servedShell() {
+  const { devPort } = developmentServer();
+  return `http://127.0.0.1:${devPort}/`;
+}
+
+function build(variant) {
   const desktop = fileURLToPath(new URL("../../", import.meta.url));
-  const paths = packagedHostPaths();
+  const paths = packagedHostPaths(variant);
   const selected = profile();
+  const identity = readIdentity();
   const contract = process.env.CADRUMO_NATIVE_CONTRACT;
   if (!contract || !isAbsolute(contract))
     throw new Error(
@@ -89,13 +109,16 @@ function build() {
     JSON.parse(
       readFileSync(resolve(desktop, "src-tauri/tauri.conf.json.in"), "utf8"),
     ),
-    readIdentity(),
+    identity,
     {
       configDirectory: snapshot.crate,
       frontend: buildPath("desktop_frontend"),
       icons: paths.icons,
     },
   );
+  // Tauri reads a URL frontend as a remote shell; the host then admits that
+  // origin as its shell and loads nothing embedded.
+  if (variant === VARIANTS.served) config.build.frontendDist = servedShell();
   writeFileSync(paths.configuration, JSON.stringify(config, null, 2));
   const environment = {
     ...process.env,
@@ -103,6 +126,11 @@ function build() {
     CARGO_TARGET_DIR: paths.cargo,
     CADRUMO_NATIVE_CONTRACT: contract,
     CADRUMO_CONTRACT_RS: resolve(contract, "../contract.rs"),
+    CADRUMO_ID_NAME: identity.name,
+    CADRUMO_ID_APPLICATION_ID: identity.application_id,
+    CADRUMO_ID_VERSION: identity.version,
+    CADRUMO_ID_MANAGER_ID: identity.manager_id,
+    CADRUMO_ID_MANAGER_NAME: identity.manager_name,
   };
   if (process.env.CADRUMO_DESKTOP_RUST_BIN) {
     const key =
@@ -157,6 +185,8 @@ function build() {
     );
   const record = {
     executable,
+    variant,
+    shell: variant === VARIANTS.served ? servedShell() : null,
     features: compiled[0],
     configuration: process.env.CADRUMO_BUILD_CONFIG,
     sha256: sha256(executable),
@@ -170,5 +200,9 @@ function build() {
 if (
   process.argv[1] &&
   resolve(process.argv[1]) === fileURLToPath(import.meta.url)
-)
-  build();
+) {
+  const options = process.argv.slice(2);
+  if (options.some((option) => option !== "--served"))
+    throw new Error("The packaged test host takes only --served.");
+  build(options.includes("--served") ? VARIANTS.served : VARIANTS.embedded);
+}

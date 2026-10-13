@@ -278,6 +278,8 @@
         "dev.deploy.docs_site_preflight",
         "dev.deploy.docs_static_site",
         "dev.deploy.r2_objects",
+        "dev.desktop_agent_live",
+        "dev.desktop_agent_live.scans",
         "dev.docs",
         "dev.docs._locale_chrome",
         "dev.docs.apidocs",
