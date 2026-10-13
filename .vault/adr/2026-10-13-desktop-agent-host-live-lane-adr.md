@@ -15,6 +15,8 @@ related:
 
 Not accepted. On 2026-10-13 the owner ruled first-hand on the tool surface: "I don't want read only tools. I want to verify that the agent platform is functional." That ruling is applied below. The owner also directed that this record is reviewed by the cadrumo-agent project and by Cadrumo's engineering sessions, and verified before any ruling on it: "I don't want you to improvise. You have to ask for reviews, ruling, check verifications." The remaining choices stay open for the owner.
 
+On 2026-10-13 the owner also ruled first-hand: "do not allow my api keys to be exposed". That ruling removes the former deviation L3, which passed the Anthropic key through the agent's environment block, and binds the key constraint below.
+
 ## Problem Statement
 
 On 2026-10-13 the owner asked for a running agent column they can use live against a real provider, "so we can for real begin working against the cadrumo api and agent backend". The production path in `2026-10-12-desktop-agent-host-adr` (proposed) needs encrypted agent stores, a key door, a recorded tool-server proof and bundling, and none of them is built. cadrumo-agent refuses every hosted start today. The development display on port 15370 runs the browser host, which serves nothing, so it can never run the agent (`2026-10-12-desktop-agent-host-reference`, fourth audit and live-lane reuse sections). This record decides how a real, interactive run happens before the production path is complete, without breaking the owner's 2026-10-12 rulings.
@@ -29,7 +31,7 @@ On 2026-10-13 the owner asked for a running agent column they can use live again
 
 ## Considered options
 
-- **A development live lane (proposed).** Every component is real. The lane runs only on a storage root it created and marked, with a profile made there holding synthetic data. Three named deviations are allowed, each retired by a named delivery, and lane builds are the only builds that carry them. It gives live use within the first stage and builds the production pieces in production form.
+- **A development live lane (proposed).** Every component is real. The lane runs only on a storage root it created and marked, with a profile made there holding synthetic data. Two named deviations are allowed, each retired by a named delivery, and lane builds are the only builds that carry them. It gives live use within the first stage and builds the production pieces in production form.
 - Wait for the full production path. This keeps every constraint, but there is no live use until contracts 3 and 4 and the tool-server proof land, and the last two belong to an unreachable owner.
 - A browser development bridge that serves the host interface from the development server. Rejected: it is a second host implementation, it needs the CSP opened, and it exposes a signed-in profile on the network address the owner browses from.
 - A live run on the person's own profile with plaintext agent stores. Rejected: it breaks the at-rest ruling.
@@ -52,7 +54,13 @@ Binding if accepted:
 - Allowed deviations, each named with what retires it:
   - **L1.** Agent stores, logs and the replay log are plaintext, under `<storage-root>/agent/<profile-id>/` only. Retired by contract 4 of the parent record (encrypted stores).
   - **L2.** cadrumo-agent runs in non-hosted mode with its `warn` proof policy. Retired by a recorded Cadrumo tool-server proof, which opens the hosted start.
-  - **L3.** The Anthropic key and the gateway bearer reach the agent process through its own environment block. They never pass through the shell's environment, a file or a command line. Retired by the standard-input key frame.
+- No exception exists for provider API keys, in the lane or anywhere else.
+  - The Anthropic key never appears in an environment block, file, command line, log, transcript, trace, crash report or the webview. That covers every process, the lane's included.
+  - It travels only from Cadrumo custody, through the runtime door, into launcher memory, then in the agent's standard-input frame into agent memory. Copies are wiped after use.
+  - cadrumo-agent passes it to no child process. The `cadrumo-mcp` relay and the worker receive environments without it.
+  - Stage 1 therefore needs cadrumo-agent to read the key from its standard-input frame (parent contract 4, the key-frame item).
+  - Stage 1 acceptance adds a scan of every started process's environment block and command line, and of the root's files and logs, for the key. A finding fails the stage.
+- The gateway bearer is a local token, not a provider key. Whether it may stay in the agent's environment during the lane, or must also travel in the frame, is open for the owner.
 - Everything else follows the parent record unchanged:
   - The shell holds no runtime connection, session or provider credential.
   - The provider key lives in Cadrumo custody, and only the admitted launcher receives it.
@@ -87,7 +95,7 @@ We will build a development live lane in four stages. Each stage builds the prod
 - **Stage 2, hosted mode.** The service restarts under its hosted root once the proofs are recorded.
 - **Stage 3, documents.** Custody intake, conversation links and text projections (parent contract 5), with documents as consent items.
 - **Stage 4, encryption.**
-  - The SQLCipher stores and the key frame retire L1 and L3.
+  - The SQLCipher stores retire L1.
   - The mark check and the lane build option are removed.
   - The lane becomes the parent record's packaged-build verification.
 
