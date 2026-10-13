@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#runtime-manager-architecture'
 date: '2026-10-12'
-modified: '2026-10-12'
+modified: '2026-10-13'
 body_schema: 'body-v2'
 body_hash: 'sha256:e089245be78293c2bb553d802716fd3b74bec1655d7860f51e1f5825bb2ca484'
 related:
@@ -11,6 +11,7 @@ related:
   - "[[2026-10-04-runtime-manager-architecture-supervisor-contract-adr]]"
   - "[[2026-10-03-runtime-without-service-manager-adr]]"
   - "[[2026-10-12-live-agent-evaluation-adr]]"
+  - '[[2026-10-04-runtime-manager-architecture-requirements-research]]'
 ---
 
 # `runtime-manager-architecture` adr: `caller-owned runtime for an explicitly configured storage root` | (**status:** `accepted`)
