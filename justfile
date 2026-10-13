@@ -91,6 +91,7 @@ default:
 [doc('Start the desktop development display on its fixed ports, generating inputs without compiling the desktop.')]
 [group('dev')]
 dev:
+    uv run --no-sync python -m dev.registry.pipeline publish-authority --if-stale
     node native/desktop/frontend/scripts/dev.mjs
 
 # ── Bootstrap / Install ──────────────────────────────────────────────────────
@@ -626,8 +627,8 @@ native_build_preset_prefix := if os() == "windows" { "" } else { native_preset +
 
 # Converging is safe to repeat: a current environment is audited and left as it
 # is. The editable install skips authority resolution because the builder reads
-# the authority this checkout publishes. `build-native` compiles it only if missing;
-# registry source/compiler changes require `registry-publish-authority` explicitly.
+# the authority this checkout publishes. `build-native` republishes it whenever it is
+# missing or stale; `registry-publish-authority` recompiles it unconditionally.
 [doc('Create or converge the native release-builder Python environment at the pinned patch in managed storage; never touches .venv.')]
 [group('setup')]
 [unix]

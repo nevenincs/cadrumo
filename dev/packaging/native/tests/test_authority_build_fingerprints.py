@@ -1,4 +1,4 @@
-"""Normal builds select existing authority; republication is explicit."""
+"""Every build republishes a missing or stale authority; a rebuild republishes it unconditionally."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor, AuthorityStoreError
+from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor
 
 from .. import authority_build
 
@@ -30,13 +30,13 @@ def _publication(root: Path) -> tuple[Path, Path]:
     return descriptor, database
 
 
-@pytest.mark.parametrize("missing", ["descriptor", "database"])
-def test_missing_publication_compiles_once_and_explicit_rebuild_always_compiles(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, missing: str
+@pytest.mark.parametrize(
+    ("rebuild", "arguments"), [(False, ["publish-authority", "--if-stale"]), (True, ["publish-authority"])]
+)
+def test_a_build_asks_the_publisher_to_publish_a_missing_or_stale_authority(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, rebuild: bool, arguments: list[str]
 ) -> None:
     root = tmp_path / ".authority"
-    descriptor, database = _publication(root)
-    (descriptor if missing == "descriptor" else database).unlink()
     monkeypatch.setenv("CADRUMO_AUTHORITY_ROOT", str(root))
     monkeypatch.setattr(authority_build, "REPO_ROOT", tmp_path)
     commands: list[list[str]] = []
@@ -47,33 +47,18 @@ def test_missing_publication_compiles_once_and_explicit_rebuild_always_compiles(
         return SimpleNamespace(returncode=0, stdout="", stderr="")
 
     monkeypatch.setattr(authority_build, "run_command", run)
-    authority_build.publish(tmp_path)
-    assert len(commands) == 1
-    stamp = descriptor.stat().st_mtime_ns
-    # These inputs no longer participate in the build's publication decision.
-    (tmp_path / "compiler.py").write_text("changed compiler", encoding="utf-8")
-    (tmp_path / "uv.lock").write_text("changed dependencies", encoding="utf-8")
-    authority_build.publish(tmp_path)
-    assert len(commands) == 1
-    assert descriptor.stat().st_mtime_ns == stamp
-    authority_build.publish(tmp_path, rebuild=True)
+    authority_build.publish(tmp_path, rebuild=rebuild)
+    # The publisher decides staleness from the registry sources and compiler;
+    # an existing publication never short-circuits a normal build.
+    authority_build.publish(tmp_path, rebuild=rebuild)
     assert len(commands) == 2
-    assert all(command[-1] == "publish-authority" for command in commands)
+    assert all(command[-len(arguments) :] == arguments for command in commands)
 
 
-def test_malformed_existing_descriptor_is_not_silently_republished(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+@pytest.mark.parametrize("rebuild", [False, True])
+def test_failed_publication_preserves_existing_pair(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, rebuild: bool
 ) -> None:
-    root = tmp_path / ".authority"
-    descriptor, _ = _publication(root)
-    descriptor.write_text("{}", encoding="utf-8")
-    monkeypatch.setenv("CADRUMO_AUTHORITY_ROOT", str(root))
-    with pytest.raises(AuthorityStoreError, match="unexpected or missing members"):
-        authority_build.publish(tmp_path)
-    assert descriptor.read_text(encoding="utf-8") == "{}"
-
-
-def test_failed_explicit_publication_preserves_existing_pair(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     root = tmp_path / ".authority"
     pair = _publication(root)
     before = [path.read_bytes() for path in pair]
@@ -84,6 +69,6 @@ def test_failed_explicit_publication_preserves_existing_pair(tmp_path: Path, mon
         lambda *args, **kwargs: SimpleNamespace(returncode=7, stdout="", stderr="refused"),
     )
     with pytest.raises(SystemExit) as error:
-        authority_build.publish(tmp_path, rebuild=True)
+        authority_build.publish(tmp_path, rebuild=rebuild)
     assert error.value.code == 7
     assert [path.read_bytes() for path in pair] == before

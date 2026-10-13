@@ -2,7 +2,7 @@ include_guard(GLOBAL)
 include("${CMAKE_CURRENT_LIST_DIR}/BuildLog.cmake")
 # An existing publication is an explicit developer selection, not a compiler cache.
 cadrumo_build_step(authority_comment registry_authority GROUP builder
-  SUMMARY "publish the registry authority when the checkout selects none (shared checkout state)")
+  SUMMARY "publish the registry authority when it is missing or stale (shared checkout state)")
 add_custom_target(registry_authority
   COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.authority_build
     --build "${CMAKE_BINARY_DIR}"

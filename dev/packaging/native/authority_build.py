@@ -15,22 +15,20 @@ from .build_log import BuildLog, command_line, display_path
 
 
 def publish(build: Path, *, rebuild: bool = False) -> None:
-    """Compile missing publications; source or compiler edits require explicit rebuild."""
+    """Publish the authority whenever it is missing or stale; republish unconditionally on request.
+
+    A build packages the authority this checkout publishes, so a registry
+    source or compiler edit since the last publication is republished here
+    rather than packaged stale.
+    """
     log = BuildLog("registry_authority")
     with action_lock(build, "authority-publication"):
-        if not rebuild:
-            try:
-                descriptor, _database = selected_published_authority(REPO_ROOT)
-            except FileNotFoundError:
-                log.status("no published authority is selected; compiling and publishing it")
-            else:
-                log.status(
-                    f"up to date, reusing {display_path(descriptor)}; build registry_authority_rebuild to recompile"
-                )
-                return
-        else:
-            log.status("recompiling and republishing the registry authority on request")
         command = [sys.executable, "-B", "-m", "dev.registry.pipeline", "publish-authority"]
+        if rebuild:
+            log.status("recompiling and republishing the registry authority on request")
+        else:
+            command.append("--if-stale")
+            log.status("publishing the registry authority if it is missing or stale")
         log.debug(f"command: {command_line(command)}")
         result = run_command(command, cwd=REPO_ROOT, inherit_output=True)
         if result.returncode:
