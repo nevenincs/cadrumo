@@ -46,17 +46,15 @@ fn refused(code: &str) -> Refused {
     Refused::new(code.to_owned())
 }
 
-/// The selection a send names: a catalog lane and one of its models.
+/// The selection a send names: a catalog lane, by provider and transport,
+/// and one of its models, as a run start takes them.
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Selection {
     pub provider: String,
-    pub execution_mode: String,
-    pub entry_id: String,
+    pub transport: String,
     pub model: String,
     pub effort: Option<String>,
-    /// Native controls by id; a run start takes none.
-    pub controls: Option<Vec<Value>>,
 }
 
 #[derive(Deserialize)]
@@ -78,25 +76,23 @@ pub struct RequestRef {
 #[derive(Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum Answer {
-    Answers {
-        answers: HashMap<String, String>,
-    },
-    /// The text is never sent: see [`clarification_body`].
-    Message {
-        #[serde(rename = "text")]
-        _text: String,
-    },
+    Answers { answers: HashMap<String, String> },
+    Message { text: String },
     Decline,
 }
 
-/// The body `clarifications/{id}/respond` takes for an answer this host can
-/// report back honestly. A message answer would add a person turn whose id
-/// the gateway does not return.
+/// The body `clarifications/{id}/respond` takes: the answers, a message
+/// that continues the run as the continuation's prompt, or a decline.
 pub fn clarification_body(answer: &Answer) -> Result<Value, Refused> {
     match answer {
         Answer::Answers { answers } => Ok(json!({ "answers": answers })),
         Answer::Decline => Ok(json!({ "decline": true })),
-        Answer::Message { .. } => Err(refused("agent_person_turn_unavailable")),
+        Answer::Message { text } => {
+            if text.trim().is_empty() || text.chars().count() > MESSAGE_LIMIT {
+                return Err(refused("agent_invalid_request"));
+            }
+            Ok(json!({ "prompt": text }))
+        }
     }
 }
 
@@ -108,12 +104,10 @@ pub fn admit_send(request: &SendRequest) -> Result<(), Refused> {
         return Err(invalid());
     }
     let selection = &request.selection;
-    for field in [
-        &selection.provider,
-        &selection.execution_mode,
-        &selection.entry_id,
-        &selection.model,
-    ] {
+    if !matches!(selection.transport.as_str(), "api" | "cli") {
+        return Err(invalid());
+    }
+    for field in [&selection.provider, &selection.model] {
         if field.is_empty() || field.len() > 512 || field.chars().any(char::is_control) {
             return Err(invalid());
         }
@@ -125,11 +119,6 @@ pub fn admit_send(request: &SendRequest) -> Result<(), Refused> {
         )
     }) {
         return Err(invalid());
-    }
-    // A run names a provider, a model and an effort; the gateway's run start
-    // takes no native control, so one chosen cannot be applied.
-    if selection.controls.as_ref().is_some_and(|c| !c.is_empty()) {
-        return Err(refused("agent_controls_unsupported"));
     }
     if request.document_ids.as_ref().is_some_and(|d| !d.is_empty()) {
         return Err(refused("agent_documents_unavailable"));
@@ -474,19 +463,23 @@ mod tests {
         json!({
             "conversation_id": "c1",
             "text": "¿Cuánto IVA declaré?",
-            "selection": {"provider": "anthropic", "execution_mode": "api", "entry_id": "e1", "model": "m1", "effort": "high"}
+            "selection": {"provider": "anthropic", "transport": "api", "model": "m1", "effort": "high"}
         })
     }
 
     #[test]
     fn a_send_is_checked_before_anything_reaches_the_gateway() {
         assert!(admit_send(&send(request())).is_ok());
+        let mut transport = request();
+        transport["selection"]["transport"] = json!("web");
+        assert_eq!(
+            admit_send(&send(transport)).unwrap_err().code,
+            "agent_invalid_request"
+        );
+        // Native controls are no part of a selection.
         let mut controls = request();
         controls["selection"]["controls"] = json!([{"control_id": "tier", "option_id": "fast"}]);
-        assert_eq!(
-            admit_send(&send(controls)).unwrap_err().code,
-            "agent_controls_unsupported"
-        );
+        assert!(serde_json::from_value::<SendRequest>(controls).is_err());
         let mut documents = request();
         documents["document_ids"] = json!(["d1"]);
         assert_eq!(
@@ -544,9 +537,17 @@ mod tests {
         let message: Answer =
             serde_json::from_value(json!({"kind": "message", "text": "otra cosa"})).unwrap();
         assert_eq!(
-            clarification_body(&message).unwrap_err().code,
-            "agent_person_turn_unavailable"
+            clarification_body(&message).unwrap(),
+            json!({"prompt": "otra cosa"})
         );
+        for text in [json!("  \n "), json!("x".repeat(MESSAGE_LIMIT + 1))] {
+            let message: Answer =
+                serde_json::from_value(json!({"kind": "message", "text": text})).unwrap();
+            assert_eq!(
+                clarification_body(&message).unwrap_err().code,
+                "agent_invalid_request"
+            );
+        }
     }
 
     #[test]
@@ -563,10 +564,10 @@ mod tests {
             pending_of("run-1", &status, &history),
             json!({
                 "questionnaires": [{"request_id": "clar-1", "reply_id": "run-1", "questions": [
-                    {"id": "q", "prompt": "¿Año?", "kind": "text", "required": true}
+                    {"id": "q", "prompt": "¿Año?", "kind": "text", "options": null, "required": true}
                 ]}],
                 "approvals": [{"request_id": "perm-1", "reply_id": "run-1", "source": "agent_tool",
-                    "title": "ledger_list", "description": "Read the ledger",
+                    "tool_call": "ledger_list", "description": "Read the ledger", "tool_kind": "read",
                     "options": [{"option_id": "ok", "name": "Allow", "kind": "allow_once"}]}]
             })
         );

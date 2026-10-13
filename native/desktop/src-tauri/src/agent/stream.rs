@@ -44,7 +44,7 @@ pub struct Question {
     pub id: String,
     pub prompt: String,
     pub kind: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    /// A choice's options; null for a text question.
     pub options: Option<Vec<String>>,
     pub required: bool,
 }
@@ -59,7 +59,9 @@ pub struct Questionnaire {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct ApprovalOption {
     pub option_id: String,
-    pub name: String,
+    /// The option's own name, which may be absent: the card words an option
+    /// by its kind.
+    pub name: Option<String>,
     pub kind: String,
 }
 
@@ -68,8 +70,11 @@ pub struct Approval {
     pub request_id: String,
     pub reply_id: String,
     pub source: &'static str,
-    pub title: String,
-    pub description: String,
+    /// The tool the agent wants to call, as the agent names it.
+    pub tool_call: Option<String>,
+    pub description: Option<String>,
+    /// One of the agent's ten tool kinds.
+    pub tool_kind: Option<String>,
     pub options: Vec<ApprovalOption>,
 }
 
@@ -390,7 +395,7 @@ impl Mapping {
                     option_id: text(option, "option_id")
                         .filter(|id| !id.is_empty())?
                         .to_owned(),
-                    name: text(option, "name")?.to_owned(),
+                    name: text(option, "name").map(str::to_owned),
                     kind: kind.to_owned(),
                 })
             })
@@ -406,8 +411,26 @@ impl Mapping {
                 request_id: request_id.to_owned(),
                 reply_id: self.reply_id.clone(),
                 source: "agent_tool",
-                title: text(frame, "tool_call").unwrap_or("unknown").to_owned(),
-                description: text(frame, "description").unwrap_or_default().to_owned(),
+                tool_call: text(frame, "tool_call").map(str::to_owned),
+                description: text(frame, "description").map(str::to_owned),
+                // A kind the agent's vocabulary does not hold is not shown.
+                tool_kind: text(frame, "tool_kind")
+                    .filter(|kind| {
+                        matches!(
+                            *kind,
+                            "read"
+                                | "edit"
+                                | "delete"
+                                | "move"
+                                | "search"
+                                | "execute"
+                                | "think"
+                                | "fetch"
+                                | "switch_mode"
+                                | "other"
+                        )
+                    })
+                    .map(str::to_owned),
                 options,
             },
         })])
@@ -740,7 +763,7 @@ mod tests {
                 "description": "Import the statement",
                 "options": [
                     {"option_id": "allow", "name": "Allow once", "kind": "allow_once"},
-                    {"option_id": "never", "name": "Never", "kind": "reject_always"},
+                    {"option_id": "never", "kind": "reject_always"},
                     {"option_id": "odd", "name": "Odd", "kind": "sometimes"}
                 ]
             }),
@@ -749,10 +772,11 @@ mod tests {
             serde_json::to_value(&raised[1]).unwrap(),
             json!({"type": "approval", "reply_id": "run-1", "approval": {
                 "request_id": "perm-1", "reply_id": "run-1", "source": "agent_tool",
-                "title": "cadrumo.ledger_import", "description": "Import the statement",
+                "tool_call": "cadrumo.ledger_import", "description": "Import the statement",
+                "tool_kind": "edit",
                 "options": [
                     {"option_id": "allow", "name": "Allow once", "kind": "allow_once"},
-                    {"option_id": "never", "name": "Never", "kind": "reject_always"}
+                    {"option_id": "never", "name": null, "kind": "reject_always"}
                 ]
             }})
         );
@@ -778,7 +802,7 @@ mod tests {
             json!({"type": "questions", "reply_id": "run-1", "questionnaire": {
                 "request_id": "clar-1", "reply_id": "run-1", "questions": [
                     {"id": "year", "prompt": "Which year?", "kind": "choice", "options": ["2024", "2025"], "required": true},
-                    {"id": "note", "prompt": "Anything else?", "kind": "text", "required": false}
+                    {"id": "note", "prompt": "Anything else?", "kind": "text", "options": null, "required": false}
                 ]
             }})
         );
