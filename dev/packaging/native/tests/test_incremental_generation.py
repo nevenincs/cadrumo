@@ -60,8 +60,10 @@ def test_shared_producer_reuses_stable_generation_and_refuses_moving_inputs(
     monkeypatch.setattr(cmake_build, "build_action", producer)
     arguments = argparse.Namespace(action="tools", inputs=inputs)
     if mutation in {"source", "producer"}:
+        # A moved source is an input change; a moved selected tool is a toolchain change.
+        refusal = "Inputs changed during tools" if mutation == "source" else "toolchain changed during tools"
         with (
-            pytest.raises(RuntimeError, match="Inputs changed during tools"),
+            pytest.raises(RuntimeError, match=refusal),
             measure_build(tmp_path, "tools") as timings,
         ):
             cmake_build.execute_action(tmp_path, arguments, timings)

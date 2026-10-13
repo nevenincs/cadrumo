@@ -32,12 +32,13 @@ from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.local_runtime.windows_process import WindowsProcessScope
+from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import probe_profile_session_keychain
 from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import publish_test_profile_capsule
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.core.storage_environment import ChildEnvironmentProfile, child_environment
-from cadrumo_harness.mcp.protocol_contract import SIGN_IN_REMEDY
+from cadrumo_harness.mcp.protocol_contract import KEYCHAIN_REMEDY, SIGN_IN_REMEDY
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.windows_only]
 
@@ -120,6 +121,11 @@ def test_a_fresh_server_process_with_no_key_and_no_stored_sign_in_answers_authen
                     raise
                 time.sleep(0.05)
 
+        # A logon that cannot use the keychain cannot follow any sign-in, and the refusal says so.
+        keychain = probe_profile_session_keychain()
+        refusal: dict[str, Any] = {"sign_in_reason": "absent", "remedy": SIGN_IN_REMEDY}
+        if keychain is not None:
+            refusal = {"sign_in_reason": "absent", "sign_in_keychain": keychain.value, "remedy": KEYCHAIN_REMEDY}
         for arguments in (("--profile-id", str(profile_id)), ()):
             (status_error, status), (private_error, private) = asyncio.run(
                 _call_status_and_a_profile_tool(mcp_executable, arguments=arguments, storage_root=storage_root)
@@ -133,13 +139,7 @@ def test_a_fresh_server_process_with_no_key_and_no_stored_sign_in_answers_authen
                 "surface": "full",
                 "denial": "authentication_required",
                 # No sign-in is stored, as the command line reports beside the same code.
-                "sign_in_reason": "absent",
-                "remedy": SIGN_IN_REMEDY,
+                **refusal,
             }, arguments
             assert private_error is True, arguments
-            assert private == {
-                "outcome": "refused",
-                "code": "authentication_required",
-                "sign_in_reason": "absent",
-                "remedy": SIGN_IN_REMEDY,
-            }, arguments
+            assert private == {"outcome": "refused", "code": "authentication_required", **refusal}, arguments
