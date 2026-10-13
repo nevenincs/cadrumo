@@ -13,12 +13,18 @@ import pytest
 
 from dev._paths import REPO_ROOT
 
+from ...command_execution import run_command
 from ..build_toolchain import builder_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def _rust() -> tuple[Path, str, str]:
+def _version(text: str) -> tuple[int, ...]:
+    return tuple(int(part) for part in text.split("."))
+
+
+def _rust() -> tuple[Path, str, str, str]:
+    """Resolve rustup's active toolchain the way configure does, admitting it at or above the floor."""
     targets = {
         ("win32", "AMD64"): "windows-x86-64",
         ("linux", "x86_64"): "linux-x86-64",
@@ -29,19 +35,30 @@ def _rust() -> tuple[Path, str, str]:
     if target is None:
         pytest.skip("This runner has no enrolled native desktop Rust target")
     pins = json.loads((REPO_ROOT / "native/toolchain.json").read_text(encoding="utf-8"))
-    version = pins["rust"]
+    floor = pins["rust"]
     triple = pins["targets"][target]["rust_target"]
-    assert isinstance(version, str) and isinstance(triple, str)
-    version, triple = str(version), str(triple)
-    root = Path.home() / ".rustup/toolchains" / (version + "-" + triple)
+    assert isinstance(floor, str) and isinstance(triple, str)
+    floor, triple = str(floor), str(triple)
+    rustup = shutil.which("rustup")
+    if rustup is None:
+        pytest.skip("rustup is unavailable on this runner")
+    resolved = run_command([rustup, "which", "rustc"], cwd=REPO_ROOT)
+    if resolved.returncode != 0:
+        pytest.skip("rustup has no active toolchain on this runner")
+    root = Path(resolved.stdout.strip()).parent.parent
     suffix = ".exe" if sys.platform == "win32" else ""
     if not (root / "bin" / ("cargo" + suffix)).is_file():
         pytest.skip("The selected native desktop Rust toolchain is unavailable on this runner")
-    return root, triple, suffix
+    identity = run_command([str(root / "bin" / ("rustc" + suffix)), "--version"], cwd=REPO_ROOT)
+    assert identity.returncode == 0, identity.stderr
+    version = identity.stdout.split()[1].split("-", 1)[0]
+    if _version(version) < _version(floor):
+        pytest.skip(f"The active Rust {version} is below the native/toolchain.json floor {floor}")
+    return root, triple, suffix, version
 
 
 def _fixture(tmp_path: Path, *, selected_target: str | None = None) -> tuple[Path, Path, Path]:
-    root, triple, suffix = _rust()
+    root, triple, suffix, _ = _rust()
     node = shutil.which("node")
     assert node is not None
     source = tmp_path / "source"
@@ -105,7 +122,7 @@ def test_generated_desktop_environment_executes_admitted_cargo_and_preserves_loc
     assert len(builder_inputs(descriptor)) == 3
     poison = tmp_path / "poison"
     poison.mkdir()
-    rust_root, _, suffix = _rust()
+    _, _, suffix, version = _rust()
     (poison / ("cargo" + suffix)).write_bytes(b"unusable ambient Cargo")
     cmake = shutil.which("cmake")
     assert cmake is not None
@@ -122,7 +139,7 @@ def test_generated_desktop_environment_executes_admitted_cargo_and_preserves_loc
     )
     assert completed.returncode == 0, completed.stdout + completed.stderr
     observed = json.loads(result.read_text(encoding="utf-8"))
-    assert observed["cargo"].startswith("cargo " + rust_root.name.split("-", 1)[0] + " ")
+    assert observed["cargo"].startswith("cargo " + version)
     assert observed["rustc"] == descriptor["builder_files"]["rust/rustc"]["path"]
     assert observed["rustdoc"] == descriptor["builder_files"]["rust/rustdoc"]["path"]
     assert observed["lib"] == "first;second"

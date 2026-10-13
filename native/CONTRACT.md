@@ -14,8 +14,9 @@ For native Linux compiler and library verification, use the target's digest-pinn
 manylinux image from `native/toolchain.json` with
 `-DCMAKE_TOOLCHAIN_FILE=<source>/native/cmake/ManylinuxToolchain.cmake`.
 That toolchain requires glibc 2.28 and the image's GCC toolset; it refuses a newer
-host libc instead of silently changing the deployment floor. Supply the pinned
-Rust root and explicit readelf, patchelf and zstd paths as described below.
+host libc instead of silently changing the deployment floor. Supply a target-capable
+Rust root at or above the Rust floor and explicit readelf, patchelf and zstd paths as
+described below.
 
 The `macos-arm64` preset selects `native/cmake/DarwinToolchain.cmake` on a native
 arm64 Mac. Supply `CADRUMO_DARWIN_COMPILER` as an absolute compiler path and
@@ -33,8 +34,18 @@ without the full product/documentation/desktop assembly graph. It supports backe
 bring-up on a native builder. It provides no bundle, installer or package acceptance
 result. The option defaults to `ON`; enable it again for full payload builds.
 
-`native/toolchain.json` keeps common tool versions and a `targets` object with
-per-target Rust triples and CPython acquisition pins. Windows uses the pinned
+`native/toolchain.json` keeps common tool version floors and a `targets` object with
+per-target Rust triples and CPython acquisition pins. The `cmake`, `rust`, `msvc` and
+`windows_sdk` values are minimum versions without an upper bound: configure admits
+any release at or above each floor and refuses an older one, naming the floor and the
+version found. An explicit `CADRUMO_RUST_ROOT` selects Rust; otherwise configure
+resolves rustup's active toolchain for the source tree, which must have the target's
+standard library installed. On Windows the toolchain file selects the newest installed
+x64 MSVC toolset and Windows SDK at or above their floors; `CADRUMO_MSVC_VERSION` and
+`CADRUMO_WINDOWS_SDK_VERSION` select another installed release at or above the floor.
+These selections are cached per binary directory, and the resolved versions are recorded
+under `tool_versions` in `generated/build-toolchain.json` and in the configure build
+facts. Windows uses the pinned
 official NuGet SDK. Linux x86-64/AArch64 and macOS ARM64 use the reviewed Astral
 Python Build Standalone 20251209 full shared-library SDKs for normal-GIL CPython
 3.13.11, with exact archive hashes and target/ABI provenance. The authorized
@@ -356,7 +367,8 @@ outside the application's filesystem policy.
 ## Repeatable Windows commands
 
 Run from the repository using its development environment. `native/toolchain.json`
-pins MSVC, SDK, Rust, CMake and the SHA256 of the official CPython NuGet SDK. The
+declares MSVC, SDK, Rust and CMake version floors and pins the SHA256 of the official
+CPython NuGet SDK. The
 Python version comes from the existing release pin. Provisioning downloads that
 SDK and the locked base dependency closure; optional integrations remain outside
 this base package. The C host is compiled locally; CPython is the official binary
@@ -1616,7 +1628,7 @@ across releases, while version components have distinct release ownership. WiX
 generates package codes for individual MSI builds. Publisher, license, version
 and names come from the existing Python product and project metadata owners.
 
-Configure with CMake 4.4.3, `-S native/cmake/distribution`, the target's preset and
+Configure with CMake 4.4.3 or newer, `-S native/cmake/distribution`, the target's preset and
 `-DCADRUMO_PAYLOAD=<absolute-payload>`. The presets are `distribution-windows-x64`,
 `distribution-linux-x86-64`, `distribution-linux-aarch64` and
 `distribution-macos-arm64`; each sets `CADRUMO_TARGET` and the binary directory
