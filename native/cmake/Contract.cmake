@@ -23,15 +23,12 @@ if(CADRUMO_TARGET MATCHES "^linux-")
   endforeach()
 endif()
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${contract_inputs})
-file(GLOB settings_inputs CONFIGURE_DEPENDS "${CADRUMO_SOURCE_ROOT}/src/cadrumo/core/config*.py"
-  "${CADRUMO_SOURCE_ROOT}/src/cadrumo/core/storage*.py" "${CADRUMO_SOURCE_ROOT}/src/cadrumo/core/product_identity.py"
-  "${CADRUMO_SOURCE_ROOT}/src/cadrumo/core/logging.py")
 include("${CMAKE_CURRENT_LIST_DIR}/CachedCommand.cmake")
 file(GLOB manager_locale_inputs CONFIGURE_DEPENDS
   "${CADRUMO_SOURCE_ROOT}/dev/locales/*.py"
   "${CADRUMO_SOURCE_ROOT}/src/cadrumo/locales/*/common.yml")
 cadrumo_cached_command(contract_command native_contract SHARED
-  INPUTS ${settings_inputs} ${contract_inputs} ${manager_locale_inputs} "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/generate.py"
+  INPUTS ${contract_inputs} ${manager_locale_inputs} "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/generate.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/stable_output.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/storage_vectors.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/transport_contract.py"
@@ -40,7 +37,7 @@ cadrumo_cached_command(contract_command native_contract SHARED
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/runtime_wheelhouse_contract.py"
     "${CADRUMO_SOURCE_ROOT}/src/cadrumo/core/external_constants.py"
     "${CADRUMO_SOURCE_ROOT}/src/cadrumo/core/runtime_transport.py"
-    "${CADRUMO_SOURCE_ROOT}/src/cadrumo/core/toml.py"
+    "${CADRUMO_SOURCE_ROOT}/src/cadrumo/core/product_identity.py"
     "${CADRUMO_SOURCE_ROOT}/src/cadrumo/application/runtime/contracts.py"
     "${CONTRACT_DIR}/identity.json" "${CADRUMO_SOURCE_ROOT}/pyproject.toml"
     "${CADRUMO_SOURCE_ROOT}/uv.lock" "${CADRUMO_DEV_PYTHON}"

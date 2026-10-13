@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:f37e76648624d93f389029e1bd18145d157a6f623002518b64bb8a2d37dfca89'
+body_hash: 'sha256:8a9f186083138d3019cbfac91cf0fbeecd7625c5671f1d53c0c2cd67dbcb0afa'
 related:
   - "[[2026-10-13-canonical-environment-plan]]"
 ---
@@ -69,6 +69,24 @@ related:
 - `S01` `verify:` `cargo +1.96.0 clippy --all-targets -D warnings and cargo test native/platform` -> `pass`
 - `S01` `verify:` `cargo +1.96.0 clippy native/manager lib` -> `pass`
 - `S01` `by:` `vaultspec-high-executor`
+- `S02` `M` `native/application-environment.toml`
+- `S02` `M` `dev/packaging/native/application_environment.py`
+- `S02` `M` `dev/packaging/native/generate.py`
+- `S02` `M` `dev/packaging/native/storage_vectors.py`
+- `S02` `M` `dev/packaging/native/runtime_exit_reasons.py`
+- `S02` `M` `dev/packaging/native/layout.py`
+- `S02` `M` `native/package-layout.json`
+- `S02` `M` `native/cmake/Contract.cmake`
+- `S02` `A` `dev/packaging/native/tests/test_generator_imports.py`
+- `S02` `M` `dev/packaging/native/tests/test_storage_root_vectors.py`
+- `S02` `M` `dev/packaging/native/tests/test_storage_path_vectors.py`
+- `S02` `M` `dev/packaging/tests/test_native_storage_environment_contract.py`
+- `S02` `verify:` `uv run --no-sync pytest test_application_environment test_generator_imports test_storage_root_vectors test_storage_path_vectors test_native_storage_environment_contract test_native_runtime_exit_reasons test_transport_contract` -> `pass`
+- `S02` `verify:` `ruff check/format, ty on touched files` -> `pass`
+- `S02` `verify:` `cargo +1.96.0 clippy -D warnings + test native/platform` -> `pass`
+- `S02` `verify:` `cargo +1.96.0 test native/manager --test environment --test supervision` -> `pass`
+- `S02` `by:` `vaultspec-high-executor`
+- `S02` `verify:` `just check-import-boundaries: 15/15 contracts kept, 0 hard findings; run reported unavailable because other sessions changed the tree mid-run` -> `pass`
 
 ## Notes
 
@@ -76,3 +94,5 @@ related:
 - `S11` No full CMake configure was run: build/windows-x64 belongs to the native lane. The selector lines were exercised in script mode instead.
 - `S11` agentLanes.generated.ts was regenerated from its generator, so its digest line also moved to the current cadrumo-agent main; the lane data is unchanged.
 - `S01` native/platform/src/installation.rs: fixed a pre-existing clippy `manual_is_multiple_of` failure to keep -D warnings green; native/manager test build carries a pre-existing clashing TrackPopupMenu extern warning, untouched
+- `S02` Interim until P02.S06: the filtering hosts' classes `(host_classes,` with `AEAT_,` `FINANCIAL_` and `SITE_HEALTH_` prefixes standing in for the retired Settings-derived reserved names) are declared in the file; the generated `RESERVED_ENV,` `PRODUCT_ENV_ALLOWLIST` and `PINNED_ENV` equal the previous values except that non-Cadrumo product names are now cleared by prefix
+- `S02` Pre-existing failures unrelated to the touched files observed in dev/packaging/native/tests: `test_distribution_prepare,` `test_linux_desktop_runtime` payload policy and `test_cpp_abi_inputs` (CMake cannot find ToolchainFloor.cmake), `test_incremental_generation` (FileExistsError), and `dev/packaging/tests/test_native_artifact_identity` (fixture layout lacks paths)

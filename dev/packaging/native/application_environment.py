@@ -118,6 +118,12 @@ class ApplicationEnvironment:
     posix_system: tuple[str, ...]
     profiles: Mapping[str, Mapping[str, Any]]
     invocations: tuple[Invocation, ...]
+    temporary_member: Mapping[str, Any]
+    host_classes: Mapping[str, Any]
+    native_host: Mapping[str, Any]
+    components: Mapping[str, Any]
+    root: Mapping[str, Any]
+    vectors: tuple[Mapping[str, Any], ...]
 
 
 def _fail(message: str) -> ApplicationEnvironmentError:
@@ -344,6 +350,254 @@ def _list(value: object, where: str) -> list[Any]:
     return value
 
 
+def _relative(value: object, where: str) -> str:
+    if not isinstance(value, str) or not value or value.startswith("/") or "\\" in value:
+        raise _fail(f"{where} must be a relative path with forward slashes")
+    if any(part in {"", ".", ".."} for part in value.split("/")):
+        raise _fail(f"{where} must not hold empty, current or parent components")
+    return value
+
+
+def _integer(value: object, where: str, *, minimum: int = 1) -> int:
+    if not isinstance(value, int) or isinstance(value, bool) or value < minimum:
+        raise _fail(f"{where} must be an integer of at least {minimum}")
+    return value
+
+
+def _temporary_member(raw: object, names: Mapping[str, Mapping[str, str]]) -> dict[str, Any]:
+    entry = _table(raw, "pins.temporary_member")
+    _keys(entry, "pins.temporary_member", {"name", "default", "create_explicit"})
+    if names.get(entry["name"], {}).get("role") != "location":
+        raise _fail("pins.temporary_member must name a declared location")
+    if not isinstance(entry["create_explicit"], bool):
+        raise _fail("pins.temporary_member.create_explicit must be a boolean")
+    return {
+        "name": entry["name"],
+        "default": _relative(entry["default"], "pins.temporary_member.default"),
+        "create_explicit": entry["create_explicit"],
+    }
+
+
+def _host_classes(raw: object) -> dict[str, Any]:
+    entry = _table(raw, "host_classes")
+    _keys(entry, "host_classes", {"cleared_prefixes", "cleared_names", "namespace_prefix"})
+    prefix = entry["namespace_prefix"]
+    if not isinstance(prefix, str) or not re.fullmatch(r"[A-Z][A-Z0-9]*_", prefix):
+        raise _fail("host_classes.namespace_prefix must be an upper-case prefix ending in an underscore")
+    return {
+        "cleared_prefixes": list(_strings(entry["cleared_prefixes"], "host_classes.cleared_prefixes", _BASE_NAME)),
+        "cleared_names": list(_strings(entry["cleared_names"], "host_classes.cleared_names", _BASE_NAME)),
+        "namespace_prefix": prefix,
+    }
+
+
+def _native_host(raw: object) -> dict[str, Any]:
+    entry = _table(raw, "native_host")
+    _keys(entry, "native_host", {"owner", "first", "last", "launch_profile_refused", "refusals"})
+    if not isinstance(entry["owner"], str) or not _SLOT.fullmatch(entry["owner"]):
+        raise _fail("native_host.owner must be a lower-case token")
+    first = _integer(entry["first"], "native_host.first")
+    last = _integer(entry["last"], "native_host.last", minimum=first)
+    refused = _integer(entry["launch_profile_refused"], "native_host.launch_profile_refused")
+    # POSIX reports only the low byte of an exit status.
+    if last > 0xFF or not first <= refused <= last:
+        raise _fail("native_host exit codes must lie in one byte and hold launch_profile_refused")
+    return {
+        "owner": entry["owner"],
+        "first": first,
+        "last": last,
+        "launch_profile_refused": refused,
+        "refusals": list(_strings(entry["refusals"], "native_host.refusals", _SLOT)),
+    }
+
+
+_COMPONENT_PATHS = (
+    "console_workspace",
+    "webview",
+    "manager_log_file",
+    "manager_preferences",
+    "manager_failed_versions",
+    "logs",
+    "log_file",
+)
+_COMPONENT_VALUES = ("log_format", "log_max_bytes", "log_backups", "language_variable", "language_default")
+
+
+def _components(raw: object, names: Mapping[str, Mapping[str, str]]) -> dict[str, Any]:
+    entry = _table(raw, "components")
+    _keys(entry, "components", {*_COMPONENT_PATHS, *_COMPONENT_VALUES})
+    components: dict[str, Any] = {key: _relative(entry[key], f"components.{key}") for key in _COMPONENT_PATHS}
+    if not components["log_file"].startswith(components["logs"] + "/"):
+        raise _fail("components.log_file must lie in components.logs")
+    if not isinstance(entry["log_format"], str) or not entry["log_format"]:
+        raise _fail("components.log_format must be a non-empty string")
+    if names.get(entry["language_variable"], {}).get("kind") != "language":
+        raise _fail("components.language_variable must name a declared language name")
+    language = entry["language_default"]
+    if not isinstance(language, str) or not re.fullmatch(r"[a-z]{2}", language):
+        raise _fail("components.language_default must be a two-letter lower-case language")
+    components.update(
+        log_format=entry["log_format"],
+        log_max_bytes=_integer(entry["log_max_bytes"], "components.log_max_bytes"),
+        log_backups=_integer(entry["log_backups"], "components.log_backups", minimum=0),
+        language_variable=entry["language_variable"],
+        language_default=language,
+    )
+    return components
+
+
+ROOT_PLATFORMS = ("windows", "linux", "macos")
+ROOT_MODES = ("development", "installed")
+_PATH_RULES = ("unicode_required", "normalize_absolute", "refuse_links", "enforce_existing_permissions")
+_ROOT_KEYS = {
+    "variable",
+    "development_variable",
+    "checkout_marker",
+    "development_default",
+    "precedence",
+    "relative_override",
+    "posix_directory_mode",
+    "refusals",
+    "path_rules",
+    "channel",
+    "installed_defaults",
+}
+
+
+def _installed_default(raw: object, where: str) -> dict[str, Any]:
+    rule = _table(raw, where)
+    _keys(rule, where, {"platform", "candidates", "home_variable"})
+    candidates = []
+    for position, item in enumerate(_list(rule["candidates"], f"{where}.candidates")):
+        candidate = _table(item, f"{where}.candidates[{position}]")
+        _keys(candidate, f"{where}.candidates[{position}]", {"variable", "subpath"})
+        if not isinstance(candidate["variable"], str) or not _BASE_NAME.fullmatch(candidate["variable"]):
+            raise _fail(f"{where}.candidates[{position}].variable is malformed")
+        subpath = (
+            _strings(candidate["subpath"], f"{where}.candidates[{position}].subpath") if candidate["subpath"] else ()
+        )
+        candidates.append({"variable": candidate["variable"], "subpath": list(subpath)})
+    home = rule["home_variable"]
+    if not candidates or not isinstance(home, str) or not _BASE_NAME.fullmatch(home):
+        raise _fail(f"{where} needs base candidates and a home variable")
+    return {"platform": rule["platform"], "candidates": candidates, "home_variable": home}
+
+
+def _root(entry: Mapping[str, Any], names: Mapping[str, Mapping[str, str]]) -> dict[str, Any]:
+    _keys(entry, "root", _ROOT_KEYS, {"vectors"})
+    variable, development = entry["variable"], entry["development_variable"]
+    if names.get(variable, {}).get("role") != "location":
+        raise _fail("root.variable must name a declared location")
+    if not isinstance(development, str) or not _NAME.fullmatch(development) or development in names:
+        raise _fail("root.development_variable must be an environment name no profile admits")
+    precedence = _table(entry["precedence"], "root.precedence")
+    _keys(precedence, "root.precedence", set(ROOT_MODES))
+    ordered = _strings(precedence["development"], "root.precedence.development")
+    if precedence["installed"] != [variable] or ordered[0] != variable or not set(ordered) <= {variable, development}:
+        raise _fail("root.precedence must put root.variable first and alone when installed")
+    relative = _table(entry["relative_override"], "root.relative_override")
+    _keys(relative, "root.relative_override", set(ROOT_MODES))
+    if not {relative["development"], relative["installed"]} <= {"anchor_at_checkout", "refuse"}:
+        raise _fail("root.relative_override values must be anchor_at_checkout or refuse")
+    mode = _integer(entry["posix_directory_mode"], "root.posix_directory_mode")
+    if mode > 0o777:
+        raise _fail("root.posix_directory_mode must be a permission mode")
+    rules = _table(entry["path_rules"], "root.path_rules")
+    _keys(rules, "root.path_rules", set(_PATH_RULES))
+    if not all(isinstance(rules[rule], bool) for rule in _PATH_RULES):
+        raise _fail("root.path_rules values must be booleans")
+    channel = _table(entry["channel"], "root.channel")
+    _keys(channel, "root.channel", {"product_directory", "stable", "separator"})
+    if not all(isinstance(value, str) and re.fullmatch(r"[a-z0-9-]+", value) for value in channel.values()):
+        raise _fail("root.channel values must be lower-case tokens")
+    defaults = [
+        _installed_default(item, f"root.installed_defaults[{index}]")
+        for index, item in enumerate(_list(entry["installed_defaults"], "root.installed_defaults"))
+    ]
+    if [rule["platform"] for rule in defaults] != list(ROOT_PLATFORMS):
+        raise _fail(f"root.installed_defaults must declare {list(ROOT_PLATFORMS)} in order")
+    return {
+        "variable": variable,
+        "development_variable": development,
+        "checkout_marker": _relative(entry["checkout_marker"], "root.checkout_marker"),
+        "precedence": {"development": list(ordered), "installed": [variable]},
+        "development_default": _relative(entry["development_default"], "root.development_default"),
+        "installed_defaults": defaults,
+        "channel": {key: channel[key] for key in ("product_directory", "stable", "separator")},
+        "relative_override": {mode_name: relative[mode_name] for mode_name in ROOT_MODES},
+        "blank_is_unset": True,
+        "posix_directory_mode": mode,
+        "refusals": list(_strings(entry["refusals"], "root.refusals", _SLOT)),
+        "path_rules": {rule: rules[rule] for rule in _PATH_RULES},
+    }
+
+
+_VECTOR_OPTIONAL = frozenset(
+    {
+        "checkout",
+        "known_folder",
+        "channel",
+        "root",
+        "refusal",
+        "invalid_environment",
+        "invalid_checkout",
+        "invalid_known_folder",
+    }
+)
+
+
+def _vector(raw: object, where: str, root: Mapping[str, Any]) -> dict[str, Any]:
+    entry = _table(raw, where)
+    _keys(entry, where, {"name", "platform", "mode", "environment"}, _VECTOR_OPTIONAL)
+    if entry["platform"] not in ROOT_PLATFORMS or entry["mode"] not in ROOT_MODES:
+        raise _fail(f"{where} names an undeclared platform or mode")
+    if ("root" in entry) == ("refusal" in entry):
+        raise _fail(f"{where} must declare exactly one of root and refusal")
+    if "refusal" in entry and entry["refusal"] not in root["refusals"]:
+        raise _fail(f"{where} names an undeclared refusal")
+    environment = _table(entry["environment"], f"{where}.environment")
+    optional = {key: entry.get(key) for key in ("checkout", "known_folder", "root", "refusal")}
+    if not all(isinstance(value, str) for value in (*environment.values(), *(v for v in optional.values() if v))):
+        raise _fail(f"{where} values must be strings")
+    flags = {key: entry.get(key, False) for key in ("invalid_checkout", "invalid_known_folder")}
+    if not all(isinstance(value, bool) for value in flags.values()):
+        raise _fail(f"{where} flags must be booleans")
+    invalid = (
+        _strings(entry["invalid_environment"], f"{where}.invalid_environment") if "invalid_environment" in entry else ()
+    )
+    return {
+        "name": str(entry["name"]),
+        "platform": entry["platform"],
+        "mode": entry["mode"],
+        "environment": dict(sorted(environment.items())),
+        "checkout": optional["checkout"],
+        "known_folder": optional["known_folder"],
+        "channel": str(entry.get("channel", root["channel"]["stable"])),
+        "expected_root": optional["root"],
+        "refusal": optional["refusal"],
+        "invalid_environment": list(invalid),
+        **flags,
+    }
+
+
+def _vectors(raw: object, root: Mapping[str, Any]) -> tuple[dict[str, Any], ...]:
+    vectors = tuple(
+        _vector(item, f"root.vectors[{index}]", root)
+        for index, item in enumerate(_list([] if raw is None else raw, "root.vectors"))
+    )
+    if len({vector["name"] for vector in vectors}) != len(vectors):
+        raise _fail("root.vectors repeats a vector name")
+    return vectors
+
+
+def channel_directory(root: Mapping[str, Any], channel: str) -> str:
+    """Name the per-channel root directory; the stable channel uses the bare product directory."""
+    names = root["channel"]
+    if channel == names["stable"]:
+        return str(names["product_directory"])
+    return f"{names['product_directory']}{names['separator']}{channel}"
+
+
 def parse(text: str) -> ApplicationEnvironment:
     """Validate the declaration's text against schema 1."""
     try:
@@ -351,7 +605,11 @@ def parse(text: str) -> ApplicationEnvironment:
     except tomllib.TOMLDecodeError as error:
         raise _fail(f"is not valid TOML: {error}") from error
     _keys(
-        document, "the declaration", {"schema", "names", "groups", "base", "pins", "path", "profiles"}, {"invocations"}
+        document,
+        "the declaration",
+        {"schema", "names", "groups", "base", "pins", "path", "profiles", "host_classes", "native_host"}
+        | {"components", "root"},
+        {"invocations"},
     )
     if document["schema"] != SCHEMA or isinstance(document["schema"], bool):
         raise _fail(f"schema must be {SCHEMA}")
@@ -359,13 +617,14 @@ def parse(text: str) -> ApplicationEnvironment:
     groups = _groups(document["groups"], names)
     base = _base(document["base"])
     pins = _table(document["pins"], "pins")
-    _keys(pins, "pins", {"temporary", "authority"})
+    _keys(pins, "pins", {"temporary", "temporary_member", "authority"})
     temporary = _strings(pins["temporary"], "pins.temporary", _NAME)
     if any(names.get(name, {}).get("role") != "pin" for name in temporary):
         raise _fail("pins.temporary must list declared pin names")
     authority = _fixed(pins["authority"], "pins.authority", names, role="fixed")
     if authority.source != "layout_path":
         raise _fail("pins.authority must name a layout path")
+    temporary_member = _temporary_member(pins["temporary_member"], names)
     path = _table(document["path"], "path")
     _keys(path, "path", {"entries", "external", "windows_system", "posix_system"})
     entries = _strings(path["entries"], "path.entries")
@@ -382,6 +641,8 @@ def parse(text: str) -> ApplicationEnvironment:
     posix_system = _strings(path["posix_system"], "path.posix_system")
     if not all(entry.startswith("/") for entry in posix_system):
         raise _fail("path.posix_system entries must be absolute")
+    root_table = _table(document["root"], "root")
+    root = _root(root_table, names)
     profiles = _profiles(document["profiles"], names, groups)
     invocations = _invocations(document.get("invocations", []))
     for invocation in invocations:
@@ -417,6 +678,12 @@ def parse(text: str) -> ApplicationEnvironment:
         posix_system=posix_system,
         profiles=profiles,
         invocations=invocations,
+        temporary_member=temporary_member,
+        host_classes=_host_classes(document["host_classes"]),
+        native_host=_native_host(document["native_host"]),
+        components=_components(document["components"], names),
+        root=root,
+        vectors=_vectors(root_table.get("vectors"), root),
     )
 
 
@@ -520,6 +787,10 @@ def compile_section(declaration: ApplicationEnvironment, layout: Mapping[str, An
         },
         "profiles": profiles,
         "invocations": invocations,
+        "native_host": {
+            "launch_profile_refused": declaration.native_host["launch_profile_refused"],
+            "refusals": list(declaration.native_host["refusals"]),
+        },
     }
 
 
@@ -567,6 +838,8 @@ def rust_lines(section: Mapping[str, Any]) -> list[str]:
         "pub struct LaunchPathEntry { pub kind: &'static str, pub value: &'static str }",
         "pub struct LaunchName { pub name: &'static str, pub kind: &'static str, pub role: &'static str }",
         f"pub const LAUNCH_SCHEMA: u32 = {section['schema']};",
+        f"pub const LAUNCH_PROFILE_REFUSED_EXIT: u32 = {section['native_host']['launch_profile_refused']};",
+        f"pub const LAUNCH_REFUSALS: &[&str] = {_rust_strings(section['native_host']['refusals'])};",
         f"pub const LAUNCH_IMAGES: &[&str] = {_rust_strings(section['images'])};",
         f"pub const LAUNCH_TEMPORARY_PINS: &[&str] = {_rust_strings(section['pins']['temporary'])};",
         f"pub const LAUNCH_AUTHORITY_PIN: &str = {_rust_string(section['pins']['authority']['name'])};",
@@ -630,5 +903,8 @@ def rust_lines(section: Mapping[str, Any]) -> list[str]:
 
 
 def c_lines(section: Mapping[str, Any]) -> list[str]:
-    """Emit the image identities a C host passes to the platform library."""
-    return [f'#define CADRUMO_LAUNCH_IMAGE_{image.upper().replace("-", "_")} "{image}"' for image in section["images"]]
+    """Emit the launch refusal status and the image identities a C host passes to the platform library."""
+    return [
+        f"#define CADRUMO_LAUNCH_PROFILE_REFUSED_EXIT {section['native_host']['launch_profile_refused']}",
+        *(f'#define CADRUMO_LAUNCH_IMAGE_{image.upper().replace("-", "_")} "{image}"' for image in section["images"]),
+    ]

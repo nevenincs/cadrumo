@@ -1,4 +1,4 @@
-"""Keep the native bootstrap's storage environment projection in taxonomy parity."""
+"""Keep the native contract's storage projection equal to the package declaration and the CLI's own defaults."""
 
 from __future__ import annotations
 
@@ -12,20 +12,20 @@ from cadrumo.core.config import Settings
 from cadrumo.core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OUTPUT_LANGUAGE_ENV_VAR
 from cadrumo.core.logging import LOG_FILE_FORMAT
 from cadrumo.core.storage_environment import (
-    PROCESS_ENVIRONMENT,
     STORAGE_PATH_RULES,
     STORAGE_ROOT,
     TOOL_STORAGE_LOCATIONS,
     StorageMode,
+    StoragePlatform,
     StorageRootRefusal,
     development_tool_env_var_names,
-    product_env_var_names,
 )
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import STORAGE_TAXONOMY
 from dev._paths import REPO_ROOT
 from dev.locales.manager_chrome import manager_chrome_strings
 from dev.packaging.native import generate as generator_module
+from dev.packaging.native.application_environment import load
 from dev.packaging.native.generate import generate
 from dev.packaging.native.layout import load_layout
 from dev.packaging.native.storage_vectors import storage_path_vectors, storage_root_vectors
@@ -34,56 +34,71 @@ from dev.packaging.native.verification_paths import verification_destination
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def test_desktop_defaults_project_canonical_declarations(tmp_path: Path) -> None:
+def _rust_strings(generated: str, constant: str) -> list[str]:
+    line = next(line for line in generated.splitlines() if line.startswith(f"pub const {constant}:"))
+    return [match.group(1) for match in re.finditer(r'"([^"]*)"', line.partition("= ")[2])]
+
+
+def test_desktop_defaults_project_the_package_declaration(tmp_path: Path) -> None:
     generate(REPO_ROOT, tmp_path)
     contract = json.loads((tmp_path / "contract.json").read_text(encoding="utf-8"))
+    components = load(REPO_ROOT).components
     assert contract["desktop_defaults"] == {
-        "console_workspace": STORAGE_TAXONOMY[StorageCategory.CONSOLE_WORKSPACE].subpath,
-        "webview": STORAGE_TAXONOMY[StorageCategory.DESKTOP_WEBVIEW].subpath,
-        "logs": STORAGE_TAXONOMY[StorageCategory.LOGS].subpath,
-        "log_file": STORAGE_TAXONOMY[StorageCategory.LOG_FILE].subpath,
-        "manager_log_file": STORAGE_TAXONOMY[StorageCategory.MANAGER_LOG_FILE].subpath,
-        "log_format": LOG_FILE_FORMAT,
-        "log_max_bytes": Settings.model_fields["cadrumo_log_file_max_bytes"].default,
-        "log_backups": Settings.model_fields["cadrumo_log_file_backup_count"].default,
-        "output_language": Settings.model_fields["cadrumo_output_language"].default,
+        "console_workspace": components["console_workspace"],
+        "webview": components["webview"],
+        "logs": components["logs"],
+        "log_file": components["log_file"],
+        "manager_log_file": components["manager_log_file"],
+        "log_format": components["log_format"],
+        "log_max_bytes": components["log_max_bytes"],
+        "log_backups": components["log_backups"],
+        "output_language": components["language_default"],
     }
+    # The desktop reads the command line's log and language without asking Python, so both state the same values.
+    assert components["logs"] == STORAGE_TAXONOMY[StorageCategory.LOGS].subpath
+    assert components["log_file"] == STORAGE_TAXONOMY[StorageCategory.LOG_FILE].subpath
+    assert components["log_format"] == LOG_FILE_FORMAT
+    assert components["log_max_bytes"] == Settings.model_fields["cadrumo_log_file_max_bytes"].default
+    assert components["log_backups"] == Settings.model_fields["cadrumo_log_file_backup_count"].default
+    assert components["language_variable"] == OUTPUT_LANGUAGE_ENV_VAR
+    assert components["language_default"] == DEFAULT_OUTPUT_LANGUAGE.value
 
     generated = (tmp_path / "contract.rs").read_text(encoding="utf-8")
-    assert _rust_strings(generated, "MANAGER_LOG") == [STORAGE_TAXONOMY[StorageCategory.MANAGER_LOG_FILE].subpath]
-    assert _rust_strings(generated, "MANAGER_PREFERENCES") == [
-        STORAGE_TAXONOMY[StorageCategory.MANAGER_PREFERENCES].subpath
-    ]
-    assert _rust_strings(generated, "MANAGER_LANGUAGE_ENV") == [OUTPUT_LANGUAGE_ENV_VAR]
-    assert _rust_strings(generated, "MANAGER_FAILED_VERSIONS") == [
-        STORAGE_TAXONOMY[StorageCategory.MANAGER_FAILED_VERSIONS].subpath
-    ]
-    assert _rust_strings(generated, "MANAGER_LANGUAGE_DEFAULT") == [DEFAULT_OUTPUT_LANGUAGE.value]
+    assert _rust_strings(generated, "MANAGER_LOG") == [components["manager_log_file"]]
+    assert _rust_strings(generated, "MANAGER_PREFERENCES") == [components["manager_preferences"]]
+    assert _rust_strings(generated, "MANAGER_FAILED_VERSIONS") == [components["manager_failed_versions"]]
+    assert _rust_strings(generated, "MANAGER_LANGUAGE_ENV") == [components["language_variable"]]
+    assert _rust_strings(generated, "MANAGER_LANGUAGE_DEFAULT") == [components["language_default"]]
     strings = json.dumps(manager_chrome_strings(), ensure_ascii=False, sort_keys=True)
     assert f"pub const MANAGER_STRINGS_JSON: &str = {generator_module._rust_string(strings)};" in generated
-    assert f"pub const LOG_MAX_BYTES: u64 = {contract['desktop_defaults']['log_max_bytes']};" in generated
-    assert f"pub const LOG_BACKUPS: u32 = {contract['desktop_defaults']['log_backups']};" in generated
+    assert f"pub const LOG_MAX_BYTES: u64 = {components['log_max_bytes']};" in generated
+    assert f"pub const LOG_BACKUPS: u32 = {components['log_backups']};" in generated
 
 
-def test_native_storage_allowlist_tracks_settings_taxonomy_and_tool_paths(tmp_path: Path) -> None:
+def test_native_storage_allowlist_is_the_declared_root_and_locations(tmp_path: Path) -> None:
     destination = tmp_path / "generated"
     generate(REPO_ROOT, destination)
+    declaration = load(REPO_ROOT)
 
     contract = json.loads((destination / "contract.json").read_text(encoding="utf-8"))
     generated = (destination / "contract.rs").read_text(encoding="utf-8")
-    declaration = next(line for line in generated.splitlines() if line.startswith("pub const PRODUCT_ENV_ALLOWLIST"))
-    rust_values = declaration.partition("= &[")[2].partition("];")[0]
-    observed = tuple(re.findall(r'"([^"]+)"', rust_values))
-    expected = tuple(sorted(Settings.storage_env_var_names()))
-    assert observed == expected == tuple(contract["storage_environment_allowlist"])
-    assert expected == tuple(sorted(product_env_var_names()))
-    assert not set(observed) & development_tool_env_var_names()
-    assert "CADRUMO_STRICT_SECURITY" not in observed
+    expected = sorted({declaration.root["variable"], *declaration.groups["locations"]})
+    assert _rust_strings(generated, "PRODUCT_ENV_ALLOWLIST") == expected == contract["storage_environment_allowlist"]
+    assert not set(expected) & development_tool_env_var_names()
+    assert "CADRUMO_STRICT_SECURITY" not in expected
+    assert _rust_strings(generated, "PACKAGE_ENV_ALLOWLIST") == list(declaration.groups["package"])
+    assert "overrides" not in contract["layout"]
 
-    temporary = STORAGE_TAXONOMY[StorageCategory.TEMPORARY_FILES]
-    assert temporary.settings_field is not None
-    assert f'pub const TEMPORARY_ENV: &str = "{temporary.settings_field.upper()}";' in generated
-    assert f'pub const TEMPORARY_DEFAULT: &str = "{temporary.relative_path().as_posix()}";' in generated
+    temporary = declaration.temporary_member
+    assert f'pub const TEMPORARY_ENV: &str = "{temporary["name"]}";' in generated
+    assert f'pub const TEMPORARY_DEFAULT: &str = "{temporary["default"]}";' in generated
+    cli_temporary = STORAGE_TAXONOMY[StorageCategory.TEMPORARY_FILES]
+    assert cli_temporary.settings_field is not None
+    assert (temporary["name"], temporary["default"], temporary["create_explicit"]) == (
+        cli_temporary.settings_field.upper(),
+        cli_temporary.relative_path().as_posix(),
+        cli_temporary.create_explicit_directory,
+    )
 
 
 def test_native_verification_stage_is_under_the_refined_build_root(tmp_path: Path) -> None:
@@ -106,15 +121,11 @@ def test_native_verification_stage_is_under_the_refined_build_root(tmp_path: Pat
         verification_destination(Path("../outside"), build_root)
 
 
-def _rust_strings(generated: str, constant: str) -> list[str]:
-    line = next(line for line in generated.splitlines() if line.startswith(f"pub const {constant}:"))
-    return [match.group(1) for match in re.finditer(r'"([^"]*)"', line.partition("= ")[2])]
-
-
 def test_schema_one_contract_projects_the_storage_declaration(tmp_path: Path) -> None:
     generate(REPO_ROOT, tmp_path)
     contract = json.loads((tmp_path / "contract.json").read_text(encoding="utf-8"))
     generated = (tmp_path / "contract.rs").read_text(encoding="utf-8")
+    declaration = load(REPO_ROOT)
 
     assert contract["schema"] == 1
     assert "#define CADRUMO_CONTRACT_SCHEMA 1" in (tmp_path / "contract.h").read_text(encoding="utf-8")
@@ -129,64 +140,49 @@ def test_schema_one_contract_projects_the_storage_declaration(tmp_path: Path) ->
     }
     with pytest.raises(ValueError, match="Unsupported release channel"):
         generate(REPO_ROOT, tmp_path / "unknown", "nightly")
+
     root = contract["root"]
+    assert root == dict(declaration.root)
+    # The command line keeps its own built-in rule for runs outside a package; both state the same rule.
     assert root["variable"] == STORAGE_ROOT.variable
-    assert root["precedence"] == {
-        "development": [STORAGE_ROOT.variable, STORAGE_ROOT.development_variable],
-        "installed": [STORAGE_ROOT.variable],
-    }
+    assert root["precedence"] == {mode.value: list(STORAGE_ROOT.root_variables(mode)) for mode in StorageMode}
     assert root["development_default"] == Path(*STORAGE_ROOT.development_default).as_posix()
     assert root["relative_override"] == {mode.value: STORAGE_ROOT.relative_override(mode).value for mode in StorageMode}
     assert root["path_rules"] == STORAGE_PATH_RULES._asdict()
     assert root["refusals"] == [refusal.value for refusal in StorageRootRefusal]
-    for refusal in StorageRootRefusal:
-        assert _rust_strings(generated, f"ROOT_REFUSAL_{refusal.name}") == [refusal.value]
-    assert {rule["platform"] for rule in root["installed_defaults"]} == {"windows", "linux", "macos"}
-    windows = next(rule for rule in root["installed_defaults"] if rule["platform"] == "windows")
-    assert windows["candidates"] == [{"variable": "LOCALAPPDATA", "subpath": []}]
-
-    locations = {entry["category"]: entry for entry in contract["locations"]}
-    assert set(locations) == {category.value for category in STORAGE_TAXONOMY}
-    for category, location in STORAGE_TAXONOMY.items():
-        entry = locations[category.value]
-        assert entry["subpath"] == location.subpath
-        expected_variable = None if location.settings_field is None else location.settings_field.upper()
-        assert entry["variable"] == expected_variable
-        assert entry["override_policy"] == location.override_policy.value
-        assert entry["create_explicit_directory"] == location.create_explicit_directory
-    assert {name for name, item in locations.items() if item["create_explicit_directory"]} == {
-        StorageCategory.TEMPORARY_FILES.value
-    }
+    assert root["checkout_marker"] == STORAGE_ROOT.checkout_marker
+    assert root["posix_directory_mode"] == STORAGE_ROOT.posix_directory_mode
+    for platform in StoragePlatform:
+        rule = STORAGE_ROOT.installed_rule(platform)
+        declared = next(item for item in root["installed_defaults"] if item["platform"] == platform.value)
+        assert declared == {
+            "platform": platform.value,
+            "candidates": [
+                {"variable": candidate.variable, "subpath": list(candidate.subpath)} for candidate in rule.candidates
+            ],
+            "home_variable": rule.home_variable,
+        }
+    for refusal in root["refusals"]:
+        assert _rust_strings(generated, f"ROOT_REFUSAL_{refusal.upper()}") == [refusal]
 
     environment = contract["environment"]
-    assert environment["pinned"] == [STORAGE_ROOT.variable, *PROCESS_ENVIRONMENT.temporary_variables]
-    assert environment["host_inherited"]["fields"] == [
-        {"name": field.name, "kind": field.kind.value} for field in PROCESS_ENVIRONMENT.inherited_fields
-    ]
-    assert environment["allowlist"]["product"] == sorted(product_env_var_names())
-    assert environment["allowlist"]["development"] == sorted(
-        {STORAGE_ROOT.development_variable, *development_tool_env_var_names()}
-    )
-    assert not set(environment["allowlist"]["product"]) & set(environment["allowlist"]["development"])
+    assert environment["pinned"] == [root["variable"], *declaration.temporary]
+    assert environment["host_inherited"]["fields"] == [{"name": declaration.authority.name, "kind": "directory_path"}]
     assert STORAGE_ROOT.development_variable not in environment["allowlist"]["product"]
     assert STORAGE_ROOT.development_variable not in _rust_strings(generated, "PRODUCT_ENV_ALLOWLIST")
-    assert environment["profiles"] == {
-        "operator": {"passes_product_allowlist": True},
-        "strict": {"passes_product_allowlist": False},
-    }
     layout = load_layout()
     assert contract["mode"] == {
         "package_manifest": layout["files"]["package_manifest"],
         "package_root_from_executable": layout["package_root_from_executable"],
-        "checkout_marker": STORAGE_ROOT.checkout_marker,
+        "checkout_marker": root["checkout_marker"],
     }
-    assert contract["vectors"] == [vector.as_contract() for vector in storage_root_vectors()]
+    assert contract["vectors"] == [vector.as_contract() for vector in storage_root_vectors(REPO_ROOT)]
     assert contract["path_vectors"] == [vector.as_contract() for vector in storage_path_vectors()]
     assert contract["invalid_native_path"]["refusal"] == StorageRootRefusal.INVALID_PATH_INPUT.value
     assert len(contract["vectors"]) >= 1
 
     # contract.rs carries the same data from the same run.
-    assert _rust_strings(generated, "ROOT_VARIABLE") == [STORAGE_ROOT.variable]
+    assert _rust_strings(generated, "ROOT_VARIABLE") == [root["variable"]]
     assert _rust_strings(generated, "INSTALLED_ROOT_PRECEDENCE") == root["precedence"]["installed"]
     assert _rust_strings(generated, "PINNED_ENV") == environment["pinned"]
     assert _rust_strings(generated, "PRODUCT_ENV_ALLOWLIST") == environment["allowlist"]["product"]
@@ -203,27 +199,24 @@ def test_packaged_contract_carries_no_development_tool_location(tmp_path: Path) 
     assert not {name for name in tool_names if f'"{name}"' in generated}
     for retired in ("TOOL_CACHE_ENV", "TOOL_CACHE_DEFAULT", "STORAGE_ENV_ALLOWLIST", "STORAGE_ROOT_ENV"):
         assert f"pub const {retired}:" not in generated
-    locations = {
-        entry["category"]: entry for entry in json.loads((tmp_path / "contract.json").read_text())["locations"]
-    }
-    cache = locations[StorageCategory.PYWIN32_GENERATED_CACHE.value]
-    assert (cache["subpath"], cache["variable"], cache["override_policy"]) == (
-        STORAGE_TAXONOMY[StorageCategory.PYWIN32_GENERATED_CACHE].subpath,
-        None,
-        "fixed",
-    )
+    contract = json.loads((tmp_path / "contract.json").read_text(encoding="utf-8"))
+    assert "locations" not in contract and "settings" not in contract and "storage" not in contract
 
 
 _ENVIRONMENT_NAME: re.Pattern[str] = re.compile(r"[A-Z][A-Z0-9_]+")
 
 
 def _location_variable_names() -> frozenset[str]:
-    taxonomy = {
-        location.settings_field.upper()
-        for location in STORAGE_TAXONOMY.values()
-        if (location.settings_field is not None and location.settings_field)
-    }
-    return frozenset({*STORAGE_ROOT.precedence, *taxonomy, *product_env_var_names(), *development_tool_env_var_names()})
+    declaration = load(REPO_ROOT)
+    return frozenset(
+        {
+            *STORAGE_ROOT.precedence,
+            *declaration.groups["locations"],
+            *declaration.temporary,
+            declaration.authority.name,
+            *development_tool_env_var_names(),
+        }
+    )
 
 
 def _spelled_location_names(source: str) -> set[str]:

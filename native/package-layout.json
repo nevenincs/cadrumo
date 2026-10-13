@@ -35,10 +35,6 @@
     "turtledemo",
     "ensurepip"
   ],
-  "overrides": [
-    "CADRUMO_CLI_REVEAL_IDENTIFIERS",
-    "CADRUMO_EXTERNAL_BIN_DIRS"
-  ],
   "entrypoints": {
     "aeat": "CADRUMO command line",
     "cadrumo-mcp": "CADRUMO MCP server",

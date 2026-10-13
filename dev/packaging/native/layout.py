@@ -7,12 +7,12 @@ import json
 import platform
 import re
 import sys
+import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
 from typing import Any
 
-from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT
 
 # Entrypoint names reach C string literals, CMake target names and Python source.
@@ -63,7 +63,7 @@ def load_layout(name: str | None = None, *, root: Path = REPO_ROOT) -> dict[str,
     for key in ("paths", "files"):
         shared[key].update(selected.pop(key))
     shared.update(selected)
-    scripts = parse_toml((root / "pyproject.toml").read_text(encoding="utf-8"))["project"]["scripts"]
+    scripts = tomllib.loads((root / "pyproject.toml").read_text(encoding="utf-8"))["project"]["scripts"]
     for entrypoint in shared["entrypoints"]:
         if not _ENTRYPOINT_NAME.fullmatch(entrypoint) or entrypoint not in scripts:
             raise ValueError(f"Native entrypoint is not a declared console script: {entrypoint}")

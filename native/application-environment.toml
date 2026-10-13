@@ -261,7 +261,92 @@ network = [
 
 [pins]
 temporary = ["TEMP", "TMP", "TMPDIR"]
+temporary_member = { name = "CADRUMO_TEMP_DIR", default = "tmp", create_explicit = true }
 authority = { name = "CADRUMO_AUTHORITY_ROOT", layout_path = "authority" }
+
+# ---------------------------------------------------------------------------
+# Name classes a filtering host clears from an environment it passes on.
+# ---------------------------------------------------------------------------
+
+[host_classes]
+cleared_prefixes = ["PYTHON", "LD_", "DYLD_", "AEAT_", "FINANCIAL_", "SITE_HEALTH_"]
+cleared_names = ["VIRTUAL_ENV", "CONDA_PREFIX", "CONDA_DEFAULT_ENV", "__PYVENV_LAUNCHER__"]
+namespace_prefix = "CADRUMO_"
+
+# ---------------------------------------------------------------------------
+# The native interpreter host's reserved exit statuses. The host exits with
+# launch_profile_refused after writing one refusal line, before Python starts.
+# ---------------------------------------------------------------------------
+
+[native_host]
+owner = "native_host"
+first = 120
+last = 125
+launch_profile_refused = 125
+refusals = ["launch_value_missing", "launch_value_malformed", "invocation_undeclared"]
+
+# ---------------------------------------------------------------------------
+# Locations of package components under the storage root, and the defaults the
+# desktop and manager use without asking Python. The Python log location,
+# format and limits mirror the command line's own; a package-side test keeps
+# them equal.
+# ---------------------------------------------------------------------------
+
+[components]
+console_workspace = "workspace"
+webview = "webview"
+manager_log_file = "logs/cadrumo-manager.log"
+manager_preferences = "manager-preferences.json"
+manager_failed_versions = ".runtime/manager-failed-versions.json"
+logs = "logs"
+log_file = "logs/cadrumo.log"
+log_format = "%(asctime)s [%(levelname)s] %(name)s: %(message)s | %(diagnostic_context)s"
+log_max_bytes = 10485760
+log_backups = 5
+language_variable = "CADRUMO_OUTPUT_LANGUAGE"
+language_default = "es"
+
+# ---------------------------------------------------------------------------
+# The storage root: its variable, the per-platform installed default under the
+# build channel's directory, and the conformance vectors every resolver replays.
+# Development rules apply only to a host built inside a source checkout.
+# ---------------------------------------------------------------------------
+
+[root]
+variable = "CADRUMO_LOCAL_STORAGE_ROOT"
+development_variable = "CADRUMO_STORAGE_ROOT"
+checkout_marker = "pyproject.toml"
+development_default = "var/storage"
+precedence = { development = ["CADRUMO_LOCAL_STORAGE_ROOT", "CADRUMO_STORAGE_ROOT"], installed = ["CADRUMO_LOCAL_STORAGE_ROOT"] }
+relative_override = { development = "anchor_at_checkout", installed = "refuse" }
+posix_directory_mode = 0o700
+refusals = [
+  "relative_override_installed",
+  "installed_base_unavailable",
+  "home_unavailable",
+  "checkout_unavailable",
+  "unsupported_platform",
+  "non_absolute_pin",
+  "invalid_path_input",
+  "filesystem_path_refused",
+]
+path_rules = { unicode_required = true, normalize_absolute = true, refuse_links = true, enforce_existing_permissions = false }
+channel = { product_directory = "cadrumo", stable = "stable", separator = "-" }
+
+[[root.installed_defaults]]
+platform = "windows"
+candidates = [{ variable = "LOCALAPPDATA", subpath = [] }]
+home_variable = "USERPROFILE"
+
+[[root.installed_defaults]]
+platform = "linux"
+candidates = [{ variable = "XDG_DATA_HOME", subpath = [] }, { variable = "HOME", subpath = [".local", "share"] }]
+home_variable = "HOME"
+
+[[root.installed_defaults]]
+platform = "macos"
+candidates = [{ variable = "HOME", subpath = ["Library", "Application Support"] }]
+home_variable = "HOME"
 
 # ---------------------------------------------------------------------------
 # PATH: composed from the package's binary directories, an admitted
@@ -355,3 +440,625 @@ arguments = [
 ]
 distinct = [["request", "result"]]
 greater = [["bound", "request"], ["bound", "result"]]
+
+# ---------------------------------------------------------------------------
+# Storage-root conformance vectors. Expected roots and refusals are authored by
+# hand, independently of any resolver. invalid_environment names carry a value
+# that is not valid Unicode on the platform.
+# ---------------------------------------------------------------------------
+
+[[root.vectors]]
+name = "windows-installed-default"
+platform = "windows"
+mode = "installed"
+environment = { LOCALAPPDATA = "C:\\Users\\ada\\AppData\\Local" }
+known_folder = "C:\\Users\\ada\\AppData\\Local"
+root = "C:\\Users\\ada\\AppData\\Local\\cadrumo"
+
+[[root.vectors]]
+name = "windows-installed-preview"
+platform = "windows"
+mode = "installed"
+environment = { LOCALAPPDATA = "C:\\Users\\ada\\AppData\\Local" }
+known_folder = "C:\\Users\\ada\\AppData\\Local"
+channel = "preview"
+root = "C:\\Users\\ada\\AppData\\Local\\cadrumo-preview"
+
+[[root.vectors]]
+name = "windows-installed-base-missing"
+platform = "windows"
+mode = "installed"
+environment = {}
+refusal = "installed_base_unavailable"
+
+[[root.vectors]]
+name = "windows-installed-base-relative"
+platform = "windows"
+mode = "installed"
+environment = { LOCALAPPDATA = "AppData\\Local" }
+refusal = "installed_base_unavailable"
+
+[[root.vectors]]
+name = "windows-installed-absolute-override"
+platform = "windows"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "D:\\cadrumo-data" }
+root = "D:\\cadrumo-data"
+
+[[root.vectors]]
+name = "windows-installed-override-wins-over-base"
+platform = "windows"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "D:\\cadrumo-data", LOCALAPPDATA = "C:\\Users\\ada\\AppData\\Local" }
+known_folder = "C:\\Users\\ada\\AppData\\Local"
+root = "D:\\cadrumo-data"
+
+[[root.vectors]]
+name = "windows-installed-relative-override"
+platform = "windows"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "data\\storage", LOCALAPPDATA = "C:\\Users\\ada\\AppData\\Local" }
+known_folder = "C:\\Users\\ada\\AppData\\Local"
+refusal = "relative_override_installed"
+
+[[root.vectors]]
+name = "windows-installed-rooted-without-drive"
+platform = "windows"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "\\data", LOCALAPPDATA = "C:\\Users\\ada\\AppData\\Local" }
+known_folder = "C:\\Users\\ada\\AppData\\Local"
+refusal = "relative_override_installed"
+
+[[root.vectors]]
+name = "windows-installed-blank-override"
+platform = "windows"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = " \t", LOCALAPPDATA = "C:\\Users\\ada\\AppData\\Local" }
+known_folder = "C:\\Users\\ada\\AppData\\Local"
+root = "C:\\Users\\ada\\AppData\\Local\\cadrumo"
+
+[[root.vectors]]
+name = "windows-installed-ignores-shared-variable"
+platform = "windows"
+mode = "installed"
+environment = { CADRUMO_STORAGE_ROOT = "D:\\shared", LOCALAPPDATA = "C:\\Users\\ada\\AppData\\Local" }
+known_folder = "C:\\Users\\ada\\AppData\\Local"
+root = "C:\\Users\\ada\\AppData\\Local\\cadrumo"
+
+[[root.vectors]]
+name = "windows-installed-home-override"
+platform = "windows"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "~\\cadrumo-data", LOCALAPPDATA = "C:\\Users\\ada\\AppData\\Local", USERPROFILE = "C:\\Users\\ada" }
+known_folder = "C:\\Users\\ada\\AppData\\Local"
+root = "C:\\Users\\ada\\cadrumo-data"
+
+[[root.vectors]]
+name = "windows-development-default"
+platform = "windows"
+mode = "development"
+environment = { LOCALAPPDATA = "C:\\Users\\ada\\AppData\\Local" }
+checkout = "C:\\src\\checkout"
+known_folder = "C:\\Users\\ada\\AppData\\Local"
+channel = "preview"
+root = "C:\\src\\checkout\\var\\storage"
+
+[[root.vectors]]
+name = "windows-development-relative"
+platform = "windows"
+mode = "development"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "var\\alternate" }
+checkout = "C:\\src\\checkout"
+root = "C:\\src\\checkout\\var\\alternate"
+
+[[root.vectors]]
+name = "windows-development-shared"
+platform = "windows"
+mode = "development"
+environment = { CADRUMO_STORAGE_ROOT = "D:\\shared" }
+checkout = "C:\\src\\checkout"
+root = "D:\\shared"
+
+[[root.vectors]]
+name = "windows-development-precedence"
+platform = "windows"
+mode = "development"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "D:\\local", CADRUMO_STORAGE_ROOT = "D:\\shared" }
+checkout = "C:\\src\\checkout"
+root = "D:\\local"
+
+[[root.vectors]]
+name = "windows-development-blank-falls-through"
+platform = "windows"
+mode = "development"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = " ", CADRUMO_STORAGE_ROOT = "var\\alternate" }
+checkout = "C:\\src\\checkout"
+root = "C:\\src\\checkout\\var\\alternate"
+
+[[root.vectors]]
+name = "linux-installed-xdg"
+platform = "linux"
+mode = "installed"
+environment = { HOME = "/home/ada", XDG_DATA_HOME = "/data/ada" }
+root = "/data/ada/cadrumo"
+
+[[root.vectors]]
+name = "linux-installed-home"
+platform = "linux"
+mode = "installed"
+environment = { HOME = "/home/ada" }
+root = "/home/ada/.local/share/cadrumo"
+
+[[root.vectors]]
+name = "linux-installed-relative-xdg"
+platform = "linux"
+mode = "installed"
+environment = { HOME = "/home/ada", XDG_DATA_HOME = "data" }
+root = "/home/ada/.local/share/cadrumo"
+
+[[root.vectors]]
+name = "linux-installed-preview"
+platform = "linux"
+mode = "installed"
+environment = { HOME = "/home/ada" }
+channel = "preview"
+root = "/home/ada/.local/share/cadrumo-preview"
+
+[[root.vectors]]
+name = "linux-installed-base-missing"
+platform = "linux"
+mode = "installed"
+environment = {}
+refusal = "installed_base_unavailable"
+
+[[root.vectors]]
+name = "linux-installed-relative-home"
+platform = "linux"
+mode = "installed"
+environment = { HOME = "home/ada" }
+refusal = "installed_base_unavailable"
+
+[[root.vectors]]
+name = "linux-installed-relative-override"
+platform = "linux"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "data", HOME = "/home/ada" }
+refusal = "relative_override_installed"
+
+[[root.vectors]]
+name = "linux-installed-absolute-override"
+platform = "linux"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "/srv/cadrumo" }
+root = "/srv/cadrumo"
+
+[[root.vectors]]
+name = "linux-installed-home-override"
+platform = "linux"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "~/data", HOME = "/home/ada" }
+root = "/home/ada/data"
+
+[[root.vectors]]
+name = "linux-development-default"
+platform = "linux"
+mode = "development"
+environment = { HOME = "/home/ada" }
+checkout = "/src/checkout"
+root = "/src/checkout/var/storage"
+
+[[root.vectors]]
+name = "macos-installed-default"
+platform = "macos"
+mode = "installed"
+environment = { HOME = "/Users/ada" }
+root = "/Users/ada/Library/Application Support/cadrumo"
+
+[[root.vectors]]
+name = "macos-installed-ignores-xdg"
+platform = "macos"
+mode = "installed"
+environment = { HOME = "/Users/ada", XDG_DATA_HOME = "/x" }
+root = "/Users/ada/Library/Application Support/cadrumo"
+
+[[root.vectors]]
+name = "macos-installed-base-missing"
+platform = "macos"
+mode = "installed"
+environment = { XDG_DATA_HOME = "/x" }
+refusal = "installed_base_unavailable"
+
+[[root.vectors]]
+name = "macos-development-default"
+platform = "macos"
+mode = "development"
+environment = { HOME = "/Users/ada" }
+checkout = "/src/checkout"
+root = "/src/checkout/var/storage"
+
+[[root.vectors]]
+name = "windows-absolute-normalized"
+platform = "windows"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "D:\\unused\\..\\datos con ñ\\." }
+root = "D:\\datos con ñ"
+
+[[root.vectors]]
+name = "windows-relative-normalized"
+platform = "windows"
+mode = "development"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "unused/../state" }
+checkout = "C:\\src\\checkout"
+root = "C:\\src\\checkout\\state"
+
+[[root.vectors]]
+name = "windows-invalid-selected"
+platform = "windows"
+mode = "development"
+environment = { CADRUMO_STORAGE_ROOT = "D:\\datos con ñ" }
+checkout = "C:\\src\\checkout"
+refusal = "invalid_path_input"
+invalid_environment = ["CADRUMO_LOCAL_STORAGE_ROOT"]
+
+[[root.vectors]]
+name = "windows-invalid-effective-lower"
+platform = "windows"
+mode = "development"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = " " }
+checkout = "C:\\src\\checkout"
+refusal = "invalid_path_input"
+invalid_environment = ["CADRUMO_STORAGE_ROOT"]
+
+[[root.vectors]]
+name = "windows-valid-higher-ignores-invalid-lower"
+platform = "windows"
+mode = "development"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "D:\\datos con ñ" }
+checkout = "C:\\src\\checkout"
+root = "D:\\datos con ñ"
+invalid_environment = ["CADRUMO_STORAGE_ROOT"]
+
+[[root.vectors]]
+name = "windows-installed-ignores-invalid-development"
+platform = "windows"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "D:\\datos con ñ" }
+root = "D:\\datos con ñ"
+invalid_environment = ["CADRUMO_STORAGE_ROOT"]
+
+[[root.vectors]]
+name = "windows-invalid-home"
+platform = "windows"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "~/state" }
+refusal = "invalid_path_input"
+invalid_environment = ["USERPROFILE"]
+
+[[root.vectors]]
+name = "windows-relative-home"
+platform = "windows"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "~/state", USERPROFILE = "relative" }
+refusal = "home_unavailable"
+
+[[root.vectors]]
+name = "windows-named-user-refused"
+platform = "windows"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "~ada/state", USERPROFILE = "C:\\Users\\ada" }
+refusal = "invalid_path_input"
+
+[[root.vectors]]
+name = "windows-home-only"
+platform = "windows"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "~", USERPROFILE = "C:\\Users\\ada" }
+root = "C:\\Users\\ada"
+
+[[root.vectors]]
+name = "windows-relative-checkout"
+platform = "windows"
+mode = "development"
+environment = {}
+checkout = "relative"
+refusal = "non_absolute_pin"
+
+[[root.vectors]]
+name = "windows-invalid-checkout"
+platform = "windows"
+mode = "development"
+environment = {}
+checkout = "C:\\src\\checkout"
+refusal = "invalid_path_input"
+invalid_checkout = true
+
+[[root.vectors]]
+name = "linux-absolute-normalized"
+platform = "linux"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "/unused/../datos con ñ/." }
+root = "/datos con ñ"
+
+[[root.vectors]]
+name = "linux-relative-normalized"
+platform = "linux"
+mode = "development"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "unused/../state" }
+checkout = "/src/checkout"
+root = "/src/checkout/state"
+
+[[root.vectors]]
+name = "linux-invalid-selected"
+platform = "linux"
+mode = "development"
+environment = { CADRUMO_STORAGE_ROOT = "/datos con ñ" }
+checkout = "/src/checkout"
+refusal = "invalid_path_input"
+invalid_environment = ["CADRUMO_LOCAL_STORAGE_ROOT"]
+
+[[root.vectors]]
+name = "linux-invalid-effective-lower"
+platform = "linux"
+mode = "development"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = " " }
+checkout = "/src/checkout"
+refusal = "invalid_path_input"
+invalid_environment = ["CADRUMO_STORAGE_ROOT"]
+
+[[root.vectors]]
+name = "linux-valid-higher-ignores-invalid-lower"
+platform = "linux"
+mode = "development"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "/datos con ñ" }
+checkout = "/src/checkout"
+root = "/datos con ñ"
+invalid_environment = ["CADRUMO_STORAGE_ROOT"]
+
+[[root.vectors]]
+name = "linux-installed-ignores-invalid-development"
+platform = "linux"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "/datos con ñ" }
+root = "/datos con ñ"
+invalid_environment = ["CADRUMO_STORAGE_ROOT"]
+
+[[root.vectors]]
+name = "linux-invalid-home"
+platform = "linux"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "~/state" }
+refusal = "invalid_path_input"
+invalid_environment = ["HOME"]
+
+[[root.vectors]]
+name = "linux-relative-home"
+platform = "linux"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "~/state", HOME = "relative" }
+refusal = "home_unavailable"
+
+[[root.vectors]]
+name = "linux-named-user-refused"
+platform = "linux"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "~ada/state", HOME = "/home/ada" }
+refusal = "invalid_path_input"
+
+[[root.vectors]]
+name = "linux-home-only"
+platform = "linux"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "~", HOME = "/home/ada" }
+root = "/home/ada"
+
+[[root.vectors]]
+name = "linux-relative-checkout"
+platform = "linux"
+mode = "development"
+environment = {}
+checkout = "relative"
+refusal = "non_absolute_pin"
+
+[[root.vectors]]
+name = "linux-invalid-checkout"
+platform = "linux"
+mode = "development"
+environment = {}
+checkout = "/src/checkout"
+refusal = "invalid_path_input"
+invalid_checkout = true
+
+[[root.vectors]]
+name = "macos-absolute-normalized"
+platform = "macos"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "/unused/../datos con ñ/." }
+root = "/datos con ñ"
+
+[[root.vectors]]
+name = "macos-relative-normalized"
+platform = "macos"
+mode = "development"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "unused/../state" }
+checkout = "/src/checkout"
+root = "/src/checkout/state"
+
+[[root.vectors]]
+name = "macos-invalid-selected"
+platform = "macos"
+mode = "development"
+environment = { CADRUMO_STORAGE_ROOT = "/datos con ñ" }
+checkout = "/src/checkout"
+refusal = "invalid_path_input"
+invalid_environment = ["CADRUMO_LOCAL_STORAGE_ROOT"]
+
+[[root.vectors]]
+name = "macos-invalid-effective-lower"
+platform = "macos"
+mode = "development"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = " " }
+checkout = "/src/checkout"
+refusal = "invalid_path_input"
+invalid_environment = ["CADRUMO_STORAGE_ROOT"]
+
+[[root.vectors]]
+name = "macos-valid-higher-ignores-invalid-lower"
+platform = "macos"
+mode = "development"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "/datos con ñ" }
+checkout = "/src/checkout"
+root = "/datos con ñ"
+invalid_environment = ["CADRUMO_STORAGE_ROOT"]
+
+[[root.vectors]]
+name = "macos-installed-ignores-invalid-development"
+platform = "macos"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "/datos con ñ" }
+root = "/datos con ñ"
+invalid_environment = ["CADRUMO_STORAGE_ROOT"]
+
+[[root.vectors]]
+name = "macos-invalid-home"
+platform = "macos"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "~/state" }
+refusal = "invalid_path_input"
+invalid_environment = ["HOME"]
+
+[[root.vectors]]
+name = "macos-relative-home"
+platform = "macos"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "~/state", HOME = "relative" }
+refusal = "home_unavailable"
+
+[[root.vectors]]
+name = "macos-named-user-refused"
+platform = "macos"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "~ada/state", HOME = "/home/ada" }
+refusal = "invalid_path_input"
+
+[[root.vectors]]
+name = "macos-home-only"
+platform = "macos"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "~", HOME = "/home/ada" }
+root = "/home/ada"
+
+[[root.vectors]]
+name = "macos-relative-checkout"
+platform = "macos"
+mode = "development"
+environment = {}
+checkout = "relative"
+refusal = "non_absolute_pin"
+
+[[root.vectors]]
+name = "macos-invalid-checkout"
+platform = "macos"
+mode = "development"
+environment = {}
+checkout = "/src/checkout"
+refusal = "invalid_path_input"
+invalid_checkout = true
+
+[[root.vectors]]
+name = "windows-drive-relative"
+platform = "windows"
+mode = "development"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "C:state" }
+checkout = "C:\\src\\checkout"
+refusal = "non_absolute_pin"
+
+[[root.vectors]]
+name = "windows-rooted-development"
+platform = "windows"
+mode = "development"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "\\state" }
+checkout = "C:\\src\\checkout"
+refusal = "non_absolute_pin"
+
+[[root.vectors]]
+name = "windows-unc-normalized"
+platform = "windows"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "\\\\server\\share\\unused\\..\\state" }
+root = "\\\\server\\share\\state"
+
+[[root.vectors]]
+name = "windows-invalid-known-folder"
+platform = "windows"
+mode = "installed"
+environment = {}
+refusal = "invalid_path_input"
+invalid_environment = ["LOCALAPPDATA"]
+invalid_known_folder = true
+
+[[root.vectors]]
+name = "linux-invalid-effective-base"
+platform = "linux"
+mode = "installed"
+environment = { HOME = "/home/ada" }
+refusal = "invalid_path_input"
+invalid_environment = ["XDG_DATA_HOME"]
+
+[[root.vectors]]
+name = "linux-valid-base-ignores-invalid-home"
+platform = "linux"
+mode = "installed"
+environment = { XDG_DATA_HOME = "/data" }
+root = "/data/cadrumo"
+invalid_environment = ["HOME"]
+
+[[root.vectors]]
+name = "macos-invalid-base"
+platform = "macos"
+mode = "installed"
+environment = {}
+refusal = "invalid_path_input"
+invalid_environment = ["HOME"]
+
+[[root.vectors]]
+name = "linux-tilde-backslash-literal"
+platform = "linux"
+mode = "development"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "~\\state", HOME = "/home/ada" }
+checkout = "/src/checkout"
+root = "/src/checkout/~\\state"
+
+[[root.vectors]]
+name = "linux-backslash-literal"
+platform = "linux"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "/data\\state" }
+root = "/data\\state"
+
+[[root.vectors]]
+name = "linux-above-root-parent"
+platform = "linux"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "/../../state" }
+root = "/state"
+
+[[root.vectors]]
+name = "linux-home-repeated-separator"
+platform = "linux"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "~//state", HOME = "/home/ada" }
+root = "/home/ada/state"
+
+[[root.vectors]]
+name = "windows-home-repeated-separator"
+platform = "windows"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "~//state", USERPROFILE = "C:\\Users\\ada" }
+root = "C:\\Users\\ada\\state"
+
+[[root.vectors]]
+name = "windows-above-root-parent"
+platform = "windows"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "D:\\..\\..\\state" }
+root = "D:\\state"
