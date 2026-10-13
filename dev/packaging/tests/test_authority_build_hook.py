@@ -45,7 +45,9 @@ def _builder_config(root: Path, target_name: str) -> BuilderConfig:
         encoding="utf-8",
     )
     builder = {"wheel": WheelBuilder, "sdist": SdistBuilder}[target_name](str(project))
-    return builder.config
+    config = builder.config
+    assert isinstance(config, BuilderConfig)
+    return config
 
 
 def _initialize(hook: ModuleType, root: Path, *, version: str, target_name: str) -> dict[str, object]:
