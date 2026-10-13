@@ -5,7 +5,7 @@ tags:
 date: '2026-10-11'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:ebfcd9f46d1122499fc766b8f71caf7f4bf869da3b768c1323b9dc6f19e05bd6'
+body_hash: 'sha256:a7ec81a0925907faba03b175f0c476340c76a8cf1f575257a93721dc116aeb24'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -267,6 +267,26 @@ Three defects reached every frontend. A verification stopped between saving its 
 Resolved 2026-10-12. The read now reports `ERROR_MODELO_VERIFICATION_OUTCOME_INCOMPLETE` and admits verify to run again (`8e7fc6173f`); both refusals name catalogue messages in four locales (`c5cf297140`); both definitions publish their error detail, the read keeps the declared recovery and the import raises the lifecycle verdict (`5ddbe1e245`). The tests join a real runtime and are admitted with the profile password on the protected frame wherever a sign-in would resume (`4fd5bd8b89`, then the fixture work carried in `e292d394b3` and `c7fbea9454`): one rule for when to send the password, one binding that `invoke_cached_cli` honours, and runtime-backed worlds for the per-test, seed-once and ledger-session fixtures. Across the files that failed, a rerun with that work fixed 277 of the 570.
 
 Open, each evidenced and outside this resolution: admission refuses an absent target or a malformed period inside the caller's own profile as `operation_denied`, so verify, file and review-package lose the declared address verdict, and an application test holds that ruling; the report verb's refusal for a work target with no calculation no longer names its address; a single-file ledger import with an invalid row reports a skipped statement rather than `ERROR_TRANSACTION_VALIDATION`, unchanged since `3bb3b64787`; the Modelo 111 surnames field is owned by another session; two bienes de inversión 303 tests fail on wallet reconciliation on HEAD; and the remaining seed-once and native suites, config profile verbs and subprocess secret-channel tests, several of which also fail under load with `KDF_RESOURCE_LIMIT` or `runtime_deadline_exceeded`.
+
+Progress 2026-10-13. A rerun of the same population with `-m "not serial"` before this pass ended 347 failed, 3 errors and 9218 passed; a rerun during it ended 173 failed, 51 errors and 9356 passed, with the 51 errors coming from another session's uncommitted supervisor edits and several later fixes not yet in. The suites moved onto one pattern per kind. Per-test and per-module worlds use `runtime_profile_backend_fixture`. Seed-once worlds use `runtime_seeded_profile_backend_fixture`. Storage-runtime suites use the new `runtime_cli_profile`, and their seeded records are addressed by its id. Config sign-in and subprocess suites are served by `native_profile_view_server`. Where signing out was only the way to reach a profile with no selection, the selection is cleared directly, because signing out keeps it.
+
+Two failures that appeared on 2026-10-12 were explained. The JSON usage-error test had passed only while no runtime answered, because its malformed ledger handle is a domain refusal reached after admission; it now uses a genuine parse error. The bulk-classify malformed IVA case passed when run alone and failed under load, refused as `unavailable` when the worker's liveness deadline was exceeded, the same signature seen on 2026-10-10 and 2026-10-11.
+
+Six defects reached every frontend and were fixed with tests on the real command-line path:
+- A refused single ledger statement reported "the rest of the folder was imported". It now raises `ERROR_TRANSACTION_VALIDATION`, and a missing `--verify-source` is refused at parse time (`f80a12a835`).
+- The LIS DA 18 activity-asset refusal crossed the runtime as the generic unsupported refusal (`789336856f`).
+- The command line and the terminal interface refused a forecast whose interval had been clamped to the asset's in-service span (`789336856f`).
+- An unsupported modelo was answered "no active profile" before its legal route (`db87d4f205`).
+- An archive push with `google_export` off was answered as a generic access denial (`7105a253d7`).
+
+Still open:
+- The bulk-classify row reason is rendered in the worker's locale, not the requested one.
+- Since `5a09ab8082`, `config login` records no `PROFILE_ACTIVATED` event.
+- A wrong or blank root password is refused with the raw `credential_rejected` or `runtime_invalid_frame` token, not the registered authentication refusal. The admission code is owned by the sign-in work.
+- The IVA wallet refresh blocks calculations whose tests seed a decision directly. This affects the bienes de inversión, registered-acquisition, export-parity and modelo-edit suites.
+- The two logout navigation tests and the keychain-less reader tests encode sign-in contracts that the application-sign-in work changed.
+- The crash funnel logs only the exception type since `4aef089995`, while its test expects the traceback.
+- Several tests run in-process profile loads or worker deadlines, which fail under load and pass alone.
 
 ## Recommendations
 
