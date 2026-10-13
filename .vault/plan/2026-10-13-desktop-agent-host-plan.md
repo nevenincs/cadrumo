@@ -25,7 +25,7 @@ Launcher protocol, shared by S02 and S03:
 - Command: `aeat app agent serve`, started by the desktop host with its projected environment. The owner's subsequent native-build brief requires the launcher to consume the CMake-installed agent in the canonical custom Python environment. No source path or alternate agent environment is admitted.
 - Standard input: one JSON line `{"bearer": "<gateway bearer minted by the host>"}`. The host then holds the stream open. End of file means stop.
 - Standard output carries JSON lines only. Diagnostics go to standard error, without content or secrets.
-  - `{"event": "agent_ready", "gateway_port": <int>, "agent_version": "<str>", "lane": "development"}`
+  - `{"event": "agent_ready", "gateway_port": <int>, "agent_version": "<str>", "lane": "development", "workspace_root": "<absolute path>"}`. `workspace_root` is the profile's one agent workspace, which the runtime creates inside the agent's admitted boundary. Every run start and the provider catalog use it, and a conversation is a run chain inside it.
   - `{"event": "agent_refused", "code": "<code>"}`, where the code is one of `agent_signed_out`, `agent_runtime_unavailable`, `agent_service_absent`, `agent_service_incompatible`, `agent_provider_credential_missing`, `agent_root_unmarked` or `agent_service_failed`.
   - `{"event": "agent_stopped", "reason": "<code>"}`
 - The provider key comes from the provider-settings resolver.
