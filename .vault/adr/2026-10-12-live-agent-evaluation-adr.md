@@ -191,6 +191,7 @@ Where it stops:
 - It does not show that another model, another MCP client or a different prompt behaves the same way.
 - It does not show that the figures are right in law beyond the published example the scenario uses.
 - It does not show anything about the MSI installation, the installed manager, login startup, the desktop shell or the TUI.
+- It does not exercise cadrumo-agent. The agent integration is proved by `dev/runtime_lifecycle/agent_live.py` against the same package, under `2026-10-13-package-verification-adr` (amended 2026-10-13).
 - It does not show that a run against a package other than the one recorded behaves the same. A stale package is refused for that reason.
 - A pass is a rate over nondeterministic runs, not a proof.
 - It cannot run where the credential store refuses the logon. Resume and an enrolled key are the only ways in for the agent, and both need that store. Such hosts report unavailable. The platform matrix is out of scope by the owner's ruling.

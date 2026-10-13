@@ -109,7 +109,7 @@ Binding if accepted:
 
 ## Implementation
 
-We will run the live lane as the packaged Cadrumo plus cadrumo-agent from its source tree, in four stages.
+We will run the live lane as the packaged Cadrumo, with cadrumo-agent started only through the runtime's hosted door from the package's bundled agent, in four stages. The lane waits on the first recorded tool-access proof. The `agent-direct-start` feature is removed (`2026-10-13-package-verification-adr`).
 
 - **Stage 1, the agent column against the real backend.**
   - Cadrumo backend:
@@ -136,7 +136,7 @@ We will run the live lane as the packaged Cadrumo plus cadrumo-agent from its so
 
 Remaining deviations:
 - **L1.** Plaintext agent stores on the marked root only, and tool results in them are synthetic profile data.
-- **L2.** The hosted parts are assembled from cadrumo-agent's source tree rather than through a hosted root.
+- **L2.** Retired by `2026-10-13-package-verification-adr`: the lane assembles no hosted parts from a source tree.
 
 Test framework:
 - A Playwright driver attaches to the packaged desktop's WebView2 over a remote-debugging port. Only the lane build opens that port, and only on loopback.
@@ -165,11 +165,11 @@ These stage contents are hypotheses within the constraints.
 
 ## Rationale
 
-Running cadrumo-agent from its source tree under its own assembly is the only configuration in which its relay mounts, by its own records and tests, and it makes every UI or agent change testable without repackaging. That serves the owner's speed ruling. The authority constraints close the holes the reviews found before the full surface is reachable. The process and root constraints keep a lane from touching the person's real profile or leaving processes behind. Gating writes on cadrumo-agent's own write proofs keeps a repeated write off even synthetic data until it is proven.
+Starting cadrumo-agent only from the package measures what ships, as `2026-10-13-package-verification-adr` rules. The authority constraints close the holes the reviews found before the full surface is reachable. The process and root constraints keep a lane from touching the person's real profile or leaving processes behind. Gating writes on cadrumo-agent's own write proofs keeps a repeated write off even synthetic data until it is proven.
 
 ## Consequences
 
 - Most of stage 1's cadrumo-agent items belong to that project. Its owner relays by hand; no direct channel exists from this session.
 - The person review door and the person-frontend predicate are new runtime authority. They need owner acceptance through the mcp-parity amendment.
-- L2 assembles cadrumo-agent's test-tree hosted parts in a lane. Its relay-mount and capability-proofs records must allow that for a synthetic profile, or the lane waits on hosted start.
+- The lane waits on hosted start: the first recorded tool-access proof, and a packaged host that passes the agent its environment (`2026-10-13-canonical-environment-application-internals-adr`).
 - The key frame is a cadrumo-agent change: a frame read in `agent:api/app.py` main(), and the worker's pipe in place of `DEVNULL`. Stage 1 waits on it.

@@ -33,7 +33,7 @@ This settles the open source-provisioning choice in the proposed desktop-agent-h
 
 ## Implementation
 
-We will select the local source directory at CMake configuration and build its wheel in `agent_project`, compose its dependency closure in `python_dependencies`, install its wheel in `python_product`, and assemble it into the canonical custom site-packages. Explicit install, uninstall, rebuild, checksum and dependency-lock update targets own their lifecycle. Uninstall removes generated dependent product and staged payloads so the next authorized build reconstructs a coherent package. CTest runs the installed agent import, version, dependency and checksum probe through the application's own interpreter.
+We will select the local source directory at CMake configuration and build its wheel in `agent_project`, compose its dependency closure in `python_dependencies`, install its wheel in `python_product`, and assemble it into the canonical custom site-packages. Explicit install, uninstall, rebuild, checksum and dependency-lock update targets own their lifecycle. Uninstall removes generated dependent product and staged payloads so the next authorized build reconstructs a coherent package. CTest runs the installed agent import, version, dependency and checksum probe through the application's own interpreter. It also launches the agent the way the runtime does, `-m cadrumo_agent.cli.main serve` on ephemeral ports, waits for the ready line, and stops it (amended 2026-10-13 under `2026-10-13-package-verification-adr`).
 
 ## Rationale
 
