@@ -106,6 +106,134 @@ This needs a follow-on decision. INPUT and CHOICE stay unsupported.
 
 tui-b3, spot-checked. The TUI is a person frontend, and its modal already answers REVIEW (`src/cadrumo/entrypoints/tui/operations/interactions.py:49-66`). It has no off-host consent screen today. The credential act carries a secret the generic modal cannot take, so it waits for the protected input channel.
 
+### review-door-for-agent-reviews | critical | No person door answers a review raised by an agent session
+
+CADRUMO-ARCHITECTURE, spot-checked; agrees with tui-b3.
+- `respond` acts as the agent's own session (`src/cadrumo_harness/mcp/admitted_operations.py:445-481`).
+- The host lets only the submitting session answer, through a process-local capability (`src/cadrumo/entrypoints/runtime/operation_host.py:330-345`, `:592-624`).
+- The TUI answers only reviews of operations it submitted (`src/cadrumo/entrypoints/tui/operations/interactions.py:3-7`).
+
+The owner must rule between two options:
+- (i) the conversational relay, stated as such, where the agent applies its own review;
+- (ii) a person door that answers a review raised by an agent session in the profile, with `respond` apply withheld from agent frontends. This is new runtime authority and amends the mcp-parity agent-inside record.
+
+### lane-mark-checks-wrong-root | critical | The mark check reads the launcher's root, not the root its runtime serves
+
+CADRUMO-ARCHITECTURE, spot-checked. No mark mechanism exists (`dev/agent_eval/live/isolated_host.py:98-119`). A GUI attaches to an installed manager (rule 04), so a lane desktop started with an override could reach a runtime serving the person's real root. The guard must compare the root reported by the connected runtime, after canonical resolution (junctions, case folding, subst drives). The record must also say how a lane desktop gets a runtime on the marked root while an installed manager exists.
+
+### provider-key-release-is-new | high | Releasing a stored provider key to a client process has no precedent
+
+CADRUMO-ARCHITECTURE, spot-checked. No client receives a stored secret's plaintext today (`src/cadrumo/adapters/outbound/google/records.py:48-75`; `src/cadrumo/adapters/outbound/llm/client.py:955`). Cadrumo has no provider-credential namespace. The records to amend:
+- application-sign-in, line 70;
+- mcp-parity agent-inside, constraint 1;
+- rule 05, for the namespace;
+- the LLM settings and canonical-environment records, which need one precedence rule for the key source.
+
+Key entry in the desktop passes through the webview and Tauri, like the password.
+
+### agent-frontend-predicate | high | Person-act refusal is hard-coded as "is MCP" at many sites
+
+CADRUMO-ARCHITECTURE, spot-checked; extends `agent-host-person-authority`. The sites:
+- `person_acts.py:81-83`
+- `operation_access_policy.py:213-219`
+- `profile_connection_admission.py:161-163`, `:277`
+- `profile_connection_sessions.py:229-231`
+- `profile_connection_access.py:163-168`
+- `profile_connection_person_acts.py:37-40`
+- `invoice_evidence_extract_operation.py:282-284`
+
+Recommended as a named stage 1 item: one "agent frontends" predicate, and a door-by-frontend matrix test.
+
+### frontend-kind-unauthenticated | medium | The runtime does not authenticate the frontend kind
+
+CADRUMO-ARCHITECTURE, spot-checked. The client sets the frontend kind (`src/cadrumo/entrypoints/cli/config/passphrase.py:77`), and admission does not check the image. So "the agent cannot grant consent" holds only while the agent cannot start processes. The direct-lane-only constraint protects consent integrity too; the Claude Code lane would break it. The application-sign-in record still carries wording its own amendment contradicts, at lines 255, 264 and 270.
+
+### launcher-runner-and-grandchild-admission | low | A grandchild resumes, and a supervised runner is needed
+
+CADRUMO-ARCHITECTURE, verified.
+- Admission is bound to the logon session, not to the process chain (`src/cadrumo/adapters/local_runtime/windows_channel.py:47-68`; `windows_login.py:40-42`; `profile_login.py:104-130`), so `cadrumo-mcp` as a grandchild resumes. That is a pass.
+- Consent through an `aeat` child passes today (`src/cadrumo/entrypoints/cli/runtime_profile_admission.py:118-141`; `session_authority_admission.py:383`).
+- The shell's child runner is built for short calls (`native/desktop/src-tauri/src/shell/sign_in/process.rs:23-27`, `:408-416`, `:513-522`). The shell amendment must name a new supervised runner and the sign-in-expiry stop trigger.
+
+### packaging-closure-and-lane-lock | critical | The agent's 39-package closure fails assembly; the lane needs its own lock
+
+BUILD1, verified in scratch.
+- Assembly requires the installed set to equal the cohort plus Cadrumo's lock export exactly (`dev/packaging/native/assemble.py:170-184`).
+- The product build collects every wheel in its output directory (`dev/packaging/native/product.py:106-110`).
+
+The recommended route:
+- build the agent wheel with `uv build --wheel` into its own directory, installed with `--no-deps` and its digest recorded;
+- a lane-only lock project inside Cadrumo, holding the agent's requirements constrained to Cadrumo's pins, with the selector given a lock-path parameter;
+- assembly's allowed set widened by that lock, as one named exception.
+
+hatch packages every file on disk, and the agent checkout carries about 250 uncommitted files, so its source must be snapshotted through a filesystem inclusion policy. The constraint changes 8 packages from the agent's tested lock, not 6. There are no missing wheels, and websockets does not conflict.
+
+### lane-build-option-wording | high | No release configure preset exists to refuse the lane option
+
+BUILD1, verified. Release is a configuration of a multi-config preset (`CMakePresets.json:95-112`; `native/cmake/Configurations.cmake:2-4`). The workable form:
+- a dedicated lane configure preset;
+- Release configurations and the release and installer targets refusing when the option is on;
+- the option recorded in the contract and metadata, as `CADRUMO_CHANNEL` is (`Identity.cmake:31`);
+- `artifact_verify` refusing a lane manifest (`artifact_verify.py:78-90`).
+
+### agent-manifest-statement | low | The agent statement fits the manifest; it has three readers
+
+BUILD1, verified. `PackageManifest` admits an optional field (`native/application/src/package.rs:20-37`). The readers are `package.rs:124-140`, `native/interpreter/bootstrap.py:67-80` and `dev/packaging/native/package_inventory.py:57-73`. Bundled must agree with `distributions`. Hosting-contract and store-format versions do not exist yet. BUILD1 recommends BUILD2 own the packaging Step.
+
+### agent-relay-unmountable-in-bundle | critical | A bundled, non-hosted cadrumo-agent cannot mount the Cadrumo relay
+
+cadrumo-agent review (stand-in reviewer). Without a root, the relay comes on only through the test-tree `hosted_parts` plugin (`agent:providers/lane_registry.py:212-237`; `agent:testing/lanes/hosted_parts.py:58`), and `testing/` is excluded from the wheel (`agent:pyproject.toml:172-200`). The uncommitted change deletes that route. The agent's records forbid mounting the relay outside hosted mode: relay-mount `:153` and write-gate `:101`.
+
+### agent-proofs-unearnable-on-lane | critical | Tool proofs are recorded only by cadrumo-agent's own tests
+
+cadrumo-agent review (stand-in reviewer).
+- A proof is a hand edit naming a pytest node id in that repository (capability-proofs).
+- Write proof needs refusal, exactly-once, worker-loss and repeat cases (`agent:providers/lane_admission.py:462-484`), and the settled-run fix must be built first.
+- A Cadrumo lane run or the owner's use cannot record one.
+- The uncommitted record edit requires production startup, which refuses without proofs, so nothing could ever be proven.
+
+### non-hosted-writes-unsafe | critical | Non-hosted mode can repeat a Cadrumo write
+
+cadrumo-agent review (stand-in reviewer). Non-hosted runs re-send accepted actions and retry turns (`agent:api/app.py:850-884`), and a settled run can still be writing. Deviation L2 breaches four records the parent does not name: relay-mount, write-gate, hosted-mode and capability-proofs. In non-hosted mode, state, `.env` reads and temporary files fall outside the lane root (`agent:control/settings_base.py:242-262`), and tracing is not refused.
+
+### history-cannot-serve-session-contract | critical | cadrumo-agent's history cannot serve `agentSession.ts`
+
+cadrumo-agent review (stand-in reviewer). Gaps against the contract:
+- One reply is one message, with text joined across tool rounds (`agent:providers/anthropic_chat_model.py:651-671`).
+- Messages and tool calls are unordered lists (`agent:thread/snapshots.py:313-337`).
+- Tool calls are reported only when done.
+- Frames carry no offset, and over-long chunks are cut without a mark.
+- A turn in progress is absent from history.
+- The person's turn id is not returned (`agent:api/schemas/gateway.py:229-243`, `:527-555`).
+- Continued runs duplicate earlier turns under new ids (`agent:worker/graph_lifecycle.py:571-583`).
+
+### bundle-strips-agent-environment | high | The packaged host strips cadrumo-agent's variables and ships no Python program
+
+cadrumo-agent review (stand-in reviewer).
+- The native host strips `CADRUMO_*` names outside the allowlist before Python runs (`native/platform/src/lib.rs:189-210`).
+- The bundle ships only three entrypoints (`native/package-layout.json:42-46`).
+- The worker re-executes as `sys.executable -m` (`agent:utils/runtime_exec.py:72-88`).
+- `runs_settled` is always false in non-hosted mode (`agent:api/app.py:861`).
+
+Also:
+- The proof's one-minor SDK range collides with the latest-SDK-only ruling.
+- The relay change's 12-tool entry matches Cadrumo, but the change should not be committed as is.
+
+Nine more agent records are contradicted beyond the five the parent names.
+
+### key-frame-absent | critical | cadrumo-agent has no way to take the key except the environment or settings
+
+cadrumo-agent review (stand-in reviewer), against the owner's 2026-10-13 ruling.
+- The key comes from the environment, or in non-hosted mode from settings files (`agent:providers/provider_readiness.py:136-154`; `agent:control/settings_base.py:106-129`).
+- The worker inherits `os.environ.copy()` (`agent:control/worker_management.py:159`).
+
+The fix:
+- a process-local holder;
+- a frame read in `agent:api/app.py` `main()` and at worker start;
+- the frame written to the worker's pipe instead of `DEVNULL`.
+
+The relay child is already scrubbed (`agent:workspace/environment.py:155-183`). Cadrumo's own LLM adapter also reads its key from the environment (`src/cadrumo/core/config_llm_fields.py:52-55`), which breaks the same ruling.
+
 ## Recommendations
 
 Pending the remaining reviews; proposed revisions will be presented to the owner together.
