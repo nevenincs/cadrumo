@@ -59,9 +59,8 @@ def _expected_vulture_path(path: Path) -> str:
 def test_real_scan_over_the_tree_returns_a_typed_outcome_with_real_findings() -> None:
     """A real vulture run classifies to CLEAN or FINDINGS, never a crash.
 
-    No self-skip on a clean tree (forbidden by ``test_no_skip_xfail`` for
-    tests outside the source tree, per the sibling ``test_duplication_scan``'s
-    own convention): both branches are asserted inside one test instead.
+    No self-skip on a clean tree (the project forbids skips as shortcuts,
+    per the sibling ``test_duplication_scan``): both branches are asserted inside one test instead.
     """
     result = run_dead_code_scan(_REPO_ROOT)
 

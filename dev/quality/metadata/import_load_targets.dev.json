@@ -690,7 +690,6 @@
         "dev.quality.quiet",
         "dev.quality.repository_sources",
         "dev.quality.secure_store_write_path",
-        "dev.quality.shard",
         "dev.quality.source_import_analysis",
         "dev.quality.stable_tree_generation",
         "dev.quality.suite",

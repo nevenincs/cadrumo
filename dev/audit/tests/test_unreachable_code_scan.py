@@ -27,7 +27,7 @@ def test_real_scan_over_the_tree_returns_a_typed_outcome_with_real_findings(
 ) -> None:
     """A real scan classifies to CLEAN or FINDINGS, never a crash, and names real paths.
 
-    No self-skip on a clean tree (forbidden by ``test_no_skip_xfail``): both
+    No self-skip on a clean tree (the project forbids skips as shortcuts): both
     branches are asserted inside one test, matching the vulture gate.
 
     The same scan also proves the reference walk read every file. If that ever

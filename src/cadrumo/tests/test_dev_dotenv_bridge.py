@@ -48,9 +48,8 @@ def test_operator_dotenv_keys_are_bridged_into_the_environment() -> None:
         # No env/.env on this machine (CI, a fresh clone, an installed run):
         # zero declared keys means there is nothing to assert. A benign
         # early return, not pytest.skip -- this module is pytest.mark.unit
-        # (always collected) and the project's skip/xfail-shortcut gate
-        # (the skip-policy ratchet) forbids pytest.skip in deterministic
-        # unit modules; only an explicitly-selected aeat_live module may
+        # (always collected) and the project forbids pytest.skip as a
+        # shortcut in deterministic unit modules; only an explicitly-selected aeat_live module may
         # fail-rather-than-skip on a missing prerequisite.
         return
 

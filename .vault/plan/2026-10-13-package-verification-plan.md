@@ -12,7 +12,7 @@ related:
   - '[[2026-10-13-canonical-environment-application-internals-adr]]'
 modified: '2026-10-13'
 body_schema: body-v2
-body_hash: 'sha256:8c5a72211f314419c85df79487af001af59335207ac389b662d9689512069473'
+body_hash: 'sha256:aa4deef434b5fa9c2b840fc8d5c5a733b3556d009bc6e0624e52b81d58ebc949'
 ---
 
 <!-- LINK RULES:
@@ -134,7 +134,7 @@ Dependencies outside this plan:
 
 ## Steps
 
-- [ ] `S01` - Remove the dead dev tooling the sweep confirms: the uninvoked pytest shard plugin, per-file ignores for missing modules, references to the absent no-skip gate, and dev/audit screens no recipe runs, updating the recipe and lane policing tests in the same change; `dev/quality/shard.py`.
+- [x] `S01` - Remove the dead dev tooling the sweep confirms: the uninvoked pytest shard plugin, per-file ignores for missing modules, references to the absent no-skip gate, and dev/audit screens no recipe runs, updating the recipe and lane policing tests in the same change; `dev/quality/shard.py`.
 - [ ] `S02` - Extend the bundle.agent CTest probe to launch the bundled agent the way the runtime does, wait for its ready line and stop it; `native/tests/agent_smoke.py`.
 - [ ] `S03` - Repoint the agent live lane onto the staged package: drop the checkout option and run the staged interpreter's bundled agent with the staged cadrumo-mcp relay; `dev/runtime_lifecycle/agent_live.py`.
 - [ ] `S04` - Remove the desktop direct-start feature and repoint the desktop agent live lane onto the runtime's hosted agent door with the catalog's provider and key names; `native/desktop/src-tauri/src/agent/direct.rs`.

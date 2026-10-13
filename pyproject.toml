@@ -758,8 +758,6 @@ convention = "google"
 # literal in the plan, and the resolution exists only so Windows `.cmd`
 # shims spawn without a shell. There is no injection surface to check for.
 "dev/init/process.py" = ["S603"]
-"dev/init/venv.py" = ["S603"]
-"dev/init/hooks.py" = ["S603"]
 "dev/init/probe.py" = ["S603"]
 "dev/audit/complexity.py" = ["S603"]
 "dev/audit/report.py" = ["S603"]
@@ -819,9 +817,6 @@ convention = "google"
 # The campaign driver fans the fixed lane-registry argv (sys.executable -m
 # dev.packaging.*) out over a worker pool; no untrusted input reaches it.
 "dev/packaging/campaign.py" = ["S603"]
-# The shard-plugin gate collect-probes via `sys.executable -m pytest` with a
-# fixed argv over in-test-authored sample modules.
-"dev/quality/tests/test_shard.py" = ["S603"]
 # The conformance-gate anti-vacuity proof drives `sys.executable -m
 # dev.registry.conformance` with a fixed argv plus a tmp_path-authored seeded
 # baseline; no untrusted input reaches subprocess.

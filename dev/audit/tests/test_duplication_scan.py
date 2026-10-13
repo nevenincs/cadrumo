@@ -34,8 +34,8 @@ def _require_npx() -> None:
     The sanctioned convention for external-binary integration tests in this
     repo is to assert the tool is present, not to self-skip when it is absent
     (see ``dev/release/tests/test_justfile_release_guidance.py`` and
-    ``dev/packaging/tests/test_smoke_split_install_sequence.py``). ``skipif`` is
-    forbidden by ``test_no_skip_xfail`` for tests outside the source tree.
+    ``dev/packaging/tests/test_smoke_split_install_sequence.py``). The project
+    forbids ``skipif`` as a shortcut.
     """
     assert shutil.which("npx") is not None, "npx is required to run the real jscpd duplication scan"
 
