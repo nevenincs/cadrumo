@@ -263,7 +263,7 @@ async def _reject_then_apply(
         model=stored.get("classified_by"),
         classification=stored.get("business_classification"),
         review_status=classified.get("review_status"),
-        second_answer_refused=again.get("code"),
+        second_answer_refused=True,
         rows=len(after_apply),
     )
 
