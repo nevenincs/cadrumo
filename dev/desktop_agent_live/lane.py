@@ -12,7 +12,9 @@ programs, and the desktop window through its WebView2 DevTools endpoint:
    and requires the DevTools endpoint to listen on loopback only;
 4. signs the profile in through the command line, the password on its standard
    input only, and requires the sign-in to be stored so the desktop resumes it;
-5. requires a provider key stored for the profile by the person;
+5. stores the developer's provider key into the throwaway profile through
+   ``aeat config provider set --secrets-stdin`` and reads it back as masked
+   status;
 6. runs the live Playwright project, which attaches to the window;
 7. signs out, closes the window and requires every process the run started to
    have ended;
@@ -21,14 +23,17 @@ programs, and the desktop window through its WebView2 DevTools endpoint:
 
 Exit 0 means every step held and every spec passed. Exit 1 names what failed.
 Exit 3 means a prerequisite is absent: the test host, the package, an
-interactive desktop, a credential store that keeps the sign-in, or the
-person's stored provider key. ``--attach-only`` runs only the attachment check
+interactive desktop, a credential store that keeps the sign-in, the
+provider-settings commands in the package, or the developer's key in this
+lane's own environment. ``--attach-only`` runs only the attachment check
 and always ends incomplete. ``--served`` loads the shell from the development
 server (``just dev``) for iterating on it; the host, launcher and agent stay
 real.
 
-Provider keys are entered by the person and never by this lane. It never takes
-a key on its command line, in a file or in its environment.
+The key comes only from this lane's own environment, under the name the
+provider-settings resolver reads in development, ``CADRUMO_LLM_ANTHROPIC_API_KEY``.
+It is written once to the set command's standard input and never placed on a
+command line, in a file, a log or another process's environment.
 """
 
 from __future__ import annotations
@@ -86,8 +91,11 @@ _WATCH_SECONDS: Final = 1.0
 _DESKTOP_UNAVAILABLE: Final = 69
 """The desktop host's exit when the logon has no interactive desktop for its window."""
 
-STORE_KEY_COMMAND: Final[str | None] = None
-"""The package command a person runs to store a provider key for a profile, once the package has one."""
+PROVIDER: Final = "anthropic"
+"""The provider whose key the agent column's model uses."""
+
+KEY_VARIABLE: Final = "CADRUMO_LLM_ANTHROPIC_API_KEY"
+"""Where this lane reads the developer's key: the provider-settings resolver's development name for it."""
 
 
 class UnavailableError(Exception):
@@ -159,16 +167,42 @@ def is_lane_root(root: Path) -> bool:
     return is_marked_lane_root(root)
 
 
-def stored_provider_key(programs: Programs, environment: Mapping[str, str]) -> bool:
-    """Whether the signed-in profile has a provider key the person stored.
+def provision_provider_key(programs: Programs, environment: Mapping[str, str]) -> None:
+    """Store the developer's key into the signed-in throwaway profile, then require masked status to report it.
 
     Raises:
-        UnavailableError: The package has no command to read provider settings yet.
+        UnavailableError: The key is not in this lane's environment, or the
+            package has no provider-settings commands yet.
+        AcceptanceError: Setting the key, or reading it back, did not hold.
     """
-    del programs, environment
-    if STORE_KEY_COMMAND is None:
-        raise UnavailableError("this package has no provider-settings command yet, so no key can be stored or read")
-    return False
+    if not os.environ.get(KEY_VARIABLE, "").strip():
+        raise UnavailableError(f"no provider key: set {KEY_VARIABLE} in this lane's own environment")
+    code, _envelope = run_cli(programs, environment, "--language", "en", "config", "provider", "--help")
+    if code != 0:
+        raise UnavailableError("this package has no `aeat config provider` commands yet, so no key can be stored")
+    payload = bytearray(json.dumps({"api_key": os.environ[KEY_VARIABLE]}), "utf-8")
+    try:
+        result = run_command(
+            [str(programs.aeat), "--format", "json", "config", "provider", "set", PROVIDER, "--secrets-stdin"],
+            cwd=_REPOSITORY,
+            environment=environment,
+            input_text=payload.decode("utf-8"),
+            timeout_seconds=180,
+            errors="replace",
+        )
+    finally:
+        # The decoded text handed to the child cannot be wiped; this buffer can.
+        payload[:] = bytes(len(payload))
+    require(result.returncode == 0, f"provider set: exit {result.returncode}")
+    code, envelope = run_cli(programs, environment, "config", "provider", "status")
+    require(code == 0, f"provider status: {code} {error_code(envelope)}")
+    providers = envelope.get("result", {}).get("providers", [])
+    entry = next((item for item in providers if isinstance(item, dict) and item.get("id") == PROVIDER), {})
+    require(
+        entry.get("available") is True and entry.get("source") == "profile",
+        f"provider status does not report the stored key: mode={entry.get('mode')} readiness={entry.get('readiness')}",
+    )
+    print(json.dumps({"step": "provider_key_stored", "readiness": entry.get("readiness")}), flush=True)
 
 
 def test_host(served: bool) -> TestHost:
@@ -393,10 +427,8 @@ def run(run_directory: Path, *, served: bool, attach_only: bool, arguments: list
             if attach_only:
                 unproven.append("agent specs: --attach-only ran only the attachment check")
                 arguments = [*arguments, "tests/live/attach.live.ts"]
-            elif not stored_provider_key(programs, environment):
-                raise UnavailableError(
-                    f"no provider key is stored for the profile; store it first: {STORE_KEY_COMMAND}"
-                )
+            else:
+                provision_provider_key(programs, environment)
             status = playwright(host.entry, endpoint, results, arguments)
             print(json.dumps({"step": "playwright", "exit_code": status}), flush=True)
             if status != 0:

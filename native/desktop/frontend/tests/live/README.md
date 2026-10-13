@@ -27,6 +27,8 @@ The lane:
 - creates a fresh, marked storage root under `build/acceptance`;
 - creates a synthetic profile through the package's `aeat` command line;
 - signs the profile in with the password on standard input;
+- stores your provider key into that profile with
+  `aeat config provider set --secrets-stdin`;
 - starts the desktop in a kill-on-close Job;
 - runs this project;
 - signs out and closes the window;
@@ -38,8 +40,11 @@ The lane:
 Exit 0 means every spec passed and both checks were clean, 1 means a failure,
 and 3 means a prerequisite is absent.
 
-The person stores the provider key for the profile. The lane never takes a key
-on its command line, in a file or in its environment.
+The lane reads your key only from its own environment, as
+`CADRUMO_LLM_ANTHROPIC_API_KEY`, and exits 3 naming that variable when it is
+unset. It writes the key once to the set command's standard input. The key is
+never placed on a command line, in a file, a log or another process's
+environment.
 
 Options, passed as `just desktop-agent-live <options>`:
 
