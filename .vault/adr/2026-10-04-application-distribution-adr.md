@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#application-distribution'
 date: '2026-10-04'
-modified: '2026-10-12'
+modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:627cf7be7fd4aa8f5030dcd05cf503ad2d6427fbec459b970ecd793296f7d029'
+body_hash: 'sha256:d4d54b6be44249a4f9a690147bf5d7f5248e2e4ffb3a4d009d45da836ecc187b'
 related:
   - '[[2026-10-04-application-distribution-research]]'
   - '[[2026-10-03-application-packaging-interpreter-foundation-adr]]'

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#runtime-manager-architecture'
 date: '2026-10-04'
-modified: '2026-10-10'
+modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:a3f3206b1979199dc5f59ee2bc00c39e04c7e603047f41f1f25d7250c1bf9789'
+body_hash: 'sha256:f5f427d62dd1c4cfc21d95a33647f5867d4c4ffc4072ab8a44314de7e068be2a'
 related:
   - "[[2026-10-04-runtime-manager-architecture-requirements-research]]"
   - "[[2026-10-03-runtime-manager-architecture-research]]"
@@ -159,7 +159,6 @@ This record decides the installed topology. The runtime-side contract is `2026-1
 - Registration, tray, session end, job escape, cutover and uninstall are verified only in package acceptance on disposable hosts.
 - Development and CI machines never receive login registration.
 
-
 ### 2026-10-09 authorized admission amendment
 
 The user explicitly removed desktop/logon launch-context admission. Earlier requirements to reject Session 0, missing desktop witnesses, or elevated launch contexts are superseded within Windows manager/runtime operation. A verified same-account native process and its actual token logon may authenticate without a desktop. Desktop lock observation remains applicable when a desktop is positively bound; a native non-desktop logon has no screen-lock surface. Passwords, receipts and approved exact-profile MCP grants remain required. Native peer identity, executable verification, storage ownership, credential revocation and process ownership are unchanged. Runtime recovery follows the owning manager lifetime until explicit stop or session-end, rather than requiring an active WTS desktop. Evidence and implementation: `2026-10-09-runtime-process-lifecycle-plan`.
@@ -167,7 +166,6 @@ The user explicitly removed desktop/logon launch-context admission. Earlier requ
 ### 2026-10-10 authorized startup ownership and optional-installation amendment
 
 Accepted under the user's explicit instruction that installation is optional, admin installation supplies a machine-start platform manager, user installation supplies login startup, and every running Cadrumo GUI must establish runtime supervision. This supersedes the earlier exclusions of desktop-owned supervision and Windows SCM hosting for this scope. A boot-time Windows service is a lifecycle broker only: it launches and watches per-user managers using genuine user logon tokens; it never owns profile credentials or runs a taxpayer runtime as SYSTEM. User-only installation retains unprivileged login startup. Cadrumo embeds the existing manager supervision core as a fallback when no installed session manager owns supervision, with the same native ownership lock, runtime start claim, process identity verification, heartbeat/recovery and authenticated client readiness. Existing installed managers retain ownership; a running GUI watches their liveness and takes over after ownership is released. Installation registration, dispatch acknowledgement, a PID or a supervisor ready line alone never establishes application readiness. CLI, TUI and MCP remain connect-only. Build and command acceptance exercise the shipped Cadrumo startup path and fail when supervision or real native IPC readiness fails. No development-host boot/login registration is required to test GUI fallback. Real installed boot/login acceptance remains separately reported until exercised on a disposable host. Detailed prior evidence: 2026-10-09-runtime-process-lifecycle-audit.
-
 
 ## Implementation
 
@@ -334,7 +332,6 @@ Letting the old manager orchestrate the cutover keeps the only supervisor channe
 - unattended agent work needs a runtime before any sign-in
 
 Acceptance would establish decision authority only. None of this is implemented.
-
 
 ### 2026-10-09 authorized desktop provisioning exception
 

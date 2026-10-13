@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#canonical-environment'
 date: '2026-10-04'
-modified: '2026-10-08'
+modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:b46e316a511ca690a176992e648169bb27728924767564d3eae46c9cac0d8589'
+body_hash: 'sha256:fd05bb99b13aab23932ab4785b6f5fb5175e638a16ac4fbdc646bc38b414ffb1'
 related:
   - "[[2026-10-04-canonical-environment-reference]]"
   - "[[2026-08-03-canonical-storage-management-adr]]"

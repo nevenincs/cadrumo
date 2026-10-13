@@ -9,9 +9,9 @@ related:
   - '[[2026-10-03-application-packaging-interpreter-foundation-adr]]'
   - '[[2026-10-03-runtime-without-service-manager-adr]]'
   - '[[2026-10-07-application-distribution-windows-versioned-msi-adr]]'
-modified: '2026-10-08'
+modified: '2026-10-13'
 body_schema: body-v2
-body_hash: 'sha256:005ae47d85def91e7b6ae072605030af843068cbc071af09382bddafeec76aa5'
+body_hash: 'sha256:c59584428e50b8bf1788135f8dceb06611fb5c1b7fc6d47ebabefc8bbd2c6edf'
 ---
 
 # Application distribution

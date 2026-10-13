@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#runtime-without-service-manager'
 date: '2026-10-03'
-modified: '2026-10-04'
+modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:b38ec14df5e713f091f8f8d2b09d071f7ddad2f11da0258d3fc9314cf5aaa16a'
+body_hash: 'sha256:b8c477723a0de72ad20503c9fe303a201d45215e0728f6ce07d81ed8f7f4eda3'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-adr]]"
   - "[[2026-09-26-mcp-purpose-authentication-profile-access-adr]]"
