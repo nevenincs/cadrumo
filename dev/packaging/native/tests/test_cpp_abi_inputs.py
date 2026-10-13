@@ -18,6 +18,7 @@ from dev._paths import REPO_ROOT
 from ...command_execution import run_command
 from .. import artifact_verify, cpp_abi_inputs, linux_cxx_abi
 from ..hashing import digest
+from ..layout import load_layout
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -163,17 +164,17 @@ def test_artifact_admission_precedes_external_or_shipped_execution(
     archive.write_bytes(b"fixture archive bytes")
     manifest = {"build": {"target": "linux-x86-64"}}
     manifest_bytes = json.dumps(manifest).encode()
-    contract = {"backend": "linux", "files": {"package_manifest": "manifest.json"}}
+    # The real layout parser supplies the contract, so a schema change reaches this fixture.
+    manifest_path = load_layout("linux-x86-64")["files"]["package_manifest"]
     monkeypatch.setattr(
         artifact_verify, "build_paths", lambda root: {"verification": root / "verification", "generated": generated}
     )
-    monkeypatch.setattr(artifact_verify, "load_layout", lambda target: contract)
     monkeypatch.setattr(artifact_verify, "verify_release", lambda *args: None)
 
     def extract(path: Path, destination: Path) -> None:
         package = destination / "app"
-        package.mkdir()
-        (package / "manifest.json").write_bytes(manifest_bytes)
+        (package / manifest_path).parent.mkdir(parents=True)
+        (package / manifest_path).write_bytes(manifest_bytes)
 
     def forbidden(*args: Any, **kwargs: Any) -> Any:
         pytest.fail("Missing Linux proof reached external/shipped image execution")

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import sys
 import zipfile
@@ -75,9 +76,14 @@ def _configure_distribution(tmp_path: Path, target: str, *, manager: bool = Fals
     text = (module / "CMakeLists.txt").read_text(encoding="utf-8")
     # Keep the real distribution graph; substitute only host/bootstrap admission.
     text = text.replace("include(../Identity.cmake)", "include(FixtureIdentity.cmake)")
-    text = text.replace(
-        "include(../CachedCommand.cmake)", f'include("{(REPO_ROOT / "native/cmake/CachedCommand.cmake").as_posix()}")'
+    # The copy leaves native/cmake/distribution, so each remaining sibling module it names as ../X.cmake
+    # must resolve against the repository, however many modules the real graph includes.
+    text = re.sub(
+        r"include\(\.\./(\w+\.cmake)\)",
+        lambda match: f'include("{(REPO_ROOT / "native/cmake" / match[1]).as_posix()}")',
+        text,
     )
+    assert "include(../" not in text, "A relative include escaped the fixture's sibling-module resolution"
     (source / "CMakeLists.txt").write_text(text, encoding="utf-8")
     shutil.copy2(module / "VerifyInstall.cmake.in", source / "VerifyInstall.cmake.in")
     shutil.copy2(module / "WindowsMsiGate.cmake.in", source / "WindowsMsiGate.cmake.in")

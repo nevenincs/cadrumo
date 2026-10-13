@@ -212,8 +212,9 @@ def test_changed_wheel_closure_reuses_sdk(tmp_path: Path, monkeypatch: pytest.Mo
     monkeypatch.setattr(provision, "backend", unexpected_sdk)
 
     def install(command: list[str], **kwargs: object) -> SimpleNamespace:
+        # Provisioning runs uv twice into one --target: the locked closure, then the agent's lock.
         dependencies = Path(command[command.index("--target") + 1])
-        dependencies.mkdir()
+        dependencies.mkdir(exist_ok=True)
         (dependencies / "fixture.py").write_text(wheel.version, encoding="utf-8")
         return SimpleNamespace(returncode=0, stderr="")
 

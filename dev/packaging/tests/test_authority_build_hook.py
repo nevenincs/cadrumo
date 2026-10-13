@@ -11,6 +11,9 @@ from types import ModuleType
 from typing import Generic, TypeVar
 
 import pytest
+from hatchling.builders.config import BuilderConfig
+from hatchling.builders.sdist import SdistBuilder
+from hatchling.builders.wheel import WheelBuilder
 
 from dev._paths import REPO_ROOT
 
@@ -33,9 +36,21 @@ def _hook_module() -> ModuleType:
     return module
 
 
+def _builder_config(root: Path, target_name: str) -> BuilderConfig:
+    """Return Hatch's own configuration for one target, whose reserved paths the hook extends."""
+    project = root / "hatch-project"
+    project.mkdir(exist_ok=True)
+    (project / "pyproject.toml").write_text(
+        '[project]\nname = "fixture"\nversion = "0"\n\n[tool.hatch.build.targets.wheel]\nbypass-selection = true\n',
+        encoding="utf-8",
+    )
+    builder = {"wheel": WheelBuilder, "sdist": SdistBuilder}[target_name](str(project))
+    return builder.config
+
+
 def _initialize(hook: ModuleType, root: Path, *, version: str, target_name: str) -> dict[str, object]:
     """Run the real hook's ``initialize`` for one target and return its build data."""
-    instance = hook.CustomBuildHook(str(root), {}, None, None, str(root), target_name)
+    instance = hook.CustomBuildHook(str(root), {}, _builder_config(root, target_name), None, str(root), target_name)
     build_data: dict[str, object] = {}
     instance.initialize(version, build_data)
     return build_data
@@ -91,7 +106,9 @@ def test_distributions_embed_selected_client_and_clean_staging(
 ) -> None:
     hook = _hook_module()
     _record_resolutions(hook, monkeypatch, tmp_path / "pair")
-    instance = hook.CustomBuildHook(str(tmp_path), {}, None, None, str(tmp_path), target_name)
+    instance = hook.CustomBuildHook(
+        str(tmp_path), {}, _builder_config(tmp_path, target_name), None, str(tmp_path), target_name
+    )
     build_data: dict[str, object] = {}
     instance.initialize("standard", build_data)
     mapping = build_data["force_include"]

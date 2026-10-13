@@ -61,6 +61,7 @@ def test_application_probe_receives_extracted_root_and_controls_acceptance(
             "abi": 1,
         },
         "python": "3.13.11",
+        "files": {},
         "distributions": {"fixture-product": "1.0"},
     }
     (tmp_path / "build-paths.json").write_text(
@@ -87,11 +88,6 @@ def test_application_probe_receives_extracted_root_and_controls_acceptance(
         },
     }
     (tmp_path / "artifacts-Release.json").write_text(json.dumps(locator), encoding="utf-8")
-    monkeypatch.setattr(
-        artifact_verify,
-        "load_layout",
-        lambda target: {"backend": "windows", "files": {"package_manifest": "data/package-manifest.json"}},
-    )
     monkeypatch.setattr(artifact_verify, "backend", lambda _: SimpleNamespace(external_probe=lambda _: ["fixture"]))
     accepted_roots: list[Path] = []
 
