@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import os
 import sys
-import sysconfig
+from importlib.metadata import distribution
 from pathlib import Path
 
 from cadrumo.core.storage_environment import storage_directory
@@ -32,13 +32,20 @@ def fixture_environment() -> dict[str, str]:
     return environment
 
 
+def _installed_site_packages() -> str:
+    # A child that ran on the base interpreter reports the base purelib from
+    # sysconfig; the directory holding the installed distribution is the test
+    # environment's in every generation.
+    return str(Path(str(distribution("cadrumo").locate_file(""))).resolve())
+
+
 def fixture_arguments(module: str, *arguments: str) -> tuple[str, ...]:
     """Run a fixture after initializing the configured site-packages hooks."""
     return (
         "-c",
         "import runpy, site, sys; site.addsitedir(sys.argv.pop(1)); "
         "runpy.run_module(sys.argv.pop(1), run_name='__main__')",
-        sysconfig.get_path("purelib"),
+        _installed_site_packages(),
         module,
         *arguments,
     )

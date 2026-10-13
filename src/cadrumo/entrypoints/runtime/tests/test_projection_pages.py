@@ -330,7 +330,6 @@ def test_native_paged_inventory_refuses_continuation_after_global_lock(tmp_path:
     with administration_subject(
         tmp_path, os_owner_id=owner_id(), installation_id=installation.installation_id
     ) as subject:
-        requested = {uuid4() for _ in range(36)}
         # Add one bounded scope so the public envelope crosses a page while
         # the complete raw inventory still fits its separate worker IPC budget.
         bounded_proposal = subject.proposal.model_copy(
@@ -342,10 +341,19 @@ def test_native_paged_inventory_refuses_continuation_after_global_lock(tmp_path:
                 )
             }
         )
-        for index, identity in enumerate(requested):
-            subject.service.request(identity, bounded_proposal if index == 0 else subject.proposal)
-        inventory_bytes = canonical_json_bytes(subject.service.inventory().model_dump(mode="json"))
-        assert len(inventory_bytes) <= WORKER_AUTOMATION_INVENTORY_MAX_BYTES
+        # Fill the raw budget rather than fixing a count: a request's size follows its proposal's scope.
+        bounded = uuid4()
+        subject.service.request(bounded, bounded_proposal)
+        requested = {bounded}
+        size = len(canonical_json_bytes(subject.service.inventory().model_dump(mode="json")))
+        step = 0
+        while size + step <= WORKER_AUTOMATION_INVENTORY_MAX_BYTES:
+            identity = uuid4()
+            subject.service.request(identity, subject.proposal)
+            requested.add(identity)
+            previous, size = size, len(canonical_json_bytes(subject.service.inventory().model_dump(mode="json")))
+            step = size - previous
+        assert size <= WORKER_AUTOMATION_INVENTORY_MAX_BYTES
         profile_id = subject.store.binding.profile_id
         close_active_bucket_session()
         stop, boot = Event(), uuid4()
