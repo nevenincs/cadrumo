@@ -71,6 +71,11 @@ _PROFILE = "agent-live-acceptance"
 _TAXPAYER = "Daniel Persona"
 _LEDGER_MARKER = "agent live acceptance"
 _KEY_NAME = "CADRUMO_AGENT_CLAUDE_API_KEY"
+# The agent's own names for the lane this run uses: Claude by its API key. The agent keeps Claude's API and
+# command-line lanes under one provider name, so a run names the transport as well.
+_AGENT_PROVIDER = "claude"
+_AGENT_TRANSPORT = "api"
+_LANE_LABEL = f"{_AGENT_PROVIDER} {_AGENT_TRANSPORT}"
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 _GATEWAY_START_SECONDS = 180
 _RUN_START_SECONDS = 240
@@ -82,6 +87,28 @@ def _source_programs(directory: Path) -> Programs:
     suffix = ".exe" if os.name == "nt" else ""
     names = ("aeat", "cadrumo-runtime", "cadrumo-mcp")
     return Programs(*((directory / f"{name}{suffix}").resolve(strict=True) for name in names))
+
+
+def _claude_api_lane(catalog: Mapping[str, Any]) -> Mapping[str, Any] | None:
+    """Return the agent catalog's Claude API lane; its command-line lane shares the provider name."""
+    return next(
+        (
+            lane
+            for lane in catalog["providers"]
+            if lane["provider_id"] == _AGENT_PROVIDER and lane["transport"] == _AGENT_TRANSPORT
+        ),
+        None,
+    )
+
+
+def _run_selection(workspace: Path, model: str) -> dict[str, str]:
+    """Return the ``agent`` member of a run start: the agent's own provider and transport names."""
+    return {
+        "provider": _AGENT_PROVIDER,
+        "transport": _AGENT_TRANSPORT,
+        "model": model,
+        "workspace_root": str(workspace),
+    }
 
 
 def _free_port() -> int:
@@ -139,12 +166,12 @@ class _Gateway:
         catalog = self._request(
             "GET", f"/v1/provider-catalog?workspace_root={urllib.parse.quote(str(workspace))}", None, 180
         )
-        lane = next((lane for lane in catalog["providers"] if lane["provider_id"] == "anthropic"), None)
+        lane = _claude_api_lane(catalog)
         if lane is None:
-            raise AcceptanceError("the gateway offers no anthropic lane")
-        require(lane["health"]["selectable"], f"the anthropic lane is not selectable: {lane['health']['reasons']}")
+            raise AcceptanceError(f"the gateway offers no {_LANE_LABEL} lane")
+        require(lane["health"]["selectable"], f"the {_LANE_LABEL} lane is not selectable: {lane['health']['reasons']}")
         models = lane["catalog"]["models"]
-        require(bool(models), "the anthropic catalog lists no model")
+        require(bool(models), f"the {_LANE_LABEL} catalog lists no model")
         if requested is not None:
             require(any(entry["model"] == requested for entry in models), f"{requested} is not in the live catalog")
             return requested
@@ -170,7 +197,7 @@ class _Gateway:
                 "message": message,
                 "title": "agent live acceptance",
                 **({"continues_run_id": continues} if continues is not None else {}),
-                "agent": {"provider": "anthropic", "model": model, "workspace_root": str(workspace)},
+                "agent": _run_selection(workspace, model),
             },
             _RUN_START_SECONDS,
         )

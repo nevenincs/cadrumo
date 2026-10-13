@@ -77,6 +77,22 @@ def test_lanes_of_one_identity_share_its_name_and_never_a_credential_field() -> 
     assert by_id["claude_api"].cli_program is None
 
 
+def test_only_api_key_lanes_have_an_agent_credential_id_and_it_is_the_agents_provider_name() -> None:
+    catalog = load_provider_catalog()
+    by_id = {entry.id: entry for entry in catalog.providers}
+
+    assert by_id["claude_api"].agent_credential_id == "claude"
+    assert by_id["codex_api"].agent_credential_id == "codex"
+    assert by_id["kimi_cli"].agent_credential_id == "kimi"
+    assert all(by_id[f"{gateway}_cli"].agent_credential_id == gateway for gateway in _GATEWAYS)
+    # An OAuth token or the provider's own sign-in never travels in the hosting frame.
+    assert by_id["claude_cli"].agent_credential_id is None
+    assert by_id["codex_cli"].agent_credential_id is None
+    assert by_id["antigravity_cli"].agent_credential_id is None
+    ids = [entry.agent_credential_id for entry in catalog.providers if entry.agent_credential_id is not None]
+    assert len(ids) == len(set(ids))
+
+
 def test_catalog_lookup_refuses_unknown_and_malformed_ids() -> None:
     catalog = load_provider_catalog()
 

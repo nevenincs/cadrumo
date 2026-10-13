@@ -104,27 +104,27 @@ class _SessionAgentCredentials:
                 error.reason,
             )
             raise AgentHostError(AgentHostRefusal.SIGNED_OUT) from error
-        # The frame names each credential by the agent settings field the catalog says receives it.
+        # The frame names each credential by the id the agent keys it by; a lane with none contributes nothing.
         catalog = load_provider_catalog()
         credentials: dict[str, AgentCredential] = {}
         try:
             offset = 0
             for item in description.credentials:
-                field = _frame_field(catalog, item.provider)
+                credential_id = _agent_credential_id(catalog, item.provider)
                 secret = material[offset : offset + item.secret_bytes]
                 offset += item.secret_bytes
-                if field is None:
+                if credential_id is None:
                     wipe(secret)
                     continue
-                credentials[field] = AgentCredential(secret, item.base_url)
+                credentials[credential_id] = AgentCredential(secret, item.base_url)
         finally:
             wipe(material)
         settings = load_settings()
         for provider in description.unset:
-            field = _frame_field(catalog, provider)
+            credential_id = _agent_credential_id(catalog, provider)
             fallback = development_fallback(provider, settings=settings, storage_mode=storage_mode().mode)
-            if field is not None and fallback is not None:
-                credentials[field] = AgentCredential(
+            if credential_id is not None and fallback is not None:
+                credentials[credential_id] = AgentCredential(
                     bytearray(fallback.secret.get_secret_value(), "utf-8"), fallback.base_url
                 )
         if not credentials:
@@ -144,9 +144,9 @@ class _SessionAgentCredentials:
             self._bearer = None
 
 
-def _frame_field(catalog: ProviderCatalog, provider_id: str) -> str | None:
+def _agent_credential_id(catalog: ProviderCatalog, provider_id: str) -> str | None:
     entry = catalog.entry(provider_id)
-    return None if entry is None else entry.credential_field
+    return None if entry is None else entry.agent_credential_id
 
 
 class ProfileConnectionAgentMixin:

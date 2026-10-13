@@ -63,6 +63,11 @@ class ProviderAuthKind(StrEnum):
         return self is not ProviderAuthKind.PROVIDER_SIGN_IN_ONLY
 
     @property
+    def carries_api_key(self) -> bool:
+        """Return whether the credential is a plain API key, the only kind cadrumo-agent's hosting frame carries."""
+        return self in {ProviderAuthKind.API_KEY, ProviderAuthKind.API_KEY_WITH_BASE_URL}
+
+    @property
     def accepts_provider_sign_in(self) -> bool:
         """Return whether the provider's own CLI sign-in can serve the lane."""
         return self in {ProviderAuthKind.OAUTH_OR_PROVIDER_SIGN_IN, ProviderAuthKind.PROVIDER_SIGN_IN_ONLY}
@@ -178,6 +183,16 @@ class ProviderCatalogEntry(BaseModel):
         if self.development_setting is not None and not self.auth_kind.accepts_direct_credential:
             raise ValueError("a provider-sign-in-only lane has no development credential")
         return self
+
+    @property
+    def agent_credential_id(self) -> str | None:
+        """Return the id cadrumo-agent's hosting frame keys this lane's credential by, or ``None``.
+
+        The agent keys an API key by its provider's own name. A lane that
+        authenticates by OAuth token or by the provider's own sign-in has no
+        such id: neither ever travels in the frame.
+        """
+        return self.provider if self.auth_kind.carries_api_key else None
 
     def serves(self, consumer: ProviderConsumer) -> bool:
         """Return whether ``consumer`` may use this lane's credential."""

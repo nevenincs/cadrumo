@@ -3,7 +3,8 @@
 The stand-in tree has the layout the runtime launches from: its own
 ``.venv`` interpreter (a copy of this checkout's environment launcher, which
 starts the base interpreter with an empty environment of its own) and a
-``cadrumo_agent`` package whose ``serve`` runs the shared agent peer fixture.
+``cadrumo_agent`` package whose ``cli.main`` module, the agent's declared
+command-line module, runs the shared agent peer fixture for ``serve``.
 So the runtime's real launch path, containment and frame are exercised, and
 nothing of Cadrumo is importable inside the agent.
 """
@@ -29,7 +30,7 @@ _STAND_IN_MAIN: Final = """\
 import json, runpy, subprocess, sys, threading
 from pathlib import Path
 
-config = json.loads((Path(__file__).resolve().parents[1] / "stand_in.json").read_text(encoding="utf-8"))
+config = json.loads((Path(__file__).resolve().parents[2] / "stand_in.json").read_text(encoding="utf-8"))
 
 
 def probe(command):
@@ -66,8 +67,10 @@ def stand_in_agent_source(
     record.mkdir()
     shutil.copy2(environment / "python.exe", source / ".venv" / "Scripts" / "python.exe")
     shutil.copy2(environment.parent / "pyvenv.cfg", source / ".venv" / "pyvenv.cfg")
-    (source / "cadrumo_agent").mkdir()
-    (source / "cadrumo_agent" / "__main__.py").write_text(_STAND_IN_MAIN, encoding="utf-8")
+    command_line = source / "cadrumo_agent" / "cli"
+    command_line.mkdir(parents=True)
+    (command_line / "__init__.py").write_text("", encoding="utf-8")
+    (command_line / "main.py").write_text(_STAND_IN_MAIN, encoding="utf-8")
     (source / "stand_in.json").write_text(
         json.dumps({"fixture": agent_host_fixture.__file__, "mode": mode, "record": str(record), "probe": probe}),
         encoding="utf-8",

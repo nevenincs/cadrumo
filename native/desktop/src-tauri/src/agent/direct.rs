@@ -7,7 +7,7 @@
 //! from `CADRUMO_AGENT_` variables, so the packaged copy cannot be configured
 //! this way. The agent's own project environment, named by
 //! `CADRUMO_AGENT_SOURCE_DIR`, runs it instead. The key comes from this
-//! process's own `CADRUMO_AGENT_ANTHROPIC_API_KEY`, and is handed to the agent
+//! process's own `CADRUMO_AGENT_CLAUDE_API_KEY`, and is handed to the agent
 //! in its environment only.
 //!
 //! The agent's files live under `<storage root>/agent/<profile>/`. It serves
@@ -24,7 +24,7 @@ use std::{
 };
 
 /// The key's variable, in this process and in the agent's.
-pub const KEY_VARIABLE: &str = "CADRUMO_AGENT_ANTHROPIC_API_KEY";
+pub const KEY_VARIABLE: &str = "CADRUMO_AGENT_CLAUDE_API_KEY";
 /// The cadrumo-agent project directory, as the package build names it.
 pub const SOURCE_VARIABLE: &str = "CADRUMO_AGENT_SOURCE_DIR";
 

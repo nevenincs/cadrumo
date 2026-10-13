@@ -31,7 +31,9 @@ HOSTED_ASSISTANT_PROVIDERS: Final[tuple[str, ...]] = ("claude_api", "claude_cli"
 
 cadrumo-agent's hosting contract owns this list; listing a lane in the
 profile's settings does not widen it. Only these lanes' credentials are ever
-written into the frame, each keyed by the catalog's ``credential_field``.
+resolved for the frame, and only an API key is written into it, keyed by the
+catalog's ``agent_credential_id``: a lane's token or provider-owned sign-in
+contributes nothing.
 """
 
 

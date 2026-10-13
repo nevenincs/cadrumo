@@ -29,7 +29,9 @@ AGENT_DIRECTORY: Final = "agent"
 _ROOT_KEY_NAME: Final = ".agent-root-key"
 _ROOT_KEY_BYTES: Final = 32
 _PACKAGE_MANIFEST: Final = ("data", "package-manifest.json")
-_AGENT_MODULE: Final = "cadrumo_agent"
+_AGENT_MODULE: Final = "cadrumo_agent.cli.main"
+"""The agent's declared command-line module; it has no package-level ``__main__``."""
+_AGENT_PACKAGE: Final = _AGENT_MODULE.partition(".")[0]
 
 
 class AgentProgramRefusalError(Exception):
@@ -93,7 +95,8 @@ def agent_image(agent_source: str | None, *, agent_root: Path) -> AgentImage:
     agent package bundled beside this runtime with this runtime's interpreter.
     """
     if agent_source is None:
-        if importlib.util.find_spec(_AGENT_MODULE) is None:
+        # The top-level package only: resolving a dotted name would import the agent's code into this process.
+        if importlib.util.find_spec(_AGENT_PACKAGE) is None:
             raise AgentProgramRefusalError(AgentLauncherRefusal.SERVICE_ABSENT)
         return AgentImage(Path(sys.executable), ("-m", _AGENT_MODULE, "serve"), agent_root)
     source = Path(agent_source)

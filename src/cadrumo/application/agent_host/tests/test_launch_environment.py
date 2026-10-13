@@ -26,6 +26,7 @@ _RECEIVED = {
     "AWS_SECRET_ACCESS_KEY": "aws-test-NOT-A-REAL-KEY",
     "CADRUMO_LLM_ANTHROPIC_API_KEY": "sk-ant-test-NOT-A-REAL-KEY",
     "CADRUMO_AGENT_ANTHROPIC_API_KEY": "sk-ant-test-NOT-A-REAL-KEY",
+    "CADRUMO_AGENT_CLAUDE_API_KEY": "sk-ant-test-NOT-A-REAL-KEY",
     "CADRUMO_AGENT_GATEWAY_TOKEN": "gateway-test-NOT-A-REAL-TOKEN",
     "GITHUB_TOKEN": "ghp-test-NOT-A-REAL-TOKEN",
     "PYTHONPATH": "C:\\elsewhere",
