@@ -52,6 +52,7 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.application.runtime.deadline_budget import exchange_deadline
 from cadrumo.application.runtime.operation_access import (
     RuntimeOperationContract,
     RuntimeOperationContractReply,
@@ -108,7 +109,7 @@ class _Session:
 
     def ask(self, build: Callable[..., RuntimeOperationRequest], **members: object) -> _Answer:
         request = build(request_id=uuid4(), profile_id=self.profile_id, session_id=self.session_id, **members)
-        return self.connection.operation(request, deadline=time.monotonic() + 30)
+        return self.connection.operation(request, deadline=exchange_deadline())
 
     def contract(self, definition_id: str) -> RuntimeOperationContractReply:
         """Read a contract: a call the worker serves, so it also says the worker is still there."""

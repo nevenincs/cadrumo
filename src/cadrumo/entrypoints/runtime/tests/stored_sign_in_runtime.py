@@ -48,6 +48,7 @@ from cadrumo.application.runtime.attendance import (
     RuntimeAttendancePending,
 )
 from cadrumo.application.runtime.contracts import RuntimeByteChannel, RuntimeClientHello
+from cadrumo.application.runtime.deadline_budget import exchange_deadline
 from cadrumo.application.runtime.profile_access import (
     RuntimeAccessRefusal,
     RuntimeDisclosurePage,
@@ -172,8 +173,8 @@ class StoredSignInRuntime:
         }
         if surface is not None:
             document["surface"] = surface.value
-        # The first login launches the profile worker, so it shares the cold admission budget.
-        reply = connection.login(RuntimeProfileLogin.model_validate(document), secret, deadline=time.monotonic() + 75)
+        # A cold worker or a concurrent profile guard uses the runtime's finite exchange budget.
+        reply = connection.login(RuntimeProfileLogin.model_validate(document), secret, deadline=exchange_deadline())
         assert secret == bytes(len(secret))
         return reply
 

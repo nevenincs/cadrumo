@@ -15,6 +15,7 @@ from ...application.operations.models import OperationId, OperationRequest
 from ...application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionDescriptionV1
 from ...application.operations.secret_submission import OperationSecretRequirement
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ...application.runtime.deadline_budget import exchange_deadline
 from ...application.runtime.operation_access import OperationManagementRequest
 from ...application.runtime.profile_worker import (
     ProfileWorkerContractRequest,
@@ -53,6 +54,7 @@ class ProfileWorkerOperationClient(ProfileWorkerTransport):
 
     def describe(self, session_id: UUID, definition_id: str) -> OperationPublicDefinitionDescriptionV1:
         """Read one exact canonical contract and request schema through live custody."""
+        # The first description may join registry preparation after a human sign-in.
         result = self._exchange(
             ProfileWorkerRequest(
                 ProfileWorkerContractRequest(
@@ -62,6 +64,7 @@ class ProfileWorkerOperationClient(ProfileWorkerTransport):
                 )
             ),
             ProfileWorkerOperationContract,
+            deadline=exchange_deadline(),
         )
         return OperationPublicDefinitionDescriptionV1(
             contract=result.contract, request_json_schema=result.request_json_schema

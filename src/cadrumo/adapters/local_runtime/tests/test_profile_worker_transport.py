@@ -14,6 +14,7 @@ import pytest
 
 from ....application.operations.frontend_requests import OperationObservationRequestV1
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ....application.runtime.deadline_budget import RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS
 from ....application.runtime.profile_worker import ProfileWorkerIdentity, ProfileWorkerRefusal
 from ....application.runtime.worker_authorization import AUTHORITY_SECTION_MAXIMUM_SECONDS
 from ....application.user_profile.access_contracts import AccessDenialCode, ProfileAccessBinding
@@ -139,6 +140,28 @@ def test_control_reply_keeps_its_short_budget() -> None:
 
     assert refused.value.reason is RuntimeRefusalCode.DEADLINE_EXCEEDED
     assert worker.contained
+
+
+def test_contract_discovery_allows_registry_preparation_without_containing_worker() -> None:
+    worker = _worker(latency=RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS - 1)
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        worker.describe(uuid4(), "auth.local-read")
+
+    assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+    assert not worker.contained
+    assert not worker._stopping.is_set()
+
+
+def test_contract_discovery_beyond_exchange_budget_contains_worker() -> None:
+    worker = _worker(latency=RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS + 1)
+
+    with pytest.raises(RuntimeRefusalError) as refused:
+        worker.describe(uuid4(), "auth.local-read")
+
+    assert refused.value.reason is RuntimeRefusalCode.DEADLINE_EXCEEDED
+    assert worker.contained
+    assert worker._stopping.is_set()
 
 
 @pytest.mark.parametrize("reentrant", [False, True])
