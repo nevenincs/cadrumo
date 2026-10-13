@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:8a9f186083138d3019cbfac91cf0fbeecd7625c5671f1d53c0c2cd67dbcb0afa'
+body_hash: 'sha256:b0bf7d7a221217ee0bea11bdb52ae39c6894358d4b471e06fb605069beddb29f'
 related:
   - "[[2026-10-13-canonical-environment-plan]]"
 ---
@@ -87,6 +87,32 @@ related:
 - `S02` `verify:` `cargo +1.96.0 test native/manager --test environment --test supervision` -> `pass`
 - `S02` `by:` `vaultspec-high-executor`
 - `S02` `verify:` `just check-import-boundaries: 15/15 contracts kept, 0 hard findings; run reported unavailable because other sessions changed the tree mid-run` -> `pass`
+- `S08` `M` `src/cadrumo/application/runtime/contracts.py`
+- `S08` `A` `src/cadrumo/application/agent_host/native_refusal.py`
+- `S08` `M` `src/cadrumo/application/agent_host/controller.py`
+- `S08` `M` `src/cadrumo/application/agent_host/launcher_protocol.py`
+- `S08` `M` `src/cadrumo/adapters/local_runtime/windows_process.py`
+- `S08` `M` `src/cadrumo/adapters/local_runtime/agent_process.py`
+- `S08` `M` `src/cadrumo/application/runtime/tests/test_exit_reason_table.py`
+- `S08` `A` `src/cadrumo/application/agent_host/tests/test_native_refusal.py`
+- `S08` `A` `src/cadrumo/application/agent_host/tests/test_controller_native_refusal.py`
+- `S08` `A` `src/cadrumo/application/agent_host/tests/test_launcher_protocol.py`
+- `S08` `M` `src/cadrumo/adapters/local_runtime/tests/agent_host_fixture.py`
+- `S08` `M` `src/cadrumo/adapters/local_runtime/tests/standard_pipe_fixture.py`
+- `S08` `M` `src/cadrumo/adapters/local_runtime/tests/test_agent_process_native.py`
+- `S08` `M` `src/cadrumo/adapters/local_runtime/tests/test_windows_standard_pipes_native.py`
+- `S08` `M` `src/cadrumo/entrypoints/runtime/tests/test_agent_host_runtime.py`
+- `S08` `M` `dev/quality/metadata/import_load_targets.json`
+- `S08` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S08` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S08` `verify:` `uv run --no-sync pytest src/cadrumo/application/agent_host/tests src/cadrumo/application/runtime/tests (308 passed)` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -m '' test_agent_process_native.py test_windows_standard_pipes_native.py (15 passed, native Windows job)` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -m '' test_agent_host_runtime.py -k native_host or hosts_status (2 passed, real runtime door)` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest dev/packaging/tests/test_native_runtime_exit_reasons.py dev/packaging/native/tests/test_application_environment.py test_exit_reason_table.py (54 passed)` -> `pass`
+- `S08` `verify:` `ruff check and format --check on 15 touched files` -> `pass`
+- `S08` `verify:` `just check-types (0 diagnostics in touched files)` -> `pass`
+- `S08` `verify:` `just check-import-boundaries (15/15 contracts, 0 hard findings, 4688/4688 loaded; unavailable only for concurrent source change)` -> `fail`
+- `S08` `by:` `runtime-lane`
 
 ## Notes
 
@@ -96,3 +122,5 @@ related:
 - `S01` native/platform/src/installation.rs: fixed a pre-existing clippy `manual_is_multiple_of` failure to keep -D warnings green; native/manager test build carries a pre-existing clashing TrackPopupMenu extern warning, untouched
 - `S02` Interim until P02.S06: the filtering hosts' classes `(host_classes,` with `AEAT_,` `FINANCIAL_` and `SITE_HEALTH_` prefixes standing in for the retired Settings-derived reserved names) are declared in the file; the generated `RESERVED_ENV,` `PRODUCT_ENV_ALLOWLIST` and `PINNED_ENV` equal the previous values except that non-Cadrumo product names are now cleared by prefix
 - `S02` Pre-existing failures unrelated to the touched files observed in dev/packaging/native/tests: `test_distribution_prepare,` `test_linux_desktop_runtime` payload policy and `test_cpp_abi_inputs` (CMake cannot find ToolchainFloor.cmake), `test_incremental_generation` (FileExistsError), and `dev/packaging/tests/test_native_artifact_identity` (fixture layout lacks paths)
+- `S08` S08 check-import-boundaries reports unavailable because other sessions changed the governed source tree while it ran; its contracts, hard findings and loadability components were clean. Load-target inventories regenerated with python -m `dev.quality.import_load_probe` --compile-targets (adds `native_refusal,` and the native lane's committed `application_environment` that was missing from the dev inventory).
+- `S08` S08 `test_agent_host_runtime.py::test_the_relay_in_the_agents_tree_acts_as_the_agent_under_the_lease_that_started_it` fails with MCP `internal_error` and fails identically with the agent's standard error restored to the null device; it is not caused by this Step.

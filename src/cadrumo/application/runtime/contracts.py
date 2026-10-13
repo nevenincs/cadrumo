@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import IntEnum, StrEnum
 from types import MappingProxyType
-from typing import Annotated, ClassVar, Literal, Protocol, override
+from typing import Annotated, ClassVar, Final, Literal, Protocol, override
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -105,6 +105,13 @@ class RuntimeReservedExitCodes:
         return self.first <= code <= self.last
 
 
+NATIVE_HOST_LAUNCH_PROFILE_REFUSED_EXIT_CODE: Final = 125
+"""The native interpreter host's exit status when an image's launch profile refuses a launch.
+
+The host refuses before Python starts, so this is a launch failure of the
+image and never a runtime exit reason.
+"""
+
 RESERVED_RUNTIME_EXIT_CODES: tuple[RuntimeReservedExitCodes, ...] = (
     # Uncaught Python exceptions, CPython configuration errors and forced job termination.
     RuntimeReservedExitCodes("python_failure", 1, 1),
@@ -112,8 +119,9 @@ RESERVED_RUNTIME_EXIT_CODES: tuple[RuntimeReservedExitCodes, ...] = (
     RuntimeReservedExitCodes("usage", 2, 2),
     # The Windows C runtime's abort().
     RuntimeReservedExitCodes("c_runtime_abort", 3, 3),
-    # CPython's finalization failure (120) and the native interpreter host's startup refusals.
-    RuntimeReservedExitCodes("native_host", 120, 124),
+    # CPython's finalization failure (120) and the native interpreter host's startup refusals,
+    # the last of which is a launch-profile refusal.
+    RuntimeReservedExitCodes("native_host", 120, NATIVE_HOST_LAUNCH_PROFILE_REFUSED_EXIT_CODE),
     # POSIX signal exits reported as 128 + N, and negative codes wrapped to a byte.
     RuntimeReservedExitCodes("posix_signal", 128, 255),
     # NTSTATUS warning and error codes, including STATUS_CONTROL_C_EXIT (0xC000013A).

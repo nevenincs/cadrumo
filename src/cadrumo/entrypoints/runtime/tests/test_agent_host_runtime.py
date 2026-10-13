@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import os
 import sys
 import time
@@ -22,6 +23,7 @@ import pytest
 from pydantic import SecretStr
 
 from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
+from cadrumo.adapters.local_runtime.tests.agent_host_fixture import NATIVE_REFUSAL_SUBJECT
 from cadrumo.application.agent_host.launch_environment import (
     HOSTED_RELAY_VARIABLE,
     HOSTED_ROOT_VARIABLE,
@@ -262,6 +264,52 @@ def test_an_unmarked_root_and_an_absent_source_are_refused(tmp_path: Path, monke
         assert isinstance(unpackaged, RuntimeAgentRefused)
         assert unpackaged.code is AgentLauncherRefusal.SERVICE_ABSENT
         assert not (record / "received.json").exists()
+
+
+_CONTROLLER_LOGGER = "cadrumo.application.agent_host.controller"
+
+
+@pytest.mark.usefixtures("development_key")
+def test_an_agent_the_native_host_refuses_to_launch_is_a_service_failure_that_records_the_hosts_reason(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    source, record = stand_in_agent_source(tmp_path, mode="native_refusal")
+    with stored_sign_in_runtime(tmp_path, monkeypatch) as runtime:
+        mark_lane_root(runtime.root)
+        agent, session_id = _session(runtime, OperationFrontendProjection.AGENT_HOST)
+        with caplog.at_level(logging.WARNING, logger=_CONTROLLER_LOGGER):
+            first = _start(runtime, agent, session_id, source)
+            second = _start(runtime, agent, session_id, source)
+        for refused in (first, second):
+            assert isinstance(refused, RuntimeAgentRefused), refused
+            assert refused.code is AgentLauncherRefusal.SERVICE_FAILED
+        # The agent never ran, and each refusal released the profile's one reservation: both starts launched.
+        assert not (record / "received.json").exists()
+        messages = [record.getMessage() for record in caplog.records if record.name == _CONTROLLER_LOGGER]
+        assert (
+            messages
+            == [
+                "agent launch refused by the native host exit=125 native_refusal=launch_value_malformed "
+                f"subject={NATIVE_REFUSAL_SUBJECT}"
+            ]
+            * 2
+        )
+
+
+@pytest.mark.usefixtures("development_key")
+def test_an_agent_that_exits_before_its_ready_line_without_the_hosts_status_is_a_service_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    source, record = stand_in_agent_source(tmp_path, mode="native_other_exit")
+    with stored_sign_in_runtime(tmp_path, monkeypatch) as runtime:
+        mark_lane_root(runtime.root)
+        agent, session_id = _session(runtime, OperationFrontendProjection.AGENT_HOST)
+        with caplog.at_level(logging.WARNING, logger=_CONTROLLER_LOGGER):
+            refused = _start(runtime, agent, session_id, source)
+        assert isinstance(refused, RuntimeAgentRefused), refused
+        assert refused.code is AgentLauncherRefusal.SERVICE_FAILED
+        assert not (record / "received.json").exists()
+        assert [item for item in caplog.records if item.name == _CONTROLLER_LOGGER] == []
 
 
 def _probe_environment(runtime: StoredSignInRuntime, tmp_path: Path) -> dict[str, str]:

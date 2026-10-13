@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import sys
+import threading
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -20,8 +22,11 @@ from cadrumo.application.agent_host.controller import (
     ResolvedAgentCredentials,
 )
 from cadrumo.application.agent_host.credential_frame import AgentCredential, build_credential_frame
+from cadrumo.application.agent_host.launcher_protocol import AgentLauncherRefusal, launcher_refusal_for
+from cadrumo.application.agent_host.native_refusal import NativeLaunchRefusal, NativeLaunchRefusalCode
 
 from ..agent_process import WindowsAgentProcessLauncher
+from . import agent_host_fixture
 from .process_support import fixture_arguments, fixture_environment, native_python
 
 pytestmark = [
@@ -35,6 +40,7 @@ _FIXTURE = "cadrumo.adapters.local_runtime.tests.agent_host_fixture"
 _FAKE = b"sk-test-NOT-A-REAL-KEY"
 _GATEWAY_FAKE = b"zai-test-NOT-A-REAL-KEY"
 _ZAI_URL = "https://api.z.ai/api/anthropic"
+_CONTROLLER_LOGGER = "cadrumo.application.agent_host.controller"
 
 
 class _CredentialSource:
@@ -209,3 +215,68 @@ def test_the_agent_job_admits_no_breakaway_and_knows_its_own_members(tmp_path: P
     finally:
         process.close_input()
         process.terminate(timeout=10)
+
+
+def _refused(tmp_path: Path, mode: str) -> tuple[AgentHostController, AgentHostError]:
+    controller = _controller(tmp_path, mode, _CredentialSource(), ready_timeout=30)
+    with pytest.raises(AgentHostError) as refused:
+        controller.start()
+    return controller, refused.value
+
+
+def test_an_exit_with_the_native_hosts_status_is_its_typed_refusal_with_its_code_and_subject(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    with caplog.at_level(logging.DEBUG, logger=_CONTROLLER_LOGGER):
+        controller, error = _refused(tmp_path, "native_refusal")
+    assert error.reason is AgentHostRefusal.LAUNCH_PROFILE_REFUSED
+    assert error.native_refusal == NativeLaunchRefusal(
+        code=NativeLaunchRefusalCode.LAUNCH_VALUE_MALFORMED, subject=agent_host_fixture.NATIVE_REFUSAL_SUBJECT
+    )
+    assert launcher_refusal_for(error) is AgentLauncherRefusal.SERVICE_FAILED
+    assert controller.state is AgentHostState.DETACHED
+    assert not (tmp_path / "received.json").exists()
+    messages = [record.getMessage() for record in caplog.records if record.name == _CONTROLLER_LOGGER]
+    assert messages == [
+        "agent launch refused by the native host exit=125 native_refusal=launch_value_malformed "
+        f"subject={agent_host_fixture.NATIVE_REFUSAL_SUBJECT}"
+    ]
+    # Only the host's own last line is read: the other line it wrote is never logged.
+    assert agent_host_fixture.NATIVE_NOISE_LINE.decode().strip() not in " ".join(messages)
+
+
+def test_a_last_line_that_is_not_the_hosts_is_a_refusal_without_a_code_and_none_of_it_is_logged(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    with caplog.at_level(logging.DEBUG, logger=_CONTROLLER_LOGGER):
+        controller, error = _refused(tmp_path, "native_unreadable")
+    assert error.reason is AgentHostRefusal.LAUNCH_PROFILE_REFUSED
+    assert error.native_refusal == NativeLaunchRefusal(code=None, subject=None)
+    assert controller.state is AgentHostState.DETACHED
+    assert "S3CRET" not in " ".join(record.getMessage() for record in caplog.records)
+
+
+def test_the_hosts_line_without_the_hosts_status_is_only_a_failed_launch(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    with caplog.at_level(logging.DEBUG, logger=_CONTROLLER_LOGGER):
+        controller, error = _refused(tmp_path, "native_other_exit")
+    # Whether the frame or the missing ready line is met first depends on how fast the tree ends.
+    assert error.reason in {AgentHostRefusal.LAUNCH_FAILED, AgentHostRefusal.NOT_READY}
+    assert error.native_refusal is None
+    assert launcher_refusal_for(error) is AgentLauncherRefusal.SERVICE_FAILED
+    assert controller.state is AgentHostState.DETACHED
+    assert [record for record in caplog.records if record.name == _CONTROLLER_LOGGER] == []
+
+
+def test_an_agent_that_fills_its_standard_error_is_not_blocked_and_its_drain_ends_with_its_tree(
+    tmp_path: Path,
+) -> None:
+    controller = _controller(tmp_path, "chatty", _CredentialSource(), ready_timeout=30)
+    ready = controller.start()
+    try:
+        assert ready.gateway_port == 47001
+        assert controller.state is AgentHostState.READY
+    finally:
+        controller.stop()
+    assert not [thread for thread in threading.enumerate() if thread.name == "agent-standard-error"]

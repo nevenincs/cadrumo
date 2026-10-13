@@ -567,6 +567,7 @@
         "dev.packaging.native",
         "dev.packaging.native.action_cache",
         "dev.packaging.native.agent",
+        "dev.packaging.native.application_environment",
         "dev.packaging.native.archive",
         "dev.packaging.native.artifact_verify",
         "dev.packaging.native.assemble",

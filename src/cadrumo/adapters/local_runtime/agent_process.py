@@ -2,16 +2,65 @@
 
 from __future__ import annotations
 
+import contextlib
 import sys
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from queue import Empty, Queue
-from threading import Thread
-from typing import BinaryIO
+from threading import Lock, Thread
+from typing import BinaryIO, Final
 
 from ...application.agent_host.controller import AgentHostError, AgentHostRefusal, AgentProcess
+from ...application.agent_host.native_refusal import STANDARD_ERROR_TAIL_BYTES
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from .windows_process import WindowsOwnedProcess, WindowsProcessScope
+
+_STANDARD_ERROR_CHUNK_BYTES: Final = 4096
+_STANDARD_ERROR_RELEASE_SECONDS: Final = 1.0
+
+
+class _StandardErrorTail:
+    """The bounded end of an agent's standard error, drained for as long as any writer holds the pipe.
+
+    The agent's standard error is a private pipe, so the runtime must read it
+    or a chatty agent would block on a full pipe. Everything but the last
+    bytes is discarded as it arrives, and nothing is logged: the host reads
+    only the native launch-profile refusal line from the end.
+    """
+
+    def __init__(self, stream: BinaryIO, *, limit: int) -> None:
+        """Start draining the stream on a daemon thread that closes it at the end of the output."""
+        self._stream = stream
+        self._limit = limit
+        self._lock = Lock()
+        self._tail = bytearray()
+        self._drain_thread = Thread(target=self._drain, name="agent-standard-error", daemon=True)
+        self._drain_thread.start()
+
+    def settled(self, *, timeout: float) -> bytes:
+        """Wait for the output to end, up to the bound, and return the retained end of it.
+
+        A descendant that inherited the pipe can keep it open after the agent
+        exits, so the bound ends the wait and what arrived so far is returned.
+        """
+        self._drain_thread.join(timeout)
+        with self._lock:
+            return bytes(self._tail)
+
+    def release(self, *, timeout: float) -> None:
+        """Wait for the drain to finish after the tree's writers are gone, up to the bound."""
+        self._drain_thread.join(timeout)
+
+    def _drain(self) -> None:
+        try:
+            with contextlib.suppress(OSError, ValueError):
+                while chunk := self._stream.read(_STANDARD_ERROR_CHUNK_BYTES):
+                    with self._lock:
+                        self._tail += chunk
+                        del self._tail[: -self._limit]
+        finally:
+            with contextlib.suppress(OSError):
+                self._stream.close()
 
 
 class WindowsAgentProcess:
@@ -24,12 +73,14 @@ class WindowsAgentProcess:
         process: WindowsOwnedProcess,
         standard_input: BinaryIO,
         standard_output: BinaryIO,
+        standard_error: BinaryIO,
     ) -> None:
-        """Take ownership of the job, the agent and both parent pipe ends."""
+        """Take ownership of the job, the agent and the parent pipe ends, and start draining standard error."""
         self._scope = scope
         self._process = process
         self._input: BinaryIO | None = standard_input
         self._output = standard_output
+        self._standard_error = _StandardErrorTail(standard_error, limit=STANDARD_ERROR_TAIL_BYTES)
         self._lines: Queue[bytes | BaseException] = Queue(maxsize=1)
         self._reader: Thread | None = None
 
@@ -61,6 +112,10 @@ class WindowsAgentProcess:
             raise result
         return result
 
+    def settled_standard_error(self, *, timeout: float) -> bytes:
+        """Return the retained end of the agent's standard error once it stops writing, or at the bound."""
+        return self._standard_error.settled(timeout=timeout)
+
     def close_input(self) -> None:
         """Close standard input once: the agent's stop signal."""
         standard_input, self._input = self._input, None
@@ -83,6 +138,8 @@ class WindowsAgentProcess:
         finally:
             self.close_input()
             self._output.close()
+            # The drain closes its own end once the job's writers are gone.
+            self._standard_error.release(timeout=_STANDARD_ERROR_RELEASE_SECONDS)
 
     def job_limit_flags(self) -> int:
         """The agent job's limit flags as the kernel holds them; it never admits breakaway."""
@@ -129,12 +186,25 @@ class WindowsAgentProcessLauncher:
             raise AgentHostError(AgentHostRefusal.LAUNCH_FAILED)
         scope = WindowsProcessScope()
         try:
-            process, standard_input, standard_output = scope.launch_with_standard_pipes(
+            process, standard_input, standard_output, standard_error = scope.launch_with_standard_pipes(
                 executable=executable, arguments=arguments, directory=directory, environment=environment
             )
         except BaseException:
             scope.terminate()
             raise
-        return WindowsAgentProcess(
-            scope=scope, process=process, standard_input=standard_input, standard_output=standard_output
-        )
+        try:
+            return WindowsAgentProcess(
+                scope=scope,
+                process=process,
+                standard_input=standard_input,
+                standard_output=standard_output,
+                standard_error=standard_error,
+            )
+        except BaseException:
+            # The drain could not start, so the tree has no owner: end it and release every pipe end.
+            try:
+                scope.terminate()
+            finally:
+                for stream in (standard_input, standard_output, standard_error):
+                    stream.close()
+            raise

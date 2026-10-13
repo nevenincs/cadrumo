@@ -298,12 +298,13 @@ class WindowsProcessScope:
 
     def launch_with_standard_pipes(
         self, *, executable: Path, arguments: Sequence[str], directory: Path, environment: Mapping[str, str]
-    ) -> tuple[WindowsOwnedProcess, BinaryIO, BinaryIO]:
-        """Launch into the job with a private standard-input and standard-output pipe.
+    ) -> tuple[WindowsOwnedProcess, BinaryIO, BinaryIO, BinaryIO]:
+        """Launch into the job with private standard-input, standard-output and standard-error pipes.
 
         Return the process, the writable end of its standard input and the
-        readable end of its standard output. Standard error goes to the null
-        device. Only the three child ends are inherited; secrets travel on the
+        readable ends of its standard output and standard error. The caller
+        owns draining standard error: a child that fills an unread pipe blocks.
+        Only the three child ends are inherited; secrets travel on the
         returned standard input, never the arguments or environment.
         """
         if sys.platform != "win32":
@@ -338,7 +339,7 @@ class WindowsProcessScope:
         finally:
             for end in child_ends:
                 end.Close()
-        return process, _python_stream(parent_ends[0], "wb"), _python_stream(parent_ends[1], "rb")
+        return process, *_parent_streams(parent_ends)
 
     def terminate(self, *, timeout: float = 2.0) -> None:
         """Fence launch, terminate this job and verify no active members to a bound."""
@@ -522,17 +523,17 @@ def _pipe_ends(attributes: object) -> tuple[NativeWindowsHandle, NativeWindowsHa
     return read, write
 
 
-def _standard_pipes() -> tuple[tuple[NativeWindowsHandle, ...], tuple[NativeWindowsHandle, NativeWindowsHandle]]:
+def _standard_pipes() -> tuple[tuple[NativeWindowsHandle, ...], tuple[NativeWindowsHandle, ...]]:
     """Create inheritable child ends and private parent ends for a launch.
 
     Return the child's standard input, output and error ends, then the
-    parent's write end of standard input and read end of standard output.
+    parent's write end of standard input and read ends of standard output and
+    standard error.
     """
     if sys.platform != "win32":
         raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
     import pywintypes
     import win32api
-    import win32file
 
     attributes = pywintypes.SECURITY_ATTRIBUTES()
     attributes.bInheritHandle = True
@@ -542,26 +543,32 @@ def _standard_pipes() -> tuple[tuple[NativeWindowsHandle, ...], tuple[NativeWind
         created.extend((input_read, input_write))
         output_read, output_write = _pipe_ends(attributes)
         created.extend((output_read, output_write))
-        null_device = owned_windows_handle(
-            win32file.CreateFile(
-                "NUL",
-                win32file.GENERIC_WRITE,
-                win32file.FILE_SHARE_READ | win32file.FILE_SHARE_WRITE,
-                attributes,
-                win32file.OPEN_EXISTING,
-                0,
-                None,
-            )
-        )
-        created.append(null_device)
-        for parent_end in (input_write, output_read):
+        error_read, error_write = _pipe_ends(attributes)
+        created.extend((error_read, error_write))
+        for parent_end in (input_write, output_read, error_read):
             # HANDLE_FLAG_INHERIT cleared: the parent ends never reach any child.
             win32api.SetHandleInformation(int(parent_end), 1, 0)
     except BaseException:
         for handle in created:
             handle.Close()
         raise
-    return (input_read, output_write, null_device), (input_write, output_read)
+    return (input_read, output_write, error_write), (input_write, output_read, error_read)
+
+
+def _parent_streams(parent_ends: tuple[NativeWindowsHandle, ...]) -> tuple[BinaryIO, BinaryIO, BinaryIO]:
+    """Turn the parent's standard-input, output and error ends into streams, releasing every end on failure."""
+    streams: list[BinaryIO] = []
+    try:
+        for end, mode in zip(parent_ends, ("wb", "rb", "rb"), strict=True):
+            streams.append(_python_stream(end, mode))
+    except BaseException:
+        for stream in streams:
+            stream.close()
+        for end in parent_ends[len(streams) :]:
+            end.Close()
+        raise
+    standard_input, standard_output, standard_error = streams
+    return standard_input, standard_output, standard_error
 
 
 def _python_stream(handle: NativeWindowsHandle, mode: str) -> BinaryIO:

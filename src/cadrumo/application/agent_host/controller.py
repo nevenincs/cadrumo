@@ -5,7 +5,9 @@ inside a contained process tree, writes the credentials once as a standard-input
 frame, and waits for a single ready line. It publishes the agent only while the
 sign-in and provider-settings generations it started under are still current.
 Closing the agent's standard input is the stop signal; a tree that has not
-exited within the grace period is terminated whole.
+exited within the grace period is terminated whole. A tree that ends before its
+ready line with the native host's launch-profile refusal status is a typed
+refusal that records the host's own code and subject.
 """
 
 from __future__ import annotations
@@ -21,9 +23,18 @@ from typing import Final, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from ...core.logging import get_logger
+from ..runtime.contracts import NATIVE_HOST_LAUNCH_PROFILE_REFUSED_EXIT_CODE
 from .credential_frame import AgentCredential, CredentialFrameError, build_credential_frame, wipe
+from .native_refusal import NativeLaunchRefusal, native_launch_refusal_from
+
+_LOGGER = get_logger(__name__)
 
 READY_LINE_MAX_BYTES: Final = 4 * 1024
+EXIT_OBSERVATION_SECONDS: Final = 2.0
+"""How long a tree whose pipe ended is given to report the status it exited with."""
+STANDARD_ERROR_SETTLE_SECONDS: Final = 1.0
+"""How long a tree that has exited is given to finish delivering its standard error."""
 HOSTING_CONTRACT: Final = 1
 """The one hosting-contract version this host speaks; an agent announcing another is refused."""
 
@@ -44,6 +55,7 @@ class AgentHostRefusal(StrEnum):
     CREDENTIALS_UNAVAILABLE = "credentials_unavailable"
     CREDENTIALS_INVALID = "credentials_invalid"
     LAUNCH_FAILED = "launch_failed"
+    LAUNCH_PROFILE_REFUSED = "launch_profile_refused"
     NOT_READY = "not_ready"
     AGENT_REFUSED = "agent_refused"
     STALE_GENERATION = "stale_generation"
@@ -51,13 +63,25 @@ class AgentHostRefusal(StrEnum):
 
 
 class AgentHostError(RuntimeError):
-    """A typed refusal; it carries no credential, path or process detail."""
+    """A typed refusal; it carries no credential, path or process detail.
 
-    def __init__(self, reason: AgentHostRefusal, *, agent_code: str | None = None) -> None:
-        """Keep the closed reason and, for an agent refusal, the agent's own closed code."""
-        super().__init__(reason.value if agent_code is None else f"{reason.value}:{agent_code}")
+    The one exception is a native launch-profile refusal, which carries the
+    host's closed code and the plain name it concerns, never a value.
+    """
+
+    def __init__(
+        self,
+        reason: AgentHostRefusal,
+        *,
+        agent_code: str | None = None,
+        native_refusal: NativeLaunchRefusal | None = None,
+    ) -> None:
+        """Keep the closed reason, the agent's own closed code and the native host's closed refusal."""
+        detail = agent_code if native_refusal is None or native_refusal.code is None else native_refusal.code.value
+        super().__init__(reason.value if detail is None else f"{reason.value}:{detail}")
         self.reason = reason
         self.agent_code = agent_code
+        self.native_refusal = native_refusal
 
 
 @dataclass(frozen=True, slots=True)
@@ -98,7 +122,11 @@ class AgentProcess(Protocol):
         ...
 
     def read_output_line(self, *, limit: int, timeout: float) -> bytes:
-        """Return one newline-terminated line, raising ``TimeoutError`` past the bound."""
+        """Return one newline-terminated line; raise ``TimeoutError`` past the bound, ``EOFError`` if output ends."""
+        ...
+
+    def settled_standard_error(self, *, timeout: float) -> bytes:
+        """Return the last bytes the agent wrote to standard error, once it has stopped writing or at the bound."""
         ...
 
     def close_input(self) -> None:
@@ -277,13 +305,17 @@ class AgentHostController:
             try:
                 process.write_input(frame)
             except OSError as error:
-                raise AgentHostError(AgentHostRefusal.LAUNCH_FAILED) from error
+                raise _ended_before_ready(
+                    process, AgentHostRefusal.LAUNCH_FAILED, observe=EXIT_OBSERVATION_SECONDS
+                ) from error
         finally:
             wipe(frame)
         try:
             line = process.read_output_line(limit=READY_LINE_MAX_BYTES, timeout=self._launch.ready_timeout)
-        except (TimeoutError, OSError) as error:
-            raise AgentHostError(AgentHostRefusal.NOT_READY) from error
+        except (EOFError, OSError) as error:
+            # A tree still running when the bound passed has no exit status to wait for.
+            observe = 0.0 if isinstance(error, TimeoutError) else EXIT_OBSERVATION_SECONDS
+            raise _ended_before_ready(process, AgentHostRefusal.NOT_READY, observe=observe) from error
         return _ready_from_line(line, resolved.generations)
 
     def _retire(self) -> None:
@@ -304,6 +336,35 @@ class AgentHostController:
         finally:
             with self._lock:
                 self._state = AgentHostState.DETACHED
+
+
+def _ended_before_ready(process: AgentProcess, refusal: AgentHostRefusal, *, observe: float) -> AgentHostError:
+    """The refusal for a tree that gave no ready line: the native host's own when it exited that way.
+
+    The host refuses a launch that breaks the image's launch profile before
+    Python starts, by its reserved exit status and one standard-error line.
+    Reading them is diagnosis only: every failure before the ready line is a
+    typed refusal whether or not either is found.
+    """
+    try:
+        status = process.wait(timeout=observe)
+    except Exception:
+        return AgentHostError(refusal)
+    if status != NATIVE_HOST_LAUNCH_PROFILE_REFUSED_EXIT_CODE:
+        return AgentHostError(refusal)
+    try:
+        tail = process.settled_standard_error(timeout=STANDARD_ERROR_SETTLE_SECONDS)
+    except Exception:
+        tail = b""
+    native = native_launch_refusal_from(tail)
+    # The host writes the name concerned, never its value; the line is read as a closed code and a plain name only.
+    _LOGGER.warning(
+        "agent launch refused by the native host exit=%d native_refusal=%s subject=%s",
+        status,
+        "unrecognized" if native.code is None else native.code.value,
+        "unrecognized" if native.subject is None else native.subject,
+    )
+    return AgentHostError(AgentHostRefusal.LAUNCH_PROFILE_REFUSED, native_refusal=native)
 
 
 def _ready_from_line(line: bytes, generations: AgentGenerations) -> AgentReady:

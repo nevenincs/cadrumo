@@ -536,6 +536,7 @@
         "cadrumo.application.agent_host.lane_root",
         "cadrumo.application.agent_host.launch_environment",
         "cadrumo.application.agent_host.launcher_protocol",
+        "cadrumo.application.agent_host.native_refusal",
         "cadrumo.application.aggregation",
         "cadrumo.application.aggregation._grouping",
         "cadrumo.application.aggregation._iva_transaction",

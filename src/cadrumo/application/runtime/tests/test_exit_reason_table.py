@@ -7,6 +7,7 @@ import signal
 import pytest
 
 from cadrumo.application.runtime.contracts import (
+    NATIVE_HOST_LAUNCH_PROFILE_REFUSED_EXIT_CODE,
     RESERVED_RUNTIME_EXIT_CODES,
     RuntimeExitReason,
     RuntimeRefusalCode,
@@ -49,7 +50,7 @@ def test_every_supervisor_reason_has_its_own_code() -> None:
         pytest.param(1, id="python-failure"),
         pytest.param(2, id="argparse-usage"),
         pytest.param(3, id="c-runtime-abort"),
-        *(pytest.param(code, id=f"native-host-{code}") for code in range(120, 125)),
+        *(pytest.param(code, id=f"native-host-{code}") for code in range(120, 126)),
         *(pytest.param(128 + number, id=f"posix-signal-{number}") for number in (1, 2, 6, 9, 15, 64)),
         pytest.param(_STATUS_CONTROL_C_EXIT, id="status-control-c-exit"),
         pytest.param(_STATUS_ACCESS_VIOLATION, id="status-access-violation"),
@@ -60,6 +61,16 @@ def test_every_supervisor_reason_has_its_own_code() -> None:
 def test_codes_owned_elsewhere_are_reserved_and_never_a_reason(code: int) -> None:
     assert _reserved(code)
     assert code not in {reason.value for reason in RuntimeExitReason}
+
+
+def test_the_native_host_range_ends_with_the_launch_profile_refusal() -> None:
+    native_host = [reserved for reserved in RESERVED_RUNTIME_EXIT_CODES if reserved.owner == "native_host"]
+    assert [(reserved.first, reserved.last) for reserved in native_host] == [(120, 125)]
+    assert NATIVE_HOST_LAUNCH_PROFILE_REFUSED_EXIT_CODE == 125
+    # Neither neighbour is claimed: the range reaches no further than the refusal.
+    assert not _reserved(119)
+    assert not _reserved(126)
+    assert not _reserved(127)
 
 
 def test_no_reason_lies_in_a_reserved_range_or_beyond_a_posix_status_byte() -> None:
