@@ -105,10 +105,11 @@ def test_exact_key_requests_reviewed_grant_change(tmp_path: Path, kind: Enrollme
                     raw, human, foreign = _connect(endpoint), _connect(endpoint), _connect(endpoint)
                     for connection in (raw, human, foreign):
                         cleanup.callback(connection.close)
+                    # The person signs in first: a key reaches the profile only under a live sign-in.
+                    human_id = _login(human, profile_id, method="password", proof=PROFILE_INPUT.encode())
                     api = RuntimeFrontendClient(raw, profile_id=profile_id, frontend=OperationFrontendProjection.CLI)
                     api.login_api_key(bytearray(original_secret.get_secret_value()), timeout=25)
                     old_session = api.session_id
-                    human_id = _login(human, profile_id, method="password", proof=PROFILE_INPUT.encode())
                     for connection, session_id in ((foreign, api.session_id), (human, human_id)):
                         refused = connection.enrollment_prepare(
                             RuntimeEnrollmentPrepare(

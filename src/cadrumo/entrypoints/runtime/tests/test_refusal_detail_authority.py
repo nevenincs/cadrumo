@@ -43,6 +43,7 @@ from cadrumo.application.operations.public_period import PublicPeriod
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.access_management import RuntimeAutomationDenied, RuntimeAutomationDeny
 from cadrumo.application.runtime.contracts import RuntimeClientHello
+from cadrumo.application.runtime.deadline_budget import exchange_deadline
 from cadrumo.application.runtime.operation_access import (
     RuntimeOperationAcknowledged,
     RuntimeOperationContract,
@@ -187,7 +188,7 @@ def _admit(
             request_id=uuid4(), profile_id=profile_id, frontend=OperationFrontendProjection.CLI, method=method
         ),
         secret,
-        deadline=time.monotonic() + 25,
+        deadline=exchange_deadline(),
     )
     assert secret == bytes(len(proof))
     assert isinstance(reply, RuntimeProfileStatus), reply
@@ -255,8 +256,9 @@ def test_refusal_detail_is_fenced_after_authority_revocation(
                 assert server.ready.wait(3)
                 api, human = _connect(endpoint), _connect(endpoint)
                 try:
-                    api_session = _admit(api, profile_id, method="api_key", proof=api_key)
+                    # The person signs in first; the key admits only while they are signed in.
                     human_session = _admit(human, profile_id, method="password", proof=PROFILE_INPUT.encode())
+                    api_session = _admit(api, profile_id, method="api_key", proof=api_key)
                     contract = api.operation(
                         RuntimeOperationContract(
                             request_id=uuid4(), profile_id=profile_id, session_id=api_session, definition_id=_CREATE

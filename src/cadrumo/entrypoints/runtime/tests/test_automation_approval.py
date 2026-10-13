@@ -35,6 +35,7 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.contracts import RuntimeClientHello
+from cadrumo.application.runtime.deadline_budget import exchange_deadline
 from cadrumo.application.runtime.enrollment_access import RuntimeEnrollmentPrepare, RuntimeEnrollmentPrepared
 from cadrumo.application.runtime.operation_access import (
     RuntimeOperationAcknowledged,
@@ -130,7 +131,7 @@ def _login(
     result = client.login(
         RuntimeProfileLogin(request_id=uuid4(), profile_id=profile_id, frontend=frontend, method=method),
         secret,
-        deadline=time.monotonic() + 25,
+        deadline=exchange_deadline(),
     )
     assert secret == bytes(len(proof))
     assert isinstance(result, RuntimeProfileStatus)

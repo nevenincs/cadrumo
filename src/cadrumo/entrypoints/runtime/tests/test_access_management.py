@@ -35,6 +35,7 @@ from cadrumo.application.runtime.access_management import (
     RuntimeSessionInventoryReply,
 )
 from cadrumo.application.runtime.contracts import RuntimeClientHello
+from cadrumo.application.runtime.deadline_budget import exchange_deadline
 from cadrumo.application.runtime.profile_access import (
     RuntimeAccessRefusal,
     RuntimeProfileLogin,
@@ -98,7 +99,7 @@ def _login(
             request_id=uuid4(), profile_id=profile_id, frontend=OperationFrontendProjection.CLI, method=method
         ),
         secret,
-        deadline=time.monotonic() + 25,
+        deadline=exchange_deadline(),
     )
     assert secret == bytes(len(proof))
     return reply
@@ -247,7 +248,7 @@ def test_native_human_lock_resume_selected_grant_and_revoke_key(tmp_path: Path) 
                             grants=frozenset({selected_grant}),
                         ),
                         wrong_password,
-                        deadline=time.monotonic() + 25,
+                        deadline=exchange_deadline(),
                     )
                     assert wrong_password == bytes(len(b"wrong-synthetic-password"))
                     assert isinstance(wrong, RuntimeAccessRefusal)
@@ -264,7 +265,7 @@ def test_native_human_lock_resume_selected_grant_and_revoke_key(tmp_path: Path) 
                             grants=frozenset({selected_grant}),
                         ),
                         password,
-                        deadline=time.monotonic() + 25,
+                        deadline=exchange_deadline(),
                     )
                     assert password == bytes(len(PROFILE_INPUT.encode()))
                     assert isinstance(resumed, RuntimeProfileResumed)
