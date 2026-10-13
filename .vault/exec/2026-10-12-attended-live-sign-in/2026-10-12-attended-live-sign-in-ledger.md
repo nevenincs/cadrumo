@@ -5,40 +5,14 @@ tags:
 date: '2026-10-12'
 modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:57eb17be7be976eb144471939a67eb99eb4d0bc648532bf7d77139e7b6dd29d1'
+body_hash: 'sha256:e0469b882fe7be7b868f07204025f97e02720098a53f4615e188fdbc41d9ac07'
 related:
   - "[[2026-10-12-attended-live-sign-in-plan]]"
 ---
 
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
-
 # `attended-live-sign-in` ledger
 
 ## Changes
-
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 
 - `S01` `A` `src/cadrumo/application/runtime/attendance.py`
 - `S01` `M` `src/cadrumo/application/runtime/profile_access.py`
@@ -104,6 +78,7 @@ related:
 - `S05` `M` `dev/runtime_lifecycle/live_sign_in.py`
 - `S05` `verify:` `just verify-live-sign-in build/windows-x64/stage/Release/app` -> `fail`
 - `S05` `verify:` `just verify-live-sign-in build/windows-x64/stage/Release/app --skip-review` -> `fail`
+- `S05` `verify:` `just verify-live-sign-in build/windows-x64/stage/Release/app` -> `pass`
 
 ## Notes
 
@@ -115,3 +90,4 @@ related:
 - `S05` Observed, not ours: the package redacts profile ids even with `CADRUMO_CLI_REVEAL_IDENTIFIERS=1` (dev env reveals them); MCP search failed on person-act describe refusals, fixed by another session in 07b729934c after this package was built.
 - `S05` Package built from HEAD e11fb302f2 with 21 dirty paths from other sessions; packaged `runtime_adapter.py` predates a408f4b773.
 - `S05` Package manifest 50301ff0bf9402f117e7e995cece9cef71d78ed5f3186f8fc568d16e752338ec. With --skip-review the run exits 3 (incomplete) and every attended lifecycle step passes: decline, wrong profile, approved read with search, sign-out, input close, logout, lock/resume, expiry, runtime stop, no stored sign-in, default root unchanged, no survivors. Reveal identifiers works in the package. The full run fails at review approval: the bundle is core-only with no llm extra, so ledger.classify.review refuses with `ERROR_OPTIONAL_EXTRA_MISSING` at ledger.llm.acquire, effect none, the absent-llm lane's tested contract. Bundling the llm extra awaits an operator decision. The driver now stops the model runner with its server; four orphaned llama-server runners were reaped.
+- `S05` Package manifest ec2e4fac443201e94e0b4c714328b8214db3e3f8ec36053af18c5730311d4e38 bundles the llm extra (c77c8d074a, ruling e4124e5b53). The full run passed with expiry and review: ledger.classify.review classified BUSINESS by llm:local-text:qwen3:1.7b, reviewed, nothing written before the decision, read back by the CLI. No model runner survived.
