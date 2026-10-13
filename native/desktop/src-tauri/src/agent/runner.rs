@@ -21,6 +21,9 @@ use std::{
 /// How long the launcher has to stop its agent and exit after its standard
 /// input closes, before the job ends it.
 pub const STOP_GRACE: Duration = Duration::from_secs(10);
+/// How long the job's ended processes have to finish exiting.
+#[cfg(windows)]
+const SETTLE_BOUND: Duration = Duration::from_secs(10);
 
 fn failure(code: ErrorCode) -> ApplicationError {
     ApplicationError::new(code, Operation::Cli)
@@ -187,9 +190,18 @@ impl Supervised {
 
     #[cfg(windows)]
     fn terminate(&self) -> Result<()> {
-        self.job
-            .terminate()
-            .map_err(|cause| failure(ErrorCode::CleanupFailed).caused_by(cause))
+        let cleanup = |cause| failure(ErrorCode::CleanupFailed).caused_by(cause);
+        self.job.terminate().map_err(cleanup)?;
+        // Termination is asynchronous: a process the job ended can still be
+        // exiting when the call returns. Stopped means the job is empty.
+        let deadline = Instant::now() + SETTLE_BOUND;
+        while self.job.active_processes().map_err(cleanup)? != 0 {
+            if Instant::now() >= deadline {
+                return Err(failure(ErrorCode::CleanupFailed));
+            }
+            thread::sleep(Duration::from_millis(10));
+        }
+        Ok(())
     }
 
     #[cfg(not(windows))]
