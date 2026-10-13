@@ -573,6 +573,12 @@ desktop:
   agent:
     add_files: Fájlok hozzáadása
     agent_replied: Az ügynök válasza
+    approval_allow_always: Mindig engedélyezem
+    approval_allow_once: Egyszer engedélyezem
+    approval_reject_always: Soha nem engedélyezem
+    approval_reject_once: Nem engedélyezem
+    approval_review_title: Nézd át, mielőtt a Cadrumo elvégzi
+    approval_tool_title: Az ügynök egy eszközt szeretne használni
     archive: Archiválás
     archived_empty: Nincs archivált beszélgetés
     archived_toggle: Archivált ({count})
@@ -627,6 +633,13 @@ desktop:
     no_models: Nincs választható modell
     provider: Szolgáltató
     provider_unavailable: '{provider}: {reason}'
+    questions_answer: Válaszolok
+    questions_decline: Nem válaszolok
+    questions_lead: Válaszolj lent, vagy írj inkább üzenetet, hogy a saját szavaiddal
+      válaszolj.
+    questions_missing: Előbb válaszolj minden kötelező kérdésre
+    questions_optional: (nem kötelező)
+    questions_title: Az ügynöknek néhány válaszra van szüksége
     queued: Feltöltésre vár
     ready: Kész
     refused: Elutasítva
@@ -3736,6 +3749,7 @@ tui:
     result:
       page: Eredmény, {page}. oldal, összesen {pages}
     run:
+      busy_holder: 'Az ezt lefoglaló művelet: {operation_id}'
       contract_changed: A szolgáltatás már más szerződést ad ehhez a művelethez. Nyisd
         meg újra a Műveleteket, és próbáld meg ismét. Semmi sem lett elküldve.
       detached: Kiléptél a műveletből, miközben még futott. Az eredménye itt nem ismert.

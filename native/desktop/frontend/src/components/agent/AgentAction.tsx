@@ -1,4 +1,5 @@
 import type * as React from "react";
+import { useState } from "react";
 import { Button, type ButtonProps } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { Icon, type IconName } from "@/components/ui/icon";
@@ -91,10 +92,11 @@ export function AgentTextAction({
 }: AgentTextActionProps) {
   const t = useStrings();
   const blocked = blockedReason(t, onAction, heldBy);
-  // The tooltip stays mounted either way, so the button is never remounted
-  // and keeps focus when it becomes available.
+  const [hovered, setHovered] = useState(false);
+  // The tooltip stays mounted and controlled either way, so the button is
+  // never remounted and keeps focus when it becomes available.
   return (
-    <Tooltip open={blocked ? undefined : false}>
+    <Tooltip open={Boolean(blocked) && hovered} onOpenChange={setHovered}>
       <TooltipTrigger asChild>
         <Button
           {...props}

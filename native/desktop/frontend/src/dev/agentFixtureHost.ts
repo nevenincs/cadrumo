@@ -1,6 +1,11 @@
 import type {
+  AgentApproval,
+  AgentApprovalOption,
   AgentConsentGrant,
   AgentProviderRecord,
+  AgentQuestion,
+  AgentQuestionnaire,
+  AgentQuestionnaireAnswer,
   AgentServiceStatus,
   AgentSession,
   AgentStreamEvent,
@@ -25,10 +30,18 @@ import {
  * with one text never sent, which only reading the history recovers. */
 export type FixtureStream = "steady" | "gap";
 
+/** What every fixture reply stops to wait on, if anything: questions, a
+ * tool the agent wants to use, or a Cadrumo operation to review. */
+export type FixtureAsks = "questions" | "approval" | "review";
+
 /** Between one streamed event and the next, in milliseconds. */
 const STEP_MS = 40;
 /** The length of each streamed piece of text. */
 const PIECE = 8;
+/** The bounds the agent sets on a questionnaire. */
+const MOST_QUESTIONS = 4;
+const MOST_OPTIONS = 4;
+const ANSWER_MAX = 2048;
 
 const PROVIDERS: AgentProviderRecord[] = [
   {
@@ -62,6 +75,29 @@ const PROVIDERS: AgentProviderRecord[] = [
   },
 ];
 
+const QUESTIONS: AgentQuestion[] = [
+  {
+    id: "q-trimestre",
+    prompt: "¿Qué trimestre preparo?",
+    kind: "choice",
+    options: ["Primer trimestre", "Segundo trimestre", "Tercer trimestre"],
+    required: true,
+  },
+  {
+    id: "q-notas",
+    prompt: "¿Algo más que deba saber?",
+    kind: "text",
+    required: false,
+  },
+];
+
+const EVERY_OPTION: AgentApprovalOption[] = [
+  { option_id: "allow-once", name: "Allow once", kind: "allow_once" },
+  { option_id: "allow-always", name: "Always allow", kind: "allow_always" },
+  { option_id: "reject-once", name: "Reject", kind: "reject_once" },
+  { option_id: "reject-always", name: "Always reject", kind: "reject_always" },
+];
+
 const coded = (code: string) => Object.assign(new Error(code), { code });
 
 const pieces = (text: string) => {
@@ -71,12 +107,51 @@ const pieces = (text: string) => {
   return out;
 };
 
+/** Why `answers` cannot answer `questions`, as the agent refuses it. */
+function answerFault(
+  questions: readonly AgentQuestion[],
+  answers: Record<string, string>,
+): string | null {
+  for (const [id, answer] of Object.entries(answers)) {
+    const question = questions.find((held) => held.id === id);
+    if (!question) return "agent_answer_unknown_question";
+    if (question.kind === "choice" && !question.options?.includes(answer))
+      return "agent_answer_not_an_option";
+    if (question.kind === "text" && answer.length > ANSWER_MAX)
+      return "agent_answer_too_long";
+  }
+  if (
+    questions.some((question) => question.required && !(question.id in answers))
+  )
+    return "agent_answer_missing";
+  return null;
+}
+
+type Reply = {
+  conversationId: string;
+  timers: number[];
+  ids: string[];
+};
+
+type Waiting =
+  | {
+      kind: "questions";
+      questionnaire: AgentQuestionnaire;
+      then: (answer: AgentQuestionnaireAnswer) => void;
+    }
+  | {
+      kind: "approval";
+      approval: AgentApproval;
+      then: (option: AgentApprovalOption) => void;
+    };
+
 export function fixtureAgent({
   say,
   wait,
   readable,
   empty,
   stream,
+  asks,
   refused,
 }: {
   say: (call: string) => void;
@@ -86,6 +161,7 @@ export function fixtureAgent({
   /** The profile has no conversations yet. */
   empty: boolean;
   stream: FixtureStream;
+  asks: FixtureAsks | null;
   /** Thrown by a read while nobody is signed in. */
   refused: () => unknown;
 }): { agent: AgentViews; session: AgentSession } {
@@ -100,10 +176,9 @@ export function fixtureAgent({
       );
   const grants: AgentConsentGrant[] = [];
   const listeners = new Map<string, Set<(event: AgentStreamEvent) => void>>();
-  const replies = new Map<
-    string,
-    { conversationId: string; timers: number[]; ids: string[] }
-  >();
+  const replies = new Map<string, Reply>();
+  // What each reply waits on, by request id.
+  const waiting = new Map<string, Waiting>();
   let next = 0;
   const id = (prefix: string) => `${prefix}-${++next}`;
 
@@ -121,94 +196,200 @@ export function fixtureAgent({
     await wait();
     if (!readable()) throw refused();
   };
+  const granted = (
+    conversationId: string,
+    providerId: string,
+    modelId: string,
+  ) =>
+    grants.some(
+      (grant) =>
+        grant.conversation_id === conversationId &&
+        grant.provider_id === providerId &&
+        grant.model_id === modelId,
+    );
 
   const status = (): AgentServiceStatus =>
     readable()
       ? { state: "ready", agent_version: "0.0.0-fixture", lane: "development" }
       : { state: "refused", code: "agent_signed_out", lane: "development" };
 
-  /** Plays one reply to `text`: some text, a tool, and more text. */
-  const play = (conversationId: string, replyId: string, text: string) => {
-    const reply = {
-      conversationId,
-      timers: [] as number[],
-      ids: [] as string[],
-    };
-    replies.set(replyId, reply);
-    const steps: (() => void)[] = [];
-    // A turn begun ends the reply's agent turns before it.
-    const begin = (turnId: string) => {
-      if (reply.ids.includes(turnId)) return;
-      for (const turn of turnsOf(conversationId))
-        if (
-          turn.kind === "agent" &&
-          turn.state === "working" &&
-          reply.ids.includes(turn.id)
-        )
-          put(conversationId, { ...turn, state: "complete" });
-      reply.ids.push(turnId);
-    };
-    const write = (turnId: string, words: string) => {
-      const all = pieces(words);
-      all.forEach((piece, index) => {
-        steps.push(() => {
-          begin(turnId);
-          const held = turnsOf(conversationId).find(
-            (turn) => turn.id === turnId,
-          );
-          put(conversationId, {
-            kind: "agent",
-            id: turnId,
-            text: (held?.kind === "agent" ? held.text : "") + piece.delta,
-            state: "working",
-          });
-          // One piece is never sent, where the stream has a gap.
-          if (stream === "gap" && turnId === reply.ids[0] && index === 1)
-            return;
-          emit(conversationId, {
-            type: "text",
-            reply_id: replyId,
-            turn_id: turnId,
-            ...piece,
-          });
-          // And one is sent twice, where it has none.
-          if (stream === "steady" && turnId !== reply.ids[0] && index === 1)
-            emit(conversationId, {
-              type: "text",
-              reply_id: replyId,
-              turn_id: turnId,
-              ...all[0]!,
-            });
-        });
-      });
-    };
-    steps.push(() =>
-      emit(conversationId, { type: "reply_started", reply_id: replyId }),
+  /** Runs `steps` one after another from now, as the reply's stream. */
+  const run = (reply: Reply, steps: (() => void)[]) => {
+    reply.timers = steps.map((step, index) =>
+      window.setTimeout(step, STEP_MS * (index + 1)),
     );
-    write(id("t"), "Lo miro en tus apuntes.");
-    const toolId = id("t");
-    for (const state of ["running", "done"] as const)
-      steps.push(() => {
-        const tool: Extract<AgentTurnRecord, { kind: "tool" }> = {
-          kind: "tool",
-          id: toolId,
-          label: "Leer los apuntes del libro del trimestre",
-          state,
-        };
-        begin(toolId);
-        put(conversationId, tool);
-        emit(conversationId, { type: "tool", reply_id: replyId, tool });
+  };
+
+  // A turn begun ends the reply's agent turns before it.
+  const begin = (reply: Reply, turnId: string) => {
+    if (reply.ids.includes(turnId)) return;
+    for (const turn of turnsOf(reply.conversationId))
+      if (
+        turn.kind === "agent" &&
+        turn.state === "working" &&
+        reply.ids.includes(turn.id)
+      )
+        put(reply.conversationId, { ...turn, state: "complete" });
+    reply.ids.push(turnId);
+  };
+
+  /** The steps that write `words` as a new agent turn of the reply. */
+  const write = (replyId: string, reply: Reply, words: string) => {
+    const turnId = id("t");
+    const { conversationId } = reply;
+    const all = pieces(words);
+    return all.map((piece, index) => () => {
+      begin(reply, turnId);
+      const first = reply.ids[0] === turnId;
+      const held = turnsOf(conversationId).find((turn) => turn.id === turnId);
+      put(conversationId, {
+        kind: "agent",
+        id: turnId,
+        text: (held?.kind === "agent" ? held.text : "") + piece.delta,
+        state: "working",
       });
-    write(
-      id("t"),
-      `Has escrito: «${text}». En estos datos de prueba no hay nada que revisar.`,
-    );
-    steps.push(() => {
-      settle(replyId, "complete");
+      // One piece is never sent, where the stream has a gap.
+      if (stream === "gap" && first && index === 1) return;
+      const event: AgentStreamEvent = {
+        type: "text",
+        reply_id: replyId,
+        turn_id: turnId,
+        ...piece,
+      };
+      emit(conversationId, event);
+      // And one is sent twice, where it has none.
+      if (stream === "steady" && !first && index === 1)
+        emit(conversationId, { ...event, ...all[0]! });
     });
-    steps.forEach((step, index) =>
-      reply.timers.push(window.setTimeout(step, STEP_MS * (index + 1))),
-    );
+  };
+
+  /** The steps of a tool the agent calls, from running to done. */
+  const tool = (replyId: string, reply: Reply, label: string) => {
+    const toolId = id("t");
+    return (["running", "done"] as const).map((state) => () => {
+      const turn: Extract<AgentTurnRecord, { kind: "tool" }> = {
+        kind: "tool",
+        id: toolId,
+        label,
+        state,
+      };
+      begin(reply, toolId);
+      put(reply.conversationId, turn);
+      emit(reply.conversationId, {
+        type: "tool",
+        reply_id: replyId,
+        tool: turn,
+      });
+    });
+  };
+
+  /** A step that parks the reply until the person decides `on`. */
+  const park = (replyId: string, reply: Reply, on: Waiting) => () => {
+    const event: AgentStreamEvent =
+      on.kind === "questions"
+        ? {
+            type: "questions",
+            reply_id: replyId,
+            questionnaire: on.questionnaire,
+          }
+        : { type: "approval", reply_id: replyId, approval: on.approval };
+    const requestId =
+      on.kind === "questions"
+        ? on.questionnaire.request_id
+        : on.approval.request_id;
+    waiting.set(requestId, on);
+    emit(reply.conversationId, event);
+  };
+
+  const finish = (replyId: string) => () => settle(replyId, "complete");
+
+  /** Plays one reply to `text`: some text, a tool, and more text, or a
+   * stop for what this run asks of the person. */
+  const play = (conversationId: string, replyId: string, text: string) => {
+    const reply: Reply = { conversationId, timers: [], ids: [] };
+    replies.set(replyId, reply);
+    const started = () =>
+      emit(conversationId, { type: "reply_started", reply_id: replyId });
+    const goOn = (steps: (() => void)[]) => run(reply, steps);
+    if (asks === "questions") {
+      const request_id = id("q");
+      run(reply, [
+        started,
+        ...write(replyId, reply, "Necesito un par de datos antes de seguir."),
+        park(replyId, reply, {
+          kind: "questions",
+          questionnaire: {
+            request_id,
+            reply_id: replyId,
+            questions: QUESTIONS,
+          },
+          then: (answer) =>
+            goOn([
+              ...write(
+                replyId,
+                reply,
+                answer.kind === "answers"
+                  ? `Con eso me basta: ${Object.values(answer.answers).join(", ")}.`
+                  : answer.kind === "message"
+                    ? `Has respondido: «${answer.text}».`
+                    : "De acuerdo, sigo sin esas respuestas.",
+              ),
+              finish(replyId),
+            ]),
+        }),
+      ]);
+      return;
+    }
+    if (asks === "approval" || asks === "review") {
+      const review = asks === "review";
+      const label = review
+        ? "Registrar la factura 2026-031"
+        : "Leer los apuntes del libro";
+      run(reply, [
+        started,
+        ...write(replyId, reply, "Para eso necesito tu permiso."),
+        park(replyId, reply, {
+          kind: "approval",
+          approval: {
+            request_id: id("p"),
+            reply_id: replyId,
+            source: review ? "cadrumo_review" : "agent_tool",
+            title: label,
+            description: review
+              ? "Añade la factura al libro de ingresos del tercer trimestre."
+              : "Lee los apuntes del tercer trimestre de este perfil.",
+            options: review
+              ? EVERY_OPTION.filter((option) => option.kind.endsWith("_once"))
+              : EVERY_OPTION,
+          },
+          then: (option) =>
+            goOn(
+              option.kind.startsWith("allow")
+                ? [
+                    ...tool(replyId, reply, label),
+                    ...write(replyId, reply, "Hecho."),
+                    finish(replyId),
+                  ]
+                : [
+                    ...write(replyId, reply, "Sin ese permiso no sigo."),
+                    finish(replyId),
+                  ],
+            ),
+        }),
+      ]);
+      return;
+    }
+    run(reply, [
+      started,
+      ...write(replyId, reply, "Lo miro en tus apuntes."),
+      ...tool(replyId, reply, "Leer los apuntes del libro del trimestre"),
+      ...write(
+        replyId,
+        reply,
+        `Has escrito: «${text}». En estos datos de prueba no hay nada que revisar.`,
+      ),
+      finish(replyId),
+    ]);
   };
 
   const settle = (replyId: string, state: "complete" | "stopped") => {
@@ -216,6 +397,13 @@ export function fixtureAgent({
     if (!reply) return;
     replies.delete(replyId);
     for (const timer of reply.timers) window.clearTimeout(timer);
+    for (const [requestId, on] of waiting) {
+      const owner =
+        on.kind === "questions"
+          ? on.questionnaire.reply_id
+          : on.approval.reply_id;
+      if (owner === replyId) waiting.delete(requestId);
+    }
     const list = turnsOf(reply.conversationId);
     const agentIds = reply.ids.filter((turnId) =>
       list.some((turn) => turn.kind === "agent" && turn.id === turnId),
@@ -232,6 +420,27 @@ export function fixtureAgent({
           state: turn.id === agentIds.at(-1) ? state : "complete",
         });
     emit(reply.conversationId, { type: "settled", reply_id: replyId, state });
+  };
+
+  /** The request `requestId` of reply `replyId`, taken off what waits. */
+  const take = (replyId: string, requestId: string) => {
+    const on = waiting.get(requestId);
+    const owner =
+      on?.kind === "questions"
+        ? on.questionnaire.reply_id
+        : on?.approval.reply_id;
+    const reply = replies.get(replyId);
+    if (!on || !reply || owner !== replyId)
+      throw coded("agent_request_unknown");
+    return { on, reply };
+  };
+  const resolve = (replyId: string, requestId: string, reply: Reply) => {
+    waiting.delete(requestId);
+    emit(reply.conversationId, {
+      type: "resolved",
+      reply_id: replyId,
+      request_id: requestId,
+    });
   };
 
   const agent: AgentViews = {
@@ -283,13 +492,11 @@ export function fixtureAgent({
     async consentNeeded(request) {
       say(`agentConsentNeeded ${request.conversation_id}`);
       await check();
-      const granted = grants.some(
-        (grant) =>
-          grant.conversation_id === request.conversation_id &&
-          grant.provider_id === request.selection.provider_id &&
-          grant.model_id === request.selection.model_id,
-      );
-      return granted
+      return granted(
+        request.conversation_id,
+        request.selection.provider_id,
+        request.selection.model_id,
+      )
         ? null
         : {
             conversation_id: request.conversation_id,
@@ -325,11 +532,10 @@ export function fixtureAgent({
       await check();
       const conversationId = request.conversation_id;
       if (
-        !grants.some(
-          (grant) =>
-            grant.conversation_id === conversationId &&
-            grant.provider_id === request.selection.provider_id &&
-            grant.model_id === request.selection.model_id,
+        !granted(
+          conversationId,
+          request.selection.provider_id,
+          request.selection.model_id,
         )
       )
         throw coded("agent_consent_required");
@@ -353,6 +559,68 @@ export function fixtureAgent({
       say(`agentCancel ${replyId}`);
       await check();
       settle(replyId, "stopped");
+    },
+    async pending(conversationId) {
+      say(`agentPending ${conversationId}`);
+      await check();
+      const questionnaires: AgentQuestionnaire[] = [];
+      const approvals: AgentApproval[] = [];
+      for (const on of waiting.values()) {
+        const replyId =
+          on.kind === "questions"
+            ? on.questionnaire.reply_id
+            : on.approval.reply_id;
+        if (replies.get(replyId)?.conversationId !== conversationId) continue;
+        if (on.kind === "questions") questionnaires.push(on.questionnaire);
+        else approvals.push(on.approval);
+      }
+      return { questionnaires, approvals };
+    },
+    async answerQuestions(questionnaire, answer) {
+      say(`agentAnswerQuestions ${questionnaire.request_id} ${answer.kind}`);
+      await check();
+      const { on, reply } = take(
+        questionnaire.reply_id,
+        questionnaire.request_id,
+      );
+      if (on.kind !== "questions") throw coded("agent_request_unknown");
+      const { questions } = on.questionnaire;
+      if (questions.length > MOST_QUESTIONS) throw coded("agent_too_many");
+      if (
+        questions.some(
+          (question) => (question.options?.length ?? 0) > MOST_OPTIONS,
+        )
+      )
+        throw coded("agent_too_many");
+      if (answer.kind === "answers") {
+        const fault = answerFault(questions, answer.answers);
+        if (fault) throw coded(fault);
+      }
+      let person_turn: Extract<AgentTurnRecord, { kind: "person" }> | undefined;
+      if (answer.kind === "message") {
+        person_turn = {
+          kind: "person",
+          id: id("t"),
+          text: answer.text,
+          sent_at: new Date().toISOString(),
+        };
+        put(reply.conversationId, person_turn);
+      }
+      resolve(questionnaire.reply_id, questionnaire.request_id, reply);
+      on.then(answer);
+      return person_turn ? { person_turn } : {};
+    },
+    async decideApproval(approval, optionId) {
+      say(`agentDecideApproval ${approval.request_id} ${optionId}`);
+      await check();
+      const { on, reply } = take(approval.reply_id, approval.request_id);
+      if (on.kind !== "approval") throw coded("agent_request_unknown");
+      const option = on.approval.options.find(
+        (held) => held.option_id === optionId,
+      );
+      if (!option) throw coded("agent_option_unknown");
+      resolve(approval.reply_id, approval.request_id, reply);
+      on.then(option);
     },
     observe(conversationId, listener) {
       say(`agentObserve ${conversationId}`);

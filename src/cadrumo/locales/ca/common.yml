@@ -584,6 +584,12 @@ desktop:
   agent:
     add_files: Afegeix fitxers
     agent_replied: L'agent ha respost
+    approval_allow_always: Permet-ho sempre
+    approval_allow_once: Permet-ho un cop
+    approval_reject_always: No ho permetis mai
+    approval_reject_once: No ho permetis
+    approval_review_title: Revisa això abans que Cadrumo ho faci
+    approval_tool_title: L'agent vol fer servir una eina
     archive: Arxiva
     archived_empty: No hi ha res arxivat
     archived_toggle: Arxivades ({count})
@@ -638,6 +644,13 @@ desktop:
     no_models: No hi ha models per triar
     provider: Proveïdor
     provider_unavailable: '{provider}: {reason}'
+    questions_answer: Respon
+    questions_decline: No responguis
+    questions_lead: Respon aquí sota, o escriu un missatge per respondre amb les teves
+      paraules.
+    questions_missing: Respon primer totes les preguntes que no són opcionals
+    questions_optional: (opcional)
+    questions_title: L'agent necessita unes respostes
     queued: Esperant per pujar
     ready: A punt
     refused: Rebutjat
@@ -3747,6 +3760,7 @@ tui:
     result:
       page: Resultat, pàgina {page} de {pages}
     run:
+      busy_holder: 'Operació que el reté: {operation_id}'
       contract_changed: El servei ofereix ara un altre contracte per a aquesta operació.
         Torna a obrir Operacions i prova-ho de nou. No s'ha enviat res.
       detached: Has deixat l'operació mentre encara estava en curs. Aquí no se'n coneix

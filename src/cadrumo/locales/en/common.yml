@@ -564,6 +564,12 @@ desktop:
   agent:
     add_files: Add files
     agent_replied: Agent replied
+    approval_allow_always: Always allow
+    approval_allow_once: Allow once
+    approval_reject_always: Never allow
+    approval_reject_once: Don't allow
+    approval_review_title: Review this before Cadrumo does it
+    approval_tool_title: The agent wants to use a tool
     archive: Archive
     archived_empty: Nothing archived
     archived_toggle: Archived ({count})
@@ -617,6 +623,13 @@ desktop:
     no_models: No models to choose from
     provider: Provider
     provider_unavailable: '{provider}: {reason}'
+    questions_answer: Answer
+    questions_decline: Don't answer
+    questions_lead: Answer below, or write a message instead to answer in your own
+      words.
+    questions_missing: Answer every question not marked optional first
+    questions_optional: (optional)
+    questions_title: The agent needs a few answers
     queued: Waiting to upload
     ready: Ready
     refused: Refused
@@ -3659,6 +3672,7 @@ tui:
     result:
       page: Result, page {page} of {pages}
     run:
+      busy_holder: 'Operation holding it: {operation_id}'
       contract_changed: The runtime now serves a different contract for this operation.
         Reopen Operations and try again. Nothing was sent.
       detached: You left the operation while it was still running. Its outcome is

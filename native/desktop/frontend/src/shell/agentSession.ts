@@ -105,6 +105,59 @@ export type AgentSendResult = {
   reply_id: string;
 };
 
+/** One question the agent asks the person: a choice among its options, or
+ * free text. */
+export type AgentQuestion = {
+  id: string;
+  prompt: string;
+  kind: "choice" | "text";
+  /** The options of a choice, answered with exactly one of them verbatim. */
+  options?: string[];
+  required: boolean;
+};
+
+/** Up to four questions the agent asks together; the reply waits until the
+ * person answers them, sends a new message instead, or declines. */
+export type AgentQuestionnaire = {
+  request_id: string;
+  reply_id: string;
+  questions: AgentQuestion[];
+};
+
+/** How the person answers a questionnaire. */
+export type AgentQuestionnaireAnswer =
+  | { kind: "answers"; answers: Record<string, string> }
+  | { kind: "message"; text: string }
+  | { kind: "decline" };
+
+/** What answering a questionnaire added to the conversation: the person's
+ * message, when they answered with one, as history will keep it. */
+export type AgentAnswerResult = {
+  person_turn?: Extract<AgentTurnRecord, { kind: "person" }>;
+};
+
+/** What an approval would let happen, as its source states it. */
+export type AgentApprovalOption = {
+  option_id: string;
+  /** The option's name as the source words it. */
+  name: string;
+  kind: "allow_once" | "allow_always" | "reject_once" | "reject_always";
+};
+
+/** Something the reply cannot do until the person decides: a tool the agent
+ * wants to call, or a Cadrumo operation's review before it commits. Only a
+ * deliberate gesture of the person answers it; no tool the model can call
+ * does. */
+export type AgentApproval = {
+  request_id: string;
+  reply_id: string;
+  source: "agent_tool" | "cadrumo_review";
+  /** What would run, as its source names it. */
+  title: string;
+  description: string;
+  options: AgentApprovalOption[];
+};
+
 /** One change to a conversation while it is watched. A reply is a run of
  * turns in order: agent text, a tool, more agent text. Every turn id and
  * tool id streamed here is the id history() returns for that record, so a
@@ -131,6 +184,11 @@ export type AgentStreamEvent =
       /** The tool turn, whole, each time its state changes. */
       tool: Extract<AgentTurnRecord, { kind: "tool" }>;
     }
+  | { type: "questions"; reply_id: string; questionnaire: AgentQuestionnaire }
+  | { type: "approval"; reply_id: string; approval: AgentApproval }
+  /** A questionnaire or approval is answered, here or elsewhere, and is no
+   * longer pending. */
+  | { type: "resolved"; reply_id: string; request_id: string }
   | {
       type: "settled";
       reply_id: string;
@@ -164,9 +222,24 @@ export interface AgentSession {
   send(request: AgentSendRequest): Promise<AgentSendResult>;
   /** Stops a reply that is still working; it settles as `stopped`. */
   cancel(replyId: string): Promise<void>;
-  /** Watches one conversation. Read history() first: it holds a turn still
-   * being written as `working`, with its text so far, and the offsets of
-   * later text events continue from it. Cleanup cannot remove a newer
+  /** What the conversation's unfinished reply waits on, so a reload shows
+   * the same questions and approvals the stream raised. */
+  pending(conversationId: string): Promise<{
+    questionnaires: AgentQuestionnaire[];
+    approvals: AgentApproval[];
+  }>;
+  answerQuestions(
+    questionnaire: Pick<AgentQuestionnaire, "reply_id" | "request_id">,
+    answer: AgentQuestionnaireAnswer,
+  ): Promise<AgentAnswerResult>;
+  decideApproval(
+    approval: Pick<AgentApproval, "reply_id" | "request_id">,
+    optionId: string,
+  ): Promise<void>;
+  /** Watches one conversation. Read history() first: it holds the newest
+   * agent turn of an unfinished reply as `working`, with its text so far,
+   * and every earlier turn of that reply as settled; the offsets of later
+   * text events continue from it. Cleanup cannot remove a newer
    * subscriber. */
   observe(
     conversationId: string,

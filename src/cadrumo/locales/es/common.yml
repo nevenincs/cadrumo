@@ -590,6 +590,12 @@ desktop:
   agent:
     add_files: Añadir archivos
     agent_replied: El agente respondió
+    approval_allow_always: Permitir siempre
+    approval_allow_once: Permitir una vez
+    approval_reject_always: No permitir nunca
+    approval_reject_once: No permitir
+    approval_review_title: Revisa esto antes de que Cadrumo lo haga
+    approval_tool_title: El agente quiere usar una herramienta
     archive: Archivar
     archived_empty: No hay nada archivado
     archived_toggle: Archivadas ({count})
@@ -644,6 +650,13 @@ desktop:
     no_models: No hay modelos para elegir
     provider: Proveedor
     provider_unavailable: '{provider}: {reason}'
+    questions_answer: Responder
+    questions_decline: No responder
+    questions_lead: Responde aquí abajo, o escribe un mensaje para responder con tus
+      palabras.
+    questions_missing: Responde primero todas las preguntas que no son opcionales
+    questions_optional: (opcional)
+    questions_title: El agente necesita unas respuestas
     queued: Esperando para subir
     ready: Listo
     refused: Rechazado
@@ -3747,6 +3760,7 @@ tui:
     result:
       page: Resultado, página {page} de {pages}
     run:
+      busy_holder: 'Operación que lo retiene: {operation_id}'
       contract_changed: El servicio ofrece ahora otro contrato para esta operación.
         Vuelve a abrir Operaciones e inténtalo de nuevo. No se ha enviado nada.
       detached: Has dejado la operación mientras seguía en curso. Aquí no se conoce

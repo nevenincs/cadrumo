@@ -1,4 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
+import {
+  agentColumn as column,
+  agentTurns,
+  ask,
+  consentPrompt as consent,
+  conversation,
+  messageField as field,
+  worded,
+} from "../support/agent";
 import { label } from "../support/strings";
 
 // The agent column at work: a message goes only once the person consents,
@@ -9,28 +18,12 @@ import { label } from "../support/strings";
 const open = (target: Page, scenario = "signed-in", query = "") =>
   target.goto(`/scenarios.html?scenario=${scenario}&latency=0&bar=off${query}`);
 
-const column = (target: Page) => target.locator(".pane-agent");
-const field = (target: Page) =>
-  target.getByRole("textbox", { name: label("desktop.agent.message_label") });
-const conversation = (target: Page) =>
-  column(target).getByRole("log", { name: label("desktop.agent.transcript") });
-const consent = (target: Page) =>
-  column(target).getByRole("region", {
-    name: label("desktop.agent.consent_title", {
-      provider: "Fixture provider",
-    }),
-  });
 const calls = (target: Page) =>
   target.evaluate(() => window.__scenarioHostCalls ?? []);
 
 /** The reply the scenario host writes to `text`, as it ends. */
 const replyTo = (text: string) =>
   `Has escrito: «${text}». En estos datos de prueba no hay nada que revisar.`;
-
-const ask = async (target: Page, text: string) => {
-  await field(target).fill(text);
-  await field(target).press("Enter");
-};
 
 test.beforeEach(async ({ page: target }) => {
   await target.addInitScript(() => {
@@ -65,18 +58,12 @@ test("a message goes only with consent, and its reply streams in once", async ({
 
   await field(target).press("Enter");
   await consent(target)
-    .getByRole("button", {
-      name: label("desktop.agent.consent_allow", {
-        provider: "Fixture provider",
-      }),
-    })
+    .getByRole("button", { name: worded("desktop.agent.consent_allow") })
     .click();
   const log = conversation(target);
   await expect(log).toContainText("¿Cuánto IVA pagué en julio?");
   await expect(log).toContainText("Leer los apuntes del libro del trimestre");
-  const replies = log.getByRole("article", {
-    name: label("desktop.agent.agent_replied"),
-  });
+  const replies = agentTurns(target);
   // Every piece once, the one the stream sent twice included.
   await expect(replies).toHaveText([
     "Lo miro en tus apuntes.",
@@ -114,11 +101,7 @@ test("a reply stopped while it is written says it was stopped", async ({
   await open(target);
   await ask(target, "Repasa el trimestre");
   await consent(target)
-    .getByRole("button", {
-      name: label("desktop.agent.consent_allow", {
-        provider: "Fixture provider",
-      }),
-    })
+    .getByRole("button", { name: worded("desktop.agent.consent_allow") })
     .click();
   await expect(conversation(target)).toContainText("Lo miro");
   await column(target)
@@ -144,15 +127,9 @@ test("text the stream never sent is recovered from the history", async ({
   await open(target, "signed-in", "&stream=gap");
   await ask(target, "Hola");
   await consent(target)
-    .getByRole("button", {
-      name: label("desktop.agent.consent_allow", {
-        provider: "Fixture provider",
-      }),
-    })
+    .getByRole("button", { name: worded("desktop.agent.consent_allow") })
     .click();
-  const replies = conversation(target).getByRole("article", {
-    name: label("desktop.agent.agent_replied"),
-  });
+  const replies = agentTurns(target);
   await expect(replies).toHaveText([
     "Lo miro en tus apuntes.",
     replyTo("Hola"),

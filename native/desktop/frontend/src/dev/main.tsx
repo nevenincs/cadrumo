@@ -67,6 +67,11 @@ function readParams() {
     // The agent's reply with a piece of its stream missing, for how the
     // column recovers it.
     agentStream: params.get("stream") === "gap" ? ("gap" as const) : undefined,
+    // What every agent reply stops to ask: questions, a tool's approval or
+    // a Cadrumo review.
+    agentAsks: (["questions", "approval", "review"] as const).find(
+      (asks) => asks === params.get("asks"),
+    ),
   };
 }
 
@@ -115,6 +120,7 @@ function Scenarios() {
       logFeedMs: initial.logFeedMs,
       calendar: initial.calendar,
       agentStream: initial.agentStream,
+      agentAsks: initial.agentAsks,
       language: run.language,
       latencyMs: initial.latencyMs,
       onCall: (call) => {

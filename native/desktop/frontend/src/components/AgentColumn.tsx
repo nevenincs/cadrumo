@@ -11,8 +11,11 @@ import { Spinner } from "@/components/ui/spinner";
 import { failureCode } from "../errors";
 import { useAgentStatus, useLiveConversation } from "../shell/agentLive";
 import type {
+  AgentApproval,
   AgentConsentRequest,
   AgentProviderRecord,
+  AgentQuestionnaire,
+  AgentQuestionnaireAnswer,
   AgentSendRequest,
   AgentServiceStatus,
   AgentSession,
@@ -29,10 +32,12 @@ import {
 import { useStrings, type Translate } from "../shell/strings";
 import { AgentHeader } from "./agent/AgentHeader";
 import { AgentWelcome } from "./agent/AgentWelcome";
+import { ApprovalPrompt } from "./agent/ApprovalPrompt";
 import { Composer } from "./agent/Composer";
 import { ConsentPrompt, type ConsentItem } from "./agent/ConsentPrompt";
 import { DocumentsPanel } from "./agent/DocumentsPanel";
 import { HistoryList } from "./agent/HistoryList";
+import { QuestionsPrompt } from "./agent/QuestionsPrompt";
 import { Transcript } from "./agent/Transcript";
 import type {
   AgentSelection,
@@ -191,8 +196,8 @@ export function AgentColumn({
     sendFailure: null as string | null,
     // The composer is drawn anew with this draft when a send is given back.
     draft: { key: 0, text: "" },
-    // Counts the replies finished, each a reason to read the
-    // conversations again.
+    // Counts the messages sent and the replies finished, each a reason to
+    // read the conversations again.
     revision: 0,
   });
   if (view.reader !== reader)
@@ -312,7 +317,13 @@ export function AgentColumn({
     if (!session) return;
     try {
       live.sent(await session.send(request));
-      change({ asking: null, sending: false });
+      // A message sent may name the conversation, so it is read again.
+      setView((held) => ({
+        ...held,
+        asking: null,
+        sending: false,
+        revision: held.revision + 1,
+      }));
     } catch (error) {
       giveBack(request.text, failureCode(error));
     }
@@ -351,13 +362,47 @@ export function AgentColumn({
     // A send that fails is given back by `deliver` itself.
     await deliver(request);
   };
+  // What the reply waits on. While it asks questions, a message written
+  // below answers them in the person's own words, and goes on with the
+  // same reply.
+  const questionnaire = live.questionnaires[0];
+  const answer = async (
+    asked: AgentQuestionnaire,
+    reply: AgentQuestionnaireAnswer,
+  ) => {
+    if (!session) return;
+    change({ sending: true, sendFailure: null });
+    try {
+      const result = await session.answerQuestions(asked, reply);
+      if (result.person_turn) live.sent({ person_turn: result.person_turn });
+      live.resolved(asked.request_id);
+      change({ sending: false });
+    } catch (error) {
+      if (reply.kind === "message") giveBack(reply.text, failureCode(error));
+      else change({ sending: false, sendFailure: failureCode(error) });
+    }
+  };
+  const decide = async (approval: AgentApproval, optionId: string) => {
+    if (!session) return;
+    change({ sending: true, sendFailure: null });
+    try {
+      await session.decideApproval(approval, optionId);
+      live.resolved(approval.request_id);
+      change({ sending: false });
+    } catch (error) {
+      change({ sending: false, sendFailure: failureCode(error) });
+    }
+  };
+  const answering = session && ready && !view.sending;
   const send =
-    session && ready && selection && !view.sending && !asking
-      ? (text: string) => {
-          change({ sending: true, sendFailure: null });
-          void submit(text, selection);
-        }
-      : undefined;
+    answering && questionnaire
+      ? (text: string) => void answer(questionnaire, { kind: "message", text })
+      : answering && selection && !asking
+        ? (text: string) => {
+            change({ sending: true, sendFailure: null });
+            void submit(text, selection);
+          }
+        : undefined;
   const allow = asking
     ? async () => {
         if (!session) return;
@@ -500,6 +545,40 @@ export function AgentColumn({
           the composer would sit under a list it does not write to. */}
       {!historyOpen && !documentsOpen && (
         <div className="grid shrink-0 gap-2 p-3 pt-0">
+          {live.approvals.map((approval) => (
+            <ApprovalPrompt
+              key={approval.request_id}
+              source={approval.source}
+              title={approval.title}
+              description={approval.description}
+              options={approval.options.map((option) => ({
+                id: option.option_id,
+                kind: option.kind,
+              }))}
+              onDecide={
+                answering
+                  ? (optionId) => void decide(approval, optionId)
+                  : undefined
+              }
+            />
+          ))}
+          {questionnaire && (
+            <QuestionsPrompt
+              key={questionnaire.request_id}
+              questions={questionnaire.questions}
+              onAnswer={
+                answering
+                  ? (answers) =>
+                      void answer(questionnaire, { kind: "answers", answers })
+                  : undefined
+              }
+              onDecline={
+                answering
+                  ? () => void answer(questionnaire, { kind: "decline" })
+                  : undefined
+              }
+            />
+          )}
           {asking && asked && (
             <ConsentPrompt
               providerName={asked.providerName}
@@ -533,7 +612,8 @@ export function AgentColumn({
             providers={offer?.providers ?? NO_PROVIDERS}
             models={offer?.models ?? NO_MODELS}
             selection={selection ?? NO_SELECTION}
-            running={live.working || view.sending}
+            // Questions are answered by a message too, so Send stays.
+            running={!questionnaire && (live.working || view.sending)}
             onSend={send}
             onStop={stop}
             onSelectionChange={

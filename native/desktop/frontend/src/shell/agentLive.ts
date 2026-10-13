@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { failureCode } from "../errors";
 import type {
+  AgentApproval,
+  AgentQuestionnaire,
   AgentSendResult,
   AgentServiceStatus,
   AgentSession,
@@ -13,7 +15,8 @@ import type { AgentRead, AgentTurnRecord, AgentViews } from "./agentViews";
 // history is read, and what it sends meanwhile is held and applied after, so
 // nothing between the two is lost. Where the stream shows that something was
 // missed, the history is read again: it holds every turn as far as it has
-// gone, under the ids the stream uses.
+// gone, under the ids the stream uses. What a reply waits on, questions or
+// an approval, is read with it, so a reload shows what is still asked.
 
 /** A conversation's turns so far, and the replies they belong to. */
 export type LiveTurns = {
@@ -23,9 +26,39 @@ export type LiveTurns = {
   replies: Readonly<Record<string, readonly string[]>>;
   /** The reply still being written, where its handle is known. */
   open: string | null;
+  /** The questions a reply waits on the person to answer. */
+  questionnaires: AgentQuestionnaire[];
+  /** The decisions a reply waits on the person to make. */
+  approvals: AgentApproval[];
 };
 
-const NO_TURNS: LiveTurns = { turns: [], replies: {}, open: null };
+/** What a conversation's unfinished reply waits on. */
+export type LivePending = Pick<LiveTurns, "questionnaires" | "approvals">;
+
+const NOTHING_PENDING: LivePending = { questionnaires: [], approvals: [] };
+const NO_TURNS: LiveTurns = {
+  turns: [],
+  replies: {},
+  open: null,
+  ...NOTHING_PENDING,
+};
+
+const upserted = <T extends { request_id: string }>(
+  list: readonly T[],
+  item: T,
+): T[] => [...list.filter((held) => held.request_id !== item.request_id), item];
+
+/** `live` without the request `requestId`, answered here or elsewhere. */
+export const withoutRequest = (
+  live: LiveTurns,
+  requestId: string,
+): LiveTurns => ({
+  ...live,
+  questionnaires: live.questionnaires.filter(
+    (held) => held.request_id !== requestId,
+  ),
+  approvals: live.approvals.filter((held) => held.request_id !== requestId),
+});
 
 /** `live` after one stream event, and whether the history must be read
  * again because the event shows that something was missed. */
@@ -109,6 +142,7 @@ export function applyStreamEvent(
       }
       return {
         live: {
+          ...live,
           turns,
           replies: joined(live.replies, event.reply_id, event.turn_id),
           open: event.reply_id,
@@ -122,6 +156,7 @@ export function applyStreamEvent(
       );
       return {
         live: {
+          ...live,
           turns:
             at < 0
               ? [
@@ -135,7 +170,39 @@ export function applyStreamEvent(
         reread: false,
       };
     }
+    case "questions":
+      return {
+        live: {
+          ...live,
+          questionnaires: upserted(live.questionnaires, event.questionnaire),
+          replies: joined(live.replies, event.reply_id),
+          open: event.reply_id,
+        },
+        reread: false,
+      };
+    case "approval":
+      return {
+        live: {
+          ...live,
+          approvals: upserted(live.approvals, event.approval),
+          replies: joined(live.replies, event.reply_id),
+          open: event.reply_id,
+        },
+        reread: false,
+      };
+    case "resolved":
+      return { live: withoutRequest(live, event.request_id), reread: false };
     case "settled": {
+      // A finished reply waits on nothing.
+      live = {
+        ...live,
+        questionnaires: live.questionnaires.filter(
+          (held) => held.reply_id !== event.reply_id,
+        ),
+        approvals: live.approvals.filter(
+          (held) => held.reply_id !== event.reply_id,
+        ),
+      };
       const ids = live.replies[event.reply_id] ?? [];
       const agentIds = ids.filter((id) =>
         live.turns.some((turn) => turn.kind === "agent" && turn.id === id),
@@ -166,22 +233,36 @@ export function applyStreamEvent(
   }
 }
 
-/** `live` with the person's own message, as the send that started a reply
- * answered it. */
-function withSent(live: LiveTurns, sent: AgentSendResult): LiveTurns {
+/** The person's own message, as the host answered with it: a send, which
+ * starts a reply, or an answer given in words, which goes on with the reply
+ * waiting for it. */
+export type PersonSent = Pick<AgentSendResult, "person_turn"> & {
+  reply_id?: string;
+};
+
+/** `live` with the person's own message. */
+function withSent(live: LiveTurns, sent: PersonSent): LiveTurns {
   const turn = sent.person_turn;
+  const turns = live.turns.some((held) => held.id === turn.id)
+    ? live.turns
+    : [...live.turns, turn];
+  if (sent.reply_id === undefined) return { ...live, turns };
   return {
-    turns: live.turns.some((held) => held.id === turn.id)
-      ? live.turns
-      : [...live.turns, turn],
+    ...live,
+    turns,
     replies: joined(live.replies, sent.reply_id),
     open: sent.reply_id,
   };
 }
 
-/** `live` with the history read again: the history's turns, and the open
- * reply closed when the history shows it has finished. */
-function withHistory(live: LiveTurns, records: AgentTurnRecord[]): LiveTurns {
+/** `live` with the history read again: the history's turns and what the
+ * reply waits on, and the open reply closed when the history shows it has
+ * finished. */
+function withHistory(
+  live: LiveTurns,
+  records: AgentTurnRecord[],
+  pending: LivePending,
+): LiveTurns {
   const ids = live.open === null ? [] : (live.replies[live.open] ?? []);
   const agentTurns = records.filter(
     (turn) => turn.kind === "agent" && ids.includes(turn.id),
@@ -191,7 +272,12 @@ function withHistory(live: LiveTurns, records: AgentTurnRecord[]): LiveTurns {
     agentTurns.every(
       (turn) => turn.kind === "agent" && turn.state !== "working",
     );
-  return { ...live, turns: records, open: finished ? null : live.open };
+  return {
+    ...live,
+    ...pending,
+    turns: records,
+    open: finished ? null : live.open,
+  };
 }
 
 export type LiveConversation = {
@@ -201,8 +287,15 @@ export type LiveConversation = {
   open: string | null;
   /** A reply is still being written, whether or not its handle is known. */
   working: boolean;
-  /** Adds the person's message that a send answered with. */
-  sent(result: AgentSendResult): void;
+  /** The questions the conversation's reply waits on. */
+  questionnaires: readonly AgentQuestionnaire[];
+  /** The decisions the conversation's reply waits on. */
+  approvals: readonly AgentApproval[];
+  /** Adds the person's message that a send, or an answer in words, was
+   * answered with. */
+  sent(result: PersonSent): void;
+  /** Drops a question or approval the person has answered. */
+  resolved(requestId: string): void;
   /** Settles once the conversation is being watched, so that nothing a
    * send then starts is missed. */
   watch(conversationId: string): Promise<void>;
@@ -236,9 +329,11 @@ export function useLiveConversation({
   }>({ for: null, live: null, failed: null });
   const settled = useRef(onSettled);
   settled.current = onSettled;
-  // How the current watch takes a send's answer, and which conversation it
-  // watches.
-  const take = useRef<((sent: AgentSendResult) => void) | null>(null);
+  // How the current watch takes a change of the person's making, and which
+  // conversation it watches.
+  const take = useRef<
+    ((change: (live: LiveTurns) => LiveTurns) => void) | null
+  >(null);
   const watching = useRef<string | null>(null);
   const waiters = useRef<Waiter[]>([]);
 
@@ -249,7 +344,8 @@ export function useLiveConversation({
     let current: LiveTurns | null = null;
     // Events that arrive while the history is read, applied once it is.
     let held: AgentStreamEvent[] | null = null;
-    let sends: AgentSendResult[] = [];
+    // The person's own changes while the history is read, made after it.
+    let changes: ((live: LiveTurns) => LiveTurns)[] = [];
     let stop: (() => void) | null = null;
 
     const show = (live: LiveTurns) => {
@@ -258,14 +354,17 @@ export function useLiveConversation({
     };
     const read = () => {
       held = [];
-      views.history(id).then(
-        (records) => {
+      Promise.all([
+        views.history(id),
+        session ? session.pending(id) : NOTHING_PENDING,
+      ]).then(
+        ([records, pending]) => {
           if (!alive) return;
           const events = held ?? [];
           held = null;
-          let live = withHistory(current ?? NO_TURNS, records);
-          for (const sent of sends) live = withSent(live, sent);
-          sends = [];
+          let live = withHistory(current ?? NO_TURNS, records, pending);
+          for (const change of changes) live = change(live);
+          changes = [];
           for (const event of events) {
             const step = applyStreamEvent(live, event);
             live = step.live;
@@ -295,10 +394,10 @@ export function useLiveConversation({
       if (step.reread) read();
       if (event.type === "settled") settled.current?.();
     };
-    take.current = (sent) => {
+    take.current = (change) => {
       if (!alive) return;
-      if (held || !current) sends.push(sent);
-      else show(withSent(current, sent));
+      if (held || !current) changes.push(change);
+      else show(change(current));
     };
     // A wait for another conversation will not be answered by this watch.
     const others = waiters.current.filter((waiter) => waiter.id !== id);
@@ -337,9 +436,15 @@ export function useLiveConversation({
     };
   }, [key, views, session]);
 
-  const sent = useCallback((result: AgentSendResult) => {
-    take.current?.(result);
-  }, []);
+  const sent = useCallback(
+    (result: PersonSent) => take.current?.((live) => withSent(live, result)),
+    [],
+  );
+  const resolved = useCallback(
+    (requestId: string) =>
+      take.current?.((live) => withoutRequest(live, requestId)),
+    [],
+  );
   const watch = useCallback(
     (id: string) =>
       watching.current === id
@@ -373,7 +478,10 @@ export function useLiveConversation({
         live.turns.some(
           (turn) => turn.kind === "agent" && turn.state === "working",
         )),
+    questionnaires: live?.questionnaires ?? NOTHING_PENDING.questionnaires,
+    approvals: live?.approvals ?? NOTHING_PENDING.approvals,
     sent,
+    resolved,
     watch,
   };
 }

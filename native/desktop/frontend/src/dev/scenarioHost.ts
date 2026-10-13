@@ -18,7 +18,11 @@ import type {
 import type { Host } from "../shell/host";
 import type { ProfileAccounts } from "../shell/profiles";
 import type { ProfileViews } from "../shell/views";
-import { fixtureAgent, type FixtureStream } from "./agentFixtureHost";
+import {
+  fixtureAgent,
+  type FixtureAsks,
+  type FixtureStream,
+} from "./agentFixtureHost";
 import { BUSY_CALENDAR } from "./fixtures/calendarBusy";
 import {
   AHEAD_CALENDAR,
@@ -68,6 +72,8 @@ export type ScenarioHostOptions = {
   calendar?: CalendarShape | null;
   /** How the agent's reply streams: in order, or with a piece missing. */
   agentStream?: FixtureStream;
+  /** What every agent reply stops to ask the person, if anything. */
+  agentAsks?: FixtureAsks;
   /** Receives one line per host call; never a password or its length. */
   onCall?: (call: string) => void;
 };
@@ -241,6 +247,7 @@ export function scenarioHost(
     readable,
     empty: scenario.views === "empty",
     stream: options.agentStream ?? "steady",
+    asks: options.agentAsks ?? null,
     refused: () => failure("timed_out", "cli"),
   });
 
