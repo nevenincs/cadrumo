@@ -264,7 +264,7 @@ def _submit(
             subject_ref=subject_ref,
             payload_json=payload_json,
         ),
-        deadline=time.monotonic() + 10,
+        deadline=exchange_deadline(),
     )
 
 
