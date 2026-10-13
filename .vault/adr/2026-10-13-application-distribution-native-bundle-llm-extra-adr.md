@@ -9,6 +9,7 @@ body_hash: 'sha256:0ea815175353d95b405a5d84358918118f03c7a8bb6bbfee0ac88d56258d8
 related:
   - "[[2026-08-07-unstructured-document-ingestion-provisioning-adr]]"
   - "[[2026-10-04-application-distribution-adr]]"
+  - '[[2026-08-06-llm-package-split-research]]'
 ---
 
 # `application-distribution` adr: `Native bundle installs the llm extra` | (**status:** `accepted`)
