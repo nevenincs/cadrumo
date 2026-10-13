@@ -30,6 +30,10 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from cadrumo.application.modelo.action_errors import WorkUnitNotFoundError
+from cadrumo.application.modelo.operation_definitions import (
+    MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID,
+    MODELO_WORK_RENAME_OPERATION_DEFINITION_ID,
+)
 from cadrumo.application.modelo.query_read_operation import MODELO_BINDINGS_LIST_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.work_change_contracts import (
     ModeloWorkDiscardBaseline,
@@ -78,7 +82,7 @@ from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
 from .stored_sign_in_runtime import stored_sign_in_runtime
-from .test_modelo_metadata import _DISCARD, _RENAME, _admit, _connect, _LoginObservation, _seed_periods, _submit
+from .test_modelo_metadata import _admit, _connect, _LoginObservation, _seed_periods, _submit
 
 pytestmark = [
     pytest.mark.integration,
@@ -241,7 +245,7 @@ class _ServedUnits:
             self.session.connection,
             self.session.profile_id,
             self.session.session_id,
-            definition_id=_RENAME,
+            definition_id=MODELO_WORK_RENAME_OPERATION_DEFINITION_ID,
             subject_ref=unit.work_unit_id,
             payload_json=ModeloWorkRenameRequest(
                 work_unit_id=unit.work_unit_id,
@@ -326,7 +330,7 @@ def _served_units(tmp_path: Path) -> Generator[_ServedUnits]:
 def test_a_read_after_its_work_unit_was_discarded_is_served_because_a_discard_keeps_the_unit(tmp_path: Path) -> None:
     with _served_units(tmp_path) as served:
         session = served.session
-        contract = session.contract(_RENAME)
+        contract = session.contract(MODELO_WORK_RENAME_OPERATION_DEFINITION_ID)
         renamed = served.rename(served.second, "synthetic renamed unit")
         settled = served.run(renamed)
         reads = session.reads(renamed, contract, settled.projection.revision)
@@ -341,7 +345,7 @@ def test_a_read_after_its_work_unit_was_discarded_is_served_because_a_discard_ke
             session.connection,
             session.profile_id,
             session.session_id,
-            definition_id=_DISCARD,
+            definition_id=MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID,
             subject_ref=unit.work_unit_id,
             payload_json=ModeloWorkDiscardRequest(
                 baseline=ModeloWorkDiscardBaseline(
@@ -355,7 +359,7 @@ def test_a_read_after_its_work_unit_was_discarded_is_served_because_a_discard_ke
         served.run(discarded.receipt.operation_id)
 
         after = {name: reads[name]() for name in ("observe", "result", "result_page")}
-        session.contract(_RENAME)
+        session.contract(MODELO_WORK_RENAME_OPERATION_DEFINITION_ID)
 
     assert _refusal_codes(after) == {
         "observe": RuntimeOperationObserved.__name__,
@@ -369,7 +373,7 @@ def test_a_read_after_its_work_unit_has_gone_is_refused_with_the_registered_erro
 ) -> None:
     with _served_units(tmp_path) as served:
         session = served.session
-        contract = session.contract(_RENAME)
+        contract = session.contract(MODELO_WORK_RENAME_OPERATION_DEFINITION_ID)
         settled_rename = served.rename(served.second, "synthetic settled rename")
         settled = served.run(settled_rename)
         waiting_rename = served.rename(served.first, "synthetic waiting rename")
@@ -378,10 +382,10 @@ def test_a_read_after_its_work_unit_has_gone_is_refused_with_the_registered_erro
         answers: dict[str, _Answer] = {}
         for name, read in session.reads(settled_rename, contract, settled.projection.revision).items():
             answers[f"{name} of a settled operation"] = read()
-            session.contract(_RENAME)
+            session.contract(MODELO_WORK_RENAME_OPERATION_DEFINITION_ID)
         for name, read in session.reads(waiting_rename, contract, 0).items():
             answers[f"{name} of a waiting operation"] = read()
-            session.contract(_RENAME)
+            session.contract(MODELO_WORK_RENAME_OPERATION_DEFINITION_ID)
 
     def gone(unit: WorkUnit) -> tuple[AutomationCustodyCode, tuple[RequestFault, ...]]:
         # The error the resolver raises for a unit the store no longer holds, as the command line prints it.

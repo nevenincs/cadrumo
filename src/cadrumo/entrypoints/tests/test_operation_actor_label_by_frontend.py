@@ -30,7 +30,7 @@ from ...application.inventory.tests.registered_operation_conformance_support imp
     prepare_inventory_operation_conformance_case,
     read_inventory_operation_conformance_ledger,
 )
-from ...application.invoices.catalogue_add_operation import InvoiceAddResult
+from ...application.invoices.catalogue_add_contracts import InvoiceAddResult
 from ...application.invoices.catalogue_update_operation import InvoiceUpdateResult
 from ...application.ledger.counterparty_operation import LedgerCounterpartyRequest, LedgerCounterpartyResult
 from ...application.ledger.link_operation import LedgerLinkOperationResult, LedgerLinkRequest

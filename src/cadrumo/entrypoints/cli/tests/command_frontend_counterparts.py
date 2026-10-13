@@ -97,13 +97,14 @@ def _query(proof: str | Unproven, *queries: str) -> Counterpart:
 
 _RUNTIME_TESTS: Final = "src/cadrumo/entrypoints/runtime/tests"
 _ENTRYPOINT_TESTS: Final = "src/cadrumo/entrypoints/tests"
+_CONFIG_TESTS: Final = "src/cadrumo/entrypoints/cli/config/tests"
 _STORAGE_PROOF: Final = (
     f"{_RUNTIME_TESTS}/test_installation_storage.py::test_each_storage_command_prints_the_document_its_act_replies_with"
 )
 _REFERENCE_PROOF: Final = (
     f"{_ENTRYPOINT_TESTS}/test_reference_catalogue_parity.py::test_tool_report_equals_the_command_line_result"
 )
-_REPAIR_OPERATIONS: Final = f"{_ENTRYPOINT_TESTS}/test_diagnostics_repair_command_parity.py"
+_REPAIR_OPERATIONS: Final = f"{_CONFIG_TESTS}/test_diagnostics_repair_command_parity.py"
 _PROVISION_PROOF: Final = (
     "src/cadrumo/entrypoints/cli/tests/test_provision_operation_parity.py"
     "::test_a_leaf_and_its_operation_return_the_same_result"
@@ -133,7 +134,7 @@ IN_PROCESS_COMMAND_COUNTERPARTS: Final[Mapping[CliPath, Counterpart]] = MappingP
         ),
         # The command parses the certificate itself before it submits the facts it read.
         ("config", "profile", "censo", "import"): _operation(
-            f"{_ENTRYPOINT_TESTS}/test_censal_certificate_file_operation.py"
+            f"{_CONFIG_TESTS}/test_censal_certificate_file_operation.py"
             "::test_the_shipped_parser_refuses_the_file_for_a_direct_client_as_it_does_for_the_command",
             "user-profile.censo-certificate-import",
         ),

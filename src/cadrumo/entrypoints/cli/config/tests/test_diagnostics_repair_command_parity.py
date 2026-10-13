@@ -25,21 +25,21 @@ from uuid import UUID
 import pytest
 from pydantic import AnyHttpUrl, BaseModel
 
-from ...adapters.outbound.aeat.browser.site_health_records import SiteHealthEvidence, SiteHealthStatus
-from ...adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
-from ...adapters.persistence.storage.secure_object_namespaces import (
+from cadrumo.adapters.outbound.aeat.browser.site_health_records import SiteHealthEvidence, SiteHealthStatus
+from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
+from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
     TEST_RUNTIME_PROFILE_NAMESPACE,
     TEST_SESSION_LIFECYCLE_NAMESPACE,
     SecureObjectNamespaceDefinition,
 )
-from ...adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from ...application.diagnostics_repair_documents import (
+from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from cadrumo.application.diagnostics_repair_documents import (
     RepairConnectivityDocument,
     RepairIntegrityObjectsDocument,
     RepairQuarantineDocument,
     RepairResetProgressDocument,
 )
-from ...application.diagnostics_repair_operations import (
+from cadrumo.application.diagnostics_repair_operations import (
     CONNECTIVITY_PROBE_OPERATION_DEFINITION_ID,
     SECURE_OBJECTS_CHECK_OPERATION_DEFINITION_ID,
     SECURE_OBJECTS_QUARANTINE_OPERATION_DEFINITION_ID,
@@ -50,20 +50,20 @@ from ...application.diagnostics_repair_operations import (
     WorkflowProgressResetRequest,
     build_connectivity_probe_definition,
 )
-from ...application.ledger.tests.bulk_classify_operation_support import CommitFence, EffectEvents, PrivateOperands
-from ...application.operations.models import OperationIdentity, OperationRequest
-from ...application.operations.operation_definition import OperationDefinition
-from ...application.operations.owner import OperationExecutorContext
-from ...application.workflow.persistence import workflow_state_repository
-from ...application.workflow.state_models import WorkflowState
-from ...core.config import override_settings
-from ...core.errors.hierarchy import SiteHealthState
-from ...core.operations import profile_operation_subject
-from ...core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER, redact_structured_for_cli_output
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ..cli.config import _repair_cli
-from ..cli.tests.cli_runner import invoke_cached_cli, semantic_cli_output
-from ..diagnostics_repair_composition import build_diagnostics_repair_operations
+from cadrumo.application.ledger.tests.bulk_classify_operation_support import CommitFence, EffectEvents, PrivateOperands
+from cadrumo.application.operations.models import OperationIdentity, OperationRequest
+from cadrumo.application.operations.operation_definition import OperationDefinition
+from cadrumo.application.operations.owner import OperationExecutorContext
+from cadrumo.application.workflow.persistence import workflow_state_repository
+from cadrumo.application.workflow.state_models import WorkflowState
+from cadrumo.core.config import override_settings
+from cadrumo.core.errors.hierarchy import SiteHealthState
+from cadrumo.core.operations import profile_operation_subject
+from cadrumo.core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER, redact_structured_for_cli_output
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.entrypoints.cli.config import _repair_cli
+from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli, semantic_cli_output
+from cadrumo.entrypoints.diagnostics_repair_composition import build_diagnostics_repair_operations
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

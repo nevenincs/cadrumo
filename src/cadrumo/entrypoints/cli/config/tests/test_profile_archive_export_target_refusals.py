@@ -6,27 +6,31 @@ from pathlib import Path
 
 import pytest
 
-from ...application.operations.operation_definition import OperationDefinition
-from ...application.operations.registry import OperationPublicDefinitionRegistrationV1
-from ...application.user_profile.archive_operation import (
+from cadrumo.application.operations.operation_definition import OperationDefinition
+from cadrumo.application.operations.registry import OperationPublicDefinitionRegistrationV1
+from cadrumo.application.user_profile.archive_operation import (
     PROFILE_ARCHIVE_EXPORT_OPERATION_DEFINITION_ID,
     ProfileArchiveExportProjection,
     ProfileArchiveExportRequest,
     build_profile_archive_operation_definitions,
     build_profile_archive_operation_registrations,
 )
-from ...application.user_profile.capsule_archive import (
+from cadrumo.application.user_profile.capsule_archive import (
     PROFILE_CAPSULE_ARCHIVE_SUFFIX,
     ProfileCapsuleArchiveError,
     inspect_profile_capsule_archive,
 )
-from ...core.config import override_settings
-from ...core.errors.error_codes import get_registered_error_code
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ..cli.config._archive_cli import _refuse_an_archive_target_the_writer_would_reject
-from ..cli.errors import CliRefusedBoundaryError
-from ..profile_archive_operation_composition import build_profile_archive_operation_ports
-from .profile_operation_supervisor import SettledOperation, SupervisedProfile, supervised_profile
+from cadrumo.core.config import override_settings
+from cadrumo.core.errors.error_codes import get_registered_error_code
+from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from cadrumo.entrypoints.cli.config._archive_cli import _refuse_an_archive_target_the_writer_would_reject
+from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError
+from cadrumo.entrypoints.profile_archive_operation_composition import build_profile_archive_operation_ports
+from cadrumo.entrypoints.tests.profile_operation_supervisor import (
+    SettledOperation,
+    SupervisedProfile,
+    supervised_profile,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 

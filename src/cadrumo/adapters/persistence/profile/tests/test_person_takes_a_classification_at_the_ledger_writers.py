@@ -45,7 +45,6 @@ from cadrumo.domain.transactions.m210_income_classification import (
 from .classification_origin_support import (
     AGENT,
     BUCKET_ID,
-    BUSINESS,
     PERSON,
     Ledger,
     add_row,
@@ -71,7 +70,9 @@ def ledger(tmp_path: Path) -> Generator[Ledger]:
 def _row_decided_by(ledger: Ledger, party: str) -> str:
     """Store a business row whose classification ``party`` decided, with the stamp that party's write leaves."""
     if party == "agent":
-        return add_row(ledger, description="classified by an agent", actor=AGENT, classification=BUSINESS)
+        return add_row(
+            ledger, description="classified by an agent", actor=AGENT, classification=BusinessClassification.BUSINESS
+        )
     if party == "rule":
         return add_row_classified_by_a_rule(ledger, description="classified by a rule")
     row = add_row(ledger, description="classified from a model's proposal")
@@ -114,7 +115,7 @@ def test_a_person_confirming_the_classification_a_row_already_has_takes_the_row_
     confirmed = _write(
         ledger,
         row,
-        {"business_classification": BUSINESS},
+        {"business_classification": BusinessClassification.BUSINESS},
         actor=PERSON,
         source_command=source_command,
         reaffirm=reaffirm,
@@ -134,10 +135,12 @@ def test_a_person_confirming_the_classification_a_row_already_has_takes_the_row_
 
 def test_a_person_restating_their_own_classification_writes_nothing(ledger: Ledger) -> None:
     """The row is already theirs, so the confirmation stays the no-op it was."""
-    row = add_row(ledger, description="the person's row", classification=BUSINESS)
+    row = add_row(ledger, description="the person's row", classification=BusinessClassification.BUSINESS)
     before = ledger.stored()
 
-    restated = _write(ledger, row, {"business_classification": BUSINESS}, actor=PERSON, source_command=_ADD)
+    restated = _write(
+        ledger, row, {"business_classification": BusinessClassification.BUSINESS}, actor=PERSON, source_command=_ADD
+    )
 
     assert restated.bucket_event_ids == ()
     assert ledger.stored() == before
@@ -145,10 +148,12 @@ def test_a_person_restating_their_own_classification_writes_nothing(ledger: Ledg
 
 def test_an_agents_label_restating_the_persons_classification_takes_nothing(ledger: Ledger) -> None:
     """Otherwise submitting the value a row already has would be a way to take it."""
-    row = add_row(ledger, description="the person's row", classification=BUSINESS)
+    row = add_row(ledger, description="the person's row", classification=BusinessClassification.BUSINESS)
     before = ledger.stored()
 
-    restated = _write(ledger, row, {"business_classification": BUSINESS}, actor=AGENT, source_command=_ADD)
+    restated = _write(
+        ledger, row, {"business_classification": BusinessClassification.BUSINESS}, actor=AGENT, source_command=_ADD
+    )
 
     assert restated.bucket_event_ids == ()
     assert ledger.stored() == before
@@ -207,10 +212,12 @@ def test_a_person_setting_one_further_tax_bearing_fact_on_an_agents_row_takes_th
     ledger: Ledger, field: str, with_classification: bool
 ) -> None:
     """Through a classification that restates the class, and through an update that sets the fact alone."""
-    row = add_row(ledger, description="classified by an agent", actor=AGENT, classification=BUSINESS)
+    row = add_row(
+        ledger, description="classified by an agent", actor=AGENT, classification=BusinessClassification.BUSINESS
+    )
     values: dict[str, object] = {field: _FIELD_VALUES[field](ledger)}
     if with_classification:
-        values["business_classification"] = BUSINESS
+        values["business_classification"] = BusinessClassification.BUSINESS
 
     _write(ledger, row, values, actor=PERSON)
 
@@ -239,7 +246,9 @@ def test_a_write_that_changes_a_tax_bearing_fact_is_stored_under_either_label_an
     ledger: Ledger, field: str, decided_by: str, actor: str, origin: ClassificationOrigin
 ) -> None:
     """Whichever fact it is: the writer compares the one set the origin is decided from."""
-    row = add_row(ledger, description="a classified row", actor=decided_by, classification=BUSINESS)
+    row = add_row(
+        ledger, description="a classified row", actor=decided_by, classification=BusinessClassification.BUSINESS
+    )
     before = ledger.stored()
 
     changed = _write(ledger, row, {field: _CHANGES[field](ledger)}, actor=actor)
@@ -254,8 +263,10 @@ def test_an_edit_that_sets_no_tax_bearing_fact_neither_takes_a_row_nor_is_refuse
     ledger: Ledger, values: dict[str, object]
 ) -> None:
     """A note or a label decides nothing about how the row is taxed, whoever writes it."""
-    by_an_agent = add_row(ledger, description="classified by an agent", actor=AGENT, classification=BUSINESS)
-    by_the_person = add_row(ledger, description="the person's row", classification=BUSINESS)
+    by_an_agent = add_row(
+        ledger, description="classified by an agent", actor=AGENT, classification=BusinessClassification.BUSINESS
+    )
+    by_the_person = add_row(ledger, description="the person's row", classification=BusinessClassification.BUSINESS)
 
     _write(ledger, by_an_agent, values, actor=PERSON, source_command="aeat app ledger update")
     _write(ledger, by_the_person, values, actor=AGENT, source_command="aeat app ledger update")
@@ -294,8 +305,10 @@ def test_a_row_is_set_aside_and_restored_under_either_label_whoever_decided_it_a
     for row in (
         add_row(ledger, description="unprocessed"),
         add_row_classified_by_a_rule(ledger, description="classified by a rule"),
-        add_row(ledger, description="classified by an agent", actor=AGENT, classification=BUSINESS),
-        add_row(ledger, description="the person's row", classification=BUSINESS),
+        add_row(
+            ledger, description="classified by an agent", actor=AGENT, classification=BusinessClassification.BUSINESS
+        ),
+        add_row(ledger, description="the person's row", classification=BusinessClassification.BUSINESS),
     ):
         decided = ledger.row(row).classification_origin
 

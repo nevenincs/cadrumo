@@ -53,7 +53,6 @@ from .....application.ledger.tests.manual_transaction_support import create_manu
 from .classification_origin_support import (
     AGENT,
     BUCKET_ID,
-    BUSINESS,
     PERSON,
     Ledger,
     add_row,
@@ -115,7 +114,7 @@ def _sealed_row_an_agent_classified(ledger: Ledger) -> tuple[str, LedgerFilingSn
             amount=Decimal(_STORED_TEXT["amount"]),
             direction=TransactionDirection.OUTGOING,
             description="classified by an agent and cited by a finalized revision",
-            business_classification=BUSINESS,
+            business_classification=BusinessClassification.BUSINESS,
             taxable_base=Decimal(_STORED_TEXT["taxable_base"]),
             iva_rate=Decimal(_STORED_TEXT["iva_rate"]),
             iva_amount=Decimal(_STORED_TEXT["iva_amount"]),
@@ -142,7 +141,9 @@ def _confirm(ledger: Ledger, row: str, values: dict[str, object], *, actor: str 
     update_manual_transaction_fields(
         bucket_id=BUCKET_ID,
         transaction_id=row,
-        patch=ManualLedgerTransactionPatch.model_validate({"business_classification": BUSINESS, **values}),
+        patch=ManualLedgerTransactionPatch.model_validate(
+            {"business_classification": BusinessClassification.BUSINESS, **values}
+        ),
         actor=actor,
         source_command=_CLASSIFY,
         ports=ledger.ports,
@@ -196,7 +197,9 @@ def test_a_bulk_confirmation_of_a_sealed_row_is_admitted_as_a_single_one_is(ledg
     row, snapshot = _sealed_row_an_agent_classified(ledger)
     before = ledger.row(row)
 
-    result = _bulk(ledger, row, BUSINESS, columns=",taxable_base,iva_rate,iva_amount", cells=",500,0.21,105")
+    result = _bulk(
+        ledger, row, BusinessClassification.BUSINESS, columns=",taxable_base,iva_rate,iva_amount", cells=",500,0.21,105"
+    )
 
     assert (result.applied, result.skipped, result.failures) == (1, 0, ())
     after = ledger.row(row)
@@ -248,11 +251,13 @@ def test_a_person_restating_their_own_sealed_row_in_canonical_text_writes_nothin
     _confirm(ledger, row, {})
     before = ledger.stored()
 
-    assert _bulk(ledger, row, BUSINESS, columns=",taxable_base", cells=",500").skipped == 1
+    assert _bulk(ledger, row, BusinessClassification.BUSINESS, columns=",taxable_base", cells=",500").skipped == 1
     update_manual_transaction_fields(
         bucket_id=BUCKET_ID,
         transaction_id=row,
-        patch=ManualLedgerTransactionPatch.model_validate({"business_classification": BUSINESS, **_RESTATED}),
+        patch=ManualLedgerTransactionPatch.model_validate(
+            {"business_classification": BusinessClassification.BUSINESS, **_RESTATED}
+        ),
         actor=PERSON,
         source_command=_CLASSIFY,
         ports=ledger.ports,
@@ -287,7 +292,7 @@ def test_an_agents_label_links_purchase_evidence_to_a_row_the_person_classified_
             amount=Decimal("121.00"),
             direction=direction,
             description="the person's row",
-            business_classification=BUSINESS,
+            business_classification=BusinessClassification.BUSINESS,
             actor=PERSON,
         ),
         ports=ledger.ports,
@@ -311,7 +316,9 @@ def test_linking_purchase_evidence_decides_the_rows_figures_for_whoever_links_it
         synthetic_invoice("SYNTHETIC-3"),
     )
     ledger.invoices.save(build_invoice_catalogue([first, second, third]))
-    by_an_agent = add_row(ledger, description="classified by an agent", actor=AGENT, classification=BUSINESS)
+    by_an_agent = add_row(
+        ledger, description="classified by an agent", actor=AGENT, classification=BusinessClassification.BUSINESS
+    )
     by_rule = add_row_classified_by_a_rule(ledger, description="classified by a rule")
     unprocessed = add_row(ledger, description="unprocessed")
 

@@ -18,10 +18,11 @@ a session host.
 
 from __future__ import annotations
 
-import importlib
+import ast
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from functools import cache
+from pathlib import Path
 from typing import Annotated, TypeAliasType, get_args, get_origin
 
 import pytest
@@ -333,8 +334,20 @@ def test_every_proof_names_a_test_that_exists() -> None:
     """The named test is a function of the named module, so a rename or removal is a finding."""
     missing: list[str] = []
     for definition_id, proof in _RECORDS_THE_SESSION_LABEL.items():
-        candidate = getattr(importlib.import_module(proof.module), proof.test, None)
-        if not callable(candidate):
+        assert proof.module.startswith(f"{_ENTRYPOINT_TESTS}.")
+        module_name = proof.module.removeprefix(f"{_ENTRYPOINT_TESTS}.")
+        assert module_name.isidentifier()
+        source = Path(__file__).with_name(f"{module_name}.py")
+        definitions = (
+            {
+                node.name
+                for node in ast.parse(source.read_text(encoding="utf-8"), filename=str(source)).body
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+            }
+            if source.is_file()
+            else set()
+        )
+        if proof.test not in definitions:
             missing.append(f"{definition_id}: {proof.module}::{proof.test}")
     assert not missing, f"proofs naming a test that does not exist: {missing}"
 

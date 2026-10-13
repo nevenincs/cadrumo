@@ -14,40 +14,44 @@ from uuid import uuid4
 
 import pytest
 
-from ...adapters.inbound.censo.parser import parse_certificado_censal_bytes
-from ...application.operations.access_resolution import OperationAccessContext, resolve_operation_access
-from ...application.operations.models import OperationRequest
-from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
-from ...application.user_profile.access_contracts import AccessAction, Availability
-from ...application.user_profile.censal_certificate_operation import (
+from cadrumo.adapters.inbound.censo.parser import parse_certificado_censal_bytes
+from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
+from cadrumo.application.operations.models import OperationRequest
+from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.user_profile.access_contracts import AccessAction, Availability
+from cadrumo.application.user_profile.censal_certificate_operation import (
     CENSAL_CERTIFICATE_OPERATION_DEFINITION_ID,
     CensalCertificateOperationProjection,
     CensalCertificateOperationRequest,
     censal_certificate_operation,
     read_censal_certificate,
 )
-from ...application.user_profile.profile_record_repository import ProfileRecordRepository
-from ...application.user_profile.projections import record_to_effective_facts
-from ...core.config import override_settings
-from ...core.errors.error_codes import get_registered_error_code
-from ...core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
-from ...core.i18n.render import tr
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ...domain.censo.certificado import (
+from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
+from cadrumo.application.user_profile.projections import record_to_effective_facts
+from cadrumo.core.config import override_settings
+from cadrumo.core.errors.error_codes import get_registered_error_code
+from cadrumo.core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
+from cadrumo.core.i18n.render import tr
+from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from cadrumo.domain.censo.certificado import (
     ActividadLocalCertificada,
     CertificadoCensalParseError,
     CertificadoSituacionCensal,
 )
-from ...domain.user_profile.values import UserProfileRecord
-from ..cli.config._censo_payloads import CensoFactPayload, CensoFileIngestResult
-from .command_line_rendering import (
+from cadrumo.domain.user_profile.values import UserProfileRecord
+from cadrumo.entrypoints.cli.config._censo_payloads import CensoFactPayload, CensoFileIngestResult
+from cadrumo.entrypoints.tests.command_line_rendering import (
     Printed,
     as_the_command_line_renders,
     command_error,
     json_document,
     redacted_as_printed,
 )
-from .profile_operation_supervisor import SettledOperation, SupervisedProfile, supervised_profile
+from cadrumo.entrypoints.tests.profile_operation_supervisor import (
+    SettledOperation,
+    SupervisedProfile,
+    supervised_profile,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 

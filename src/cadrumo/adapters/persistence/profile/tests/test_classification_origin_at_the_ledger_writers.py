@@ -38,7 +38,6 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from .classification_origin_support import (
     AGENT,
     BUCKET_ID,
-    BUSINESS,
     PERSON,
     Ledger,
     add_row,
@@ -107,7 +106,9 @@ def _classified_split(ledger: Ledger, transaction_id: str, *, actor: str) -> Non
         bucket_id=BUCKET_ID,
         transaction_id=transaction_id,
         children=_PARTS,
-        child_classifications=tuple(ManualLedgerTransactionPatch(business_classification=BUSINESS) for _ in _PARTS),
+        child_classifications=tuple(
+            ManualLedgerTransactionPatch(business_classification=BusinessClassification.BUSINESS) for _ in _PARTS
+        ),
         classified_by=_PROPOSED_BY,
         actor=actor,
         source_command="aeat app ledger split --llm",
@@ -141,7 +142,9 @@ def test_a_first_classification_records_who_ran_the_write(
     ledger: Ledger, actor: str, origin: ClassificationOrigin
 ) -> None:
     """Typed at creation, typed later, accepted from a model, or excluded: the party who ran the write decided."""
-    at_creation = add_row(ledger, description="classified at creation", actor=actor, classification=BUSINESS)
+    at_creation = add_row(
+        ledger, description="classified at creation", actor=actor, classification=BusinessClassification.BUSINESS
+    )
     later = add_row(ledger, description="classified later")
     classify_row(ledger, later, actor=actor)
     accepted = add_row(ledger, description="accepted from a model")
@@ -179,8 +182,10 @@ def test_a_write_that_changes_no_classification_fact_restamps_the_row_and_keeps_
     """Attaching rebuilds the row and leaves the hand stamp, on a rule's row as on any other."""
     del origin
     by_rule = add_row_classified_by_a_rule(ledger, description="classified by a rule")
-    by_hand = add_row(ledger, description="classified by hand", classification=BUSINESS)
-    by_an_agent = add_row(ledger, description="classified by an agent", actor=AGENT, classification=BUSINESS)
+    by_hand = add_row(ledger, description="classified by hand", classification=BusinessClassification.BUSINESS)
+    by_an_agent = add_row(
+        ledger, description="classified by an agent", actor=AGENT, classification=BusinessClassification.BUSINESS
+    )
     expected = {
         by_rule: ClassificationOrigin.AUTOMATIC,
         by_hand: ClassificationOrigin.PERSON,
@@ -228,7 +233,12 @@ def _row_decided_by(ledger: Ledger, decided_by: str) -> str:
     if decided_by == "rule":
         return add_row_classified_by_a_rule(ledger, description="classified by a rule")
     actor = PERSON if decided_by == "person" else AGENT
-    return add_row(ledger, description=f"classified by the {decided_by}", actor=actor, classification=BUSINESS)
+    return add_row(
+        ledger,
+        description=f"classified by the {decided_by}",
+        actor=actor,
+        classification=BusinessClassification.BUSINESS,
+    )
 
 
 @pytest.mark.parametrize("write", [write for _, write in _WRITES_IN_PLACE], ids=[name for name, _ in _WRITES_IN_PLACE])

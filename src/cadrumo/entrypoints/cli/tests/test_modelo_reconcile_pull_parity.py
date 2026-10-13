@@ -16,9 +16,10 @@ from uuid import UUID
 import pytest
 import typer
 
-from ....application.modelo.reconciliation import ModeloReconciliationAdvisory, ModeloReconciliationReport
+from ....application.modelo.reconciliation import ModeloReconciliationReport
 from ....application.modelo.reconciliation_import_operation import ModeloReconciliationImportProjection
 from ....application.modelo.reconciliation_records import (
+    ModeloReconciliationAdvisory,
     ModeloReconciliationDiff,
     ModeloReconciliationDiffKind,
     ModeloReconciliationEvidenceKind,

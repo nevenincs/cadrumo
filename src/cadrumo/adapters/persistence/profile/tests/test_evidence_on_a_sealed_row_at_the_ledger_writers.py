@@ -35,12 +35,12 @@ from cadrumo.application.ledger.models import ManualLedgerTransactionPatch, Manu
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
 from cadrumo.domain.transactions.classification_origin import ClassificationOrigin
+from cadrumo.domain.transactions.enums import BusinessClassification
 from cadrumo.domain.transactions.errors import TransactionValidationError
 
 from .classification_origin_support import (
     AGENT,
     BUCKET_ID,
-    BUSINESS,
     PERSON,
     Ledger,
     add_row,
@@ -94,7 +94,11 @@ def _sealed_rule_row(ledger: Ledger) -> str:
 
 
 def _sealed_hand_row(ledger: Ledger) -> str:
-    return add_row(ledger, description="stamped by hand and cited by a finalized revision", classification=BUSINESS)
+    return add_row(
+        ledger,
+        description="stamped by hand and cited by a finalized revision",
+        classification=BusinessClassification.BUSINESS,
+    )
 
 
 _ROWS = pytest.mark.parametrize(
@@ -161,7 +165,9 @@ def test_an_identifier_of_only_whitespace_names_no_evidence_in_the_request() -> 
 
 @pytest.mark.parametrize("blank", ["", _BLANK])
 def test_a_blank_identifier_links_nothing_and_takes_no_row_at_the_writer(ledger: Ledger, blank: str) -> None:
-    by_an_agent = add_row(ledger, description="classified by an agent", actor=AGENT, classification=BUSINESS)
+    by_an_agent = add_row(
+        ledger, description="classified by an agent", actor=AGENT, classification=BusinessClassification.BUSINESS
+    )
     attachment = store_attachment(ledger, b"beside a blank identifier")
     before = ledger.row(by_an_agent)
     assert before.classification_origin is ClassificationOrigin.AGENT
@@ -176,7 +182,9 @@ def test_a_blank_identifier_links_nothing_and_takes_no_row_at_the_writer(ledger:
 
 @pytest.mark.parametrize("blank", ["", _BLANK])
 def test_a_blank_identifier_alone_is_refused_and_stores_nothing(ledger: Ledger, blank: str) -> None:
-    by_an_agent = add_row(ledger, description="classified by an agent", actor=AGENT, classification=BUSINESS)
+    by_an_agent = add_row(
+        ledger, description="classified by an agent", actor=AGENT, classification=BusinessClassification.BUSINESS
+    )
     before = ledger.stored()
 
     with pytest.raises(TransactionValidationError):
@@ -197,7 +205,9 @@ def test_a_confirmation_with_a_reason_is_refused_on_a_sealed_row_and_names_the_f
         update_manual_transaction_fields(
             bucket_id=BUCKET_ID,
             transaction_id=row,
-            patch=ManualLedgerTransactionPatch.model_validate({"business_classification": BUSINESS, "notes": reason}),
+            patch=ManualLedgerTransactionPatch.model_validate(
+                {"business_classification": BusinessClassification.BUSINESS, "notes": reason}
+            ),
             actor=PERSON,
             source_command="aeat app ledger classify",
             ports=ledger.ports,

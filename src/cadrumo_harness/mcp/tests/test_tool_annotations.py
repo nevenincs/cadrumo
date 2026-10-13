@@ -22,10 +22,10 @@ from cadrumo.application.operations.frontend_projection import OperationReviewPr
 from cadrumo.application.operations.frontend_requests import (
     OperationObservationRequestV1,
     OperationReviewProjectionRequestV1,
-    OperationSchemaIdentityV1,
 )
 from cadrumo.application.operations.mcp_surfaces import MCP_SURFACES, McpSurface
 from cadrumo.application.operations.registry import OperationPublicDefinitionDescriptionV1
+from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
 from cadrumo.application.runtime.operation_access import RuntimeOperationObserve, RuntimeOperationReview
 from cadrumo.application.runtime.projection_pages import ProjectionPageRequest
 from cadrumo.core.hashing import sha256_hex
