@@ -130,9 +130,11 @@ def _preflight_verdict(
                 values=facts,
             ),
         ),
-        conditionality=ActionConditionality.IMMEDIATE if action_id else ActionConditionality.NOT_APPLICABLE,
-        action=ActionReference(action_id=action_id) if action_id else None,
-        no_recovery_outcome=None if action_id else NoRecoveryOutcome.OPERATOR_DECISION,
+        conditionality=ActionConditionality.IMMEDIATE
+        if (action_id is not None and action_id)
+        else ActionConditionality.NOT_APPLICABLE,
+        action=ActionReference(action_id=action_id) if (action_id is not None and action_id) else None,
+        no_recovery_outcome=None if (action_id is not None and action_id) else NoRecoveryOutcome.OPERATOR_DECISION,
     )
 
 
@@ -452,7 +454,7 @@ def _probe_windows_long_path_support(settings: Settings, *, object_path_suffix_l
             facts={"platform_windows": False, "path_limit_applicable": False},
         )
 
-    if windows_long_paths_enabled():
+    if windows_long_paths_enabled() is True:
         return _healthy_check(
             check="storage:windows-long-path",
             severity=HealthSeverity.OK,

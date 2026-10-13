@@ -11,7 +11,7 @@ import math
 import re
 import subprocess
 import sys
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
@@ -655,7 +655,7 @@ def check_page_coherence_in_subprocess(
 
 
 @contextmanager
-def _execute_in_fresh_sandbox(sequence: ParsedSequence) -> Iterator[SequenceTranscript]:
+def _execute_in_fresh_sandbox(sequence: ParsedSequence) -> Generator[SequenceTranscript]:
     """Keep disposable artifacts alive through their owning refresh/check."""
     with TemporaryDirectory(prefix="seq-", ignore_cleanup_errors=True, dir=prepare_temporary_directory()) as tmp:
         yield execute_sequence(sequence, sandbox_root=Path(tmp))

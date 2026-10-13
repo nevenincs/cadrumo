@@ -517,7 +517,7 @@ def _assert_probe_target_is_exclusive_to_the_extra(repo_root: Path, wheel: Path)
     """
     registry_extras, _symbols = optional_extra_registry(repo_root)
     import_name = registry_extras.get(_EXTRA)
-    if not import_name:
+    if not (import_name is not None and import_name):
         raise SystemExit(f"the core optional-extra registry has no {_EXTRA!r} entry to probe")
 
     requirements, _provided = wheel_metadata(wheel)

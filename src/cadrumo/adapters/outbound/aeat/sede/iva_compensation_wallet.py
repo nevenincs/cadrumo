@@ -527,7 +527,7 @@ async def _select_own_name_actuacion_if_present(page: Page, *, settings: Setting
     if link is None:
         return False
     href = await link.get_attribute("href")
-    if not href:
+    if not (href is not None and href):
         return False
     target = urljoin(getattr(page, "url", "") or WALLET_URL, href)
     if not is_aeat_wallet_read_url(target):

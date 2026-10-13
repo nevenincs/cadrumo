@@ -108,10 +108,12 @@ class _CustodyWitness(ProfileWorkerCustody):
         yield
 
     @override
-    def retire(self, session_id: UUID) -> None:
+    def retire(self, session_id: UUID) -> frozenset[UUID]:
         with self._witness_lock:
             assert session_id == self.session.session_id
+            retired = frozenset({session_id}) if self.live else frozenset[UUID]()
             self.live = False
+            return retired
 
     @override
     def live_sessions(self) -> tuple[UUID, ...]:

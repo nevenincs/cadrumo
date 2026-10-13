@@ -258,7 +258,7 @@ def test_both_feeds_declare_an_export_into_casilla_60(
         f"the two feeds disagree on casilla 60: invoice={invoice.get(_CASILLA_60)!r} bank={bank.get(_CASILLA_60)!r}"
     )
     assert bank.get(_CASILLA_60) == _BASE
-    assert not invoice.get(_CASILLA_59), "an export must not also land in the intra-community casilla"
+    assert not bool(invoice.get(_CASILLA_59)), "an export must not also land in the intra-community casilla"
 
 
 def test_the_two_feeds_classify_the_operation_identically() -> None:

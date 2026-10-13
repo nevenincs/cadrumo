@@ -13,7 +13,7 @@ consumer reading the override surface picks ``2T``.
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Generator, Mapping
 from contextlib import contextmanager
 from typing import Final
 
@@ -74,7 +74,7 @@ def period_override_operation(
     revision_id: str,
     year: int,
     periods: tuple[str, ...],
-) -> Iterator[PinnedAuthorityOperation]:
+) -> Generator[PinnedAuthorityOperation]:
     """Lease the published generation with one revision's year surface overridden.
 
     The selector is rebuilt through the typed constructor, so the override is
@@ -119,7 +119,7 @@ def period_override_operation(
 
 
 @contextmanager
-def override_operation() -> Iterator[PinnedAuthorityOperation]:
+def override_operation() -> Generator[PinnedAuthorityOperation]:
     """Lease the generation whose :data:`OVERRIDE_MODELO` overrides :data:`OVERRIDE_YEAR`."""
     with period_override_operation(
         modelo_id=OVERRIDE_MODELO,

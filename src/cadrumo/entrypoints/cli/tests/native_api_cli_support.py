@@ -6,7 +6,7 @@ import asyncio
 import json
 import os
 import sys
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Generator
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from dataclasses import dataclass, field
@@ -235,7 +235,7 @@ def native_api_cli_session[Prepared](
     prepare_profile: Callable[[UUID, Path], Prepared],
     profile_label: str = "Enrollment tests",
     server_native_store: AutomationSecretStore | None = None,
-) -> Iterator[NativeApiCliSession[Prepared]]:
+) -> Generator[NativeApiCliSession[Prepared]]:
     """Enroll an exact API scope and serve it through the native CLI worker.
 
     The supplied callback owns profile-specific encrypted test data. The

@@ -473,6 +473,8 @@ enrolled name elsewhere, stops with the enrolled names.
 | `_deps/python-sdk/` | Verified pinned CPython SDK, independent of runtime wheel changes |
 | `_deps/runtime/` | Locked third-party wheels installed for staging |
 | `_deps/build-tools/` | Pinned SVG renderer; never shipped |
+| `_deps/agent-source/` | Private agent archive acquired by CMake and checked against `native/agent.json` |
+| `_deps/agent/` | Verified agent source, built wheel and content inventory; never used as a runtime import path |
 | `product/build/wheels/` | Existing CADRUMO three-wheel cohort built from source |
 | `product/dependencies/` | Exact production closure plus those product wheels |
 | `generated/` | Native contracts, metadata, icon and resource source |
@@ -508,6 +510,12 @@ divergence before staging. ZIP acceptance also checks the reported Windows versi
 | --- | --- |
 | default / `bundle` | Build the application payload and, for Windows desktop deliveries, its matching background-services installation kit at `stage/<Config>/services` |
 | `app-distro` | Compatibility target for the complete `bundle` |
+| `agent_source`, `agent_project` | Acquire the private archive pinned by `native/agent.json`, then build and inventory its wheel; neither target installs or publishes a public package |
+| `agent-install` | Build the complete bundle with the agent installed in `cadrumo/site-packages`; `cmake --install` copies that built payload to the selected prefix |
+| `agent-uninstall` | Remove generated product dependencies and the selected staged bundle; the next bundle build reconstructs the complete dependency set |
+| `agent-rebuild` | Remove the built agent wheel and dependent payloads, then rebuild the complete bundle using the pinned archive |
+| `agent-checksum` | Build or reuse the agent, then check its source identity and wheel SHA-256 |
+| `agent-lock-<target>` | Explicitly regenerate the target's hash-pinned supplemental dependency lock under `native/agent/`, constrained by Cadrumo's current locked versions |
 | `app-payload` | Internal payload assembly at `stage/<Config>/app`, including application images, runtime and documentation; a Windows desktop payload alone is not a complete delivery |
 | `native-process-quiesce` | Before replacing product images, request shutdown of verified running product processes and children, wait 10 seconds, then terminate survivors and refuse replacement if any remain alive |
 | `verify-app-distro` | Build the complete bundle, run its smoke tests and inspect the package inventory, without ZIP or release verification |
@@ -542,6 +550,15 @@ divergence before staging. ZIP acceptance also checks the reported Windows versi
 | `clean-docs` | Remove documentation build roots, work state and the staged subset |
 | `clean-<target>` | Remove the target's owned outputs; keep shared prerequisites and other configurations |
 | `clean-all` | Remove enrolled outputs in every configuration and bounded cleanup groups; retain configuration, builder and installation receipts |
+
+`bundle.agent` runs `native/tests/agent_smoke.py` using the staged application's own
+interpreter. It refuses an interpreter or import outside that package, compares the
+installed agent version and dependency versions with the manifest, checks inventoried
+agent bytes, and invokes the installed version command. No test runner acquires,
+builds or installs the agent. Supplemental native locks widen the application closure
+without changing the Python distribution's base closure; shared versions must match
+the existing root lock. Build provenance records both lock identities and the private
+source/wheel hashes. The desktop launcher receives no source-checkout path.
 
 `cadrumo --check-health` opens no window. It uses the same supervision startup
 as the GUI: an existing installed manager keeps ownership, otherwise the host

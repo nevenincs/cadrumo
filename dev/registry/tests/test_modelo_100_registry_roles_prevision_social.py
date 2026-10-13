@@ -52,7 +52,7 @@ def test_modelo_100_anexo_c3_edition_prevision_social_0426_is_distinct_employer_
     assert tuple(casilla_0426.section) == _PREVISION_SOCIAL_SECTION
     assert casilla_0426.semantic_role == _EMPLOYER_ANEXO_C3_ROLE
     assert casilla_0426.semantic_role_cardinality == "intentional_singleton"
-    assert casilla_0426.semantic_role_cardinality_reason
+    assert casilla_0426.semantic_role_cardinality_reason is not None and casilla_0426.semantic_role_cardinality_reason
     assert {_ART_51_REF, _ART_52_REF} <= set(casilla_0426.legal_refs)
     assert {
         _AEAT_ANEXO_C3_DICTIONARY_REF,

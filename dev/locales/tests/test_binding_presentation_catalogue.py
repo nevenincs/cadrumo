@@ -87,7 +87,9 @@ def test_every_authored_binding_text_resolves_in_each_language(language: OutputL
     unresolved = [
         key
         for key in sorted(authored)
-        if not (text := lookup_translation(key, locale=language.value)) or not text.strip() or text == key
+        if not ((text := lookup_translation(key, locale=language.value)) is not None and text)
+        or not text.strip()
+        or text == key
     ]
     assert not unresolved, unresolved
 

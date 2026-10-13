@@ -100,7 +100,7 @@ def _is_armed(revision: ModeloRevision, casilla_id: str) -> bool:
     for casilla in revision.casillas:
         if str(casilla.id) != casilla_id:
             continue
-        if casilla.form_number:
+        if casilla.form_number is not None and casilla.form_number:
             return True
         number = casilla.number or ""
         return bool(number.strip().isdigit())

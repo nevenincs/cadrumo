@@ -1314,6 +1314,20 @@ eval-agent-floor SCENARIO="modelo_130_dr130" RUNS="1" *FLAGS:
 eval-agent-live SCENARIO="modelo_130_dr130" RUNS="3" *FLAGS:
     uv run --no-sync python -m dev.agent_eval.live live {{quote(SCENARIO)}} {{RUNS}} {{FLAGS}}
 
+# The desktop agent lane runs the shared agent specs against the packaged desktop's
+# own window, attached over its loopback WebView2 DevTools port, on a fresh marked
+# root under build/acceptance. It is opt-in: no default lane, workflow or gate calls
+# it. It uses the remote-debugging host `just build-native Release
+# desktop-packaged-host` builds, and the package `build-native Release bundle`
+# stages. Exit 0 passed, 1 failed, 3 unavailable (no test host, no interactive
+# desktop, a logon whose credential store keeps no sign-in, or no provider key the
+# person stored). ARGS: --served loads the shell from `just dev`, --attach-only runs
+# only the attachment check, and arguments after -- go to Playwright.
+[doc('Run the shared agent specs against the packaged desktop window on a fresh lane root (signed-in Windows desktop).')]
+[group('test')]
+desktop-agent-live *ARGS:
+    uv run --no-sync python -m dev.desktop_agent_live {{ARGS}}
+
 [doc('Reindex the running resident search service, then run its retrieval contracts.')]
 [group('test')]
 test-resident-service:

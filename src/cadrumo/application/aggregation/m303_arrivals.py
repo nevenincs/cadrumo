@@ -93,7 +93,7 @@ def _final_schedule_periods(
         for schedule in operation.revision("303", str(entry.id)).filing_schedules:
             served.setdefault(str(schedule.id), []).extend(token for token in schedule.periods if token in admitted)
     for schedule in selected.filing_schedules:
-        if not served.get(str(schedule.id)):
+        if not bool(served.get(str(schedule.id))):
             served[str(schedule.id)] = list(schedule.periods)
     return {
         schedule_id: max(tokens, key=lambda token: Period.from_year_and_code(filing_year, token).end_date)

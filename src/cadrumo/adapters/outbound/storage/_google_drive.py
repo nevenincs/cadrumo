@@ -1169,7 +1169,7 @@ class GoogleDriveProvider:
                 seen_tokens=seen_tokens,
                 action="iter_namespaces",
             )
-            if not page_token:
+            if not (page_token is not None and page_token):
                 return
 
     def iter_objects(self, namespace: str) -> Iterator[ProviderObjectMetadata]:
@@ -1242,7 +1242,7 @@ class GoogleDriveProvider:
                 seen_tokens=seen_tokens,
                 action="iter_objects",
             )
-            if not page_token:
+            if not (page_token is not None and page_token):
                 return
 
     def probe(self, *, read_only: bool = False) -> ProviderProbeReport:

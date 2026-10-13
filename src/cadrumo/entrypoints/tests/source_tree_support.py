@@ -153,7 +153,9 @@ class SourceTree:
                     if owner is None:
                         continue
                     submodule = self.module_path(
-                        path, f"{node.module}.{alias.name}" if node.module else alias.name, node.level
+                        path,
+                        f"{node.module}.{alias.name}" if (node.module is not None and node.module) else alias.name,
+                        node.level,
                     )
                     origins[alias.asname or alias.name] = (
                         (submodule, alias.name)
@@ -188,7 +190,9 @@ class SourceTree:
                 continue
             for alias in node.names:
                 submodule = self.module_path(
-                    path, f"{node.module}.{alias.name}" if node.module else alias.name, node.level
+                    path,
+                    f"{node.module}.{alias.name}" if (node.module is not None and node.module) else alias.name,
+                    node.level,
                 )
                 if submodule is not None:
                     aliases[alias.asname or alias.name] = submodule

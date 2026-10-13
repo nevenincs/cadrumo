@@ -8,11 +8,11 @@ from decimal import Decimal
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.application.ledger.actions_manual import create_manual_transaction
 from cadrumo.application.ledger.actions_split_merge import split_transaction
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand, SplitChildCommand
 from cadrumo.domain.transactions.enums import TransactionDirection
 
+from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from .ledger_action_create_support import ledger_ports_for_test
 
 _BUCKET_ID = "25252525-2525-4525-8525-252525252525"

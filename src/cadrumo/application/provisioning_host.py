@@ -136,7 +136,7 @@ def locate_runtime_executable(
     process that ran it would otherwise not find what it installed.
     """
     found = which("ollama")
-    if found:
+    if found is not None and found:
         return Path(found)
     resolved_platform = platform if platform is not None else current_runtime_platform()
     environment = os.environ if env is None else env
@@ -152,11 +152,11 @@ def _located_installer(
 ) -> tuple[RuntimeInstaller, Path | None]:
     if platform is RuntimeHostPlatform.WINDOWS:
         found = which("winget")
-        if found:
+        if found is not None and found:
             return RuntimeInstaller.WINGET, Path(found)
     if platform is RuntimeHostPlatform.MACOS:
         found = which("brew")
-        if found:
+        if found is not None and found:
             return RuntimeInstaller.HOMEBREW, Path(found)
     return RuntimeInstaller.NONE, None
 

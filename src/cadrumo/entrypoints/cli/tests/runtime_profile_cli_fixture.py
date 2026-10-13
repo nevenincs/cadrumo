@@ -160,7 +160,7 @@ def observe_native_runtime_failures(
     profiles: RuntimeProfileConnections,
     *,
     failure_observer: Callable[[RuntimeFailureObservation], None],
-) -> Iterator[None]:
+) -> Generator[None]:
     """Observe safe profile-operation, worker-exchange and server-failure facts."""
     original_failed_set = server._failed.set
     original_exchange = ProfileWorkerProcess._exchange
@@ -327,7 +327,7 @@ def native_cli_profile_server(
     storage_root: Path,
     *,
     failure_observer: Callable[[RuntimeFailureObservation], None] | None = None,
-) -> Iterator[None]:
+) -> Generator[None]:
     """Serve a real worker with explicit development session admission and a synthetic native store."""
     if sys.platform != "win32":
         pytest.skip("requires native Windows profile workers")
@@ -422,7 +422,7 @@ class NativeCliProfileFixture:
 
 
 @contextmanager
-def native_cli_profile_scope(tmp_path: Path) -> Iterator[NativeCliProfileFixture]:
+def native_cli_profile_scope(tmp_path: Path) -> Generator[NativeCliProfileFixture]:
     """Isolate storage, active local test oracle and native server cleanup."""
     with ExitStack() as scope:
         root = scope.enter_context(isolated_profile_storage_root(tmp_path=tmp_path))

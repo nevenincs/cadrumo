@@ -837,7 +837,7 @@ def _required_withholding_role(
     key: str,
 ) -> frozenset[str]:
     values = declarations.get(key)
-    if not values:
+    if not (values is not None and values):
         raise RegistryValidationError(f"withholding role declaration {key!r} is missing")
     return frozenset(values)
 

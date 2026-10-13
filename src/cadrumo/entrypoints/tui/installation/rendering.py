@@ -160,7 +160,7 @@ def _refused(reply: RuntimeInstallationRefused, *, preview: bool) -> ActPresenta
     code = detail.error_code or detail.kind.value
     lines: list[str] = []
     explanation = operation_error_explanation(detail)
-    if explanation:
+    if explanation is not None and explanation:
         lines.append(explanation)
     lines.extend(_mapping_lines(detail.context_mapping(), ""))
     verdict = detail.precondition_verdict()

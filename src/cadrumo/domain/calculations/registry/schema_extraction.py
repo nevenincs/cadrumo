@@ -218,7 +218,7 @@ class ExtractionTargetDefinition(RegistryModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _field_strategy_consistency(self) -> ExtractionTargetDefinition:
-        if self.match_strategy == "named_label" and not self.label_pattern:
+        if self.match_strategy == "named_label" and not (self.label_pattern is not None and self.label_pattern):
             raise RegistryValidationError("named_label extraction targets require label_pattern")
         if self.match_strategy == "numeric_casilla" and self.label_pattern is not None:
             raise RegistryValidationError("numeric_casilla extraction targets must not define label_pattern")

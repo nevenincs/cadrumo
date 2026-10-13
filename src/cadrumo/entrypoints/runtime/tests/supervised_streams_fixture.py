@@ -26,7 +26,6 @@ from collections.abc import Mapping
 from pathlib import Path
 
 from cadrumo.adapters.local_runtime.tests.process_support import fixture_environment, native_python
-from cadrumo.adapters.local_runtime.windows_token_elevation import WindowsTokenElevationType
 from cadrumo.application.runtime.contracts import RuntimeExitReason
 from cadrumo.core.logging import get_logger
 from cadrumo.entrypoints.runtime import main as runtime_main
@@ -123,7 +122,7 @@ def _failure(arguments: list[str]) -> None:
     raise SystemExit(runtime_main.run(parse_runtime_arguments(arguments)))
 
 
-def _elevated(root: Path, arguments: list[str]) -> None:
+def _owner_reached(root: Path, arguments: list[str]) -> None:
     def recording_owner(
         _options: argparse.Namespace,
         _stop: RuntimeStop,
@@ -133,9 +132,6 @@ def _elevated(root: Path, arguments: list[str]) -> None:
         (root / "owner-reached").write_text("reached", encoding="ascii")
         return RuntimeExitReason.SUPERVISOR_STOP
 
-    # No test host can be given a full elevated token on demand, so the native
-    # reader is replaced in this disposable process. It must not gate ownership.
-    vars(runtime_main)["current_process_token_elevation_type"] = lambda: WindowsTokenElevationType.FULL
     vars(runtime_main)["_run_runtime_owner"] = recording_owner
     raise SystemExit(runtime_main.run(parse_runtime_arguments(arguments)))
 
@@ -146,8 +142,8 @@ def main() -> None:
         asyncio.run(_streams(root))
     elif mode == "failure":
         _failure(sys.argv[3:])
-    elif mode == "elevated":
-        _elevated(root, sys.argv[3:])
+    elif mode == "owner-reached":
+        _owner_reached(root, sys.argv[3:])
     else:
         raise ValueError("unknown supervised stream fixture mode")
 

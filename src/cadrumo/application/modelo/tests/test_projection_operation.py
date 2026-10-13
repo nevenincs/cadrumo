@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import fields, replace
 from types import SimpleNamespace
@@ -266,7 +266,7 @@ class _Fence:
     active = False
 
     @asynccontextmanager
-    async def irreversible_section(self) -> AsyncIterator[None]:
+    async def irreversible_section(self) -> AsyncGenerator[None]:
         assert not self.active
         self.active = True
         try:

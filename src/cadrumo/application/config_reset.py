@@ -185,9 +185,9 @@ def normalise_retention_override(
 ) -> ConfigResetRetentionOverride:
     """Check that an override and its reason are given together, and trim the reason."""
     reason = (retention_override_reason or "").strip() or None
-    if acknowledge_retention_override and not reason:
+    if acknowledge_retention_override and not (reason is not None and reason):
         raise ConfigResetRequestRefusedError(ConfigResetRequestProblem.OVERRIDE_REASON_REQUIRED)
-    if not acknowledge_retention_override and reason:
+    if not acknowledge_retention_override and (reason is not None and reason):
         raise ConfigResetRequestRefusedError(ConfigResetRequestProblem.OVERRIDE_REASON_WITHOUT_OVERRIDE)
     return ConfigResetRetentionOverride(acknowledge_retention_override, reason)
 

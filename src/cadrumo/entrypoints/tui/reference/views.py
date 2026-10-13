@@ -208,7 +208,7 @@ def _casilla(result: ModeloCasillaResult) -> ReferenceView:
         ("binding", _text(result.binding)),
         ("formula_id", _text(result.formula_id)),
     ]
-    if result.help_text:
+    if result.help_text is not None and result.help_text:
         facts.append(("help", result.help_text))
     if result.formula_expression is not None:
         facts.append(("formula_expression", str(result.formula_expression)))

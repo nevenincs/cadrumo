@@ -113,14 +113,9 @@ def test_text_sidecar_is_indexable_by_the_installed_walker(tmp_path: Path) -> No
     load-bearing claim of the interim path: existing walker, zero upstream
     change.
     """
-    from vaultspec_rag.indexer._chunking import (
-        _MAX_FILE_SIZE,
-        SUPPORTED_EXTENSIONS,
-        _is_binary,
-    )
+    from .index_admission_support import assert_source_is_indexable
 
     # .extracted.md resolves to the .md extension the walker already supports.
-    assert Path("x" + EXTRACTED_TEXT_SUFFIX).suffix.lower() in SUPPORTED_EXTENSIONS
 
     source_copy = tmp_path / _WORKED_EXAMPLE_HTML.name
     source_copy.write_bytes(_WORKED_EXAMPLE_HTML.read_bytes())
@@ -131,9 +126,7 @@ def test_text_sidecar_is_indexable_by_the_installed_walker(tmp_path: Path) -> No
     # the real rendered sidecar: supported extension, under the size cap, and
     # not detected as binary. The gitignore/.vaultragignore axis is exercised
     # at the repo level by the sidecar naming convention, not here.
-    assert text_path.suffix.lower() in SUPPORTED_EXTENSIONS
-    assert text_path.stat().st_size <= _MAX_FILE_SIZE
-    assert not _is_binary(text_path)
+    assert_source_is_indexable(source_copy, text_path, tmp_path)
 
 
 def test_tampered_sidecar_is_rejected(tmp_path: Path) -> None:

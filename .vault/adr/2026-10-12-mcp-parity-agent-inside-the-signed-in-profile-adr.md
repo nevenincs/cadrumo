@@ -5,7 +5,7 @@ tags:
 date: '2026-10-12'
 modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:6995acf868f01ac05a5b0dc0736373a663e4ba2186517241c401b558925a94bd'
+body_hash: 'sha256:54f9cfc4a8fddeb20461e6a5fe8aaef52e5de3d5acef37da8eafd9f593834911'
 related:
   - "[[2026-10-11-mcp-parity-full-parity-adr]]"
   - "[[2026-10-10-mcp-parity-shared-sign-in-door-adr]]"
@@ -57,7 +57,7 @@ Under the parity ruling of 2026-10-11, the records were amended so that MCP carr
 
 Binding:
 
-1. **No secret in the agent's path.** No password, key, recovery value or other secret travels in an MCP tool call, an MCP result, an agent transcript, or off the machine. No MCP tool has an argument that carries a secret, and none has an argument that names one by reference. The agent never names a credential. The person configures a credential, by reference, in the MCP server's launch configuration. An operation whose contract requires a secret is a credential act and is not an agent operation. On MCP it is refused with the typed sign-in result of constraint 3, naming the act as the person's.
+1. **No secret in the agent's path.** No password, key, recovery value or other secret travels in an MCP tool call, an MCP result, an agent transcript, or off the machine. No MCP tool has an argument that carries a secret, and none has an argument that names one by reference. The agent never names a credential. The person configures a credential, by reference, in the MCP server's launch configuration. An operation whose contract requires a secret is a credential act and is not an agent operation. On MCP it is refused with the typed sign-in result of constraint 3, naming the act as the person's. Managing a model-provider credential is a credential act whether or not the call carries a secret. That covers setting, replacing, removing or resetting one. Its masked status, which never returns the secret, is not. (Amended 2026-10-13 under `2026-10-13-provider-settings-adr`; before that a credential act was only an operation whose contract requires a secret.)
 2. **The agent never authenticates or manages authentication.** MCP offers no sign-in by password, no sign-in by key from a tool call, no sign-out, no lock, no session listing or administration, no grant or key administration, no enrollment request or approval, no password change or reset, and no recovery enrolment. An MCP connection is admitted only in one of two ways:
    - by resuming the person's live sign-in for the active profile, through the runtime; or
    - by an enrolled API key the person issued for that profile and configured by reference in the server's launch configuration.

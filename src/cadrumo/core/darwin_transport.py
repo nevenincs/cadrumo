@@ -118,7 +118,7 @@ class _Namespace:
 @cache
 def _namespace() -> _Namespace:
     value = _user_cache_directory()
-    if not value or not Path(value).is_absolute():
+    if not (value is not None and value) or not Path(value).is_absolute():
         raise OSError("Darwin user cache query returned no absolute directory")
     return _Namespace(Path(value).resolve(strict=True))
 

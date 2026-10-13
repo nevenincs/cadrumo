@@ -301,7 +301,11 @@ async def _search_a_box(scenario: SequenceScenario, pilot: Pilot[object]) -> Non
     """Press ``/`` and type the number of the declaration's first numbered box, as a filer looks one up."""
     workbench = _workbench(scenario, pilot.app)
     form = workbench.form
-    box = None if form is None else next((field.box for field in form.fields() if field.box), None)
+    box = (
+        None
+        if form is None
+        else next((field.box for field in form.fields() if (field.box is not None and field.box)), None)
+    )
     if box is None:
         raise PageUnavailableError(f"{scenario.sequence_id}: the declaration has no numbered box to search for")
     await pilot.press("slash")

@@ -12,7 +12,7 @@ import json
 import sys
 import time
 import zipfile
-from collections.abc import Iterator, Mapping
+from collections.abc import Generator, Mapping
 from contextlib import contextmanager, suppress
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -179,7 +179,7 @@ def _tamper(package: Path) -> None:
 
 
 @contextmanager
-def _installed(tmp_path: Path) -> Iterator[tuple[WindowsRuntimeEndpoint, Path]]:
+def _installed(tmp_path: Path) -> Generator[tuple[WindowsRuntimeEndpoint, Path]]:
     """Serve one storage root that the runtime and a command in this process both resolve."""
     root = tmp_path / "cadrumo-storage"
     root.mkdir()

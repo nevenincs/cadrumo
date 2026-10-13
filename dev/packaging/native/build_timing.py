@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import re
 import time
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
@@ -51,7 +51,7 @@ class BuildTimings:
             self.log.verbose(f"command exited with status {returncode}")
 
     @contextmanager
-    def phase(self, name: str) -> Iterator[None]:
+    def phase(self, name: str) -> Generator[None]:
         """Retain completed and failed intervals, including process-local CPU."""
         started = time.monotonic()
         cpu = time.process_time()
@@ -82,7 +82,7 @@ class BuildTimings:
 
 
 @contextmanager
-def measure_build(build: Path, action: str, *, log: BuildLog | None = None) -> Iterator[BuildTimings]:
+def measure_build(build: Path, action: str, *, log: BuildLog | None = None) -> Generator[BuildTimings]:
     """Retain total duration even when a producer fails or refuses moving inputs."""
     timings = BuildTimings(build, action, log=log)
     started = time.monotonic()

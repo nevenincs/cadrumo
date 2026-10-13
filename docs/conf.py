@@ -299,7 +299,7 @@ suppress_warnings = [
     "sphinx_autodoc_typehints.forward_reference",
     "sphinx_autodoc_typehints.guarded_import",
 ]
-if os.environ.get("CADRUMO_DOCS_SINGLE_PAGE"):
+if bool(os.environ.get("CADRUMO_DOCS_SINGLE_PAGE")):
     suppress_warnings.append("toc.excluded")
     suppress_warnings.append("toc.not_included")
 if _USER_SCOPE:
@@ -423,7 +423,7 @@ intersphinx_mapping = {
     "typer": ("https://typer.tiangolo.com/", None),
 }
 _SELF_INVENTORY = _DOCS_HTML_ROOT / "objects.inv"
-if os.environ.get("CADRUMO_DOCS_SELF_INVENTORY") and _SELF_INVENTORY.is_file():
+if bool(os.environ.get("CADRUMO_DOCS_SELF_INVENTORY")) and _SELF_INVENTORY.is_file():
     intersphinx_mapping["cadrumo-local"] = ((_SELF_INVENTORY.parent).as_uri() + "/", str(_SELF_INVENTORY))
 intersphinx_disabled_reftypes = ["std:doc"]
 
@@ -432,9 +432,11 @@ intersphinx_disabled_reftypes = ["std:doc"]
 # mappings, so the build resolves stdlib/SQLAlchemy targets deterministically
 # without any network access. The dropped third-party namespaces are covered by
 # nitpick_ignore_regex below.
-if os.environ.get("CADRUMO_DOCS_OFFLINE"):
+if bool(os.environ.get("CADRUMO_DOCS_OFFLINE")):
     intersphinx_mapping = {
-        name: (uri, inv) for name, (uri, inv) in intersphinx_mapping.items() if inv and Path(inv).is_file()
+        name: (uri, inv)
+        for name, (uri, inv) in intersphinx_mapping.items()
+        if (inv is not None and inv) and Path(inv).is_file()
     }
 
 # ── HTML theme ──────────────────────────────────────────────────────────────
@@ -1291,7 +1293,7 @@ def _build_reads(relative_target: str) -> bool:
 
 def _should_generate_cli_reference() -> bool:
     """Return whether this Sphinx invocation needs generated ``docs/cli`` pages."""
-    if os.environ.get("CADRUMO_DOCS_SKIP_CLI_REFERENCE"):
+    if bool(os.environ.get("CADRUMO_DOCS_SKIP_CLI_REFERENCE")):
         return False
     return _build_reads("cli")
 
@@ -1314,7 +1316,7 @@ def _should_resolve_deferred_models() -> bool:
         # diagnostics report models; user scope loads no autodoc, so importing
         # the application here would defeat the whole point of the scope.
         return False
-    if os.environ.get("CADRUMO_DOCS_SKIP_DEFERRED_MODELS"):
+    if bool(os.environ.get("CADRUMO_DOCS_SKIP_DEFERRED_MODELS")):
         return False
     specific_sources = _specific_build_sources()
     if specific_sources is None:
@@ -1487,7 +1489,7 @@ def _resolve_short_reference(app, env, node, contnode):
     if not _PY_SUFFIX_INDEX:
         _PY_SUFFIX_INDEX.update(_build_py_suffix_index(env))
     candidates = _PY_SUFFIX_INDEX.get(short)
-    if not candidates:
+    if not (candidates is not None and candidates):
         # Postponed annotations reach the extension as unresolved strings, so
         # ``typehints_formatter`` cannot inspect their runtime TypeAliasType or
         # TypeVar identity.  A source-declared alias with no documented object

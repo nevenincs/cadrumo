@@ -104,7 +104,7 @@ def _validate_rule_add_success(projection: LedgerRuleAddProjection) -> None:
         projection.rule is None
         or projection.validation_code is not None
         or projection.validation_messages
-        or projection.category_example
+        or (projection.category_example is not None and projection.category_example)
     ):
         raise ValueError("added rule projection requires one rule and no refusal details")
 

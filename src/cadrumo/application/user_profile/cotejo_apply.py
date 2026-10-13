@@ -141,7 +141,7 @@ def open_censo_divergences(record: UserProfileRecord | None) -> tuple[CensoDiver
         axis = values.get(_divergence_path(index, _DIVERGENCE_AXIS))
         artefact_value = values.get(_divergence_path(index, _DIVERGENCE_ARTEFACT_VALUE))
         source = values.get(_divergence_path(index, _DIVERGENCE_SOURCE), PROVENANCE_SOURCE_CENSO_ARTEFACT)
-        if not axis or not artefact_value:
+        if not (axis is not None and axis) or not (artefact_value is not None and artefact_value):
             continue
         rows.append((index, CensoDivergence(axis=axis, artefact_value=artefact_value, source=source)))
     return tuple(row for _index, row in rows)

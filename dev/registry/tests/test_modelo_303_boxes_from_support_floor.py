@@ -73,7 +73,9 @@ def _design_text(source_id: str) -> str:
 
 def _design(revision: ModeloRevision) -> str:
     """Return the record design an edition's own casillas cite."""
-    assert revision.casilla_source_refs, f"edition {revision.id} cites no record design for its casillas"
+    assert revision.casilla_source_refs is not None and revision.casilla_source_refs, (
+        f"edition {revision.id} cites no record design for its casillas"
+    )
     return _design_text(str(revision.casilla_source_refs[0]))
 
 

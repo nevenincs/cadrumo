@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:3b4e60baab240047d421e74f5bc8511180babf3f6cdd25b356b9184b9b9e648e'
+body_hash: 'sha256:a671044e09ce8296430bd2633a19690d3d38d1c7104d3f5bdc3a15a6b3120210'
 related:
   - "[[2026-10-12-desktop-agent-host-adr]]"
   - "[[2026-10-12-desktop-agent-host-reference]]"
@@ -25,6 +25,7 @@ Owner rulings this revision applies, all first-hand on 2026-10-13:
   - "they're secret; the machine has them, if you upload them they're fucked"
   - Encrypted custody was confirmed safe.
   - For the hand-off to the agent, relayed by CADRUMO-ARCHITECTURE: "do standard input frame".
+- On consent, relayed first-hand by the desktop design session: "tool calls are approval gated not messages". There is no per-message consent gate. Sending is the person's act, and tool calls are what the person approves.
 - "I don't care about anything but that we test the agent ui against the real agent backend so we can debug and iterate fast."
 
 ## Problem Statement
@@ -47,7 +48,7 @@ The owner wants the agent column tested and iterated against the real agent back
 
 ## Considered options
 
-- **The packaged Cadrumo with cadrumo-agent run from its source tree under its own hosted-parts assembly (proposed).** Every component is real, and the relay mounts the way cadrumo-agent proves it. A UI or agent change needs no repackaging. Bundling moves to the last stage.
+- **The packaged Cadrumo with cadrumo-agent acquired, built and installed by CMake.** The owner's subsequent 2026-10-13 build brief requires the canonical custom Python environment for every agent integration lane. The source-checkout proposal is withdrawn for this scope; hosted-parts compatibility must be proved using the installed agent.
 - The packaged Cadrumo with cadrumo-agent bundled and non-hosted. Rejected: the relay cannot mount there, its writes can repeat, and the bundle strips its variables.
 - Waiting for the production path. Rejected by the owner's direction to test against the real backend now.
 - A browser bridge, or the person's real profile. Rejected as in revision 1: the bridge is a second host and opens the network, and the real profile breaks the at-rest ruling.
@@ -60,7 +61,7 @@ Binding if accepted:
 - These are real and run unmodified:
   - the packaged desktop with its Rust agent host;
   - the launcher `aeat app agent serve` in the same package;
-  - cadrumo-agent from an explicit source path, in its own project environment, with its hosted-parts assembly;
+  - cadrumo-agent installed into the built app's custom site-packages by CMake, with its hosted-parts assembly admitted from that package;
   - the Anthropic API and the Cadrumo runtime.
   There is no mock host, scripted model or stand-in under test. The fixture host stays an appearance tool.
 - The launcher builds on the provider-settings controller. It does not add a second lifecycle owner.
@@ -95,7 +96,7 @@ Binding if accepted:
   - The desktop shows the review, worded by Cadrumo. Only a deliberate gesture of the person releases it, through an `aeat` child on the person's frontend.
   - This is new runtime authority and amends `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`.
 - Tool permissions and questionnaires raised by cadrumo-agent are answered only through the host's commands behind a person gesture. The model cannot answer them.
-- Consent stays a person act checked before every send.
+- Sending is never gated on consent. Every tool call the agent makes waits on the person's approval, unless the person chose to allow that tool always.
 
 **Processes**
 - The Rust host owns the launcher through a new supervised runner, distinct from the short-call runner (`native/desktop/src-tauri/src/shell/sign_in/process.rs:23-27`). It places the launcher in a kill-on-close Job Object.
@@ -116,7 +117,6 @@ We will run the live lane as the packaged Cadrumo plus cadrumo-agent from its so
     - the `agent-host` frontend;
     - the launcher on the provider-settings controller;
     - the root guard;
-    - consent person acts;
     - the review person door, with `respond` apply refused on agent frontends.
   - Rust host:
     - the supervised runner and Job;
@@ -158,7 +158,7 @@ Stage 1 passes when, live:
 - a questionnaire is answered;
 - a tool permission is decided by the person;
 - the agent's attempt to apply a review is refused;
-- a send without consent is refused;
+- a tool call waits for the person's approval, and a rejected one does not run;
 - signing out leaves no process and no key in any scanned place.
 
 These stage contents are hypotheses within the constraints.

@@ -19,9 +19,10 @@ from ....adapters.persistence.storage.master_key.active_session import (
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....application.ledger.action_ports import LedgerActionPorts
 from ....application.ledger.actions_common import blocking_modelo_references
-from ....application.ledger.actions_manual import create_manual_transaction, ledger_transaction_result_payload
+from ....application.ledger.actions_manual import ledger_transaction_result_payload
 from ....application.ledger.attachment_mutation_operation import LedgerAttachmentStaleRevisionProjection
 from ....application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionResult
+from ....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from ....application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from ....core.config import override_settings
 from ....core.decimal.formatting import format_decimal

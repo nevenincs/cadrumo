@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from multiprocessing import get_context
 from multiprocessing.process import BaseProcess
@@ -34,7 +34,7 @@ def _wait_for_release(release: Event) -> None:
 
 
 @contextmanager
-def _owned(processes: tuple[BaseProcess, ...], results: Queue[str]) -> Iterator[None]:
+def _owned(processes: tuple[BaseProcess, ...], results: Queue[str]) -> Generator[None]:
     try:
         for process in processes:
             process.start()

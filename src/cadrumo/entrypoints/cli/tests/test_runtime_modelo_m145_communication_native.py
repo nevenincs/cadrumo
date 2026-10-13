@@ -116,7 +116,11 @@ def _event_delta(
     assert all(after.events.get(key) == event for key, event in before.events.items())
     added = tuple(event for key, event in after.events.items() if key not in before.events)
     activations = tuple(event for event in added if event.event_type is BucketEventType.PROFILE_ACTIVATED)
-    mutations = tuple(event for event in added if event.event_type is expected_mutation) if expected_mutation else ()
+    mutations = (
+        tuple(event for event in added if event.event_type is expected_mutation)
+        if (expected_mutation is not None and expected_mutation)
+        else ()
+    )
     expected_count = 2 if expected_mutation is not None else 1
     assert len(added) == expected_count
     assert len(activations) == 1

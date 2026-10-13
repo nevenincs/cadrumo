@@ -178,7 +178,7 @@ def test_a_registry_refusal_is_confined_to_its_row_and_keeps_technical_details_p
     )
 
     assert bad.state is DeclarationSummaryState.UNREADABLE
-    assert bad.result is None and bad.technical_reason
+    assert bad.result is None and (bad.technical_reason is not None and bad.technical_reason)
     assert "technical_reason" not in bad.model_dump()
     assert good.state is DeclarationSummaryState.CALCULATED and good.result is not None
 

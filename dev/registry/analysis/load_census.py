@@ -221,7 +221,7 @@ def _import_targets(node: ast.stmt, *, owner: str) -> frozenset[str]:
         return frozenset[str]()
     if node.level:
         base = owner.rsplit(".", node.level)[0] if node.level <= owner.count(".") else ""
-        head = f"{base}.{node.module}" if node.module else base
+        head = f"{base}.{node.module}" if (node.module is not None and node.module) else base
     else:
         head = node.module or ""
     return frozenset({head} | {f"{head}.{alias.name}" for alias in node.names})
@@ -633,7 +633,7 @@ def _registry_statement_targets(node: ast.Import | ast.ImportFrom, module: str) 
     base = module.split(".")
     # ``a.b.c`` sits in package ``a.b``; one further level per extra dot.
     del base[len(base) - node.level :]
-    target = ".".join((*base, node.module)) if node.module else ".".join(base)
+    target = ".".join((*base, node.module)) if (node.module is not None and node.module) else ".".join(base)
     return (target,)
 
 

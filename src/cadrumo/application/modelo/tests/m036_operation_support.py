@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
@@ -58,7 +58,7 @@ class CommitFence:
         self.deny = False
 
     @asynccontextmanager
-    async def irreversible_section(self) -> AsyncIterator[None]:
+    async def irreversible_section(self) -> AsyncGenerator[None]:
         if self.deny:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         self.active = True

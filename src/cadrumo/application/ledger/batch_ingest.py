@@ -183,11 +183,11 @@ class BatchItemResult(BaseModel):
 
 def _validate_batch_item_refusal(item: BatchItemResult) -> None:
     refused = item.status == "refused"
-    if refused and not item.refusal_code:
+    if refused and not (item.refusal_code is not None and item.refusal_code):
         raise ValueError("a refused batch item must carry the reason it was refused")
     if refused and item.refusal_verdict is None:
         raise ValueError("a refused batch item must carry the typed verdict explaining what was seen")
-    if not refused and item.refusal_code:
+    if not refused and (item.refusal_code is not None and item.refusal_code):
         raise ValueError(f"refusal_code is only meaningful for a refused item; got status={item.status!r}")
     if not refused and item.refusal_verdict is not None:
         raise ValueError(f"refusal_verdict is only meaningful for a refused item; got status={item.status!r}")

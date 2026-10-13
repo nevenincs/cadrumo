@@ -80,7 +80,7 @@ class XlsProvider(FinancialProvider):
                 warnings=(f"{match.layout.bank_name} worksheet has no data rows after the header",),
             )
         warnings: tuple[str, ...] = ()
-        if not find_column(match.lookup, match.layout.columns.currency):
+        if not bool(find_column(match.lookup, match.layout.columns.currency)):
             warnings = (
                 f"{match.layout.bank_name} worksheet has no currency column; falling back to {default_currency()}",
             )

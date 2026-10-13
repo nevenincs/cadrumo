@@ -353,7 +353,7 @@ def validate_export_record(
     """
     if record.binding_record is not None:
         _validate_export_record_binding_link(failures, prefix=prefix, revision=revision, record=record)
-    if repeat_failure := record.repeat_field_family_failure():
+    if (repeat_failure := record.repeat_field_family_failure()) is not None and repeat_failure:
         failures.append(f"{prefix}: export record {record.id!r}: {repeat_failure}")
     if record.requires_positive_casilla_id is not None and record.requires_positive_casilla_id not in casillas:
         failures.append(

@@ -1115,7 +1115,7 @@ def _active_profile_auth_facts(
 
 
 def _assert_session_identity_matches_expected(session_identity: str, expected_identity: str | None) -> None:
-    if not expected_identity:
+    if not (expected_identity is not None and expected_identity):
         return
     session_identity = _normalise_tax_identity(session_identity)
     # A blank session identity means there is nothing to check, and that stays

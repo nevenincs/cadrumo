@@ -1,0 +1,130 @@
+# Model-provider credential catalog.
+#
+# Read at runtime by cadrumo.domain.provider_settings.catalog, which validates
+# every entry strictly. This is the one place that says which providers a
+# profile can hold a credential for, what kind of credential each takes, and
+# which Cadrumo consumers may use it. Listing a provider here does not make it
+# eligible for the hosted assistant lane; cadrumo-agent's hosting contract owns
+# that.
+#
+# auth_kind:
+#   api_key                          one direct API key
+#   api_key_with_base_url            a direct API key for an Anthropic-compatible
+#                                    gateway; the effective URL is the stored one,
+#                                    else default_base_url
+#   oauth_token_or_provider_sign_in  a person-entered OAuth token, or the
+#                                    provider's own CLI sign-in
+#   provider_sign_in_only            the provider's own CLI sign-in; Cadrumo holds
+#                                    no credential
+#
+# development_setting names the Cadrumo settings field read as the fallback for
+# an unset record in development storage mode only. Installed builds never read
+# it.
+#
+# agent_credential_id is the id cadrumo-agent keys this credential by in the
+# hosted-agent standard-input frame. It is absent for a credential the agent
+# never receives: an extraction-only key, and any provider-owned sign-in.
+
+schema_version = 1
+
+[[providers]]
+id = "anthropic"
+display_name = "Anthropic"
+auth_kind = "api_key"
+consumers = ["extraction", "assistant"]
+development_setting = "cadrumo_llm_anthropic_api_key"
+agent_credential_id = "claude"
+
+[[providers]]
+id = "openai"
+display_name = "OpenAI"
+auth_kind = "api_key"
+consumers = ["extraction", "assistant"]
+development_setting = "cadrumo_llm_openai_api_key"
+agent_credential_id = "codex"
+
+[[providers]]
+id = "gemini"
+display_name = "Gemini"
+auth_kind = "api_key"
+consumers = ["extraction"]
+development_setting = "cadrumo_llm_gemini_api_key"
+
+[[providers]]
+id = "kimi"
+display_name = "Kimi"
+auth_kind = "api_key"
+consumers = ["assistant"]
+development_setting = "cadrumo_llm_kimi_api_key"
+agent_credential_id = "kimi"
+
+[[providers]]
+id = "zai"
+display_name = "Z.ai"
+auth_kind = "api_key_with_base_url"
+consumers = ["assistant"]
+default_base_url = "https://api.z.ai/api/anthropic"
+development_setting = "cadrumo_llm_zai_api_key"
+agent_credential_id = "zai"
+
+[[providers]]
+id = "zhipu"
+display_name = "Zhipu AI"
+auth_kind = "api_key_with_base_url"
+consumers = ["assistant"]
+default_base_url = "https://open.bigmodel.cn/api/anthropic"
+development_setting = "cadrumo_llm_zhipu_api_key"
+agent_credential_id = "zhipu"
+
+[[providers]]
+id = "deepseek"
+display_name = "DeepSeek"
+auth_kind = "api_key_with_base_url"
+consumers = ["assistant"]
+default_base_url = "https://api.deepseek.com/anthropic"
+development_setting = "cadrumo_llm_deepseek_api_key"
+agent_credential_id = "deepseek"
+
+[[providers]]
+id = "moonshot"
+display_name = "Moonshot AI"
+auth_kind = "api_key_with_base_url"
+consumers = ["assistant"]
+default_base_url = "https://api.moonshot.ai/anthropic"
+development_setting = "cadrumo_llm_moonshot_api_key"
+agent_credential_id = "moonshot"
+
+[[providers]]
+id = "minimax"
+display_name = "MiniMax"
+auth_kind = "api_key_with_base_url"
+consumers = ["assistant"]
+default_base_url = "https://api.minimax.io/anthropic"
+development_setting = "cadrumo_llm_minimax_api_key"
+agent_credential_id = "minimax"
+
+[[providers]]
+id = "qwen"
+display_name = "Qwen"
+auth_kind = "api_key_with_base_url"
+consumers = ["assistant"]
+development_setting = "cadrumo_llm_qwen_api_key"
+agent_credential_id = "qwen"
+
+[[providers]]
+id = "claude"
+display_name = "Claude"
+auth_kind = "oauth_token_or_provider_sign_in"
+consumers = ["assistant"]
+
+[[providers]]
+id = "codex"
+display_name = "Codex"
+auth_kind = "provider_sign_in_only"
+consumers = ["assistant"]
+
+[[providers]]
+id = "antigravity"
+display_name = "Antigravity"
+auth_kind = "provider_sign_in_only"
+consumers = ["assistant"]

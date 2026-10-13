@@ -138,7 +138,7 @@ class SupervisorSubmissionMixin(SupervisorHost):
             OperationIdempotencyClaim.bind(
                 identity=identity, idempotency_key=request.idempotency_key, request_reference=request_reference
             )
-            if request.idempotency_key
+            if (request.idempotency_key is not None and request.idempotency_key)
             else None
         )
         existing_operation_id = await self._resolve_idempotency(claim)

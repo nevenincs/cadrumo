@@ -97,7 +97,7 @@ def export_field_wire_shape(field: ExportFieldDefinition) -> tuple[str, str, str
 
 def validate_export_allowed_values(field: ExportFieldDefinition) -> None:
     """Constrain an exact reviewed semantic integer domain."""
-    if failure := _allowed_values_failure(field):
+    if (failure := _allowed_values_failure(field)) is not None and failure:
         raise RegistryValidationError(failure)
 
 
@@ -215,7 +215,7 @@ def _validate_field_semantic_payload(field: ExportFieldDefinition) -> None:
     payloads = _field_semantic_payloads(field)
     required = export_semantic_payload_axis(field.kind)
     declared = tuple(axis for axis, value in payloads.items() if value is not None)
-    if failure := _semantic_payload_failure(field, required=required, declared=declared):
+    if (failure := _semantic_payload_failure(field, required=required, declared=declared)) is not None and failure:
         raise RegistryValidationError(failure)
     if field.kind == CasillaFieldKind.FILLER and field.length is None:
         raise RegistryValidationError(f"export field {field.id!r} filler must declare length")
@@ -290,7 +290,7 @@ def _allowed_values_failure(field: ExportFieldDefinition) -> str | None:
     allowed_values = field.allowed_values
     if allowed_values is None:
         return None
-    if failure := _allowed_values_declaration_failure(field, allowed_values):
+    if (failure := _allowed_values_declaration_failure(field, allowed_values)) is not None and failure:
         return failure
     return _allowed_values_member_failure(field, allowed_values)
 

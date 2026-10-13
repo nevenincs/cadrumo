@@ -103,7 +103,9 @@ def test_law_splits_into_anchored_articles() -> None:
     # Many articles, one unit each (the IVA law has 100+ articles).
     assert len(output.units) > 100
 
-    article_one = next(u for u in output.units if u.title and u.title.startswith("Artículo 1."))
+    article_one = next(
+        u for u in output.units if (u.title is not None and u.title) and u.title.startswith("Artículo 1.")
+    )
     assert article_one.anchor == "#a1"
     assert "Impuesto sobre el Valor Añadido" in article_one.text
     assert "tributo de naturaleza indirecta" in article_one.text
@@ -114,7 +116,9 @@ def test_law_retains_non_article_boe_anchor() -> None:
     output = build_outputs(_LAW_HTML, repo_root=_REPO_ROOT)[0]
 
     disposition = next(
-        unit for unit in output.units if unit.title and unit.title.startswith("Disposición adicional primera.")
+        unit
+        for unit in output.units
+        if (unit.title is not None and unit.title) and unit.title.startswith("Disposición adicional primera.")
     )
 
     assert disposition.anchor == "#daprimera"
@@ -169,7 +173,11 @@ def test_ordinal_legal_boundaries_are_titled_units_without_invented_anchors() ->
     primero_units = [unit for unit in modelo_145.units if unit.title == primero_title]
     assert len(primero_units) == 1
     primero = primero_units[0]
-    segundo_units = [unit for unit in modelo_145.units if unit.title and unit.title.startswith("Segundo.")]
+    segundo_units = [
+        unit
+        for unit in modelo_145.units
+        if (unit.title is not None and unit.title) and unit.title.startswith("Segundo.")
+    ]
     assert len(segundo_units) == 1
     segundo = segundo_units[0]
     assert primero.anchor is None
@@ -186,7 +194,11 @@ def test_ordinal_legal_boundaries_are_titled_units_without_invented_anchors() ->
 def test_annex_instructions_become_atomic_citation_units() -> None:
     """Real BOE paragraph headings bound one local citation unit each."""
     output = build_outputs(_UNMARKED_ANNEX_HTML, repo_root=_REPO_ROOT)[0]
-    fragments = {unit.anchor: unit for unit in output.units if unit.anchor and "instruccion" in unit.anchor}
+    fragments = {
+        unit.anchor: unit
+        for unit in output.units
+        if (unit.anchor is not None and unit.anchor) and "instruccion" in unit.anchor
+    }
 
     employment = fragments["#anexo-ii-instruccion-2-2-a"]
     assert employment.title == "2.2\u2003Fase\xa02: Rendimiento neto minorado."
@@ -209,7 +221,7 @@ def test_annex_instructions_become_atomic_citation_units() -> None:
 def test_iva_instructions_and_activity_tables_become_atomic_citation_units() -> None:
     """Real 2025 IVA source boundaries exclude adjacent instruction and activity units."""
     output = build_outputs(_MODULES_2025_HTML, repo_root=_REPO_ROOT)[0]
-    fragments = {unit.anchor: unit for unit in output.units if unit.anchor}
+    fragments = {unit.anchor: unit for unit in output.units if (unit.anchor is not None and unit.anchor)}
 
     instructions = fragments["#anexo-i-instrucciones-iva"]
     assert "La cuota devengada por operaciones corrientes será la suma" in instructions.text
@@ -221,7 +233,7 @@ def test_iva_instructions_and_activity_tables_become_atomic_citation_units() -> 
     iva_table_anchors = tuple(
         unit.anchor
         for unit in output.units
-        if unit.anchor
+        if (unit.anchor is not None and unit.anchor)
         and unit.anchor.startswith("#m303-anexo-ii-iva-")
         and unit.anchor != "#m303-anexo-ii-iva-ingreso-a-cuenta"
     )
@@ -230,7 +242,7 @@ def test_iva_instructions_and_activity_tables_become_atomic_citation_units() -> 
     agricultural_anchors = tuple(
         unit.anchor
         for unit in output.units
-        if unit.anchor
+        if (unit.anchor is not None and unit.anchor)
         and unit.anchor.startswith("#m303-anexo-i-iva-")
         and unit.anchor != "#m303-anexo-i-iva-ingreso-a-cuenta"
     )
@@ -260,12 +272,12 @@ def test_iva_instructions_and_activity_tables_become_atomic_citation_units() -> 
 def test_lorca_reduction_modulos_orden_iva_units_preserve_the_legacy_table_shape() -> None:
     """The source-neutral annual parser keeps the Lorca-reduction orden's multi-value table rows exact."""
     output = build_outputs(_LORCA_REDUCTION_MODULES_HTML, repo_root=_REPO_ROOT)[0]
-    fragments = {unit.anchor: unit for unit in output.units if unit.anchor}
+    fragments = {unit.anchor: unit for unit in output.units if (unit.anchor is not None and unit.anchor)}
 
     iva_table_anchors = tuple(
         unit.anchor
         for unit in output.units
-        if unit.anchor
+        if (unit.anchor is not None and unit.anchor)
         and unit.anchor.startswith("#m303-anexo-ii-iva-")
         and unit.anchor != "#m303-anexo-ii-iva-ingreso-a-cuenta"
     )
@@ -376,11 +388,7 @@ def test_sidecar_round_trips_and_is_walker_indexable(tmp_path: Path) -> None:
     Inspects the real installed walker (no mock): the rendered .md must pass
     the extension, size-cap, and binary filters.
     """
-    from vaultspec_rag.indexer._chunking import (
-        _MAX_FILE_SIZE,
-        SUPPORTED_EXTENSIONS,
-        _is_binary,
-    )
+    from .index_admission_support import assert_source_is_indexable
 
     source_copy = tmp_path / _SLICE_HTML.name
     source_copy.write_bytes(_SLICE_HTML.read_bytes())
@@ -395,9 +403,7 @@ def test_sidecar_round_trips_and_is_walker_indexable(tmp_path: Path) -> None:
     assert reloaded.status is ExtractionStatus.OK
     assert reloaded.units
 
-    assert text_path.suffix.lower() in SUPPORTED_EXTENSIONS
-    assert text_path.stat().st_size <= _MAX_FILE_SIZE
-    assert not _is_binary(text_path)
+    assert_source_is_indexable(source_copy, text_path, tmp_path)
 
 
 def test_tampered_sidecar_is_rejected(tmp_path: Path) -> None:
@@ -467,7 +473,9 @@ def test_derived_anchor_is_recorded_indistinguishably_from_a_declared_one() -> N
     assert _UNMARKED_ORDINAL_SLICE_HTML.is_file(), _UNMARKED_ORDINAL_SLICE_HTML
 
     declared = build_outputs(_LAW_HTML, repo_root=_REPO_ROOT)[0]
-    article_one = next(u for u in declared.units if u.title and u.title.startswith("Artículo 1."))
+    article_one = next(
+        u for u in declared.units if (u.title is not None and u.title) and u.title.startswith("Artículo 1.")
+    )
 
     derived_output = build_outputs(_UNMARKED_ORDINAL_SLICE_HTML, repo_root=_REPO_ROOT)[0]
     assert len(derived_output.units) == 1

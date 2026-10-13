@@ -103,7 +103,7 @@ def computed_attribute_targets(
     if isinstance(target_node, ast.Name) and closed_attribute_targets:
         scope = context.nearest_function(target_node)
         assignments = context.latest_values(target_node.id, lineno, scope)
-        if assignments and any(
+        if (assignments is not None and assignments) and any(
             _is_module_projection_expression(assignment.value, context, lineno, scope, set())
             for assignment in assignments
         ):
@@ -161,7 +161,7 @@ def _metadata_target_set_candidate_nodes(
     if key in resolving:
         return
     assignments = context.latest_values(node.id, lineno, scope)
-    if not assignments:
+    if not (assignments is not None and assignments):
         return
     resolving.add(key)
     for assignment in assignments:
@@ -208,7 +208,7 @@ def _is_module_projection_expression(
         return isinstance(node.elt, ast.Attribute) and node.elt.attr == "module"
     if isinstance(node, ast.Name) and node.id not in resolving:
         assignments = context.latest_values(node.id, lineno, scope)
-        if assignments:
+        if assignments is not None and assignments:
             resolving.add(node.id)
             result = any(
                 _is_module_projection_expression(assignment.value, context, lineno, scope, resolving)

@@ -114,7 +114,7 @@ def test_a_registered_design_states_its_coverage_on_its_own_axis() -> None:
             )
             pinned += 1
             continue
-        assert source.record_design_epoch, (
+        assert source.record_design_epoch is not None and source.record_design_epoch, (
             f"{name} is registered as {source_id} but declares no record_design_epoch, so its "
             "coverage is stated on no axis at all"
         )

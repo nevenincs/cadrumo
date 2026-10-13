@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -114,7 +114,7 @@ class _ExecutionAuthority:
         self.events.append(f"require:{action.value}")
 
     @asynccontextmanager
-    async def commit_guard(self, identity: object) -> AsyncIterator[None]:
+    async def commit_guard(self, identity: object) -> AsyncGenerator[None]:
         assert identity is not None
         self.events.append("guard-enter")
         try:
@@ -373,7 +373,7 @@ def test_bulk_capture_projects_isolated_query_failures_after_all_remote_reads(
 
     class Cancellation:
         @asynccontextmanager
-        async def irreversible_section(self) -> AsyncIterator[None]:
+        async def irreversible_section(self) -> AsyncGenerator[None]:
             events.append("guard-enter")
             try:
                 yield
@@ -475,7 +475,7 @@ def test_bulk_capture_projects_isolated_query_failures_after_all_remote_reads(
     guard_count = events.count("guard-enter")
 
     @asynccontextmanager
-    async def allow_local_write() -> AsyncIterator[None]:
+    async def allow_local_write() -> AsyncGenerator[None]:
         yield
 
     with pytest.raises(ProfileAccessRefusedError) as denial:

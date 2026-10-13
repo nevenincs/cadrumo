@@ -145,7 +145,7 @@ def _authored_prose_sites() -> tuple[str, ...]:
                 continue
             func = node.func
             name = func.id if isinstance(func, ast.Name) else getattr(func, "attr", None)
-            if not name or not name.endswith("Error"):
+            if not (name is not None and name) or not name.endswith("Error"):
                 continue
             keywords = {kw.arg: kw.value for kw in node.keywords if kw.arg in _MESSAGE_KEYWORDS}
             carries_key_channel = "translated_message" in keywords or (

@@ -342,7 +342,7 @@ def _judge_value(
     failures: list[InvariantFailure] = []
     notes: list[str] = []
     if phase.value is ProfileValue.READ:
-        if not name_before:
+        if not (name_before is not None and name_before):
             return False, failures, [f"phase {index}: the oracle could not read the profile name"]
         if not any(name_before in call.result_text for call in calls if _released(call)):
             failures.append(

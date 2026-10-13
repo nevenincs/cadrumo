@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator, Callable, Iterator
+from collections.abc import AsyncGenerator, Callable, Generator
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -163,7 +163,7 @@ class _SyntheticFiledDataPort:
         authority_operation: PinnedAuthorityOperation | None = None,
         effect_guard: FiledEffectGuard | None = None,
         on_session_write: SessionWriteReporter | None = None,
-    ) -> AsyncIterator[FiledDataRegisterPort]:
+    ) -> AsyncGenerator[FiledDataRegisterPort]:
         assert self._resource_is_active()
         assert operation == "live-expedientes-read"
         assert effect_guard is not None and on_session_write is not None
@@ -201,7 +201,7 @@ class _ResourceScope:
         self.closed = False
 
     @contextmanager
-    def activate(self) -> Iterator[None]:
+    def activate(self) -> Generator[None]:
         self.activation_entries += 1
         self.activation_depth += 1
         try:

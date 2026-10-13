@@ -66,7 +66,7 @@ class _PriorPaymentDeclaration:
 
 def _declared_casilla(declarations: Mapping[str, str], key: str) -> CasillaId:
     value = declarations.get(key)
-    if not value:
+    if not (value is not None and value):
         raise RegistryValidationError(f"prior-payment declaration lacks {key!r}")
     return validated_casilla_id(value, surface=f"{_MAPPING_FACT_ID} {key}")
 
@@ -92,12 +92,12 @@ def _selected_registry_declaration(
         raise RegistryValidationError("selected prior-payment declaration must resolve as a mapping fact")
     declarations = {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
     selected_modelo = declarations.get("modelo")
-    if not selected_modelo:
+    if not (selected_modelo is not None and selected_modelo):
         raise RegistryValidationError("selected prior-payment declaration lacks a model coordinate")
     if selected_modelo != modelo:
         return None
     selected_revision = declarations.get("revision")
-    if not selected_revision:
+    if not (selected_revision is not None and selected_revision):
         raise RegistryValidationError("selected prior-payment declaration lacks a revision coordinate")
     if selected_revision != str(revision.id):
         return None

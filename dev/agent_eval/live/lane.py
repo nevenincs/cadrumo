@@ -220,7 +220,7 @@ async def _resolvable(launch: McpLaunch, keys: set[str], stderr: Path) -> frozen
         tools = RecordedTools(session, quiet)
         for key in sorted(keys):
             described, _, _ = await tools.call("describe", {"definition_id": key})
-            if described and described.get("outcome") == "described":
+            if (described is not None and described) and described.get("outcome") == "described":
                 resolved.add(key)
     return frozenset(resolved)
 
@@ -379,7 +379,9 @@ def _access_run(
         person = run.open(load_scenario("modelo_130_dr130").profile_options())
         reference = issue_key(run.host, person, scenario) if scenario.uses_key else None
         command, arguments, environment = mcp_launch(
-            run.host, profile_id=person.profile_id if reference else None, credential_reference=reference
+            run.host,
+            profile_id=person.profile_id if (reference is not None and reference) else None,
+            credential_reference=reference,
         )
         launch = McpLaunch(command, tuple(arguments), environment, run.run.path)
         offered, live_write, _handoff = _surface_and_leaves(run, launch)

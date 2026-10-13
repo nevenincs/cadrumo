@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import replace
 from datetime import UTC, datetime
@@ -67,7 +67,7 @@ class _Recorder:
         self.inside_commit = False
 
     @asynccontextmanager
-    async def irreversible_section(self) -> AsyncIterator[None]:
+    async def irreversible_section(self) -> AsyncGenerator[None]:
         assert not self.inside_commit
         self.inside_commit = True
         try:

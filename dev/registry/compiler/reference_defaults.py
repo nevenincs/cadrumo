@@ -89,7 +89,7 @@ def _default_casilla_section(
 ) -> dict[str, object]:
     filled: dict[str, object] = {}
     rows = as_toml_array(table.get(_INHERITED_SECTION, ()))
-    if rows:
+    if rows is not None and rows:
         defaulted = tuple(
             default_row_references(context, row, source_default=source_default, orden_default=orden_default)
             for row in rows
@@ -103,7 +103,7 @@ def _default_keyed_family_sections(context: str, table: Mapping[str, object]) ->
     filled: dict[str, object] = {}
     for section, default_field in family_source_default_fields():
         section_rows = as_toml_array(table.get(section, ()))
-        if not section_rows:
+        if not (section_rows is not None and section_rows):
             continue
         family_default = as_toml_array(table.get(default_field)) or ()
         defaulted = tuple(
@@ -216,7 +216,7 @@ def _extended_source_default(
             f"{default_field} for them to extend; state {_ROW_SOURCE_FIELD} instead",
         )
     additions = as_toml_array(table.get(_ROW_SOURCE_ADDITIONS_FIELD))
-    if not additions or not all(isinstance(item, str) for item in additions):
+    if not (additions is not None and additions) or not all(isinstance(item, str) for item in additions):
         raise RegistryLoadError(
             f"{subject} {_ROW_SOURCE_ADDITIONS_FIELD} must be a non-empty array of source reference ids; "
             "omit the key to take the edition default alone",

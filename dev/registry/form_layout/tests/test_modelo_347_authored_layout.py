@@ -35,7 +35,7 @@ def test_quarters_remain_inside_each_declared_person(revision_id: str) -> None:
         "resumen-inmuebles",
         "resumen-arrendamientos",
     }
-    assert {b.box_number for b in contexts if b.box_number} == {"01", "02", "03", "04"}
+    assert {b.box_number for b in contexts if (b.box_number is not None and b.box_number)} == {"01", "02", "03", "04"}
     assert all(b.export_record_id == "m347-declarante" for b in contexts)
     (group,) = persons.sections[0].blocks
     assert isinstance(group, FormRepeatingGroupBlock)

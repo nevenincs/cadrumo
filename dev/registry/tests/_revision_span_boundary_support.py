@@ -518,7 +518,7 @@ def _box_displacement_evidence(
         return None
     sample = ", ".join(f"[{box}] {before_boxes[box]}->{after_boxes[box]}" for box in moved[:3])
     note = f"{len(moved)} of {len(shared)} shared boxes moved (e.g. {sample})"
-    if _record_count_delta(before_lengths, after_lengths):
+    if bool(_record_count_delta(before_lengths, after_lengths)):
         note += " -- NOT a clean in-record displacement: the record set also changed"
     return note
 
@@ -530,7 +530,7 @@ def _page_length_evidence(before: tuple[str, ...], after: tuple[str, ...]) -> st
     delta = _record_count_delta(before, after)
     headline = (
         f"RECORD SET CHANGED ({delta}) -- the design's record decomposition differs, so this is not an offset shift"
-        if delta
+        if (delta is not None and delta)
         else "page byte-lengths differ, so something moved inside a record"
     )
     return f"{headline}: {before} vs {after}"
@@ -563,7 +563,7 @@ def _design_pair_evidence(earlier: Path, later: Path) -> tuple[str, ...]:
     before_lengths, after_lengths = _page_lengths(earlier), _page_lengths(later)
     evidence: list[str] = []
     displacement = _box_displacement_evidence(before_boxes, after_boxes, before_lengths, after_lengths)
-    if displacement:
+    if displacement is not None and displacement:
         evidence.append(displacement)
 
     # FOURTH SIGNAL: the box SET changed, whether or not anything moved.
@@ -586,11 +586,11 @@ def _design_pair_evidence(earlier: Path, later: Path) -> tuple[str, ...]:
     # boxes, so a reader spot-checking the signal against that pair sees a
     # membership change duly reported and concludes the set is compared.
     membership = _box_set_evidence(before_boxes, after_boxes)
-    if membership:
+    if membership is not None and membership:
         evidence.append(membership)
 
     lengths = _page_length_evidence(before_lengths, after_lengths)
-    if lengths:
+    if lengths is not None and lengths:
         evidence.append(lengths)
 
     evidence.extend(_occupancy_evidence(earlier, later))
@@ -600,16 +600,16 @@ def _design_pair_evidence(earlier: Path, later: Path) -> tuple[str, ...]:
     # measured false positive (Modelo 202's reserved-space repartition) its exclusion
     # closes.
     position_membership = _position_set_evidence(earlier, later)
-    if position_membership:
+    if position_membership is not None and position_membership:
         evidence.append(position_membership)
 
     description = _description_flip_evidence(earlier, later)
-    if description:
+    if description is not None and description:
         evidence.append(description)
 
     # SEVENTH SIGNAL: a pure displacement, which every signal above is blind to.
     straddle = _straddle_evidence(earlier, later)
-    if straddle:
+    if straddle is not None and straddle:
         evidence.append(straddle)
 
     return tuple(evidence)

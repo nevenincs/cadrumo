@@ -27,7 +27,7 @@ def describe_bindings(
     """
     for key, translation_key in descriptions.items():
         entries = table.get(key)
-        if entries:
+        if entries is not None and entries:
             label = tr(translation_key)
             show = shown is None or key in shown
             table[key] = [replace(binding, description=label, show=show) for binding in entries]

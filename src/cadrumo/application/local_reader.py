@@ -468,7 +468,7 @@ def probe_local_reader(
                 ProvisioningPreconditionCondition.SELECTED_MODEL_AVAILABLE, facts=facts
             ),
         )
-    if not _present(model, _names(inventory)):
+    if not bool(_present(model, _names(inventory))):
         facts = {"role": role.value, "runtime_reachable": True, "model": model, "role_model_installed": False}
         return DependencyStatus(
             service=service,
@@ -579,7 +579,12 @@ def _role_load_admission(
     residents: tuple[RuntimeResident, ...] | None,
     assess_load: bool,
 ) -> tuple[bool | None, tuple[ContentionCause, ...]]:
-    if not assess_load or model is None or not installed or resident:
+    if (
+        not assess_load
+        or model is None
+        or not (installed is not None and installed)
+        or (resident is not None and resident)
+    ):
         return None, ()
     requirement = _requirement_for(role, model, settings)
     if requirement is None:

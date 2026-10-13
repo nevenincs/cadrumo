@@ -22,7 +22,6 @@ from ...application.invoices.catalogue_intake_contracts import (
     InvoiceWizardRequest,
 )
 from ...application.ledger.action_ports import LedgerActionPorts
-from ...application.ledger.actions_manual import create_manual_transaction
 from ...application.ledger.evidence_ingestion_contracts import (
     LedgerEvidenceBatchProjection,
     LedgerEvidenceBatchRequest,
@@ -34,6 +33,7 @@ from ...application.ledger.llm_review_contracts import LedgerLlmReviewRequest
 from ...application.ledger.llm_review_workflow import LlmReviewInvocationOrigin
 from ...application.ledger.models import ManualLedgerTransactionCommand
 from ...application.ledger.operator_iva_contracts import LedgerOperatorIvaRequest, LedgerOperatorIvaResult
+from ...application.ledger.tests.manual_transaction_support import create_manual_transaction
 from ...core.config_support import LLMProvider
 from ...core.hashing import sha256_hex
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject

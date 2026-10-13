@@ -77,7 +77,9 @@ async def _run_async(command: list[str], environment: dict[str, str]) -> _Comple
 def _run(name: str, args: list[str], *, env: dict[str, str] | None = None) -> _Completed:
     """Run a console script, falling back to ``python -m`` when not on PATH."""
     script = shutil.which(name)
-    command = [script, *args] if script else [sys.executable, "-m", name.replace("-", "_"), *args]
+    command = (
+        [script, *args] if (script is not None and script) else [sys.executable, "-m", name.replace("-", "_"), *args]
+    )
     return asyncio.run(_run_async(command, {**os.environ, **(env or {})}))
 
 

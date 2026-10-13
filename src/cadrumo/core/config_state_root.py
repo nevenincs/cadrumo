@@ -51,7 +51,7 @@ def refuse_former_product_database(storage_root: Path, *, bucket_id: str | None 
     connected to, read, copied, moved, deleted, or adopted.
     """
     parent = storage_root
-    if bucket_id:
+    if bucket_id is not None and bucket_id:
         parent = parent / BUCKETS_DIRNAME / bucket_id / BUCKET_DB_DIRNAME
     former_database = parent / FORMER_PRODUCT_DATABASE_FILENAME
     if not former_database.exists():

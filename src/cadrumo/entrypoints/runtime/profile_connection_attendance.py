@@ -81,7 +81,8 @@ class ProfileConnectionAttendanceMixin:
         request: RuntimeAttendanceAsk,
     ) -> RuntimeAttendancePending | RuntimeProfileStatus | AccessDenied:
         if request.frontend is not OperationFrontendProjection.MCP:
-            # Attendance is the agent's door; a person signs in with their own proof.
+            # Attendance is the MCP agent's door; a person signs in with their own proof,
+            # and the agent host only resumes the person's stored sign-in.
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         surface = _named_surface(request.surface)
         with self._guard:

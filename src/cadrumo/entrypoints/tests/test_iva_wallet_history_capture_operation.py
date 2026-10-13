@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator, Callable, Iterator
+from collections.abc import AsyncGenerator, Callable, Generator
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -133,7 +133,7 @@ class _SyntheticIvaRemoteStatePort:
         raise AssertionError("history capture must not request the wallet endpoint")
 
     @contextmanager
-    def active_storage_span(self) -> Iterator[None]:
+    def active_storage_span(self) -> Generator[None]:
         self.storage_span_entries += 1
         self.storage_span_depth += 1
         try:
@@ -182,7 +182,7 @@ class _SyntheticIvaRemoteStatePort:
         self._trace.append("capture")
 
         @asynccontextmanager
-        async def tracked_guard() -> AsyncIterator[None]:
+        async def tracked_guard() -> AsyncGenerator[None]:
             async with effect_guard():
                 self.guard_entries += 1
                 self.guard_depth += 1
@@ -250,7 +250,7 @@ class _ResourceScope:
         self.close_calls = 0
 
     @contextmanager
-    def activate(self) -> Iterator[None]:
+    def activate(self) -> Generator[None]:
         self.activation_entries += 1
         self.activation_depth += 1
         try:

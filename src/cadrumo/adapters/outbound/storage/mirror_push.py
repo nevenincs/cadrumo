@@ -317,11 +317,10 @@ def _mirror_refusal_for_definition(definition: SecureObjectNamespaceDefinition) 
     """Return why ``definition``'s namespace must not be mirrored, or ``None``.
 
     Split from the registry lookup so the decision can be exercised against a
-    policy the shipped registry does not currently carry. No namespace ships
-    as ``LOCAL_ONLY`` today, so a test that re-labelled a shipped one to reach
-    that branch would be asserting against a production declaration somebody
-    may legitimately change; taking a definition directly lets the test build
-    the case it means to test.
+    policy independently of what the shipped registry declares. Building the
+    definition in the test keeps it from asserting against a production
+    declaration somebody may legitimately change, such as the ``LOCAL_ONLY``
+    provider-settings namespace.
     """
     policy = definition.remote_mirror_policy
     if policy is StorageRemoteMirrorPolicy.CIPHERTEXT_WITH_METADATA:

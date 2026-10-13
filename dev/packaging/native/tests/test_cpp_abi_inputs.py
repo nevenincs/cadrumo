@@ -201,7 +201,7 @@ def digest_bytes(value: bytes) -> str:
 
 def test_cmake_projects_both_provider_inputs(inputs: dict[str, Any], tmp_path: Path) -> None:
     cmake = shutil.which("cmake")
-    assert cmake, "CMake is required by the common build regression"
+    assert cmake is not None and cmake, "CMake is required by the common build regression"
     project = inputs["root"]
     script = f'''cmake_minimum_required(VERSION 3.25)
 project(floor_inputs NONE)

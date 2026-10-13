@@ -973,7 +973,7 @@ class PinnedRegistryQueryService:
     ) -> ResolvedRegistryQueryContext:
         requested = period.strip()
         declared = tuple(token for item in directory.revisions for token in item.period_selector.declared_periods)
-        if not (_BARE_PERIOD_RE.fullmatch(requested.upper()) or selector_token_for_request(declared, requested)):
+        if not (_BARE_PERIOD_RE.fullmatch(requested.upper()) or bool(selector_token_for_request(declared, requested))):
             raise RegistryValidationError(
                 f"period must be a bare registry token; pass the filing year separately; got {period!r}",
             )

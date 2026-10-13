@@ -16,7 +16,6 @@ from .....application.ledger.actions_import import (
     persist_prepared_ledger_source_import as _persist_prepared_ledger_source_import,
 )
 from .....application.ledger.actions_import import prepare_ledger_source_import as _prepare_ledger_source_import
-from .....application.ledger.actions_manual import create_manual_transaction as _create_manual_transaction
 from .....application.ledger.import_ports import LedgerImportPorts as _LedgerImportPorts
 from .....application.ledger.models import LedgerSourceImportCommand as _LedgerSourceImportCommand
 from .....application.ledger.models import LedgerSourceImportResult as _LedgerSourceImportResult
@@ -27,6 +26,9 @@ from .....application.ledger.protocols import (
 )
 from .....application.ledger.protocols import (
     TransactionCatalogueCoCommitWriterProtocol as _TransactionCatalogueCoCommitWriterProtocol,
+)
+from .....application.ledger.tests.manual_transaction_support import (
+    create_manual_transaction as _create_manual_transaction,
 )
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period

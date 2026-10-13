@@ -18,9 +18,12 @@ set(docs_build_args ${docs_target_args})
 if(NOT CADRUMO_DOCS_SHARED_CACHE)
   list(APPEND docs_build_args --no-shared-cache)
 endif()
+include("${CMAKE_CURRENT_LIST_DIR}/PackageInputs.cmake")
+cadrumo_source_inputs(user_docs_source_inputs "${CADRUMO_SOURCE_ROOT}")
 file(GLOB_RECURSE user_docs_inputs CONFIGURE_DEPENDS
-  "${CADRUMO_SOURCE_ROOT}/docs/*" "${CADRUMO_SOURCE_ROOT}/dev/docs/*" "${CADRUMO_SOURCE_ROOT}/src/*"
+  "${CADRUMO_SOURCE_ROOT}/docs/*" "${CADRUMO_SOURCE_ROOT}/dev/docs/*"
   "${CADRUMO_SOURCE_ROOT}/native/platforms/*.json")
+list(APPEND user_docs_inputs ${user_docs_source_inputs})
 list(FILTER user_docs_inputs EXCLUDE REGEX "/(__pycache__|\\.git)/|\\.pyc$|\\.lock$|/docs/_build/|/dev/docs/(.*/)?tests/")
 # Documentation scenarios import source test-support modules and their helpers.
 # Retain that tree so fixture changes invalidate the compiled site too.

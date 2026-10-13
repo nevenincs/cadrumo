@@ -72,7 +72,7 @@ def python_invokes_git(source: str) -> bool:
         for node in ast.walk(tree)
         if isinstance(node, ast.ImportFrom)
         for alias in node.names
-        if alias.asname
+        if (alias.asname is not None and alias.asname)
     }
     for node in ast.walk(tree):
         if not isinstance(node, ast.Call):

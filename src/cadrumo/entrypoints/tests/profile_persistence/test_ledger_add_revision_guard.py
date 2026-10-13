@@ -20,9 +20,9 @@ from ....adapters.persistence.storage.sql.secure_object_records import (
 )
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.ledger.action_ports import LedgerActionPorts
-from ....application.ledger.actions_manual import create_manual_transaction
 from ....application.ledger.models import ManualLedgerTransactionCommand
 from ....application.ledger.persistence_ports import LedgerPersistenceConflictError
+from ....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from ....core.secure_object_write import SecureObjectWrite
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState

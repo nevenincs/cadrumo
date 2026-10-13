@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import re
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from io import BytesIO
@@ -30,7 +30,7 @@ _PDF_TEXT_BACKEND_LOGGERS: Final = ("pdfminer", "pdfplumber")
 
 
 @contextmanager
-def quiet_pdf_text_backend_logging() -> Iterator[None]:
+def quiet_pdf_text_backend_logging() -> Generator[None]:
     """Hold the PDF text backends' own logging at WARNING for one read.
 
     pdfminer emits a DEBUG record per parsed token. Only ``configure_logging``

@@ -25,6 +25,7 @@ use tauri::{
 use zeroize::Zeroizing;
 
 use process::Children;
+pub(crate) use wire::Presence;
 use wire::{ProfileCreateResult, ProfileList, SignInResult, SignInStatus, SignOutResult};
 
 /// The header that names a profile by its label, percent-encoded as UTF-8:
@@ -116,6 +117,12 @@ impl SignIn {
             children: Children::new(launch.diagnostics.clone()),
             observation: observation::Observer::default(),
         }
+    }
+
+    /// The digest-verified canonical CLI, for a caller that supervises its
+    /// own long-lived child.
+    pub(crate) fn cli(&self) -> Result<ChildConfiguration> {
+        self.child.clone()
     }
 
     pub(crate) async fn read_status(self: &Arc<Self>) -> Result<SignInStatus> {

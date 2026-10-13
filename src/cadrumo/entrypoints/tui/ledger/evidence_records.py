@@ -67,7 +67,7 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
                 tr(_RECORD_STATUS_LOCALE_KEYS[record.status]),
                 key=record.evidence_id,
             )
-        if not self._records:
+        if not (self._records is not None and self._records):
             self.query_one("#ledger-evidence-record-detail", Static).update(tr("tui.ledger.evidence.records_empty"))
 
     async def _read_readiness(self) -> LedgerReaderReadinessV1 | None:
@@ -192,7 +192,7 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
                 if draft.suggested_kind is not None:
                     self.query_one("#ledger-evidence-kind", Select).value = draft.suggested_kind.value
                 counterparty = self.query_one("#ledger-evidence-counterparty", Input)
-                if not counterparty.value and draft.supplier_name:
+                if not counterparty.value and (draft.supplier_name is not None and draft.supplier_name):
                     counterparty.value = draft.supplier_name
         finally:
             self.reading = False

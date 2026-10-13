@@ -86,7 +86,7 @@ def confirmation_table(fields: tuple[ModeloFormField, ...], language: OutputLang
     table.add_column(tr("tui.modelo.workbench.bulk_confirm.column.value"), no_wrap=True, justify="right")
     for field in fields:
         table.add_row(
-            f"[{field.box}]" if field.box else "",
+            f"[{field.box}]" if (field.box is not None and field.box) else "",
             field.label.text,
             value_text(CasillaListEntry(field), language),
         )

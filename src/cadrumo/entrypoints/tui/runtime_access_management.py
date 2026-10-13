@@ -349,7 +349,7 @@ class RuntimeAccessManagementScreen(_RuntimeAccessActionsMixin, ModalScreen[None
 
     def _on_inventory_closed(self, screen: RuntimeAutomationInventoryScreen, lost: bool | None) -> None:
         """A closed child cannot restore a lost parent admission."""
-        if lost or screen.access_lost:
+        if (lost is not None and lost) or screen.access_lost:
             self._lose_access()
 
     def _binding_is_current(self) -> bool:

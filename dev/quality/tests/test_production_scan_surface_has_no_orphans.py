@@ -58,7 +58,7 @@ def _absolute_target(node: ast.ImportFrom, here: str, is_package: bool) -> str |
     anchor = parts[: len(parts) - node.level + (1 if is_package else 0)]
     if not anchor:
         return None
-    tail: list[str] = [node.module] if node.module else []
+    tail: list[str] = [node.module] if (node.module is not None and node.module) else []
     return ".".join(anchor + tail)
 
 
@@ -133,7 +133,7 @@ def _statically_imported(sources: dict[Path, str]) -> set[str]:
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom):
                 target = _absolute_target(node, here, is_package)
-                if target:
+                if target is not None and target:
                     imported.add(target)
             elif isinstance(node, ast.Import):
                 imported.update(alias.name for alias in node.names)

@@ -701,7 +701,7 @@ class ExportRecordDefinition(RegistryModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _repeat_matches_field_family(self) -> ExportRecordDefinition:
-        if failure := self.repeat_field_family_failure():
+        if (failure := self.repeat_field_family_failure()) is not None and failure:
             raise RegistryValidationError(failure)
         validate_export_record_components(self)
         return self

@@ -161,7 +161,10 @@ def _fact_path(call: ast.Call) -> str | None:
 
 def _profile_fact_paths(container: ast.Tuple | ast.List) -> frozenset[str]:
     return frozenset(
-        path for element in container.elts if isinstance(element, ast.Call) if (path := _fact_path(element))
+        path
+        for element in container.elts
+        if isinstance(element, ast.Call)
+        if ((path := _fact_path(element)) is not None and path)
     )
 
 

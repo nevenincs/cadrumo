@@ -119,7 +119,7 @@ def project_ledger_llm_writer_result(
             profile_id=operand.request.profile_id,
             transaction=LedgerTransactionProjection.from_payload(payload.transaction),
             deduction_fact_kind=result.transaction.deduction_fact_kind.value
-            if result.transaction.deduction_fact_kind
+            if (result.transaction.deduction_fact_kind is not None and result.transaction.deduction_fact_kind)
             else None,
             investment_asset_id=result.transaction.investment_asset_id,
             review_status=payload.review_status,

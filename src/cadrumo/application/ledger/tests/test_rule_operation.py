@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator, Iterable
+from collections.abc import AsyncGenerator, Iterable
 from contextlib import asynccontextmanager
 from datetime import UTC, date, datetime, timedelta, timezone
 from types import SimpleNamespace
@@ -456,7 +456,7 @@ class _FenceProbe:
         self.entries = 0
 
     @asynccontextmanager
-    async def irreversible_section(self) -> AsyncIterator[None]:
+    async def irreversible_section(self) -> AsyncGenerator[None]:
         assert not self.active
         self.active = True
         self.entries += 1

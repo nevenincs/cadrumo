@@ -446,7 +446,11 @@ class DeclaracionesRegisterSession:
             ejercicio=declaration.ejercicio,
         )
         selected = next((item for item in current if item.expediente_id == declaration.expediente_id), None)
-        if selected is None or selected.period != declaration.period or not selected.justificante_link_text:
+        if (
+            selected is None
+            or selected.period != declaration.period
+            or not (selected.justificante_link_text is not None and selected.justificante_link_text)
+        ):
             raise SedeNavigationError("AEAT declarations register no longer exposes the selected period's receipt")
         return await capture_row_pdf_artefact(
             context=self._context,

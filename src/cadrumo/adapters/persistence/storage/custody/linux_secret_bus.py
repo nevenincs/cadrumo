@@ -155,7 +155,11 @@ class DeadlineSecretBus:
             raise AutomationCustodyError(code)
         if reply.header.message_type is not MessageType.method_return:
             raise invalid_secret_reply()
-        if self.owner and destination is None and reply.header.fields.get(HeaderFields.sender) != self.owner:
+        if (
+            (self.owner is not None and self.owner)
+            and destination is None
+            and reply.header.fields.get(HeaderFields.sender) != self.owner
+        ):
             raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
         if not isinstance(reply.body, tuple):
             raise invalid_secret_reply()
@@ -166,7 +170,11 @@ class DeadlineSecretBus:
         if sys.platform != "linux":
             raise AutomationCustodyError(AutomationCustodyCode.UNSUPPORTED)
         (owner,) = secret_reply_body(self.call(BUS_PATH, BUS, "GetNameOwner", "s", (SERVICE,), destination=BUS), 1)
-        if not isinstance(owner, str) or not owner.startswith(":") or (self.owner and owner != self.owner):
+        if (
+            not isinstance(owner, str)
+            or not owner.startswith(":")
+            or ((self.owner is not None and self.owner) and owner != self.owner)
+        ):
             raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
         (uid,) = secret_reply_body(self.call(BUS_PATH, BUS, "GetConnectionUnixUser", "s", (owner,), destination=BUS), 1)
         if type(uid) is not int or uid != os.getuid():

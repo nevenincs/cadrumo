@@ -186,7 +186,7 @@ class RuntimeLoginScreen(
                 if remaining_seconds is not None
                 else tr("tui.runtime_login.refused")
             )
-            if remedy := runtime_unavailable_remedy(code):
+            if (remedy := runtime_unavailable_remedy(code)) is not None and remedy:
                 message = f"{message} {remedy}"
             self.query_one("#runtime-login-status", PinnedStatusBar).show_error(
                 message if code is None else f"{message} ({code})"
@@ -220,7 +220,7 @@ class RuntimeLoginScreen(
         if not valid_reference:
             return
         proof = self._proof_input(method, credential)
-        if method in {RuntimeLoginMethod.PASSWORD, RuntimeLoginMethod.API_KEY} and not proof:
+        if method in {RuntimeLoginMethod.PASSWORD, RuntimeLoginMethod.API_KEY} and not (proof is not None and proof):
             self.query_one("#runtime-login-status", PinnedStatusBar).show_error(
                 tr("tui.runtime_login.credential_required")
             )

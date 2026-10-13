@@ -307,7 +307,12 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
         if row is not None:
             summary = None if row.declaration is None else row.declaration.summary
             details.update(
-                row.key + ("\n" + summary.technical_reason if summary is not None and summary.technical_reason else "")
+                row.key
+                + (
+                    "\n" + summary.technical_reason
+                    if summary is not None and (summary.technical_reason is not None and summary.technical_reason)
+                    else ""
+                )
             )
 
     def _restore_declaration_focus(self, _: None) -> None:

@@ -519,7 +519,7 @@ def test_native_bus_startup_verifies_fixed_root_peer_bounds_handshake_and_closes
     assert library.closed == ([] if defect == "untrusted_root_peer" else [21])
     assert connection.detached == (defect in (None, "startup_timeout"))
     assert library.waits == ([1_000_000] if defect in (None, "startup_timeout") else [])
-    assert not bus.bus.value
+    assert not (bus.bus.value is not None and bus.bus.value)
 
 
 @pytest.mark.skipif(sys.platform != "linux", reason="requires Linux PIDFD and real logind desktop session")
@@ -611,9 +611,9 @@ def _require_native_desktop(native: linux_logind_native._NativeLogin, pidfd: int
         result = native.library.sd_pidfd_get_session(pidfd, ctypes.byref(session))
         if result in (-errno.ENODATA, -errno.ENOSYS, -errno.EOPNOTSUPP):
             pytest.skip("current native peer has no logind session or PIDFD login facility")
-        assert result >= 0 and session.value
+        assert result >= 0 and (session.value is not None and session.value)
         identity = ctypes.cast(session, ctypes.c_char_p).value
-        assert identity
+        assert identity is not None and identity
         for symbol, supported in (
             ("sd_session_get_class", (b"user",)),
             ("sd_session_get_type", (b"x11", b"wayland")),
@@ -627,7 +627,7 @@ def _require_native_desktop(native: linux_logind_native._NativeLogin, pidfd: int
                 result = query(identity, ctypes.byref(value))
                 if result == -errno.ENODATA:
                     pytest.skip("native session lacks the required class/type/state prerequisite")
-                assert result >= 0 and value.value
+                assert result >= 0 and (value.value is not None and value.value)
                 observed = ctypes.cast(value, ctypes.c_char_p).value
                 if observed not in supported:
                     pytest.skip("current native session is outside active logind user x11/wayland support")
@@ -651,7 +651,7 @@ def test_native_peer_without_a_logind_session_refuses_and_keeps_borrowed_pidfd_o
         try:
             result = native.library.sd_pidfd_get_session(pidfd, ctypes.byref(session))
         finally:
-            if session.value:
+            if session.value is not None and session.value:
                 native.libc.free(session)
         if result >= 0:
             pytest.skip("native peer belongs to a logind session; requires the no-session context")
@@ -731,7 +731,7 @@ def test_native_fixed_system_bus_handshake_and_nonexistent_session_refuse() -> N
             ),
         ):
             pytest.fail("synthetic service unexpectedly exists")
-    assert not bus.bus.value
+    assert not (bus.bus.value is not None and bus.bus.value)
     with pytest.raises(RuntimeRefusalError) as refused:
         native.session(f"cadrumo{uuid4().hex}")
     assert refused.value.reason is RuntimeRefusalCode.UNAVAILABLE

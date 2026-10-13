@@ -8,7 +8,7 @@ tests of executor behavior; it never returns an operand to the executor.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 
@@ -49,7 +49,7 @@ async def deliver_financial_operand(
     identity: OperationIdentity,
     declaration: OperationTransientFinancialOperandDeclarationV1,
     operand: BaseModel,
-) -> AsyncIterator[BoundTypedFinancialOperandAccess]:
+) -> AsyncGenerator[BoundTypedFinancialOperandAccess]:
     """Bind an exact batch through real grant, baseline and one-shot custody checks."""
     lock = asyncio.Lock()
 

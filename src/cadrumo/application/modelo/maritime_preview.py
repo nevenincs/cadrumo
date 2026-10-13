@@ -143,7 +143,7 @@ def maritime_facts_from_active_profile() -> MaritimeWorkerFacts:
 
     def _raw(path: str) -> str | None:
         raw = fact_value(record, path)
-        return raw.strip() if raw else None
+        return raw.strip() if (raw is not None and raw) else None
 
     def _bool(path: str) -> bool:
         return _bool_from_raw(fact_value(record, path))

@@ -85,7 +85,7 @@ def register_certificate_source(
     record = CertificateSourceRecord(
         name=normalized_name,
         certificate_path=str(certificate_path),
-        friendly_name=friendly_name.strip() if friendly_name else None,
+        friendly_name=friendly_name.strip() if (friendly_name is not None and friendly_name) else None,
         registered_at=now(),
     )
     sources = dict(auth.certificate_sources)

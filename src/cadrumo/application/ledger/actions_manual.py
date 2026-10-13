@@ -154,31 +154,6 @@ class PreparedManualTransaction:
     event: BucketEvent
 
 
-def create_manual_transaction(
-    command: ManualLedgerTransactionCommand,
-    *,
-    ports: LedgerActionPorts,
-    occurred_at: datetime | None = None,
-    currency_normalizer: CurrencyNormalizationService | None = None,
-    require_revision_guard: bool = False,
-) -> ManualLedgerTransactionResult:
-    """Persist one manual ledger transaction in the command's bucket.
-
-    Returns a :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionResult`
-    with the created transaction and associated bucket event.
-    """
-    prepared = prepare_manual_transaction(
-        command,
-        ports=ports,
-        occurred_at=occurred_at,
-        currency_normalizer=currency_normalizer,
-        require_revision_guard=require_revision_guard,
-    )
-    if isinstance(prepared, ManualLedgerTransactionResult):
-        return prepared
-    return commit_manual_transaction(prepared, ports=ports)
-
-
 def prepare_manual_transaction(
     command: ManualLedgerTransactionCommand,
     *,
@@ -1999,8 +1974,12 @@ def _raw_field_values(command: ManualLedgerTransactionCommand) -> dict[str, str]
         "irpf_category": command.irpf_category or "",
         "usage_ratio_id": command.usage_ratio_id or "",
         "prorrata_reference": command.prorrata_reference or "",
-        "art_104_tres_exclusion": command.art_104_tres_exclusion.value if command.art_104_tres_exclusion else "",
-        "input_classification": command.input_classification.value if command.input_classification else "",
+        "art_104_tres_exclusion": command.art_104_tres_exclusion.value
+        if (command.art_104_tres_exclusion is not None and command.art_104_tres_exclusion)
+        else "",
+        "input_classification": command.input_classification.value
+        if (command.input_classification is not None and command.input_classification)
+        else "",
         "prorrata_sector_id": command.prorrata_sector_id or "",
         "purchase_invoice_evidence_id": command.purchase_invoice_evidence_id or "",
         "attachment_ids": ",".join(command.attachment_ids),
@@ -2031,7 +2010,6 @@ __all__ = [
     "PreparedManualTransaction",
     "attach_manual_transaction_evidence",
     "commit_manual_transaction",
-    "create_manual_transaction",
     "detach_manual_transaction_attachments",
     "get_manual_transaction",
     "ledger_transaction_payload",

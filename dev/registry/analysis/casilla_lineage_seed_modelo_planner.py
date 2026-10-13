@@ -55,7 +55,7 @@ class _ModeloPlanner:
             and all(self.state.role_counts[revision][role] == 1 for revision in pair)
         ):
             return _role_derived(role)
-        if role is not None and not self.state.members.get(_role_derived(role)):
+        if role is not None and not bool(self.state.members.get(_role_derived(role))):
             return _role_derived(role)
         return _slug(previous.id)
 

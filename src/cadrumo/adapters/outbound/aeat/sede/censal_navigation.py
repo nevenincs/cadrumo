@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Literal
 from urllib.parse import urlsplit
@@ -47,7 +47,7 @@ def assert_censal_consultation_request(policy: RemoteStateGuardPolicy, method: s
 
 
 @asynccontextmanager
-async def _consultation_requests(page: Page, policy: RemoteStateGuardPolicy) -> AsyncIterator[None]:
+async def _consultation_requests(page: Page, policy: RemoteStateGuardPolicy) -> AsyncGenerator[None]:
     violations: list[dict[str, str]] = []
 
     async def guard(route: Route) -> None:

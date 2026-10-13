@@ -114,7 +114,7 @@ def _parent_role(
     parents: dict[int, ast.AST],
     scopes: dict[int, str],
 ) -> str | None:
-    if isinstance(parent, ast.keyword) and parent.arg:
+    if isinstance(parent, ast.keyword) and (parent.arg is not None and parent.arg):
         return parent.arg
     if isinstance(parent, ast.arguments):
         return _default_parameter_role(current, parent, parents)

@@ -236,7 +236,7 @@ class ModeloValidator:
             if value.kind is ModeloValueKind.EMPTY and not casilla.required:
                 continue
             if not casilla.formula_input_casilla_ids:
-                if value.formula_trace_casilla_ids:
+                if value.formula_trace_casilla_ids is not None and value.formula_trace_casilla_ids:
                     out.append(self._divergence(value.casilla_id))
                 continue
             if value.kind is not ModeloValueKind.COMPUTED:

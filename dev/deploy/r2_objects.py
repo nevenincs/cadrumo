@@ -16,7 +16,7 @@ import mimetypes
 import threading
 import time
 import uuid
-from collections.abc import Callable, Iterable, Iterator, Mapping
+from collections.abc import Callable, Generator, Iterable, Mapping
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -235,7 +235,7 @@ def list_keys(bucket: R2Bucket, prefix: str) -> set[str]:
     token: str | None = None
     while True:
         query = {"list-type": "2", "prefix": prefix, "max-keys": "1000"}
-        if token:
+        if token is not None and token:
             query["continuation-token"] = token
         status, payload = _request(bucket, method="GET", path=f"/{quote(bucket.name, safe='')}", query=query)
         if status != 200:
@@ -244,7 +244,7 @@ def list_keys(bucket: R2Bucket, prefix: str) -> set[str]:
         keys.update(node.text or "" for node in document.iter(f"{_S3_NAMESPACE}Key"))
         truncated = (document.findtext(f"{_S3_NAMESPACE}IsTruncated") or "").strip() == "true"
         token = document.findtext(f"{_S3_NAMESPACE}NextContinuationToken")
-        if not truncated or not token:
+        if not truncated or not (token is not None and token):
             return keys
 
 
@@ -357,7 +357,7 @@ def copy_public_object(source: R2Bucket, destination: R2Bucket, key: str, etag: 
 
 
 @contextmanager
-def deployment_lock(bucket: R2Bucket) -> Iterator[None]:
+def deployment_lock(bucket: R2Bucket) -> Generator[None]:
     """Serialize local and CI publishers with an atomic, non-expiring lease.
 
     A crashed publisher leaves the lock in place; an operator must inspect the

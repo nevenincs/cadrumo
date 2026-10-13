@@ -41,7 +41,7 @@ def member(root: Path, relative: str) -> Path:
 def validate_payload(root: Path, identity_file: Path, desktop: str | None = None) -> None:
     """Require the payload to match the requested target, channel and release."""
     expected = json.loads(identity_file.read_text(encoding="utf-8"))
-    if desktop and not re.fullmatch(r"[A-Za-z0-9_./-]+", desktop):
+    if (desktop is not None and desktop) and not re.fullmatch(r"[A-Za-z0-9_./-]+", desktop):
         raise ValueError("Desktop executable must use a safe payload-relative path")
     manifest_file = member(root, "data/package-manifest.json")
     manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
@@ -57,10 +57,10 @@ def validate_payload(root: Path, identity_file: Path, desktop: str | None = None
         file = member(root, name)
         if not file.is_file() or digest(file) != checksum:
             raise ValueError(f"Payload file is missing or modified: {name}")
-    if desktop and desktop not in manifest["files"]:
+    if (desktop is not None and desktop) and desktop not in manifest["files"]:
         raise ValueError("Desktop executable must belong to the verified payload inventory")
-    declared = desktop_image(manifest["layout"]) if desktop else None
-    if desktop and (declared is None or desktop != declared.package_path):
+    declared = desktop_image(manifest["layout"]) if (desktop is not None and desktop) else None
+    if (desktop is not None and desktop) and (declared is None or desktop != declared.package_path):
         raise ValueError(
             "Only the desktop application image the payload's platform mapping declares receives desktop registration"
         )
@@ -198,7 +198,7 @@ def _prepare_fresh(payload: Path, identity_file: Path, root: Path, build: Path, 
     if target.startswith("linux-"):
         destination = root / "opt" / value["package_name"]
     elif target.startswith("macos-"):
-        if not desktop or "/" in desktop:
+        if not (desktop is not None and desktop) or "/" in desktop:
             raise ValueError("A macOS application bundle requires a root-level desktop executable")
         destination = root / f"{value['name']}.app" / "Contents/MacOS"
     elif versioned:
@@ -235,7 +235,7 @@ def _prepare_fresh(payload: Path, identity_file: Path, root: Path, build: Path, 
             + "\n",
             encoding="utf-8",
         )
-    if target.startswith("linux-") and desktop:
+    if target.startswith("linux-") and (desktop is not None and desktop):
         applications = root / "usr/share/applications"
         applications.mkdir(parents=True)
         (applications / f"{value['application_id']}.desktop").write_text(
@@ -274,10 +274,10 @@ def _prepare_fresh(payload: Path, identity_file: Path, root: Path, build: Path, 
             agent_file.parent.mkdir(parents=True, exist_ok=True)
             agent_file.write_bytes(agent.contents)
             verify_agent(agent_file.read_bytes(), identity, manager)
-    if target.startswith("windows-") and (desktop or versioned):
+    if target.startswith("windows-") and ((desktop is not None and desktop) or versioned):
         wix = Element("Wix", xmlns="http://wixtoolset.org/schemas/v4/wxs")
         fragment = SubElement(wix, "Fragment")
-        if desktop:
+        if desktop is not None and desktop:
             menu = SubElement(fragment, "StandardDirectory", Id="ProgramMenuFolder")
             folder = SubElement(menu, "Directory", Id="CADRUMO_MENU", Name=value["name"])
         else:
@@ -289,7 +289,7 @@ def _prepare_fresh(payload: Path, identity_file: Path, root: Path, build: Path, 
             Bitness="always64",
             Guid=str(uuid5(UUID(value["upgrade_code"]), "start-menu")).upper(),
         )
-        if desktop:
+        if desktop is not None and desktop:
             shortcut = SubElement(
                 component,
                 "Shortcut",
@@ -312,7 +312,7 @@ def _prepare_fresh(payload: Path, identity_file: Path, root: Path, build: Path, 
             Value="[INSTALL_ROOT]",
             KeyPath="yes",
         )
-        if desktop:
+        if desktop is not None and desktop:
             SubElement(component, "RemoveFolder", Id="CADRUMO_REMOVE_MENU", On="uninstall")
         if versioned:
             SubElement(

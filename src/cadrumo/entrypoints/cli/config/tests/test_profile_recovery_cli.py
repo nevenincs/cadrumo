@@ -15,7 +15,7 @@ from __future__ import annotations
 import json
 import os
 import threading
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager, suppress
 from dataclasses import replace
 from pathlib import Path
@@ -53,7 +53,7 @@ _PROFILE = "Recovery Operator"
 
 
 @contextmanager
-def _runtime_profile_storage(*, tmp_path: Path) -> Iterator[Path]:
+def _runtime_profile_storage(*, tmp_path: Path) -> Generator[Path]:
     """Isolate storage and serve a native runtime worker so login and custody verbs are admitted."""
     with native_cli_profile_scope(tmp_path) as fixture:
         fixture.storage_root.mkdir(parents=True, exist_ok=True)
@@ -161,7 +161,7 @@ def _assert_recovery_code_shape(code: str) -> None:
 @contextmanager
 def _capturing_descriptors(
     respond: Callable[[bytes], bytes] = lambda document: document,
-) -> Iterator[tuple[int, int, list[str]]]:
+) -> Generator[tuple[int, int, list[str]]]:
     """Play the operator's part of the handoff while keeping the code for a later reset.
 
     ``scripted_registration_descriptors`` only echoes the document back; a

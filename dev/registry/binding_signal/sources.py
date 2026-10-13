@@ -113,7 +113,7 @@ def _collect_revision(root: Path, revision_dir: Path, inventory: RawInventory) -
     record: _RawRevisionRecord = {"metadata": {}, "families": {}, "locations": {}}
     revision_file = revision_dir / "revision.toml"
     revision_data, error = load_toml(revision_file)
-    if error:
+    if error is not None and error:
         inventory.parse_failures.append({"path": relative(revision_file, root), "error": error})
     elif revision_data is not None:
         record["metadata"] = dict(revision_table(revision_data, revision_dir.name))
@@ -132,7 +132,7 @@ def _collect_revision_families(
         for fragment in sorted(family_dir.glob("*.toml")):
             inventory.family_file_counts[family] += 1
             data, error = load_toml(fragment)
-            if error:
+            if error is not None and error:
                 inventory.parse_failures.append({"path": relative(fragment, root), "error": error})
                 continue
             if data is None:

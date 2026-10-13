@@ -87,7 +87,7 @@ def test_listener_closes_on_every_abandoned_flow(monkeypatch: pytest.MonkeyPatch
 
     def browser_open(url: str, **kwargs: object) -> bool:
         parsed = urlsplit(url)
-        assert parsed.hostname == "127.0.0.1" and parsed.port
+        assert parsed.hostname == "127.0.0.1" and (parsed.port is not None and parsed.port)
         address.append((parsed.hostname, parsed.port))
         if mode in {"partial", "oversized"}:
             connection = socket.create_connection(address[0], timeout=1)
@@ -150,7 +150,9 @@ def test_real_flow_uses_fresh_s256_and_never_logs_callback(
             assert set(query["scope"][0].split()) == set(REQUIRED_SCOPES)
             assert request["redirect_uri"] == query["redirect_uri"]
             redirect = urlsplit(query["redirect_uri"][0])
-            assert redirect.hostname and redirect.port
+            assert (redirect.hostname is not None and redirect.hostname) and (
+                redirect.port is not None and redirect.port
+            )
             # No replay can be received after the first callback, even during token validation.
             with pytest.raises(OSError):
                 socket.create_connection((redirect.hostname, redirect.port), timeout=0.1)

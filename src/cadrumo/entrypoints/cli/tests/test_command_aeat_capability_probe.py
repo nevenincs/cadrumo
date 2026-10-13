@@ -48,7 +48,7 @@ import json
 import os
 import socket
 import sys
-from collections.abc import Callable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Generator, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
@@ -398,7 +398,7 @@ def _import_sites(code: CodeType) -> dict[int, tuple[str, int, tuple[str, ...]]]
 
 
 @contextmanager
-def observe_aeat_contact(handler: CodeType) -> Iterator[AeatContactObservation]:
+def observe_aeat_contact(handler: CodeType) -> Generator[AeatContactObservation]:
     """Record the handler's Sede-client imports, Sede-client calls and the handler's start."""
     modules = frozenset(_SEDE_CLIENT_MODULES)
     codes = sede_client_codes()

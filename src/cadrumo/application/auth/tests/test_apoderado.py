@@ -148,7 +148,7 @@ class TestConfigure:
             )
         error = excinfo.value
         assert "NOTANIF" not in str(error)
-        assert not error.context
+        assert not (error.context is not None and error.context)
         assert error.translated_message == "errors.refused.refused_apoderado_invalid_represented_nif"
         assert get_registered_error_code(error).code == "REFUSED_APODERADO_INVALID_REPRESENTED_NIF"
         assert str(error) == error.translated_message, f"the raise site carries an authored sentence: {str(error)!r}"

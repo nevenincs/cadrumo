@@ -9,7 +9,7 @@ wall clock are explicit ports the test holds.
 from __future__ import annotations
 
 import time
-from collections.abc import Iterator
+from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from dataclasses import dataclass, field
@@ -254,7 +254,7 @@ class StoredSignInRuntime:
 @contextmanager
 def stored_sign_in_runtime(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *, signed_in: bool = True
-) -> Iterator[StoredSignInRuntime]:
+) -> Generator[StoredSignInRuntime]:
     """Serve one profile from a real runtime, with the person's sign-in stored when ``signed_in``."""
     root = tmp_path / "cadrumo-storage"
     root.mkdir()

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import base64
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -104,7 +104,7 @@ class TestAdministrationOwner:
         return self.delivery
 
     @contextmanager
-    def administration_guard(self) -> Iterator[None]:
+    def administration_guard(self) -> Generator[None]:
         with self.guard:
             yield
 
@@ -134,7 +134,7 @@ def administration_subject(
     os_owner_id: str = "synthetic-owner",
     installation_id: UUID | None = None,
     profile_label: str = "Enrollment tests",
-) -> Iterator[AdministrationSubject]:
+) -> Generator[AdministrationSubject]:
     """Use a real encrypted profile; only native store and OS/transport observations are doubled."""
     create, decode = profile_authority_contexts()
     with isolated_profile_storage_root(tmp_path=tmp_path):

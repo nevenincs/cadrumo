@@ -41,7 +41,7 @@ def import_modelo_filing_record(
     """Submit exactly one local input mode and restore the established CLI result."""
     if (source_file is not None) == (casilla_values is not None):
         raise typer.BadParameter("filing-record import accepts either a spreadsheet or casilla values")
-    if source_file is None and not casilla_values:
+    if source_file is None and not (casilla_values is not None and casilla_values):
         raise typer.BadParameter("filing-record import requires casilla values or a spreadsheet")
     direct_values = tuple(
         sorted(

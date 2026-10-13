@@ -3,7 +3,7 @@
 A command that works with no profile open asks the runtime to do the work
 instead of doing it in this process, so the terminal interface and MCP reach
 the same act. The command builds the act's request, calls
-:func:`run_installation_act`, and projects the reply onto its own envelope. A
+:func:`run_installation_act_if_runtime`, and projects the reply onto its own envelope. A
 refusal is raised as the error the in-process command would have raised, so
 the shared command boundary renders it in the envelope unchanged.
 """
@@ -43,41 +43,6 @@ _UNANSWERED_REFUSALS: Final = frozenset({RuntimeRefusalCode.UNAVAILABLE, Runtime
 """The outcomes of opening a connection that a later attempt can cure: busy, timed out, or unreadable."""
 
 
-def run_installation_act[ReplyT: RuntimeInstallationCompleted](
-    request: RuntimeInstallationActRequest,
-    reply_type: type[ReplyT],
-    *,
-    secret: bytearray | None = None,
-    hold_secret: InstallationSecretHolder | None = None,
-    timeout: float | None = None,
-) -> ReplyT:
-    """Send ``request`` to the running runtime and return the act's completed reply.
-
-    Args:
-        request: The act's request, naming this frontend.
-        reply_type: The reply the act's contract declares for it.
-        secret: The act's one secret frame, built with
-            ``installation_passphrase_document``, for an act that takes one.
-            It is consumed and wiped.
-        hold_secret: Receives the act's delivered secret, for an act that
-            delivers one, and returns the copy read back.
-        timeout: Seconds for the whole exchange; the act's own deadline when omitted.
-
-    Raises:
-        CliRecordedOperationError: The act was refused with a registered error,
-            or stopped on a fault with no public facts.
-        CliOperationStillRunningError: The wait ended, or the connection was
-            lost, after an act that changes records was sent, so its outcome is
-            unknown and its reader tells it.
-        CliRefusedBoundaryError: The runtime refused admission.
-        RuntimeRefusalError: The runtime is not running, or the transport refused.
-    """
-    from ...adapters.local_runtime.installation_client import open_installed_installation_client
-
-    client = asyncio.run(open_installed_installation_client())
-    return _settle(client, request, reply_type, secret=secret, hold_secret=hold_secret, timeout=timeout)
-
-
 def run_installation_act_if_runtime[ReplyT: RuntimeInstallationCompleted](
     request: RuntimeInstallationActRequest,
     reply_type: type[ReplyT],
@@ -98,7 +63,11 @@ def run_installation_act_if_runtime[ReplyT: RuntimeInstallationCompleted](
     Raises:
         CliRefusedBoundaryError: A runtime may own the root but could not be
             reached, or refused admission. Nothing was sent in the first case.
-        As :func:`run_installation_act` otherwise.
+        CliRecordedOperationError: The handler refused the act with a registered
+            error, or stopped on a fault with no public facts.
+        CliOperationStillRunningError: The connection stopped answering after
+            an act that changes records was sent, leaving its outcome unknown.
+        RuntimeRefusalError: The transport refused for another reason.
     """
     from ...adapters.local_runtime.installation_client import (
         installed_runtime_presence,

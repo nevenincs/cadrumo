@@ -128,7 +128,7 @@ class LoginKeychain:
         result = ctypes.c_void_p()
         try:
             require_keychain_status(native_integer(function(*args, ctypes.byref(result))))
-            if not result.value:
+            if not (result.value is not None and result.value):
                 raise keychain_refusal(AutomationCustodyCode.UNAVAILABLE)
             yield result.value
         finally:
@@ -220,7 +220,7 @@ class LoginKeychain:
 
     def _acl_authorizations(self, acl: int) -> frozenset[str]:
         pointer = self.authorizations(acl)
-        if not pointer:
+        if not (pointer is not None and pointer):
             raise keychain_refusal()
         try:
             self.cf.require_type(pointer, self.cf.array_type)
@@ -252,14 +252,14 @@ class LoginKeychain:
                     )
                 )
             )
-            if not description.value:
+            if not (description.value is not None and description.value):
                 raise keychain_refusal()
             self.cf.require_type(description.value, self.cf.string_type)
-            if applications.value:
+            if applications.value is not None and applications.value:
                 self.cf.require_type(applications.value, self.cf.array_type)
             yield applications.value, description.value
         finally:
-            if applications.value:
+            if applications.value is not None and applications.value:
                 self.cf.release(applications.value)
             if description.value:
                 self.cf.release(description.value)
@@ -348,7 +348,7 @@ class LoginKeychain:
                     self.cf.read_data(self.cf.field(record, self._constant("kSecValueData"))),
                 )
             finally:
-                if result.value:
+                if result.value is not None and result.value:
                     self.cf.release(result.value)
 
     def update(self, identity: KeychainItemIdentity, value: bytes) -> int:

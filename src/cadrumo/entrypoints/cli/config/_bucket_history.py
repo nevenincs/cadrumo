@@ -42,7 +42,13 @@ def _resolve_bucket_history_filters(
     until_dt = _parse_bucket_history_instant(until, flag="--until")
     if since_dt is not None and until_dt is not None and since_dt > until_dt:
         raise typer.BadParameter(tr("cli.config.profile.history.since_after_until"))
-    return selected, since_dt, until_dt, object_id.strip() if object_id else None, actor.strip() if actor else None
+    return (
+        selected,
+        since_dt,
+        until_dt,
+        object_id.strip() if (object_id is not None and object_id) else None,
+        actor.strip() if (actor is not None and actor) else None,
+    )
 
 
 def _bucket_history_lines(*, profile_label: str, events: tuple[BucketEvent, ...]) -> list[str]:
@@ -129,7 +135,7 @@ def _resolve_profile_history_target(profile: str | None, *, ctx: typer.Context) 
 
 def _parse_bucket_event_types(event_type: list[str] | None) -> tuple[BucketEventType, ...] | None:
     """Parse the ``--event-type`` flag tuple, raising :class:`typer.BadParameter` on unknown values."""
-    if not event_type:
+    if not (event_type is not None and event_type):
         return None
 
     parsed: list[BucketEventType] = []
@@ -150,7 +156,7 @@ def _parse_bucket_event_types(event_type: list[str] | None) -> tuple[BucketEvent
 
 def _parse_bucket_history_instant(raw: str | None, *, flag: str) -> datetime | None:
     """Parse one ``--since`` / ``--until`` value into a :class:`datetime`, or ``None`` when absent."""
-    if not raw:
+    if not (raw is not None and raw):
         return None
 
     try:

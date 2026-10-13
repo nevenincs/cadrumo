@@ -737,7 +737,7 @@ def test_232_populated_related_parties_remain_separate_rows() -> None:
     mirrors = {
         str(cell.casilla_id): cell.address
         for cell in plan.formula_cells
-        if cell.address.tab is TabName.FORM and cell.casilla_id
+        if cell.address.tab is TabName.FORM and (cell.casilla_id is not None and cell.casilla_id)
     }
     for i in (1, 2):
         assert mirrors[f"vinculada-{i}-nif"].row == mirrors[f"vinculada-{i}-importe"].row
@@ -1050,7 +1050,7 @@ def test_current_registry_generates_form_geometry_and_xlsx(case: DemoCase) -> No
     assert any("pendiente de revisión" in value for value in form_text)
     for page in snapshot.revision.form_layouts[0].pages:
         heading = lookup_translation(page.heading_key, locale="es") or page.official_heading
-        if heading:
+        if heading is not None and heading:
             assert any(heading in value for value in form_text)
     workbook = load_workbook(BytesIO(materialize_export_plan(plan)), data_only=False)
     form = workbook[TabName.FORM.value]

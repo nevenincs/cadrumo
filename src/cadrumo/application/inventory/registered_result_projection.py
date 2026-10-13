@@ -206,7 +206,7 @@ def _validate_ledger_success(
         OperationEffect.UPDATED if result is not None and result.bucket_event_ids else OperationEffect.NONE
     )
     if operation_id == "closing-authority.record":
-        expected_effect = OperationEffect.UPDATED if private.closing_changed else OperationEffect.NONE
+        expected_effect = OperationEffect.UPDATED if (private.closing_changed is True) else OperationEffect.NONE
     result = _require_inventory_ledger_execution(
         private,
         result=result,

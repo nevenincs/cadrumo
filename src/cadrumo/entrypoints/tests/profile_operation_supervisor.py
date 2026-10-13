@@ -10,7 +10,7 @@ through the same supervisor every registered operation runs through.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterator, Sequence
+from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import timedelta
@@ -144,7 +144,7 @@ class SupervisedProfile:
 def supervised_profile(
     tmp_path: Path,
     composed: Sequence[tuple[OperationDefinition, OperationPublicDefinitionRegistrationV1]],
-) -> Iterator[SupervisedProfile]:
+) -> Generator[SupervisedProfile]:
     """Register and sign in to one profile, and compose the supervisor over ``composed``."""
     create_context, decode_context = profile_authority_contexts()
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:

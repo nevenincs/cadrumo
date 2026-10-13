@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import inspect
 import sys
-from collections.abc import Iterator, Mapping
+from collections.abc import Generator, Mapping
 from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from enum import Enum
@@ -122,7 +122,7 @@ def seeded_probe_runtime(
     extra_facts: tuple[UserProfileFact, ...] = (),
     certificate_path: Path | None = None,
     client_native_store: AutomationSecretStore | None = None,
-) -> Iterator[PortableHumanCliRuntime]:
+) -> Generator[PortableHumanCliRuntime]:
     """Register real password custody and own admitted, observable CLI execution.
 
     Registration's governed-fact lease ends before the joined runtime captures
@@ -159,7 +159,7 @@ def seeded_probe_runtime(
 
 
 @contextmanager
-def synthetic_aeat_credentials(workdir: Path) -> Iterator[Path]:
+def synthetic_aeat_credentials(workdir: Path) -> Generator[Path]:
     """Configure a real, self-signed certificate naming the seeded profile's taxpayer.
 
     A session-gated AEAT flow refuses at credential loading when nothing is

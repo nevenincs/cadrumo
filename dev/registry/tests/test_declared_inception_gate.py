@@ -112,7 +112,9 @@ def _unauthored_before_earliest_edition(modelo: ModeloDefinition) -> ModeloDefin
 
 def test_every_inception_statement_agrees_with_the_authored_editions() -> None:
     """No declared inception postdates an edition, and every debt statement names the earliest one."""
-    disagreements = [finding for modelo in _live_modelos() if (finding := _inception_disagreement(modelo))]
+    disagreements = [
+        finding for modelo in _live_modelos() if ((finding := _inception_disagreement(modelo)) is not None and finding)
+    ]
 
     assert disagreements == []
 

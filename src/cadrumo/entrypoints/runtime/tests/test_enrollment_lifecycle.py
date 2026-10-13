@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import time
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import replace
 from datetime import timedelta
@@ -75,7 +75,7 @@ class _ResumeOwner:
         self.guard = RLock()
 
     @contextmanager
-    def administration_guard(self) -> Iterator[None]:
+    def administration_guard(self) -> Generator[None]:
         """Fence one canonical resume against this test's custody transition."""
         with self.guard:
             yield

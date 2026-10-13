@@ -34,7 +34,6 @@ from cadrumo.application.aggregation.ledger_filing_snapshot import (
 from cadrumo.application.ledger.actions_classification import bulk_classify_from_csv
 from cadrumo.application.ledger.actions_manual import (
     attach_manual_transaction_evidence,
-    create_manual_transaction,
     update_manual_transaction_fields,
 )
 from cadrumo.application.ledger.models import (
@@ -50,6 +49,7 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.errors import TransactionValidationError
 from cadrumo.domain.transactions.models import Transaction
 
+from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from .classification_origin_support import (
     AGENT,
     BUCKET_ID,

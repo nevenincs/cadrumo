@@ -91,7 +91,7 @@ def _passphrase_text(secret: memoryview) -> str:
     text: str | None = None
     with suppress(UnicodeError):
         text = bytes(secret).decode("utf-8")
-    if not text:
+    if not (text is not None and text):
         raise ProfileRecoveryError(translated_message="application.user_profile.errors.passphrase_current_rejected")
     return text
 

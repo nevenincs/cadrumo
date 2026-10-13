@@ -119,10 +119,12 @@ def config_storage_check(
     if result.issues:
         lines.extend(("", f"{_label('issues', 'Issues')} ({len(result.issues)}):"))
         for issue in result.issues:
+            area = issue.area
+            area_label = _value_label("area", area.value) if area is not None and area else "-"
             lines.extend(
                 (
                     f"  - {issue.kind.value}",
-                    f"    {_label('area', 'Area')}: {_value_label('area', issue.area.value) if issue.area else '-'}",
+                    f"    {_label('area', 'Area')}: {area_label}",
                     f"    {_label('path', 'Path')}: {issue.path}",
                     f"    {_label('detail', 'Detail')}: {issue.detail}",
                 ),

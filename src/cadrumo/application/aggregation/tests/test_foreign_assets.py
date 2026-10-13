@@ -215,7 +215,11 @@ def _registered(
     if isinstance(lot, ForeignAssetIngestObservation):
         code = MODELO_720_FOREIGN_ASSET_CLASS_CODES[lot.asset_class]
         country, identifier = lot.country, lot.asset_external_id
-        ceased_on = date.fromisoformat(lot.valuation_event_date) if lot.valuation_event_date else None
+        ceased_on = (
+            date.fromisoformat(lot.valuation_event_date)
+            if (lot.valuation_event_date is not None and lot.valuation_event_date)
+            else None
+        )
     else:
         code, country, identifier = lot.asset_class_code, lot.country_code, lot.asset_identifier
         ceased_on = lot.valuation_event_date

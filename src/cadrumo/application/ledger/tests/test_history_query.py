@@ -10,7 +10,7 @@ the logic lived in the CLI adapter.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Iterator
+from collections.abc import Generator, Iterable
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -233,7 +233,7 @@ def _transaction_event(object_id: str) -> BucketEvent:
 
 
 @contextmanager
-def _stored(*transactions: Transaction) -> Iterator[TransactionCatalogueCoCommitWriterProtocol]:
+def _stored(*transactions: Transaction) -> Generator[TransactionCatalogueCoCommitWriterProtocol]:
     """Build a deterministic catalogue through the application read protocol."""
     yield _InMemoryTransactionRepository(
         bucket_id=_BUCKET,

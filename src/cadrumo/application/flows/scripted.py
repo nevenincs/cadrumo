@@ -116,7 +116,11 @@ def _refuse_rejected_answer(state: FlowState, page_key: str) -> None:
         translated_message="application.flows.errors.scripted_answer_rejected",
         context={
             "page_key": page_key,
-            "message_keys": tuple(verdict.message_key for verdict in state.verdicts[page_key] if verdict.message_key),
+            "message_keys": tuple(
+                verdict.message_key
+                for verdict in state.verdicts[page_key]
+                if (verdict.message_key is not None and verdict.message_key)
+            ),
         },
     )
 

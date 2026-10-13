@@ -530,7 +530,7 @@ def _missing_required_flags(
     missing: list[str] = []
     for question in _required_flag_questions(flow):
         if question.id not in canonical or not canonical[question.id]:
-            if question.default:
+            if question.default is not None and question.default:
                 canonical[question.id] = question.default
             else:
                 missing.append(question.id)
@@ -1474,7 +1474,7 @@ def _wizard_validation_bad(flow: WizardFlow, error: ValidationError) -> typer.Ba
         "; ".join(mapped_details) if mapped_details else tr("application.wizard.errors.command_input_invalid_fallback")
     )
     message = tr("application.wizard.errors.command_input_invalid", details=details)
-    first_flag = next((flag for _detail, flag in rendered if flag), None)
+    first_flag = next((flag for _detail, flag in rendered if (flag is not None and flag)), None)
     if first_flag is not None:
         return typer.BadParameter(message, param_hint=f"'{first_flag}'")
     return typer.BadParameter(message)

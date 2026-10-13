@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 import time
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
@@ -56,7 +56,7 @@ def installation_client(endpoint: WindowsRuntimeEndpoint) -> RuntimeInstallation
 
 
 @contextmanager
-def serving_profile_acts(root: Path) -> Iterator[WindowsRuntimeEndpoint]:
+def serving_profile_acts(root: Path) -> Generator[WindowsRuntimeEndpoint]:
     """Serve the profile acts over ``root`` with a credential store held in memory."""
     native = MemoryNativePort()
     endpoint = WindowsRuntimeEndpoint(storage_root=root)
@@ -67,7 +67,7 @@ def serving_profile_acts(root: Path) -> Iterator[WindowsRuntimeEndpoint]:
 
 
 @contextmanager
-def served_installation(tmp_path: Path) -> Iterator[ServedInstallation]:
+def served_installation(tmp_path: Path) -> Generator[ServedInstallation]:
     """Create one profile with the ``create`` verb, close its session, and serve its root."""
     root = tmp_path / "cadrumo-storage"
     root.mkdir()

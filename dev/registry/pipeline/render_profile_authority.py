@@ -426,7 +426,7 @@ def _validate_composite_segment(
 
 
 def _composite_sentences(segment: str | None) -> tuple[str, ...]:
-    if not segment:
+    if not (segment is not None and segment):
         return ()
     sentences = cast(list[str], re.split(r"(?<=[.;])\s+", segment.strip()))
     parts = (part.strip(" .;") for part in sentences)

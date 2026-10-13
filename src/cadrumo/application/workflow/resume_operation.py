@@ -77,7 +77,11 @@ def _validate_resume_receipt_identity(receipt: OperationTerminalReceipt, profile
 
 
 def _validate_resume_receipt_outcome(receipt: OperationTerminalReceipt, refusal_code: str | None) -> None:
-    condition = OperationTerminalCondition.REFUSED if refusal_code else OperationTerminalCondition.SUCCEEDED
+    condition = (
+        OperationTerminalCondition.REFUSED
+        if (refusal_code is not None and refusal_code)
+        else OperationTerminalCondition.SUCCEEDED
+    )
     if receipt.effect is not OperationEffect.NONE:
         raise ValueError("resume result differs from its terminal receipt")
     if receipt.condition is not condition:

@@ -92,7 +92,7 @@ def _read_single_revision_table(path: Path, expected_revision_id: RevisionId) ->
     if "modelo" in fragment_data:
         raise RegistryLoadError(f"{path}: revision fragment must not declare [modelo]; that lives in manifest.toml")
     file_revisions = _as_toml_table(fragment_data.get("revisions"))
-    if not file_revisions:
+    if not (file_revisions is not None and file_revisions):
         raise RegistryLoadError(f"{path}: revision fragment must declare [revisions.<id>]")
     if len(file_revisions) != 1:
         raise RegistryLoadError(f"{path}: revision fragment must declare exactly one revision")

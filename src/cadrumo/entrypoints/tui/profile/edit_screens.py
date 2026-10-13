@@ -26,7 +26,7 @@ def field_help_text(field: ProfileFieldView) -> str:
     A field without catalogue help is explained by its schema description,
     so no question is ever asked without saying what it is about.
     """
-    if field.help:
+    if field.help is not None and field.help:
         headings = (
             tr("flows.manager.help.what"),
             tr("flows.manager.help.why"),
@@ -280,7 +280,7 @@ def _field_edit_dialog(screen: FieldEditScreen) -> ComposeResult:
 
 def _field_edit_content(screen: FieldEditScreen) -> ComposeResult:
     """Compose the prompt, input, refusal, and optional help disclosure."""
-    if screen._question_context:
+    if screen._question_context is not None and screen._question_context:
         yield Static(screen._question_context, id="edit-context", markup=False)
     yield Label(screen._prompt, id="edit-label")
     yield Static(

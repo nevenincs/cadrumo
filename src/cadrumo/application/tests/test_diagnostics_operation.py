@@ -6,7 +6,7 @@ claims native acceptance.
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import UTC, date, datetime, timedelta
 from types import SimpleNamespace
@@ -133,7 +133,7 @@ class _Commit:
         self.refuse = False
 
     @asynccontextmanager
-    async def irreversible_section(self) -> AsyncIterator[None]:
+    async def irreversible_section(self) -> AsyncGenerator[None]:
         if self.refuse:
             raise ProfileAccessRefusedError(AccessDenialCode.GRANT_INACTIVE)
         assert not self.active

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator, Mapping
+from collections.abc import AsyncGenerator, Mapping
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -171,7 +171,7 @@ def test_single_capture_revocation_after_remote_fetch_discards_bytes(
             authority_operation: PinnedAuthorityOperation | None = None,
             effect_guard: FiledEffectGuard | None = None,
             on_session_write: SessionWriteReporter | None = None,
-        ) -> AsyncIterator[Register]:
+        ) -> AsyncGenerator[Register]:
             assert operation == "live-filed-read"
             assert effect_guard is DeniedGuard
             assert on_session_write is None
@@ -704,7 +704,7 @@ class _AccountingRegister:
         )
 
     @asynccontextmanager
-    async def open_register(self, **_kwargs: object) -> AsyncIterator[_AccountingRegister]:
+    async def open_register(self, **_kwargs: object) -> AsyncGenerator[_AccountingRegister]:
         """Supply one explicit synthetic acquisition session, without authentication or network."""
         self.opened += 1
         yield self

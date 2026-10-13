@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
 from types import SimpleNamespace
 from typing import cast
@@ -33,7 +33,7 @@ class _Recorder:
         self.result: object | None = None
 
     @asynccontextmanager
-    async def irreversible_section(self) -> AsyncIterator[None]:
+    async def irreversible_section(self) -> AsyncGenerator[None]:
         assert not self.active
         self.active = True
         self.timeline.append(("enter", asyncio.current_task()))

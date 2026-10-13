@@ -12,7 +12,7 @@ import os
 import sys
 import textwrap
 import threading
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Generator
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Final, override
@@ -75,7 +75,7 @@ _GENERATED_INDEX_PREFIXES: Final[tuple[str, ...]] = ("pagefind/index/", "pagefin
 
 
 @contextlib.contextmanager
-def _replacing(target: object, name: str, value: object) -> Iterator[None]:
+def _replacing(target: object, name: str, value: object) -> Generator[None]:
     """Replace ``target.name`` for the scope, restoring the original on exit."""
     original = getattr(target, name)
     setattr(target, name, value)
@@ -856,7 +856,7 @@ class _StaticResponseHandler(http.server.BaseHTTPRequestHandler):
 
 
 @contextlib.contextmanager
-def _serving(*, status: int = 200, body: bytes = b"") -> Iterator[str]:
+def _serving(*, status: int = 200, body: bytes = b"") -> Generator[str]:
     """Run a real localhost HTTP server for the duration of the block; yield its URL."""
     handler_cls = type("_Handler", (_StaticResponseHandler,), {"response_status": status, "response_body": body})
     server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler_cls)

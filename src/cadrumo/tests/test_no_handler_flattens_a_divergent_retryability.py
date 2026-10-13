@@ -81,7 +81,7 @@ def _raised_names(handler: ast.ExceptHandler) -> set[str]:
         if isinstance(inner, ast.Raise) and isinstance(inner.exc, ast.Call):
             target = inner.exc.func
             name = target.id if isinstance(target, ast.Name) else getattr(target, "attr", None)
-            if name:
+            if name is not None and name:
                 raised.add(name)
     return raised
 

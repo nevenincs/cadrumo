@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Sequence
+from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -52,7 +52,7 @@ class PortableApiCliRuntime:
 
 
 @contextmanager
-def portable_api_cli_runtime(tmp_path: Path) -> Iterator[PortableApiCliRuntime]:
+def portable_api_cli_runtime(tmp_path: Path) -> Generator[PortableApiCliRuntime]:
     """Use the native API fixture's real request/approval/delivery/possession flow.
 
     Only OS credential storage and transport are synthetic. No enrollment stage

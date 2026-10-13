@@ -230,7 +230,7 @@ def _registration(
         "EntryPoint": "[INSTALL_ROOT]" + manager,
         "ManagerAnchorVersion": value.version,
     }
-    if desktop:
+    if desktop is not None and desktop:
         values["DesktopAnchorVersion"] = value.version
     for name, text in values.items():
         SubElement(
@@ -255,7 +255,7 @@ def _registration(
             Value='"[INSTALL_ROOT]' + manager + '" --sign-in',
             KeyPath="yes",
         )
-    if desktop:
+    if desktop is not None and desktop:
         menu = SubElement(package, "StandardDirectory", Id="ProgramMenuFolder")
         folder = SubElement(menu, "Directory", Id="CADRUMO_MENU", Name=_literal(value.name))
         shortcut_component = _component(folder, feature, product, "menu/desktop")

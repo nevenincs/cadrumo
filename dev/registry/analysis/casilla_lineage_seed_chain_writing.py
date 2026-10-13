@@ -99,7 +99,7 @@ def _existing_chain_conflict(
     }
     if holders:
         return f"chain {chain!r} is already carried by {sorted(holders)[:2]} in this pair"
-    if prev_chain is None and succ_chain is None and planner.state.members.get(chain):
+    if prev_chain is None and succ_chain is None and bool(planner.state.members.get(chain)):
         return f"derived chain id {chain!r} already names another chain in this modelo"
     return None
 

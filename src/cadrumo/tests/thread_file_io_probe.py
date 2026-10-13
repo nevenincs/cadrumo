@@ -32,7 +32,7 @@ def _audit(event: str, args: tuple[object, ...]) -> None:
     if event not in _FILE_EVENTS:
         return
     active = _recordings.get(threading.get_ident())
-    if not active:
+    if not (active is not None and active):
         return
     target = args[0] if args else None
     if isinstance(target, int) or target is None:

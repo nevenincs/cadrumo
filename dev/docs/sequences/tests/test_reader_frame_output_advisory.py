@@ -12,7 +12,7 @@ well under it as text, which is exactly the remedy the advisory recommends.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
@@ -344,7 +344,7 @@ def _refresh_readiness_fixture(
         events.append("authority")
 
     @contextmanager
-    def execute_fresh(actual: ParsedSequence) -> Iterator[SequenceTranscript]:
+    def execute_fresh(actual: ParsedSequence) -> Generator[SequenceTranscript]:
         assert actual == sequence
         events.append("execute")
         try:

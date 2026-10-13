@@ -45,7 +45,7 @@ def run_ledger_split(
                 for child in children
             ),
             reason=reason,
-            actor=actor if actor else None,
+            actor=actor if (actor is not None and actor) else None,
         )
     except ValidationError as exc:
         raise ledger_validation_bad(exc) from exc

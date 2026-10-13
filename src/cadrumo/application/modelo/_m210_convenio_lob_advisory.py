@@ -78,7 +78,7 @@ def _m210_convenio_lob_advisory_finding(
     beneficial-ownership article when the row carries one.
     """
     country = profile.country_of_fiscal_residence
-    if not country:
+    if not (country is not None and country):
         return None
 
     try:

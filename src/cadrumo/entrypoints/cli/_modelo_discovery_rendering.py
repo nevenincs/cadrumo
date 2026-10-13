@@ -36,7 +36,7 @@ def data_inventory_section_lines(title: str, rows: tuple[DataInventoryCasilla, .
     lines = [f"{title}\t{len(rows)}"]
     for entry in rows:
         label = entry.label
-        suffix = f"\t({entry.binding_source})" if entry.binding_source else ""
+        suffix = f"\t({entry.binding_source})" if (entry.binding_source is not None and entry.binding_source) else ""
         lines.append(f"  {entry.number}\t{label}{suffix}")
     return lines
 

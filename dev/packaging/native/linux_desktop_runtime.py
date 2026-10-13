@@ -175,10 +175,13 @@ def package_requirements(package_format: Literal["deb", "rpm"]) -> tuple[str, ..
     clauses = []
     for requirement in REQUIREMENTS:
         if package_format == "deb":
-            suffix = f" (>= {requirement.minimum})" if requirement.minimum else ""
+            suffix = f" (>= {requirement.minimum})" if (requirement.minimum is not None and requirement.minimum) else ""
             clauses.append(" | ".join(name + suffix for name in requirement.deb))
         else:
-            clauses.append(requirement.rpm + (f" >= {requirement.minimum}" if requirement.minimum else ""))
+            clauses.append(
+                requirement.rpm
+                + (f" >= {requirement.minimum}" if (requirement.minimum is not None and requirement.minimum) else "")
+            )
     return tuple(clauses)
 
 

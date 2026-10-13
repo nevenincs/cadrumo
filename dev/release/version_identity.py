@@ -615,9 +615,9 @@ def forge_arguments(repository: str | None, own_source_commit: str | None) -> tu
     comparison, so an argument that could only ever exempt too much is an
     operator error reported before the first probe.
     """
-    if not repository:
+    if not (repository is not None and repository):
         raise VersionIdentityError("--repository is required to ask the forge which refs own this version")
-    if not own_source_commit:
+    if not (own_source_commit is not None and own_source_commit):
         raise VersionIdentityError(
             "--own-source-commit is required: the tag and release being published already exist, and "
             "without the commit they sit on they cannot be told apart from a foreign ref",

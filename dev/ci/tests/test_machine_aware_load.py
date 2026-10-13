@@ -522,7 +522,9 @@ def test_dropping_the_exclusion_lets_a_real_lane_actually_collect_a_member() -> 
     reaching = _lanes_reaching_members_with_exclusions_dropped(_REPOSITORY_ROOT, members, member_markers)
     assert reaching, "no lane reaches a harness member even with exclusions dropped"
     lane = reaching[0]
-    assert lane.marker_expression, f"lane `{lane.source}/{lane.recipe}` carries no marker expression to replay"
+    assert lane.marker_expression is not None and lane.marker_expression, (
+        f"lane `{lane.source}/{lane.recipe}` carries no marker expression to replay"
+    )
 
     result = run_command(
         [

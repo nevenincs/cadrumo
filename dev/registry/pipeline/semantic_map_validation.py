@@ -433,7 +433,9 @@ def validate_declared_parts(
         field = fields_by_anchor.get(key)
         if field is None:
             continue
-        printed = _collapse_whitespace(" ".join(text for text in (field.normalized_description, field.content) if text))
+        printed = _collapse_whitespace(
+            " ".join(text for text in (field.normalized_description, field.content) if (text is not None and text))
+        )
         content = _collapse_whitespace(field.content or "")
         _validate_cell_parts(key, field, cell_entries, fields_by_anchor, printed=printed, content=content)
 

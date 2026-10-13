@@ -117,7 +117,11 @@ def test_the_mcp_frontend_is_refused_every_sign_in_session_and_key_act_and_keeps
             definition_id=PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID,
             subject_ref=f"profile:{runtime.profile_id}",
             payload_json=json.dumps(
-                {"profile_id": str(runtime.profile_id), "destination": str(tmp_path / "x.bundle"), "purpose": "portable_transfer"}
+                {
+                    "profile_id": str(runtime.profile_id),
+                    "destination": str(tmp_path / "x.bundle"),
+                    "purpose": "portable_transfer",
+                }
             ),
         )
         _persons_act(_refusal_of(lambda: agent.operation(submitted, deadline=time.monotonic() + 30)))

@@ -128,7 +128,7 @@ def _run(
             profile_id=client.profile_id,
             transaction_id=transaction_id,
             reason=reason,
-            actor=actor if actor else None,
+            actor=actor if (actor is not None and actor) else None,
         )
     except ValidationError as error:
         raise ledger_validation_bad(error) from error

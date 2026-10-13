@@ -262,7 +262,7 @@ class InstallationActScreen(AccountChromeScreen):
         passphrase: bytearray | None = None
         if self._offered.contract.takes_secret:
             passphrase = self._take_passphrase()
-            if not passphrase:
+            if not (passphrase is not None and passphrase):
                 with worded_in(self._locale):
                     status.show_error(tr("tui.installation.passphrase.required"))
                 self.query_one("#installation-passphrase", Input).focus()

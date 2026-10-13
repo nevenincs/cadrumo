@@ -117,7 +117,11 @@ def _storage_category_binding_names(tree: ast.AST) -> set[str]:
     names = {"StorageCategory"}
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom):
-            names.update(alias.asname for alias in node.names if alias.name == "StorageCategory" and alias.asname)
+            names.update(
+                alias.asname
+                for alias in node.names
+                if alias.name == "StorageCategory" and (alias.asname is not None and alias.asname)
+            )
     return names
 
 
@@ -351,7 +355,9 @@ def test_every_dormant_member_states_a_reason_and_really_is_dormant() -> None:
         if location.dormant_reason is None:
             continue
         assert location.dormant_reason.strip(), f"{location.category.value} declares an empty dormant reason"
-        names = {location.category.name} | ({location.settings_field} if location.settings_field else set())
+        names = {location.category.name} | (
+            {location.settings_field} if (location.settings_field is not None and location.settings_field) else set()
+        )
         for module in _production_sources():
             # A module that never spells either name cannot reference the
             # member, and the two walks below would both come back empty. The

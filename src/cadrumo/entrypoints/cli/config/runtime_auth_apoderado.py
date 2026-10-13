@@ -135,7 +135,7 @@ def clear_apoderado(ctx: typer.Context) -> bool:
     )
     projection = completed.projection
     cleared = projection.cleared
-    expected_effect = OperationEffect.UPDATED if cleared else OperationEffect.NONE
+    expected_effect = OperationEffect.UPDATED if (cleared is not None and cleared) else OperationEffect.NONE
     if (
         _apoderado_clear_terminal_invalid(completed, expected_effect)
         or _apoderado_clear_header_invalid(projection, client.profile_id, expected_effect)

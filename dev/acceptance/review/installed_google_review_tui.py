@@ -10,7 +10,7 @@ from __future__ import annotations
 import asyncio
 import json
 import re
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
@@ -182,7 +182,7 @@ async def _until[T](
 ) -> None:
     while not predicate():
         refused = None if refusal is None else refusal()
-        if refused:
+        if refused is not None and refused:
             _capture_public_failure(pilot.app, output_dir, stage=stage, reason=refused)
             raise GoogleReviewTuiAcceptanceError(f"TUI acceptance refused at {stage}; inspect failure.json")
         if monotonic() >= deadline:
@@ -192,7 +192,7 @@ async def _until[T](
 
 
 @asynccontextmanager
-async def _reject_failed_prepublication(app: CadrumoTuiApp, output_dir: Path) -> AsyncIterator[None]:
+async def _reject_failed_prepublication(app: CadrumoTuiApp, output_dir: Path) -> AsyncGenerator[None]:
     """Reject only this still-live session's untouched review after an acceptance failure."""
     try:
         yield

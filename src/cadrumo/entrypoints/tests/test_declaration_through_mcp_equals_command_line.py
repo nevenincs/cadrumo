@@ -37,7 +37,7 @@ import json
 import re
 import sys
 import time
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Generator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from decimal import Decimal
@@ -366,7 +366,7 @@ class _Prepared:
 
 
 @contextmanager
-def _fresh_profile(root: Path, monkeypatch: pytest.MonkeyPatch, *, signed_in: bool) -> Iterator[StoredSignInRuntime]:
+def _fresh_profile(root: Path, monkeypatch: pytest.MonkeyPatch, *, signed_in: bool) -> Generator[StoredSignInRuntime]:
     """Serve one new, empty profile from its own runtime and storage, selected as the installation's profile."""
     root.mkdir()
     failure: BaseException | None = None

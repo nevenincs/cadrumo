@@ -167,7 +167,11 @@ def _calculate_200(
             repository=obs_repo,
             iva_history_repository=IvaCompensationHistoryRepository(),
         ).binding_values
-    bound_binding_ids = {c.binding for c in snapshot.revision.casillas if c.input_kind.value == "bound" and c.binding}
+    bound_binding_ids = {
+        c.binding
+        for c in snapshot.revision.casillas
+        if c.input_kind.value == "bound" and (c.binding is not None and c.binding)
+    }
     carry_defaults = {bid: Decimal("0") for bid in bound_binding_ids}
     binding_values = {**carry_defaults, **prefilled, **relation_binding_values, **_PROFILE_DECIMAL_BINDINGS}
     inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)

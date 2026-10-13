@@ -137,7 +137,7 @@ class IvaCategoryCatalogue:
     def category_for_untdid_code(self, code: str) -> IvaCategory | None:
         """Project an EN 16931/UNTDID 5305 code through registry data."""
         token = self.untdid_categories.get(code)
-        return None if not token else self.require(token)
+        return None if not (token is not None and token) else self.require(token)
 
     def exclusion(self, modelo: Modelo, token: object) -> IvaCategoryExclusion | None:
         """Return how ``modelo`` treats operations of one category, or ``None`` when it declares them."""

@@ -89,9 +89,9 @@ def _imported_modules(tree: ast.AST, *, module_parts: tuple[str, ...]) -> set[st
         elif isinstance(node, ast.ImportFrom):
             if node.level:
                 base = module_parts[: len(module_parts) - node.level]
-                prefix = (*base, *(node.module.split(".") if node.module else ()))
+                prefix = (*base, *(node.module.split(".") if (node.module is not None and node.module) else ()))
             else:
-                prefix = tuple(node.module.split(".")) if node.module else ()
+                prefix = tuple(node.module.split(".")) if (node.module is not None and node.module) else ()
             if not prefix:
                 continue
             imported.add(".".join(prefix))

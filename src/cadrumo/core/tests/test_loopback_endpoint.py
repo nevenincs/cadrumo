@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ..loopback_endpoint import endpoint_host_is_loopback, endpoint_is_loopback
+from ..loopback_endpoint import endpoint_host_is_loopback
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -29,7 +29,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
     ],
 )
 def test_loopback_endpoints_are_accepted(url: str) -> None:
-    assert endpoint_is_loopback(url) is True
     assert endpoint_host_is_loopback(url) is True
 
 
@@ -70,7 +69,6 @@ def test_loopback_endpoints_are_accepted(url: str) -> None:
     ],
 )
 def test_other_endpoints_are_refused(url: str) -> None:
-    assert endpoint_is_loopback(url) is False
     assert endpoint_host_is_loopback(url) is False
 
 
@@ -86,7 +84,6 @@ def test_other_endpoints_are_refused(url: str) -> None:
     ],
 )
 def test_non_http_schemes_are_refused_even_with_a_loopback_host(url: str) -> None:
-    assert endpoint_is_loopback(url) is False
     assert endpoint_host_is_loopback(url) is False
 
 
@@ -98,6 +95,5 @@ def test_non_http_schemes_are_refused_even_with_a_loopback_host(url: str) -> Non
         "http://user:secret@[::1]:11434/api/chat",
     ],
 )
-def test_credentials_on_a_loopback_host_leave_the_host_loopback_but_not_the_authorisation(url: str) -> None:
+def test_credentials_on_a_loopback_host_leave_the_host_loopback(url: str) -> None:
     assert endpoint_host_is_loopback(url) is True
-    assert endpoint_is_loopback(url) is False

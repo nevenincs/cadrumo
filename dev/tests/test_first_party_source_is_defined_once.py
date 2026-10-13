@@ -182,7 +182,10 @@ def _imports_authority(tree: ast.Module, module: str) -> bool:
             if node.level:
                 anchor = package.split(".")
                 base = anchor[: len(anchor) - (node.level - 1)]
-                if ".".join([*base, *([node.module] if node.module else [])]) == _AUTHORITY_MODULE:
+                if (
+                    ".".join([*base, *([node.module] if (node.module is not None and node.module) else [])])
+                    == _AUTHORITY_MODULE
+                ):
                     return True
     return False
 

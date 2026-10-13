@@ -774,7 +774,9 @@ def project_oss_ioss_invoices_from_repositories(
         candidates=tuple(candidates),
         contributing_invoices=tuple(contributing),
         source_bucket_id=source_bucket_id,
-        catalogue_fingerprint=content_hash_hex(catalogue.model_dump(mode="json")) if source_bucket_id else None,
+        catalogue_fingerprint=content_hash_hex(catalogue.model_dump(mode="json"))
+        if (source_bucket_id is not None and source_bucket_id)
+        else None,
     )
 
 

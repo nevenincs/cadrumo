@@ -11,7 +11,7 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import Calculation
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.application.ledger.actions_manual import create_manual_transaction, update_manual_transaction
+from cadrumo.application.ledger.actions_manual import update_manual_transaction
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -20,6 +20,7 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.errors import TransactionValidationError
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile
 
+from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from .ledger_action_persistence_support import (
     BUCKET_ID as _BUCKET_ID,
 )

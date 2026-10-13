@@ -345,7 +345,11 @@ def test_a_row_stating_only_a_lineage_claim_moves_to_the_canonical_carrier(
     for edition in reversed(_delta_editions(pilot)):
         successor = pilot_before.revisions[edition.revision_id]
         predecessor = pilot_before.revisions[str(edition.predecessor)]
-        by_lineage = {casilla.continuidad_id: casilla for casilla in predecessor.casillas if casilla.continuidad_id}
+        by_lineage = {
+            casilla.continuidad_id: casilla
+            for casilla in predecessor.casillas
+            if (casilla.continuidad_id is not None and casilla.continuidad_id)
+        }
         for casilla in successor.casillas:
             inherited = by_lineage.get(casilla.continuidad_id)
             if inherited is None:
@@ -821,7 +825,9 @@ def test_apply_publishes_a_modelo_whose_proof_is_clean(
         str(edition.revision_id): None for edition in outcome.plan.editions
     }
     storage_baselines = {
-        str(revision.id): str(revision.casilla_storage_baseline) if revision.casilla_storage_baseline else None
+        str(revision.id): str(revision.casilla_storage_baseline)
+        if (revision.casilla_storage_baseline is not None and revision.casilla_storage_baseline)
+        else None
         for revision in published.revisions.values()
     }
     assert storage_baselines == {str(edition.revision_id): edition.predecessor for edition in outcome.plan.editions}

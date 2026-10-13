@@ -277,7 +277,12 @@ def configure_operator_auth(
         state=next_state,
         provider=listing.id,
         certificate_path=(
-            certificate_path or (Path(next_state.auth.certificate_path) if next_state.auth.certificate_path else None)
+            certificate_path
+            or (
+                Path(next_state.auth.certificate_path)
+                if (next_state.auth.certificate_path is not None and next_state.auth.certificate_path)
+                else None
+            )
         ),
         changed=changed,
     )
@@ -1039,7 +1044,11 @@ def _logout_event_provider_ids(
     return tuple(
         dict.fromkeys(
             (
-                *((current_provider,) if clears_session_state and current_provider else ()),
+                *(
+                    (current_provider,)
+                    if clears_session_state and (current_provider is not None and current_provider)
+                    else ()
+                ),
                 *intent.session_provider_ids,
             ),
         ),

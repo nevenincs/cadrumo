@@ -129,7 +129,7 @@ def _anchor(app: Sphinx) -> str:
     declared += [
         (str(filename), int(attributes.get("priority", _DEFAULT_PRIORITY)))
         for filename, attributes in app.registry.js_files
-        if filename
+        if (filename is not None and filename)
     ]
     declared += [
         (str(filename), int(attributes.get("priority", _CONFIGURED_PRIORITY)))

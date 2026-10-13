@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncGenerator, Callable
 from contextlib import AbstractAsyncContextManager, asynccontextmanager, contextmanager
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime, timedelta
@@ -364,7 +364,7 @@ def test_supervisor_binds_source_capture_to_exact_profile_and_projects_reconcili
             assert on_session_write is not None
 
             @asynccontextmanager
-            async def tracked_guard() -> AsyncIterator[None]:
+            async def tracked_guard() -> AsyncGenerator[None]:
                 nonlocal guard_depth, guard_entries
                 async with effect_guard():
                     guard_depth += 1

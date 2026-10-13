@@ -174,7 +174,7 @@ def _violation_rule(item: Mapping[str, object]) -> str:
     typed_context = cast(Mapping[str, object], context) if isinstance(context, Mapping) else None
     raised = typed_context.get("error") if typed_context is not None else None
     named = type(raised).__name__ if raised is not None else None
-    return f"{kind} ({named})" if named else kind
+    return f"{kind} ({named})" if (named is not None and named) else kind
 
 
 def internal_record_fault_context(

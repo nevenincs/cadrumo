@@ -9,7 +9,7 @@ projection adapter for every invocation.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import date
 from pathlib import Path
@@ -95,7 +95,7 @@ def state_projection_read_ports() -> StateProjectionReadPorts:
 
 
 @contextmanager
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+def authority_operation() -> Generator[PinnedAuthorityOperation]:
     """Lease one real generation-pinned bundled authority operation."""
 
     with bundled_indexed_authority().operation() as operation:

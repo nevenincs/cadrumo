@@ -122,7 +122,7 @@ def sign_in_remedy(code: str, facts: Mapping[str, Any] | None = None) -> str | N
     """
     if code == AccessDenialCode.PROFILE_MISMATCH.value:
         return PROFILE_CHANGED_REMEDY
-    if facts and "sign_in_keychain" in facts:
+    if (facts is not None and facts) and "sign_in_keychain" in facts:
         # No sign-in can be followed from this logon, so signing in again would change nothing.
         return KEYCHAIN_REMEDY
     return SIGN_IN_REMEDY if code in _ADMISSION_REFUSALS else None

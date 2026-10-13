@@ -27,7 +27,7 @@ import json
 import logging
 import os
 import time
-from collections.abc import Iterator, Mapping
+from collections.abc import Generator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -61,7 +61,7 @@ type FingerprintRows = tuple[tuple[str, int, int, str], ...]
 def verdict_cache_dir() -> Path:
     """Resolve the runner-local validation verdict directory."""
     override = os.environ.get(VERDICT_CACHE_DIR_ENV)
-    if override and override.strip():
+    if (override is not None and override) and override.strip():
         return resolve_storage_path(override, root=configured_storage_root(repository_root=REPO_ROOT))
     return dev_cache_dir("registry-validation-verdicts")
 
@@ -367,7 +367,7 @@ def _stamp_lock_handle(handle: int) -> None:
 
 
 @contextmanager
-def verdict_validation_lock(key: str, *, wait_seconds: float = _LOCK_WAIT_CEILING_SECONDS) -> Iterator[None]:
+def verdict_validation_lock(key: str, *, wait_seconds: float = _LOCK_WAIT_CEILING_SECONDS) -> Generator[None]:
     """Hold the cross-process lock for the first validation under ``key``.
 
     A caller checks :func:`is_validated` inside the lock, so a process that

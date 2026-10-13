@@ -195,7 +195,9 @@ def probe_authority(
         if result.status != "compiled"
     )
     references = Counter(
-        str(result.context["reference"]) for result in results if result.context and "reference" in result.context
+        str(result.context["reference"])
+        for result in results
+        if (result.context is not None and result.context) and "reference" in result.context
     )
     return {
         "schema_version": 1,

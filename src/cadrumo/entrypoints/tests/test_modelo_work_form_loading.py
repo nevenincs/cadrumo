@@ -17,7 +17,7 @@ imported AEAT draft supplied reads as AEAT data.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
@@ -128,7 +128,7 @@ class _Events:
 
 class _Cancellation:
     @asynccontextmanager
-    async def irreversible_section(self) -> AsyncIterator[None]:
+    async def irreversible_section(self) -> AsyncGenerator[None]:
         yield
 
 

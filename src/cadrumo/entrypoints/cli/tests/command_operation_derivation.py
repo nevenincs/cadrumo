@@ -226,12 +226,12 @@ def derive_command_operations(
     findings.extend(
         f"{symbol[0]}:{symbol[1]} submits an operation and no command reaches it"
         for symbol in accounted
-        if reading.submissions.get(symbol) and symbol not in reached_by_commands
+        if bool(reading.submissions.get(symbol)) and symbol not in reached_by_commands
     )
     return CommandOperationDerivation(
         operations=operations,
         operations_without_command=registered.difference(*operations.values()),
-        reached_submitters=frozenset(symbol for symbol in reached_by_commands if reading.submissions.get(symbol)),
+        reached_submitters=frozenset(symbol for symbol in reached_by_commands if bool(reading.submissions.get(symbol))),
         findings=tuple(sorted(set(findings))),
     )
 
@@ -250,7 +250,7 @@ def _settle(submission: Submission, ids_by_type: Mapping[Symbol, set[str]]) -> _
     payload_is_known = not payload.opaque and not payload.parameters
     by_type = frozenset[str]().union(*(ids_by_type.get(cls, ()) for cls in payload.types)) if payload_is_known else None
     if not identity.opaque and not identity.parameters:
-        consistent = identity.constants & by_type if by_type else frozenset[str]()
+        consistent = identity.constants & by_type if (by_type is not None and by_type) else frozenset[str]()
         return _Settled(operation_ids=consistent or identity.constants)
     family = by_type or identity.members
     if len(family) == 1:

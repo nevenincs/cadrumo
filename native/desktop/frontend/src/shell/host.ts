@@ -22,6 +22,7 @@ import type {
 import type { ProfileAccounts } from "./profiles";
 import type { AgentSession } from "./agentSession";
 import type { AgentViews } from "./agentViews";
+import type { ProviderSettings } from "./providerSettings";
 import type { ProfileViews } from "./views";
 
 export type TerminalKind = "console" | "python" | "tui";
@@ -93,10 +94,13 @@ export interface Host {
   /** What the agent column reads, where this host serves the agent.
    * Without it each of the column's views says it is not available yet. */
   readonly agent?: AgentViews;
-  /** Working with the agent: its state, the models it can run, consent,
-   * sending and the live stream. Without it the column can read but not
-   * send, and says so. */
+  /** Working with the agent: its state, the catalog of what can run it,
+   * sending, the live stream and what a reply waits on the person for.
+   * Without it the column can read but not send, and says so. */
   readonly agentSession?: AgentSession;
+  /** The signed-in profile's model providers and their keys, where this
+   * host offers them. A key is handed to it once and never comes back. */
+  readonly providerSettings?: ProviderSettings;
 }
 
 export class HostUnavailable extends Error {

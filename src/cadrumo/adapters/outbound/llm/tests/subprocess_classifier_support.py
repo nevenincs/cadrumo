@@ -73,7 +73,7 @@ class SubprocessLLMClassifier:
     @property
     def decided_by(self) -> str:
         """Return the ``classified_by`` identifier including the model when set."""
-        if self.model:
+        if self.model is not None and self.model:
             return f"llm:{self.name}:{self.model}"
         return f"llm:{self.name}"
 

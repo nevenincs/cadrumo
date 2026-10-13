@@ -405,7 +405,11 @@ async def test_installed_sdk_reconnects_tui_rotated_native_reference_and_cli_rev
                 for boundary, phase, operation_id, reason in tuple(refusals)
             ],
             "client_delivery": [
-                {"phase": phase, "elapsed_seconds": round(elapsed, 3), "refusal": code.value if code else None}
+                {
+                    "phase": phase,
+                    "elapsed_seconds": round(elapsed, 3),
+                    "refusal": code.value if (code is not None and code) else None,
+                }
                 for phase, elapsed, code in tuple(client_delivery)
             ],
         }
@@ -508,9 +512,9 @@ async def test_installed_sdk_reconnects_tui_rotated_native_reference_and_cli_rev
                     assert worker.identity.binding == profile.binding and worker.exact_session_admitted
                     assert worker.alive
                     if sys.platform == "linux":
-                        assert worker.linux_scope_owns_worker and worker.kernel_control_groups_match
+                        assert (worker.linux_scope_owns_worker is True) and (worker.kernel_control_groups_match is True)
                     else:
-                        assert worker.windows_job_owns_worker
+                        assert worker.windows_job_owns_worker is True
                     custody = await asyncio.to_thread(profile.server_custody_health)
                     assert custody.backend is backend and custody.runtime_uses_same_store
                     assert custody.binding == profile.binding and custody.wrapping_keys_valid
@@ -742,9 +746,9 @@ async def test_installed_sdk_reconnects_tui_rotated_native_reference_and_cli_rev
                     assert worker.identity.binding == profile.binding and worker.exact_session_admitted
                     assert worker.alive
                     if sys.platform == "linux":
-                        assert worker.linux_scope_owns_worker and worker.kernel_control_groups_match
+                        assert (worker.linux_scope_owns_worker is True) and (worker.kernel_control_groups_match is True)
                     else:
-                        assert worker.windows_job_owns_worker
+                        assert worker.windows_job_owns_worker is True
                     progress("rotated_sdk_read_enter")
                     result_request = await _private_read(sdk, profile.profile_id)
                     progress("rotated_sdk_read_exit")

@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import sys
 import time
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 from uuid import UUID, uuid4
@@ -67,7 +67,7 @@ _UNHELD_CODE = "a-code-nobody-was-given"
 
 
 @contextmanager
-def _running_runtime(tmp_path: Path, login: InstallationLogin) -> Iterator[tuple[WindowsRuntimeEndpoint, Path]]:
+def _running_runtime(tmp_path: Path, login: InstallationLogin) -> Generator[tuple[WindowsRuntimeEndpoint, Path]]:
     """Serve a storage root that holds no profile, yielding its endpoint and root."""
     root = tmp_path / "cadrumo-storage"
     root.mkdir()
@@ -79,7 +79,7 @@ def _running_runtime(tmp_path: Path, login: InstallationLogin) -> Iterator[tuple
 @contextmanager
 def _running_runtime_with_profile(
     tmp_path: Path, login: InstallationLogin
-) -> Iterator[tuple[WindowsRuntimeEndpoint, Path, UUID, RuntimeProfileConnections]]:
+) -> Generator[tuple[WindowsRuntimeEndpoint, Path, UUID, RuntimeProfileConnections]]:
     """Serve a storage root that holds one real encrypted profile, yielding that profile too."""
     root = tmp_path / "cadrumo-storage"
     root.mkdir()

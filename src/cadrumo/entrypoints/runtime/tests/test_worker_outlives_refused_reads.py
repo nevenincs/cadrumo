@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 import sys
 import time
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Generator
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -263,7 +263,7 @@ class _ServedUnits:
 
 
 @contextmanager
-def _served_units(tmp_path: Path) -> Iterator[_ServedUnits]:
+def _served_units(tmp_path: Path) -> Generator[_ServedUnits]:
     root = tmp_path / "cadrumo-storage"
     root.mkdir()
     endpoint = WindowsRuntimeEndpoint(storage_root=root)

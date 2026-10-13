@@ -794,7 +794,7 @@ class PullProgress(BaseModel):
     @property
     def percent(self) -> int | None:
         """Return whole-percent progress, or ``None`` when the total is not yet known."""
-        if not self.total_bytes or self.completed_bytes is None:
+        if not (self.total_bytes is not None and self.total_bytes) or self.completed_bytes is None:
             return None
         return min(100, int(self.completed_bytes * 100 / self.total_bytes))
 

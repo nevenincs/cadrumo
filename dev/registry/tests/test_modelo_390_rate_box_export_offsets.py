@@ -103,7 +103,11 @@ def _registry_rate_fields() -> dict[int, str]:
             if record.record_type != _BOX_RECORD_TYPE:
                 continue
             for field in record.fields:
-                if field.offset is not None and field.casilla_id and field.casilla_id.startswith(_CASILLA_PREFIX):
+                if (
+                    field.offset is not None
+                    and (field.casilla_id is not None and field.casilla_id)
+                    and field.casilla_id.startswith(_CASILLA_PREFIX)
+                ):
                     fields[field.offset] = field.casilla_id
     return fields
 

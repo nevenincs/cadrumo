@@ -63,8 +63,8 @@ def guide_paragraph_height(text: str) -> int:
 
 
 def _leaves(expression: FormulaExpression) -> set[str]:
-    result = {v for v in (expression.binding, expression.date_binding, expression.parameter) if v}
-    if expression.dispatch_table:
+    result = {v for v in (expression.binding, expression.date_binding, expression.parameter) if (v is not None and v)}
+    if expression.dispatch_table is not None and expression.dispatch_table:
         result.update(expression.dispatch_table.values())
     for argument in expression.args:
         result.update(_leaves(argument))
@@ -149,12 +149,12 @@ def _project_human_workbook[M: (SheetExportMetadata, SheetReviewMetadata, SheetT
                     if isinstance(block, FormContextFieldBlock):
                         owner = resolve_form_context_field(revision, block)
                         heading = lookup_translation(block.heading_key, locale="es") or block.official_heading
-                        if owner.binding is not None and heading:
+                        if owner.binding is not None and (heading is not None and heading):
                             labels.setdefault(owner.binding, heading)
     row_bindings = {column.binding for row_set in plan.row_sets for column in row_set.columns}
     for binding in revision.bindings:
         declared_label = lookup_translation(binding_locale_key(str(modelo_id), binding.id, "label"), locale="es")
-        if declared_label:
+        if declared_label is not None and declared_label:
             labels[binding.id] = declared_label
             continue
         if binding.id in labels:
@@ -167,14 +167,18 @@ def _project_human_workbook[M: (SheetExportMetadata, SheetReviewMetadata, SheetT
         selector = binding_row_set_selector(binding) if binding.id in row_bindings else None
         if selector is not None:
             heading = lookup_translation(f"sheets.detalle.headers.{selector.row_field}", locale="es")
-            if heading:
+            if heading is not None and heading:
                 labels[binding.id] = heading
         owners = [c.label for c in casillas.values() if c.binding == binding.id]
         if owners:
             labels[binding.id] = " / ".join(dict.fromkeys(owners))
         elif isinstance(binding.provider, PreviousFilingProvider):
             provider = binding.provider
-            keys = provider.source_casilla_ids or ((provider.source_casilla_id,) if provider.source_casilla_id else ())
+            keys = provider.source_casilla_ids or (
+                (provider.source_casilla_id,)
+                if (provider.source_casilla_id is not None and provider.source_casilla_id)
+                else ()
+            )
             names = [
                 key
                 if key.isdigit()
@@ -224,8 +228,8 @@ def _project_human_workbook[M: (SheetExportMetadata, SheetReviewMetadata, SheetT
                 raise CalcSheetsEngineError("human workbook legal reference is missing")
             parts.append(
                 reference.document_id
-                + (f", artículo {reference.article}" if reference.article else "")
-                + (f", {reference.section}" if reference.section else "")
+                + (f", artículo {reference.article}" if (reference.article is not None and reference.article) else "")
+                + (f", {reference.section}" if (reference.section is not None and reference.section) else "")
                 + f" — {reference.permalink}"
             )
         return "\n".join(dict.fromkeys(parts))
@@ -283,7 +287,7 @@ def _project_human_workbook[M: (SheetExportMetadata, SheetReviewMetadata, SheetT
                 elif address.column == 3 and isinstance(value, str) and value in {b.id for b in revision.bindings}:
                     value = label(value)
             elif address.tab is TabName.TARIFFS:
-                if cell.parameter:
+                if cell.parameter is not None and cell.parameter:
                     value = label(cell.parameter)
                 elif isinstance(value, str) and value in {b.id for b in revision.bindings}:
                     value = label(value)

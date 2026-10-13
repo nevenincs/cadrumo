@@ -19,7 +19,6 @@ from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support imp
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.actions_manual import (
     attach_manual_transaction_evidence,
-    create_manual_transaction,
     link_manual_transaction_invoice,
     update_manual_transaction,
     update_manual_transaction_fields,
@@ -31,6 +30,7 @@ from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalo
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.errors import TransactionValidationError
 
+from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from .ledger_action_persistence_support import (
     BUCKET_ID as _BUCKET_ID,
 )

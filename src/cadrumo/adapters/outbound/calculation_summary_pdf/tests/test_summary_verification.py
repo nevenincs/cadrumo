@@ -141,7 +141,9 @@ def test_an_edited_metadata_identifier_is_refused(genuine: bytes) -> None:
     verification = _verify(_mutated(genuine, edit))
 
     assert verification.reasons == (Reason.METADATA_MISMATCH,)
-    assert [check.detail for check in verification.checks if check.reason] == ["CalculationRevisionId"]
+    assert [check.detail for check in verification.checks if (check.reason is not None and check.reason)] == [
+        "CalculationRevisionId"
+    ]
 
 
 def test_two_figures_swapped_on_the_page_are_refused(genuine: bytes) -> None:
@@ -208,7 +210,9 @@ def test_a_text_layer_that_reads_another_character_for_the_hyphen_is_refused(gen
 
     assert verification.outcome is Outcome.REFUSED
     assert set(verification.reasons) == {Reason.TEXT_LAYER_MISMATCH}
-    assert f"casilla {LONG_CASILLA_NUMBER}" in [check.detail for check in verification.checks if check.reason]
+    assert f"casilla {LONG_CASILLA_NUMBER}" in [
+        check.detail for check in verification.checks if (check.reason is not None and check.reason)
+    ]
 
 
 def test_a_flipped_signature_byte_is_refused(genuine: bytes) -> None:
@@ -249,7 +253,9 @@ def test_a_removed_attachment_is_named(genuine: bytes) -> None:
     verification = _verify(_mutated(genuine, remove))
 
     assert verification.reasons == (Reason.ATTACHMENT_MISSING,)
-    assert [check.detail for check in verification.checks if check.reason] == [CSV_ATTACHMENT_NAME]
+    assert [check.detail for check in verification.checks if (check.reason is not None and check.reason)] == [
+        CSV_ATTACHMENT_NAME
+    ]
 
 
 def test_a_statement_re_encoded_and_re_signed_is_refused_as_not_canonical(genuine: bytes) -> None:

@@ -282,7 +282,9 @@ def _casilla_row_payloads(report: ModeloCasillasReport, casilla_number: str | No
             source_refs=tuple(row.source_refs),
         )
         for row in report.rows
-        if not number_filter or row.number == number_filter or row.casilla_id == number_filter
+        if not (number_filter is not None and number_filter)
+        or row.number == number_filter
+        or row.casilla_id == number_filter
     ]
 
 

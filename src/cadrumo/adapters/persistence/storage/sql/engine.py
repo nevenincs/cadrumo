@@ -77,7 +77,7 @@ def _normalize_sqlite_url(url: str) -> str:
     if not parsed.drivername.startswith("sqlite"):
         return url
     database = parsed.database
-    if not database or database == ":memory:":
+    if not (database is not None and database) or database == ":memory:":
         return url
     resolved_db = resolve_project_path(database)
     normalized = URL.create(
@@ -130,7 +130,7 @@ def _ensure_sqlite_parent(url: str) -> None:
     """
     parsed = make_url(_normalize_sqlite_url(url))
     database = parsed.database
-    if database and database != ":memory:":
+    if (database is not None and database) and database != ":memory:":
         parent = Path(database).parent
         _refuse_absent_bucket_root(parent)
         parent.mkdir(parents=True, exist_ok=True)
@@ -140,7 +140,7 @@ def _refuse_former_product_database_target(url: str) -> None:
     """Refuse an explicit SQLite target using the retired product filename."""
     parsed = make_url(url)
     database = parsed.database
-    if not parsed.drivername.startswith("sqlite") or not database or database == ":memory:":
+    if not parsed.drivername.startswith("sqlite") or not (database is not None and database) or database == ":memory:":
         return
     if Path(database).name != FORMER_PRODUCT_DATABASE_FILENAME:
         return
@@ -246,7 +246,7 @@ def _engine_cache_key(settings: Settings) -> _EngineCacheKey:
     URL itself as the key (the settings-driven direct path).
     """
     route = classify_storage_route(settings)
-    if route.kind is StorageRouteKind.ACTIVE_BUCKET_DATABASE and route.bucket_id:
+    if route.kind is StorageRouteKind.ACTIVE_BUCKET_DATABASE and (route.bucket_id is not None and route.bucket_id):
         root = str(settings.cadrumo_local_storage_root.expanduser().resolve())
         return ("bucket", root, route.bucket_id)
     return ("url", "", settings.cadrumo_database_url)

@@ -155,6 +155,6 @@ def test_absence_and_non_applicability_have_their_own_words(language: OutputLang
     not_applicable = lookup_translation(VALUE_NOT_APPLICABLE_LOCALE_KEY, locale=language.value)
 
     assert absent
-    assert not_applicable
+    assert not_applicable is not None and not_applicable
     assert absent != not_applicable
     assert "0" not in absent

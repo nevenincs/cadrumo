@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import replace
 from datetime import UTC, date, datetime
@@ -198,7 +198,7 @@ def _ledger_ports(
     tx_repo: TransactionCatalogueRepository,
     event_repo: BucketEventHistoryRepository,
     invoice_repo: InvoiceCatalogueRepository | None = None,
-) -> Iterator[LedgerActionPorts]:
+) -> Generator[LedgerActionPorts]:
     """Yield canonical ledger ports while retaining isolated test stores."""
     with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,

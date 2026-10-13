@@ -175,7 +175,7 @@ def subprocess_cli_env(
             "CADRUMO_PROFILE_KDF_MEASURE_CALIBRATION": "false",
         }
     )
-    if extra:
+    if extra is not None and extra:
         env.update(extra)
     return env
 

@@ -87,7 +87,7 @@ def _absolute_import_from(module_dotted: str, *, is_package: bool, node: ast.Imp
     if node.level - 1 > len(package_parts):
         return None
     base = package_parts[: len(package_parts) - (node.level - 1)]
-    if node.module:
+    if node.module is not None and node.module:
         base = [*base, *node.module.split(".")]
     return ".".join(base) if base else None
 

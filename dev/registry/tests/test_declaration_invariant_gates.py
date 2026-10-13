@@ -619,7 +619,9 @@ def test_a_derived_screen_reports_nothing_its_source_does_not(
     """
     from ..analysis.screens import SCREENS, screen_findings
 
-    sources = {entry.name: entry.derives_from for entry in SCREENS if entry.derives_from}
+    sources = {
+        entry.name: entry.derives_from for entry in SCREENS if (entry.derives_from is not None and entry.derives_from)
+    }
     assert sources, "no screen declares a source, so this gate checked nothing"
 
     populations = {
@@ -1085,7 +1087,7 @@ def _names_imported_by_tests(root: pathlib.Path) -> set[str]:
         tree = ast.parse(path.read_text(encoding=_UTF_8))
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom):
-                if node.module:
+                if node.module is not None and node.module:
                     names.add(node.module.rsplit(".", 1)[-1])
                 names.update(alias.name.rsplit(".", 1)[-1] for alias in node.names)
             elif isinstance(node, ast.Import):

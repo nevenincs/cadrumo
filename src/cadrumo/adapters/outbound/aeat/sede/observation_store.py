@@ -251,7 +251,7 @@ class FiledDeclaracionObservationStore:
         :data:`adapters.persistence.storage.secure_object_namespaces.AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE`
         using the body SHA-256 as the natural object key.
         """
-        if not artefact.storage_ref and not body:
+        if not (artefact.storage_ref is not None and artefact.storage_ref) and not body:
             raise SedeValidationError("cannot persist an empty filed-declaration artefact")
         if body and len(body) != artefact.byte_count:
             raise SedeValidationError("filed-declaration artefact byte count does not match its body")

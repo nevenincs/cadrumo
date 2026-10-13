@@ -216,7 +216,9 @@ def test_a_refused_pair_and_an_empty_pair_are_distinguishable() -> None:
     assert refused.row_count == empty.row_count == 0
     assert refused.walk_completed is False and empty.walk_completed is True
     assert refused.refused is not empty.refused
-    assert refused.failure_message and not empty.failure_message
+    assert (refused.failure_message is not None and refused.failure_message) and not (
+        empty.failure_message is not None and empty.failure_message
+    )
 
 
 def test_the_counts_separate_refusals_from_legitimate_empties() -> None:

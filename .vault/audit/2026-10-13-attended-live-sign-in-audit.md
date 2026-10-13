@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:14634428f707d8a81ca7b2b0d904f0e1c03632510d683847235459b71aabdf96'
+body_hash: 'sha256:475d993e4948264ca822198b104540e5fb42d51d01f61e2d011f77ef864e5a3d'
 related:
   - "[[2026-10-12-attended-live-sign-in-plan]]"
   - "[[2026-10-12-mcp-parity-attended-live-sign-in-adr]]"
@@ -73,3 +73,38 @@ The operator asked on 2026-10-13 for the findings to be fixed; S06 of `2026-10-1
 ### attendance-peer-facts-posix | low | Linux and macOS still report no image path
 
 The POSIX transport reads only the uid and pid (`src/cadrumo/adapters/local_runtime/posix_channel.py:83`), so `image_path` is `null` there. On macOS the audit-token path read deliberately never discloses the path (`src/cadrumo/adapters/local_runtime/macos_login.py:87`). Linux has no retained process handle, so a path read from the pid could race pid reuse. Closing this needs either a pidfd-anchored Linux read and a macOS audit-token read, or an amendment to constraint 2 that limits the image path to Windows.
+
+## S06 re-review
+
+On 2026-10-13 an independent read-only reviewer re-reviewed commit f0b54b5717 (S06). Verdict: pass with findings. Nothing was critical or high, and the four operator constraints held. The new custody refusal is caught at every worker and runtime boundary. `_attendance_spent` is bounded by live connections.
+
+### peer-identity-widening | medium | adding image_path made the program path part of peer equality
+
+`RuntimePeer` compared every field, so every `context.peer != channel.peer` gate, and the two cross-channel worker checks, required two separate path reads to agree. A link replaced between the reads would refuse a healthy worker.
+
+### logout-receipt-first-unmapped-refusal | medium | an unmapped receipt refusal skipped the password fallback
+
+`resume_receipt` re-raises a `RuntimeFrontendRefusedError` for any denial outside `_RUNTIME_RECEIPT_REFUSALS`. Logout fell back only on `ProfileReceiptRefusedError`, so it failed even though a valid password was supplied.
+
+### worker-exit-refusal-tuple | low | the worker's refusal exit did not name the new error type
+
+### attendance-spent-on-transient-denial | low | any attend denial spent the connection, not only an ended sign-in
+
+### client-id-restore-window | low | the client id was swapped and restored outside the connections guard
+
+### logout-evidence-is-a-stub | low | the logout ordering test drives a hand-written client
+
+## S07 resolutions
+
+S07 fixes the re-review findings and closes `attendance-peer-facts-posix`, under the operator's 2026-10-13 instruction to keep working the findings.
+
+- peer-identity-widening: fixed. Peer equality and hashing compare only the OS owner and the process id (`src/cadrumo/application/runtime/contracts.py:185`). Covered by `src/cadrumo/application/runtime/tests/test_runtime_peer.py`.
+- logout-receipt-first-unmapped-refusal: fixed. Logout tries `resume_receipt` explicitly and falls back to the password on any refusal of it (`src/cadrumo/entrypoints/cli/config/custody.py:404`). The test adds an unmapped-refusal case.
+- worker-exit-refusal-tuple: fixed (`src/cadrumo/entrypoints/runtime/worker.py:285`).
+- attendance-spent-on-transient-denial: fixed. A denied renewal asks the authority whether the person's session still lives (`src/cadrumo/entrypoints/runtime/profile_connection_attendance.py:222`). Only an ended session spends the connection; otherwise the approval stands and the denial is returned. No test reaches a passing denial.
+- client-id-restore-window: fixed. The swap and the restore both run under the connections guard (`profile_connection_attendance.py:321`).
+- logout-evidence-is-a-stub: the real-client path is the packaged proof's `logout_password_proven` step, rerun on the rebuilt bundle. No unit case was added.
+- attendance-peer-facts-posix: fixed.
+  - Linux reads `/proc/<pid>/exe` only while the peer's pidfd shows that exact process alive (`src/cadrumo/adapters/local_runtime/posix_channel.py:77`). A kernel without peer pidfds reports none.
+  - macOS returns the path that the version-checked `proc_pidpath_audittoken` query already answered (`src/cadrumo/adapters/local_runtime/macos_login.py:81`).
+  - The Linux path is proven in WSL on kernel 6.18 by `test_the_peer_program_is_read_while_its_pidfd_pins_it`. The macOS path is proven only against the faked native call; the native macOS lane runs on the macOS host.

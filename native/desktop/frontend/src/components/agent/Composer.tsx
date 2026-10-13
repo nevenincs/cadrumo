@@ -25,7 +25,8 @@ function selectionWords(
     (option) => option.id === selection.modelId,
   );
   if (!model) return null;
-  return selection.effort ? `${model.name} · ${selection.effort}` : model.name;
+  const effort = model.efforts.find((held) => held.id === selection.effort);
+  return effort ? `${model.name} · ${effort.name}` : model.name;
 }
 
 /**

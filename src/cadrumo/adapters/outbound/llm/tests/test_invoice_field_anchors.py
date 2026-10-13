@@ -243,7 +243,7 @@ class TestEveryExtractedFieldCarriesItsAnchor:
         draft = _spanish_draft(operation=operation)
 
         for item in draft.provenance:
-            assert item.anchor, item.field
+            assert item.anchor is not None and item.anchor, item.field
             assert item.anchor == _SPANISH_ANCHORS[item.field]
 
     def test_the_envelope_records_the_reader_that_produced_it(self, *, operation: PinnedAuthorityOperation) -> None:

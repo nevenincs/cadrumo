@@ -463,7 +463,7 @@ def _project_disposition_header(
     # as ambiguous rather than choosing a convenient disposition.
     legacy_header_key = registry_mapping.get("disposition.legacy_header_key")
     accepted_keys = {header_key}
-    if legacy_header_key:
+    if legacy_header_key is not None and legacy_header_key:
         accepted_keys.add(legacy_header_key)
     facts = tuple(item for item in envelope.source_headers if item.header_key in accepted_keys)
     if not facts:

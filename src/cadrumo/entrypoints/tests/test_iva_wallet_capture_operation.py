@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -87,7 +87,7 @@ class _SyntheticIvaRemoteStatePort:
         self.local_persistence_guarded = False
 
     @contextmanager
-    def active_storage_span(self) -> Iterator[None]:
+    def active_storage_span(self) -> Generator[None]:
         self.events.append("storage-span")
         yield
 
@@ -159,7 +159,7 @@ class _ResourceScope:
         self.close_calls = 0
 
     @contextmanager
-    def activate(self) -> Iterator[None]:
+    def activate(self) -> Generator[None]:
         self.activation_depth += 1
         try:
             yield

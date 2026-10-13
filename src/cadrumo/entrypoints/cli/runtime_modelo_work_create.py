@@ -64,7 +64,7 @@ def create_modelo_work(
             modelo=modelo.strip(),
             period=requested_period,
             revision_id=revision_id or None,
-            name=name if name else None,
+            name=name if (name is not None and name) else None,
             actor=actor,
             causante_ccaa=causante_ccaa,
             allow_not_applicable=allow_not_applicable,

@@ -472,6 +472,8 @@ cache/
 /*scratchpadvault_check*
 
 # >>> vaultspec-managed (do not edit this block) >>>
+.env
+.env.*
 .vault/.obsidian/
 .vault/.trash/
 .vault/data/
@@ -488,6 +490,7 @@ cache/
 /.pre-commit-config.yml
 /.vaultspec/.env
 /.vaultspec/.env.*
+!.env.example
 # <<< vaultspec-managed <<<
 
 # Claude Code machine-local (not team-shared)

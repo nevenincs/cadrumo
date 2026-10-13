@@ -125,6 +125,7 @@ _EXPECTED_NAMESPACE_KEYS_IN_ORDER = (
     "google_oauth_token",
     "google_oauth_metadata",
     "google_drive_config",
+    "provider_settings",
     "llm_cache",
     "llm_usage",
     "llm_run_telemetry",
@@ -590,9 +591,15 @@ def test_auth_session_cache_namespace_registration_coverage_is_present() -> None
     } <= registered_keys
 
 
+_LOCAL_ONLY_NAMESPACE_KEYS = frozenset({"provider_settings"})
+"""Production namespaces that must never reach a remote mirror."""
+
+
 def test_secure_namespaces_default_to_ciphertext_remote_mirror_policy() -> None:
     production_namespaces = tuple(
-        namespace for namespace in STORAGE_NAMESPACE_REGISTRY.namespaces if not namespace.key.startswith("test_")
+        namespace
+        for namespace in STORAGE_NAMESPACE_REGISTRY.namespaces
+        if not namespace.key.startswith("test_") and namespace.key not in _LOCAL_ONLY_NAMESPACE_KEYS
     )
 
     assert production_namespaces
@@ -602,6 +609,28 @@ def test_secure_namespaces_default_to_ciphertext_remote_mirror_policy() -> None:
     )
     assert all(namespace.remote_mirror_requires_revision for namespace in production_namespaces)
     assert all(namespace.remote_mirror_requires_integrity_manifest for namespace in production_namespaces)
+
+
+def test_provider_credentials_are_never_mirrored_or_carried() -> None:
+    """Provider keys are durable on this machine only.
+
+    LOCAL_ONLY keeps them off every remote mirror, and PROCESS_LOCAL keeps them
+    out of both custody carry profiles, so neither a portable export nor a
+    restorative backup holds them.
+    """
+    local_only = {
+        namespace.key
+        for namespace in STORAGE_NAMESPACE_REGISTRY.namespaces
+        if namespace.remote_mirror_policy is StorageRemoteMirrorPolicy.LOCAL_ONLY
+    }
+    provider_settings = lookup_namespace_definition("provider_settings")
+
+    assert local_only == _LOCAL_ONLY_NAMESPACE_KEYS
+    assert provider_settings.sensitivity is SensitivityClass.SECRET
+    assert provider_settings.scope is StorageNamespaceScope.PROFILE_LOCAL
+    assert provider_settings.custody_disposition is StorageCustodyDisposition.PROCESS_LOCAL
+    for profile in StorageCustodyProfile:
+        assert provider_settings not in STORAGE_NAMESPACE_REGISTRY.namespaces_for_custody_profile(profile)
 
 
 def test_test_only_namespaces_do_not_require_remote_mirror_metadata() -> None:

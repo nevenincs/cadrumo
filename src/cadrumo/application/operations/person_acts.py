@@ -16,9 +16,9 @@ its profile or disclose the profile's data in the person's name:
   which an operation's request carries as its acknowledgement. An agent may
   ask for the same operation's reading that stays on this machine.
 
-This module names them, and says which frontend never takes one. It refuses
-nothing itself: the MCP harness offers no tool that sends one, and the runtime
-refuses each on the MCP frontend.
+This module names them, and names the person's frontends, the only ones that
+take one. It refuses nothing itself: the MCP harness offers no tool that sends
+one, and the runtime refuses each on every other frontend.
 
 Operations are named by definition id text. This package owns no feature
 package's constants, and importing them would invert the dependency.
@@ -43,49 +43,28 @@ ACCESS_ADMINISTRATION_OPERATIONS: Final = frozenset(
 )
 """The registered operations that administer who may reach the profile, by definition id."""
 
-PERSON_RUNTIME_REQUESTS: Final = frozenset(
-    {
-        "automation_deny",
-        "enrollment_inspect",
-        "enrollment_poll",
-        "enrollment_prepare",
-        "enrollment_reconcile",
-        "enrollment_submit",
-        "human_sign_out",
-        "password_reset",
-        "password_reset_prepare",
-        "profile_delete",
-        "profile_delete_prepare",
-        "profile_recovery_prepare",
-        "profile_resume",
-        "session_inventory",
-        "session_lock",
-        "sign_in_status",
-    }
-)
-"""The requests of the runtime's own door that authenticate or administer sessions, keys or the profile.
-
-Every installation act is the person's act as well: it belongs to no single
-profile. A sign-in by password is too; a key the person configured is
-presented by the login request of the key method, which is not one of these.
-Reading the stored sign-in names no frontend and admits nothing; an agent
-reads its own standing from its session instead.
-"""
-
 
 def operation_is_persons_act(definition_id: str, *, ephemeral_secret_required: bool) -> bool:
     """Tell whether a registered operation is the person's own act and not an agent operation."""
     return ephemeral_secret_required or definition_id in ACCESS_ADMINISTRATION_OPERATIONS
 
 
-def persons_act_refused_on(frontend: OperationFrontendProjection) -> bool:
-    """Tell whether a person's act arriving on ``frontend`` is refused: it is, on the agent's frontend only."""
-    return frontend is OperationFrontendProjection.MCP
+PERSONS_FRONTENDS: Final = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
+"""The frontends a person works in, and the only ones on which a person's act is taken.
+
+Every other frontend is an agent's, including one added later: it reaches no
+person's act until it is named here.
+"""
+
+
+def is_persons_frontend(frontend: OperationFrontendProjection) -> bool:
+    """Tell whether ``frontend`` is one the person works in, where the person's own acts are open."""
+    return frontend in PERSONS_FRONTENDS
 
 
 __all__ = [
     "ACCESS_ADMINISTRATION_OPERATIONS",
-    "PERSON_RUNTIME_REQUESTS",
+    "PERSONS_FRONTENDS",
+    "is_persons_frontend",
     "operation_is_persons_act",
-    "persons_act_refused_on",
 ]

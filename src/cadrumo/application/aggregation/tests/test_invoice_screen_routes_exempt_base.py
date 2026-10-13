@@ -162,7 +162,7 @@ def test_an_intra_community_supply_base_reaches_casilla_59(
     assert resolved.get(_CASILLA_59) == _BASE, (
         f"the intra-community base never reached casilla 59: {resolved.get(_CASILLA_59)!r}"
     )
-    assert not resolved.get(_CASILLA_60), "an intra-community supply is not an export"
+    assert not bool(resolved.get(_CASILLA_60)), "an intra-community supply is not an export"
 
 
 def test_an_export_base_reaches_casilla_60(authority_operation: PinnedAuthorityOperation) -> None:
@@ -185,7 +185,7 @@ def test_an_export_base_reaches_casilla_60(authority_operation: PinnedAuthorityO
     assert resolved.get(_CASILLA_60) == _BASE, (
         f"the export base never reached casilla 60: {resolved.get(_CASILLA_60)!r}"
     )
-    assert not resolved.get(_CASILLA_59), "an export is not an intra-community supply"
+    assert not bool(resolved.get(_CASILLA_59)), "an export is not an intra-community supply"
 
 
 def test_a_domestic_exemption_is_not_routed_to_either_base_casilla(
@@ -204,8 +204,8 @@ def test_a_domestic_exemption_is_not_routed_to_either_base_casilla(
         operation=authority_operation,
     )
 
-    assert not resolved.get(_CASILLA_59)
-    assert not resolved.get(_CASILLA_60)
+    assert not bool(resolved.get(_CASILLA_59))
+    assert not bool(resolved.get(_CASILLA_60))
 
 
 def test_an_intra_community_supply_to_a_third_country_is_not_routed(
@@ -230,7 +230,7 @@ def test_an_intra_community_supply_to_a_third_country_is_not_routed(
         operation=authority_operation,
     )
 
-    assert not resolved.get(_CASILLA_59), "a third-country destination was routed as an intra-community supply"
+    assert not bool(resolved.get(_CASILLA_59)), "a third-country destination was routed as an intra-community supply"
 
 
 def test_the_aggregate_already_refuses_an_intra_community_supply_to_spain() -> None:
@@ -265,7 +265,7 @@ def test_an_export_claimed_to_a_member_state_is_not_routed(
         operation=authority_operation,
     )
 
-    assert not resolved.get(_CASILLA_60), "an EU counterparty was routed as a third-country export"
+    assert not bool(resolved.get(_CASILLA_60)), "an EU counterparty was routed as a third-country export"
 
 
 def test_an_ordinary_rated_line_still_routes_through_the_standard_path() -> None:

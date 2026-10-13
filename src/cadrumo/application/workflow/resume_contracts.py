@@ -200,7 +200,9 @@ class WorkflowResumeCandidateSnapshot(BaseModel):
             | {
                 "period": PublicPeriod.from_period(candidate.period),
                 "final_stage": WorkflowStage(candidate.final_stage),
-                "aborted_reason": WorkflowAbortReason(candidate.aborted_reason) if candidate.aborted_reason else None,
+                "aborted_reason": WorkflowAbortReason(candidate.aborted_reason)
+                if (candidate.aborted_reason is not None and candidate.aborted_reason)
+                else None,
             }
         )
 
@@ -211,7 +213,9 @@ class WorkflowResumeCandidateSnapshot(BaseModel):
             | {
                 "period": self.period.to_period(),
                 "final_stage": self.final_stage.value,
-                "aborted_reason": self.aborted_reason.value if self.aborted_reason else None,
+                "aborted_reason": self.aborted_reason.value
+                if (self.aborted_reason is not None and self.aborted_reason)
+                else None,
             }
         )
 

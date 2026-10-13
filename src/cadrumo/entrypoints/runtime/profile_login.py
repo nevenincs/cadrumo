@@ -114,7 +114,7 @@ class ProfileWorkerHumanLogin:
         with self._lock:
             self.cancel()
             try:
-                if len(receipt_key) != 32 or not login_id:
+                if len(receipt_key) != 32 or not (login_id is not None and login_id):
                     raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
                 candidate = self._lifetime.enter_context(
                     resume_profile_candidate(

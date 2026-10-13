@@ -19,6 +19,7 @@ from dev._paths import REPO_ROOT
 
 from ..runtime_wheel_selection import active_requirements
 from ..runtime_wheelhouse_contract import target_platform
+from .agent import agent_pin, locked_requirements
 from .build_log import BuildLog, display_path
 from .build_timing import BuildTimings
 from .docs_stage import verified_stage
@@ -174,6 +175,11 @@ def assemble(
         else active_requirements(REPO_ROOT, target_platform(target), build_identity["python"], extras=BUNDLED_EXTRAS)
     )
     allowed.update(requirements)
+    if not interpreter:
+        agent_requirements = locked_requirements(target, build_identity["python"])
+        requirements.update(agent_requirements)
+        allowed.update(agent_requirements)
+        allowed.add("cadrumo-agent")
     installed = [] if dependencies is None else list(importlib.metadata.distributions(path=[str(dependencies)]))
     distributions: dict[str, str] = {
         canonicalize_name(distribution.metadata["Name"]): distribution.version for distribution in installed
@@ -185,6 +191,8 @@ def assemble(
     for name, requirement in requirements.items():
         if distributions[name] not in requirement.specifier:
             raise ValueError(f"Production dependency version differs from lock: {name} {distributions[name]}")
+    if not interpreter and distributions["cadrumo-agent"] != agent_pin()["version"]:
+        raise ValueError("Installed agent version differs from the source pin")
     if not interpreter and {distributions[name] for name in PRODUCT_IDENTITY.cohort_distributions} != {
         build_identity["version"]
     }:
@@ -339,6 +347,7 @@ def assemble(
         "python": (REPO_ROOT / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip(),
         "lock_sha256": digest(REPO_ROOT / "uv.lock"),
         "inputs": dict(provenance or {}),
+        "agent": {"bundled": not interpreter, **({} if interpreter else agent_pin())},
         "relocation": relocation,
         "patches": patches,
         "pruned": pruned,

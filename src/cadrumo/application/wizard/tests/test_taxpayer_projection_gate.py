@@ -88,7 +88,11 @@ def _submit_refusal(canonical: Mapping[str, str], *, registry_setup_flow: Wizard
 
 
 def _blocking_keys(projection: ReviewProjection) -> set[str]:
-    return {verdict.message_key for verdict in projection.blocking if verdict.message_key}
+    return {
+        verdict.message_key
+        for verdict in projection.blocking
+        if (verdict.message_key is not None and verdict.message_key)
+    }
 
 
 def test_setup_definition_names_the_taxpayer_projection_validator(*, registry_setup_flow: WizardFlow) -> None:

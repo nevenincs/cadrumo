@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import json
 import sys
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from decimal import Decimal
 from pathlib import Path
@@ -145,7 +145,7 @@ def _scope(client_id: UUID) -> AccessScope:
 @contextmanager
 def _legal_entity_session(
     tmp_path: Path, authority_operation: PinnedAuthorityOperation
-) -> Iterator[NativeApiCliSession[None]]:
+) -> Generator[NativeApiCliSession[None]]:
     """Enrol the legal-entity (IS) profile the Modelo 200 calculation needs, served by its worker."""
 
     def prepare(profile_id: UUID, root: Path) -> None:

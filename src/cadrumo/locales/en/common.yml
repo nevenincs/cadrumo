@@ -576,7 +576,13 @@ desktop:
     attachments: Files for the next message
     attachments_refused: 'Refused: {count}'
     attachments_uploading: 'Uploading: {count}'
+    can_read_images: read images
+    can_read_pdfs: read PDFs
+    can_search_web: search the web
+    can_use_tools: use tools
+    can_write: write files
     cancel: Cancel
+    capabilities: 'Can: {list}'
     choose_model: Choose a model
     close_documents: Close the documents
     collapse_members: Hide the files in {name}
@@ -585,11 +591,9 @@ desktop:
     consent_items: What would be sent
     consent_lead: To answer, {model} needs the content below. Sending it takes it
       off this computer to {provider}.
-    consent_messages: Your message and this conversation so far
     consent_note: Nothing is sent until you choose. If you don't send it, it stays
       on this computer.
     consent_title: Send this to {provider}?
-    consent_tool_results: What Cadrumo's tools found for this conversation
     delete: Delete
     delete_confirm: Delete “{title}” and its documents ({count})? This can't be undone.
     delete_confirm_bare: Delete “{title}”? This can't be undone.
@@ -605,14 +609,25 @@ desktop:
     drop_release_single: Release to add 1 file
     drop_title: Add to this conversation
     effort: Effort
+    effort_high: High
+    effort_low: Low
+    effort_max: Max
+    effort_medium: Medium
+    effort_ultra: Ultra
+    effort_xhigh: Extra high
     expand_members: Show the files in {name}
     files_summary: 'Files: {count} · {size}'
     hide: Hide the agent
     history: History
     history_empty: No conversations yet
     history_no_match: No conversations match “{query}”.
+    lane_no_catalog: models couldn't be listed
+    lane_not_admitted: not allowed here
+    lane_not_configured: not set up
     lane_notice: 'Development lane: conversations are kept unencrypted on this test
       storage. Use made-up data only.'
+    lane_signed_out: not signed in
+    lane_unreachable: can't be reached
     members_multiple: '{count} files'
     members_single: 1 file
     message_label: Message
@@ -621,6 +636,7 @@ desktop:
     more_files: +{count} more
     new_conversation: New conversation
     no_models: No models to choose from
+    no_provider: The agent has no provider it can use yet.
     provider: Provider
     provider_unavailable: '{provider}: {reason}'
     questions_answer: Answer
@@ -658,6 +674,8 @@ desktop:
     service_signed_out: Sign in to talk to the agent.
     service_starting: Starting the agent…
     service_stopped: The agent isn't running.
+    set_up_providers: Set up AI providers
+    settings: Agent settings
     settings_label: 'Model and effort: {current}'
     settings_title: Model settings
     show: Show the agent
@@ -808,6 +826,61 @@ desktop:
     label: Bottom panel
     resize: Resize the bottom panel
     show: Show the bottom panel
+  providers:
+    add_key: Add key
+    add_token: Add token
+    base_url_default: Leave it empty to use {url}.
+    base_url_label: Base URL
+    base_url_required: 'Required: this provider has no default.'
+    cancel: Cancel
+    consumer_assistant: Agent
+    consumer_extraction: Reading documents
+    development_note: In this development build, a provider with no key of its own
+      uses the development environment's.
+    disable: Disable
+    disable_note: Disable stops Cadrumo from using a provider at all, not even with
+      a key it finds elsewhere.
+    disabled: 'Disabled: Cadrumo won''t use it until you add a key or reset it.'
+    key_label: '{provider} API key'
+    key_note: Paste it here. It's saved encrypted and never shown again.
+    lead: Keys are kept encrypted in this profile and are never shown again. Only
+      you can add, replace or remove them.
+    mode_provider_sign_in: Signed in through {provider}
+    mode_token: OAuth token saved in this profile
+    readiness_disabled: Disabled
+    readiness_missing: No key
+    readiness_not_verified: Saved, not used yet
+    readiness_ready: Ready
+    readiness_sign_in_required: Needs sign-in
+    readiness_unusable: Can't be used
+    reason_not_configured: It isn't set up yet.
+    reason_record_unreadable: Its saved settings can't be read. Add the key again.
+    reason_sign_in_with_provider_tool: Sign in with {provider}'s own app first.
+    refresh: Refresh
+    refused_base_url_rejected: That base URL can't be used.
+    refused_invalid_key_format: That doesn't look like a key for this provider.
+    refused_not_signed_in: Sign in to change keys.
+    refused_person_act_required: Keys can only be changed by you, here.
+    refused_profile_locked: This profile is locked.
+    refused_revision_conflict: This changed somewhere else. The latest is shown; try
+      again.
+    replace_key: Replace key
+    replace_token: Replace token
+    reset: Reset
+    reset_note: Reset forgets what was set for it, as if it had never been set up.
+    reset_note_development: Reset forgets what was set for it; in this development
+      build, the development environment's key is used again.
+    save: Save
+    saved_unread: Saved, but its status couldn't be read.
+    saving: Saving…
+    sign_in_only: Uses {provider}'s own sign-in. Cadrumo only shows whether it's available.
+    source_environment: Using the development environment's key
+    source_profile: Key saved in this profile
+    through: Through {url}
+    title: AI providers
+    token_label: '{provider} OAuth token'
+    transport_api: API
+    transport_cli: CLI
   rail:
     aeat: AEAT website
     agent: Agent

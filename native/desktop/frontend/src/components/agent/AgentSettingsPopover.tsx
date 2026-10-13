@@ -1,32 +1,103 @@
 import { useId, useState, type ReactElement } from "react";
-import { RadioGroup as RadioGroupPrimitive } from "radix-ui";
-import { Field, FieldLabel } from "@/components/ui/field";
-import { Icon } from "@/components/ui/icon";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { NativeSelect } from "@/components/ui/native-select";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  SegmentedControl,
-  SegmentedControlItem,
-} from "@/components/ui/segmented-control";
 import { useStrings } from "../../shell/strings";
-import type { AgentSelection, ModelOption, ProviderOption } from "./types";
+import type {
+  AgentSelection,
+  ModelControl,
+  ModelOption,
+  ProviderOption,
+} from "./types";
 
 /** The effort a model starts at: its default where it accepts that, else
  * its first, else none. */
 function startingEffort(model: ModelOption | undefined): string | undefined {
   if (!model) return undefined;
-  if (model.defaultEffort && model.efforts.includes(model.defaultEffort))
+  if (
+    model.defaultEffort &&
+    model.efforts.some((effort) => effort.id === model.defaultEffort)
+  )
     return model.defaultEffort;
-  return model.efforts[0];
+  return model.efforts[0]?.id;
+}
+
+/** The settings a model starts with, keeping any still offered. */
+function startingControls(
+  model: ModelOption,
+  held: AgentSelection["controls"],
+): Record<string, string> | undefined {
+  if (!model.controls?.length) return undefined;
+  return Object.fromEntries(
+    model.controls.map((control) => {
+      const kept = held?.[control.id];
+      const offered = control.options.some((option) => option.id === kept);
+      return [
+        control.id,
+        offered && kept
+          ? kept
+          : (control.defaultOptionId ?? control.options[0]?.id ?? ""),
+      ];
+    }),
+  );
+}
+
+/** The model a provider starts with: its recommended one, else its first. */
+function startingModel(
+  provider: ProviderOption | undefined,
+  models: readonly ModelOption[],
+): ModelOption | undefined {
+  return (
+    models.find((model) => model.id === provider?.defaultModelId) ?? models[0]
+  );
+}
+
+/** One of a model's own settings, as a list to choose from. */
+function ControlField({
+  control,
+  value,
+  onChange,
+}: {
+  control: ModelControl;
+  value: string | undefined;
+  onChange: (optionId: string) => void;
+}) {
+  const id = useId();
+  const chosen = control.options.find((option) => option.id === value);
+  return (
+    <Field>
+      <FieldLabel htmlFor={id}>{control.name}</FieldLabel>
+      <NativeSelect
+        id={id}
+        controlSize="sm"
+        value={value ?? ""}
+        onChange={(event) => onChange(event.target.value)}
+      >
+        {control.options.map((option) => (
+          <option key={option.id} value={option.id}>
+            {option.name}
+          </option>
+        ))}
+      </NativeSelect>
+      {(chosen?.description ?? control.description) && (
+        <FieldDescription>
+          {chosen?.description ?? control.description}
+        </FieldDescription>
+      )}
+    </Field>
+  );
 }
 
 /**
- * The provider, model and effort of the conversation, chosen in a popover
- * opened from `children`. It holds no choice of its own: every change is
- * handed to `onChange`, and what it shows is `selection`.
+ * The provider, model, effort and model settings of the conversation,
+ * chosen in a popover opened from `children`. Every list is what it is
+ * given, however long: the providers there are, each one's models, and the
+ * efforts and settings of the model chosen. It holds no choice of its own:
+ * every change is handed to `onChange`, and what it shows is `selection`.
  */
 export function AgentSettingsPopover({
   providers,
@@ -48,38 +119,39 @@ export function AgentSettingsPopover({
   const providerId = useId();
   const modelId = useId();
   const effortId = useId();
-  const reasonsId = useId();
+  const provider = providers.find((held) => held.id === selection.providerId);
   const offered = models[selection.providerId] ?? [];
   const model = offered.find((option) => option.id === selection.modelId);
   const efforts = model?.efforts ?? [];
-  // A provider with nothing to choose from cannot be chosen either.
-  const reasons = providers.flatMap((provider) => {
-    const empty = (models[provider.id] ?? []).length === 0;
-    if (provider.selectable && !empty) return [];
-    const reason = !provider.selectable
-      ? (provider.unavailableReason ?? t("desktop.agent.unavailable"))
-      : t("desktop.agent.no_models");
-    return [{ id: provider.id, name: provider.name, reason }];
-  });
 
   const chooseProvider = (next: string) => {
-    const first = (models[next] ?? [])[0];
-    if (!first) return;
+    const chosen = providers.find((held) => held.id === next);
+    const first = startingModel(chosen, models[next] ?? []);
+    if (!chosen?.selectable || !first) return;
+    const controls = startingControls(first, undefined);
     onChange({
       providerId: next,
       modelId: first.id,
       effort: startingEffort(first),
+      ...(controls ? { controls } : {}),
     });
   };
   const chooseModel = (next: string) => {
     const chosen = offered.find((option) => option.id === next);
     if (!chosen) return;
-    // The effort carries over where the new model accepts it.
+    // The effort and settings carry over where the new model takes them.
     const effort =
-      selection.effort && chosen.efforts.includes(selection.effort)
+      selection.effort &&
+      chosen.efforts.some((held) => held.id === selection.effort)
         ? selection.effort
         : startingEffort(chosen);
-    onChange({ ...selection, modelId: chosen.id, effort });
+    const controls = startingControls(chosen, selection.controls);
+    onChange({
+      providerId: selection.providerId,
+      modelId: chosen.id,
+      effort,
+      ...(controls ? { controls } : {}),
+    });
   };
 
   return (
@@ -92,95 +164,107 @@ export function AgentSettingsPopover({
         className="grid w-settings grid-cols-1 gap-3"
       >
         <Field>
-          <FieldLabel id={providerId}>{t("desktop.agent.provider")}</FieldLabel>
-          <SegmentedControl
-            aria-labelledby={providerId}
-            aria-describedby={reasons.length > 0 ? reasonsId : undefined}
+          <FieldLabel htmlFor={providerId}>
+            {t("desktop.agent.provider")}
+          </FieldLabel>
+          <NativeSelect
+            id={providerId}
+            controlSize="sm"
             value={selection.providerId}
-            onValueChange={chooseProvider}
+            onChange={(event) => chooseProvider(event.target.value)}
           >
-            {providers.map((provider) => (
-              <SegmentedControlItem
-                key={provider.id}
-                value={provider.id}
-                disabled={reasons.some((entry) => entry.id === provider.id)}
-              >
-                {provider.name}
-              </SegmentedControlItem>
-            ))}
-          </SegmentedControl>
-          {reasons.length > 0 && (
-            <ul id={reasonsId} className="grid gap-0.5 text-sm text-faint">
-              {reasons.map((entry) => (
-                <li key={entry.id}>
-                  {t("desktop.agent.provider_unavailable", {
-                    provider: entry.name,
-                    reason: entry.reason,
-                  })}
-                </li>
-              ))}
-            </ul>
-          )}
+            {!provider && (
+              <option value="">{t("desktop.agent.choose_model")}</option>
+            )}
+            {providers.map((option) => {
+              const empty = (models[option.id] ?? []).length === 0;
+              const reason = !option.selectable
+                ? (option.unavailableReason ?? t("desktop.agent.unavailable"))
+                : empty
+                  ? t("desktop.agent.no_models")
+                  : null;
+              return (
+                <option key={option.id} value={option.id} disabled={!!reason}>
+                  {reason
+                    ? t("desktop.agent.provider_unavailable", {
+                        provider: option.name,
+                        reason,
+                      })
+                    : option.name}
+                </option>
+              );
+            })}
+          </NativeSelect>
         </Field>
         <Field>
-          <FieldLabel id={modelId}>{t("desktop.agent.model")}</FieldLabel>
+          <FieldLabel htmlFor={modelId}>{t("desktop.agent.model")}</FieldLabel>
           {offered.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               {t("desktop.agent.no_models")}
             </p>
           ) : (
-            <RadioGroupPrimitive.Root
-              aria-labelledby={modelId}
-              orientation="vertical"
+            <NativeSelect
+              id={modelId}
+              controlSize="sm"
               value={selection.modelId}
-              onValueChange={chooseModel}
-              className="grid gap-0.5"
+              onChange={(event) => chooseModel(event.target.value)}
             >
               {offered.map((option) => (
-                <RadioGroupPrimitive.Item
-                  key={option.id}
-                  value={option.id}
-                  className="flex w-full cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent data-[state=checked]:bg-selected forced-colors:data-[state=checked]:bg-[Highlight] forced-colors:data-[state=checked]:text-[HighlightText]"
-                >
-                  <span className="grid min-w-0 flex-1 gap-0.5">
-                    <span className="truncate font-medium text-foreground">
-                      {option.name}
-                    </span>
-                    {option.description ? (
-                      <span className="text-sm text-muted-foreground">
-                        {option.description}
-                      </span>
-                    ) : null}
-                  </span>
-                  <span className="flex size-icon-md shrink-0 items-center justify-center pt-0.5">
-                    <RadioGroupPrimitive.Indicator>
-                      <Icon name="check" className="text-foreground" />
-                    </RadioGroupPrimitive.Indicator>
-                  </span>
-                </RadioGroupPrimitive.Item>
+                <option key={option.id} value={option.id}>
+                  {option.name}
+                </option>
               ))}
-            </RadioGroupPrimitive.Root>
+            </NativeSelect>
+          )}
+          {model?.description && (
+            <FieldDescription>{model.description}</FieldDescription>
+          )}
+          {model?.capabilities && model.capabilities.length > 0 && (
+            <FieldDescription>
+              {t("desktop.agent.capabilities", {
+                list: new Intl.ListFormat(undefined, {
+                  type: "conjunction",
+                }).format(model.capabilities),
+              })}
+            </FieldDescription>
           )}
         </Field>
         {efforts.length > 0 && (
           <Field>
-            <FieldLabel id={effortId}>{t("desktop.agent.effort")}</FieldLabel>
-            <SegmentedControl
-              aria-labelledby={effortId}
+            <FieldLabel htmlFor={effortId}>
+              {t("desktop.agent.effort")}
+            </FieldLabel>
+            <NativeSelect
+              id={effortId}
+              controlSize="sm"
               value={selection.effort ?? ""}
-              onValueChange={(effort) => {
-                if (efforts.includes(effort))
+              onChange={(event) => {
+                const effort = event.target.value;
+                if (efforts.some((held) => held.id === effort))
                   onChange({ ...selection, effort });
               }}
             >
               {efforts.map((effort) => (
-                <SegmentedControlItem key={effort} value={effort}>
-                  {effort}
-                </SegmentedControlItem>
+                <option key={effort.id} value={effort.id}>
+                  {effort.name}
+                </option>
               ))}
-            </SegmentedControl>
+            </NativeSelect>
           </Field>
         )}
+        {model?.controls?.map((control) => (
+          <ControlField
+            key={control.id}
+            control={control}
+            value={selection.controls?.[control.id]}
+            onChange={(optionId) =>
+              onChange({
+                ...selection,
+                controls: { ...selection.controls, [control.id]: optionId },
+              })
+            }
+          />
+        ))}
       </PopoverContent>
     </Popover>
   );

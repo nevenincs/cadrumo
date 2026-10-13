@@ -10,7 +10,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import sys
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
@@ -69,7 +69,7 @@ class _ServedProfile:
 
 
 @contextmanager
-def _serving_one_profile(tmp_path: Path) -> Iterator[_ServedProfile]:
+def _serving_one_profile(tmp_path: Path) -> Generator[_ServedProfile]:
     """Serve a storage root that holds one real encrypted profile with no recovery enrolled."""
     root = tmp_path / "cadrumo-storage"
     root.mkdir()

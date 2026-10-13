@@ -182,7 +182,9 @@ def test_a_year_outside_the_declared_window_is_reported_as_a_named_refusal(
 
     blocked = [probe for probe in refuses if probe.revision == "2008-2022"]
     assert blocked, "no probe named revision 2008-2022 for 2015, so the refusal claim below is vacuous"
-    served = [probe for probe in blocked if probe.resolved is not None or not probe.refusal]
+    served = [
+        probe for probe in blocked if probe.resolved is not None or not (probe.refusal is not None and probe.refusal)
+    ]
     assert not served, f"2015 is outside the declared window, so every probe must refuse by name: {served}"
 
 

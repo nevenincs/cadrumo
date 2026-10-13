@@ -1107,7 +1107,7 @@ def existing_transaction_import_fingerprints(transaction: Transaction) -> frozen
             own_account_id=transaction.own_account_id,
         )
     }
-    if transaction.import_fingerprint:
+    if transaction.import_fingerprint is not None and transaction.import_fingerprint:
         fingerprints.add(transaction.import_fingerprint)
     return frozenset(fingerprints)
 

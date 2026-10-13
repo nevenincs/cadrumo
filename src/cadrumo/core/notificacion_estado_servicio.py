@@ -94,7 +94,7 @@ def resolve_notificacion_estado_servicio(
         # row is not served by any reading of art. 43.2, so a stray access flag
         # on a pendiente row must not promote it to ACCEDIDA.
         return NotificacionEstadoServicio.NO_ENTREGADA
-    if leida:
+    if leida is not None and leida:
         return NotificacionEstadoServicio.ACCEDIDA
     # A negative elapsed count means ``as_of`` precedes the puesta a disposición,
     # so the window has not opened; EN_PLAZO is correct for it.

@@ -146,7 +146,7 @@ def register_taxpayer_projection_validator(definition: FlowDefinition) -> None:
     definition twice re-enrols the same rows.
     """
     for page in iter_flow_pages(definition):
-        if page.domain_key:
+        if page.domain_key is not None and page.domain_key:
             _ENROLLED_DOMAIN_KEYS[page.id] = page.domain_key
 
 

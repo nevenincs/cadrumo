@@ -195,7 +195,7 @@ def recalculation_risk_text(unattributed: UnattributedBoxes, *, console: Console
 def change_line(change: StagedChange) -> str:
     """One change as a line of words: its box and concept, how it read before and after, and its effect."""
     field = change.field
-    box = f"[{field.box}] " if field.box else ""
+    box = f"[{field.box}] " if (field.box is not None and field.box) else ""
     effect = change_effect_text(change)
     if change.before_changed:
         effect = f"{effect} · {tr('tui.modelo.workbench.review.before_changed')}"
@@ -376,7 +376,7 @@ class EditReviewScreen(ModalScreen[ReviewDecision | None]):
     def _notes_text(self) -> Content:
         lines = [tr("tui.modelo.workbench.review.findings_heading")]
         for note in self._notes:
-            box = f"[{note.box}] " if note.box else ""
+            box = f"[{note.box}] " if (note.box is not None and note.box) else ""
             lines.append(f"{_NOTE_MARKS[note.blocking].glyph} {box}{note.message}")
         if self._blocked:
             lines.append(tr("tui.modelo.workbench.review.blocked"))

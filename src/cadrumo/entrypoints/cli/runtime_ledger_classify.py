@@ -73,7 +73,7 @@ def run_ledger_classify(
         patch=wire_patch,
         patch_fields=selected_patch_fields,
         m210=m210,
-        actor=actor if actor else None,
+        actor=actor if (actor is not None and actor) else None,
         reaffirm=reaffirm,
     )
     completed = run_registered_operation(

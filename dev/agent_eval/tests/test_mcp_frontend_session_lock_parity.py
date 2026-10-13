@@ -11,7 +11,7 @@ from __future__ import annotations
 import asyncio
 import json
 import sys
-from collections.abc import Iterator
+from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from contextvars import copy_context
@@ -176,7 +176,7 @@ def _scope(destination: UUID) -> AccessScope:
 
 
 @contextmanager
-def _runtime(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[_ParityRuntime]:
+def _runtime(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Generator[_ParityRuntime]:
     # The isolated worker loads settings independently of this process's override context.
     monkeypatch.setenv("CADRUMO_BUCKET_DEFAULT_IDLE_LOCK_MINUTES", "1")
     root = tmp_path / "cadrumo-storage"

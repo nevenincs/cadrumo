@@ -5,15 +5,19 @@ import {
   type ReactNode,
   type Ref,
 } from "react";
+import { Button } from "@/components/ui/button";
 import { Empty, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
 import { failureCode } from "../errors";
+import {
+  catalogChoices,
+  offeredSelection,
+  selectionRecord,
+} from "../shell/agentCatalog";
 import { useAgentStatus, useLiveConversation } from "../shell/agentLive";
 import type {
   AgentApproval,
-  AgentConsentRequest,
-  AgentProviderRecord,
   AgentQuestionnaire,
   AgentQuestionnaireAnswer,
   AgentSendRequest,
@@ -29,15 +33,19 @@ import {
   type AgentRead,
   type AgentViews,
 } from "../shell/agentViews";
+import {
+  useProviderSettings,
+  type ProviderSettings,
+} from "../shell/providerSettings";
 import { useStrings, type Translate } from "../shell/strings";
 import { AgentHeader } from "./agent/AgentHeader";
 import { AgentWelcome } from "./agent/AgentWelcome";
 import { ApprovalPrompt } from "./agent/ApprovalPrompt";
 import { Composer } from "./agent/Composer";
-import { ConsentPrompt, type ConsentItem } from "./agent/ConsentPrompt";
 import { DocumentsPanel } from "./agent/DocumentsPanel";
 import { HistoryList } from "./agent/HistoryList";
 import { QuestionsPrompt } from "./agent/QuestionsPrompt";
+import { ProviderSettings as ProviderSettingsSection } from "./settings/ProviderSettings";
 import { Transcript } from "./agent/Transcript";
 import type {
   AgentSelection,
@@ -53,13 +61,7 @@ const NO_PROVIDERS: ProviderOption[] = [];
 const NO_MODELS: Record<string, ModelOption[]> = {};
 const NO_SELECTION: AgentSelection = { providerId: "", modelId: "" };
 
-type Panel = "none" | "history" | "documents";
-
-/** A send waiting on the person's consent. */
-type Asking = {
-  request: AgentSendRequest;
-  consent: AgentConsentRequest;
-};
+type Panel = "none" | "history" | "documents" | "settings";
 
 /** Why the agent service is not serving, in words; null when it is. */
 function serviceWords(t: Translate, status: AgentServiceStatus): string | null {
@@ -89,76 +91,19 @@ function refusalWords(t: Translate, code: string): string {
   }
 }
 
-/** The providers and models as the composer offers them. */
-function choices(t: Translate, records: readonly AgentProviderRecord[]) {
-  const providers: ProviderOption[] = records.map((record) => ({
-    id: record.id,
-    name: record.name,
-    selectable: record.selectable,
-    ...(record.unavailable_reason
-      ? { unavailableReason: refusalWords(t, record.unavailable_reason) }
-      : {}),
-  }));
-  const models: Record<string, ModelOption[]> = Object.fromEntries(
-    records.map((record) => [
-      record.id,
-      record.models.map((model) => ({
-        id: model.id,
-        name: model.display_name,
-        efforts: model.efforts,
-        ...(model.default_effort
-          ? { defaultEffort: model.default_effort }
-          : {}),
-      })),
-    ]),
-  );
-  return { providers, models };
-}
-
-/** `selection` where the providers still offer it, else the first model
- * of the first provider that can be chosen; null when there is none. */
-function offered(
-  records: readonly AgentProviderRecord[],
-  selection: AgentSelection | null,
-): AgentSelection | null {
-  if (selection) {
-    const provider = records.find(
-      (record) => record.id === selection.providerId && record.selectable,
-    );
-    const model = provider?.models.find(
-      (option) => option.id === selection.modelId,
-    );
-    if (
-      model &&
-      (selection.effort === undefined ||
-        model.efforts.includes(selection.effort))
-    )
-      return selection;
-  }
-  const provider = records.find(
-    (record) => record.selectable && record.models.length > 0,
-  );
-  const model = provider?.models[0];
-  if (!provider || !model) return null;
-  return {
-    providerId: provider.id,
-    modelId: model.id,
-    ...(model.default_effort ? { effort: model.default_effort } : {}),
-  };
-}
-
 /**
  * The agent column's content: its header, the conversation or the history or
  * its documents, and the composer. What it shows comes from the host's agent
  * views, read as the signed-in profile's, and a conversation is kept up to
  * date from the host's agent session as replies are written. A host that
  * serves neither leaves every one of its doors saying it is not available
- * yet; nothing here is made up, and nothing is sent without the person's
- * consent.
+ * yet. Nothing here is made up: the providers, models and what each can do
+ * are the agent's own catalog, and only what the person sends is sent.
  */
 export function AgentColumn({
   agent,
   session,
+  providerSettings,
   reader,
   shown,
   locale,
@@ -167,8 +112,11 @@ export function AgentColumn({
   onToggleMaximize,
 }: {
   agent: AgentViews | undefined;
-  /** Sending, consent and the live stream, where the host offers them. */
+  /** Sending and the live stream, where the host offers them. */
   session: AgentSession | undefined;
+  /** The profile's model providers and their keys, where the host offers
+   * them. */
+  providerSettings: ProviderSettings | undefined;
   /** Whose the conversations are: the signed-in profile, or null while the
    * account withholds them. */
   reader: string | null;
@@ -191,7 +139,6 @@ export function AgentColumn({
     archived: false,
     conversationId: null as string | null,
     chosen: null as AgentSelection | null,
-    asking: null as Asking | null,
     sending: false,
     sendFailure: null as string | null,
     // The composer is drawn anew with this draft when a send is given back.
@@ -207,13 +154,12 @@ export function AgentColumn({
       archived: false,
       conversationId: null,
       chosen: null,
-      asking: null,
       sending: false,
       sendFailure: null,
       draft: { key: view.draft.key + 1, text: "" },
       revision: 0,
     });
-  const { panel, archived, conversationId, asking, revision } = view;
+  const { panel, archived, conversationId, revision } = view;
   const change = (next: Partial<typeof view>) =>
     setView((held) => ({ ...held, ...next }));
 
@@ -258,13 +204,29 @@ export function AgentColumn({
     enabled: readable && conversationShown,
     onSettled,
   });
-  const history = useMemo(
-    (): AgentRead<ReturnType<typeof transcriptItems>> =>
-      live.read.kind === "ready"
-        ? { kind: "ready", value: transcriptItems(live.read.value, locale) }
-        : live.read,
-    [live.read, locale],
-  );
+  // A reply held on the person's answer or decision says it waits for them,
+  // on the newest turn it is writing.
+  const heldOnPerson =
+    live.questionnaires.length > 0 || live.approvals.length > 0;
+  const history = useMemo((): AgentRead<ReturnType<typeof transcriptItems>> => {
+    if (live.read.kind !== "ready") return live.read;
+    const items = transcriptItems(live.read.value, locale);
+    let newest = -1;
+    items.forEach((item, index) => {
+      if (item.kind === "agent" && item.state === "working") newest = index;
+    });
+    return {
+      kind: "ready",
+      value:
+        heldOnPerson && newest >= 0
+          ? items.map((item, index) =>
+              index === newest && item.kind === "agent"
+                ? { ...item, waitingOnPerson: true }
+                : item,
+            )
+          : items,
+    };
+  }, [live.read, locale, heldOnPerson]);
   const groups = useConversationGroups(conversations, {
     locale,
     archived,
@@ -274,17 +236,17 @@ export function AgentColumn({
   // The service, and what it can run, while the column could send.
   const status = useAgentStatus(session, readable);
   const ready = status?.state === "ready";
-  const readProviders = useMemo(
-    () => (ready && session ? () => session.providers() : null),
+  // What it can run is the agent's own catalog, every lane of it.
+  const readCatalog = useMemo(
+    () => (ready && session ? () => session.providerCatalog() : null),
     [ready, session],
   );
-  const providers = useAgentRead(readProviders);
+  const catalog = useAgentRead(readCatalog);
   const offer = useMemo(
-    () => (providers.kind === "ready" ? choices(t, providers.value) : null),
-    [providers, t],
+    () => (catalog.kind === "ready" ? catalogChoices(t, catalog.value) : null),
+    [catalog, t],
   );
-  const selection =
-    providers.kind === "ready" ? offered(providers.value, view.chosen) : null;
+  const selection = offer ? offeredSelection(offer, view.chosen) : null;
 
   const current =
     conversations.kind === "ready" && conversationId !== null
@@ -296,19 +258,29 @@ export function AgentColumn({
         ...held,
         panel: "none",
         conversationId: id,
-        asking: null,
         sendFailure: null,
       })),
     [],
   );
   const toggle = (next: Panel) =>
     change({ panel: panel === next ? "none" : next });
+  // The agent's settings belong to the signed-in profile, and are read
+  // only while they are open.
+  const settingsOpen = panel === "settings";
+  const settings = useProviderSettings(
+    providerSettings,
+    reader,
+    settingsOpen && shown,
+  );
+  const openSettings =
+    providerSettings && reader !== null
+      ? () => change({ panel: "settings" })
+      : undefined;
 
   // A send that did not go is given back to the composer to try again.
   const giveBack = (text: string, failure: string | null) =>
     setView((held) => ({
       ...held,
-      asking: null,
       sending: false,
       sendFailure: failure,
       draft: { key: held.draft.key + 1, text },
@@ -320,7 +292,6 @@ export function AgentColumn({
       // A message sent may name the conversation, so it is read again.
       setView((held) => ({
         ...held,
-        asking: null,
         sending: false,
         revision: held.revision + 1,
       }));
@@ -328,8 +299,15 @@ export function AgentColumn({
       giveBack(request.text, failureCode(error));
     }
   };
+  // Pressing Send is the person's decision: the message goes, and nothing
+  // asks them again.
   const submit = async (text: string, chosen: AgentSelection) => {
-    if (!session) return;
+    if (!session || catalog.kind !== "ready") return;
+    const runs = selectionRecord(catalog.value, chosen);
+    if (!runs) {
+      giveBack(text, "agent_selection_unavailable");
+      return;
+    }
     let request: AgentSendRequest;
     try {
       // A new conversation begins with its first message, never on its own.
@@ -341,20 +319,7 @@ export function AgentColumn({
       // Watched before anything is sent, so the reply is followed from its
       // first word.
       await live.watch(id);
-      request = {
-        conversation_id: id,
-        text,
-        selection: {
-          provider_id: chosen.providerId,
-          model_id: chosen.modelId,
-          ...(chosen.effort ? { effort: chosen.effort } : {}),
-        },
-      };
-      const consent = await session.consentNeeded(request);
-      if (consent) {
-        change({ asking: { request, consent }, sending: false });
-        return;
-      }
+      request = { conversation_id: id, text, selection: runs };
     } catch (error) {
       giveBack(text, failureCode(error));
       return;
@@ -397,25 +362,12 @@ export function AgentColumn({
   const send =
     answering && questionnaire
       ? (text: string) => void answer(questionnaire, { kind: "message", text })
-      : answering && selection && !asking
+      : answering && selection
         ? (text: string) => {
             change({ sending: true, sendFailure: null });
             void submit(text, selection);
           }
         : undefined;
-  const allow = asking
-    ? async () => {
-        if (!session) return;
-        change({ sending: true });
-        try {
-          await session.grantConsent(asking.consent);
-        } catch (error) {
-          giveBack(asking.request.text, failureCode(error));
-          return;
-        }
-        await deliver(asking.request);
-      }
-    : undefined;
   const stop =
     session && live.open
       ? () => {
@@ -429,32 +381,21 @@ export function AgentColumn({
         }
       : undefined;
 
-  const consentFor = (consent: AgentConsentRequest) => {
-    const record =
-      providers.kind === "ready"
-        ? providers.value.find((option) => option.id === consent.provider_id)
-        : undefined;
-    const model = record?.models.find(
-      (option) => option.id === consent.model_id,
-    );
-    const items = consent.items.map((item, index): ConsentItem => ({
-      id: `${item.kind}-${item.kind === "document" ? item.id : index}`,
-      label:
-        item.kind === "messages"
-          ? t("desktop.agent.consent_messages")
-          : item.kind === "tool_results"
-            ? t("desktop.agent.consent_tool_results")
-            : item.name,
-    }));
-    return {
-      providerName: record?.name ?? consent.provider_id,
-      modelName: model?.display_name ?? consent.model_id,
-      items,
-    };
-  };
-
-  const notice = status ? serviceWords(t, status) : null;
-  const asked = asking ? consentFor(asking.consent) : null;
+  // No provider the agent can run: a key is missing, or every lane is held
+  // back. That is not a failure, and the way to a key is offered.
+  const noProvider =
+    (status?.state === "refused" &&
+      status.code === "agent_provider_credential_missing") ||
+    (offer !== null &&
+      !offer.providers.some(
+        (provider) =>
+          provider.selectable && (offer.models[provider.id] ?? []).length > 0,
+      ));
+  const notice = noProvider
+    ? t("desktop.agent.no_provider")
+    : status
+      ? serviceWords(t, status)
+      : null;
 
   return (
     <>
@@ -472,13 +413,14 @@ export function AgentColumn({
                 change({
                   panel: "none",
                   conversationId: null,
-                  asking: null,
                   sendFailure: null,
                 })
             : undefined
         }
         onToggleHistory={agent ? () => toggle("history") : undefined}
         onToggleDocuments={agent ? () => toggle("documents") : undefined}
+        settingsOpen={settingsOpen}
+        onToggleSettings={openSettings ? () => toggle("settings") : undefined}
         onToggleMaximize={onToggleMaximize}
         trailing={trailing}
       />
@@ -498,7 +440,24 @@ export function AgentColumn({
         aria-label={t("desktop.pane.agent")}
         className="agent-body flex min-h-0 flex-1 flex-col overflow-y-auto focus-visible:-outline-offset-2"
       >
-        {historyOpen ? (
+        {settingsOpen ? (
+          settings.read.kind === "ready" ? (
+            <div className="p-3">
+              <ProviderSettingsSection
+                providers={settings.read.value.providers}
+                development={settings.read.value.development}
+                busyId={settings.busyId}
+                outcomes={settings.outcomes}
+                onSave={settings.save}
+                onTurnOff={settings.turnOff}
+                onReset={settings.reset}
+                onRefresh={settings.refresh}
+              />
+            </div>
+          ) : (
+            <ReadState read={settings.read} icon="settings" />
+          )
+        ) : historyOpen ? (
           groups ? (
             <HistoryList
               groups={groups}
@@ -543,7 +502,7 @@ export function AgentColumn({
       </section>
       {/* The history and the documents take the column's whole height, as
           the composer would sit under a list it does not write to. */}
-      {!historyOpen && !documentsOpen && (
+      {!historyOpen && !documentsOpen && !settingsOpen && (
         <div className="grid shrink-0 gap-2 p-3 pt-0">
           {live.approvals.map((approval) => (
             <ApprovalPrompt
@@ -579,15 +538,6 @@ export function AgentColumn({
               }
             />
           )}
-          {asking && asked && (
-            <ConsentPrompt
-              providerName={asked.providerName}
-              modelName={asked.modelName}
-              contentItems={asked.items}
-              onAllow={view.sending ? undefined : () => void allow?.()}
-              onDecline={() => giveBack(asking.request.text, null)}
-            />
-          )}
           {view.sendFailure !== null ? (
             <p role="alert" className="flex items-start gap-2 text-sm">
               <Icon name="alert" className="mt-0.5 text-destructive" />
@@ -600,7 +550,14 @@ export function AgentColumn({
                 className="flex items-start gap-2 text-sm text-muted-foreground"
               >
                 <Icon name="info" className="mt-0.5" />
-                <span>{notice}</span>
+                <span className="grid justify-items-start gap-1.5">
+                  {notice}
+                  {noProvider && openSettings && (
+                    <Button variant="outline" size="xs" onClick={openSettings}>
+                      {t("desktop.agent.set_up_providers")}
+                    </Button>
+                  )}
+                </span>
               </p>
             )
           )}

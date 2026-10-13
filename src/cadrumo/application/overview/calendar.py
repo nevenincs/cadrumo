@@ -991,9 +991,7 @@ def _calendar_entry_from_obligation(
                     "error_type": type(exc).__name__,
                 },
             )
-    censo_enrolment_state = (
-        None if censo_enrolment_states is None else censo_enrolment_states.get(obligation.modelo)
-    )
+    censo_enrolment_state = None if censo_enrolment_states is None else censo_enrolment_states.get(obligation.modelo)
     if censo_enrolment_state is None:
         censo_enrolment_state = _calendar_censo_enrolment_state(
             modelo=obligation.modelo,

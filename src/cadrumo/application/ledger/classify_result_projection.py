@@ -72,7 +72,9 @@ def classification_result_from_action(
         profile_id=profile_id,
         transaction=LedgerTransactionProjection.from_payload(canonical.transaction),
         deduction_fact_kind=(
-            result.transaction.deduction_fact_kind.value if result.transaction.deduction_fact_kind else None
+            result.transaction.deduction_fact_kind.value
+            if (result.transaction.deduction_fact_kind is not None and result.transaction.deduction_fact_kind)
+            else None
         ),
         investment_asset_id=result.transaction.investment_asset_id,
         review_status=canonical.review_status,

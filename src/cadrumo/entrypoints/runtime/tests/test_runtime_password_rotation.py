@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import sys
-from collections.abc import Iterator
+from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from pathlib import Path
@@ -64,7 +64,7 @@ class _LoginObservation:
 
 
 @contextmanager
-def _native_runtime(tmp_path: Path) -> Iterator[tuple[UUID, UUID, RuntimeLaunchDoor, UUID, Path]]:
+def _native_runtime(tmp_path: Path) -> Generator[tuple[UUID, UUID, RuntimeLaunchDoor, UUID, Path]]:
     """Launch a real installed server over synthetic OS and native-store ports."""
     with worker_profiles(tmp_path) as (root, targets):
         profile_id = targets[0][0].binding.profile_id

@@ -11,7 +11,7 @@ from __future__ import annotations
 import ctypes
 import sys
 import threading
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
@@ -64,7 +64,7 @@ def _operation(note: str) -> _Operation:
 
 
 @contextmanager
-def _exclusively_held(path: Path, *, release_after: float) -> Iterator[None]:
+def _exclusively_held(path: Path, *, release_after: float) -> Generator[None]:
     """Hold ``path`` open with no sharing, as a racing handle does, then close it on a timer."""
     if sys.platform == "win32":
         kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)

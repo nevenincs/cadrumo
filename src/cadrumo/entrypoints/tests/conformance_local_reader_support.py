@@ -18,20 +18,22 @@ from ...application.browser_runtime_operation import (
     BROWSER_RUNTIME_PREFLIGHT_PHASE,
     BROWSER_RUNTIME_SETTLEMENT_PHASE,
     BrowserRuntimeProvisionPublicResultV1,
-    build_browser_runtime_provision_request,
 )
 from ...application.local_reader_contracts import local_reader_fact_mapping
 from ...application.local_reader_report import (
     LOCAL_READER_REPORT_OPERATION_DEFINITION_ID,
     LocalReaderReportPublicResultV1,
-    build_local_reader_report_request,
 )
 from ...application.local_reader_status_operation import (
     LOCAL_READER_STATUS_OPERATION_DEFINITION_ID,
     LocalReaderStatusPublicResultV1,
-    build_local_reader_status_request,
 )
 from ...application.provisioning_browser import required_browser_builds
+from ...application.tests.local_reader_operation_requests import (
+    build_browser_runtime_provision_request,
+    build_local_reader_report_request,
+    build_local_reader_status_request,
+)
 from ...core.config import load_settings
 from ...core.operations import OperationEffect, OperationTerminalCondition
 from ...tests.env_scope import scoped_env_var

@@ -134,7 +134,7 @@ def _seed_profile(
         "iva.voluntary_sii_enrolled": "false",
         "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
     }
-    if extra_values:
+    if extra_values is not None and extra_values:
         values.update(extra_values)
     return register_cli_profile(label=name, facts=values, log_in=False)
 

@@ -10,9 +10,9 @@ related:
   - '[[2026-07-08-mcp-protocol-hardening-adr]]'
 supersedes:
   - '2026-10-10-mcp-parity-admission-rulings-adr'
-modified: '2026-10-12'
+modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:8d7d634a309784ee59677a34efa0384ec6bec8b43f5065f43b10b04e604ca341'
+body_hash: 'sha256:7681fb2bd515bf0e6aea4e528677273813511bdc303f0c83d0b6892b5fc1f6f6'
 ---
 
 # `mcp-parity` adr: `The command line, the terminal interface and MCP are at parity, and no frontend is refused what another can do` | (**status:** `accepted`)
@@ -39,7 +39,7 @@ The work to make the MCP server a full interface was built on a wrong reading of
 
 Binding:
 
-1. Every registered operation the command line can submit inside a signed-in or key-admitted profile can be submitted from the terminal interface and from MCP. Authentication, session and access administration, acts outside the bound profile and operations that require a secret are not agent operations, and MCP does not serve them (`2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`). (Amended 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`; before that every operation the command line could submit was to be submittable on MCP.)
+1. Every registered operation the command line can submit inside a signed-in or key-admitted profile can be submitted from the terminal interface and from MCP. Authentication, session and access administration, acts outside the bound profile and operations that require a secret are not agent operations, and MCP does not serve them (`2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`). (Amended 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`; before that every operation the command line could submit was to be submittable on MCP.) Setting, replacing, removing or resetting a model-provider credential is a person's act and is refused at application dispatch on MCP and generic `execute`. Its masked status remains an ordinary read on every frontend. (Amended 2026-10-13 under `2026-10-13-provider-settings-adr`; before that only operations that require a secret were named, so removing a credential, which needs none, was not.)
 2. No access resolver, executor, action, guard or runtime check refuses, narrows or changes what an operation does because of the frontend that submitted it. The same request gets the same decision and the same effect on every frontend.
 3. A result is the same on every frontend. A session reads on MCP whatever it could read on the command line.
 4. Where MCP lacked a way to carry something the command line carries inside the profile, an answer to an interaction or a host file path, MCP is given that way. The operation is not refused. No secret is ever carried: MCP has no argument that takes a secret or names one, and an operation that requires a secret is the person's credential act. (Amended 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`; before that a typed secret was among the things MCP was given a way to carry.)

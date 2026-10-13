@@ -23,20 +23,22 @@ def test_180_printed_boxes_do_not_confuse_record_offsets(revision_id: str, sourc
     assert layout.seed_source.value == "authored"
     assert layout.review.state.value == "generated"
     assert {str(p.casilla_id) for p in layout.placements} == {str(c.id) for c in revision.casillas}
-    boxes = {str(p.casilla_id): p.box_number for p in layout.placements if p.box_number}
+    boxes = {str(p.casilla_id): p.box_number for p in layout.placements if (p.box_number is not None and p.box_number)}
     assert boxes == {"decl.total-perceptores": "01", "decl.base-total": "02", "decl.retenciones-total": "03"}
     assert {str(p.source_ref) for p in layout.design_sources} == {"boe-2000-21430-modelo-115-form", source}
     assert [s.id for s in layout.pages[0].sections] == ["declarante", "ejercicio", "declaracion", "resumen"]
     context = [b for s in layout.pages[0].sections for b in s.blocks if isinstance(b, FormContextFieldBlock)]
     fields = [resolve_form_context_field(revision, block) for block in context]
     assert len(fields) == 5
-    assert {str(f.producer_key) for f in fields if f.producer_key} == {
+    assert {str(f.producer_key) for f in fields if (f.producer_key is not None and f.producer_key)} == {
         "taxpayer.tax_id",
         "taxpayer.full_name",
         "contact_person.phone",
         "contact_person.full_name",
     }
-    assert {str(f.draft_attribute) for f in fields if f.draft_attribute} == {"filing_year"}
+    assert {str(f.draft_attribute) for f in fields if (f.draft_attribute is not None and f.draft_attribute)} == {
+        "filing_year"
+    }
     repeated = layout.pages[1].sections[0].blocks[0]
     assert isinstance(repeated, FormRepeatingGroupBlock)
     assert repeated.export_record_id == "modelo-180-perceptor"

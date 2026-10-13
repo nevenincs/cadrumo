@@ -210,7 +210,7 @@ def test_the_recipient_side_does_not_reach_casilla_122(
         operation=authority_operation,
     )
 
-    assert not resolved.get(_CASILLA_122), (
+    assert not bool(resolved.get(_CASILLA_122)), (
         f"a RECEIVED reverse charge is the recipient's self-assessment, not supplied turnover: "
         f"{resolved.get(_CASILLA_122)!r}"
     )
@@ -231,7 +231,7 @@ def test_a_domestic_exemption_does_not_reach_casilla_122(
         operation=authority_operation,
     )
 
-    assert not resolved.get(_CASILLA_122)
+    assert not bool(resolved.get(_CASILLA_122))
 
 
 def test_the_new_arm_does_not_divert_the_intracom_and_export_bases(
@@ -250,8 +250,8 @@ def test_the_new_arm_does_not_divert_the_intracom_and_export_bases(
         operation=authority_operation,
     )
 
-    assert not reverse_charge.get(_CASILLA_59), "a domestic reverse charge is not an intra-community supply"
-    assert not reverse_charge.get(_CASILLA_60), "a domestic reverse charge is not an export"
+    assert not bool(reverse_charge.get(_CASILLA_59)), "a domestic reverse charge is not an intra-community supply"
+    assert not bool(reverse_charge.get(_CASILLA_60)), "a domestic reverse charge is not an export"
 
 
 _CASILLA_120 = "modelo-303-casilla-120-no-sujetas-localizacion-base"
@@ -299,9 +299,9 @@ def test_the_two_informacion_adicional_boxes_do_not_collect_each_other(
     )
 
     assert service.get(_CASILLA_120) == _BASE
-    assert not service.get(_CASILLA_122), "a not-subject service is not a reverse charge"
+    assert not bool(service.get(_CASILLA_122)), "a not-subject service is not a reverse charge"
     assert reverse_charge.get(_CASILLA_122) == _BASE
-    assert not reverse_charge.get(_CASILLA_120), "a reverse charge IS subject; it is not a localizacion case"
+    assert not bool(reverse_charge.get(_CASILLA_120)), "a reverse charge IS subject; it is not a localizacion case"
 
 
 def test_an_article_7_not_subject_operation_does_not_reach_casilla_120(
@@ -320,4 +320,4 @@ def test_an_article_7_not_subject_operation_does_not_reach_casilla_120(
         operation=authority_operation,
     )
 
-    assert not resolved.get(_CASILLA_120)
+    assert not bool(resolved.get(_CASILLA_120))

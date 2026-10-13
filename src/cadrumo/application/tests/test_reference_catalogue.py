@@ -189,7 +189,11 @@ def test_a_single_casilla_carries_its_formula_only_when_it_is_computed(operation
     bound = catalogue.describe_casilla("130", "01", year=2025, period="1T", operation=operation)
     unscoped = catalogue.describe_casilla("130", "03", operation=operation)
 
-    assert computed.input_kind == "computed" and computed.formula_id and "op" in (computed.formula_expression or {})
+    assert (
+        computed.input_kind == "computed"
+        and (computed.formula_id is not None and computed.formula_id)
+        and "op" in (computed.formula_expression or {})
+    )
     assert bound.input_kind == "bound" and bound.formula_id is None and bound.formula_expression is None
     assert (computed.filing_year, unscoped.filing_year) == (2025, None)
     assert unscoped.formula_id == computed.formula_id

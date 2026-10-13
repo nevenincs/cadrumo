@@ -2456,11 +2456,15 @@ def test_an_unconverted_foreign_invoice_is_excluded_but_reported(
         "the invoice was withheld from Modelo 349 with no advisory: the operator "
         "files a recapitulativa missing a real operation and is never told"
     )
-    reported = [d for d in resolution.diagnostics if d.source_ref and unconverted.invoice_id in d.source_ref]
+    reported = [
+        d
+        for d in resolution.diagnostics
+        if (d.source_ref is not None and d.source_ref) and unconverted.invoice_id in d.source_ref
+    ]
     assert reported, f"no advisory names the withheld invoice: {[d.source_ref for d in resolution.diagnostics]}"
     # The advisory has to say what to DO about it. An operator who cannot act on
     # the message is no better off than one who never saw it.
-    assert reported[0].remedy, "the advisory names the problem but not the remedy"
+    assert reported[0].remedy is not None and reported[0].remedy, "the advisory names the problem but not the remedy"
 
 
 def test_m347_role_fact_advisories_fires_only_for_a_role_carrying_filer_with_the_fact_unset(

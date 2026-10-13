@@ -14,7 +14,7 @@ never contend for one runtime door in a test.
 from __future__ import annotations
 
 import shutil
-from collections.abc import Callable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Generator, Iterator, Mapping, Sequence
 from contextlib import ExitStack, contextmanager, nullcontext
 from pathlib import Path
 from typing import Unpack
@@ -92,7 +92,7 @@ def operator_profile_bound_to_cli(
     facts: Mapping[str, str] | None = None,
     complete: bool = True,
     prepare: Callable[[], None] | None = None,
-) -> Iterator[UUID]:
+) -> Generator[UUID]:
     """Register one password-custodied profile and run every command as its operator.
 
     Registration leaves the profile's session live in this process for the
@@ -117,7 +117,7 @@ def runtime_cli_profile(
     tmp_path: Path,
     label: str = _OPERATOR_LABEL,
     facts: Mapping[str, str] | None = None,
-) -> Iterator[TestRuntimeProfile]:
+) -> Generator[TestRuntimeProfile]:
     """Isolate a CLI world around one password-custodied profile whose operator runs every command.
 
     The command-line counterpart of the storage package's runtime profile: the
@@ -199,11 +199,13 @@ def runtime_profile_backend_fixture(
 
 
 @contextmanager
-def _isolated_world(root: Path, settings_overrides: Mapping[str, object] | None) -> Iterator[Path]:
+def _isolated_world(root: Path, settings_overrides: Mapping[str, object] | None) -> Generator[Path]:
     dispose_engine()
     try:
         with (
-            override_settings(**settings_overrides) if settings_overrides else nullcontext(),
+            override_settings(**settings_overrides)
+            if (settings_overrides is not None and settings_overrides)
+            else nullcontext(),
             isolated_profile_storage_root(tmp_path=root) as storage_root,
         ):
             yield storage_root
@@ -212,7 +214,7 @@ def _isolated_world(root: Path, settings_overrides: Mapping[str, object] | None)
 
 
 @contextmanager
-def _signed_in_copy_bound_to_cli(storage_root: Path, label: str) -> Iterator[None]:
+def _signed_in_copy_bound_to_cli(storage_root: Path, label: str) -> Generator[None]:
     """Unlock a copied world's profile with its password, as its operator would, and bind it."""
     passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
     with bundled_indexed_authority().operation() as operation:

@@ -35,7 +35,7 @@ def resolve_form_context_field(revision: ModeloRevision, block: FormContextField
     if block.choices and (
         field.kind is not CasillaFieldKind.HEADER
         or field.producer_key is None
-        or not field.allowed_values
+        or not (field.allowed_values is not None and field.allowed_values)
         or {choice.value for choice in block.choices} != set(field.allowed_values)
     ):
         raise RegistryValidationError("context choices must cover the exact closed domain of a header producer")

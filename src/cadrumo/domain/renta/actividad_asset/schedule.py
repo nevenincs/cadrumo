@@ -396,7 +396,7 @@ def require_opening_method(revision: ActivityAssetRevision, method: Amortization
     to have been charged under the same method (RIS arts. 5.1 and 6.1).
     """
     opening = revision.opening_history
-    if method not in _FROM_START_METHODS or not opening.accumulated_amount:
+    if method not in _FROM_START_METHODS or not (opening.accumulated_amount is not None and opening.accumulated_amount):
         return
     if opening.amortization_method is not method:
         raise ActividadAssetUnsupportedError(

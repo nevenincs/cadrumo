@@ -346,7 +346,7 @@ def build_download_latest(
     from dev.packaging.cohort_manifest import CohortManifest
 
     manifest = CohortManifest.model_validate_json(cohort_manifest_path.read_text(encoding=_UTF_8))
-    base = _release_download_base_url(release_base_url) if release_base_url else None
+    base = _release_download_base_url(release_base_url) if (release_base_url is not None and release_base_url) else None
     assets = tuple(
         DownloadAsset(
             name=record.name,
@@ -354,7 +354,7 @@ def build_download_latest(
             filename=Path(record.path).name,
             sha256=record.sha256,
             size=record.size,
-            url=f"{base}/{Path(record.path).name}" if base else None,
+            url=f"{base}/{Path(record.path).name}" if (base is not None and base) else None,
         )
         for record in manifest.artifacts
     )

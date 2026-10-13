@@ -102,7 +102,11 @@ class ProrrataEntryProjection(BaseModel):
             sector_id=entry.sector_id,
             interrupted=entry.interrupted,
             provisional_percentage=_public_decimal(entry.provisional_percentage),
-            provisional_provenance=(entry.provisional_provenance.value if entry.provisional_provenance else None),
+            provisional_provenance=(
+                entry.provisional_provenance.value
+                if (entry.provisional_provenance is not None and entry.provisional_provenance)
+                else None
+            ),
             authorisation_reference=entry.authorisation_reference,
             definitive_percentage=_public_decimal(entry.definitive_percentage),
             definitive_volume_con_derecho=_public_decimal(entry.definitive_volume_con_derecho),

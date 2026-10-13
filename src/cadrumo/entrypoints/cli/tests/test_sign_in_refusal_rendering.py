@@ -139,7 +139,9 @@ def test_a_damaged_or_older_saved_sign_in_is_not_called_expired(sign_in: SignInR
     assert rendered["message"] == expected
     assert expected not in {expired, key}
     assert isinstance(sign_in.reason, ProfileSessionRefusalReason)
-    assert sign_in.reason.value == rendered["context"]["sign_in_reason"]  # type: ignore[index]
+    context = rendered["context"]
+    assert isinstance(context, dict)
+    assert sign_in.reason.value == context["sign_in_reason"]
 
 
 def test_no_two_refusals_share_one_message() -> None:

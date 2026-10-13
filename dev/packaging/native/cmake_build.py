@@ -22,6 +22,7 @@ from ..command_execution import CommandResult, run_command
 from ..google_oauth import build_client_json, client_build_identity
 from ..runtime_wheel_selection import plan_target_wheels
 from .action_cache import action_lock, completed, fingerprint, modified_inputs, staleness
+from .agent import agent_wheel, build_agent, validate_wheel_dependencies
 from .assemble import assemble, image_artifact
 from .build_log import BuildLog, command_line, display_path
 from .build_paths import build_paths
@@ -54,7 +55,7 @@ def action_toolchain(configured: Mapping[str, object], action: str, target: str)
             selected["cpython_archive_decoder"] = configured["cpython_archive_decoder"]
     elif action == "tools":
         selected["pins"] = {"resvg_py": pins["resvg_py"]}
-    elif action != "product":
+    elif action not in {"product", "agent"}:
         raise ValueError(f"No shared producer selection for {action}")
     # Product wheels use Hatchling's Python/data hooks; native compilers and SDKs
     # never produce their contents. CMake enrolls their declared sources/backend,
@@ -172,7 +173,8 @@ def _announce(timings: BuildTimings | None, command: list[str]) -> None:
 def main() -> None:
     """Run one CMake action with scoped development-tool storage."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=("sdk", "provision", "product", "assemble", "run", "tools"))
+    parser.add_argument("action", choices=("sdk", "provision", "product", "assemble", "run", "tools", "agent"))
+    parser.add_argument("--cmake")
     parser.add_argument("--build", type=Path)
     parser.add_argument("--inputs", type=Path)
     parser.add_argument("--config", choices=("Debug", "Release"))
@@ -212,7 +214,7 @@ def main() -> None:
         raise SystemExit(result.returncode)
     if arguments.build is None:
         parser.error("--build is required")
-    if arguments.action in {"sdk", "provision", "product", "tools"} and arguments.inputs is None:
+    if arguments.action in {"sdk", "provision", "product", "tools", "agent"} and arguments.inputs is None:
         parser.error("Shared actions require --inputs")
     build = arguments.build.resolve(strict=True)
     with measure_build(build, arguments.action) as timings:
@@ -232,12 +234,14 @@ def execute_action(build: Path, arguments: argparse.Namespace, timings: BuildTim
     identity_file = paths["generated"] / "identity.json"
     configured = json.loads((paths["generated"] / "build-toolchain.json").read_text(encoding="utf-8"))
     arguments.target = json.loads(identity_file.read_text(encoding="utf-8"))["target"]
-    if arguments.action in {"sdk", "provision", "product", "tools"}:
+    if arguments.action in {"sdk", "provision", "product", "tools", "agent"}:
         if arguments.inputs is None:
             raise ValueError("Shared actions require --inputs")
         paths = build_paths(build)
         destination = paths[
-            {"sdk": "python_sdk", "provision": "runtime", "tools": "tools", "product": "product"}[arguments.action]
+            {"sdk": "python_sdk", "provision": "runtime", "tools": "tools", "product": "product", "agent": "agent"}[
+                arguments.action
+            ]
         ]
         extra = selected_published_authority(REPO_ROOT) if arguments.action == "product" else ()
         selected = action_toolchain(configured, arguments.action, arguments.target)
@@ -311,7 +315,12 @@ def build_action(build: Path, arguments: argparse.Namespace, *, timings: BuildTi
     contract = load_layout(arguments.target)
     sdk_root = paths.get("python_sdk", runtime)
     sdk = sdk_root / contract["sdk"]["root"]
-    if arguments.action == "sdk":
+    if arguments.action == "agent":
+        if not arguments.cmake:
+            raise ValueError("Agent construction requires the CMake executable")
+        destination = reset(build, str(paths["agent"].relative_to(build)))
+        build_agent(destination, paths["agent_source"] / "source.tar.gz", arguments.cmake, selected_uv(configured))
+    elif arguments.action == "sdk":
         destination = reset(build, str(sdk_root.relative_to(build)))
         pin = (REPO_ROOT / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip()
         produced = backend(contract).provision_sdk(
@@ -364,6 +373,29 @@ def build_action(build: Path, arguments: argparse.Namespace, *, timings: BuildTi
             build_toolchain=configured,
             timings=timings,
         )
+        pin = (REPO_ROOT / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip()
+        wheel = agent_wheel(paths["agent"])
+        validate_wheel_dependencies(wheel, arguments.target, pin)
+        result = run_command(
+            [
+                selected_uv(configured),
+                "pip",
+                "install",
+                "--python",
+                sys.executable,
+                "--no-config",
+                "--no-deps",
+                "--link-mode",
+                "copy",
+                "--target",
+                str(destination / "dependencies"),
+                str(wheel),
+            ],
+            cwd=REPO_ROOT,
+        )
+        if result.returncode:
+            raise RuntimeError(result.stderr)
+        shutil.copy2(paths["agent"] / "agent-wheel.json", destination / "agent-wheel.json")
     else:
         if arguments.config is None:
             raise ValueError("assemble requires --config")
@@ -390,6 +422,9 @@ def build_action(build: Path, arguments: argparse.Namespace, *, timings: BuildTi
                 "cohort_wheels": {}
                 if arguments.interpreter
                 else json.loads((paths["product"] / "build/product-wheels.json").read_text(encoding="utf-8")),
+                "agent": {}
+                if arguments.interpreter
+                else json.loads((paths["product"] / "agent-wheel.json").read_text(encoding="utf-8")),
                 "build_toolchain": json.loads(
                     (paths["generated"] / "build-toolchain.json").read_text(encoding="utf-8")
                 ),

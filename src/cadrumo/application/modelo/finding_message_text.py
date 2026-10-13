@@ -235,7 +235,7 @@ def _date(value: FindingFactValue, language: OutputLanguage) -> str:
 def _box(value: FindingFactValue, box_words: Mapping[str, str], language: OutputLanguage) -> str:
     text = str(value)
     words = box_words.get(text)
-    if words:
+    if words is not None and words:
         return words
     if _BOX_NUMBER.fullmatch(text):
         return text

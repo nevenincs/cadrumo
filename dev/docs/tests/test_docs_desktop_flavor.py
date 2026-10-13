@@ -206,11 +206,11 @@ def _loaded_resource_urls(page: str) -> list[str]:
         @override
         def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
             values = {name: value or "" for name, value in attrs}
-            if tag in {"script", "img", "iframe", "source", "audio", "video", "embed"} and values.get("src"):
+            if tag in {"script", "img", "iframe", "source", "audio", "video", "embed"} and bool(values.get("src")):
                 urls.append(values["src"])
-            elif tag == "link" and values.get("href"):
+            elif tag == "link" and bool(values.get("href")):
                 urls.append(values["href"])
-            elif tag == "object" and values.get("data"):
+            elif tag == "object" and bool(values.get("data")):
                 urls.append(values["data"])
 
     _Collector().feed(page)

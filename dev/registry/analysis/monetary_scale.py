@@ -273,7 +273,11 @@ def amount_shaped_without_casilla(field: ExportFieldDefinition) -> bool:
         return False
     if str(field.data_type) not in _AMOUNT_WIRE_TYPES:
         return False
-    return field.value_policy is None and not field.allowed_values and field.date_format is None
+    return (
+        field.value_policy is None
+        and not (field.allowed_values is not None and field.allowed_values)
+        and field.date_format is None
+    )
 
 
 def sibling_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[MonetaryScaleFinding, ...]:

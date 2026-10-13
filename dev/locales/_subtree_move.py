@@ -274,7 +274,11 @@ def collect_subtree_source_leaf(
     carried = False
     for destination in destinations:
         destination_key = f"{destination}{tail}"
-        permitted = permitted_destination_keys.get(destination) if permitted_destination_keys else None
+        permitted = (
+            permitted_destination_keys.get(destination)
+            if (permitted_destination_keys is not None and permitted_destination_keys)
+            else None
+        )
         if permitted is not None and destination_key not in permitted:
             continue
         if value is None and not destination_key.startswith(_MODELO_SCHEMA_PREFIX):

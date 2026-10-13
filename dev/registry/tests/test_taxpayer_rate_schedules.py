@@ -77,7 +77,7 @@ def test_natural_person_route_has_irpf_tarifa_bracket_schedules() -> None:
         return None
 
     dispatch_table = _first_ccaa_dispatch_table(autonomic_formula.expression)
-    assert dispatch_table, "autonomic IRPF general scale must dispatch by CCAA"
+    assert dispatch_table is not None and dispatch_table, "autonomic IRPF general scale must dispatch by CCAA"
     for ccaa, parameter_id in dispatch_table.items():
         parameter = parameters[parameter_id]
         assert parameter.data_type == "bracket_table", ccaa

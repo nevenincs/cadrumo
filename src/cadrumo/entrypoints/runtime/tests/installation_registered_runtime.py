@@ -8,7 +8,7 @@ by the test.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Generator
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from importlib.metadata import version
@@ -35,7 +35,7 @@ def serving_registered_runtime(
     *,
     secret_store: Callable[[], AutomationSecretStore] = installed_automation_secret_store,
     product_version: str = "test",
-) -> Iterator[RuntimeProfileConnections]:
+) -> Generator[RuntimeProfileConnections]:
     """Serve the real transport over ``root`` with the acts ``register`` adds, then drain it."""
     registry = InstallationActRegistry()
     register(registry)
@@ -52,7 +52,7 @@ def serving_installed_composition(
     login: InstallationLogin,
     *,
     secret_store: Callable[[], AutomationSecretStore] = installed_automation_secret_store,
-) -> Iterator[RuntimeProfileConnections]:
+) -> Generator[RuntimeProfileConnections]:
     """Serve the real transport over ``root`` with the acts the installed runtime composes for itself.
 
     The connection service is handed no registry, so it composes the one the
@@ -73,7 +73,7 @@ def _serving(
     *,
     secret_store: Callable[[], AutomationSecretStore],
     product_version: str,
-) -> Iterator[RuntimeProfileConnections]:
+) -> Generator[RuntimeProfileConnections]:
     stop, boot = Event(), uuid4()
     profiles = RuntimeProfileConnections(
         storage_root=root,

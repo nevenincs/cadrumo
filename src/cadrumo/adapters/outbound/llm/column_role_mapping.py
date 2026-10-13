@@ -274,7 +274,9 @@ def _role_catalogue_lines() -> tuple[str, ...]:
     lines: list[str] = []
     for role in permitted_column_roles():
         description = descriptions.get(role.value)
-        lines.append(f"- {role.value}: {description}" if description else f"- {role.value}")
+        lines.append(
+            f"- {role.value}: {description}" if (description is not None and description) else f"- {role.value}"
+        )
     return tuple(lines)
 
 

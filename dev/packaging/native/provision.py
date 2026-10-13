@@ -14,6 +14,7 @@ from dev._paths import REPO_ROOT
 
 from ..command_execution import run_command
 from ..runtime_wheel_selection import plan_target_wheels
+from .agent import locked_requirements
 from .build_log import BuildLog, display_path
 from .build_toolchain import selected_uv
 from .hashing import digest
@@ -103,6 +104,35 @@ def provision(
     )
     if result.returncode:
         raise RuntimeError(result.stderr)
+    agent_dependencies = locked_requirements(target, pin)
+    result = run_command(
+        [
+            uv,
+            "pip",
+            "install",
+            "--python",
+            sys.executable,
+            "--python-version",
+            pin,
+            "--python-platform",
+            uv_platform(target),
+            "--require-hashes",
+            "--no-config",
+            "--target",
+            str(dependencies),
+            "--only-binary",
+            ":all:",
+            "--no-deps",
+            "--link-mode",
+            "copy",
+            "-r",
+            str(REPO_ROOT / "native/agent" / f"{target}.txt"),
+        ],
+        cwd=REPO_ROOT,
+        environment=uv_environment(target),
+    )
+    if result.returncode:
+        raise RuntimeError(result.stderr)
     (destination / "runtime-inputs.json").write_text(
         json.dumps(
             {
@@ -110,6 +140,10 @@ def provision(
                 "python": pin,
                 "toolchain": {name: value for name, value in tools.items() if name.startswith("cpython_")},
                 "wheels": [asdict(wheel) for wheel in wheels],
+                "agent_dependencies": {
+                    "lock_sha256": digest(REPO_ROOT / "native/agent" / f"{target}.txt"),
+                    "versions": {name: str(requirement.specifier) for name, requirement in agent_dependencies.items()},
+                },
             },
             indent=2,
         ),

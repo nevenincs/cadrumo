@@ -2,12 +2,12 @@
 
 The production registry and the real executors run over a stored profile with
 a session host that answers for the frontend that admitted the invocation.
-Each operation below runs its seeded scenario on the command line, the
-terminal interface and MCP. It settles the same on all three, and every event
-it stores names the party who acted: the session's label for an execution
-admitted on MCP, whatever the request typed, and for a person's frontend the
-label the request typed or, where the request carries none, the operation's
-own label for a person.
+Each operation below runs its seeded scenario on every frontend: the command
+line, the terminal interface, MCP and the agent host. It settles the same on
+each, and every event it stores names the party who acted: the session's label
+for an execution admitted on an agent's frontend, whatever the request typed,
+and for a person's frontend the label the request typed or, where the request
+carries none, the operation's own label for a person.
 """
 
 from __future__ import annotations
@@ -29,10 +29,13 @@ from . import test_registered_executor_conformance as conformance
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_MCP = OperationFrontendProjection.MCP
 _SESSION_CLIENT = UUID("5aa00000-0000-4000-8000-0000000000dd")
 _TYPED_ACTOR = "typed by the caller"
-_AGENT_LABEL = f"agent:mcp.attended.{_SESSION_CLIENT}"
+_AGENT_LABELS = {
+    OperationFrontendProjection.MCP: f"agent:mcp.attended.{_SESSION_CLIENT}",
+    OperationFrontendProjection.AGENT_HOST: f"agent:agent-host.attended.{_SESSION_CLIENT}",
+}
+"""The label each agent's frontend records, written out rather than derived."""
 _FRONTENDS = pytest.mark.parametrize("frontend", sorted(OperationFrontendProjection))
 
 _TYPED = "the label the request typed"
@@ -100,8 +103,8 @@ def test_a_ledger_write_records_the_session_label_for_an_agent_and_the_persons_l
         assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
         stored = [event for event_id, event in history.load().events.items() if event_id not in before]
         assert stored
-        if frontend is _MCP:
-            recorded = _AGENT_LABEL
+        if frontend in _AGENT_LABELS:
+            recorded = _AGENT_LABELS[frontend]
         elif a_person_records == _TYPED:
             recorded = _TYPED_ACTOR
         else:

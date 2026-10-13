@@ -187,7 +187,7 @@ def _imported_module(module: str, imported: str | None, level: int, *, is_packag
     package = module.split(".") if is_package else module.split(".")[:-1]
     keep = len(package) - (level - 1)
     prefix = package[: max(keep, 0)]
-    if imported:
+    if imported is not None and imported:
         prefix.extend(imported.split("."))
     return ".".join(prefix)
 
@@ -245,7 +245,7 @@ def _record_import_bindings(node: ast.stmt, module: str, is_package: bool, bindi
     elif isinstance(node, ast.Import):
         for alias in node.names:
             local = alias.asname or alias.name.split(".", maxsplit=1)[0]
-            bindings[local] = alias.name if alias.asname else local
+            bindings[local] = alias.name if (alias.asname is not None and alias.asname) else local
 
 
 def _record_class_declaration(
@@ -283,7 +283,7 @@ def _admit_interface_declaration(
     resolved_bases = {
         resolved
         for base in declaration.resolved_bases
-        if (resolved := resolve_base(_module_name(declaration.path), base))
+        if ((resolved := resolve_base(_module_name(declaration.path), base)) is not None and resolved)
     }
     if _TEXTUAL_APP_ROOT in declaration.resolved_bases or apps & resolved_bases:
         apps.add(qualname)

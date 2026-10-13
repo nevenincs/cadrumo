@@ -68,7 +68,7 @@ def execute_profile_mutation(
         context = {
             "reason": error.reason,
             "operation_id": str(error.operation_id),
-            "effect": error.effect.value if error.effect else "unknown",
+            "effect": error.effect.value if (error.effect is not None and error.effect) else "unknown",
         }
         if error.terminal_condition is not None:
             context["terminal_condition"] = error.terminal_condition.value

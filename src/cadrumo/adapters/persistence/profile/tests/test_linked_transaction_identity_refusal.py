@@ -7,13 +7,10 @@ from decimal import Decimal
 
 import pytest
 
-from .....application.ledger.actions_manual import (
-    create_manual_transaction,
-    link_manual_transaction_invoice,
-    update_manual_transaction_fields,
-)
+from .....application.ledger.actions_manual import link_manual_transaction_invoice, update_manual_transaction_fields
 from .....application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
 from .....application.ledger.persistence_ports import LedgerPersistenceConflictError
+from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from .....domain.buckets.event import BucketEventHistoryCatalogue
 from .....domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from .....domain.transactions.enums import TransactionDirection

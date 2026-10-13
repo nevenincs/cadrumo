@@ -79,4 +79,4 @@ def test_certificate_error_returns_unavailable_description(tmp_path: Path) -> No
     description = auth.describe()
 
     assert description.available is False
-    assert description.health_summary
+    assert description.health_summary is not None and description.health_summary

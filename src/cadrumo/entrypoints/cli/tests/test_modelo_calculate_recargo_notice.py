@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import json
 import sys
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -209,7 +209,7 @@ def _m130_session(
     tmp_path: Path,
     authority_operation: PinnedAuthorityOperation,
     seed: Callable[[str], None],
-) -> Iterator[NativeApiCliSession[None]]:
+) -> Generator[NativeApiCliSession[None]]:
     """Complete a natural-person operator, seed its income row and serve its native worker."""
 
     def prepare(profile_id: UUID, root: Path) -> None:

@@ -116,7 +116,7 @@ def test_a_declared_regime_is_taken_from_the_profile_authority() -> None:
 
     assert inputs.filer_iva_regime == IVARegime("RECARGO_EQUIVALENCIA")
     assert fact.source is ClassifierInputSource.PROFILE_AUTHORITY
-    assert fact.authority
+    assert fact.authority is not None and fact.authority
     assert fact.anchor is None, "a profile fact has no printed form on this document"
 
 

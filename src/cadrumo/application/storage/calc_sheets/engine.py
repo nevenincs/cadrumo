@@ -1190,7 +1190,7 @@ def build_template_preview_plan(
     anchor = calculation_filing_date(frame) if isinstance(frame, Period) else date(frame.filing_year, 12, 31)
     excluded = _untranslatable_internal_only_casillas(source.revision, bracket_filter_date=anchor)
     layout = plan_layout(source.revision, bracket_filter_date=anchor, excluded_casilla_ids=excluded)
-    if unused_example_rows:
+    if unused_example_rows is not None and unused_example_rows:
         layout = layout.model_copy(
             update={"record_rows": fictional_unused_form_rows(source.revision, unused_example_rows)}
         )

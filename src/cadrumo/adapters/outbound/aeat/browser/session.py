@@ -352,7 +352,7 @@ class BrowserSession:
             # (sensitive-financial-data-secure-storage-only).
             "accept_downloads": False,
         }
-        if self.profile.user_agent:
+        if self.profile.user_agent is not None and self.profile.user_agent:
             context_kwargs["user_agent"] = self.profile.user_agent
         if storage_state is not None:
             context_kwargs["storage_state"] = storage_state

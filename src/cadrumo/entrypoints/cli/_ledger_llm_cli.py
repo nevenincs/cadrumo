@@ -424,7 +424,7 @@ def _render_classify_llm_preview(
     lines = [
         f"{tr('cli.ledger.labels.id')}\t{suggestion.transaction_id}",
         f"{tr('cli.ledger.classify.llm_suggestion_label')}\t{suggestion.classification}",
-        f"{tr('cli.ledger.labels.category_id')}\t{suggestion.category if suggestion.category else ''}",
+        f"{tr('cli.ledger.labels.category_id')}\t{suggestion.category or ''}",
         f"{tr('cli.ledger.classify.llm_confidence_label')}\t{suggestion.confidence}",
         f"{tr('cli.ledger.classify.llm_reason_label')}\t{suggestion.reason}",
         tr("cli.ledger.classify.llm_review_hint"),
@@ -472,7 +472,7 @@ def _render_saturate_llm_preview(
     lines = [
         f"{tr('cli.ledger.labels.id')}\t{suggestion.transaction_id}",
         f"{tr('cli.ledger.classify.llm_suggestion_label')}\t{suggestion.classification}",
-        f"{tr('cli.ledger.labels.category_id')}\t{suggestion.category if suggestion.category else ''}",
+        f"{tr('cli.ledger.labels.category_id')}\t{suggestion.category or ''}",
         f"{tr('cli.ledger.labels.iva_category')}\t{iva_category_value or ''}",
     ]
     if suggestion.rate_derivable:

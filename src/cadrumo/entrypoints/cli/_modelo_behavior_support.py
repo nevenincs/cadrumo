@@ -85,7 +85,7 @@ def _declared_period_tokens(
     unknown or unspecified — the caller falls back to the generic shape
     hint.
     """
-    if not modelo or not modelo.strip():
+    if not (modelo is not None and modelo) or not modelo.strip():
         return ()
     try:
         if operation is not None:

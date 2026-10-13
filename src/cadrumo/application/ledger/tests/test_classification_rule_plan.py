@@ -13,7 +13,7 @@ engines cannot drift without a red test.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Iterator
+from collections.abc import Callable, Generator, Iterable, Iterator
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -468,7 +468,7 @@ def _transaction(*, provider_id: str, description: str) -> Transaction:
 
 
 @contextmanager
-def _stored(*transactions: Transaction) -> Iterator[_ClassificationScenario]:
+def _stored(*transactions: Transaction) -> Generator[_ClassificationScenario]:
     """Compose application ports around an in-memory transaction catalogue."""
     with bundled_indexed_authority().operation() as operation:
         yield _ClassificationScenario(TransactionCatalogue.from_transactions(transactions), operation=operation)

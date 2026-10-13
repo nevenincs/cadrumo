@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -83,7 +83,7 @@ class Cancellation:
     """Grant the irreversible section without a supervisor."""
 
     @asynccontextmanager
-    async def irreversible_section(self) -> AsyncIterator[None]:
+    async def irreversible_section(self) -> AsyncGenerator[None]:
         """Enter and leave the section."""
         yield
 

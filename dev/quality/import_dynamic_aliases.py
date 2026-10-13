@@ -42,11 +42,11 @@ def _collect_dynamic_import_aliases(
         local = alias.asname or alias.name.split(".", 1)[0]
         if alias.name == "importlib":
             importlib_names.add(local)
-        elif alias.name == "importlib.import_module" and alias.asname:
+        elif alias.name == "importlib.import_module" and (alias.asname is not None and alias.asname):
             import_module_names.add(local)
         elif alias.name == "builtins":
             raw_import_names.add(f"{local}.__import__")
-        elif alias.name == "builtins.__import__" and alias.asname:
+        elif alias.name == "builtins.__import__" and (alias.asname is not None and alias.asname):
             raw_import_names.add(local)
 
 

@@ -433,8 +433,12 @@ def category_counterparty_mismatch_diagnostics(
         source_ref=lambda invoice: f"invoice:{invoice.invoice_id}",
         message=lambda invoice: (
             f"invoice {invoice.invoice_number!r} declares "
-            f"{invoice.iva_category.value if invoice.iva_category else 'no category'} but its "
-            f"counterparty country {invoice.counterparty_country!r} cannot bear it, so its base "
+            + (
+                invoice.iva_category.value
+                if invoice.iva_category is not None and invoice.iva_category
+                else "no category"
+            )
+            + f" but its counterparty country {invoice.counterparty_country!r} cannot bear it, so its base "
             "is NOT declared on this modelo"
         ),
         remedy=lambda _invoice: (
@@ -466,8 +470,12 @@ def reverse_charge_underivable_diagnostics(
         source_ref=lambda invoice: f"invoice:{invoice.invoice_id}",
         message=lambda invoice: (
             f"invoice {invoice.invoice_number!r} declares "
-            f"{invoice.iva_category.value if invoice.iva_category else 'no category'}, so the "
-            "recipient owes the self-assessed cuota, but no line states a rated tier to compute "
+            + (
+                invoice.iva_category.value
+                if invoice.iva_category is not None and invoice.iva_category
+                else "no category"
+            )
+            + ", so the recipient owes the self-assessed cuota, but no line states a rated tier to compute "
             "it from -- the cuota is NOT declared on this modelo"
         ),
         remedy=lambda _invoice: (
@@ -1025,7 +1033,7 @@ def _recargo_spans_several_tiers(invoice: Invoice) -> bool:
     attribute, named on its own so the screen can report it instead of only
     leaving it out.
     """
-    if not invoice.recargo_amount:
+    if not (invoice.recargo_amount is not None and invoice.recargo_amount):
         return False
     return len({line.iva_rate for line in invoice.lines if line.iva_amount > Decimal("0")}) > 1
 
@@ -1045,7 +1053,7 @@ def _sole_recargo_bearing_line_index(invoice: Invoice) -> int | None:
     declared confidently, where an unscreened one is only an unscreened one.
     That gap is a limit of the invoice-level field, not of this screen.
     """
-    if not invoice.recargo_amount:
+    if not (invoice.recargo_amount is not None and invoice.recargo_amount):
         return None
     cuota_lines = [index for index, line in enumerate(invoice.lines) if line.iva_amount > Decimal("0")]
     if not cuota_lines:

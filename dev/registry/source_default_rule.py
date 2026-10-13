@@ -32,7 +32,7 @@ def _leading_run_scores(rows: Sequence[Mapping[str, object]]) -> Counter[tuple[s
     scores: Counter[tuple[str, ...]] = Counter()
     for row in rows:
         refs = _source_refs(row)
-        if refs and len(set(refs)) == len(refs):
+        if (refs is not None and refs) and len(set(refs)) == len(refs):
             scores.update(refs[:length] for length in range(1, len(refs) + 1))
     return scores
 

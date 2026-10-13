@@ -105,7 +105,9 @@ class WorkbenchReviewMixin:
         sections = self._section_titles()
         chosen = self._unattributed_fields(form, excluding)
         return UnattributedBoxes(
-            boxes=tuple(f"[{field.box}]" if field.box else field.label.text for field in chosen),
+            boxes=tuple(
+                f"[{field.box}]" if (field.box is not None and field.box) else field.label.text for field in chosen
+            ),
             sections=tuple(sections.get(address_key(field.address), "") for field in chosen),
         )
 

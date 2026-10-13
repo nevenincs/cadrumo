@@ -126,13 +126,13 @@ class _IssueList(OptionList):
     def enter_binding(self) -> Binding | None:
         """Its Enter key's binding, with what it now says."""
         entries = self._bindings.key_to_bindings.get("enter")
-        return entries[0] if entries else None
+        return entries[0] if (entries is not None and entries) else None
 
     def show_enter(self, shown: bool) -> None:
         """Show or leave out its Enter key in the footer, keeping what it says."""
         table = self._bindings.key_to_bindings
         entries = table.get("enter")
-        if entries:
+        if entries is not None and entries:
             table["enter"] = [replace(binding, show=shown) for binding in entries]
             self.refresh_bindings()
 
@@ -225,7 +225,7 @@ def _footer_binding(key: str, enter_binding: Binding | None, bindings: Mapping[s
     if key == "enter":
         return enter_binding
     entries = bindings.get(key)
-    return entries[0] if entries else None
+    return entries[0] if (entries is not None and entries) else None
 
 
 def _available_footer_binding(

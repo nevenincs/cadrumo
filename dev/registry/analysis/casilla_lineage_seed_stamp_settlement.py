@@ -114,7 +114,7 @@ def _fresh_chain_id(planner: _PlannerContext, revision: str, casilla_id: str) ->
     candidates: list[str] = [_role_derived(role)] if role is not None else []
     candidates += [_slug(casilla_id), _slug(f"{casilla_id}-{revision}")]
     for candidate in candidates:
-        if candidate and _CONTINUIDAD_ID.match(candidate) and not planner.state.members.get(candidate):
+        if candidate and _CONTINUIDAD_ID.match(candidate) and not bool(planner.state.members.get(candidate)):
             return candidate
     raise ValueError(f"modelo {planner.modelo_id}: no free continuidad_id for {revision}/{casilla_id}")
 

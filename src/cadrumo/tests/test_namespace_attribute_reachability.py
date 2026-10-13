@@ -46,7 +46,7 @@ def _resolve_relative(module_path: Path, level: int, module: str | None) -> Path
     base = module_path.parent
     for _ in range(level - 1):
         base = base.parent
-    if module:
+    if module is not None and module:
         for part in module.split("."):
             base = base / part
     return base

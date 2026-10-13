@@ -29,7 +29,7 @@ import traceback
 import types
 import warnings
 from collections import Counter
-from collections.abc import Callable, Collection, Iterator, Mapping, Sequence
+from collections.abc import Callable, Collection, Generator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from math import isfinite
@@ -465,7 +465,7 @@ def profile_cli_invocation(
 
 
 @contextmanager
-def _observed_root(storage_root: Path | None) -> Iterator[Path]:
+def _observed_root(storage_root: Path | None) -> Generator[Path]:
     """Yield the root to observe: the caller's, resolved, or a private temporary one."""
     if storage_root is None:
         with tempfile.TemporaryDirectory(prefix="cadrumo-cli-profile-") as directory:

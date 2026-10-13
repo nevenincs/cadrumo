@@ -41,6 +41,13 @@ test("questions are answered by choosing, and Answer waits for the required ones
   await send(target, "Antes de preparar el 303, pregúntame qué trimestre.");
   const prompt = questionsPrompt(target);
   await expect(prompt).toBeVisible();
+  // The reply says it waits for the person, not that it is working.
+  await expect(conversation(target)).toContainText(
+    label("desktop.agent.waiting_on_you"),
+  );
+  await expect(conversation(target)).not.toContainText(
+    label("desktop.agent.working"),
+  );
   // The required choice has no answer yet, and Answer says so. It is named
   // alone, or with why it waits.
   const answer = prompt.getByRole("button", {

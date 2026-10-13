@@ -145,7 +145,7 @@ def index_files(project: str, version: str, *, index_url: str = _PYPI_JSON_INDEX
     """
     endpoint = urllib.parse.urlsplit(index_url)
     hostname = endpoint.hostname
-    if endpoint.scheme != "https" or not hostname:
+    if endpoint.scheme != "https" or not (hostname is not None and hostname):
         raise PublicationConflictError(f"index endpoint {index_url!r} is not an HTTPS endpoint")
     request_target = package_version_request_target(
         endpoint.path,

@@ -426,7 +426,7 @@ def _host_only(value: str) -> str:
     if value == aeat_authentication_url():
         return value
     parsed = urlparse(value)
-    if not parsed.hostname:
+    if not (parsed.hostname is not None and parsed.hostname):
         return "https://[redacted]"
     scheme = parsed.scheme or "https"
     return f"{scheme}://{parsed.hostname}"

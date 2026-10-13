@@ -322,7 +322,14 @@ class LocalReaderProvisionOutcome(BaseModel):
         """Return the first refused condition across the runtime action, steps and models."""
         if self.precondition_verdict is not None:
             return self.precondition_verdict.failed_condition_id
-        failed_step = next((step.failed_condition_id for step in self.steps if step.failed_condition_id), None)
+        failed_step = next(
+            (
+                step.failed_condition_id
+                for step in self.steps
+                if (step.failed_condition_id is not None and step.failed_condition_id)
+            ),
+            None,
+        )
         if failed_step is not None:
             return failed_step
         return next((item.failed_condition_id for item in self.models if not item.succeeded), None)

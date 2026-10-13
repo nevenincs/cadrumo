@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import sys
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
@@ -179,7 +179,7 @@ class _Case:
 
 
 @contextmanager
-def _case(tmp_path: Path, authority_operation: PinnedAuthorityOperation) -> Iterator[_Case]:
+def _case(tmp_path: Path, authority_operation: PinnedAuthorityOperation) -> Generator[_Case]:
     with (
         validating_governed_facts(authority_operation),
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE) as profile,

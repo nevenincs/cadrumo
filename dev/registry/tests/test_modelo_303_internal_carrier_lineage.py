@@ -68,7 +68,7 @@ def test_the_stating_edition_declares_the_carrier_is_on_no_form(casilla_id: str)
     row = _row(_modelo().revisions[_STATING_EDITION], casilla_id)
 
     assert row.continuidad_origin is CasillaLineageOrigin.NOT_ON_FORM
-    assert row.continuidad_evidence
+    assert row.continuidad_evidence is not None and row.continuidad_evidence
 
 
 @pytest.mark.parametrize("casilla_id", sorted(_CARRIER_BOXES))

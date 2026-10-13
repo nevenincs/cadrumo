@@ -75,7 +75,7 @@ def _resolve_relative_module(source: Path, level: int, module: str | None) -> st
     if level - 1 > len(package_parts):
         return None
     anchor = package_parts[: len(package_parts) - (level - 1)] if level > 1 else package_parts
-    if module:
+    if module is not None and module:
         anchor = anchor + module.split(".")
     return ".".join(anchor)
 
@@ -106,7 +106,7 @@ def _collect_import_pairs(source_tree_ast: Mapping[Path, ast.AST] | None = None)
     for source, tree in package_ast_items(source_tree_ast, include_data=True):
         for node in _walk_import_from(tree):
             resolved = _resolve_relative_module(source, node.level, node.module) if node.level > 0 else node.module
-            if not resolved or not resolved.startswith("cadrumo"):
+            if not (resolved is not None and resolved) or not resolved.startswith("cadrumo"):
                 continue
             for alias in node.names:
                 if alias.name == "*":

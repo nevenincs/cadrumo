@@ -103,7 +103,6 @@ def _parse_iso_date(value: str | None, option: str) -> _date | None:
         value,
         label=option,
         translation_key="cli.diagnostics.run_health.bad_date",
-        default=f"{option} must be an ISO date (YYYY-MM-DD); got {value!r}.",
     )
 
 

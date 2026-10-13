@@ -151,7 +151,11 @@ def _translation_call_names(tree: ast.AST) -> frozenset[str]:
     names = {"tr"}
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom) and (node.module or "").endswith("i18n.render"):
-            names.update(alias.asname for alias in node.names if alias.name == "tr" and alias.asname)
+            names.update(
+                alias.asname
+                for alias in node.names
+                if alias.name == "tr" and (alias.asname is not None and alias.asname)
+            )
     return frozenset(names)
 
 

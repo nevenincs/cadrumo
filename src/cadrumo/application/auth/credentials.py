@@ -288,7 +288,7 @@ def project_active_certificate_credentials(
     active_record = active_certificate_source(state)
     if active_record is None:
         certificate_path = settings.cadrumo_certificate_path
-        if certificate_path is None and state.auth.certificate_path:
+        if certificate_path is None and (state.auth.certificate_path is not None and state.auth.certificate_path):
             certificate_path = Path(state.auth.certificate_path)
         credentials = unnamed_certificate_credentials(settings)
         return credentials.model_copy(update={"certificate_path": certificate_path})

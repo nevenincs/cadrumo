@@ -164,7 +164,7 @@ def run_ledger_add(
         purchase_invoice_evidence_id=purchase_invoice_evidence_id,
         attachment_ids=tuple(attachment_ids),
         notes=notes,
-        actor=actor if actor else None,
+        actor=actor if (actor is not None and actor) else None,
         idempotency_key=idempotency_key,
         source_jurisdiction=source_jurisdiction,
         own_account_id=own_account_id,

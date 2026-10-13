@@ -28,6 +28,7 @@ from ...application.operations.access_resolution import (
 )
 from ...application.operations.execution_actor import OperationExecutionCaller
 from ...application.operations.models import OperationId, OperationIdentity, OperationRequest
+from ...application.operations.person_acts import is_persons_frontend
 from ...application.operations.provenance import OperationAdmissionProvenance
 from ...application.operations.registry import (
     OperationFrontendProjection,
@@ -128,8 +129,8 @@ class ProfileWorkerOperationAuthority:
         from the request, so the actor an execution records is the session that
         admitted it and nothing the caller typed.
 
-        An invocation submitted on the MCP frontend stays attributed to it when
-        another session re-enters it: its request is still what was typed
+        An invocation submitted on an agent's frontend stays attributed to it
+        when another session re-enters it: its request is still what was typed
         there. The session named is the one carrying the execution now.
         """
         binding = self._bindings.get(identity.operation_id)
@@ -138,9 +139,9 @@ class ProfileWorkerOperationAuthority:
         self._require_binding_identity(identity, binding.request)
         lease = self.custody.require(binding.session_id)
         provenance = binding.provenance
-        admitted_by_agent = provenance is not None and provenance.admitting_frontend is OperationFrontendProjection.MCP
+        admitting = None if provenance is None else provenance.admitting_frontend
         return OperationExecutionCaller(
-            frontend=OperationFrontendProjection.MCP if admitted_by_agent else binding.frontend,
+            frontend=admitting if admitting is not None and not is_persons_frontend(admitting) else binding.frontend,
             session_kind=lease.kind,
             client_id=lease.client_id,
         )

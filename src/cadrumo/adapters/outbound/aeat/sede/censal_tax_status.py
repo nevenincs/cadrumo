@@ -64,25 +64,33 @@ def _row_cells(row: Tag) -> tuple[CensalCell, ...]:
     for element in elements:
         text = census_text(element)
         label = _label(element)
-        if label:
+        if label is not None and label:
             cells.append(CensalCell(role="label", text=label))
             if text != label:
                 remainder = census_document(str(element))
                 for node in remainder.select(".ASWeb_multi_idioma, label, [data-censal-label]"):
                     node.decompose()
                 value = census_text(remainder)
-                if value:
+                if value is not None and value:
                     cells.append(CensalCell(role="value", text=value))
-        elif text and _CASILLA.fullmatch(text) and "fondo_medio" not in element.get_attribute_list("class"):
+        elif (
+            (text is not None and text)
+            and _CASILLA.fullmatch(text)
+            and "fondo_medio" not in element.get_attribute_list("class")
+        ):
             cells.append(CensalCell(role="casilla", text=text))
-        elif text or "fondo_medio" in element.get_attribute_list("class") or element.has_attr("data-censal-value"):
+        elif (
+            (text is not None and text)
+            or "fondo_medio" in element.get_attribute_list("class")
+            or element.has_attr("data-censal-value")
+        ):
             cells.append(CensalCell(role="value", text=text))
     return tuple(cells)
 
 
 def _sections(fieldset: Tag) -> tuple[CensalSection, ...]:
     legend = fieldset.find("legend", recursive=False)
-    if not isinstance(legend, Tag) or not census_text(legend):
+    if not isinstance(legend, Tag) or not bool(census_text(legend)):
         raise census_shape_error("tax-status fieldset has no label")
     title = census_text(legend) or ""
     current_title = title
@@ -95,7 +103,7 @@ def _sections(fieldset: Tag) -> tuple[CensalSection, ...]:
         cells = _row_cells(row)
         if not cells:
             continue
-        labels = tuple(cell.text for cell in cells if cell.role == "label" and cell.text)
+        labels = tuple(cell.text for cell in cells if cell.role == "label" and (cell.text is not None and cell.text))
         values = tuple(cell for cell in cells if cell.role != "label")
         if labels and not values:
             if all(census_key(label) in _COLUMN_LABELS for label in labels):

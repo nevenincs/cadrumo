@@ -85,11 +85,15 @@ def _choose_render_subjects(
     available_scenarios: tuple[_harness.Scenario, ...],
 ) -> tuple[tuple[str, ...], tuple[_harness.Scenario, ...]]:
     """Choose render subjects."""
-    chosen_surfaces = _resolve_surfaces(surface, available) if surface or not sequence else ()
-    if sequence:
+    chosen_surfaces = (
+        _resolve_surfaces(surface, available)
+        if (surface is not None and surface) or not (sequence is not None and sequence)
+        else ()
+    )
+    if sequence is not None and sequence:
         chosen_scenarios = _resolve_scenarios(sequence, available_scenarios)
     else:
-        chosen_scenarios = () if surface else available_scenarios
+        chosen_scenarios = () if (surface is not None and surface) else available_scenarios
     return chosen_surfaces, chosen_scenarios
 
 
@@ -213,14 +217,14 @@ def _load_manifest(name: str) -> Manifest:
 
 
 def _resolve_viewports(names: list[str] | None) -> tuple[_viewports.Viewport, ...]:
-    chosen = tuple(names) if names else _viewports.DEFAULT_VIEWPORTS
+    chosen = tuple(names) if (names is not None and names) else _viewports.DEFAULT_VIEWPORTS
     if len(chosen) == 1 and chosen[0] == "all":
         chosen = tuple(_viewports.VIEWPORTS)
     return tuple(_viewports.resolve(name) for name in chosen)
 
 
 def _resolve_themes(names: list[str] | None) -> tuple[ThemeName, ...]:
-    if not names:
+    if not (names is not None and names):
         return THEMES
     chosen: list[ThemeName] = []
     for name in names:
@@ -245,7 +249,7 @@ def _resolve_scenarios(names: list[str], available: tuple[_harness.Scenario, ...
 
 def _resolve_surfaces(names: list[str] | None, available: tuple[_harness.Surface, ...]) -> tuple[str, ...]:
     known = {surface.name for surface in available}
-    if not names:
+    if not (names is not None and names):
         return tuple(sorted(known))
     unknown = sorted(set(names) - known)
     if unknown:

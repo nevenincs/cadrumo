@@ -8,7 +8,7 @@ use their production implementations against test-owned synthetic profiles.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Generator, Iterator
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from contextvars import copy_context
@@ -94,7 +94,7 @@ class ObservedStore(AutomationControlStore):
 
     @override
     @contextmanager
-    def unlocked(self, *, credential: SecretBytes, now: UtcInstant) -> Iterator[bytearray]:
+    def unlocked(self, *, credential: SecretBytes, now: UtcInstant) -> Generator[bytearray]:
         with super().unlocked(credential=credential, now=now) as material:
             yield material
         if self.fail_release:
@@ -137,7 +137,7 @@ class AdmissionOwner:
         self.after_capture: Callable[[UUID], None] = lambda _session_id: None
 
     @contextmanager
-    def admission_guard(self) -> Iterator[None]:
+    def admission_guard(self) -> Generator[None]:
         with self.guard:
             yield
 
@@ -201,7 +201,7 @@ class AdmissionOwner:
             raise RuntimeError("synthetic retirement failure")
 
     @contextmanager
-    def authenticate_human(self, connection_id: UUID) -> Iterator[tuple[ProfileLoginOutcome, str]]:
+    def authenticate_human(self, connection_id: UUID) -> Generator[tuple[ProfileLoginOutcome, str]]:
         self.login_calls += 1
         _, decode = profile_authority_contexts()
         outcome = authenticate_profile_for_invocation(
@@ -225,7 +225,7 @@ class AdmissionOwner:
         return self.current.context.monotonic_now + 40
 
     @contextmanager
-    def prepare_api_admission(self, connection_id: UUID) -> Iterator[float]:
+    def prepare_api_admission(self, connection_id: UUID) -> Generator[float]:
         assert connection_id in self.connections
         yield self.current.context.monotonic_now + 30
 
@@ -1092,7 +1092,7 @@ def test_paused_human_authentication_allows_status_and_cannot_publish_across_pro
     class PausedAdmissionOwner(AdmissionOwner):
         @override
         @contextmanager
-        def authenticate_human(self, connection_id: UUID) -> Iterator[tuple[ProfileLoginOutcome, str]]:
+        def authenticate_human(self, connection_id: UUID) -> Generator[tuple[ProfileLoginOutcome, str]]:
             if connection_id == candidate_connection:
                 entered.set()
                 assert release.wait(10)
@@ -1186,7 +1186,7 @@ def test_human_candidate_is_retired_when_context_release_overlaps_fresh_fence(su
     class SettledCandidateOwner(AdmissionOwner):
         @override
         @contextmanager
-        def authenticate_human(self, connection_id: UUID) -> Iterator[tuple[ProfileLoginOutcome, str]]:
+        def authenticate_human(self, connection_id: UUID) -> Generator[tuple[ProfileLoginOutcome, str]]:
             with super().authenticate_human(connection_id) as outcome:
                 yield outcome
             if connection_id == candidate_connection:
@@ -1263,7 +1263,7 @@ def test_api_preparation_allows_status_and_cannot_publish_across_a_fresh_fence(s
     class PausedApiOwner(AdmissionOwner):
         @override
         @contextmanager
-        def prepare_api_admission(self, connection_id: UUID) -> Iterator[float]:
+        def prepare_api_admission(self, connection_id: UUID) -> Generator[float]:
             with super().prepare_api_admission(connection_id) as deadline:
                 if connection_id == candidate_connection:
                     entered.set()
@@ -1374,7 +1374,7 @@ async def test_api_preparation_exit_failure_preserves_primary_and_retryable_inst
     class FailedPreparationOwner(AdmissionOwner):
         @override
         @contextmanager
-        def prepare_api_admission(self, connection_id: UUID) -> Iterator[float]:
+        def prepare_api_admission(self, connection_id: UUID) -> Generator[float]:
             with super().prepare_api_admission(connection_id) as deadline:
                 yield deadline
             raise primary
@@ -1672,7 +1672,7 @@ def test_sign_out_between_binding_and_publication_refuses_candidate(subject: Sub
     class SigningOutOwner(AdmissionOwner):
         @override
         @contextmanager
-        def authenticate_human(self, connection_id: UUID) -> Iterator[tuple[ProfileLoginOutcome, str]]:
+        def authenticate_human(self, connection_id: UUID) -> Generator[tuple[ProfileLoginOutcome, str]]:
             with super().authenticate_human(connection_id) as proof:
                 yield proof
             subject.authority.retire_human_sessions()

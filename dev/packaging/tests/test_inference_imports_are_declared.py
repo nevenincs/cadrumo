@@ -101,7 +101,7 @@ def _top_level_imports(path: Path) -> Iterator[str]:
         if isinstance(node, ast.Import):
             for alias in node.names:
                 yield alias.name.split(".")[0]
-        elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+        elif isinstance(node, ast.ImportFrom) and node.level == 0 and (node.module is not None and node.module):
             yield node.module.split(".")[0]
 
 

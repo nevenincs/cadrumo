@@ -564,7 +564,7 @@ def _stage_authority_candidate(clean_repo: Path) -> None:
     from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor
 
     raw_candidate = os.environ.get(_AUTHORITY_CANDIDATE_ENV)
-    if raw_candidate:
+    if raw_candidate is not None and raw_candidate:
         candidate = Path(raw_candidate).resolve(strict=True)
     else:
         # Once accepted bytes are promoted, the cohort builds from the promoted

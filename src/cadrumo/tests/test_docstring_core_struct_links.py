@@ -86,12 +86,12 @@ def _linked_anchors(tree: ast.AST) -> set[str]:
     docstrings: list[str] = []
     if isinstance(tree, ast.Module):
         module_doc = ast.get_docstring(tree)
-        if module_doc:
+        if module_doc is not None and module_doc:
             docstrings.append(module_doc)
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
             doc = ast.get_docstring(node)
-            if doc:
+            if doc is not None and doc:
                 docstrings.append(doc)
     linked: set[str] = set()
     for doc in docstrings:
@@ -173,7 +173,7 @@ def test_public_functions_link_anchor_parameters() -> None:
             if node.name.startswith("_"):
                 continue
             doc = ast.get_docstring(node)
-            if not doc:
+            if not (doc is not None and doc):
                 continue
             linked = {m for m in _ROLE.findall(doc) if m in CORE_STRUCTS}
             params = node.args.args + node.args.kwonlyargs + node.args.posonlyargs
@@ -313,7 +313,7 @@ def _scan_dotted_references(path: Path, tree: ast.AST) -> tuple[list[str], int]:
         if not isinstance(node, ast.Module | ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef):
             continue
         text = ast.get_docstring(node, clean=False)
-        if not text:
+        if not (text is not None and text):
             continue
         for target in _DOTTED_ROLE.findall(text):
             if _owning_module(target) is None:

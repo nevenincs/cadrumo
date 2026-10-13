@@ -370,7 +370,7 @@ class OperationRunScreen(Screen[None]):
         secret: bytearray | None = None
         if self._entry.contract.ephemeral_secret_required:
             secret = self._take_secret()
-            if not secret:
+            if not (secret is not None and secret):
                 self._notice(tr("tui.operations.form.secret_required"))
                 return
         self._submitting = True

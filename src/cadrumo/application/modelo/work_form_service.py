@@ -305,7 +305,7 @@ def _last_export(
     exported = [
         event
         for event in bucket_events.load().for_bucket(str(bucket_id), event_types=(BucketEventType.MODELO_EXPORTED,))
-        if event.payload.get("work_unit_id") == work_unit_id and event.payload.get("calculation_revision_id")
+        if event.payload.get("work_unit_id") == work_unit_id and bool(event.payload.get("calculation_revision_id"))
     ]
     if not exported:
         return None

@@ -40,7 +40,7 @@ import subprocess
 import sys
 import tempfile
 import threading
-from collections.abc import Iterator, Mapping
+from collections.abc import Generator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -152,7 +152,7 @@ def error_code(envelope: Mapping[str, Any]) -> str | None:
 
 
 @contextmanager
-def caller_owned_runtime(programs: Programs, environment: Mapping[str, str], log: Path) -> Iterator[RuntimeProcess]:
+def caller_owned_runtime(programs: Programs, environment: Mapping[str, str], log: Path) -> Generator[RuntimeProcess]:
     """Start the runtime with piped standard streams; always end it by closing its input first."""
     with log.open("wb") as errors:
         process = subprocess.Popen(  # noqa: S603 -- exact packaged executable; no shell.

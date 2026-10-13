@@ -58,7 +58,7 @@ def seed_withholding_work(cli: InstalledCli, *, year: int) -> tuple[WithholdingW
         )
         source_revision = _annual_source_revision(slice_, stage="tui_source_preflight")
         for source in slice_.source_periods:
-            if slice_.source_modelo == "111" and not captures.get(source.period):
+            if slice_.source_modelo == "111" and not bool(captures.get(source.period)):
                 if f"{year}:{source.period}" not in attestations:
                     raise ValueError("an empty Modelo 111 source lacks its explicit no-duty attestation")
                 continue

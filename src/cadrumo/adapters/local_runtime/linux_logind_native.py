@@ -89,7 +89,7 @@ class _NativeLogin:
         uid = ctypes.c_uint32()
         try:
             _bus._check(self.library.sd_pidfd_get_session(pidfd, ctypes.byref(session)))
-            if not session.value:
+            if not (session.value is not None and session.value):
                 raise _unavailable()
             raw = ctypes.cast(session, ctypes.c_char_p).value
             if raw is None or len(raw) > 64:
@@ -102,7 +102,7 @@ class _NativeLogin:
                 raise _unavailable()
             return identity, uid.value
         finally:
-            if session.value:
+            if session.value is not None and session.value:
                 self.libc.free(session)
 
     def session(self, session_id: str) -> _models.LinuxSessionObservation:

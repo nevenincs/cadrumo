@@ -379,7 +379,7 @@ def _row_locus(casilla: CasillaDefinition, design: DesignInventory | str) -> str
         span = design.component_span(box)
         over = "" if span is None else f" over {len(found)} printed components @{span.offset}+{span.length}"
         return f"{_cite(design, line)} box [{box}]{over} ({design.snippet(line)})"
-    if casilla.segmento and _BYTE_POSITIONS.match(casilla.number.strip()):
+    if (casilla.segmento is not None and casilla.segmento) and _BYTE_POSITIONS.match(casilla.number.strip()):
         return f"{_cite(design, None)} record {casilla.segmento} campo at byte position {casilla.number.strip()}"
     return None
 

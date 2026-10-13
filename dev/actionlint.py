@@ -194,7 +194,7 @@ def find() -> Path | None:
     report actionlint prints.
     """
     on_path = shutil.which("actionlint")
-    if on_path:
+    if on_path is not None and on_path:
         return Path(on_path)
     key = _platform_key()
     if key not in ARCHIVES:

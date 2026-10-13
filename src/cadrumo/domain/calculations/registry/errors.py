@@ -582,7 +582,7 @@ class AmbiguousRevisionSelectionError(RegistrySnapshotError):
         self.filing_year: int | None = filing_year
         scope = f"modelo {modelo_id}" if filing_year is None else f"modelo {modelo_id} filing year {filing_year}"
         detail = f"{scope}: ambiguous revision selection: {', '.join(ids)}"
-        if reason:
+        if reason is not None and reason:
             detail = f"{detail} -- {reason}"
         context: dict[str, object] = {"modelo_id": modelo_id, "candidate_ids": _csv(ids)}
         if filing_year is not None:

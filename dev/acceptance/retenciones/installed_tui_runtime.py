@@ -9,7 +9,7 @@ from __future__ import annotations
 import asyncio
 import sys
 import time
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager, suppress
 from importlib.metadata import version
 from pathlib import Path
@@ -49,7 +49,7 @@ def installed_foreground_runtime(
     authority_root: Path,
     runtime_socket_dir: Path,
     startup_timeout_seconds: float = 60,
-) -> Iterator[dict[str, Any]]:
+) -> Generator[dict[str, Any]]:
     """Verify installed cohort/root readiness, then join shutdown on every outcome."""
     if sys.platform not in {"darwin", "linux"}:
         raise RetencionesInstalledCliError(stage="runtime_fixture", diagnostic_code="posix_fixture_required")

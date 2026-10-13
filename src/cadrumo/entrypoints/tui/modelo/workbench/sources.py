@@ -476,7 +476,7 @@ def group_boxes(group: SourceGroup) -> tuple[str, ...]:
     """The box numbers a closed group lists, for the groups that ask something of the filer."""
     if group.kind not in _BOX_LISTING_GROUPS:
         return ()
-    return tuple(field.box for field in group.fields if field.box)
+    return tuple(field.box for field in group.fields if (field.box is not None and field.box))
 
 
 def group_summary(group: SourceGroup) -> str:

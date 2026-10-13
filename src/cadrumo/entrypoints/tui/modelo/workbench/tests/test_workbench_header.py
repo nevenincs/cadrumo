@@ -428,7 +428,7 @@ async def test_the_result_carries_the_emphasis_and_the_title_bar_is_a_neutral_su
             app.exit(None)
 
     assert result.lower() == theme[expected].lower()
-    assert bold
+    assert bold is not None and bold
     assert identity.lower() != theme["primary"].lower(), "the title bar is not the loudest thing on screen"
     assert next_step.lower() != theme["primary"].lower()
     assert next_step.lower() != theme["accent"].lower()

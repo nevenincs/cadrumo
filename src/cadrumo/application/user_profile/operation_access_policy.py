@@ -5,7 +5,7 @@ from __future__ import annotations
 from ...core.operations import OperationInteractionKind
 from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ..operations.mcp_surfaces import MCP_SURFACES, McpSurface
-from ..operations.person_acts import operation_is_persons_act, persons_act_refused_on
+from ..operations.person_acts import is_persons_frontend, operation_is_persons_act
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1, OperationRegistry
 from .access_contracts import (
     AccessAction,
@@ -214,7 +214,7 @@ def _persons_act_refusal(
         contract.definition_id, ephemeral_secret_required=contract.ephemeral_secret_required
     ):
         return None
-    if not persons_act_refused_on(request.frontend):
+    if is_persons_frontend(request.frontend):
         return None
     return AccessDenied(code=AccessDenialCode.PERSON_ACT_REQUIRED)
 

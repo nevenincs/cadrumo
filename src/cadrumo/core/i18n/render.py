@@ -504,7 +504,7 @@ def _parse_format_placeholder_roots(value: str) -> set[str] | None:
             root = _FORMAT_FIELD_ROOT_RE.match(field_name)
             if root is not None:
                 names.add(_match_group_text(root, "name"))
-        if format_spec:
+        if format_spec is not None and format_spec:
             nested = _parse_format_placeholder_roots(format_spec)
             if nested is None:
                 names.update(_recover_format_placeholder_roots(format_spec))

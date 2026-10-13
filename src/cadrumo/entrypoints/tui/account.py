@@ -73,7 +73,10 @@ class AccountRecomposeRequiredV1:
         if self.reason is AccountRecomposeReasonV1.CHANGE_USER:
             if (self.profile_id is None) != (self.profile_label is None):
                 raise ValueError("change-user recomposition requires both profile identity fields or neither")
-            if has_profile and (not self.profile_id or not self.profile_label):
+            if has_profile and (
+                not (self.profile_id is not None and self.profile_id)
+                or not (self.profile_label is not None and self.profile_label)
+            ):
                 raise ValueError("change-user profile identity fields must not be empty")
             return
         if has_profile:

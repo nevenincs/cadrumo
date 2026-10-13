@@ -101,7 +101,7 @@ def start_flow(definition: FlowDefinition, *, mode: FlowMode) -> FlowState:
     state = FlowState(flow_id=definition.id, mode=mode)
     sequence = visible_sequence(definition, state)
     cursor = sequence[0].key if sequence else None
-    return state.model_copy(update={"cursor": cursor, "visited": (cursor,) if cursor else ()})
+    return state.model_copy(update={"cursor": cursor, "visited": (cursor,) if (cursor is not None and cursor) else ()})
 
 
 def visible_sequence(definition: FlowDefinition, state: FlowState) -> tuple[VisiblePage, ...]:
@@ -378,7 +378,7 @@ def _answered_dependents(
             ):
                 continue
             committed = answers.get(entry.key)
-            if committed:
+            if committed is not None and committed:
                 dependents.add(entry.key)
     return dependents
 

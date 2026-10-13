@@ -128,7 +128,9 @@ def test_bad_exact_run_result_retains_receipt(
     effect: OperationEffect,
 ) -> None:
     _client(monkeypatch)
-    period = PublicPeriod.from_period(Period.from_year_and_code(2025, "1T")) if expected else None
+    period = (
+        PublicPeriod.from_period(Period.from_year_and_code(2025, "1T")) if (expected is not None and expected) else None
+    )
     monkeypatch.setattr(
         bridge,
         "run_registered_operation",

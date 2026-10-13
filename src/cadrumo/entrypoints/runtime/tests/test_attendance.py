@@ -10,7 +10,7 @@ import asyncio
 import os
 import sys
 import time
-from collections.abc import Iterator
+from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from datetime import timedelta
@@ -69,7 +69,7 @@ class _LoginObservation:
 
 
 @contextmanager
-def _runtime(tmp_path: Path) -> Iterator[tuple[UUID, UUID, RuntimeLaunchDoor]]:
+def _runtime(tmp_path: Path) -> Generator[tuple[UUID, UUID, RuntimeLaunchDoor]]:
     with worker_profiles(tmp_path) as (root, targets):
         endpoint = WindowsRuntimeEndpoint(storage_root=root)
         runtime_installation(storage_root=root, os_owner_id=owner_id(), storage_identity=endpoint.storage_identity)

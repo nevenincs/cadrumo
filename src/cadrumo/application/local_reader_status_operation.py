@@ -55,7 +55,6 @@ __all__ = [
     "LocalReaderStatusRequest",
     "build_local_reader_status_definition",
     "build_local_reader_status_registration",
-    "build_local_reader_status_request",
     "local_reader_status_public_result",
     "project_local_reader_status_result",
     "resolve_local_reader_status_access",
@@ -68,15 +67,6 @@ class LocalReaderStatusRequest(CredentialFreeOperationRequest):
     """One status read; ``probe`` checks the text model's fitness now instead of reading the recorded verdict."""
 
     probe: bool = False
-
-
-def build_local_reader_status_request(*, probe: bool) -> OperationRequest[LocalReaderStatusRequest]:
-    """Build the request that reads the machine's reader status, probing fitness when asked."""
-    return OperationRequest(
-        definition_id=LOCAL_READER_STATUS_OPERATION_DEFINITION_ID,
-        subject_ref=LOCAL_READER_OPERATION_SUBJECT,
-        payload=LocalReaderStatusRequest(probe=probe),
-    )
 
 
 class LocalReaderHostStatusV1(BaseModel):

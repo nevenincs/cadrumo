@@ -927,7 +927,7 @@ class RegistryConformanceProfile(ConformanceModel):
         empty gap list means "nothing was measured", not "nothing is missing".
         Rendering the two counts side by side is what keeps those apart.
         """
-        return tuple(row for row in self.rows if row.has_required_coverage_gap)
+        return tuple(row for row in self.rows if (row.has_required_coverage_gap is True))
 
     @property
     def coverage_unmeasured_rows(self) -> tuple[RevisionConformanceRow, ...]:

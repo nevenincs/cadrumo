@@ -6,7 +6,7 @@ import hashlib
 import json
 import os
 import time
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager, nullcontext
 from pathlib import Path
 from typing import Any
@@ -16,7 +16,7 @@ from .build_toolchain import sysroot_inventory
 
 
 @contextmanager
-def action_lock(build: Path, action: str, *, timings: BuildTimings | None = None) -> Iterator[None]:
+def action_lock(build: Path, action: str, *, timings: BuildTimings | None = None) -> Generator[None]:
     """Serialize shared writers; OS locks release even if the build is interrupted."""
     with (build / f".{action}.lock").open("a+b") as stream:
         stream.seek(0)

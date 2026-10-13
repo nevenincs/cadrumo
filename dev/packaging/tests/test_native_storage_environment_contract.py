@@ -218,7 +218,11 @@ _ENVIRONMENT_NAME: re.Pattern[str] = re.compile(r"[A-Z][A-Z0-9_]+")
 
 
 def _location_variable_names() -> frozenset[str]:
-    taxonomy = {location.settings_field.upper() for location in STORAGE_TAXONOMY.values() if location.settings_field}
+    taxonomy = {
+        location.settings_field.upper()
+        for location in STORAGE_TAXONOMY.values()
+        if (location.settings_field is not None and location.settings_field)
+    }
     return frozenset({*STORAGE_ROOT.precedence, *taxonomy, *product_env_var_names(), *development_tool_env_var_names()})
 
 

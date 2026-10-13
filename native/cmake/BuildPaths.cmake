@@ -13,6 +13,8 @@ set(CADRUMO_BUILD_DIRECTORIES
   PYTHON_SDK _deps/python-sdk
   TOOLS _deps/build-tools
   PRODUCT product
+  AGENT _deps/agent
+  AGENT_SOURCE _deps/agent-source
   BIN bin
   LIB lib
   SYMBOLS symbols
@@ -49,7 +51,7 @@ endwhile()
 set(cleanup_groups [=[{
   "stage": ["stage", "verification", "testing"],
   "packages": ["packages"],
-  "dependencies": ["runtime", "python_sdk", "tools", "product"],
+  "dependencies": ["runtime", "python_sdk", "tools", "product", "agent", "agent_source"],
   "native": ["bin", "lib", "symbols", "cargo"],
   "desktop": ["desktop_frontend", "desktop_frontend_generated", "desktop_cache", "desktop_icons", "desktop_host", "desktop_cargo", "desktop_testing", "desktop_results"],
   "docs": ["user_docs_build", "user_docs_work", "user_docs_stage"]

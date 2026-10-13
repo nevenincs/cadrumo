@@ -13,7 +13,7 @@ the failure mode the project's own no-silent-under-declaration rule names.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Iterator
+from collections.abc import Generator, Iterable, Iterator
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -178,7 +178,7 @@ def _transaction(
 
 
 @contextmanager
-def _stored(*transactions: Transaction) -> Iterator[TransactionCatalogueCoCommitWriterProtocol]:
+def _stored(*transactions: Transaction) -> Generator[TransactionCatalogueCoCommitWriterProtocol]:
     """Build a deterministic catalogue through the application read protocol."""
     yield _InMemoryTransactionRepository(
         bucket_id=_BUCKET,

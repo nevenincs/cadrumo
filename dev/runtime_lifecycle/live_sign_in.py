@@ -50,7 +50,7 @@ import sys
 import tempfile
 import threading
 import time
-from collections.abc import AsyncIterator, Iterator, Mapping
+from collections.abc import AsyncGenerator, Generator, Mapping
 from contextlib import asynccontextmanager, suppress
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -207,7 +207,7 @@ class McpSession:
 @asynccontextmanager
 async def mcp_session(
     programs: Programs, environment: Mapping[str, str], directory: Path, *arguments: str
-) -> AsyncIterator[McpSession]:
+) -> AsyncGenerator[McpSession]:
     """Run the packaged MCP server over stdio for the life of the block."""
     server = StdioServerParameters(
         command=str(programs.mcp), args=list(arguments), env=dict(environment), cwd=str(directory)
@@ -338,7 +338,7 @@ def identify_profile(programs: Programs, environment: Mapping[str, str], profile
 
 
 @contextlib.contextmanager
-def local_model(scratch: Path, models: Path) -> Iterator[bool]:
+def local_model(scratch: Path, models: Path) -> Generator[bool]:
     """Serve the local text model on the loopback port for the block; say whether it is available.
 
     A server this harness did not start is never used or stopped. Ollama's
@@ -594,9 +594,7 @@ async def run(
                 held = holder.event("held")
                 receipt.record("held", session_expires_at=held.get("session_expires_at"))
 
-                is_error, content = await ask_and_decide(
-                    holder, agent, approve=False, receipt=receipt, step="declined"
-                )
+                is_error, content = await ask_and_decide(holder, agent, approve=False, receipt=receipt, step="declined")
                 require(is_error and _refused_code(content) == "authentication_required", f"declined: {content}")
 
                 async with mcp_session(programs, environment, scratch, "--profile-id", str(other.profile_id)) as wrong:

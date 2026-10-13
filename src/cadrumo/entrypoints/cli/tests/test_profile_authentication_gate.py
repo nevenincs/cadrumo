@@ -111,7 +111,7 @@ def test_every_resume_refusal_reason_has_an_operator_diagnostic() -> None:
             "errors.auth.auth_storage_keyring_unavailable",
         }, reason
         for language in OutputLanguage:
-            assert lookup_translation(key, locale=language.value), (reason, language)
+            assert bool(lookup_translation(key, locale=language.value)), (reason, language)
 
 
 @pytest.mark.parametrize("language", tuple(OutputLanguage))

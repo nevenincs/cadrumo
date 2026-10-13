@@ -451,7 +451,7 @@ def test_modelo_303_devengada_formula_matches_devengada_flow_set() -> None:
     # the selector. Collect the flow directions of all bindings whose
     # cuota contributes to cuota-devengada-total via the formula.
     devengada_formula = next(f for f in revision.formulas if f.id == "modelo-303-iva-cuota-devengada-total")
-    casilla_to_binding = {c.id: c.binding for c in revision.casillas if c.binding}
+    casilla_to_binding = {c.id: c.binding for c in revision.casillas if (c.binding is not None and c.binding)}
     binding_flows: set[IvaFlowDirection] = set()
     # Walk the formula expression to find casilla operands
     for arg in devengada_formula.expression.args or ():

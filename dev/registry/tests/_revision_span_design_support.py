@@ -285,7 +285,9 @@ def _constant_ejercicio_years(path: Path) -> tuple[int, ...]:
     for sheet in _design_sheets(path):
         for parsed_field in sheet.fields:
             blob = " ".join(
-                text for text in (parsed_field.description, parsed_field.content, parsed_field.validation) if text
+                text
+                for text in (parsed_field.description, parsed_field.content, parsed_field.validation)
+                if (text is not None and text)
             )
             for pattern in (_CONSTANT_EJERCICIO, _CONSTANT_EJERCICIO_REVERSED):
                 matched = pattern.search(blob)

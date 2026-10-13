@@ -124,7 +124,7 @@ def _unauthenticated_status(connection: _AdmittedConnection) -> dict[str, Any]:
         reply.update(denial.facts())
     # Without a sign-in or a key nothing else answers, so status says what the agent is to do.
     code = AccessDenialCode.AUTHENTICATION_REQUIRED.value if denial is None else denial.code
-    if remedy := runtime_unavailable_remedy(code) or sign_in_remedy(code, reply):
+    if (remedy := runtime_unavailable_remedy(code) or sign_in_remedy(code, reply)) is not None and remedy:
         reply["remedy"] = remedy
     return reply
 

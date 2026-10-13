@@ -192,6 +192,7 @@ def test_presence_is_absent_without_a_socket_and_held_while_an_owner_listens(tmp
 def test_presence_of_a_socket_that_outlived_its_owner_is_absent_only_where_a_refusal_proves_it(
     tmp_path: Path, namespace: Path
 ) -> None:
+    assert sys.platform != "win32"
     observer = PosixRuntimeEndpoint(storage_root=tmp_path, namespace=namespace)
     path = namespace / (observer.storage_identity[:32] + ".sock")
     abandoned = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)

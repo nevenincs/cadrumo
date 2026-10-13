@@ -553,7 +553,7 @@ def _read_runtime_wheelhouse_manifest(archive: zipfile.ZipFile, cohort: _PluginP
 
 def _runtime_wheelhouse_runtimes(document: Mapping[str, object]) -> dict[str, object]:
     runtimes = _string_keyed_object(document.get("runtimes"))
-    if not runtimes:
+    if not (runtimes is not None and runtimes):
         raise ValueError("runtime wheelhouse declares no runtimes")
     return runtimes
 
@@ -577,7 +577,7 @@ def _extract_runtime_wheelhouse_runtime(
     wheels = _string_keyed_object(runtime.get("wheels"))
     if platforms is None or frozenset(platforms) != _SUPPORTED_WHEELHOUSE_TARGETS:
         raise ValueError(f"runtime wheelhouse platform closure is incomplete: {python_version!r}")
-    if not wheels:
+    if not (wheels is not None and wheels):
         raise ValueError(f"runtime wheelhouse declares no wheels: {python_version!r}")
     _extract_runtime_wheelhouse_wheels(archive, destination, expected_members, python_version, wheels)
     _validate_runtime_platform_closures(platforms, wheels, python_version)
@@ -634,7 +634,7 @@ def _validate_runtime_platform_closures(
 ) -> None:
     for target, rows_value in platforms.items():
         rows = _string_keyed_object(rows_value)
-        if not rows:
+        if not (rows is not None and rows):
             raise ValueError(f"runtime wheelhouse target closure is empty: {python_version}/{target!r}")
         _validate_runtime_target_rows(rows, wheels, python_version, target)
 

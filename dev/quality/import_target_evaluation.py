@@ -209,7 +209,7 @@ class TargetEvaluationContext:
             return tuple(values)
         if isinstance(node, ast.Name):
             assignments = self.latest_values(node.id, lineno, scope)
-            if not assignments:
+            if not (assignments is not None and assignments):
                 return None
             result: list[str] = []
             for assignment in assignments:

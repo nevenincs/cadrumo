@@ -294,7 +294,7 @@ def _unknown_command_failure(_exc: BaseException, detail: str, locale: str) -> t
 
 def _drop_empty(facts: dict[str, str | None]) -> dict[str, str]:
     """Return ``facts`` with empty values removed."""
-    return {key: value for key, value in facts.items() if value}
+    return {key: value for key, value in facts.items() if (value is not None and value)}
 
 
 def _render_click_exception_text(exc: BaseException) -> None:

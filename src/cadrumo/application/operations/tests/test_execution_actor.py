@@ -14,6 +14,7 @@ from ...user_profile.access_contracts import SessionKind
 from ..execution_actor import (
     OperationExecutionCaller,
     OperationExecutionCallerReader,
+    actor_label_is_an_agents,
     execution_actor_label,
 )
 from ..interactions import OperationActorReference
@@ -26,6 +27,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _CLIENT = UUID("5aa00000-0000-4000-8000-0000000000dd")
 _SUPPLIED = "  Typed by the caller  "
 _IDENTITY = OperationIdentity(operation_id="a" * 64, definition_id="domain.thing.record", subject_ref="b" * 64)
+_AGENTS = (OperationFrontendProjection.AGENT_HOST, OperationFrontendProjection.MCP)
+"""The agents' frontends, written out rather than read from the predicate the label uses."""
 
 
 class _DerivedActor(BaseModel):
@@ -63,27 +66,38 @@ def _host(frontend: OperationFrontendProjection, kind: SessionKind = SessionKind
     return _SessionHost(OperationExecutionCaller(frontend=frontend, session_kind=kind, client_id=_CLIENT))
 
 
+@pytest.mark.parametrize("frontend", _AGENTS, ids=lambda frontend: frontend.value)
 @pytest.mark.parametrize("kind", list(SessionKind))
-def test_an_agent_execution_is_labelled_from_its_session_and_never_from_the_request(kind: SessionKind) -> None:
-    """Whatever an MCP caller sends, the label names the session's kind and client."""
-    host = _host(OperationFrontendProjection.MCP, kind)
+def test_an_agent_execution_is_labelled_from_its_session_and_never_from_the_request(
+    kind: SessionKind, frontend: OperationFrontendProjection
+) -> None:
+    """Whatever an agent's caller sends, the label names the frontend, the session's kind and client."""
+    host = _host(frontend, kind)
 
     label = execution_actor_label(host, _context(), supplied=_SUPPLIED)
 
-    assert label == f"agent:mcp.{kind.value}.{_CLIENT}"
+    assert label == f"agent:{frontend.value}.{kind.value}.{_CLIENT}"
     assert host.asked == [_IDENTITY]
     assert execution_actor_label(host, _context(), supplied="another label") == label
     assert "Typed" not in label
+    assert actor_label_is_an_agents(label)
 
 
+@pytest.mark.parametrize("frontend", _AGENTS, ids=lambda frontend: frontend.value)
 @pytest.mark.parametrize("kind", list(SessionKind))
-def test_the_agent_label_is_a_bounded_actor_reference(kind: SessionKind) -> None:
+def test_the_agent_label_is_a_bounded_actor_reference(kind: SessionKind, frontend: OperationFrontendProjection) -> None:
     """The label fits every stored actor field and reads as an agent, not as a person."""
-    label = execution_actor_label(_host(OperationFrontendProjection.MCP, kind), _context(), supplied=_SUPPLIED)
+    label = execution_actor_label(_host(frontend, kind), _context(), supplied=_SUPPLIED)
 
     assert label.startswith("agent:")
     assert len(label) <= 128
     assert _DerivedActor(reference=label).reference == label
+
+
+@pytest.mark.parametrize("label", ["operator", "agent:", "agent:cli.human.x", "agent:tui.human.x", "Agent:mcp.human.x"])
+def test_a_label_a_person_frontend_could_record_is_not_read_as_an_agents(label: str) -> None:
+    """Only the prefix of an agent frontend reads as an agent's execution."""
+    assert not actor_label_is_an_agents(label)
 
 
 @pytest.mark.parametrize("frontend", [OperationFrontendProjection.CLI, OperationFrontendProjection.TUI])

@@ -5,13 +5,11 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:f4f29e15a376eb56bf1e0825cb270d45e325889a97d2bb48842da8d8d9426c11'
+body_hash: 'sha256:05df2b19f311bc65f0358e91586718c44f212f683fb22c3e6cec7d336d246414'
 related:
   - "[[2026-10-13-desktop-agent-host-live-lane-adr]]"
   - "[[2026-10-12-desktop-agent-host-adr]]"
 ---
-
-
 
 # `desktop-agent-host` audit: `Live lane design review`
 

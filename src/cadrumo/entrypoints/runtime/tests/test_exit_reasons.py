@@ -168,7 +168,7 @@ def test_login_witness_loss_logs_only_counts_and_measured_spans_without_changing
     assert len(records) == 1
     record = records[0]
     assert record.getMessage() == "no eligible login witness remains; stopping the runtime"
-    assert not record.args and record.exc_info is None
+    assert not (record.args is not None and record.args) and record.exc_info is None
     rendered = DiagnosticFormatter(LOG_FILE_FORMAT).format(record)
     context = json.loads(rendered.split(" | ", 1)[1])
     assert context == {

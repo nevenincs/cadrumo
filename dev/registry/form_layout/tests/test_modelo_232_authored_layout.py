@@ -73,5 +73,7 @@ def test_232_official_groups_preserve_every_record_and_binding(revision_id: str)
     }
     assert layout.seed_source.value == "authored"
     assert layout.review.state.value == "generated"
-    assert layout.review.notes and "Country-name display remains absent" in layout.review.notes
+    assert (
+        layout.review.notes is not None and layout.review.notes
+    ) and "Country-name display remains absent" in layout.review.notes
     assert any(s.source_ref == "boe-2017-10042-modelo-232-form-pdf" for s in layout.design_sources)

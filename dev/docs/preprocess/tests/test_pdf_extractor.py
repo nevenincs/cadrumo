@@ -235,11 +235,7 @@ def test_sidecar_round_trips_and_is_walker_indexable(tmp_path: Path) -> None:
     corpus tree. Inspects the real installed walker (no mock): the rendered
     .md must pass the extension, size-cap, and binary filters.
     """
-    from vaultspec_rag.indexer._chunking import (
-        _MAX_FILE_SIZE,
-        SUPPORTED_EXTENSIONS,
-        _is_binary,
-    )
+    from .index_admission_support import assert_source_is_indexable
 
     # Recreate modelo_131/{manifest.json, files/<pdf>} so the diseno
     # attribution read path is exercised against a real manifest.
@@ -260,9 +256,7 @@ def test_sidecar_round_trips_and_is_walker_indexable(tmp_path: Path) -> None:
     assert reloaded.status is ExtractionStatus.OK
     assert reloaded.units
 
-    assert text_path.suffix.lower() in SUPPORTED_EXTENSIONS
-    assert text_path.stat().st_size <= _MAX_FILE_SIZE
-    assert not _is_binary(text_path)
+    assert_source_is_indexable(source_copy, text_path, tmp_path)
 
 
 def test_tampered_sidecar_is_rejected(tmp_path: Path) -> None:

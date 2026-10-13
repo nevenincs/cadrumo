@@ -247,7 +247,7 @@ def _registered_per_modelo_provider_modelos(
     for modelo_id in operation.modelo_ids():
         directory = operation.modelo_directory(modelo_id)
         revisions = tuple(operation.revision(modelo_id, str(metadata.id)) for metadata in directory.revisions)
-        if provider := _provider_for_modelo_revisions(modelo_id, tuple(revisions)):
+        if (provider := _provider_for_modelo_revisions(modelo_id, tuple(revisions))) is not None and provider:
             grouped[provider].append(modelo_id)
     return {contributor: tuple(sorted(modelos)) for contributor, modelos in grouped.items()}
 
@@ -279,7 +279,7 @@ def provider_for_modelo(
     if modelo == modelo.strip() and modelo in operation.modelo_ids():
         directory = operation.modelo_directory(modelo)
         revisions = tuple(operation.revision(modelo, str(metadata.id)) for metadata in directory.revisions)
-        if provider := _provider_for_modelo_revisions(modelo, revisions):
+        if (provider := _provider_for_modelo_revisions(modelo, revisions)) is not None and provider:
             return provider
     supported = _supported_per_modelo_modelos(operation=operation)
     raise AggregationUnsupportedModeloError(

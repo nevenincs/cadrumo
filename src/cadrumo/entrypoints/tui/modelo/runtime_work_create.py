@@ -41,7 +41,6 @@ from .lifecycle import ModeloLifecycleActionUnavailableError
 
 async def _read_terminal_state(
     controller: RuntimeOperationController,
-    payload: ModeloWorkCreateRequest,
     subject: str,
     deadline: float,
 ) -> OperationPublicProjectionV1:
@@ -185,7 +184,7 @@ async def _create(
     effect = OperationEffect.UNKNOWN
     refusal_code: str | None = None
     try:
-        state = await _read_terminal_state(controller, payload, subject, deadline)
+        state = await _read_terminal_state(controller, subject, deadline)
         condition, effect, refusal_code = _admitted_terminal_details(state)
         result = await _read_create_projection(controller, state)
         if not _result_matches_request(result, payload, client, session_id):
@@ -242,7 +241,7 @@ def compose_runtime_work_create_handoff(
             raise ModeloLifecycleActionUnavailableError(
                 translated_message="tui.declarations.work_create.refusal.period"
             )
-        if locale_key := modelo_work_create_refusal_locale_key(modelo):
+        if (locale_key := modelo_work_create_refusal_locale_key(modelo)) is not None and locale_key != "":
             raise ModeloLifecycleActionUnavailableError(
                 translated_message=locale_key, context={"modelo": modelo.strip()}
             )

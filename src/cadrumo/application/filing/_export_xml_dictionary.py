@@ -334,7 +334,7 @@ def _latest_xml_dictionary_xsd_version(source: SourceReference, *, source_payloa
             continue
         for enumeration in simple_type.iter(f"{_XSD_NS}enumeration"):
             value = enumeration.attrib.get("value")
-            if value:
+            if value is not None and value:
                 versions.append(value)
     if not versions:
         raise FilingExportValidationError(f"XML dictionary XSD source {source.id!r} declares no versionxsd values")
@@ -414,7 +414,7 @@ def _xsd_declared_children(node: ElementTree.Element[str]) -> list[ElementTree.E
         # A comment or processing instruction carries a callable tag rather than
         # a name; rendering it to text simply matches nothing below.
         local_name = str(current.tag).rpartition("}")[2]
-        if local_name == "element" and current.get("name"):
+        if local_name == "element" and bool(current.get("name")):
             found.append(current)
         elif local_name in _XSD_MODEL_GROUP_TAGS:
             pending = list(current) + pending
@@ -482,7 +482,9 @@ def _xml_dictionary_optional_element_paths(
 ) -> frozenset[str]:
     """Return the absolute paths whose XSD element declaration is optional."""
     root = _xml_dictionary_xsd_root(source, source_payloads=source_payloads)
-    named_types = {name: node for node in root.iter(f"{_XSD_NS}complexType") if (name := node.get("name"))}
+    named_types = {
+        name: node for node in root.iter(f"{_XSD_NS}complexType") if ((name := node.get("name")) is not None and name)
+    }
     declaration = next(
         (node for node in root if node.tag == f"{_XSD_NS}element" and node.get("name") == _XML_DICTIONARY_ROOT_TAG),
         None,

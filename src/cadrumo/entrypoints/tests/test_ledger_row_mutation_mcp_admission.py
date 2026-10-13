@@ -21,7 +21,6 @@ import pytest
 from pydantic import BaseModel
 
 from ...application.bucket_event_repository import bucket_event_history_repository
-from ...application.ledger.actions_manual import create_manual_transaction
 from ...application.ledger.attachment_mutation_operation import (
     LedgerAttachmentOperationResult,
     LedgerAttachRequest,
@@ -34,6 +33,7 @@ from ...application.ledger.split_operation import (
     LedgerSplitOperationResult,
     LedgerSplitRequest,
 )
+from ...application.ledger.tests.manual_transaction_support import create_manual_transaction
 from ...application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...application.operations.execution_actor import OperationExecutionCaller, OperationExecutionCallerReader
 from ...application.operations.models import OperationIdentity, OperationRequest

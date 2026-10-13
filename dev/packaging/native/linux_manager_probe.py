@@ -30,7 +30,7 @@ def _text(library: ctypes.CDLL, name: str, argument: object) -> str:
     result = function(argument, ctypes.byref(pointer))
     if result < 0:
         raise OSError(-result, f"{name}: {os.strerror(-result)}")
-    if not pointer.value:
+    if not (pointer.value is not None and pointer.value):
         raise RuntimeError(f"{name} returned an empty value")
     try:
         return ctypes.string_at(pointer).decode("utf-8", errors="strict")

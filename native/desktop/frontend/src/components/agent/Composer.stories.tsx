@@ -32,21 +32,28 @@ export const PROVIDERS: ProviderOption[] = [
   },
 ];
 
+// A specimen's efforts, as a model's catalog entry would list them.
+const EFFORTS = [
+  { id: "low", name: "Low" },
+  { id: "medium", name: "Medium" },
+  { id: "high", name: "High" },
+];
+
 export const MODELS: Record<string, ModelOption[]> = {
   anthropic: [
     {
       id: "opus",
       name: "Opus 5.5",
       description: "Most capable, for careful work across many documents",
-      efforts: ["Low", "Medium", "High"],
-      defaultEffort: "High",
+      efforts: EFFORTS,
+      defaultEffort: "high",
     },
     {
       id: "sonnet",
       name: "Sonnet 5",
       description: "Balanced speed and depth for everyday questions",
-      efforts: ["Low", "Medium", "High"],
-      defaultEffort: "Medium",
+      efforts: EFFORTS,
+      defaultEffort: "medium",
     },
     {
       id: "haiku",
@@ -61,7 +68,7 @@ export const MODELS: Record<string, ModelOption[]> = {
 export const SELECTION: AgentSelection = {
   providerId: "anthropic",
   modelId: "opus",
-  effort: "High",
+  effort: "high",
 };
 
 // Pictures for image tiles, drawn inline: no request leaves the catalogue.

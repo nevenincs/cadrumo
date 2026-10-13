@@ -82,7 +82,7 @@ def _unresolvable_pointer_for_entry(
         return None
     label = f"nota{pointer.group(1)}"
     defining = labels.get((modelo, label))
-    if not defining or len(defining) <= 1:
+    if not (defining is not None and defining) or len(defining) <= 1:
         return None
     if (entry.get("parser_field") or {}).get("sheet") in defining:
         # Resolved on its own sheet, which is how these designs scope a

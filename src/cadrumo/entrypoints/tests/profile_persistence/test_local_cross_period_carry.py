@@ -59,8 +59,8 @@ from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.observations_repository import APP_FILING_SOURCE_KIND, ResultDispositionProjection
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from ....application.ledger.actions_manual import create_manual_transaction
 from ....application.ledger.models import ManualLedgerTransactionCommand
+from ....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from ....application.modelo.calculation_actions import (
     calculate_modelo_revision,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,

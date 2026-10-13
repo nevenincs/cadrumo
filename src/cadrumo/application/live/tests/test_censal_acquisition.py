@@ -60,7 +60,11 @@ def _sede_imports_in(source: str) -> set[str]:
     tree = ast.parse(source)
     names: set[str] = set()
     for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom) and node.module and node.module.endswith("aeat.sede"):
+        if (
+            isinstance(node, ast.ImportFrom)
+            and (node.module is not None and node.module)
+            and node.module.endswith("aeat.sede")
+        ):
             names.update(alias.name for alias in node.names)
     return names
 

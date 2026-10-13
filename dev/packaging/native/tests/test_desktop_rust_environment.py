@@ -32,6 +32,7 @@ def _rust() -> tuple[Path, str, str]:
     version = pins["rust"]
     triple = pins["targets"][target]["rust_target"]
     assert isinstance(version, str) and isinstance(triple, str)
+    version, triple = str(version), str(triple)
     root = Path.home() / ".rustup/toolchains" / (version + "-" + triple)
     suffix = ".exe" if sys.platform == "win32" else ""
     if not (root / "bin" / ("cargo" + suffix)).is_file():

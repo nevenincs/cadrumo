@@ -105,7 +105,7 @@ def reconcile_pull_verb(
     """Pull the AEAT justificante for a work unit and reconcile against it."""
     from .runtime_modelo_reconciliation_pull import pull_modelo_reconciliation
 
-    resolved_actor = actor.strip() if actor else _resolve_default_actor_value()
+    resolved_actor = actor.strip() if (actor is not None and actor) else _resolve_default_actor_value()
     report = pull_modelo_reconciliation(
         ctx,
         work_unit_id=work_unit_id,
@@ -137,7 +137,7 @@ def reconcile_file_verb(
     """Reconcile a work unit against a local justificante or declaración PDF file."""
     from .runtime_modelo_reconciliation_import import import_modelo_reconciliation
 
-    resolved_actor = actor.strip() if actor else "operator"
+    resolved_actor = actor.strip() if (actor is not None and actor) else "operator"
     resolved_kind = kind if kind is not None else ModeloReconciliationEvidenceKind.JUSTIFICANTE
     report = import_modelo_reconciliation(
         ctx,
@@ -161,7 +161,7 @@ def reconcile_list_verb(ctx: typer.Context, work_unit_id: str | None = None) -> 
     from ._modelo_payloads_m036 import ModeloReconciliationHistoryResult, ModeloReconciliationHistoryRowPayload
     from .runtime_modelo_reconciliation_list import read_modelo_reconciliation_list
 
-    work_unit_token = work_unit_id.strip() if work_unit_id else None
+    work_unit_token = work_unit_id.strip() if (work_unit_id is not None and work_unit_id) else None
     projection = read_modelo_reconciliation_list(ctx, work_unit_id=work_unit_token)
     bucket_id = str(projection.profile_id)
     entries = projection.reconciliations

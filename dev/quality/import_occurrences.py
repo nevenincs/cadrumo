@@ -276,5 +276,9 @@ def _record_dynamic_targets(
     """Record dynamic targets."""
     for target in sorted(() if exhaustive_census else targets or ()):
         resolved = dynamic_target(self.module, target, node, context)
-        if resolved and resolved in self.known and is_first_party(resolved, self.authority.root_names):
+        if (
+            (resolved is not None and resolved)
+            and resolved in self.known
+            and is_first_party(resolved, self.authority.root_names)
+        ):
             self.record(resolved, (), node.lineno, "dynamic")

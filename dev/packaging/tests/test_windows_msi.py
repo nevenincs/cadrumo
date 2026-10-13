@@ -7,7 +7,9 @@ import os
 import shutil
 import sys
 from pathlib import Path, PurePosixPath, PureWindowsPath
+from typing import Literal
 from uuid import UUID
+from xml.etree.ElementTree import Element
 
 import pytest
 from defusedxml import ElementTree
@@ -88,7 +90,9 @@ def test_msi_authoring_partitions_complete_mandatory_component_ownership(tmp_pat
 
 
 @pytest.mark.parametrize("scope", ["user", "machine"])
-def test_version_data_components_preserve_directory_inventory_and_binary_ownership(tmp_path: Path, scope: str) -> None:
+def test_version_data_components_preserve_directory_inventory_and_binary_ownership(
+    tmp_path: Path, scope: Literal["user", "machine"]
+) -> None:
     from dev.packaging.native.windows_msi import _source
 
     _, identity = _prepared(tmp_path)
@@ -107,7 +111,7 @@ def test_version_data_components_preserve_directory_inventory_and_binary_ownersh
     )
     members = {f"versions/{value.version}/{name}": "0" * 64 for name in names}
 
-    def components(files: dict[str, str]) -> list:
+    def components(files: dict[str, str]) -> list[Element]:
         source = _source(
             tmp_path,
             files,
@@ -167,8 +171,8 @@ def test_version_data_components_preserve_directory_inventory_and_binary_ownersh
 def test_msi_component_costing_budget_accounts_for_registry_expansion(count: int) -> None:
     from dev.packaging.native.windows_msi_database import _verify_component_rows
 
-    components = [(f"C_{index}", "260", f"R_{index}") for index in range(count)]
-    registry = [(f"R_{index}", "1", f"C_{index}") for index in range(count)]
+    components: list[tuple[str, ...]] = [(f"C_{index}", "260", f"R_{index}") for index in range(count)]
+    registry: list[tuple[str, ...]] = [(f"R_{index}", "1", f"C_{index}") for index in range(count)]
     if count == 32767:
         components.append(("C_File", "256", "F_File"))
         _verify_component_rows(components, registry)
@@ -183,9 +187,12 @@ def test_msi_component_costing_budget_accounts_for_registry_expansion(count: int
 def test_msi_feature_table_inventory_refuses_invalid_or_unselected_ownership(fault: str) -> None:
     from dev.packaging.native.windows_msi_database import _verify_feature_rows
 
-    features = [("ProductFeature", "", "0", "1", "24"), ("PayloadFeature0001", "ProductFeature", "0", "1", "26")]
-    components = [(f"C_{index}",) for index in range(1601)]
-    links = [
+    features: list[tuple[str, ...]] = [
+        ("ProductFeature", "", "0", "1", "24"),
+        ("PayloadFeature0001", "ProductFeature", "0", "1", "26"),
+    ]
+    components: list[tuple[str, ...]] = [(f"C_{index}",) for index in range(1601)]
+    links: list[tuple[str, ...]] = [
         ("ProductFeature" if index < 1600 else "PayloadFeature0001", component[0])
         for index, component in enumerate(components)
     ]
@@ -840,7 +847,7 @@ def test_native_admission_dll_is_embedded_in_all_four_verified_products(
     wix = shutil.which("wix")
     assert wix is not None, "Put the configured WiX compiler on PATH"
     configured = os.environ.get("CADRUMO_TEST_MSI_ADAPTER")
-    assert configured, "Set CADRUMO_TEST_MSI_ADAPTER to the CMake rust_installer output"
+    assert configured is not None and configured, "Set CADRUMO_TEST_MSI_ADAPTER to the CMake rust_installer output"
     adapter = tmp_path / "adapter.dll"
     shutil.copyfile(Path(configured), adapter)
     runner = Path(configured).with_name("cadrumo-msi-maintenance.exe")
@@ -882,6 +889,7 @@ def test_native_admission_dll_is_embedded_in_all_four_verified_products(
 
     disabled = tmp_path / "disabled-feature.msi"
     shutil.copyfile(artifact, disabled)
+    assert sys.platform == "win32"
     msi = ctypes.WinDLL("msi.dll", winmode=0x00000800)
     handle = ctypes.c_uint32
     for name, arguments in {

@@ -415,7 +415,11 @@ def _complete_template_override(
     año_override: int | None,
 ) -> TemplateRevision | None:
     """Build the highest-precedence template when all three coordinates are explicit."""
-    if modelo_override and año_override and template_revision_override:
+    if (
+        (modelo_override is not None and modelo_override)
+        and (año_override is not None and año_override)
+        and (template_revision_override is not None and template_revision_override)
+    ):
         return TemplateRevision(
             modelo=modelo_override,
             año=año_override,
@@ -432,7 +436,7 @@ def _template_from_missing_detection(
     año_override: int | None,
 ) -> TemplateRevision:
     """Resolve the explicit fallback or retain the template-not-detected refusal."""
-    if not modelo_override or not año_override:
+    if not (modelo_override is not None and modelo_override) or not (año_override is not None and año_override):
         raise TemplateNotDetectedError(
             translated_message="adapters.inbound.declaracion.errors.template_not_detected",
             context={"path": _INPUT_PDF_SOURCE_LABEL},
@@ -452,12 +456,12 @@ def _validate_template_overrides(
     año_override: int | None,
 ) -> None:
     """Refuse explicit modelo/year overrides that contradict detected metadata."""
-    if modelo_override and modelo_override != detected.modelo:
+    if (modelo_override is not None and modelo_override) and modelo_override != detected.modelo:
         raise DeclaracionParseError(
             translated_message="adapters.inbound.declaracion.errors.modelo_conflict",
             context={"modelo": modelo_override, "detected": detected.modelo},
         )
-    if año_override and año_override != detected.año:
+    if (año_override is not None and año_override) and año_override != detected.año:
         raise DeclaracionParseError(
             translated_message="adapters.inbound.declaracion.errors.year_conflict",
             context={"year": año_override, "detected": detected.año},
@@ -469,7 +473,7 @@ def _apply_template_revision_override(
     template_revision_override: str | None,
 ) -> TemplateRevision:
     """Replace only the revision when its explicit override survives metadata checks."""
-    if template_revision_override:
+    if template_revision_override is not None and template_revision_override:
         return TemplateRevision(
             modelo=detected.modelo,
             año=detected.año,
@@ -480,7 +484,7 @@ def _apply_template_revision_override(
 
 
 def _resolve_period(text: str, *, period_override: str | None) -> str:
-    if period_override:
+    if period_override is not None and period_override:
         return period_override.upper()
     match = _PERIOD_RE.search(text)
     if match is None:
@@ -612,7 +616,7 @@ def _select_extraction_profile(
         for profile in snapshot.extraction_profiles.values()
         if profile.surface == "declaracion_pdf" and "declaration_pdf" in profile.accepted_artefact_kinds
     )
-    if extraction_profile_id:
+    if extraction_profile_id is not None and extraction_profile_id:
         for profile in profiles:
             if profile.id == extraction_profile_id:
                 return profile
@@ -1080,7 +1084,7 @@ def _printed_box_numbers(
         printed = casilla.form_number or None
         if printed is None and casilla.number and casilla.number.strip().isdigit():
             printed = casilla.number
-        if printed:
+        if printed is not None and printed:
             numbers[target.casilla_id] = printed
     return numbers
 
@@ -1201,7 +1205,7 @@ def _find_bbox_page_hits(
 
 def _bbox_column_bounds(words: list[_PdfWord], anchor_spec: BboxAnchorSpec) -> tuple[float | None, float | None]:
     """Return the optional column constraint for one page's bbox anchors."""
-    if anchor_spec.column_anchor:
+    if anchor_spec.column_anchor is not None and anchor_spec.column_anchor:
         return _find_column_x_range(words, anchor_spec.column_anchor)
     return None, None
 

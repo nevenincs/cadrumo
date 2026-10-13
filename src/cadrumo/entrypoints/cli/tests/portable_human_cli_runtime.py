@@ -13,7 +13,7 @@ import os
 import sys
 import time
 import traceback
-from collections.abc import AsyncIterator, Callable, Iterator, Sequence
+from collections.abc import AsyncGenerator, Callable, Generator, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager, contextmanager
 from contextvars import Context, copy_context
@@ -228,7 +228,7 @@ class _Authorization(WorkerAuthorizationClient):
 
     @override
     @asynccontextmanager
-    async def guard(self, request: WorkerAuthorityRequest) -> AsyncIterator[WorkerAuthorizationLease]:
+    async def guard(self, request: WorkerAuthorityRequest) -> AsyncGenerator[WorkerAuthorizationLease]:
         # The actual runtime owner evaluates and holds its thread-affine fence.
         with self.owner.authorize(request):
             yield WorkerAuthorizationLease(
@@ -374,7 +374,7 @@ def portable_human_cli_runtime(
     native_store: AutomationSecretStore | None = None,
     os_owner_id: str = "portable-test-owner",
     client_native_store: AutomationSecretStore | None = None,
-) -> Iterator[PortableHumanCliRuntime]:
+) -> Generator[PortableHumanCliRuntime]:
     """Own synthetic transport, real human admission and finite joined cleanup."""
     root = storage_root.resolve(strict=True)
     oracle = current_active_bucket_session()

@@ -25,6 +25,8 @@ pub mod preferences;
 pub mod session;
 #[cfg(windows)]
 pub mod service_windows;
+#[cfg(windows)]
+pub mod process_job;
 pub mod startup;
 pub mod strings;
 pub mod supervision;

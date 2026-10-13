@@ -89,5 +89,5 @@ def test_202_current_grid_matches_the_printed_rate_and_correction_boxes() -> Non
     assert correction_rows[2].cells[0].kind is FormCellKind.BLANK
     assert correction_rows[2].cells[1].casilla_id == "37"
     assert layout.review.state.value == "generated"
-    assert layout.review.notes and "Part 2" in layout.review.notes
+    assert (layout.review.notes is not None and layout.review.notes) and "Part 2" in layout.review.notes
     assert "boe-2025-5407-modelo-202-form-pdf" in {str(s.source_ref) for s in layout.design_sources}

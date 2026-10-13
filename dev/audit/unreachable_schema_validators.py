@@ -35,7 +35,7 @@ def validator_schema_arguments(
             }
     validated: dict[str, set[str]] = {}
     for name, prefix, function, _arguments in functions.values():
-        if not fields.get(prefix) or not any(
+        if not bool(fields.get(prefix)) or not any(
             qualify(name, decorator.func if isinstance(decorator, ast.Call) else decorator)
             in {"pydantic.field_validator", "pydantic.model_validator"}
             for decorator in function.decorator_list
@@ -71,7 +71,7 @@ def validator_schema_arguments(
                 and mapping.attr == "data"
                 and isinstance(mapping.value, ast.Name)
                 and mapping.value.id in infos
-                and not stores.get(mapping.value.id)
+                and not bool(stores.get(mapping.value.id))
                 and value.args
                 and isinstance(value.args[0], ast.Constant)
                 and isinstance(value.args[0].value, str)
@@ -83,7 +83,7 @@ def validator_schema_arguments(
             head = call.func
             while isinstance(head, ast.Attribute):
                 head = head.value
-            if isinstance(head, ast.Name) and (head.id in arguments or stores.get(head.id)):
+            if isinstance(head, ast.Name) and (head.id in arguments or bool(stores.get(head.id))):
                 continue
             destination = qualify(name, call.func)
             if destination not in functions:
@@ -99,7 +99,7 @@ def validator_schema_arguments(
     result: dict[str, set[str]] = {}
     for target, (_name, prefix, function, _arguments) in functions.items():
         if (
-            not validated.get(prefix)
+            not bool(validated.get(prefix))
             or not any(ast.unparse(decorator) == "classmethod" for decorator in function.decorator_list)
             or any(
                 isinstance(node, ast.Name) and node.id == "cls" and isinstance(node.ctx, ast.Store)

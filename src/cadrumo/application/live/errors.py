@@ -177,7 +177,7 @@ class LiveIvaSurfaceTimeoutError(LiveApplicationError):
     ) -> None:
         """Initialize this public contract."""
         context: dict[str, object] = {"surface": surface, "timeout_ms": timeout_ms}
-        if progress_context:
+        if progress_context is not None and progress_context:
             context["progress"] = dict(progress_context)
         super().__init__(
             message,

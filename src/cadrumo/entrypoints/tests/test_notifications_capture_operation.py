@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -104,7 +104,7 @@ class _Cancellation:
         self.refuse = refuse
 
     @asynccontextmanager
-    async def irreversible_section(self) -> AsyncIterator[None]:
+    async def irreversible_section(self) -> AsyncGenerator[None]:
         self.events.append("guard-enter")
         if self.refuse:
             raise ProfileAccessRefusedError(AccessDenialCode.GRANT_INACTIVE)
@@ -123,7 +123,7 @@ class _ExecutionAuthority:
         self.events.append(f"require:{action.value}")
 
     @asynccontextmanager
-    async def commit_guard(self, identity: object) -> AsyncIterator[None]:
+    async def commit_guard(self, identity: object) -> AsyncGenerator[None]:
         assert identity is not None
         self.events.append("guard-enter")
         try:

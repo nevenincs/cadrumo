@@ -217,7 +217,12 @@ def post_webhook(url: str, alert: ReleaseAlert) -> None:
     """POST the alert to an operator-nominated webhook."""
     body = json.dumps({"text": alert_payload(alert), "workflow": alert.workflow, "run_url": alert.run_url})
     endpoint = urllib.parse.urlsplit(url)
-    if endpoint.scheme != "https" or endpoint.hostname is None or endpoint.username or endpoint.password:
+    if (
+        endpoint.scheme != "https"
+        or endpoint.hostname is None
+        or (endpoint.username is not None and endpoint.username)
+        or (endpoint.password is not None and endpoint.password)
+    ):
         raise AlertError("alert webhook URL must be an HTTPS endpoint without embedded credentials")
     try:
         port = endpoint.port

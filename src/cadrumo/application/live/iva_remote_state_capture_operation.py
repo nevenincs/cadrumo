@@ -226,7 +226,7 @@ class IvaRemoteStateCaptureExecutor:
             or report.year_to != payload.year_to
             or report.target_year != payload.target_year
             or report.target_period != period
-            or not report.acquisition_manifest_id
+            or not (report.acquisition_manifest_id is not None and report.acquisition_manifest_id)
         ):
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         return await publish_live_capture_report(

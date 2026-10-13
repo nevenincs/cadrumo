@@ -1,8 +1,6 @@
 import type {
   AgentApproval,
   AgentApprovalOption,
-  AgentConsentGrant,
-  AgentProviderRecord,
   AgentQuestion,
   AgentQuestionnaire,
   AgentQuestionnaireAnswer,
@@ -15,6 +13,7 @@ import type {
   AgentTurnRecord,
   AgentViews,
 } from "../shell/agentViews";
+import { FIXTURE_CATALOG } from "./fixtures/agentCatalog";
 import {
   FIXTURE_CONVERSATIONS,
   FIXTURE_DOCUMENTS,
@@ -24,7 +23,8 @@ import {
 // The scenario host's agent: its views over the fixture conversations, and
 // a session that answers every message with a made-up reply, streamed as
 // the desktop host would stream one. Nothing is sent anywhere; the reply
-// only repeats the message. Its provider and models are named as fixtures.
+// only repeats the message. Its providers and models are a catalog in
+// cadrumo-agent's shape, every model named as a fixture.
 
 /** How the fixture stream behaves: in order with one text sent twice, or
  * with one text never sent, which only reading the history recovers. */
@@ -42,38 +42,6 @@ const PIECE = 8;
 const MOST_QUESTIONS = 4;
 const MOST_OPTIONS = 4;
 const ANSWER_MAX = 2048;
-
-const PROVIDERS: AgentProviderRecord[] = [
-  {
-    id: "fixture-provider",
-    name: "Fixture provider",
-    selectable: true,
-    models: [
-      {
-        id: "fixture-large",
-        display_name: "Fixture Large",
-        created_at: "2026-01-01T00:00:00Z",
-        max_input_tokens: 200_000,
-        max_output_tokens: 32_000,
-        efforts: ["low", "medium", "high"],
-        default_effort: "medium",
-      },
-      {
-        id: "fixture-small",
-        display_name: "Fixture Small",
-        created_at: "2025-06-01T00:00:00Z",
-        efforts: [],
-      },
-    ],
-  },
-  {
-    id: "fixture-local",
-    name: "Fixture local",
-    selectable: false,
-    unavailable_reason: "agent_service_absent",
-    models: [],
-  },
-];
 
 const QUESTIONS: AgentQuestion[] = [
   {
@@ -174,7 +142,6 @@ export function fixtureAgent({
     : Object.fromEntries(
         Object.entries(FIXTURE_HISTORY).map(([id, list]) => [id, [...list]]),
       );
-  const grants: AgentConsentGrant[] = [];
   const listeners = new Map<string, Set<(event: AgentStreamEvent) => void>>();
   const replies = new Map<string, Reply>();
   // What each reply waits on, by request id.
@@ -196,18 +163,6 @@ export function fixtureAgent({
     await wait();
     if (!readable()) throw refused();
   };
-  const granted = (
-    conversationId: string,
-    providerId: string,
-    modelId: string,
-  ) =>
-    grants.some(
-      (grant) =>
-        grant.conversation_id === conversationId &&
-        grant.provider_id === providerId &&
-        grant.model_id === modelId,
-    );
-
   const status = (): AgentServiceStatus =>
     readable()
       ? { state: "ready", agent_version: "0.0.0-fixture", lane: "development" }
@@ -471,10 +426,10 @@ export function fixtureAgent({
       say("agentObserveStatus");
       return Promise.resolve(() => undefined);
     },
-    async providers() {
-      say("agentProviders");
+    async providerCatalog() {
+      say("agentProviderCatalog");
       await check();
-      return PROVIDERS;
+      return FIXTURE_CATALOG;
     },
     async startConversation() {
       say("agentStartConversation");
@@ -489,56 +444,10 @@ export function fixtureAgent({
       conversations.unshift(record);
       return { ...record };
     },
-    async consentNeeded(request) {
-      say(`agentConsentNeeded ${request.conversation_id}`);
-      await check();
-      return granted(
-        request.conversation_id,
-        request.selection.provider_id,
-        request.selection.model_id,
-      )
-        ? null
-        : {
-            conversation_id: request.conversation_id,
-            provider_id: request.selection.provider_id,
-            model_id: request.selection.model_id,
-            items: [{ kind: "messages" }],
-          };
-    },
-    async grantConsent(request) {
-      say(`agentGrantConsent ${request.conversation_id}`);
-      await check();
-      const grant = {
-        ...request,
-        grant_id: id("g"),
-        granted_at: new Date().toISOString(),
-      };
-      grants.push(grant);
-      return grant;
-    },
-    async withdrawConsent(grantId) {
-      say(`agentWithdrawConsent ${grantId}`);
-      await check();
-      const at = grants.findIndex((grant) => grant.grant_id === grantId);
-      if (at >= 0) grants.splice(at, 1);
-    },
-    async consents(conversationId) {
-      say(`agentConsents ${conversationId}`);
-      await check();
-      return grants.filter((grant) => grant.conversation_id === conversationId);
-    },
     async send(request) {
       say(`agentSend ${request.conversation_id}`);
       await check();
       const conversationId = request.conversation_id;
-      if (
-        !granted(
-          conversationId,
-          request.selection.provider_id,
-          request.selection.model_id,
-        )
-      )
-        throw coded("agent_consent_required");
       const record = conversations.find((held) => held.id === conversationId);
       if (record) {
         record.title ||= request.text.slice(0, 48);

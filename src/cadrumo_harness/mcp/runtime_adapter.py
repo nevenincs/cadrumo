@@ -452,7 +452,7 @@ class RuntimeMcpAdapter:
             if code == AccessDenialCode.PERSON_ACT_REQUIRED.value:
                 # The runtime refused the person's own act; the agent is told to ask the person.
                 reply["remedy"] = PERSON_ACT_REMEDY
-            elif remedy := runtime_unavailable_remedy(code):
+            elif (remedy := runtime_unavailable_remedy(code)) is not None and remedy:
                 reply["remedy"] = remedy
             elif self.client is None and (told := sign_in_remedy(code, reply)) is not None:
                 # Nothing admits this server: no live sign-in and no configured key.

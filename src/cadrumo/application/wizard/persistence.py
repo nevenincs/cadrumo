@@ -260,7 +260,7 @@ def _safe_entry_date(birth_raw: str, entry_raw: str | None) -> date | None:
     the review verdict still blocks final submission until the operator corrects
     it.
     """
-    if not entry_raw:
+    if not (entry_raw is not None and entry_raw):
         return None
     birth = parse_iso8601_date(birth_raw) if birth_raw else None
     entry = parse_iso8601_date(entry_raw)
@@ -433,7 +433,7 @@ def _meses_madre_trabajo(raw: str) -> tuple[int, ...]:
 
 
 def _optional_int(raw: str | None) -> int | None:
-    return int(raw) if raw else None
+    return int(raw) if (raw is not None and raw) else None
 
 
 class _GuarderiaSpend(TypedDict):

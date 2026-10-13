@@ -2,7 +2,7 @@
 
 import json
 import sys
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from importlib.metadata import version
@@ -142,7 +142,7 @@ class _NativeLogin:
 
 
 @contextmanager
-def _keyring_backend(name: str | None) -> Iterator[None]:
+def _keyring_backend(name: str | None) -> Generator[None]:
     """Apply the declared keychain refusal to the process owning runtime login."""
     if name is None:
         yield
@@ -164,7 +164,7 @@ def native_profile_view_server(
     *,
     allow_unavailable_shutdown: bool = False,
     keychain_backend: str | None = None,
-) -> Iterator[None]:
+) -> Generator[None]:
     """Host real native profile workers for explicit password-backed CLI reads."""
     if sys.platform != "win32":
         pytest.skip("requires native Windows profile workers")

@@ -12,6 +12,7 @@ from dev._paths import REPO_ROOT
 
 from ...runtime_wheel_selection import active_requirements
 from ...runtime_wheelhouse_contract import target_platform
+from ..agent import agent_pin, locked_requirements
 from ..assemble import assemble
 from ..product import BUNDLED_EXTRAS
 
@@ -26,6 +27,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
         ("mixed", "cohort versions"),
         ("duplicate", "Duplicate installed"),
         ("target", "target/layout ABI"),
+        ("agent-missing", "closure mismatch"),
+        ("agent-version", "agent version"),
     ],
 )
 def test_invalid_cohort_never_reaches_payload_copy(tmp_path: Path, defect: str, message: str) -> None:
@@ -35,6 +38,9 @@ def test_invalid_cohort_never_reaches_payload_copy(tmp_path: Path, defect: str, 
     bundled = active_requirements(REPO_ROOT, target_platform("windows-x86-64"), "3.13.11", extras=BUNDLED_EXTRAS)
     for name, requirement in bundled.items():
         versions[name] = next(iter(requirement.specifier)).version
+    for name, requirement in locked_requirements("windows-x86-64", "3.13.11").items():
+        versions[name] = next(iter(requirement.specifier)).version
+    versions["cadrumo-agent"] = agent_pin()["version"]
     companion = PRODUCT_IDENTITY.companion_distributions[0]
     if defect == "missing":
         del versions[companion]
@@ -42,6 +48,10 @@ def test_invalid_cohort_never_reaches_payload_copy(tmp_path: Path, defect: str, 
         del versions["nvidia-ml-py"]
     if defect == "mixed":
         versions[companion] = "1.2.2"
+    if defect == "agent-missing":
+        del versions["cadrumo-agent"]
+    if defect == "agent-version":
+        versions["cadrumo-agent"] = "0.0.1"
     for name, version in versions.items():
         directory = dependencies / f"{name.replace('-', '_')}-{version}.dist-info"
         directory.mkdir()

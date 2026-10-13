@@ -251,7 +251,7 @@ def field_degradation_notices(provenance: Sequence[FieldProvenance]) -> list[Not
             # the check could not run, which is only meaningful once the outcomes
             # that mean a check ran and failed are already handled.
             notices.append(_self_reported_notice(envelope))
-        elif envelope.refused_anchor:
+        elif envelope.refused_anchor is not None and envelope.refused_anchor:
             # A recorded refusal, and nothing else, reaches the not-found shape.
             # The grounding stage clears the anchor it could not locate, so the
             # refusal is the only surviving trace that a form was offered; without
@@ -259,7 +259,7 @@ def field_degradation_notices(provenance: Sequence[FieldProvenance]) -> list[Not
             # the operator is told the reader offered nothing, which is
             # affirmatively false about a reader that offered a printed form.
             notices.append(_anchor_not_found_notice(envelope))
-        elif envelope.anchor:
+        elif envelope.anchor is not None and envelope.anchor:
             # A CARRIED anchor under a degraded outcome is the third state, and
             # routing it to the not-found shape told the operator the form does
             # not occur in the document when the check had located it. Whatever

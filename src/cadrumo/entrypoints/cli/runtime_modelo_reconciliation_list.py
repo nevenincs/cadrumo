@@ -26,7 +26,9 @@ def read_modelo_reconciliation_list(
     """Return one settled worker snapshot for the invocation's bound profile."""
     client = bound_profile_client(ctx)
     profile_id = str(client.profile_id)
-    scoped_work_unit_id = work_unit_id.strip() if work_unit_id and work_unit_id.strip() else None
+    scoped_work_unit_id = (
+        work_unit_id.strip() if (work_unit_id is not None and work_unit_id) and work_unit_id.strip() else None
+    )
     request = ModeloReconciliationListRequest(
         profile_id=client.profile_id,
         work_unit_id=scoped_work_unit_id,

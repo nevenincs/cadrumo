@@ -159,7 +159,7 @@ def _authority_root(build_root: Path) -> Path:
     """
     source_tree = build_root / _SOURCE_TREE_DIRECTORY
     override = os.environ.get(_AUTHORITY_ROOT_ENV)
-    if override:
+    if override is not None and override:
         candidate = Path(override)
         # A foreign authority root is an explicit selection; never publish into it.
         if candidate.resolve() != source_tree.resolve():

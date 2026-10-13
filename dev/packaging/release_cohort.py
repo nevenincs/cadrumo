@@ -30,7 +30,7 @@ _SOURCE_ROOT = _REPO_ROOT / "src"
 for _import_root in (str(_REPO_ROOT), str(_SOURCE_ROOT)):
     if _import_root not in sys.path:
         sys.path.insert(0, _import_root)
-if not __package__:
+if not (__package__ is not None and __package__):
     __package__ = "dev.packaging"
 
 scan_directory = importlib.import_module("cadrumo.core.directory_scan").scan_directory

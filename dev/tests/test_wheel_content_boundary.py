@@ -149,7 +149,7 @@ def candidate_source(tmp_path_factory: pytest.TempPathFactory) -> Path:
     """Snapshot the repository and stage the one release-selected authority candidate."""
 
     raw_candidate = os.environ.get(_AUTHORITY_CANDIDATE_ENV)
-    if raw_candidate:
+    if raw_candidate is not None and raw_candidate:
         candidate = Path(raw_candidate).resolve(strict=True)
         source_root: Path | None = None
     else:

@@ -9,7 +9,7 @@ a profile projection.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Generator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from decimal import Decimal
@@ -63,7 +63,7 @@ class ProfileFixtureState(StrEnum):
 
 
 @contextmanager
-def profile_fixture_storage() -> Iterator[str]:
+def profile_fixture_storage() -> Generator[str]:
     """Create fresh state so a prior capture cannot answer a later one's questions."""
     with harness_storage(namespace=f"profile-review-{uuid4().hex}"), bundled_indexed_authority().operation():
         yield ensure_session()

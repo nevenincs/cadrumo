@@ -1,5 +1,5 @@
 use crate::{
-    docs,
+    agent, docs,
     environment::Launch,
     logs,
     manager::{self, ManagerStart},
@@ -133,6 +133,7 @@ pub fn run(launch: Launch) -> Result<i32> {
             shell::window_controls::commands(),
             shell::sign_in::commands(),
             manager::commands(),
+            agent::commands(),
         ],
         token,
         diagnostics.clone(),
@@ -142,6 +143,7 @@ pub fn run(launch: Launch) -> Result<i32> {
         .plugin(docs::plugin(&launch))
         .plugin(logs::plugin(&launch))
         .plugin(shell::plugin(&launch))
+        .plugin(agent::plugin(&launch))
         .plugin(shell::clipboard_plugin());
     let manager_start = Arc::new(ManagerStart::new(&launch));
     let startup_manager = manager_start.clone();
@@ -214,6 +216,12 @@ pub fn run(launch: Launch) -> Result<i32> {
         .on_window_event(|window, event| {
             let state = window.state::<Arc<TerminalState>>();
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                // The launcher is a runtime client: it ends before the runtime's
+                // supervision does.
+                let agent = window.state::<Arc<agent::AgentHost>>();
+                if let Err(error) = tauri::async_runtime::block_on(agent.close()) {
+                    state.launch.diagnostics.failure(error);
+                }
                 let manager = window.state::<Arc<ManagerStart>>();
                 if let Err(error) = tauri::async_runtime::block_on(manager.close_checked()) {
                     api.prevent_close();
@@ -242,6 +250,7 @@ pub fn run(launch: Launch) -> Result<i32> {
         })?;
     let sign_in = app.state::<Arc<shell::sign_in::SignIn>>().inner().clone();
     let manager = app.state::<Arc<ManagerStart>>().inner().clone();
+    let agent = app.state::<Arc<agent::AgentHost>>().inner().clone();
     #[cfg(windows)]
     let monitoring = {
         let watched = manager.clone();
@@ -266,9 +275,11 @@ pub fn run(launch: Launch) -> Result<i32> {
     let code = app.run_return(|_, _| {});
     #[cfg(windows)]
     monitoring.abort();
+    let agent_cleanup = tauri::async_runtime::block_on(agent.close());
     let manager_cleanup = tauri::async_runtime::block_on(manager.close_checked());
     let sign_in_cleanup = tauri::async_runtime::block_on(sign_in.stop());
     let terminal_cleanup = state.stop();
+    agent_cleanup?;
     manager_cleanup?;
     sign_in_cleanup?;
     terminal_cleanup?;
@@ -349,6 +360,7 @@ mod tests {
             shell::window_controls::commands(),
             shell::sign_in::commands(),
             manager::commands(),
+            agent::commands(),
         ];
         let names: Vec<&str> = modules
             .iter()

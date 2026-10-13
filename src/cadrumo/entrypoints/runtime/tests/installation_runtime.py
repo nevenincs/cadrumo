@@ -8,7 +8,7 @@ which runs the real custody service.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Generator
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from pathlib import Path
@@ -154,7 +154,7 @@ def serving_installation_runtime(
     *,
     secret_store: Callable[[], AutomationSecretStore] = installed_automation_secret_store,
     product_version: str = "test",
-) -> Iterator[RuntimeProfileConnections]:
+) -> Generator[RuntimeProfileConnections]:
     """Serve the real transport over ``root`` until the scope ends, then drain it.
 
     The connection service is yielded so a test can observe what the runtime holds while an act runs.

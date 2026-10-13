@@ -1,3 +1,15 @@
+function(cadrumo_source_inputs output source_root)
+  string(SHA256 source_key "${source_root}")
+  get_property(enrolled GLOBAL PROPERTY "CADRUMO_SOURCE_INPUTS_${source_key}" SET)
+  if(enrolled)
+    get_property(inputs GLOBAL PROPERTY "CADRUMO_SOURCE_INPUTS_${source_key}")
+  else()
+    file(GLOB_RECURSE inputs CONFIGURE_DEPENDS "${source_root}/src/*")
+    set_property(GLOBAL PROPERTY "CADRUMO_SOURCE_INPUTS_${source_key}" "${inputs}")
+  endif()
+  set(${output} "${inputs}" PARENT_SCOPE)
+endfunction()
+
 function(cadrumo_package_bootstrap output layout source_root)
   string(JSON bootstrap_relative GET "${layout}" bootstrap)
   set(bootstrap "${source_root}/native/${bootstrap_relative}")
@@ -11,7 +23,7 @@ function(cadrumo_product_inputs output source_root)
   # ARGN contains only the project directories and hook directories selected by
   # pyproject.toml. Installer generators, registry authoring tools and tests do
   # not contribute bytes to these wheels.
-  file(GLOB_RECURSE inputs CONFIGURE_DEPENDS "${source_root}/src/*")
+  cadrumo_source_inputs(inputs "${source_root}")
   foreach(directory IN LISTS ARGN)
     file(TO_CMAKE_PATH "${directory}" directory)
     file(GLOB_RECURSE package_inputs CONFIGURE_DEPENDS "${source_root}/${directory}/*")
@@ -35,7 +47,8 @@ endfunction()
 
 function(cadrumo_assembly_product_inputs output product_root)
   # Assembly reads installed payloads and provenance, never wheel-build scratch.
-  set(${output} "${product_root}/dependencies" "${product_root}/build/product-wheels.json" PARENT_SCOPE)
+  set(${output} "${product_root}/dependencies" "${product_root}/build/product-wheels.json"
+    "${product_root}/agent-wheel.json" PARENT_SCOPE)
 endfunction()
 
 function(cadrumo_assembly_backend_inputs output source_root backend)

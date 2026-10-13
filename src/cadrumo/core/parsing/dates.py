@@ -89,7 +89,7 @@ def parse_iso8601_date(raw: str | None) -> date | None:
                     Callers are expected to wrap this in the appropriate
                     domain exception.
     """
-    if not raw:
+    if not (raw is not None and raw):
         return None
     cleaned = raw.strip()
     if not cleaned:

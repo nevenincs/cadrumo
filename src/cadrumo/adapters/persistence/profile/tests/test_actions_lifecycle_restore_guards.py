@@ -10,13 +10,13 @@ import pytest
 from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.actions_lifecycle import restore_manual_transaction, stash_manual_transaction
-from cadrumo.application.ledger.actions_manual import create_manual_transaction
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.transactions.enums import TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.errors import TransactionValidationError
 from cadrumo.domain.transactions.models import TransactionCatalogue
 
+from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from .ledger_action_persistence_support import (
     BUCKET_ID as _BUCKET_ID,
 )

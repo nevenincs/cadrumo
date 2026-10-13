@@ -5,16 +5,18 @@ from __future__ import annotations
 import asyncio
 import ctypes
 import math
+import os
 import subprocess
 import sys
 import time
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from threading import Lock
-from typing import cast
+from typing import BinaryIO, cast
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.async_cleanup import AsyncResourceCleanupError, await_cancellation_complete
+from .windows_native_io import NativeWindowsHandle, native_windows_call, owned_windows_handle
 
 if sys.platform == "win32":
     from ctypes import wintypes
@@ -54,7 +56,13 @@ if sys.platform == "win32":
 
 
 def _launch_in_job(
-    job: int, *, executable: Path, arguments: Sequence[str], directory: Path, environment: Mapping[str, str]
+    job: int,
+    *,
+    executable: Path,
+    arguments: Sequence[str],
+    directory: Path,
+    environment: Mapping[str, str],
+    standard_handles: tuple[int, int, int] | None = None,
 ) -> tuple[int, int, int]:
     if sys.platform != "win32":
         raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
@@ -90,12 +98,13 @@ def _launch_in_job(
         ctypes.POINTER(_ProcessInformation),
     )
     create.restype = wintypes.BOOL
+    count = 1 if standard_handles is None else 2
     size = ctypes.c_size_t()
-    initialize(None, 1, 0, ctypes.byref(size))
+    initialize(None, count, 0, ctypes.byref(size))
     if size.value == 0:
         raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
     attributes = ctypes.create_string_buffer(size.value)
-    if not initialize(attributes, 1, 0, ctypes.byref(size)):
+    if not initialize(attributes, count, 0, ctypes.byref(size)):
         raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
     try:
         jobs = (wintypes.HANDLE * 1)(job)
@@ -106,6 +115,15 @@ def _launch_in_job(
         startup = _StartupInfoEx()
         startup.startup.cb = ctypes.sizeof(startup)
         startup.attributes = ctypes.addressof(attributes)
+        inherited = None
+        if standard_handles is not None:
+            # PROC_THREAD_ATTRIBUTE_HANDLE_LIST: exactly these three pipe ends
+            # are inherited, so no other inheritable handle of this process leaks.
+            inherited = (wintypes.HANDLE * 3)(*standard_handles)
+            if not update(attributes, 0, 0x00020002, inherited, ctypes.sizeof(inherited), None, None):
+                raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+            startup.startup.dwFlags = 0x00000100  # STARTF_USESTDHANDLES
+            startup.startup.hStdInput, startup.startup.hStdOutput, startup.startup.hStdError = standard_handles
         information = _ProcessInformation()
         command = ctypes.create_unicode_buffer(subprocess.list2cmdline((str(executable), *arguments)))
         block = ctypes.create_unicode_buffer(
@@ -113,13 +131,14 @@ def _launch_in_job(
             + "\0\0"
         )
         # EXTENDED_STARTUPINFO_PRESENT | CREATE_UNICODE_ENVIRONMENT |
-        # CREATE_NO_WINDOW. Inherit no handles, including this job handle.
+        # CREATE_NO_WINDOW. Inherit no handles, including this job handle,
+        # beyond the standard handles the handle list names.
         if not create(
             str(executable),
             command,
             None,
             None,
-            False,
+            inherited is not None,
             0x08080400,
             block,
             str(directory),
@@ -277,6 +296,50 @@ class WindowsProcessScope:
             self._children.append(process)
             return process
 
+    def launch_with_standard_pipes(
+        self, *, executable: Path, arguments: Sequence[str], directory: Path, environment: Mapping[str, str]
+    ) -> tuple[WindowsOwnedProcess, BinaryIO, BinaryIO]:
+        """Launch into the job with a private standard-input and standard-output pipe.
+
+        Return the process, the writable end of its standard input and the
+        readable end of its standard output. Standard error goes to the null
+        device. Only the three child ends are inherited; secrets travel on the
+        returned standard input, never the arguments or environment.
+        """
+        if sys.platform != "win32":
+            raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+        if not executable.is_absolute() or not directory.is_absolute():
+            raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+        _require_launch_environment(arguments, environment)
+        try:
+            executable = executable.resolve(strict=True)
+            directory = directory.resolve(strict=True)
+        except (OSError, ValueError):
+            raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE) from None
+        child_ends, parent_ends = _standard_pipes()
+        try:
+            with self._lock:
+                if self._launch_fenced or self._job is None:
+                    raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+                handle, thread_handle, pid = _launch_in_job(
+                    self._job,
+                    executable=executable,
+                    arguments=arguments,
+                    directory=directory,
+                    environment=environment,
+                    standard_handles=cast("tuple[int, int, int]", tuple(int(end) for end in child_ends)),
+                )
+                process = WindowsOwnedProcess(handle=handle, thread_handle=thread_handle, pid=pid)
+                self._children.append(process)
+        except BaseException:
+            for end in parent_ends:
+                end.Close()
+            raise
+        finally:
+            for end in child_ends:
+                end.Close()
+        return process, _python_stream(parent_ends[0], "wb"), _python_stream(parent_ends[1], "rb")
+
     def terminate(self, *, timeout: float = 2.0) -> None:
         """Fence launch, terminate this job and verify no active members to a bound."""
         if not math.isfinite(timeout) or timeout < 0:
@@ -427,6 +490,88 @@ class WindowsProcessScope:
             raise
         if failures:
             raise failures[0]
+
+
+def _pipe_ends(attributes: object) -> tuple[NativeWindowsHandle, NativeWindowsHandle]:
+    """Retain both native pipe handles and release the first if the second is refused."""
+    import win32pipe
+
+    values = native_windows_call(win32pipe, "CreatePipe", attributes, 0)
+    if not isinstance(values, tuple) or len(values) != 2:
+        raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+    read = owned_windows_handle(values[0])
+    try:
+        write = owned_windows_handle(values[1])
+    except BaseException:
+        read.Close()
+        raise
+    return read, write
+
+
+def _standard_pipes() -> tuple[tuple[NativeWindowsHandle, ...], tuple[NativeWindowsHandle, NativeWindowsHandle]]:
+    """Create inheritable child ends and private parent ends for a launch.
+
+    Return the child's standard input, output and error ends, then the
+    parent's write end of standard input and read end of standard output.
+    """
+    if sys.platform != "win32":
+        raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+    import pywintypes
+    import win32api
+    import win32file
+
+    attributes = pywintypes.SECURITY_ATTRIBUTES()
+    attributes.bInheritHandle = True
+    created: list[NativeWindowsHandle] = []
+    try:
+        input_read, input_write = _pipe_ends(attributes)
+        created.extend((input_read, input_write))
+        output_read, output_write = _pipe_ends(attributes)
+        created.extend((output_read, output_write))
+        null_device = owned_windows_handle(
+            win32file.CreateFile(
+                "NUL",
+                win32file.GENERIC_WRITE,
+                win32file.FILE_SHARE_READ | win32file.FILE_SHARE_WRITE,
+                attributes,
+                win32file.OPEN_EXISTING,
+                0,
+                None,
+            )
+        )
+        created.append(null_device)
+        for parent_end in (input_write, output_read):
+            # HANDLE_FLAG_INHERIT cleared: the parent ends never reach any child.
+            win32api.SetHandleInformation(int(parent_end), 1, 0)
+    except BaseException:
+        for handle in created:
+            handle.Close()
+        raise
+    return (input_read, output_write, null_device), (input_write, output_read)
+
+
+def _python_stream(handle: NativeWindowsHandle, mode: str) -> BinaryIO:
+    """Transfer one native pipe end into an unbuffered Python binary stream."""
+    if sys.platform != "win32":
+        raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+    import msvcrt
+
+    import win32api
+
+    flags = os.O_WRONLY if "w" in mode else os.O_RDONLY
+    detached = native_windows_call(handle, "Detach")
+    if type(detached) is not int or detached <= 0:
+        raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+    try:
+        descriptor = msvcrt.open_osfhandle(detached, flags | os.O_BINARY)
+    except BaseException:
+        win32api.CloseHandle(detached)
+        raise
+    try:
+        return cast("BinaryIO", os.fdopen(descriptor, mode, buffering=0))
+    except BaseException:
+        os.close(descriptor)
+        raise
 
 
 def _require_launch_environment(arguments: Sequence[str], environment: Mapping[str, str]) -> None:

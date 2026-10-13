@@ -219,7 +219,9 @@ def source_diagnostic_notice(
     }
     optional: dict[str, str | None] = {
         "resolver_id": diagnostic.resolver_id,
-        "binding_source": diagnostic.binding_source.value if diagnostic.binding_source else None,
+        "binding_source": diagnostic.binding_source.value
+        if (diagnostic.binding_source is not None and diagnostic.binding_source)
+        else None,
         "binding_id": diagnostic.binding_id,
         "relation_id": diagnostic.relation_id,
         "casilla_id": diagnostic.casilla_id,
@@ -243,7 +245,7 @@ def source_diagnostic_notice(
 
     box = None if boxes is None or diagnostic.casilla_id is None else boxes.number(str(diagnostic.casilla_id))
     attention = note_attention(diagnostic.reason, box=box)
-    context.update({key: value for key, value in optional.items() if value})
+    context.update({key: value for key, value in optional.items() if (value is not None and value)})
     context.update({"level": attention.value, "detail": diagnostic.message, **({} if box is None else {"box": box})})
     return Notice(
         severity=NoticeSeverity.INFO if attention is ModeloFormAttention.INFO else NoticeSeverity.WARNING,
@@ -268,7 +270,7 @@ def source_diagnostic_notice_text(notice: Notice) -> str:
 
 def short_id(value: str | None) -> str | None:
     """Return the display suffix for a content-addressed id."""
-    return value[-12:] if value else None
+    return value[-12:] if (value is not None and value) else None
 
 
 def _short_id_text(value: str | None) -> str:

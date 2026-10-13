@@ -19,11 +19,11 @@ consumed in the body:
   Protocol stub (:mod:`cadrumo.adapters.outbound.workbook.calc_sheets_xlsx`).
   The stub body is ``...``; the parameter is part of the structural type.
 Vulture marks a name "used" when it appears in a whitelist file. Referencing
-each name once here clears the false positive while leaving every other
-occurrence of an unused name still subject to detection — this file lists
-only these specific, individually-justified names, so it cannot mask genuinely
-dead code elsewhere. When any of these parameters is removed at its source,
-delete its line here so the audit re-detects a stale whitelist entry.
+each name once here clears all findings with that name across the scan,
+including unrelated definitions. These entries therefore cannot establish
+that other occurrences are used. When any parameter is removed at its source,
+delete its line here; resolved-import and argument checks provide independent
+evidence for the names this lexical scan cannot distinguish.
 """
 
 from __future__ import annotations

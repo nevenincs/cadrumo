@@ -90,7 +90,7 @@ def _require_aggregate_refusal(
     """Correlate an empty refusal projection with its registered receipt."""
     refusal_reason = projection.refusal_reason
     if (
-        not refusal_reason
+        not (refusal_reason is not None and refusal_reason)
         or _has_aggregate_refusal_payload(projection)
         or completed.terminal_condition is not OperationTerminalCondition.REFUSED
         or completed.refusal_code not in MODELO_AGGREGATE_REFUSAL_CODES

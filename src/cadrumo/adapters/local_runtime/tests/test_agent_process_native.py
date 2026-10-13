@@ -1,0 +1,180 @@
+"""The agent host's controller against real contained process trees on Windows."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import sys
+from collections.abc import Mapping
+from pathlib import Path
+
+import pytest
+
+from cadrumo.application.agent_host.controller import (
+    AgentGenerations,
+    AgentHostController,
+    AgentHostError,
+    AgentHostRefusal,
+    AgentHostState,
+    AgentLaunch,
+    ResolvedAgentCredentials,
+)
+from cadrumo.application.agent_host.credential_frame import AgentCredential, build_credential_frame
+
+from ..agent_process import WindowsAgentProcessLauncher
+from .process_support import fixture_arguments, fixture_environment, native_python
+
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_outbound_adapter,
+    pytest.mark.windows_only,
+    pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows Job containment"),
+]
+
+_FIXTURE = "cadrumo.adapters.local_runtime.tests.agent_host_fixture"
+_FAKE = b"sk-test-NOT-A-REAL-KEY"
+_GATEWAY_FAKE = b"zai-test-NOT-A-REAL-KEY"
+_ZAI_URL = "https://api.z.ai/api/anthropic"
+
+
+class _CredentialSource:
+    """The signed-in profile's resolver, reduced to fixed values and a movable generation."""
+
+    def __init__(self) -> None:
+        self.generations = AgentGenerations(sign_in="login-1", provider_settings="settings-1")
+        self.handed_out: list[AgentCredential] = []
+        self.on_resolve: list[AgentGenerations] = []
+
+    def resolve_for_agent(self) -> ResolvedAgentCredentials:
+        credentials: Mapping[str, AgentCredential] = {
+            "anthropic": AgentCredential(bytearray(_FAKE)),
+            "zai": AgentCredential(bytearray(_GATEWAY_FAKE), _ZAI_URL),
+        }
+        self.handed_out.extend(credentials.values())
+        resolved = ResolvedAgentCredentials(generations=self.generations, credentials=credentials)
+        if self.on_resolve:
+            self.generations = self.on_resolve.pop()
+        return resolved
+
+    def current_generations(self) -> AgentGenerations | None:
+        return self.generations
+
+
+def _controller(
+    tmp_path: Path, mode: str, source: _CredentialSource, *, ready_timeout: float = 30
+) -> AgentHostController:
+    return AgentHostController(
+        launcher=WindowsAgentProcessLauncher(),
+        credentials=source,
+        launch=AgentLaunch(
+            executable=native_python(),
+            arguments=fixture_arguments(_FIXTURE, mode, str(tmp_path)),
+            directory=tmp_path,
+            environment=fixture_environment(),
+            ready_timeout=ready_timeout,
+            stop_grace=10,
+        ),
+    )
+
+
+def _received(tmp_path: Path) -> dict[str, object]:
+    received: object = json.loads((tmp_path / "received.json").read_text(encoding="utf-8"))
+    assert isinstance(received, dict)
+    return {str(key): value for key, value in received.items()}
+
+
+def _alive(pid: int, *, within: float = 0) -> bool:
+    """Whether the process still runs after up to ``within`` seconds of waiting for it to end.
+
+    A job's accounting reaches zero as its members end; each process object is
+    signalled a moment later, so a check for death waits within a short bound.
+    """
+    import pywintypes
+    import win32api
+    import win32event
+
+    try:
+        handle = win32api.OpenProcess(0x100000, False, pid)
+    except pywintypes.error:
+        return False
+    try:
+        return win32event.WaitForSingleObject(handle, int(within * 1000)) == win32event.WAIT_TIMEOUT
+    finally:
+        win32api.CloseHandle(handle)
+
+
+def test_the_agent_receives_its_keys_only_on_standard_input_and_stops_with_its_whole_tree(tmp_path: Path) -> None:
+    source = _CredentialSource()
+    controller = _controller(tmp_path, "ready", source)
+    ready = controller.start()
+    try:
+        assert controller.state is AgentHostState.READY
+        assert ready.gateway_port == 47001 and ready.hosting_contract == 1
+        assert controller.published() == ready
+        received = _received(tmp_path)
+        expected = build_credential_frame(
+            {"anthropic": AgentCredential(bytearray(_FAKE)), "zai": AgentCredential(bytearray(_GATEWAY_FAKE), _ZAI_URL)}
+        )
+        assert received["frame_sha256"] == hashlib.sha256(expected).hexdigest()
+        assert received["providers"] == ["anthropic", "zai"]
+        exposed = json.dumps({"environment": received["environment"], "arguments": received["arguments"]})
+        assert _FAKE.decode() not in exposed and _GATEWAY_FAKE.decode() not in exposed
+        # The controller's own copies are wiped once the frame is written.
+        assert all(credential.secret == bytearray() for credential in source.handed_out)
+        grandchild = received["grandchild"]
+        assert isinstance(grandchild, int) and _alive(grandchild)
+    finally:
+        controller.stop()
+    assert controller.state is AgentHostState.DETACHED
+    assert (tmp_path / "stopped").read_text(encoding="utf-8") == "stdin closed"
+    assert not _alive(grandchild, within=5)
+    assert controller.published() is None
+
+
+def test_an_agent_refusal_is_typed_and_leaves_no_process(tmp_path: Path) -> None:
+    controller = _controller(tmp_path, "refuse", _CredentialSource())
+    with pytest.raises(AgentHostError) as refused:
+        controller.start()
+    assert refused.value.reason is AgentHostRefusal.AGENT_REFUSED
+    assert refused.value.agent_code == "provider_unsupported"
+    assert controller.state is AgentHostState.DETACHED
+
+
+def test_an_agent_that_never_answers_is_ended_at_the_ready_bound(tmp_path: Path) -> None:
+    controller = _controller(tmp_path, "silent", _CredentialSource(), ready_timeout=3)
+    with pytest.raises(AgentHostError) as refused:
+        controller.start()
+    assert refused.value.reason is AgentHostRefusal.NOT_READY
+    assert controller.state is AgentHostState.DETACHED
+
+
+def test_a_sign_out_while_starting_retires_the_tree_instead_of_publishing_it(tmp_path: Path) -> None:
+    source = _CredentialSource()
+    source.on_resolve.append(AgentGenerations(sign_in="login-2", provider_settings="settings-1"))
+    controller = _controller(tmp_path, "ready", source)
+    with pytest.raises(AgentHostError) as refused:
+        controller.start()
+    assert refused.value.reason is AgentHostRefusal.STALE_GENERATION
+    assert controller.state is AgentHostState.DETACHED
+    grandchild = _received(tmp_path)["grandchild"]
+    assert isinstance(grandchild, int) and not _alive(grandchild, within=5)
+
+
+def test_a_key_change_after_start_withdraws_the_published_agent(tmp_path: Path) -> None:
+    source = _CredentialSource()
+    controller = _controller(tmp_path, "ready", source)
+    controller.start()
+    try:
+        source.generations = AgentGenerations(sign_in="login-1", provider_settings="settings-2")
+        assert controller.published() is None
+        assert controller.state is AgentHostState.DETACHED
+    finally:
+        controller.stop()
+
+
+def test_an_agent_speaking_another_hosting_contract_is_not_published(tmp_path: Path) -> None:
+    controller = _controller(tmp_path, "future", _CredentialSource())
+    with pytest.raises(AgentHostError) as refused:
+        controller.start()
+    assert refused.value.reason is AgentHostRefusal.NOT_READY
+    assert controller.state is AgentHostState.DETACHED

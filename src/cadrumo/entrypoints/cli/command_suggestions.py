@@ -109,7 +109,7 @@ class LazyImportTarget:
             raise ValueError("a lazy import target requires a module")
         if not self.attribute or "." in self.attribute:
             raise ValueError("a lazy import target requires one public attribute name")
-        if self.module.startswith(".") and not self.package:
+        if self.module.startswith(".") and not (self.package is not None and self.package):
             raise ValueError("a relative lazy import target requires its package")
         dependencies = self.optional_dependencies
         if isinstance(dependencies, frozenset) and any(
@@ -314,9 +314,9 @@ class LazySubcommand:
 
     def get_short_help_str(self, limit: int = 45) -> str:
         """Render short help with the same rules as Click ``Command``."""
-        if self._short_help:
+        if self._short_help is not None and self._short_help:
             text = inspect.cleandoc(self._short_help)
-        elif self._help:
+        elif self._help is not None and self._help:
             text = make_default_short_help(self._help, limit)
         else:
             text = ""

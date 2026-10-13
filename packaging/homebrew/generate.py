@@ -164,8 +164,8 @@ def _sdist_artifact(
     name = metadata.get("Name")
     version = metadata.get("Version")
     if (
-        not name
-        or not version
+        not (name is not None and name)
+        or not (version is not None and version)
         or normalise_distribution_name(name) != normalise_distribution_name(expected_name)
         or version != expected_version
     ):

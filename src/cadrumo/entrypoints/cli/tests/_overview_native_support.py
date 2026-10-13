@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator, Sequence
+from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -21,7 +21,7 @@ _EARLIEST_ACTIVITY_START = f"{min(PublishedGovernedFactSource().supported_filing
 
 
 @contextmanager
-def registered_overview_profile(tmp_path: Path) -> Iterator[NativeCliProfileFixture]:
+def registered_overview_profile(tmp_path: Path) -> Generator[NativeCliProfileFixture]:
     """Register a readiness-complete synthetic profile before worker login."""
     with native_cli_profile_scope(tmp_path) as fixture:
         fixture.register(

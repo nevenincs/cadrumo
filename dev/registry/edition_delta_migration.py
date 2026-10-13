@@ -625,6 +625,9 @@ def _edition_lines(outcome: MigrationOutcome) -> list[str]:
     lines: list[str] = []
     for edition in outcome.plan.editions:
         kept = " ".join(f"{reason}={count}" for reason, count in edition.kept.items())
+        source_default = (
+            list(edition.source_default) if edition.source_default is not None and edition.source_default else None
+        )
         lines.append(
             f"edition modelo={outcome.plan.modelo_id} revision={edition.revision_id} basis={edition.basis} "
             f"predecessor={edition.predecessor} dependencies={','.join(edition.dependencies) or '-'} "
@@ -634,7 +637,7 @@ def _edition_lines(outcome: MigrationOutcome) -> list[str]:
             f"lifted_constraint_source_refs={edition.lifted.constraint_source_refs} "
             f"lifted_row_orden_legal_refs={edition.lifted.row_orden_legal_refs} "
             f"lifted_constraint_orden_legal_refs={edition.lifted.constraint_orden_legal_refs} "
-            f"source_default={json.dumps(list(edition.source_default) if edition.source_default else None)} "
+            f"source_default={json.dumps(source_default)} "
             f"reviewed_against={edition.reviewed_against} comments_dropped={edition.comments_dropped} {kept}".rstrip()
         )
         lines.extend(f"not_exact revision={edition.revision_id} {detail}" for detail in edition.not_exact)

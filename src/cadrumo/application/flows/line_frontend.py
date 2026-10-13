@@ -186,14 +186,14 @@ class LineFlowFrontend:
             raw = self._prompt_widget(entry, copy, current=state.answers.get(entry.key))
             state = answer(self._definition, state, entry.key, raw)
             failing = state.verdicts.get(entry.key)
-            if not failing:
+            if not (failing is not None and failing):
                 # Successful commit: notify before the walk moves to the next
                 # page, so a locale-switch hook applies to what renders next.
                 if self._on_answer_committed is not None:
                     self._on_answer_committed(entry.key, state.answers.get(entry.key, ""))
                 return state
             for verdict in failing:
-                if verdict.message_key:
+                if verdict.message_key is not None and verdict.message_key:
                     self._emit(tr(verdict.message_key, **verdict.context))
 
     def _render_page_header(self, state: FlowState, entry: VisiblePage, copy: PageCopy) -> None:
@@ -217,14 +217,14 @@ class LineFlowFrontend:
 
     def _render_page_copy(self, copy: PageCopy) -> None:
         """Emit the page's guidance blocks: help, format hint, failures, legal zone."""
-        if copy.help:
+        if copy.help is not None and copy.help:
             self._emit(copy.help)
-        if copy.format_hint:
+        if copy.format_hint is not None and copy.format_hint:
             self._emit(tr("flows.progress.format_hint", hint=copy.format_hint))
         for failure_mode in copy.failure_modes:
             self._emit(tr("flows.progress.failure_mode", text=failure_mode))
         for legal_ref in copy.legal_zone:
-            if legal_ref.label:
+            if legal_ref.label is not None and legal_ref.label:
                 self._emit(tr("flows.progress.legal_ref", ref=legal_ref.ref, label=legal_ref.label))
             else:
                 self._emit(legal_ref.ref)
@@ -232,7 +232,7 @@ class LineFlowFrontend:
     def _render_current_answer(self, state: FlowState, entry: VisiblePage) -> None:
         """Echo the committed answer, masking a SECRET page's value."""
         current = state.answers.get(entry.key)
-        if not current:
+        if not (current is not None and current):
             return
         # A SECRET page's committed value must never reach the terminal
         # or a captured session log; render a fixed masked marker while
@@ -348,7 +348,7 @@ class LineFlowFrontend:
         rendered: list[questionary.Choice] = []
         for number, choice in enumerate(copy.choices, start=1):
             title = choice.label
-            if choice.provenance:
+            if choice.provenance is not None and choice.provenance:
                 title = tr("flows.compare_select.candidate", label=choice.label, provenance=choice.provenance)
             # Number every row so "item 3" names the same choice on both
             # frontends (the full-screen list is numbered identically).
@@ -362,7 +362,7 @@ class LineFlowFrontend:
             if not key.startswith(SECTION_VERDICT_PREFIX):
                 continue
             for verdict in verdicts:
-                if verdict.message_key:
+                if verdict.message_key is not None and verdict.message_key:
                     self._emit(tr(verdict.message_key, **verdict.context))
         return state
 
@@ -417,7 +417,7 @@ class LineFlowFrontend:
                 ),
             )
         for verdict in projection.blocking:
-            if verdict.message_key:
+            if verdict.message_key is not None and verdict.message_key:
                 self._emit(tr(verdict.message_key, **verdict.context))
         return rows_by_number
 

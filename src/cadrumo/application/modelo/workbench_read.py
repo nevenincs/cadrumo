@@ -213,7 +213,11 @@ def modelo_edit_prerequisite_source_boxes(
             if isinstance(provider, PreviousFilingProvider)
             for box in (
                 *provider.source_casilla_ids,
-                *((provider.source_casilla_id,) if provider.source_casilla_id else ()),
+                *(
+                    (provider.source_casilla_id,)
+                    if (provider.source_casilla_id is not None and provider.source_casilla_id)
+                    else ()
+                ),
             )
         )
     )

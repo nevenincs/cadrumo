@@ -24,7 +24,7 @@ inject rather than import.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import replace
 from typing import TYPE_CHECKING, ClassVar, Final, Protocol, cast
@@ -128,7 +128,7 @@ class CredentialScreen[OutcomeT](TypedAppAccess, Screen[OutcomeT | None]):
         by a screen that changes its own language.
         """
         bindings = self._bindings.key_to_bindings.get("f3")
-        if not bindings:
+        if not (bindings is not None and bindings):
             return
         label = tr("tui.root.account.appearance", locale=self.output_locale())
         self._bindings.key_to_bindings["f3"] = [replace(binding, description=label, show=True) for binding in bindings]
@@ -152,7 +152,7 @@ class CredentialScreen[OutcomeT](TypedAppAccess, Screen[OutcomeT | None]):
         line.update(assessment_copy(assessment, locale=locale))
 
     @contextmanager
-    def credential_panel(self, *, panel_id: str) -> Iterator[None]:
+    def credential_panel(self, *, panel_id: str) -> Generator[None]:
         """Compose the shared scrollable column that contains one credential form.
 
         The caller owns its banner, status bar, fields, actions, and footer.

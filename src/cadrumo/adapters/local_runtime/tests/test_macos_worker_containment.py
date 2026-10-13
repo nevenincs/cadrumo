@@ -219,7 +219,9 @@ class _ContainmentCleanup:
             failures.append(error)
         if not self.retired:
             try:
-                for label in dict.fromkeys([*([self.label] if self.label else []), *self.labels]):
+                for label in dict.fromkeys(
+                    [*([self.label] if (self.label is not None and self.label) else []), *self.labels]
+                ):
                     self._retire(label, self.coalition if label == self.label else None)
                 self.retired = True
             except BaseException as error:

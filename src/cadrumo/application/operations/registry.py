@@ -192,8 +192,14 @@ class OperationFrontendProjection(StrEnum):
 
     Every registered operation is open to every frontend, so a definition
     declares none. The identity names where one submission came from.
+
+    The command line and the terminal interface are the person's frontends.
+    MCP and the agent host are an agent's: the agent host is the launcher that
+    serves the desktop's agent, and it is admitted only by resuming the
+    person's stored sign-in.
     """
 
+    AGENT_HOST = "agent-host"
     CLI = "cli"
     MCP = "mcp"
     TUI = "tui"

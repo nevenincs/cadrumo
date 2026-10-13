@@ -6,7 +6,7 @@ import asyncio
 import json
 import sys
 import time
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass
 from importlib.metadata import PackageNotFoundError, version
@@ -103,7 +103,7 @@ class _Installation:
 @contextmanager
 def _installed(
     tmp_path: Path, *, product_version: str | None = None, process_root: Path | None = None
-) -> Iterator[_Installation]:
+) -> Generator[_Installation]:
     """Serve a storage root holding two real encrypted profiles, with the runtime's settings on that root.
 
     The runtime announces the installed product's version unless told otherwise, so a command in this

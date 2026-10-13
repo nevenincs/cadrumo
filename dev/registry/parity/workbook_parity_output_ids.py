@@ -26,7 +26,7 @@ def _missing_or_empty_output_refs(
     expected_ids: frozenset[WorkbookOutputId],
     refs: Mapping[WorkbookOutputId, tuple[str, ...]],
 ) -> tuple[WorkbookOutputId, ...]:
-    return tuple(sorted(output_id for output_id in expected_ids if not refs.get(output_id)))
+    return tuple(sorted(output_id for output_id in expected_ids if not bool(refs.get(output_id))))
 
 
 def _workbook_output_id_set(

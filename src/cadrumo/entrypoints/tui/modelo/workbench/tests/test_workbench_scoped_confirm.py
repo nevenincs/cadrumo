@@ -61,7 +61,11 @@ async def test_confirming_offers_only_the_section_under_the_cursor(key: str) -> 
             await pilot.press(key)
             await _settle(pilot)
             offered = _offered(app)
-            status = str(app.screen.query_one("#bulk-status", Static).render()) if offered else None
+            status = (
+                str(app.screen.query_one("#bulk-status", Static).render())
+                if (offered is not None and offered)
+                else None
+            )
             app.exit(None)
 
     assert landed is not None and landed.field.box == "05"

@@ -12,7 +12,7 @@ from __future__ import annotations
 import json
 import sys
 import time
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from functools import partial
@@ -86,7 +86,7 @@ _DOOR_COORDINATES = frozenset({"request_id", "runtime_boot_id", "connection_id",
 @contextmanager
 def _installed(
     tmp_path: Path, kind: _RootKind, *, as_installed: bool = False
-) -> Iterator[tuple[WindowsRuntimeEndpoint, Path]]:
+) -> Generator[tuple[WindowsRuntimeEndpoint, Path]]:
     """Serve one storage root that the runtime and a command in this process both resolve.
 
     A healthy root holds one committed profile that is the active selection,

@@ -67,7 +67,7 @@ def test_the_read_only_local_surface_declares_and_lists_exactly_the_local_reads(
 
     assert not surface.changes_records and not surface.reaches_network
     assert surface.narrows
-    assert surface.operations
+    assert surface.operations is not None and surface.operations
     assert surface.operations == local_reads
     for definition_id in sorted(surface.operations):
         facts = operation_surface_facts(definition_id)

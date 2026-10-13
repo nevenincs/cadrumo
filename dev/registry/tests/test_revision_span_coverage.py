@@ -171,7 +171,7 @@ def test_every_modelo_resolves_exactly_one_revision_for_every_filing_year_throug
                 if not revisions_coexist(rev_a, rev_b):
                     continue
                 collision = _period_overlap(id_a, rev_a.period_selector.periods, id_b, rev_b.period_selector.periods)
-                if collision:
+                if collision is not None and collision:
                     overlaps.append(f"modelo {modelo.id} filing year {year}: {collision}")
 
     assert not holes and not overlaps, (

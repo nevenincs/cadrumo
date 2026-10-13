@@ -585,14 +585,18 @@ def evidence_confirm(
         counterparty_tax_id=counterparty_nif,
         counterparty_name=counterparty_name,
         invoice_number=invoice_number,
-        invoice_date=_parse_iso_date(invoice_date, label="invoice-date") if invoice_date else None,
+        invoice_date=_parse_iso_date(invoice_date, label="invoice-date")
+        if (invoice_date is not None and invoice_date)
+        else None,
         taxable_base=_decimal_request_text(taxable_base, label="taxable-base"),
         iva_rate=_decimal_request_text(iva_rate, label="iva-rate"),
         iva_amount=_decimal_request_text(iva_amount, label="iva-amount"),
         currency=currency,
         iva_category=iva_category.value if iva_category is not None else None,
         operation_type=operation_type,
-        operation_date=_parse_iso_date(operation_date, label="operation-date") if operation_date else None,
+        operation_date=_parse_iso_date(operation_date, label="operation-date")
+        if (operation_date is not None and operation_date)
+        else None,
         retention_rate=_decimal_request_text(retention_rate, label="retention-rate"),
         retention_amount=_decimal_request_text(retention_amount, label="retention-amount"),
         recargo_amount=_decimal_request_text(recargo_amount, label="recargo-amount"),

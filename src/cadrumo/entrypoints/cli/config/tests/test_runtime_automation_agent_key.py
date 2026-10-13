@@ -23,7 +23,7 @@ import asyncio
 import json
 import sys
 import time
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Generator
 from concurrent.futures import Future, ThreadPoolExecutor
 from contextlib import contextmanager
 from contextvars import copy_context
@@ -143,7 +143,7 @@ def _human(endpoint: WindowsRuntimeEndpoint, profile_id: UUID) -> RuntimeFronten
 
 
 @contextmanager
-def _running_runtime(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[_Runtime]:
+def _running_runtime(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Generator[_Runtime]:
     """Serve one synthetic profile from a real runtime, both native stores held by the test."""
     with worker_profiles(tmp_path) as (root, targets):
         profile_id = targets[-1][0].binding.profile_id

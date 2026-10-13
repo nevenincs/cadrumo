@@ -145,7 +145,7 @@ def prepare_environment(repository: Path) -> None:
     """Mint the controller run before any production import can bind logging."""
     global _ACTIVE
     inherited_root = os.environ.get("CADRUMO_TEST_RUN_ROOT")
-    if inherited_root:
+    if inherited_root is not None and inherited_root:
         root = Path(inherited_root).resolve()
         global _INHERITED_RUN
         _INHERITED_RUN = True

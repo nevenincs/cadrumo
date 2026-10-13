@@ -1405,7 +1405,7 @@ def _locale_coverage(
     records: Sequence[_SharedModeloLocaleCoverageRecord] | None,
 ) -> RevisionLocaleCoverage | None:
     """Fold one revision's per-locale records, or report absence as absence."""
-    if not records:
+    if not (records is not None and records):
         return None
     first = records[0]
     return RevisionLocaleCoverage(

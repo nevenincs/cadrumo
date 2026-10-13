@@ -39,7 +39,7 @@ def test_key_migrated_concepts_are_approved_and_complete() -> None:
         concept = handbook.concept(concept_id)
         assert concept.lifecycle is ConceptLifecycle.APPROVED, concept_id
         es = concept.section(OutputLanguage.ES)
-        assert es.definition and es.definition.strip(), concept_id
+        assert (es.definition is not None and es.definition) and es.definition.strip(), concept_id
         assert es.source is not None and es.source.citation.strip(), concept_id
 
 

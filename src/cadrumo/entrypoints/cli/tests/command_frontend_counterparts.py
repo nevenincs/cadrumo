@@ -38,7 +38,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Final
 
-from ....application.operations.person_acts import PERSON_RUNTIME_REQUESTS, operation_is_persons_act
+from ....application.operations.person_acts import operation_is_persons_act
 from ....application.operations.registry import OperationRegistry
 from ....application.operator_surface.command_operations import CommandOperations
 from ....application.runtime.installation_requests import InstallationAct
@@ -414,6 +414,35 @@ class CommandReach(StrEnum):
 
 
 _INSTALLATION_ACTIONS: Final = frozenset(act.value for act in InstallationAct)
+
+PERSON_RUNTIME_REQUESTS: Final = frozenset(
+    {
+        "automation_deny",
+        "enrollment_inspect",
+        "enrollment_poll",
+        "enrollment_prepare",
+        "enrollment_reconcile",
+        "enrollment_submit",
+        "human_sign_out",
+        "password_reset",
+        "password_reset_prepare",
+        "profile_delete",
+        "profile_delete_prepare",
+        "profile_recovery_prepare",
+        "profile_resume",
+        "session_inventory",
+        "session_lock",
+        "sign_in_status",
+    }
+)
+"""The requests of the runtime's own door that authenticate or administer sessions, keys or the profile.
+
+Every installation act is the person's act as well: it belongs to no single
+profile. A sign-in by password is too; a key the person configured is
+presented by the login request of the key method, which is not one of these.
+Reading the stored sign-in names no frontend and admits nothing; an agent
+reads its own standing from its session instead.
+"""
 
 PERSON_REQUESTS: Final = PERSON_RUNTIME_REQUESTS | _INSTALLATION_ACTIONS
 """Every request of the runtime's own door that is the person's act: the session and key requests and every act."""

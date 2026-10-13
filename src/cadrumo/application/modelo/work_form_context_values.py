@@ -58,7 +58,11 @@ def form_context_value(
         return period.start_date if field.draft_attribute is ExportDraftAttribute.PERIOD_START_DATE else period.end_date
     if producer_snapshot is None:
         return None
-    value = filing_producer_values(producer_snapshot).get(field.producer_key) if field.producer_key else None
+    value = (
+        filing_producer_values(producer_snapshot).get(field.producer_key)
+        if (field.producer_key is not None and field.producer_key)
+        else None
+    )
     if value is None or isinstance(value, (str, bool, int, Decimal, date)):
         return value
     raise RegistryValidationError("form context producer value is not a supported scalar")

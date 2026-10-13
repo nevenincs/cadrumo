@@ -136,7 +136,8 @@ def test_allowlist_split_separates_product_controls_from_development_tools() -> 
     overridable = {
         location.settings_field.upper()
         for location in STORAGE_TAXONOMY.values()
-        if location.override_policy is StorageOverridePolicy.OPERATOR_OVERRIDABLE and location.settings_field
+        if location.override_policy is StorageOverridePolicy.OPERATOR_OVERRIDABLE
+        and (location.settings_field is not None and location.settings_field)
     }
     assert {"CADRUMO_LOCAL_STORAGE_ROOT", "CADRUMO_WEBVIEW_DIR", "CADRUMO_TEMP_DIR"} <= product
     assert product == overridable | {"CADRUMO_LOCAL_STORAGE_ROOT"}

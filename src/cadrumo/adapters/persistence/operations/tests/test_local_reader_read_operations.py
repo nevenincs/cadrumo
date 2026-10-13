@@ -21,16 +21,18 @@ from .....application.local_reader_contracts import (
 from .....application.local_reader_report import (
     LOCAL_READER_REPORT_OPERATION_DEFINITION_ID,
     LocalReaderReportPublicResultV1,
-    build_local_reader_report_request,
     read_local_reader_report,
 )
 from .....application.local_reader_status_operation import (
     LOCAL_READER_STATUS_OPERATION_DEFINITION_ID,
     LocalReaderStatusPublicResultV1,
-    build_local_reader_status_request,
 )
 from .....application.provisioning_contracts import ProvisioningPreconditionCondition
 from .....application.provisioning_runtime import forget_runtime_unreachable
+from .....application.tests.local_reader_operation_requests import (
+    build_local_reader_report_request,
+    build_local_reader_status_request,
+)
 from .....core.config import override_settings
 from .....core.model_catalogue import ModelRole
 from .....core.operations import OperationEffect

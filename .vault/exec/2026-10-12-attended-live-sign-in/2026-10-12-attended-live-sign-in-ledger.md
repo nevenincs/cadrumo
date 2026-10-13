@@ -5,7 +5,7 @@ tags:
 date: '2026-10-12'
 modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:54713145daa51eb0db790fb03caf952818d7a09a364857062ee3522891354647'
+body_hash: 'sha256:46250a5d49f80235c5a41d4d4fc9f8b709aaafd0349d1971239a7e464f3bacd9'
 related:
   - "[[2026-10-12-attended-live-sign-in-plan]]"
 ---
@@ -102,6 +102,25 @@ related:
 - `S06` `verify:` `pytest test_runtime_logout.py` -> `pass`
 - `S06` `verify:` `ruff check, ruff format --check, ty check on touched files` -> `pass`
 - `S06` `verify:` `just check-import-boundaries` -> `fail`
+- `S07` `M` `src/cadrumo/application/runtime/contracts.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime/worker.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/config/custody.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_logout.py`
+- `S07` `M` `src/cadrumo/adapters/local_runtime/posix_channel.py`
+- `S07` `M` `src/cadrumo/adapters/local_runtime/macos_login.py`
+- `S07` `M` `src/cadrumo/adapters/local_runtime/tests/test_posix.py`
+- `S07` `M` `src/cadrumo/adapters/local_runtime/tests/test_macos_peer_process_version.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime/profile_connection_attendance.py`
+- `S07` `M` `docs/how-to/connect-an-agent.md`
+- `S07` `M` `.vault/audit/2026-10-13-attended-live-sign-in-audit.md`
+- `S07` `M` `.vault/plan/2026-10-12-attended-live-sign-in-plan.md`
+- `S07` `A` `src/cadrumo/application/runtime/tests/test_runtime_peer.py`
+- `S07` `verify:` `pytest test_runtime_peer.py test_attendance.py test_runtime_logout.py test_profile_worker_custody_lease_window.py test_macos_peer_process_version.py test_framing.py (Windows)` -> `pass`
+- `S07` `verify:` `pytest test_posix.py test_posix_peer_liveness.py test_posix_login_capture.py test_macos_peer_process_version.py test_runtime_peer.py (WSL Linux 6.18)` -> `pass`
+- `S07` `verify:` `ruff check, ruff format --check, ty check on touched files` -> `pass`
+- `S07` `verify:` `just registry-publish-authority-if-authority-stale` -> `pass`
+- `S07` `verify:` `just check-types` -> `fail`
+- `S07` `verify:` `just build-native Release bundle` -> `fail`
 
 ## Notes
 
@@ -118,3 +137,6 @@ related:
 - `S06` Neighbouring tests: 205 passed, 3 failed in `test_config_custody_profile_lifecycle.py.` All three fail with `runtime_deadline_exceeded` because another session's uncommitted `holder_operation_id` field in `profile_connection_operations.py` fails RuntimeAccessRefusal validation; none of those files is in this Step.
 - `S06` check-import-boundaries: all 15 contracts kept; its 188 hard findings are in test files outside this Step, and the tree changed during the run. ruff format flags `sign_in_hold.py:99,` unchanged since HEAD.
 - `S06` Image path is read on Windows only; Linux and macOS report null (audit finding attendance-peer-facts-posix). The client-id restore on a refused approval has no direct test.
+- `S07` WSL run: 73 passed, 1 failed. `test_lock_substitution[hardlink]` cannot hardlink from the 9p mount into the /tmp socket directory chosen for the run, so the failure comes from the setup. Without that directory, 27 endpoint tests exceed the Unix socket path limit under /mnt/y.
+- `S07` check-types: no diagnostic in any file this Step touched; the failing files are outside it. Its `test_posix.py` diagnostic is at line 197 `(AF_UNIX` on win32) and predates this Step.
+- `S07` build-native fails in desktop-frontend-build on another session's uncommitted AgentColumn.tsx and agentFixtureHost.ts, which use agentSession exports that do not exist yet. The rebuild and packaged proof wait for that tree to compile; `profile_connection_attendance.py` keeps that session's uncommitted comment out of this commit.

@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import sys
 import time
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
@@ -57,7 +57,7 @@ _CLI = OperationFrontendProjection.CLI
 
 
 @contextmanager
-def _installed(tmp_path: Path) -> Iterator[tuple[WindowsRuntimeEndpoint, Path]]:
+def _installed(tmp_path: Path) -> Generator[tuple[WindowsRuntimeEndpoint, Path]]:
     """Serve one storage root that the runtime and a command in this process both resolve."""
     root = tmp_path / "cadrumo-storage"
     root.mkdir()

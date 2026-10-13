@@ -341,7 +341,7 @@ def _require_semantic_entries(
     authors filing artefacts.
     """
     entries = entries_by_anchor.get(intermediate_anchor_key(field))
-    if not entries:
+    if not (entries is not None and entries):
         raise RegistryValidationError(
             f"semantic map has no entry for parser field: record_identity={field.record_identity!r}, "
             f"sheet={field.sheet!r}, ordinal={field.ordinal!r}, source_row={field.source_row!r}",

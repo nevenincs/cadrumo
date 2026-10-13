@@ -40,7 +40,7 @@ def parallel_localization_inventory(
     )
     for (catalogue, message_id), states in docs_messages.items():
         for locale in ("ca", "es", "hu"):
-            if states.get(locale):
+            if bool(states.get(locale)):
                 continue
             counts["parallel_localization_declarations"] += 1
             findings.append(

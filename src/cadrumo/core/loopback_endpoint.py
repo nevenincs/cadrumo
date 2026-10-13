@@ -6,7 +6,7 @@ import ipaddress
 from typing import Final
 from urllib.parse import urlsplit
 
-__all__ = ["endpoint_host_is_loopback", "endpoint_is_loopback"]
+__all__ = ["endpoint_host_is_loopback"]
 
 _HTTP_SCHEMES: Final = frozenset({"http", "https"})
 _LOCALHOST: Final = "localhost"
@@ -35,8 +35,7 @@ def endpoint_host_is_loopback(url: str) -> bool:
     not parse is not loopback.
 
     Use it to describe where an endpoint is, and to choose a transport that must
-    not leave the machine. Use :func:`endpoint_is_loopback` to authorise a
-    request.
+    not leave the machine.
 
     Args:
         url: Endpoint URL to classify.
@@ -51,27 +50,9 @@ def endpoint_host_is_loopback(url: str) -> bool:
         host = parts.hostname
     except ValueError:
         return False
-    if parts.scheme.lower() not in _HTTP_SCHEMES or not host:
+    if parts.scheme.lower() not in _HTTP_SCHEMES or not (host is not None and host):
         return False
     return _host_is_loopback(host.lower())
-
-
-def endpoint_is_loopback(url: str) -> bool:
-    """Return whether a request to ``url`` may be treated as staying on this machine.
-
-    Stricter than :func:`endpoint_host_is_loopback`: a URL that carries
-    credentials is refused even when its host is loopback, because an
-    authorisation to send a person's documents has no use for them and a
-    credentialed URL is the shape parsers most often disagree about.
-
-    Args:
-        url: Endpoint URL to classify.
-
-    Returns:
-        ``True`` only when the host is loopback and the URL carries no user
-        information.
-    """
-    return endpoint_host_is_loopback(url) and "@" not in urlsplit(url).netloc
 
 
 def _host_is_loopback(host: str) -> bool:

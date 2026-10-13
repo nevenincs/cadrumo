@@ -60,7 +60,6 @@ __all__ = [
     "browser_runtime_public_result",
     "build_browser_runtime_operation_definition",
     "build_browser_runtime_operation_registration",
-    "build_browser_runtime_provision_request",
     "project_browser_runtime_result",
     "resolve_browser_runtime_provision_access",
 ]
@@ -74,15 +73,6 @@ BROWSER_RUNTIME_SETTLEMENT_PHASE = "browser-runtime.provision.settlement"
 
 class BrowserRuntimeProvisionRequest(CredentialFreeOperationRequest):
     """One browser provisioning run; the pinned builds are the whole subject, so the request carries nothing."""
-
-
-def build_browser_runtime_provision_request() -> OperationRequest[BrowserRuntimeProvisionRequest]:
-    """Build the request that provisions the browser build automation launches."""
-    return OperationRequest(
-        definition_id=BROWSER_RUNTIME_OPERATION_DEFINITION_ID,
-        subject_ref=BROWSER_RUNTIME_OPERATION_SUBJECT,
-        payload=BrowserRuntimeProvisionRequest(),
-    )
 
 
 class BrowserRuntimeProvisionPublicResultV1(BaseModel):

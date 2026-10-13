@@ -153,7 +153,7 @@ def test_two_real_rows_survive_one_stale_coordinate_without_its_amount_or_histor
     assert healthy.summary is None or healthy.summary.state is not DeclarationSummaryState.UNREADABLE
     assert bad.settled_result is None
     assert bad.summary is not None and bad.summary.state is DeclarationSummaryState.UNREADABLE
-    assert bad.summary.result is None and bad.summary.technical_reason
+    assert bad.summary.result is None and (bad.summary.technical_reason is not None and bad.summary.technical_reason)
     assert "technical_reason" not in bad.summary.model_dump()
     assert read_periods == [Period.from_year_and_code(2026, "1T")]
     assert all(row.work_unit_id == healthy.work_unit_id for row in projection.calculation_revisions)

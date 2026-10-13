@@ -87,5 +87,7 @@ def test_the_retencion_amount_reaches_the_catalogue_invoice(tmp_path: Path) -> N
     assert first.base_total == Decimal("4272.00")
     assert first.retention_amount == Decimal("640.80")
 
-    withheld = [inv for inv in catalogue.invoices.values() if inv.retention_amount]
+    withheld = [
+        inv for inv in catalogue.invoices.values() if (inv.retention_amount is not None and inv.retention_amount)
+    ]
     assert withheld, "no invoice carried a retención; the column was dropped"

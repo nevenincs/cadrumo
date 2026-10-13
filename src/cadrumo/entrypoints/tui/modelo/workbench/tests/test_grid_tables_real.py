@@ -136,7 +136,11 @@ def _grids(page: WorkbenchPage) -> list[ModeloFormGridBlock]:
 
 
 def _boxes(row_cells: tuple[ModeloFormGridCell, ...]) -> list[str]:
-    return [f"[{cell.field.box}]" for cell in row_cells if cell.field is not None and cell.field.box]
+    return [
+        f"[{cell.field.box}]"
+        for cell in row_cells
+        if cell.field is not None and (cell.field.box is not None and cell.field.box)
+    ]
 
 
 def _with_field(form: ModeloWorkForm, box: str, update: Mapping[str, object]) -> ModeloWorkForm:
@@ -206,7 +210,11 @@ async def _walk(items: tuple[CasillaListItem, ...], width: int, keys: tuple[str,
         async with app.run_test(size=(width, 300)) as pilot:
             await pilot.pause()
             widget = app.query_one(CasillaList)
-            first = next(item for item in items if isinstance(item, CasillaListEntry) and item.field.box)
+            first = next(
+                item
+                for item in items
+                if isinstance(item, CasillaListEntry) and (item.field.box is not None and item.field.box)
+            )
             assert first.field.address is not None
             assert widget.focus_address(address_key(first.field.address))
             for key in keys:
@@ -383,7 +391,7 @@ async def test_past_the_last_row_the_cursor_leaves_the_table_and_side_arrows_are
 
     assert on_grid
     assert after is not None and after.field.box == "27"
-    assert not left_taken
+    assert not (left_taken is not None and left_taken)
     assert still is not None and still.field.box == "27"
     assert back is not None and back.field.box == "25"
 
@@ -514,9 +522,9 @@ async def test_section_headings_take_the_colour_of_their_most_severe_level(opera
 
     assert set(styles) == {"!", "▲", "✓"}
     to_do, blocked, done = styles["!"], styles["▲"], styles["✓"]
-    assert to_do is not None and to_do.color == warning.color and to_do.bold
-    assert blocked is not None and blocked.color == error.color and blocked.bold
-    assert done is not None and done.color == plain.color and done.bold
+    assert to_do is not None and to_do.color == warning.color and (to_do.bold is True)
+    assert blocked is not None and blocked.color == error.color and (blocked.bold is True)
+    assert done is not None and done.color == plain.color and (done.bold is True)
     assert len({to_do.color, blocked.color, done.color}) == 3
     for style in (to_do, blocked, done):
         assert style.color is not None and style.color.triplet is not None

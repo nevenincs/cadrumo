@@ -6,7 +6,7 @@ import asyncio
 import sys
 import tempfile
 import threading
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -68,7 +68,9 @@ class _RuntimeProcess:
 
 
 @asynccontextmanager
-async def _fixture(root: Path) -> AsyncIterator[tuple[_RuntimeProcess, PosixRuntimeEndpoint | WindowsRuntimeEndpoint]]:
+async def _fixture(
+    root: Path,
+) -> AsyncGenerator[tuple[_RuntimeProcess, PosixRuntimeEndpoint | WindowsRuntimeEndpoint]]:
     with tempfile.TemporaryDirectory(prefix="s-", dir=runtime_namespace_base()) as folder:
         namespace = Path(folder) / "ipc"
         runtime = _RuntimeProcess(root, namespace)

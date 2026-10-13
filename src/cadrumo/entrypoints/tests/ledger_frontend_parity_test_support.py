@@ -22,12 +22,9 @@ from ...application.ledger.actions_classification import (
     apply_classification_rule_match,
     plan_classification_rules,
 )
-from ...application.ledger.actions_manual import (
-    attach_manual_transaction_evidence,
-    create_manual_transaction,
-    update_manual_transaction_fields,
-)
+from ...application.ledger.actions_manual import attach_manual_transaction_evidence, update_manual_transaction_fields
 from ...application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
+from ...application.ledger.tests.manual_transaction_support import create_manual_transaction
 from ...application.operations.execution_actor import OperationExecutionCaller
 from ...application.operations.frontend_requests import OperationObservationSuccessV1
 from ...application.operations.models import OperationIdentity

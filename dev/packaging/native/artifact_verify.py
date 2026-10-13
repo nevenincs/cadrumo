@@ -107,7 +107,7 @@ def _check(build: Path, configuration: str, application_probe: list[str] | None,
                         raise AssertionError(f"Missing interpreter banner metadata: {key}")
     with timings.phase("platform-acceptance"):
         verify(package, target=target, product=True, build_root=destination, already_relocated=True)
-    if application_probe:
+    if application_probe is not None and application_probe:
         probe_environment = dict(os.environ)
         probe_environment["CADRUMO_TEST_PACKAGE_ROOT"] = str(package.resolve())
         probe_environment["CADRUMO_TEST_RELEASE_EXPECTATION"] = str(expectation_path.resolve())
@@ -132,7 +132,9 @@ def _check(build: Path, configuration: str, application_probe: list[str] | None,
                 "build": manifest["build"],
                 "interpreters": [p.name for p in executables],
                 "package_root": str(package.resolve()),
-                "application_probe": "passed" if application_probe else "not_requested",
+                "application_probe": "passed"
+                if (application_probe is not None and application_probe)
+                else "not_requested",
                 "linux_cpp_abi": linux_cpp_abi,
                 "passed": True,
             },

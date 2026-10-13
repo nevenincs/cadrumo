@@ -573,7 +573,12 @@ def _iva_remote_state_capture_lines(report: IvaRemoteStateAcquisitionReport) -> 
         metric_line("auth_status", report.auth.status.value),
         metric_line("auth_outcome", report.auth.outcome_mode.value),
         metric_line("auth_outcome_label", _live_iva_outcome_label(report.auth.outcome_mode)),
-        metric_line("auth_failure_mode", report.auth.failure_mode.value if report.auth.failure_mode else ""),
+        metric_line(
+            "auth_failure_mode",
+            report.auth.failure_mode.value
+            if (report.auth.failure_mode is not None and report.auth.failure_mode)
+            else "",
+        ),
         metric_line("auth_failure_type", report.auth.failure_type or ""),
         metric_line("auth_provider_kind", report.auth.provider_kind or ""),
         metric_line("auth_reused_persisted_session", report.auth.reused_persisted_session),
@@ -583,6 +588,8 @@ def _iva_remote_state_capture_lines(report: IvaRemoteStateAcquisitionReport) -> 
         metric_line("output_root", report.output_root),
     ]
     for outcome in report.outcomes:
+        failure_mode = outcome.failure_mode
+        failure_mode_value = failure_mode.value if failure_mode is not None and failure_mode else ""
         calculation_count = (
             outcome.calculation_observation_count if outcome.calculation_observation_count is not None else ""
         )
@@ -595,7 +602,7 @@ def _iva_remote_state_capture_lines(report: IvaRemoteStateAcquisitionReport) -> 
                         f"status={outcome.status.value}",
                         f"outcome={outcome.outcome_mode.value}",
                         f"outcome_label={_live_iva_outcome_label(outcome.outcome_mode)}",
-                        f"failure_mode={outcome.failure_mode.value if outcome.failure_mode else ''}",
+                        f"failure_mode={failure_mode_value}",
                         f"failure_type={outcome.failure_type or ''}",
                         f"failure_context={_compact_failure_context(outcome.failure_context)}",
                         f"captured_count={outcome.captured_count if outcome.captured_count is not None else ''}",
@@ -608,7 +615,7 @@ def _iva_remote_state_capture_lines(report: IvaRemoteStateAcquisitionReport) -> 
 
 
 def _compact_failure_context(context: dict[str, object] | None) -> str:
-    if not context:
+    if not (context is not None and context):
         return ""
     parts: list[str] = []
     for key in sorted(context):

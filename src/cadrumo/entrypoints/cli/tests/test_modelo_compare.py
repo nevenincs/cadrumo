@@ -364,7 +364,9 @@ def test_compare_delta_rows_carry_provenance() -> None:
     ):
         obs = obs_by_id.get(casilla_id)
         assert obs is not None, f"Casilla {casilla_id!r} absent from engine_result.observations"
-        assert obs.formula_id, f"Computed casilla {casilla_id!r}: formula_id must be non-empty in compare delta_rows"
+        assert obs.formula_id is not None and obs.formula_id, (
+            f"Computed casilla {casilla_id!r}: formula_id must be non-empty in compare delta_rows"
+        )
         assert obs.legal_refs, f"Computed casilla {casilla_id!r}: legal_refs must be non-empty in compare delta_rows"
         assert obs.source_refs, f"Computed casilla {casilla_id!r}: source_refs must be non-empty in compare delta_rows"
 

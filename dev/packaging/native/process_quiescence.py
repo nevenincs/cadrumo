@@ -72,9 +72,17 @@ def terminate(process: psutil.Process) -> None:
     import win32con
     import win32process
 
+    from cadrumo.adapters.local_runtime.windows_native_io import native_windows_call, owned_windows_handle
+
     try:
-        handle = win32api.OpenProcess(
-            win32con.PROCESS_TERMINATE | win32con.PROCESS_QUERY_LIMITED_INFORMATION, False, process.pid
+        handle = owned_windows_handle(
+            native_windows_call(
+                win32api,
+                "OpenProcess",
+                win32con.PROCESS_TERMINATE | win32con.PROCESS_QUERY_LIMITED_INFORMATION,
+                False,
+                process.pid,
+            )
         )
     except (OSError, pywintypes.error):
         if not process.is_running():
@@ -82,7 +90,7 @@ def terminate(process: psutil.Process) -> None:
         raise
     try:
         if process.is_running():
-            win32process.TerminateProcess(handle, 1)
+            win32process.TerminateProcess(int(handle), 1)
     finally:
         handle.Close()
 

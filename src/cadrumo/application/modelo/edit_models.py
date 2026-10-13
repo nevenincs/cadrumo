@@ -802,7 +802,7 @@ def _validate_add_row_intent_shape(
     move_to_index: int | None,
 ) -> None:
     """Require an ADD_ROW to carry a new-row identity and complete values."""
-    if not isinstance(address, ModeloEditNewRowCorrelationV1) or not row:
+    if not isinstance(address, ModeloEditNewRowCorrelationV1) or not (row is not None and row):
         raise ValueError("ADD_ROW requires a new-row correlation address and a complete typed row")
     if move_to_index is not None:
         raise ValueError("ADD_ROW may not carry a move_to_index")
@@ -814,7 +814,7 @@ def _validate_update_row_intent_shape(
     move_to_index: int | None,
 ) -> None:
     """Require an UPDATE_ROW to carry an existing-row identity and values."""
-    if isinstance(address, ModeloEditNewRowCorrelationV1) or not row:
+    if isinstance(address, ModeloEditNewRowCorrelationV1) or not (row is not None and row):
         raise ValueError("UPDATE_ROW requires the canonical existing-row address and a complete typed row")
     if move_to_index is not None:
         raise ValueError("UPDATE_ROW may not carry a move_to_index")

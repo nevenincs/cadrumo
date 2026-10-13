@@ -249,7 +249,11 @@ def test_130_sections_are_the_designs_three_apartados_in_order() -> None:
     assert [section.id for section in sections[:2]] == ["identificacion", "devengo"]
     assert [section.id for section in sections[5:]] == ["ingreso", "complementaria"]
     headings = [section.official_heading for section in sections[2:5]]
-    assert [heading.split(". ")[1] if heading else None for heading in headings] == ["I", "II", "III"]
+    assert [heading.split(". ")[1] if (heading is not None and heading) else None for heading in headings] == [
+        "I",
+        "II",
+        "III",
+    ]
     assert all(heading and heading.startswith("Liquidación (3).") for heading in headings)
 
 
@@ -387,7 +391,9 @@ def test_authored_111_preserves_the_nine_printed_three_column_rows() -> None:
     assert [section.id for section in layout.pages[0].sections[:2]] == ["identificacion", "devengo"]
     assert [section.id for section in layout.pages[0].sections[8:]] == ["ingreso", "complementaria"]
     for section, numeral in zip(sections[:5], ("I.", "II.", "III.", "IV.", "V."), strict=True):
-        assert section.official_heading and section.official_heading.startswith(numeral)
+        assert (
+            section.official_heading is not None and section.official_heading
+        ) and section.official_heading.startswith(numeral)
     rows = []
     for section in sections[:5]:
         for block in section.blocks:

@@ -15,12 +15,15 @@ from uuid import UUID
 
 from ..user_profile.access_contracts import SessionKind
 from .models import OperationIdentity
+from .person_acts import is_persons_frontend
 from .registry import OperationFrontendProjection
 
 if TYPE_CHECKING:
     from .owner import OperationExecutorContext
 
-_AGENT_LABEL_PREFIX: Final = "agent:mcp."
+_AGENT_LABEL_PREFIXES: Final = tuple(
+    f"agent:{frontend.value}." for frontend in OperationFrontendProjection if not is_persons_frontend(frontend)
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -42,9 +45,10 @@ def execution_actor_label(
 ) -> str:
     """Return the label to record as the actor of the execution ``context`` belongs to.
 
-    An execution admitted on the MCP frontend is an agent's. Its label names
-    the session's kind and client, and the label the request supplied is not
-    recorded. Every other frontend records the supplied label unchanged.
+    An execution admitted on an agent's frontend is an agent's. Its label
+    names the frontend, the session's kind and client, and the label the
+    request supplied is not recorded. The person's frontends record the
+    supplied label unchanged.
 
     ``reader`` is ``None`` where no session host composed the operation; no
     frontend exists there to tell apart, so the supplied label stands.
@@ -52,9 +56,9 @@ def execution_actor_label(
     if reader is None:
         return supplied
     caller = reader(context.identity)
-    if caller.frontend is not OperationFrontendProjection.MCP:
+    if is_persons_frontend(caller.frontend):
         return supplied
-    return f"{_AGENT_LABEL_PREFIX}{caller.session_kind.value}.{caller.client_id}"
+    return f"agent:{caller.frontend.value}.{caller.session_kind.value}.{caller.client_id}"
 
 
 def actor_label_is_an_agents(label: str) -> bool:
@@ -66,7 +70,7 @@ def actor_label_is_an_agents(label: str) -> bool:
     records the label it supplies, so a person who types this form records
     their own act as an agent's.
     """
-    return label.startswith(_AGENT_LABEL_PREFIX)
+    return label.startswith(_AGENT_LABEL_PREFIXES)
 
 
 __all__ = [

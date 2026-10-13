@@ -6,6 +6,22 @@
 // Field names and casing follow the host's serde output exactly.
 
 import type { Channel } from "@tauri-apps/api/core";
+import type {
+  AgentAnswerResult,
+  AgentApproval,
+  AgentProviderCatalog,
+  AgentQuestionnaire,
+  AgentQuestionnaireAnswer,
+  AgentSendRequest,
+  AgentSendResult,
+  AgentServiceStatus,
+  AgentStreamEvent,
+} from "../shell/agentSession";
+import type {
+  AgentConversationRecord,
+  AgentDocumentRecord,
+  AgentTurnRecord,
+} from "../shell/agentViews";
 
 // ---------------------------------------------------------------------------
 // Launch token
@@ -798,6 +814,78 @@ export interface HostCommands {
   shell_context_menu: {
     args: Authorized<ContextMenuRequest>;
     result: ContextMenuResult;
+  };
+  /**
+   * The agent host. Every agent command refuses with `{ code }`: the
+   * service's own refusal while it is not ready, `agent_reply_unknown` for
+   * a reply this host is not watching, and `agent_conversation_unavailable`
+   * for any conversation, since the launcher reports no conversation
+   * workspace yet.
+   */
+  agent_status: { args: Authorized; result: AgentServiceStatus };
+  agent_status_subscribe: {
+    args: Authorized<{ updates: Channel<AgentServiceStatus> }>;
+    result: number;
+  };
+  agent_status_unsubscribe: {
+    args: Authorized<{ subscription: number }>;
+    result: null;
+  };
+  /** cadrumo-agent's catalog, unchanged and unfiltered. */
+  agent_provider_catalog: { args: Authorized; result: AgentProviderCatalog };
+  agent_conversation_start: {
+    args: Authorized;
+    result: AgentConversationRecord;
+  };
+  agent_send: {
+    args: Authorized<{ request: AgentSendRequest }>;
+    result: AgentSendResult;
+  };
+  agent_cancel: { args: Authorized<{ replyId: string }>; result: null };
+  agent_pending: {
+    args: Authorized<{ conversationId: string }>;
+    result: {
+      questionnaires: AgentQuestionnaire[];
+      approvals: AgentApproval[];
+    };
+  };
+  agent_questions_answer: {
+    args: Authorized<{
+      questionnaire: Pick<AgentQuestionnaire, "reply_id" | "request_id">;
+      answer: AgentQuestionnaireAnswer;
+    }>;
+    result: AgentAnswerResult;
+  };
+  /** Answers a tool approval; Cadrumo reviews are not served. */
+  agent_approval_decide: {
+    args: Authorized<{
+      approval: Pick<AgentApproval, "reply_id" | "request_id">;
+      optionId: string;
+    }>;
+    result: null;
+  };
+  agent_observe: {
+    args: Authorized<{
+      conversationId: string;
+      events: Channel<AgentStreamEvent>;
+    }>;
+    result: number;
+  };
+  agent_unobserve: {
+    args: Authorized<{ subscription: number }>;
+    result: null;
+  };
+  agent_conversations: {
+    args: Authorized;
+    result: AgentConversationRecord[];
+  };
+  agent_history: {
+    args: Authorized<{ conversationId: string }>;
+    result: AgentTurnRecord[];
+  };
+  agent_documents: {
+    args: Authorized<{ conversationId: string }>;
+    result: AgentDocumentRecord[];
   };
 }
 

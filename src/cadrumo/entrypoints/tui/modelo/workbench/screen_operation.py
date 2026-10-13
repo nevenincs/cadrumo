@@ -153,7 +153,7 @@ class WorkbenchOperationMixin:
             return
 
         def closed(confirmed: bool | None) -> None:
-            if confirmed:
+            if confirmed is not None and confirmed:
                 if not self._filing_withheld() and not self._file_out_of_date():
                     self._run_operation(submit)
             else:

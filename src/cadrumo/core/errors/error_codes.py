@@ -333,7 +333,7 @@ def scrub_error_context(context: Mapping[str, object] | None) -> dict[str, str] 
     entirely — they are implementation detail (e.g. widget prompt identifiers)
     and must not appear in operator-facing output.
     """
-    if not context:
+    if not (context is not None and context):
         return None
     from ..redaction.rules import is_sensitive_redaction_key, redact_for_log
 
@@ -399,7 +399,7 @@ def render_error_text(
     first_line = f"{prefix} {message}"
     lines = [first_line]
     scrubbed_context = scrub_error_context(_merge_error_context(error, context))
-    if scrubbed_context:
+    if scrubbed_context is not None and scrubbed_context:
         for key, value in scrubbed_context.items():
             lines.append(f"  {_text_context_label(key)}: {_text_context_value(key, value)}")
     return "\n".join(lines) + "\n"
@@ -567,7 +567,7 @@ def _merge_error_context(
         if key.startswith("_") or key in {"code", "context", "translated_message", "suggestion", "original_exception"}:
             continue
         merged[key] = value
-    if context:
+    if context is not None and context:
         merged.update(context)
     return merged or None
 

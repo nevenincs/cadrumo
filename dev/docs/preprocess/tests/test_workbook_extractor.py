@@ -134,11 +134,7 @@ def test_sidecar_round_trips_and_is_walker_indexable(tmp_path: Path) -> None:
     during the test. Inspects the real installed walker (no mock): the
     rendered .md must pass the extension, size-cap, and binary filters.
     """
-    from vaultspec_rag.indexer._chunking import (
-        _MAX_FILE_SIZE,
-        SUPPORTED_EXTENSIONS,
-        _is_binary,
-    )
+    from .index_admission_support import assert_source_is_indexable
 
     # Recreate the modelo_303/files/<wb> + sibling manifest so attribution
     # resolution exercises the real manifest read path too.
@@ -161,9 +157,7 @@ def test_sidecar_round_trips_and_is_walker_indexable(tmp_path: Path) -> None:
     assert reloaded.units  # non-empty
 
     # The real installed walker would index the rendered .md.
-    assert text_path.suffix.lower() in SUPPORTED_EXTENSIONS
-    assert text_path.stat().st_size <= _MAX_FILE_SIZE
-    assert not _is_binary(text_path)
+    assert_source_is_indexable(source_copy, text_path, tmp_path)
 
 
 def test_largest_corpus_sidecar_under_walker_cap() -> None:

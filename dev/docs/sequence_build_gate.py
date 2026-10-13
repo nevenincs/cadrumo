@@ -71,9 +71,9 @@ def should_emit_cli_tree(output_path: Path, *, specific_sources: list[Path] | No
         specific_sources: The changed-page specific-source set of an incremental
             build, or ``None`` for a normal full/update build.
     """
-    if os.environ.get(_FORCE_EMIT_ENV):
+    if bool(os.environ.get(_FORCE_EMIT_ENV)):
         return True
-    if os.environ.get(_SKIP_EMIT_ENV):
+    if bool(os.environ.get(_SKIP_EMIT_ENV)):
         return False
     if specific_sources is None:
         return True
@@ -117,7 +117,7 @@ def should_check_sequences() -> bool:
     exactly one root ran it. A build that is not part of such a lane never sets
     the opt-out, so an ordinary docs build keeps failing on a golden divergence.
     """
-    return not os.environ.get(SEQUENCE_CHECK_SKIP_ENV)
+    return not bool(os.environ.get(SEQUENCE_CHECK_SKIP_ENV))
 
 
 def _config_root(app: Sphinx, name: str) -> Path | None:

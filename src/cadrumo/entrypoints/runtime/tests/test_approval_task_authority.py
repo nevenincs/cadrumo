@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import os
 import sys
-from collections.abc import AsyncGenerator, Iterator
+from collections.abc import AsyncGenerator, Generator
 from contextlib import asynccontextmanager, contextmanager
 from pathlib import Path
 from threading import Event
@@ -117,7 +117,7 @@ def _registry() -> OperationRegistry:
 @contextmanager
 def _authority(
     tmp_path: Path,
-) -> Iterator[
+) -> Generator[
     tuple[
         ProfileWorkerOperationAuthority,
         HeldAuthorizationClient,

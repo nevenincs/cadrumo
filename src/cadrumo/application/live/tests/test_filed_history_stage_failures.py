@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
@@ -53,7 +53,7 @@ class _Guard:
         self.active = False
 
     @asynccontextmanager
-    async def __call__(self) -> AsyncIterator[None]:
+    async def __call__(self) -> AsyncGenerator[None]:
         assert not self.active
         self.entries += 1
         self.active = True

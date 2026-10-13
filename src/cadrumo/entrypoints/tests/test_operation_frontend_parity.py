@@ -1,12 +1,13 @@
-"""Every registered operation is answered alike on the command line, the terminal interface and MCP.
+"""Every registered operation is answered alike on every frontend: the person's and the agents'.
 
 The one exception is the person's own act: a credential or access act, or a
 request carrying the person's consent to send a stored document off this
-machine. It is answered alike on the person's frontends, and on MCP it is
-either answered the same or refused with the typed person-act refusal.
+machine. It is answered alike on the person's frontends, and on MCP and the
+agent host it is either answered the same or refused with the typed
+person-act refusal.
 
 No definition declares the frontends it is open to: every registered
-operation is open to all three. What a submission is answered is decided in
+operation is open to all of them. What a submission is answered is decided in
 two places, the operation's own access resolver and the access policy that
 holds the resolved access to the session, and neither may tell the frontends
 apart. This file puts both to every registered operation, through the
@@ -93,6 +94,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _FRONTENDS = tuple(sorted(OperationFrontendProjection))
 _CLI = OperationFrontendProjection.CLI
+_AGENTS = frozenset({OperationFrontendProjection.MCP, OperationFrontendProjection.AGENT_HOST})
+"""The agents' frontends, written out here rather than read from the predicate under test."""
 
 
 def _registrations() -> tuple[OperationPublicDefinitionRegistrationV1, ...]:
@@ -187,7 +190,7 @@ def _widest_submission(
 def test_every_registered_definition_is_submittable_from_every_frontend_by_either_kind_of_session() -> None:
     """The access policy admits a submission of each operation from each frontend, with no surface named.
 
-    A person's own act is the one exception, and only on the agent's frontend, where it is refused, typed.
+    A person's own act is the one exception, and only on an agent's frontend, where it is refused, typed.
     """
     refused: dict[str, str] = {}
     persons_acts: set[str] = set()
@@ -198,7 +201,7 @@ def test_every_registered_definition_is_submittable_from_every_frontend_by_eithe
             request, policy = _widest_submission(definition_id, frontend)
             for human in (True, False):
                 answer = _session_answer(request, policy, human=human, registry=_registry())
-                if persons and frontend is _AGENT and answer == _PERSON_ACT_REQUIRED:
+                if persons and frontend in _AGENTS and answer == _PERSON_ACT_REQUIRED:
                     persons_acts.add(definition_id)
                     continue
                 if answer != _ALLOWED:
@@ -206,6 +209,30 @@ def test_every_registered_definition_is_submittable_from_every_frontend_by_eithe
     assert not refused, f"submissions the access policy refuses for a frontend: {refused}"
     # The exception is exercised, so a person's act left open to the agent would show here.
     assert persons_acts
+
+
+def test_every_persons_act_is_refused_on_each_agents_frontend_and_admitted_on_each_persons_frontend() -> None:
+    """The door-by-frontend matrix of the registered person's acts, through the production registry and policy.
+
+    Each frontend is on one side: a new one fails here until it is placed.
+    """
+    persons = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
+    assert persons | _AGENTS == frozenset(OperationFrontendProjection)
+    assert not persons & _AGENTS
+    matrix: dict[tuple[str, str, bool], str] = {}
+    expected: dict[tuple[str, str, bool], str] = {}
+    for definition_id in _definition_ids():
+        contract = _registry().lookup_public_contract(definition_id)
+        if not operation_is_persons_act(definition_id, ephemeral_secret_required=contract.ephemeral_secret_required):
+            continue
+        for frontend in _FRONTENDS:
+            request, policy = _widest_submission(definition_id, frontend)
+            for human in (True, False):
+                cell = (definition_id, frontend.value, human)
+                matrix[cell] = _session_answer(request, policy, human=human, registry=_registry())
+                expected[cell] = _PERSON_ACT_REQUIRED if frontend in _AGENTS else _ALLOWED
+    assert matrix
+    assert matrix == expected, {cell: answer for cell, answer in matrix.items() if answer != expected[cell]}
 
 
 # ---------------------------------------------------------------------------
@@ -586,7 +613,6 @@ def _answers_on(
     }
 
 
-_AGENT = OperationFrontendProjection.MCP
 _PERSON_ACT_REQUIRED = AccessDenialCode.PERSON_ACT_REQUIRED.value
 _REFUSED_AS_PERSONS_ACT = f"refused:{_PERSON_ACT_REQUIRED}"
 
@@ -621,16 +647,17 @@ def _refused_as_persons_act(agent: object, person: object) -> bool:
 def _on_the_persons_frontends[AnswerT](
     by_frontend: Mapping[OperationFrontendProjection, AnswerT], request: OperationRequest[BaseModel]
 ) -> Mapping[OperationFrontendProjection, AnswerT]:
-    """Leave the agent's frontend out of the comparison for a person's act, once its answer is shown to be typed.
+    """Leave the agents' frontends out of the comparison for a person's act, once their answers are shown typed.
 
-    The agent is answered either as the person is, where a later door refuses
+    An agent is answered either as the person is, where a later door refuses
     it, or with the person-act refusal; never with anything else.
     """
     if not _is_persons_act(request):
         return by_frontend
-    agent = by_frontend[_AGENT]
-    assert _refused_as_persons_act(agent, by_frontend[_CLI]), (request.definition_id, agent)
-    return {frontend: answer for frontend, answer in by_frontend.items() if frontend is not _AGENT}
+    for frontend in _AGENTS:
+        agent = by_frontend[frontend]
+        assert _refused_as_persons_act(agent, by_frontend[_CLI]), (request.definition_id, frontend.value, agent)
+    return {frontend: answer for frontend, answer in by_frontend.items() if frontend not in _AGENTS}
 
 
 def _differing(answers: Mapping[OperationFrontendProjection, object]) -> dict[str, object] | None:

@@ -178,5 +178,5 @@ def test_every_notice_message_resolves_to_real_copy() -> None:
 
 def test_every_notice_carries_machine_queryable_context() -> None:
     for notice in _filed_discover_notices(_register_only_report()):
-        assert notice.context
+        assert notice.context is not None and notice.context
         assert all(isinstance(value, str) for value in notice.context.values())

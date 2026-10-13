@@ -471,7 +471,7 @@ async def test_the_declarations_status_line_leads_the_dialog_and_the_title_is_st
     assert shown == status
     assert without[0] == "issues-title"
     assert "issues-status" not in without
-    assert title_style.bold
+    assert title_style.bold is True
     assert title_style.color != verdict_style.color
 
 

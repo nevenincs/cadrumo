@@ -16,12 +16,9 @@ from typing import override
 import pytest
 
 from .....application.ledger.action_ports import LedgerActionPorts
-from .....application.ledger.actions_manual import (
-    create_manual_transaction,
-    update_manual_transaction,
-    update_manual_transaction_fields,
-)
+from .....application.ledger.actions_manual import update_manual_transaction, update_manual_transaction_fields
 from .....application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
+from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection
 from .....domain.transactions.models import TransactionCatalogue
 from ...storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile

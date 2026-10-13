@@ -83,7 +83,7 @@ def test_the_shipped_marks_give_each_glyph_one_meaning_and_each_meaning_one_glyp
 def test_every_mark_has_words_in_every_language() -> None:
     for mark in WORKBENCH_MARKS:
         for locale in ("es", "en", "ca", "hu"):
-            assert lookup_translation(mark.translation_key, locale=locale), (mark, locale)
+            assert bool(lookup_translation(mark.translation_key, locale=locale)), (mark, locale)
 
 
 def test_a_glyph_given_a_second_meaning_is_refused() -> None:

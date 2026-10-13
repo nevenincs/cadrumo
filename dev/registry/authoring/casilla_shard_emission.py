@@ -210,7 +210,7 @@ def _carried_attributes(
     casilla_id = attributes.get("id") or f"{segmento}:{group.number}"
     row_segmento = attributes.get("segmento") or None
     legal_refs = spec.legal_refs
-    if spec.carry_legal_refs and attributes.get("legal_refs"):
+    if spec.carry_legal_refs and bool(attributes.get("legal_refs")):
         legal_refs = attributes["legal_refs"]
     _record_drift(segmento, group.number, row, group.caption, attributes.get("_caption", ""), report)
     return _RowAttributes(

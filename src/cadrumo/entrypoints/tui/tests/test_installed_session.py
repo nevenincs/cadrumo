@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator, Callable, Iterator
+from collections.abc import AsyncGenerator, Callable, Iterator
 from contextlib import asynccontextmanager, nullcontext
 from typing import TYPE_CHECKING, Literal, cast, override
 from uuid import UUID, uuid4
@@ -110,7 +110,7 @@ def _session_callbacks(
         return screen
 
     @asynccontextmanager
-    async def login(**options: object) -> AsyncIterator[RuntimeLoginHandoff | None]:
+    async def login(**options: object) -> AsyncGenerator[RuntimeLoginHandoff | None]:
         try:
             if requester == "login":
                 factory = cast(RuntimeRequesterFactory, options["requester_factory"])
@@ -326,7 +326,7 @@ def test_the_profiles_are_read_again_when_the_sign_in_screen_closed_after_an_ins
     preselections: list[str | None] = []
 
     @asynccontextmanager
-    async def login(**options: object) -> AsyncIterator[RuntimeLoginHandoff | None]:
+    async def login(**options: object) -> AsyncGenerator[RuntimeLoginHandoff | None]:
         preselections.append(cast("str | None", options["preselected"]))
         if len(preselections) == 1:
             build_area = cast("Callable[[Callable[[], None]], InstallationScreen]", options["installation_factory"])

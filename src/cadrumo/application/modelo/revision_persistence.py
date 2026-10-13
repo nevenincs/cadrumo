@@ -992,7 +992,7 @@ def _new_local_filing_record(
         period=work_unit.period,
         filed_at=now,
         filed_by=actor.strip(),
-        notes=notes.strip() if notes else None,
+        notes=notes.strip() if (notes is not None and notes) else None,
         origin=FilingOrigin.LOCAL,
         confirmation=AeatConfirmationState.PENDIENTE,
         declaration_kind=FilingDeclarationKind.ORIGINAL,

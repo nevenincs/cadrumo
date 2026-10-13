@@ -355,7 +355,7 @@ def _barred_by_the_two_facts() -> list[str]:
 
 def _read_only_local_operations() -> frozenset[str]:
     operations = MCP_SURFACES[_READ_ONLY_LOCAL].operations
-    assert operations
+    assert operations is not None and operations
     return operations
 
 

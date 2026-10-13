@@ -199,7 +199,7 @@ class _McpConnection:
     def __init__(self, client: RuntimeFrontendClient) -> None:
         self.client: RuntimeFrontendClient | None = client
         self.profile_id: UUID | None = client.profile_id
-        self.admission: McpAdmission | None = McpAdmission.TYPED_SIGN_IN
+        self.admission: McpAdmission | None = McpAdmission.SIGN_IN
         self.surface = mcp_surface(DEFAULT_MCP_SURFACE)
         self._admission_denial: AdmissionDenial | None = None
         self._contracts = OperationContractCache()

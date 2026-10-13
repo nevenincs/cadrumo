@@ -333,14 +333,14 @@ def _parse_canonical_decimal(raw: str | None) -> Decimal | None:
     numeric meaning is not what it appears. Fractional digits stay uncapped: a
     projection value may legitimately carry sub-cent precision.
     """
-    if not raw:
+    if not (raw is not None and raw):
         return None
     return try_parse_canonical_decimal(raw)
 
 
 def _entity_type_from_token(raw: str | None) -> EntityType | None:
     """Map a raw ``taxpayer_type.entity_type`` token to :class:`EntityType`, or ``None``."""
-    if not raw:
+    if not (raw is not None and raw):
         return None
     from ...domain.calculations.registry.entity_type import require_entity_type
     from ...domain.calculations.registry.errors import RegistryValidationError

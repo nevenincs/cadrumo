@@ -207,7 +207,7 @@ def legend_panel(
         panel.append_text(_heading(tr(group.heading_key)))
         panel.append("\n")
         for entry in group.entries:
-            key = f"  [{entry.key}]" if entry.key else ""
+            key = f"  [{entry.key}]" if (entry.key is not None and entry.key) else ""
             panel.append(f" {entry.mark.glyph} {mark_name(entry.mark)}: {tr(entry.meaning_key)}{key}\n")
     panel.append_text(_heading(tr("tui.modelo.workbench.legend.group.keys")))
     panel.append(f"\n{keys}\n{_GRID_KEYS}  {tr('tui.modelo.workbench.legend.keys.grid')}")

@@ -199,7 +199,7 @@ class ExportFieldVerdict(_StrictModel):
     def _ruling_matches_outcome(self) -> ExportFieldVerdict:
         if self.outcome == "agrees" and self.ruling is not None:
             raise ValueError("an agreeing verdict carries no ruling")
-        if self.outcome == "adjudicated" and not self.ruling:
+        if self.outcome == "adjudicated" and not (self.ruling is not None and self.ruling):
             raise ValueError("an adjudicated verdict must name the ruling that explains it")
         return self
 

@@ -1214,7 +1214,7 @@ def _invoke_frame(args: tuple[str, ...]) -> Result:
     settings_context = override_settings(cadrumo_active_profile=None) if is_profile_delete else nullcontext()
     with settings_context, _next_process_session_view():
         result = _invoke_authenticated_frame(args)
-    if os.environ.get("CI"):
+    if bool(os.environ.get("CI")):
         return result
     tries = 1
     while (

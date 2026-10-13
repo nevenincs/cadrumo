@@ -69,7 +69,7 @@ def _top_level_environment() -> dict[str, str]:
     run_root = environment.pop("CADRUMO_TEST_RUN_ROOT", None)
     environment.pop("CADRUMO_TEST_RUN_SCRATCH", None)
     configured_logs = environment.get("CADRUMO_LOG_DIR", "").strip()
-    if run_root and configured_logs:
+    if (run_root is not None and run_root) and configured_logs:
         # The parent logger exports its generated per-process product-log path.
         # Drop that derived value with the run-root binding so an independent
         # child can mint a fresh run; explicit overrides remain untouched.

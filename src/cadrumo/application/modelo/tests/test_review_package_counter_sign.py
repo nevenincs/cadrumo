@@ -34,7 +34,7 @@ See Also:
 from __future__ import annotations
 
 import functools
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta, timezone
@@ -94,12 +94,12 @@ class _TestTwoBucketRuntime:
     secondary: _TestBucket
 
     @contextmanager
-    def switch_to_secondary(self) -> Iterator[None]:
+    def switch_to_secondary(self) -> Generator[None]:
         yield
 
 
 @contextmanager
-def _two_bucket_runtime() -> Iterator[_TestTwoBucketRuntime]:
+def _two_bucket_runtime() -> Generator[_TestTwoBucketRuntime]:
     """Provide deterministic bucket identities without opening persistence."""
     yield _TestTwoBucketRuntime(
         primary=_TestBucket(bucket_id=_PRIMARY_BUCKET_ID),

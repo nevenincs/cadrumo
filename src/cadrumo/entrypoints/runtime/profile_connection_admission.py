@@ -160,6 +160,9 @@ class ProfileConnectionAdmissionMixin:
         if request.method == "password":
             # Signing in by password is the person's act, never an agent's.
             self._require_persons_frontend(request.frontend)
+        if request.frontend is OperationFrontendProjection.AGENT_HOST and request.method != "receipt":
+            # The agent host is admitted only by resuming the person's stored sign-in.
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         surface = self._login_surface(request)
         connection = self._existing_or_captured_connection(context, channel, request, surface)
         host = self._host(request.profile_id, context)

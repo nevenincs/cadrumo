@@ -257,7 +257,7 @@ def corpus_text_cache_dir() -> Path:
         The directory holding the corpus-text cache file.
     """
     override = os.environ.get(CORPUS_TEXT_CACHE_DIR_ENV)
-    if override and override.strip():
+    if (override is not None and override) and override.strip():
         return resolve_storage_path(override, root=configured_storage_root(repository_root=REPO_ROOT))
     return dev_cache_dir("corpus-text")
 
@@ -422,7 +422,7 @@ def _legal_clause_covers_source(
     valid_from: date,
     valid_to: date | None,
 ) -> bool:
-    if legal.authority != "boe" or not legal.article:
+    if legal.authority != "boe" or not (legal.article is not None and legal.article):
         return False
     if legal.corpus_ref.partition("#")[0] != source.corpus_path:
         return False

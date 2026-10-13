@@ -96,7 +96,7 @@ class WorkbenchNextStepMixin:
             return
 
         def closed(proceed: bool | None) -> None:
-            if proceed:
+            if proceed is not None and proceed:
                 self._calculate_now(actions)
             else:
                 self._notice(tr("tui.modelo.workbench.calculate.kept"))

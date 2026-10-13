@@ -347,7 +347,7 @@ def test_each_gate_runs_the_same_command_its_recipe_does() -> None:
 def test_the_recipe_command_scan_reads_real_commands() -> None:
     """A scan returning nothing would make the drift check vacuous."""
     commands = _recipe_commands()
-    assert commands.get("check-style"), f"check-style recipe not parsed: {commands.get('check-style')!r}"
+    assert bool(commands.get("check-style")), f"check-style recipe not parsed: {commands.get('check-style')!r}"
 
 
 def test_only_code_quality_primitives_are_enrolled() -> None:

@@ -30,6 +30,7 @@ from typing import Final, override
 
 import pytest
 
+from .....core.config_support import LLMProvider
 from .....tests.loopback_llm import SilentLoopbackHandler, read_json_body, serving_loopback, write_json_response
 from ..client import LLMClient
 from ..providers.anthropic import AnthropicAdapter, build_message_kwargs
@@ -70,7 +71,7 @@ def _request(
 class _RefusesTemperature(ProviderAdapter):
     """An adapter whose model rejects an explicitly-sent temperature."""
 
-    provider = None  # type: ignore[assignment]  # reason: payload-shape probe, never dispatched
+    provider = LLMProvider.LOCAL
 
     @override
     def unsupported_parameters(self, model: str) -> frozenset[str]:
@@ -240,7 +241,7 @@ def test_an_adapter_declares_no_unsupported_parameters_by_default() -> None:
     """
 
     class _Plain(ProviderAdapter):
-        provider = None  # type: ignore[assignment]  # reason: probe only
+        provider = LLMProvider.LOCAL
 
         @override
         async def complete(self, request: ProviderRequest) -> ProviderCompletion:  # pragma: no cover

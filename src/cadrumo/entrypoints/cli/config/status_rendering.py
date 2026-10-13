@@ -72,7 +72,7 @@ def precondition_action_lines(action: ResolvedPreconditionAction | None) -> tupl
 
 def _presence(values: Mapping[str, str], path: str) -> str:
     """Render one fact path as the presence token the status report prints."""
-    return "present" if values.get(path) else "missing"
+    return "present" if bool(values.get(path)) else "missing"
 
 
 __all__ = ["blocked_readiness_status", "precondition_action_lines"]

@@ -164,7 +164,7 @@ def test_self_hosted_architectural_vocabulary_is_deprecated_not_glossary_facing(
         es_definition = next(
             definition.definition for definition in card.definitions if definition.language is OutputLanguage.ES
         )
-        assert es_definition
+        assert es_definition is not None and es_definition
 
 
 def test_every_card_has_a_spanish_short_description(

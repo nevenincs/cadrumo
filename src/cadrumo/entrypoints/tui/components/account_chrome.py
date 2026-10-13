@@ -213,7 +213,7 @@ class AccountChromeScreen(TypedAppAccess, Screen[None]):
         ``ProfileManagerScreen._offer_language_in_footer`` gives.
         """
         bindings = self._bindings.key_to_bindings.get(_APPEARANCE_KEY)
-        if not bindings:
+        if not (bindings is not None and bindings):
             return
         if isinstance(self.app, TuiAccountHostV1):
             self._bindings.key_to_bindings = {

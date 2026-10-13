@@ -37,7 +37,7 @@ from .iva_tui_scenario import _synthetic_rows, _write_synthetic_statement
 def _child_authority() -> AuthorityIdentity:
     """Read the isolated authority root installed by the shared child runner."""
     raw = os.environ.get("CADRUMO_AUTHORITY_ROOT")
-    if not raw:
+    if not (raw is not None and raw):
         raise InstalledTuiChildError("installed TUI child has no isolated authority root")
     try:
         return _authority_identity(Path(raw))

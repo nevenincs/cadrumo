@@ -123,7 +123,7 @@ def _account_country_code(*, iban: str | None, bank_country_code: str) -> str | 
     ``bank_country_code`` for a non-IBAN SWIFT account. Returns ``None`` when
     neither a country-prefixed IBAN nor a bank country code is available.
     """
-    if iban:
+    if iban is not None and iban:
         canonical = normalise_iban(iban)
         if len(canonical) >= 2 and canonical[:2].isalpha():
             return canonical[:2]

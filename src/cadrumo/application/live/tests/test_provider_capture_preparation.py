@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import os
 import sys
-from collections.abc import Awaitable, Callable, Iterator
+from collections.abc import Awaitable, Callable, Generator
 from contextlib import contextmanager
 from pathlib import Path
 from types import SimpleNamespace
@@ -81,7 +81,7 @@ class _Events(EventEmitter):
 
 class _Resources:
     @contextmanager
-    def activate(self) -> Iterator[None]:
+    def activate(self) -> Generator[None]:
         yield
 
     async def close(self) -> None: ...

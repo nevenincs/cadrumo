@@ -478,7 +478,9 @@ class SubmissionFlow:
         self, reached: tuple[Symbol, ...], summaries: Mapping[Symbol, frozenset[Submission]]
     ) -> tuple[str, ...]:
         submitting = {
-            symbol[1].rpartition(".")[2]: symbol for symbol in reached if "." in symbol[1] and summaries.get(symbol)
+            symbol[1].rpartition(".")[2]: symbol
+            for symbol in reached
+            if "." in symbol[1] and bool(summaries.get(symbol))
         }
         return tuple(
             f"{symbol[0]}:{line} calls .{name}() on a receiver of unknown class, "

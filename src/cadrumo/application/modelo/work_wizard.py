@@ -277,7 +277,7 @@ class ModeloWorkWizardRun:
                 label=step.label,
             )
             help_ref: str | None = None
-            if step.help_text:
+            if step.help_text is not None and step.help_text:
                 help_ref = _copy_ref_id(self._run_token, step, "help")
                 table[help_ref] = step.help_text
             pages.append(
@@ -285,7 +285,9 @@ class ModeloWorkWizardRun:
                     id=_page_key(step),
                     widget=FlowWidgetKind.TEXT,
                     prompt=CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=prompt_ref),
-                    help=CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=help_ref) if help_ref else None,
+                    help=CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=help_ref)
+                    if (help_ref is not None and help_ref)
+                    else None,
                     required=False,
                     answer_type=str,
                 )

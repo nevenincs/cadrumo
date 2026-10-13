@@ -36,11 +36,6 @@ export const personTurns = (target: Page) =>
     name: label("desktop.agent.you_said"),
   });
 
-export const consentPrompt = (target: Page) =>
-  agentColumn(target).getByRole("region", {
-    name: worded("desktop.agent.consent_title"),
-  });
-
 export const questionsPrompt = (target: Page) =>
   agentColumn(target).getByRole("region", {
     name: label("desktop.agent.questions_title"),
@@ -64,17 +59,11 @@ export async function ask(target: Page, text: string) {
   await messageField(target).press("Enter");
 }
 
-/** Sends `text` as a new message, allowing it to go where consent is
- * asked first, and waits until it is in the conversation. */
+/** Sends `text` as a new message and waits until it is in the
+ * conversation. */
 export async function send(target: Page, text: string) {
   await ask(target, text);
-  const mine = personTurns(target).filter({ hasText: text });
-  await expect(consentPrompt(target).or(mine)).toBeVisible();
-  if (await consentPrompt(target).isVisible())
-    await consentPrompt(target)
-      .getByRole("button", { name: worded("desktop.agent.consent_allow") })
-      .click();
-  await expect(mine).toBeVisible();
+  await expect(personTurns(target).filter({ hasText: text })).toBeVisible();
 }
 
 /** Waits until no reply is being written. */

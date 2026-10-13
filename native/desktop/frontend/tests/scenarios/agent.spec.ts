@@ -3,17 +3,17 @@ import {
   agentColumn as column,
   agentTurns,
   ask,
-  consentPrompt as consent,
   conversation,
   messageField as field,
   worded,
 } from "../support/agent";
 import { label } from "../support/strings";
 
-// The agent column at work: a message goes only once the person consents,
-// its reply streams into the conversation as the host writes it, and a
-// reply can be stopped. The scenario host's reply repeats the message; its
-// stream sends one piece twice, or with `stream=gap` leaves one out.
+// The agent column at work: a message goes when the person sends it, its
+// reply streams into the conversation as the host writes it, a reply can be
+// stopped, and what can run it is the agent's own catalog. The scenario
+// host's reply repeats the message; its stream sends one piece twice, or with
+// `stream=gap` leaves one out.
 
 const open = (target: Page, scenario = "signed-in", query = "") =>
   target.goto(`/scenarios.html?scenario=${scenario}&latency=0&bar=off${query}`);
@@ -33,7 +33,7 @@ test.beforeEach(async ({ page: target }) => {
   });
 });
 
-test("a message goes only with consent, and its reply streams in once", async ({
+test("a message goes when it is sent, and its reply streams in once", async ({
   page: target,
 }) => {
   await open(target);
@@ -41,25 +41,8 @@ test("a message goes only with consent, and its reply streams in once", async ({
   await expect(column(target).getByRole("note")).toHaveText(
     label("desktop.agent.lane_notice"),
   );
+  // Sending is the person's decision: nothing asks them to confirm it.
   await ask(target, "¿Cuánto IVA pagué en julio?");
-  await expect(consent(target)).toBeVisible();
-  await expect(consent(target)).toContainText(
-    label("desktop.agent.consent_messages"),
-  );
-  // Declining sends nothing and gives the message back.
-  await consent(target)
-    .getByRole("button", { name: label("desktop.agent.consent_decline") })
-    .click();
-  await expect(consent(target)).toHaveCount(0);
-  await expect(field(target)).toHaveValue("¿Cuánto IVA pagué en julio?");
-  expect(await calls(target)).not.toContainEqual(
-    expect.stringMatching(/^agentSend /),
-  );
-
-  await field(target).press("Enter");
-  await consent(target)
-    .getByRole("button", { name: worded("desktop.agent.consent_allow") })
-    .click();
   const log = conversation(target);
   await expect(log).toContainText("¿Cuánto IVA pagué en julio?");
   await expect(log).toContainText("Leer los apuntes del libro del trimestre");
@@ -84,15 +67,17 @@ test("a message goes only with consent, and its reply streams in once", async ({
   expect(observed).toBeGreaterThanOrEqual(0);
   expect(sent).toBeGreaterThan(observed);
 
-  // The consent given covers the next message to the same model.
   await ask(target, "¿Y en agosto?");
   await expect(replies.last()).toHaveText(replyTo("¿Y en agosto?"));
-  await expect(consent(target)).toHaveCount(0);
+  // Two messages, two sends, and no question in between.
   expect(
-    (await calls(target)).filter((call) =>
-      call.startsWith("agentGrantConsent "),
-    ),
-  ).toHaveLength(1);
+    (await calls(target)).filter((call) => call.startsWith("agentSend ")),
+  ).toHaveLength(2);
+  await expect(
+    column(target).getByRole("region", {
+      name: worded("desktop.agent.consent_title"),
+    }),
+  ).toHaveCount(0);
 });
 
 test("a reply stopped while it is written says it was stopped", async ({
@@ -100,9 +85,6 @@ test("a reply stopped while it is written says it was stopped", async ({
 }) => {
   await open(target);
   await ask(target, "Repasa el trimestre");
-  await consent(target)
-    .getByRole("button", { name: worded("desktop.agent.consent_allow") })
-    .click();
   await expect(conversation(target)).toContainText("Lo miro");
   await column(target)
     .getByRole("button", { name: label("desktop.agent.stop") })
@@ -126,9 +108,6 @@ test("text the stream never sent is recovered from the history", async ({
 }) => {
   await open(target, "signed-in", "&stream=gap");
   await ask(target, "Hola");
-  await consent(target)
-    .getByRole("button", { name: worded("desktop.agent.consent_allow") })
-    .click();
   const replies = agentTurns(target);
   await expect(replies).toHaveText([
     "Lo miro en tus apuntes.",
@@ -154,4 +133,46 @@ test("an agent that cannot serve says why, and nothing can be sent", async ({
       name: `${label("desktop.agent.send")}, ${label("desktop.agent.unavailable")}`,
     }),
   ).toBeVisible();
+});
+
+test("the providers, models and efforts offered are the agent's own catalog", async ({
+  page: target,
+}) => {
+  await open(target);
+  await column(target)
+    .getByRole("button", { name: /^Model and effort|^Modelo/ })
+    .first()
+    .click();
+  const settings = target.getByRole("dialog", {
+    name: label("desktop.agent.settings_title"),
+  });
+  const provider = settings.getByRole("combobox", {
+    name: label("desktop.agent.provider"),
+  });
+  // Every lane the catalog lists, and those that cannot run held back.
+  await expect(provider.locator("option")).toHaveCount(12);
+  await expect(provider.locator("option:disabled")).toHaveCount(8);
+  await provider.selectOption({ label: "OpenAI" });
+  const model = settings.getByRole("combobox", {
+    name: label("desktop.agent.model"),
+  });
+  const effort = settings.getByRole("combobox", {
+    name: label("desktop.agent.effort"),
+  });
+  // The lane's recommended model, with the efforts that model takes.
+  await expect(model).toHaveValue("fixture-ultra");
+  await expect(effort.locator("option")).toHaveText([
+    label("desktop.agent.effort_high"),
+    label("desktop.agent.effort_ultra"),
+  ]);
+  // Another model takes other efforts, and a setting of its own.
+  await model.selectOption("fixture-tiered");
+  await expect(effort.locator("option")).toHaveText([
+    label("desktop.agent.effort_low"),
+    label("desktop.agent.effort_medium"),
+    label("desktop.agent.effort_high"),
+  ]);
+  await expect(
+    settings.getByRole("combobox", { name: "Fixture service tier" }),
+  ).toHaveValue("standard");
 });

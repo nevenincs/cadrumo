@@ -11,14 +11,14 @@ a scan's wall time.
 from __future__ import annotations
 
 import gc
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 
 __all__ = ["cyclic_gc_paused"]
 
 
 @contextmanager
-def cyclic_gc_paused() -> Iterator[None]:
+def cyclic_gc_paused() -> Generator[None]:
     """Disable the cyclic collector for the block, then restore its prior state.
 
     Cyclic garbage created inside the block is deferred, not lost: the collector

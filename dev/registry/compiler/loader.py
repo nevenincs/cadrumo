@@ -6,7 +6,7 @@ sources into registry schema models; shipped runtime reads a published, digest-c
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Generator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import asdict
 from datetime import date
@@ -103,7 +103,7 @@ def _authored_fact_authority(
 
 
 @contextmanager
-def _modelo_facts_in_scope(modelo_directory: Path) -> Iterator[None]:
+def _modelo_facts_in_scope(modelo_directory: Path) -> Generator[None]:
     """Scope a modelo's validation to the governed facts authored beside it.
 
     A binding declares registry vocabulary -- an IVA rate tier, a cash-accounting
@@ -131,7 +131,7 @@ def _modelo_facts_in_scope(modelo_directory: Path) -> Iterator[None]:
 
 
 @contextmanager
-def modelo_fact_scope(modelo_directory: Path) -> Iterator[None]:
+def modelo_fact_scope(modelo_directory: Path) -> Generator[None]:
     """Expose the compiler's candidate-fact scope to authoring proofs.
 
     A migration that reconstructs typed members outside a complete modelo load

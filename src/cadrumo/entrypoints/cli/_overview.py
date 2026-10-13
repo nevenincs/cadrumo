@@ -248,7 +248,7 @@ def overview_agenda(
         raise bad(tr("cli.overview.agenda.errors.invalid_horizon"))
     query = _request(
         OverviewReadKind.AGENDA,
-        as_of=_parse_iso_date(as_of, label="--date") if as_of else today_madrid(),
+        as_of=_parse_iso_date(as_of, label="--date") if (as_of is not None and as_of) else today_madrid(),
         horizon_days=horizon_days,
         allow_incomplete=allow_incomplete,
     )
@@ -412,7 +412,11 @@ def _overview_calendar_survey_output(
     )
     profiles: list[dict[str, object]] = []
     notices: list[Notice] = []
-    if survey.active_calendar is not None and survey.active_profile_id and survey.active_label:
+    if (
+        survey.active_calendar is not None
+        and (survey.active_profile_id is not None and survey.active_profile_id)
+        and (survey.active_label is not None and survey.active_label)
+    ):
         calendar = survey.active_calendar.to_calendar()
         if calendar.warnings and not allow_incomplete:
             raise _incomplete_refusal(

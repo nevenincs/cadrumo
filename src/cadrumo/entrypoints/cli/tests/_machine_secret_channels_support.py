@@ -7,7 +7,7 @@ import os
 import subprocess
 import sys
 import tempfile
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable, Generator, Iterator, Sequence
 from contextlib import ExitStack, contextmanager, suppress
 from pathlib import Path
 from textwrap import dedent
@@ -289,7 +289,7 @@ def _settings(storage_root: Path, *, output_language: OutputLanguage = OutputLan
 
 
 @contextmanager
-def _payload_channels(inherited_payloads: Sequence[str | bytes]) -> Iterator[list[int]]:
+def _payload_channels(inherited_payloads: Sequence[str | bytes]) -> Generator[list[int]]:
     """Expose readable payload descriptors and always close their transport files."""
     readers: list[int] = []
     writers: list[int] = []

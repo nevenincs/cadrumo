@@ -94,7 +94,7 @@ def test_oss_detail_owners_remain_distinct_and_missing_settlement_is_disclosed(s
             sheet = workbook[cell.address.tab.value]
             assert sheet.row_dimensions[cell.address.row].hidden
             assert sheet[cell.address.a1].value == "=" + cell.formula
-        elif cell.casilla_id and cell.address.tab is TabName.CALCULOS:
+        elif (cell.casilla_id is not None and cell.casilla_id) and cell.address.tab is TabName.CALCULOS:
             assert (cell.address.tab, cell.address.row) not in hidden
     reference_labels = {cell.value for cell in plan.value_cells if cell.address.tab is TabName.PROVENANCE}
     assert not {casilla.label for casilla in internal.values()} & reference_labels

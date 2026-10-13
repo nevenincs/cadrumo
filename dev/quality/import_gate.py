@@ -346,7 +346,7 @@ def run_import_linter(
     environment = os.environ.copy()
     import_paths = [str(root.source_root) for root in authority.roots]
     existing = environment.get("PYTHONPATH")
-    if existing:
+    if existing is not None and existing:
         import_paths.append(existing)
     environment["PYTHONPATH"] = os.pathsep.join(dict.fromkeys(import_paths))
     environment["PYTHONIOENCODING"] = UTF_8
@@ -471,7 +471,7 @@ def run_loadability(
     environment = os.environ.copy()
     import_paths = list(harness_roots)
     existing = environment.get("PYTHONPATH")
-    if existing:
+    if existing is not None and existing:
         import_paths.append(existing)
     environment["PYTHONPATH"] = os.pathsep.join(dict.fromkeys(import_paths))
     environment["PYTHONIOENCODING"] = UTF_8
@@ -481,7 +481,7 @@ def run_loadability(
         with tempfile.TemporaryDirectory(
             prefix="cadrumo-import-loadability-", dir=prepare_temporary_directory()
         ) as temporary:
-            if artifact_directory:
+            if artifact_directory is not None and artifact_directory:
                 report_path = resolve_storage_path(artifact_directory) / "import-loadability.json"
                 report_path.parent.mkdir(parents=True, exist_ok=True)
             else:
@@ -508,7 +508,7 @@ def run_loadability(
             )
             decoded_payload = _loadability_report_object(report_path)
             payload = _validate_loadability_report(decoded_payload)
-            if artifact_directory:
+            if artifact_directory is not None and artifact_directory:
                 payload["artifact"] = str(report_path)
     except StepBudgetExceededError as exc:
         unavailable["operational_error"] = f"loadability probe {exc}"
@@ -537,7 +537,11 @@ def _load_harness_import_roots() -> tuple[str, ...] | str:
     roots: list[str] = []
     for package in _LOAD_HARNESS_PACKAGES:
         spec = importlib.util.find_spec(package)
-        if spec is None or spec.origin is None or not spec.submodule_search_locations:
+        if (
+            spec is None
+            or spec.origin is None
+            or not (spec.submodule_search_locations is not None and spec.submodule_search_locations)
+        ):
             return f"loadability harness package {package!r} is not a regular package in the tool environment"
         roots.append(str(Path(spec.origin).resolve().parents[1]))
     return tuple(dict.fromkeys(roots))
@@ -775,7 +779,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
     env_root = os.environ.get(_ROOT_ENV)
-    repository = args.root or (Path(env_root) if env_root else REPO_ROOT)
+    repository = args.root or (Path(env_root) if (env_root is not None and env_root) else REPO_ROOT)
     lint_executable = args.lint_executable or os.environ.get(_LINTER_ENV)
     budget = StepBudget(args.cpu_budget, args.stall_seconds) if args.cpu_budget is not None else None
     if budget is None and args.stall_seconds != _STALL_SECONDS:
@@ -858,7 +862,7 @@ def _subordinate_environment(authority: Authority) -> dict[str, str]:
     environment = os.environ.copy()
     import_paths = [str(_CHECKER_PATH.parents[2]), *(str(root.source_root) for root in authority.roots)]
     existing = environment.get("PYTHONPATH")
-    if existing:
+    if existing is not None and existing:
         import_paths.append(existing)
     _set_subordinate_environment(environment, import_paths)
     return environment

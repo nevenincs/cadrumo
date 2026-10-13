@@ -13,12 +13,12 @@ from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support imp
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.export.tabular import ExportSerializationFormat
 from cadrumo.application.ledger.actions_export import export_ledger_transactions
-from cadrumo.application.ledger.actions_manual import create_manual_transaction
 from cadrumo.application.ledger.models import LedgerExportCommand, ManualLedgerTransactionCommand
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.transactions.enums import TransactionDirection
 
+from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from .ledger_action_persistence_support import (
     BUCKET_ID as _BUCKET_ID,
 )

@@ -495,7 +495,9 @@ def _correction_value_pages(
                 id=_value_page_id(row.casilla_id),
                 widget=FlowWidgetKind.DECIMAL,
                 prompt=CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=prompt_ref),
-                help=CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=help_ref) if help_ref else None,
+                help=CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=help_ref)
+                if (help_ref is not None and help_ref)
+                else None,
                 required=True,
                 answer_type=str,
             )
@@ -504,7 +506,7 @@ def _correction_value_pages(
 
 
 def _value_help_ref(*, row: ModeloCasillaRow, run_token: str, table: dict[str, str]) -> str | None:
-    if not row.help_text:
+    if not (row.help_text is not None and row.help_text):
         return None
     help_ref = _copy_ref(run_token, f"val:{row.casilla_id}:help")
     table[help_ref] = row.help_text
@@ -642,10 +644,13 @@ def _emit_amend_wizard_result(
             "corrected_casillas": corrected_payload,
         }
     )
+    motive_value = (
+        m303_rectificativa_motive.value if m303_rectificativa_motive is not None and m303_rectificativa_motive else ""
+    )
     lines = [
         "operation\tmodelo.work.amend_wizard",
         f"amendment_kind\t{amendment_kind.value}",
-        f"m303_rectificativa_motive\t{(m303_rectificativa_motive.value if m303_rectificativa_motive else '')}",
+        f"m303_rectificativa_motive\t{motive_value}",
         *filing_record_lines(record),
         *(
             f"corrected\t{row.number}\t{previous_value}\t{corrected_value}"

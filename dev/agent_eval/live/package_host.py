@@ -206,7 +206,11 @@ def parse_export(file: Path, modelo: str, filing_year: int, period: str) -> int:
         {
             "event": "parsed_export",
             "layout_id": str(parsed.layout_id),
-            "casillas": {str(item.casilla_id): str(item.value) for item in parsed.casillas if item.casilla_id},
+            "casillas": {
+                str(item.casilla_id): str(item.value)
+                for item in parsed.casillas
+                if (item.casilla_id is not None and item.casilla_id)
+            },
         }
     )
     return 0

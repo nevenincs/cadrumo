@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import os
 import threading
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager, suppress
 from typing import Final
 
@@ -50,7 +50,7 @@ def _relay_the_code(handoff_read: int, verification_write: int) -> None:
 
 
 @contextmanager
-def scripted_registration_descriptors() -> Iterator[tuple[int, int]]:
+def scripted_registration_descriptors() -> Generator[tuple[int, int]]:
     """Yield the ``(handoff_write, verification_read)`` descriptors for one enrolment.
 
     The two yielded descriptors are the verb's ends of the exchange. The

@@ -30,8 +30,12 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import close
 from cadrumo.application.operations.frontend_requests import OperationResultProjectionSuccessV1
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.enrollment_access import RuntimeEnrollmentPrepare, RuntimeEnrollmentReconcile
-from cadrumo.application.runtime.profile_access import RuntimeAccessRefusal
-from cadrumo.application.user_profile.access_contracts import AccessAction
+from cadrumo.application.runtime.profile_access import (
+    RuntimeAccessRefusal,
+    RuntimeProfileStatus,
+    RuntimeSessionRequest,
+)
+from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
 from cadrumo.application.user_profile.automation_enrollment import (
     AutomationReceiptProjection,
@@ -103,6 +107,7 @@ def test_exact_key_requests_reviewed_grant_change(tmp_path: Path, kind: Enrollme
                         cleanup.callback(connection.close)
                     api = RuntimeFrontendClient(raw, profile_id=profile_id, frontend=OperationFrontendProjection.CLI)
                     api.login_api_key(bytearray(original_secret.get_secret_value()), timeout=25)
+                    old_session = api.session_id
                     human_id = _login(human, profile_id, method="password", proof=PROFILE_INPUT.encode())
                     for connection, session_id in ((foreign, api.session_id), (human, human_id)):
                         refused = connection.enrollment_prepare(
@@ -263,16 +268,30 @@ def test_exact_key_requests_reviewed_grant_change(tmp_path: Path, kind: Enrollme
                     else:
                         assert current.generation == grant.generation + 1
                         assert completed.key_id is None and completed.credential_reference is None
-                        try:
-                            status = api.status()
-                        except RuntimeFrontendRefusedError as error:
-                            assert error.reason == "connection_mismatch"
-                        else:
-                            assert status.status.denial is not None
-                        with pytest.raises((AutomationCustodyError, RuntimeFrontendRefusedError)):
-                            api.prepare_grant_change(subject.client_native)
                         assert requester_done.credential is None
-                    assert fresh.session_id != api.session_id
+                    # The runtime retires the old lease: a renewed or rescoped
+                    # grant is a new generation, and a rotated predecessor key
+                    # now expires before the lease would. Ask the runtime on the
+                    # old lease's own connection, not the client's cleared view.
+                    retired = raw.session(
+                        RuntimeSessionRequest(
+                            action="session_status",
+                            request_id=uuid4(),
+                            profile_id=profile_id,
+                            session_id=old_session,
+                        ),
+                        deadline=time.monotonic() + 5,
+                    )
+                    # An access refusal, never a transport failure: the old
+                    # connection is still live and only its lease is gone.
+                    if isinstance(retired, RuntimeAccessRefusal):
+                        assert isinstance(retired.code, AccessDenialCode)
+                    else:
+                        assert isinstance(retired, RuntimeProfileStatus)
+                        assert retired.status.denial is not None
+                    with pytest.raises((AutomationCustodyError, RuntimeFrontendRefusedError)):
+                        api.prepare_grant_change(subject.client_native)
+                    assert fresh.session_id != old_session
                     recovered = fresh.reconcile_enrollment(submitted.request_id)
                     assert recovered == completed
                     with pytest.raises(RuntimeFrontendRefusedError):

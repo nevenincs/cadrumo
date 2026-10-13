@@ -214,10 +214,12 @@ def _compose_address(domicilio: CensalObservationAddress) -> str | None:
             domicilio.puerta,
             domicilio.complemento,
         )
-        if part and part.strip()
+        if (part is not None and part) and part.strip()
     ).strip()
     tail = " ".join(
-        part for part in (domicilio.codigo_postal, domicilio.municipio, domicilio.provincia) if part and part.strip()
+        part
+        for part in (domicilio.codigo_postal, domicilio.municipio, domicilio.provincia)
+        if (part is not None and part) and part.strip()
     ).strip()
     composed = ", ".join(part for part in (street, tail) if part)
     return composed or None

@@ -247,7 +247,7 @@ async def test_bulk_confirm_repeats_the_header_result_line_first_and_titles_in_t
     assert shown == status_line
     assert status.y == first_row
     assert title.y == status.bottom
-    assert bold
+    assert bold is not None and bold
     assert colour == foreground
     assert intro_colour != colour
     for region in regions:

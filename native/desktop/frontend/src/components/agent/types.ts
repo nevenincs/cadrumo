@@ -2,6 +2,13 @@
 // only and follow no wire format: whatever serves the column maps its own
 // answers onto these shapes.
 
+/** One of a few things to choose among, as shown. */
+export type Choice = {
+  id: string;
+  name: string;
+  description?: string;
+};
+
 /** A model provider the person can choose, or see and not choose. */
 export type ProviderOption = {
   id: string;
@@ -9,25 +16,43 @@ export type ProviderOption = {
   selectable: boolean;
   /** Why it cannot be chosen, shown beside it when `selectable` is false. */
   unavailableReason?: string;
+  /** The model chosen with it, where its catalog recommends one. */
+  defaultModelId?: string;
 };
 
-/** A model one provider offers, with the efforts it can work at. */
+/** A setting of the provider's own that a model takes, such as a service
+ * tier, with the options it offers. */
+export type ModelControl = {
+  id: string;
+  name: string;
+  description?: string;
+  options: readonly Choice[];
+  defaultOptionId?: string;
+};
+
+/** A model one provider offers, with the efforts it can work at and the
+ * settings it takes, each the model's own. */
 export type ModelOption = {
   id: string;
   name: string;
   /** One line saying what the model is for, where the provider says. */
   description?: string;
-  /** The efforts it accepts, as shown to the person, in the order shown.
-   * Empty when the model takes no effort setting. */
-  efforts: readonly string[];
+  /** The efforts it accepts, in the order shown. Empty when the model takes
+   * no effort setting. */
+  efforts: readonly Choice[];
   defaultEffort?: string;
+  controls?: readonly ModelControl[];
+  /** What it has been proven able to do, already worded. */
+  capabilities?: readonly string[];
 };
 
-/** The provider, model and effort a conversation runs with. */
+/** The provider, model, effort and settings a conversation runs with. */
 export type AgentSelection = {
   providerId: string;
   modelId: string;
   effort?: string;
+  /** The option chosen for each of the model's settings, by setting id. */
+  controls?: Readonly<Record<string, string>>;
 };
 
 /** What a file is, as far as how it is drawn goes. */

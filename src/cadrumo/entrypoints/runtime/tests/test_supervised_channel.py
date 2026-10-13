@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from collections.abc import Iterator
+from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from pathlib import Path
@@ -111,7 +111,7 @@ class _Pipes:
 
 
 @contextmanager
-def _channel(stop: RuntimeStop | None = None) -> Iterator[tuple[_Pipes, SupervisorChannel]]:
+def _channel(stop: RuntimeStop | None = None) -> Generator[tuple[_Pipes, SupervisorChannel]]:
     pipes = _Pipes()
     channel = SupervisorChannel(pipes.streams(), logger=_LOGGER)
     try:

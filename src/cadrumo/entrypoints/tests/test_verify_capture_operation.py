@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -73,7 +73,7 @@ class _ExecutionAuthority:
         self.events.append(f"require:{action.value}")
 
     @asynccontextmanager
-    async def commit_guard(self, identity: object) -> AsyncIterator[None]:
+    async def commit_guard(self, identity: object) -> AsyncGenerator[None]:
         assert identity is not None
         self.guard_calls += 1
         guard_number = self.guard_calls

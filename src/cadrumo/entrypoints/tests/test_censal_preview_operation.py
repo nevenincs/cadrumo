@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 from uuid import UUID, uuid4
@@ -66,7 +66,7 @@ class _PreviewBrowserResources:
         self.closed = False
 
     @contextmanager
-    def activate(self) -> Iterator[None]:
+    def activate(self) -> Generator[None]:
         assert not self.active
         assert not self.closed
         task = asyncio.current_task()

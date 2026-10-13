@@ -8,7 +8,7 @@ related:
   - '[[2026-10-12-mcp-parity-attended-live-sign-in-adr]]'
 modified: '2026-10-13'
 body_schema: body-v2
-body_hash: 'sha256:b9768fc55b65bc85a49308b7d823806727cb05688032807071402aa95be2180f'
+body_hash: 'sha256:d021269dfb8b4c8304ef7642bdae8b607d1d7aaed20e14f6398d00e2eef43921'
 ---
 
 # `attended-live-sign-in` plan
@@ -27,6 +27,7 @@ On 2026-10-13 the operator asked for the plan-close review findings in `2026-10-
 - [x] `S04` - Docs and governance: separate-storage guide setup/teardown contract, amendments to the four related ADRs; `docs/how-to, .vault/adr`.
 - [x] `S05` - Packaged lifecycle proof: rebuild the bundle and prove operator auth, attended MCP reads, review approval, refusals, logout/lock/expiry, runtime stop and no persistence; `dev/runtime_lifecycle, justfile`.
 - [x] `S06` - Fix the plan-close review findings: expired attended leases refuse as session expired, the holder sees the asking program's path, a refused approval restores the recipient's client id, an ended approval makes no unclaimed ask, logout tries the stored sign-in before the password, and the attendance bounds are tested; `src/cadrumo, docs/how-to`.
+- [ ] `S07` - Resolve the S06 re-review findings and read the asking program's path on Linux and macOS, then rebuild the bundle and rerun the packaged proof; `src/cadrumo, docs/how-to, build/windows-x64/stage`.
 
 ## Parallelization
 

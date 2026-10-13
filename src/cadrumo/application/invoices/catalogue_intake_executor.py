@@ -175,7 +175,9 @@ class _InvoiceIntakeRun:
             source,
             bucket_id=str(self.payload.profile_id),
             kind=self.payload.kind,
-            declared_country=self.payload.country.strip().upper() if self.payload.country else None,
+            declared_country=self.payload.country.strip().upper()
+            if (self.payload.country is not None and self.payload.country)
+            else None,
             ports=ports.creation(),
             operation=operation,
         )

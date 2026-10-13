@@ -61,6 +61,34 @@ class CadrumoLlmSettings(CadrumoIntegrationSettings):
         default=None,
         description="Google Gemini API key (optional)",
     )
+    cadrumo_llm_kimi_api_key: SecretStr | None = Field(
+        default=None,
+        description="Kimi API key for the development-mode provider-settings fallback (optional)",
+    )
+    cadrumo_llm_zai_api_key: SecretStr | None = Field(
+        default=None,
+        description="Z.ai API key for the development-mode provider-settings fallback (optional)",
+    )
+    cadrumo_llm_zhipu_api_key: SecretStr | None = Field(
+        default=None,
+        description="Zhipu AI API key for the development-mode provider-settings fallback (optional)",
+    )
+    cadrumo_llm_deepseek_api_key: SecretStr | None = Field(
+        default=None,
+        description="DeepSeek API key for the development-mode provider-settings fallback (optional)",
+    )
+    cadrumo_llm_moonshot_api_key: SecretStr | None = Field(
+        default=None,
+        description="Moonshot AI API key for the development-mode provider-settings fallback (optional)",
+    )
+    cadrumo_llm_minimax_api_key: SecretStr | None = Field(
+        default=None,
+        description="MiniMax API key for the development-mode provider-settings fallback (optional)",
+    )
+    cadrumo_llm_qwen_api_key: SecretStr | None = Field(
+        default=None,
+        description="Qwen API key for the development-mode provider-settings fallback (optional)",
+    )
     cadrumo_llm_cache_dir: Path = Field(
         default=Path("cache") / "llm-cache",
         description="Directory for on-disk LLM cache entries",

@@ -65,7 +65,7 @@ _NOT_RESOLVED = (ProfileAccessRefusedError, CadrumoError, ValueError, LookupErro
 
 def _listed() -> tuple[str, ...]:
     operations = MCP_SURFACES[_READ_ONLY_LOCAL].operations
-    assert operations
+    assert operations is not None and operations
     return tuple(sorted(operations))
 
 

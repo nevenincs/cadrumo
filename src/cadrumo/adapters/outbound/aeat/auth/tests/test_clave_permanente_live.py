@@ -88,7 +88,9 @@ async def test_clave_permanente_provider_full_login_with_central_playwright() ->
     Móvil live suite.
     """
     settings = _settings_or_skip()
-    if not settings.cadrumo_clave_permanente_dni_nie or not settings.cadrumo_clave_permanente_password:
+    if not (
+        settings.cadrumo_clave_permanente_dni_nie is not None and settings.cadrumo_clave_permanente_dni_nie
+    ) or not (settings.cadrumo_clave_permanente_password is not None and settings.cadrumo_clave_permanente_password):
         pytest.fail(
             "CADRUMO_CLAVE_PERMANENTE_DNI_NIE and CADRUMO_CLAVE_PERMANENTE_PASSWORD "
             "are not both configured after live opt-in",

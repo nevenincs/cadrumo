@@ -125,7 +125,7 @@ def _bindings(query: ReferenceQuery, operation: PinnedAuthorityOperation) -> Bas
 def _pinned(query: ReferenceQuery, operation: PinnedAuthorityOperation) -> BaseModel:
     read = query.read
     if read is ReferenceRead.MODELOS:
-        domain = TaxDomain(query.domain) if query.domain else None
+        domain = TaxDomain(query.domain) if (query.domain is not None and query.domain) else None
         return catalogue.list_modelos(year=query.year, domain=domain, operation=operation)
     if read is ReferenceRead.SUPPORT_MATRIX:
         return catalogue.read_support_matrix(operation=operation)
@@ -146,7 +146,7 @@ def _pinned(query: ReferenceQuery, operation: PinnedAuthorityOperation) -> BaseM
             year=year,
             period=period,
             as_of=as_of,
-            input_kind=InputKind(query.input_kind) if query.input_kind else None,
+            input_kind=InputKind(query.input_kind) if (query.input_kind is not None and query.input_kind) else None,
             required=query.required,
             form_number=query.form_number,
             casilla_number=query.casilla_number,
@@ -163,8 +163,8 @@ def _unpinned(query: ReferenceQuery) -> BaseModel:
     read = query.read
     if read is ReferenceRead.PORTALS:
         return catalogue.list_portals(
-            category=PortalCategory(query.category) if query.category else None,
-            modelo=Modelo(query.modelo) if query.modelo else None,
+            category=PortalCategory(query.category) if (query.category is not None and query.category) else None,
+            modelo=Modelo(query.modelo) if (query.modelo is not None and query.modelo) else None,
         )
     if read is ReferenceRead.PORTAL:
         return catalogue.view_portal(_required(query.portal, "portal"))

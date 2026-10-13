@@ -311,7 +311,7 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
         "schema": CONTRACT_SCHEMA,
         "channel": {"build": build_channel, "installed_directory": STORAGE_ROOT.channel_directory(build_channel)},
         "layout": layout,
-        "linux_desktop_runtime": desktop_runtime_declaration(layout) if desktop_path(layout) else None,
+        "linux_desktop_runtime": desktop_runtime_declaration(layout) if bool(desktop_path(layout)) else None,
         "installation_identity": {"application_id": release.application_id, "channel": release.channel},
         "python": version,
         "release": {

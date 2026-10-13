@@ -52,7 +52,7 @@ def run_ledger_attach(
             transaction_id=transaction_id,
             purchase_invoice_evidence_id=purchase_invoice_evidence_id,
             attachment_ids=attachment_ids,
-            actor=actor if actor else None,
+            actor=actor if (actor is not None and actor) else None,
         )
     except ValidationError as error:
         raise ledger_validation_bad(error) from error
@@ -77,7 +77,7 @@ def run_ledger_detach(
             profile_id=client.profile_id,
             transaction_id=transaction_id,
             attachment_ids=attachment_ids,
-            actor=actor if actor else None,
+            actor=actor if (actor is not None and actor) else None,
         )
     except ValidationError as error:
         raise ledger_validation_bad(error) from error

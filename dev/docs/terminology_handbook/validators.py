@@ -48,7 +48,7 @@ def _approved_spanish_failures(concept: ConceptRecord, failures: list[str]) -> N
     if es is None:
         failures.append(f"concept {concept.concept_id!r}: approved concept has no es language section")
     else:
-        if not (es.definition and es.definition.strip()):
+        if not ((es.definition is not None and es.definition) and es.definition.strip()):
             failures.append(f"concept {concept.concept_id!r}: approved es section has no definition")
         if es.source is None or not es.source.citation.strip():
             failures.append(f"concept {concept.concept_id!r}: approved es section has no source citation")

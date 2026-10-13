@@ -20,7 +20,7 @@ See Also:
 from __future__ import annotations
 
 import zipfile
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from decimal import Decimal
 from pathlib import Path
@@ -45,7 +45,7 @@ _CIF = "A58818501"
 
 
 @contextmanager
-def _in_memory_ports() -> Iterator[CatalogueCreationPorts]:
+def _in_memory_ports() -> Generator[CatalogueCreationPorts]:
     yield in_memory_catalogue_creation_ports()
 
 

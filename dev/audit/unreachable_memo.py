@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import ast
-from collections.abc import Iterable, Iterator
+from collections.abc import Generator, Iterable
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
@@ -30,7 +30,7 @@ _SCAN_MEMO: ContextVar[_ScanMemo | None] = ContextVar("unreachable_code_scan_mem
 
 
 @contextmanager
-def shared_scan_memo() -> Iterator[None]:
+def shared_scan_memo() -> Generator[None]:
     """Share parses and node walks among every pass run inside the block.
 
     A scan that composes several of this module's passes over the same trees

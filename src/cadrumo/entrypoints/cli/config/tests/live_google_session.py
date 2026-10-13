@@ -15,12 +15,13 @@ import runpy
 import subprocess
 import sys
 import time
+from collections.abc import Generator
 from contextlib import contextmanager, suppress
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, cast
 
 if TYPE_CHECKING:
-    from collections.abc import Awaitable, Iterator
+    from collections.abc import Awaitable
 
     from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 
@@ -162,7 +163,7 @@ async def _recover_exact_failed_tui_review(client: RuntimeFrontendClient) -> dic
 
 
 @contextmanager
-def _owned_runtime_job() -> Iterator[int]:
+def _owned_runtime_job() -> Generator[int]:
     """Keep the native kill-on-close handle owned through setup and teardown."""
     if sys.platform != "win32":
         raise RuntimeError("owned runtime jobs require Windows")

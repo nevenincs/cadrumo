@@ -309,7 +309,7 @@ def _observation_from_socio(socio: _SocioFacts, *, filing_year: int) -> Atributi
 
 def _x_flag(value: bool | None) -> str | None:
     """Render a boolean profile fact as the diseño's own "X"/blank text flag."""
-    return "X" if value else None
+    return "X" if (value is not None and value) else None
 
 
 def _detail_row_from_socio(socio: _SocioFacts) -> Modelo184MemberRow:

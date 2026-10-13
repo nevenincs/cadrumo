@@ -381,7 +381,7 @@ def _format_constraint_sentences(
     constraints: CasillaConstraints, language: OutputLanguage, *, phrase: _HelpPhrase
 ) -> tuple[str, ...]:
     sentences: list[str] = []
-    if constraints.enum:
+    if constraints.enum is not None and constraints.enum:
         sentences.append(phrase(language, "constraint.choices", choices=", ".join(constraints.enum)))
     if constraints.pattern is not None:
         sentences.append(phrase(language, "constraint.format"))

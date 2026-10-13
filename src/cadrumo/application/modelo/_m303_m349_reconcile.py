@@ -249,7 +249,7 @@ def _reconcile_revision_for_work_unit(
 ) -> CalculationRevision | None:
     """Resolve the strongest current calculation revision for a work unit."""
     for pointer in (unit.filed_calculation_revision_id, unit.current_calculation_revision_id):
-        if pointer:
+        if pointer is not None and pointer:
             revision = revisions.get(pointer)
             if revision is not None:
                 _require_revision_belongs_to_unit(revision, unit, operation=operation)

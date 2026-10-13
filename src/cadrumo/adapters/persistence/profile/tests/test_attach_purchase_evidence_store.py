@@ -36,7 +36,6 @@ from cadrumo.adapters.persistence.profile.transactions import TransactionCatalog
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from cadrumo.application.ledger.actions_manual import (
     attach_manual_transaction_evidence,
-    create_manual_transaction,
     update_manual_transaction_fields,
 )
 from cadrumo.application.ledger.models import (
@@ -47,6 +46,7 @@ from cadrumo.application.ledger.models import (
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.errors import TransactionValidationError
 
+from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from .ledger_action_create_support import ledger_ports_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

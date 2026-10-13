@@ -298,7 +298,7 @@ async def render_progress_banner(
         notice_code = "auth.clave-movil.qr-scan-pending"
         instruction = "Scan the QR code in the visible browser with the Cl@ve app and confirm the AEAT request"
     display_code: str | None = None
-    if verification_code:
+    if verification_code is not None and verification_code:
         instruction = f"{instruction}. Verify that code {verification_code} matches in both places"
         candidate = verification_code.strip().upper()
         if re.fullmatch(OPERATOR_DISPLAY_CODE_PATTERN, candidate):

@@ -15,7 +15,7 @@ import sys
 import sysconfig
 import threading
 import time
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from importlib.metadata import version
 from pathlib import Path
@@ -55,7 +55,7 @@ def _environment(root: Path | None) -> dict[str, str]:
 
 
 @contextmanager
-def _caller_owned(environment: dict[str, str], directory: Path) -> Iterator[subprocess.Popen[bytes]]:
+def _caller_owned(environment: dict[str, str], directory: Path) -> Generator[subprocess.Popen[bytes]]:
     name = "cadrumo-runtime.exe" if sys.platform == "win32" else "cadrumo-runtime"
     executable = Path(sysconfig.get_path("scripts")) / name
     assert executable.is_file(), "install the current project entrypoints before installed acceptance"

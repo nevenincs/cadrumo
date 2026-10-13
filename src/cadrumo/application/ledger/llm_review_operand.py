@@ -155,8 +155,8 @@ def _project_split_child(child: LLMSplitChildSuggestion) -> LedgerLlmChildProjec
         proportion=_wire_decimal(child.proportion),
         amount=_wire_decimal(child.amount),
         description=child.description,
-        category=child.category.value if child.category else None,
-        iva_category=child.iva_category.value if child.iva_category else None,
+        category=child.category.value if (child.category is not None and child.category) else None,
+        iva_category=child.iva_category.value if (child.iva_category is not None and child.iva_category) else None,
         iva_rate=_wire_decimal(child.iva_rate) if child.iva_rate is not None else None,
         taxable_base=_wire_decimal(child.taxable_base) if child.taxable_base is not None else None,
         iva_amount=_wire_decimal(child.iva_amount) if child.iva_amount is not None else None,
@@ -190,7 +190,7 @@ def _project_classification_suggestion(
         reason=suggestion.reason,
         evidence_id=suggestion.evidence_id,
         classification=suggestion.classification.value,
-        category=suggestion.category.value if suggestion.category else None,
+        category=suggestion.category.value if (suggestion.category is not None and suggestion.category) else None,
         confidence=_wire_decimal(suggestion.confidence),
         multiple_components=suggestion.multiple_components,
     )
@@ -205,7 +205,9 @@ def _project_saturated_suggestion(
             **basic.model_dump(),
             "kind": "saturated",
             "business_pct": _wire_decimal(suggestion.business_pct) if suggestion.business_pct is not None else None,
-            "iva_category": suggestion.iva_category.value if suggestion.iva_category else None,
+            "iva_category": suggestion.iva_category.value
+            if (suggestion.iva_category is not None and suggestion.iva_category)
+            else None,
             "iva_rate": _wire_decimal(suggestion.iva_rate) if suggestion.iva_rate is not None else None,
             "taxable_base": _wire_decimal(suggestion.taxable_base) if suggestion.taxable_base is not None else None,
             "iva_amount": _wire_decimal(suggestion.iva_amount) if suggestion.iva_amount is not None else None,

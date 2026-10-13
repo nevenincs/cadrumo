@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from datetime import date
 from decimal import Decimal
@@ -215,7 +215,7 @@ def test_confirmation_boundary_refuses_a_reader_or_operator_self_counterparty(
         profile = TaxpayerProfile(tax_id=_COUNTERPARTY, iva_regime=require_iva_regime("GENERAL"))
 
     @contextmanager
-    def authority_operation() -> Iterator[object]:
+    def authority_operation() -> Generator[object]:
         yield SimpleNamespace(profile_schema=lambda: object())
 
     monkeypatch.setattr(

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 import pytest
@@ -53,7 +53,7 @@ _LIVE_MODELO = "130"
 
 
 @asynccontextmanager
-async def _fixture_persistence_guard() -> AsyncIterator[None]:
+async def _fixture_persistence_guard() -> AsyncGenerator[None]:
     """Allow this opt-in fixture to persist the expediente snapshot it inspects."""
     yield
 

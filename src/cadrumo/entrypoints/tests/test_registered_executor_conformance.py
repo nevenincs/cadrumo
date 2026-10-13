@@ -141,11 +141,7 @@ from ...application.invoices.catalogue_update_operation import (
     InvoiceUpdateResult,
 )
 from ...application.ledger.actions_import import LedgerProviderID
-from ...application.ledger.actions_manual import (
-    command_from_patch,
-    create_manual_transaction,
-    prepare_manual_transaction_update,
-)
+from ...application.ledger.actions_manual import command_from_patch, prepare_manual_transaction_update
 from ...application.ledger.actions_split_merge import split_transaction
 from ...application.ledger.allocate_operation import LedgerAllocateOperationResult, LedgerAllocateRequest
 from ...application.ledger.attachment_mutation_operation import (
@@ -217,6 +213,7 @@ from ...application.ledger.split_operation import (
     LedgerSplitRequest,
 )
 from ...application.ledger.status_operation import LedgerStatusProjection, LedgerStatusRequest
+from ...application.ledger.tests.manual_transaction_support import create_manual_transaction
 from ...application.ledger.track_operation import LedgerTrackProjection, LedgerTrackRequest
 from ...application.ledger.tracking_projection import (
     LedgerParticipationProjection as LedgerParticipationEntryProjection,
@@ -3799,7 +3796,7 @@ def test_censal_frontend_driver_reviews_one_acquisition_and_rolls_back_rejection
         assert result.applied is apply
         assert len(decisions) == 1
         assert len(decisions[0]) == len(CENSAL_ADOPTABLE_PATHS)
-        assert decisions[0][0]
+        assert decisions[0][0] is not None and decisions[0][0] != ""
         assert decisions[0][1] == "28013"
         assert cleanup.closed is True
         after = repository.load(profile_id)

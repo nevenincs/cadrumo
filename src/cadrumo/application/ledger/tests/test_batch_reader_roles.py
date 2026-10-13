@@ -18,7 +18,7 @@ application-owned probe port.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from http import HTTPStatus
 from typing import ClassVar, override
@@ -77,7 +77,7 @@ class _InventoryOnlyHandler(SilentLoopbackHandler):
 
 
 @contextmanager
-def _serving_inventory(*installed: str) -> Iterator[None]:
+def _serving_inventory(*installed: str) -> Generator[None]:
     """Point settings at a real runtime reporting exactly ``installed``."""
     _InventoryOnlyHandler.installed = installed
     with (

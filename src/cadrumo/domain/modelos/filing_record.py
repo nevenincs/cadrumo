@@ -561,7 +561,7 @@ class ModeloRecord(BaseModel):
     @override
     def model_copy(self, *, update: Mapping[str, object] | None = None, deep: bool = False) -> Self:
         copied = super().model_copy(update=update, deep=deep)
-        if update:
+        if update is not None and update:
             return type(self).model_validate(copied.model_dump(mode="python"))
         return copied
 

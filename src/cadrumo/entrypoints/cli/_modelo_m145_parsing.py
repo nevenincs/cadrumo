@@ -46,7 +46,7 @@ def m145_field_values_from_cli(
     parse_casilla_override: ParseCasillaOverride,
 ) -> dict[CasillaId, str]:
     """Parse repeated ``--casilla ID=VALUE`` tokens for the backend service."""
-    if not casilla_specs:
+    if not (casilla_specs is not None and casilla_specs):
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.m145.errors.casilla_required",

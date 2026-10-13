@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import replace
 from datetime import datetime
@@ -83,7 +83,7 @@ class _Scope:
         self.refuse = refuse
 
     @asynccontextmanager
-    async def irreversible_section(self) -> AsyncIterator[None]:
+    async def irreversible_section(self) -> AsyncGenerator[None]:
         if self.refuse:
             raise ProfileAccessRefusedError(AccessDenialCode.SESSION_INACTIVE)
         assert not self.held

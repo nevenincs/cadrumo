@@ -27,12 +27,12 @@ from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     bound_test_profile_record,
     upsert_test_profile_facts,
 )
-from ....application.ledger.actions_manual import create_manual_transaction
 from ....application.ledger.models import ManualLedgerTransactionCommand
 from ....application.ledger.participation_operation import LEDGER_PARTICIPATION_OPERATION_DEFINITION_ID
 from ....application.ledger.participation_rebuild_operation import (
     LEDGER_PARTICIPATION_REBUILD_OPERATION_DEFINITION_ID,
 )
+from ....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from ....application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from ....application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ....application.operations.persistence.events import OperationEffectEvent

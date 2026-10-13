@@ -491,7 +491,7 @@ class CasillaEditorPanel(Vertical):
     @override
     def compose(self) -> ComposeResult:
         field = self._field
-        box = f"[{field.box}] " if field.box else ""
+        box = f"[{field.box}] " if (field.box is not None and field.box) else ""
         with Vertical(id="editor-head"):
             if self._status_line is not None:
                 yield StatusBar(self._status_line, id="editor-status")

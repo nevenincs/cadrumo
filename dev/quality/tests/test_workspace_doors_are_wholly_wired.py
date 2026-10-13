@@ -70,7 +70,7 @@ def supplied_fields(source: str, factory: str = _FACTORY) -> frozenset[str]:
     supplied: set[str] = set()
     for node in ast.walk(ast.parse(source)):
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == factory:
-            supplied.update(kw.arg for kw in node.keywords if kw.arg)
+            supplied.update(kw.arg for kw in node.keywords if (kw.arg is not None and kw.arg))
     return frozenset(supplied)
 
 

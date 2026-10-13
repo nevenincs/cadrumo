@@ -2,10 +2,14 @@ import type { AgentConversationRecord, AgentTurnRecord } from "./agentViews";
 
 // What a host offers for working with the agent, beside the reads in
 // agentViews: the service's state, the providers and models it can run,
-// consent, sending a turn, the live stream of a conversation, and stopping a
-// reply. A host that cannot serve these offers none of them, and the column
-// shows sending as not available yet. Records are raw values on the wire,
+// sending a turn, the live stream of a conversation, and stopping a reply. A
+// host that cannot serve these offers none of them, and the column shows
+// sending as not available yet. Records are raw values on the wire,
 // snake_case, worded by the column in the chrome locale.
+//
+// Sending a message is the person's own act and is never asked about again.
+// What waits on the person's decision is what the agent would do: a tool
+// call, or a Cadrumo operation's review, each an approval.
 
 /** Why the agent service is not serving, as a stable code. */
 export type AgentServiceRefusal =
@@ -33,58 +37,122 @@ export type AgentServiceStatus = (
   lane?: "development";
 };
 
-/** One model a provider offers, as the provider's own model list names it.
- * Ids and names come from the provider at run time, never from the desktop. */
-export type AgentModelRecord = {
-  id: string;
+// The providers, models and what each can do are cadrumo-agent's own
+// provider catalog, field for field as its `/v1/provider-catalog` serves it:
+// the host relays the answer and the column deduces every choice from it.
+// Nothing here names a provider, a model, an effort a model takes or what it
+// can do.
+
+/** One axis of a lane's health. */
+export type AgentHealthState = "available" | "unavailable" | "unknown";
+
+export type AgentAuthenticationState =
+  "authenticated" | "unauthenticated" | "unknown" | "not_applicable";
+
+export type AgentCatalogStatus =
+  "available" | "unavailable" | "stale" | "unknown";
+
+export type AgentAdmissionState =
+  "admitted" | "unproven" | "not_admitted" | "unknown";
+
+/** How much reasoning a run asks its model for, lowest first. Which of these
+ * a model accepts is the model's own, in its catalog entry. */
+export type AgentEffort = "low" | "medium" | "high" | "xhigh" | "max" | "ultra";
+
+/** A capability a lane has, or has not, been proven to have. */
+export type AgentLaneCapability =
+  "tool_access" | "writing" | "web_retrieval" | "image_reading" | "pdf_reading";
+
+export type AgentLaneVerification =
+  "proven" | "unproven_version" | "unproven" | "not_applicable";
+
+/** One model a lane offers, as its catalog lists it. */
+export type AgentCatalogEntry = {
+  entry_id: string;
+  /** The model's id, as a run names it. */
+  model: string;
   display_name: string;
-  /** When the provider published it, as an ISO instant. */
-  created_at: string;
-  max_input_tokens?: number;
-  max_output_tokens?: number;
-  /** The efforts it accepts, in the order shown; empty when it takes none. */
-  efforts: string[];
-  default_effort?: string;
+  description?: string | null;
+  capabilities?: string[];
+  /** The lane's native controls this model takes. */
+  native_control_ids?: string[];
+  /** The efforts this model accepts; none when it takes no effort. */
+  efforts?: AgentEffort[];
+  default_effort?: AgentEffort | null;
 };
 
-/** One provider the agent can run, chosen or not. */
-export type AgentProviderRecord = {
-  id: string;
-  name: string;
-  selectable: boolean;
-  /** Why it cannot be chosen, as a stable code, when `selectable` is false. */
-  unavailable_reason?: string;
-  models: AgentModelRecord[];
+export type AgentNativeControlOption = {
+  option_id: string;
+  display_name: string;
+  description?: string | null;
 };
 
-/** The provider, model and effort a turn runs with. */
+/** A setting of the lane's own, such as a model configuration or a
+ * service tier, that some of its models take. */
+export type AgentNativeControl = {
+  control_id: string;
+  kind: "model_config" | "thought_level" | "service_tier" | "other";
+  display_name: string;
+  options?: AgentNativeControlOption[];
+  default_option_id?: string | null;
+  description?: string | null;
+};
+
+/** One way of running one provider, its health and its models. */
+export type AgentProviderLane = {
+  provider_id: string;
+  display_name: string;
+  execution_mode: string;
+  executable: boolean;
+  model_source: "catalog" | "declared";
+  aliases?: string[];
+  health: {
+    configured: AgentHealthState;
+    transport: AgentHealthState;
+    authentication: AgentAuthenticationState;
+    catalog: AgentCatalogStatus;
+    admission: AgentAdmissionState;
+    selectable: boolean;
+    reasons?: string[];
+    checked_at: string;
+  };
+  catalog: {
+    schema_version?: number;
+    state: {
+      status: AgentCatalogStatus;
+      checked_at: string;
+      revision?: string | null;
+      expires_at?: string | null;
+      reason?: string | null;
+    };
+    recommended_entry_id?: string | null;
+    models?: AgentCatalogEntry[];
+    native_controls?: AgentNativeControl[];
+  };
+  capability_proofs?: {
+    capability: AgentLaneCapability;
+    /** The model entry the proof is for; none for the whole lane. */
+    entry?: string | null;
+    state: AgentLaneVerification;
+  }[];
+};
+
+/** cadrumo-agent's provider catalog: every lane it knows, runnable or not. */
+export type AgentProviderCatalog = {
+  api_version?: string;
+  providers?: AgentProviderLane[];
+};
+
+/** What a turn runs with: a lane and one of its models, as the catalog
+ * names them. `provider`, `model` and `effort` are what a run takes. */
 export type AgentSelectionRecord = {
-  provider_id: string;
-  model_id: string;
-  effort?: string;
-};
-
-/** One thing a send would share with the provider. */
-export type AgentConsentItem =
-  | { kind: "messages" }
-  | { kind: "document"; id: string; name: string; digest: string }
-  | { kind: "tool_results" };
-
-/** What the person is asked to allow before a send: this provider and
- * model receiving these items. The column shows it and the person confirms
- * it; nothing grants it as a side effect of sending. */
-export type AgentConsentRequest = {
-  conversation_id: string;
-  provider_id: string;
-  model_id: string;
-  items: AgentConsentItem[];
-};
-
-/** A consent the person gave, as Cadrumo records it. */
-export type AgentConsentGrant = AgentConsentRequest & {
-  grant_id: string;
-  /** When it was given, as an ISO instant. */
-  granted_at: string;
+  provider: string;
+  execution_mode: string;
+  entry_id: string;
+  model: string;
+  effort?: AgentEffort;
+  /** The native controls chosen, by control id. */
+  controls?: { control_id: string; option_id: string }[];
 };
 
 /** One message the person sends. */
@@ -206,19 +274,12 @@ export interface AgentSession {
   observeStatus(
     listener: (status: AgentServiceStatus) => void,
   ): Promise<() => void>;
-  /** The providers and models the agent can run now. */
-  providers(): Promise<AgentProviderRecord[]>;
+  /** cadrumo-agent's provider catalog, as it serves it. */
+  providerCatalog(): Promise<AgentProviderCatalog>;
   /** A new, empty conversation of the signed-in profile. */
   startConversation(): Promise<AgentConversationRecord>;
-  /** What `request` would share that no grant covers, or null when a grant
-   * covers all of it. */
-  consentNeeded(request: AgentSendRequest): Promise<AgentConsentRequest | null>;
-  /** Records the person's consent. Only the person can give it. */
-  grantConsent(request: AgentConsentRequest): Promise<AgentConsentGrant>;
-  withdrawConsent(grantId: string): Promise<void>;
-  /** The conversation's grants in force. */
-  consents(conversationId: string): Promise<AgentConsentGrant[]>;
-  /** Refused with `agent_consent_required` when a grant is missing. */
+  /** Sends the person's message: pressing Send is their decision, and
+   * nothing asks them again. */
   send(request: AgentSendRequest): Promise<AgentSendResult>;
   /** Stops a reply that is still working; it settles as `stopped`. */
   cancel(replyId: string): Promise<void>;

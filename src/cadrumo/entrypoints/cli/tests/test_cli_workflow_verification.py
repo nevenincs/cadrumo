@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
-from collections.abc import Iterator, Mapping
+from collections.abc import Generator, Iterator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
@@ -60,7 +60,7 @@ def _as_group(command: object) -> TyperGroup:
 
 
 @contextmanager
-def _certificate_bearing_backend(backend: Path) -> Iterator[Path]:
+def _certificate_bearing_backend(backend: Path) -> Generator[Path]:
     # The round-trip helper writes its synthetic certificate to
     # ``<backend>/certificate.p12``. The certificate auth backend
     # probes the path from ``Settings.cadrumo_certificate_path``, so the

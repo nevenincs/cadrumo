@@ -250,7 +250,7 @@ def authenticated_identity_matches_expected(
     authenticated_identity: str | None,
     expected_tax_id: str | None,
 ) -> bool:
-    if not expected_tax_id:
+    if not (expected_tax_id is not None and expected_tax_id):
         return True
     return same_tax_identifier(authenticated_identity, expected_tax_id)
 
@@ -269,7 +269,9 @@ def filing_evidence_from_filed_declaration_observation(
     only when the storage layer has already verified and supplied the encrypted
     justificante artefact reference and CSV.
     """
-    if expected_tax_id and not same_tax_identifier(observation.authenticated_identity, expected_tax_id):
+    if (expected_tax_id is not None and expected_tax_id) and not same_tax_identifier(
+        observation.authenticated_identity, expected_tax_id
+    ):
         return None
     if not is_active_aeat_filing_status(observation.status):
         return _register_concern(observation.modelo, observation.ejercicio, observation.period, observation.status)
@@ -402,7 +404,9 @@ def _calculation_observation_evidence_input(
     if not aeat_reference_id:
         return None
     authenticated_identity = str(source_metadata.get("authenticated_identity", ""))
-    if expected_tax_id and not same_tax_identifier(authenticated_identity, expected_tax_id):
+    if (expected_tax_id is not None and expected_tax_id) and not same_tax_identifier(
+        authenticated_identity, expected_tax_id
+    ):
         return None
     observation = payload.observation
     period = _calculation_observation_period(observation.filing_year, observation.period, observation.filing_period)

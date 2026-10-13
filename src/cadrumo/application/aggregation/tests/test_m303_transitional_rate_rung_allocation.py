@@ -492,7 +492,7 @@ def test_total_cuota_devengada_covers_every_term_aeat_prints() -> None:
         target = str(formula.target_casilla_id) if formula.target_casilla_id else None
         operands = [str(a.casilla_id) for a in formula.expression.args if a.casilla_id is not None]
         source = getattr(formula.expression, "casilla_id", None)
-        if target and source is not None and not operands:
+        if (target is not None and target) and source is not None and not operands:
             projects[target] = str(source)
 
     uncovered = [

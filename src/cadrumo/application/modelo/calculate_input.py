@@ -279,13 +279,17 @@ class WorkCalculateInputBundle:
             casilla_inputs=dict(casilla_inputs),
             text_casilla_inputs=dict(text_casilla_inputs or {}),
             m210_official_tipo_renta_code=(
-                m210_official_tipo_renta_code.strip() if m210_official_tipo_renta_code else None
+                m210_official_tipo_renta_code.strip()
+                if (m210_official_tipo_renta_code is not None and m210_official_tipo_renta_code)
+                else None
             ),
             binding_values=dict(binding_values),
             enum_binding_values=dict(enum_binding_values),
             relation_values=dict(relation_values),
             detail_rows=detail_rows,
-            borrador_snapshot_id=borrador_snapshot_id.strip() if borrador_snapshot_id else None,
+            borrador_snapshot_id=borrador_snapshot_id.strip()
+            if (borrador_snapshot_id is not None and borrador_snapshot_id)
+            else None,
             filing_instance_evidence=filing_instance_evidence,
             m210_gross_income_source_mode=m210_gross_income_source_mode,
             shortcut_diagnostics=shortcut_diagnostics,

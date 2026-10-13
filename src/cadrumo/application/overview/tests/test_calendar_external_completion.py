@@ -32,7 +32,7 @@ def _row(operation: PinnedAuthorityOperation, observations, *, coordinate_change
         filed_declaration_observations=observations,
         expected_tax_id="X1234567L",
     )
-    if coordinate_change:
+    if coordinate_change is not None and coordinate_change:
         evidence = tuple(item.model_copy(update=coordinate_change) for item in evidence)
     calendar = build_overview_calendar(profile(), _RANGE, operation=operation, today=_AS_OF, filing_evidence=evidence)
     return next(item for item in calendar.entries if item.modelo == "303" and item.period == _PERIOD)

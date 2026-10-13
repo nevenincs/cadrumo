@@ -83,7 +83,7 @@ def resolve_auto_num_workers(config: pytest.Config) -> int:
         fall-through would do.
     """
     env_var = os.environ.get(_ENV_VAR)
-    if not env_var:
+    if not (env_var is not None and env_var):
         return DEFAULT_WORKER_COUNT
     try:
         return int(env_var)

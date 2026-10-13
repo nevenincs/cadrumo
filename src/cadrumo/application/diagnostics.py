@@ -334,12 +334,12 @@ def render_config_repair_text(report: _ConfigRepairReport) -> str:
             else f" [{tr('cli.diagnostics.repair.audience_internal')}]"
         )
         lines.append(f"{check.status}\t{check.name}\t{check.summary}{scope}")
-        if check.detail:
+        if check.detail is not None and check.detail:
             lines.append(f"{tr('cli.diagnostics.repair.detail_label')}\t{check.detail}")
         for finding in check.findings:
             tag = _finding_tag(finding)
             lines.append(f"{tr('cli.diagnostics.repair.finding_label')}\t{tag}{finding.summary}")
-            if finding.detail:
+            if finding.detail is not None and finding.detail:
                 lines.append(f"  {tr('cli.diagnostics.repair.detail_label')}\t{finding.detail}")
     return "\n".join(lines) + "\n"
 

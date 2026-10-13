@@ -327,7 +327,7 @@ def overview_deemed_served_notification_notices(
     )
     if not deemed_served:
         return []
-    if not legal_ref:
+    if not (legal_ref is not None and legal_ref):
         raise InternalInvariantError("deemed-served notification is missing captured legal provenance")
     certificado_ids = sorted({event.reference_id for event in deemed_served if event.reference_id})
     message = tr(
@@ -943,30 +943,30 @@ def _calendar_filing_evidence_text_fields(filing_evidence: OverviewCalendarFilin
         f"aeat={filing_evidence.aeat_submission_state.value}",
         f"justificante={str(filing_evidence.justificante_verified).lower()}",
     ]
-    if filing_evidence.local_filing_record_id:
+    if filing_evidence.local_filing_record_id is not None and filing_evidence.local_filing_record_id:
         fields.append(f"local_record={filing_evidence.local_filing_record_id}")
-    if filing_evidence.aeat_reference_id:
+    if filing_evidence.aeat_reference_id is not None and filing_evidence.aeat_reference_id:
         fields.append(f"aeat_ref={filing_evidence.aeat_reference_id}")
     if filing_evidence.aeat_submitted_at:
         fields.append(f"aeat_submitted_at={filing_evidence.aeat_submitted_at.isoformat()}")
-    if filing_evidence.aeat_evidence_kind:
+    if filing_evidence.aeat_evidence_kind is not None and filing_evidence.aeat_evidence_kind:
         fields.append(f"aeat_kind={filing_evidence.aeat_evidence_kind}")
     if filing_evidence.aeat_evidence_conflict_reference_ids:
         fields.append("aeat_conflict_refs=" + ",".join(filing_evidence.aeat_evidence_conflict_reference_ids))
-    if filing_evidence.verified_justificante_csv:
+    if filing_evidence.verified_justificante_csv is not None and filing_evidence.verified_justificante_csv:
         fields.append(f"verified_justificante_csv={filing_evidence.verified_justificante_csv}")
-    if filing_evidence.evidence_source:
+    if filing_evidence.evidence_source is not None and filing_evidence.evidence_source:
         fields.append(f"evidence_source={filing_evidence.evidence_source}")
     return "\t".join(fields)
 
 
 def _calendar_entry_work_unit_text_fields(entry: OverviewCalendarEntry) -> str:
     fields = [f"source={entry.source.value}"]
-    if entry.local_work_unit_id:
+    if entry.local_work_unit_id is not None and entry.local_work_unit_id:
         fields.append(f"work_unit={entry.local_work_unit_id}")
-    if entry.local_work_unit_name:
+    if entry.local_work_unit_name is not None and entry.local_work_unit_name:
         fields.append(f"work_name={entry.local_work_unit_name}")
-    if entry.local_work_unit_revision_id:
+    if entry.local_work_unit_revision_id is not None and entry.local_work_unit_revision_id:
         fields.append(f"work_revision={entry.local_work_unit_revision_id}")
     return "\t".join(fields)
 
@@ -983,21 +983,21 @@ def _calendar_event_text_line(event: OverviewCalendarEvent) -> str:
     ]
     if event.post_filing_kind is not None:
         parts.append(f"kind={event.post_filing_kind.value}")
-    if event.modelo:
+    if event.modelo is not None and event.modelo:
         parts.append(f"modelo={event.modelo}")
     if event.filing_year is not None:
         parts.append(f"year={event.filing_year}")
     if event.period:
         parts.append(f"period={event.period}")
-    if event.status:
+    if event.status is not None and event.status:
         parts.append(f"status={event.status}")
-    if event.aeat_submission_state:
+    if event.aeat_submission_state is not None and event.aeat_submission_state:
         parts.append(f"aeat={event.aeat_submission_state.value}")
     if event.aeat_submitted_at:
         parts.append(f"aeat_submitted_at={event.aeat_submitted_at.isoformat()}")
     if event.justificante_verified is not None:
         parts.append(f"justificante={str(event.justificante_verified).lower()}")
-    if event.verified_justificante_csv:
+    if event.verified_justificante_csv is not None and event.verified_justificante_csv:
         parts.append(f"verified_justificante_csv={event.verified_justificante_csv}")
     return "\t".join(parts)
 

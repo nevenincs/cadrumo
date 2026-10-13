@@ -460,7 +460,7 @@ def _legal_xml_corpus_text(root: Path, path: Path, *, anchor: str, reference: Le
     units = tuple(unit for output in outputs for unit in output.units)
     _reject_fused_xml_redactions(path, reference, len(units))
     unit = _unique_xml_corpus_unit(units, anchor, reference)
-    rendered = f"# {unit.title}\n\n{unit.text}" if unit.title else unit.text
+    rendered = f"# {unit.title}\n\n{unit.text}" if (unit.title is not None and unit.title) else unit.text
     return normalise_corpus_text(rendered)
 
 

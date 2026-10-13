@@ -542,7 +542,7 @@ def _vision_evidence_section() -> list[str]:
 
 def _evidence_block(evidence_text: str | None, evidence_image_present: bool) -> list[str]:
     """Select the evidence instruction: inlined text, attached image, or none."""
-    if evidence_text:
+    if evidence_text is not None and evidence_text:
         return _evidence_section(evidence_text)
     if evidence_image_present:
         return _vision_evidence_section()

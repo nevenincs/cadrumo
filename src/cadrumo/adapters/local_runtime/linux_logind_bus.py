@@ -76,7 +76,7 @@ class _SessionBus:
                     raise _unavailable()
                 connection.setblocking(False)
                 _check(self.library.sd_bus_new(ctypes.byref(self.bus)))
-                if not self.bus.value:
+                if not (self.bus.value is not None and self.bus.value):
                     raise _unavailable()
                 _check(self.library.sd_bus_set_fd(self.bus, connection.fileno(), connection.fileno()))
                 connection.detach()  # sd-bus now owns and closes this descriptor.
@@ -105,7 +105,7 @@ class _SessionBus:
         raise _unavailable()
 
     def close(self) -> None:
-        if self.bus.value:
+        if self.bus.value is not None and self.bus.value:
             self.library.sd_bus_close_unref(self.bus)
             self.bus = ctypes.c_void_p()
 
@@ -123,14 +123,14 @@ class _SessionBus:
                     self.bus, ctypes.byref(request), destination, path, interface, method
                 )
             )
-            if not request.value:
+            if not (request.value is not None and request.value):
                 raise _unavailable()
             _check(self.library.sd_bus_message_set_auto_start(request, 0))
             _check(self.library.sd_bus_message_set_allow_interactive_authorization(request, 0))
             if argument is not None:
                 _check(self.library.sd_bus_message_append_basic(request, b"s", ctypes.c_char_p(argument)))
             _check(self.library.sd_bus_call(self.bus, request, self.remaining_usec(), None, ctypes.byref(reply)))
-            if not reply.value:
+            if not (reply.value is not None and reply.value):
                 raise _unavailable()
             sender = self.library.sd_bus_message_get_sender(reply)
             if sender != destination:

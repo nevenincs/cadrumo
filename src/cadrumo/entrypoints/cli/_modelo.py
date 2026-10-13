@@ -259,10 +259,13 @@ def _missing_amendment_options(
     set_overrides: list[str] | None,
 ) -> tuple[str, ...]:
     checks = (
-        ("--from-filing-record", not from_filing_record_id or not from_filing_record_id.strip()),
+        (
+            "--from-filing-record",
+            not (from_filing_record_id is not None and from_filing_record_id) or not from_filing_record_id.strip(),
+        ),
         ("--kind", kind is None),
-        ("--reason", not reason or not reason.strip()),
-        ("--set", not set_overrides),
+        ("--reason", not (reason is not None and reason) or not reason.strip()),
+        ("--set", not (set_overrides is not None and set_overrides)),
     )
     return tuple(option for option, missing in checks if missing)
 
@@ -403,11 +406,12 @@ def work_amend(
             **_filing_record_payload(record).model_dump(mode="python"),
         },
     )
+    motive = amended.m303_rectificativa_motive
+    motive_value = motive.value if motive is not None and motive else ""
     lines = [
         "operation\tmodelo.work.amend",
         f"amendment_kind\t{amended.amendment_kind.value}",
-        "m303_rectificativa_motive\t"
-        f"{amended.m303_rectificativa_motive.value if amended.m303_rectificativa_motive else ''}",
+        f"m303_rectificativa_motive\t{motive_value}",
         f"amends_filing_record_id\t{amended.amended_from_filing_record_id}",
         *_filing_record_lines(record),
     ]

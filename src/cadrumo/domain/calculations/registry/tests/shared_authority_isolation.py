@@ -12,7 +12,7 @@ from __future__ import annotations
 import contextlib
 import json
 import shutil
-from collections.abc import Iterator
+from collections.abc import Generator
 from pathlib import Path
 
 from .....core.config import override_settings
@@ -22,7 +22,7 @@ from ..authority_location import bundled_authority_descriptor_path
 
 
 @contextlib.contextmanager
-def isolated_shared_authority(directory: Path) -> Iterator[Path]:
+def isolated_shared_authority(directory: Path) -> Generator[Path]:
     """Point the shared owner at a copy of the published pair in ``directory``.
 
     The session's own shared owner is set aside for the scope and restored after

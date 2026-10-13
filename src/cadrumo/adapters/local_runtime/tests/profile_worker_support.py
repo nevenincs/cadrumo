@@ -7,7 +7,7 @@ import base64
 import os
 import sys
 import time
-from collections.abc import Iterator
+from collections.abc import Generator
 from concurrent.futures import CancelledError as FutureCancelledError
 from concurrent.futures import Future, ThreadPoolExecutor
 from contextlib import contextmanager
@@ -299,7 +299,9 @@ def owner_id() -> str:
 
 
 @contextmanager
-def worker_profiles(tmp_path: Path) -> Iterator[tuple[Path, tuple[tuple[ProfileWorkerIdentity, bytes], ...]]]:
+def worker_profiles(
+    tmp_path: Path,
+) -> Generator[tuple[Path, tuple[tuple[ProfileWorkerIdentity, bytes], ...]]]:
     create, decode = profile_authority_contexts()
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         targets: list[tuple[ProfileWorkerIdentity, bytes]] = []

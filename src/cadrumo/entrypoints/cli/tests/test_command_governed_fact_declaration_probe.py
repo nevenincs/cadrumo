@@ -53,7 +53,7 @@ import os
 import socket
 import subprocess
 import sys
-from collections.abc import Iterator, Sequence
+from collections.abc import Generator, Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, timedelta
@@ -242,7 +242,7 @@ def missing_scope_raise_sites() -> frozenset[RaiseSite]:
 
 
 @contextmanager
-def observe_automation_proposal_validation() -> Iterator[list[bool]]:
+def observe_automation_proposal_validation() -> Generator[list[bool]]:
     """Observe the real operand validator's result without replacing its implementation."""
     results: list[bool] = []
     code = automation_administration_service._proposal_is_allowed.__code__
@@ -282,7 +282,7 @@ class ProbeObservation:
 
 
 @contextmanager
-def observe_invocation(handler: CodeType) -> Iterator[ProbeObservation]:
+def observe_invocation(handler: CodeType) -> Generator[ProbeObservation]:
     """Record missing-scope raises and the handler's start while the block runs."""
     by_file: dict[str, list[RaiseSite]] = {}
     for site in missing_scope_raise_sites():

@@ -127,7 +127,7 @@ def test_each_refusal_family_raises_its_registered_refusal(
     assert message.strip() and message != registered.message_key
     assert _DETAIL not in message
     assert _DETAIL not in repr(error.args)
-    assert not error.context
+    assert not (error.context is not None and error.context)
 
 
 def test_each_refusal_family_has_a_distinct_code() -> None:

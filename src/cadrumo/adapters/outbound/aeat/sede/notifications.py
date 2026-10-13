@@ -482,7 +482,7 @@ def _classify_tipo(
 
 def _parse_leida(raw: str | None) -> bool | None:
     """Parse a Spanish ``Leída`` cell into a tri-state boolean (``None`` for blank)."""
-    if not raw:
+    if not (raw is not None and raw):
         return None
     lower = raw.strip().lower()
     if not lower:

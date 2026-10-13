@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import time
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from hashlib import sha256
@@ -217,7 +217,7 @@ def installation_client(endpoint: WindowsRuntimeEndpoint) -> RuntimeInstallation
 
 
 @contextmanager
-def serving_test_acts(tmp_path: Path) -> Iterator[ServedRuntime]:
+def serving_test_acts(tmp_path: Path) -> Generator[ServedRuntime]:
     """Serve the test's handlers over the real transport until the scope ends."""
     root = tmp_path / "cadrumo-storage"
     root.mkdir()

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -102,7 +102,7 @@ _M100_FACTS: dict[str, str] = {
 
 
 @contextmanager
-def _operator_profile(tmp_path: Path, extra_facts: dict[str, str] | None = None) -> Iterator[NativeCliProfileFixture]:
+def _operator_profile(tmp_path: Path, extra_facts: dict[str, str] | None = None) -> Generator[NativeCliProfileFixture]:
     """Register the operator profile and serve it through its native worker.
 
     ``extra_facts`` carries per-modelo attestations that readiness demands of
@@ -125,7 +125,7 @@ def _cli(profile: NativeCliProfileFixture, *args: str) -> Result:
 
 
 @contextmanager
-def _opened_profile(profile: NativeCliProfileFixture, operation: PinnedAuthorityOperation) -> Iterator[str]:
+def _opened_profile(profile: NativeCliProfileFixture, operation: PinnedAuthorityOperation) -> Generator[str]:
     """Open the registered profile's encrypted bucket for direct seeding or assertions."""
     close_active_bucket_session()
     login = authenticate_profile_for_invocation(

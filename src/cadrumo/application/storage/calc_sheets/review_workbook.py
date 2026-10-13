@@ -247,13 +247,13 @@ def build_review_workbook(
                 (
                     label("aeat_confirmation"),
                     label("aeat_confirmation_" + lifecycle.aeat_confirmation.value)
-                    if lifecycle and lifecycle.aeat_confirmation
+                    if lifecycle and (lifecycle.aeat_confirmation is not None and lifecycle.aeat_confirmation)
                     else label("not_captured"),
                 ),
                 (
                     label("filing_status"),
                     label("filing_status_" + lifecycle.filing_status.value)
-                    if lifecycle and lifecycle.filing_status
+                    if lifecycle and (lifecycle.filing_status is not None and lifecycle.filing_status)
                     else label("not_captured"),
                 ),
                 (label("filing_record"), lifecycle.filing_record_id if lifecycle else None),

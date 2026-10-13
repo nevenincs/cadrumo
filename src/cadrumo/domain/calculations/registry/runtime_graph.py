@@ -195,7 +195,7 @@ def revision_date_binding_ids(revision: ModeloRevision) -> frozenset[BindingId]:
 def _collect_parameter_refs(expression: FormulaExpression, refs: list[ParameterId]) -> None:
     if expression.parameter is not None:
         refs.append(expression.parameter)
-    if expression.dispatch_table:
+    if expression.dispatch_table is not None and expression.dispatch_table:
         refs.extend(expression.dispatch_table.values())
     for arg in expression.args:
         _collect_parameter_refs(arg, refs)

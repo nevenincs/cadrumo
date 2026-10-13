@@ -355,9 +355,9 @@ def read_clusters(targets: tuple[ResolvedTarget, ...]) -> tuple[DirectoryCluster
 
 def _cluster_locator(target: ResolvedTarget) -> str:
     metadata = target.record.metadata
-    if metadata.modelo:
+    if metadata.modelo is not None and metadata.modelo:
         return f"modelo:{metadata.modelo}"
-    if metadata.domain:
+    if metadata.domain is not None and metadata.domain:
         return f"domain:{metadata.domain}"
     # Fall back to the top directory segment of the originating hit path.
     parts = target.source_hit.posix_path.parts

@@ -140,7 +140,7 @@ def _summary_state(
         state = DeclarationSummaryState.RECORDED
     elif head.state is CalculationRevisionState.PRESENTADO_SUPERSEDIDO:
         state = DeclarationSummaryState.SUPERSEDED
-    elif blockers:
+    elif blockers is not None and blockers:
         state = DeclarationSummaryState.BLOCKED
     elif checked:
         state = DeclarationSummaryState.CHECKED

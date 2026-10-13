@@ -51,7 +51,7 @@ def localized_text(keys: tuple[str, ...], language: OutputLanguage) -> ModeloFor
     """Resolve a modelo catalogue chain and say which language actually served it."""
     source = modelo_localization_source(keys, locale=language.value)
     text = resolve_modelo_localization(keys, locale=language.value)
-    if source is None or not text:
+    if source is None or not (text is not None and text):
         return None
     served_locale = source[1]
     disclosure = (
@@ -65,17 +65,17 @@ def localized_text(keys: tuple[str, ...], language: OutputLanguage) -> ModeloFor
 def localized_heading(key: str, official: str | None, technical: str, language: OutputLanguage) -> ModeloFormText:
     """Resolve a layout heading: the translation, then Spanish, then the design's words, then a name."""
     translated = lookup_translation(key, locale=language.value)
-    if translated:
+    if translated is not None and translated:
         return ModeloFormText(text=translated, disclosure=ModeloFormTextDisclosure.LOCALIZED)
     spanish = lookup_translation(key, locale=_SPANISH)
-    if spanish:
+    if spanish is not None and spanish:
         disclosure = (
             ModeloFormTextDisclosure.LOCALIZED
             if language is OutputLanguage.ES
             else ModeloFormTextDisclosure.SPANISH_FALLBACK
         )
         return ModeloFormText(text=spanish, disclosure=disclosure)
-    if official:
+    if official is not None and official:
         return ModeloFormText(text=official, disclosure=ModeloFormTextDisclosure.OFFICIAL_SPANISH)
     return ModeloFormText(text=technical, disclosure=ModeloFormTextDisclosure.TECHNICAL)
 
@@ -85,7 +85,7 @@ def unnamed_casilla_label(language: OutputLanguage) -> ModeloFormText:
     text = lookup_translation(_UNNAMED_LOCALE_KEY, locale=language.value) or lookup_translation(
         _UNNAMED_LOCALE_KEY, locale=_SPANISH
     )
-    if not text:
+    if not (text is not None and text):
         raise InternalInvariantError(f"the catalogue has no text for {_UNNAMED_LOCALE_KEY!r}")
     return ModeloFormText(text=text, disclosure=ModeloFormTextDisclosure.UNNAMED)
 
@@ -103,7 +103,7 @@ def fed_box_label(binding_id: str, context: WorkFormContext) -> ModeloFormText |
         (context.language.value, ModeloFormTextDisclosure.LOCALIZED),
         (_SPANISH, ModeloFormTextDisclosure.SPANISH_FALLBACK),
     ):
-        if lookup_translation(_FEEDS_BOX_LOCALE_KEY, locale=locale):
+        if bool(lookup_translation(_FEEDS_BOX_LOCALE_KEY, locale=locale)):
             return ModeloFormText(text=tr(_FEEDS_BOX_LOCALE_KEY, locale=locale, box=box), disclosure=disclosure)
     raise InternalInvariantError(f"the catalogue has no text for {_FEEDS_BOX_LOCALE_KEY!r}")
 
@@ -112,7 +112,7 @@ def casilla_help(casilla: CasillaDefinition, label: str, context: WorkFormContex
     """Return the casilla's help unless it only restates the label or names the box."""
     keys = tuple(f"{key.removesuffix('.label')}.help" for key in casilla.localization_keys)
     text = resolve_modelo_localization(keys, locale=context.language.value)
-    if not text:
+    if not (text is not None and text):
         return None
     if normalized_help_text(text) == normalized_help_text(label) or names_only_its_box(text, context.box_locators):
         return None

@@ -63,7 +63,7 @@ class RequesterPresentationMixin:
         screen = RuntimeAutomationInventoryScreen(reviewer)
 
         def closed(lost: bool | None) -> None:
-            if lost or screen.access_lost:
+            if (lost is not None and lost) or screen.access_lost:
                 self._reviewer_access_lost = True
             if self._live and self.is_mounted:
                 self.query_one("#automation-request-review", Button).disabled = not self._reviewer_bound()

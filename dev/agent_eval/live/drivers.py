@@ -22,7 +22,7 @@ import json
 import os
 import shutil
 import time
-from collections.abc import AsyncIterator, Awaitable, Callable, Mapping, Sequence
+from collections.abc import AsyncGenerator, Awaitable, Callable, Mapping, Sequence
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -111,7 +111,7 @@ BetweenPhases = Callable[[int], Awaitable[None]]
 
 def select_driver(ambient: Mapping[str, str]) -> DriverKind:
     """The API when its key is present, otherwise the authenticated ``claude`` command line, otherwise unavailable."""
-    if ambient.get("ANTHROPIC_API_KEY"):
+    if bool(ambient.get("ANTHROPIC_API_KEY")):
         return DriverKind.ANTHROPIC_API
     if shutil.which("claude", path=ambient.get("PATH")) is not None:
         return DriverKind.CLAUDE_CLI
@@ -164,7 +164,7 @@ class RecordedTools:
 
 
 @asynccontextmanager
-async def mcp_session(launch: McpLaunch, stderr_path: Path) -> AsyncIterator[ClientSession]:
+async def mcp_session(launch: McpLaunch, stderr_path: Path) -> AsyncGenerator[ClientSession]:
     """Start the packaged MCP server over stdio and hand back an initialized client session.
 
     The server's standard error goes to a file inside the run directory, which
@@ -202,7 +202,7 @@ class _RefusedError(Exception):
 
 
 def _started(submitted: Mapping[str, Any] | None) -> bool:
-    if not submitted:
+    if not (submitted is not None and submitted):
         return False
     start = submitted.get("start")
     return bool(
@@ -223,7 +223,7 @@ async def _settle(tools: RecordedTools, definition_id: str, arguments: dict[str,
     deadline = time.monotonic() + _SETTLE_SECONDS
     while True:
         observed, _, _ = await tools.call("observe", {"observation": observation})
-        if observed and observed.get("outcome") == "reply":
+        if (observed is not None and observed) and observed.get("outcome") == "reply":
             projection = observed["reply"]["observation"]["projection"]
             if projection.get("lifecycle") == "terminal":
                 break

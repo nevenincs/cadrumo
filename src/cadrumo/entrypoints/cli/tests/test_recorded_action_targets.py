@@ -102,7 +102,9 @@ def test_the_recorded_resolver_prints_the_action_the_command_line_prints_for_eve
         printed = resolve_cli_precondition_action(verdict)
 
         assert recorded == printed, entry.action_id
-        assert recorded.action is not None and recorded.action.cli_path, entry.action_id
+        assert recorded.action is not None and (recorded.action.cli_path is not None and recorded.action.cli_path), (
+            entry.action_id
+        )
         assert recorded.action.target_command_key == entry.target_command_key
 
 

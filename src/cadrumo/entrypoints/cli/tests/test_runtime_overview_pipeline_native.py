@@ -11,8 +11,8 @@ from uuid import UUID
 
 import pytest
 
-from ....application.ledger.actions_manual import create_manual_transaction
 from ....application.ledger.models import ManualLedgerTransactionCommand
+from ....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from ....application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ....application.overview.pipeline_operation import OVERVIEW_PIPELINE_OPERATION_DEFINITION_ID
 from ....application.user_profile.access_contracts import (

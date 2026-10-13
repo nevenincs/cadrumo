@@ -173,7 +173,7 @@ def _refuse_misplaced_ledger_payment_withholding(
     payment capture share a command with another evidence provider would make
     its reported window depend on which input landed first.
     """
-    if not ledger_payment_withholding:
+    if not (ledger_payment_withholding is not None and ledger_payment_withholding):
         return
     if modelo not in _LEDGER_PAYMENT_WITHHOLDING_MODELOS:
         raise typer.BadParameter(tr("cli.app.modelo.aggregate.ledger_payment_withholding_wrong_modelo", modelo=modelo))
@@ -258,14 +258,15 @@ def aggregate_modelo(
         counterpart_observation=counterpart_observation,
         foreign_asset_observation=foreign_asset_observation,
     )
-    if modelo == Modelo("123").value and received_invoice_retencion:
+    if modelo == Modelo("123").value and (received_invoice_retencion is not None and received_invoice_retencion):
         raise typer.BadParameter(tr("cli.app.modelo.aggregate.m123_ledger_payment_only"))
 
     command = PerModeloAggregationCommand(
         modelo=modelo,
         period=(
             _invoice_capture_period(year, period)
-            if received_invoice_retencion and not ledger_payment_withholding
+            if (received_invoice_retencion is not None and received_invoice_retencion)
+            and not (ledger_payment_withholding is not None and ledger_payment_withholding)
             else resolve_year_period(year, period, modelo=modelo)
         ),
         counterpart_observations=_parse_typed_cli_observations(
@@ -281,7 +282,7 @@ def aggregate_modelo(
         flag="--ledger-payment-withholding",
     )
     notices: list[Notice] = []
-    if received_invoice_retencion:
+    if received_invoice_retencion is not None and received_invoice_retencion:
         invoice_withholding_requests = _parse_typed_cli_observations(
             received_invoice_retencion,
             model=InvoiceWithholdingEvidenceRequest,

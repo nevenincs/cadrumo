@@ -103,7 +103,7 @@ def test_the_projection_names_where_the_reader_answers_and_nothing_else_of_the_c
     assert projection.host.endpoint_url == "http://127.0.0.1:1"
     assert projection.host.endpoint_local is True
     assert projection.host.reachable is False and projection.host.available is False
-    assert projection.host.failed_condition_id
+    assert projection.host.failed_condition_id is not None and projection.host.failed_condition_id
     assert projection.extraction_ready is status.extraction_ready
     assert [row.role for row in projection.roles] == [row.role.value for row in status.roles]
     assert [row.model for row in projection.roles] == [row.model for row in status.roles]

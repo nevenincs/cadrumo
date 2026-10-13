@@ -162,7 +162,7 @@ def test_availability_discovery_refuses_a_missing_session_exactly_as_capture_doe
         asyncio.run(walk_declarations_register(session, modelo="303", ejercicio=2025))
 
     assert discovery_error.value.translated_message == capture_error.value.translated_message
-    assert discovery_error.value.translated_message
+    assert discovery_error.value.translated_message is not None and discovery_error.value.translated_message
     assert str(discovery_error.value) == str(capture_error.value)
 
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Generator, Mapping, Sequence
 from contextlib import ExitStack, contextmanager
 from contextvars import ContextVar
 from functools import cache
@@ -84,7 +84,7 @@ _BOUND_PROFILE: ContextVar[ProfileCliInvoker | None] = ContextVar("cli-test-boun
 
 
 @contextmanager
-def bind_profile_cli(invoker: ProfileCliInvoker) -> Iterator[None]:
+def bind_profile_cli(invoker: ProfileCliInvoker) -> Generator[None]:
     """Run every :func:`invoke_cached_cli` call as ``invoker``'s operator until the scope ends.
 
     A fixture that registers a profile and joins its runtime binds it, so a
@@ -105,7 +105,7 @@ _OPERATOR_SCOPE: ContextVar[ExitStack | None] = ContextVar("cli-test-operator-sc
 
 
 @contextmanager
-def operator_runtime_scope() -> Iterator[None]:
+def operator_runtime_scope() -> Generator[None]:
     """Own, for one test phase, the runtime a live in-process profile session is joined to.
 
     Registering or unlocking a profile in a test leaves that profile's session

@@ -19,11 +19,11 @@ from .....application.browser_runtime_operation import (
     BROWSER_RUNTIME_PREFLIGHT_PHASE,
     BROWSER_RUNTIME_SETTLEMENT_PHASE,
     BrowserRuntimeProvisionPublicResultV1,
-    build_browser_runtime_provision_request,
 )
 from .....application.local_reader_contracts import local_reader_fact_mapping, local_reader_public_verdict
 from .....application.provisioning_browser import BrowserBuild, required_browser_builds
 from .....application.provisioning_contracts import ProvisioningPreconditionCondition
+from .....application.tests.local_reader_operation_requests import build_browser_runtime_provision_request
 from .....core.operations import OperationEffect
 from .local_reader_operation_support import ProvisioningPorts, SupervisedRun, provisioning_registry, run_supervised
 

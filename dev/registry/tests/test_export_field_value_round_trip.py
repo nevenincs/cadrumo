@@ -41,7 +41,7 @@ def _values(field: ExportFieldDefinition) -> tuple[object, ...]:
         return ("20250314",)
     if policy in {ExportValuePolicy.TWO_DIGIT_MONTH, ExportValuePolicy.TWO_DIGIT_DAY}:
         return (3,)
-    if field.allowed_values:
+    if field.allowed_values is not None and field.allowed_values:
         return field.allowed_values
     if policy is ExportValuePolicy.SELECTED_1_UNSELECTED_0:
         return (False, True)

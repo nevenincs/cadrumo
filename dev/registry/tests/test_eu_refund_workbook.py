@@ -20,7 +20,7 @@ def test_eu_refund_example_keeps_both_invoices_and_honest_absences() -> None:
     inputs = {
         cell.casilla_id: cell.value
         for cell in plan.value_cells
-        if cell.address.tab is TabName.ENTRADAS and cell.casilla_id
+        if cell.address.tab is TabName.ENTRADAS and (cell.casilla_id is not None and cell.casilla_id)
     }
     assert inputs["devolucion.importe-solicitado"] == Decimal("285")
     assert inputs["decl.op1-cuota"] == Decimal("190")

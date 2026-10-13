@@ -415,7 +415,7 @@ def test_a_boundary_only_the_description_pass_sees_is_reported_and_marked_for_re
     for modelo_id in sorted({str(modelo.id) for modelo, _revision_id, _revision in _declared_revisions()}):
         ordered, _unorderable = _designs_in_publication_order(modelo_id)
         for earlier, later in pairwise(ordered):
-            if _description_flip_evidence(earlier, later):
+            if bool(_description_flip_evidence(earlier, later)):
                 positive.append(f"modelo {modelo_id} {_boundary_label(earlier, later)}")
     for modelo, revision_id, revision in _declared_revisions():
         for key, evidence in _boundaries_for(modelo.id, revision).items():

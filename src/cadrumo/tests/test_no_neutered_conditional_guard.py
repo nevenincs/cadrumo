@@ -62,7 +62,7 @@ def _is_neutered(node: ast.AST) -> bool:
         return False
     if not isinstance(node.test, ast.Constant):
         return False
-    return not (isinstance(node, ast.While) and node.test.value)
+    return not (isinstance(node, ast.While) and (node.test.value is not None and node.test.value))
 
 
 def _neutered_conditions(tree: ast.AST) -> list[tuple[int, str]]:
@@ -133,7 +133,9 @@ def test_the_exclusion_is_exercised_against_real_package_code() -> None:
         1
         for _path, tree in package_ast_items()
         for node in ast.walk(tree)
-        if isinstance(node, ast.While) and isinstance(node.test, ast.Constant) and node.test.value
+        if isinstance(node, ast.While)
+        and isinstance(node.test, ast.Constant)
+        and (node.test.value is not None and node.test.value)
     )
 
     assert idiomatic_loops > 10

@@ -20,6 +20,8 @@ export function AgentHeader({
   historyOpen = false,
   onToggleHistory,
   documentsOpen = false,
+  settingsOpen = false,
+  onToggleSettings,
   documentCount = 0,
   onToggleDocuments,
   trailing,
@@ -34,6 +36,9 @@ export function AgentHeader({
   /** The documents in the conversation, counted on the Documents toggle. */
   documentCount?: number;
   onToggleDocuments?: () => void;
+  settingsOpen?: boolean;
+  /** Opens the agent's settings: its providers and their keys. */
+  onToggleSettings?: () => void;
   /** Controls owned by the surrounding column, drawn after a divider. */
   trailing?: ReactNode;
   /** A double click on the bar itself, not on a control, toggles maximize. */
@@ -100,6 +105,12 @@ export function AgentHeader({
             </Badge>
           ) : undefined
         }
+      />
+      <AgentIconAction
+        icon="settings"
+        label={t("desktop.agent.settings")}
+        aria-pressed={settingsOpen}
+        onAction={onToggleSettings}
       />
       {trailing && (
         <>

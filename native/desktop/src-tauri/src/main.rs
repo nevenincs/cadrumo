@@ -1,5 +1,6 @@
 #![cfg_attr(windows, windows_subsystem = "windows")]
 
+mod agent;
 mod app;
 mod docs;
 mod environment;

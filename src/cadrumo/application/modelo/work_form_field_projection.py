@@ -151,8 +151,11 @@ def _binding_field_help(
 ) -> str | None:
     help_text = resolve_modelo_localization(
         (binding_locale_key(modelo, binding_id, "help"),), locale=context.language.value
-    ) or next((text for casilla in casillas if (text := casilla_help(casilla, label.text, context))), None)
-    if help_text and normalized_help_text(help_text) == normalized_help_text(label.text):
+    ) or next(
+        (text for casilla in casillas if ((text := casilla_help(casilla, label.text, context)) is not None and text)),
+        None,
+    )
+    if (help_text is not None and help_text) and normalized_help_text(help_text) == normalized_help_text(label.text):
         help_text = None
     return help_text
 
@@ -166,7 +169,10 @@ def _binding_field_box(
         (
             number
             for casilla in casillas
-            if (number := context.placed_boxes.get(str(casilla.id)) or printed_box_number(casilla, None))
+            if (
+                (number := context.placed_boxes.get(str(casilla.id)) or printed_box_number(casilla, None)) is not None
+                and number
+            )
         ),
         None,
     )

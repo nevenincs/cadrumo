@@ -10,7 +10,7 @@ import subprocess
 import sys
 import tempfile
 import xml.etree.ElementTree as ET
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Generator, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, cast
@@ -20,7 +20,7 @@ _UTF_8: Final[str] = "utf-8"
 _ROOT_FOR_DIRECT_INVOCATION = Path(__file__).resolve().parents[2]
 if str(_ROOT_FOR_DIRECT_INVOCATION) not in sys.path:
     sys.path.insert(0, str(_ROOT_FOR_DIRECT_INVOCATION))
-if not __package__:
+if not (__package__ is not None and __package__):
     __package__ = "dev.docs"
 
 from cadrumo.core.directory_scan import scan_directory
@@ -273,7 +273,7 @@ def _copy_docs_source(docs_root: Path, target: Path) -> None:
 
 
 @contextlib.contextmanager
-def _full_build_source(docs_root: Path, *, isolated: bool) -> Iterator[Path]:
+def _full_build_source(docs_root: Path, *, isolated: bool) -> Generator[Path]:
     """Yield the source tree a full build reads, a private copy when ``isolated``.
 
     A build writes its generated sources -- the CLI reference, glossary, casilla
@@ -798,7 +798,7 @@ def build_docs(
     if plan.full_build_required:
         html_root = html_output_root
         base_url = os.environ.get(DOCS_BASE_URL_ENV)
-        if base_url and flavor == "web":
+        if (base_url is not None and base_url) and flavor == "web":
             sitemap_path = write_deployment_sitemap(html_root, base_url)
             print(f"Wrote deployment sitemap: {sitemap_path}", flush=True)
         if pagefind_index_mode(os.environ) == "none":

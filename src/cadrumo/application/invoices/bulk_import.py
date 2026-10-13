@@ -417,7 +417,7 @@ def _build_bulk_invoice_row(
         )
     except ValidationError as exc:
         first = exc.errors()[0] if exc.errors() else {"loc": ("row",), "msg": "invalid row"}
-        field = str(first["loc"][0]) if first.get("loc") else "row"
+        field = str(first["loc"][0]) if bool(first.get("loc")) else "row"
         raise _RowParseError(row_number=row_number, field=field, reason=str(first.get("msg", "invalid row"))) from exc
 
 
@@ -509,7 +509,7 @@ def _assert_country_is_answerable(
     blank -- those are per-row omissions and stay per-row refusals, so the
     rows that do state a country still import.
     """
-    if declared_country or "country_code" in resolution.fields_present:
+    if (declared_country is not None and declared_country) or "country_code" in resolution.fields_present:
         return
     raise InvoiceValidationError(
         "bulk invoice import file supplies no counterparty country column and no country was declared "

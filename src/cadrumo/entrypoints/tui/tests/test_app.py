@@ -611,7 +611,7 @@ async def test_failed_direct_action_exits_to_fresh_admission_and_hides_unavailab
     async with app.run_test() as pilot:
         await _settle(app, pilot)
         assert not app.account_action_available(AccountActionV1.PASSWORD)
-        assert not app.check_action("account", ("password",))
+        assert not bool(app.check_action("account", ("password",)))
         assert "account('password')" not in {active.binding.action for active in app.active_bindings.values()}
         app.run_account_action(AccountActionV1.CHANGE_USER)
         async with asyncio.timeout(5):

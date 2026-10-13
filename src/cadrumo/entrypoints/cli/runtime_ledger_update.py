@@ -93,7 +93,7 @@ def run_ledger_update(
         transaction_id=transaction_id,
         patch=worker_patch,
         patch_fields=patch_fields,
-        actor=actor if actor else None,
+        actor=actor if (actor is not None and actor) else None,
     )
     completed = run_registered_operation(
         client,

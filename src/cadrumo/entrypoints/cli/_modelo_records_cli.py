@@ -102,7 +102,7 @@ def _import_input_values(
     file: Path | None,
 ) -> dict[CasillaId, Decimal]:
     """Validate the import transport choice and parse any ``--set`` values."""
-    if file is not None and set_overrides:
+    if file is not None and (set_overrides is not None and set_overrides):
         raise typer.BadParameter("filing-record import accepts either --file or --set, not both")
     casilla_values: dict[CasillaId, Decimal] = {}
     for spec in set_overrides or ():
@@ -326,7 +326,7 @@ def filing_record_observe_local(
     modelo_code = _modelo_code(modelo)
     filing_period = _filing_period(year, period)
     if clear:
-        if file is not None or set_overrides:
+        if file is not None or (set_overrides is not None and set_overrides):
             raise typer.BadParameter(tr("cli.app.modelo.filing_record.observe_local_clear_values_error"))
         result = clear_modelo_local_observation(
             ctx,

@@ -343,7 +343,7 @@ def resolve_auth_operation_scope(
         provider_ids = known_auth_provider_ids()
     elif provider is not None:
         provider_ids = (get_auth_provider(provider).id,)
-    elif current_provider:
+    elif current_provider is not None and current_provider:
         provider_ids = (get_auth_provider(current_provider).id,)
     else:
         raise AuthProviderNotConfiguredError(

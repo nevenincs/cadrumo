@@ -61,7 +61,7 @@ def validate_deferred_target(module: str, qualname: str, package: str | None = N
                 "deferred target module must be a dotted Python module name",
             ),
             (
-                relative_module and not package,
+                relative_module and not (package is not None and package),
                 "relative deferred target modules require their importing package",
             ),
             (

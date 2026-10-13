@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import sys
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import AbstractContextManager, contextmanager
 from pathlib import Path
 from typing import cast
@@ -174,7 +174,7 @@ def catalogue_after_password_login(profile_id: UUID, authority_operation: Pinned
 
 
 @contextmanager
-def password_profile_session(profile_id: UUID, authority_operation: PinnedAuthorityOperation) -> Iterator[None]:
+def password_profile_session(profile_id: UUID, authority_operation: PinnedAuthorityOperation) -> Generator[None]:
     """Open the enrolled profile for a direct repository assertion."""
     close_active_bucket_session()
     login = authenticate_profile_for_invocation(

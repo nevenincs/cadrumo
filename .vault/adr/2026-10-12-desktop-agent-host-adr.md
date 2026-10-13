@@ -82,7 +82,7 @@ Binding if accepted:
 - Every byte cadrumo-agent persists under that root that can hold private content is encrypted with the profile's agent data key. Nothing private is written to plaintext logs, temp files, token files, workspaces or provider homes. Files that hold no private content (ready record, store-format marker) may stay plaintext.
 - The agent data key and the provider credential travel only Cadrumo custody → runtime door → launcher memory → agent standard input frame → worker standard input pipe, and are never placed in environment variables, files, command lines, transcripts or the webview. Cadrumo passwords and receipts never cross into the launcher's child or the provider.
 - No real document is written in plaintext to the agent root. Documents live in Cadrumo custody; the model reads only registered projections served by Cadrumo.
-- Private content reaches a provider only under an active consent grant naming that provider and model and that content. A grant is a person act refused on the MCP and `agent-host` frontends. No other act creates one.
+- Owner ruling of 2026-10-13, first-hand, relayed by the desktop design session: "tool calls are approval gated not messages". It replaces per-message consent. Sending a message is the person's own act and needs no further grant. Every tool call waits on the person's approval, given by a deliberate gesture that the model cannot make. Off-host document extraction keeps its existing digest-bound acknowledgement (`2026-06-10-llm-evidence-classification-adr`).
 - A missing or incompatible bundled agent is a typed refusal shown in the agent column; Cadrumo never downloads or installs it.
 - Unbuilt capability is shown as unavailable; no mock host or simulated behaviour.
 
@@ -125,11 +125,11 @@ Contract 5, documents (owner: Cadrumo backend):
 - List by conversation; text projections per document for the hosted assistant; ledger-data documents continue through the existing evidence and import operations with human review.
 - Deleting a conversation removes its links; bytes go only when unreferenced and not under hold.
 
-Contract 6, consent (owner: Cadrumo backend, desktop interface):
+Contract 6, approvals (owner: desktop host; cadrumo-agent):
 
-- Grant, withdraw and list operations as person acts. A grant names profile, conversation, provider, model and content scope: the person's messages, named documents by digest, and Cadrumo tool results.
-- The desktop asks before the first send in a conversation, on any provider or model change, and before a newly referenced document is shared; Allow is a deliberate action; the prompt names the provider, model and each item.
-- The host refuses to start or continue a run without a matching grant. Cadrumo's hosted-assistant surface refuses document projections and private tool results without one, at the granularity Cadrumo can verify (see remaining choice 3). Every served projection is recorded in the consent ledger with its digest, provider, model and frontend.
+- Per-message consent grants are withdrawn by the 2026-10-13 ruling. No grant, withdraw or list operations exist.
+- cadrumo-agent raises a `permission_request` for each tool call. The desktop shows it, and only a person's gesture answers it, on the gateway's permission route.
+- Cadrumo reviews raised by the agent's MCP session are answered only through a person door. That door's form is open (`2026-10-13-desktop-agent-host-live-lane-review-audit`, `review-door-for-agent-reviews`).
 
 Contract 7, packaging and compatibility (owner: Cadrumo build; cadrumo-agent):
 
@@ -151,7 +151,7 @@ Verification criteria (each on the packaged build with a synthetic encrypted pro
 3. Location: with and without `CADRUMO_LOCAL_STORAGE_ROOT`, agent state appears only under that root's `agent/<profile-id>/`; a second profile's root is never touched; profile deletion and all-profile reset remove it, with receipts.
 4. At rest: after a real conversation with a document, a byte scan of the storage root, the OS temp directory and user cache directories for known message, tool-result and document strings finds none outside encrypted stores; the stores do not open without the key.
 5. Secrets: the agent data key, provider credential, gateway bearer and Cadrumo password appear in no environment block, command line, file, log or transcript.
-6. Consent: a send without a grant is refused; the prompt names provider, model and items; withdrawing stops further sends and projections; grants cannot be created from MCP or the agent; each served projection appears in the consent ledger.
+6. Approvals: every tool call waits on the person's decision, a rejected call does not run, and the model cannot answer its own request.
 7. Tool path: a real, signed-in Cadrumo read through the hosted assistant succeeds and is refused after sign-out; no sign-in, sign-out, lock, attendance or secret-carrying tool is reachable. This is recorded as cadrumo-agent's tool-access proof and pairs with `2026-10-10-mcp-parity-plan` `P10.S70`.
 8. Documents: each accepted type, a ZIP and a ZIP bomb fixture; custody digests, conversation links, refusals with reasons, ledger-data documents reaching review, deletion with holds.
 9. Interface: the column shows every unbuilt or refused capability as unavailable with its reason.
@@ -171,7 +171,7 @@ Remaining architectural choices, each named for the owner:
 
 1. Agent state shape: encrypted sibling root with a released key (proposed) or agent state as Cadrumo secure objects with no key release.
 2. Launcher identity: a new `agent-host` frontend (proposed) or the CLI frontend with a narrow door.
-3. Cadrumo-side consent granularity: per profile, provider and model (enforceable now) or per conversation, which needs cadrumo-agent to carry the conversation id on its tool connection again.
+3. Withdrawn by the 2026-10-13 approval ruling: no consent granularity remains to choose.
 4. Implementation owner for the Tauri host: no running session claims `native/desktop/src-tauri`.
 5. How the cadrumo-agent repository is provisioned into Cadrumo's build, given that it is never published to PyPI.
 6. Model selection per role from the live Models API: which model to use when several meet a role's capability needs, and what replaces the per-model price table.

@@ -46,7 +46,7 @@ class ProfileOverviewSetupRenderMixin:
         index = SETUP_STAGES.index(stage)
         _render_setup_progress(self, stage, total, answered)
         action = _setup_continue_action(stage, done, missing)
-        _render_setup_copy(self, stage, total, missing, index)
+        _render_setup_copy(self, stage, total, missing)
         _render_setup_checklist(self, stage, missing)
         busy = self._pending_write is not None or self._pending_completion is not None
         _render_setup_navigation(self, overview, stage, index, done, busy)
@@ -210,7 +210,7 @@ def _setup_continue_action(stage: ProfileSetupStage, done: bool, missing: frozen
 
 
 def _render_setup_copy(
-    screen: ProfileManagerScreen, stage: ProfileSetupStage, total: int, missing: frozenset[str], index: int
+    screen: ProfileManagerScreen, stage: ProfileSetupStage, total: int, missing: frozenset[str]
 ) -> None:
     """Render the selected stage's title and explanatory copy."""
     title = screen.query_one("#onboarding-stage-title", Static)

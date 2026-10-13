@@ -583,7 +583,8 @@ async def test_resume_routes_single_classification_split_and_audit_rejection(
 
     monkeypatch.setattr(review_runtime, "require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(review_runtime, "execute_reviewed_decision", writer)
-    assert await LedgerLlmReviewExecutor(case.factory).resume(case.request, checkpoint, case.context)
+    resumed = await LedgerLlmReviewExecutor(case.factory).resume(case.request, checkpoint, case.context)
+    assert resumed is not None and resumed != ""
     expected = (
         LlmReviewDecision.REJECT
         if response == "reject"
@@ -643,7 +644,8 @@ async def test_resume_records_the_session_label_for_an_agent_and_the_supplied_la
     monkeypatch.setattr(review_runtime, "execute_reviewed_decision", writer)
     executor = LedgerLlmReviewExecutor(case.factory, execution_caller_reader=None if frontend is None else session_host)
 
-    assert await executor.resume(case.request, checkpoint, case.context)
+    resumed = await executor.resume(case.request, checkpoint, case.context)
+    assert resumed is not None and resumed != ""
 
     assert actors == [recorded]
     # The session host is asked about this invocation and no other, and not at all where none composed it.
@@ -1022,7 +1024,8 @@ async def test_a_response_commits_the_reviewed_decision_whichever_frontend_submi
     monkeypatch.setattr(review_runtime, "require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(review_runtime, "execute_reviewed_decision", writer)
 
-    assert await _executor_on(case, frontend).resume(case.request, checkpoint, case.context)
+    resumed = await _executor_on(case, frontend).resume(case.request, checkpoint, case.context)
+    assert resumed is not None and resumed != ""
 
     assert written == [(decision, case.baseline)]
     assert case.repository.loads == loads_before

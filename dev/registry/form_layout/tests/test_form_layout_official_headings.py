@@ -67,17 +67,17 @@ def _parts(layout: FormLayoutDefinition) -> Iterator[tuple[str, str | None, str 
 def _quoted_keys(layout: FormLayoutDefinition) -> Iterator[tuple[str, str]]:
     """Yield the heading key and official words of every part that carries an official heading."""
     for page in layout.pages:
-        if page.official_heading:
+        if page.official_heading is not None and page.official_heading:
             yield page.heading_key, page.official_heading
         for section in page.sections:
-            if section.official_heading:
+            if section.official_heading is not None and section.official_heading:
                 yield section.heading_key, section.official_heading
             for block in section.blocks:
                 if isinstance(block, (FormGridBlock, FormRepeatingGroupBlock)):
                     yield from (
                         (column.heading_key, column.official_heading)
                         for column in block.columns
-                        if column.official_heading
+                        if (column.official_heading is not None and column.official_heading)
                     )
 
 
@@ -162,7 +162,7 @@ def test_every_official_heading_is_translated(modelo: str, locale: str) -> None:
         key for revision_id, _revision in _revisions(modelo) for key, _ in _quoted_keys(_layout(modelo, revision_id))
     }
     assert keys
-    assert sorted(key for key in keys if not lookup_translation(key, locale=locale)) == []
+    assert sorted(key for key in keys if not bool(lookup_translation(key, locale=locale))) == []
 
 
 @pytest.mark.parametrize("modelo", _COVERED)

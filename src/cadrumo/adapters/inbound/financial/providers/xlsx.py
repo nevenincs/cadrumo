@@ -126,7 +126,7 @@ class XlsxProvider(FinancialProvider):
                 is_valid=False,
                 warnings=(f"{layout.bank_name} worksheet has no data rows after the header",),
             )
-        if not find_column(header_lookup(header_row), layout.columns.currency):
+        if not bool(find_column(header_lookup(header_row), layout.columns.currency)):
             warnings.append(
                 f"{layout.bank_name} worksheet has no currency column; falling back to {default_currency()}",
             )

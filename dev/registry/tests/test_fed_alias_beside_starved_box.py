@@ -135,7 +135,11 @@ def _pairings() -> dict[tuple[str, str, str], tuple[str, ...]]:
             fed = [c for c in revision.casillas if str(c.id) in owned and not _is_box_number(c.number)]
             if not fed:
                 continue
-            starved = [c for c in revision.casillas if _is_box_number(c.number) and c.binding and not c.export_refs]
+            starved = [
+                c
+                for c in revision.casillas
+                if _is_box_number(c.number) and (c.binding is not None and c.binding) and not c.export_refs
+            ]
             if not starved:
                 continue
 

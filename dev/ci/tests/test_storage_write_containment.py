@@ -77,7 +77,7 @@ def _imports(tree: ast.Module) -> tuple[dict[str, str], dict[str, str]]:
         if isinstance(node, ast.Import):
             for alias in node.names:
                 local = alias.asname or alias.name.split(".")[0]
-                modules[local] = alias.name if alias.asname else alias.name.split(".")[0]
+                modules[local] = alias.name if (alias.asname is not None and alias.asname) else alias.name.split(".")[0]
         elif isinstance(node, ast.ImportFrom):
             for alias in node.names:
                 symbols[alias.asname or alias.name] = f"{node.module or ''}.{alias.name}"

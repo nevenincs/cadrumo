@@ -9,7 +9,7 @@ with the persistence adapter test tree rather than ``cadrumo.tests``.
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Generator, Iterator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -42,7 +42,7 @@ from ...storage.tests.secure_sql import isolated_profile_storage_root
 
 
 @contextmanager
-def _profile_authority_scope() -> Iterator[PinnedAuthorityOperation]:
+def _profile_authority_scope() -> Generator[PinnedAuthorityOperation]:
     """Build profile fixtures under the same published authority the product reads.
 
     The profile a fixture seeds is read back by real CLI and TUI invocations,
@@ -79,7 +79,7 @@ def register_minimal_profile(
         profile_id = canonical_profile_bucket_id(profile_id)
         merged: dict[str, str] = dict(REQUIRED_PROFILE_PLACEHOLDERS)
         merged["identity.tax_id"] = _distinct_valid_nif(profile_id, operation=operation)
-        if overrides:
+        if overrides is not None and overrides:
             merged.update(overrides)
         facts = tuple(UserProfileFact(path=path, value=value) for path, value in merged.items() if value)
         record = create_user_profile_record(
@@ -130,7 +130,7 @@ def register_cli_profile(
     with _profile_authority_scope() as operation:
         merged: dict[str, str] = dict(REQUIRED_PROFILE_PLACEHOLDERS)
         merged["identity.tax_id"] = _distinct_valid_nif(label, operation=operation)
-        if facts:
+        if facts is not None and facts:
             merged.update(facts)
         passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
         create_context = operation.profile_create_context()
@@ -176,7 +176,7 @@ class LiveAeatProfile:
 
 
 @contextmanager
-def live_clave_movil_profile_scope(base: Path) -> Iterator[LiveAeatProfile]:
+def live_clave_movil_profile_scope(base: Path) -> Generator[LiveAeatProfile]:
     """Create on first use, then log in, the Cl@ve Movil profile named by the environment.
 
     The profile's fiscal identity is ``CADRUMO_CLAVE_MOVIL_DNI_NIE`` and its

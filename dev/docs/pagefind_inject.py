@@ -457,23 +457,23 @@ def _meta_for(
         **{summary_meta_key(language): _summary_for(record, language) for language in languages},
     }
     md = record.metadata
-    if md.concept_id:
+    if md.concept_id is not None and md.concept_id:
         meta["concept_id"] = md.concept_id
-    if md.domain:
+    if md.domain is not None and md.domain:
         meta["domain"] = md.domain
-    if md.modelo:
+    if md.modelo is not None and md.modelo:
         meta["modelo"] = md.modelo
-    if record.kind.value == "casilla" and md.casilla_id:
+    if record.kind.value == "casilla" and (md.casilla_id is not None and md.casilla_id):
         meta["casilla_id"] = md.casilla_id
-    if md.number:
+    if md.number is not None and md.number:
         meta["number"] = md.number
-    if md.segmento:
+    if md.segmento is not None and md.segmento:
         # The casilla card crumb: a segmented modelo (M200 ``DP200014:00562``)
         # shows its segmento beside the modelo/number so the operator can tell
         # sibling casillas apart at a glance. Grounding (legal/source refs) stays
         # off the index meta and renders at the destination (D6).
         meta["segmento"] = md.segmento
-    if md.command_path:
+    if md.command_path is not None and md.command_path:
         meta["command_path"] = md.command_path
     return meta
 
@@ -495,7 +495,7 @@ def _filters_for(
         "kind": [record.kind.value],
         "language": [language.value for language in languages],
     }
-    if record.metadata.domain:
+    if record.metadata.domain is not None and record.metadata.domain:
         filters["domain"] = [record.metadata.domain]
     return filters
 

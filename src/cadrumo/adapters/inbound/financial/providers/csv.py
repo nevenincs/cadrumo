@@ -280,7 +280,7 @@ class CsvProvider(FinancialProvider):
             )
         warnings: list[str] = []
         lookup = header_lookup(rows[header_index])
-        if not find_column(lookup, layout.columns.currency):
+        if not bool(find_column(lookup, layout.columns.currency)):
             warnings.append(
                 f"{_currency_warning_subject(layout, lookup)} has no currency column; "
                 f"falling back to {default_currency()}",
@@ -420,7 +420,7 @@ def layout_score(lookup: Mapping[str, str], layout: CsvBankLayout) -> int:
         layout.columns.external_id,
     )
     for aliases in optional_groups:
-        if aliases and find_column(lookup, aliases):
+        if aliases and bool(find_column(lookup, aliases)):
             score += 1
     return score
 
@@ -494,7 +494,7 @@ def parse_tabular_transaction_row(
 ) -> ParsedTabularTransactionRow:
     """Project one bank-layout row into typed transaction fields."""
     transaction_id = _value_from_aliases(raw_fields, lookup, layout.columns.external_id)
-    if not transaction_id:
+    if not (transaction_id is not None and transaction_id):
         transaction_id = synthesize_transaction_id(
             provider_name=synthetic_provider_name,
             source_sha256=source_sha256,

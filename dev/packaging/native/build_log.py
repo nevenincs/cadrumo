@@ -36,7 +36,7 @@ def selected_level(environment: Mapping[str, str] | None = None) -> str:
     if requested and requested not in LEVELS:
         raise ValueError(f"{LEVEL_VARIABLE} must be one of {', '.join(LEVELS)}, not {requested!r}")
     level = requested or DEFAULT_LEVEL
-    if environment.get("VERBOSE") and LEVELS.index(level) < LEVELS.index("VERBOSE"):
+    if bool(environment.get("VERBOSE")) and LEVELS.index(level) < LEVELS.index("VERBOSE"):
         level = "VERBOSE"
     return level
 

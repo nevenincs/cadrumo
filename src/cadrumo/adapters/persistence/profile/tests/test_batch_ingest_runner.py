@@ -247,7 +247,7 @@ def test_the_refused_row_says_what_was_wrong_with_that_document(
     result = _run(runtime_profile, batch_dir)
     poison = next(item for item in result.items if item.source_name == _POISON)
 
-    assert poison.refusal_code
+    assert poison.refusal_code is not None and poison.refusal_code
     assert poison.refusal_verdict is not None, "a refusal must name the condition that failed"
     assert poison.refusal_verdict.failed_condition_id
     facts = {key: value for evidence in poison.refusal_verdict.evidence for key, value in evidence.values.items()}

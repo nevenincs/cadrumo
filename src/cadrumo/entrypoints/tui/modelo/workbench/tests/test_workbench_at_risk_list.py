@@ -118,7 +118,7 @@ async def test_a_modelo_100_whose_values_nobody_typed_names_sections_with_counts
     operation: PinnedAuthorityOperation,
 ) -> None:
     built = _modelo_100(operation)
-    boxes = {field.box for field in built.fields() if field.box}
+    boxes = {field.box for field in built.fields() if (field.box is not None and field.box)}
     form = replace_fields(built, {box: {"unattributed": True} for box in boxes}).model_copy(
         update={"calculation_revision_id": "b" * 64, "operator_entries_known": False}
     )

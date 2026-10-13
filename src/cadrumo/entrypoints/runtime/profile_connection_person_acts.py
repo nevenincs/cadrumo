@@ -1,4 +1,4 @@
-"""Refuse on the MCP frontend the requests that are the person's own act.
+"""Refuse on an agent's frontend the requests that are the person's own act.
 
 An agent works only inside the one profile the person signed in to, or one the
 person issued a key for, and never authenticates, administers sessions or
@@ -6,8 +6,8 @@ access, or handles a secret. The MCP harness offers no tool that sends any of
 these requests, which is the decisive control. The frontend a request names is
 a client's claim, so this refusal is defence in depth, keyed on the act: each
 request listed in :mod:`cadrumo.application.operations.person_acts` is refused
-here when it arrives on the MCP frontend, with one typed code that tells the
-agent to have the person act in Cadrumo.
+here when it arrives on any frontend that is not the person's, with one typed
+code that tells the agent to have the person act in Cadrumo.
 """
 
 from __future__ import annotations
@@ -16,6 +16,7 @@ import time
 from typing import TYPE_CHECKING
 
 from ...adapters.local_runtime.runtime_frame_io import write_document
+from ...application.operations.person_acts import is_persons_frontend
 from ...application.operations.registry import OperationFrontendProjection
 from ...application.runtime.contracts import RuntimeByteChannel
 from ...application.runtime.profile_access import RuntimeAccessRefusal
@@ -32,11 +33,11 @@ _WRITE_SECONDS = 5
 
 
 class ProfileConnectionPersonActMixin:
-    """Refuse the person's acts on the MCP frontend, wherever the runtime's door receives one."""
+    """Refuse the person's acts on an agent's frontend, wherever the runtime's door receives one."""
 
     def _require_persons_frontend(self: RuntimeProfileConnections, frontend: OperationFrontendProjection) -> None:
-        """Refuse a person's act that names the MCP frontend, with the code that sends the agent to the person."""
-        if frontend is OperationFrontendProjection.MCP:
+        """Refuse a person's act that names an agent's frontend, with the code that sends the agent to the person."""
+        if not is_persons_frontend(frontend):
             raise ProfileAccessRefusedError(AccessDenialCode.PERSON_ACT_REQUIRED)
 
     def _connection_frontend(
@@ -55,7 +56,7 @@ class ProfileConnectionPersonActMixin:
         request_id: UUID,
         frontend: OperationFrontendProjection | None,
     ) -> bool:
-        """Answer a person's act from the MCP frontend with the typed refusal, and say whether it was refused.
+        """Answer a person's act from an agent's frontend with the typed refusal, and say whether it was refused.
 
         ``frontend`` is the one the request names, or else the one its
         connection logged in with; a request whose connection has not logged

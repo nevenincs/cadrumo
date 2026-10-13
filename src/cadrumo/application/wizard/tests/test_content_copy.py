@@ -165,5 +165,5 @@ def test_tax_id_page_copy_carries_the_identity_hint_in_spanish(*, registry_setup
     assert isinstance(page, FlowPage)
     with override_settings(cadrumo_output_language="es"):
         copy = assemble_page_copy(page)
-    assert copy.format_hint, "tax-id page must carry a resolved format hint"
+    assert copy.format_hint is not None and copy.format_hint, "tax-id page must carry a resolved format hint"
     assert "12345678Z" in copy.format_hint

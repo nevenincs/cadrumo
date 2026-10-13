@@ -298,7 +298,7 @@ def _base_empty(row: ModeloFormGridRow, rate_box: ModeloFormField | None) -> boo
         return None
     fields = [cell.field for cell in row.cells]
     index = next((position for position, item in enumerate(fields) if item is rate_box), None)
-    base = None if not index else fields[index - 1]
+    base = None if not (index is not None and index) else fields[index - 1]
     if base is None or base.data_type == _RATIO_DATA_TYPE:
         return None
     return not _holds_amount(base)
@@ -391,7 +391,11 @@ def _grid_row_items(
         slots=tuple(slots),
         span=len(row_items),
         rate=None if rate_box is None else shown_rate(rate_box),
-        boxes=tuple(cell.field.box for cell in row.cells if cell.field is not None and cell.field.box),
+        boxes=tuple(
+            cell.field.box
+            for cell in row.cells
+            if cell.field is not None and (cell.field.box is not None and cell.field.box)
+        ),
     )
     return CasillaListHeading(row.heading.text, level=1, row=place), row_items
 

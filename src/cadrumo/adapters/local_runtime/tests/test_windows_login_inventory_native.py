@@ -15,7 +15,7 @@ from __future__ import annotations
 import hashlib
 import json
 import time
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
@@ -55,7 +55,7 @@ def _native_error_number(error: BaseException) -> int | None:
 
 
 @contextmanager
-def _evidence(kind: str) -> Iterator[dict[str, object]]:
+def _evidence(kind: str) -> Generator[dict[str, object]]:
     facts: dict[str, object] = {"passed": False}
     artifact = (
         Path(__file__).resolve().parents[5]

@@ -146,7 +146,7 @@ def _wheel_identity(wheel: Path) -> tuple[str, str, tuple[str, ...]]:
     metadata = read_wheel_metadata(wheel)
     name = metadata.get("Name")
     version = metadata.get("Version")
-    if not name or not version:
+    if not (name is not None and name) or not (version is not None and version):
         raise SystemExit(f"wheel metadata lacks Name or Version: {wheel}")
     return (
         normalise_distribution_name(name),
@@ -171,7 +171,7 @@ def _sdist_identity(sdist: Path) -> tuple[str, str, tuple[str, ...]]:
         raise SystemExit(f"invalid source distribution {sdist}: {exc}") from exc
     name = metadata.get("Name")
     version = metadata.get("Version")
-    if not name or not version:
+    if not (name is not None and name) or not (version is not None and version):
         raise SystemExit(f"sdist metadata lacks Name or Version: {sdist}")
     return (
         normalise_distribution_name(name),

@@ -36,7 +36,7 @@ import json
 import re
 import socket
 import threading
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from http import HTTPStatus
 from pathlib import Path
@@ -115,7 +115,7 @@ _UNSATISFIABLE_MARGIN_BYTES = 1 << 60
 
 
 @contextmanager
-def _recording_runtime() -> Iterator[tuple[str, list[str]]]:
+def _recording_runtime() -> Generator[tuple[str, list[str]]]:
     """Serve a runtime that answers the fill and records every request that reaches it."""
     arrivals: list[str] = []
 
@@ -136,7 +136,7 @@ def _recording_runtime() -> Iterator[tuple[str, list[str]]]:
 
 
 @contextmanager
-def _unreachable_runtime_url() -> Iterator[str]:
+def _unreachable_runtime_url() -> Generator[str]:
     """Reserve a loopback port that nothing listens on, so a connection is refused."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as reserved:
         reserved.bind(("127.0.0.1", 0))
@@ -350,7 +350,7 @@ def _start_holding_read(tmp_path: Path) -> tuple[threading.Thread, list[object]]
 
 
 @contextmanager
-def _runtime_with_the_slot(tmp_path: Path, *, held: bool) -> Iterator[list[str]]:
+def _runtime_with_the_slot(tmp_path: Path, *, held: bool) -> Generator[list[str]]:
     """Serve the reading runtime, with another read holding the inference slot when ``held``.
 
     Yields the requests that reached the runtime OTHER than the holding read,

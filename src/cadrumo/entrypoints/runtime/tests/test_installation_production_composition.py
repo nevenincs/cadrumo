@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import asyncio
 import sys
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 from uuid import uuid4
@@ -74,7 +74,7 @@ def test_the_census_detects_an_act_the_registry_does_not_serve() -> None:
 
 
 @contextmanager
-def _installed_runtime(tmp_path: Path) -> Iterator[Path]:
+def _installed_runtime(tmp_path: Path) -> Generator[Path]:
     """Serve one storage root that the runtime's handlers and the frontends' opener both resolve."""
     root = tmp_path / "cadrumo-storage"
     root.mkdir()

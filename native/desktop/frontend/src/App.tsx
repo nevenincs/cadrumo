@@ -2068,7 +2068,10 @@ export function App({ host }: { host: Host }) {
       <AgentColumn
         agent={host.agent}
         session={host.agentSession}
-        reader={reader}
+        providerSettings={host.providerSettings}
+        // The agent works only for a profile that is signed in here: not
+        // for one the shell cannot tell about.
+        reader={signedIn ? (account.status?.active_profile ?? null) : null}
         shown={agentVisible}
         locale={locale}
         body={agentBody}

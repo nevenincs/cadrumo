@@ -66,12 +66,12 @@ def _import_bindings(module: ShippedModule) -> dict[str, str]:
     for node in module.tree.body:
         if isinstance(node, ast.ImportFrom):
             base = resolve_relative_import(module.name, module.is_package, node.level, node.module)
-            if base:
+            if base is not None and base:
                 bindings.update((alias.asname or alias.name, f"{base}.{alias.name}") for alias in node.names)
         elif isinstance(node, ast.Import):
             for alias in node.names:
                 bindings[alias.asname or alias.name.split(".")[0]] = (
-                    alias.name if alias.asname else alias.name.split(".")[0]
+                    alias.name if (alias.asname is not None and alias.asname) else alias.name.split(".")[0]
                 )
         elif isinstance(node, ast.Assign | ast.AnnAssign) and node.value is not None:
             original = _expression_name(node.value)
@@ -149,7 +149,7 @@ def framework_contracts(modules: Mapping[str, ShippedModule]) -> dict[str, dict[
             target = _expression_name(base)
             head, separator, tail = target.partition(".")
             bound = bindings[key[0]].get(head)
-            qualified = f"{bound}{separator}{tail}" if bound else f"{key[0]}.{target}"
+            qualified = f"{bound}{separator}{tail}" if (bound is not None and bound) else f"{key[0]}.{target}"
             followed: set[str] = set()
             while qualified not in followed:
                 followed.add(qualified)

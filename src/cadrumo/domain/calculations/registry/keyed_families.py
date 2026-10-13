@@ -127,7 +127,9 @@ def _validate_family_spec_identity(spec: KeyedFamilySpec) -> None:
         raise ValueError(f"family {spec.section!r} needs a storage identity")
     if not set(spec.casilla_identity_fields).issubset(spec.identity_fields):
         raise ValueError(f"casilla identity fields must be identity fields: {spec.section!r}")
-    if spec.inheritance in {FamilyInheritanceMode.CASILLA, FamilyInheritanceMode.KEYED} and not spec.identity:
+    if spec.inheritance in {FamilyInheritanceMode.CASILLA, FamilyInheritanceMode.KEYED} and not (
+        spec.identity is not None and spec.identity
+    ):
         raise ValueError(f"inherited family {spec.section!r} needs an identity")
 
 

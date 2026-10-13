@@ -19,7 +19,6 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.application.ledger.action_ports import LedgerActionPorts
 from cadrumo.application.ledger.actions_manual import (
     attach_manual_transaction_evidence,
-    create_manual_transaction,
     update_manual_transaction_fields,
 )
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
@@ -31,6 +30,7 @@ from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction
 
+from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from .ledger_action_create_support import ledger_ports_for_test
 
 BUCKET_ID = "43434343-4343-4343-8343-434343434343"

@@ -132,7 +132,7 @@ def test_every_reason_has_its_own_sentences_in_every_language(language: str) -> 
         key
         for reason in _REASONS
         for key in (what_locale_key(reason), what_to_do_locale_key(reason))
-        if not lookup_translation(key, locale=language)
+        if not bool(lookup_translation(key, locale=language))
     ]
 
     assert unworded == []

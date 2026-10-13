@@ -216,7 +216,7 @@ def test_inspect_bridge_correlates_full_revision_identity_and_read_only_effect(
     assert request.profile_id == _PROFILE
     assert request.asset_id == revision.asset_id
     revisions = projection.revisions
-    if not revisions:
+    if not (revisions is not None and revisions):
         raise AssertionError("inspect projection omitted its revision chain")
     assert revisions[0].revision.to_domain() == revision
 

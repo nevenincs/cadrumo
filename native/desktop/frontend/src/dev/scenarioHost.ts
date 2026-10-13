@@ -24,6 +24,7 @@ import {
   type FixtureStream,
 } from "./agentFixtureHost";
 import { BUSY_CALENDAR } from "./fixtures/calendarBusy";
+import { providerSettingsFixture } from "./providerSettingsFixture";
 import {
   AHEAD_CALENDAR,
   BEHIND_CALENDAR,
@@ -251,9 +252,17 @@ export function scenarioHost(
     refused: () => failure("timed_out", "cli"),
   });
 
+  const providerSettings = providerSettingsFixture({
+    say,
+    wait: () => wait(options.latencyMs),
+    readable,
+  });
+
   return {
     available: true,
-    ...(scenario.views === "none" ? {} : { views, agent, agentSession }),
+    ...(scenario.views === "none"
+      ? {}
+      : { views, agent, agentSession, providerSettings }),
     ...(scenario.profiles === "absent" ? {} : { profiles }),
     ...managerCommand,
     ...(supervision

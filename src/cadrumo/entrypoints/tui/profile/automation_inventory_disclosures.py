@@ -54,7 +54,7 @@ class AutomationInventoryDisclosureMixin:
             None if target_id is None else DisclosurePager(InventoryDisclosureReader(self._client, target_id))
         )
         for button in self.query("#automation-inventory-disclosures"):
-            button.disabled = target_id is None or not digest
+            button.disabled = target_id is None or not (digest is not None and digest)
 
     def _start_disclosure_page(self: RuntimeAutomationInventoryScreen) -> None:
         if self._busy or self._access_lost or self._disclosure_pager is None or self._disclosure_digest is None:

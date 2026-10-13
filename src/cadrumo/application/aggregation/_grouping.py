@@ -140,7 +140,7 @@ def group_and_collect_names[T, GroupKey: tuple[object, ...], IdentityKey: tuple[
     for observation in available:
         identity_key = identity_key_fn(observation)
         name = name_fn(observation)
-        if name and not names.get(identity_key):
+        if (name is not None and name) and not bool(names.get(identity_key)):
             names[identity_key] = name
     return grouped, names
 

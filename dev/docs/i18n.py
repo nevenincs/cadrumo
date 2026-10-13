@@ -41,7 +41,7 @@ from typing import TYPE_CHECKING, Final
 _ROOT_FOR_DIRECT_INVOCATION = Path(__file__).resolve().parents[2]
 if str(_ROOT_FOR_DIRECT_INVOCATION) not in sys.path:
     sys.path.insert(0, str(_ROOT_FOR_DIRECT_INVOCATION))
-if not __package__:
+if not (__package__ is not None and __package__):
     __package__ = "dev.docs"
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory

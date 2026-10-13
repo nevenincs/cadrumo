@@ -103,7 +103,11 @@ def _manual_add_notices(
     transaction = result.transaction
     if transaction is None:
         raise InternalInvariantError("ledger add notices require a successful transaction projection")
-    normalized_idempotency_key = idempotency_key.strip() if idempotency_key and idempotency_key.strip() else None
+    normalized_idempotency_key = (
+        idempotency_key.strip()
+        if (idempotency_key is not None and idempotency_key) and idempotency_key.strip()
+        else None
+    )
     notices: list[Notice] = []
     extra_lines: list[str] = []
     if not result.bucket_event_ids:

@@ -256,7 +256,7 @@ def discover_iva_compensation_wallet_entrypoint(html: str, *, base_url: str) -> 
     soup = parse_html(html)
     for node in soup.find_all(["a", "form"]):
         raw_url = node.get("href") if node.name == "a" else node.get("action")
-        if not raw_url:
+        if not (raw_url is not None and raw_url):
             continue
         candidate = _absolute_audited_wallet_url(str(raw_url), base_url=base_url)
         if candidate is not None:

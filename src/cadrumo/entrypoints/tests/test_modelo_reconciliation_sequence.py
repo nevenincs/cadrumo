@@ -11,7 +11,7 @@ the production ones.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import AbstractContextManager, asynccontextmanager, nullcontext
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -166,7 +166,7 @@ class _FiledPort:
         authority_operation: PinnedAuthorityOperation | None = None,
         effect_guard: FiledEffectGuard | None = None,
         on_session_write: SessionWriteReporter | None = None,
-    ) -> AsyncIterator[FiledDataRegisterPort]:
+    ) -> AsyncGenerator[FiledDataRegisterPort]:
         yield self._register
 
 

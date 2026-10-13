@@ -43,7 +43,7 @@ def _obs(
         operation_kind=op_kind,
         operation_period=period,
         taxable_base=Decimal(base),
-        invoice_total=Decimal(invoice_total) if invoice_total else Decimal(base),
+        invoice_total=Decimal(invoice_total) if (invoice_total is not None and invoice_total) else Decimal(base),
         accrued_on=accrued,
     )
 

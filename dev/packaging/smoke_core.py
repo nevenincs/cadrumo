@@ -49,7 +49,7 @@ def _wheel_identity(wheel: Path) -> tuple[str, str]:
     metadata = read_wheel_metadata(wheel)
     name = metadata.get("Name")
     version = metadata.get("Version")
-    if not name or not version:
+    if not (name is not None and name) or not (version is not None and version):
         raise SystemExit(f"wheel metadata is missing Name or Version: {wheel}")
     return normalise_distribution_name(name), version
 

@@ -37,7 +37,7 @@ def run_ledger_allocate(
         category_id=category_id,
         usage_ratio_id=usage_ratio_id,
         prorrata_reference=prorrata_reference,
-        actor=actor if actor else None,
+        actor=actor if (actor is not None and actor) else None,
     )
     completed = run_registered_operation(
         client,

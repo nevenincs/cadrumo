@@ -160,7 +160,7 @@ def _lifecycle_work_unit_id(
     object it references.
     """
     payload_work_unit_id = event.payload.get("work_unit_id")
-    if payload_work_unit_id:
+    if payload_work_unit_id is not None and payload_work_unit_id:
         return payload_work_unit_id
     object_id = event.object_id
     if event.object_type is BucketEventObjectType.WORK_UNIT:

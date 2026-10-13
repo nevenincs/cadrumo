@@ -14,7 +14,7 @@ import signal
 import sys
 import sysconfig
 import time
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager, suppress
 from importlib.metadata import version
 from pathlib import Path
@@ -93,7 +93,7 @@ async def _reap(process: asyncio.subprocess.Process) -> None:
 @asynccontextmanager
 async def _supervised(
     root: Path, identity: str, *, announcements: int | None = None
-) -> AsyncIterator[asyncio.subprocess.Process]:
+) -> AsyncGenerator[asyncio.subprocess.Process]:
     environment = os.environ.copy()
     # Native IPC acceptance is independent of the test runner's desktop session.
     environment["CADRUMO_DEV_RUNTIME_SESSION_OVERRIDE"] = "1"
@@ -459,13 +459,10 @@ async def test_an_unexpected_failure_reports_only_its_reason_code(
 
 
 @pytest.mark.asyncio
-@pytest.mark.skipif(sys.platform != "win32", reason="only a Windows token carries a UAC elevation type")
-async def test_elevation_does_not_reject_the_runtime_owner(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+async def test_supervised_start_reaches_the_runtime_owner(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("CADRUMO_LOG_DIR", str(tmp_path / "logs"))
     arguments = ("--storage-root", str(tmp_path), "--storage-identity", "0" * 64, "--expected-version", "synthetic")
-    process = await launch_fixture(_STREAMS_FIXTURE, "elevated", str(tmp_path), *arguments, "--supervised")
+    process = await launch_fixture(_STREAMS_FIXTURE, "owner-reached", str(tmp_path), *arguments, "--supervised")
     try:
         output, errors = await _remaining_output(process)
         exit_code = await asyncio.wait_for(process.wait(), timeout=_STARTUP_TIMEOUT_SECONDS)

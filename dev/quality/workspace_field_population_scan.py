@@ -146,7 +146,9 @@ def _record_generic_factory_construction(
                 continue
             model = bound.get(inner.func.id)
             if model is not None:
-                supplied[model].update(keyword.arg for keyword in inner.keywords if keyword.arg)
+                supplied[model].update(
+                    keyword.arg for keyword in inner.keywords if (keyword.arg is not None and keyword.arg)
+                )
 
 
 def _declared_fields(models_module: Path) -> dict[str, dict[str, bool]]:
@@ -213,7 +215,9 @@ def _collect_supplied_fields(node: ast.AST, known: set[str], supplied: dict[str,
         return
     constructed = _constructed_name(node.func, known)
     if constructed is not None:
-        supplied[constructed].update(keyword.arg for keyword in node.keywords if keyword.arg)
+        supplied[constructed].update(
+            keyword.arg for keyword in node.keywords if (keyword.arg is not None and keyword.arg)
+        )
     _record_validated_model_fields(node, known, supplied)
 
 

@@ -573,10 +573,10 @@ def resolve_default_actor() -> str:
         from ...core.bucket_pointer import resolve_active_bucket_id
 
         label = active_profile_label()
-        if label:
+        if label is not None and label:
             return label
         active = resolve_active_bucket_id()
-        if active:
+        if active is not None and active:
             return active
     except Exception:
         _log.debug("default actor lookup failed; falling back to operator label", exc_info=True)

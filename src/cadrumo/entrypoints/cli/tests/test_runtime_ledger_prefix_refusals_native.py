@@ -17,8 +17,8 @@ from ....adapters.persistence.storage.master_key.active_session import (
     close_active_bucket_session,
     current_active_bucket_session,
 )
-from ....application.ledger.actions_manual import create_manual_transaction
 from ....application.ledger.models import ManualLedgerTransactionCommand
+from ....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from ....application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from ....core.config import override_settings
 from ....core.hashing import HEX_ALPHABET

@@ -637,7 +637,11 @@ def test_no_full_screen_surface_reaches_an_outbound_adapter_directly() -> None:
     offenders: list[tuple[str, str]] = []
     for path in _paths_under(prefix):
         for node in ast.walk(_tree().parsed(path)):
-            if isinstance(node, ast.ImportFrom) and node.module and "adapters.outbound" in node.module:
+            if (
+                isinstance(node, ast.ImportFrom)
+                and (node.module is not None and node.module)
+                and "adapters.outbound" in node.module
+            ):
                 offenders.append((path, node.module))
             elif isinstance(node, ast.Import):
                 offenders.extend((path, alias.name) for alias in node.names if "adapters.outbound" in alias.name)

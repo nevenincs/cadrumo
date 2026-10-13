@@ -909,11 +909,16 @@ class Invoice(BaseModel):
         _normalization.raise_first_invoice_violation(
             (
                 (
-                    (self.invoice_class == rectificativa, not self.series) == (True, True),
+                    (self.invoice_class == rectificativa, not (self.series is not None and self.series))
+                    == (True, True),
                     "a factura rectificativa must be issued in a specific series (RD 1619/2012 art. 6.1.a.2.º)",
                 ),
                 (
-                    (self.invoice_class == rectificativa, not self.rectifies_invoice_number) == (True, True),
+                    (
+                        self.invoice_class == rectificativa,
+                        not (self.rectifies_invoice_number is not None and self.rectifies_invoice_number),
+                    )
+                    == (True, True),
                     "a factura rectificativa must name the invoice it rectifies (LIVA art. 89)",
                 ),
                 (

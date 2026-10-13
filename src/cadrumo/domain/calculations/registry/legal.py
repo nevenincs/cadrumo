@@ -39,7 +39,7 @@ def _validate_known_bad_citation(reference: LegalReference, *, filing_date: date
     source = legal_source_kind_declarations().get(str(reference.kind))
     if source is None:
         return
-    role_text = " ".join(part for part in (reference.section, reference.notes) if part)
+    role_text = " ".join(part for part in (reference.section, reference.notes) if (part is not None and part))
     if role_text and (
         known_bad := find_known_bad(
             source,

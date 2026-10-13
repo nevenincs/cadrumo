@@ -632,7 +632,8 @@ def product_env_var_names() -> frozenset[str]:
     names.update(
         location.settings_field.upper()
         for location in STORAGE_TAXONOMY.values()
-        if location.override_policy is StorageOverridePolicy.OPERATOR_OVERRIDABLE and location.settings_field
+        if location.override_policy is StorageOverridePolicy.OPERATOR_OVERRIDABLE
+        and (location.settings_field is not None and location.settings_field)
     )
     return frozenset(names)
 

@@ -13,7 +13,7 @@ from __future__ import annotations
 import asyncio
 import os
 import secrets
-from collections.abc import AsyncGenerator, Awaitable, Callable, Generator, Iterator
+from collections.abc import AsyncGenerator, Awaitable, Callable, Generator
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -193,8 +193,9 @@ class _SessionsWitness(ProfileWorkerCustody):
         yield
 
     @override
-    def retire(self, session_id: UUID) -> None:
-        self._sessions.pop(session_id, None)
+    def retire(self, session_id: UUID) -> frozenset[UUID]:
+        retired = self._sessions.pop(session_id, None)
+        return frozenset({session_id}) if retired is not None else frozenset[UUID]()
 
 
 class _ScopeCeilingPermit(WorkerAuthorizationClient):
@@ -428,7 +429,7 @@ def _location(document: dict[str, JsonValue]) -> JsonValue:
 
 
 @contextmanager
-def _worker(tmp_path: Path) -> Iterator[_Worker]:
+def _worker(tmp_path: Path) -> Generator[_Worker]:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         identity = ProfileWorkerIdentity(
             worker_id=uuid4(),

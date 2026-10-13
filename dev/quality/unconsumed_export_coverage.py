@@ -63,7 +63,7 @@ def _imported_pairs(tree: ast.Module, module: str, is_package: bool) -> set[tupl
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom):
             base = resolve_relative_import(module, is_package, node.level, node.module)
-            if base:
+            if base is not None and base:
                 pairs.update((base, alias.name) for alias in node.names)
     return pairs
 

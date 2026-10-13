@@ -15,7 +15,7 @@ atomicity the code does not yet have.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from decimal import Decimal
 from pathlib import Path
@@ -58,7 +58,7 @@ def _eligible_category() -> SpendingCategory:
 
 
 @contextmanager
-def _profile() -> Iterator[PinnedAuthorityOperation]:
+def _profile() -> Generator[PinnedAuthorityOperation]:
     """Lease the published facts while retaining encrypted storage."""
     with (
         bundled_indexed_authority().operation() as operation,

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import sqlite3
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import replace
 from datetime import UTC, datetime
@@ -132,7 +132,7 @@ def _execute[ResultT: BaseModel](
 
 
 @contextmanager
-def _profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
+def _profile(tmp_path: Path) -> Generator[TestRuntimeProfile]:
     """One real encrypted profile, its session open, with the workflow store composed."""
     with (
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id=str(_PROFILE)) as profile,

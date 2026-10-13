@@ -124,7 +124,7 @@ async def test_previous_keeps_saved_answers_and_incomplete_review_returns_to_req
             await pilot.press("escape")
             await pilot.pause()
             value = app._field_by_key[path].value
-            assert value
+            assert value is not None and value
             await pilot.click("#onboarding-previous")
             await pilot.pause()
             assert app._setup_stage is ProfileSetupStage.GET_DATA

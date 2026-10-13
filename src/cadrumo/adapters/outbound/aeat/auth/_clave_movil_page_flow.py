@@ -315,7 +315,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
         surface = self._clave_surface()
         if await self._observe_clave_page(page, target_path) is ClaveMovilPageState.AUTHENTICATED:
             return
-        if verification_code:
+        if verification_code is not None and verification_code:
             return
 
         has_wait_marker, has_wait_url = await self._push_wait_state_signals(

@@ -13,7 +13,7 @@ from __future__ import annotations
 import asyncio
 import json
 import sqlite3
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -83,7 +83,7 @@ _OBSERVED = SiteHealthStatus(
 
 
 @contextmanager
-def _profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
+def _profile(tmp_path: Path) -> Generator[TestRuntimeProfile]:
     """One real encrypted profile that is the active selection, its session open in this process."""
     with (
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id=str(_PROFILE)) as profile,

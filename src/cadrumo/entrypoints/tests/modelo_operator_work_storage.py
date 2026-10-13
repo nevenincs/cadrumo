@@ -16,7 +16,7 @@ the first calculation.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator, Generator
+from collections.abc import AsyncGenerator, Generator
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
@@ -107,7 +107,7 @@ class _CommitSection:
     """The supervisor's irreversible section, which these direct executor runs never cancel."""
 
     @asynccontextmanager
-    async def irreversible_section(self) -> AsyncIterator[None]:
+    async def irreversible_section(self) -> AsyncGenerator[None]:
         yield
 
 

@@ -59,7 +59,7 @@ class WorkbenchFooterMixin:
             return
 
         def closed(discard: bool | None) -> None:
-            if discard:
+            if discard is not None and discard:
                 self._session.discard()
                 leave()
 
@@ -111,7 +111,7 @@ class WorkbenchFooterMixin:
 
     def _key_label(self: ModeloWorkbenchScreen, key: str, translation_key: str) -> str:
         own = self._bindings.key_to_bindings.get(key)
-        binding = own[0] if own else self.query_one(CasillaList).binding_for(key)
+        binding = own[0] if (own is not None and own) else self.query_one(CasillaList).binding_for(key)
         display = key if binding is None else self.app.get_key_display(binding)
         return f"{display} {tr(translation_key)}"
 

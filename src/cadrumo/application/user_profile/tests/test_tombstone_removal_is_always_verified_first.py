@@ -52,7 +52,7 @@ def _called_names(node: ast.AST) -> list[tuple[int, str]]:
             continue
         target = inner.func
         name = target.attr if isinstance(target, ast.Attribute) else getattr(target, "id", None)
-        if name:
+        if name is not None and name:
             calls.append((inner.lineno, name))
     return calls
 

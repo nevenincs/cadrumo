@@ -537,7 +537,7 @@ dev = [
   "ruff>=0.16.7",
   # Repository-wide YAML syntax/style linting; TOML parsing goes through the rtoml-backed `cadrumo.core.toml` boundary.
   "yamllint>=1.38,<2",
-  "ty>=0.0.81",
+  "ty>=0.0.85",
   # Vault tooling — contributor-only; not imported by src/cadrumo/ and never
   # shipped in a published product wheel.
   # 0.1.55 is the first version that understands the `body_hash` frontmatter

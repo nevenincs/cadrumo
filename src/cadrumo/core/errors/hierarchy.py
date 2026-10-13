@@ -177,7 +177,7 @@ class CadrumoError(Exception):
             translated_message: Optional multilingual message override.
         """
         text = message or translated_message
-        if text:
+        if text is not None and text:
             super().__init__(text)
         else:
             super().__init__()

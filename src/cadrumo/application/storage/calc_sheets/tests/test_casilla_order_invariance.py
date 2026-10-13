@@ -123,10 +123,14 @@ def test_reordering_moves_cells_and_invalidates_a_pulled_workbook(
     permuted = _reordered(baseline)
 
     base_addresses = {
-        cell.casilla_id: str(cell.address) for cell in build_export_plan(baseline).value_cells if cell.casilla_id
+        cell.casilla_id: str(cell.address)
+        for cell in build_export_plan(baseline).value_cells
+        if (cell.casilla_id is not None and cell.casilla_id)
     }
     perm_addresses = {
-        cell.casilla_id: str(cell.address) for cell in build_export_plan(permuted).value_cells if cell.casilla_id
+        cell.casilla_id: str(cell.address)
+        for cell in build_export_plan(permuted).value_cells
+        if (cell.casilla_id is not None and cell.casilla_id)
     }
     assert base_addresses != perm_addresses, (
         f"modelo {modelo}: reordering left every cell address unchanged, so the invariance gate above proves nothing"

@@ -63,7 +63,7 @@ def _reader_endpoint_origin(endpoint_url: str) -> str | None:
         host, port = parts.hostname, parts.port
     except ValueError:
         return None
-    if not parts.scheme or not host:
+    if not parts.scheme or not (host is not None and host):
         return None
     authority = f"[{host}]" if ":" in host else host
     return f"{parts.scheme}://{authority}" if port is None else f"{parts.scheme}://{authority}:{port}"

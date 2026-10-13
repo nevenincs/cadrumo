@@ -585,7 +585,13 @@ desktop:
     attachments: Fájlok a következő üzenethez
     attachments_refused: 'Elutasítva: {count}'
     attachments_uploading: 'Feltöltés alatt: {count}'
+    can_read_images: képeket olvasni
+    can_read_pdfs: PDF-eket olvasni
+    can_search_web: a weben keresni
+    can_use_tools: eszközöket használni
+    can_write: fájlokat írni
     cancel: Mégse
+    capabilities: 'Képes: {list}'
     choose_model: Válassz modellt
     close_documents: Dokumentumok bezárása
     collapse_members: 'Fájlok elrejtése: {name}'
@@ -594,11 +600,9 @@ desktop:
     consent_items: Ezt küldenénk el
     consent_lead: 'A válaszhoz a modellnek ({model}) szüksége van az alábbi tartalomra.
       Ha elküldöd, elhagyja ezt a számítógépet, és ide kerül: {provider}.'
-    consent_messages: Az üzeneted és ez a beszélgetés eddig
     consent_note: Semmi sem megy el, amíg nem döntesz. Ha nem küldöd el, ezen a számítógépen
       marad.
     consent_title: 'Elküldöd ezt ide: {provider}?'
-    consent_tool_results: Amit a Cadrumo eszközei ehhez a beszélgetéshez találtak
     delete: Törlés
     delete_confirm: 'Törlöd ezt: „{title}”, a dokumentumaival együtt ({count})? Ez
       nem vonható vissza.'
@@ -615,14 +619,25 @@ desktop:
     drop_release_single: Engedd el 1 fájl hozzáadásához
     drop_title: Hozzáadás ehhez a beszélgetéshez
     effort: Ráfordítás
+    effort_high: Magas
+    effort_low: Alacsony
+    effort_max: Maximális
+    effort_medium: Közepes
+    effort_ultra: Ultra
+    effort_xhigh: Nagyon magas
     expand_members: 'Fájlok megjelenítése: {name}'
     files_summary: 'Fájlok: {count} · {size}'
     hide: Ügynök elrejtése
     history: Előzmények
     history_empty: Még nincs beszélgetés
     history_no_match: 'Egy beszélgetés sem felel meg ennek: „{query}”.'
+    lane_no_catalog: a modelleket nem sikerült lekérni
+    lane_not_admitted: itt nem engedélyezett
+    lane_not_configured: nincs beállítva
     lane_notice: 'Fejlesztői környezet: a beszélgetések titkosítás nélkül maradnak
       ezen a teszttárhelyen. Csak kitalált adatokat használj.'
+    lane_signed_out: nincs bejelentkezve
+    lane_unreachable: nem érhető el
     members_multiple: '{count} fájl'
     members_single: 1 fájl
     message_label: Üzenet
@@ -631,6 +646,7 @@ desktop:
     more_files: +{count} további
     new_conversation: Új beszélgetés
     no_models: Nincs választható modell
+    no_provider: Az ügynöknek még nincs használható szolgáltatója.
     provider: Szolgáltató
     provider_unavailable: '{provider}: {reason}'
     questions_answer: Válaszolok
@@ -668,6 +684,8 @@ desktop:
     service_signed_out: Jelentkezz be, hogy beszélhess az ügynökkel.
     service_starting: Az ügynök indul…
     service_stopped: Az ügynök nem fut.
+    set_up_providers: MI-szolgáltatók beállítása
+    settings: Ügynök beállításai
     settings_label: 'Modell és ráfordítás: {current}'
     settings_title: Modellbeállítások
     show: Ügynök megjelenítése
@@ -821,6 +839,66 @@ desktop:
     label: Alsó panel
     resize: Alsó panel átméretezése
     show: Alsó panel megjelenítése
+  providers:
+    add_key: Kulcs hozzáadása
+    add_token: Token hozzáadása
+    base_url_default: 'Hagyd üresen, és ezt használjuk: {url}.'
+    base_url_label: Alap-URL
+    base_url_required: 'Kötelező: ennek a szolgáltatónak nincs alapértelmezett címe.'
+    cancel: Mégse
+    consumer_assistant: Ügynök
+    consumer_extraction: Dokumentumok olvasása
+    development_note: Ebben a fejlesztői változatban a saját kulcs nélküli szolgáltató
+      a fejlesztői környezet kulcsát használja.
+    disable: Letiltás
+    disable_note: A letiltás megakadályozza, hogy a Cadrumo használja a szolgáltatót,
+      máshol talált kulccsal sem.
+    disabled: 'Letiltva: a Cadrumo nem használja, amíg nem adsz hozzá kulcsot, vagy
+      vissza nem állítod.'
+    key_label: API-kulcs ({provider})
+    key_note: Illeszd be ide. Titkosítva mentjük, és soha többé nem jelenik meg.
+    lead: A kulcsok titkosítva maradnak ebben a profilban, és soha többé nem jelennek
+      meg. Csak te adhatod hozzá, cserélheted le vagy távolíthatod el őket.
+    mode_provider_sign_in: 'Bejelentkezve ezen keresztül: {provider}'
+    mode_token: OAuth-token mentve ebben a profilban
+    readiness_disabled: Letiltva
+    readiness_missing: Nincs kulcs
+    readiness_not_verified: Mentve, még nincs használva
+    readiness_ready: Kész
+    readiness_sign_in_required: Bejelentkezés szükséges
+    readiness_unusable: Nem használható
+    reason_not_configured: Még nincs beállítva.
+    reason_record_unreadable: A mentett beállításai nem olvashatók. Add hozzá újra
+      a kulcsot.
+    reason_sign_in_with_provider_tool: Előbb jelentkezz be a szolgáltató ({provider})
+      saját alkalmazásával.
+    refresh: Frissítés
+    refused_base_url_rejected: Ez az alap-URL nem használható.
+    refused_invalid_key_format: Ez nem tűnik ennek a szolgáltatónak a kulcsának.
+    refused_not_signed_in: Jelentkezz be a kulcsok módosításához.
+    refused_person_act_required: A kulcsokat csak te módosíthatod, itt.
+    refused_profile_locked: Ez a profil zárolva van.
+    refused_revision_conflict: Ez máshol megváltozott. A legfrissebb látható; próbáld
+      újra.
+    replace_key: Kulcs cseréje
+    replace_token: Token cseréje
+    reset: Visszaállítás
+    reset_note: A visszaállítás elfelejti, amit beállítottál, mintha soha nem lett
+      volna beállítva.
+    reset_note_development: A visszaállítás elfelejti, amit beállítottál; ebben a
+      fejlesztői változatban újra a fejlesztői környezet kulcsa lesz használva.
+    save: Mentés
+    saved_unread: Mentve, de az állapotát nem sikerült beolvasni.
+    saving: Mentés…
+    sign_in_only: A szolgáltató ({provider}) saját bejelentkezését használja. A Cadrumo
+      csak azt mutatja, hogy elérhető-e.
+    source_environment: A fejlesztői környezet kulcsát használja
+    source_profile: A kulcs ebben a profilban van mentve
+    through: 'Ezen keresztül: {url}'
+    title: MI-szolgáltatók
+    token_label: OAuth-token ({provider})
+    transport_api: API
+    transport_cli: CLI
   rail:
     aeat: Az AEAT honlapja
     agent: Ügynök

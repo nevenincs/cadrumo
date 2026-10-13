@@ -499,7 +499,7 @@ def _effect_for_success(result: InventoryOperationExecutionResult) -> OperationE
     if result.operation_id == "list":
         return OperationEffect.NONE
     if result.operation_id == "closing-authority.record":
-        return OperationEffect.UPDATED if result.closing_changed else OperationEffect.NONE
+        return OperationEffect.UPDATED if (result.closing_changed is True) else OperationEffect.NONE
     if result.operation_id == "valuation.preview":
         if result.valuation_result is None:
             raise ValueError("inventory valuation result is missing")

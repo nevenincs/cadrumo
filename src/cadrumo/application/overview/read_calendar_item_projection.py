@@ -80,7 +80,7 @@ class OverviewFilingEvidenceSnapshot(BaseModel):
         """Revalidate the filing evidence against canonical invariants."""
         return OverviewCalendarFilingEvidence.model_validate(
             self.model_dump(mode="python", exclude={"period"})
-            | {"period": _period(self.period) if self.period else None}
+            | {"period": _period(self.period) if (self.period is not None and self.period) else None}
         )
 
 
@@ -244,7 +244,7 @@ class OverviewCalendarEventSnapshot(BaseModel):
         """Restore the canonical event and AEAT evidence invariants."""
         return OverviewCalendarEvent.model_validate(
             self.model_dump(mode="python", exclude={"period"})
-            | {"period": _period(self.period) if self.period else None}
+            | {"period": _period(self.period) if (self.period is not None and self.period) else None}
         )
 
 

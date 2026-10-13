@@ -197,7 +197,7 @@ def _field_constant(field: RecordDesignField) -> str | None:
 def _identifier_constant(cells: tuple[str | None, str | None]) -> str | None:
     """Read the angle-bracket identifier from an identifier-block row."""
     for text in cells:
-        if not text:
+        if not (text is not None and text):
             continue
         identifier = _IDENTIFIER_VALUE.search(text)
         if identifier is not None:
@@ -208,7 +208,7 @@ def _identifier_constant(cells: tuple[str | None, str | None]) -> str | None:
 def _quoted_constant(cells: tuple[str | None, str | None]) -> str | None:
     """Read a quoted constant declared in either design cell."""
     for text in cells:
-        if not text:
+        if not (text is not None and text):
             continue
         matched = _QUOTED_VALUE.search(text)
         if matched is not None:
@@ -254,7 +254,7 @@ def _record_literals(
     one that uses the first.
     """
     literals = _inline_record_literals(record)
-    if not constants_by_binding:
+    if not (constants_by_binding is not None and constants_by_binding):
         return literals
     for coordinate, value in _bound_record_literals(record, constants_by_binding).items():
         literals.setdefault(coordinate, value)

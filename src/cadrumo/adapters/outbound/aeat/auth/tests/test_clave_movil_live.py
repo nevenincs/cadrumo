@@ -69,7 +69,7 @@ async def test_clave_movil_provider_probes_persisted_session_with_central_playwr
     """Real provider + central Playwright verify an existing encrypted Cl@ve session."""
 
     settings = _settings_or_skip()
-    if not settings.cadrumo_clave_movil_dni_nie:
+    if not (settings.cadrumo_clave_movil_dni_nie is not None and settings.cadrumo_clave_movil_dni_nie):
         pytest.fail("CADRUMO_CLAVE_MOVIL_DNI_NIE is not configured after live opt-in")
     from ......core.auth_session_keys import aeat_auth_session_storage_state_path
     from ......core.bucket_pointer import require_active_bucket_id
@@ -103,7 +103,7 @@ async def test_clave_movil_provider_full_login_with_central_playwright_when_expl
     settings = _settings_or_skip()
     if os.environ.get("AEAT_CLAVE_MOVIL_FULL_LIVE_AUTH") != "1":
         pytest.fail("AEAT_CLAVE_MOVIL_FULL_LIVE_AUTH is not 1 after live opt-in")
-    if not settings.cadrumo_clave_movil_dni_nie:
+    if not (settings.cadrumo_clave_movil_dni_nie is not None and settings.cadrumo_clave_movil_dni_nie):
         pytest.fail("CADRUMO_CLAVE_MOVIL_DNI_NIE is not configured after live opt-in")
 
     provider = ClaveMovilAuthProvider(settings, browser_session_factory=_central_browser_session)

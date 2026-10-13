@@ -66,7 +66,10 @@ async def _capture_declaration_copy_if_available(
     artefact_sink: FiledDeclaracionArtefactSink | None,
 ) -> tuple[tuple[FiledDeclaracionArtefact, ...], bytes | None]:
     """Capture the optional declaration-copy PDF, retaining artefact order."""
-    if not declaration.declaration_copy_link_text or declaration.declaration_copy_cell_index is None:
+    if (
+        not (declaration.declaration_copy_link_text is not None and declaration.declaration_copy_link_text)
+        or declaration.declaration_copy_cell_index is None
+    ):
         return (), None
     declaration_pdf, declaration_pdf_body = await capture_row_pdf_artefact(
         context=context,
@@ -108,7 +111,9 @@ async def _capture_submitted_file_if_available(
     casillas: tuple[ObservedCasillaValue, ...] = ()
     headers: tuple[ObservedHeaderFact, ...] = ()
     extraction_coverage: dict[str, float] = {}
-    if declaration.archive_link_text and declaration.archive_cell_index is not None:
+    if (
+        declaration.archive_link_text is not None and declaration.archive_link_text
+    ) and declaration.archive_cell_index is not None:
         try:
             submitted_artefact, submitted_body = await capture_submitted_file_artefact(
                 context=context,
@@ -179,7 +184,11 @@ def _resolve_captured_casillas(
         extraction_coverage["declaration_pdf"] = 1.0
         if _declaration_pdf_extraction_profile_provisional(snapshot):
             metadata["declaration_pdf_extraction_profile_provisional"] = "true"
-    elif not casillas and not declaration.archive_link_text and declaration_pdf_body is None:
+    elif (
+        not casillas
+        and not (declaration.archive_link_text is not None and declaration.archive_link_text)
+        and declaration_pdf_body is None
+    ):
         raise SedeParseError(
             f"AEAT declaration {declaration.expediente_id!r} did not expose submitted-file or declaration-copy data",
         )

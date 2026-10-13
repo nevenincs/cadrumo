@@ -77,7 +77,7 @@ def publish_google_review_cli(
         profile_id=client.profile_id,
         calculation_revision_id=calculation_revision_id,
         filing_record_id=filing_record_id,
-        publication_id=UUID(publication_id) if publication_id else uuid4(),
+        publication_id=UUID(publication_id) if (publication_id is not None and publication_id) else uuid4(),
     )
 
     reviewed: GoogleReviewProjection | None = None

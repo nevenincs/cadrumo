@@ -20,7 +20,9 @@ def test_historical_322_example_compiles_every_printed_total_without_future_boxe
     assert {"38", "62", "63", "65", "68", "70", "88", "717", "735"} <= mirrors.keys()
     assert "112" not in mirrors
     inputs = {
-        cell.casilla_id: cell for cell in plan.value_cells if cell.address.tab is TabName.ENTRADAS and cell.casilla_id
+        cell.casilla_id: cell
+        for cell in plan.value_cells
+        if cell.address.tab is TabName.ENTRADAS and (cell.casilla_id is not None and cell.casilla_id)
     }
     assert inputs["20"].value == Decimal("2100")
     assert inputs["decl.prorrata-especial"].value == "1"

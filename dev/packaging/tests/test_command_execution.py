@@ -119,6 +119,8 @@ def test_run_command_timeout_kills_the_grandchild_holding_the_captured_stream(tm
             (sys.executable, "-c", _SPAWN_A_GRANDCHILD_HOLDING_STDOUT, str(pid_file)), cwd=tmp_path, timeout_seconds=5
         )
     elapsed = time.monotonic() - started
+    assert caught.value.stderr is not None
+    assert caught.value.output is not None
     assert caught.value.stderr.splitlines() == [b"native-phase-entered"]
     assert caught.value.output.splitlines() == [b"native-before-timeout"]
 

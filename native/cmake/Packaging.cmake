@@ -8,7 +8,8 @@ execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -c
 cadrumo_product_inputs(product_inputs "${PROJECT_SOURCE_DIR}" ${product_directories})
 include("${CMAKE_CURRENT_LIST_DIR}/Authority.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/CachedCommand.cmake")
-list(APPEND product_inputs "${CADRUMO_PATH_RUNTIME}/ready")
+list(APPEND product_inputs "${CADRUMO_PATH_RUNTIME}/ready" "${CADRUMO_PATH_AGENT}/ready"
+  "${PROJECT_SOURCE_DIR}/native/agent.json" "${PROJECT_SOURCE_DIR}/native/agent/${CADRUMO_TARGET}.txt")
 list(JOIN product_inputs "\n" input_lines)
 file(GENERATE OUTPUT "${PROJECT_BINARY_DIR}/inputs-product.txt" CONTENT "${input_lines}\n")
 cadrumo_build_step(step_comment python_product GROUP dependencies
@@ -20,8 +21,16 @@ add_custom_target(python_product
   DEPENDS ${product_inputs} "${PROJECT_BINARY_DIR}/inputs-product.txt"
   BYPRODUCTS "${CADRUMO_PATH_PRODUCT}/ready"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
-add_dependencies(python_product python_dependencies registry_authority)
+add_dependencies(python_product python_dependencies registry_authority agent_project)
 cadrumo_register_clean(TARGET python_product PATHS "${CADRUMO_PATH_PRODUCT}")
+cadrumo_build_step(step_comment agent-install GROUP dependencies
+  SUMMARY "install the agent into the custom site-packages and assemble the application")
+add_custom_target(agent-install DEPENDS bundle COMMENT "${step_comment}")
+cadrumo_build_step(step_comment agent-uninstall GROUP dependencies
+  SUMMARY "remove the product and staged bundle containing the agent; the next build restores them")
+add_custom_target(agent-uninstall
+  COMMAND "${CMAKE_COMMAND}" --build "${PROJECT_BINARY_DIR}" --config "$<CONFIG>" --target clean-python_product clean-bundle
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
 if(CADRUMO_INCLUDE_DEVELOPMENT_BINARY)
   set(development_args --development)
   set(development_target cadrumo_python_d)
@@ -147,6 +156,7 @@ else()
 endif()
 list(APPEND assembly_inputs "${PROJECT_SOURCE_DIR}/native/interpreter/bootstrap.py")
 foreach(input uv.lock pyproject.toml dev/packaging/release-python-version
+    native/agent.json dev/packaging/native/agent.py native/agent/${CADRUMO_TARGET}.txt
     dev/packaging/runtime_wheel_selection.py dev/packaging/runtime_wheelhouse_contract.py
     dev/packaging/native/action_cache.py dev/packaging/native/build_toolchain.py)
   list(APPEND assembly_inputs "${PROJECT_SOURCE_DIR}/${input}")
@@ -222,6 +232,11 @@ if(TARGET desktop-headless-test)
   add_dependencies(desktop-headless-test bundle)
 endif()
 if(BUILD_TESTING)
+  add_test(NAME bundle.agent COMMAND "${CMAKE_COMMAND}" -E env
+    "${CADRUMO_STORAGE_ROOT_VARIABLE}=${CADRUMO_PATH_TESTING}/$<CONFIG>/storage"
+    "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/${CADRUMO_PACKAGE_EXECUTABLE}"
+    "${PROJECT_SOURCE_DIR}/native/tests/agent_smoke.py" "${CADRUMO_PATH_STAGE}/$<CONFIG>/app")
+  set_tests_properties(bundle.agent PROPERTIES RESOURCE_LOCK package_inventory)
   add_test(NAME bundle.python COMMAND "${CMAKE_COMMAND}" -E env
     "${CADRUMO_STORAGE_ROOT_VARIABLE}=${CADRUMO_PATH_TESTING}/$<CONFIG>/storage"
     "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/${CADRUMO_PACKAGE_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/native/tests/package_smoke.py" "${CADRUMO_PATH_STAGE}/$<CONFIG>/app"

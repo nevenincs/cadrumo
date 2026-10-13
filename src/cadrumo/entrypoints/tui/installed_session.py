@@ -294,7 +294,7 @@ def _runtime_session_refusal(error: RuntimeFrontendRefusedError | RuntimeRefusal
         primary_error=error,
     )
     sys.stderr.write(f"{reason}\n")
-    if remedy := runtime_unavailable_remedy(reason):
+    if (remedy := runtime_unavailable_remedy(reason)) is not None and remedy:
         sys.stderr.write(f"{remedy}\n")
     return SESSION_INVENTORY_UNAVAILABLE
 

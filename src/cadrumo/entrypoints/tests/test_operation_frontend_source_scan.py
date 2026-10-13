@@ -1,8 +1,7 @@
 """No application or entrypoint code decides anything by comparing the submitting frontend.
 
-Every registered operation is open to the command line, the terminal
-interface and MCP alike, and the same request gets the same decision and the
-same effect on each. A comparison of a frontend with one named member is how
+Every registered operation is open to every frontend alike, and the same
+request gets the same decision and the same effect on each. A comparison of a frontend with one named member is how
 code would tell them apart, so this scan reads every production source under
 the application and entrypoint tiers and fails on each such comparison, on
 each ``match`` over a named frontend, and on each call of a function that
@@ -32,9 +31,29 @@ _SCANNED_TIERS = ("src/cadrumo/application/", "src/cadrumo/entrypoints/")
 
 _ALLOWED_FUNCTIONS: Mapping[tuple[str, str], str] = {
     (
+        "src/cadrumo/application/operations/person_acts.py",
+        "is_persons_frontend",
+    ): "the one predicate naming the person's frontends, on which alone a person's act is taken",
+    (
         "src/cadrumo/application/operations/execution_actor.py",
         "execution_actor_label",
     ): "derives the actor an agent's execution records from its session; it refuses nothing",
+    (
+        "src/cadrumo/application/operations/execution_actor.py",
+        "<module>",
+    ): "names the label prefix of each agent frontend, so a stored label is read as an agent's; it refuses nothing",
+    (
+        "src/cadrumo/application/ledger/invoice_evidence_extract_operation.py",
+        "_resolve_extract_access",
+    ): "the acknowledgement of an off-host read is the person's consent to send the document off this machine",
+    (
+        "src/cadrumo/entrypoints/runtime/profile_connection_admission.py",
+        "ProfileConnectionAdmissionMixin._prepare",
+    ): "the agent host is admitted only by resuming the person's stored sign-in, never by a key",
+    (
+        "src/cadrumo/entrypoints/runtime/profile_connection_attendance.py",
+        "ProfileConnectionAttendanceMixin._attendance_ask",
+    ): "attendance is the door of an MCP agent that follows the person's live sign-in; no other frontend asks",
     (
         "src/cadrumo/application/user_profile/operation_access_policy.py",
         "_surface_refuses",
@@ -46,7 +65,7 @@ _ALLOWED_FUNCTIONS: Mapping[tuple[str, str], str] = {
     (
         "src/cadrumo/entrypoints/runtime/operation_authority.py",
         "ProfileWorkerOperationAuthority.execution_caller",
-    ): "keeps an execution attributed to the MCP session that submitted it when another session re-enters it",
+    ): "keeps an execution attributed to the agent session that submitted it when another session re-enters it",
     (
         "src/cadrumo/application/user_profile/operation_access_policy.py",
         "_persons_act_refusal",

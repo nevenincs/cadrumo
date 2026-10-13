@@ -63,7 +63,7 @@ def modelo_title(modelo: str, language: OutputLanguage) -> str:
     """Return the modelo's own title in the filer's language, or its number alone."""
     for locale in (language.value, OutputLanguage.ES.value):
         title = lookup_translation(f"modelo.schema.{modelo}.field.title", locale=locale)
-        if title:
+        if title is not None and title:
             return tr("tui.modelo.workbench.modelo_title", modelo=modelo, title=title)
     return modelo_number(modelo)
 

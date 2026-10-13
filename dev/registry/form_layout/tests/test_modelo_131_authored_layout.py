@@ -45,23 +45,29 @@ def test_131_groups_keep_all_boxes_context_and_additional_records(revision_id: s
             tuple(
                 str(b.casilla_id)
                 for b in sections[f"liquidacion-{sid}"].blocks
-                if isinstance(b, FormFieldBlock) and b.casilla_id
+                if isinstance(b, FormFieldBlock) and (b.casilla_id is not None and b.casilla_id)
             )
             == boxes
         )
     context = [b for s in sections.values() for b in s.blocks if isinstance(b, FormContextFieldBlock)]
     assert len(context) == 5
     fields = [resolve_form_context_field(revision, b) for b in context]
-    assert {str(f.producer_key) for f in fields if f.producer_key} == {
+    assert {str(f.producer_key) for f in fields if (f.producer_key is not None and f.producer_key)} == {
         "taxpayer.tax_id",
         "taxpayer.surnames",
         "taxpayer.given_name",
     }
-    assert {str(f.draft_attribute) for f in fields if f.draft_attribute} == {"filing_year", "period_code"}
+    assert {str(f.draft_attribute) for f in fields if (f.draft_attribute is not None and f.draft_attribute)} == {
+        "filing_year",
+        "period_code",
+    }
     grids = [b for b in sections["liquidacion-i"].blocks if isinstance(b, FormGridBlock)]
     assert len(grids) == 1 and len(grids[0].rows) == 5
     bindings = {
-        b.binding_id for s in sections.values() for b in s.blocks if isinstance(b, FormFieldBlock) and b.binding_id
+        b.binding_id
+        for s in sections.values()
+        for b in s.blocks
+        if isinstance(b, FormFieldBlock) and (b.binding_id is not None and b.binding_id)
     }
     assert "modelo-131.page1.discapacidad-33" in bindings
     assert "modelo-131.page1.sin-datos-base-vivienda-limite" in bindings

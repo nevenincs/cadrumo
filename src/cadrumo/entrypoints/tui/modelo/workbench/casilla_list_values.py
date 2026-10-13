@@ -144,10 +144,10 @@ def _right(text: str, width: int) -> str:
 def description_text(field: ModeloFormField) -> str | None:
     """A field's description as a person reads it, without an opening that only names its box."""
     text = field.help
-    if not text:
+    if not (text is not None and text):
         return None
     stated = text.strip()
-    if field.box:
+    if field.box is not None and field.box:
         for language in OutputLanguage:
             opening = tr(_BOX_OPENING_LOCALE_KEY, locale=language.value, box=field.box)
             if stated.startswith(opening):
@@ -162,7 +162,7 @@ def _label_width(entry: CasillaListEntry, columns: _Columns) -> int:
 
 
 def _box_mark(field: ModeloFormField) -> str:
-    return f"[{field.box}]" if field.box else _NO_BOX
+    return f"[{field.box}]" if (field.box is not None and field.box) else _NO_BOX
 
 
 def shown_rate(field: ModeloFormField) -> ModeloFormRate | ModeloFormPrintedRate | None:

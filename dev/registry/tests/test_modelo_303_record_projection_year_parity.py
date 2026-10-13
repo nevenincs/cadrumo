@@ -101,7 +101,9 @@ def _design_row(revision_id: str, box: str) -> str:
 
 def _derived_state(revision: ModeloRevision, box: str) -> tuple[str, str | None]:
     row = next(row for row in revision.casillas if str(row.id) == box)
-    return str(row.input_kind), str(row.formula or row.binding) if (row.formula or row.binding) else None
+    return str(row.input_kind), str(row.formula or row.binding) if (
+        (row.formula is not None and row.formula) or (row.binding is not None and row.binding)
+    ) else None
 
 
 @pytest.mark.parametrize("box", sorted(_DERIVED_BOXES))

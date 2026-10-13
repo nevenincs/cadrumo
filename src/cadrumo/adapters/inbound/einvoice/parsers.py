@@ -211,7 +211,7 @@ def _record_text(root: Element) -> str:
     fragments: list[str] = []
     for node in root.iter():
         for raw in (node.text, node.tail):
-            if raw and raw.strip():
+            if (raw is not None and raw) and raw.strip():
                 fragments.append(raw.strip())
     return _TEXT_NODE_SEPARATOR.join(fragments)
 
@@ -223,7 +223,7 @@ def _find_all(root: Element, name: str) -> list[Element]:
 
 def _first_text(parent: Element, name: str) -> str | None:
     for node in parent.iter():
-        if _local(node.tag) == name and node.text and node.text.strip():
+        if _local(node.tag) == name and (node.text is not None and node.text) and node.text.strip():
             return node.text.strip()
     return None
 
@@ -240,7 +240,7 @@ def _direct_child_text(parent: Element, name: str) -> str | None:
     schema happens to fix their order.
     """
     for node in parent:
-        if _local(node.tag) == name and node.text and node.text.strip():
+        if _local(node.tag) == name and (node.text is not None and node.text) and node.text.strip():
             return node.text.strip()
     return None
 
@@ -254,11 +254,11 @@ def _ubl_party_name(party: Element) -> str | None:
     trading name is the fallback for a document that states only that.
     """
     registration = _first_text(party, "RegistrationName")
-    if registration:
+    if registration is not None and registration:
         return registration
     for named in _find_all(party, "PartyName"):
         found = _direct_child_text(named, "Name")
-        if found:
+        if found is not None and found:
             return found
     return None
 
@@ -274,11 +274,11 @@ def _facturae_party_name(party: Element) -> str | None:
     counterparty recorded under the given name alone is not identifiable.
     """
     corporate = _first_text(party, "CorporateName")
-    if corporate:
+    if corporate is not None and corporate:
         return corporate
     for individual in _find_all(party, "Individual"):
         parts = [_direct_child_text(individual, part) for part in ("Name", "FirstSurname", "SecondSurname")]
-        joined = " ".join(part for part in parts if part)
+        joined = " ".join(part for part in parts if (part is not None and part))
         if joined:
             return joined
     return None
@@ -307,7 +307,7 @@ def _facturae_postal_code(party: Element) -> str | None:
     """
     for address in _find_all(party, "AddressInSpain"):
         found = _direct_child_text(address, "PostCode")
-        if found:
+        if found is not None and found:
             return found
     return None
 
@@ -337,7 +337,7 @@ def _facturae_country_code(party: Element) -> tuple[str, str] | None:
     for block in _FACTURAE_ADDRESS_BLOCKS:
         for address in _find_all(party, block):
             found = _direct_child_text(address, "CountryCode")
-            if found:
+            if found is not None and found:
                 return block, found
     return None
 
@@ -359,7 +359,7 @@ def _ubl_country_code(party: Element) -> str | None:
     for address in _find_all(party, "PostalAddress"):
         for country in _find_all(address, "Country"):
             found = _direct_child_text(country, "IdentificationCode")
-            if found:
+            if found is not None and found:
                 return found
     return None
 
@@ -372,7 +372,7 @@ def _ubl_postal_code(party: Element) -> str | None:
     """
     for address in _find_all(party, "PostalAddress"):
         found = _direct_child_text(address, "PostalZone")
-        if found:
+        if found is not None and found:
             return found
     return None
 
@@ -385,7 +385,7 @@ def _cii_postal_code(party: Element) -> str | None:
     """
     for address in _find_all(party, "PostalTradeAddress"):
         found = _direct_child_text(address, "PostcodeCode")
-        if found:
+        if found is not None and found:
             return found
     return None
 
@@ -408,7 +408,7 @@ def _cii_country_code(party: Element) -> str | None:
     """
     for address in _find_all(party, "PostalTradeAddress"):
         found = _direct_child_text(address, "CountryID")
-        if found:
+        if found is not None and found:
             return found
     return None
 
@@ -479,7 +479,7 @@ def _category_for(code: str | None) -> str | None:
     Returns ``None`` when the document states no code, or states one that maps
     to no special category. Never guesses.
     """
-    if not code:
+    if not (code is not None and code):
         return None
     return resolve_iva_category_catalogue().category_for_untdid_code(code.strip().upper())
 
@@ -496,7 +496,7 @@ def _apply_cii_document_header(root: Element, parsed: ParsedEInvoice) -> None:
     # be mistaken for the document's statutory mention.
     for note in _find_all(docs[0], "IncludedNote"):
         content = _first_text(note, "Content")
-        if content:
+        if content is not None and content:
             parsed.regime_legend = content
             break
 
@@ -580,7 +580,7 @@ def _ubl_invoice_number(root: Element) -> str | None:
     a party id instead, both of which look like plausible invoice numbers.
     """
     for child in root:
-        if _local(child.tag) == "ID" and child.text:
+        if _local(child.tag) == "ID" and (child.text is not None and child.text):
             return child.text.strip()
     return None
 
@@ -599,10 +599,12 @@ def _ubl_header_child_values(
     recover nothing there while appearing to work on every domestic document.
     """
     name = _local(child.tag)
-    invoice_date = child.text.strip() if name == "IssueDate" and child.text else None
-    currency = child.text.strip() if name == "DocumentCurrencyCode" and child.text else None
+    invoice_date = child.text.strip() if name == "IssueDate" and (child.text is not None and child.text) else None
+    currency = (
+        child.text.strip() if name == "DocumentCurrencyCode" and (child.text is not None and child.text) else None
+    )
     regime_legend = existing_regime_legend
-    if name == "Note" and child.text and regime_legend is None:
+    if name == "Note" and (child.text is not None and child.text) and regime_legend is None:
         regime_legend = child.text.strip() or None
     return invoice_date, currency, regime_legend
 
@@ -659,7 +661,7 @@ def _ubl_subtotal_category(subtotal: Element) -> str | None:
     """Return the tax category the subtotal's cbc:ID names, if it names one."""
     for category in _find_all(subtotal, "TaxCategory"):
         for child in category:
-            if _local(child.tag) == "ID" and child.text:
+            if _local(child.tag) == "ID" and (child.text is not None and child.text):
                 return _category_for(child.text)
     return None
 
@@ -668,7 +670,7 @@ def _apply_ubl_tax_totals(root: Element, parsed: ParsedEInvoice) -> None:
     """Read the cuota, the per-rate breakdown, and the first stated category."""
     for tax_total in _find_all(root, "TaxTotal"):
         for child in tax_total:
-            if _local(child.tag) == "TaxAmount" and child.text:
+            if _local(child.tag) == "TaxAmount" and (child.text is not None and child.text):
                 parsed.iva_amount = _decimal(child.text)
         for subtotal in _find_all(tax_total, "TaxSubtotal"):
             parsed.iva_breakdown.append(

@@ -20,7 +20,9 @@ def test_summary_and_detail_preserve_every_field_and_only_real_box_numbers(revis
     assert len(layout.placements) == 25
     assert {p.casilla_id for p in layout.placements} == {c.id for c in revision.casillas}
     assert all(p.kind.value == "on_form" for p in layout.placements)
-    assert {str(p.casilla_id): p.box_number for p in layout.placements if p.box_number} == {
+    assert {
+        str(p.casilla_id): p.box_number for p in layout.placements if (p.box_number is not None and p.box_number)
+    } == {
         "numero-total-declarados": "01",
         "valoracion-total": "02",
     }

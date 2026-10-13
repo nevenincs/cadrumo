@@ -57,7 +57,9 @@ def test_modelo_audit_and_readiness_parameter_contracts_match_public_handlers() 
         module = importlib.import_module(spec.handler.target.module)
         handler = getattr(module, spec.handler.target.qualname)
         signature = inspect.signature(handler)
-        expected = ((spec.invocation.context_parameter,) if spec.invocation.context_parameter else ()) + tuple(
-            parameter.name for parameter in spec.parameters
-        )
+        expected = (
+            (spec.invocation.context_parameter,)
+            if (spec.invocation.context_parameter is not None and spec.invocation.context_parameter)
+            else ()
+        ) + tuple(parameter.name for parameter in spec.parameters)
         assert tuple(signature.parameters) == expected

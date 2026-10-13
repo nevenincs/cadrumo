@@ -130,7 +130,7 @@ def _imported_names(tree: ast.Module) -> set[str]:
             for alias in node.names:
                 names.add(alias.asname or alias.name.split(".")[0])
                 names.add(alias.name.rsplit(".", 1)[-1])
-        if isinstance(node, ast.ImportFrom) and node.module:
+        if isinstance(node, ast.ImportFrom) and (node.module is not None and node.module):
             names.add(node.module.split(".")[0])
             names.add(node.module.rsplit(".", 1)[-1])
     return names
@@ -282,7 +282,7 @@ def _collect_node_docstring_references(node: ast.AST, module: str, found: list[t
     """Collect node docstring references."""
     if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
         text = ast.get_docstring(node)
-        if text:
+        if text is not None and text:
             found.extend((module, match) for match in _ROLE.findall(text))
     for text in _attribute_docstrings(node):
         found.extend((module, match) for match in _ROLE.findall(text))

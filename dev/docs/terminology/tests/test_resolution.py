@@ -191,7 +191,7 @@ def test_legal_toml_resolves_to_a_legal_target(resolver: TargetResolver) -> None
     assert out.record.metadata.legal_id == "orden-eha-789-2010:art-1"
     assert out.record.target.startswith("_generated/legal/")
     assert ".html" in out.record.target
-    assert out.record.metadata.legal_permalink
+    assert out.record.metadata.legal_permalink is not None and out.record.metadata.legal_permalink
     assert out.record.metadata.legal_refs  # at least one legal ref carried
 
 
@@ -363,7 +363,7 @@ def test_emitted_cli_option_resolves_to_its_exact_page_anchor(
             record
             for record in projection.records
             if record.kind is SearchRecordKind.CLI
-            and record.metadata.command_path
+            and (record.metadata.command_path is not None and record.metadata.command_path)
             and record.metadata.option_names
             and "#" in record.target
         ),
@@ -429,7 +429,7 @@ def test_emitted_nested_cli_command_resolves_to_its_exact_page_anchor(
             record
             for record in projection.records
             if record.kind is SearchRecordKind.CLI
-            and record.metadata.command_path
+            and (record.metadata.command_path is not None and record.metadata.command_path)
             and len(record.metadata.command_path.split()) >= 4
             and not record.metadata.option_names
             and "#" in record.target

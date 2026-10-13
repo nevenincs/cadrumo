@@ -111,7 +111,7 @@ def _require_invoice_capture_refusal(
 ) -> None:
     """Correlate invoice refusal shape and unchanged terminal effects."""
     if (
-        not refusal_reason
+        not (refusal_reason is not None and refusal_reason)
         or _invoice_refusal_has_success_data(projection)
         or completed.terminal_condition is not OperationTerminalCondition.REFUSED
         or (completed.refusal_code is None)

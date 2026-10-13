@@ -105,7 +105,7 @@ def windows_desktop_observation(session_id: int) -> WindowsDesktopObservation:
             int(data.session_id), int(data.state), int(data.flags), int(data.logon_time), _desktop_owner(data)
         )
     finally:
-        if buffer.value:
+        if buffer.value is not None and buffer.value:
             release(buffer)
 
 
@@ -115,7 +115,7 @@ def _validated_desktop_information(
     session_id: int,
 ) -> WindowsSessionLevel:
     """Require exact native buffer size and addressed WTS generation before projection."""
-    if not buffer.value or count.value != ctypes.sizeof(WindowsSessionInformation):
+    if not (buffer.value is not None and buffer.value) or count.value != ctypes.sizeof(WindowsSessionInformation):
         raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
     information = WindowsSessionInformation.from_buffer_copy(ctypes.string_at(buffer, count.value))
     data = cast(WindowsSessionLevel, information.data)

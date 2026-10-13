@@ -180,7 +180,9 @@ def test_a_box_declared_for_its_own_sheet_is_where_that_sheet_maps(revision: Mod
         for field in sheet.fields
     }
     own = {
-        (casilla.segmento, str(casilla.number)): str(casilla.id) for casilla in revision.casillas if casilla.segmento
+        (casilla.segmento, str(casilla.number)): str(casilla.id)
+        for casilla in revision.casillas
+        if (casilla.segmento is not None and casilla.segmento)
     }
     semantic_map = _semantic_map(str(design.record_design_epoch))
     misplaced = []
@@ -297,7 +299,7 @@ def _shared_number_slots(revision: ModeloRevision) -> dict[str, list[Slot]]:
     sheets_by_number: dict[str, set[str]] = {}
     for casilla in revision.casillas:
         if (
-            casilla.segmento
+            (casilla.segmento is not None and casilla.segmento)
             and casilla.input_kind is InputKind.MANUAL
             and casilla.data_type is CasillaDataType.MONEY
             and amounts.get(str(casilla.id), False)

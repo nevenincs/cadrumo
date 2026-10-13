@@ -74,7 +74,7 @@ def _printed_label(reference: str) -> str:
 
 def apartado_ordinal(heading: str | None) -> str | None:
     """Return the apartado ordinal a heading opens with (``"5"`` for ``5. Operaciones ...``), or ``None``."""
-    if not heading:
+    if not (heading is not None and heading):
         return None
     match = _APARTADO.match(heading.strip())
     return None if match is None else str(match.group(1))

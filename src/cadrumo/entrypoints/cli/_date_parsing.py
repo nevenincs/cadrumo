@@ -25,7 +25,6 @@ def _parse_iso_date(
     *,
     label: str,
     translation_key: str = "cli.common.errors.invalid_iso_date",
-    default: str | None = None,
 ) -> _date:
     message = tr(
         translation_key,

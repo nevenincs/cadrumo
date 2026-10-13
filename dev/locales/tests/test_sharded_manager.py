@@ -85,7 +85,7 @@ def test_sharded_set_and_remove_locale_value() -> None:
         assert removed_target == es_dir / "cli.yml"
 
         loaded_after = manager.load_locale(es_dir)
-        assert "cli" not in loaded_after or not loaded_after["cli"]
+        assert "cli" not in loaded_after or not bool(loaded_after["cli"])
 
 
 def test_sharded_scaffold_partitions_keys() -> None:

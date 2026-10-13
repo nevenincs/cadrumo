@@ -72,7 +72,9 @@ def _require_attestation_update(state: OperationPublicProjectionV1, operation_id
             else "operation_terminal_unknown",
             context={
                 "operation_id": operation_id,
-                "terminal_condition": state.terminal_condition.value if state.terminal_condition else "unknown",
+                "terminal_condition": state.terminal_condition.value
+                if (state.terminal_condition is not None and state.terminal_condition)
+                else "unknown",
                 "effect": (terminal_effect or OperationEffect.UNKNOWN).value,
             },
         )

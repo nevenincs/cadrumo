@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from collections.abc import AsyncIterator, Callable, Iterator
+from collections.abc import AsyncGenerator, Callable, Generator
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -176,7 +176,7 @@ class _SyntheticIvaRemoteStatePort:
         return "https://fixture.invalid/iva-wallet"
 
     @contextmanager
-    def active_storage_span(self) -> Iterator[None]:
+    def active_storage_span(self) -> Generator[None]:
         self.storage_span_entries += 1
         self.storage_span_depth += 1
         try:
@@ -275,7 +275,7 @@ class _SyntheticIvaRemoteStatePort:
 
     async def _guard_local_effect(self, effect_guard: FiledEffectGuard, surface: str) -> None:
         @asynccontextmanager
-        async def tracked_guard() -> AsyncIterator[None]:
+        async def tracked_guard() -> AsyncGenerator[None]:
             async with effect_guard():
                 self.guard_depth += 1
                 self.surface_guards.append(surface)
@@ -304,7 +304,7 @@ class _ResourceScope:
         self.closed = False
 
     @contextmanager
-    def activate(self) -> Iterator[None]:
+    def activate(self) -> Generator[None]:
         self.activation_entries += 1
         self.activation_depth += 1
         try:

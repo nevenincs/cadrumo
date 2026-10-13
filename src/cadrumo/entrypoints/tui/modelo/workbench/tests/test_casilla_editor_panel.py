@@ -266,7 +266,7 @@ async def test_the_title_carries_the_strongest_weight(case: str) -> None:
             foreground = Color.parse(app.theme_variables["foreground"])
             primary = Color.parse(app.theme_variables["primary"])
 
-    assert title.styles.text_style.bold
+    assert title.styles.text_style.bold is True
     assert title.styles.color == foreground
     assert title.styles.color != primary
     assert label.styles.color != title.styles.color

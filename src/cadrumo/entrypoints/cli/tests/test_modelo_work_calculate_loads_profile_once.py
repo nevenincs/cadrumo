@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import json
 import sys
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import date
 from decimal import Decimal
@@ -159,7 +159,7 @@ def _scope(client_id: UUID) -> AccessScope:
 @contextmanager
 def _operator_session(
     tmp_path: Path, authority_operation: PinnedAuthorityOperation
-) -> Iterator[NativeApiCliSession[None]]:
+) -> Generator[NativeApiCliSession[None]]:
     """Enrol the operator profile the modelo work UX suites run against, served by its worker."""
 
     def prepare(profile_id: UUID, root: Path) -> None:

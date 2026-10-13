@@ -56,7 +56,6 @@ __all__ = [
     "LocalReaderReportRequest",
     "build_local_reader_report_definition",
     "build_local_reader_report_registration",
-    "build_local_reader_report_request",
     "local_reader_report_public_result",
     "project_local_reader_report_result",
     "read_local_reader_report",
@@ -155,15 +154,6 @@ def read_local_reader_report(settings: Settings | None = None) -> LocalReaderRep
 
 class LocalReaderReportRequest(CredentialFreeOperationRequest):
     """One report read; the machine is the whole subject, so the request carries nothing."""
-
-
-def build_local_reader_report_request() -> OperationRequest[LocalReaderReportRequest]:
-    """Build the request that reads the machine's local-inference report."""
-    return OperationRequest(
-        definition_id=LOCAL_READER_REPORT_OPERATION_DEFINITION_ID,
-        subject_ref=LOCAL_READER_OPERATION_SUBJECT,
-        payload=LocalReaderReportRequest(),
-    )
 
 
 class LocalReaderReportModelV1(BaseModel):

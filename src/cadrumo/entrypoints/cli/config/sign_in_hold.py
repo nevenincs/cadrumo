@@ -96,9 +96,7 @@ def config_sign_in_hold(
     emit_envelope(
         ctx,
         command="config.sign-in-hold",
-        result=ConfigSignInHoldResult(
-            profile_id=target.bucket_id, ended=ended, approved=approved, declined=declined
-        ),
+        result=ConfigSignInHoldResult(profile_id=target.bucket_id, ended=ended, approved=approved, declined=declined),
         lines=(f"ended\t{ended}", f"approved\t{approved}", f"declined\t{declined}"),
     )
 

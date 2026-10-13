@@ -190,7 +190,7 @@ def derive_number(
     # all carry a real double space -- and collapsing those would quietly edit
     # the transcription this corpus exists to preserve.
     flattened = _LINE_BREAK.sub(" ", description).strip()
-    pattern = re.compile(grammar) if grammar else _NUMBERED
+    pattern = re.compile(grammar) if (grammar is not None and grammar) else _NUMBERED
     matches = tuple(pattern.finditer(flattened))
     if matches:
         number = matches[-1].group(1)
@@ -233,7 +233,7 @@ def comment_line(row: RecordDesignField, caption: str) -> str:
     is most needed, and it was invisible on a design whose Contenido is mostly
     empty.
     """
-    content = _LINE_BREAK.sub(" ", row.content).strip() if row.content else ""
+    content = _LINE_BREAK.sub(" ", row.content).strip() if (row.content is not None and row.content) else ""
     trailing = f" | {content}" if content else ""
     return f"# @{row.offset}+{row.length} {row.type_code}. {caption}{trailing}"
 
@@ -282,7 +282,7 @@ def _row_declaration_problems(
         problems.append(
             f"{name} @{row.offset}: more than one box token in one description; the number rule has become ambiguous"
         )
-    pattern = re.compile(grammar) if grammar else _NUMBERED
+    pattern = re.compile(grammar) if (grammar is not None and grammar) else _NUMBERED
     recognised = {
         match.group(1) if pattern.groups else match.group(0) for match in pattern.finditer(row.description)
     } | {match.group(1) for match in _LETTERED.finditer(row.description)}

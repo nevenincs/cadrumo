@@ -122,7 +122,7 @@ class WorkbenchConfirmationMixin:
         }
 
     def _bulk_confirmed(self: ModeloWorkbenchScreen, confirmed: tuple[ModeloFormField, ...] | None) -> None:
-        if not confirmed:
+        if not (confirmed is not None and confirmed):
             return
         refusals = [refusal for field in confirmed if (refusal := self._session.stage_confirmation(field)) is not None]
         self._refresh_after_staging()

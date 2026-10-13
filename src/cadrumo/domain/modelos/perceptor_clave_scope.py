@@ -127,7 +127,7 @@ def _scope_entries(resolved: ResolvedMappingFact) -> dict[str, str]:
 
 def _required_scope_entry(entries: Mapping[str, str], key: str) -> str:
     value = entries.get(key)
-    if not value:
+    if not (value is not None and value):
         raise RegistryValidationError(f"perceptor clave scope is missing {key!r}")
     return value
 

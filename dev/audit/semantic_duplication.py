@@ -253,7 +253,7 @@ def _call_fingerprint(node: ast.FunctionDef | ast.AsyncFunctionDef) -> frozenset
         if isinstance(inner, ast.Call):
             func = inner.func
             name = func.id if isinstance(func, ast.Name) else getattr(func, "attr", None)
-            if name:
+            if name is not None and name:
                 marks.add(f"call:{name}/{len(inner.args)}")
         elif isinstance(inner, ast.Constant) and _meaningful_literal(inner):
             marks.add(f"lit:{inner.value!r}")
@@ -502,7 +502,7 @@ def _populate_reference_node(node: ast.AST, module: Module, enum_names: frozense
         module.enum_members.setdefault(node.value.id, set()).add(node.attr)
     elif isinstance(node, ast.Constant) and _meaningful_literal(node):
         module.literals.add(node.value)
-    elif isinstance(node, ast.ImportFrom) and node.module:
+    elif isinstance(node, ast.ImportFrom) and (node.module is not None and node.module):
         module.first_party_imports.add(f"{'.' * (node.level or 0)}{node.module}")
 
 

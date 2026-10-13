@@ -68,7 +68,7 @@ def _policy(entries: Mapping[str, str]) -> AmendmentRegimePolicy:
             raise RegistryValidationError(
                 f"amendment-regime-policy boundary for {modelo!r} must be an ISO date",
             ) from exc
-        if not (entries.get(f"boundary.{modelo}.source_fact") or entries.get(f"boundary.{modelo}.source")):
+        if not (bool(entries.get(f"boundary.{modelo}.source_fact")) or bool(entries.get(f"boundary.{modelo}.source"))):
             raise RegistryValidationError(
                 f"amendment-regime-policy boundary for {modelo!r} lacks source evidence",
             )

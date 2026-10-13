@@ -15,7 +15,7 @@ real revision fixtures (``aeat-quality-gates``, ``aeat-quality-gates``).
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -39,11 +39,7 @@ from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ....application.aggregation.ledger_filing_snapshot import row_fingerprint
 from ....application.ledger.action_ports import LedgerActionPorts
-from ....application.ledger.actions_manual import (
-    attach_manual_transaction_evidence,
-    create_manual_transaction,
-    update_manual_transaction_fields,
-)
+from ....application.ledger.actions_manual import attach_manual_transaction_evidence, update_manual_transaction_fields
 from ....application.ledger.evidence import PurchaseInvoiceEvidenceService
 from ....application.ledger.evidence_ports import LedgerEvidencePorts
 from ....application.ledger.models import (
@@ -53,6 +49,7 @@ from ....application.ledger.models import (
     ManualLedgerTransactionResult,
 )
 from ....application.ledger.notices import stale_finalized_revision_notices
+from ....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.errors import TransactionValidationError
@@ -93,7 +90,7 @@ def _revisions(profile: TestRuntimeProfile) -> CalculationRevisionCatalogueRepos
 
 
 @contextmanager
-def _ledger_ports(profile: TestRuntimeProfile) -> Iterator[LedgerActionPorts]:
+def _ledger_ports(profile: TestRuntimeProfile) -> Generator[LedgerActionPorts]:
     with ledger_ports_for_test(
         bucket_id=profile.bucket_id,
         objects=profile.repository,

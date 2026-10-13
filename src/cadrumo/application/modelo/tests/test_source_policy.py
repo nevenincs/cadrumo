@@ -77,5 +77,5 @@ def test_undecided_policies_are_the_kinds_nobody_has_classified() -> None:
 def test_every_source_is_nameable_in_every_language(language: OutputLanguage) -> None:
     for kind in BindingSourceKind:
         policy = source_policy(kind)
-        assert lookup_translation(policy.label_key, locale=language.value), policy.label_key
-        assert lookup_translation(policy.origin_sentence_key, locale=language.value), policy.origin_sentence_key
+        assert bool(lookup_translation(policy.label_key, locale=language.value)), policy.label_key
+        assert bool(lookup_translation(policy.origin_sentence_key, locale=language.value)), policy.origin_sentence_key

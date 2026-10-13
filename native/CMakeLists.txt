@@ -19,6 +19,8 @@ set(sdk_inputs ${shared_inputs} ${contract_inputs} ${provision_helper_inputs}
   "${PROJECT_SOURCE_DIR}/dev/packaging/runtime_wheelhouse_contract.py"
   "${PROJECT_SOURCE_DIR}/dev/packaging/command_execution.py")
 set(provision_inputs ${shared_inputs}
+  "${PROJECT_SOURCE_DIR}/native/agent/${CADRUMO_TARGET}.txt"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/agent.py"
   "${PROJECT_SOURCE_DIR}/dev/packaging/release-python-version"
   "${PROJECT_SOURCE_DIR}/dev/packaging/native/provision.py"
   "${PROJECT_SOURCE_DIR}/dev/packaging/native/build_toolchain.py"
@@ -70,6 +72,7 @@ if(COMMAND cadrumo_register_clean)
   cadrumo_register_clean(TARGET python_dependencies PATHS "${CADRUMO_PATH_RUNTIME}")
   cadrumo_register_clean(TARGET native_build_tools PATHS "${CADRUMO_PATH_TOOLS}")
 endif()
+include("${PROJECT_SOURCE_DIR}/native/cmake/Agent.cmake")
 set(native_helper_inputs "${native_helper_inputs}" PARENT_SCOPE)
 set(contract_inputs "${contract_inputs}" PARENT_SCOPE)
 set(CADRUMO_HELPER "${CADRUMO_HELPER}" PARENT_SCOPE)

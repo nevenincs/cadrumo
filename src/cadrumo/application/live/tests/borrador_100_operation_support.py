@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
@@ -63,7 +63,7 @@ class SnapshotFence:
         self.deny_entry: int | None = None
 
     @asynccontextmanager
-    async def irreversible_section(self) -> AsyncIterator[None]:
+    async def irreversible_section(self) -> AsyncGenerator[None]:
         if self.entries + 1 == self.deny_entry:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         self.entries += 1

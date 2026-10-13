@@ -284,8 +284,8 @@ def _validate_comparison_inputs(
         _raise_output_id_mismatch("workbook output cells", cell_ids, "compared output values", expected_ids)
     empty_legal_refs: dict[WorkbookOutputId, tuple[LegalRefId, ...]] = {}
     empty_source_refs: dict[WorkbookOutputId, tuple[SourceRefId, ...]] = {}
-    legal_ref_map = legal_refs if legal_refs else empty_legal_refs
-    source_ref_map = source_refs if source_refs else empty_source_refs
+    legal_ref_map = legal_refs if (legal_refs is not None and legal_refs) else empty_legal_refs
+    source_ref_map = source_refs if (source_refs is not None and source_refs) else empty_source_refs
     missing_legal_refs = _missing_or_empty_output_refs(expected_ids, legal_ref_map)
     missing_source_refs = _missing_or_empty_output_refs(expected_ids, source_ref_map)
     if missing_legal_refs:

@@ -119,9 +119,17 @@ def test_the_vocabulary_is_the_flow_the_command_line_is_built_from_and_the_patch
     with bundled_indexed_authority().operation() as operation:
         flow = build_setup_flow(operation)
         assert vocabulary["logical_generation"] == operation.generation.logical_generation
-        stored = {question.id for section in flow.sections for question in section.questions if question.profile_key}
+        stored = {
+            question.id
+            for section in flow.sections
+            for question in section.questions
+            if (question.profile_key is not None and question.profile_key)
+        }
         asked_only = {
-            question.id for section in flow.sections for question in section.questions if not question.profile_key
+            question.id
+            for section in flow.sections
+            for question in section.questions
+            if not (question.profile_key is not None and question.profile_key)
         }
         # The patch's own reading of an answer knows every listed id, and refuses one that is not a question.
         for question_id in listed:

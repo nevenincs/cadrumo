@@ -153,7 +153,7 @@ def default_verdict_cache_dir() -> Path:
         The directory holding writable verdict files.
     """
     override = os.environ.get(_CACHE_DIR_ENV)
-    if override and override.strip():
+    if (override is not None and override) and override.strip():
         return resolve_storage_path(override, root=configured_storage_root(repository_root=REPO_ROOT))
     return dev_cache_dir("registry-verdict")
 

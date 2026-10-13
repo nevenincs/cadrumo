@@ -289,7 +289,7 @@ class _OverviewReadPorts:
             raise ValueError("calendar query requires a date window")
         rng = OverviewCalendarRange(from_date=request.from_date, to_date=request.to_date)
         calendar: OverviewCalendar | None = None
-        if request.all_profiles and record.setup_state is not ProfileSetupState.COMPLETE:
+        if (request.all_profiles is True) and record.setup_state is not ProfileSetupState.COMPLETE:
             active = None
             legal_ref = None
             notices = ()
@@ -337,7 +337,7 @@ class _OverviewReadPorts:
                     *pending_payer_fact_notices(record, operation=operation),
                 )
             )
-        if not request.all_profiles:
+        if request.all_profiles is not True:
             if active is None or calendar is None:
                 raise ValueError("bound calendar was not captured")
             return OverviewCalendarRead(

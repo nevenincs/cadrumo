@@ -71,7 +71,7 @@ def test_probe_has_fresh_identity_admission_and_balanced_actual_acknowledgements
             assert "files.delete" not in endpoint.calls
         else:
             report = provider.probe()
-            assert report.reachable and report.writable and report.root_folder_present
+            assert report.reachable and report.writable and (report.root_folder_present is True)
             assert [call for call in endpoint.calls if call == "files.delete"] == ["files.delete"]
             assert ("files.create", True) in boundary.completed
             assert ("files.delete", True) in boundary.completed

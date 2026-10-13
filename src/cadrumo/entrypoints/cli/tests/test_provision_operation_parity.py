@@ -26,10 +26,7 @@ from ....adapters.persistence.operations.tests.local_reader_operation_support im
     loopback_model_runtime,
     run_supervised_in,
 )
-from ....application.browser_runtime_operation import (
-    BrowserRuntimeProvisionPublicResultV1,
-    build_browser_runtime_provision_request,
-)
+from ....application.browser_runtime_operation import BrowserRuntimeProvisionPublicResultV1
 from ....application.local_reader_contracts import (
     LocalReaderProvisionPublicResultV2,
     build_local_reader_install_request,
@@ -40,15 +37,17 @@ from ....application.local_reader_contracts import (
     build_local_reader_start_request,
     build_local_reader_verify_request,
 )
-from ....application.local_reader_report import LocalReaderReportPublicResultV1, build_local_reader_report_request
-from ....application.local_reader_status_operation import (
-    LocalReaderStatusPublicResultV1,
-    build_local_reader_status_request,
-)
+from ....application.local_reader_report import LocalReaderReportPublicResultV1
+from ....application.local_reader_status_operation import LocalReaderStatusPublicResultV1
 from ....application.operations.models import OperationRequest
 from ....application.operations.registry import OperationRegistry
 from ....application.provisioning_browser import required_browser_builds
 from ....application.provisioning_runtime import forget_runtime_unreachable
+from ....application.tests.local_reader_operation_requests import (
+    build_browser_runtime_provision_request,
+    build_local_reader_report_request,
+    build_local_reader_status_request,
+)
 from ....core.config import override_settings
 from ....core.model_catalogue import ModelRole
 from ...local_reader_operation_composition import build_local_reader_operations

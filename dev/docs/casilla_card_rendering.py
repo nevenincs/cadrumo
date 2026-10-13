@@ -62,7 +62,7 @@ def _help_element(record: CasillaSearchRecord, box_number: str, language: Output
     """Return the card's help paragraph in ``language``, or None where it has none."""
     _label, help_text = _localised(record, language)
     description = _description(help_text, box_number)
-    if not description:
+    if not (description is not None and description):
         return None
     return f'<p class="casilla-card__help">{escape(" ".join(description.split()))}</p>'
 
@@ -152,7 +152,7 @@ def _box_number(record: CasillaSearchRecord, facts: CasillaFacts | None) -> str:
     wins wherever the registry states one, and the record-design value stays
     visible in the identifier disclosure.
     """
-    if facts is not None and facts.form_number:
+    if facts is not None and (facts.form_number is not None and facts.form_number):
         return facts.form_number
     return record.number
 
@@ -165,7 +165,7 @@ def _constraint_phrases(constraints: CasillaConstraints | None, language: Output
     _value_constraint_phrases(constraints, language, phrases)
     _length_constraint_phrases(constraints, language, phrases)
 
-    if constraints.enum:
+    if constraints.enum is not None and constraints.enum:
         phrases.append(
             docs_chrome("docs.casilla.value_enum", language, values=", ".join(str(value) for value in constraints.enum))
         )
@@ -180,7 +180,7 @@ def _fact_chips(record: CasillaSearchRecord, facts: CasillaFacts | None, languag
         chips.append(f'<li class="casilla-fact casilla-fact--required">{escape(required)}</li>')
     for phrase in _constraint_phrases(facts.constraints if facts else None, language):
         chips.append(f'<li class="casilla-fact">{escape(phrase)}</li>')
-    if record.segmento:
+    if record.segmento is not None and record.segmento:
         segmento = docs_chrome("docs.casilla.chrome.segmento", language, segmento=record.segmento)
         chips.append(f'<li class="casilla-fact">{escape(segmento)}</li>')
     if facts is not None and facts.internal_only:
@@ -294,7 +294,7 @@ def _registry_identifier_rows(
                 f"<code>{escape(record.number)}</code>",
             )
         )
-    if record.semantic_role:
+    if record.semantic_role is not None and record.semantic_role:
         rows.append(
             (
                 docs_chrome("docs.casilla.chrome.semantic_role", language),

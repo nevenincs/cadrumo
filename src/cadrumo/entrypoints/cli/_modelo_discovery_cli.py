@@ -254,7 +254,7 @@ def casilla(
         f"binding\t{result.binding or '-'}",
         f"formula_id\t{result.formula_id or '-'}",
     ]
-    if result.help_text:
+    if result.help_text is not None and result.help_text:
         lines.append(f"help\t{result.help_text}")
     if result.formula_expression is not None:
         lines.append(f"formula_expression\t{result.formula_expression}")

@@ -378,7 +378,7 @@ def measure_dp30302_field_matrix(authority: ValidatedRegistryAuthority) -> DP303
         epoch_entries: list[DP30302RepeatingModuleFamilyEpoch] = []
         for epoch in DP30302_EPOCHS:
             cards = per_epoch.get(epoch)
-            if not cards:
+            if not (cards is not None and cards):
                 continue
             if len(cards) != 1:
                 raise RegistryValidationError(

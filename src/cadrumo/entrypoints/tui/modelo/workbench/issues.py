@@ -278,7 +278,7 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
         table = self._bindings.key_to_bindings
         for key in ("escape", "a", "b", "t"):
             entries = table.get(key)
-            if entries:
+            if entries is not None and entries:
                 table[key] = [replace(binding, show=key in shown) for binding in entries]
         self.refresh_bindings()
 
@@ -286,7 +286,7 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
         """Name the area ``a`` opens for the finding under the cursor, and show the key only when there is one."""
         table = self._bindings.key_to_bindings
         entries = table.get("a")
-        if entries:
+        if entries is not None and entries:
             label = "" if area is None else tr(_OPEN_AREA_LOCALE_KEY, area=area_words(area))
             table["a"] = [replace(binding, description=label, show=area is not None) for binding in entries]
         self.refresh_bindings()

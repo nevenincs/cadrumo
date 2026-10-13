@@ -152,7 +152,7 @@ def legal_reference_page(document_id: str) -> str:
 
 
 def _has_fragment(value: str | None) -> bool:
-    if not value or "#" not in value:
+    if not (value is not None and value) or "#" not in value:
         return False
     return bool(value.partition("#")[2])
 

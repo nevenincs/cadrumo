@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import replace
 from decimal import Decimal
@@ -169,7 +169,7 @@ async def test_observer_failure_keeps_the_exact_registered_refusal_and_none_effe
             effects.append(effect)
 
     @asynccontextmanager
-    async def irreversible_section() -> AsyncIterator[None]:
+    async def irreversible_section() -> AsyncGenerator[None]:
         yield
 
     delivered: list[ModeloEditCalculationPrerequisiteV1] = []

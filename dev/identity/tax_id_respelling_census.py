@@ -172,7 +172,7 @@ class _FunctionScan(ast.NodeVisitor):
     def visit_Assign(self, node: ast.Assign) -> None:
         if _is_normalising_chain(node.value):
             root = _base_text(node.value)
-            if root and _looks_like_a_tax_id(root):
+            if (root is not None and root) and _looks_like_a_tax_id(root):
                 for target in node.targets:
                     # The bound name can VETO a hint in the expression -- a
                     # `country = ... country_code_for_printed_tax_identifier(x)`
@@ -192,7 +192,7 @@ class _FunctionScan(ast.NodeVisitor):
     def _operand_is_respelled(self, node: ast.AST) -> str | None:
         if _is_normalising_chain(node):
             root = _base_text(node)
-            return root if root and _looks_like_a_tax_id(root) else None
+            return root if (root is not None and root) and _looks_like_a_tax_id(root) else None
         if isinstance(node, ast.Name) and node.id in self.normalised:
             self.consumed.add(node.id)
             return node.id
@@ -208,14 +208,14 @@ class _FunctionScan(ast.NodeVisitor):
             return
         for operand in (node.left, *node.comparators):
             name = self._operand_is_respelled(operand)
-            if name:
+            if name is not None and name:
                 self._record(name, node.lineno, "comparison")
         self.generic_visit(node)
 
     @override
     def visit_Subscript(self, node: ast.Subscript) -> None:
         name = self._operand_is_respelled(node.slice)
-        if name:
+        if name is not None and name:
             self._record(name, node.lineno, "keying")
         self.generic_visit(node)
 
@@ -224,16 +224,18 @@ class _FunctionScan(ast.NodeVisitor):
         for value in node.values:
             if isinstance(value, ast.FormattedValue):
                 name = self._operand_is_respelled(value.value)
-                if name:
+                if name is not None and name:
                     self._record(name, node.lineno, "keying")
         self.generic_visit(node)
 
     @override
     def visit_Call(self, node: ast.Call) -> None:
         for keyword in node.keywords:
-            if keyword.arg and any(hint in keyword.arg.lower() for hint in KEY_ARGUMENT_HINTS):
+            if (keyword.arg is not None and keyword.arg) and any(
+                hint in keyword.arg.lower() for hint in KEY_ARGUMENT_HINTS
+            ):
                 name = self._operand_is_respelled(keyword.value)
-                if name:
+                if name is not None and name:
                     self._record(name, node.lineno, "keying")
         self.generic_visit(node)
 
@@ -275,7 +277,7 @@ def _scan_module(path: pathlib.Path, source: str) -> list[Finding]:
         if not _is_normalising_chain(node):
             continue
         base = _base_text(node)
-        if not base or not _looks_like_a_tax_id(base):
+        if not (base is not None and base) or not _looks_like_a_tax_id(base):
             continue
         line = getattr(node, "lineno", 0)
         if any(f.line == line for f in findings):

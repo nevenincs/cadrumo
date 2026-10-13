@@ -8,12 +8,12 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.application.ledger.actions_manual import create_manual_transaction
 from cadrumo.application.ledger.actions_split_merge import merge_transactions, split_transaction
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand, SplitChildCommand
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.errors import TransactionValidationError
 
+from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from ._merge_test_support import _BUCKET_ID, _repositories, _split_setup
 from .ledger_action_create_support import ledger_ports_for_test
 

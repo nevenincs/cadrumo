@@ -445,7 +445,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         resolved_target_url = target_url or session_landing_url
         target_path = (
             self._target_path_from_url(resolved_target_url)
-            if resolved_target_url
+            if (resolved_target_url is not None and resolved_target_url)
             else self._settings.aeat_sede_expedientes_path
         )
         probe_url = self._probe_url_for_verification(
@@ -659,7 +659,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         from ....persistence.storage.master_key.active_session import active_bucket_session_serves
 
         bucket_id = resolve_active_bucket_id()
-        pointer = read_profile_bucket_by_id(bucket_id) if bucket_id else None
+        pointer = read_profile_bucket_by_id(bucket_id) if (bucket_id is not None and bucket_id) else None
         context = _active_profile_context_defaults(
             bucket_id,
             profile_label_present=bool(pointer is not None and pointer.label),

@@ -8,7 +8,7 @@ execution are proven in the persistence roundtrip and executor conformance tests
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Iterator
+from collections.abc import Callable, Generator, Iterable
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -113,7 +113,7 @@ class _Catalogue:
 
 
 @contextmanager
-def _transactions(*transactions: Transaction) -> Iterator[None]:
+def _transactions(*transactions: Transaction) -> Generator[None]:
     catalogue = TransactionCatalogue.from_transactions(transactions)
 
     def factory(*, bucket_id: str) -> TransactionCatalogueRepositoryProtocol:

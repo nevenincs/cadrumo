@@ -103,13 +103,13 @@ class CoreFoundation:
     def constant(library: ctypes.CDLL, name: str) -> int:
         """Read one published nonnull native Core Foundation constant."""
         pointer = ctypes.c_void_p.in_dll(library, name).value
-        if not pointer:
+        if not (pointer is not None and pointer):
             raise keychain_refusal(AutomationCustodyCode.UNAVAILABLE)
         return pointer
 
     def require_type(self, pointer: int | None, expected: NativeKeychainFunction) -> int:
         """Admit a nonnull pointer only when its native type matches the expected identifier."""
-        if not pointer or self.type_id(pointer) != expected():
+        if not (pointer is not None and pointer) or self.type_id(pointer) != expected():
             raise keychain_refusal()
         return pointer
 
@@ -132,7 +132,7 @@ class CoreFoundation:
         if not 0 <= length <= 1024:
             raise keychain_refusal()
         buffer = ctypes.create_string_buffer(length * 4 + 1)
-        if not self.string_get(pointer, buffer, len(buffer), UTF8):
+        if not bool(self.string_get(pointer, buffer, len(buffer), UTF8)):
             raise keychain_refusal()
         raw: object = buffer.value
         if not isinstance(raw, bytes):
@@ -176,7 +176,7 @@ class CoreFoundation:
         """Read one typed native number without changing its integer meaning."""
         pointer = self.require_type(pointer, self.number_type)
         value = ctypes.c_int64()
-        if not self.number_get(pointer, 4, ctypes.byref(value)):
+        if not bool(self.number_get(pointer, 4, ctypes.byref(value))):
             raise keychain_refusal()
         return value.value
 
@@ -219,6 +219,6 @@ class CoreFoundation:
         pointer = self.require_type(pointer, self.data_type)
         length = native_integer(self.data_length(pointer))
         address = self.data_pointer(pointer)
-        if not 0 < length <= MAX_SECRET_BYTES or not address:
+        if not 0 < length <= MAX_SECRET_BYTES or not (address is not None and address):
             raise keychain_refusal()
         return ctypes.string_at(address, length)

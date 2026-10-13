@@ -94,7 +94,7 @@ def _sourced(form: ModeloWorkForm) -> ModeloFormField:
     return next(
         field
         for field in form.fields()
-        if field.box
+        if (field.box is not None and field.box)
         and field.origin in SOURCE_WORDED_ORIGINS
         and field.source is not None
         and any(binding.policy.family is field.source.family for binding in field.bindings)
@@ -167,7 +167,7 @@ async def test_the_help_band_never_breaks_a_citation_between_art_and_its_number(
         field = next(
             field
             for field in load.form.fields()
-            if field.box
+            if (field.box is not None and field.box)
             and _ART_71 in {str(ref) for ref in field.legal_refs}
             and isinstance(field.address, ModeloFormCasillaAddressV1)
         )

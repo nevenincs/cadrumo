@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import cast
 
@@ -22,7 +22,7 @@ class _Recorder:
         self.timeline: list[tuple[str, object]] = []
 
     @asynccontextmanager
-    async def irreversible_section(self) -> AsyncIterator[None]:
+    async def irreversible_section(self) -> AsyncGenerator[None]:
         owner = asyncio.current_task()
         self.timeline.append(("enter", owner))
         try:

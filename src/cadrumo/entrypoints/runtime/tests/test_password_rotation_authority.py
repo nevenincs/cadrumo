@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import os
-from collections.abc import AsyncGenerator, Iterator
+from collections.abc import AsyncGenerator, Generator
 from contextlib import asynccontextmanager, contextmanager
 from pathlib import Path
 from typing import override
@@ -143,7 +143,7 @@ def _registry() -> OperationRegistry:
 @contextmanager
 def _authority(
     tmp_path: Path,
-) -> Iterator[tuple[ProfileWorkerOperationAuthority, HeldPermitClient, OperationIdentity, WitnessCustody]]:
+) -> Generator[tuple[ProfileWorkerOperationAuthority, HeldPermitClient, OperationIdentity, WitnessCustody]]:
     with profile_adapter_composition(), worker_profiles(tmp_path) as profiles:
         root, ((worker, key), _) = profiles
         with override_settings(cadrumo_local_storage_root=root, cadrumo_active_profile=str(worker.binding.profile_id)):

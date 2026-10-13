@@ -396,7 +396,11 @@ def _lift_previous_filing_casilla_overrides_to_bindings(
     promoted: dict[BindingId, Decimal] = {}
     for casilla_id, value in casilla_inputs.items():
         casilla = revision_casillas_by_id.get(casilla_id)
-        if casilla is None or casilla.input_kind != InputKind.BOUND or not casilla.binding:
+        if (
+            casilla is None
+            or casilla.input_kind != InputKind.BOUND
+            or not (casilla.binding is not None and casilla.binding)
+        ):
             continue
         binding = bindings_by_id.get(casilla.binding)
         if binding is None or binding.source != _BindingSourceKind.PREVIOUS_FILING:

@@ -7,7 +7,14 @@ import type {
   SignInSignal,
   WindowPresentation,
 } from "../ipc/contract";
+import type {
+  AgentServiceStatus,
+  AgentSession,
+  AgentStreamEvent,
+} from "./agentSession";
+import type { AgentViews } from "./agentViews";
 import type { Host } from "./host";
+import type { HostCall } from "./hostCall";
 import { hostCall } from "./hostCall";
 import { openTauriTerminal } from "./tauriTerminal";
 
@@ -124,5 +131,67 @@ export function tauriHost(): Host {
       return chosen;
     },
     openExternal: (url) => call("open_external", { url }).then(() => undefined),
+    ...tauriAgent(call),
+  };
+}
+
+// The agent column served by the desktop host's agent commands: the status
+// and each conversation's stream arrive on channels, everything else is one
+// token-checked call. A refusal rejects with the host's `{ code }`.
+
+/** The agent session and views of the desktop host. */
+function tauriAgent(call: HostCall): {
+  agentSession: AgentSession;
+  agent: AgentViews;
+} {
+  return {
+    agentSession: {
+      status: () => call("agent_status", {}),
+      async observeStatus(listener) {
+        const updates = new Channel<AgentServiceStatus>();
+        updates.onmessage = listener;
+        const subscription = await call("agent_status_subscribe", { updates });
+        return () => {
+          updates.onmessage = () => undefined;
+          void call("agent_status_unsubscribe", { subscription }).catch(
+            () => undefined,
+          );
+        };
+      },
+      providerCatalog: () => call("agent_provider_catalog", {}),
+      startConversation: () => call("agent_conversation_start", {}),
+      send: (request) => call("agent_send", { request }),
+      cancel: (replyId) =>
+        call("agent_cancel", { replyId }).then(() => undefined),
+      pending: (conversationId) => call("agent_pending", { conversationId }),
+      answerQuestions: ({ reply_id, request_id }, answer) =>
+        call("agent_questions_answer", {
+          questionnaire: { reply_id, request_id },
+          answer,
+        }),
+      decideApproval: ({ reply_id, request_id }, optionId) =>
+        call("agent_approval_decide", {
+          approval: { reply_id, request_id },
+          optionId,
+        }).then(() => undefined),
+      async observe(conversationId, listener) {
+        const events = new Channel<AgentStreamEvent>();
+        events.onmessage = listener;
+        const subscription = await call("agent_observe", {
+          conversationId,
+          events,
+        });
+        return () => {
+          events.onmessage = () => undefined;
+          void call("agent_unobserve", { subscription }).catch(() => undefined);
+        };
+      },
+    },
+    agent: {
+      conversations: () => call("agent_conversations", {}),
+      history: (conversationId) => call("agent_history", { conversationId }),
+      documents: (conversationId) =>
+        call("agent_documents", { conversationId }),
+    },
   };
 }

@@ -84,7 +84,7 @@ class InstallationScreen(AccountChromeScreen):
             hint = tr("tui.installation.list_hint")
         yield Static(title, classes="cadrumo-banner", markup=False)
         with ContentScroll(id="installation-page", classes="cadrumo-scroll"):
-            if self._notice:
+            if self._notice is not None and self._notice:
                 yield Static(self._notice, id="installation-notice", markup=False)
             yield Static(intro, id="installation-intro", classes="cadrumo-subtle", markup=False)
             yield ContentDataTable[str](id="installation-acts", cursor_type="row", zebra_stripes=True)

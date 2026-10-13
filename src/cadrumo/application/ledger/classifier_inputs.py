@@ -101,7 +101,7 @@ class ClassifierInputFact(BaseModel):
         if self.source is ClassifierInputSource.PROFILE_AUTHORITY:
             if self.anchor is not None:
                 raise ValueError(f"profile fact {self.name!r} must not carry a document anchor")
-            if not self.authority:
+            if not (self.authority is not None and self.authority):
                 raise ValueError(f"profile fact {self.name!r} must name the authority that vouches for it")
         elif self.source is ClassifierInputSource.OPERATOR_ASSERTION:
             if self.anchor is not None:
@@ -182,7 +182,9 @@ def collect_classifier_inputs(
 
     identifier = _printed_counterparty_identifier(draft)
     counterparty = (
-        CounterpartyTaxablePersonStatus.TAXABLE_PERSON if identifier else CounterpartyTaxablePersonStatus.UNKNOWN
+        CounterpartyTaxablePersonStatus.TAXABLE_PERSON
+        if (identifier is not None and identifier)
+        else CounterpartyTaxablePersonStatus.UNKNOWN
     )
     facts.append(
         ClassifierInputFact(

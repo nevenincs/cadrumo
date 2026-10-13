@@ -65,7 +65,7 @@ def _has_class(target: str):
     """Return a bs4 ``class_=`` matcher that yields ``True`` when ``target`` is present."""
 
     def _matcher(value: str | list[str] | None) -> bool:
-        if not value:
+        if not (value is not None and value):
             return False
         classes = value if isinstance(value, list) else [value]
         return target in classes

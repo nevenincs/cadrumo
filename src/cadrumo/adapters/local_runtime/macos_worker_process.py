@@ -245,7 +245,7 @@ def parse_macos_job_print(text: str, *, target: str, label: str) -> MacosJobPrin
             members.append(member[2:])
         blocks[key] = tuple(members)
     state = scalars.get("state")
-    if not state:
+    if not (state is not None and state):
         raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
     printed_pid = scalars.get("pid")
     pid = None if printed_pid is None else _decimal(printed_pid, minimum=1)
