@@ -15,6 +15,17 @@ uint32_t cadrumo_platform_abi(void);
 uint32_t cadrumo_platform_create(uint32_t abi, cadrumo_context **out, cadrumo_buffer *error);
 uint32_t cadrumo_platform_path(cadrumo_context *ctx, uint32_t key, cadrumo_buffer *out);
 uint32_t cadrumo_platform_prepare(cadrumo_context *ctx, cadrumo_buffer *error);
+/* Define the process environment from the launch profile `image` selects for the
+ * arguments after the image's own path. 4 is a launch-profile refusal: error holds
+ * the one refusal line to write last on stderr before exiting with
+ * CADRUMO_LAUNCH_PROFILE_REFUSED_EXIT; the environment is unchanged. */
+#ifdef _WIN32
+typedef uint16_t cadrumo_native_char;
+#else
+typedef char cadrumo_native_char;
+#endif
+uint32_t cadrumo_platform_define(cadrumo_context *ctx, const char *image, uint32_t argc,
+    const cadrumo_native_char *const *argv, cadrumo_buffer *error);
 void cadrumo_platform_release(cadrumo_buffer *buffer);
 void cadrumo_platform_destroy(cadrumo_context *ctx);
 /* Path keys: 0 package, 1 user root, 2 executable, 3 stdlib, 4 site-packages,

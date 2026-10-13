@@ -110,7 +110,7 @@ pub(crate) fn relative_components(relative: &str) -> PathBuf {
         .collect()
 }
 
-fn filename_matches(left: &str, right: &str) -> bool {
+pub(crate) fn filename_matches(left: &str, right: &str) -> bool {
     if cfg!(windows) {
         left.eq_ignore_ascii_case(right)
     } else {

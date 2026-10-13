@@ -7,6 +7,8 @@
 #include <windows.h>
 #endif
 #include "cadrumo_platform.h"
+#include "contract.h"
+#define CADRUMO_CONSUMER_IMAGE CADRUMO_LAUNCH_IMAGE_PYTHON
 
 static int environment_matches(const char *name, const char *expected) {
 #ifdef _WIN32
@@ -95,6 +97,33 @@ int main(int argc, char **argv) {
     assert(path.data == NULL && path.len == 0);
     cadrumo_platform_release(NULL);
     cadrumo_platform_destroy(NULL);
-    puts("C consumer ABI 1: statuses, path keys and provider buffers pass");
+
+    /* Launch-profile definition: invalid arguments, an undeclared image, the kdf-child's
+     * unchanged parent environment, then the generic interpreter's closed environment. */
+    assert(cadrumo_platform_define(NULL, CADRUMO_CONSUMER_IMAGE, 0, NULL, &error) == 2);
+    assert(cadrumo_platform_create(1, &ctx, &error) == 0);
+    assert(cadrumo_platform_define(ctx, NULL, 0, NULL, &error) == 2);
+    assert(cadrumo_platform_define(ctx, CADRUMO_CONSUMER_IMAGE, 1, NULL, &error) == 2);
+    assert(cadrumo_platform_define(ctx, "undeclared-image", 0, NULL, &error) == 3);
+    assert(error.data != NULL && error.len > 0);
+    cadrumo_platform_release(&error);
+#ifdef _WIN32
+    const cadrumo_native_char *kdf[] = {(const cadrumo_native_char *)L"-m",
+        (const cadrumo_native_char *)L"cadrumo.adapters.persistence.storage.custody._kdf_worker",
+        (const cadrumo_native_char *)L"--request-handle", (const cadrumo_native_char *)L"5",
+        (const cadrumo_native_char *)L"--result-handle", (const cadrumo_native_char *)L"6"};
+    assert(SetEnvironmentVariableA("CADRUMO_CONSUMER_MARKER", "kept"));
+#else
+    const cadrumo_native_char *kdf[] = {"-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker",
+        "--request-fd", "3", "--result-fd", "4", "--descriptor-bound", "1024"};
+    assert(setenv("CADRUMO_CONSUMER_MARKER", "kept", 1) == 0);
+#endif
+    assert(cadrumo_platform_define(ctx, CADRUMO_CONSUMER_IMAGE, sizeof kdf / sizeof kdf[0], kdf, &error) == 0);
+    assert(error.data == NULL && environment_matches("CADRUMO_CONSUMER_MARKER", "kept"));
+    assert(cadrumo_platform_define(ctx, CADRUMO_CONSUMER_IMAGE, 0, NULL, &error) == 0);
+    assert(error.data == NULL && environment_matches("CADRUMO_CONSUMER_MARKER", NULL));
+    assert(!environment_matches("PATH", NULL));
+    cadrumo_platform_destroy(ctx);
+    puts("C consumer ABI 1: statuses, path keys, provider buffers and launch definition pass");
     return 0;
 }

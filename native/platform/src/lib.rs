@@ -15,13 +15,12 @@ mod conformance_tests;
 pub mod desktop;
 #[cfg(windows)]
 pub mod installation;
+pub mod launch;
 #[cfg(all(test, unix))]
 mod posix_tests;
 pub mod storage;
 #[cfg(target_os = "macos")]
 pub mod transport;
-
-use storage::Profile;
 
 #[repr(C)]
 pub struct Buffer {
@@ -134,134 +133,66 @@ pub(crate) fn normalize_absolute_path(path: &Path) -> std::io::Result<PathBuf> {
     storage::validated_absolute_path(path).map_err(std::io::Error::from)
 }
 
-/// Names a packaged host clears from itself, keeping the product and package allowlists.
-fn cleared(name: &str) -> bool {
-    storage::cleared(name, Profile::Operator, PACKAGE_ENV_ALLOWLIST)
-}
-
-/// The contract's pinned set plus the host-inherited authority pin, from resolved paths.
-fn pinned(ctx: &Context) -> Vec<(&'static str, &Path)> {
-    let mut values: Vec<(&'static str, &Path)> = PINNED_ENV
+/// The image a packaged executable is, from its declared file name in the package.
+fn executable_image(executable: &Path) -> Option<&'static str> {
+    let name = executable.file_name()?.to_str()?;
+    if storage::filename_matches(name, EXECUTABLE) {
+        return Some("python");
+    }
+    let suffix = Path::new(EXECUTABLE)
+        .extension()
+        .map(|extension| format!(".{}", extension.to_string_lossy()))
+        .unwrap_or_default();
+    LAUNCH_IMAGES
         .iter()
-        .map(|&name| {
-            let value = if name == ROOT_VARIABLE {
-                &ctx.paths[7]
-            } else {
-                &ctx.paths[8]
-            };
-            (name, value.as_path())
-        })
-        .collect();
-    values.extend(
-        HOST_INHERITED_ENV
-            .iter()
-            .map(|&name| (name, ctx.paths[6].as_path())),
-    );
-    values
+        .copied()
+        .find(|image| storage::filename_matches(name, &format!("{image}{suffix}")))
 }
 
-fn executable_search_path(
-    ctx: &Context,
-    lookup: &dyn Fn(&str) -> Option<std::ffi::OsString>,
-) -> Result<std::ffi::OsString, String> {
-    let mut search = vec![ctx.paths[0].clone()];
-    if let Some(overrides) = lookup("CADRUMO_EXTERNAL_BIN_DIRS") {
-        for directory in env::split_paths(&overrides) {
-            if !directory.is_absolute() || !directory.is_dir() {
-                return Err(
-                    "CADRUMO_EXTERNAL_BIN_DIRS requires existing absolute directories".into(),
-                );
-            }
-            search.push(directory);
-        }
+/// Define the environment `executable`'s default profile gives a caller holding `ambient`.
+fn define_for(
+    executable: &Path,
+    ambient: &[(std::ffi::OsString, std::ffi::OsString)],
+) -> Result<launch::Defined, String> {
+    let image = executable_image(executable)
+        .ok_or_else(|| format!("{} is not a declared package image", executable.display()))?;
+    let evidence = storage::detect_mode(executable)?;
+    let profile = launch::select(image, &[]).map_err(describe)?;
+    launch::define_environment(profile, ambient, &evidence.package.clone(), &|lookup| {
+        storage::resolve_storage_root_with(&evidence, lookup).map(|resolved| resolved.root)
+    })
+    .map_err(describe)
+}
+
+fn describe(error: launch::DefineError) -> String {
+    match error {
+        launch::DefineError::Refused(refusal) => refusal.line(),
+        launch::DefineError::Failed(message) => message,
     }
-    search.push(ctx.paths[5].clone());
-    #[cfg(windows)]
-    {
-        let system = lookup("SystemRoot").ok_or("SystemRoot is missing")?;
-        search.push(PathBuf::from(system).join("System32"));
-    }
-    #[cfg(unix)]
-    search.extend([PathBuf::from("/usr/bin"), PathBuf::from("/bin")]);
-    env::join_paths(search).map_err(|e| e.to_string())
 }
 
 fn prepare(ctx: &Context) -> Result<(), String> {
-    let search = executable_search_path(ctx, &|name| env::var_os(name))?;
-    for path in [&ctx.paths[1], &ctx.paths[8]] {
-        create_private_directory(path).map_err(|e| e.to_string())?;
-    }
+    let ambient: Vec<_> = env::vars_os().collect();
+    let defined = define_for(&ctx.paths[2], &ambient)?;
     // Environment mutation occurs once, before Python or application threads exist.
-    let names: Vec<_> = env::vars_os().map(|(key, _)| key).collect();
-    for name in names {
-        if cleared(&name.to_string_lossy()) {
-            unsafe {
-                env::remove_var(name);
-            }
-        }
-    }
-    unsafe {
-        for (name, value) in pinned(ctx) {
-            env::set_var(name, value);
-        }
-        env::set_var("PATH", search);
-    }
-    Ok(())
+    unsafe { launch::apply(&defined) }.map_err(describe)
 }
 
-/// Prepare the same environment as the interpreter host without starting Python
-/// or changing this process's environment. The caller verifies the executable.
+/// Define the environment `executable` gives a caller holding `ambient`, without starting
+/// Python or changing this process's environment. Its pinned directories are created.
+/// The caller verifies the executable.
 pub fn prepared_environment(
     executable: &Path,
     ambient: &[(std::ffi::OsString, std::ffi::OsString)],
 ) -> Result<Vec<(std::ffi::OsString, std::ffi::OsString)>, String> {
-    let matches = |key: &std::ffi::OsStr, name: &str| {
-        if cfg!(windows) {
-            key.to_string_lossy().eq_ignore_ascii_case(name)
-        } else {
-            key == name
-        }
-    };
-    let lookup = |name: &str| {
-        ambient
-            .iter()
-            .rev()
-            .find(|(key, _)| matches(key, name))
-            .map(|(_, value)| value.clone())
-    };
     // Match the native interpreter's current_exe path representation even when
     // callers supply a Windows executable using forward slashes.
     let executable = normalize_absolute_path(executable).map_err(|error| error.to_string())?;
-    let ctx = context_for(&executable, &lookup)?;
-    let search = executable_search_path(&ctx, &lookup)?;
-    for path in [&ctx.paths[1], &ctx.paths[8]] {
-        create_private_directory(path).map_err(|e| e.to_string())?;
+    let defined = define_for(&executable, ambient)?;
+    for directory in &defined.directories {
+        create_private_directory(directory).map_err(|e| e.to_string())?;
     }
-    let pins = pinned(&ctx);
-    let mut environment: Vec<_> = ambient
-        .iter()
-        .filter(|(key, _)| {
-            !cleared(&key.to_string_lossy())
-                && !matches(key, "PATH")
-                && !pins.iter().any(|(name, _)| matches(key, name))
-        })
-        .cloned()
-        .collect();
-    environment.extend(
-        pins.into_iter()
-            .map(|(name, value)| (name.into(), value.as_os_str().to_owned())),
-    );
-    environment.push(("PATH".into(), search));
-    #[cfg(windows)]
-    for (key, _) in &mut environment {
-        // CPython's Windows os.environ exposes case-insensitive names in
-        // uppercase; preserve that representation for exact query parity.
-        *key = key
-            .to_str()
-            .map(|name| name.to_uppercase().into())
-            .unwrap_or_else(|| key.to_ascii_uppercase());
-    }
-    Ok(environment)
+    Ok(defined.environment)
 }
 
 #[unsafe(no_mangle)]
@@ -365,6 +296,103 @@ pub unsafe extern "C" fn cadrumo_platform_prepare(ctx: *mut Context, error: *mut
         }
     }
 }
+/// The native character of this platform's process arguments.
+#[cfg(windows)]
+pub type NativeChar = u16;
+#[cfg(unix)]
+pub type NativeChar = std::ffi::c_char;
+
+/// # Safety
+/// `argument` must be a non-null, terminated native string.
+unsafe fn native_argument(argument: *const NativeChar) -> std::ffi::OsString {
+    #[cfg(windows)]
+    {
+        use std::os::windows::ffi::OsStringExt;
+        let length = (0..)
+            .take_while(|&index| unsafe { *argument.add(index) } != 0)
+            .count();
+        std::ffi::OsString::from_wide(unsafe { std::slice::from_raw_parts(argument, length) })
+    }
+    #[cfg(unix)]
+    {
+        use std::os::unix::ffi::OsStringExt;
+        std::ffi::OsString::from_vec(
+            unsafe { std::ffi::CStr::from_ptr(argument) }
+                .to_bytes()
+                .to_vec(),
+        )
+    }
+}
+
+/// Select the launch profile for `image` and this invocation, then define the process
+/// environment from it.
+///
+/// Returns 0 on success, 2 on an invalid argument, 3 on a platform failure with an
+/// error message, and 4 on a launch-profile refusal, when `error` holds the one
+/// refusal line the host writes before exiting. A refusal changes nothing.
+///
+/// # Safety
+/// A non-null context must be live and created by this library. `image` must be a
+/// terminated UTF-8 string. `argv` must hold `argc` terminated native strings: the
+/// arguments after the image's own path. The error output must be aligned and
+/// writable. The caller must exclude concurrent environment access while this
+/// operation changes it.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn cadrumo_platform_define(
+    ctx: *mut Context,
+    image: *const std::ffi::c_char,
+    argc: u32,
+    argv: *const *const NativeChar,
+    error: *mut Buffer,
+) -> u32 {
+    if ctx.is_null() || image.is_null() || error.is_null() || (argc > 0 && argv.is_null()) {
+        return 2;
+    }
+    unsafe {
+        *error = Buffer {
+            data: ptr::null_mut(),
+            len: 0,
+        };
+    }
+    let Ok(image) = unsafe { std::ffi::CStr::from_ptr(image) }.to_str() else {
+        return 2;
+    };
+    let mut arguments = Vec::with_capacity(argc as usize);
+    for index in 0..argc as usize {
+        let argument = unsafe { *argv.add(index) };
+        if argument.is_null() {
+            return 2;
+        }
+        arguments.push(unsafe { native_argument(argument) });
+    }
+    let package = unsafe { &*ctx }.paths[0].clone();
+    let outcome = launch::select(image, &arguments).and_then(|profile| {
+        let exe = env::current_exe().map_err(|e| launch::DefineError::Failed(e.to_string()))?;
+        let evidence = storage::detect_mode(&exe).map_err(launch::DefineError::Failed)?;
+        let ambient: Vec<_> = env::vars_os().collect();
+        let defined = launch::define_environment(profile, &ambient, &package, &|lookup| {
+            storage::resolve_storage_root_with(&evidence, lookup).map(|resolved| resolved.root)
+        })?;
+        // Environment mutation occurs once, before Python or application threads exist.
+        unsafe { launch::apply(&defined) }
+    });
+    match outcome {
+        Ok(()) => 0,
+        Err(launch::DefineError::Refused(refusal)) => {
+            unsafe {
+                *error = buffer(refusal.line());
+            }
+            4
+        }
+        Err(launch::DefineError::Failed(message)) => {
+            unsafe {
+                *error = buffer(message);
+            }
+            3
+        }
+    }
+}
+
 /// # Safety
 /// A non-null pointer must exclusively reference an aligned, writable buffer
 /// returned by this library (or an empty buffer). Its data and length must be
@@ -395,44 +423,5 @@ pub unsafe extern "C" fn cadrumo_platform_destroy(ctx: *mut Context) {
         unsafe {
             drop(Box::from_raw(ctx));
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn packaged_environment_pins_root_temporary_and_authority_and_clears_tool_and_cache_names() {
-        let ctx = Context {
-            paths: vec![
-                PathBuf::from(r"C:\app"),
-                PathBuf::from(r"C:\data"),
-                PathBuf::from(r"C:\app\python.exe"),
-                PathBuf::from(r"C:\app\python.zip"),
-                PathBuf::from(r"C:\app\site"),
-                PathBuf::from(r"C:\app\bin"),
-                PathBuf::from(r"C:\app\data\authority"),
-                PathBuf::from(r"C:\data"),
-                PathBuf::from(r"C:\data\tmp"),
-            ],
-        };
-        let set: Vec<_> = pinned(&ctx).into_iter().map(|(name, _)| name).collect();
-        let mut expected: Vec<&str> = PINNED_ENV.to_vec();
-        expected.extend(HOST_INHERITED_ENV);
-        assert_eq!(set, expected);
-        assert_eq!(set[0], ROOT_VARIABLE);
-        assert!(!set.contains(&"XDG_CACHE_HOME"));
-        assert!(
-            pinned(&ctx)
-                .iter()
-                .any(|(name, value)| *name == ROOT_VARIABLE && *value == Path::new(r"C:\data"))
-        );
-        assert!(cleared("PYTHONPATH") && cleared("VIRTUAL_ENV"));
-        assert!(cleared(&format!("{NAMESPACE_PREFIX}SECRET_PASSPHRASE")));
-        assert!(!cleared(ROOT_VARIABLE));
-        assert!(!cleared("SYSTEMROOT"));
-        assert!(PRODUCT_ENV_ALLOWLIST.iter().all(|name| !cleared(name)));
-        assert!(PACKAGE_ENV_ALLOWLIST.iter().all(|name| !cleared(name)));
     }
 }

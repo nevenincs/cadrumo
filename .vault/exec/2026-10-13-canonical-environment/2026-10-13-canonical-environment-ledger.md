@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:b0bf7d7a221217ee0bea11bdb52ae39c6894358d4b471e06fb605069beddb29f'
+body_hash: 'sha256:615c274bc37ce56e96e09aa1945863840427acd20a00d73008eba65e394503fe'
 related:
   - "[[2026-10-13-canonical-environment-plan]]"
 ---
@@ -113,6 +113,17 @@ related:
 - `S08` `verify:` `just check-types (0 diagnostics in touched files)` -> `pass`
 - `S08` `verify:` `just check-import-boundaries (15/15 contracts, 0 hard findings, 4688/4688 loaded; unavailable only for concurrent source change)` -> `fail`
 - `S08` `by:` `runtime-lane`
+- `S03` `A` `native/platform/src/launch.rs`
+- `S03` `M` `native/platform/src/lib.rs`
+- `S03` `M` `native/platform/src/storage.rs`
+- `S03` `M` `native/platform/include/cadrumo_platform.h`
+- `S03` `M` `native/platform/tests/consumer.c`
+- `S03` `verify:` `cargo +1.96.0 clippy --all-targets -D warnings native/platform (windows, x86_64-linux, aarch64-darwin)` -> `pass`
+- `S03` `verify:` `cargo +1.96.0 test native/platform (44)` -> `pass`
+- `S03` `verify:` `consumer.c compiled with cl /W4 /WX against the platform staticlib and run inside the checkout` -> `pass`
+- `S03` `verify:` `cargo +1.96.0 clippy native/manager lib` -> `pass`
+- `S03` `verify:` `just check-types: no diagnostics in native-lane files (2 remain in dev/registry/pipeline/tests/test_generated_tree_publication.py)` -> `pass`
+- `S03` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -124,3 +135,4 @@ related:
 - `S02` Pre-existing failures unrelated to the touched files observed in dev/packaging/native/tests: `test_distribution_prepare,` `test_linux_desktop_runtime` payload policy and `test_cpp_abi_inputs` (CMake cannot find ToolchainFloor.cmake), `test_incremental_generation` (FileExistsError), and `dev/packaging/tests/test_native_artifact_identity` (fixture layout lacks paths)
 - `S08` S08 check-import-boundaries reports unavailable because other sessions changed the governed source tree while it ran; its contracts, hard findings and loadability components were clean. Load-target inventories regenerated with python -m `dev.quality.import_load_probe` --compile-targets (adds `native_refusal,` and the native lane's committed `application_environment` that was missing from the dev inventory).
 - `S08` S08 `test_agent_host_runtime.py::test_the_relay_in_the_agents_tree_acts_as_the_agent_under_the_lease_that_started_it` fails with MCP `internal_error` and fails identically with the agent's standard error restored to the null device; it is not caused by this Step.
+- `S03` `cadrumo_platform_prepare` and `prepared_environment` now define the executable's default profile through `define_environment` until P02.S05 and P02.S06 move their callers to `cadrumo_platform_define`
