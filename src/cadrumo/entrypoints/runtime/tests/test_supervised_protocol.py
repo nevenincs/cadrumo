@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import json
 from uuid import uuid4
 
 import pytest
-from pydantic import TypeAdapter
+from pydantic import TypeAdapter, ValidationError
 
 from cadrumo.application.runtime.contracts import RuntimeExitReason
 
@@ -137,3 +138,44 @@ def test_every_announcement_is_one_bounded_line_that_round_trips(
 def test_stopping_names_the_numeric_exit_reason() -> None:
     line = encode_runtime_announcement(RuntimeStopping(reason=RuntimeExitReason.SUPERVISOR_STOP))
     assert line == b'{"type":"stopping","reason":64}\n'
+
+
+@pytest.mark.parametrize("reason", list(RuntimeExitReason))
+def test_every_exit_reason_is_accepted_as_its_integer_and_refused_as_a_float(reason: RuntimeExitReason) -> None:
+    announcements = TypeAdapter(RuntimeAnnouncement)
+    exact = f'{{"type":"stopping","reason":{int(reason)}}}'
+    assert announcements.validate_json(exact, strict=True) == RuntimeStopping(reason=reason)
+    assert RuntimeStopping.model_validate_json(exact) == RuntimeStopping(reason=reason)
+    for spelling in (f"{int(reason)}.0", f"{int(reason) / 10}e1"):
+        line = f'{{"type":"stopping","reason":{spelling}}}'
+        with pytest.raises(ValidationError):
+            announcements.validate_json(line, strict=True)
+        with pytest.raises(ValidationError):
+            RuntimeStopping.model_validate_json(line)
+    with pytest.raises(ValidationError):
+        RuntimeStopping.model_validate({"type": "stopping", "reason": float(reason)})
+
+
+@pytest.mark.parametrize("reason", ["true", "false", '"64"', "null", "[64]", "{}", "64.5", "63", "74"])
+def test_a_stopping_reason_that_is_not_a_known_integer_is_refused(reason: str) -> None:
+    with pytest.raises(ValidationError):
+        RuntimeStopping.model_validate_json(f'{{"type":"stopping","reason":{reason}}}')
+
+
+def _integer_fields() -> list[tuple[object, str]]:
+    return [
+        (message, name)
+        for message in _largest_announcements()
+        for name, value in message.model_dump().items()
+        if type(value) is int or isinstance(value, RuntimeExitReason)
+    ]
+
+
+@pytest.mark.parametrize(("message", "field"), _integer_fields())
+def test_no_announced_integer_field_accepts_a_float_spelling(
+    message: RuntimeReady | RuntimeHeartbeat | RuntimeStopping | RuntimeBusy | RuntimeRefused, field: str
+) -> None:
+    document = json.loads(encode_runtime_announcement(message))
+    document[field] = float(document[field])
+    with pytest.raises(ValidationError):
+        TypeAdapter(RuntimeAnnouncement).validate_json(json.dumps(document), strict=True)
