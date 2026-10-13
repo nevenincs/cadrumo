@@ -77,6 +77,13 @@ _RUN_START_SECONDS = 240
 _TURN_SECONDS = 600
 
 
+def _source_programs(directory: Path) -> Programs:
+    """Locate the three entry points in a directory of console scripts."""
+    suffix = ".exe" if os.name == "nt" else ""
+    names = ("aeat", "cadrumo-runtime", "cadrumo-mcp")
+    return Programs(*((directory / f"{name}{suffix}").resolve(strict=True) for name in names))
+
+
 def _free_port() -> int:
     with socket.socket() as probe:
         probe.bind(("127.0.0.1", 0))
@@ -296,6 +303,10 @@ def run(programs: Programs, package: Path | None, scratch: Path, *, checkout: Pa
     secret_store.mkdir(parents=True)
     workspace.mkdir()
     environment = consumer_environment(root, secret_store)
+    authority_root = os.environ.get("CADRUMO_AUTHORITY_ROOT")
+    if package is None and authority_root is not None:
+        # Source programs read the authority this checkout publishes; a package carries its own.
+        environment["CADRUMO_AUTHORITY_ROOT"] = authority_root
     log = scratch / "processes.log"
     profile = create_profile(programs, environment, _PROFILE, log)
     with caller_owned_runtime(programs, environment, scratch / "runtime-stderr.log") as runtime:
@@ -350,7 +361,13 @@ def run(programs: Programs, package: Path | None, scratch: Path, *, checkout: Pa
 def main(arguments: list[str] | None = None) -> int:
     """Run the proof; exit 0 when every step held, 1 on a contradicted step, 3 when a step was left out."""
     parser = argparse.ArgumentParser(prog="agent-live", description=__doc__.splitlines()[0])
-    parser.add_argument("--package", type=Path, required=True, help="A built package directory.")
+    target = parser.add_mutually_exclusive_group(required=True)
+    target.add_argument("--package", type=Path, help="A built package directory.")
+    target.add_argument(
+        "--programs",
+        type=Path,
+        help="A directory holding aeat, cadrumo-runtime and cadrumo-mcp, such as a checkout's environment scripts.",
+    )
     parser.add_argument(
         "--agent-checkout",
         type=Path,
@@ -362,13 +379,14 @@ def main(arguments: list[str] | None = None) -> int:
     options = parser.parse_args(arguments)
     if options.agent_checkout is None:
         parser.error("give --agent-checkout or set CADRUMO_AGENT_CHECKOUT")
-    package = Path(options.package).resolve(strict=True)
+    package = None if options.package is None else Path(options.package).resolve(strict=True)
+    programs = Programs.of(package) if package is not None else _source_programs(Path(options.programs))
     checkout = Path(options.agent_checkout).resolve(strict=True)
     base = _REPOSITORY_ROOT / "build" / "acceptance"
     base.mkdir(parents=True, exist_ok=True)
     scratch = Path(tempfile.mkdtemp(prefix="agent-live-", dir=base))
     try:
-        receipt = run(Programs.of(package), package, scratch, checkout=checkout, model=options.model)
+        receipt = run(programs, package, scratch, checkout=checkout, model=options.model)
     except (AcceptanceError, BaseExceptionGroup) as failure:
         reason = acceptance_failure(failure)
         if reason is None:
