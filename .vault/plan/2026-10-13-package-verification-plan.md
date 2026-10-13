@@ -12,7 +12,7 @@ related:
   - '[[2026-10-13-canonical-environment-application-internals-adr]]'
 modified: '2026-10-13'
 body_schema: body-v2
-body_hash: 'sha256:e8458d4637ad8675035f5d59bdf24adac2ab1d25a59cef2ff90eacb28180d0a3'
+body_hash: 'sha256:bc125bc108d8d3a58857778cb9d530f45153a8a91c9b02f525ab77db831ff833'
 ---
 
 <!-- LINK RULES:
@@ -136,7 +136,7 @@ Dependencies outside this plan:
 
 - [x] `S01` - Remove the dead dev tooling the sweep confirms: the uninvoked pytest shard plugin, per-file ignores for missing modules, references to the absent no-skip gate, and dev/audit screens no recipe runs, updating the recipe and lane policing tests in the same change; `dev/quality/shard.py`.
 - [ ] `S02` - Extend the bundle.agent CTest probe to launch the bundled agent the way the runtime does, wait for its ready line and stop it; `native/tests/agent_smoke.py`.
-- [ ] `S03` - Repoint the agent live lane onto the staged package: drop the checkout option and run the staged interpreter's bundled agent with the staged cadrumo-mcp relay; `dev/runtime_lifecycle/agent_live.py`.
+- [ ] `S03` - Repoint the agent live lane onto the staged package: drop the checkout option, run the package's bundled agent with the staged cadrumo-mcp relay, and answer each permission request through the production respond route only after asserting its tool or package program and workspace, denying and failing on anything else, with the inspected request and the answer in the receipt; `dev/runtime_lifecycle/agent_live.py`.
 - [x] `S04` - Remove the desktop direct-start feature and repoint the desktop agent live lane onto the runtime's hosted agent door with the catalog's provider and key names; `native/desktop/src-tauri/src/agent/direct.rs`.
 - [ ] `S05` - Drive the packaged proof runs for the cadrumo-agent owner to record: re-earn the claude/api completed-turn proof and earn the first hosted tool-access proof, with each packaged program start and each relay call approved per start as the person; `dev/runtime_lifecycle/agent_live.py`.
 
