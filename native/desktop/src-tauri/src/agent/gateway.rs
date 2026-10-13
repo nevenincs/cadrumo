@@ -165,17 +165,23 @@ impl Client {
         )
     }
 
-    /// `GET /v1/runs?workspace_root=`: the one run of a workspace that has
-    /// not settled, if any. A hosted service runs one at a time.
-    pub fn live_run(&self, workspace_root: &str) -> Result<Option<String>, Refused> {
+    /// `GET /v1/runs?state=all`: one page of every run, newest created first.
+    pub fn runs(&self, offset: usize, limit: usize) -> Result<Value, Refused> {
         let response = self
             .calls
             .get(format!("{}/runs", self.base))
-            .query("workspace_root", workspace_root)
+            .query("state", "all")
+            .query("limit", limit.to_string())
+            .query("offset", offset.to_string())
             .header("Authorization", &self.authorization)
             .call()
             .map_err(|_| unreachable())?;
-        live(&Self::answer(response)?)
+        Self::answer(response)
+    }
+
+    /// `POST /v1/runs`: starts a run under the id the host chose.
+    pub fn start_run(&self, body: &Value) -> Result<Value, Refused> {
+        self.post("/runs", body, None)
     }
 
     /// `GET /v1/runs/{id}/history`.
@@ -221,32 +227,9 @@ impl Client {
     }
 }
 
-/// The single unsettled run a discovery answer lists.
-pub fn live(answer: &Value) -> Result<Option<String>, Refused> {
-    let runs = answer
-        .get("runs")
-        .and_then(Value::as_array)
-        .ok_or_else(|| Refused::new("agent_gateway_unreadable".to_owned()))?;
-    let mut ids = Vec::new();
-    for run in runs {
-        let id = run
-            .get("run_id")
-            .and_then(Value::as_str)
-            .filter(|id| run_id(id))
-            .ok_or_else(|| Refused::new("agent_gateway_unreadable".to_owned()))?;
-        ids.push(id.to_owned());
-    }
-    match ids.len() {
-        0 => Ok(None),
-        1 => Ok(ids.pop()),
-        _ => Err(Refused::new("agent_conversation_ambiguous".to_owned())),
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json::json;
 
     #[test]
     fn ids_follow_the_gateway_grammar() {
@@ -268,28 +251,6 @@ mod tests {
         for bad in ["", ".x", "a/b", "a?b", "a".repeat(129).as_str()] {
             assert!(!request_id(bad), "{bad}");
         }
-    }
-
-    #[test]
-    fn a_workspace_has_at_most_one_live_run() {
-        let answer = |runs: Value| json!({"api_version": "v1", "state": "active", "runs": runs, "truncated": false});
-        assert_eq!(live(&answer(json!([]))).unwrap(), None);
-        assert_eq!(
-            live(&answer(json!([{"run_id": "run-1", "status": "running"}]))).unwrap(),
-            Some("run-1".into())
-        );
-        assert_eq!(
-            live(&answer(json!([{"run_id": "a", "status": "running"}, {"run_id": "b", "status": "submitted"}])))
-                .unwrap_err()
-                .code,
-            "agent_conversation_ambiguous"
-        );
-        assert_eq!(
-            live(&answer(json!([{"run_id": "../x", "status": "running"}])))
-                .unwrap_err()
-                .code,
-            "agent_gateway_unreadable"
-        );
     }
 
     #[test]

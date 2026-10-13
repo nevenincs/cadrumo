@@ -63,10 +63,23 @@ pub struct Supervised {
 
 /// Starts `command` contained, writes the bearer frame, and reports each
 /// output line to `signals` from a reader thread.
-#[cfg(windows)]
+#[cfg(all(windows, test))]
 pub fn start(
-    mut command: Command,
+    command: Command,
     bearer: &str,
+    signals: impl Fn(Signal) + Send + 'static,
+    diagnostics: Arc<Diagnostics>,
+) -> Result<Supervised> {
+    start_child(command, Some(bearer), signals, diagnostics)
+}
+
+/// Starts `command` contained, as [`start`] does. Without a bearer it is a
+/// child that speaks no launcher protocol: nothing is written to it, its
+/// output is read only to drain it, and its end is the one signal.
+#[cfg(windows)]
+pub fn start_child(
+    mut command: Command,
+    bearer: Option<&str>,
     signals: impl Fn(Signal) + Send + 'static,
     diagnostics: Arc<Diagnostics>,
 ) -> Result<Supervised> {
@@ -109,14 +122,23 @@ pub fn start(
         supervised.abandon(failure(ErrorCode::SpawnFailed));
         return Err(failure(ErrorCode::SpawnFailed));
     };
-    supervised
-        .threads
-        .push(thread::spawn(move || read_events(stdout, signals)));
+    let protocol = bearer.is_some();
+    supervised.threads.push(thread::spawn(move || {
+        if protocol {
+            read_events(stdout, signals);
+        } else {
+            discard(stdout);
+            signals(Signal::Ended);
+        }
+    }));
     // Diagnostics carry no content, so standard error is read only to keep
     // the launcher from blocking on a full pipe.
     supervised
         .threads
         .push(thread::spawn(move || discard(stderr)));
+    let Some(bearer) = bearer else {
+        return Ok(supervised);
+    };
     let frame = launcher::bearer_frame(bearer);
     let written = supervised
         .stdin
@@ -137,9 +159,9 @@ pub fn start(
 
 /// Nothing else contains a child's descendants, so no other platform starts one.
 #[cfg(not(windows))]
-pub fn start(
+pub fn start_child(
     _command: Command,
-    _bearer: &str,
+    _bearer: Option<&str>,
     _signals: impl Fn(Signal) + Send + 'static,
     _diagnostics: Arc<Diagnostics>,
 ) -> Result<Supervised> {

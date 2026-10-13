@@ -6,6 +6,7 @@
 //! launcher's loopback gateway, with each run's stream on a Tauri channel.
 //! The launcher admits the agent bundled by CMake or returns a typed refusal.
 
+mod direct;
 mod gateway;
 mod launcher;
 mod runner;
@@ -23,7 +24,7 @@ use cadrumo_application::{diagnostics::Diagnostics, error::application::Result};
 use serde::Serialize;
 use serde_json::Value;
 use session::{Answer, RequestRef, SendRequest, Session};
-use std::sync::Arc;
+use std::{path::PathBuf, sync::Arc};
 use stream::StreamEvent;
 use supervisor::{Observation, Status, Supervisor};
 use tauri::{Manager, Runtime, State, ipc::Channel, plugin::TauriPlugin};
@@ -47,7 +48,7 @@ pub struct AgentHost {
 }
 
 impl AgentHost {
-    fn new(sign_in: Arc<SignIn>, diagnostics: Arc<Diagnostics>) -> Self {
+    fn new(sign_in: Arc<SignIn>, diagnostics: Arc<Diagnostics>, storage: PathBuf) -> Self {
         let observed = sign_in.clone();
         let observe = Arc::new(move || {
             let sign_in = observed.clone();
@@ -61,13 +62,20 @@ impl AgentHost {
                 })
             }) as std::pin::Pin<Box<dyn Future<Output = Result<Observation>> + Send>>
         });
-        let launch = Some({
-            Arc::new(move || {
-                let mut command = sign_in.cli()?.command();
-                command.args(["app", "agent", "serve"]);
-                Ok(command)
-            }) as Arc<dyn Fn() -> Result<std::process::Command> + Send + Sync>
+        let launcher: supervisor::Launch = Arc::new(move |_bearer: &str, _profile: &str| {
+            let mut command = sign_in.cli()?.command();
+            command.args(["app", "agent", "serve"]);
+            Ok(supervisor::Prepared {
+                command,
+                direct: None,
+            })
         });
+        let direct = if cfg!(feature = "agent-direct-start") {
+            direct::launch(storage)
+        } else {
+            None
+        };
+        let launch = Some(direct.unwrap_or(launcher));
         Self {
             supervisor: Supervisor::new(observe, launch, diagnostics),
             session: Session::default(),
@@ -84,10 +92,15 @@ impl AgentHost {
 /// Registers the host once the shell's sign-in owner exists.
 pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
     let diagnostics = launch.diagnostics.clone();
+    let storage = launch.working_directory.clone();
     tauri::plugin::Builder::new("cadrumo-agent")
         .setup(move |app, _| {
             let sign_in = app.state::<Arc<SignIn>>().inner().clone();
-            app.manage(Arc::new(AgentHost::new(sign_in, diagnostics)));
+            app.manage(Arc::new(AgentHost::new(
+                sign_in,
+                diagnostics,
+                storage.clone(),
+            )));
             Ok(())
         })
         .build()
@@ -161,10 +174,15 @@ async fn agent_provider_catalog(
     .await
 }
 
-/// The contract has no conversation without a first run.
+/// Reserves a conversation: the id its first run will have.
 #[tauri::command]
-async fn agent_conversation_start() -> std::result::Result<Value, Refused> {
-    refused("agent_conversation_unavailable")
+async fn agent_conversation_start(
+    host: State<'_, Arc<AgentHost>>,
+) -> std::result::Result<Value, Refused> {
+    blocking(&host, |host| {
+        host.session.start_conversation(&host.supervisor)
+    })
+    .await
 }
 
 #[tauri::command]
@@ -248,18 +266,24 @@ async fn agent_unobserve(
     Ok(())
 }
 
-/// The contract does not yet name a conversation by its run chain.
+/// Every conversation: each chain of runs, and those reserved here.
 #[tauri::command]
-async fn agent_conversations() -> std::result::Result<Value, Refused> {
-    refused("agent_conversation_unavailable")
+async fn agent_conversations(
+    host: State<'_, Arc<AgentHost>>,
+) -> std::result::Result<Value, Refused> {
+    blocking(&host, |host| host.session.conversations(&host.supervisor)).await
 }
 
-/// cadrumo-agent's history keeps no turn order, no turn in progress and no
-/// person turn id, and the contract names no conversation by its run chain.
+/// A conversation's records, composed from its runs.
 #[tauri::command]
-async fn agent_history(conversation_id: String) -> std::result::Result<Value, Refused> {
-    let _ = conversation_id;
-    refused("agent_conversation_unavailable")
+async fn agent_history(
+    host: State<'_, Arc<AgentHost>>,
+    conversation_id: String,
+) -> std::result::Result<Value, Refused> {
+    blocking(&host, move |host| {
+        host.session.history(&host.supervisor, &conversation_id)
+    })
+    .await
 }
 
 /// Conversation documents are not built in Cadrumo custody.

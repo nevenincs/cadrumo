@@ -1,16 +1,15 @@
 //! A run's progress frames, as `streaming/sse_frames.py` declares them,
 //! mapped onto the column's stream events.
 //!
-//! Frames are droppable and carry less than the column's contract asks for,
-//! so this maps only what the stream proves. Text offsets are counted here,
-//! per message, from the run's first frame: the stream must be contiguous
-//! from sequence 1 and every chunk uncut. A gap in the sequence is not a
-//! loss yet: the stream is reopened after the last frame mapped, and the
-//! gateway's replay fills it. Only what a replay cannot cover ends the
-//! stream as lost: a drop notice, a refused stream, a first frame after
-//! sequence 1, an unnumbered chunk, or a chunk at the frame's text cap. cadrumo-agent keeps one message
-//! across a reply's tool rounds; text that resumes after a tool frame is a new
-//! agent turn, named here `<message id>#<n>`, since the frames name none.
+//! Frames are droppable, and the column applies a reply's text by each
+//! chunk's sequence, so this passes on only numbered text from a stream that
+//! starts at sequence 1. A gap in the sequence is not a loss yet: the stream
+//! is reopened after the last frame mapped, and the gateway's replay fills
+//! it. Only what a replay cannot cover ends the stream as lost: a drop
+//! notice, a refused stream, a first numbered frame after sequence 1, an
+//! unnumbered chunk, or a chunk at the frame's text cap, which may have been
+//! cut. A reply's text is one message however many tool calls come between
+//! its parts, as cadrumo-agent keeps it.
 
 use serde::Serialize;
 use serde_json::Value;
@@ -20,23 +19,30 @@ use std::collections::{BTreeSet, HashMap};
 const FRAME_VERSION: &str = "v1";
 /// `MAX_PROGRESS_CONTENT_CHARS`: a chunk this long may have been cut.
 const CONTENT_CAP: usize = 16 * 1024;
+/// cadrumo-agent's `ToolKind`.
+pub const TOOL_KINDS: &[&str] = &[
+    "read",
+    "edit",
+    "delete",
+    "move",
+    "search",
+    "execute",
+    "think",
+    "fetch",
+    "switch_mode",
+    "other",
+];
+/// cadrumo-agent's `ToolCallStatus`.
+pub const TOOL_STATUSES: &[&str] = &["pending", "in_progress", "completed", "failed"];
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "snake_case")]
-pub enum ToolState {
-    Running,
-    Done,
-    Refused,
-}
-
-/// A tool turn, whole.
+/// A tool call as the agent reports it.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
-pub struct ToolTurn {
-    pub kind: &'static str,
+pub struct ToolCall {
     pub id: String,
-    /// The tool as cadrumo-agent names it.
-    pub label: String,
-    pub state: ToolState,
+    /// The tool's name, as the agent gives it.
+    pub title: String,
+    pub tool_kind: String,
+    pub status: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
@@ -78,12 +84,13 @@ pub struct Approval {
     pub options: Vec<ApprovalOption>,
 }
 
+/// How a run ended, as its terminal frame names it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
-pub enum Settled {
-    Complete,
-    Stopped,
+pub enum RunEnd {
+    Completed,
     Failed,
+    Cancelled,
 }
 
 /// One change to a watched conversation, as `AgentStreamEvent` names it.
@@ -95,13 +102,13 @@ pub enum StreamEvent {
     },
     Text {
         reply_id: String,
-        turn_id: String,
-        offset: usize,
+        message_id: String,
+        sequence: u64,
         delta: String,
     },
     Tool {
         reply_id: String,
-        tool: ToolTurn,
+        tool: ToolCall,
     },
     Questions {
         reply_id: String,
@@ -117,7 +124,9 @@ pub enum StreamEvent {
     },
     Settled {
         reply_id: String,
-        state: Settled,
+        status: RunEnd,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        provider_condition: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
         failure_reason: Option<String>,
     },
@@ -134,8 +143,9 @@ pub enum Step {
     /// Read the run's status for the questionnaire `request_id` names: the
     /// frame carries only the handle.
     ReadQuestionnaire(String),
-    /// The run settled; a failed one's reason is read from its status.
-    Settle(Settled),
+    /// The run ended; a failed one's condition and reason are read from its
+    /// status.
+    Settle(RunEnd),
     /// A frame was skipped: reopen the stream after the last frame mapped,
     /// whose replay serves what was missed.
     Resume,
@@ -143,20 +153,12 @@ pub enum Step {
     End,
 }
 
-struct Text {
-    segment: u32,
-    length: usize,
-    after_tool: bool,
-}
-
 /// One run's stream, mapped frame by frame.
 pub struct Mapping {
     reply_id: String,
     started: bool,
     last_sequence: u64,
-    from_start: bool,
-    texts: HashMap<String, Text>,
-    tools: HashMap<String, ToolTurn>,
+    tools: HashMap<String, ToolCall>,
     pending: BTreeSet<String>,
     ended: bool,
 }
@@ -172,8 +174,6 @@ impl Mapping {
             reply_id: run_id.to_owned(),
             started: false,
             last_sequence: 0,
-            from_start: false,
-            texts: HashMap::new(),
             tools: HashMap::new(),
             pending: BTreeSet::new(),
             ended: false,
@@ -233,20 +233,24 @@ impl Mapping {
             .or_else(|| text(&frame, "event_type"))
             .unwrap_or_default()
             .to_owned();
-        if let Some(sequence) = frame.get("sequence") {
-            let Some(sequence) = sequence.as_u64().filter(|s| *s > 0) else {
+        let mut sequence = None;
+        if let Some(numbered) = frame.get("sequence") {
+            let Some(numbered) = numbered.as_u64().filter(|s| *s > 0) else {
                 return self.lost();
             };
-            if sequence <= self.last_sequence {
+            if numbered <= self.last_sequence {
                 // A replayed frame this stream already mapped.
                 return Vec::new();
             }
-            if self.last_sequence == 0 {
-                self.from_start = sequence == 1;
-            } else if sequence != self.last_sequence + 1 {
+            if self.last_sequence == 0 && numbered != 1 {
+                // What came before the first retained frame is gone.
+                return self.lost();
+            }
+            if self.last_sequence > 0 && numbered != self.last_sequence + 1 {
                 return vec![Step::Resume];
             }
-            self.last_sequence = sequence;
+            self.last_sequence = numbered;
+            sequence = Some(numbered);
         }
         let mut steps = Vec::new();
         if !self.started {
@@ -256,10 +260,8 @@ impl Mapping {
             }));
         }
         let mapped = match kind.as_str() {
-            "message_chunk" => self.message_chunk(&frame),
-            "tool_call_start" | "tool_call_update" => {
-                self.tool_call(&frame, kind == "tool_call_start")
-            }
+            "message_chunk" => self.message_chunk(&frame, sequence),
+            "tool_call_start" | "tool_call_update" => self.tool_call(&frame),
             "permission_request" => self.permission(&frame),
             "clarification_pending" => match text(&frame, "request_id") {
                 Some(request) if !request.is_empty() => {
@@ -286,7 +288,7 @@ impl Mapping {
         }
     }
 
-    fn message_chunk(&mut self, frame: &Value) -> Result<Vec<Step>, ()> {
+    fn message_chunk(&mut self, frame: &Value, sequence: Option<u64>) -> Result<Vec<Step>, ()> {
         let content = match frame.get("content") {
             None | Some(Value::Null) => return Ok(Vec::new()),
             Some(Value::String(content)) => content,
@@ -298,76 +300,61 @@ impl Mapping {
         let message = text(frame, "message_id")
             .filter(|id| !id.is_empty())
             .ok_or(())?;
-        if !self.from_start || content.chars().count() >= CONTENT_CAP {
+        // Text is applied by its sequence: unnumbered or possibly cut text
+        // cannot be applied faithfully.
+        let sequence = sequence.ok_or(())?;
+        if content.chars().count() >= CONTENT_CAP {
             return Err(());
         }
-        let turn = self.texts.entry(message.to_owned()).or_insert(Text {
-            segment: 0,
-            length: 0,
-            after_tool: false,
-        });
-        if turn.after_tool {
-            turn.after_tool = false;
-            turn.segment += 1;
-            turn.length = 0;
-        }
-        let offset = turn.length;
-        turn.length += content.encode_utf16().count();
-        let turn_id = if turn.segment == 0 {
-            message.to_owned()
-        } else {
-            format!("{message}#{}", turn.segment)
-        };
         Ok(vec![Step::Emit(StreamEvent::Text {
             reply_id: self.reply_id.clone(),
-            turn_id,
-            offset,
+            message_id: message.to_owned(),
+            sequence,
             delta: content.clone(),
         })])
     }
 
-    fn tool_call(&mut self, frame: &Value, start: bool) -> Result<Vec<Step>, ()> {
+    fn tool_call(&mut self, frame: &Value) -> Result<Vec<Step>, ()> {
         let id = text(frame, "tool_call_id")
             .filter(|id| !id.is_empty())
             .ok_or(())?;
-        let state = match text(frame, "status") {
+        let status = match text(frame, "status") {
             None => None,
-            Some("pending" | "in_progress") => Some(ToolState::Running),
-            Some("completed") => Some(ToolState::Done),
-            Some("failed") => Some(ToolState::Refused),
+            Some(status) if TOOL_STATUSES.contains(&status) => Some(status),
+            Some(_) => return Err(()),
+        };
+        let kind = match text(frame, "kind") {
+            None => None,
+            Some(kind) if TOOL_KINDS.contains(&kind) => Some(kind),
             Some(_) => return Err(()),
         };
         let title = text(frame, "title").filter(|title| !title.is_empty());
         let tool = match self.tools.get_mut(id) {
             Some(tool) => {
                 if let Some(title) = title {
-                    title.clone_into(&mut tool.label);
+                    title.clone_into(&mut tool.title);
                 }
-                if let Some(state) = state {
-                    tool.state = state;
+                if let Some(kind) = kind {
+                    kind.clone_into(&mut tool.tool_kind);
+                }
+                if let Some(status) = status {
+                    status.clone_into(&mut tool.status);
                 }
                 tool.clone()
             }
             None => {
-                // A tool first seen without its name cannot be shown.
-                let label = title.ok_or(())?.to_owned();
-                let tool = ToolTurn {
-                    kind: "tool",
+                // A call first seen without its name, kind or status cannot
+                // be shown as it is.
+                let tool = ToolCall {
                     id: id.to_owned(),
-                    label,
-                    state: state.unwrap_or(if start {
-                        ToolState::Running
-                    } else {
-                        return Err(());
-                    }),
+                    title: title.ok_or(())?.to_owned(),
+                    tool_kind: kind.ok_or(())?.to_owned(),
+                    status: status.ok_or(())?.to_owned(),
                 };
                 self.tools.insert(id.to_owned(), tool.clone());
                 tool
             }
         };
-        for turn in self.texts.values_mut() {
-            turn.after_tool = true;
-        }
         Ok(vec![Step::Emit(StreamEvent::Tool {
             reply_id: self.reply_id.clone(),
             tool,
@@ -415,21 +402,7 @@ impl Mapping {
                 description: text(frame, "description").map(str::to_owned),
                 // A kind the agent's vocabulary does not hold is not shown.
                 tool_kind: text(frame, "tool_kind")
-                    .filter(|kind| {
-                        matches!(
-                            *kind,
-                            "read"
-                                | "edit"
-                                | "delete"
-                                | "move"
-                                | "search"
-                                | "execute"
-                                | "think"
-                                | "fetch"
-                                | "switch_mode"
-                                | "other"
-                        )
-                    })
+                    .filter(|kind| TOOL_KINDS.contains(kind))
                     .map(str::to_owned),
                 options,
             },
@@ -484,10 +457,10 @@ impl Mapping {
     }
 
     fn terminal(&mut self, frame: &Value) -> Result<Vec<Step>, ()> {
-        let settled = match text(frame, "status") {
-            Some("completed" | "archived") => Settled::Complete,
-            Some("cancelled") => Settled::Stopped,
-            Some("failed") => Settled::Failed,
+        let end = match text(frame, "status") {
+            Some("completed" | "archived") => RunEnd::Completed,
+            Some("cancelled") => RunEnd::Cancelled,
+            Some("failed") => RunEnd::Failed,
             _ => return Err(()),
         };
         self.ended = true;
@@ -501,21 +474,28 @@ impl Mapping {
                 })
             })
             .collect();
-        steps.push(Step::Settle(settled));
+        steps.push(Step::Settle(end));
         steps.push(Step::End);
         Ok(steps)
     }
 
-    /// The settled event, with a failed run's typed provider condition.
-    pub fn settled(&self, state: Settled, failure_reason: Option<String>) -> StreamEvent {
+    /// The settled event. A failed run carries its provider condition and
+    /// the agent's one line about it, read from its status.
+    pub fn settled(&self, end: RunEnd, status: Option<&Value>) -> StreamEvent {
+        let read = |key: &str| {
+            (end == RunEnd::Failed)
+                .then(|| {
+                    status
+                        .and_then(|status| text(status, key))
+                        .map(str::to_owned)
+                })
+                .flatten()
+        };
         StreamEvent::Settled {
             reply_id: self.reply_id.clone(),
-            state,
-            failure_reason: if state == Settled::Failed {
-                failure_reason
-            } else {
-                None
-            },
+            status: end,
+            provider_condition: read("provider_condition"),
+            failure_reason: read("failure_reason"),
         }
     }
 }
@@ -562,7 +542,7 @@ mod tests {
     }
 
     #[test]
-    fn a_reply_streams_as_ordered_turns_with_counted_offsets() {
+    fn a_reply_streams_text_by_sequence_and_tool_calls_whole() {
         let mut mapping = Mapping::new("run-1");
         let mut seen = events(mapping.frame(&frame(
             "stream_snapshot",
@@ -570,19 +550,18 @@ mod tests {
             json!({"status": "running"}),
         )));
         seen.extend(events(mapping.frame(&chunk(1, "m1", "Hola, "))));
-        // UTF-16 code units, as the column counts them: one astral character is two.
-        seen.extend(events(mapping.frame(&chunk(2, "m1", "😀 a"))));
         seen.extend(events(mapping.frame(&frame(
             "tool_call_start",
-            Some(3),
+            Some(2),
             json!({"tool_call_id": "t1", "title": "ledger_list", "kind": "read", "status": "pending", "locations": []}),
         ))));
         seen.extend(events(mapping.frame(&frame(
             "tool_call_update",
-            Some(4),
+            Some(3),
             json!({"tool_call_id": "t1", "status": "completed"}),
         ))));
-        seen.extend(events(mapping.frame(&chunk(5, "m1", "\n\nListo."))));
+        // Text after a tool is more of the same message.
+        seen.extend(events(mapping.frame(&chunk(4, "m1", "\n\nListo."))));
         seen.extend(events(mapping.frame(&frame(
             "heartbeat",
             None,
@@ -592,26 +571,28 @@ mod tests {
             serde_json::to_value(&seen).unwrap(),
             json!([
                 {"type": "reply_started", "reply_id": "run-1"},
-                {"type": "text", "reply_id": "run-1", "turn_id": "m1", "offset": 0, "delta": "Hola, "},
-                {"type": "text", "reply_id": "run-1", "turn_id": "m1", "offset": 6, "delta": "😀 a"},
-                {"type": "tool", "reply_id": "run-1", "tool": {"kind": "tool", "id": "t1", "label": "ledger_list", "state": "running"}},
-                {"type": "tool", "reply_id": "run-1", "tool": {"kind": "tool", "id": "t1", "label": "ledger_list", "state": "done"}},
-                {"type": "text", "reply_id": "run-1", "turn_id": "m1#1", "offset": 0, "delta": "\n\nListo."},
+                {"type": "text", "reply_id": "run-1", "message_id": "m1", "sequence": 1, "delta": "Hola, "},
+                {"type": "tool", "reply_id": "run-1", "tool": {"id": "t1", "title": "ledger_list", "tool_kind": "read", "status": "pending"}},
+                {"type": "tool", "reply_id": "run-1", "tool": {"id": "t1", "title": "ledger_list", "tool_kind": "read", "status": "completed"}},
+                {"type": "text", "reply_id": "run-1", "message_id": "m1", "sequence": 4, "delta": "\n\nListo."},
             ])
         );
         let steps = mapping.frame(&frame(
             "thread_terminal",
-            Some(6),
+            Some(5),
             json!({"status": "completed", "replay": false}),
         ));
-        assert_eq!(steps, [Step::Settle(Settled::Complete), Step::End]);
+        assert_eq!(steps, [Step::Settle(RunEnd::Completed), Step::End]);
         assert!(mapping.ended());
         assert_eq!(
-            serde_json::to_value(mapping.settled(Settled::Complete, Some("unknown".into())))
-                .unwrap(),
-            json!({"type": "settled", "reply_id": "run-1", "state": "complete"})
+            serde_json::to_value(mapping.settled(
+                RunEnd::Completed,
+                Some(&json!({"provider_condition": "unknown"}))
+            ))
+            .unwrap(),
+            json!({"type": "settled", "reply_id": "run-1", "status": "completed"})
         );
-        assert!(mapping.frame(&chunk(7, "m1", "late")).is_empty());
+        assert!(mapping.frame(&chunk(6, "m1", "late")).is_empty());
     }
 
     #[test]
@@ -624,15 +605,15 @@ mod tests {
             events(mapping.frame(&chunk(2, "m1", "c"))),
             [StreamEvent::Text {
                 reply_id: "run-1".into(),
-                turn_id: "m1".into(),
-                offset: 2,
+                message_id: "m1".into(),
+                sequence: 2,
                 delta: "c".into()
             }]
         );
     }
 
     #[test]
-    fn what_one_stream_cannot_prove_ends_it_as_lost() {
+    fn what_a_replay_cannot_cover_ends_the_stream_as_lost() {
         let lost = [
             Step::Emit(StreamEvent::Lost {
                 reply_id: Some("run-1".into()),
@@ -641,8 +622,8 @@ mod tests {
         ];
         let cut = "x".repeat(CONTENT_CAP);
         for (name, frames) in [
-            // Attached after the run's first frame: earlier text is unknown.
-            ("late attach", vec![chunk(4, "m1", "a")]),
+            // The retained window starts after the run's first frame.
+            ("first frame after sequence 1", vec![chunk(4, "m1", "a")]),
             (
                 "unnumbered chunk",
                 vec![frame(
@@ -686,7 +667,15 @@ mod tests {
                 vec![frame(
                     "tool_call_start",
                     Some(1),
-                    json!({"tool_call_id": "t1", "status": "pending"}),
+                    json!({"tool_call_id": "t1", "kind": "read", "status": "pending"}),
+                )],
+            ),
+            (
+                "unknown tool kind",
+                vec![frame(
+                    "tool_call_start",
+                    Some(1),
+                    json!({"tool_call_id": "t1", "title": "x", "kind": "teleport", "status": "pending"}),
                 )],
             ),
             (
@@ -728,11 +717,13 @@ mod tests {
         let texts: Vec<_> = seen
             .iter()
             .filter_map(|event| match event {
-                StreamEvent::Text { offset, delta, .. } => Some((*offset, delta.as_str())),
+                StreamEvent::Text {
+                    sequence, delta, ..
+                } => Some((*sequence, delta.as_str())),
                 _ => None,
             })
             .collect();
-        assert_eq!(texts, [(0, "ab"), (2, "cd"), (4, "ef"), (6, "gh")]);
+        assert_eq!(texts, [(1, "ab"), (2, "cd"), (3, "ef"), (4, "gh")]);
         // A replay that cannot reach back far enough says so, and that is a loss.
         let steps = mapping.frame(&frame(
             "progress_dropped",
@@ -826,19 +817,23 @@ mod tests {
                     reply_id: "run-1".into(),
                     request_id: "clar-1".into()
                 }),
-                Step::Settle(Settled::Failed),
+                Step::Settle(RunEnd::Failed),
                 Step::End
             ]
         );
         assert_eq!(
-            serde_json::to_value(mapping.settled(Settled::Failed, Some("throttled".into())))
-                .unwrap(),
-            json!({"type": "settled", "reply_id": "run-1", "state": "failed", "failure_reason": "throttled"})
+            serde_json::to_value(mapping.settled(
+                RunEnd::Failed,
+                Some(&json!({"provider_condition": "throttled", "failure_reason": "rate limited"}))
+            ))
+            .unwrap(),
+            json!({"type": "settled", "reply_id": "run-1", "status": "failed",
+                   "provider_condition": "throttled", "failure_reason": "rate limited"})
         );
     }
 
     #[test]
-    fn a_stopped_run_settles_as_stopped() {
+    fn a_cancelled_run_settles_as_cancelled() {
         let mut mapping = Mapping::new("run-1");
         let steps = mapping.frame(&frame(
             "thread_terminal",
@@ -846,10 +841,14 @@ mod tests {
             json!({"status": "cancelled"}),
         ));
         assert_eq!(
-            events(steps),
-            [StreamEvent::ReplyStarted {
-                reply_id: "run-1".into()
-            }]
+            steps,
+            [
+                Step::Emit(StreamEvent::ReplyStarted {
+                    reply_id: "run-1".into()
+                }),
+                Step::Settle(RunEnd::Cancelled),
+                Step::End
+            ]
         );
         assert_eq!(
             serde_json::to_value(StreamEvent::Lost { reply_id: None }).unwrap(),
