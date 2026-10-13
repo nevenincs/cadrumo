@@ -705,6 +705,7 @@ desktop:
     unavailable: Aún no está disponible
     uploading: Subiendo
     uploading_name: Subiendo {name}
+    waiting_on_you: Esperando tu respuesta
     welcome_lead: ¿Algo sobre impuestos? Pregunta por un modelo o un plazo, o añade
       recibos, facturas y extractos bancarios con +.
     welcome_title: ¿En qué trabajamos hoy?

@@ -125,6 +125,7 @@ We will run the live lane as the packaged Cadrumo plus cadrumo-agent from its so
     - the stream mapped onto a Tauri channel.
   - cadrumo-agent:
     - ordered turn records with stable ids, a turn in progress in history, text offsets, the person turn id, and continued runs without duplicated turns;
+    - answered questionnaires and decided approvals kept in history as turns: what was asked, and the person's answer or decision, so the conversation is auditable and a reload shows it;
     - an optional `provider` filter on the catalog;
     - the settled-run fix and the write-proof tests;
     - committing its relay change without deleting its proof route.

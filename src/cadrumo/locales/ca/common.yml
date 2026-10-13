@@ -698,6 +698,7 @@ desktop:
     unavailable: Encara no està disponible
     uploading: S'està pujant
     uploading_name: S'està pujant {name}
+    waiting_on_you: Esperant la teva resposta
     welcome_lead: Alguna cosa d'impostos? Pregunta per un model o un termini, o afegeix
       rebuts, factures i extractes bancaris amb +.
     welcome_title: En què treballem avui?

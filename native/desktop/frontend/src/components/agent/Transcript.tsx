@@ -136,7 +136,12 @@ function AgentTurn({
             {text}
           </p>
         )}
-        {state === "working" && (
+        {state === "working" && message.waitingOnPerson && (
+          <p className="text-sm text-muted-foreground">
+            {t("desktop.agent.waiting_on_you")}
+          </p>
+        )}
+        {state === "working" && !message.waitingOnPerson && (
           <p className="flex items-center gap-2 text-sm text-muted-foreground">
             <span
               aria-hidden="true"

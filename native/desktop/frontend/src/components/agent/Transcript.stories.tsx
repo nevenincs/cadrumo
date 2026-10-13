@@ -268,6 +268,16 @@ export const LongConversationWide: Story = {
 
 export const AgentWorking: Story = { args: { items: WORKING } };
 
+export const AgentWaitingOnPerson: Story = {
+  args: {
+    items: WORKING.map((item) =>
+      item.kind === "agent" && item.state === "working"
+        ? { ...item, waitingOnPerson: true }
+        : item,
+    ),
+  },
+};
+
 export const ToolActivity: Story = {
   name: "Tool activity: done, refused, running",
   args: { items: TOOLS },

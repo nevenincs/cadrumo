@@ -130,6 +130,10 @@ export type TranscriptMessage =
       state: AgentReplyState;
       /** Why the reply failed, when `state` is `failed`. */
       failureReason?: string;
+      /** While `state` is `working`: the reply is held until the person
+       * answers questions or decides an approval, so it says it is waiting
+       * for them rather than working. */
+      waitingOnPerson?: boolean;
     };
 
 /** Where a Cadrumo tool the agent called is: still running, finished, or

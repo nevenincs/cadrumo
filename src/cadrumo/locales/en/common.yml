@@ -677,6 +677,7 @@ desktop:
     unavailable: Not available yet
     uploading: Uploading
     uploading_name: Uploading {name}
+    waiting_on_you: Waiting for you
     welcome_lead: Something tax related? Ask about a modelo or a deadline, or add
       receipts, invoices and bank exports with +.
     welcome_title: What are we working on today?

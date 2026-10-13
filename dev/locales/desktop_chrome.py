@@ -215,6 +215,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.agent.unavailable",
         "desktop.agent.uploading",
         "desktop.agent.uploading_name",
+        "desktop.agent.waiting_on_you",
         "desktop.agent.welcome_lead",
         "desktop.agent.welcome_title",
         "desktop.agent.working",

@@ -687,6 +687,7 @@ desktop:
     unavailable: Még nem érhető el
     uploading: Feltöltés
     uploading_name: 'Feltöltés: {name}'
+    waiting_on_you: Rád vár
     welcome_lead: Adózási kérdésed van? Kérdezz egy Modelóról vagy egy határidőről,
       vagy adj hozzá nyugtákat, számlákat és banki kivonatokat a + gombbal.
     welcome_title: Min dolgozunk ma?
