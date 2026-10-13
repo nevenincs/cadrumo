@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#mcp-parity'
 date: '2026-10-12'
-modified: '2026-10-12'
+modified: '2026-10-13'
 body_schema: 'body-v2'
 body_hash: 'sha256:6995acf868f01ac05a5b0dc0736373a663e4ba2186517241c401b558925a94bd'
 related:
@@ -16,6 +16,8 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-adr]]"
   - "[[2026-07-08-mcp-protocol-hardening-adr]]"
   - "[[2026-10-04-desktop-shell-adr]]"
+  - '[[2026-10-10-mcp-parity-sign-in-doors-reference]]'
+  - '[[2026-10-11-mcp-parity-audit]]'
 ---
 
 # `mcp-parity` adr: `The agent works only inside the one signed-in profile and never handles authentication` | (**status:** `accepted`)
