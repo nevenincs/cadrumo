@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#llm-evidence-classification'
 date: '2026-06-10'
-modified: '2026-08-15'
-body_hash: 'sha256:9933216766f8786e986004f47d5430b4bf33ef655ba25b95254a70efc4bd3a96'
+modified: '2026-10-13'
+body_hash: 'sha256:ba623cd4227486b25bfae1446c1ec6803739e515de8ccb37fb5e1bd0982aafa5'
 related:
   - "[[2026-06-10-llm-evidence-classification-research]]"
   - "[[2026-06-04-llm-ledger-classification-adr]]"

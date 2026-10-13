@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:135dab2258eb9b729269e089989b395cb2fe9f25bc9f8b68c9deed747ed17ca2'
+body_hash: 'sha256:d0f652cec48799a8311d0e96fecd982597f6a4c1ab27c4b635baed2a3869df33'
 related:
   - "[[2026-10-13-startup-performance-audit]]"
 ---

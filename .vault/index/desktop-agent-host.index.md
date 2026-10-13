@@ -6,11 +6,12 @@ tags:
 date: '2026-10-12'
 modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:b62b1806192afec54e00de5645ef52c4ce501da68d3571a97ffc60b13b4be27a'
+body_hash: 'sha256:570c6a3cd6a09ac7211a5421127d22fedd2f676eb0c7a0ab48cadcf887ed70a6'
 related:
   - '[[2026-10-12-desktop-agent-host-adr]]'
   - '[[2026-10-12-desktop-agent-host-plan]]'
   - '[[2026-10-12-desktop-agent-host-reference]]'
+  - '[[2026-10-13-desktop-agent-host-ledger]]'
   - '[[2026-10-13-desktop-agent-host-live-lane-adr]]'
   - '[[2026-10-13-desktop-agent-host-live-lane-review-audit]]'
   - '[[2026-10-13-desktop-agent-host-plan]]'
@@ -30,6 +31,10 @@ Auto-generated index of all documents tagged with `#desktop-agent-host`.
 ### audit
 
 - `2026-10-13-desktop-agent-host-live-lane-review-audit` - `desktop-agent-host` audit: `Live lane design review`
+
+### exec
+
+- `2026-10-13-desktop-agent-host-ledger` - `desktop-agent-host` ledger
 
 ### plan
 

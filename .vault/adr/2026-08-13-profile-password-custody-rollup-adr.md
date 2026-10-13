@@ -16,9 +16,9 @@ related:
 supersedes:
   - '2026-05-14-secure-backend-passkey-custody-adr'
   - '2026-08-02-adjacent-domain-deduplication-store-scoped-login-throttle-adr'
-modified: '2026-10-04'
+modified: '2026-10-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:db405a79456dc8fd4e23f38cd0fefecd2aa94ae26f8b2525ca71d6ab20395f0c'
+body_hash: 'sha256:9354be77071414e5dff703f5d91ad067a12f06008b302c6cd580e39a35c4db78'
 ---
 
 # `profile-password-custody` adr: `per-profile password custody authority` | (**status:** `accepted`)
