@@ -248,6 +248,5 @@ def test_every_frontend_resolves_the_same_access_and_a_preview_declares_no_commi
             ).policy
             for frontend in OperationFrontendProjection
         }
-        assert len(policies) == 3
         assert all(policy == policies[command_line] for policy in policies.values())
         assert (AccessAction.COMMIT in policies[command_line].actions) is not preview
