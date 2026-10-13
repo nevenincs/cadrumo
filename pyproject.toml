@@ -34,7 +34,7 @@ dependencies = [
   "mcp>=2,<3",
   # Rust-backed TOML parser behind the canonical `cadrumo.core.toml` boundary,
   # the only place TOML is parsed; several times faster than the stdlib parser.
-  "rtoml>=0.13.0,<1",
+  "rtoml>=0.14.0,<1",
   # Capability-gated integrations live in [project.optional-dependencies].
   # `anthropic` (Anthropic-API LLM provider), the `google-*` stack
   # (Drive/Sheets export), and `playwright*` (live AEAT browser) are lazily
@@ -83,11 +83,11 @@ dependencies = [
   "pdfplumber>=0.11.9,<1",
   # Fast text extraction from official AEAT manual PDFs for registry
   # source-citation validation.
-  "pypdfium2>=5.7.1,<6",
+  "pypdfium2>=5.14.0,<6",
   # PDF sanitiser; content-stream rewriter for PII redaction.
   # Upstream 10.14 wheels require macOS 15; retain the declared macOS 14 floor.
   "pikepdf==10.13.0.post1; sys_platform == 'darwin'",
-  "pikepdf>=10.0.0,<11; sys_platform != 'darwin'",
+  "pikepdf>=10.17.0,<11; sys_platform != 'darwin'",
   # Imaging primitive behind pypdfium2's `to_pil()` page rasterisation. Same
   # class as the `lxml` entry above and declared for the same reason: Pillow
   # DOES reach a default install today, but only as a transitive of pdfplumber
@@ -101,13 +101,13 @@ dependencies = [
   # the base closure regardless.
   "pillow>=12,<13",
   # Data validation & models
-  "pydantic>=2.12.5,<3",
+  "pydantic>=2.14.1,<3",
   "pydantic-settings>=2.9.1,<3",
   # `pydantic` does not re-export `PydanticSerializationError`, so ten production
   # modules reach it at its own distribution. A direct import needs a direct
   # declaration; left unbounded above so `pydantic`'s exact pin stays the
   # resolver's authority.
-  "pydantic-core>=2.46",
+  "pydantic-core>=2.50",
   # Interactive prompt backend for the wizard descriptor runtime.
   "questionary>=2.1.1,<3",
   # Direct prompt_toolkit imports support wizard console validation and tests.
@@ -126,9 +126,9 @@ dependencies = [
   # has ONE shape on every install and carries no unstemmed degraded branch.
   "snowballstemmer>=2.2,<4",
   # Persistence
-  "sqlalchemy>=2.0.36,<3",
+  "sqlalchemy>=2.1.4,<3",
   # CLI
-  "typer>=0.20.0,<1",
+  "typer>=0.27.3,<1",
   # IANA timezone data for Europe/Madrid, including Windows and minimal
   # Linux containers whose operating system carries no zoneinfo database.
   "tzdata>=2026.2",
@@ -167,7 +167,7 @@ workbook-windows = [
 # / Sheets v4 through the discovery client. google-auth-httplib2 is intentionally
 # NOT pinned — transport is satisfied by `requests` (transitive via google-auth).
 google = [
-  "google-auth>=2.50.0,<3",
+  "google-auth>=2.62.0,<3",
   "google-auth-oauthlib>=1.3.1,<2",
   "google-api-python-client>=2.195.0,<3",
 ]
@@ -263,13 +263,13 @@ requires = [
   "defusedxml>=0.7.1,<1",
   "openpyxl>=3.1.5,<4",
   "pdfplumber>=0.11.9,<1",
-  "pydantic>=2.12.5,<3",
+  "pydantic>=2.14.1,<3",
   "pydantic-settings>=2.9.1,<3",
-  "pypdfium2>=5.7.1,<6",
+  "pypdfium2>=5.14.0,<6",
   "python-dotenv>=1.2.2,<2",
   "python-i18n>=0.3.9,<1",
   "PyYAML>=6.0.3,<7",
-  "rtoml>=0.13.0,<1",
+  "rtoml>=0.14.0,<1",
   "tzdata>=2026.2",
   "xlrd>=2.0.1,<3",
 ]
@@ -504,7 +504,7 @@ dev = [
   # [project.optional-dependencies]) are pulled into the dev/test/CI
   # environment here so the full test suite — which imports every adapter —
   # installs unchanged. Production `pip install cadrumo` stays lean without them.
-  "google-auth>=2.50.0,<3",
+  "google-auth>=2.62.0,<3",
   "google-auth-oauthlib>=1.3.1,<2",
   "google-api-python-client>=2.195.0,<3",
   "playwright>=1.58.0",
@@ -517,13 +517,13 @@ dev = [
   # and the inference test suite refuses instead of running. A pure-Python
   # `py3-none-any` wheel: importable with no NVIDIA driver and no accelerator.
   "nvidia-ml-py>=13,<14",
-  "prek>=0.5.3",
+  "prek>=0.5.5",
   "pytest>=9.0.3",
   "pytest-asyncio>=1.0.0",
   # Coverage measurement + fail-under gate for unit tests.
   "pytest-cov>=6.0.0",
   # Live browser harness.
-  "pytest-playwright>=0.6.0",
+  "pytest-playwright>=0.10.0",
   # Parallel unit suite via opt-in `uv run pytest -n auto -m unit`.
   "pytest-xdist>=3.6.0",
   # Reproducible light-theme CLI GIFs for the repository README.
@@ -538,10 +538,10 @@ dev = [
   # `ty`; the stubs are dev-only because production never imports lxml, it
   # names the backend as a string.
   "types-lxml>=2025.3.30",
-  "ruff>=0.16.7",
+  "ruff>=0.17.0",
   # Repository-wide YAML syntax/style linting; TOML parsing goes through the rtoml-backed `cadrumo.core.toml` boundary.
   "yamllint>=1.38,<2",
-  "ty>=0.0.85",
+  "ty>=0.0.86",
   # Vault tooling — contributor-only; not imported by src/cadrumo/ and never
   # shipped in a published product wheel.
   # 0.1.55 is the first version that understands the `body_hash` frontmatter
@@ -549,7 +549,7 @@ dev = [
   # mixed-version corpus silently loses the stamp on exactly the documents
   # being edited (nevenincs/vaultspec-core#299). Operator directive: the
   # tooling tracks latest.
-  "vaultspec-core>=0.1.55",
+  "vaultspec-core>=0.3.7",
   "vaultspec-rag[mcp]>=0.3.8",
   # Sphinx documentation pipeline — `just docs-build` builds HTML + Markdown from
   # the Google-style + Sphinx-cross-referenced docstrings under src/cadrumo/.
@@ -588,15 +588,15 @@ dev = [
   "babel>=2.16",
   # Documentation conformance enforcement: docstring presence/style,
   # signature-vs-docstring accuracy, and RST formatting.
-  "pydoclint>=0.9.1",
+  "pydoclint>=0.11.1",
   "interrogate>=1.7.0",
   "doc8>=2.0.0",
   "types-defusedxml>=0.7.0.20260504",
   "types-openpyxl>=3.1.5.20260408",
-  "types-reportlab>=4.4.10.20260408",
+  "types-reportlab>=5.0.0.20261008",
   "types-pyyaml>=6.0.12.20260510",
   "types-xlrd>=2.0.0.20260408",
-  "types-pywin32>=311.0.0.20260508",
+  "types-pywin32>=312.0.0.20261006",
   "google-api-python-client-stubs>=1.36",
   "pyrefly>=1.3.1",
   # Semgrep is invoked through `uvx --from semgrep==1.168.0 semgrep` instead of the
