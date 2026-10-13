@@ -43,7 +43,12 @@ endif()
 message(CHECK_PASS "found")
 set(rust_profile "$<IF:$<CONFIG:Debug>,debug,release>")
 set(CADRUMO_RUST_ENVIRONMENT_NAMES RUSTFLAGS CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER LIB INCLUDE
-  "CC_${CADRUMO_PIN_rust_target}" "AR_${CADRUMO_PIN_rust_target}")
+  "CC_${CADRUMO_PIN_rust_target}" "AR_${CADRUMO_PIN_rust_target}" VSTEL_MSBuildProjectFullPath)
+# MSBuild sets VSTEL_MSBuildProjectFullPath to the running .vcxproj, a different value for each CMake
+# target. The cc build script of ring tracks it, so without a constant value every switch between
+# Cargo targets in one target directory rebuilds ring and every crate above it. cc only tests whether
+# the variable is set.
+set(CADRUMO_RUST_ENV_VSTEL_MSBuildProjectFullPath "${PROJECT_BINARY_DIR}/ALL_BUILD.vcxproj")
 set(CADRUMO_RUST_ENV_RUSTFLAGS "-C target-feature=+crt-static")
 set(CADRUMO_RUST_ENV_CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER "${CMAKE_LINKER}")
 set(CADRUMO_RUST_ENV_LIB "${msvc_root}/lib/x64;${sdk_root}/Lib/${windows_sdk_version}/um/x64;${sdk_root}/Lib/${windows_sdk_version}/ucrt/x64")

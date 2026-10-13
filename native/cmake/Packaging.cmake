@@ -199,12 +199,15 @@ if(WIN32 AND desktop_image_staged)
   enable_testing()
   set(installer_bootstrap_test
     "runner::bootstrap::tests::assembled_kit_admits_both_scopes_and_refuses_wrong_native_role_without_installing")
+  get_directory_property(installer_target_dir DIRECTORY "${PROJECT_SOURCE_DIR}/native"
+    DEFINITION CADRUMO_INSTALLER_TARGET_DIR)
   cadrumo_cargo_command(installer_bootstrap_cargo
     --env "CADRUMO_BOOTSTRAP_TEST_PACKAGE=${CADRUMO_PATH_STAGE}/$<CONFIG>/app"
     --env "CADRUMO_NATIVE_CONTRACT=${CADRUMO_PATH_GENERATED}/contract.json")
   add_test(NAME bundle.installer-bootstrap
     COMMAND ${installer_bootstrap_cargo} test --locked --lib
       --manifest-path "${PROJECT_SOURCE_DIR}/native/installer/Cargo.toml"
+      --target-dir "${installer_target_dir}"
       --target "${CADRUMO_PIN_rust_target}" --profile "$<IF:$<CONFIG:Debug>,dev,release>"
       "${installer_bootstrap_test}" -- --ignored --exact)
   set_tests_properties(bundle.installer-bootstrap PROPERTIES
