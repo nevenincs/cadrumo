@@ -152,8 +152,15 @@ class _Gateway:
         chosen = next((entry for entry in models if entry["entry_id"] == recommended), models[0])
         return str(chosen["model"])
 
-    def turn(self, workspace: Path, model: str, message: str, continues: str | None) -> tuple[str, str, list[str]]:
-        """Run one turn to its end; return its run id, the reply text and the Cadrumo tools it called."""
+    def turn(
+        self, workspace: Path, model: str, message: str, continues: str | None
+    ) -> tuple[str, str, list[str], list[str]]:
+        """Run one turn to its end, approving each tool call once as the person would.
+
+        Returns the run id, the reply text, the Cadrumo tools it called and the
+        approvals it was asked for. Only an ``allow_once`` option is chosen, so
+        every later call must ask again.
+        """
         run_id = str(uuid.uuid4())
         self._request(
             "POST",
@@ -173,6 +180,7 @@ class _Gateway:
         )
         reply: list[str] = []
         tools: list[str] = []
+        approvals: list[str] = []
         status = None
         event = None
         with urllib.request.urlopen(stream, timeout=_TURN_SECONDS) as response:  # noqa: S310
@@ -188,11 +196,24 @@ class _Gateway:
                     reply.append(str(data.get("content", "")))
                 elif event == "tool_call_start" and data.get("title"):
                     tools.append(str(data["title"]))
+                elif event == "permission_request":
+                    option = next(
+                        (choice for choice in data.get("options", []) if choice.get("kind") == "allow_once"), None
+                    )
+                    if option is None:
+                        raise AcceptanceError(f"an approval offered no allow_once option: {data.get('options')}")
+                    approvals.append(str(data.get("description") or data.get("tool_call")))
+                    self._request(
+                        "POST",
+                        f"/v1/runs/{run_id}/permissions/{data['request_id']}/respond",
+                        {"option_id": option["option_id"]},
+                        60,
+                    )
                 elif event == "thread_terminal":
                     status = data.get("status")
                     break
         require(status == "completed", f"the turn ended {status}")
-        return run_id, "".join(reply), tools
+        return run_id, "".join(reply), tools, approvals
 
 
 @contextmanager
@@ -320,7 +341,7 @@ def run(programs: Programs, package: Path | None, scratch: Path, *, checkout: Pa
             with _attending(holder) as approved, _gateway(checkout, programs, environment, scratch, key) as gateway:
                 chosen = gateway.model(workspace, model)
                 receipt.record("gateway_ready", model=chosen)
-                first, answer, tools = gateway.turn(
+                first, answer, tools, _ = gateway.turn(
                     workspace,
                     chosen,
                     "Use your Cadrumo tools to read my profile. Reply with the taxpayer's full name exactly as "
@@ -332,7 +353,7 @@ def run(programs: Programs, package: Path | None, scratch: Path, *, checkout: Pa
                 receipt.record("read_through_tools", tools=tools, answer=answer.strip()[:200])
                 before = _ledger_text(programs, environment, profile)
                 require(_LEDGER_MARKER not in before, "the ledger already holds the acceptance row")
-                _, answer, tools = gateway.turn(
+                _, answer, tools, approvals = gateway.turn(
                     workspace,
                     chosen,
                     "Use your Cadrumo tools to add one ledger expense: 12.34 EUR on 2026-01-15, description "
@@ -343,7 +364,9 @@ def run(programs: Programs, package: Path | None, scratch: Path, *, checkout: Pa
                 require(
                     after.count(_LEDGER_MARKER) == 1, f"the ledger holds the row {after.count(_LEDGER_MARKER)} times"
                 )
-                receipt.record("wrote_through_tools", tools=tools, attended_processes=len(approved))
+                receipt.record(
+                    "wrote_through_tools", tools=tools, approvals=approvals, attended_processes=len(approved)
+                )
             holder.close_input()
             reason, exit_code = holder.finish()
             require(reason == "input_closed" and exit_code == 0, f"holder: {reason} {exit_code}")
