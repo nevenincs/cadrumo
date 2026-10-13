@@ -140,7 +140,7 @@ def _project_capture(result: BaseModel, receipt: OperationTerminalReceipt, /) ->
     require_succeeded_terminal_receipt(
         receipt,
         definition_id=_definition_id(observation.surface),
-        subject_ref=profile_operation_subject(str(observation.bucket_id)),
+        subject_ref=profile_operation_subject(observation.bucket_id),
         effect=OperationEffect.UPDATED if report.newly_persisted else OperationEffect.NONE,
         message=_RECEIPT_CONTRADICTION,
     )

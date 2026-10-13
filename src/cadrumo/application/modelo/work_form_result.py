@@ -91,13 +91,13 @@ def _declared_type_result(
 
 
 def _has_declared_result_value(result_ids: tuple[CasillaId, ...], values: Mapping[str, Decimal | None]) -> bool:
-    return any(str(casilla_id) in values for casilla_id in result_ids)
+    return any(casilla_id in values for casilla_id in result_ids)
 
 
 def _known_result_values(
     result_ids: tuple[CasillaId, ...], values: Mapping[str, Decimal | None]
 ) -> dict[CasillaId, Decimal]:
-    return {casilla_id: amount for casilla_id in result_ids if (amount := values.get(str(casilla_id))) is not None}
+    return {casilla_id: amount for casilla_id in result_ids if (amount := values.get(casilla_id)) is not None}
 
 
 def _settling_result_casilla(result_ids: tuple[CasillaId, ...], known: Mapping[CasillaId, Decimal]) -> CasillaId:
@@ -155,12 +155,12 @@ def settlement_result_values(
     if selected.by_declared_type:
         return _declared_type_result(modelo, selected.casilla_ids, values, period)
     role_casilla = selected.casilla_ids[0]
-    if str(role_casilla) not in values:
+    if role_casilla not in values:
         return None
     return ModeloFormResult(
         casilla_id=role_casilla,
         box=None,
-        value=values[str(role_casilla)],
+        value=values[role_casilla],
         direction=ModeloFormResultDirection.UNKNOWN,
     )
 

@@ -153,7 +153,7 @@ def _phrase(language: OutputLanguage, name: str, /, **values: object) -> str:
 
 def legal_citation_text(reference: LegalReference) -> str:
     """Cite one legal reference from its own identifier, falling back to the official document id."""
-    document, _, locator = str(reference.id).partition(":")
+    document, _, locator = reference.id.partition(":")
     title = reference.document_id
     law = _LAW_ID.match(document)
     order = _ORDER_ID.match(document)
@@ -187,7 +187,7 @@ def _origin_sentence(binding: BindingDefinition | None, language: OutputLanguage
 def _require_help_casilla(
     casilla_id: CasillaId, *, snapshot: RegistrySnapshot, casillas: Mapping[str, CasillaDefinition]
 ) -> CasillaDefinition:
-    casilla = casillas.get(str(casilla_id))
+    casilla = casillas.get(casilla_id)
     if casilla is None:
         raise KeyError(f"casilla {casilla_id!r} is not defined by revision {snapshot.revision.id!r}")
     return casilla
@@ -195,7 +195,7 @@ def _require_help_casilla(
 
 def _legal_basis(casilla: CasillaDefinition, operation: PinnedAuthorityOperation) -> tuple[ModeloHelpCitationV1, ...]:
     return tuple(
-        ModeloHelpCitationV1(text=legal_citation_text(reference), permalink=str(reference.permalink))
+        ModeloHelpCitationV1(text=legal_citation_text(reference), permalink=reference.permalink)
         for reference in (operation.legal_reference(ref_id) for ref_id in casilla.legal_refs)
     )
 
@@ -208,7 +208,7 @@ def _origin_sentences(
 ) -> tuple[str, ...]:
     return tuple(
         text
-        for text in (_origin_sentence(bindings.get(str(binding_id)), language) for binding_id in _bound_by(casilla))
+        for text in (_origin_sentence(bindings.get(binding_id), language) for binding_id in _bound_by(casilla))
         if text is not None
     )
 
@@ -236,11 +236,11 @@ def build_casilla_help_card(
         :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`
             The pinned registry snapshot supplying the selected modelo revision.
     """
-    casillas = {str(item.id): item for item in snapshot.revision.casillas}
+    casillas = {item.id: item for item in snapshot.revision.casillas}
     casilla = _require_help_casilla(casilla_id, snapshot=snapshot, casillas=casillas)
-    formulas = {str(item.id): item for item in snapshot.revision.formulas}
-    parameters = {str(item.id): item for item in snapshot.revision.parameters}
-    bindings = {str(item.id): item for item in snapshot.revision.bindings}
+    formulas = {item.id: item for item in snapshot.revision.formulas}
+    parameters = {item.id: item for item in snapshot.revision.parameters}
+    bindings = {item.id: item for item in snapshot.revision.bindings}
 
     boxes = snapshot_printed_boxes(operation, snapshot)
 
@@ -249,10 +249,10 @@ def build_casilla_help_card(
         return _phrase(language, "formula.working_figure") if number is None else f"[{number}]"
 
     def box_of(target: CasillaId) -> str:
-        return box_text(str(target))
+        return box_text(target)
 
     def binding_name(binding_id: BindingId) -> str:
-        binding = bindings.get(str(binding_id))
+        binding = bindings.get(binding_id)
         if binding is None:
             return _phrase(language, "formula.table")
         name = lookup_translation(source_policy(binding.source).label_key, locale=language.value)

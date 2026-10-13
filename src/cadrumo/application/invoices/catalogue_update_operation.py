@@ -118,7 +118,7 @@ class InvoiceUpdateResult(BaseModel):
         if (
             not self.invoice_id.strip()
             or not self.invoice.invoice_id.startswith(self.invoice_id.strip())
-            or (self.invoice.bucket_id is not None and str(self.invoice.bucket_id) != str(self.profile_id))
+            or (self.invoice.bucket_id is not None and self.invoice.bucket_id != str(self.profile_id))
         ):
             raise ValueError("updated invoice differs from requested identity")
         return self

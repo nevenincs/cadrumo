@@ -103,7 +103,7 @@ def filing_axes_from_modelo_record(
     :class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`.
     """
     modelo = str(record.modelo)
-    filing_year = int(record.filing_year)
+    filing_year = record.filing_year
     period = record.period
     external_evidence = record.external_evidence
     local_state = _local_filing_state_from_modelo_record(record)
@@ -119,7 +119,7 @@ def filing_axes_from_modelo_record(
     if external_evidence is not None:
         kind = getattr(external_evidence, "kind", None)
         aeat_evidence_kind = str(getattr(kind, "value", kind))
-        aeat_reference_id = str(external_evidence.reference_id)
+        aeat_reference_id = external_evidence.reference_id
         if aeat_accepted and is_justificante_backed_external_evidence(external_evidence.kind):
             verified_justificante = _modelo_record_verified_justificante(
                 modelo=modelo,
@@ -141,8 +141,8 @@ def filing_axes_from_modelo_record(
         filing_year=filing_year,
         period=period,
         local_filing_state=local_state,
-        local_filing_record_id=str(record.filing_record_id),
-        local_calculation_revision_id=str(record.calculation_revision_id),
+        local_filing_record_id=record.filing_record_id,
+        local_calculation_revision_id=record.calculation_revision_id,
         local_filed_at=record.filed_at,
         aeat_submission_state=aeat_state,
         aeat_submitted_at=aeat_submitted_at,
@@ -398,12 +398,12 @@ def _calculation_observation_evidence_input(
     source_metadata = payload.source_metadata
     if not is_official_aeat_observation_source(source_kind) or not source_metadata:
         return None
-    if not is_active_aeat_filing_status(str(source_metadata.get("aeat_register_status", "")).strip()):
+    if not is_active_aeat_filing_status(source_metadata.get("aeat_register_status", "").strip()):
         return None
-    aeat_reference_id = str(source_metadata.get("aeat_expediente_id") or "").strip()
+    aeat_reference_id = (source_metadata.get("aeat_expediente_id") or "").strip()
     if not aeat_reference_id:
         return None
-    authenticated_identity = str(source_metadata.get("authenticated_identity", ""))
+    authenticated_identity = source_metadata.get("authenticated_identity", "")
     if (expected_tax_id is not None and expected_tax_id) and not same_tax_identifier(
         authenticated_identity, expected_tax_id
     ):
@@ -415,7 +415,7 @@ def _calculation_observation_evidence_input(
     return _CalculationObservationEvidenceInput(
         source_kind=source_kind,
         source_metadata=source_metadata,
-        modelo=str(observation.modelo),
+        modelo=observation.modelo,
         filing_year=observation.filing_year,
         period=period,
         aeat_reference_id=aeat_reference_id,

@@ -169,10 +169,10 @@ def _merge_gathered_observations(
             context={
                 "primary_modelo": primary.observation.modelo,
                 "primary_filing_year": primary.observation.filing_year,
-                "primary_period": str(primary.observation.period),
+                "primary_period": primary.observation.period,
                 "overlay_modelo": overlay.observation.modelo,
                 "overlay_filing_year": overlay.observation.filing_year,
-                "overlay_period": str(overlay.observation.period),
+                "overlay_period": overlay.observation.period,
             },
         )
 
@@ -641,7 +641,7 @@ def _unsatisfied_previous_filing_bindings(
         source_modelo, source_filing_year, source_periods, _dependency_treatment = requirement_index.get(
             binding.id,
             (
-                str(provider.source_modelo),
+                provider.source_modelo,
                 snapshot.filing_year + provider.uniform_filing_year_delta,
                 provider.required_periods,
                 "",
@@ -771,7 +771,7 @@ def _prefilled_bindings(
             requirement_index.get(
                 binding_id,
                 (
-                    str(provider.source_modelo),
+                    provider.source_modelo,
                     snapshot.filing_year + provider.uniform_filing_year_delta,
                     provider.required_periods,
                     "",

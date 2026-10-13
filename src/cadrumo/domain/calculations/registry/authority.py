@@ -695,7 +695,7 @@ class PinnedAuthorityOperation:
             on=on,
             revision_id=revision_id,
         )
-        return self.revision(normalized, str(selected.id))
+        return self.revision(normalized, selected.id)
 
     def snapshot(
         self,
@@ -721,7 +721,7 @@ class PinnedAuthorityOperation:
             on=on,
             revision_id=revision_id,
         )
-        revision = self.revision_with_export_layouts(normalized, str(selected.id))
+        revision = self.revision_with_export_layouts(normalized, selected.id)
         modelo = directory.materialize(revision)
         legal_ids, source_ids = collect_snapshot_ref_ids(modelo, revision)
         globals_value = self.snapshot_globals()
@@ -751,7 +751,7 @@ class PinnedAuthorityOperation:
             cached = self._fact_resolutions.get(query)
             if cached is not None:
                 return cached
-            value = self.governed_fact(str(query.fact_id))
+            value = self.governed_fact(query.fact_id)
             resolved = resolve_validated_governed_fact(
                 value,
                 query,
@@ -860,7 +860,7 @@ class PinnedAuthorityOperation:
         if grade is None:
             directory = self.modelo_directory(normalized)
             selected = select_revision_metadata(directory, filing_year=filing_year, period=period, on=on)
-            revision = self.revision(normalized, str(selected.id))
+            revision = self.revision(normalized, selected.id)
             modelo = directory.materialize(revision)
             legal_ids, source_ids = collect_snapshot_ref_ids(modelo, revision)
             projection = RegistryRevisionInspection.from_revision(

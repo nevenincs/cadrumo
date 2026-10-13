@@ -434,7 +434,7 @@ def _profile_exempt_iva_ratio(
     raw_regime = fact_value(record, "iva.regime")
     if raw_regime is None:
         return None
-    regime = require_iva_regime(str(raw_regime).strip().upper())
+    regime = require_iva_regime(raw_regime.strip().upper())
     if regime == iva_regime_exento_token():
         return exempt_ratio
     return None

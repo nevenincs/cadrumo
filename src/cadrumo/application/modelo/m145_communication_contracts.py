@@ -155,7 +155,7 @@ class M145CommunicationCreateRequest(BaseModel):
 
     @model_validator(mode="after")
     def _field_values_are_unique_and_sorted(self) -> M145CommunicationCreateRequest:
-        identifiers = tuple(str(item.casilla_id) for item in self.field_values)
+        identifiers = tuple(item.casilla_id for item in self.field_values)
         if identifiers != tuple(sorted(set(identifiers))):
             raise ValueError("M145 operation field values must be unique and sorted by casilla id")
         return self
@@ -175,7 +175,7 @@ class M145CommunicationCreateRequest(BaseModel):
             period_token=command.period_token,
             field_values=tuple(
                 M145CommunicationFieldValueProjection(casilla_id=key, value=value)
-                for key, value in sorted(command.field_values.items(), key=lambda pair: str(pair[0]))
+                for key, value in sorted(command.field_values.items(), key=lambda pair: pair[0])
             ),
             note=command.note,
             actor=actor,
@@ -267,7 +267,7 @@ class M145CommunicationRecordProjection(BaseModel):
 
     @model_validator(mode="after")
     def _field_values_are_unique_and_sorted(self) -> M145CommunicationRecordProjection:
-        identifiers = tuple(str(item.casilla_id) for item in self.field_values)
+        identifiers = tuple(item.casilla_id for item in self.field_values)
         if identifiers != tuple(sorted(set(identifiers))):
             raise ValueError("M145 projection field values must be unique and sorted by casilla id")
         return self
@@ -287,7 +287,7 @@ class M145CommunicationRecordProjection(BaseModel):
             state=record.state,
             field_values=tuple(
                 M145CommunicationFieldValueProjection(casilla_id=key, value=value)
-                for key, value in sorted(record.field_values.items(), key=lambda pair: str(pair[0]))
+                for key, value in sorted(record.field_values.items(), key=lambda pair: pair[0])
             ),
             legal_refs=tuple(record.legal_refs),
             source_refs=tuple(record.source_refs),

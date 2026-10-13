@@ -143,7 +143,7 @@ def _project_reconciliation_pull(result: BaseModel, receipt: OperationTerminalRe
     require_terminal_receipt_match(
         receipt,
         definition_id=MODELO_RECONCILIATION_PULL_OPERATION_DEFINITION_ID,
-        subject_ref=profile_operation_subject(str(projection.bucket_id)),
+        subject_ref=profile_operation_subject(projection.bucket_id),
         condition=OperationTerminalCondition.SUCCEEDED,
         effect=OperationEffect.UPDATED,
         message=contradiction,

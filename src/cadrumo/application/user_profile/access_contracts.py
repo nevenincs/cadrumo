@@ -142,7 +142,7 @@ DISCLOSURE_PAGE_ENTRIES = 100
 def ordered_disclosures(disclosures: frozenset[DisclosurePermission]) -> tuple[DisclosurePermission, ...]:
     """Order a scope's disclosures as every summary digest and page read sees them, by category first."""
     return tuple(
-        sorted(disclosures, key=lambda item: (item.category.value, str(item.projection_id), str(item.destination_id)))
+        sorted(disclosures, key=lambda item: (item.category.value, item.projection_id, str(item.destination_id)))
     )
 
 

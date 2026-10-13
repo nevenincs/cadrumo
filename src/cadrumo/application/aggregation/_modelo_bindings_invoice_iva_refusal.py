@@ -130,7 +130,7 @@ def raise_if_invoice_iva_would_be_silent(
     if screened_bindings is None:
         screened_bindings = invoice_ledger_screen_binding_ids(
             context.revision,
-            modelo=str(context.modelo),
+            modelo=context.modelo,
         )
     if not screened_bindings:
         return InvoiceIvaSilenceReport()
@@ -185,7 +185,7 @@ def _raise_if_screened_invoice_iva_would_be_silent(
             tr("errors.error.error_modelo_aggregation_binding"),
             context={
                 "reason": "invoice_deduction_authority_missing_from_transaction_ledger",
-                "modelo": str(context.modelo),
+                "modelo": context.modelo,
                 "filing_year": str(context.filing_year),
                 "period": context.period.registry_token,
                 "source_kind": "ledger_iva_aggregation",
@@ -240,12 +240,12 @@ def _raise_if_screened_invoice_iva_would_be_silent(
         tr("errors.error.error_modelo_aggregation_binding"),
         context={
             "reason": "invoice_domestic_iva_not_in_transaction_ledger",
-            "modelo": str(context.modelo),
+            "modelo": context.modelo,
             "filing_year": str(context.filing_year),
             "period": context.period.registry_token,
             "source_kind": "ledger_iva_aggregation",
             "invoice_domestic_iva_excess_by_binding": {
-                str(binding_id): str(amount) for binding_id, amount in missing_binding_values.items()
+                binding_id: str(amount) for binding_id, amount in missing_binding_values.items()
             },
             "invoice_ids": tuple(sorted(screened.invoice_ids)[:M303_INVOICE_EVIDENCE_SAMPLE_LIMIT]),
             "invoice_count": str(len(screened.invoice_ids)),

@@ -123,7 +123,7 @@ def _normalise_bulk_classify_row(
             malformed_cells.append("<extra>")
             continue
         if value is not None and not isinstance(value, str):
-            malformed_cells.append(str(key))
+            malformed_cells.append(key)
             continue
         normalised_row[key] = (value.strip() or None) if value is not None else None
     return transaction_id, normalised_row, malformed_cells

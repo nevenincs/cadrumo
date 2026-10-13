@@ -108,9 +108,7 @@ def active_036_ownership_from_registry(
     if isinstance(authority, PinnedAuthorityOperation):
         try:
             directory = authority.modelo_directory(_ACTIVE_CENSO_MODELO)
-            revisions = tuple(
-                authority.revision(_ACTIVE_CENSO_MODELO, str(metadata.id)) for metadata in directory.revisions
-            )
+            revisions = tuple(authority.revision(_ACTIVE_CENSO_MODELO, metadata.id) for metadata in directory.revisions)
             tax_domain = directory.modelo.tax_domain
             cadence = directory.modelo.cadence
         except (RegistrySnapshotError, ValueError) as exc:
@@ -189,7 +187,7 @@ def _require_active_036_metadata(tax_domain: str, cadence: str) -> None:
 
 def _latest_active_036_revision(revisions: tuple[ModeloRevision, ...]) -> ModeloRevision:
     try:
-        return max(revisions, key=lambda item: (item.valid_from, str(item.id)))
+        return max(revisions, key=lambda item: (item.valid_from, item.id))
     except ValueError as exc:
         raise RegistryValidationError("active censo modelo 036 has no registry revisions") from exc
 
@@ -227,7 +225,7 @@ def _historical_037_ownership_from_registry(
                 "historical censo modelo 037 suppression source metadata is missing"
             ) from None
     else:
-        if any(str(modelo.id) == _HISTORICAL_CENSO_MODELO for modelo in authority.modelos):
+        if any(modelo.id == _HISTORICAL_CENSO_MODELO for modelo in authority.modelos):
             raise RegistryValidationError("historical censo modelo 037 must not have an active registry definition")
         if _HISTORICAL_037_SOURCE_REF not in authority.catalogues.sources:
             raise RegistryValidationError("historical censo modelo 037 suppression source metadata is missing")

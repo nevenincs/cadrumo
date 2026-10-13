@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from functools import wraps
-from typing import Annotated, ClassVar, Literal, TypeAliasType, override
+from typing import Annotated, ClassVar, Literal, override
 
 import pytest
 from pydantic import BaseModel, Field, create_model
@@ -52,16 +52,16 @@ def _colliding_models(*, equivalent: bool) -> type[BaseModel]:
 
 
 def _colliding_aliases() -> type[BaseModel]:
-    def text_alias() -> TypeAliasType:
+    # Two distinct aliases that share one name, each scoped by its own class.
+    class Text:
         type Value = str
-        return Value
 
-    def number_alias() -> TypeAliasType:
+    class Number:
         type Value = int
-        return Value
 
-    left, right = text_alias(), number_alias()
-    return create_model("AliasCollision", __config__=STRICT_FROZEN_CONFIG, left=(left, ...), right=(right, ...))
+    return create_model(
+        "AliasCollision", __config__=STRICT_FROZEN_CONFIG, left=(Text.Value, ...), right=(Number.Value, ...)
+    )
 
 
 def _same_name_parent() -> type[BaseModel]:

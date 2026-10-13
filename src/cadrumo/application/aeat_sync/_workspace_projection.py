@@ -301,7 +301,7 @@ def _validate_operation_ids(
     key: str,
     contract_by_id: Mapping[OperationDefinitionId, Any],
 ) -> set[str]:
-    operation_id_values: set[str] = {str(item) for item in operation_ids}
+    operation_id_values: set[str] = set(operation_ids)
     _unique(operation_ids, "row operations")
     for operation_id in operation_ids:
         contract = contract_by_id.get(operation_id)
@@ -322,9 +322,9 @@ def _validate_action_operation_joins(
         joined = tuple(
             contract
             for contract in contracts.definitions
-            if contract.action_reference == action and str(contract.definition_id) in operation_id_values
+            if contract.action_reference == action and contract.definition_id in operation_id_values
         )
-        if not joined and str(action.action_id) in {
+        if not joined and action.action_id in {
             "operator.live.filed.pull",
             "operator.live.filed.pull_all",
             "operator.live.notifications.list",

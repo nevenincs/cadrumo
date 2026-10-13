@@ -229,7 +229,7 @@ def internal_record_fault_context(
     reported = violations[:_INTERNAL_FAULT_VIOLATION_LIMIT]
     declared = _declared_field_names(record)
     named = tuple(f"{_violation_location(item, declared)}: {_violation_rule(item)}" for item in reported)
-    withheld = sum(1 for item in reported if str(item.get("type", "")) in _VALIDATOR_AUTHORED_MESSAGE_TYPES)
+    withheld = sum(1 for item in reported if item.get("type", "") in _VALIDATOR_AUTHORED_MESSAGE_TYPES)
     context: dict[str, object] = {
         "failing_record": error.title,
         "violation_count": len(violations),

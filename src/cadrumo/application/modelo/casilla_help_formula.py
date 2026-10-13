@@ -215,18 +215,16 @@ class _RecordedValuesRenderer(_FormulaRenderer):
     @override
     def leaf(self, node: FormulaExpression) -> str:
         if node.casilla_id is not None:
-            casilla = self.casillas[str(node.casilla_id)]
+            casilla = self.casillas[node.casilla_id]
             maximum = None if casilla.constraints is None else casilla.constraints.max_value
-            value = _format_recorded_value(
-                self.values, str(node.casilla_id), str(casilla.data_type), self.language, maximum
-            )
+            value = _format_recorded_value(self.values, node.casilla_id, str(casilla.data_type), self.language, maximum)
             return f"{self.box_of(node.casilla_id)} {value}"
         if node.binding is not None:
-            binding = self.bindings[str(node.binding)]
-            value = _format_recorded_value(self.values, str(node.binding), str(binding.value.data_type), self.language)
+            binding = self.bindings[node.binding]
+            value = _format_recorded_value(self.values, node.binding, str(binding.value.data_type), self.language)
             return f"{self.binding_name(node.binding)} {value}"
         if node.parameter is not None:
-            value = self.values.get(str(node.parameter))
+            value = self.values.get(node.parameter)
             return super().leaf(node) if value is None else _number(value, self.language)
         return super().leaf(node)
 
@@ -296,7 +294,7 @@ def _formula_values_text(
         phrase=phrase,
     )
     expression = renderer.render(formula.expression)
-    target = casillas[str(observation.casilla_id)]
+    target = casillas[observation.casilla_id]
     maximum = None if target.constraints is None else target.constraints.max_value
     result = format_casilla_value(
         observation.value,
@@ -410,13 +408,13 @@ def build_casilla_formula_help(
 
     Parameter types: ``observation`` (:class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation`).
     """
-    formula = None if casilla.formula is None else formulas.get(str(casilla.formula))
+    formula = None if casilla.formula is None else formulas.get(casilla.formula)
     if formula is None:
         return None, []
     renderer = _FormulaRenderer(
         box_of=box_of,
         binding_name=binding_name,
-        parameter_value=lambda parameter_id: _parameter_value(parameters.get(str(parameter_id)), on),
+        parameter_value=lambda parameter_id: _parameter_value(parameters.get(parameter_id), on),
         language=language,
         phrase=phrase,
     )
@@ -477,7 +475,7 @@ def _formula_quotes(
             ModeloHelpQuoteV1(
                 fragments=tuple(citation.required_text),
                 source=phrase(language, f"source_kind.{source.kind.value}"),
-                source_url=str(source.source_url),
+                source_url=source.source_url,
                 retrieved_at=source.retrieved_at,
             )
         )

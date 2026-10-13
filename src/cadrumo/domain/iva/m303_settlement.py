@@ -86,7 +86,7 @@ def _same_cadence_periods(
         candidate
         for revision in revisions
         for token in revision.period_selector.periods_for_year(year)
-        if (candidate := Period.from_year_and_code(year, str(token))).kind is kind
+        if (candidate := Period.from_year_and_code(year, token)).kind is kind
     )
 
 

@@ -204,7 +204,7 @@ def _load_exact_baseline(
 ) -> UserProfileRecord:
     """Load the full encrypted record and reject a stale or mis-scoped baseline."""
     profile_id = require_active_bucket_id()
-    if profile_id != str(baseline.profile_id):
+    if profile_id != baseline.profile_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     record = ProfileRecordRepository.for_current_session(
         profile_id,
@@ -325,7 +325,7 @@ class CensalPreviewOperationExecutor:
     ) -> str:
         """Acquire one observation and persist its bounded exact-profile preview."""
         baseline = request.payload.baseline
-        profile_id = str(baseline.profile_id)
+        profile_id = baseline.profile_id
         if request.definition_id != CENSAL_PREVIEW_OPERATION_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         require_operation_profile(request, context, UUID(profile_id))
@@ -449,7 +449,7 @@ def _validated_censal_preview_request(
         payload, CensalPreviewOperationRequest
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    profile_id = str(payload.baseline.profile_id)
+    profile_id = payload.baseline.profile_id
     if payload.baseline.profile_id != str(context.profile_id) or request.subject_ref != profile_operation_subject(
         profile_id
     ):

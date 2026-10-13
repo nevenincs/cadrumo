@@ -308,11 +308,10 @@ def _validate_snapshot_summary_and_rows(snapshot: ModeloCalculationSnapshot) -> 
 def _decimal_facts(values: Mapping[CasillaId, Decimal]) -> tuple[PublicNamedScalar, ...]:
     """Give visible Decimal facts a deterministic immutable order."""
     return tuple(
-        PublicNamedScalar(key=str(key), value=PublicDecimal(decimal=str(value)))
-        for key, value in sorted(values.items())
+        PublicNamedScalar(key=key, value=PublicDecimal(decimal=str(value))) for key, value in sorted(values.items())
     )
 
 
 def _text_facts(values: Mapping[str, str]) -> tuple[PublicNamedScalar, ...]:
     """Give typed input spellings a deterministic immutable order."""
-    return tuple(PublicNamedScalar(key=str(key), value=value) for key, value in sorted(values.items()))
+    return tuple(PublicNamedScalar(key=key, value=value) for key, value in sorted(values.items()))

@@ -452,7 +452,7 @@ class WithholdingSourceResolver:
         """Resolve withholding totals from the bucket-scoped observation store."""
         try:
             detail = self.load_calculation_detail(
-                modelo=str(context.modelo),
+                modelo=context.modelo,
                 period=context.period,
                 revision=context.revision,
                 cadence=lambda: _work_profile_cadence(context),

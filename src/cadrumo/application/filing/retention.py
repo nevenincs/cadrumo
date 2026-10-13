@@ -148,7 +148,7 @@ class FilingRetentionSnapshot(BaseModel):
             sorted(
                 (
                     FilingRetentionFact(
-                        filing_record_id=str(record.filing_record_id),
+                        filing_record_id=record.filing_record_id,
                         modelo=str(record.modelo),
                         filing_year=record.filing_year,
                         filed_at=record.filed_at,
@@ -206,7 +206,7 @@ class FilingRetentionAuthority:
         :class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`.
         """
         materialized = tuple(records)
-        if any(str(record.bucket_id) != str(profile_id) for record in materialized):
+        if any(record.bucket_id != str(profile_id) for record in materialized):
             raise ValueError("filing retention facts must belong to their profile")
         snapshot = FilingRetentionSnapshot.from_modelo_records(
             profile_id=profile_id,
@@ -341,7 +341,7 @@ def try_record_filing_retention_snapshot(
     """
     try:
         FilingRetentionAuthority().record_filing_catalogue(
-            profile_id=UUID(str(bucket_id)),
+            profile_id=UUID(bucket_id),
             records=records,
             observed_at=observed_at,
         )

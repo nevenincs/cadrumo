@@ -222,7 +222,7 @@ def build_ledger_remove_definition(
 
 def _operation_result(profile_id: UUID, report: LedgerTransactionRemovalReport) -> LedgerRemoveOperationResult:
     """Validate exact-profile identity and every bound before publishing a receipt."""
-    if str(report.bucket_id) != str(profile_id):
+    if report.bucket_id != str(profile_id):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     return LedgerRemoveOperationResult(profile_id=profile_id, report=_project_report(report))
 

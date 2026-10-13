@@ -107,7 +107,7 @@ def _ledger_documents(
             status=_ledger_status(row.review_status),
             label_key=WorkbenchSearchLabelKey.LEDGER_ENTRY,
             admission=admission,
-            identity_basis=SecretStr(str(row.transaction_id)),
+            identity_basis=SecretStr(row.transaction_id),
             content_terms=tuple(
                 term
                 for term in (
@@ -146,7 +146,7 @@ def _ledger_evidence_documents(
             status=WorkbenchSearchStatus.LEDGER_EVIDENCE_STALE,
             label_key=WorkbenchSearchLabelKey.LEDGER_EVIDENCE,
             admission=admission,
-            identity_basis=SecretStr(str(row.calculation_revision_id)),
+            identity_basis=SecretStr(row.calculation_revision_id),
         )
         for row in projection.affected_declarations
     )

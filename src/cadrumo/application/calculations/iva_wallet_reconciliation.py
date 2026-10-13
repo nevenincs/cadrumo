@@ -360,7 +360,7 @@ def reconcile_modelo_303_iva_compensation(
     is_first_iva_period = treat_absent_recurrence_as_first_period and wallet is None and local_recurrence_amount is None
     if is_first_iva_period:
         local_recurrence_amount = _resolve_first_period_compensation_amount(
-            filing_year=int(snapshot.filing_year),
+            filing_year=snapshot.filing_year,
             operation=operation,
         )
     decision = reconcile_iva_compensation_wallet(

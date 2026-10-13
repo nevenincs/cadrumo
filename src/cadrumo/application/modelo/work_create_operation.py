@@ -257,7 +257,7 @@ class ModeloWorkCreateExecutor:
             profile = load_modelo_work_profile(
                 bucket_id=profile_id, profile_decode_context=operation.profile_decode_context()
             )
-            if profile is None or str(profile.record.profile_id) != profile_id:
+            if profile is None or profile.record.profile_id != profile_id:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
             guard_active_profile_foral_ccaa(profile.record)
             applicability = modelo_work_create_applicability_refusal(

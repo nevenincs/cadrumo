@@ -200,7 +200,7 @@ NotificationsPortsFactory = Callable[[], NotificationsPorts]
 
 def _require_snapshot_bucket(snapshot: PersistedNotificationsSnapshot, bucket_id: str) -> None:
     """Fail closed if a persisted row is inconsistent with its exact query bucket."""
-    if str(snapshot.bucket_id) != bucket_id:
+    if snapshot.bucket_id != bucket_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
 
 

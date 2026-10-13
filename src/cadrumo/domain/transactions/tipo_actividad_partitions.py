@@ -90,7 +90,7 @@ def resolve_tipo_actividad_selector(
 
 def _typed_code_set(selector: ResolvedEntitySetFact) -> frozenset[str]:
     """Narrow a resolved entity-set payload to registry-owned activity tokens."""
-    return frozenset(str(token) for token in selector.payload.entities)
+    return frozenset(selector.payload.entities)
 
 
 def tipo_actividad_code_set(

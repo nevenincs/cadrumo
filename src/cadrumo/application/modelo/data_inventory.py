@@ -244,7 +244,7 @@ def data_inventory_checklist(
     )
     # The export layouts say which manual casillas are filled once per detail
     # row, so the revision is read with them.
-    revision = operation.revision_with_export_layouts(modelo, str(selected.id))
+    revision = operation.revision_with_export_layouts(modelo, selected.id)
     bindings_by_id = revision_bindings_by_id(revision)
     buckets = _collect_inventory_buckets(revision, bindings_by_id)
 
@@ -260,7 +260,7 @@ def data_inventory_checklist(
         )
         profile_checked = True
         unresolved_profile_bindings = tuple(
-            binding_id for binding_id in buckets.profile_binding_ids if str(binding_id) not in resolved
+            binding_id for binding_id in buckets.profile_binding_ids if binding_id not in resolved
         )
         unresolved_profile_keys = _profile_keys_for_bindings(revision, unresolved_profile_bindings)
     elif bucket_id is not None:
@@ -269,8 +269,8 @@ def data_inventory_checklist(
         profile_checked = False
 
     return DataInventoryChecklist(
-        modelo=str(modelo),
-        revision_id=str(revision.id),
+        modelo=modelo,
+        revision_id=revision.id,
         filing_year=filing_year,
         period=period.registry_token,
         required_manual=tuple(buckets.required_manual),

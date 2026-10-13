@@ -43,7 +43,7 @@ def saved_projection_context_value(
     supported = (M303Exonerado390ActivityProjectionRef, M303Exonerado390OperacionesTercerosProjectionRef)
     if not isinstance(field.projection_ref, supported):
         raise RegistryValidationError("unsupported scalar form projection")
-    if str(snapshot.modelo.id) != "303":
+    if snapshot.modelo.id != "303":
         raise RegistryValidationError("annual activity projection requires Modelo 303")
     if revision is None:
         return None
@@ -57,7 +57,7 @@ def saved_projection_context_value(
     evidence = envelope.m303.exonerado_390
     if evidence is None:
         return None
-    if evidence.applicable and str(snapshot.period) not in ("4T", "12"):
+    if evidence.applicable and snapshot.period not in ("4T", "12"):
         raise RegistryValidationError("annual activity evidence requires the final filing period")
     record = next(
         record
@@ -99,7 +99,7 @@ def saved_projection_form_records(
     )
     if not all(isinstance(ref, supported) for ref in refs):
         return False, ()
-    if str(snapshot.modelo.id) != "303":
+    if snapshot.modelo.id != "303":
         raise RegistryValidationError("simplified-regime projection requires Modelo 303")
     envelope = revision.filing_instance_evidence
     if envelope is None:
@@ -118,7 +118,7 @@ def saved_projection_form_records(
     if current_design is None or current_design.sha256 != design.sha256:
         raise RegistryValidationError("saved activity evidence uses a different record-design source")
     regimen_refs = tuple(ref for ref in refs if isinstance(ref, supported))
-    validate_m303_regimen_simplificado_endpoint_epoch(regimen_refs, revision_id=str(snapshot.revision.id))
+    validate_m303_regimen_simplificado_endpoint_epoch(regimen_refs, revision_id=snapshot.revision.id)
     projected = project_m303_regimen_simplificado_rows(
         projection_refs=regimen_refs,
         rows=evidence.rows,

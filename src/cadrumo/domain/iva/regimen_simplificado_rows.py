@@ -200,7 +200,7 @@ class ReduccionLorcaOrdenAnual(BaseModel):
         """Build the projection only after matching the selected facts authority."""
         from ..calculations.registry.lorca_reduction import resolve_lorca_reduction
 
-        declared = resolve_lorca_reduction(effective_date=date(int(ejercicio), 12, 31))
+        declared = resolve_lorca_reduction(effective_date=date(ejercicio, 12, 31))
         if (
             municipality != declared.municipality
             or percentage != declared.percentage
@@ -225,7 +225,7 @@ class ReduccionLorcaOrdenAnual(BaseModel):
     def _matches_registry_reduction(self) -> Self:
         from ..calculations.registry.lorca_reduction import resolve_lorca_reduction
 
-        declared = resolve_lorca_reduction(effective_date=date(int(self.ejercicio), 12, 31))
+        declared = resolve_lorca_reduction(effective_date=date(self.ejercicio, 12, 31))
         if (
             self.ejercicio != declared.ejercicio
             or self.municipality != declared.municipality

@@ -84,7 +84,7 @@ class LedgerImportDiagnostic(BaseModel):
         """Reject diagnostics without an authoritative Spanish message."""
         from ...core.i18n.render import tr
 
-        if not value or not str(value).strip():
+        if not value or not value.strip():
             raise ValueError("message must be a non-empty Translatable key")
         # tr() humanises unknown keys into a readable fallback, so a plain
         # round-trip comparison no longer detects missing entries. Pass a

@@ -241,7 +241,7 @@ class ModeloEntry(BaseModel):
 
 def _rename_record(evolution: CasillaContinuidadEvolutionDefinition) -> ModeloRenameRecord:
     return ModeloRenameRecord(
-        continuidad_id=str(evolution.continuidad_id),
+        continuidad_id=evolution.continuidad_id,
         from_revision=evolution.from_revision,
         to_revision=evolution.to_revision,
         evolution_kind=evolution.evolution_kind,
@@ -254,7 +254,7 @@ def _entry_for_modelo(modelo: ModeloDefinition, supported_revision_ids: tuple[Re
     renames = tuple(_rename_record(evolution) for evolution in revision.casilla_continuidad_evolutions)
     portal_refs = tuple(
         ModeloPortalCompatibilityRef(
-            id=str(decision.id),
+            id=decision.id,
             surface=decision.surface,
             evidence_tier=decision.evidence_tier,
         )
@@ -298,7 +298,7 @@ def build_support_matrix(authority: ValidatedRegistryAuthority) -> tuple[ModeloE
             modelo,
             tuple(
                 revision.id
-                for revision in sorted(modelo.revisions.values(), key=lambda item: (item.valid_from, str(item.id)))
+                for revision in sorted(modelo.revisions.values(), key=lambda item: (item.valid_from, item.id))
             ),
         )
         for modelo in RegistryQueryService(authority).iter_modelo_definitions()
@@ -320,10 +320,7 @@ def build_support_matrix_from_directory_views(
     entries = (
         _entry_for_modelo(
             view,
-            tuple(
-                metadata.id
-                for metadata in sorted(directory.revisions, key=lambda item: (item.valid_from, str(item.id)))
-            ),
+            tuple(metadata.id for metadata in sorted(directory.revisions, key=lambda item: (item.valid_from, item.id))),
         )
         for directory, view in views
     )

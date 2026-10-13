@@ -177,7 +177,7 @@ def _registered_modelo_revisions(
             return _registered_modelo_revisions(modelo, operation=indexed_operation)
     try:
         directory = operation.modelo_directory(modelo)
-        revisions = tuple(operation.revision(modelo, str(metadata.id)) for metadata in directory.revisions)
+        revisions = tuple(operation.revision(modelo, metadata.id) for metadata in directory.revisions)
     except (RegistrySnapshotError, ValueError):
         return None
     return revisions or None

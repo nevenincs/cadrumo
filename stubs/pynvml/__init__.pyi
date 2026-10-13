@@ -22,8 +22,9 @@ class _MemoryInfo(Protocol):
     """The memory triple ``nvmlDeviceGetMemoryInfo`` returns.
 
     Typed as a protocol rather than a class because the caller reads only
-    ``total`` and ``free`` and coerces both through ``int()``; binding it to a
-    concrete type would over-specify a structure this codebase never inspects.
+    ``total`` and ``free``, both plain integers, and uses them as they are;
+    binding it to a concrete type would over-specify a structure this codebase
+    never inspects.
     """
 
     @property

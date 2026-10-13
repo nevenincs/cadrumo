@@ -284,7 +284,7 @@ def _reject_binding_channel_mismatch(
         raise ModeloError(
             translated_message="errors.error.error_modelos",
             context={
-                "misrouted_binding_ids": ", ".join(str(b) for b in misrouted_to_decimal),
+                "misrouted_binding_ids": ", ".join(misrouted_to_decimal),
                 "expected_input_channel": "enum",
                 "supplied_input_channel": "decimal",
             },
@@ -297,7 +297,7 @@ def _reject_binding_channel_mismatch(
         raise ModeloError(
             translated_message="errors.error.error_modelos",
             context={
-                "misrouted_binding_ids": ", ".join(str(b) for b in misrouted_to_enum),
+                "misrouted_binding_ids": ", ".join(misrouted_to_enum),
                 "expected_input_channel": "decimal",
                 "supplied_input_channel": "enum",
             },
@@ -331,7 +331,7 @@ def _reject_boolean_binding_channel_mismatch(
     raise ModeloError(
         translated_message="errors.error.error_modelos",
         context={
-            "misrouted_binding_ids": ", ".join(str(binding_id) for binding_id in misrouted),
+            "misrouted_binding_ids": ", ".join(misrouted),
             "expected_input_channel": "boolean",
             "supplied_input_channel": "decimal",
         },

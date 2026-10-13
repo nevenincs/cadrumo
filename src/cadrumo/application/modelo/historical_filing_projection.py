@@ -259,7 +259,7 @@ def _row_provenance(
         source_row_index=source.source_row_index,
         source_kind=identity.source_kind.value,
         source_row_identity=identity.source_row_identity,
-        fingerprint=str(identity.fingerprint),
+        fingerprint=identity.fingerprint,
         row_set_grouping=identity.row_set_grouping,
         materialization_rule_id=source.materialization_rule_id,
         materialization_rule_version=source.materialization_rule_version,

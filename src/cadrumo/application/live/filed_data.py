@@ -91,7 +91,7 @@ def select_declarations_for_capture(
     if expediente_id is not None and not selected:
         raise LiveApplicationInputError(
             translated_message="live.errors.expediente_not_found",
-            context={"expediente_id": str(expediente_id)},
+            context={"expediente_id": expediente_id},
         )
     if limit is not None:
         selected = selected[:limit]

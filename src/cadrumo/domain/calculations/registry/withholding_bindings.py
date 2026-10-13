@@ -995,19 +995,19 @@ def _withholding_row_group_key(
 ) -> tuple[str, ...]:
     """Return the registry-declared annual record identity for one observation."""
     if grouping == "per_perceptor":
-        return (str(observation.perceptor_tax_id),)
+        return (observation.perceptor_tax_id,)
     if grouping == "per_source_allocation":
         # A transaction-oriented record preserves source identity even when
         # its recipient, security and amounts happen to match another record.
         # The selected registry declares when this grouping is appropriate.
-        return (str(observation.perceptor_tax_id), observation.source_id, observation.source_allocation_id)
+        return (observation.perceptor_tax_id, observation.source_id, observation.source_allocation_id)
     perceptor, clave, subclave = _percepcion_key(observation)
     if grouping == "per_perceptor_clave":
         # Exactly the ``distinct_percepcion_keys`` key.  The Modelo 190 header
         # counts its emitted type-2 records, so adding source or payment
         # identity here would split a record the header does not count;
         # omitting subclave would merge records the header does count.
-        return (str(perceptor), str(clave), subclave)
+        return (perceptor, str(clave), subclave)
     if grouping == "per_perceptor_clave_devengo":
         # The Modelo 193 PENDIENTE flag (position 117) and EJERCICIO DEVENGO
         # (118-121) are record identity, not detail: a pending row under the
@@ -1017,7 +1017,7 @@ def _withholding_row_group_key(
         # accrual years never share one.
         flag = observation.pendiente_flag
         pendiente = "" if flag is None or _withholding_row_value_is_absent(flag) else flag
-        return (str(perceptor), str(clave), subclave, pendiente, f"{_devengo_year(observation):04d}")
+        return (perceptor, str(clave), subclave, pendiente, f"{_devengo_year(observation):04d}")
     raise RegistryValidationError(f"unsupported withholding row grouping {grouping!r}")
 
 

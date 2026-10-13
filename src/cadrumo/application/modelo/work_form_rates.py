@@ -59,7 +59,7 @@ def page_applies_for_values(
     if page.condition is FormPageCondition.PERIOD_RESTRICTED:
         return context.review.period.registry_token in page.condition_periods
     if page.condition is FormPageCondition.REQUIRES_POSITIVE_CASILLA and page.condition_casilla_id is not None:
-        return _positive_casilla_page_applies(str(page.condition_casilla_id), context)
+        return _positive_casilla_page_applies(page.condition_casilla_id, context)
     return _page_has_value_or_records(sections)
 
 
@@ -92,13 +92,13 @@ def _grounded_rate(field: ModeloFormField, context: WorkFormContext) -> ModeloFo
     """
     if not isinstance(field.address, ModeloFormCasillaAddressV1):
         return None
-    casilla = context.casillas.get(str(field.address.casilla_id))
+    casilla = context.casillas.get(field.address.casilla_id)
     if casilla is None:
         return None
     binding_ids = tuple(item for item in (casilla.binding, *casilla.alternate_bindings) if item is not None)
     rates: set[Decimal] = set()
     for binding_id in binding_ids:
-        binding = context.bindings.get(str(binding_id))
+        binding = context.bindings.get(binding_id)
         provider = None if binding is None else binding.provider
         if not isinstance(provider, LedgerIvaProvider) or provider.applied_rates is None:
             return None

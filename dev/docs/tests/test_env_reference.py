@@ -116,5 +116,7 @@ def test_every_settings_field_carries_a_description() -> None:
     from cadrumo.core.config import Settings
 
     assert Settings.model_fields, "Settings declares no fields; this gate would pass over an empty model"
-    missing = sorted(name for name, field in Settings.model_fields.items() if not field.description)
+    missing = sorted(
+        name for name, field in Settings.model_fields.items() if field.description is None or not field.description
+    )
     assert not missing, f"Settings fields without descriptions: {missing}"

@@ -69,7 +69,7 @@ class ProviderSettingsAgentCredentialSource(AgentCredentialSource):
         self._store = store
         self._resolver = resolver
         self._agent_lanes = tuple(
-            (entry.id, str(entry.provider))
+            (entry.id, entry.provider)
             for entry in catalog.providers
             if entry.auth_kind in _FRAMED_KINDS and entry.serves(ProviderConsumer.ASSISTANT)
         )

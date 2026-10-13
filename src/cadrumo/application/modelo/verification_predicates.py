@@ -727,7 +727,7 @@ def _advisory_predicate_finding(predicate: VerificationPredicateDefinition) -> M
     Each constructor carries its ``message_locale_key`` as a literal, so the
     two suffered-retencion families dispatch to their own call sites.
     """
-    legal_refs = tuple(str(r) for r in predicate.legal_refs)
+    legal_refs = tuple(predicate.legal_refs)
     message_facts = {"predicate_id": predicate.predicate_id}
     casilla_id = _unique_predicate_casilla_id(predicate)
     if predicate.predicate_id.endswith(_TRABAJO_RETENCION_ADVISORY_SUFFIX):
@@ -769,7 +769,7 @@ def _blocking_predicate_finding(
     A categorical requirement names the missing field with a human message;
     other operators retain their predicate identity.
     """
-    legal_refs = tuple(str(r) for r in predicate.legal_refs)
+    legal_refs = tuple(predicate.legal_refs)
     parsed = parse_verification_predicate_expression(predicate.expression)
     if parsed is not None and parsed.operator in (
         VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_NONZERO,
@@ -800,7 +800,7 @@ def _blocking_predicate_finding(
                 message_locale_key="application.modelo.findings.printed_total_mismatch",
                 message_facts={
                     "predicate_id": predicate.predicate_id,
-                    "box": str(total_id),
+                    "box": total_id,
                     "printed_sum": addend_sum,
                 },
                 legal_refs=legal_refs,

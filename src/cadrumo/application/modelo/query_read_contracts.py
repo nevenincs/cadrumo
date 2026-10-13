@@ -401,7 +401,7 @@ class ModeloReadinessProjection(BaseModel):
         authority_generation: ContentDigest,
     ) -> Self:
         """Copy all readiness axes from the canonical report."""
-        if str(report.profile_id) != str(profile_id):
+        if report.profile_id != str(profile_id):
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         return cls(
             authority_generation=authority_generation,

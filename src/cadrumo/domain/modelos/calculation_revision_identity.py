@@ -313,7 +313,7 @@ def _source_issues_revision_id_payload(
                 issue.source_ref or "",
                 issue.resolver_id or "",
                 issue.message,
-                *(() if issue.casilla_id is None else (str(issue.casilla_id),)),
+                *(() if issue.casilla_id is None else (issue.casilla_id,)),
             )
             for issue in source_issues
         )

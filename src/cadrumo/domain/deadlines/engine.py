@@ -197,7 +197,7 @@ def _project_deadline_windows(
                         context={
                             "registry_stage": "deadline_window_projection",
                             "modelo": modelo_id,
-                            "revision": str(metadata.id),
+                            "revision": metadata.id,
                             "filing_year": year,
                         },
                     )

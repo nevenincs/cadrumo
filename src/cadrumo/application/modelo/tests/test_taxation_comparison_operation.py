@@ -478,13 +478,11 @@ def test_work_unit_comparison_refuses_unproven_manual_and_relation_inputs() -> N
 
 def test_projection_rejects_non_finite_amount_and_unmodeled_scope() -> None:
     with pytest.raises(ValidationError):
-        ModeloTaxationComparisonProjection(
-            **(
-                ModeloTaxationComparisonProjection.from_comparison(
-                    _comparison(), profile_id=_PROFILE, work_unit_id=_unit().work_unit_id
-                ).model_dump()
-                | {"delta_resultado": "NaN"}
-            )
+        ModeloTaxationComparisonProjection.model_validate(
+            ModeloTaxationComparisonProjection.from_comparison(
+                _comparison(), profile_id=_PROFILE, work_unit_id=_unit().work_unit_id
+            ).model_dump()
+            | {"delta_resultado": "NaN"}
         )
 
     unsupported = _comparison().model_copy(update={"modelo": "303"})

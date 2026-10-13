@@ -279,7 +279,7 @@ class WorkflowEngine:
             if len(stripped) != 16 or any(c not in "0123456789abcdef" for c in stripped):
                 raise WorkflowInputMismatchError(
                     translated_message="application.modelo.errors.workflow_input_mismatch",
-                    context={"field": "resumed_from", "value": str(resumed_from), "run_id_shape_valid": False},
+                    context={"field": "resumed_from", "value": resumed_from, "run_id_shape_valid": False},
                 )
             resumed_from = stripped
         return await self._drive(

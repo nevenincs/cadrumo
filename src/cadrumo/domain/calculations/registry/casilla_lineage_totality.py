@@ -131,7 +131,7 @@ def unresolved_successor_rows(modelo: ModeloDefinition) -> tuple[CasillaRowKey, 
                 continue
             if casilla.continuidad_id is not None and casilla.continuidad_id in carried:
                 continue
-            unresolved.append(CasillaRowKey(modelo=modelo.id, revision=str(revision.id), casilla=str(casilla.id)))
+            unresolved.append(CasillaRowKey(modelo=modelo.id, revision=revision.id, casilla=casilla.id))
     return tuple(unresolved)
 
 

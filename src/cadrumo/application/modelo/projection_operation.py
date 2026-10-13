@@ -177,11 +177,11 @@ class ModeloProjectOperationProjection(BaseModel):
             ),
             casilla_observations=tuple(
                 ProjectCasillaObservationProjection(
-                    casilla_id=str(row.casilla_id),
+                    casilla_id=row.casilla_id,
                     value=_decimal(row.value),
-                    formula_id=str(row.formula_id) if row.formula_id is not None else None,
-                    legal_refs=tuple(str(ref) for ref in row.legal_refs),
-                    source_refs=tuple(str(ref) for ref in row.source_refs),
+                    formula_id=row.formula_id,
+                    legal_refs=tuple(row.legal_refs),
+                    source_refs=tuple(row.source_refs),
                 )
                 for row in result.casilla_observations
             ),
@@ -267,8 +267,8 @@ class ModeloCompareOperationProjection(BaseModel):
             modelo=result.modelo,
             year_a=result.year_a,
             year_b=result.year_b,
-            year_a_revision_id=str(result.year_a_revision_id),
-            year_b_revision_id=str(result.year_b_revision_id),
+            year_a_revision_id=result.year_a_revision_id,
+            year_b_revision_id=result.year_b_revision_id,
             year_a_is_draft=result.year_a_is_draft,
             year_b_is_draft=result.year_b_is_draft,
             sections=tuple(
@@ -293,16 +293,16 @@ def _compare_row(row: object) -> CompareDeltaRowProjection:
     if not isinstance(row, ModeloCompareDeltaRow):
         raise TypeError("canonical comparison row has changed type")
     return CompareDeltaRowProjection(
-        casilla_id=str(row.casilla_id),
+        casilla_id=row.casilla_id,
         label=row.label,
         section=row.section,
         year_a_value=_decimal(row.year_a_value),
         year_b_value=_decimal(row.year_b_value),
         delta=_decimal(row.delta),
         pct_change=_decimal(row.pct_change) if row.pct_change is not None else None,
-        formula_id=str(row.formula_id) if row.formula_id is not None else None,
-        legal_refs=tuple(str(ref) for ref in row.legal_refs),
-        source_refs=tuple(str(ref) for ref in row.source_refs),
+        formula_id=row.formula_id,
+        legal_refs=tuple(row.legal_refs),
+        source_refs=tuple(row.source_refs),
     )
 
 

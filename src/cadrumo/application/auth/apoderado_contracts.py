@@ -100,7 +100,7 @@ class ApoderadoStatusSnapshot(BaseModel):
     def from_status(cls, status: ApoderadoStatus) -> ApoderadoStatusSnapshot:
         """Copy canonical status without a coercive bucket ID validator."""
         return cls(
-            bucket_id=UUID(str(status.bucket_id)),
+            bucket_id=UUID(status.bucket_id),
             configured=status.configured,
             represented_nif=status.represented_nif,
             granted_scopes=status.granted_scopes,
@@ -124,7 +124,7 @@ class ApoderadoConfigurationSnapshot(BaseModel):
     def from_configuration(cls, configuration: ApoderadoConfiguration) -> ApoderadoConfigurationSnapshot:
         """Copy the full canonical encrypted record into its public result."""
         return cls(
-            bucket_id=UUID(str(configuration.bucket_id)),
+            bucket_id=UUID(configuration.bucket_id),
             represented_nif=configuration.represented_nif,
             granted_scopes=configuration.granted_scopes,
             catalogue_version=configuration.catalogue_version,

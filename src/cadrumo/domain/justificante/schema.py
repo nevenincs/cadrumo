@@ -134,7 +134,7 @@ class Justificante(BaseModel):
         """
         return (
             self.modelo.strip() == modelo.strip()
-            and str(self.ejercicio or "").strip() == str(filing_year)
+            and (self.ejercicio or "").strip() == str(filing_year)
             and self.period == period
             and (tax_id is None or same_tax_identifier(self.tax_id, tax_id))
         )

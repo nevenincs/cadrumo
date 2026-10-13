@@ -107,7 +107,7 @@ def row_field_template_records_by_casilla(revision: ModeloRevision) -> dict[Casi
     for layout in revision.export_layouts:
         for record in layout.records:
             for casilla_id in record.row_field_casilla_ids.values():
-                records.setdefault(casilla_id, set()).add(str(record.id))
+                records.setdefault(casilla_id, set()).add(record.id)
     return {casilla_id: tuple(sorted(record_ids)) for casilla_id, record_ids in sorted(records.items())}
 
 

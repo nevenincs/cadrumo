@@ -394,7 +394,7 @@ class LedgerIvaAggregationSourceResolver:
             )
             screened_bindings = invoice_ledger_screen_binding_ids(
                 context.revision,
-                modelo=str(context.modelo),
+                modelo=context.modelo,
             )
             silence_report = raise_if_invoice_iva_would_be_silent(
                 context=context,
@@ -566,7 +566,7 @@ class LedgerIvaAggregationSourceResolver:
 def _present_unroutable_iva_categories(
     context: CalculationSourceContext, observations: Iterable[IvaLedgerObservation]
 ) -> tuple[IvaCategory, ...]:
-    if str(context.modelo) != Modelo("303").value:
+    if context.modelo != Modelo("303").value:
         return ()
     present_categories = {observation.category for observation in observations}
     return tuple(
@@ -616,7 +616,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
             activity_category_matcher = _activity_category_matcher(operation)
             employment_category_matcher = _employment_category_matcher(operation)
             try:
-                if str(context.modelo) == Modelo("100").value:
+                if context.modelo == Modelo("100").value:
                     aggregation = aggregate_renta_m100_income_ledger_from_repositories(
                         bucket_id=context.bucket_id,
                         period=aggregation_period,
@@ -626,7 +626,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
                         employment_category_matcher=employment_category_matcher,
                         ports=self._ports,
                     )
-                elif str(context.modelo) == Modelo("131").value:
+                elif context.modelo == Modelo("131").value:
                     agrarian_activity_codes = frozenset(
                         TipoActividad(code)
                         for code in tipo_actividad_code_set(
@@ -957,7 +957,7 @@ def _m130_retenciones_backend_inputs(
 ) -> dict[CasillaId, Decimal]:
     """Redirect the selected registry binding route to its declared endpoint."""
     route = resolve_m130_retenciones_route(authority=context.operation)
-    if str(context.modelo) != route.modelo_id:
+    if context.modelo != route.modelo_id:
         return {}
     value = binding_values.get(route.binding_id)
     if value is None:
@@ -1046,7 +1046,7 @@ def _impatriado_declaration_values(
         or target_value is None
         or jurisdiction_value is None
         or category_value is None
-        or modelo != str(context.modelo)
+        or modelo != context.modelo
         or source_kind != _IMPATRIADO_REGISTRY_SOURCE_KIND
     ):
         return None
@@ -1367,7 +1367,7 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                 period=aggregation_period,
                 modelo=context.modelo,
                 target_casilla_id=target_casilla_id,
-                accept_activity_marker=str(context.modelo) == Modelo("130").value,
+                accept_activity_marker=context.modelo == Modelo("130").value,
                 transaction_repository=self._transaction_repository,
                 profile_record=context.profile.record if context.profile is not None else None,
                 prorrata_register_repository=self._prorrata_register_repository,

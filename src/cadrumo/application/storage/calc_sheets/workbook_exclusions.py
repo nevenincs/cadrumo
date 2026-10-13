@@ -39,7 +39,7 @@ def workbook_transport_controls(revision: ModeloRevision) -> frozenset[str]:
     The ``revision`` parameter uses :class:`ModeloRevision`, which declares the form and its value contracts.
     """
     excluded = frozenset(
-        str(p.casilla_id)
+        p.casilla_id
         for layout in revision.form_layouts
         for p in layout.placements
         if p.workbook_exclusion == "transport_control"
@@ -58,7 +58,7 @@ def workbook_transport_controls(revision: ModeloRevision) -> frozenset[str]:
             return any(references(v) for v in cast(list[object] | tuple[object, ...], value))
         return False
 
-    casillas = {str(c.id): c for c in revision.casillas}
+    casillas = {c.id: c for c in revision.casillas}
     if not excluded <= casillas.keys():
         raise CalcSheetsEngineError("workbook transport exclusion names an unknown casilla")
     for identifier in excluded:

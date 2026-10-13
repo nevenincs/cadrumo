@@ -48,7 +48,7 @@ class LedgerRuleRowProjection(BaseModel):
     def from_rule(cls, rule: LedgerClassificationRule) -> LedgerRuleRowProjection:
         """Copy every canonical persisted field without changing its meaning."""
         return cls(
-            rule_id=str(rule.rule_id),
+            rule_id=rule.rule_id,
             description_pattern=rule.description_pattern,
             classification=rule.classification,
             category_id=rule.category_id,

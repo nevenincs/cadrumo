@@ -128,7 +128,7 @@ def amortization_labelled_expense_categories(*, effective_date: date) -> frozens
     return frozenset(
         category.value
         for category, casilla in renta_first_slice_expense_routing(effective_date=effective_date).items()
-        if str(casilla) in M100_AMORTIZATION_CASILLA_IDS
+        if casilla in M100_AMORTIZATION_CASILLA_IDS
     )
 
 

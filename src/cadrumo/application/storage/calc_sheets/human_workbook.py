@@ -88,7 +88,7 @@ def human_workbook[M: (SheetExportMetadata, SheetReviewMetadata)](
     return _project_human_workbook(
         plan,
         revision=snapshot.revision,
-        modelo_id=str(snapshot.modelo.id),
+        modelo_id=snapshot.modelo.id,
         frame=snapshot.filing_period or plan.metadata.period,
         legal_catalogue=snapshot.legal,
         source_catalogue=snapshot.sources,
@@ -111,7 +111,7 @@ def human_template_preview(
     return _project_human_workbook(
         plan,
         revision=source.revision,
-        modelo_id=str(source.modelo_id),
+        modelo_id=source.modelo_id,
         frame=source.preview_frame,
         legal_catalogue=source.legal,
         source_catalogue=source.sources,
@@ -153,7 +153,7 @@ def _project_human_workbook[M: (SheetExportMetadata, SheetReviewMetadata, SheetT
                             labels.setdefault(owner.binding, heading)
     row_bindings = {column.binding for row_set in plan.row_sets for column in row_set.columns}
     for binding in revision.bindings:
-        declared_label = lookup_translation(binding_locale_key(str(modelo_id), binding.id, "label"), locale="es")
+        declared_label = lookup_translation(binding_locale_key(modelo_id, binding.id, "label"), locale="es")
         if declared_label is not None and declared_label:
             labels[binding.id] = declared_label
             continue
@@ -240,7 +240,7 @@ def _project_human_workbook[M: (SheetExportMetadata, SheetReviewMetadata, SheetT
             source = source_catalogue.get(key)
             if source is None:
                 raise CalcSheetsEngineError("human workbook official source is missing")
-            parts.append(str(source.source_url))
+            parts.append(source.source_url)
         return "\n".join(dict.fromkeys(parts))
 
     rows = {

@@ -298,9 +298,9 @@ def _resolved_binding_ids_for_required_binding_gate(
 
 def _iva_regime_from_path_values(profile_values: Mapping[str, str]) -> IVARegime | None:
     value = profile_values.get("iva.regime")
-    if value is None or not str(value).strip():
+    if value is None or not value.strip():
         return None
-    return require_iva_regime(str(value).strip())
+    return require_iva_regime(value.strip())
 
 
 _LEDGER_PREFLIGHT_BINDING_SOURCES = frozenset(

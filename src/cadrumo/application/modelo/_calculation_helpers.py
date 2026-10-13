@@ -210,7 +210,7 @@ def build_typed_observations(
     if unknown:
         raise CasillaProvenanceMissingError(
             translated_message="errors.error.error_modelo_casilla_provenance_missing",
-            context={"casilla_id": str(unknown[0]), "origin": "engine_result"},
+            context={"casilla_id": unknown[0], "origin": "engine_result"},
         )
     return engine_result.observations
 
@@ -276,7 +276,7 @@ def casilla_observation_for(
     if registry_casilla is None:
         raise CasillaProvenanceMissingError(
             translated_message="errors.error.error_modelo_casilla_provenance_missing",
-            context={"casilla_id": str(casilla_id), "origin": "engine_result"},
+            context={"casilla_id": casilla_id, "origin": "engine_result"},
         )
     return CasillaObservation(
         casilla_id=casilla_id,
@@ -324,7 +324,7 @@ def amendment_observations(
         if registry_casilla is None:
             raise CasillaProvenanceMissingError(
                 translated_message="errors.error.error_modelo_casilla_provenance_missing",
-                context={"casilla_id": str(casilla_id), "origin": "amendment_corrected_values"},
+                context={"casilla_id": casilla_id, "origin": "amendment_corrected_values"},
             )
         observations.append(
             CasillaObservation(

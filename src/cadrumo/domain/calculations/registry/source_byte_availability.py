@@ -47,7 +47,7 @@ def source_bytes_are_embedded(source: SourceReference) -> bool:
 
 def embedded_source_ids(sources: Mapping[str, SourceReference]) -> frozenset[str]:
     """Return the identifiers in ``sources`` whose bytes a generation embeds."""
-    return frozenset(str(source_id) for source_id, source in sources.items() if source_bytes_are_embedded(source))
+    return frozenset(source_id for source_id, source in sources.items() if source_bytes_are_embedded(source))
 
 
 def layout_embedded_source_ids(
@@ -70,13 +70,13 @@ def layout_embedded_source_ids(
     selected: set[str] = set()
     for layout in layouts:
         for source_id in layout.source_refs:
-            source = sources.get(str(source_id))
+            source = sources.get(source_id)
             if source is None:
                 raise RegistryValidationError(
                     f"export layout {layout.id!r} cites source {source_id!r} absent from the snapshot catalogue",
                 )
             if source_bytes_are_embedded(source):
-                selected.add(str(source_id))
+                selected.add(source_id)
         if layout.format is ExportLayoutFormat.XML_DICTIONARY:
             _require_embedded_dictionary(layout, sources=sources)
     return frozenset(selected)
@@ -88,7 +88,7 @@ def _require_embedded_dictionary(
     sources: Mapping[str, SourceReference],
 ) -> None:
     dictionary_ref = layout.dictionary_source_ref
-    dictionary = None if dictionary_ref is None else sources.get(str(dictionary_ref))
+    dictionary = None if dictionary_ref is None else sources.get(dictionary_ref)
     if dictionary is None:
         raise RegistryValidationError(
             f"XML export layout {layout.id!r} has unresolved dictionary source {dictionary_ref!r}",

@@ -69,9 +69,9 @@ def casilla_origin(row: ModeloWorkReviewCasilla, context: WorkFormContext, *, re
 
 
 def _source_override_origin(row: ModeloWorkReviewCasilla, context: WorkFormContext) -> ModeloFormOrigin | None:
-    entered_bound_casilla = context.entered is not None and str(row.casilla_id) in context.entered
+    entered_bound_casilla = context.entered is not None and row.casilla_id in context.entered
     overridden_binding = context.overridden is not None and any(
-        str(origin.binding_id) in context.overridden for origin in row.concrete_bindings
+        origin.binding_id in context.overridden for origin in row.concrete_bindings
     )
     if row.declared_input_kind is InputKind.BOUND and (overridden_binding or entered_bound_casilla):
         return ModeloFormOrigin.OVERRIDES_SOURCE
@@ -106,7 +106,7 @@ def _declared_origin(row: ModeloWorkReviewCasilla, context: WorkFormContext) -> 
 def _operator_entry_origin(
     row: ModeloWorkReviewCasilla, context: WorkFormContext, *, required: bool
 ) -> ModeloFormOrigin:
-    casilla_id = str(row.casilla_id)
+    casilla_id = row.casilla_id
     if casilla_id in context.cleared:
         return ModeloFormOrigin.CLEARED
     if context.entered is not None and casilla_id in context.entered:
@@ -153,7 +153,7 @@ def casilla_editability(
         return _bound_editability(row, context)
     if context.surface is None:
         return ModeloFormEditability.NO_ADMISSION, None
-    entry = context.surface.get(("casilla", str(row.casilla_id)))
+    entry = context.surface.get(("casilla", row.casilla_id))
     if isinstance(entry, ModeloEditWritableScalarSurfaceEntryV1):
         return ModeloFormEditability.EDITABLE_VALUE, None
     if isinstance(entry, ModeloEditNonWritableScalarSurfaceEntryV1):
@@ -179,7 +179,7 @@ def _bound_editability(
         return fixed, None
     if context.surface is None:
         return ModeloFormEditability.NO_ADMISSION, None
-    entry = context.surface.get(("binding", str(primary.binding_id)))
+    entry = context.surface.get(("binding", primary.binding_id))
     if isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1):
         editable = (
             ModeloFormEditability.OVERRIDABLE_SOURCE

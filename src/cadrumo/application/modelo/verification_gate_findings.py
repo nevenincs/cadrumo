@@ -224,7 +224,7 @@ def missing_evidence_findings(
             # binding would print "%{binding_id}" to the operator. The marker
             # also says which case this is: "there is no binding" reads
             # differently from a binding whose id is blank.
-            "binding_id": str(diagnostic.binding_id) if diagnostic.binding_id is not None else ABSENT_FACT,
+            "binding_id": diagnostic.binding_id if diagnostic.binding_id is not None else ABSENT_FACT,
         }
         if diagnostic.source_ref is not None:
             message_facts["source_ref"] = diagnostic.source_ref
@@ -416,10 +416,10 @@ def collect_verification_gate_findings(
                 evidence_values={
                     "diagnostic_reason_code": str(diagnostic.reason),
                     "source_kind_code": diagnostic.source_kind,
-                    "transaction_id": str(diagnostic.binding_id or ""),
-                    "binding_id": str(diagnostic.binding_id or ""),
-                    "casilla_id": str(diagnostic.casilla_id or ""),
-                    "source_ref": str(diagnostic.source_ref or ""),
+                    "transaction_id": diagnostic.binding_id or "",
+                    "binding_id": diagnostic.binding_id or "",
+                    "casilla_id": diagnostic.casilla_id or "",
+                    "source_ref": diagnostic.source_ref or "",
                 },
                 provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
             ),
@@ -529,6 +529,6 @@ def iva_wallet_error_verification_finding(
             "condition_id": error.precondition_failure.verdict.failed_condition_id,
             "scenario_id": error.precondition_failure.scenario_id,
         },
-        legal_refs=tuple(str(ref) for ref in casilla_def.legal_refs),
-        source_refs=tuple(str(ref) for ref in casilla_def.source_refs),
+        legal_refs=tuple(casilla_def.legal_refs),
+        source_refs=tuple(casilla_def.source_refs),
     )

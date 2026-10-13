@@ -30,8 +30,8 @@ def require_modelo_draft_coordinates_current(
                 "modelo": draft.modelo,
                 "filing_year": str(draft.period.filing_year),
                 "period": draft.period.registry_token,
-                "stored_revision": str(draft.snapshot_ref.revision_id),
-                "law_revision": str(outcome.selected_revision_id or "unresolvable"),
+                "stored_revision": draft.snapshot_ref.revision_id,
+                "law_revision": outcome.selected_revision_id or "unresolvable",
             },
         )
     return draft

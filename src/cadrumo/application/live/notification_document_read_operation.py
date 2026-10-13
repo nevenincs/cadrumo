@@ -149,9 +149,9 @@ class NotificationDocumentViewOperationReport(BaseModel):
 
     @model_validator(mode="after")
     def _record_matches_scope(self) -> NotificationDocumentViewOperationReport:
-        if str(self.record.bucket_id) != canonical_profile_bucket_id(self.profile_id):
+        if self.record.bucket_id != canonical_profile_bucket_id(self.profile_id):
             raise ValueError("notification document belongs to another profile")
-        if str(self.record.certificado_id) != self.certificado_id:
+        if self.record.certificado_id != self.certificado_id:
             raise ValueError("notification document differs from the selected certificado")
         if self.record.sancion is not None and (
             self.record.sancion.certificado_id != self.record.certificado_id
@@ -172,7 +172,7 @@ class NotificationDocumentHistoryOperationReport(BaseModel):
     @model_validator(mode="after")
     def _every_record_matches_scope(self) -> NotificationDocumentHistoryOperationReport:
         bucket_id = canonical_profile_bucket_id(self.profile_id)
-        if any(str(record.bucket_id) != bucket_id for record in self.records):
+        if any(record.bucket_id != bucket_id for record in self.records):
             raise ValueError("notification document history contains another profile's record")
         if any(
             record.sancion is not None
@@ -191,7 +191,7 @@ NotificationDocumentServiceFactory = Callable[[], NotificationDocumentService]
 
 def _require_document_record(record: NotificationDocumentRecord, *, bucket_id: str) -> None:
     """Refuse a repository record outside the exact service bucket."""
-    if str(record.bucket_id) != bucket_id:
+    if record.bucket_id != bucket_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
 
 
@@ -236,7 +236,7 @@ class NotificationDocumentViewExecutor:
                 certificado_id=payload.certificado_id,
             )
             _require_document_record(record, bucket_id=bucket_id)
-            if str(record.certificado_id) != payload.certificado_id:
+            if record.certificado_id != payload.certificado_id:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
             return NotificationDocumentViewOperationReport(
                 profile_id=payload.profile_id,

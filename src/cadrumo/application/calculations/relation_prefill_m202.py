@@ -41,7 +41,7 @@ def _registry_relation_prefill_binding_ids(
         )
     except (RegistrySnapshotError, RegistryValidationError):
         return frozenset[BindingId]()
-    if str(selected_revision.id) != str(revision.id):
+    if selected_revision.id != revision.id:
         return frozenset[BindingId]()
     return frozenset(
         binding.id

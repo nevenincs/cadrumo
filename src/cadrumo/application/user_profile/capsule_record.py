@@ -203,7 +203,7 @@ class ProfileRecordSession:
         Core types:
         :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
         """
-        if UUID(str(record.profile_id)) != self.profile_id:
+        if UUID(record.profile_id) != self.profile_id:
             raise ProfileRecordIntegrityError("initial profile record UUID differs from its custody session")
         if record.record_revision != 1 or record.previous_record_digest is not None:
             raise ProfileRecordIntegrityError(
@@ -216,7 +216,7 @@ class ProfileRecordSession:
         Core types:
         :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
         """
-        if UUID(str(replacement.profile_id)) != self.profile_id:
+        if UUID(replacement.profile_id) != self.profile_id:
             raise ProfileRecordIntegrityError("replacement profile record UUID differs from its custody session")
         if (
             replacement.record_revision != current.record_revision + 1
@@ -262,7 +262,7 @@ def _assert_record_profile_binding(
     record: UserProfileRecord,
 ) -> None:
     """Require the decrypted record UUID to match its live session."""
-    if UUID(str(record.profile_id)) != profile_id:
+    if UUID(record.profile_id) != profile_id:
         raise ProfileRecordIntegrityError("profile record UUID differs from the unlocked custody session")
 
 
@@ -417,7 +417,7 @@ class ProfileRecordStore:
 
             replacement = create_user_profile_record(
                 context=self.session.create_context(),
-                profile_id=str(current.record.profile_id),
+                profile_id=current.record.profile_id,
                 facts=kept_facts,
                 setup_state=current.record.setup_state,
                 record_revision=current.record.record_revision + 1,
@@ -690,7 +690,7 @@ def _replacement_record(
 
     return create_user_profile_record(
         context=context,
-        profile_id=str(current.profile_id),
+        profile_id=current.profile_id,
         facts=current.facts,
         setup_state=setup_state,
         record_revision=record_revision,

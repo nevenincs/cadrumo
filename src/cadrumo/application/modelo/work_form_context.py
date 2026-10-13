@@ -41,28 +41,28 @@ _FILED_STATES: Final[frozenset[CalculationRevisionState]] = frozenset(
 def _review_indexes(
     review: ModeloWorkReview,
 ) -> tuple[dict[str, ModeloWorkReviewCasilla], dict[str, set[str]]]:
-    rows = {str(row.casilla_id): row for row in review.casillas}
+    rows = {row.casilla_id: row for row in review.casillas}
     fed_casillas: dict[str, set[str]] = {}
     for row in review.casillas:
         refs = (
-            *(str(origin.binding_id) for origin in row.concrete_bindings),
-            *(() if row.concrete_formula is None else (str(ref) for ref in row.concrete_formula.operand_refs)),
+            *(origin.binding_id for origin in row.concrete_bindings),
+            *(() if row.concrete_formula is None else row.concrete_formula.operand_refs),
         )
         for ref in refs:
-            fed_casillas.setdefault(ref, set()).add(str(row.casilla_id))
+            fed_casillas.setdefault(ref, set()).add(row.casilla_id)
     return rows, fed_casillas
 
 
 def _registry_indexes(
     snapshot: RegistrySnapshot,
 ) -> tuple[dict[str, CasillaDefinition], dict[str, BindingDefinition], dict[str, str]]:
-    casillas = {str(item.id): item for item in snapshot.revision.casillas}
-    bindings = {str(item.id): item for item in snapshot.revision.bindings}
+    casillas = {item.id: item for item in snapshot.revision.casillas}
+    bindings = {item.id: item for item in snapshot.revision.bindings}
     casilla_by_binding: dict[str, str] = {}
     for casilla in snapshot.revision.casillas:
         for binding_id in (casilla.binding, *casilla.alternate_bindings):
             if binding_id is not None:
-                casilla_by_binding.setdefault(str(binding_id), str(casilla.id))
+                casilla_by_binding.setdefault(binding_id, casilla.id)
     return casillas, bindings, casilla_by_binding
 
 
@@ -77,7 +77,7 @@ def _surface_index(
 def _aeat_data_binding_ids(revision: CalculationRevision | None) -> frozenset[str]:
     if revision is None or caller_context_of(revision).borrador_snapshot_id is None:
         return frozenset[str]()
-    return frozenset(str(item) for item in revision.bindings_sourced_from_borrador)
+    return frozenset(revision.bindings_sourced_from_borrador)
 
 
 def _export_position_index(
@@ -88,8 +88,8 @@ def _export_position_index(
         for record, field in layout_fields_in_emission_order(export_layout):
             target = export_field_casilla_id(record, field, bindings=bindings)
             if target is not None and field.offset is not None:
-                for coordinate in (str(record.id), record.record_type):
-                    casillas_by_export_position.setdefault((coordinate, field.offset), set()).add(str(target))
+                for coordinate in (record.id, record.record_type):
+                    casillas_by_export_position.setdefault((coordinate, field.offset), set()).add(target)
     return casillas_by_export_position
 
 
@@ -99,7 +99,7 @@ def _export_decimal_index(snapshot: RegistrySnapshot, bindings: dict[str, Bindin
         for record, field in layout_fields_in_emission_order(layout):
             target = export_field_casilla_id(record, field, bindings=bindings)
             if target is not None and field.decimals is not None:
-                decimals.setdefault(str(target), field.decimals)
+                decimals.setdefault(target, field.decimals)
     return decimals
 
 
@@ -116,7 +116,7 @@ class WorkFormContext:
     def box_locators(self) -> tuple[re.Pattern[str], ...]:
         """The modelo's box-locator help sentences, rendered once per form."""
         if self._box_locators is None:
-            self._box_locators = render_box_locator_patterns(str(self.snapshot.modelo.id))
+            self._box_locators = render_box_locator_patterns(self.snapshot.modelo.id)
         return self._box_locators
 
     def __init__(
@@ -141,24 +141,22 @@ class WorkFormContext:
         self.snapshot = snapshot
         self._export_decimals: dict[str, int] | None = None
         self._box_locators: tuple[re.Pattern[str], ...] | None = None
-        self.required: frozenset[str] = frozenset(str(item) for item in filer_required_casilla_ids(snapshot.revision))
+        self.required: frozenset[str] = filer_required_casilla_ids(snapshot.revision)
         self.filed = review.lifecycle_state in _FILED_STATES
         self.surface = _surface_index(permitted_surface, filed=self.filed)
         self.aeat_data_bindings = _aeat_data_binding_ids(revision)
         self.entered = entered_casilla_ids
         self.overridden = overridden_binding_ids
-        self.cleared: frozenset[str] = frozenset(
-            () if revision is None else (str(item) for item in revision.cleared_casilla_ids)
-        )
+        self.cleared: frozenset[str] = frozenset(() if revision is None else revision.cleared_casilla_ids)
         self.placed_boxes: dict[str, str] = {}
         self.casillas_by_export_position = _export_position_index(snapshot, self.bindings)
 
 
 def _surface_key(entry: ModeloEditPermittedSurfaceEntryV1) -> tuple[str, str]:
     if isinstance(entry, (ModeloEditWritableScalarSurfaceEntryV1, ModeloEditNonWritableScalarSurfaceEntryV1)):
-        return ("casilla", str(entry.casilla_id))
+        return ("casilla", entry.casilla_id)
     if isinstance(
         entry, (ModeloEditWritableBindingOverrideSurfaceEntryV1, ModeloEditNonWritableBindingOverrideSurfaceEntryV1)
     ):
-        return ("binding", str(entry.binding_id))
+        return ("binding", entry.binding_id)
     return (entry.kind, "")

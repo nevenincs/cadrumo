@@ -114,7 +114,7 @@ def derive_casilla_export_refs(
             one casilla. Two layouts each claiming a casilla is a conflict to
             resolve in the declarations, never a union to take silently.
     """
-    bindings_by_id = {str(binding.id): binding for binding in bindings}
+    bindings_by_id = {binding.id: binding for binding in bindings}
     refs: dict[CasillaId, list[ExportFieldId]] = {}
     owner: dict[CasillaId, str] = {}
     for layout in export_layouts:
@@ -122,10 +122,10 @@ def derive_casilla_export_refs(
             casilla_id = export_field_casilla_id(record, field, bindings=bindings_by_id)
             if casilla_id is None:
                 continue
-            claimed = owner.setdefault(casilla_id, str(layout.id))
-            if claimed != str(layout.id):
+            claimed = owner.setdefault(casilla_id, layout.id)
+            if claimed != layout.id:
                 raise RegistryValidationError(
-                    f"export layouts {claimed!r} and {str(layout.id)!r} both address casilla {casilla_id!r}; "
+                    f"export layouts {claimed!r} and {layout.id!r} both address casilla {casilla_id!r}; "
                     "a casilla's export references are derived from one layout",
                 )
             refs.setdefault(casilla_id, []).append(field.id)

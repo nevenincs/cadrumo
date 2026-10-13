@@ -1329,8 +1329,8 @@ def collect_row_sets(revision: ModeloRevision) -> tuple[SheetRowSet, ...]:
         if _is_public_row_mirror(binding, selector, public_row_bindings_by_id):
             continue
         cohorts.setdefault(selector.grouping, []).append((binding, selector))
-        cohort_legal.setdefault(selector.grouping, set()).update(str(ref) for ref in binding.legal_refs)
-        cohort_source.setdefault(selector.grouping, set()).update(str(ref) for ref in binding.source_refs)
+        cohort_legal.setdefault(selector.grouping, set()).update(binding.legal_refs)
+        cohort_source.setdefault(selector.grouping, set()).update(binding.source_refs)
 
     row_sets: list[SheetRowSet] = []
     next_row = 1
@@ -1343,7 +1343,7 @@ def collect_row_sets(revision: ModeloRevision) -> tuple[SheetRowSet, ...]:
                 binding=binding.id,
                 header_address=SheetCellAddress.at(TabName.DETALLE, header_row, column_index),
                 header_label=_row_set_column_label(binding, selector),
-                legal_refs=tuple(sorted(str(ref) for ref in binding.legal_refs)),
+                legal_refs=tuple(sorted(binding.legal_refs)),
             )
             for column_index, (binding, selector) in enumerate(members, start=1)
         )
@@ -1367,7 +1367,7 @@ def collect_row_sets(revision: ModeloRevision) -> tuple[SheetRowSet, ...]:
 
 def _collectible_row_bindings_by_id(revision: ModeloRevision) -> dict[str, BindingDefinition]:
     return {
-        str(binding.id): binding
+        binding.id: binding
         for binding in revision.bindings
         if binding.source == BindingSourceKind.COLLECTIBLE_INVOICE
         and binding_aggregation_op(binding) == BindingAggregationOp.ROWS
@@ -1381,7 +1381,7 @@ def _is_public_row_mirror(
 ) -> bool:
     if binding.source != BindingSourceKind.PAYABLE_INVOICE:
         return False
-    binding_id = str(binding.id)
+    binding_id = binding.id
     if not binding_id.endswith(_ACQUISITION_MIRROR_BINDING_SUFFIX):
         return False
     public_binding_id = binding_id.removesuffix(_ACQUISITION_MIRROR_BINDING_SUFFIX)

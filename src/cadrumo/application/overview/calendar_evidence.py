@@ -444,7 +444,7 @@ def _aeat_evidence_semantic_key(evidence: OverviewCalendarFilingEvidence) -> tup
         evidence.justificante_verified,
         evidence.aeat_submitted_at.isoformat() if evidence.aeat_submitted_at is not None else "",
         _clean_reference_id(evidence.aeat_reference_id) or "",
-        str(evidence.aeat_snapshot_id or ""),
+        evidence.aeat_snapshot_id or "",
         evidence.aeat_evidence_kind or "",
         _clean_reference_id(evidence.verified_justificante_csv) or "",
         evidence.evidence_source or "",

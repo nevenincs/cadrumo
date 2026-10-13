@@ -151,9 +151,9 @@ def binding_consumers(revision: ModeloRevision) -> Mapping[BindingId, tuple[Bind
         if casilla.input_kind is not InputKind.BOUND:
             continue
         if casilla.binding is not None:
-            record(casilla.binding, BindingConsumerKind.CASILLA_PRIMARY, str(casilla.id))
+            record(casilla.binding, BindingConsumerKind.CASILLA_PRIMARY, casilla.id)
         for alternate in casilla.alternate_bindings:
-            record(alternate, BindingConsumerKind.CASILLA_ALTERNATE, str(casilla.id))
+            record(alternate, BindingConsumerKind.CASILLA_ALTERNATE, casilla.id)
     # Deferred: ``runtime_graph`` and ``binding_selector_utils`` both reach
     # ``schema``, which reaches the provider union, which reaches this module.
     # The cycle is real at import time only; by call time every module is built.
@@ -161,9 +161,9 @@ def binding_consumers(revision: ModeloRevision) -> Mapping[BindingId, tuple[Bind
 
     for formula in revision.formulas:
         for binding_id in expression_binding_refs(formula.expression):
-            record(binding_id, BindingConsumerKind.FORMULA_OPERAND, str(formula.id))
+            record(binding_id, BindingConsumerKind.FORMULA_OPERAND, formula.id)
         for binding_id in expression_date_binding_refs(formula.expression):
-            record(binding_id, BindingConsumerKind.FORMULA_DATE_OPERAND, str(formula.id))
+            record(binding_id, BindingConsumerKind.FORMULA_DATE_OPERAND, formula.id)
     _record_export_consumers(revision, record)
     _record_relation_evidence_consumers(revision, record)
     _record_foreign_asset_row_consumers(revision, record)
@@ -209,7 +209,7 @@ def _record_relation_evidence_consumers(
     from .relations import relation_prefill_bindings_for_period
 
     owners = {
-        binding_id: str(classification.id)
+        binding_id: classification.id
         for classification in revision.dependency_classifications
         for binding_id in classification.binding_refs
     }
@@ -247,7 +247,7 @@ def _record_export_field_consumers(
     for layout in revision.export_layouts:
         for export_record in layout.records:
             if export_record.binding_record is not None:
-                record_names.setdefault(export_record.binding_record, []).append(str(export_record.id))
+                record_names.setdefault(export_record.binding_record, []).append(export_record.id)
             for field in export_record.fields:
                 if field.binding is not None:
                     record(field.binding, BindingConsumerKind.EXPORT_FIELD, f"{export_record.id}.{field.id}")

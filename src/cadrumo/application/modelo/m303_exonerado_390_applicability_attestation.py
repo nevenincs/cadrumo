@@ -205,7 +205,7 @@ def _current_profile(
         bucket_identity = UUID(bucket_id)
     except ValueError as exc:
         raise AttachmentValidationError("Modelo 390 applicability evidence bucket is invalid") from exc
-    if profile is None or str(profile.record.profile_id) != str(bucket_identity):
+    if profile is None or profile.record.profile_id != str(bucket_identity):
         raise AttachmentValidationError("Modelo 390 applicability evidence requires the authenticated current profile")
     return profile
 

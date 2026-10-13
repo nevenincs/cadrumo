@@ -257,8 +257,8 @@ class AutomationScopeProjection(BaseModel):
             periods=None
             if scope.periods is None
             else tuple(
-                AutomationPeriodProjection(filing_year=item.filing_year, code=str(item.code))
-                for item in sorted(scope.periods, key=lambda item: (item.filing_year, str(item.code)))
+                AutomationPeriodProjection(filing_year=item.filing_year, code=item.code)
+                for item in sorted(scope.periods, key=lambda item: (item.filing_year, item.code))
             ),
             allow_period_independent=scope.allow_period_independent,
             allow_delegation=scope.allow_delegation,

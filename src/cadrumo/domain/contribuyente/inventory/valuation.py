@@ -130,7 +130,7 @@ def _inventory_projection_source_fingerprint(ledger: InventoryLedger) -> Content
 def _validate_anexo_d_ledger(ledger: InventoryLedger) -> InventoryLedger:
     """Validate the grounded year/source envelope and canonicalize movement order."""
     try:
-        applicable_filing_year = resolve_inventory_anexo_d_filing_year(filing_year=int(ledger.year))
+        applicable_filing_year = resolve_inventory_anexo_d_filing_year(filing_year=ledger.year)
     except RegistryValidationError as exc:
         raise InventoryLedgerError(
             "inventory Anexo D applicability is not declared for the filing year",

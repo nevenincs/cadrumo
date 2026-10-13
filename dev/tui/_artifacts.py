@@ -652,7 +652,7 @@ def _defaulted_fields(model: type[BaseModel]) -> frozenset[str]:
     """
     names: set[str] = set()
     for name, field in model.model_fields.items():
-        if not field.is_required() and isinstance(name, str):
+        if not field.is_required():
             names.add(name)
     return frozenset(names)
 

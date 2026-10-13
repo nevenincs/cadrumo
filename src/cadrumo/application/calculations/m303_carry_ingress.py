@@ -79,7 +79,7 @@ def _require_carry_mapping_coordinate(resolved: object, effective_date: date) ->
     if not isinstance(resolved, ResolvedMappingFact):
         raise TypeError("M303 carry declarations must resolve as a mapping fact")
     if (
-        str(resolved.fact_id) != "modelo-303-carry-disposition-verification-mapping"
+        resolved.fact_id != "modelo-303-carry-disposition-verification-mapping"
         or resolved.date_axis is not DateAxis.FILING_PERIOD
         or resolved.effective_date != effective_date
     ):
@@ -114,7 +114,7 @@ def _validated_carry_mapping_entries(
         _required_registry_value(entries, key)
     if _required_registry_value(entries, "modelo") != normalized_modelo:
         raise ValueError("M303 carry mapping does not match the selected modelo")
-    if _required_registry_value(entries, "revision") != str(revision.id):
+    if _required_registry_value(entries, "revision") != revision.id:
         raise ValueError("M303 carry mapping does not match the selected modelo revision")
     _validate_disposition_code_mapping(entries)
     return entries
@@ -141,7 +141,7 @@ def _selected_registry_mapping(
             period=normalized_period,
             on=effective_date,
         )
-        if str(revision.id).strip() == "":
+        if revision.id.strip() == "":
             raise ValueError("selected M303 modelo revision does not match the filing scope")
 
         # Monthly and quarterly periods can share an end date while selecting
@@ -297,13 +297,13 @@ def normalize_m303_carry_observation_envelope(
     projection, and the normalized available/generated pair are checked before
     a later reader can treat the observation as carry evidence.
     """
-    if str(envelope.observation.modelo) != Modelo("303").value:
+    if envelope.observation.modelo != Modelo("303").value:
         return envelope
 
     registry_mapping = _selected_registry_mapping(
-        modelo=str(envelope.observation.modelo),
+        modelo=envelope.observation.modelo,
         filing_year=envelope.observation.filing_year,
-        period=str(envelope.observation.period),
+        period=envelope.observation.period,
         operation=operation,
     )
     disposition_projection = _resolve_result_disposition(envelope, registry_mapping)
@@ -338,7 +338,7 @@ def validate_normalized_m303_carry_observation_envelope(
     Every supported Modelo 303 writer produces this canonical shape; an
     unnormalized payload is invalid persisted state, not a compatibility form.
     """
-    if str(envelope.observation.modelo) != Modelo("303").value:
+    if envelope.observation.modelo != Modelo("303").value:
         raise M303CarryIngressError(
             translated_message=_translated_error("non_target_modelo_envelope"),
             context={"modelo": envelope.observation.modelo},
@@ -564,7 +564,7 @@ def _normalize_carry_observation(
     if derivation is None:
         raise M303CarryIngressError(
             translated_message=_translated_error("incomplete_supported_operands"),
-            context={"casilla_ids": sorted(str(casilla_id) for casilla_id in values)},
+            context={"casilla_ids": sorted(values)},
         )
 
     supplied_rows = {item.casilla_id: item for item in observation.observations}
@@ -707,7 +707,7 @@ def resolve_available_compensation_formula_id(
             translated_message=_translated_error("available_compensation_formula_missing"),
             context={
                 "revision_id": revision.id,
-                "target_casilla_id": str(available_casilla_id),
+                "target_casilla_id": available_casilla_id,
             },
         )
     expected_operands = expression_casilla_refs(formula.expression)

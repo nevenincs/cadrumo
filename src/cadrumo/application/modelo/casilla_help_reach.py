@@ -40,7 +40,7 @@ def _uses(formula: FormulaDefinition) -> set[str]:
     while pending:
         node = pending.pop()
         if node.casilla_id is not None:
-            found.add(str(node.casilla_id))
+            found.add(node.casilla_id)
         pending.extend(node.args)
     return found
 
@@ -49,7 +49,7 @@ def _dependents(formulas: Iterable[FormulaDefinition]) -> dict[str, frozenset[st
     """Each casilla's direct dependents: the casillas whose formula reads it."""
     graph: dict[str, set[str]] = {}
     for formula in formulas:
-        target = str(formula.target_casilla_id)
+        target = formula.target_casilla_id
         for used in _uses(formula):
             if used != target:
                 graph.setdefault(used, set()).add(target)
@@ -150,16 +150,14 @@ def build_casilla_help_reach(
     Parameter types: ``snapshot`` (:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`).
     """
     graph = _dependents(snapshot.revision.formulas)
-    feeds = tuple(sorted({box_text(target) for target in graph.get(str(casilla.id), frozenset())}))
-    selected = declaration_result_casillas(str(snapshot.modelo.id), snapshot.revision)
-    results: frozenset[str] = (
-        frozenset[str]() if selected is None else frozenset(str(item) for item in selected.casilla_ids)
-    )
-    is_result = str(casilla.id) in results
+    feeds = tuple(sorted({box_text(target) for target in graph.get(casilla.id, frozenset())}))
+    selected = declaration_result_casillas(snapshot.modelo.id, snapshot.revision)
+    results: frozenset[str] = frozenset[str]() if selected is None else frozenset(selected.casilla_ids)
+    is_result = casilla.id in results
     reach = (
         None
         if is_result or not results
-        else _reach(str(casilla.id), graph=graph, results=results, casillas=casillas, boxes=boxes, box_text=box_text)
+        else _reach(casilla.id, graph=graph, results=results, casillas=casillas, boxes=boxes, box_text=box_text)
     )
     return feeds, is_result, reach
 

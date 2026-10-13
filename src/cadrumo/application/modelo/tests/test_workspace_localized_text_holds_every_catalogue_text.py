@@ -21,7 +21,9 @@ from ..workspace_models import ModeloWorkspaceLocalizedTextV1
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _LOCALES_ROOT = Path(__file__).resolve().parents[3] / "locales"
-_VALUE = TypeAdapter(ModeloWorkspaceLocalizedTextV1.model_fields["value"].annotation)
+_VALUE_ANNOTATION = ModeloWorkspaceLocalizedTextV1.model_fields["value"].annotation
+assert _VALUE_ANNOTATION is not None, "the localized text model no longer annotates its value field"
+_VALUE = TypeAdapter(_VALUE_ANNOTATION)
 
 
 def _schema_texts() -> Iterator[tuple[str, str]]:

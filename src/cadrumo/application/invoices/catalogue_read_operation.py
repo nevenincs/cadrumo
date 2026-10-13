@@ -107,7 +107,7 @@ def _validate_invoices(
     if len({row.invoice_id for row in invoices}) != len(invoices):
         raise ValueError("duplicate invoice identities")
     for row in invoices:
-        if row.bucket_id is not None and str(row.bucket_id) != str(profile_id):
+        if row.bucket_id is not None and row.bucket_id != str(profile_id):
             raise ValueError("invoice snapshot belongs to another profile")
         if kind is not None and row.kind is not kind:
             raise ValueError("invoice snapshot differs from selected kind")
@@ -235,7 +235,7 @@ class InvoiceCatalogueReadExecutor:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         with validating_governed_facts(operation):
             catalogue = ports.invoices.load()
-            if any(row.bucket_id is not None and str(row.bucket_id) != profile for row in catalogue.values()):
+            if any(row.bucket_id is not None and row.bucket_id != profile for row in catalogue.values()):
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
             if isinstance(payload, InvoiceListRequest):
                 return _capture_invoice_list(payload, catalogue)

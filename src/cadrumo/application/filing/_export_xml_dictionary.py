@@ -320,7 +320,7 @@ def _xml_dictionary_xsd_root(
 ) -> ElementTree.Element[str]:
     """Return the parsed root from the signed XSD projection ``source`` names."""
     try:
-        root = DefusedElementTree.fromstring(source_payloads[str(source.id)])
+        root = DefusedElementTree.fromstring(source_payloads[source.id])
     except (DefusedElementTree.ParseError, KeyError) as exc:
         raise FilingExportValidationError(f"XML dictionary XSD source {source.id!r} could not be parsed") from exc
     return root
@@ -779,7 +779,7 @@ def _modelo_100_comunidad_casillas(
         shared_total = declarations.get("xml.comunidad.shared_total_casilla")
         if shared_total is None:
             raise FilingExportValidationError("registry-selected comunidad total casilla is missing")
-        if str(entry.casilla_id) != shared_total:
+        if entry.casilla_id != shared_total:
             own_casillas_by_block.setdefault(block, set()).add(entry.casilla_id)
     return own_casillas_by_block
 

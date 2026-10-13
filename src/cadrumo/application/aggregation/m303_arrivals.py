@@ -67,7 +67,7 @@ def _transition_period_applicability_from_registry(
     carried_periods = {token for _, periods in carries for token in periods}
     final_periods = _final_schedule_periods(revision, filing_year=period.filing_year, operation=operation)
     transition_periods = {
-        final_periods[str(schedule.id)]
+        final_periods[schedule.id]
         for schedule in schedules
         if schedule.periods and carried_periods.intersection(schedule.periods)
     }
@@ -90,11 +90,11 @@ def _final_schedule_periods(
         if not entry.period_selector.includes_year(filing_year):
             continue
         admitted = set(entry.period_selector.periods_for_year(filing_year))
-        for schedule in operation.revision("303", str(entry.id)).filing_schedules:
-            served.setdefault(str(schedule.id), []).extend(token for token in schedule.periods if token in admitted)
+        for schedule in operation.revision("303", entry.id).filing_schedules:
+            served.setdefault(schedule.id, []).extend(token for token in schedule.periods if token in admitted)
     for schedule in selected.filing_schedules:
-        if not bool(served.get(str(schedule.id))):
-            served[str(schedule.id)] = list(schedule.periods)
+        if not bool(served.get(schedule.id)):
+            served[schedule.id] = list(schedule.periods)
     return {
         schedule_id: max(tokens, key=lambda token: Period.from_year_and_code(filing_year, token).end_date)
         for schedule_id, tokens in served.items()

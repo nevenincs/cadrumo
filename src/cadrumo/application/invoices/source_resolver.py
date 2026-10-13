@@ -567,7 +567,7 @@ def _m349_incoherence_diagnostics(
     return tuple(
         CalculationSourceDiagnostic(
             reason="ungrounded_income_substrate",
-            source_kind=str(_invoice_source_kind(invoice)),
+            source_kind=_invoice_source_kind(invoice),
             resolver_id=resolver_id,
             source_ref=f"invoice:{invoice.invoice_id}",
             message=(
@@ -607,7 +607,7 @@ def _unconverted_foreign_diagnostics(
     return tuple(
         CalculationSourceDiagnostic(
             reason="unconverted_foreign_currency",
-            source_kind=str(_invoice_source_kind(invoice)),
+            source_kind=_invoice_source_kind(invoice),
             resolver_id=resolver_id,
             source_ref=f"invoice:{invoice.invoice_id}",
             message=(
@@ -654,7 +654,7 @@ def _m347_role_fact_advisories(
             diagnostics.append(
                 CalculationSourceDiagnostic(
                     reason="unclassified_declarant_role_fact",
-                    source_kind=str(_invoice_source_kind(invoice)),
+                    source_kind=_invoice_source_kind(invoice),
                     resolver_id=resolver_id,
                     source_ref=f"invoice:{invoice.invoice_id}",
                     message=(
@@ -669,7 +669,7 @@ def _m347_role_fact_advisories(
             diagnostics.append(
                 CalculationSourceDiagnostic(
                     reason="unclassified_declarant_role_fact",
-                    source_kind=str(_invoice_source_kind(invoice)),
+                    source_kind=_invoice_source_kind(invoice),
                     resolver_id=resolver_id,
                     source_ref=f"invoice:{invoice.invoice_id}",
                     message=(

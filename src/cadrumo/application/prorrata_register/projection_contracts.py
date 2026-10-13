@@ -192,7 +192,7 @@ class ProrrataSeedSourceProjection(BaseModel):
             modelo=seed.source_modelo,
             filing_year=seed.source_filing_year,
             period=seed.source_period,
-            casilla_id=str(seed.source_casilla_id),
+            casilla_id=seed.source_casilla_id,
             stamped_revision_id=seed.stamped_revision_id,
         )
 

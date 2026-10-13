@@ -112,7 +112,7 @@ class NotificationsCaptureCompositionFactory(Protocol):
 
 def _require_snapshot_bucket(snapshot: PersistedNotificationsSnapshot, bucket_id: str) -> None:
     """Fail closed if local custody returns a snapshot from another profile."""
-    if str(snapshot.bucket_id) != bucket_id:
+    if snapshot.bucket_id != bucket_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
 
 
@@ -126,7 +126,7 @@ def _project_capture(result: BaseModel, receipt: OperationTerminalReceipt, /) ->
     require_live_capture_receipt(
         receipt,
         definition_id=NOTIFICATIONS_CAPTURE_DEFINITION_ID,
-        bucket_id=str(snapshot.bucket_id),
+        bucket_id=snapshot.bucket_id,
         stored=report.newly_persisted,
         message=_RECEIPT_CONTRADICTION,
     )

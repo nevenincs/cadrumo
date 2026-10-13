@@ -1719,7 +1719,7 @@ class ModeloEditApplyExecutor:
                     await context.events.effect(OperationEffect.NONE)
                     self._deliver_prerequisite(
                         outcome.refusal,
-                        operation_id=str(context.identity.operation_id),
+                        operation_id=context.identity.operation_id,
                         baseline=ModeloEditApplyBaselineV1.from_baseline(submission.baseline),
                     )
                     raise modelo_edit_refusal_error(outcome.refusal)
@@ -1758,8 +1758,8 @@ class ModeloEditApplyExecutor:
             observer(
                 ModeloEditCalculationPrerequisiteV1(
                     operation_id=operation_id,
-                    work_unit_id=str(baseline.work_unit_id),
-                    baseline_id=str(baseline.baseline_id),
+                    work_unit_id=baseline.work_unit_id,
+                    baseline_id=baseline.baseline_id,
                     calculation_revision_id=baseline.current_calculation_revision_id,
                     casilla_id=refusal.address.casilla_id,
                     binding_ids=refusal.evidence,

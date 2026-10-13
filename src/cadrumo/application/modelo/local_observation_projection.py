@@ -63,7 +63,7 @@ def project_recorded_observation(
         observation_key=result.observation_key,
         source_kind=result.source_kind,
         casilla_values=tuple(
-            ModeloLocalObservationCasillaValue(casilla_id=str(casilla_id), value=str(value))
+            ModeloLocalObservationCasillaValue(casilla_id=casilla_id, value=str(value))
             for casilla_id, value in sorted(result.casilla_values.items())
         ),
         captured_at=result.captured_at,

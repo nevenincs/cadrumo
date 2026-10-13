@@ -128,7 +128,7 @@ def link_transaction(
     if len(normalized_tx) != 64 or any(char not in "0123456789abcdef" for char in normalized_tx):
         raise InvoiceLinkError(
             translated_message="errors.error.error_financial_invoices_invoice_link",
-            context={"transaction_id": str(transaction_id), "hex_digest_shape_valid": False},
+            context={"transaction_id": transaction_id, "hex_digest_shape_valid": False},
         )
     if normalized_tx in invoice.linked_transaction_ids:
         _LOGGER.debug(
@@ -145,7 +145,7 @@ def link_transaction(
     except ValidationError as exc:
         raise InvoiceLinkError(
             translated_message="errors.error.error_financial_invoices_invoice_link",
-            context={"invoice_id": str(invoice_id), "link_update_error_type": type(exc).__name__},
+            context={"invoice_id": invoice_id, "link_update_error_type": type(exc).__name__},
         ) from exc
     return _replace_invoice(catalogue, updated_invoice)
 
@@ -334,6 +334,6 @@ def _require_invoice(catalogue: InvoiceCatalogue, invoice_id: str) -> Invoice:
     if invoice is None:
         raise InvoiceNotFoundError(
             translated_message="errors.error.error_financial_invoices_invoice_not_found",
-            context={"invoice_id": str(invoice_id), "invoice_present": False},
+            context={"invoice_id": invoice_id, "invoice_present": False},
         )
     return invoice

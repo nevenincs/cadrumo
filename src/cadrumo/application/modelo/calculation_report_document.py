@@ -206,19 +206,19 @@ def calculation_report_csv_row(row: ModeloCalculationReportRow) -> dict[str, str
     that renders as ``value_state=value`` with ``value=0``.
     """
     return {
-        "casilla_id": str(row.casilla_id),
+        "casilla_id": row.casilla_id,
         "casilla_number": row.number,
         "section_path": _SECTION_PATH_SEPARATOR.join(row.section_path),
         "label": row.label,
         "row_role": row.row_role.value,
         "semantic_role": row.semantic_role or "",
         "declared_input_kind": row.declared_input_kind.value,
-        "formula_id": "" if row.formula_id is None else str(row.formula_id),
+        "formula_id": "" if row.formula_id is None else row.formula_id,
         "realised_kind": row.realised_kind.value,
         "value_state": row.value_state.value,
         "value": "" if row.value is None else str(row.value),
-        "legal_refs": _REFERENCE_SEPARATOR.join(str(ref) for ref in row.legal_refs),
-        "source_refs": _REFERENCE_SEPARATOR.join(str(ref) for ref in row.source_refs),
+        "legal_refs": _REFERENCE_SEPARATOR.join(row.legal_refs),
+        "source_refs": _REFERENCE_SEPARATOR.join(row.source_refs),
         "source_provenance": _PROVENANCE_ROW_SEPARATOR.join(
             _PROVENANCE_FIELD_SEPARATOR.join(
                 (

@@ -308,7 +308,7 @@ def _profile_export_binding_applies(
     gate_key = provider.required_when_profile_key
     if gate_key is None:
         return True
-    expected = str(provider.required_when_value or "").strip()
+    expected = (provider.required_when_value or "").strip()
     actual = str(fact_index.get(gate_key, "")).strip()
     return bool(expected) and actual.casefold() == expected.casefold()
 
@@ -581,7 +581,7 @@ def _profile_export_values_from_facts(
             continue
         value = _profile_export_value(binding, fact_index)
         if value is not None:
-            values[str(field_id)] = value
+            values[field_id] = value
     return values
 
 

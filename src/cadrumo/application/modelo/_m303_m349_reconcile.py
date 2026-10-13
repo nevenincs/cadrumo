@@ -81,7 +81,7 @@ def _selected_registry_reconciliation_context(
         )
     except (RegistrySnapshotError, RegistryValidationError):
         return snapshot, ()
-    if str(selected_revision.id) != str(snapshot.revision.id):
+    if selected_revision.id != snapshot.revision.id:
         return snapshot, ()
     expectations = tuple(
         expectation
@@ -116,7 +116,7 @@ def _expectation_comparison_policy_matches(
         sorted(str(cause) for cause in right.discrepancy_causes)
     ):
         return False
-    return frozenset(str(ref) for ref in left.legal_refs) == frozenset(str(ref) for ref in right.legal_refs)
+    return frozenset(left.legal_refs) == frozenset(right.legal_refs)
 
 
 def _expectations_are_counterparts(
@@ -131,7 +131,7 @@ def _expectations_are_counterparts(
     # Reciprocal source references are the registry's cross-surface identity;
     # requiring an intersection prevents pairing unrelated expectations that
     # happen to share a tolerance and legal vocabulary.
-    return bool(frozenset(str(ref) for ref in left.source_refs) & frozenset(str(ref) for ref in right.source_refs))
+    return bool(frozenset(left.source_refs) & frozenset(right.source_refs))
 
 
 def _selected_reconciliation_contract(
@@ -144,7 +144,7 @@ def _selected_reconciliation_contract(
     if not expectations:
         return None
 
-    selected_modelo = str(snapshot.modelo.id)
+    selected_modelo = snapshot.modelo.id
     matches: list[_ReconciliationContract] = []
     for expectation in expectations:
         counterpart_matches: list[tuple[str, VerificationExpectationDefinition]] = []
@@ -194,7 +194,7 @@ def _require_revision_belongs_to_unit(
 
     coordinate = revision.registry_snapshot_ref
     if revision.work_unit_id != unit.work_unit_id or (
-        str(coordinate.modelo),
+        coordinate.modelo,
         coordinate.modelo_year,
         coordinate.period,
         coordinate.revision_id,
@@ -318,8 +318,8 @@ def m303_m349_intracom_reconcile_findings(
                     "sibling_missing_count": len(sibling_missing),
                 },
                 expectation_id=contract.expectation.id,
-                legal_refs=tuple(str(ref) for ref in contract.expectation.legal_refs),
-                source_refs=tuple(str(ref) for ref in contract.expectation.source_refs),
+                legal_refs=tuple(contract.expectation.legal_refs),
+                source_refs=tuple(contract.expectation.source_refs),
             )
         ]
 
@@ -356,8 +356,8 @@ def m303_m349_intracom_reconcile_findings(
                 "gap": gap,
             },
             expectation_id=contract.expectation.id,
-            legal_refs=tuple(str(ref) for ref in contract.expectation.legal_refs),
-            source_refs=tuple(str(ref) for ref in contract.expectation.source_refs),
+            legal_refs=tuple(contract.expectation.legal_refs),
+            source_refs=tuple(contract.expectation.source_refs),
         ),
     ]
 

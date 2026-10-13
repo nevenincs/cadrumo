@@ -162,13 +162,13 @@ def discover_modelo_work_wizard_steps(
             binding_steps.extend(
                 ModeloWorkWizardStep(
                     channel="relation",
-                    key=str(relation_id),
-                    casilla_id=str(row.binding_id),
-                    number=str(row.binding_id),
-                    label=str(row.binding_id),
+                    key=relation_id,
+                    casilla_id=row.binding_id,
+                    number=row.binding_id,
+                    label=row.binding_id,
                     help_text=tr(
                         "cli.app.modelo.work.wizard_relation_help",
-                        binding_id=str(row.binding_id),
+                        binding_id=row.binding_id,
                     ),
                     legal_refs=tuple(row.legal_refs),
                     source_refs=tuple(row.source_refs),
@@ -181,10 +181,10 @@ def discover_modelo_work_wizard_steps(
         binding_steps.append(
             ModeloWorkWizardStep(
                 channel="binding",
-                key=str(row.binding_id),
-                casilla_id=str(row.binding_id),
-                number=str(row.binding_id),
-                label=str(row.binding_id),
+                key=row.binding_id,
+                casilla_id=row.binding_id,
+                number=row.binding_id,
+                label=row.binding_id,
                 help_text=None,
                 legal_refs=tuple(row.legal_refs),
                 source_refs=tuple(row.source_refs),
@@ -203,9 +203,9 @@ def _binding_grounding_lookup(
     lookup: dict[str, tuple[tuple[str, ...], tuple[str, ...]]] = {}
     for row in bindings_report.rows:
         grounding = (tuple(row.legal_refs), tuple(row.source_refs))
-        lookup[str(row.binding_id)] = grounding
+        lookup[row.binding_id] = grounding
         for relation_id in row.relation_inputs:
-            lookup[str(relation_id)] = grounding
+            lookup[relation_id] = grounding
     return lookup
 
 

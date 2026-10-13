@@ -143,7 +143,7 @@ def _observed_filings(
     if filed_evidence is None:
         return {}
     return {
-        (str(row.modelo), int(row.filing_year), row.period.registry_token): row
+        (row.modelo, row.filing_year, row.period.registry_token): row
         for row in filed_evidence.evidence
         if row.modelo is not None
         and row.filing_year is not None
@@ -275,7 +275,7 @@ def _area_operations(
 ) -> tuple[OperationDefinitionId, ...]:
     """Keep admitted operation IDs in registry order for one overview area."""
     area_operation_ids = set(_OVERVIEW_OPERATIONS[area])
-    return tuple(definition_id for definition_id in admitted if str(definition_id) in area_operation_ids)
+    return tuple(definition_id for definition_id in admitted if definition_id in area_operation_ids)
 
 
 def _joined_action_references(
@@ -302,9 +302,7 @@ def _area_actions(
 
 def _action_is_admitted(action_id: str, joined_actions: tuple[ActionReference, ...]) -> bool:
     """Return whether an operation-backed action has its exact operation."""
-    return action_id not in _OPERATION_ACTION_IDS or any(
-        str(joined.action_id) == action_id for joined in joined_actions
-    )
+    return action_id not in _OPERATION_ACTION_IDS or any(joined.action_id == action_id for joined in joined_actions)
 
 
 _LOCALLY_READ_AREAS: Final[frozenset[AeatSyncOverviewArea]] = frozenset(
@@ -431,7 +429,7 @@ def _overview_row(
         local_observed_at = observed_at
         if reconciliations:
             rows = reconciliation_rows(
-                bucket_id=str(reconciliations[0].bucket_id), subject_key="overview", records=reconciliations
+                bucket_id=reconciliations[0].bucket_id, subject_key="overview", records=reconciliations
             )
             aeat_state = (
                 AeatSyncSourceState.CONFLICT
@@ -537,10 +535,10 @@ def _filed_declaration_rows(
     """
     area_actions, operations = _admitted_capabilities(AeatSyncOverviewArea.FILED_DECLARATIONS, contracts)
     # The whole-history pull is the area's offer on its overview row; one declaration's row does not carry it.
-    actions = tuple(action for action in area_actions if str(action.action_id) != "operator.live.filed.pull_all")
+    actions = tuple(action for action in area_actions if action.action_id != "operator.live.filed.pull_all")
     latest: dict[_NaturalKey, ModeloRecord] = {}
     for record in filings:
-        key = (str(record.modelo), int(record.filing_year), record.period.registry_token)
+        key = (str(record.modelo), record.filing_year, record.period.registry_token)
         current = latest.get(key)
         if current is None or record.filed_at > current.filed_at:
             latest[key] = record

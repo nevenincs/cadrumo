@@ -46,7 +46,7 @@ class PrintedBoxes:
 
     def number(self, casilla_id: str | None) -> str | None:
         """The number the form prints for ``casilla_id``, or ``None`` when it prints none or none is named."""
-        return None if casilla_id is None else self.numbers.get(str(casilla_id))
+        return None if casilla_id is None else self.numbers.get(casilla_id)
 
     def prints(self, casilla_id: str | None) -> bool:
         """Whether the form prints ``casilla_id`` as a numbered box."""
@@ -61,14 +61,14 @@ def printed_boxes(revision: ModeloRevision, layout: FormLayoutDefinition | None)
             The registry declaration supplying casillas, formulas, bindings and layout metadata.
     """
     placements: dict[str, FormPlacementDefinition] = (
-        {str(placement.casilla_id): placement for placement in layout.placements}
-        if layout is not None and str(layout.revision_id) == str(revision.id)
+        {placement.casilla_id: placement for placement in layout.placements}
+        if layout is not None and layout.revision_id == revision.id
         else {}
     )
     numbers = {
-        str(casilla.id): number
+        casilla.id: number
         for casilla in revision.casillas
-        if (number := printed_box_number(casilla, placements.get(str(casilla.id)))) is not None
+        if (number := printed_box_number(casilla, placements.get(casilla.id))) is not None
     }
     return PrintedBoxes(numbers=MappingProxyType(numbers))
 
@@ -80,7 +80,7 @@ def snapshot_printed_boxes(operation: PinnedAuthorityOperation, snapshot: Regist
         :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`
             The pinned registry snapshot supplying the selected modelo revision.
     """
-    return printed_boxes(snapshot.revision, operation.form_layout(str(snapshot.modelo.id), str(snapshot.revision.id)))
+    return printed_boxes(snapshot.revision, operation.form_layout(snapshot.modelo.id, snapshot.revision.id))
 
 
 __all__ = ["PrintedBoxes", "printed_box_number", "printed_boxes", "snapshot_printed_boxes"]

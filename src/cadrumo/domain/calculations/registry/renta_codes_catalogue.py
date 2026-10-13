@@ -213,7 +213,7 @@ def _resolve_country_entities(
     )
     if not isinstance(resolved, ResolvedEntitySetFact):
         raise RegistryValidationError("EU/EEA country membership must resolve as an entity-set fact")
-    entities = tuple(str(entity).strip().upper() for entity in resolved.payload.entities)
+    entities = tuple(entity.strip().upper() for entity in resolved.payload.entities)
     if not entities or len(entities) != len(set(entities)) or any(len(entity) != 2 for entity in entities):
         raise RegistryValidationError("EU/EEA country membership must contain unique two-letter country codes")
     return frozenset(entities)

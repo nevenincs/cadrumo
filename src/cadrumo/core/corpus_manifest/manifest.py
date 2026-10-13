@@ -97,19 +97,19 @@ class CorpusEntry(BaseModel):
         if "\\" in value:
             raise CorpusManifestError(
                 translated_message="errors.integrity.integrity_storage_corpus_manifest",
-                context={"relative_path": str(value), "posix_separators_only": False},
+                context={"relative_path": value, "posix_separators_only": False},
             )
         pure = PurePosixPath(value)
         if pure.is_absolute():
             raise CorpusManifestError(
                 translated_message="errors.integrity.integrity_storage_corpus_manifest",
-                context={"relative_path": str(value), "absolute": True},
+                context={"relative_path": value, "absolute": True},
             )
         for part in pure.parts:
             if part in {"..", "."}:
                 raise CorpusManifestError(
                     translated_message="errors.integrity.integrity_storage_corpus_manifest",
-                    context={"relative_path": str(value), "contains_dot_tokens": True},
+                    context={"relative_path": value, "contains_dot_tokens": True},
                 )
         return value
 

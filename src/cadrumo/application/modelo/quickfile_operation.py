@@ -127,7 +127,7 @@ def _require_ports(
     if (
         ports.profile_id != request.profile_id
         or ports.operation is not context.authority_operation
-        or str(ports.profile.record.profile_id) != profile_id
+        or ports.profile.record.profile_id != profile_id
         or ports.calculation.operation is not context.authority_operation
         or ports.calculation.work_unit_repository.bucket_id != profile_id
         or ports.export.work_unit.bucket_id != profile_id

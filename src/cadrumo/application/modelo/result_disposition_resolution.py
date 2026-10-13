@@ -222,7 +222,7 @@ def base_modelo_result_disposition(
             translated_message="errors.refused.refused_modelo_result_disposition_uncodified",
             context={
                 "modelo": str(work_unit.modelo),
-                "revision_id": str(registry_revision.id),
+                "revision_id": registry_revision.id,
                 "producer_key": producer_key.value,
             },
         )

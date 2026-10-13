@@ -53,7 +53,7 @@ def render_layout_records(
     :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
     """
     occurrences: list[RenderedRecordOccurrence] = []
-    source_digests = {str(ref): source.sha256 for ref, source in registry_snapshot.sources.items()}
+    source_digests = {ref: source.sha256 for ref, source in registry_snapshot.sources.items()}
     for record in sorted(layout.records, key=lambda item: item.order):
         if did_page_suppressed(
             record,

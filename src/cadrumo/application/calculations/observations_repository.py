@@ -348,7 +348,7 @@ class ObservationEnvelopePayload(BaseModel):
     @pydantic_validation_boundary
     def _require_canonical_m303_shape(self, info: ValidationInfo) -> ObservationEnvelopePayload:
         """Reject persisted M303 envelopes that predate canonical carry ingress."""
-        if str(self.observation.modelo) != "303":
+        if self.observation.modelo != "303":
             return self
         ingress_candidate = False
         if is_object_mapping(info.context):
@@ -397,7 +397,7 @@ class ObservationLayers(BaseModel):
             if layer is None:
                 continue
             observation = layer.observation
-            layer_coordinate = (str(observation.modelo), observation.filing_year, observation.period, layer.member_nif)
+            layer_coordinate = (observation.modelo, observation.filing_year, observation.period, layer.member_nif)
             if layer_coordinate != coordinate:
                 raise ValueError(f"observation layer {layer_coordinate!r} does not belong to {coordinate!r}")
         return self
@@ -646,7 +646,7 @@ def validate_observation_casilla_ids(
 
     invalid = undeclared_casilla_ids(revision, referenced_casilla_ids) if referenced_casilla_ids else ()
     if not invalid:
-        return str(revision.id)
+        return revision.id
     raise ObservationCasillaReferenceError(
         translated_message="application.calculations.observations.errors.casilla_ids_noncanonical",
         context={

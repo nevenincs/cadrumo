@@ -71,9 +71,9 @@ def verification_calculation_revision_period(
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     snapshot = revision.registry_snapshot_ref
     if (
-        str(snapshot.modelo) != str(unit.modelo)
+        snapshot.modelo != str(unit.modelo)
         or snapshot.modelo_year != unit.filing_year
-        or str(snapshot.period) != unit.period.registry_token
+        or snapshot.period != unit.period.registry_token
         or snapshot.revision_id != unit.revision_id
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)

@@ -46,7 +46,7 @@ class ModeloWorkProfilePathValues:
         from ..user_profile.projections import record_to_path_values
 
         record = self.profile.record
-        if UUID(str(bucket_id)) != UUID(str(record.profile_id)):
+        if UUID(bucket_id) != UUID(record.profile_id):
             return None
         return record_to_path_values(record)
 

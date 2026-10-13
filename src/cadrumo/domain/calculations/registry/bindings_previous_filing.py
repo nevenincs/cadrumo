@@ -654,7 +654,7 @@ def _previous_filing_selector(binding: BindingDefinition) -> PreviousFilingProvi
     if missing:
         raise RegistryValidationError(
             f"binding {binding.id!r} carries a malformed previous-filing selector missing {missing}",
-            context={"binding_id": str(binding.id)},
+            context={"binding_id": binding.id},
         )
     return selector
 

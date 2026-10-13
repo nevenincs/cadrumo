@@ -115,7 +115,7 @@ def _resolve_irnr_registry_revision(
         period=period.registry_token,
         on=period.end_date,
     )
-    if str(selected.id) != str(revision.id):
+    if selected.id != revision.id:
         raise AggregationValidationError(
             tr("aggregation.irnr_income_ledger.errors.registry_revision_mismatch"),
         )
@@ -294,7 +294,7 @@ def _resolve_selected_income_type_codes(revision: ModeloRevision, period: Period
         )
     coordinate = period.start_date
     declared = frozenset(
-        str(entry.key)
+        entry.key
         for entry in candidates[0].keyed_brackets
         if entry.valid_from <= coordinate and (entry.valid_to is None or coordinate <= entry.valid_to)
     )
@@ -311,7 +311,7 @@ def _resolve_source_jurisdictions(revision: ModeloRevision, target_casilla_id: C
     if scope is None:
         raise AggregationValidationError(
             tr("aggregation.irnr_income_ledger.errors.source_scope_missing"),
-            context={"revision_id": str(revision.id), "target_casilla_id": str(target_casilla_id)},
+            context={"revision_id": revision.id, "target_casilla_id": target_casilla_id},
         )
     return scope
 

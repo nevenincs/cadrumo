@@ -57,7 +57,7 @@ _ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=M
 def _single_evidence(values: tuple[str, ...], label: str) -> str:
     if len(values) != 1 or not values[0].strip():
         raise RegistryValidationError(f"Lorca reduction fact must declare exactly one {label}")
-    return str(values[0])
+    return values[0]
 
 
 def _periods(entries: Mapping[str, str]) -> tuple[str, ...]:

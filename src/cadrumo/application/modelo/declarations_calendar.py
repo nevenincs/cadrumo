@@ -370,7 +370,7 @@ def _project_calendar_row(
         adjusted_closes_on=entry.adjusted_closes_on,
         shift_reason=entry.shift_reason,
         holiday_coverage=entry.holiday_coverage,
-        holiday_territory=None if entry.holiday_territory is None else str(entry.holiday_territory),
+        holiday_territory=entry.holiday_territory,
         payment_cutoff_on=entry.payment_cutoff_on,
         evaluated_on=entry.evaluated_on,
         days_overdue=entry.days_overdue,

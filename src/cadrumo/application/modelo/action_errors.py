@@ -299,9 +299,7 @@ class ModeloWorkflowGateError(ModeloError):
         # the verified revision can still be exported; every other abort
         # renders the run's own summary.
         translated_message = (
-            None
-            if result.aborted_reason is WorkflowAbortReason.NO_PENDING_OBLIGATION
-            else str(result.summary_locale_key)
+            None if result.aborted_reason is WorkflowAbortReason.NO_PENDING_OBLIGATION else result.summary_locale_key
         )
         super().__init__(
             translated_message=translated_message,

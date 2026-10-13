@@ -629,9 +629,7 @@ def _build_live_auth_preflight_report(
                 operator_probe_ports=operator_probe_ports,
             ),
             certificate_path_configured=certificate_path is not None,
-            certificate_file_present=bool(
-                certificate_path is not None and certificate_path.is_file(),
-            ),
+            certificate_file_present=certificate_path is not None and certificate_path.is_file(),
             persisted_session_present=probe.persisted_session_present,
             persisted_session_expired=probe.persisted_session_expired,
             persisted_session_state=probe.persisted_session_state,

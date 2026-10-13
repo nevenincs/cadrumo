@@ -61,7 +61,7 @@ class LedgerPreflightProjection(BaseModel):
         return cls(
             profile_id=profile_id,
             period=PublicPeriod.from_period(report.period),
-            bucket_id=str(report.bucket_id),
+            bucket_id=report.bucket_id,
             checked_transaction_count=report.checked_transaction_count,
             issues=tuple(LedgerCheckIssueProjection.from_issue(issue) for issue in report.issues),
             ready=report.ready,

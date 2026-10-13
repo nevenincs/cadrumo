@@ -215,7 +215,7 @@ def _draft_document(ports: LedgerEvidenceFollowupOperationPorts, bucket_id: str)
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     with bind_extraction_draft_repository_factory(ports.extraction_draft_repository_factory):
         document = load_extraction_drafts(bucket_id, ports.settings)
-    if str(document.bucket_id) != bucket_id:
+    if document.bucket_id != bucket_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     return document
 

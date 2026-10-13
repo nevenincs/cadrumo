@@ -184,7 +184,7 @@ class ModeloValidator:
                 continue
             value = by_id.get(casilla.casilla_id)
             if value is None or value.kind is ModeloValueKind.EMPTY or value.value is None:
-                if _required_casilla_satisfied_by_row_bindings(draft, str(casilla.casilla_id)):
+                if _required_casilla_satisfied_by_row_bindings(draft, casilla.casilla_id):
                     continue
                 out.append(_required_missing_finding(casilla))
         return out
@@ -306,7 +306,7 @@ def _required_missing_finding(casilla: CasillaSchema) -> ModeloValidationFinding
 
 
 def _required_casilla_satisfied_by_row_bindings(draft: ModeloDraft, casilla_id: str) -> bool:
-    if str(draft.modelo) != Modelo("349").value:
+    if draft.modelo != Modelo("349").value:
         return False
     binding_ids = _M349_OPERADOR_TEMPLATE_BINDINGS_BY_CASILLA.get(casilla_id)
     if binding_ids is not None:
@@ -318,13 +318,13 @@ def _required_casilla_satisfied_by_row_bindings(draft: ModeloDraft, casilla_id: 
 
 def _row_binding_has_value(draft: ModeloDraft, binding_id: str) -> bool:
     return any(
-        str(value.binding_id) == binding_id and value.row_index is not None and value.value not in {None, ""}
+        value.binding_id == binding_id and value.row_index is not None and value.value not in {None, ""}
         for value in draft.binding_values
     )
 
 
 def _m349_zero_rectifications(draft: ModeloDraft) -> bool:
-    values = {str(value.casilla_id): value.value for value in draft.values}
+    values = {value.casilla_id: value.value for value in draft.values}
     return values.get(_M349_NUMERO_RECTIFICACIONES_CASILLA) == Decimal("0") and values.get(
         _M349_IMPORTE_RECTIFICACIONES_CASILLA
     ) == Decimal("0")

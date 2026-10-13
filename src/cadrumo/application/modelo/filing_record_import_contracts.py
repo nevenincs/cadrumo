@@ -227,7 +227,7 @@ def _filing_import_receipt_outside_scope(
         record.bucket_id != str(profile_id)
         or reconciliation.bucket_id != str(profile_id)
         or reconciliation.filing_record_id != record.filing_record_id
-        or reconciliation.modelo != str(record.modelo)
+        or reconciliation.modelo != record.modelo
         or reconciliation.filing_year != record.filing_year
         or reconciliation.period != record.period
         or reconciliation.member_nif != record.member_nif

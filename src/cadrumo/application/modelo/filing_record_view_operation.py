@@ -113,7 +113,7 @@ class ModeloFilingObservationLayerProjection(BaseModel):
             captured_at=envelope.captured_at,
             stamped_revision_id=envelope.stamped_revision_id,
             casilla_values=tuple(
-                (str(key), str(value)) for key, value in sorted(envelope.observation.casilla_values.items())
+                (key, str(value)) for key, value in sorted(envelope.observation.casilla_values.items())
             ),
         )
 

@@ -8,7 +8,7 @@ Core types:
 from __future__ import annotations
 
 from collections.abc import Iterator
-from typing import ClassVar, override
+from typing import ClassVar, Final, override
 
 from ....application.filing.history_models import ModeloHistory
 from ....application.filing.history_ports import (
@@ -33,7 +33,8 @@ class FilingHistoryRepositoryAdapter(
     namespace: ClassVar[str] = FILING_HISTORY_NAMESPACE
     sensitivity: ClassVar[SensitivityClass] = FILING_HISTORY_SENSITIVITY
     schema_version: ClassVar[int] = FILING_HISTORY_SCHEMA_VERSION
-    payload_type: ClassVar[type[ModeloHistory]] = ModeloHistory
+    # Final: a constant narrowing of the base's mutable ``ClassVar[type[BaseModel]]``.
+    payload_type: Final[type[ModeloHistory]] = ModeloHistory
 
     def __init__(self, *, objects: SecureObjectRepository) -> None:
         """Bind an already-composed secure-object store; never resolve one here."""

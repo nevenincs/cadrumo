@@ -1110,7 +1110,7 @@ def _active_profile_auth_facts(
         # model selector still owns that identity; fold it onto the
         # canonical path so the shared reader sees one shape.
         selector_values = record_to_values(record, schema=repository.session.profile_decode_context.schema)
-        path_values[_PROFILE_TAX_ID_PATH] = str(selector_values.get("tax.id") or "")
+        path_values[_PROFILE_TAX_ID_PATH] = selector_values.get("tax.id") or ""
     return clave_auth_facts_from_profile_values(path_values, profile_setup_state=record.setup_state)
 
 

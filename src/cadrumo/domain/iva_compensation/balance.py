@@ -121,7 +121,7 @@ def _next_expiry_year(
     if not lot_list:
         return None
     return min(
-        int(lot.source_filing_year)
+        lot.source_filing_year
         + resolve_iva_compensation_carry_window_years(
             effective_date=lot.source_period.end_date,
             operation=operation,

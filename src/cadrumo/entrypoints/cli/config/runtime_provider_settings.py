@@ -15,6 +15,7 @@ import typer
 from pydantic import BaseModel, ValidationError
 
 from ....application.provider_settings.contracts import (
+    ProviderSettingsActionAccepted,
     ProviderSettingsRefusal,
     ProviderSettingsRefusalCode,
     ProviderSettingsStatus,
@@ -117,12 +118,17 @@ def _run[ResultT: BaseModel](
         )
 
 
-def _settled(completion: RegisteredOperationCompletion[BaseModel], effect: OperationEffect, profile_id: UUID) -> bool:
+def _settled(
+    completion: RegisteredOperationCompletion[ProviderSettingsStatusResult]
+    | RegisteredOperationCompletion[ProviderSettingsChangeResult],
+    effect: OperationEffect,
+    profile_id: UUID,
+) -> bool:
     return (
         completion.terminal_condition is OperationTerminalCondition.SUCCEEDED
         and completion.refusal_code is None
         and completion.effect is effect
-        and getattr(completion.projection, "profile_id", None) == profile_id
+        and completion.projection.profile_id == profile_id
     )
 
 
@@ -185,7 +191,7 @@ def _change(
     result = completion.projection
     if type(result) is not ProviderSettingsChangeResult or result.provider_id != provider_id:
         raise invalid_completion_error(completion)
-    outcome = result.entry if result.entry is not None else _refusal(result)
+    outcome = ProviderSettingsActionAccepted(entry=result.entry) if result.entry is not None else _refusal(result)
     if not _settled(completion, change_effect(definition_id, request, outcome), profile_id):
         raise invalid_completion_error(completion)
     if result.refused is not None:

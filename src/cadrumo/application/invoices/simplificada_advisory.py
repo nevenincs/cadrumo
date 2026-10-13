@@ -106,7 +106,7 @@ def resolve_simplificada_tax_id_legal_refs(
         raise RegistryValidationError("invoice applicability must resolve as a mapping fact")
     if not resolved.legal_refs:
         raise RegistryValidationError("invoice applicability is missing legal-reference provenance")
-    return tuple(str(reference) for reference in resolved.legal_refs)
+    return tuple(resolved.legal_refs)
 
 
 def _active_taxpayer_profile() -> TaxpayerProfile | None:

@@ -73,25 +73,16 @@ def collect_note_sources(
     Parameter types: ``revision`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
     """
     if diagnostics is not None:
-        return tuple(
-            (diagnostic.reason, None if diagnostic.casilla_id is None else str(diagnostic.casilla_id))
-            for diagnostic in diagnostics
-        )
+        return tuple((diagnostic.reason, diagnostic.casilla_id) for diagnostic in diagnostics)
     if revision is None:
         return ()
-    return tuple(
-        (issue.reason, None if issue.casilla_id is None else str(issue.casilla_id)) for issue in revision.source_issues
-    )
+    return tuple((issue.reason, issue.casilla_id) for issue in revision.source_issues)
 
 
 def _said_by_a_finding(reason: str, casilla_id: str | None, findings: Iterable[ModeloVerificationFinding]) -> bool:
     """Whether a finding of the check already says what this note says, about the same box."""
     causes = _FINDINGS_OF_THE_SAME_CAUSE.get(reason, frozenset())
-    return any(
-        finding.message_locale_key in causes
-        and (None if finding.casilla_id is None else str(finding.casilla_id)) == casilla_id
-        for finding in findings
-    )
+    return any(finding.message_locale_key in causes and finding.casilla_id == casilla_id for finding in findings)
 
 
 def project_calculation_notes(
@@ -106,9 +97,7 @@ def project_calculation_notes(
     """
     checked = context.review.verification_outcome is not None
     boxes = {
-        str(field.address.casilla_id): field.box
-        for field in fields
-        if isinstance(field.address, ModeloFormCasillaAddressV1)
+        field.address.casilla_id: field.box for field in fields if isinstance(field.address, ModeloFormCasillaAddressV1)
     }
     notes: dict[tuple[str, str | None], ModeloFormCalculationNote] = {}
     for reason, casilla_id in sources:
@@ -132,14 +121,12 @@ def project_verification_issues(
 ) -> tuple[ModeloFormIssue, ...]:
     """The review's verification findings, blocking first, each with the box it names."""
     boxes = {
-        str(field.address.casilla_id): field.box
-        for field in fields
-        if isinstance(field.address, ModeloFormCasillaAddressV1)
+        field.address.casilla_id: field.box for field in fields if isinstance(field.address, ModeloFormCasillaAddressV1)
     }
     ordered = sorted(
         review.findings, key=lambda finding: finding.severity is not ModeloVerificationFindingSeverity.BLOCKING
     )
     return tuple(
-        ModeloFormIssue(finding=finding, box=None if finding.casilla_id is None else boxes.get(str(finding.casilla_id)))
+        ModeloFormIssue(finding=finding, box=None if finding.casilla_id is None else boxes.get(finding.casilla_id))
         for finding in ordered
     )

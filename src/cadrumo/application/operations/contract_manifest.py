@@ -23,7 +23,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from functools import cache, cached_property
 from threading import RLock
-from typing import Literal, Self
+from typing import Literal, Self, override
 
 from pydantic import BaseModel, Field, PrivateAttr, field_validator, model_validator
 
@@ -105,14 +105,14 @@ class OperationContractManifestV1(BaseModel):
     @cached_property
     def entries(self) -> Mapping[str, OperationContractManifestEntryV1]:
         """Each entry by definition ID."""
-        return {str(entry.contract.definition_id): entry for entry in self.operations}
+        return {entry.contract.definition_id: entry for entry in self.operations}
 
     @cached_property
     def groups(self) -> Mapping[str, frozenset[str]]:
         """The definition IDs each composition group must build."""
         members: dict[str, set[str]] = {}
         for entry in self.operations:
-            members.setdefault(entry.group, set()).add(str(entry.contract.definition_id))
+            members.setdefault(entry.group, set()).add(entry.contract.definition_id)
         return {group: frozenset(ids) for group, ids in members.items()}
 
     @classmethod
@@ -135,7 +135,10 @@ class OperationContractManifestV1(BaseModel):
     def render(self) -> str:
         """Serialize canonically: one operation per line, so a change reviews as one line."""
         header = {"contract_set_digest": self.contract_set_digest, "manifest_version": self.manifest_version}
-        lines = [json.dumps(entry.model_dump(mode="json"), sort_keys=True, separators=(",", ":")) for entry in self.operations]
+        lines = [
+            json.dumps(entry.model_dump(mode="json"), sort_keys=True, separators=(",", ":"))
+            for entry in self.operations
+        ]
         head = json.dumps(header, sort_keys=True, separators=(",", ":"))[:-1]
         return head + ',"operations":[\n' + ",\n".join(lines) + "\n]}\n"
 
@@ -170,6 +173,7 @@ class ManifestOperationRegistry(OperationRegistry):
         return registry
 
     @cached_property
+    @override
     def public_contract_set(self) -> OperationPublicContractSetV1:
         """Return the manifest's contracts without composing any operation."""
         return self._manifest.contract_set
@@ -189,14 +193,14 @@ class ManifestOperationRegistry(OperationRegistry):
 
     def _admit(self, group: str, built: OperationGroupBuild) -> None:
         """Admit a composed group only when it reproduces the manifest exactly."""
-        definitions = {str(definition.definition_id): definition for definition in built.definitions}
-        registrations = {str(item.contract.definition_id): item for item in built.registrations}
+        definitions = {definition.definition_id: definition for definition in built.definitions}
+        registrations = {item.contract.definition_id: item for item in built.registrations}
         expected = self._manifest.groups[group]
         if (
             len(definitions) != len(built.definitions)
             or len(registrations) != len(built.registrations)
-            or set(definitions) != expected
-            or set(registrations) != expected
+            or frozenset(definitions) != expected
+            or frozenset(registrations) != expected
         ):
             raise InternalInvariantError(f"operation group {group!r} does not compose what the contract manifest names")
         schema_models = dict(self._schema_models)
@@ -213,15 +217,19 @@ class ManifestOperationRegistry(OperationRegistry):
                 key = (binding.identity.schema_id, binding.identity.schema_version)
                 current = (binding.identity.schema_fingerprint, binding.model_type)
                 if schema_models.setdefault(key, current) != current:
-                    raise InternalInvariantError("one operation schema identity must bind one exact model and fingerprint")
+                    raise InternalInvariantError(
+                        "one operation schema identity must bind one exact model and fingerprint"
+                    )
         self._schema_models = schema_models
         self._definitions.update(definitions)
         self._registrations.update(registrations)
 
+    @override
     def lookup(self, definition_id: str) -> OperationDefinition:
         """Compose and return the exact registered definition, or fail closed."""
         return self._resolved(definition_id)[0]
 
+    @override
     def lookup_public_contract(self, definition_id: str) -> OperationPublicDefinitionContractV1:
         """Return the manifest contract without composing the operation."""
         entry = self._manifest.entries.get(definition_id)
@@ -229,18 +237,20 @@ class ManifestOperationRegistry(OperationRegistry):
             raise KeyError(f"operation definition has no public contract: {definition_id!r}")
         return entry.contract
 
+    @override
     def lookup_public_registration(self, definition_id: str) -> OperationPublicDefinitionRegistrationV1:
         """Compose and return the sole runtime binding for one operation."""
         if definition_id not in self._manifest.entries:
             raise KeyError(f"operation definition has no public registration: {definition_id!r}")
         return self._resolved(definition_id)[1]
 
+    @override
     def lookup_public_schema_binding(self, identity: OperationSchemaIdentityV1) -> OperationSchemaBindingV1:
         """Compose the first operation declaring this exact identity and return its binding."""
         key = (identity.schema_id, identity.schema_version, identity.schema_fingerprint)
         for entry in self._manifest.operations:
             if key in declared_public_schema_identities(entry.contract):
-                for binding in self._resolved(str(entry.contract.definition_id))[1].schema_bindings:
+                for binding in self._resolved(entry.contract.definition_id)[1].schema_bindings:
                     if binding.identity == identity:
                         return binding
         raise KeyError(
@@ -248,17 +258,20 @@ class ManifestOperationRegistry(OperationRegistry):
             f"{identity.schema_id!r} version {identity.schema_version}"
         )
 
+    @override
     def lookup_action(self, action: ActionReference) -> OperationDefinition:
         """Resolve an action join from the manifest, composing only its operation."""
         for entry in self._manifest.operations:
             if entry.contract.action_reference == action:
-                return self.lookup(str(entry.contract.definition_id))
+                return self.lookup(entry.contract.definition_id)
         raise KeyError(f"operator action is not mapped to an operation definition: {action.action_id!r}")
 
+    @override
     def declares_transient_financial_operands(self) -> bool:
         """Answer from the manifest contracts."""
         return any(entry.contract.transient_financial_operand is not None for entry in self._manifest.operations)
 
+    @override
     def ephemeral_secret_lifetimes(self) -> tuple[timedelta, ...]:
         """Answer from the manifest entries."""
         return tuple(lifetime for entry in self._manifest.operations if (lifetime := _lifetime(entry)) is not None)

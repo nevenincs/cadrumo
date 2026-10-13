@@ -146,7 +146,7 @@ def calculation_result_summary(
         if work_unit_resolver is None:
             raise TypeError("calculation result summary requires its selected work unit")
         try:
-            work_unit = work_unit_resolver(str(revision.work_unit_id))
+            work_unit = work_unit_resolver(revision.work_unit_id)
         except (LookupError, KeyError, AttributeError, CadrumoError) as exc:
             _log.warning(
                 "modelo result summary: unable to resolve work unit for revision=%s",

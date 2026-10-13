@@ -92,7 +92,7 @@ class PreviousFilingSourceResolver:
                 repository=self._repository,
                 iva_history_repository=self._iva_history_repository,
                 activity_start_date=activity_start_date_for_bucket(
-                    str(context.bucket_id),
+                    context.bucket_id,
                     profile_path_values_reader=self._profile_read_ports.path_values,
                 ),
                 excluded_binding_ids=self._excluded_binding_ids,

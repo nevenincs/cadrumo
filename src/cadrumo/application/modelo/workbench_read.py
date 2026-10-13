@@ -152,10 +152,10 @@ def read_modelo_workbench_form(
         load=loaded,
         admission=admission,
         calculation_revision_id=head_id,
-        verification_report_id=None if report is None else str(report.verification_report_id),
+        verification_report_id=None if report is None else report.verification_report_id,
         asks_m303_evidence=is_m303 and (head is None or head.filing_instance_evidence is None),
         asks_modelo_390=is_m303 and modelo_390_question_asked(unit.period, operation=operation),
-        registry_revision_id=str(form.registry_revision_id),
+        registry_revision_id=form.registry_revision_id,
         tax_id_format=runtime_tax_id_format(authority=operation),
     )
 

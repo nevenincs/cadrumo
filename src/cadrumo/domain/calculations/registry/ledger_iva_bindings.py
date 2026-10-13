@@ -592,7 +592,7 @@ def _is_conceptual_invoice_screen_rung(
         target_ids = casillas_by_binding(revision).get(binding.id, ())
         if not target_ids:
             return False
-        if any("transitorio" in str(target_id).casefold() for target_id in target_ids):
+        if any("transitorio" in target_id.casefold() for target_id in target_ids):
             return False
     return True
 
@@ -722,7 +722,7 @@ def _invoice_ledger_screen_candidates(
                 f"revision {revision.id!r} modelo {modelo!r} has an unknown "
                 f"invoice IVA screen selector shape {shape!r} on binding {binding.id!r}",
             )
-        if not str(binding.id).startswith(expected_prefix):
+        if not binding.id.startswith(expected_prefix):
             raise RegistryValidationError(
                 f"revision {revision.id!r} modelo {modelo!r} has cross-model invoice IVA screen binding {binding.id!r}",
             )

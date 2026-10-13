@@ -900,13 +900,13 @@ def _validated_m210_official_tipo_renta_code(raw_value: str, *, key: str) -> str
 def _refuse_row_field_casilla_override(key: CasillaId, *, records: tuple[str, ...], work_unit: WorkUnit) -> NoReturn:
     """Refuse a casilla an export record fills once per detail row, naming those records."""
     raise ModeloCalculateCasillaInputError(
-        context={"casilla_ids": str(key), "record_ids": ",".join(records)},
+        context={"casilla_ids": key, "record_ids": ",".join(records)},
         translated_message="errors.calc.row_field_template_supplied_as_input",
         precondition_failure=_caller_override_failure(
             work_unit,
             scenario_id="modelo.work.calculate.caller_overrides.row_field_casilla_refused",
             evidence_id=_CASILLA_OVERRIDE_EVIDENCE_ID,
-            facts={"casilla_key": str(key)},
+            facts={"casilla_key": key},
             with_registry_listing=False,
         ),
     )

@@ -143,7 +143,7 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                     category=str(observation.category),
                     tax_year=observation.tax_year,
                     deductible_amount=observation.deductible_amount,
-                    amortization_labelled=str(observation.target_casilla_id) in M100_AMORTIZATION_CASILLA_IDS,
+                    amortization_labelled=observation.target_casilla_id in M100_AMORTIZATION_CASILLA_IDS,
                 )
                 for observation in aggregation.observations
             ),
@@ -186,7 +186,7 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                     resolver_id=self.resolver_id,
                     message=(
                         f"declarable renta gastos observation "
-                        f"(modelo={str(observation.modelo)!r}, period={observation.period!r}, "
+                        f"(modelo={observation.modelo!r}, period={observation.period!r}, "
                         f"target_casilla_id={observation.target_casilla_id!r}, "
                         f"deductible_amount={observation.deductible_amount}) is not consumed by any "
                         f"ledger_renta_gastos_estimacion_directa_aggregation binding "

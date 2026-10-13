@@ -321,11 +321,11 @@ class ModeloAggregateExecutor:
         first_revision = transaction_repository.load_revision()
         if first_revision is None:
             raise LedgerPaymentWithholdingEvidenceError("transaction_catalogue_revision_unavailable")
-        catalogue = transaction_repository.load_by_ids((str(ledger_payment.transaction_id),))
+        catalogue = transaction_repository.load_by_ids((ledger_payment.transaction_id,))
         second_revision = transaction_repository.load_revision()
         if second_revision is None or second_revision != first_revision:
             raise LedgerPaymentWithholdingEvidenceError("transaction_catalogue_revision_changed")
-        transaction = resolve_ledger_payment_transaction(catalogue, str(ledger_payment.transaction_id))
+        transaction = resolve_ledger_payment_transaction(catalogue, ledger_payment.transaction_id)
         with validating_governed_facts(operation):
             capture = build_ledger_payment_withholding_capture(
                 transaction,

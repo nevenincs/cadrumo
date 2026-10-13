@@ -595,7 +595,7 @@ def _build_wizard_invoice(
             operation=operation,
         )
     except (InvoiceValidationError, ValidationError, CoreValidationError) as exc:
-        reason = str(exc.errors()[0].get("msg", str(exc))) if isinstance(exc, ValidationError) else str(exc)
+        reason = exc.errors()[0].get("msg", str(exc)) if isinstance(exc, ValidationError) else str(exc)
         raise InvoiceValidationError(
             f"invoice wizard refused: {reason}",
             translated_message="application.invoices.wizard.errors.build_failed",

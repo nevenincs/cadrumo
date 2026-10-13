@@ -302,9 +302,7 @@ def _registry_portal_bindings_for_modelo(
             # answer, not a registry integrity failure.
             return frozenset[Portal]()
         directory = operation.modelo_directory(str(code))
-        revisions = tuple(
-            (str(code), operation.revision(str(code), str(metadata.id))) for metadata in directory.revisions
-        )
+        revisions = tuple((str(code), operation.revision(str(code), metadata.id)) for metadata in directory.revisions)
         for modelo_id, revision in revisions:
             for link in revision.application_links:
                 if link.surface != "portal":

@@ -104,7 +104,7 @@ def _registry_snapshot_ref_for_m303_period(
     )
     return RegistrySnapshotRef(
         modelo=Modelo("303").value,
-        revision_id=str(revision.id),
+        revision_id=revision.id,
         modelo_year=period.filing_year,
         period=period.registry_token,
     )

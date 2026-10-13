@@ -162,7 +162,7 @@ def observe_profile_login_inventory(
         return ProfileLoginInventoryV1(state=ProfileLoginInventoryState.EMPTY)
 
     choices = choice_reader()
-    expected = {str(item.profile_id): str(item.label) for item in inventory.summaries}
+    expected = {item.profile_id: item.label for item in inventory.summaries}
     observed = {choice.profile_id: choice.label for choice in choices}
     if len(choices) != len(inventory.summaries) or expected != observed:
         return ProfileLoginInventoryV1(

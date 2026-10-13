@@ -115,7 +115,7 @@ def _project_capture(result: BaseModel, receipt: OperationTerminalReceipt, /) ->
     require_succeeded_terminal_receipt(
         receipt,
         definition_id=JUSTIFICANTE_CAPTURE_DEFINITION_ID,
-        subject_ref=profile_operation_subject(str(projection.bucket_id)),
+        subject_ref=profile_operation_subject(projection.bucket_id),
         effect=OperationEffect.UPDATED if report.local_write_performed else OperationEffect.NONE,
         message=_RECEIPT_CONTRADICTION,
     )
@@ -173,7 +173,7 @@ class JustificanteCaptureExecutor:
             )
         snapshot = outcome.snapshot
         if (
-            str(snapshot.bucket_id) != bucket_id
+            snapshot.bucket_id != bucket_id
             or snapshot.modelo != payload.modelo
             or snapshot.filing_year != payload.year
             or snapshot.period != period

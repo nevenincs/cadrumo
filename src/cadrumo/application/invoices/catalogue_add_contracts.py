@@ -285,7 +285,7 @@ def _require_created_invoice_result(result: InvoiceAddResult) -> None:
     if (
         result.invoice is None
         or result.invoice.bucket_id is None
-        or str(result.invoice.bucket_id) != str(result.profile_id)
+        or result.invoice.bucket_id != str(result.profile_id)
         or len(result.bucket_event_ids) != 1
         or result.invoice_id is not None
         or result.validation_code is not None

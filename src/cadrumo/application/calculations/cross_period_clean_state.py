@@ -176,12 +176,12 @@ def _revision_dependency_inventory_items(
     for period in periods:
         # A symbolic or administrative selector covers filings without
         # naming one, so it has no single filing snapshot to inspect.
-        if not is_filing_period_token(str(period)):
+        if not is_filing_period_token(period):
             continue
         snapshot = operation.snapshot(
             modelo_id,
             filing_year=filing_year,
-            period=str(period),
+            period=period,
             revision_id=revision_id,
         )
         dependencies = cross_period_dependency_requirements(snapshot)
@@ -189,8 +189,8 @@ def _revision_dependency_inventory_items(
             continue
         items.append(
             CrossPeriodDependencyInventoryItem(
-                target_modelo=str(snapshot.modelo.id),
-                target_revision_id=str(snapshot.revision.id),
+                target_modelo=snapshot.modelo.id,
+                target_revision_id=snapshot.revision.id,
                 target_filing_year=snapshot.filing_year,
                 target_period=Period.from_year_and_code(snapshot.filing_year, snapshot.period),
                 dependencies=dependencies,
@@ -228,14 +228,14 @@ def cross_period_dependency_inventory(
             # Dependency inventory is a filing-readiness surface. Applicability-
             # and calculation-grade revisions cannot lawfully produce the filing
             # snapshot consumed below, and therefore cannot own filing blockers.
-            revision_payload = operation.revision(modelo_id, str(revision.id))
+            revision_payload = operation.revision(modelo_id, revision.id)
             if revision_payload.effective_authority_grade is not RegistryAuthorityGrade.FILING:
                 continue
             items.extend(
                 _revision_dependency_inventory_items(
                     operation,
                     modelo_id=modelo_id,
-                    revision_id=str(revision.id),
+                    revision_id=revision.id,
                     filing_year=filing_year,
                     periods=revision.period_selector.periods_for_year(filing_year),
                 )
@@ -758,7 +758,7 @@ def evaluate_cross_period_clean_state(
     )
     return CrossPeriodCleanStateVerdict(
         bucket_id=bucket_id,
-        target_modelo=str(snapshot.modelo.id),
+        target_modelo=snapshot.modelo.id,
         target_filing_year=snapshot.filing_year,
         target_period=Period.from_year_and_code(snapshot.filing_year, snapshot.period),
         dependencies=_clean_state_dependencies(

@@ -184,9 +184,9 @@ def require_m190_signed_reintegro_context(
     record: ExportRecordDefinition, wire: str, *, source_digests: Mapping[str, str] | None = None
 ) -> None:
     """Enforce the source's prior-year, zero-withholding and incapacity conditions."""
-    if str(record.id) != "modelo-190-perceptor":
+    if record.id != "modelo-190-perceptor":
         return
-    by_id = {str(field.id): field for field in record.fields}
+    by_id = {field.id: field for field in record.fields}
     signed = by_id.get(_M190_SIGNED_PAIRS[0][0])
     if signed is None or signed.value_policy is not ExportValuePolicy.SIGNED_COMPONENT_SIGN:
         return  # Superseded manually authored layouts do not claim this contract.

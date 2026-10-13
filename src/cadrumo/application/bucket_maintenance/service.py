@@ -104,8 +104,8 @@ class BucketMaintenanceService:
                 except ValueError as exc:
                     raise _bucket_delete_refusal(
                         BucketDeletionPreconditionCondition.CUSTODY_TARGET_UNLINKED,
-                        bucket_id=str(bucket_id),
-                        facts={"bucket_id": str(bucket_id), "custody_target_unlinked": False},
+                        bucket_id=bucket_id,
+                        facts={"bucket_id": bucket_id, "custody_target_unlinked": False},
                     ) from exc
                 self._bucket_storage.acquire_lock(paths, wait_seconds=wait_seconds)
                 stack.callback(self._bucket_storage.release_lock, paths)
@@ -142,15 +142,15 @@ class BucketMaintenanceService:
         except ValueError as exc:
             raise _bucket_delete_refusal(
                 BucketDeletionPreconditionCondition.CUSTODY_TARGET_UNLINKED,
-                bucket_id=str(command.bucket_id),
-                facts={"bucket_id": str(command.bucket_id), "custody_target_unlinked": False},
+                bucket_id=command.bucket_id,
+                facts={"bucket_id": command.bucket_id, "custody_target_unlinked": False},
             ) from exc
         bucket = read_profile_bucket_by_id(command.bucket_id, root=root)
         if bucket is None:
             raise _bucket_delete_refusal(
                 BucketDeletionPreconditionCondition.LABEL_PROJECTION_PRESENT,
-                bucket_id=str(command.bucket_id),
-                facts={"bucket_id": str(command.bucket_id), "custody_record_present": False},
+                bucket_id=command.bucket_id,
+                facts={"bucket_id": command.bucket_id, "custody_record_present": False},
             )
         profile_id = UUID(command.bucket_id)
         return BucketDeletionAssessment(

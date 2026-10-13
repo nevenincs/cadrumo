@@ -230,7 +230,7 @@ def taxpayer_profile_from_record(record: UserProfileRecord, *, schema: ProfileSc
     if not bool(values.get(_TAX_ID_PATH)):
         _require_active_profile_tax_id(
             values,
-            active_profile=str(record.profile_id),
+            active_profile=record.profile_id,
             requirement=_grounded_tax_id_requirement(schema=schema),
         )
     return projection_for_taxpayer(record, schema=schema)

@@ -197,8 +197,8 @@ type ModeloFormAddressV1 = Annotated[
 def address_key(address: ModeloFormAddressV1) -> tuple[str, str]:
     """Return the hashable identity of one address."""
     if isinstance(address, ModeloFormCasillaAddressV1):
-        return ("casilla", str(address.casilla_id))
-    return ("binding", str(address.binding_id))
+        return ("casilla", address.casilla_id)
+    return ("binding", address.binding_id)
 
 
 class ModeloFormBinding(_FormModel):

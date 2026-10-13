@@ -30,7 +30,7 @@ def build_ledger_add_validation_messages(error: Exception) -> LedgerAddValidatio
     """Retain bounded validation locations and messages without error context."""
     if isinstance(error, ValidationError):
         messages: tuple[str, ...] = tuple(
-            str(item.get("msg", "invalid value")).removeprefix("Value error, ").strip()
+            item.get("msg", "invalid value").removeprefix("Value error, ").strip()
             for item in error.errors(include_input=False, include_context=False, include_url=False)[
                 :MAX_LEDGER_ADD_VALIDATION_MESSAGES
             ]

@@ -322,7 +322,7 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
                 return AccessDenied(code=AccessDenialCode.AUTHENTICATION_REQUIRED)
             outcome, login_id = authenticated
             deadline = self.owner.human_admission_deadline(connection_id)
-            if str(outcome.bucket_id) != str(self.binding.profile_id):
+            if outcome.bucket_id != str(self.binding.profile_id):
                 return AccessDenied(code=AccessDenialCode.PROFILE_MISMATCH)
             with self.owner.admission_guard():
                 if generation != self._human_admission_generation:

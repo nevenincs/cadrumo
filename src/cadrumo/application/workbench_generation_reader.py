@@ -176,7 +176,7 @@ def _lifecycle_work_unit_id(
 
 def _revision_event_work_unit_id(object_id: str, revisions: CalculationRevisionCatalogue) -> str | None:
     revision = revisions.revisions.get(object_id)
-    return None if revision is None else str(revision.work_unit_id)
+    return None if revision is None else revision.work_unit_id
 
 
 def _verification_event_work_unit_id(
@@ -192,7 +192,7 @@ def _verification_event_work_unit_id(
 
 def _filing_event_work_unit_id(object_id: str, filings: ModeloRecordCatalogue) -> str | None:
     record = filings.records.get(object_id)
-    return None if record is None else str(record.work_unit_id)
+    return None if record is None else record.work_unit_id
 
 
 def _declarations_lifecycle_facts(
@@ -209,7 +209,7 @@ def _declarations_lifecycle_facts(
     workspace joins every fact to a live declaration address, and a fact for a
     work unit that is no longer there has no row to belong to.
     """
-    known = {str(unit.work_unit_id) for unit in work_units.values()}
+    known = {unit.work_unit_id for unit in work_units.values()}
     facts: list[DeclarationsSanitizedLifecycleFactV1] = []
     for event in sorted(events.events.values(), key=bucket_event_order_key):
         kind = _LIFECYCLE_KIND_BY_EVENT.get(event.event_type)

@@ -696,9 +696,9 @@ def _normalize_prior_filing_observation(payload: _StoredPriorObservation) -> lis
         for entry in observation.observations
     )
     return [
-        str(observation.modelo),
+        observation.modelo,
         str(observation.filing_year),
-        str(observation.period),
+        observation.period,
         payload.source_kind,
         payload.member_nif or "",
         payload.stamped_revision_id,

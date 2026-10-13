@@ -75,10 +75,10 @@ class ModeloVerificationRegistrySnapshotProjection(BaseModel):
     def from_snapshot(cls, reference: RegistrySnapshotRef) -> ModeloVerificationRegistrySnapshotProjection:
         """Copy the domain reference into schema-safe scalar fields."""
         return cls(
-            modelo=str(reference.modelo),
-            revision_id=str(reference.revision_id),
+            modelo=reference.modelo,
+            revision_id=reference.revision_id,
             modelo_year=reference.modelo_year,
-            period=str(reference.period),
+            period=reference.period,
         )
 
 

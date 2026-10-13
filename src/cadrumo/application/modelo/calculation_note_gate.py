@@ -78,7 +78,7 @@ def require_no_blocking_calculation_notes(
     if not blocking:
         return
     first = blocking[0]
-    box = None if boxes is None or first.casilla_id is None else boxes.number(str(first.casilla_id))
+    box = None if boxes is None or first.casilla_id is None else boxes.number(first.casilla_id)
     raise ModeloCalculationBlockedError(
         translated_message=what_locale_key(first.reason),
         context={

@@ -118,8 +118,8 @@ def _selected_registry_scope(
 
 def _validate_binding_report(scope: _RegistryScope) -> None:
     """Require the query report to carry every typed, grounded binding row."""
-    declared_ids = {str(binding.id) for binding in scope.revision.bindings}
-    reported_ids = {str(binding.id) for binding in scope.bindings}
+    declared_ids = {binding.id for binding in scope.revision.bindings}
+    reported_ids = {binding.id for binding in scope.bindings}
     if declared_ids != reported_ids:
         raise RegistryValidationError(
             "selected descendant advisory binding report does not match the revision declarations",

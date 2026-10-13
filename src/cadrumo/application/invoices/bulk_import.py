@@ -898,7 +898,7 @@ def import_invoices_from_rows(
                 operation=operation,
             )
         except (InvoiceValidationError, ValidationError) as exc:
-            reason = str(exc.errors()[0].get("msg", str(exc))) if isinstance(exc, ValidationError) else str(exc)
+            reason = exc.errors()[0].get("msg", str(exc)) if isinstance(exc, ValidationError) else str(exc)
             refused.append(BulkInvoiceImportRowFailure(row_number=row_number, field="invoice", reason=reason))
             continue
 

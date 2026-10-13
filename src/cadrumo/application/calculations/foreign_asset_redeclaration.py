@@ -69,7 +69,7 @@ def _registry_valuation_casillas(
     # PinnedAuthorityOperation and must not be reopened here.
     catalogue = resolve_foreign_asset_obligation_catalogue()
     for casilla in modelo_revision.casillas:
-        parts = tuple(str(casilla.id).split("."))
+        parts = tuple(casilla.id.split("."))
         if len(parts) < 2 or parts[-1].casefold() != "valoracion":
             continue
         namespace = parts[-2].replace("-", "_").casefold()
@@ -134,7 +134,7 @@ def _obligation_group_for_valuation_casilla(
     operation: PinnedAuthorityOperation,
 ) -> ForeignAssetObligationGroup | None:
     """Infer the typed obligation group from a registry valuation casilla identity."""
-    parts = tuple(str(casilla_id).split("."))
+    parts = tuple(casilla_id.split("."))
     if len(parts) < 2 or parts[-1].casefold() != "valoracion":
         return None
     namespace = parts[-2].replace("-", "_").casefold()

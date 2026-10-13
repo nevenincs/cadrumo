@@ -70,7 +70,7 @@ def derive_m036_declaration_id(
     """
     canonical = "\x1f".join(
         [
-            str(profile_id),
+            profile_id,
             event_kind.value,
             declared_on.isoformat(),
             sede_justificante if sede_justificante is not None else "-",
@@ -247,8 +247,8 @@ def _require_profile_owns_bucket(*, profile_id: ProfileId, bucket_id: BucketId) 
     """
     from ..live.errors import LiveApplicationInputError
 
-    canonical_profile = str(profile_id).strip()
-    canonical_bucket = str(bucket_id).strip()
+    canonical_profile = profile_id.strip()
+    canonical_bucket = bucket_id.strip()
     if canonical_profile != canonical_bucket:
         raise LiveApplicationInputError(
             translated_message="application.modelo.errors.m036_declaration_profile_bucket_mismatch",
@@ -402,7 +402,7 @@ def record_m036_declaration(
 
     event_type = _EVENT_KIND_TO_BUCKET_EVENT[command.event_kind]
     payload: dict[str, str] = {
-        "profile_id": str(command.profile_id),
+        "profile_id": command.profile_id,
         "declared_on": command.declared_on.isoformat(),
     }
     if command.sede_justificante is not None:

@@ -51,7 +51,7 @@ def earlier_filings(binding: BindingDefinition, *, target: Period) -> tuple[Mode
         return ()
     return tuple(
         ModeloFormEarlierFiling(
-            modelo=str(provider.source_modelo),
+            modelo=provider.source_modelo,
             period=Period.from_year_and_code(target.filing_year + year_delta, source_period),
         )
         for year_delta, source_period in anchors
@@ -73,12 +73,12 @@ def bound_value_source(
     """
     if not binding_ids:
         return None
-    from_aeat_data = next((binding_id for binding_id in binding_ids if str(binding_id) in aeat_data_binding_ids), None)
+    from_aeat_data = next((binding_id for binding_id in binding_ids if binding_id in aeat_data_binding_ids), None)
     if from_aeat_data is not None:
         return ModeloFormValueSource(
             family=SourceFamily.AEAT_DRAFT, binding_id=from_aeat_data, source_kind=BindingSourceKind.BORRADOR
         )
-    primary = bindings[str(binding_ids[0])]
+    primary = bindings[binding_ids[0]]
     return ModeloFormValueSource(
         family=source_policy(primary.source).family,
         binding_id=primary.id,

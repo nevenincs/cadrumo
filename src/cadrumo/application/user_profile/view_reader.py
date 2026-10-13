@@ -87,8 +87,7 @@ def _is_profile_view_valid(record: UserProfileRecord, report: ProfileValidationR
 
 def _build_fact_source(record: UserProfileRecord) -> tuple[ProfileViewItem, ...]:
     return tuple(
-        ProfileViewFactItem(path=path, value=str(value))
-        for path, value in sorted(record_to_path_values(record).items())
+        ProfileViewFactItem(path=path, value=value) for path, value in sorted(record_to_path_values(record).items())
     )
 
 
@@ -197,9 +196,7 @@ def _build_status_source(
         baseline_ready=baseline_ready,
         projection_valid=projection_valid,
         facts=tuple(
-            ProfileViewFactItem(path=path, value=str(values[path]))
-            for path in sorted(_STATUS_FACT_PATHS)
-            if path in values
+            ProfileViewFactItem(path=path, value=values[path]) for path in sorted(_STATUS_FACT_PATHS) if path in values
         ),
     )
     return (status_item,)

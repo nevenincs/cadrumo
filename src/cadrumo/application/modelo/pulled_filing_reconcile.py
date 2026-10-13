@@ -101,7 +101,7 @@ def _pulled_filed_values(
         return None
     require_observation_envelope_coordinates_current(stored, operation=operation)
     coordinate = stored.registry_snapshot_ref
-    if (str(coordinate.modelo), coordinate.modelo_year, coordinate.period, coordinate.revision_id) != (
+    if (coordinate.modelo, coordinate.modelo_year, coordinate.period, coordinate.revision_id) != (
         str(work_unit.modelo),
         work_unit.filing_year,
         work_unit.period.registry_token,

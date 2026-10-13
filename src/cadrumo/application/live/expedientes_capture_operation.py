@@ -125,7 +125,7 @@ def _project_single(result: BaseModel, receipt: OperationTerminalReceipt, /) -> 
     require_live_capture_receipt(
         receipt,
         definition_id=EXPEDIENTES_SINGLE_CAPTURE_DEFINITION_ID,
-        bucket_id=str(snapshot.bucket_id),
+        bucket_id=snapshot.bucket_id,
         stored=report.newly_persisted,
         message=_RECEIPT_CONTRADICTION,
     )
@@ -148,7 +148,7 @@ def _project_bulk(result: BaseModel, receipt: OperationTerminalReceipt, /) -> Ba
     require_live_capture_receipt(
         receipt,
         definition_id=EXPEDIENTES_BULK_CAPTURE_DEFINITION_ID,
-        bucket_id=str(report.bucket_id),
+        bucket_id=report.bucket_id,
         stored=report.newly_persisted,
         message=_RECEIPT_CONTRADICTION,
     )
@@ -222,7 +222,7 @@ class ExpedientesSingleCaptureExecutor(_CaptureExecutorBase):
                 effect_guard=fenced_persistence_guard(context, persist_phase=_PHASES[2]),
                 on_session_write=session_receipt,
             )
-        if str(outcome.snapshot.bucket_id) != bucket_id:
+        if outcome.snapshot.bucket_id != bucket_id:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         return await self._publish(
             ExpedientesSingleCaptureReport(snapshot=outcome.snapshot, newly_persisted=outcome.newly_persisted),
@@ -258,7 +258,7 @@ class ExpedientesBulkCaptureExecutor(_CaptureExecutorBase):
                 effect_guard=fenced_persistence_guard(context, persist_phase=_PHASES[2]),
                 on_session_write=session_receipt,
             )
-        if str(report.bucket_id) != bucket_id:
+        if report.bucket_id != bucket_id:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         return await self._publish(report, report.newly_persisted, context, session_receipt)
 

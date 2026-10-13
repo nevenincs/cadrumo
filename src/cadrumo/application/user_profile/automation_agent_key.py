@@ -53,7 +53,7 @@ AGENT_OPTIONAL_CATEGORIES: tuple[DisclosureCategory, ...] = (DisclosureCategory.
 def registered_disclosure_projections(contracts: OperationPublicContractSetV1) -> frozenset[str]:
     """Return every projection an operation contract may disclose, as the owner's ceiling counts them."""
     return frozenset(
-        str(schema.schema_id)
+        schema.schema_id
         for contract in contracts.definitions
         for schema in (
             contract.result_schema,
@@ -67,10 +67,10 @@ def registered_disclosure_projections(contracts: OperationPublicContractSetV1) -
 def agent_operations(contracts: OperationPublicContractSetV1) -> frozenset[str]:
     """Return every registered operation an agent may run: all but the person's own acts."""
     return frozenset(
-        str(contract.definition_id)
+        contract.definition_id
         for contract in contracts.definitions
         if not operation_is_persons_act(
-            str(contract.definition_id), ephemeral_secret_required=contract.ephemeral_secret_required
+            contract.definition_id, ephemeral_secret_required=contract.ephemeral_secret_required
         )
     )
 

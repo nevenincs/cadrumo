@@ -193,7 +193,7 @@ def _require_advisory_revision_coordinate(work_unit: WorkUnit, revision: Calcula
     coordinate = revision.registry_snapshot_ref
     if (
         revision.work_unit_id != work_unit.work_unit_id
-        or str(coordinate.modelo) != str(work_unit.modelo)
+        or coordinate.modelo != str(work_unit.modelo)
         or coordinate.modelo_year != work_unit.filing_year
         or coordinate.period != work_unit.period.registry_token
         or coordinate.revision_id != work_unit.revision_id

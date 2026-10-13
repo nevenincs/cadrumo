@@ -574,7 +574,7 @@ def _recargo_rate_divergence(
         return None
     # The provision the advisory names is the pairing fact's own grounding,
     # so the message cites whatever the registry cites for that window.
-    legal_refs = tuple(str(ref) for ref in record.legal_refs)
+    legal_refs = record.legal_refs
     provisions = tuple(
         f"art. {article}"
         for article in (operation.legal_reference(ref).article for ref in legal_refs)

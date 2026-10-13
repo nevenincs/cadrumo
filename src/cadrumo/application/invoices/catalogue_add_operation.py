@@ -185,7 +185,7 @@ async def _commit_invoice_add(
         if (
             created.invoice.invoice_id != invoice.invoice_id
             or created.invoice.bucket_id is None
-            or str(created.invoice.bucket_id) != profile
+            or created.invoice.bucket_id != profile
         ):
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         result = InvoiceAddResult.created(
@@ -339,7 +339,7 @@ def _prepare_invoice_add(
 
 
 def _require_prepared_invoice_profile(invoice: Invoice, profile: str) -> None:
-    if invoice.bucket_id is None or str(invoice.bucket_id) != profile:
+    if invoice.bucket_id is None or invoice.bucket_id != profile:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
 
 

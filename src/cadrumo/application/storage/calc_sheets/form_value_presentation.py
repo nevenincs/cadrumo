@@ -16,7 +16,7 @@ def compact_date_casillas(revision: ModeloRevision) -> frozenset[str]:
     The ``revision`` parameter uses :class:`ModeloRevision`, which declares the form and its value contracts.
     """
     return frozenset(
-        str(field.casilla_id)
+        field.casilla_id
         for layout in revision.export_layouts
         for record in layout.records
         for field in record.fields

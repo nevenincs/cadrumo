@@ -219,7 +219,7 @@ def _projection_from_state(
     return ModeloIvaWalletCorrectionProjection(
         profile_id=profile_id,
         period=PublicPeriod.from_period(period),
-        taxpayer_nif=str(state.taxpayer_nif),
+        taxpayer_nif=state.taxpayer_nif,
         previous_amount=str(previous_state.available_end_amount),
         amount=str(state.available_end_amount),
         provenance=state.provenance,

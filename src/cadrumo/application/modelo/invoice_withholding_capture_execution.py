@@ -306,7 +306,7 @@ class ModeloInvoiceWithholdingCaptureExecutor:
         )
         catalogue, revision_id = ports.invoice_catalogue_repository.load_revisioned()
         try:
-            invoice = resolve_catalogue_invoice(catalogue, str(evidence.invoice_id))
+            invoice = resolve_catalogue_invoice(catalogue, evidence.invoice_id)
         except InvoiceLookupRefusedError:
             raise
         try:

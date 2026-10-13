@@ -234,7 +234,7 @@ def _modelo_export_layout_readiness_refusal(
         return None
     context = {"modelo": modelo, "reason": reason}
     if layout is not None:
-        context["layout_id"] = str(layout.id)
+        context["layout_id"] = layout.id
         context["layout_format"] = str(layout.format)
     return ModeloExportReadinessRefusal(
         reason=reason,
@@ -1155,7 +1155,7 @@ def _build_export_producer_snapshot(
             # relacionarse" is a third party, and under a gestor it is routinely
             # neither the taxpayer nor the presenter.
             declaration_contact=resolve_declaration_contact(
-                bucket_id=str(work_unit.bucket_id),
+                bucket_id=work_unit.bucket_id,
                 operation=operation,
             ),
         )
@@ -1256,7 +1256,7 @@ def _require_export_identity(
     if command.presenter is not None and command.taxpayer_identity is not None:
         return command.presenter, command.taxpayer_identity
     derived = resolve_export_identity(
-        bucket_id=str(work_unit.bucket_id),
+        bucket_id=work_unit.bucket_id,
         operation=operation,
     )
     presenter = command.presenter or (derived[0] if derived else None)
@@ -1381,7 +1381,7 @@ def _resolve_m303_filing_facts_for_export(
         prorrata_register_repository=prorrata_register_repository,
         transaction_repository=export_ports.transaction,
         investment_asset_register=bienes_register,
-        investment_asset_profile_id=str(work_unit.bucket_id),
+        investment_asset_profile_id=work_unit.bucket_id,
         operation=operation,
     )
     (

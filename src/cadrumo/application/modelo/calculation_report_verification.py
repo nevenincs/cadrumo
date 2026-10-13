@@ -485,7 +485,7 @@ def _read_document(
 def _filing_record_ids(revision: CalculationRevision, *, export_ports: ModeloExportPorts) -> frozenset[str]:
     """Return the ids of every filing record the store holds for the revision."""
     return frozenset(
-        str(record.filing_record_id)
+        record.filing_record_id
         for record in export_ports.filing.load().records.values()
         if record.calculation_revision_id == revision.calculation_revision_id
     )
@@ -814,7 +814,7 @@ def _check_stored_lifecycle(
     else:
         checks.expect(
             CalculationSummaryCheckName.FILING_RECORD,
-            str(statement.filing_record_id) in filing_record_ids,
+            statement.filing_record_id in filing_record_ids,
             CalculationSummaryVerificationReason.FILING_RECORD_MISMATCH,
         )
     if revision.state is statement.calculation_revision_state:

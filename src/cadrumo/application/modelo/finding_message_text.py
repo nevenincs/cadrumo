@@ -305,7 +305,7 @@ def finding_message_text(
     otherwise as a box without a number, never as its id.
     """
     words = box_words or {}
-    own_box = None if finding.casilla_id is None else words.get(str(finding.casilla_id))
+    own_box = None if finding.casilla_id is None else words.get(finding.casilla_id)
     facts: dict[str, str] = {}
     for name, value in finding.message_facts.items():
         text = fact_text(

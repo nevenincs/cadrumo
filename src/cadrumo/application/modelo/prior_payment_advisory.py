@@ -99,7 +99,7 @@ def _selected_registry_declaration(
     selected_revision = declarations.get("revision")
     if not (selected_revision is not None and selected_revision):
         raise RegistryValidationError("selected prior-payment declaration lacks a revision coordinate")
-    if selected_revision != str(revision.id):
+    if selected_revision != revision.id:
         return None
     operation.revision_for_context(selected_modelo, filing_year=filing_year, period=period_token, on=effective_date)
     return _PriorPaymentDeclaration(
@@ -141,7 +141,7 @@ def _prior_casilla_values(
 
 def _casilla_legal_refs(revision: ModeloRevision, casilla_id: CasillaId) -> tuple[str, ...]:
     casilla = casillas_by_id(revision).get(casilla_id)
-    return () if casilla is None else tuple(str(ref) for ref in casilla.legal_refs)
+    return () if casilla is None else tuple(casilla.legal_refs)
 
 
 def collect_prior_payment_not_deducted_diagnostics(

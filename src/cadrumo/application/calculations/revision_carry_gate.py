@@ -77,13 +77,11 @@ def revision_carry_outcome(
     try:
         # A carried prior filing may predate the supported filing floor; the law
         # still selected a design for it, so the envelope is not applied here.
-        selected_revision_id = str(
-            select_authored_revision_metadata(
-                operation.modelo_directory(str(snapshot_ref.modelo)),
-                filing_year=int(snapshot_ref.modelo_year),
-                period=str(snapshot_ref.period),
-            ).id
-        )
+        selected_revision_id = select_authored_revision_metadata(
+            operation.modelo_directory(snapshot_ref.modelo),
+            filing_year=snapshot_ref.modelo_year,
+            period=snapshot_ref.period,
+        ).id
     except Exception as exc:
         return RevisionCarryOutcome(
             refused=True,

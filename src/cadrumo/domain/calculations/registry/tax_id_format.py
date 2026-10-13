@@ -93,17 +93,17 @@ def tax_id_format_from_declarations(declarations: Mapping[str, str]) -> SpanishT
     width, prefixed_width, strip_width = _tax_id_widths(declarations)
     return SpanishTaxIdFormat(
         width=width,
-        country_prefix=str(declarations["tax_id.country_prefix"]),
+        country_prefix=declarations["tax_id.country_prefix"],
         country_prefixed_width=prefixed_width,
         country_prefix_strip_width=strip_width,
-        prefixed_nif_leaders=str(declarations["tax_id.leaders.prefixed_nif"]),
-        nie_leaders=str(declarations["tax_id.leaders.nie"]),
-        cif_leaders=str(declarations["tax_id.leaders.cif"]),
-        nif_letters=str(declarations["tax_id.check.nif_letters"]),
+        prefixed_nif_leaders=declarations["tax_id.leaders.prefixed_nif"],
+        nie_leaders=declarations["tax_id.leaders.nie"],
+        cif_leaders=declarations["tax_id.leaders.cif"],
+        nif_letters=declarations["tax_id.check.nif_letters"],
         nie_prefix_substitutions=_nie_prefix_substitutions(declarations),
-        cif_digit_only_kinds=str(declarations["tax_id.check.cif_digit_only_kinds"]),
-        cif_letter_only_kinds=str(declarations["tax_id.check.cif_letter_only_kinds"]),
-        cif_letter_table=str(declarations["tax_id.check.cif_letter_table"]),
+        cif_digit_only_kinds=declarations["tax_id.check.cif_digit_only_kinds"],
+        cif_letter_only_kinds=declarations["tax_id.check.cif_letter_only_kinds"],
+        cif_letter_table=declarations["tax_id.check.cif_letter_table"],
     )
 
 

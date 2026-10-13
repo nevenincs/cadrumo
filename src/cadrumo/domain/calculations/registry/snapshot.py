@@ -362,8 +362,8 @@ def _check_snapshot_authority_grade(
             registry_failure=RegistryFailureClassification(
                 condition=RegistryFailureCondition.SNAPSHOT_AUTHORITY_GRADE_SUFFICIENT,
                 facts={
-                    "modelo": str(modelo.id),
-                    "revision_id": str(revision.id),
+                    "modelo": modelo.id,
+                    "revision_id": revision.id,
                     "requested_authority_grade": requested_grade.value,
                     "authority_grade_declared": False,
                 },
@@ -380,8 +380,8 @@ def _check_snapshot_authority_grade(
         registry_failure=RegistryFailureClassification(
             condition=RegistryFailureCondition.SNAPSHOT_AUTHORITY_GRADE_SUFFICIENT,
             facts={
-                "modelo": str(modelo.id),
-                "revision_id": str(revision.id),
+                "modelo": modelo.id,
+                "revision_id": revision.id,
                 "requested_authority_grade": requested_grade.value,
                 "declared_authority_grade": declared_grade.value,
                 "authority_grade_declared": True,
@@ -446,8 +446,8 @@ def check_snapshot_filing_capability(
         registry_failure=RegistryFailureClassification(
             condition=RegistryFailureCondition.SNAPSHOT_EXPORT_LAYOUT_DECLARED,
             facts={
-                "modelo": str(modelo.id),
-                "revision": str(revision.id),
+                "modelo": modelo.id,
+                "revision": revision.id,
                 "export_layout_declared": False,
                 "filing_artifact_supported": False,
             },

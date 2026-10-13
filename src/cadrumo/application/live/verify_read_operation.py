@@ -50,7 +50,7 @@ VerifyObservationPersistenceFactory = Callable[[str], VerifyObservationPersisten
 
 
 def _require_bucket(observation: VerifyObservation, bucket_id: str) -> None:
-    if str(observation.bucket_id) != bucket_id:
+    if observation.bucket_id != bucket_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
 
 
@@ -93,7 +93,7 @@ class VerifyListExecutor:
                 surface=request.payload.surface,
                 nif=request.payload.nif,
             )
-            if any(str(observation.bucket_id) != bucket_id for observation in observations):
+            if any(observation.bucket_id != bucket_id for observation in observations):
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
             if any(
                 (request.payload.surface is not None and observation.surface is not request.payload.surface)
@@ -138,7 +138,7 @@ class VerifyViewExecutor:
             except VerifyObservationNotFoundError as exc:
                 raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED) from exc
             _require_bucket(observation, bucket_id)
-            if not str(observation.observation_id).startswith(request.payload.observation_id):
+            if not observation.observation_id.startswith(request.payload.observation_id):
                 raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
             projection = VerifyObservationPublicV1(**_summary(observation).model_dump(), bucket_id=bucket_id)
             _require_bounded_result(projection)
@@ -243,7 +243,7 @@ def _project_list(result: BaseModel, receipt: OperationTerminalReceipt, /) -> Ba
     require_live_read_receipt(
         receipt,
         definition_id=VERIFY_LIST_DEFINITION_ID,
-        bucket_id=str(report.bucket_id),
+        bucket_id=report.bucket_id,
         message=_RECEIPT_CONTRADICTION,
     )
     projection = VerifyListPublicResultV1(bucket_id=report.bucket_id, count=len(report.rows), rows=report.rows)
@@ -261,7 +261,7 @@ def _project_view(result: BaseModel, receipt: OperationTerminalReceipt, /) -> Ba
     require_live_read_receipt(
         receipt,
         definition_id=VERIFY_VIEW_DEFINITION_ID,
-        bucket_id=str(observation.bucket_id),
+        bucket_id=observation.bucket_id,
         message=_RECEIPT_CONTRADICTION,
     )
     projection = VerifyObservationPublicV1(**_summary(observation).model_dump(), bucket_id=observation.bucket_id)
@@ -278,7 +278,7 @@ def _project_latest_report(report: VerifyLatestOperationReport) -> VerifyLatestP
             surface=report.surface,
             nif=report.nif,
         )
-    if str(observation.bucket_id) != str(report.bucket_id):
+    if observation.bucket_id != report.bucket_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     summary = _summary(observation)
     return VerifyLatestPublicResultV1(
@@ -300,7 +300,7 @@ def _project_latest(result: BaseModel, receipt: OperationTerminalReceipt, /) -> 
     require_live_read_receipt(
         receipt,
         definition_id=VERIFY_LATEST_DEFINITION_ID,
-        bucket_id=str(report.bucket_id),
+        bucket_id=report.bucket_id,
         message=_RECEIPT_CONTRADICTION,
     )
     projection = _project_latest_report(report)

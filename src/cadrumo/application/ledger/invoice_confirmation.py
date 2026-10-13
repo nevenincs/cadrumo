@@ -278,7 +278,7 @@ def _fields_a_reconfirm_would_change(candidate: Invoice, stored: Invoice) -> tup
     """
     compared = candidate.model_dump(mode="json")
     against = stored.model_dump(mode="json")
-    field_names = tuple(str(name) for name in Invoice.model_fields)
+    field_names = tuple(Invoice.model_fields)
     return tuple(
         sorted(
             name

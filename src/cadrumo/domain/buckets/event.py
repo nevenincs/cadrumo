@@ -430,8 +430,8 @@ def verify_bucket_event_id(event: BucketEvent) -> None:
         raise BucketEventValidationError(
             translated_message="errors.error.error_storage_bucket",
             context={
-                "declared_event_id": str(event.event_id),
-                "derived_event_id": str(derived),
+                "declared_event_id": event.event_id,
+                "derived_event_id": derived,
                 "event_id_matches_derivation": False,
             },
         )
@@ -473,8 +473,8 @@ class BucketEventHistoryCatalogue(BaseModel):
                 raise BucketEventValidationError(
                     translated_message="errors.error.error_storage_bucket",
                     context={
-                        "catalogue_key": str(key),
-                        "event_id": str(event.event_id),
+                        "catalogue_key": key,
+                        "event_id": event.event_id,
                         "catalogue_key_matches_event_id": False,
                     },
                 )

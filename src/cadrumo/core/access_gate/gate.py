@@ -88,7 +88,7 @@ class AeatAccessGate:
                 context={
                     "env_var": _LIVE_READ_TEST_OPT_IN_ENV_VAR,
                     "required_value": "1",
-                    "current_value": str(self.settings.cadrumo_live_tests_enabled),
+                    "current_value": self.settings.cadrumo_live_tests_enabled,
                     "live_reads_enabled": False,
                 },
             )

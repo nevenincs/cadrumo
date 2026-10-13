@@ -30,11 +30,11 @@ def require_calculation_revision_coordinates_current(
         translated_message="application.modelo.errors.work_unit_revision_divergence",
         context={
             "work_unit_id": revision.work_unit_id,
-            "modelo": str(snapshot_ref.modelo),
+            "modelo": snapshot_ref.modelo,
             "filing_year": str(snapshot_ref.modelo_year),
-            "period": str(snapshot_ref.period),
-            "work_unit_revision": str(snapshot_ref.revision_id),
-            "law_revision": str(outcome.selected_revision_id or "unresolvable"),
+            "period": snapshot_ref.period,
+            "work_unit_revision": snapshot_ref.revision_id,
+            "law_revision": outcome.selected_revision_id or "unresolvable",
         },
     )
 

@@ -129,7 +129,7 @@ def add_form_workbook[M: (SheetExportMetadata, SheetReviewMetadata)](
     return _project_form(
         human_workbook(plan, snapshot),
         snapshot.revision,
-        str(snapshot.modelo.id),
+        snapshot.modelo.id,
         snapshot.filing_period or plan.metadata.period,
         layout,
         bindings,
@@ -145,7 +145,7 @@ def add_template_preview_form(
     illustrative_producer: FilingProducerSnapshot | None = None,
 ) -> SheetExportPlan[SheetTemplatePreviewMetadata]:
     """Render a fictional template without acquiring filing or saved-revision authority."""
-    if illustrative_producer is not None and str(illustrative_producer.modelo) != str(source.modelo_id):
+    if illustrative_producer is not None and str(illustrative_producer.modelo) != source.modelo_id:
         raise CalcSheetsEngineError("illustrative form context belongs to another modelo")
     if TabName.FORM in plan.tabs:
         raise CalcSheetsEngineError("workbook already contains a form projection")
@@ -164,7 +164,7 @@ def add_template_preview_form(
         if field.draft_attribute is ExportDraftAttribute.FILING_YEAR:
             return frame.filing_year
         if field.draft_attribute is ExportDraftAttribute.PERIOD_CODE:
-            return str(frame.code)
+            return frame.code
         if isinstance(frame, Period) and frame.has_date_span():
             if field.draft_attribute is ExportDraftAttribute.PERIOD_START_DATE:
                 return frame.start_date
@@ -182,7 +182,7 @@ def add_template_preview_form(
     return _project_form(
         plan,
         source.revision,
-        str(source.modelo_id),
+        source.modelo_id,
         source.preview_frame,
         layout,
         bindings,
@@ -216,7 +216,7 @@ def add_saved_review_form(
     return _project_form(
         plan,
         snapshot.revision,
-        str(snapshot.modelo.id),
+        snapshot.modelo.id,
         snapshot.filing_period or Period.from_year_and_code(snapshot.filing_year, snapshot.period),
         layout,
         {},
@@ -612,7 +612,7 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
     def field(self, casilla_id: str, *, constant: str | None = None, decimals: int | None = None) -> None:
         self.text(self.casilla_label(casilla_id))
         self.span(2, 8, StyleRole.FORM_LABEL)
-        self.text(str(self.placements[casilla_id].box_number or ""), 9)
+        self.text(self.placements[casilla_id].box_number or "", 9)
         self.span(9, 9, StyleRole.CASILLA, boxed=True)
         self.value(casilla_id, 10, 12, constant=constant, decimals=decimals)
         self.heights.append(
@@ -722,7 +722,7 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
                 text_width = sum(self.column_widths[start - 1 : start + 1]) - 2
                 if cell.casilla_id is not None and cell.casilla_id:
                     text_width = self.column_widths[start] - 2
-                    self.text(str(self.placements[cell.casilla_id].box_number or ""), start)
+                    self.text(self.placements[cell.casilla_id].box_number or "", start)
                     self.span(start, start, StyleRole.CASILLA, boxed=True)
                     if record_values is None:
                         self.value(
@@ -828,7 +828,7 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
                     self.text(label)
                     self.span(2, 8, StyleRole.FORM_LABEL)
                     if box_number is not None and box_number:
-                        self.text(str(box_number), 9)
+                        self.text(box_number, 9)
                         self.span(9, 9, StyleRole.CASILLA, boxed=True)
                     self.record_value(
                         column.casilla_id,
@@ -900,11 +900,11 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
         self.text(label)
         value_column = 10 if (block.box_number is not None and block.box_number) else 9
         if block.box_number is not None and block.box_number:
-            self.text(str(block.box_number), 9)
+            self.text(block.box_number, 9)
             self.span(9, 9, StyleRole.CASILLA, boxed=True)
         if field.binding is not None:
             self.span(2, 8, StyleRole.FORM_LABEL)
-            self.binding_value(str(field.binding), value_column, 12, readonly=True)
+            self.binding_value(field.binding, value_column, 12, readonly=True)
             self.heights.append(SheetRowHeight(tab=TabName.FORM, row=self.row, height_pixels=32))
             self.row += 1
             return

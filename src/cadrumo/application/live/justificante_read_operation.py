@@ -149,18 +149,18 @@ JustificanteCaptureSnapshotServiceFactory = Callable[[str], JustificanteCaptureS
 
 def _summary(snapshot: JustificanteCaptureSnapshot) -> JustificanteSnapshotSummaryPublicV1:
     return JustificanteSnapshotSummaryPublicV1(
-        snapshot_id=_SNAPSHOT_ID.validate_python(str(snapshot.snapshot_id), strict=True),
+        snapshot_id=_SNAPSHOT_ID.validate_python(snapshot.snapshot_id, strict=True),
         modelo=str(_MODELO.validate_python(snapshot.modelo)),
-        filing_year=_FILING_YEAR.validate_python(int(snapshot.filing_year), strict=True),
+        filing_year=_FILING_YEAR.validate_python(snapshot.filing_year, strict=True),
         period=_validated_period_token(snapshot),
-        pdf_sha256=_CONTENT_DIGEST.validate_python(str(snapshot.pdf_sha256), strict=True),
+        pdf_sha256=_CONTENT_DIGEST.validate_python(snapshot.pdf_sha256, strict=True),
         state=SnapshotLifecycleState(snapshot.state).value,
         captured_at=snapshot.captured_at,
     )
 
 
 def _require_bucket(snapshot: JustificanteCaptureSnapshot, bucket_id: str) -> None:
-    stored_bucket_id = _BUCKET_ID.validate_python(str(snapshot.bucket_id), strict=True)
+    stored_bucket_id = _BUCKET_ID.validate_python(snapshot.bucket_id, strict=True)
     if stored_bucket_id != bucket_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
 
@@ -280,7 +280,7 @@ def _project_list(result: BaseModel, receipt: OperationTerminalReceipt, /) -> Ba
     require_live_read_receipt(
         receipt,
         definition_id=JUSTIFICANTE_LIST_DEFINITION_ID,
-        bucket_id=str(report.bucket_id),
+        bucket_id=report.bucket_id,
         message=_RECEIPT_CONTRADICTION,
     )
     return JustificanteListPublicResultV1(bucket_id=report.bucket_id, count=len(report.rows), rows=report.rows)
@@ -294,18 +294,18 @@ def _project_show(result: BaseModel, receipt: OperationTerminalReceipt, /) -> Ba
     require_live_read_receipt(
         receipt,
         definition_id=JUSTIFICANTE_SHOW_DEFINITION_ID,
-        bucket_id=str(snapshot.bucket_id),
+        bucket_id=snapshot.bucket_id,
         message=_RECEIPT_CONTRADICTION,
     )
     return JustificanteShowPublicResultV1(
-        bucket_id=_BUCKET_ID.validate_python(str(snapshot.bucket_id), strict=True),
-        snapshot_id=_SNAPSHOT_ID.validate_python(str(snapshot.snapshot_id), strict=True),
+        bucket_id=_BUCKET_ID.validate_python(snapshot.bucket_id, strict=True),
+        snapshot_id=_SNAPSHOT_ID.validate_python(snapshot.snapshot_id, strict=True),
         modelo=str(_MODELO.validate_python(snapshot.modelo)),
-        filing_year=_FILING_YEAR.validate_python(int(snapshot.filing_year), strict=True),
+        filing_year=_FILING_YEAR.validate_python(snapshot.filing_year, strict=True),
         period=_validated_period_token(snapshot),
-        expediente_id=_EXPEDIENTE_ID.validate_python(str(snapshot.expediente_id), strict=True),
-        csv=_CSV.validate_python(str(snapshot.csv), strict=True),
-        pdf_sha256=_CONTENT_DIGEST.validate_python(str(snapshot.pdf_sha256), strict=True),
+        expediente_id=_EXPEDIENTE_ID.validate_python(snapshot.expediente_id, strict=True),
+        csv=_CSV.validate_python(snapshot.csv, strict=True),
+        pdf_sha256=_CONTENT_DIGEST.validate_python(snapshot.pdf_sha256, strict=True),
         source_kind=ObservationSourceKind(snapshot.source_kind).value,
         state=SnapshotLifecycleState(snapshot.state).value,
         captured_at=snapshot.captured_at,

@@ -123,9 +123,9 @@ def missing_modelo_required_binding_ids(
     """
     if str(work_unit.modelo) != Modelo("202").value:
         return ()
-    resolved = frozenset(str(binding_id) for binding_id in resolved_binding_ids)
+    resolved = frozenset(resolved_binding_ids)
     return tuple(
-        sorted(binding.id for binding in registry_revision.bindings if str(binding.id) not in resolved),
+        sorted(binding.id for binding in registry_revision.bindings if binding.id not in resolved),
     )
 
 
@@ -225,7 +225,7 @@ def _raise_required_bindings_missing(
                 "year": work_unit.filing_year,
                 "period": period,
                 "missing_binding_count": len(missing_bindings),
-                "missing_binding_ids": "|".join(str(binding_id) for binding_id in missing_bindings),
+                "missing_binding_ids": "|".join(missing_bindings),
             },
             provenance=ActionEvidenceProvenance.REGISTRY_RECORD,
             action_id="operator.modelo.bindings.list",

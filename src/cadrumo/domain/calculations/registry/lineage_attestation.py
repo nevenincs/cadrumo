@@ -134,7 +134,7 @@ class LineageAttestation(RegistryModel):
         if self.member is not None:
             return self.member
         if self.continuidad_id is not None:
-            return str(self.continuidad_id)
+            return self.continuidad_id
         raise RegistryValidationError(
             f"lineage attestation {self.family!r} has no family identity",
         )

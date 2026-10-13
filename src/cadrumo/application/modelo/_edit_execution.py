@@ -435,7 +435,7 @@ def _unresolved_binding_edit_refusal(
     casilla = next((item for item in revision.casillas if item.id == context.get("casilla_id")), None)
     raw = context.get("binding_id")
     binding_ids = tuple(raw.split(",")) if isinstance(raw, str) else ()
-    declared = {str(binding.id) for binding in revision.bindings}
+    declared = {binding.id for binding in revision.bindings}
     if (
         casilla is not None
         and 0 < len(binding_ids) <= 16

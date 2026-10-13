@@ -63,7 +63,7 @@ def test_temporal_union_round_trips_every_member_through_its_discriminator(
 
 
 def test_applicability_and_authorship_unions_round_trip_every_member() -> None:
-    members: list[object] = [
+    members: list[BindingApplicability] = [
         AllRevisionContexts(),
         TargetPeriods(periods=("0A",)),
         NonCalculation(
@@ -75,7 +75,7 @@ def test_applicability_and_authorship_unions_round_trip_every_member() -> None:
     for member in members:
         assert _APPLICABILITY.validate_python(_APPLICABILITY.dump_python(member, mode="json")) == member
 
-    authorship: list[object] = [
+    authorship: list[BindingAuthorship] = [
         AuthoredBinding(),
         GeneratedBinding(generator_id="m303-binding-generator", run_digest="sha256:abc"),
     ]

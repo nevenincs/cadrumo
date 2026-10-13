@@ -257,8 +257,7 @@ def load_modelo_work_form(
     layer = context.operator_layer if resolved else None
     surface = (
         admission.baseline.permitted_surface
-        if isinstance(admission, ModeloEditAdmittedV1)
-        and str(admission.baseline.work_unit_id) == str(review.work_unit_id)
+        if isinstance(admission, ModeloEditAdmittedV1) and admission.baseline.work_unit_id == review.work_unit_id
         else None
     )
     form = build_modelo_work_form(
@@ -278,15 +277,11 @@ def load_modelo_work_form(
             reference_on=reference_on if reference_on is not None else today_madrid(),
         ),
         aeat_data_imported_at=_aeat_data_imported_at(context.borrador_snapshot_id, borrador_snapshots),
-        calculation_diagnostics=CALCULATION_NOTES.diagnostics_for(
-            str(review.work_unit_id), review.calculation_revision_id
-        ),
+        calculation_diagnostics=CALCULATION_NOTES.diagnostics_for(review.work_unit_id, review.calculation_revision_id),
     )
     form = form.model_copy(
         update={
-            "last_export": _last_export(
-                bucket_events, bucket_id, str(review.work_unit_id), review.calculation_revision_id
-            )
+            "last_export": _last_export(bucket_events, bucket_id, review.work_unit_id, review.calculation_revision_id)
         }
     )
     state = review.lifecycle_state
@@ -304,13 +299,13 @@ def _last_export(
         return None
     exported = [
         event
-        for event in bucket_events.load().for_bucket(str(bucket_id), event_types=(BucketEventType.MODELO_EXPORTED,))
+        for event in bucket_events.load().for_bucket(bucket_id, event_types=(BucketEventType.MODELO_EXPORTED,))
         if event.payload.get("work_unit_id") == work_unit_id and bool(event.payload.get("calculation_revision_id"))
     ]
     if not exported:
         return None
     latest = exported[-1]
-    revision_id = str(latest.payload["calculation_revision_id"])
+    revision_id = latest.payload["calculation_revision_id"]
     return ModeloFormExport(
         exported_at=latest.occurred_at, calculation_revision_id=revision_id, current=revision_id == current_revision_id
     )

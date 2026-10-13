@@ -152,7 +152,7 @@ def _projection_from_decision(
     return ModeloIvaWalletOverrideProjection(
         profile_id=profile_id,
         period=period,
-        taxpayer_nif=str(decision.taxpayer_nif),
+        taxpayer_nif=decision.taxpayer_nif,
         amount=str(decision.selected_amount),
         reason=reason,
         evidence_locator=evidence_locator,

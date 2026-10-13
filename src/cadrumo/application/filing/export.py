@@ -803,7 +803,7 @@ def render_filing_envelope(request: _FilingEnvelopeRenderRequest) -> _FilingEnve
         modelo=request.modelo,
         period=request.draft.period,
         product_software_identity=request.product_software_identity,
-        declarant_tax_id=str(request.draft.subject_tax_id),
+        declarant_tax_id=request.draft.subject_tax_id,
         envelope=envelope,
         casilla_values={item.casilla_id: item.value for item in request.draft.values},
     )
@@ -813,8 +813,8 @@ def render_filing_envelope(request: _FilingEnvelopeRenderRequest) -> _FilingEnve
     )
     return _FilingEnvelopeRenderResult(
         draft_id=request.draft.draft_id,
-        revision_id=str(request.registry_snapshot.revision.id),
-        layout_id=str(request.layout.id),
+        revision_id=request.registry_snapshot.revision.id,
+        layout_id=request.layout.id,
         modelo=request.modelo,
         period=request.draft.period,
         envelope=envelope,
@@ -833,7 +833,7 @@ def _require_envelope_required_occurrences(
     occurrences: tuple[_FilingEnvelopeOccurrence, ...],
 ) -> None:
     present = {item.record_id for item in occurrences}
-    missing = tuple(str(record.id) for record in layout.records if record.required and record.id not in present)
+    missing = tuple(record.id for record in layout.records if record.required and record.id not in present)
     if missing:
         raise FilingExportValidationError(
             f"filing-envelope required record families have no emitted occurrence: {missing!r}",

@@ -231,14 +231,14 @@ def read_system_memory() -> SystemMemoryReading:
         names = getattr(os, "sysconf_names", {})
         if "SC_PAGE_SIZE" in names and "SC_PHYS_PAGES" in names:
             try:
-                page_size = int(os.sysconf("SC_PAGE_SIZE"))
-                total = page_size * int(os.sysconf("SC_PHYS_PAGES"))
+                page_size = os.sysconf("SC_PAGE_SIZE")
+                total = page_size * os.sysconf("SC_PHYS_PAGES")
             except (OSError, ValueError):
                 return SystemMemoryReading()
             free: int | None = None
             if "SC_AVPHYS_PAGES" in names:
                 try:
-                    free = page_size * int(os.sysconf("SC_AVPHYS_PAGES"))
+                    free = page_size * os.sysconf("SC_AVPHYS_PAGES")
                 except (OSError, ValueError):
                     free = None
             return SystemMemoryReading(total_bytes=total, free_bytes=free)
@@ -473,7 +473,7 @@ def read_accelerator() -> AcceleratorReading:
         )
     try:
         try:
-            count = int(pynvml.nvmlDeviceGetCount())
+            count = pynvml.nvmlDeviceGetCount()
         except (pynvml.NVMLError, OSError, ValueError):
             return AcceleratorReading(
                 kind=AcceleratorKind.UNKNOWN,
@@ -492,10 +492,10 @@ def read_accelerator() -> AcceleratorReading:
             try:
                 handle = pynvml.nvmlDeviceGetHandleByIndex(index)
                 raw_name = pynvml.nvmlDeviceGetName(handle)
-                name = raw_name.decode("utf-8", "replace") if isinstance(raw_name, bytes) else str(raw_name)
+                name = raw_name.decode("utf-8", "replace") if isinstance(raw_name, bytes) else raw_name
                 info = pynvml.nvmlDeviceGetMemoryInfo(handle)
-                total = int(info.total)
-                free = int(info.free)
+                total = info.total
+                free = info.free
             except (pynvml.NVMLError, OSError, ValueError, AttributeError):
                 # A device that answers nothing stays enumerated with unreadable
                 # figures rather than being dropped: its presence is a real

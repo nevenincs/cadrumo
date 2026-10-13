@@ -2,6 +2,7 @@
 
 Core types:
 :class:`~cadrumo.core.classification.policies.SensitivityClass`.
+:class:`SecureObjectRepository` stores the encrypted history records.
 """
 
 from __future__ import annotations
@@ -20,7 +21,6 @@ from ....application.calculations.iva_compensation_history_ports import (
     IvaCompensationHistoryPersistenceError,
     IvaCompensationHistoryRepositoryProtocol,
 )
-from ....application.calculations.observations_repository import CalculationObservationStorageProtocol
 from ....core.classification.policies import SensitivityClass
 from ....core.period import Period
 from ....core.secure_object_write import SecureObjectWrite
@@ -28,6 +28,7 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState, iva_compensation_period_sort_key
 from ..storage.envelope.secure_bound_repository import SecureBoundRepository
 from ..storage.secure_object_namespaces import IVA_COMPENSATION_HISTORY_NAMESPACE
+from ..storage.sql.secure_objects import SecureObjectRepository
 
 
 def _call_storage[T](operation: str, callback: Callable[[], T]) -> T:
@@ -60,7 +61,7 @@ class IvaCompensationHistoryRepository(
 
     @property
     @override
-    def secure_object_repository(self) -> CalculationObservationStorageProtocol:
+    def secure_object_repository(self) -> SecureObjectRepository:
         """Expose the storage capability required for atomic co-commit."""
         return self._objects
 

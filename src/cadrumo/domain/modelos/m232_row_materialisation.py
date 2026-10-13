@@ -109,7 +109,7 @@ def m232_related_party_row_casilla_values(
         required_mapping_entry(entries, "modelo", subject=_SUBJECT),
         required_mapping_entry(entries, "revision", subject=_SUBJECT),
     )
-    declared = {str(casilla.id) for casilla in revision.casillas}
+    declared = {casilla.id for casilla in revision.casillas}
     return _materialise_declared_rows(
         rows,
         slot_ids=slot_ids,

@@ -236,7 +236,7 @@ class LedgerImportResultProjection(BaseModel):
         if self.bucket_id != str(self.profile_id):
             raise ValueError("ledger import result does not belong to its exact profile")
         if any(
-            str(reference.bucket_id) != self.bucket_id
+            reference.bucket_id != self.bucket_id
             for reference in (
                 *self.imported_transaction_refs,
                 *self.skipped_transaction_refs,

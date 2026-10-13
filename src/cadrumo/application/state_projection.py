@@ -1096,20 +1096,19 @@ def _missing_calculation_bindings_for_readiness(
     )
 
     revision = snapshot.revision
-    enum_consumed = {str(binding_id) for binding_id in enum_consumed_binding_ids(revision)}
-    date_consumed = {str(binding_id) for binding_id in revision_date_binding_ids(revision)}
+    enum_consumed = set(enum_consumed_binding_ids(revision))
+    date_consumed = set(revision_date_binding_ids(revision))
     if not revision.bindings:
         return ()
-    period_zero_defaulted = {
-        str(binding_id)
-        for binding_id in relation_prefill_period_zero_default_binding_ids(
+    period_zero_defaulted = set(
+        relation_prefill_period_zero_default_binding_ids(
             revision,
             modelo=modelo,
-            filing_year=int(snapshot.filing_year),
+            filing_year=snapshot.filing_year,
             period=period.registry_token,
             operation=operation,
         )
-    }
+    )
     try:
         profile_resolution = resolve_profile_sourced_bindings(
             snapshot,
@@ -1125,7 +1124,7 @@ def _missing_calculation_bindings_for_readiness(
         )
         profile_resolved: set[str] = set()
     else:
-        profile_resolved = {str(binding_id) for binding_id in profile_resolved_binding_ids(profile_resolution)}
+        profile_resolved = set(profile_resolved_binding_ids(profile_resolution))
 
     return _build_missing_binding_requirements(
         revision,
@@ -1148,8 +1147,8 @@ def _build_missing_binding_requirements(
 ) -> tuple[ProjectionModeloBindingRequirement, ...]:
     """Project unresolved registry bindings in their canonical ID order."""
     missing: list[ProjectionModeloBindingRequirement] = []
-    for binding in sorted(revision.bindings, key=lambda item: str(item.id)):
-        binding_id = str(binding.id)
+    for binding in sorted(revision.bindings, key=lambda item: item.id):
+        binding_id = binding.id
         if binding.source in _LEDGER_PREFLIGHT_BINDING_SOURCES and ledger_sources_ready:
             continue
         if binding.source == BindingSourceKind.PROFILE and binding_id in profile_resolved:

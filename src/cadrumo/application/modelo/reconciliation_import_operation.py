@@ -255,7 +255,7 @@ def _project_reconciliation_import(
     require_terminal_receipt_match(
         receipt,
         definition_id=MODELO_RECONCILIATION_IMPORT_OPERATION_DEFINITION_ID,
-        subject_ref=profile_operation_subject(str(projection.bucket_id)),
+        subject_ref=profile_operation_subject(projection.bucket_id),
         condition=OperationTerminalCondition.SUCCEEDED,
         effect=OperationEffect.UPDATED,
         message="modelo reconciliation import result contradicts its terminal receipt",

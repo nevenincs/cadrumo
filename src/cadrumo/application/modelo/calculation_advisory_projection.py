@@ -210,7 +210,7 @@ def _diagnostic_printed_box_numbers(
     return tuple(
         PrintedBoxNumberSnapshot(casilla_id=casilla_id, number=number)
         for casilla_id in named
-        if boxes is not None and (number := boxes.number(str(casilla_id))) is not None
+        if boxes is not None and (number := boxes.number(casilla_id)) is not None
     )
 
 
@@ -273,7 +273,7 @@ class ModeloCalculationAdvisories(BaseModel):
 
     def to_printed_boxes(self) -> PrintedBoxes:
         """Restore the printed numbers of the boxes the diagnostics name."""
-        return PrintedBoxes(numbers=MappingProxyType({str(row.casilla_id): row.number for row in self.printed_boxes}))
+        return PrintedBoxes(numbers=MappingProxyType({row.casilla_id: row.number for row in self.printed_boxes}))
 
     def to_modality(self) -> Modelo202ModalitySummary | None:
         """Restore the optional Modelo 202 modality summary."""

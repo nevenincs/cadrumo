@@ -230,7 +230,7 @@ def build_ledger_reset_definition(
 
 def _operation_result(profile_id: UUID, report: LedgerCatalogueResetReport) -> LedgerResetOperationResult:
     """Validate profile identity and all bounds before publishing a receipt."""
-    if str(report.bucket_id) != str(profile_id):
+    if report.bucket_id != str(profile_id):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     return LedgerResetOperationResult(profile_id=profile_id, report=_project_report(report))
 

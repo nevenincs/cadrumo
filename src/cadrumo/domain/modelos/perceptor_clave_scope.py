@@ -165,7 +165,7 @@ def row_field_value_bindings(revision: ModeloRevision) -> dict[CasillaId, Bindin
             if record.binding_record is None:
                 continue
             for row_field, casilla_id in record.row_field_casilla_ids.items():
-                casilla_by_record_field[(str(record.binding_record), str(row_field))] = casilla_id
+                casilla_by_record_field[(record.binding_record, row_field)] = casilla_id
     bindings: dict[CasillaId, BindingId] = {}
     for binding in revision.bindings:
         record = getattr(binding.provider, "record", None)

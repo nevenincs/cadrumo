@@ -50,7 +50,7 @@ def reject_unknown_revision(
         raise ModeloError(str(exc)) from exc
     if any(revision.id == revision_id for revision in revisions):
         return
-    available = ", ".join(sorted(str(revision.id) for revision in revisions))
+    available = ", ".join(sorted(revision.id for revision in revisions))
     raise ModeloError(
         f"revision_id {revision_id!r} is not declared on modelo {modelo!r}. Available revisions: {available}",
     )
@@ -74,7 +74,7 @@ def reject_unknown_period_for_revision(
     from ...domain.calculations.registry.period_selector_match import selector_period_matches_request
 
     try:
-        revision = operation.revision(modelo, str(revision_id))
+        revision = operation.revision(modelo, revision_id)
     except (RegistrySnapshotError, ValueError) as exc:
         raise ModeloError(str(exc)) from exc
     declared: set[str] = set()

@@ -136,7 +136,7 @@ class ModeloReviewPackageManifestPublic(BaseModel):
                 modelo=manifest.registry_snapshot_ref.modelo,
                 revision_id=manifest.registry_snapshot_ref.revision_id,
                 modelo_year=manifest.registry_snapshot_ref.modelo_year,
-                period=str(manifest.registry_snapshot_ref.period),
+                period=manifest.registry_snapshot_ref.period,
             ),
             modelo=manifest.modelo,
             filing_year=manifest.filing_year,

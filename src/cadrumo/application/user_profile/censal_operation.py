@@ -371,7 +371,7 @@ def _validated_censal_operation_access_request(
     if request.definition_id != CENSAL_OPERATION_DEFINITION_ID or not isinstance(payload, CensalOperationRequest):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     baseline = payload.baseline
-    if request.subject_ref != str(baseline.profile_id) or context.profile_id != UUID(str(baseline.profile_id)):
+    if request.subject_ref != baseline.profile_id or context.profile_id != UUID(baseline.profile_id):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     return payload
 
@@ -437,7 +437,7 @@ def _load_exact_baseline(
 ) -> UserProfileRecord:
     profile_id = require_active_bucket_id()
     baseline = request.payload.baseline
-    if request.subject_ref != str(baseline.profile_id) or profile_id != str(baseline.profile_id):
+    if request.subject_ref != baseline.profile_id or profile_id != baseline.profile_id:
         raise ProfileRecordConflictError("censal operation baseline does not identify the active profile")
     record = ProfileRecordRepository.for_current_session(
         profile_id,
@@ -497,7 +497,7 @@ class CensalOperationExecutor:
             request,
             profile_decode_context=context.authority_operation.profile_decode_context(),
         )
-        self._provider_preflight(UUID(str(request.payload.baseline.profile_id)), context.authority_operation)
+        self._provider_preflight(UUID(request.payload.baseline.profile_id), context.authority_operation)
         if await _acknowledge_if_cancelled(context):
             return None
         await context.events.phase(CENSAL_PHASE_CLAVE_DEVICE_WAIT)
@@ -690,7 +690,7 @@ def _require_current_operand_baseline(
         profile_decode_context=profile_decode_context,
     ).load(profile_id)
     if (
-        profile_id != str(baseline.profile_id)
+        profile_id != baseline.profile_id
         or record.profile_id != baseline.profile_id
         or record.record_revision != baseline.record_revision
         or record.content_digest != baseline.content_digest

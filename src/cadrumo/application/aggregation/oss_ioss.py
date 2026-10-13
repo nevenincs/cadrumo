@@ -662,7 +662,7 @@ def _candidate_for_invoice_line(
                 "invoice_id": invoice.invoice_id,
                 "invoice_number": invoice.invoice_number,
                 "line_index": str(line_index),
-                "iva_rate": str(line.iva_rate.value),
+                "iva_rate": line.iva_rate.value,
             },
         )
     # OSS/IOSS is cross-border EU B2C by definition, where invoicing in the

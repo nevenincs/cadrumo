@@ -38,7 +38,7 @@ def form_context_value(
     The ``snapshot`` parameter uses :class:`RegistrySnapshot`, which pins
     the registry declarations used by the projection.
     """
-    if producer_snapshot is not None and str(producer_snapshot.modelo) != str(snapshot.modelo.id):
+    if producer_snapshot is not None and str(producer_snapshot.modelo) != snapshot.modelo.id:
         raise RegistryValidationError("form context producer belongs to another modelo")
     field = resolve_form_context_field(snapshot.revision, block)
     if field.projection_ref is not None:
@@ -48,7 +48,7 @@ def form_context_value(
     if field.draft_attribute is ExportDraftAttribute.FILING_YEAR:
         return snapshot.filing_year
     if field.draft_attribute is ExportDraftAttribute.PERIOD_CODE:
-        return str(snapshot.period)
+        return snapshot.period
     if field.draft_attribute in (ExportDraftAttribute.PERIOD_START_DATE, ExportDraftAttribute.PERIOD_END_DATE):
         # These exact draft fields use draft.period in the filing renderer.
         # A fiscal-start header producer is a different fact and never inferred here.

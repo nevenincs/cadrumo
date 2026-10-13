@@ -100,7 +100,7 @@ def _project_capture(result: BaseModel, receipt: OperationTerminalReceipt, /) ->
     require_live_capture_receipt(
         receipt,
         definition_id=NOTIFICATION_DOCUMENT_CAPTURE_DEFINITION_ID,
-        bucket_id=str(record.bucket_id),
+        bucket_id=record.bucket_id,
         stored=not custody.already_in_custody,
         message=_RECEIPT_CONTRADICTION,
     )
@@ -155,7 +155,7 @@ class NotificationDocumentCaptureExecutor:
         with browser_resources.activate():
             custody = await pull_notification_document(
                 bucket_id=bucket_id,
-                certificado_id=str(payload.certificado_id),
+                certificado_id=payload.certificado_id,
                 ports=composition.notifications_ports,
                 service=service,
                 certificate_secret_backend_factory=composition.certificate_secret_backend_factory,
@@ -165,7 +165,7 @@ class NotificationDocumentCaptureExecutor:
                 on_session_write=session_receipt,
                 authority_operation=context.authority_operation,
             )
-        if str(custody.record.bucket_id) != bucket_id or custody.record.certificado_id != payload.certificado_id:
+        if custody.record.bucket_id != bucket_id or custody.record.certificado_id != payload.certificado_id:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         effect = OperationEffect.NONE if custody.already_in_custody else OperationEffect.UPDATED
         return await publish_live_capture_report(

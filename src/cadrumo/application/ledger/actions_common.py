@@ -212,7 +212,10 @@ def optional_patched[T](
 
 def _typed_patch_value[T](patch: ManualLedgerTransactionPatch, field: str, value: object, expected: T) -> T:
     """Validate a dynamic patch field through its declared Pydantic type."""
-    adapter: TypeAdapter[T] = TypeAdapter(ManualLedgerTransactionPatch.model_fields[field].annotation)
+    annotation = ManualLedgerTransactionPatch.model_fields[field].annotation
+    if annotation is None:
+        raise InternalInvariantError(f"manual ledger patch field {field} declares no type to validate against")
+    adapter: TypeAdapter[T] = TypeAdapter(annotation)
     return adapter.validate_python(value)
 
 

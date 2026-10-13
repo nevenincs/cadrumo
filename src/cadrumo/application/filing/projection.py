@@ -390,7 +390,7 @@ def _project_regimen_record(
         raise FilingExportValidationError("regimen-simplificado projection record must repeat projection_rows")
     evidence = facts.regimen_simplificado
     regimen_refs = tuple(ref for ref in refs if isinstance(ref, _REGIMEN_REF_TYPES))
-    validate_m303_regimen_simplificado_endpoint_epoch(regimen_refs, revision_id=str(registry_snapshot.revision.id))
+    validate_m303_regimen_simplificado_endpoint_epoch(regimen_refs, revision_id=registry_snapshot.revision.id)
     projected = project_m303_regimen_simplificado_rows(
         projection_refs=regimen_refs,
         rows=evidence.rows,

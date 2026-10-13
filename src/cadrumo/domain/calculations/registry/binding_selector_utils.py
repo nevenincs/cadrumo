@@ -654,7 +654,7 @@ def provider_member[ProviderT: BaseModel](binding: BindingDefinition, provider_m
         raise RegistryValidationError(
             f"binding {binding.id!r} (source={binding.source!r}) carries provider member "
             f"{type(provider).__name__}, but its kind is registered for {provider_model.__name__}",
-            context={"binding_id": str(binding.id), "kind": binding.source.value},
+            context={"binding_id": binding.id, "kind": binding.source.value},
         )
     return provider
 

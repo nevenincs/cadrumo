@@ -668,7 +668,7 @@ def apply_llm_classification(
     if updated_transaction is None:
         raise TransactionValidationError(
             "classification write dropped the transaction it was applied to",
-            context={"transaction_id": str(suggestion.transaction_id)},
+            context={"transaction_id": suggestion.transaction_id},
         )
     event = build_ledger_bucket_event(
         bucket_id=bucket_id,

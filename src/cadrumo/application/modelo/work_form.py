@@ -199,7 +199,7 @@ def _inspection_only_for_unusable_layout(
 ) -> ModeloWorkForm | None:
     if layout is None:
         reason = ModeloFormInspectionReason.LAYOUT_ABSENT
-    elif str(layout.revision_id) != str(snapshot.revision.id):
+    elif layout.revision_id != snapshot.revision.id:
         reason = ModeloFormInspectionReason.LAYOUT_FOR_ANOTHER_REVISION
     else:
         return None
@@ -217,7 +217,7 @@ def _project_layout(
     layout: FormLayoutDefinition, context: WorkFormContext
 ) -> tuple[tuple[ModeloFormPage, ...], list[ModeloFormField], list[ModeloFormUnplacedField]]:
     context.placed_boxes = {
-        str(placement.casilla_id): placement.box_number
+        placement.casilla_id: placement.box_number
         for placement in layout.placements
         if placement.box_number is not None
     }
@@ -234,7 +234,7 @@ def _project_other_placements(
     working: list[ModeloFormField] = []
     unplaced: list[ModeloFormUnplacedField] = []
     for placement in layout.placements:
-        casilla_id = str(placement.casilla_id)
+        casilla_id = placement.casilla_id
         if placement.kind is FormPlacementKind.WORKING_FIGURE:
             working.append(project_casilla_field(casilla_id, context, placement))
         elif placement.kind is FormPlacementKind.UNPLACED:
@@ -255,12 +255,10 @@ def _ensure_layout_is_total(
     unplaced: list[ModeloFormUnplacedField],
 ) -> None:
     placed = walk.seen | {
-        str(field.address.casilla_id) for field in working if isinstance(field.address, ModeloFormCasillaAddressV1)
+        field.address.casilla_id for field in working if isinstance(field.address, ModeloFormCasillaAddressV1)
     }
     placed |= {
-        str(item.field.address.casilla_id)
-        for item in unplaced
-        if isinstance(item.field.address, ModeloFormCasillaAddressV1)
+        item.field.address.casilla_id for item in unplaced if isinstance(item.field.address, ModeloFormCasillaAddressV1)
     }
     missing = sorted(set(context.rows) - placed)
     if missing:
@@ -294,8 +292,8 @@ def _assemble_work_form(
         filing_year=review.filing_year,
         period=review.period,
         registry_revision_id=snapshot.revision.id,
-        work_unit_id=str(review.work_unit_id),
-        calculation_revision_id=None if review.calculation_revision_id is None else str(review.calculation_revision_id),
+        work_unit_id=review.work_unit_id,
+        calculation_revision_id=review.calculation_revision_id,
         language=language,
         layout_provenance=provenance,
         seed_source=layout.seed_source,

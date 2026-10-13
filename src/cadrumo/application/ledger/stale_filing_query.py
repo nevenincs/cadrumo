@@ -132,8 +132,8 @@ def read_stale_ledger_filings(
             continue
         findings.append(
             LedgerStaleFilingV1(
-                modelo=str(work_unit.modelo),
-                filing_year=int(work_unit.filing_year),
+                modelo=work_unit.modelo,
+                filing_year=work_unit.filing_year,
                 period=work_unit.period.registry_token,
                 calculation_revision_id=revision.calculation_revision_id,
                 work_unit_id=revision.work_unit_id,

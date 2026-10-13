@@ -861,7 +861,7 @@ def _missing_current_year_resolution(
         return None
     message = (
         f"prorrata_regularizacion binding requires current-year registry casillas "
-        f"{tuple(str(casilla_id) for casilla_id in missing_current)} before it can resolve"
+        f"{missing_current} before it can resolve"
     )
     return CalculationSourceResolution(
         resolver_id=resolver_id,

@@ -71,7 +71,7 @@ def project_casilla_field(
         box=printed_box_number(casilla, placement),
         label=label,
         help=casilla_help(casilla, label.text, context),
-        data_type=str(row.data_type),
+        data_type=row.data_type,
         value=value,
         origin=origin,
         editability=editability,
@@ -106,10 +106,10 @@ def _casilla_source(casilla_id: str, context: WorkFormContext) -> tuple[ModeloWo
 
 def _binding_casillas(binding: BindingDefinition, context: WorkFormContext) -> tuple[CasillaDefinition, ...]:
     """Follow declared ownership, provider and unambiguous export coordinates, in that order."""
-    ids = [context.casilla_by_binding.get(str(binding.id))]
+    ids = [context.casilla_by_binding.get(binding.id)]
     provider = binding.provider
     if isinstance(provider, ManualInputProvider):
-        ids.append(None if provider.casilla_id is None else str(provider.casilla_id))
+        ids.append(provider.casilla_id)
         if provider.record is not None and provider.offset is not None:
             positioned = context.casillas_by_export_position.get((provider.record, provider.offset), set())
             if len(positioned) == 1:
@@ -123,7 +123,7 @@ def _binding_presentation(
     context: WorkFormContext,
     casillas: tuple[CasillaDefinition, ...],
 ) -> tuple[ModeloFormText, str | None, str | None]:
-    modelo = str(context.snapshot.modelo.id)
+    modelo = context.snapshot.modelo.id
     label = _binding_field_label(modelo, binding_id, casillas, context)
     help_text = _binding_field_help(modelo, binding_id, casillas, label, context)
     box = _binding_field_box(modelo, binding_id, casillas, context)
@@ -170,7 +170,7 @@ def _binding_field_box(
             number
             for casilla in casillas
             if (
-                (number := context.placed_boxes.get(str(casilla.id)) or printed_box_number(casilla, None)) is not None
+                (number := context.placed_boxes.get(casilla.id) or printed_box_number(casilla, None)) is not None
                 and number
             )
         ),

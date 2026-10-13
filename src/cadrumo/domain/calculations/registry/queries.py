@@ -126,7 +126,7 @@ class ResolvedRegistryQueryContext(BaseModel):
 
 def _latest_revision(definition: ModeloDefinition) -> ModeloRevision:
     """Return the latest revision under the query service's deterministic tie-break."""
-    return max(definition.revisions.values(), key=lambda item: (item.valid_from, str(item.id)))
+    return max(definition.revisions.values(), key=lambda item: (item.valid_from, item.id))
 
 
 def _raise_unscoped_as_of_query(modelo: str) -> None:
@@ -180,7 +180,7 @@ def _resolve_declared_period_revision(
             f"period {period!r} is not declared by any revision of modelo "
             f"{definition.id}; declared periods: {', '.join(declared)}",
         )
-    revision = max(candidates, key=lambda item: (item.valid_from, str(item.id)))
+    revision = max(candidates, key=lambda item: (item.valid_from, item.id))
     registry_token = selector_token_for_request(revision.period_selector.declared_periods, bare)
     if registry_token is None:
         raise RegistryValidationError(
@@ -226,7 +226,7 @@ class RegistryQueryService:
                 f"modelo {normalized!r} is not present in the calculation registry",
             )
         for _modelo_id, revision in revisions:
-            if str(revision.id) == str(revision_id):
+            if revision.id == revision_id:
                 return revision
         raise RegistryValidationError(
             f"modelo {normalized!r} has no revision {revision_id!r}",
@@ -253,9 +253,9 @@ class RegistryQueryService:
             allowed = frozenset(Modelo(code).value for code in modelo_codes)
             selected = tuple(modelo for modelo in selected if modelo.id in allowed)
         return tuple(
-            (str(modelo.id), revision)
-            for modelo in sorted(selected, key=lambda item: str(item.id))
-            for revision in sorted(modelo.revisions.values(), key=lambda item: (item.valid_from, str(item.id)))
+            (modelo.id, revision)
+            for modelo in sorted(selected, key=lambda item: item.id)
+            for revision in sorted(modelo.revisions.values(), key=lambda item: (item.valid_from, item.id))
         )
 
     def iter_modelo_definitions(self) -> tuple[ModeloDefinition, ...]:
@@ -265,7 +265,7 @@ class RegistryQueryService:
         source inventories are declared bulk operations; ordinary calculation
         consumers must use a selected revision method instead.
         """
-        return tuple(sorted(self._authority.modelos, key=lambda item: str(item.id)))
+        return tuple(sorted(self._authority.modelos, key=lambda item: item.id))
 
     def list_modelos(
         self,
@@ -295,7 +295,7 @@ class RegistryQueryService:
         """
         rows = [
             ModeloListRow(
-                code=str(modelo.id),
+                code=modelo.id,
                 title=modelo.title,
                 cadence=modelo.cadence,
                 tax_domain=modelo.tax_domain,
@@ -652,7 +652,7 @@ class RegistryQueryService:
         # legal and source windows -- runs at this rung too, so the reports lose
         # nothing they read.
         snapshot = self._authority.snapshot(
-            str(definition.id),
+            definition.id,
             filing_year=filing_year,
             period=registry_period,
             on=as_of,
@@ -697,7 +697,7 @@ class RegistryQueryService:
 
     def _revision_ids(self, modelo: str) -> tuple[str, ...]:
         """Return explicit revision metadata for a model-wide report."""
-        return tuple(str(revision.id) for _modelo_id, revision in self.iter_modelo_revisions(modelo_codes=(modelo,)))
+        return tuple(revision.id for _modelo_id, revision in self.iter_modelo_revisions(modelo_codes=(modelo,)))
 
 
 class PinnedRegistryQueryService:
@@ -730,7 +730,7 @@ class PinnedRegistryQueryService:
                 continue
             directory = self._operation.modelo_directory(modelo_id)
             for metadata in directory.revisions:
-                rows.append((modelo_id, self._operation.revision(modelo_id, str(metadata.id))))
+                rows.append((modelo_id, self._operation.revision(modelo_id, metadata.id)))
         return tuple(rows)
 
     def _latest_modelo_views(self) -> tuple[tuple[ModeloRevisionDirectory, ModeloDefinition], ...]:
@@ -738,9 +738,9 @@ class PinnedRegistryQueryService:
         views: list[tuple[ModeloRevisionDirectory, ModeloDefinition]] = []
         for modelo_id in sorted(self._operation.modelo_ids()):
             directory = self._operation.modelo_directory(modelo_id)
-            metadata = max(directory.revisions, key=lambda item: (item.valid_from, str(item.id)))
+            metadata = max(directory.revisions, key=lambda item: (item.valid_from, item.id))
             views.append(
-                (directory, directory.materialize(self._operation.revision(modelo_id, str(metadata.id)))),
+                (directory, directory.materialize(self._operation.revision(modelo_id, metadata.id))),
             )
         return tuple(views)
 
@@ -929,7 +929,7 @@ class PinnedRegistryQueryService:
         )
 
     def _revision_ids(self, directory: ModeloRevisionDirectory) -> tuple[str, ...]:
-        return tuple(str(metadata.id) for metadata in directory.revisions)
+        return tuple(metadata.id for metadata in directory.revisions)
 
     def _context(
         self,
@@ -962,8 +962,8 @@ class PinnedRegistryQueryService:
         return self._period_revision_context(directory, period)
 
     def _latest_revision_context(self, directory: ModeloRevisionDirectory) -> ResolvedRegistryQueryContext:
-        metadata = max(directory.revisions, key=lambda item: (item.valid_from, str(item.id)))
-        revision = self._operation.revision(directory.modelo_id, str(metadata.id))
+        metadata = max(directory.revisions, key=lambda item: (item.valid_from, item.id))
+        revision = self._operation.revision(directory.modelo_id, metadata.id)
         return self._context(directory, revision)
 
     def _period_revision_context(
@@ -987,7 +987,7 @@ class PinnedRegistryQueryService:
                 f"period {period!r} is not declared by any revision of modelo {directory.modelo_id}; "
                 f"declared periods: {', '.join(sorted(set(declared)))}",
             )
-        metadata = max(candidates, key=lambda item: (item.valid_from, str(item.id)))
+        metadata = max(candidates, key=lambda item: (item.valid_from, item.id))
         registry_period = selector_token_for_request(metadata.period_selector.declared_periods, requested)
         if registry_period is None:
             raise RegistryValidationError(
@@ -995,7 +995,7 @@ class PinnedRegistryQueryService:
             )
         return self._context(
             directory,
-            self._operation.revision(directory.modelo_id, str(metadata.id)),
+            self._operation.revision(directory.modelo_id, metadata.id),
             registry_period=registry_period,
         )
 
@@ -1037,7 +1037,7 @@ class PinnedRegistryQueryService:
         # The same canonical year selection every other consumer uses, so a
         # year-scoped report names the revision a snapshot of that year selects.
         metadata = select_revision_metadata_for_year(directory, filing_year=filing_year, on=as_of)
-        revision = self._operation.revision(directory.modelo_id, str(metadata.id))
+        revision = self._operation.revision(directory.modelo_id, metadata.id)
         return self._context(
             directory,
             revision,
@@ -1053,13 +1053,13 @@ def _build_modelo_describe_report(context: ResolvedRegistryQueryContext) -> Mode
     filing_year = context.filing_year
     registry_period = context.registry_period
     return ModeloDescribeReport(
-        code=str(definition.id),
+        code=definition.id,
         title=definition.get_title(output_language()),
         official_name=definition.get_official_name(output_language()),
         tax_domain=definition.tax_domain,
         cadence=definition.cadence,
         jurisdiction=definition.jurisdiction,
-        revision=str(revision.id),
+        revision=revision.id,
         authority_grade=revision.authority_grade,
         revision_ids=context.revision_ids,
         filing_year=filing_year,
@@ -1078,8 +1078,8 @@ def _build_modelo_describe_report(context: ResolvedRegistryQueryContext) -> Mode
         computed_casilla_count=sum(1 for casilla in revision.casillas if casilla.input_kind == InputKind.COMPUTED),
         binding_count=len(revision.bindings),
         formula_count=len(revision.formulas),
-        legal_refs=tuple(str(ref) for ref in revision.legal_refs),
-        source_refs=tuple(str(ref) for ref in revision.source_refs),
+        legal_refs=tuple(ref for ref in revision.legal_refs),
+        source_refs=tuple(ref for ref in revision.source_refs),
     )
 
 
@@ -1118,18 +1118,18 @@ def _build_modelo_casillas_report(
             data_type=casilla.data_type,
             input_kind=casilla.input_kind,
             required=casilla.required,
-            formula=str(casilla.formula) if casilla.formula is not None else None,
-            binding=str(casilla.binding) if casilla.binding is not None else None,
+            formula=casilla.formula if casilla.formula is not None else None,
+            binding=casilla.binding if casilla.binding is not None else None,
             form_number=casilla.form_number,
-            legal_refs=tuple(str(ref) for ref in casilla.legal_refs),
-            source_refs=tuple(str(ref) for ref in casilla.source_refs),
+            legal_refs=tuple(ref for ref in casilla.legal_refs),
+            source_refs=tuple(ref for ref in casilla.source_refs),
         )
         for casilla in revision.casillas
         if _casilla_row_included(casilla, input_kind=input_kind, required=required, form_number=form_number)
     ]
     return ModeloCasillasReport(
-        code=str(definition.id),
-        revision=str(revision.id),
+        code=definition.id,
+        revision=revision.id,
         filing_year=context.filing_year,
         filing_period=_query_filing_period(context.filing_year, context.registry_period),
         period=context.registry_period,
@@ -1144,7 +1144,7 @@ def _build_modelo_formulas_report(context: ResolvedRegistryQueryContext) -> Mode
     fold_binding_ids = frozenset(binding.id for binding, _ in relation_prefill_bindings_for_period(revision))
     rows = tuple(
         ModeloFormulaRow(
-            formula_id=str(formula.id),
+            formula_id=formula.id,
             target_casilla_id=formula.target_casilla_id,
             input_casilla_ids=tuple(dict.fromkeys(expression_casilla_refs(formula.expression))),
             input_bindings=tuple(dict.fromkeys(expression_binding_refs(formula.expression))),
@@ -1155,14 +1155,14 @@ def _build_modelo_formulas_report(context: ResolvedRegistryQueryContext) -> Mode
                 if binding_id in fold_binding_ids
             ),
             expression=_public_mapping(formula.expression.model_dump(mode="json")),
-            legal_refs=tuple(str(ref) for ref in formula.legal_refs),
-            source_refs=tuple(str(ref) for ref in formula.source_refs),
+            legal_refs=tuple(ref for ref in formula.legal_refs),
+            source_refs=tuple(ref for ref in formula.source_refs),
         )
         for formula in revision.formulas
     )
     return ModeloFormulasReport(
-        code=str(definition.id),
-        revision=str(revision.id),
+        code=definition.id,
+        revision=revision.id,
         filing_year=context.filing_year,
         filing_period=_query_filing_period(context.filing_year, context.registry_period),
         period=context.registry_period,
@@ -1172,10 +1172,10 @@ def _build_modelo_formulas_report(context: ResolvedRegistryQueryContext) -> Mode
 
 def _build_modelo_bindings_report(context: ResolvedRegistryQueryContext) -> ModeloBindingsReport:
     """Assemble a :class:`ModeloBindingsReport` from a resolved query context."""
-    modelo = str(context.definition.id)
+    modelo = context.definition.id
     return ModeloBindingsReport(
         code=modelo,
-        revision=str(context.revision.id),
+        revision=context.revision.id,
         filing_year=context.filing_year,
         filing_period=_query_filing_period(context.filing_year, context.registry_period),
         period=context.registry_period,
@@ -1228,12 +1228,12 @@ def _find_casilla_for_detail(
     revision = context.revision
     needle = casilla.strip()
     matched = next(
-        (item for item in revision.casillas if str(item.id) == needle or item.number == needle),
+        (item for item in revision.casillas if item.id == needle or item.number == needle),
         None,
     )
     if matched is not None:
         return matched
-    valid_ids = [str(item.id) for item in revision.casillas]
+    valid_ids = [item.id for item in revision.casillas]
     sample = ", ".join(valid_ids[:20])
     overflow = "" if len(valid_ids) <= 20 else f" (+{len(valid_ids) - 20} more)"
     raise RegistryValidationError(
@@ -1242,8 +1242,8 @@ def _find_casilla_for_detail(
         registry_failure=RegistryFailureClassification(
             condition=RegistryFailureCondition.QUERY_CASILLA_DECLARED,
             facts={
-                "modelo": str(definition.id),
-                "revision": str(revision.id),
+                "modelo": definition.id,
+                "revision": revision.id,
                 "casilla": needle,
                 "casilla_declared": False,
             },
@@ -1279,8 +1279,8 @@ def _casilla_detail_report(context: ResolvedRegistryQueryContext, casilla: str) 
     matched = _find_casilla_for_detail(context, casilla)
     formula_expression = _casilla_formula_expression(revision, matched)
     return ModeloCasillaDetailReport(
-        code=str(definition.id),
-        revision=str(revision.id),
+        code=definition.id,
+        revision=revision.id,
         filing_year=context.filing_year,
         filing_period=_query_filing_period(context.filing_year, context.registry_period),
         period=context.registry_period,
@@ -1292,8 +1292,8 @@ def _casilla_detail_report(context: ResolvedRegistryQueryContext, casilla: str) 
         data_type=matched.data_type,
         input_kind=matched.input_kind,
         required=matched.required,
-        legal_refs=tuple(str(ref) for ref in matched.legal_refs),
-        source_refs=tuple(str(ref) for ref in matched.source_refs),
+        legal_refs=tuple(ref for ref in matched.legal_refs),
+        source_refs=tuple(ref for ref in matched.source_refs),
         binding=matched.binding,
         formula_id=matched.formula,
         formula_expression=formula_expression,
