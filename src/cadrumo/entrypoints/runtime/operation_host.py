@@ -10,6 +10,7 @@ from collections.abc import AsyncGenerator, Generator
 from contextlib import ExitStack, asynccontextmanager, contextmanager
 from datetime import timedelta
 from math import isfinite
+from time import monotonic
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -91,6 +92,8 @@ if TYPE_CHECKING:
     from ...application.operations.supervisor import OperationSupervisor
 
 _PROJECTION_DOCUMENT = TypeAdapter(dict[str, JsonValue])
+#: How often, at most, a used profile looks for operations whose owner lapsed.
+_LAPSE_CHECK_SECONDS = 30.0
 _log = get_logger(__name__)
 _PRIVATE_RESULT_RELEASE_ACTIONS = frozenset({AccessAction.RESULT, AccessAction.REVIEW})
 
@@ -135,6 +138,11 @@ class ProfileWorkerOperationHost:
         self._submissions: dict[OperationId, tuple[UUID, OperationSubmission]] = {}
         self._inventory_lock = asyncio.Lock()
         self._inventory_verified = False
+        # Every operation that may still be unsettled: the journal's unsettled
+        # records at first use, and each admission since.
+        self._unsettled: set[OperationId] = set()
+        self._lapse_lock = asyncio.Lock()
+        self._lapse_checked_at: float | None = None
 
     def _bind_execution(self, registry: OperationRegistry) -> ProfileWorkerOperationAuthority:
         self._execution = ProfileWorkerOperationAuthority(
@@ -267,21 +275,32 @@ class ProfileWorkerOperationHost:
     async def _require_current_inventory(self) -> None:
         """Refuse unreadable startup state before any hosted private operation.
 
-        Inventory only checks the current journal format. It neither takes over
-        owner leases nor replays work. Each requested continuation still resolves
-        encrypted provenance and goes through canonical lease reconciliation.
+        Inventory only checks the current journal format and notes which records
+        are unsettled. It replays no work. Each requested continuation still
+        resolves encrypted provenance and goes through canonical lease
+        reconciliation; only operations whose owner lapsed are then settled.
         """
+        await self._verify_inventory()
+        await self._settle_lapsed_operations()
+
+    async def _verify_inventory(self) -> None:
         async with self._inventory_lock:
             if self._inventory_verified:
                 return
             services = self._composed()
             after = None
             refused = False
+            unsettled: set[OperationId] = set()
             try:
                 while True:
                     page = await services.recovery_inventory(after=after, limit=128)
                     refused |= any(
                         entry.disposition is OperationRecoveryInventoryDisposition.REFUSED for entry in page.entries
+                    )
+                    unsettled.update(
+                        entry.operation_id
+                        for entry in page.entries
+                        if entry.disposition is OperationRecoveryInventoryDisposition.NONTERMINAL
                     )
                     if not page.has_more:
                         break
@@ -290,7 +309,34 @@ class ProfileWorkerOperationHost:
                 raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE) from None
             if refused or self._closed:
                 raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+            self._unsettled.update(unsettled)
             self._inventory_verified = True
+
+    async def _settle_lapsed_operations(self) -> None:
+        """Settle every operation whose owner stopped renewing its lease and whose grace has passed.
+
+        Its owner is gone, and its submitter has had a whole lease to continue
+        it, so nothing else would ever settle it. Checked at most every
+        :data:`_LAPSE_CHECK_SECONDS` as the profile is used; a failure is logged
+        with the operation and never refuses the caller's own request.
+        """
+        now = monotonic()
+        checked_at = self._lapse_checked_at
+        if self._lapse_lock.locked() or (checked_at is not None and now - checked_at < _LAPSE_CHECK_SECONDS):
+            return
+        async with self._lapse_lock:
+            self._lapse_checked_at = now
+            supervisor = self._composed().submission.supervisor
+            for operation_id in sorted(self._unsettled):
+                try:
+                    settled = await supervisor.settle_lapsed(operation_id, grace=supervisor.lease_duration)
+                except (RepositoryError, ValueError) as error:
+                    _log.warning(
+                        "lapsed operation left unsettled operation=%s error=%s", operation_id, type(error).__name__
+                    )
+                    continue
+                if settled is not None and settled.lifecycle is OperationLifecycle.TERMINAL:
+                    self._unsettled.discard(operation_id)
 
     def contract(self, session_id: UUID, definition_id: str) -> OperationPublicDefinitionContractV1:
         """Resolve an allowed definition from the real production service inventory."""
@@ -340,19 +386,22 @@ class ProfileWorkerOperationHost:
                     )
                     if submitted.receipt.operation_id == operation_id:
                         self._submissions[operation_id] = session_id, submitted
+                        self._unsettled.add(operation_id)
                     else:
                         # Replay does not revive the original response bearer.
                         execution.discard(operation_id)
                     return submitted
             except OperationSubjectBusyError as busy:
                 execution.discard(operation_id)
-                # Only this local log names the holder: it is the operation an operator resumes.
+                # The log and the refused frontend both name the holder: it is the operation to follow.
                 _log.warning(
                     "operation subject busy definition=%s holder=%s",
                     request.definition_id,
                     busy.holder_operation_id or "unknown",
                 )
-                raise ProfileAccessRefusedError(AccessDenialCode.SUBJECT_BUSY) from None
+                raise ProfileAccessRefusedError(
+                    AccessDenialCode.SUBJECT_BUSY, holder_operation_id=busy.holder_operation_id
+                ) from None
             except RepositoryError:
                 execution.discard(operation_id)
                 raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE) from None

@@ -222,6 +222,11 @@ class OperationSupervisor(
         if self._typed_financial_operands is not None:
             await self._typed_financial_operands.settle_operation(operation_id)
 
+    @property
+    def lease_duration(self) -> timedelta:
+        """How long an owner keeps a subject without renewing; a lapsed owner's submitter gets as long again."""
+        return self._lease_duration
+
     def in_flight_operation_count(self) -> int:
         """Observe distinct admitted operations until all local settlement completes.
 

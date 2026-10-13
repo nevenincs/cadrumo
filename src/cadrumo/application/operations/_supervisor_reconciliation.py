@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, TypeIs, override
 
 from pydantic import BaseModel
@@ -23,7 +23,7 @@ from .models import (
 )
 from .operation_definition import OperationDefinition
 from .owner import OperationResumableExecutor
-from .persistence.events import OperationReconciliationEvent
+from .persistence.events import OperationReconciliationEvent, OperationTerminalEvent
 from .persistence.journal import OperationPersistedSnapshot
 from .persistence.leases import (
     OperationLeaseDisposition,
@@ -34,6 +34,7 @@ from .persistence.leases import (
 )
 from .registry import OperationReconciliationPolicy
 from .secret_submission import BoundEphemeralSecretAccess
+from .settlement_snapshot import log_settlement, settlement_successor
 
 if TYPE_CHECKING:
     pass
@@ -67,6 +68,85 @@ class SupervisorReconciliationMixin(SupervisorHost):
         if observed.disposition is not OperationLeaseObservationDisposition.EXPIRED or observed.current is None:
             raise ValueError("operation lease observation cannot establish startup reconciliation ownership")
         return await self._reconcile_expired_lease(operation_id, snapshot, definition, observed.current, now)
+
+    async def settle_lapsed(self, operation_id: OperationId, *, grace: timedelta) -> OperationPersistedSnapshot | None:
+        """Settle an operation whose owner stopped renewing its lease more than ``grace`` ago.
+
+        Nothing else would ever settle it: its owner is gone, and its submitter
+        may never come back to continue it. A live owner renews its lease, so an
+        active lease is left alone, and ``grace`` gives a returning submitter
+        time to continue through :meth:`reconcile` first. The settlement is
+        ``INTERRUPTED``; the effect is ``NONE`` only when no executor was
+        entered, otherwise ``UNKNOWN``. It needs neither the executor nor a
+        reproducible definition contract, so an operation left by an older
+        build settles too. Returns ``None`` when the operation is not lapsed.
+        """
+        snapshot = await self._journal.load(operation_id)
+        if snapshot.lifecycle is OperationLifecycle.TERMINAL:
+            await self._release_settled_leftover_lease(snapshot)
+            return snapshot
+        observed, now = await self._inspect_reconciliation_lease(operation_id, snapshot)
+        current = observed.current
+        candidate = self._candidate(snapshot.identity, now)
+        lapsed = (
+            current
+            if observed.disposition is OperationLeaseObservationDisposition.EXPIRED
+            and current is not None
+            and now >= current.expires_at + grace
+            else None
+        )
+        if lapsed is not None and (lapsed.owner_id, lapsed.token) != (self._owner_id, self._lease_token):
+            claimed = await self._leases.compare_and_swap(lapsed, candidate, observed_at=now)
+            if claimed.disposition is not OperationLeaseDisposition.TAKEN_OVER or claimed.current != candidate:
+                return None
+        elif observed.disposition is OperationLeaseObservationDisposition.ABSENT or lapsed is not None:
+            # This supervisor cannot take over a lease it holds itself: it gives its
+            # own lapsed lease back first, exactly, and claims the subject afresh.
+            if lapsed is not None:
+                await self._leases.release(lapsed, observed_at=now)
+                self._leases_by_operation.pop(operation_id, None)
+            claimed = await self._leases.acquire(candidate, observed_at=now)
+            if claimed.disposition is not OperationLeaseDisposition.ACQUIRED or claimed.current != candidate:
+                return None
+        else:
+            return None
+        receipt = OperationTerminalReceipt(
+            identity=snapshot.identity,
+            revision=snapshot.revision + 1,
+            condition=OperationTerminalCondition.INTERRUPTED,
+            effect=OperationEffect.NONE if snapshot.executor_entered_at is None else OperationEffect.UNKNOWN,
+            settled_at=now,
+        )
+        events = (
+            OperationReconciliationEvent(
+                identity=snapshot.identity,
+                revision=receipt.revision,
+                sequence=snapshot.event_cursor + 1,
+                timestamp=now,
+                code="operation.reconciliation",
+                outcome=OperationReconciliationOutcome.ORPHANED,
+                lease_evidence_ref=claimed.evidence_ref,
+            ),
+            OperationTerminalEvent(
+                identity=snapshot.identity,
+                revision=receipt.revision,
+                sequence=snapshot.event_cursor + 2,
+                timestamp=now,
+                code="operation.terminal",
+                receipt=receipt,
+            ),
+        )
+        successor = settlement_successor(snapshot, receipt, events)
+        try:
+            await self._journal.commit_settlement(successor, expected_revision=snapshot.revision, lease=candidate)
+        except BaseException:
+            # The journal moved on under its owner; give the subject back rather than hold it.
+            await self._leases.release(candidate, observed_at=now)
+            raise
+        self._leases_by_operation.pop(operation_id, None)
+        log_settlement(receipt, cause="owner_lapsed")
+        self._notify_durable_change(successor)
+        return successor
 
     async def _inspect_reconciliation_lease(
         self,

@@ -286,7 +286,8 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         "code as its type refuses the whole request, with the message the command line prints for that error. "
         "No fault attaches the refused input itself. "
         "A refusal with code subject_busy means an earlier operation of this definition on the same subject has "
-        "not settled; signing in again changes nothing, so report it to the person rather than retrying. "
+        "not settled, and holder_operation_id names it; signing in again changes nothing, so report it to the "
+        "person with that id rather than retrying. "
         "Every call submits a new operation, so two identical calls run twice. "
         "idempotency_key is optional, and giving one makes a repeat safe: a repeat with the same key, operation "
         f"and payload answers with the operation already recorded and submits nothing. {_UNKNOWN_OUTCOME} "
@@ -469,9 +470,15 @@ def sign_in_refusal_facts(sign_in: SignInRefusal | None) -> dict[str, Any]:
 
 
 def refusal_facts(error: Exception) -> dict[str, Any]:
-    """Return the public facts a refusal carries beside its code, so no sign-in refusal collapses to it."""
+    """Return the public facts a refusal carries beside its code, so no sign-in refusal collapses to it.
+
+    A busy subject also names the unsettled operation that holds it, for the person to follow.
+    """
     if isinstance(error, RuntimeFrontendRefusedError):
-        return sign_in_refusal_facts(error.sign_in)
+        facts = sign_in_refusal_facts(error.sign_in)
+        if error.holder_operation_id is not None:
+            facts["holder_operation_id"] = error.holder_operation_id
+        return facts
     return {}
 
 

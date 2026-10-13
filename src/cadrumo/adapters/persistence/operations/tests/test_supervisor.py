@@ -3344,8 +3344,8 @@ def test_a_live_unsettled_holder_refuses_resubmission_with_the_registered_busy_r
             asyncio.run(journal.load("6" * 64))
 
 
-def test_an_expired_lease_of_an_unsettled_holder_refuses_rather_than_taking_over(tmp_path: Path) -> None:
-    """A lapsed owner that never settled needs reconciliation; submission neither waits nor seizes it."""
+def test_a_submission_interrupts_an_unstarted_holder_whose_lease_lapsed(tmp_path: Path) -> None:
+    """Nobody started the holder within its whole lease: it had no effect, and it must not hold the subject."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         journal, leases, operands = _repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
@@ -3370,20 +3370,158 @@ def test_an_expired_lease_of_an_unsettled_holder_refuses_rather_than_taking_over
             token="4" * 64,
             clock=lambda: lapsed_at,
         )
-        unsettled = asyncio.run(owner.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="5" * 64))
+        unstarted = asyncio.run(owner.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="5" * 64))
         expired_lease = _shared_scope_holder(leases, observed_at=lapsed_at)
         assert expired_lease is not None and expired_lease.expires_at <= lapsed_at
+
+        admitted = asyncio.run(contender.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="6" * 64))
+
+        assert admitted == "6" * 64
+        holder = _shared_scope_holder(leases, observed_at=lapsed_at)
+        assert holder is not None and holder.operation_id == admitted and holder.owner_id == "3" * 64
+        settled = asyncio.run(journal.load(unstarted))
+        assert settled.lifecycle is OperationLifecycle.TERMINAL
+        assert settled.terminal_condition is OperationTerminalCondition.INTERRUPTED
+        assert settled.effect is OperationEffect.NONE
+        replayed = asyncio.run(journal.read_after(unstarted, 0, limit=20))
+        outcomes = tuple(event.outcome for event in replayed.events if isinstance(event, OperationReconciliationEvent))
+        assert outcomes == (OperationReconciliationOutcome.ORPHANED,)
+
+
+def test_a_live_unstarted_holder_still_refuses_and_names_itself_to_the_runtime(tmp_path: Path) -> None:
+    """Within its lease an unstarted holder may still be started; the refusal carries its id for the operator."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, operands = _repositories(
+            storage_root=tmp_path / "durable-state", profile_objects=profile.repository
+        )
+        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
+        owner = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+            lease_duration=timedelta(minutes=1),
+        )
+        within_lease = _NOW + timedelta(seconds=30)
+        contender = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="3" * 64,
+            token="4" * 64,
+            clock=lambda: within_lease,
+        )
+        unstarted = asyncio.run(owner.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="5" * 64))
 
         with pytest.raises(OperationSubjectBusyError) as refused:
             asyncio.run(contender.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="6" * 64))
 
-        assert not isinstance(refused.value, ValueError)
-        assert get_registered_error_code(refused.value).code == "REFUSED_OPERATION_SUBJECT_BUSY"
-        # The holder is named for the runtime's log only; the refusal's message stays free of it.
-        assert refused.value.holder_operation_id == unsettled
-        assert unsettled not in resolve_error_message(refused.value)
-        assert _shared_scope_holder(leases, observed_at=lapsed_at) == expired_lease
-        assert asyncio.run(journal.load(unsettled)).lifecycle is OperationLifecycle.CREATED
+        assert refused.value.holder_operation_id == unstarted
+        assert asyncio.run(journal.load(unstarted)).lifecycle is OperationLifecycle.CREATED
+
+
+def _abandon_running_operation(
+    tmp_path: Path, profile_objects: SecureObjectRepository
+) -> tuple[OperationJournalRepository, OperationLeaseFilesystemRepository, OperationSecureReferenceRepository, str]:
+    """Leave a started operation whose host closed mid-run, with a one-minute lease nobody renews."""
+    journal, leases, operands = _repositories(storage_root=tmp_path / "durable-state", profile_objects=profile_objects)
+    started = asyncio.Event()
+    executor = WaitingExecutor(started=started, release=asyncio.Event())
+    owner = _supervisor(
+        registry=_registry(executor_type=WaitingExecutor, build=lambda: executor),
+        journal=journal,
+        leases=leases,
+        operands=operands,
+        owner_id="1" * 64,
+        token="2" * 64,
+        lease_duration=timedelta(minutes=1),
+    )
+    operation_id = asyncio.run(owner.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="3" * 64))
+    abandoned = asyncio.run(_close_host_over_live_executor(owner, operation_id, started))
+    assert abandoned.lifecycle is OperationLifecycle.RUNNING
+    return journal, leases, operands, operation_id
+
+
+def _lapse_settler(
+    *,
+    journal: OperationJournalRepository,
+    leases: OperationLeaseFilesystemRepository,
+    operands: OperationSecureReferenceRepository,
+    at: datetime,
+    registry: OperationRegistry | None = None,
+) -> OperationSupervisor:
+    return _supervisor(
+        registry=_registry(executor_type=WaitingExecutor, build=IdleExecutor) if registry is None else registry,
+        journal=journal,
+        leases=leases,
+        operands=operands,
+        owner_id="4" * 64,
+        token="5" * 64,
+        clock=lambda: at,
+    )
+
+
+def test_settle_lapsed_waits_out_the_grace_then_interrupts_a_started_operation_as_unknown(tmp_path: Path) -> None:
+    """A returning submitter gets the grace to continue; after it, the dead owner's work settles honestly."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, operands, operation_id = _abandon_running_operation(tmp_path, profile.repository)
+        grace = timedelta(minutes=10)
+        early = _lapse_settler(journal=journal, leases=leases, operands=operands, at=_NOW + timedelta(minutes=5))
+
+        assert asyncio.run(early.settle_lapsed(operation_id, grace=grace)) is None
+        assert asyncio.run(journal.load(operation_id)).lifecycle is OperationLifecycle.RUNNING
+
+        settled_at = _NOW + timedelta(minutes=12)
+        late = _lapse_settler(journal=journal, leases=leases, operands=operands, at=settled_at)
+        settled = asyncio.run(late.settle_lapsed(operation_id, grace=grace))
+
+        assert settled is not None
+        assert asyncio.run(journal.load(operation_id)) == settled
+        assert settled.terminal_condition is OperationTerminalCondition.INTERRUPTED
+        assert settled.effect is OperationEffect.UNKNOWN
+        assert _shared_scope_holder(leases, observed_at=settled_at) is None
+        assert asyncio.run(late.settle_lapsed(operation_id, grace=grace)) == settled
+
+
+def test_settle_lapsed_leaves_an_operation_whose_owner_still_renews(tmp_path: Path) -> None:
+    """An active lease is a live owner; nothing is taken from it."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, operands = _repositories(
+            storage_root=tmp_path / "durable-state", profile_objects=profile.repository
+        )
+        owner = _lapse_settler(journal=journal, leases=leases, operands=operands, at=_NOW)
+        operation_id = asyncio.run(owner.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="5" * 64))
+        held = _shared_scope_holder(leases, observed_at=_NOW)
+
+        assert asyncio.run(owner.settle_lapsed(operation_id, grace=timedelta())) is None
+        assert asyncio.run(journal.load(operation_id)).lifecycle is OperationLifecycle.CREATED
+        assert _shared_scope_holder(leases, observed_at=_NOW) == held
+
+
+def test_settle_lapsed_settles_an_operation_a_changed_definition_can_no_longer_reconcile(tmp_path: Path) -> None:
+    """An operation left by an older build cannot be resumed, and must not be left unsettled for good."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, operands, operation_id = _abandon_running_operation(tmp_path, profile.repository)
+        changed = _drifted_registry(_registry(executor_type=WaitingExecutor, build=IdleExecutor))
+        settled_at = _NOW + timedelta(minutes=12)
+        newer_build = _lapse_settler(journal=journal, leases=leases, operands=operands, at=settled_at, registry=changed)
+        before = asyncio.run(journal.load(operation_id))
+        assert (
+            changed.lookup_public_contract(before.identity.definition_id).definition_contract_digest
+            != before.definition_contract_digest
+        )
+        with pytest.raises(ValueError, match="no longer reproduces"):
+            asyncio.run(newer_build.reconcile(operation_id))
+
+        settled = asyncio.run(newer_build.settle_lapsed(operation_id, grace=timedelta(minutes=10)))
+
+        assert settled is not None
+        assert settled.terminal_condition is OperationTerminalCondition.INTERRUPTED
+        assert settled.effect is OperationEffect.UNKNOWN
+        assert _shared_scope_holder(leases, observed_at=settled_at) is None
 
 
 def test_a_lease_whose_holder_has_no_journal_yet_is_a_live_conflict(tmp_path: Path) -> None:

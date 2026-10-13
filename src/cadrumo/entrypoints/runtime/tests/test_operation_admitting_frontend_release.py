@@ -16,7 +16,7 @@ import secrets
 from collections.abc import AsyncGenerator, Awaitable, Callable, Generator, Iterator
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import override
 from uuid import UUID, uuid4
@@ -91,6 +91,7 @@ from cadrumo.core.operations import (
     profile_operation_subject,
 )
 from cadrumo.core.time.clock import now
+from cadrumo.entrypoints.runtime import operation_host
 from cadrumo.entrypoints.runtime.operation_authority import WorkerOperationBinding
 from cadrumo.entrypoints.runtime.operation_host import ProfileWorkerOperationHost
 
@@ -107,6 +108,7 @@ _LOCATION = f"{_DIRECTORY}\\{_FILE}"
 _FRONTENDS = (_CLI, _TUI, _MCP)
 _REFUSAL_MESSAGE_KEY = "aggregation.grouping.errors.unsupported_modelo"
 _REPLAY_KEY = "sealed-document-once"
+_LEASE_DURATION = timedelta(minutes=10)
 
 
 class _DocumentRequest(BaseModel):
@@ -227,6 +229,11 @@ class _SealedDocumentHost(ProfileWorkerOperationHost):
     ) -> None:
         super().__init__(custody, authorization=authorization)
         self._operands = operands
+        self.elapsed = timedelta()
+
+    def clock(self) -> datetime:
+        """The supervisor's time: real time moved on by :attr:`elapsed`."""
+        return now() + self.elapsed
 
     @override
     def _composed(self) -> OperationComposedServices:
@@ -243,8 +250,8 @@ class _SealedDocumentHost(ProfileWorkerOperationHost):
                 operands=self._operands,
                 owner_id=self.custody.identity.operation_owner_id,
                 lease_token_factory=lambda: secrets.token_hex(32),
-                clock=now,
-                lease_duration=timedelta(minutes=10),
+                clock=self.clock,
+                lease_duration=_LEASE_DURATION,
                 execution_timeout=timedelta(minutes=5),
                 cleanup_timeout=timedelta(minutes=2),
                 execution_authority=self._bind_execution(registry),
@@ -631,11 +638,62 @@ def test_a_subject_held_by_an_unsettled_operation_is_refused_as_busy(tmp_path: P
     async def scenario(worker: _Worker) -> None:
         held = await worker.submit(worker.person, _CLI, worker.request())
 
-        refused = await _refusal(worker.submit(worker.key, _MCP, worker.request()))
+        with pytest.raises(ProfileAccessRefusedError) as refused:
+            await worker.submit(worker.key, _MCP, worker.request())
 
-        assert refused is AccessDenialCode.SUBJECT_BUSY
+        assert refused.value.reason is AccessDenialCode.SUBJECT_BUSY
+        # The refused frontend is told which operation holds the subject, so the person can follow it.
+        assert refused.value.holder_operation_id == held
         # A receipt the holder's own session takes is released as before.
         async with worker.host.release_submission(worker.person.session_id, held, _CLI) as receipt:
             assert receipt.request.frontend is _CLI
+
+    _exercise(tmp_path, scenario)
+
+
+def test_an_admission_nobody_starts_settles_once_its_owner_has_lapsed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A submitter that vanishes after its receipt leaves no operation unsettled and no subject held for good."""
+    monkeypatch.setattr(operation_host, "_LAPSE_CHECK_SECONDS", 0.0)
+
+    async def scenario(worker: _Worker) -> None:
+        supervisor = worker.host._composed().submission.supervisor
+        abandoned = await worker.submit(worker.key, _MCP, worker.request())
+
+        # The lease has run out, but its submitter still has the grace to start it.
+        worker.host.elapsed = _LEASE_DURATION + timedelta(seconds=1)
+        await worker.observed(worker.person, _CLI, abandoned)
+        assert (await supervisor.inspect(abandoned)).lifecycle is OperationLifecycle.CREATED
+
+        worker.host.elapsed = 2 * _LEASE_DURATION + timedelta(seconds=1)
+        await worker.observed(worker.person, _CLI, abandoned)
+
+        settled = await supervisor.inspect(abandoned)
+        assert settled.lifecycle is OperationLifecycle.TERMINAL
+        assert settled.terminal_condition is OperationTerminalCondition.INTERRUPTED
+        assert settled.effect is OperationEffect.NONE
+        assert await worker.run(worker.person, _CLI) != abandoned
+
+    _exercise(tmp_path, scenario)
+
+
+def test_a_new_submission_interrupts_an_admission_nobody_started_within_its_lease(tmp_path: Path) -> None:
+    """The same runtime that admitted the abandoned operation gives its subject to the next submitter."""
+
+    async def scenario(worker: _Worker) -> None:
+        supervisor = worker.host._composed().submission.supervisor
+        abandoned = await worker.submit(worker.key, _MCP, worker.request())
+        assert await _refusal(worker.submit(worker.person, _CLI, worker.request())) is AccessDenialCode.SUBJECT_BUSY
+
+        worker.host.elapsed = _LEASE_DURATION + timedelta(seconds=1)
+        admitted = await worker.submit(worker.person, _CLI, worker.request())
+
+        assert admitted != abandoned
+        settled = await supervisor.inspect(abandoned)
+        assert settled.terminal_condition is OperationTerminalCondition.INTERRUPTED
+        assert settled.effect is OperationEffect.NONE
+        await worker.host.start(admitted, worker.person.session_id)
+        await worker.settled(admitted)
 
     _exercise(tmp_path, scenario)

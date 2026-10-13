@@ -25,7 +25,7 @@ from .persistence.events import (
 )
 from .persistence.journal import OperationPersistedSnapshot
 from .persistence.leases import OperationOwnerLease
-from .settlement_snapshot import settlement_successor
+from .settlement_snapshot import log_settlement, settlement_successor
 
 if TYPE_CHECKING:
     pass
@@ -230,6 +230,7 @@ class SupervisorSettlementMixin(SupervisorHost):
         await self._journal.commit_settlement(successor, expected_revision=snapshot.revision, lease=lease)
         self._leases_by_operation.pop(operation_id, None)
         self._ephemeral_secrets.discard(operation_id)
+        log_settlement(receipt, cause="owner")
         return successor, False
 
     @override

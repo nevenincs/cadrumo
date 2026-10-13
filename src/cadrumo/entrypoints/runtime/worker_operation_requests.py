@@ -103,6 +103,9 @@ async def operate(
                         if isinstance(refusal, ValidationError)
                         else refusal.reason,
                         request_faults=refusal.request_faults if isinstance(refusal, AutomationCustodyError) else (),
+                        holder_operation_id=refusal.holder_operation_id
+                        if isinstance(refusal, ProfileAccessRefusedError)
+                        else None,
                     ),
                     deadline=time.monotonic() + 5,
                 )

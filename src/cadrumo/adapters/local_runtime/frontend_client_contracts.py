@@ -33,17 +33,23 @@ class RuntimeFrontendRefusedError(CadrumoError):
         sign_in: SignInRefusal | None = None,
         custody_transaction_id: UUID | None = None,
         request_faults: tuple[RequestFault, ...] = (),
+        holder_operation_id: str | None = None,
     ) -> None:
         """Retain an allowlisted refusal code and the reasons the runtime returned with it.
 
         ``request_faults`` are the reasons an operation's request was refused
         as invalid, in the validators' own messages, when the runtime returned
-        them.
+        them. ``holder_operation_id`` names the unsettled operation that holds
+        a busy subject, so the person can follow, resume or report it.
         """
         self.reason = code
         self.sign_in = sign_in
         self.request_faults = request_faults
+        # Every error context copies public attributes; only a refusal that has a holder names one.
+        self._holder_operation_id = holder_operation_id
         context: dict[str, object] = {"reason": code}
+        if holder_operation_id is not None:
+            context["holder_operation_id"] = holder_operation_id
         if request_faults:
             context["request_faults"] = request_faults_text(request_faults)
         if custody_transaction_id is not None:
@@ -55,6 +61,11 @@ class RuntimeFrontendRefusedError(CadrumoError):
             if sign_in.remaining_seconds is not None:
                 context["seconds"] = sign_in.remaining_seconds
         super().__init__(code, context=context)
+
+    @property
+    def holder_operation_id(self) -> str | None:
+        """The unsettled operation that holds a busy subject, when the runtime named one."""
+        return self._holder_operation_id
 
 
 def frontend_failure_code(error: Exception) -> str:

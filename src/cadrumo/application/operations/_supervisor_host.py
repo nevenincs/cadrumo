@@ -17,6 +17,7 @@ from pydantic import BaseModel
 
 if TYPE_CHECKING:
     from ...core.async_cleanup import AsyncCloseable
+    from ...core.hex import Hex64Str
     from ...core.operations import (
         OperationCancellation,
         OperationDeadline,
@@ -50,7 +51,7 @@ if TYPE_CHECKING:
         OperationPersistedSnapshot,
         OperationSecureReferenceStore,
     )
-    from .persistence.leases import OperationOwnerLease
+    from .persistence.leases import OperationLeaseToken, OperationOwnerLease
     from .projection_services import OperationResponseAuthorityIssuer
     from .provenance import OperationAdmissionProvenance
     from .refusal_evidence import OperationExecutorResult
@@ -68,6 +69,8 @@ class SupervisorHost:
         _authority_operation: PinnedAuthorityOperation
         _journal: OperationJournal
         _leases: OperationLeaseRepository
+        _owner_id: Hex64Str
+        _lease_token: OperationLeaseToken
         _operands: OperationSecureReferenceStore | None
         _clock: Callable[[], datetime]
         _execution_timeout: timedelta | None

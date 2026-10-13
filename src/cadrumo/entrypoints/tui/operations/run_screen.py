@@ -446,6 +446,9 @@ class OperationRunScreen(Screen[None]):
         if isinstance(error, RuntimeFrontendRefusedError) and error.request_faults:
             # The runtime's request model refused a payload the form's own check let through.
             return "\n".join((message, *(request_fault_line(fault) for fault in error.request_faults)))
+        if isinstance(error, RuntimeFrontendRefusedError) and error.holder_operation_id is not None:
+            # A busy subject names the unsettled operation holding it, so the person can follow it.
+            return f"{message}\n{tr('tui.operations.run.busy_holder', operation_id=error.holder_operation_id)}"
         return message
 
     def _show_receipt(self, text: str) -> None:

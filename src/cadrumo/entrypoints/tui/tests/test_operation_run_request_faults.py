@@ -6,6 +6,8 @@ import pytest
 
 from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ....application.user_profile.automation_custody_port import AutomationCustodyCode
+from ....core.config import override_settings
+from ....core.i18n.render import tr
 from ....core.request_faults import RequestFault
 from ..operations.run_screen import OperationRunScreen
 
@@ -31,3 +33,14 @@ def test_each_fault_the_runtime_returned_is_shown_under_the_refusal_as_the_form_
 
 def test_a_refusal_without_faults_is_shown_as_it_was() -> None:
     assert OperationRunScreen._failure_text(RuntimeFrontendRefusedError("operation_denied")) == "operation_denied"
+
+
+def test_a_busy_refusal_names_the_operation_holding_the_subject() -> None:
+    holder = "ef" * 32
+    refused = RuntimeFrontendRefusedError("subject_busy", holder_operation_id=holder)
+
+    with override_settings(cadrumo_output_language="en"):
+        lines = OperationRunScreen._failure_text(refused).splitlines()
+        assert lines == ["subject_busy", tr("tui.operations.run.busy_holder", operation_id=holder)]
+
+    assert holder in lines[1]

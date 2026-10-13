@@ -190,7 +190,9 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         if isinstance(result, ProfileWorkerRefusal):
             if isinstance(result.reason, AccessDenialCode):
-                raise ProfileAccessRefusedError(result.reason, sign_in=result.sign_in)
+                raise ProfileAccessRefusedError(
+                    result.reason, sign_in=result.sign_in, holder_operation_id=result.holder_operation_id
+                )
             raise AutomationCustodyError(result.reason, request_faults=result.request_faults)
         if not isinstance(result, response):
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)

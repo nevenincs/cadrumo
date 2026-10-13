@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field, RootModel, model_validator
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.request_faults import MAX_REQUEST_FAULTS, RequestFault
+from ..operations.models import OperationId
 from ..operations.registry import OperationFrontendProjection
 from ..user_profile.access_contracts import (
     AccessDenialCode,
@@ -278,11 +279,15 @@ class RuntimeAccessRefusal(BaseModel):
     code: AccessDenialCode | AutomationCustodyCode | RuntimeRefusalCode
     sign_in: SignInRefusal | None = None
     request_faults: Annotated[tuple[RequestFault, ...], Field(max_length=MAX_REQUEST_FAULTS)] = ()
+    #: The unsettled operation that holds the subject of a ``subject_busy`` refusal.
+    holder_operation_id: OperationId | None = None
 
     @model_validator(mode="after")
     def _only_an_invalid_request_has_faults(self) -> RuntimeAccessRefusal:
         if self.request_faults and self.code is not AutomationCustodyCode.INVALID:
             raise ValueError("only an invalid request carries request faults")
+        if self.holder_operation_id is not None and self.code is not AccessDenialCode.SUBJECT_BUSY:
+            raise ValueError("only a busy subject names the operation that holds it")
         return self
 
 

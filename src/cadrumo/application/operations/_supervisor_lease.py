@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.hex import Hex64Str
+from ...core.logging import get_logger
 from ...core.operations import OperationLifecycle
 from .errors import OperationSubjectBusyError
 from .models import OperationId, OperationIdentity
@@ -28,6 +29,8 @@ from .persistence.leases import (
 )
 from .persistence.replay import OperationReplayStatus
 
+_log = get_logger(__name__)
+
 
 class OperationSupervisorLeaseMixin:
     """Own local guards and exact durable-lease transitions for a supervisor."""
@@ -46,6 +49,10 @@ class OperationSupervisorLeaseMixin:
 
     async def reconcile(self, operation_id: OperationId) -> OperationPersistedSnapshot:
         """Recover one operation through its durable owner evidence (the reconciliation mixin owns it)."""
+        raise NotImplementedError
+
+    async def settle_lapsed(self, operation_id: OperationId, *, grace: timedelta) -> OperationPersistedSnapshot | None:
+        """Settle an operation whose owner lapsed (the reconciliation mixin owns it)."""
         raise NotImplementedError
 
     def _candidate(self, identity: OperationIdentity, now: datetime) -> OperationOwnerLease:
@@ -206,13 +213,8 @@ class OperationSupervisorLeaseMixin:
         )
         if holder is None:
             raise OperationSubjectBusyError()
-        # A started holder whose owner stopped renewing (its runtime died mid-run) is recovered
-        # through the canonical reconciliation. An unstarted one keeps the subject: its
-        # continuation may still be authorised, and a refused frontend start settles itself.
-        if not await self._holder_is_settled(holder) and (
-            acquired.disposition is not OperationLeaseDisposition.EXPIRED
-            or (await self._journal.load(holder.operation_id)).lifecycle is OperationLifecycle.CREATED
-            or (await self.reconcile(holder.operation_id)).lifecycle is not OperationLifecycle.TERMINAL
+        if not await self._holder_is_settled(holder) and not (
+            acquired.disposition is OperationLeaseDisposition.EXPIRED and await self._recover_lapsed_holder(holder)
         ):
             raise OperationSubjectBusyError(holder.operation_id)
         # Crash recovery, not the settlement path: settlement clears the lease
@@ -229,6 +231,25 @@ class OperationSupervisorLeaseMixin:
             return existing_operation_id
         contender = reacquired.current if reacquired.disposition is OperationLeaseDisposition.CONFLICT else None
         raise OperationSubjectBusyError(None if contender is None else contender.operation_id)
+
+    async def _recover_lapsed_holder(self, holder: OperationOwnerLease) -> bool:
+        """Settle a holder whose owner stopped renewing, so the waiting submission can proceed.
+
+        An unstarted holder has had no effect, and nobody started it within its
+        whole lease: its submitter is gone, so it is interrupted at once rather
+        than holding the subject for good. A started one goes through the
+        canonical reconciliation, which may resume it instead.
+        """
+        holder_snapshot = await self._journal.load(holder.operation_id)
+        if holder_snapshot.lifecycle is OperationLifecycle.CREATED and holder_snapshot.executor_entered_at is None:
+            settled = await self.settle_lapsed(holder.operation_id, grace=timedelta())
+        else:
+            try:
+                settled = await self.reconcile(holder.operation_id)
+            except ValueError:
+                _log.warning("lapsed operation could not be reconciled operation=%s", holder.operation_id)
+                return False
+        return settled is not None and settled.lifecycle is OperationLifecycle.TERMINAL
 
     async def _holder_is_settled(self, holder: OperationOwnerLease) -> bool:
         """Tell whether the operation a subject's lease names has a terminal journal.
