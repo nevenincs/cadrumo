@@ -1,7 +1,7 @@
 //! Runtime exit codes, read through the exit-reason table the contract generator projects.
 
 use crate::contract::{
-    RUNTIME_EXIT_DRAIN_WATCHDOG, RUNTIME_EXIT_ELEVATED_TOKEN_REFUSED,
+    LAUNCH_PROFILE_REFUSED_EXIT, RUNTIME_EXIT_DRAIN_WATCHDOG, RUNTIME_EXIT_ELEVATED_TOKEN_REFUSED,
     RUNTIME_EXIT_LOGIN_WITNESS_LOSS, RUNTIME_EXIT_OWNER_BUSY, RUNTIME_EXIT_ROOT_MISMATCH,
     RUNTIME_EXIT_SESSION_END_SETTLE, RUNTIME_EXIT_SIGNAL_STOP, RUNTIME_EXIT_SUPERVISOR_STOP,
     RUNTIME_EXIT_UNEXPECTED_FAILURE, RUNTIME_EXIT_VERSION_MISMATCH,
@@ -10,8 +10,9 @@ use crate::contract::{
 /// The NTSTATUS a console process reports when Ctrl+C ended it before its handlers ran.
 pub const STATUS_CONTROL_C_EXIT: u32 = 0xC000_013A;
 
-/// Python's uncaught-exception code and argparse's usage code, both before runtime code runs.
-const LAUNCH_FAILURE_CODES: [u32; 2] = [1, 2];
+/// Python's uncaught-exception code, argparse's usage code, and the native host's
+/// launch-profile refusal, all before runtime code runs.
+const LAUNCH_FAILURE_CODES: [u32; 3] = [1, 2, LAUNCH_PROFILE_REFUSED_EXIT];
 
 /// One reason a runtime names by its exit code.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -153,6 +154,11 @@ mod tests {
         assert_eq!(RuntimeExit::from_code(2), RuntimeExit::LaunchFailure(2));
         assert_eq!(RuntimeExit::from_code(3), RuntimeExit::Crash(3));
         assert_eq!(RuntimeExit::from_code(120), RuntimeExit::Crash(120));
+        assert_eq!(RuntimeExit::from_code(124), RuntimeExit::Crash(124));
+        assert_eq!(
+            RuntimeExit::from_code(LAUNCH_PROFILE_REFUSED_EXIT),
+            RuntimeExit::LaunchFailure(125)
+        );
         assert_eq!(RuntimeExit::from_code(143), RuntimeExit::Crash(143));
         assert_eq!(
             RuntimeExit::from_code(STATUS_CONTROL_C_EXIT),

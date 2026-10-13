@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:1f88d3391480fe89297544e868cb85d65e1c803f26af78d4b5888263775f9c5e'
+body_hash: 'sha256:f426be1fbbf08eeb89bc91025e6aaf12f047d48005f90f38b53ee93f884e8011'
 related:
   - "[[2026-10-13-canonical-environment-plan]]"
 ---
@@ -133,6 +133,17 @@ related:
 - `S04` `verify:` `cargo +1.96.0 clippy --all-targets -D warnings native/platform for windows, x86_64-linux, aarch64-darwin` -> `pass`
 - `S04` `verify:` `cargo +1.96.0 test native/platform (45, Windows vectors replayed)` -> `pass`
 - `S04` `by:` `vaultspec-high-executor`
+- `S05` `A` `native/interpreter/launch_profile.h`
+- `S05` `M` `native/interpreter/windows/host.c`
+- `S05` `M` `native/interpreter/posix/host.c`
+- `S05` `D` `native/interpreter/posix/invocation.h`
+- `S05` `M` `native/interpreter/posix/tests/invocation.c`
+- `S05` `M` `native/cmake/platforms/Posix.cmake`
+- `S05` `M` `native/manager/src/supervision/exit.rs`
+- `S05` `verify:` `cl /W4 /WX compile of windows/host.c as the python image and as an entrypoint image` -> `pass`
+- `S05` `verify:` `cargo +1.96.0 test native/manager --lib exit (125 is a launch failure, 124 stays a crash)` -> `pass`
+- `S05` `verify:` `cargo +1.96.0 clippy native/manager lib` -> `pass`
+- `S05` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -146,3 +157,5 @@ related:
 - `S08` S08 `test_agent_host_runtime.py::test_the_relay_in_the_agents_tree_acts_as_the_agent_under_the_lease_that_started_it` fails with MCP `internal_error` and fails identically with the agent's standard error restored to the null device; it is not caused by this Step.
 - `S03` `cadrumo_platform_prepare` and `prepared_environment` now define the executable's default profile through `define_environment` until P02.S05 and P02.S06 move their callers to `cadrumo_platform_define`
 - `S04` Agent gateway and worker admission and undeclared-invocation refusal vectors need the cadrumo-agent image, the only image without a default profile; they land with it in P02.S07. POSIX vectors are replayed in Python here and in Rust only on a POSIX build
+- `S05` The POSIX host and its rewritten launch-profile test (platform.invocation) were not compiled here: no POSIX C toolchain on this Windows host; they run in the POSIX CTest lanes
+- `S05` The refusal path of a real image is first reachable with the cadrumo-agent image in P02.S07, the only image without a default profile

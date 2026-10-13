@@ -12,9 +12,7 @@
 #ifndef CADRUMO_DEVELOPMENT
 #define CADRUMO_DEVELOPMENT 0
 #endif
-#ifndef CADRUMO_ENTRYPOINT
-#include "invocation.h"
-#endif
+#include "launch_profile.h"
 
 typedef int (*bridge_main)(int, char **, const char **, int);
 extern char **environ;
@@ -86,8 +84,14 @@ int main(int argc, char **argv) {
     if (!bridge) goto done;
     bridge_main run = (bridge_main)dlsym(bridge, "cadrumo_python_main");
     if (!run) goto failure;
+    /* The launch profile defines the environment before Python starts. */
+    int defined = define_launch(ctx, argc, argv, &error);
+    if (defined < 0) goto failure;
+    if (defined > 0) {
+        result = defined;
+        goto done;
+    }
 #ifdef CADRUMO_ENTRYPOINT
-    if (cadrumo_platform_prepare(ctx, &error)) goto failure;
     char *interpreter = join(paths[0], CADRUMO_EXECUTABLE);
     char **forwarded = calloc((size_t)argc + 3, sizeof(char *));
     if (!interpreter || !forwarded) {
@@ -104,8 +108,6 @@ int main(int argc, char **argv) {
     result = run(argc + 2, forwarded, (const char **)paths, CADRUMO_DEVELOPMENT);
     free(forwarded);
 #else
-    /* The KDF worker attests its parent's neutral environment before reading requests. */
-    if (!supervised_kdf_invocation(argc, argv) && cadrumo_platform_prepare(ctx, &error)) goto failure;
     if (argc == 2 && !strcmp(argv[1], "--check-package")) {
         char *check[] = {argv[0], "-c", "import _cadrumo_bootstrap; _cadrumo_bootstrap.verify(full=True); print('CADRUMO package verified')", NULL};
         result = run(3, check, (const char **)paths, CADRUMO_DEVELOPMENT);

@@ -143,9 +143,12 @@ if(BUILD_TESTING)
     -P "${CMAKE_CURRENT_LIST_DIR}/tests/RustLinker.cmake")
   add_executable(platform_invocation_test interpreter/posix/tests/invocation.c)
   cadrumo_describe_target(platform_invocation_test GROUP verification
-    SUMMARY "compile the interpreter host invocation test")
+    SUMMARY "compile the interpreter host launch-profile test")
   cadrumo_compile_policy(platform_invocation_test)
   target_compile_options(platform_invocation_test PRIVATE -UNDEBUG)
+  target_include_directories(platform_invocation_test PRIVATE "${CONTRACT_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/platform/include")
+  target_link_libraries(platform_invocation_test PRIVATE "${platform_static}" ${CMAKE_DL_LIBS} pthread m)
+  add_dependencies(platform_invocation_test rust_platform_static native_contract)
   add_test(NAME platform.invocation COMMAND platform_invocation_test)
   add_test(NAME platform.resolver COMMAND ${platform_cargo} test --locked --lib
     --manifest-path "${CMAKE_CURRENT_SOURCE_DIR}/platform/Cargo.toml"
