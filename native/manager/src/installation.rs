@@ -249,6 +249,7 @@ mod tests {
                         "fixture-dependency.bin": format!("{:x}", Sha256::digest(dependency)),
                     },
                     "user_docs": {"directory": "docs/user", "bundled": false},
+                    "startup_files": [member.as_str(), "fixture-dependency.bin"],
                 }))
                 .unwrap(),
             )
@@ -382,15 +383,16 @@ mod tests {
     }
 
     #[test]
-    fn catalogue_admission_refuses_absent_damaged_and_foreign_packages() {
+    fn catalogue_admission_refuses_absent_startup_files_and_foreign_packages() {
         let fixture = Fixture::new();
         let dependency = fixture.package.join("fixture-dependency.bin");
         fs::remove_file(&dependency).unwrap();
         assert!(fixture.admit().is_err());
         fs::write(&dependency, b"inventoried fixture dependency").unwrap();
         assert!(fixture.admit().is_ok());
+        // A launch hashes nothing: changed bytes in a present file are the installer's to find.
         fs::write(&dependency, b"damaged fixture dependency").unwrap();
-        assert!(fixture.admit().is_err());
+        assert!(fixture.admit().is_ok());
         fs::write(&dependency, b"inventoried fixture dependency").unwrap();
         fixture.amend_manifest(|manifest| {
             manifest["build"]["application_id"] = json!("fixture.foreign");

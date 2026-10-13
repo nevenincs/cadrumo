@@ -28,6 +28,9 @@ pub struct PackageManifest {
     pub delegated_inventories: BTreeMap<RelativePath, RelativePath>,
     /// The assembler's statement of whether the user documentation tree ships.
     pub user_docs: Option<UserDocsStatement>,
+    /// The few files every start needs; a launch confirms only that these exist.
+    #[serde(default)]
+    pub startup_files: Vec<RelativePath>,
 }
 
 #[derive(Debug, Deserialize)]

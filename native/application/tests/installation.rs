@@ -91,7 +91,8 @@ impl Fixture {
             "layout": {"abi": 1, "platform": self.contract.layout.platform}, "python": "fixture", "distributions": {},
             "files": {(member.as_str()): format!("{:x}", Sha256::digest(fs::read(&self.source).unwrap())),
                 "python.zip": format!("{:x}", Sha256::digest(b"inventoried fixture dependency"))},
-            "user_docs": {"directory": "docs/user", "bundled": false}
+            "user_docs": {"directory": "docs/user", "bundled": false},
+            "startup_files": [member.as_str(), "python.zip"]
         })).unwrap()).unwrap();
         package
     }
@@ -930,7 +931,18 @@ fn verified_this_user_registration_precedes_newer_machine_and_local_versions() {
             older_user
         );
     }
+    // A launch hashes nothing: changed bytes in a present file are the installer's to find.
     fs::write(older_user.join("python.zip"), b"corrupted user package").unwrap();
+    assert_eq!(
+        fixture
+            .contract
+            .discover(&machine_entry, &hints)
+            .unwrap()
+            .package,
+        older_user
+    );
+    // A user package missing a file every start needs is passed over for the machine one.
+    fs::remove_file(older_user.join("python.zip")).unwrap();
     assert_eq!(
         fixture
             .contract

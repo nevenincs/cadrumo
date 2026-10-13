@@ -9,13 +9,8 @@ use crate::supervision::{
 #[cfg(windows)]
 use cadrumo_application::diagnostics::{Diagnostics, EventKind, HostStage};
 use cadrumo_application::{
-    child::ChildConfiguration,
-    component::Cancellation,
-    diagnostics::lifecycle::InspectionRefusal,
-    error::Error as ApplicationCause,
-    package::{PackageManifest, Readiness},
-    runtime,
-    value::RelativePath,
+    child::ChildConfiguration, component::Cancellation, diagnostics::lifecycle::InspectionRefusal,
+    error::Error as ApplicationCause, package::PackageManifest, runtime, value::RelativePath,
 };
 use std::{error::Error, fmt, io, path::Path, time::Duration};
 
@@ -187,24 +182,16 @@ fn require_package_cancellable(
                 io::Error::other(cause),
             )
         })?;
-    let inspection = manifest
-        .inspect_cancellable(
-            package,
-            &manifest_path,
-            &contract.layout.platform,
-            crate::contract::ABI,
-            cancellation,
-        )
-        .map_err(package_failure)?;
-    match inspection.readiness {
-        Readiness::Ready => Ok(()),
-        Readiness::Incompatible(_) => Err(InspectionFailure::refused(
+    // The installer published this version complete; starting its runtime checks only that the
+    // package is built for this target, never every file it holds.
+    if manifest.layout.platform != contract.layout.platform
+        || manifest.layout.abi != crate::contract::ABI
+    {
+        return Err(InspectionFailure::refused(
             InspectionRefusal::PackageIncompatible,
-        )),
-        Readiness::Missing(_) | Readiness::NeedsUser(_) => Err(InspectionFailure::refused(
-            InspectionRefusal::PackageIncomplete,
-        )),
+        ));
     }
+    Ok(())
 }
 
 #[cfg(test)]
@@ -359,7 +346,7 @@ mod tests {
     }
 
     #[test]
-    fn real_package_integrity_and_missing_file_refusals_have_different_records() {
+    fn a_runtime_start_checks_the_package_target_and_never_its_files() {
         let scratch = Scratch::new();
         let package = scratch.0.join("package");
         let manifest = package.join(crate::contract::MODE_PACKAGE_MANIFEST);
@@ -376,17 +363,10 @@ mod tests {
         let diagnostics = Diagnostics::new(DiagnosticSource::Manager);
         let log = scratch.0.join("fixture.log");
         diagnostics.configure_file(&log, 16384, 1).unwrap();
-        let failure = require_package(&package).unwrap_err();
-        assert_eq!(failure.refusal, InspectionRefusal::PackageIncomplete);
-        crate::diagnostics::inspection_failed(&diagnostics, failure);
+        // The installer published the version complete: an inventoried file that is absent or
+        // differs is not re-read on every runtime start.
+        require_package(&package).unwrap();
         fs::write(package.join("fixture.bin"), b"synthetic-private-file").unwrap();
-        let failure = require_package(&package).unwrap_err();
-        assert_eq!(failure.refusal, InspectionRefusal::PackageIncompatible);
-        crate::diagnostics::inspection_failed(&diagnostics, failure);
-        use sha2::{Digest, Sha256};
-        document["files"]["fixture.bin"] =
-            serde_json::json!(format!("{:x}", Sha256::digest(b"synthetic-private-file")));
-        fs::write(&manifest, serde_json::to_vec(&document).unwrap()).unwrap();
         require_package(&package).unwrap();
         let cancellation = Cancellation::default();
         cancellation.cancel();
@@ -398,22 +378,13 @@ mod tests {
             )))
             .is_cancelled()
         );
-        // Cancellation must win before native manifest access, without accepting
-        // the incomplete package on a later uncancelled admission.
-        fs::remove_file(package.join("fixture.bin")).unwrap();
-        assert!(require_package_cancellable(&package, &cancellation).is_err());
-        let missing = require_package(&package).unwrap_err();
-        assert_eq!(missing.refusal, InspectionRefusal::PackageIncomplete);
-        assert!(!missing.is_cancelled());
-        fs::write(package.join("fixture.bin"), b"synthetic-private-file").unwrap();
         document["layout"]["platform"] = serde_json::json!("different-build-target");
         fs::write(&manifest, serde_json::to_vec(&document).unwrap()).unwrap();
-        assert_eq!(
-            require_package(&package).unwrap_err().refusal,
-            InspectionRefusal::PackageIncompatible
-        );
+        let failure = require_package(&package).unwrap_err();
+        assert_eq!(failure.refusal, InspectionRefusal::PackageIncompatible);
+        assert!(!failure.is_cancelled());
+        crate::diagnostics::inspection_failed(&diagnostics, failure);
         let log = fs::read_to_string(log).unwrap();
-        assert!(log.contains("package_incomplete"));
         assert!(log.contains("package_incompatible"));
         assert!(!log.contains("synthetic-private"));
     }

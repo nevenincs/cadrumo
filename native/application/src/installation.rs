@@ -383,7 +383,7 @@ impl DiscoveryContract {
         let mut newest: Option<Selection> = None;
         for (prefix, this_user) in prefixes {
             cancellation.check()?;
-            let inspected = self.inspect_cancellable(&prefix, cancellation);
+            let inspected = self.select_for_launch_cancellable(&prefix, cancellation);
             cancellation.check()?;
             if matches!(inspected, Err(Error::Cancelled)) {
                 return Err(Error::Cancelled);
@@ -417,7 +417,21 @@ impl DiscoveryContract {
         prefix: &Path,
         cancellation: &Cancellation,
     ) -> Result<Selection, Error> {
-        self.read_catalogue(prefix, cancellation, false)?
+        self.read_catalogue(prefix, cancellation, false, true)?
+            .into_iter()
+            .next()
+            .ok_or_else(|| Error::Incompatible("no complete compatible installed version".into()))
+    }
+
+    /// The installed version a start runs. It reads each candidate's manifest and verifies its
+    /// manager executable, but never hashes the package: that is the installer's work, done
+    /// once when the version is published, not on every manager or desktop start.
+    pub fn select_for_launch_cancellable(
+        &self,
+        prefix: &Path,
+        cancellation: &Cancellation,
+    ) -> Result<Selection, Error> {
+        self.read_catalogue(prefix, cancellation, false, false)?
             .into_iter()
             .next()
             .ok_or_else(|| Error::Incompatible("no complete compatible installed version".into()))
@@ -431,7 +445,7 @@ impl DiscoveryContract {
         prefix: &Path,
         cancellation: &Cancellation,
     ) -> Result<Vec<Selection>, Error> {
-        self.read_catalogue(prefix, cancellation, true)
+        self.read_catalogue(prefix, cancellation, true, true)
     }
 
     fn read_catalogue(
@@ -439,6 +453,7 @@ impl DiscoveryContract {
         prefix: &Path,
         cancellation: &Cancellation,
         all: bool,
+        full: bool,
     ) -> Result<Vec<Selection>, Error> {
         cancellation.check()?;
         filesystem::absolute_root(prefix)?;
@@ -519,7 +534,9 @@ impl DiscoveryContract {
                         store.acquire(&name, &manifest).map(Arc::new)
                     })
                     .transpose()?;
-                let (manager, digest) = self.inspect_package(&package, &name, cancellation)?;
+                let (manager, digest) = self
+                    .inspect_package_diagnostic(&package, &name, full, cancellation)
+                    .map_err(|failure| failure.error)?;
                 Ok((manager, digest, lease))
             };
             let inspected = inspect();
@@ -592,7 +609,7 @@ impl DiscoveryContract {
     ) -> Result<(), CandidateRejection> {
         version(release)
             .map_err(|error| CandidateFailure::new(error, CandidateStage::Release).rejection)?;
-        self.inspect_package_diagnostic(package, release, &Cancellation::default())
+        self.inspect_package_diagnostic(package, release, true, &Cancellation::default())
             .map(|_| ())
             .map_err(|failure| failure.rejection)
     }
@@ -613,14 +630,17 @@ impl DiscoveryContract {
         name: &str,
         cancellation: &Cancellation,
     ) -> Result<(PathBuf, Sha256Digest), Error> {
-        self.inspect_package_diagnostic(package, name, cancellation)
+        self.inspect_package_diagnostic(package, name, true, cancellation)
             .map_err(|failure| failure.error)
     }
 
+    /// ``full`` hashes every package file, for installation, repair and rollback; a launch passes
+    /// ``false`` and checks only the version's identity, target and manager executable.
     fn inspect_package_diagnostic(
         &self,
         package: &Path,
         name: &str,
+        full: bool,
         cancellation: &Cancellation,
     ) -> Result<(PathBuf, Sha256Digest), CandidateFailure> {
         filesystem::absolute_root(package)
@@ -646,25 +666,47 @@ impl DiscoveryContract {
                 CandidateStage::VersionIdentity,
             ));
         }
-        let inspected = manifest
-            .package
-            .inspect_cancellable(
-                package,
-                &layout.files.package_manifest,
-                &layout.platform,
-                layout.abi,
-                cancellation,
-            )
-            .map_err(|error| CandidateFailure::new(error, CandidateStage::Inventory))?;
-        if inspected.readiness != Readiness::Ready {
-            return Err(CandidateFailure::readiness(&inspected.readiness));
-        }
+        let files = if full {
+            let inspected = manifest
+                .package
+                .inspect_cancellable(
+                    package,
+                    &layout.files.package_manifest,
+                    &layout.platform,
+                    layout.abi,
+                    cancellation,
+                )
+                .map_err(|error| CandidateFailure::new(error, CandidateStage::Inventory))?;
+            if inspected.readiness != Readiness::Ready {
+                return Err(CandidateFailure::readiness(&inspected.readiness));
+            }
+            inspected.manifest.files
+        } else {
+            // A launch trusts the installer's publication of a complete version: it checks the
+            // version's target and the manager it is about to run, never every package file.
+            if manifest.package.layout.platform != layout.platform
+                || manifest.package.layout.abi != layout.abi
+            {
+                return Err(CandidateFailure::readiness(&Readiness::Incompatible(
+                    "package target or ABI differs".into(),
+                )));
+            }
+            // An interrupted or damaged version missing a file every start needs is passed over.
+            for critical in &manifest.package.startup_files {
+                let present = fs::symlink_metadata(critical.under(package))
+                    .is_ok_and(|metadata| metadata.is_file());
+                if !present {
+                    return Err(CandidateFailure::readiness(&Readiness::Missing(
+                        critical.as_str().into(),
+                    )));
+                }
+            }
+            manifest.package.files
+        };
         let member = self
             .manager_member()
             .map_err(|error| CandidateFailure::new(error, CandidateStage::Manager))?;
-        let digest = inspected
-            .manifest
-            .files
+        let digest = files
             .get(&member)
             .ok_or_else(|| {
                 CandidateFailure::new(

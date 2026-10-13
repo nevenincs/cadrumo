@@ -1,4 +1,8 @@
-"""Interpreter startup confirms every package file without resolving each path or following a link."""
+"""Interpreter startup reads only the build record; the full check confirms every package file.
+
+Every Cadrumo Python process starts through the bootstrap, so a start must not list, hash or
+parse the package. The full check, run by the build's own verification, keeps every refusal.
+"""
 
 from __future__ import annotations
 
@@ -21,6 +25,7 @@ from dev.packaging.native.hashing import digest
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 MANIFEST = "data/package-manifest.json"
+BUILD = "data/build.json"
 NATIVE_MANIFEST = "data/native-modules.json"
 PATH_FILE = "cadrumo/python.pth"
 NAMES = ("python.exe", "lib/a.py", "lib/deep/b.py", "bin/native.dll")
@@ -123,9 +128,11 @@ def _stage(
 ) -> None:
     """Point the shipped bootstrap at a synthetic package root built for this interpreter."""
     build = {"version": "1", "build_number": 1, "build_date": "d", "python": ".".join(map(str, sys.version_info[:3]))}
+    (root / BUILD).parent.mkdir(parents=True, exist_ok=True)
+    (root / BUILD).write_text(json.dumps(build), encoding="utf-8")
     manifest = {
         "build": build,
-        "files": files,
+        "files": {**files, BUILD: digest(root / BUILD)},
         "startup_files": list(startup),
         "delegated_inventories": {},
         "user_docs": {"directory": "docs/user", "bundled": False},
@@ -136,12 +143,17 @@ def _stage(
     # An absolute package root replaces the executable-relative anchor when joined.
     layout = {
         "package_root_from_executable": str(root),
-        "files": {"package_manifest": MANIFEST, "native_manifest": NATIVE_MANIFEST, "path_file": PATH_FILE},
+        "files": {
+            "package_manifest": MANIFEST,
+            "build_metadata": BUILD,
+            "native_manifest": NATIVE_MANIFEST,
+            "path_file": PATH_FILE,
+        },
     }
     monkeypatch.setattr(bootstrap, "LAYOUT", layout)
 
 
-def _refusal(bootstrap: types.ModuleType, *, full: bool = False) -> str:
+def _refusal(bootstrap: types.ModuleType, *, full: bool = True) -> str:
     with pytest.raises(ImportError) as refused:
         bootstrap.verify(full=full)
     return str(refused.value)
@@ -211,7 +223,7 @@ def test_a_complete_package_starts_and_unlisted_files_stay_a_full_check_matter(
     assert _refusal(bootstrap, full=True).startswith("Unexpected package files")
 
 
-def test_the_host_entry_refuses_a_missing_file_before_preparing_native_code(
+def test_the_host_entry_refuses_a_mixed_build_before_preparing_native_code(
     root: Path, bootstrap: types.ModuleType, prepared: list[Path], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     (root / "cadrumo/site-packages").mkdir(parents=True)
@@ -227,11 +239,17 @@ def test_the_host_entry_refuses_a_missing_file_before_preparing_native_code(
     bootstrap.install()
     assert prepared == [root]
     assert isinstance(sys.meta_path[0], bootstrap.NativeModules)
+    # A start never looks at package files beyond the build record: a missing one is left to the
+    # import that needs it and to the full check.
     (root / "lib/deep/b.py").unlink()
+    bootstrap.install()
+    assert prepared == [root, root]
+    build = json.loads((root / BUILD).read_text(encoding="utf-8"))
+    (root / BUILD).write_text(json.dumps({**build, "build_number": 2}), encoding="utf-8")
     with pytest.raises(ImportError) as refused:
         bootstrap.install()
-    assert str(refused.value) == MISSING.format("lib/deep/b.py")
-    assert prepared == [root]
+    assert str(refused.value) == "Incompatible CADRUMO package build: build_number"
+    assert prepared == [root, root]
 
 
 @pytest.mark.parametrize(("removed", "reported"), [("lib/deep/b.py", "lib/deep/b.py"), ("lib", "lib/a.py")])
@@ -243,8 +261,8 @@ def test_a_missing_file_or_directory_is_refused(
         shutil.rmtree(root / removed)
     else:
         (root / removed).unlink()
+    bootstrap.verify()
     assert _refusal(bootstrap) == MISSING.format(reported)
-    assert _refusal(bootstrap, full=True) == MISSING.format(reported)
 
 
 def test_a_directory_where_a_file_belongs_is_refused(
@@ -279,8 +297,8 @@ def test_a_file_replaced_by_a_symbolic_link_is_refused(
     (root / "lib/a.py").replace(original)
     symlink(root / "lib/a.py", original)
     assert digest(root / "lib/a.py") == digest(original)
+    bootstrap.verify()
     assert _refusal(bootstrap) == INVALID.format("lib/a.py")
-    assert _refusal(bootstrap, full=True) == INVALID.format("lib/a.py")
 
 
 @pytest.mark.parametrize(("linked", "reported"), [("lib", "lib/a.py"), ("lib/deep", "lib/deep/b.py")])
@@ -298,8 +316,8 @@ def test_a_directory_replaced_by_a_link_to_an_identical_tree_is_refused(
     shutil.move(root / linked, identical)
     link_directory(root / linked, identical)
     assert all((root / name).is_file() for name in NAMES)
+    bootstrap.verify()
     assert _refusal(bootstrap) == INVALID.format(reported)
-    assert _refusal(bootstrap, full=True) == INVALID.format(reported)
 
 
 @pytest.mark.parametrize(
@@ -356,7 +374,7 @@ def test_a_differently_cased_name_is_present_exactly_where_the_filesystem_says_s
     files[spelled] = files.pop(spelled.lower())
     _stage(bootstrap, monkeypatch, root, files)
     if (root / spelled).is_file():
-        bootstrap.verify()
+        bootstrap._present(root, [spelled])
     else:
         assert _refusal(bootstrap) == MISSING.format(spelled)
 
@@ -377,24 +395,32 @@ def test_a_differently_cased_name_does_not_let_a_linked_directory_through(
     assert _refusal(bootstrap) == (INVALID if folded else MISSING).format("LIB/a.py")
 
 
-def test_a_start_queries_the_filesystem_per_directory_not_per_file(
+def test_a_start_reads_only_the_build_record_however_large_the_package(
     tmp_path: Path, bootstrap: types.ModuleType, monkeypatch: pytest.MonkeyPatch, calls: Counter[str]
 ) -> None:
     directories = ("lib", "lib/deep", "lib/deep/er", "bin")
 
-    def start(files_per_directory: int) -> tuple[Counter[str], list[Path]]:
-        root = (tmp_path / f"package-{files_per_directory}").resolve()
+    def start(files_per_directory: int, *, full: bool = False) -> tuple[Counter[str], Path, list[Path]]:
+        root = (tmp_path / f"package-{files_per_directory}-{full}").resolve()
         names = [f"{directory}/m{index}.py" for directory in directories for index in range(files_per_directory)]
         _stage(bootstrap, monkeypatch, root, _write(root, ["python.exe", *names]))
         calls.clear()
-        bootstrap.verify()
-        return Counter(calls), [root / name for name in names]
+        bootstrap.verify(full=full)
+        return Counter(calls), root, [root / name for name in names]
 
-    few, _ = start(2)
-    many, files = start(60)
-    # The root and each directory are listed once however many files they hold.
-    assert few["scandir"] == many["scandir"] == len(directories) + 1
+    few, _, _ = start(2)
+    many, root, files = start(60)
+    # A start lists no directory and probes no package file, so its cost does not grow with the package.
+    assert few["scandir"] == many["scandir"] == 0
     assert few == many
+    # Nor does it parse the package inventory: the full check is the build's, not every start's.
+    (root / MANIFEST).unlink()
+    bootstrap.verify()
+    # The full check still lists each directory once however many files it holds: the root, data/
+    # for the build record, and the package directories.
+    full_few, _, _ = start(2, full=True)
+    full_many, _, _ = start(60, full=True)
+    assert full_few["scandir"] == full_many["scandir"] == len(directories) + 2
     # The counters do see a probe made file by file, so the equality above is not blind to one.
     calls.clear()
     assert all(file.resolve().is_file() for file in files)

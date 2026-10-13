@@ -636,9 +636,12 @@ in the package manifest. Every retained native module is imported by the smoke t
 
 `cadrumo/python.pth` is generated data: only reviewed package-relative directories
 are allowed, matching the native manifest. This file is consumed by the package
-bootstrap, rather than executed by `site`. Startup checks build identity, file presence and essential file hashes;
-`python.exe --check-package` hashes the whole package, including delegated
-inventories, and rejects extra files.
+bootstrap, rather than executed by `site`. Every Cadrumo Python process starts through
+the bootstrap, so a start reads only `data/build.json` and refuses a mixed build: it
+lists, hashes and parses nothing else. The assembled package is the build's guarantee,
+and the installer verifies a version once when it publishes it. `python.exe
+--check-package` hashes the whole package, including delegated inventories, and
+rejects extra files; only the build's own verification runs it, never the product.
 This detects missing, damaged or mixed artifacts; it is not an authenticated
 signature or a sandbox for Python code.
 
@@ -773,8 +776,7 @@ resolves to nothing servable, a `stored.text` whose languages are not exactly
 
 The package manifest does not list each documentation file. It lists
 `docs/user/manifest.json` with its hash and declares
-`delegated_inventories: {"docs/user": "docs/user/manifest.json"}`, so interpreter
-startup checks only the package's own files. `python.exe --check-package`, payload
+`delegated_inventories: {"docs/user": "docs/user/manifest.json"}`. `python.exe --check-package`, payload
 validation and the Rust package inspection hash the delegated manifest before using
 it, merge its entries strictly beneath `docs/user/`, refuse an entry that escapes the
 prefix or collides with a listed package file, hash every merged file and reject

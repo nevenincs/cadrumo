@@ -96,26 +96,35 @@ def _delegated_inventory(root, manifest):
     return inventory
 
 
-def verify(full=False):
-    """Refuse mixed builds and missing/damaged runtime inputs; optionally hash every file."""
-    root = (Path(sys.executable).parent / LAYOUT["package_root_from_executable"]).resolve()
-    files = LAYOUT["files"]
-    manifest = json.loads(_inside(root, files["package_manifest"]).read_text(encoding="utf-8"))
-    identity = manifest["build"]
+def _require_build(identity):
     for key in ("version", "build_number", "build_date"):
         if str(identity[key]) != str(vars(sys)["cadrumo_build"][key]):
             raise ImportError(f"Incompatible CADRUMO package build: {key}")
     if identity["python"] != ".".join(map(str, sys.version_info[:3])):
         raise ImportError("Incompatible CADRUMO CPython version")
+
+
+def verify(full=False):
+    """Refuse a mixed build at every start; with ``full``, check and hash the whole package.
+
+    Every Cadrumo Python process starts here, so a start reads only the small build record. The
+    assembled package is the build's guarantee; listing, hashing or parsing its whole inventory
+    belongs to ``python.exe --check-package``, not to each interpreter start.
+    """
+    root = (Path(sys.executable).parent / LAYOUT["package_root_from_executable"]).resolve()
+    files = LAYOUT["files"]
+    if not full:
+        _require_build(json.loads(_inside(root, files["build_metadata"]).read_text(encoding="utf-8")))
+        return
+    manifest = json.loads(_inside(root, files["package_manifest"]).read_text(encoding="utf-8"))
+    _require_build(manifest["build"])
     _present(root, manifest["files"])
-    inventory = _delegated_inventory(root, manifest) if full else manifest["files"]
-    if full:
-        observed = {p.relative_to(root).as_posix() for p in root.rglob("*") if p.is_file()}
-        expected = set(inventory) | {files["package_manifest"]}
-        if observed != expected:
-            raise ImportError(f"Unexpected package files: {observed - expected}")
-    required = inventory if full else manifest["startup_files"]
-    for relative in required:
+    inventory = _delegated_inventory(root, manifest)
+    observed = {p.relative_to(root).as_posix() for p in root.rglob("*") if p.is_file()}
+    expected = set(inventory) | {files["package_manifest"]}
+    if observed != expected:
+        raise ImportError(f"Unexpected package files: {observed - expected}")
+    for relative in inventory:
         path = _inside(root, relative)
         if not path.is_file():
             raise ImportError(f"Missing bundled file: {relative}")

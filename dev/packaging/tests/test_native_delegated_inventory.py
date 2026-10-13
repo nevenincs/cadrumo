@@ -68,10 +68,15 @@ def _bootstrap_package(
     build = {"version": "1", "build_number": 1, "build_date": "d", "python": ".".join(map(str, sys.version_info[:3]))}
     manifest["build"] = build
     manifest["startup_files"] = ["python.exe"]
+    (root / "data/build.json").write_text(json.dumps(build), encoding="utf-8")
+    manifest["files"]["data/build.json"] = digest(root / "data/build.json")
     (root / "data/package-manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
     monkeypatch.setattr(sys, "cadrumo_build", build, raising=False)
     # An absolute package root replaces the executable-relative anchor when joined.
-    layout = {"package_root_from_executable": str(root), "files": {"package_manifest": "data/package-manifest.json"}}
+    layout = {
+        "package_root_from_executable": str(root),
+        "files": {"package_manifest": "data/package-manifest.json", "build_metadata": "data/build.json"},
+    }
     monkeypatch.setattr(bootstrap, "LAYOUT", layout)
 
 
