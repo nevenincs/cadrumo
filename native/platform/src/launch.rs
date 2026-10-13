@@ -382,16 +382,22 @@ pub fn define_environment(
     })
 }
 
+/// Create the private directories a defined environment pins.
+pub fn create_directories(defined: &Defined) -> Result<(), DefineError> {
+    for directory in &defined.directories {
+        crate::create_private_directory(directory)
+            .map_err(|error| DefineError::Failed(error.to_string()))?;
+    }
+    Ok(())
+}
+
 /// Replace this process's environment with `defined` after creating its directories.
 ///
 /// # Safety
 /// The caller must exclude every concurrent environment access: no other thread may
 /// read or write the environment while this runs.
 pub unsafe fn apply(defined: &Defined) -> Result<(), DefineError> {
-    for directory in &defined.directories {
-        crate::create_private_directory(directory)
-            .map_err(|error| DefineError::Failed(error.to_string()))?;
-    }
+    create_directories(defined)?;
     let names: Vec<OsString> = env::vars_os()
         .map(|(name, _)| name)
         // Windows keeps per-drive working directories under names that start with '='.

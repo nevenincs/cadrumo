@@ -22,9 +22,15 @@ use tokio::io::{AsyncRead, AsyncReadExt};
 #[derive(Deserialize)]
 struct Contract {
     layout: Layout,
-    storage_environment_allowlist: Vec<String>,
+    application_environment: ApplicationEnvironment,
     #[cfg(windows)]
     desktop_defaults: DesktopDefaults,
+}
+/// The package's declared environment: the storage root and the member locations an
+/// operator may relocate, whose overrides the desktop leaves to the command line's Settings.
+#[derive(Deserialize)]
+struct ApplicationEnvironment {
+    location_names: Vec<String>,
 }
 #[cfg(windows)]
 #[derive(Deserialize)]
@@ -215,7 +221,10 @@ async fn project(
     if manifest.layout.platform != layout.platform || manifest.layout.abi != layout.abi {
         return Err(invalid());
     }
-    let bundled = manifest.user_docs.as_ref().map(|statement| statement.bundled);
+    let bundled = manifest
+        .user_docs
+        .as_ref()
+        .map(|statement| statement.bundled);
     let executable = layout.paths.executable.under(root);
     let digest = manifest
         .files
@@ -232,7 +241,7 @@ async fn project(
         &executable,
         parent,
         &contract.desktop_defaults,
-        &contract.storage_environment_allowlist,
+        &contract.application_environment.location_names,
     )? {
         return Ok((executable, projection, layout, bundled));
     }
@@ -313,7 +322,10 @@ async fn project(
         };
         let projection: Projection = serde_json::from_slice(&output)
             .map_err(|e| failure(ErrorCode::EnvironmentFailed).caused_by(e))?;
-        if !admissible(&projection, &contract.storage_environment_allowlist) {
+        if !admissible(
+            &projection,
+            &contract.application_environment.location_names,
+        ) {
             return Err(failure(ErrorCode::EnvironmentFailed));
         }
         Ok((executable, projection, layout, bundled))
@@ -517,7 +529,8 @@ mod tests {
         let mut parent = Parent::current().unwrap();
         parent.environment.retain(|(key, _)| {
             !contract
-                .storage_environment_allowlist
+                .application_environment
+                .location_names
                 .iter()
                 .any(|name| key.eq_ignore_ascii_case(name))
         });
@@ -530,7 +543,7 @@ mod tests {
                 &executable,
                 &parent,
                 &contract.desktop_defaults,
-                &contract.storage_environment_allowlist,
+                &contract.application_environment.location_names,
             )
         };
         let projection = project().unwrap().unwrap();
@@ -560,7 +573,8 @@ mod tests {
         let mut parent = Parent::current().unwrap();
         parent.environment.retain(|(key, _)| {
             !contract
-                .storage_environment_allowlist
+                .application_environment
+                .location_names
                 .iter()
                 .any(|name| key.to_string_lossy().eq_ignore_ascii_case(name))
         });
@@ -645,17 +659,13 @@ mod tests {
 
         let raw_contract: serde_json::Value =
             serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json"))).unwrap();
-        let log_variable = raw_contract["locations"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .find(|location| location["category"] == "logs")
-            .unwrap()["variable"]
+        let log_variable = raw_contract["desktop_defaults"]["log_variable"]
             .as_str()
             .unwrap();
         assert!(
             contract
-                .storage_environment_allowlist
+                .application_environment
+                .location_names
                 .iter()
                 .any(|name| name == log_variable)
         );
@@ -681,14 +691,7 @@ mod tests {
 
         // A temporary directory cannot be a regular file. The canonical
         // interpreter host validates this member before importing Settings.
-        let temporary_variable = raw_contract["locations"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .find(|location| location["category"] == "temporary-files")
-            .unwrap()["variable"]
-            .as_str()
-            .unwrap();
+        let temporary_variable = cadrumo_platform::TEMPORARY_ENV;
         let invalid_temporary = storage.join("temporary-file");
         std::fs::write(&invalid_temporary, b"not a directory").unwrap();
         parent.environment.push((
@@ -832,7 +835,7 @@ mod tests {
         assert!(pins_storage(
             &projection,
             &serde_json::from_value::<Vec<String>>(
-                contract["storage_environment_allowlist"].clone()
+                contract["application_environment"]["location_names"].clone()
             )
             .unwrap()
         ));

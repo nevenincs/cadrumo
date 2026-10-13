@@ -63,7 +63,6 @@ impl ChildConfiguration {
         executable: PathBuf,
         working_directory: PathBuf,
         root: &Path,
-        profile: cadrumo_platform::storage::Profile,
         ambient: impl IntoIterator<Item = (OsString, OsString)>,
     ) -> Result<Self, Error> {
         // Reject invalid command inputs before the owner prepares any directories.
@@ -73,7 +72,7 @@ impl ChildConfiguration {
             BTreeMap::new(),
         )?;
         crate::filesystem::absolute_root(root)?;
-        let environment = cadrumo_platform::storage::child_environment(profile, ambient, root)?;
+        let environment = cadrumo_platform::storage::child_environment(ambient, root)?;
         Self::new(
             executable,
             working_directory,

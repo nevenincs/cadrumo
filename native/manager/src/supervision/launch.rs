@@ -347,6 +347,7 @@ mod tests {
                 (ROOT_VARIABLE.into(), "discard-this-root".into()),
                 ("PYTHONPATH".into(), "discard-this-secret".into()),
                 ("PATH".into(), "initial-os-path".into()),
+                ("SYSTEMROOT".into(), r"C:\Windows".into()),
             ])
             .unwrap()
             .clone();
@@ -357,7 +358,12 @@ mod tests {
                 .any(|(_, value)| value == "discard-this-root" || value == "discard-this-secret")
         );
         for name in HOST_INHERITED_ENV {
-            assert!(first.contains(&(name.into(), package.join(AUTHORITY).into_os_string())));
+            assert!(first.iter().any(|(key, value)| {
+                key == name
+                    && Path::new(value)
+                        .components()
+                        .eq(package.join(AUTHORITY).components())
+            }));
         }
         let second = target
             .prepare_environment([("PATH".into(), "later-os-path".into())])

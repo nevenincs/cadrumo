@@ -171,13 +171,6 @@ fn describe(error: launch::DefineError) -> String {
     }
 }
 
-fn prepare(ctx: &Context) -> Result<(), String> {
-    let ambient: Vec<_> = env::vars_os().collect();
-    let defined = define_for(&ctx.paths[2], &ambient)?;
-    // Environment mutation occurs once, before Python or application threads exist.
-    unsafe { launch::apply(&defined) }.map_err(describe)
-}
-
 /// Define the environment `executable` gives a caller holding `ambient`, without starting
 /// Python or changing this process's environment. Its pinned directories are created.
 /// The caller verifies the executable.
@@ -189,9 +182,7 @@ pub fn prepared_environment(
     // callers supply a Windows executable using forward slashes.
     let executable = normalize_absolute_path(executable).map_err(|error| error.to_string())?;
     let defined = define_for(&executable, ambient)?;
-    for directory in &defined.directories {
-        create_private_directory(directory).map_err(|e| e.to_string())?;
-    }
+    launch::create_directories(&defined).map_err(describe)?;
     Ok(defined.environment)
 }
 
@@ -269,31 +260,6 @@ pub unsafe extern "C" fn cadrumo_platform_path(
             None => 3,
         },
         None => 2,
-    }
-}
-/// # Safety
-/// A non-null context must be live and created by this library. A non-null error
-/// output must be aligned, writable and not alias the context. The caller must
-/// exclude concurrent environment access while this operation changes it.
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn cadrumo_platform_prepare(ctx: *mut Context, error: *mut Buffer) -> u32 {
-    if ctx.is_null() || error.is_null() {
-        return 2;
-    }
-    unsafe {
-        *error = Buffer {
-            data: ptr::null_mut(),
-            len: 0,
-        };
-    }
-    match prepare(unsafe { &*ctx }) {
-        Ok(()) => 0,
-        Err(e) => {
-            unsafe {
-                *error = buffer(e);
-            }
-            3
-        }
     }
 }
 /// The native character of this platform's process arguments.

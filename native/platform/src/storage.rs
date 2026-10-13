@@ -10,12 +10,12 @@ use crate::{
     HOST_INHERITED_ENV, HOST_INHERITED_FIELDS, INHERITED_KIND_DIRECTORY_PATH, INSTALLED_DEFAULTS,
     INSTALLED_RELATIVE_OVERRIDE, INSTALLED_ROOT_PRECEDENCE, InstalledDefault, MODE_CHECKOUT_MARKER,
     MODE_PACKAGE_MANIFEST, MODE_PACKAGE_ROOT_FROM_EXECUTABLE, NAMESPACE_PREFIX, NATIVE, PINNED_ENV,
-    PRODUCT_DIRECTORY, PRODUCT_ENV_ALLOWLIST, RESERVED_ENV, ROOT_REFUSAL_CHECKOUT_UNAVAILABLE,
-    ROOT_REFUSAL_FILESYSTEM_PATH_REFUSED, ROOT_REFUSAL_HOME_UNAVAILABLE,
-    ROOT_REFUSAL_INSTALLED_BASE_UNAVAILABLE, ROOT_REFUSAL_INVALID_PATH_INPUT,
-    ROOT_REFUSAL_NON_ABSOLUTE_PIN, ROOT_REFUSAL_RELATIVE_OVERRIDE_INSTALLED, ROOT_REFUSALS,
-    ROOT_VARIABLE, STABLE_CHANNEL, STORAGE_NORMALIZE_ABSOLUTE, STORAGE_REFUSE_LINKS,
-    STORAGE_UNICODE_REQUIRED, TEMPORARY_CREATE_EXPLICIT, TEMPORARY_DEFAULT, TEMPORARY_ENV,
+    PRODUCT_DIRECTORY, ROOT_REFUSAL_CHECKOUT_UNAVAILABLE, ROOT_REFUSAL_FILESYSTEM_PATH_REFUSED,
+    ROOT_REFUSAL_HOME_UNAVAILABLE, ROOT_REFUSAL_INSTALLED_BASE_UNAVAILABLE,
+    ROOT_REFUSAL_INVALID_PATH_INPUT, ROOT_REFUSAL_NON_ABSOLUTE_PIN,
+    ROOT_REFUSAL_RELATIVE_OVERRIDE_INSTALLED, ROOT_REFUSALS, ROOT_VARIABLE, STABLE_CHANNEL,
+    STORAGE_NORMALIZE_ABSOLUTE, STORAGE_REFUSE_LINKS, STORAGE_UNICODE_REQUIRED,
+    TEMPORARY_CREATE_EXPLICIT, TEMPORARY_DEFAULT, TEMPORARY_ENV,
 };
 #[cfg(windows)]
 use std::os::windows::ffi::OsStringExt;
@@ -86,16 +86,6 @@ pub enum RootSource {
 pub struct ResolvedRoot {
     pub root: PathBuf,
     pub source: RootSource,
-}
-
-/// How much of a received environment a child process keeps.
-///
-/// `Operator` children keep allowlisted operator overrides; `Strict` children keep none.
-/// Both keep host-inherited pins they receive, as the Python declaration does.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Profile {
-    Operator,
-    Strict,
 }
 
 fn refusal(code: &'static str, message: String) -> Refusal {
@@ -582,24 +572,19 @@ pub(crate) fn temporary_path(
     Ok(path)
 }
 
-/// Whether the contract clears `name` from a child built with `profile`.
-///
-/// `extra_allowed` names package-owned variables a native host keeps for itself.
-pub(crate) fn cleared(name: &str, profile: Profile, extra_allowed: &[&str]) -> bool {
+/// Whether a strict child filter clears `name`: the declared host classes and every
+/// product-namespace name except a received host-inherited pin.
+pub(crate) fn cleared(name: &str) -> bool {
     let upper = if cfg!(windows) {
         name.to_uppercase()
     } else {
         name.to_owned()
     };
-    let allowed = (profile == Profile::Operator && PRODUCT_ENV_ALLOWLIST.contains(&upper.as_str()))
-        || extra_allowed.contains(&upper.as_str())
-        || HOST_INHERITED_ENV.contains(&upper.as_str());
     CLEARED_PREFIXES
         .iter()
         .any(|prefix| upper.starts_with(prefix))
         || CLEARED_NAMES.contains(&upper.as_str())
-        || ((upper.starts_with(NAMESPACE_PREFIX) || RESERVED_ENV.contains(&upper.as_str()))
-            && !allowed)
+        || (upper.starts_with(NAMESPACE_PREFIX) && !HOST_INHERITED_ENV.contains(&upper.as_str()))
 }
 
 /// Clear the canonical strict host classes without pinning a runtime storage root.
@@ -609,7 +594,7 @@ pub fn strict_host_environment(
 ) -> Vec<(OsString, OsString)> {
     ambient
         .into_iter()
-        .filter(|(name, _)| !cleared(&name.to_string_lossy(), Profile::Strict, &[]))
+        .filter(|(name, _)| !cleared(&name.to_string_lossy()))
         .collect()
 }
 
@@ -639,17 +624,13 @@ fn environment_name_matches(name: &std::ffi::OsStr, expected: &str) -> bool {
     }
 }
 
-/// Build a child environment that inherits `root` instead of re-resolving it.
+/// Build a strict child environment that inherits `root` instead of re-resolving it.
 ///
-/// Mirrors the Python `child_environment`: the contract's classes are cleared from
-/// `ambient`; an `Operator` child keeps allowlisted overrides, a `Strict` child none;
-/// received host-inherited pins pass unchanged; the root variable and the temporary
-/// variables are pinned, and both directories are created.
-pub fn child_environment<I>(
-    profile: Profile,
-    ambient: I,
-    root: &Path,
-) -> std::io::Result<Vec<(OsString, OsString)>>
+/// The declared host classes and every product-namespace name are cleared from
+/// `ambient`; received host-inherited pins pass unchanged; the root variable and the
+/// temporary variables are pinned, and both directories are created. A packaged
+/// interpreter image defines its own environment from its launch profile instead.
+pub fn child_environment<I>(ambient: I, root: &Path) -> std::io::Result<Vec<(OsString, OsString)>>
 where
     I: IntoIterator<Item = (OsString, OsString)>,
 {
@@ -664,7 +645,7 @@ where
         (name, value)
     });
     let mut environment: Vec<(OsString, OsString)> = ambient
-        .filter(|(name, _)| !cleared(&name.to_string_lossy(), profile, &[]))
+        .filter(|(name, _)| !cleared(&name.to_string_lossy()))
         .collect::<std::collections::BTreeMap<_, _>>()
         .into_iter()
         .collect();
@@ -940,40 +921,32 @@ mod tests {
     }
 
     #[test]
-    fn child_environment_pins_the_root_and_follows_the_profile() {
+    fn child_environment_pins_the_root_and_keeps_no_product_setting() {
         let scratch = Scratch::new("child");
         let root = scratch.0.join("root");
-        let operator = child_environment(Profile::Operator, ambient(), &root).unwrap();
-        let strict = child_environment(Profile::Strict, ambient(), &root).unwrap();
-        for environment in [&operator, &strict] {
-            assert_eq!(value(environment, ROOT_VARIABLE).unwrap(), root.as_os_str());
-            assert!(value(environment, "PYTHONPATH").is_none());
-            assert!(value(environment, "CADRUMO_SECRET_PASSPHRASE").is_none());
-            assert_eq!(value(environment, "PATH").unwrap(), "ambient-path");
-            for name in HOST_INHERITED_ENV {
-                assert_eq!(value(environment, name).unwrap(), r"C:\authority");
-            }
-            assert_eq!(
-                environment
-                    .iter()
-                    .filter(|(key, _)| key.to_string_lossy().eq_ignore_ascii_case(ROOT_VARIABLE))
-                    .count(),
-                1
-            );
+        let environment = child_environment(ambient(), &root).unwrap();
+        assert_eq!(
+            value(&environment, ROOT_VARIABLE).unwrap(),
+            root.as_os_str()
+        );
+        assert!(value(&environment, "PYTHONPATH").is_none());
+        assert!(value(&environment, "CADRUMO_SECRET_PASSPHRASE").is_none());
+        assert_eq!(value(&environment, "PATH").unwrap(), "ambient-path");
+        for name in HOST_INHERITED_ENV {
+            assert_eq!(value(&environment, name).unwrap(), r"C:\authority");
         }
-        // An operator child keeps its temporary override; a strict child uses the declared member.
-        assert_eq!(value(&operator, TEMPORARY_ENV).unwrap(), "worker-temp");
         assert_eq!(
-            value(&operator, "TEMP").unwrap(),
-            root.join("worker-temp").as_os_str()
+            environment
+                .iter()
+                .filter(|(key, _)| key.to_string_lossy().eq_ignore_ascii_case(ROOT_VARIABLE))
+                .count(),
+            1
         );
-        assert!(value(&strict, TEMPORARY_ENV).is_none());
-        let strict_temporary = root.join(relative_components(TEMPORARY_DEFAULT));
-        assert_eq!(
-            value(&strict, "TEMP").unwrap(),
-            strict_temporary.as_os_str()
-        );
-        assert!(root.join("worker-temp").is_dir() && strict_temporary.is_dir());
+        // A received temporary override is a product setting: the declared member applies.
+        assert!(value(&environment, TEMPORARY_ENV).is_none());
+        let temporary = root.join(relative_components(TEMPORARY_DEFAULT));
+        assert_eq!(value(&environment, "TEMP").unwrap(), temporary.as_os_str());
+        assert!(temporary.is_dir() && !root.join("worker-temp").exists());
     }
 
     #[test]

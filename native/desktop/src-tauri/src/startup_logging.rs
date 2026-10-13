@@ -20,7 +20,14 @@ use std::path::{Path, PathBuf};
 #[derive(Deserialize)]
 struct Contract {
     desktop_defaults: Defaults,
-    storage_environment_allowlist: Vec<String>,
+    application_environment: ApplicationEnvironment,
+}
+
+/// The storage root and the member locations an operator may relocate.
+#[cfg(windows)]
+#[derive(Deserialize)]
+struct ApplicationEnvironment {
+    location_names: Vec<String>,
 }
 
 #[cfg(windows)]
@@ -71,11 +78,15 @@ fn location(executable: &Path, parent: &Parent, contract: &Contract) -> Result<O
         storage::{detect_mode, resolve_storage_root_with, validated_absolute_path},
     };
     if parent.environment.iter().any(|(key, value)| {
-        contract.storage_environment_allowlist.iter().any(|name| {
-            key.to_string_lossy().eq_ignore_ascii_case(name)
-                && !name.eq_ignore_ascii_case(ROOT_VARIABLE)
-                && !value.to_string_lossy().trim().is_empty()
-        })
+        contract
+            .application_environment
+            .location_names
+            .iter()
+            .any(|name| {
+                key.to_string_lossy().eq_ignore_ascii_case(name)
+                    && !name.eq_ignore_ascii_case(ROOT_VARIABLE)
+                    && !value.to_string_lossy().trim().is_empty()
+            })
     }) {
         return Ok(None);
     }

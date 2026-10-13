@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:f426be1fbbf08eeb89bc91025e6aaf12f047d48005f90f38b53ee93f884e8011'
+body_hash: 'sha256:33badc93522236bcffa77cfee1da5878c92f94c20d9a87de98120aee962674fd'
 related:
   - "[[2026-10-13-canonical-environment-plan]]"
 ---
@@ -144,6 +144,37 @@ related:
 - `S05` `verify:` `cargo +1.96.0 test native/manager --lib exit (125 is a launch failure, 124 stays a crash)` -> `pass`
 - `S05` `verify:` `cargo +1.96.0 clippy native/manager lib` -> `pass`
 - `S05` `by:` `vaultspec-high-executor`
+- `S06` `M` `dev/packaging/native/application_environment.py`
+- `S06` `M` `dev/packaging/native/generate.py`
+- `S06` `M` `dev/packaging/tests/test_native_storage_environment_contract.py`
+- `S06` `M` `native/application-environment.toml`
+- `S06` `M` `native/application/src/child.rs`
+- `S06` `M` `native/application/tests/live_package.rs`
+- `S06` `M` `native/application/tests/platform.rs`
+- `S06` `M` `native/desktop/src-tauri/src/environment.rs`
+- `S06` `M` `native/desktop/src-tauri/src/startup_logging.rs`
+- `S06` `M` `native/desktop/src-tauri/src/terminal/tests/live.rs`
+- `S06` `M` `native/manager/src/supervision/environment.rs`
+- `S06` `M` `native/manager/src/supervision/launch.rs`
+- `S06` `M` `native/manager/src/windows_lifecycle.rs`
+- `S06` `M` `native/manager/tests/environment.rs`
+- `S06` `M` `native/manager/tests/supervision.rs`
+- `S06` `M` `native/platform/include/cadrumo_platform.h`
+- `S06` `M` `native/platform/src/conformance_tests.rs`
+- `S06` `M` `native/platform/src/launch.rs`
+- `S06` `M` `native/platform/src/lib.rs`
+- `S06` `M` `native/platform/src/posix_tests.rs`
+- `S06` `M` `native/platform/src/storage.rs`
+- `S06` `M` `native/platform/tests/consumer.c`
+- `S06` `verify:` `uv run --no-sync pytest generator, vector, storage-vector, contract and exit-reason suites (141)` -> `pass`
+- `S06` `verify:` `ruff check/format and ty dev/packaging` -> `pass`
+- `S06` `verify:` `cargo +1.96.0 clippy -D warnings native/platform (win, linux, darwin) and cargo test (45)` -> `pass`
+- `S06` `verify:` `consumer.c built with cl /W4 /WX and run` -> `pass`
+- `S06` `verify:` `cargo +1.96.0 clippy --all-targets -D warnings native/manager (fixture-test-mode)` -> `pass`
+- `S06` `verify:` `cargo +1.96.0 test native/manager --lib --test environment --test supervision --test runtime_identity` -> `pass`
+- `S06` `verify:` `cargo +1.96.0 clippy --all-targets -D warnings native/application (platform) and test --test platform` -> `pass`
+- `S06` `verify:` `cargo +1.96.0 clippy --all-targets -D warnings native/desktop/src-tauri (with and without live-package-tests) via a scratch mirror` -> `pass`
+- `S06` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -159,3 +190,7 @@ related:
 - `S04` Agent gateway and worker admission and undeclared-invocation refusal vectors need the cadrumo-agent image, the only image without a default profile; they land with it in P02.S07. POSIX vectors are replayed in Python here and in Rust only on a POSIX build
 - `S05` The POSIX host and its rewritten launch-profile test (platform.invocation) were not compiled here: no POSIX C toolchain on this Windows host; they run in the POSIX CTest lanes
 - `S05` The refusal path of a real image is first reachable with the cadrumo-agent image in P02.S07, the only image without a default profile
+- `S06` native/application joined the native lane's ownership for this Step by orchestrator approval; `ChildConfiguration::from_platform` lost its Profile parameter
+- `S06` `native/manager/src/windows_lifecycle.rs:` its test TrackPopupMenu declaration now matches `windows_tray.rs,` clearing a clashing-extern warning that failed clippy -D warnings on all targets
+- `S06` Environment-dependent failures outside this change: native/application `package_inspection` junction fixture and desktop `startup_logging` projection test both need a target directory inside a checkout or mklink support; the scratch target directory has neither
+- `S06` `cadrumo_platform_prepare` is retired with the filter; the C consumer's prepare modes are removed and `cadrumo_platform_define` covers definition

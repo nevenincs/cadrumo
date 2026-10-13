@@ -422,7 +422,14 @@ _COMPONENT_PATHS = (
     "logs",
     "log_file",
 )
-_COMPONENT_VALUES = ("log_format", "log_max_bytes", "log_backups", "language_variable", "language_default")
+_COMPONENT_VALUES = (
+    "log_variable",
+    "log_format",
+    "log_max_bytes",
+    "log_backups",
+    "language_variable",
+    "language_default",
+)
 
 
 def _components(raw: object, names: Mapping[str, Mapping[str, str]]) -> dict[str, Any]:
@@ -431,6 +438,8 @@ def _components(raw: object, names: Mapping[str, Mapping[str, str]]) -> dict[str
     components: dict[str, Any] = {key: _relative(entry[key], f"components.{key}") for key in _COMPONENT_PATHS}
     if not components["log_file"].startswith(components["logs"] + "/"):
         raise _fail("components.log_file must lie in components.logs")
+    if names.get(entry["log_variable"], {}).get("role") != "location":
+        raise _fail("components.log_variable must name a declared location")
     if not isinstance(entry["log_format"], str) or not entry["log_format"]:
         raise _fail("components.log_format must be a non-empty string")
     if names.get(entry["language_variable"], {}).get("kind") != "language":
@@ -439,6 +448,7 @@ def _components(raw: object, names: Mapping[str, Mapping[str, str]]) -> dict[str
     if not isinstance(language, str) or not re.fullmatch(r"[a-z]{2}", language):
         raise _fail("components.language_default must be a two-letter lower-case language")
     components.update(
+        log_variable=entry["log_variable"],
         log_format=entry["log_format"],
         log_max_bytes=_integer(entry["log_max_bytes"], "components.log_max_bytes"),
         log_backups=_integer(entry["log_backups"], "components.log_backups", minimum=0),
@@ -839,6 +849,7 @@ def compile_section(declaration: ApplicationEnvironment, layout: Mapping[str, An
         "schema": SCHEMA,
         "platform_family": family,
         "names": {name: dict(entry) for name, entry in sorted(declaration.names.items())},
+        "location_names": sorted(name for name, entry in declaration.names.items() if entry["role"] == "location"),
         "images": list(built),
         "pins": {
             "temporary": list(declaration.temporary),

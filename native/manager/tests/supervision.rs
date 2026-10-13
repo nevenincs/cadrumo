@@ -9,8 +9,8 @@
 mod startup_cases;
 
 use cadrumo_manager::contract::{
-    CLEARED_NAMES, CLEARED_PREFIXES, HOST_INHERITED_ENV, NAMESPACE_PREFIX, PINNED_ENV,
-    RESERVED_ENV, ROOT_VARIABLE,
+    CLEARED_NAMES, CLEARED_PREFIXES, HOST_INHERITED_ENV, LAUNCH_NAMES, NAMESPACE_PREFIX,
+    PINNED_ENV, ROOT_VARIABLE,
 };
 use cadrumo_manager::session::claim::StartClaim;
 use cadrumo_manager::session::ownership::{BootRecordLocator, Role, WaitReason, reserve_restart};
@@ -458,7 +458,10 @@ fn the_runtime_gets_the_supervised_arguments_and_canonical_strict_environment() 
         let name = name.as_str().expect("variable name");
         if !PINNED_ENV.contains(&name) {
             assert!(
-                !CLEARED_NAMES.contains(&name) && !RESERVED_ENV.contains(&name),
+                !CLEARED_NAMES.contains(&name)
+                    && !LAUNCH_NAMES
+                        .iter()
+                        .any(|declared| declared.name == name && declared.role != "pin"),
                 "{name}"
             );
             assert!(

@@ -1,5 +1,6 @@
 use crate::conformance_tests::Scratch;
-use crate::storage::{Mode, Profile, child_environment, resolve_root_vector};
+use crate::conformance_tests::operator_environment;
+use crate::storage::{Mode, child_environment, resolve_root_vector};
 use crate::*;
 use std::ffi::OsString;
 use std::os::unix::fs::{PermissionsExt, symlink};
@@ -55,18 +56,14 @@ fn environment_case_and_loader_controls_follow_the_posix_declaration() {
         "DYLD_LIBRARY_PATH",
         "PYTHONPATH",
     ] {
-        assert!(storage::cleared(name, Profile::Operator, &[]), "{name}");
-        assert!(!storage::cleared(
-            &name.to_lowercase(),
-            Profile::Strict,
-            &[]
-        ));
+        assert!(storage::cleared(name), "{name}");
+        assert!(!storage::cleared(&name.to_lowercase()));
     }
 }
 
 #[test]
 fn child_pins_refuse_relative_roots_and_symlinks_and_create_private_directories() {
-    assert!(child_environment(Profile::Strict, Vec::new(), Path::new("relative")).is_err());
+    assert!(child_environment(Vec::new(), Path::new("relative")).is_err());
     let nonce = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()
@@ -83,7 +80,7 @@ fn child_pins_refuse_relative_roots_and_symlinks_and_create_private_directories(
             OsString::from("operator-temp"),
         ),
     ];
-    let strict = child_environment(Profile::Strict, received.clone(), &root).unwrap();
+    let strict = child_environment(received.clone(), &root).unwrap();
     assert_eq!(
         fs::metadata(&root).unwrap().permissions().mode() & 0o777,
         POSIX_DIRECTORY_MODE
@@ -98,10 +95,10 @@ fn child_pins_refuse_relative_roots_and_symlinks_and_create_private_directories(
             .iter()
             .any(|(key, value)| key == ROOT_VARIABLE && value == root.as_os_str())
     );
-    let operator = child_environment(Profile::Operator, received, &root).unwrap();
+    let operator = operator_environment(received, &root).unwrap();
     assert!(operator.iter().any(|(key, _)| key == TEMPORARY_ENV));
     symlink(&root, scratch.join("link")).unwrap();
-    assert!(child_environment(Profile::Strict, Vec::new(), &scratch.join("link/child")).is_err());
+    assert!(child_environment(Vec::new(), &scratch.join("link/child")).is_err());
     fs::remove_dir_all(scratch).unwrap();
 }
 
@@ -170,7 +167,7 @@ fn lower_case_posix_names_do_not_override_declared_paths_or_authority() {
         (OsString::from("LD_PRELOAD"), OsString::from("hostile")),
     ];
     assert!(!storage::authority_override_present(ambient.clone()));
-    let environment = child_environment(Profile::Operator, ambient, &root).unwrap();
+    let environment = child_environment(ambient, &root).unwrap();
     assert!(
         environment
             .iter()
@@ -200,24 +197,16 @@ fn normalization_does_not_hide_symlinks_before_parent_components() {
         scratch.0.join("link/../state"),
         scratch.0.join("link/child"),
     ] {
-        assert!(child_environment(Profile::Strict, Vec::new(), &path).is_err());
+        assert!(child_environment(Vec::new(), &path).is_err());
     }
     symlink(scratch.0.join("absent"), scratch.0.join("dangling")).unwrap();
-    assert!(
-        child_environment(
-            Profile::Strict,
-            Vec::new(),
-            &scratch.0.join("dangling/state")
-        )
-        .is_err()
-    );
+    assert!(child_environment(Vec::new(), &scratch.0.join("dangling/state")).is_err());
     assert!(!scratch.0.join("state").exists());
     let root = scratch.0.join("root");
     fs::create_dir(&root).unwrap();
     symlink(&destination, root.join("link")).unwrap();
     assert!(
-        child_environment(
-            Profile::Operator,
+        operator_environment(
             vec![(
                 OsString::from(TEMPORARY_ENV),
                 OsString::from("link/../temporary"),
@@ -233,8 +222,7 @@ fn normalization_does_not_hide_symlinks_before_parent_components() {
 fn nested_new_storage_and_temporary_directories_are_private() {
     let scratch = Scratch::new("permissions");
     let root = scratch.0.join("new-parent/state");
-    child_environment(
-        Profile::Operator,
+    operator_environment(
         vec![(
             OsString::from(TEMPORARY_ENV),
             OsString::from("nested/scratch"),
@@ -262,7 +250,6 @@ fn non_unicode_ambient_values_are_not_replaced() {
     let invalid = OsString::from_vec(vec![b'd', 0xFF]);
     let root = scratch.0.join("root");
     let environment = child_environment(
-        Profile::Strict,
         vec![(OsString::from("AMBIENT_VALUE"), invalid.clone())],
         &root,
     )
@@ -278,7 +265,7 @@ fn non_unicode_ambient_values_are_not_replaced() {
 fn native_path_pins_refuse_non_unicode_bytes_without_replacement() {
     let scratch = Scratch::new("native-path-bytes");
     let root = scratch.0.join(crate::conformance_tests::invalid_unicode());
-    let error = child_environment(Profile::Strict, Vec::new(), &root).unwrap_err();
+    let error = child_environment(Vec::new(), &root).unwrap_err();
     assert_eq!(error.kind(), std::io::ErrorKind::InvalidInput);
     assert!(error.to_string().contains(ROOT_REFUSAL_INVALID_PATH_INPUT));
     assert!(!root.exists());

@@ -1,4 +1,4 @@
-use crate::storage::{Profile, child_environment};
+use crate::storage::child_environment;
 use crate::*;
 use std::ffi::{OsStr, OsString};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -33,12 +33,26 @@ fn value<'a>(environment: &'a [(OsString, OsString)], name: &str) -> &'a OsStrin
     &environment.iter().find(|(key, _)| key == name).unwrap().1
 }
 
+/// The environment the operator-facing `aeat` image defines against a resolved `root`,
+/// with its pinned directories created.
+pub(crate) fn operator_environment(
+    mut ambient: Vec<(OsString, OsString)>,
+    root: &Path,
+) -> Result<Vec<(OsString, OsString)>, launch::DefineError> {
+    ambient.push((OsString::from("SYSTEMROOT"), OsString::from(r"C:\Windows")));
+    let profile = launch::select("aeat", &[])?;
+    let defined = launch::define_environment(profile, &ambient, &env::temp_dir(), &|_| {
+        Ok(root.to_path_buf())
+    })?;
+    launch::create_directories(&defined)?;
+    Ok(defined.environment)
+}
+
 #[test]
-fn child_pins_normalize_absolute_root_and_relative_temporary_member() {
+fn defined_pins_normalize_absolute_root_and_relative_temporary_member() {
     let scratch = Scratch::new("normalized");
     let root = scratch.0.join("unused").join("..").join("datos con ñ");
-    let environment = child_environment(
-        Profile::Operator,
+    let environment = operator_environment(
         vec![(
             OsString::from(TEMPORARY_ENV),
             OsString::from("unused-temp/../scratch"),
@@ -62,7 +76,7 @@ fn child_pins_normalize_absolute_root_and_relative_temporary_member() {
 }
 
 #[test]
-fn child_pins_expand_current_user_temporary_override_and_keep_inherited_pins() {
+fn temporary_override_expands_the_current_user_and_strict_children_keep_inherited_pins() {
     let scratch = Scratch::new("home");
     let root = scratch.0.join("root");
     let rule = INSTALLED_DEFAULTS
@@ -82,12 +96,12 @@ fn child_pins_expand_current_user_temporary_override_and_keep_inherited_pins() {
             .iter()
             .map(|name| (OsString::from(name), inherited.as_os_str().to_owned())),
     );
-    let operator = child_environment(Profile::Operator, ambient.clone(), &root).unwrap();
-    let strict = child_environment(Profile::Strict, ambient, &root).unwrap();
-    for environment in [&operator, &strict] {
-        for name in HOST_INHERITED_ENV {
-            assert_eq!(value(environment, name), inherited.as_os_str());
-        }
+    let operator = operator_environment(ambient.clone(), &root).unwrap();
+    let strict = child_environment(ambient, &root).unwrap();
+    for name in HOST_INHERITED_ENV {
+        assert_eq!(value(&strict, name), inherited.as_os_str());
+        // A defined image takes its authority from its own package, never its caller.
+        assert_ne!(value(&operator, name), inherited.as_os_str());
     }
     for name in PINNED_ENV.iter().filter(|name| **name != ROOT_VARIABLE) {
         assert_eq!(
@@ -132,7 +146,16 @@ fn abi_mismatch_and_invalid_arguments_return_declared_statuses() {
             2
         );
         assert_eq!(cadrumo_platform_path(ptr::null_mut(), 0, &mut error), 2);
-        assert_eq!(cadrumo_platform_prepare(ptr::null_mut(), &mut error), 2);
+        assert_eq!(
+            cadrumo_platform_define(
+                ptr::null_mut(),
+                c"python".as_ptr(),
+                0,
+                ptr::null(),
+                &mut error
+            ),
+            2
+        );
         cadrumo_platform_release(ptr::null_mut());
         cadrumo_platform_destroy(ptr::null_mut());
     }
@@ -191,10 +214,12 @@ fn invalid_temporary_override_refuses_without_effects_or_lossy_replacement() {
     let scratch = Scratch::new("invalid-temp");
     let root = scratch.0.join("root");
     let invalid = vec![(OsString::from(TEMPORARY_ENV), invalid_unicode())];
-    let error = child_environment(Profile::Operator, invalid.clone(), &root).unwrap_err();
-    assert_eq!(error.kind(), std::io::ErrorKind::InvalidInput);
+    assert!(matches!(
+        operator_environment(invalid.clone(), &root),
+        Err(launch::DefineError::Failed(_))
+    ));
     assert!(!root.exists());
-    let strict = child_environment(Profile::Strict, invalid, &root).unwrap();
+    let strict = child_environment(invalid, &root).unwrap();
     assert!(!strict.iter().any(|(name, _)| name == TEMPORARY_ENV));
 }
 
@@ -298,19 +323,16 @@ fn generated_filesystem_vectors_preserve_original_link_evidence_and_have_no_effe
 
 #[test]
 fn inherited_path_pins_refuse_relative_and_invalid_values_before_creation() {
-    for profile in [Profile::Operator, Profile::Strict] {
-        for field in HOST_INHERITED_FIELDS
-            .iter()
-            .filter(|field| field.kind == INHERITED_KIND_DIRECTORY_PATH)
-        {
-            for value in [OsString::from("relative"), invalid_unicode()] {
-                let scratch = Scratch::new("inherited-refusal");
-                let root = scratch.0.join("root");
-                let error = child_environment(profile, vec![(field.name.into(), value)], &root)
-                    .unwrap_err();
-                assert_eq!(error.kind(), std::io::ErrorKind::InvalidInput);
-                assert!(!root.exists());
-            }
+    for field in HOST_INHERITED_FIELDS
+        .iter()
+        .filter(|field| field.kind == INHERITED_KIND_DIRECTORY_PATH)
+    {
+        for value in [OsString::from("relative"), invalid_unicode()] {
+            let scratch = Scratch::new("inherited-refusal");
+            let root = scratch.0.join("root");
+            let error = child_environment(vec![(field.name.into(), value)], &root).unwrap_err();
+            assert_eq!(error.kind(), std::io::ErrorKind::InvalidInput);
+            assert!(!root.exists());
         }
     }
 }
@@ -325,7 +347,7 @@ fn child_and_public_root_share_normalized_spelling_without_discarded_creation() 
             .unwrap();
     assert_eq!(resolved.root, scratch.0.join("selected"));
     assert!(!resolved.root.exists() && !scratch.0.join("unused").exists());
-    let environment = child_environment(Profile::Strict, Vec::new(), &resolved.root).unwrap();
+    let environment = child_environment(Vec::new(), &resolved.root).unwrap();
     assert_eq!(
         value(&environment, ROOT_VARIABLE),
         resolved.root.as_os_str()
@@ -344,8 +366,7 @@ fn absolute_temporary_override_normalizes_without_changing_the_root_pin() {
     let scratch = Scratch::new("absolute-member");
     let root = scratch.0.join("root");
     let temporary = scratch.0.join("unused-member/../temporary con ñ");
-    let environment = child_environment(
-        Profile::Operator,
+    let environment = operator_environment(
         vec![(
             OsString::from(TEMPORARY_ENV),
             temporary.as_os_str().to_owned(),
@@ -364,22 +385,18 @@ fn absolute_temporary_override_normalizes_without_changing_the_root_pin() {
 }
 
 #[test]
-fn abi_prepare_filesystem_refusal_returns_a_provider_error_without_panicking() {
-    let scratch = Scratch::new("prepare-refusal");
+fn defined_directory_refusal_reports_a_failure_and_keeps_the_existing_file() {
+    let scratch = Scratch::new("define-refusal");
     let file = scratch.0.join("file");
     fs::write(&file, b"preserved").unwrap();
-    let mut context = Context {
-        paths: vec![file.clone(); 9],
+    let defined = launch::Defined {
+        environment: Vec::new(),
+        directories: vec![file.join("child")],
     };
-    let mut error = empty_buffer();
-    unsafe {
-        assert_eq!(cadrumo_platform_prepare(&mut context, &mut error), 3);
-        assert!(!error.data.is_null() && error.len > 0);
-        let bytes = std::slice::from_raw_parts(error.data, error.len as usize);
-        assert!(std::str::from_utf8(bytes).is_ok());
-        cadrumo_platform_release(&mut error);
-        assert!(error.data.is_null() && error.len == 0);
-    }
+    assert!(matches!(
+        launch::create_directories(&defined),
+        Err(launch::DefineError::Failed(_))
+    ));
     assert_eq!(fs::read(file).unwrap(), b"preserved");
 }
 
@@ -404,12 +421,10 @@ fn windows_environment_names_follow_the_declarations_unicode_uppercase_rule() {
         ),
     ];
     assert!(storage::authority_override_present(ambient.clone()));
-    let environment = child_environment(Profile::Operator, ambient, &root).unwrap();
+    let environment = operator_environment(ambient.clone(), &root).unwrap();
     assert_eq!(value(&environment, TEMPORARY_ENV), "worker-temp");
-    assert_eq!(
-        value(&environment, HOST_INHERITED_ENV[0]),
-        authority.as_os_str()
-    );
+    let strict = child_environment(ambient, &root).unwrap();
+    assert_eq!(value(&strict, HOST_INHERITED_ENV[0]), authority.as_os_str());
     for name in PINNED_ENV.iter().filter(|name| **name != ROOT_VARIABLE) {
         assert_eq!(
             value(&environment, name),

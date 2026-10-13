@@ -47,6 +47,7 @@ def test_desktop_defaults_project_the_package_declaration(tmp_path: Path) -> Non
         "console_workspace": components["console_workspace"],
         "webview": components["webview"],
         "logs": components["logs"],
+        "log_variable": components["log_variable"],
         "log_file": components["log_file"],
         "manager_log_file": components["manager_log_file"],
         "log_format": components["log_format"],
@@ -57,6 +58,8 @@ def test_desktop_defaults_project_the_package_declaration(tmp_path: Path) -> Non
     # The desktop reads the command line's log and language without asking Python, so both state the same values.
     assert components["logs"] == STORAGE_TAXONOMY[StorageCategory.LOGS].subpath
     assert components["log_file"] == STORAGE_TAXONOMY[StorageCategory.LOG_FILE].subpath
+    log_field = STORAGE_TAXONOMY[StorageCategory.LOGS].settings_field
+    assert log_field is not None and components["log_variable"] == log_field.upper()
     assert components["log_format"] == LOG_FILE_FORMAT
     assert components["log_max_bytes"] == Settings.model_fields["cadrumo_log_file_max_bytes"].default
     assert components["log_backups"] == Settings.model_fields["cadrumo_log_file_backup_count"].default
@@ -75,7 +78,7 @@ def test_desktop_defaults_project_the_package_declaration(tmp_path: Path) -> Non
     assert f"pub const LOG_BACKUPS: u32 = {components['log_backups']};" in generated
 
 
-def test_native_storage_allowlist_is_the_declared_root_and_locations(tmp_path: Path) -> None:
+def test_native_contract_names_the_declared_locations_and_no_allowlist(tmp_path: Path) -> None:
     destination = tmp_path / "generated"
     generate(REPO_ROOT, destination)
     declaration = load(REPO_ROOT)
@@ -83,10 +86,12 @@ def test_native_storage_allowlist_is_the_declared_root_and_locations(tmp_path: P
     contract = json.loads((destination / "contract.json").read_text(encoding="utf-8"))
     generated = (destination / "contract.rs").read_text(encoding="utf-8")
     expected = sorted({declaration.root["variable"], *declaration.groups["locations"]})
-    assert _rust_strings(generated, "PRODUCT_ENV_ALLOWLIST") == expected == contract["storage_environment_allowlist"]
+    assert contract["application_environment"]["location_names"] == expected
     assert not set(expected) & development_tool_env_var_names()
     assert "CADRUMO_STRICT_SECURITY" not in expected
-    assert _rust_strings(generated, "PACKAGE_ENV_ALLOWLIST") == list(declaration.groups["package"])
+    for retired in ("PRODUCT_ENV_ALLOWLIST", "PACKAGE_ENV_ALLOWLIST", "RESERVED_ENV"):
+        assert f"pub const {retired}:" not in generated
+    assert "storage_environment_allowlist" not in contract
     assert "overrides" not in contract["layout"]
 
     temporary = declaration.temporary_member
@@ -168,8 +173,7 @@ def test_schema_one_contract_projects_the_storage_declaration(tmp_path: Path) ->
     environment = contract["environment"]
     assert environment["pinned"] == [root["variable"], *declaration.temporary]
     assert environment["host_inherited"]["fields"] == [{"name": declaration.authority.name, "kind": "directory_path"}]
-    assert STORAGE_ROOT.development_variable not in environment["allowlist"]["product"]
-    assert STORAGE_ROOT.development_variable not in _rust_strings(generated, "PRODUCT_ENV_ALLOWLIST")
+    assert STORAGE_ROOT.development_variable not in contract["application_environment"]["location_names"]
     layout = load_layout()
     assert contract["mode"] == {
         "package_manifest": layout["files"]["package_manifest"],
@@ -185,7 +189,6 @@ def test_schema_one_contract_projects_the_storage_declaration(tmp_path: Path) ->
     assert _rust_strings(generated, "ROOT_VARIABLE") == [root["variable"]]
     assert _rust_strings(generated, "INSTALLED_ROOT_PRECEDENCE") == root["precedence"]["installed"]
     assert _rust_strings(generated, "PINNED_ENV") == environment["pinned"]
-    assert _rust_strings(generated, "PRODUCT_ENV_ALLOWLIST") == environment["allowlist"]["product"]
     assert _rust_strings(generated, "MODE_PACKAGE_MANIFEST") == [contract["mode"]["package_manifest"]]
     rust_vectors = re.findall(r'StorageRootVector \{ name: "([^"]+)"', generated)
     assert rust_vectors == [vector["name"] for vector in contract["vectors"]]

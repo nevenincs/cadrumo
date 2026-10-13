@@ -58,7 +58,6 @@ async fn manifest_cohort_matches_selected_packaged_interpreter() {
         executable.under(&root),
         directory.path().to_owned(),
         directory.path(),
-        cadrumo_platform::storage::Profile::Strict,
         std::env::vars_os(),
     )
     .unwrap();

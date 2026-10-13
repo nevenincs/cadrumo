@@ -1005,7 +1005,8 @@ mod relocated {
     }
 
     fn settings_storage_names() -> Vec<String> {
-        serde_json::from_value(contract()["storage_environment_allowlist"].clone()).unwrap()
+        serde_json::from_value(contract()["application_environment"]["location_names"].clone())
+            .unwrap()
     }
 
     /// The canonical root override, which wins in every mode.

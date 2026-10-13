@@ -48,28 +48,6 @@ int main(int argc, char **argv) {
         puts("C consumer ABI 1: create refusal and error buffer pass");
         return 0;
     }
-    if (argc == 4 && strcmp(argv[1], "--expect-prepare-refusal") == 0) {
-        assert(environment_matches(argv[2], argv[3]));
-        assert(cadrumo_platform_create(1, &ctx, &error) == 0);
-        assert(cadrumo_platform_prepare(ctx, &error) == 3);
-        assert(error.data != NULL && error.len > 0);
-        assert(environment_matches(argv[2], argv[3]));
-        cadrumo_platform_release(&error);
-        cadrumo_platform_destroy(ctx);
-        puts("C consumer ABI 1: prepare refusal preserves ambient environment");
-        return 0;
-    }
-    if (argc == 4 && strcmp(argv[1], "--expect-prepare-success") == 0) {
-        assert(environment_matches(argv[2], argv[3]));
-        assert(cadrumo_platform_create(1, &ctx, &error) == 0);
-        assert(cadrumo_platform_prepare(ctx, &error) == 0);
-        assert(error.data == NULL && error.len == 0);
-        assert(environment_matches(argv[2], NULL));
-        cadrumo_platform_release(&error);
-        cadrumo_platform_destroy(ctx);
-        puts("C consumer ABI 1: prepare succeeds and clears generated-prefix marker");
-        return 0;
-    }
     assert(cadrumo_platform_create(2, &ctx, &error) == 1);
     assert(ctx == NULL && error.len > 0);
     assert(error.len == strlen("Incompatible platform ABI"));
@@ -80,7 +58,6 @@ int main(int argc, char **argv) {
     assert(cadrumo_platform_create(1, NULL, &error) == 2);
     assert(cadrumo_platform_create(1, &ctx, NULL) == 2);
     assert(cadrumo_platform_path(NULL, 0, &path) == 2);
-    assert(cadrumo_platform_prepare(NULL, &error) == 2);
     assert(cadrumo_platform_create(1, &ctx, &error) == 0);
     for (uint32_t key = 0; key < CADRUMO_PATH_KEYS; ++key) {
         assert(cadrumo_platform_path(ctx, key, &path) == 0);

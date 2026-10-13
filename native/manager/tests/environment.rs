@@ -1,7 +1,7 @@
 //! The manager consumes the canonical strict environment in isolated synthetic roots.
 
 use cadrumo_manager::contract::{
-    AUTHORITY, HOST_INHERITED_ENV, PINNED_ENV, PRODUCT_ENV_ALLOWLIST, ROOT_VARIABLE,
+    AUTHORITY, HOST_INHERITED_ENV, LAUNCH_NAMES, NATIVE, PINNED_ENV, ROOT_VARIABLE,
     TEMPORARY_DEFAULT, TEMPORARY_ENV,
 };
 use cadrumo_manager::supervision::environment::{ManagedLocations, runtime_environment};
@@ -38,16 +38,30 @@ impl Drop for Root {
     }
 }
 
+/// The operating-system names a caller holds, which the runtime's base may take.
+fn system() -> Vec<(OsString, OsString)> {
+    ["SYSTEMROOT", "HOME"]
+        .into_iter()
+        .filter_map(|name| std::env::var_os(name).map(|value| (OsString::from(name), value)))
+        .collect()
+}
+
 #[test]
-fn strict_children_pin_canonical_paths_and_never_inherit_operator_settings() {
+fn runtime_children_pin_canonical_paths_and_never_inherit_operator_settings() {
     let root = Root::new();
     let storage = root.0.join("storage");
     let package = root.0.join("package");
-    let mut inherited: Vec<_> = PRODUCT_ENV_ALLOWLIST
+    let declared: Vec<&str> = LAUNCH_NAMES
+        .iter()
+        .filter(|declared| declared.role == "location" || declared.role == "operator")
+        .map(|declared| declared.name)
+        .collect();
+    let mut inherited: Vec<_> = declared
         .iter()
         .chain(HOST_INHERITED_ENV)
         .map(|name| (OsString::from(name), OsString::from("untrusted")))
         .collect();
+    inherited.extend(system());
     inherited.extend([
         (OsString::from("PYTHONPATH"), OsString::from("untrusted")),
         (OsString::from("PATH"), OsString::from("os-path")),
@@ -64,7 +78,11 @@ fn strict_children_pin_canonical_paths_and_never_inherit_operator_settings() {
         value(ROOT_VARIABLE),
         Some(&storage.clone().into_os_string())
     );
-    assert_eq!(value("PATH"), Some(&OsString::from("os-path")));
+    // The runtime image's PATH is its package's declared composition, never the caller's.
+    let path: Vec<PathBuf> = std::env::split_paths(value("PATH").unwrap()).collect();
+    assert_eq!(path.first(), Some(&package));
+    assert!(path.contains(&package.join(NATIVE)));
+    assert!(!path.contains(&PathBuf::from("os-path")));
     assert_eq!(value("PYTHONPATH"), None);
     assert_eq!(value(TEMPORARY_ENV), None);
     let temporary = TEMPORARY_DEFAULT
@@ -74,12 +92,14 @@ fn strict_children_pin_canonical_paths_and_never_inherit_operator_settings() {
         assert_eq!(value(name), Some(&temporary.clone().into_os_string()));
     }
     for name in HOST_INHERITED_ENV {
-        assert_eq!(value(name), Some(&package.join(AUTHORITY).into_os_string()));
+        let authority = Path::new(value(name).unwrap());
+        assert!(
+            authority
+                .components()
+                .eq(package.join(AUTHORITY).components())
+        );
     }
-    for name in PRODUCT_ENV_ALLOWLIST
-        .iter()
-        .filter(|name| **name != ROOT_VARIABLE)
-    {
+    for name in declared.iter().filter(|name| **name != ROOT_VARIABLE) {
         assert_eq!(value(name), None, "operator setting {name}");
     }
     assert!(storage.is_dir() && temporary.is_dir());
@@ -88,15 +108,20 @@ fn strict_children_pin_canonical_paths_and_never_inherit_operator_settings() {
 #[test]
 fn fixture_children_do_not_receive_a_package_authority_pin() {
     let root = Root::new();
-    let inherited = HOST_INHERITED_ENV
+    let mut inherited: Vec<_> = HOST_INHERITED_ENV
         .iter()
-        .map(|name| (OsString::from(name), OsString::from("untrusted")));
+        .map(|name| (OsString::from(name), OsString::from("untrusted")))
+        .collect();
+    inherited.extend(system());
+    inherited.push((OsString::from("PATH"), OsString::from("os-path")));
     let environment = runtime_environment(&root.0, None, inherited).unwrap();
     assert!(
         !environment
             .iter()
             .any(|(name, _)| HOST_INHERITED_ENV.iter().any(|pin| name == pin))
     );
+    // A fixture image has no package composition; it keeps its caller's PATH.
+    assert!(environment.contains(&(OsString::from("PATH"), OsString::from("os-path"))));
 }
 
 #[cfg(windows)]
@@ -106,7 +131,7 @@ fn unicode_aliases_of_inherited_pins_are_removed_before_package_authority_is_add
     let storage = root.0.join("storage");
     let package = root.0.join("package");
     for value in ["untrusted", ""] {
-        let inherited = HOST_INHERITED_ENV
+        let mut inherited = HOST_INHERITED_ENV
             .iter()
             .map(|name| {
                 let alias = name.to_lowercase().replace('i', "ı");
@@ -115,6 +140,7 @@ fn unicode_aliases_of_inherited_pins_are_removed_before_package_authority_is_add
                 (OsString::from(alias), OsString::from(value))
             })
             .collect::<Vec<_>>();
+        inherited.extend(system());
         for selected in [None, Some(package.as_path())] {
             let environment = runtime_environment(&storage, selected, inherited.clone()).unwrap();
             for pin in HOST_INHERITED_ENV {
@@ -128,7 +154,11 @@ fn unicode_aliases_of_inherited_pins_are_removed_before_package_authority_is_add
                 if selected.is_some() {
                     assert_eq!(entries.len(), 1, "duplicate inherited pin {pin}");
                     assert_eq!(entries[0].0, OsString::from(pin));
-                    assert_eq!(entries[0].1, package.join(AUTHORITY).into_os_string());
+                    assert!(
+                        Path::new(&entries[0].1)
+                            .components()
+                            .eq(package.join(AUTHORITY).components())
+                    );
                 } else {
                     assert!(entries.is_empty(), "ambient inherited pin {pin}");
                 }

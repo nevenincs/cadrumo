@@ -6,7 +6,7 @@
  * A zeroed buffer is valid to release. Never copy ownership or free with a CRT.
  * Calls require valid pointers; contexts are process-local and not thread-safe.
  * 0 success, 1 incompatible ABI, 2 invalid argument, 3 platform/policy failure.
- * No unwinding crosses this boundary. Create/prepare error text is provider
+ * No unwinding crosses this boundary. Create/define error text is provider
  * owned. Path conversion/key failures clear out.
  */
 typedef struct cadrumo_context cadrumo_context;
@@ -14,7 +14,6 @@ typedef struct { uint8_t *data; uint64_t len; } cadrumo_buffer;
 uint32_t cadrumo_platform_abi(void);
 uint32_t cadrumo_platform_create(uint32_t abi, cadrumo_context **out, cadrumo_buffer *error);
 uint32_t cadrumo_platform_path(cadrumo_context *ctx, uint32_t key, cadrumo_buffer *out);
-uint32_t cadrumo_platform_prepare(cadrumo_context *ctx, cadrumo_buffer *error);
 /* Define the process environment from the launch profile `image` selects for the
  * arguments after the image's own path. 4 is a launch-profile refusal: error holds
  * the one refusal line to write last on stderr before exiting with

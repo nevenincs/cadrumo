@@ -504,7 +504,7 @@ mod tests {
             reserved: i32,
             window: Handle,
             rectangle: *const c_void,
-        ) -> i32;
+        ) -> u32;
         fn PeekMessageW(
             message: *mut Message,
             window: Handle,

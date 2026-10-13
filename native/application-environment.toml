@@ -299,6 +299,7 @@ manager_log_file = "logs/cadrumo-manager.log"
 manager_preferences = "manager-preferences.json"
 manager_failed_versions = ".runtime/manager-failed-versions.json"
 logs = "logs"
+log_variable = "CADRUMO_LOG_DIR"
 log_file = "logs/cadrumo.log"
 log_format = "%(asctime)s [%(levelname)s] %(name)s: %(message)s | %(diagnostic_context)s"
 log_max_bytes = 10485760

@@ -56,16 +56,14 @@ _INHERITED_KINDS = {"DIRECTORY_PATH": "directory_path", "OPAQUE": "opaque"}
 
 
 def _environment_section(declaration: ApplicationEnvironment) -> dict[str, Any]:
-    """Project the declaration onto the classes the filtering hosts still apply."""
+    """Project the declaration onto the classes a strict child filter clears and the pins it sets."""
     root = declaration.root["variable"]
-    product = sorted({root, *declaration.groups["locations"]})
     authority = declaration.authority.name
     return {
         "cleared": {
             "prefixes": list(declaration.host_classes["cleared_prefixes"]),
             "names": list(declaration.host_classes["cleared_names"]),
             "namespace_prefix": declaration.host_classes["namespace_prefix"],
-            "reserved_settings": sorted(name for name, entry in declaration.names.items() if entry["role"] != "pin"),
         },
         "pinned": [root, *declaration.temporary],
         "host_inherited": {
@@ -73,7 +71,6 @@ def _environment_section(declaration: ApplicationEnvironment) -> dict[str, Any]:
             "windows": [],
             "fields": [{"name": authority, "kind": _INHERITED_KINDS["DIRECTORY_PATH"]}],
         },
-        "allowlist": {"product": product},
     }
 
 
@@ -160,7 +157,6 @@ def _rust_root_and_environment(contract: dict[str, Any]) -> list[str]:
             for field in environment["host_inherited"]["fields"]
         )
         + "];",
-        f"pub const PRODUCT_ENV_ALLOWLIST: &[&str] = {_rust_strings(environment['allowlist']['product'])};",
         f"pub const MODE_PACKAGE_MANIFEST: &str = {_rust_string(mode['package_manifest'])};",
         f"pub const MODE_PACKAGE_ROOT_FROM_EXECUTABLE: &str = {_rust_string(mode['package_root_from_executable'])};",
         f"pub const MODE_CHECKOUT_MARKER: &str = {_rust_string(mode['checkout_marker'])};",
@@ -240,7 +236,6 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
             "channel": release.channel,
             "cohort": list(PRODUCT_IDENTITY.cohort_distributions),
         },
-        "storage_environment_allowlist": environment["allowlist"]["product"],
         "root": dict(declaration.root),
         "runtime_transport": transport_section(),
         "environment": environment,
@@ -259,6 +254,7 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
             "console_workspace": components["console_workspace"],
             "webview": components["webview"],
             "logs": components["logs"],
+            "log_variable": components["log_variable"],
             "log_file": components["log_file"],
             "manager_log_file": components["manager_log_file"],
             "log_format": components["log_format"],
@@ -289,9 +285,7 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
         ]
     )
     rust.extend(f"pub const {key}: &str = {_rust_string(value)};" for key, value in package_strings.items())
-    rust.append(f"pub const RESERVED_ENV: &[&str] = {_rust_strings(environment['cleared']['reserved_settings'])};")
     rust.append(f"pub const TEMPORARY_CREATE_EXPLICIT: bool = {str(temporary['create_explicit']).lower()};")
-    rust.append(f"pub const PACKAGE_ENV_ALLOWLIST: &[&str] = {_rust_strings(declaration.groups['package'])};")
     # Declared entrypoint images live in NATIVE; the platform context maps them back to the package root.
     entrypoints = [Path(relative).name for relative in entrypoint_files(layout).values()]
     rust.append(f"pub const ENTRYPOINT_FILES: &[&str] = {_rust_strings(entrypoints)};")

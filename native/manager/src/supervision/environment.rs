@@ -3,8 +3,9 @@
 //! The platform owner resolves the root. Only its installed default is managed;
 //! developer roots and authority overrides never become managed by clearing variables.
 
-use crate::contract::{AUTHORITY, HOST_INHERITED_ENV};
-use cadrumo_platform::storage::{self, Evidence, Mode, Profile, ResolvedRoot, RootSource};
+use crate::contract::{HOST_INHERITED_ENV, LAUNCH_AUTHORITY_PIN, ROOT_VARIABLE};
+use cadrumo_platform::launch::{self, DefineError};
+use cadrumo_platform::storage::{self, Evidence, Mode, ResolvedRoot, RootSource};
 use std::ffi::OsString;
 use std::io;
 use std::path::{Path, PathBuf};
@@ -105,37 +106,66 @@ impl ManagedLocations {
     }
 }
 
-/// Prepare the platform's strict environment against an already pinned root.
-/// Package authority comes only from the selected package, never the ambient environment.
+/// The packaged runtime image whose launch profile defines the runtime's environment.
+const RUNTIME_IMAGE: &str = "cadrumo-runtime";
+
+fn same_name(name: &std::ffi::OsStr, declared: &str) -> bool {
+    if cfg!(windows) {
+        name.to_str()
+            .is_some_and(|name| name.to_uppercase() == declared.to_uppercase())
+    } else {
+        name == declared
+    }
+}
+
+/// Define the runtime image's environment from its launch profile against an already
+/// pinned root, and create the root and temporary directories it pins.
+///
+/// The runtime host defines the same environment again from what it receives. Package
+/// authority comes only from the selected package, never the ambient environment. A
+/// fixture image has no package: it receives no authority pin and keeps its caller's
+/// `PATH`.
 pub fn runtime_environment(
     root: &Path,
     package: Option<&Path>,
     inherited: impl IntoIterator<Item = (OsString, OsString)>,
 ) -> io::Result<Vec<(OsString, OsString)>> {
-    if package.is_some_and(|package| !package.is_absolute()) {
+    if package.is_some_and(|package| !package.is_absolute()) || !root.is_absolute() {
         return Err(io::Error::new(
             io::ErrorKind::InvalidInput,
-            "the package root must be absolute",
+            "the package and storage roots must be absolute",
         ));
     }
-    let inherited = inherited.into_iter().filter(|(name, _)| {
-        !HOST_INHERITED_ENV.iter().any(|pin| {
-            if cfg!(windows) {
-                name.to_str()
-                    .is_some_and(|name| name.to_uppercase() == *pin)
-            } else {
-                name == pin
-            }
+    let mut ambient: Vec<(OsString, OsString)> = inherited
+        .into_iter()
+        .filter(|(name, _)| {
+            !same_name(name, ROOT_VARIABLE)
+                && !HOST_INHERITED_ENV.iter().any(|pin| same_name(name, pin))
         })
-    });
-    let mut environment = storage::child_environment(Profile::Strict, inherited, root)?;
-    if let Some(package) = package {
-        let authority = package.join(AUTHORITY);
-        environment.extend(
-            HOST_INHERITED_ENV
-                .iter()
-                .map(|name| (OsString::from(name), authority.clone().into_os_string())),
-        );
+        .collect();
+    let caller_path = ambient
+        .iter()
+        .rev()
+        .find(|(name, _)| same_name(name, "PATH"))
+        .map(|(_, value)| value.clone());
+    ambient.push((OsString::from(ROOT_VARIABLE), root.as_os_str().to_owned()));
+    let failed = |error: DefineError| match error {
+        DefineError::Refused(refusal) => {
+            io::Error::new(io::ErrorKind::InvalidInput, refusal.line())
+        }
+        DefineError::Failed(message) => io::Error::new(io::ErrorKind::InvalidInput, message),
+    };
+    let profile = launch::select(RUNTIME_IMAGE, &[]).map_err(failed)?;
+    let defined = launch::define_environment(profile, &ambient, package.unwrap_or(root), &|_| {
+        Ok(root.to_path_buf())
+    })
+    .map_err(failed)?;
+    launch::create_directories(&defined).map_err(failed)?;
+    let mut environment = defined.environment;
+    if package.is_none() {
+        environment
+            .retain(|(name, _)| !same_name(name, LAUNCH_AUTHORITY_PIN) && !same_name(name, "PATH"));
+        environment.extend(caller_path.map(|path| (OsString::from("PATH"), path)));
     }
     Ok(environment)
 }
