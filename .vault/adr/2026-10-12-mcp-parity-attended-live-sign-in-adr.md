@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#mcp-parity'
 date: '2026-10-12'
-modified: '2026-10-12'
+modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:f887a5c41a82dd7f63d1cce71b5241c062011b11ca699027276aadab4bb39636'
+body_hash: 'sha256:bbb1ed4452710fc1257a302037f4fd510f2083b70b055061ab860bcb9d78bb63'
 related:
   - "[[2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr]]"
   - "[[2026-10-10-mcp-parity-shared-sign-in-door-adr]]"
@@ -13,6 +13,8 @@ related:
   - "[[2026-10-04-application-sign-in-adr]]"
   - "[[2026-10-12-runtime-manager-architecture-caller-owned-root-adr]]"
   - "[[2026-10-12-live-agent-evaluation-adr]]"
+  - '[[2026-10-10-mcp-parity-sign-in-doors-reference]]'
+  - '[[2026-10-04-application-sign-in-reference]]'
 ---
 
 # `mcp-parity` adr: `MCP follows an operator-held live sign-in by attended delegation, without a persisted credential` | (**status:** `accepted`)
