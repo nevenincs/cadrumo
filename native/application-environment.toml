@@ -442,6 +442,102 @@ distinct = [["request", "result"]]
 greater = [["bound", "request"], ["bound", "result"]]
 
 # ---------------------------------------------------------------------------
+# Launch-profile conformance vectors, authored by hand: an image, its arguments
+# and its caller's environment in; the selected profile and the exact defined
+# environment, or a refusal, out. A replay places the image in package
+# C:\launch-vector\package (/launch-vector/package on POSIX) and resolves the
+# storage root to C:\launch-vector\state (/launch-vector/state).
+# ---------------------------------------------------------------------------
+
+[[launch_vectors]]
+name = "windows-python-defines-a-closed-environment"
+platform = "windows"
+image = "python"
+arguments = ["-c", "pass"]
+ambient = { SystemRoot = "C:\\Windows", USERPROFILE = "C:\\Users\\ada", TERM = "xterm", CADRUMO_LOG_LEVEL = "DEBUG", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_HOSTED_ROOT = "C:\\agent", CADRUMO_SECRET_PASSPHRASE = "must-not-cross", AEAT_BASE_URL = "https://example.invalid", PYTHONPATH = "C:\\elsewhere", ANTHROPIC_API_KEY = "must-not-cross", CADRUMO_AUTHORITY_ROOT = "C:\\elsewhere", TEMP = "C:\\elsewhere", PATH = "C:\\elsewhere" }
+profile = "python"
+environment = { SYSTEMROOT = "C:\\Windows", USERPROFILE = "C:\\Users\\ada", TERM = "xterm", CADRUMO_LOG_LEVEL = "DEBUG", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\launch-vector\\state", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "windows-python-honours-an-admitted-temporary-member"
+platform = "windows"
+image = "python"
+arguments = []
+ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_TEMP_DIR = "scratch", CADRUMO_CLI_REVEAL_IDENTIFIERS = "1" }
+profile = "python"
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_TEMP_DIR = "scratch", CADRUMO_CLI_REVEAL_IDENTIFIERS = "1", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\launch-vector\\state", TEMP = "C:\\launch-vector\\state\\scratch", TMP = "C:\\launch-vector\\state\\scratch", TMPDIR = "C:\\launch-vector\\state\\scratch", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "windows-runtime-keeps-no-operator-setting"
+platform = "windows"
+image = "cadrumo-runtime"
+arguments = []
+ambient = { SYSTEMROOT = "C:\\Windows", TERM = "xterm", CADRUMO_LOG_LEVEL = "DEBUG", CADRUMO_TEMP_DIR = "scratch", CADRUMO_CLI_REVEAL_IDENTIFIERS = "1", CADRUMO_AGENT_PORT = "0" }
+profile = "cadrumo-runtime"
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\launch-vector\\state", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "windows-kdf-child-keeps-its-parent-environment"
+platform = "windows"
+image = "python"
+arguments = ["-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker", "--request-handle", "540", "--result-handle", "548"]
+ambient = { SYSTEMROOT = "C:\\Windows", NEUTRAL = "kept", CADRUMO_AGENT_PORT = "0", PATH = "C:\\parent" }
+profile = "kdf-child"
+environment = { SYSTEMROOT = "C:\\Windows", NEUTRAL = "kept", CADRUMO_AGENT_PORT = "0", PATH = "C:\\parent" }
+
+[[launch_vectors]]
+name = "windows-kdf-near-miss-takes-the-interpreter-profile"
+platform = "windows"
+image = "python"
+arguments = ["-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker", "--request-handle", "540", "--result-handle", "540"]
+ambient = { SYSTEMROOT = "C:\\Windows", NEUTRAL = "dropped" }
+profile = "python"
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\launch-vector\\state", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "posix-python-defines-a-closed-environment"
+platform = "posix"
+image = "python"
+arguments = ["-c", "pass"]
+ambient = { HOME = "/home/ada", LANG = "C.UTF-8", DISPLAY = ":0", http_proxy = "http://proxy.invalid:3128", CADRUMO_LOG_LEVEL = "DEBUG", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_HOSTED_ROOT = "/agent", CADRUMO_SECRET_PASSPHRASE = "must-not-cross", LD_PRELOAD = "/elsewhere.so", PYTHONHOME = "/elsewhere", ANTHROPIC_API_KEY = "must-not-cross", TMPDIR = "/elsewhere", PATH = "/elsewhere" }
+profile = "python"
+environment = { HOME = "/home/ada", LANG = "C.UTF-8", DISPLAY = ":0", http_proxy = "http://proxy.invalid:3128", CADRUMO_LOG_LEVEL = "DEBUG", CADRUMO_LOCAL_STORAGE_ROOT = "/launch-vector/state", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
+
+[[launch_vectors]]
+name = "posix-names-keep-their-case"
+platform = "posix"
+image = "aeat"
+arguments = ["config", "show"]
+ambient = { HOME = "/home/ada", cadrumo_log_level = "DEBUG", CADRUMO_LOG_LEVEL = "INFO" }
+profile = "aeat"
+environment = { HOME = "/home/ada", CADRUMO_LOG_LEVEL = "INFO", CADRUMO_LOCAL_STORAGE_ROOT = "/launch-vector/state", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
+
+[[launch_vectors]]
+name = "posix-kdf-child-keeps-its-parent-environment"
+platform = "posix"
+image = "python"
+arguments = ["-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker", "--request-fd", "3", "--result-fd", "4", "--descriptor-bound", "1024"]
+ambient = { NEUTRAL = "kept", CADRUMO_AGENT_PORT = "0", PATH = "/parent" }
+profile = "kdf-child"
+environment = { NEUTRAL = "kept", CADRUMO_AGENT_PORT = "0", PATH = "/parent" }
+
+[[launch_vectors]]
+name = "posix-kdf-standard-descriptor-is-not-the-invocation"
+platform = "posix"
+image = "python"
+arguments = ["-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker", "--request-fd", "2", "--result-fd", "4", "--descriptor-bound", "1024"]
+ambient = { HOME = "/home/ada", NEUTRAL = "dropped" }
+profile = "python"
+environment = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "/launch-vector/state", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
+
+# ---------------------------------------------------------------------------
 # Storage-root conformance vectors. Expected roots and refusals are authored by
 # hand, independently of any resolver. invalid_environment names carry a value
 # that is not valid Unicode on the platform.

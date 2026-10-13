@@ -1,6 +1,6 @@
 use crate::storage::{Profile, child_environment};
 use crate::*;
-use std::ffi::OsString;
+use std::ffi::{OsStr, OsString};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub(crate) struct Scratch(pub PathBuf);
@@ -428,5 +428,83 @@ fn abi_unrepresentable_path_returns_failure_and_an_empty_buffer() {
         assert_eq!(cadrumo_platform_path(&mut context, 0, &mut output), 3);
         assert!(output.data.is_null() && output.len == 0);
         cadrumo_platform_release(&mut output);
+    }
+}
+
+fn normal(value: &OsStr) -> String {
+    let text = value.to_string_lossy().into_owned();
+    if cfg!(windows) {
+        text.replace('\\', "/")
+    } else {
+        text
+    }
+}
+
+#[test]
+fn launch_profiles_reproduce_every_generated_launch_vector() {
+    let (package, root) = if cfg!(windows) {
+        (r"C:\launch-vector\package", r"C:\launch-vector\state")
+    } else {
+        ("/launch-vector/package", "/launch-vector/state")
+    };
+    assert!(
+        !LAUNCH_VECTORS.is_empty(),
+        "the contract carries this family's vectors"
+    );
+    for vector in LAUNCH_VECTORS {
+        let arguments: Vec<OsString> = vector.arguments.iter().map(OsString::from).collect();
+        let ambient: Vec<(OsString, OsString)> = vector
+            .ambient
+            .iter()
+            .map(|(name, value)| (OsString::from(name), OsString::from(value)))
+            .collect();
+        let selected = launch::select(vector.image, &arguments);
+        let defined = selected.clone().and_then(|profile| {
+            launch::define_environment(profile, &ambient, Path::new(package), &|_| {
+                Ok(PathBuf::from(root))
+            })
+        });
+        match (defined, vector.refusal) {
+            (Err(launch::DefineError::Refused(refusal)), Some((code, subject))) => {
+                assert_eq!(
+                    (refusal.code(), refusal.subject()),
+                    (code, subject),
+                    "{}",
+                    vector.name
+                );
+            }
+            (Ok(defined), None) => {
+                assert_eq!(
+                    Some(selected.unwrap().name),
+                    vector.profile,
+                    "{}",
+                    vector.name
+                );
+                let mut actual: Vec<(String, String)> = defined
+                    .environment
+                    .iter()
+                    .map(|(name, value)| (name.to_string_lossy().into_owned(), normal(value)))
+                    .collect();
+                if let Some(path) = vector.path {
+                    let position = actual.iter().position(|(name, _)| name == "PATH").unwrap();
+                    let (_, value) = actual.remove(position);
+                    let entries: Vec<String> = env::split_paths(&OsString::from(value))
+                        .map(|entry| normal(entry.as_os_str()))
+                        .collect();
+                    let expected: Vec<String> =
+                        path.iter().map(|entry| normal(OsStr::new(entry))).collect();
+                    assert_eq!(entries, expected, "{}", vector.name);
+                }
+                let mut expected: Vec<(String, String)> = vector
+                    .environment
+                    .iter()
+                    .map(|(name, value)| ((*name).to_owned(), normal(OsStr::new(value))))
+                    .collect();
+                actual.sort();
+                expected.sort();
+                assert_eq!(actual, expected, "{}", vector.name);
+            }
+            (outcome, refusal) => panic!("{}: {outcome:?}, expected {refusal:?}", vector.name),
+        }
     }
 }

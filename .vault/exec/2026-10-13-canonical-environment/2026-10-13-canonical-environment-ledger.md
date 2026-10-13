@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:615c274bc37ce56e96e09aa1945863840427acd20a00d73008eba65e394503fe'
+body_hash: 'sha256:1f88d3391480fe89297544e868cb85d65e1c803f26af78d4b5888263775f9c5e'
 related:
   - "[[2026-10-13-canonical-environment-plan]]"
 ---
@@ -124,6 +124,15 @@ related:
 - `S03` `verify:` `cargo +1.96.0 clippy native/manager lib` -> `pass`
 - `S03` `verify:` `just check-types: no diagnostics in native-lane files (2 remain in dev/registry/pipeline/tests/test_generated_tree_publication.py)` -> `pass`
 - `S03` `by:` `vaultspec-high-executor`
+- `S04` `M` `native/application-environment.toml`
+- `S04` `M` `dev/packaging/native/application_environment.py`
+- `S04` `M` `native/platform/src/conformance_tests.rs`
+- `S04` `A` `dev/packaging/native/tests/test_launch_profile_vectors.py`
+- `S04` `verify:` `uv run --no-sync pytest test_launch_profile_vectors test_application_environment test_generator_imports test_native_storage_environment_contract (40)` -> `pass`
+- `S04` `verify:` `ty check dev/packaging` -> `pass`
+- `S04` `verify:` `cargo +1.96.0 clippy --all-targets -D warnings native/platform for windows, x86_64-linux, aarch64-darwin` -> `pass`
+- `S04` `verify:` `cargo +1.96.0 test native/platform (45, Windows vectors replayed)` -> `pass`
+- `S04` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -136,3 +145,4 @@ related:
 - `S08` S08 check-import-boundaries reports unavailable because other sessions changed the governed source tree while it ran; its contracts, hard findings and loadability components were clean. Load-target inventories regenerated with python -m `dev.quality.import_load_probe` --compile-targets (adds `native_refusal,` and the native lane's committed `application_environment` that was missing from the dev inventory).
 - `S08` S08 `test_agent_host_runtime.py::test_the_relay_in_the_agents_tree_acts_as_the_agent_under_the_lease_that_started_it` fails with MCP `internal_error` and fails identically with the agent's standard error restored to the null device; it is not caused by this Step.
 - `S03` `cadrumo_platform_prepare` and `prepared_environment` now define the executable's default profile through `define_environment` until P02.S05 and P02.S06 move their callers to `cadrumo_platform_define`
+- `S04` Agent gateway and worker admission and undeclared-invocation refusal vectors need the cadrumo-agent image, the only image without a default profile; they land with it in P02.S07. POSIX vectors are replayed in Python here and in Rust only on a POSIX build

@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import json
 import re
 import tomllib
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePath, PurePosixPath, PureWindowsPath
 from typing import Any
 
 DECLARATION = Path("native/application-environment.toml")
@@ -124,6 +125,7 @@ class ApplicationEnvironment:
     components: Mapping[str, Any]
     root: Mapping[str, Any]
     vectors: tuple[Mapping[str, Any], ...]
+    launch_vectors: tuple[Mapping[str, Any], ...]
 
 
 def _fail(message: str) -> ApplicationEnvironmentError:
@@ -598,6 +600,69 @@ def channel_directory(root: Mapping[str, Any], channel: str) -> str:
     return f"{names['product_directory']}{names['separator']}{channel}"
 
 
+def _text_table(raw: object, where: str) -> dict[str, str]:
+    table = _table(raw, where)
+    if not all(isinstance(value, str) for value in table.values()):
+        raise _fail(f"{where} values must be strings")
+    return {str(key): str(value) for key, value in table.items()}
+
+
+def _launch_vector(
+    raw: object, where: str, profiles: Mapping[str, Mapping[str, Any]], native_host: Mapping[str, Any]
+) -> dict[str, Any]:
+    entry = _table(raw, where)
+    _keys(
+        entry,
+        where,
+        {"name", "platform", "image", "arguments", "ambient"},
+        {"profile", "environment", "path", "refusal"},
+    )
+    if entry["platform"] not in PLATFORMS:
+        raise _fail(f"{where} platform must be windows or posix")
+    arguments = _list(entry["arguments"], f"{where}.arguments")
+    if not all(isinstance(argument, str) for argument in arguments):
+        raise _fail(f"{where}.arguments must be strings")
+    if ("refusal" in entry) == ("profile" in entry) or ("refusal" in entry and ({"environment", "path"} & set(entry))):
+        raise _fail(f"{where} must declare either a profile and its environment or a refusal")
+    vector: dict[str, Any] = {
+        "name": str(entry["name"]),
+        "platform": entry["platform"],
+        "image": str(entry["image"]),
+        "arguments": [str(argument) for argument in arguments],
+        "ambient": _text_table(entry["ambient"], f"{where}.ambient"),
+        "profile": None,
+        "environment": {},
+        "path": None,
+        "refusal": None,
+    }
+    if "refusal" in entry:
+        refusal = _text_table(entry["refusal"], f"{where}.refusal")
+        _keys(refusal, f"{where}.refusal", {"code", "subject"})
+        if refusal["code"] not in native_host["refusals"]:
+            raise _fail(f"{where} names an undeclared refusal")
+        vector["refusal"] = {"code": refusal["code"], "subject": refusal["subject"]}
+        return vector
+    if entry["profile"] not in profiles:
+        raise _fail(f"{where} selects an undeclared profile")
+    vector["profile"] = entry["profile"]
+    vector["environment"] = _text_table(entry.get("environment", {}), f"{where}.environment")
+    if "path" in entry:
+        vector["path"] = list(_strings(entry["path"], f"{where}.path"))
+    return vector
+
+
+def _launch_vectors(
+    raw: object, profiles: Mapping[str, Mapping[str, Any]], native_host: Mapping[str, Any]
+) -> tuple[dict[str, Any], ...]:
+    vectors = tuple(
+        _launch_vector(item, f"launch_vectors[{index}]", profiles, native_host)
+        for index, item in enumerate(_list(raw, "launch_vectors"))
+    )
+    if len({vector["name"] for vector in vectors}) != len(vectors):
+        raise _fail("launch_vectors repeats a vector name")
+    return vectors
+
+
 def parse(text: str) -> ApplicationEnvironment:
     """Validate the declaration's text against schema 1."""
     try:
@@ -609,7 +674,7 @@ def parse(text: str) -> ApplicationEnvironment:
         "the declaration",
         {"schema", "names", "groups", "base", "pins", "path", "profiles", "host_classes", "native_host"}
         | {"components", "root"},
-        {"invocations"},
+        {"invocations", "launch_vectors"},
     )
     if document["schema"] != SCHEMA or isinstance(document["schema"], bool):
         raise _fail(f"schema must be {SCHEMA}")
@@ -645,6 +710,7 @@ def parse(text: str) -> ApplicationEnvironment:
     root = _root(root_table, names)
     profiles = _profiles(document["profiles"], names, groups)
     invocations = _invocations(document.get("invocations", []))
+    native_host = _native_host(document["native_host"])
     for invocation in invocations:
         if invocation.profile not in profiles:
             raise _fail(f"an invocation selects an undeclared profile {invocation.profile!r}")
@@ -680,10 +746,11 @@ def parse(text: str) -> ApplicationEnvironment:
         invocations=invocations,
         temporary_member=temporary_member,
         host_classes=_host_classes(document["host_classes"]),
-        native_host=_native_host(document["native_host"]),
+        native_host=native_host,
         components=_components(document["components"], names),
         root=root,
         vectors=_vectors(root_table.get("vectors"), root),
+        launch_vectors=_launch_vectors(document.get("launch_vectors", []), profiles, native_host),
     )
 
 
@@ -791,6 +858,7 @@ def compile_section(declaration: ApplicationEnvironment, layout: Mapping[str, An
             "launch_profile_refused": declaration.native_host["launch_profile_refused"],
             "refusals": list(declaration.native_host["refusals"]),
         },
+        "vectors": [dict(vector) for vector in declaration.launch_vectors if vector["platform"] == family],
     }
 
 
@@ -802,6 +870,13 @@ def _rust_string(value: str) -> str:
 
 def _rust_strings(values: Sequence[str]) -> str:
     return "&[" + ", ".join(_rust_string(value) for value in values) + "]"
+
+
+def _rust_text(value: str) -> str:
+    # Vector values may hold path separators; JSON's escapes are valid Rust for printable ASCII.
+    if not value.isascii() or not value.isprintable():
+        raise _fail(f"cannot spell {value!r} as a contract literal")
+    return json.dumps(value)
 
 
 def _rust_pairs(values: Sequence[Sequence[str]]) -> str:
@@ -899,6 +974,31 @@ def rust_lines(section: Mapping[str, Any]) -> list[str]:
             f"distinct: {_rust_pairs(invocation['distinct'])}, greater: {_rust_pairs(invocation['greater'])} }},"
         )
     lines.append("];")
+    lines.append(
+        "pub struct LaunchVector { pub name: &'static str, pub image: &'static str, "
+        "pub arguments: &'static [&'static str], pub ambient: &'static [(&'static str, &'static str)], "
+        "pub profile: Option<&'static str>, pub environment: &'static [(&'static str, &'static str)], "
+        "pub path: Option<&'static [&'static str]>, pub refusal: Option<(&'static str, &'static str)> }"
+    )
+    lines.append("pub const LAUNCH_VECTORS: &[LaunchVector] = &[")
+    for vector in section["vectors"]:
+
+        def pairs(table: Mapping[str, str]) -> str:
+            return "&[" + ", ".join(f"({_rust_text(k)}, {_rust_text(v)})" for k, v in table.items()) + "]"
+
+        profile = "None" if vector["profile"] is None else f"Some({_rust_text(vector['profile'])})"
+        path = "None" if vector["path"] is None else "Some(&[" + ", ".join(map(_rust_text, vector["path"])) + "])"
+        refusal = (
+            "None"
+            if vector["refusal"] is None
+            else f"Some(({_rust_text(vector['refusal']['code'])}, {_rust_text(vector['refusal']['subject'])}))"
+        )
+        lines.append(
+            f"    LaunchVector {{ name: {_rust_text(vector['name'])}, image: {_rust_text(vector['image'])}, "
+            f"arguments: &[{', '.join(map(_rust_text, vector['arguments']))}], ambient: {pairs(vector['ambient'])}, "
+            f"profile: {profile}, environment: {pairs(vector['environment'])}, path: {path}, refusal: {refusal} }},"
+        )
+    lines.append("];")
     return lines
 
 
@@ -908,3 +1008,138 @@ def c_lines(section: Mapping[str, Any]) -> list[str]:
         f"#define CADRUMO_LAUNCH_PROFILE_REFUSED_EXIT {section['native_host']['launch_profile_refused']}",
         *(f'#define CADRUMO_LAUNCH_IMAGE_{image.upper().replace("-", "_")} "{image}"' for image in section["images"]),
     ]
+
+
+class LaunchRefusedError(Exception):
+    """A reference launch the profile refuses; carries the closed code and subject."""
+
+    def __init__(self, code: str, subject: str) -> None:
+        """Keep the refusal's code and subject."""
+        super().__init__(code, subject)
+        self.code = code
+        self.subject = subject
+
+
+def _argument_value(kind: str, minimum: int, text: str, family: str) -> int | None:
+    if not text.isascii() or not text.isdigit() or (text.startswith("0") and len(text) > 1):
+        return None
+    value = int(text)
+    maximum = (1 << 64) - 2 if kind == "handle" else (1 << 31) - 1
+    if kind not in ARGUMENT_KINDS or (kind == "handle") != (family == "windows"):
+        return None
+    return value if max(minimum, 1) <= value <= maximum else None
+
+
+def _invocation_matches(invocation: Invocation, arguments: Sequence[str], family: str) -> bool:
+    if len(invocation.arguments) != len(arguments):
+        return False
+    values: dict[str, int] = {}
+    for declared, actual in zip(invocation.arguments, arguments, strict=True):
+        if declared.literal is not None:
+            if declared.literal != actual:
+                return False
+            continue
+        value = _argument_value(str(declared.kind), declared.minimum, actual, family)
+        if value is None or declared.slot is None:
+            return False
+        values[declared.slot] = value
+    return all(values[a] != values[b] for a, b in invocation.distinct) and all(
+        values[a] > values[b] for a, b in invocation.greater
+    )
+
+
+def reference_select(declaration: ApplicationEnvironment, family: str, image: str, arguments: Sequence[str]) -> str:
+    """Select a profile name as the host must, independently of the native implementation."""
+    for invocation in declaration.invocations:
+        if invocation.platform not in {family, "all"}:
+            continue
+        if declaration.profiles[invocation.profile]["image"] == image and _invocation_matches(
+            invocation, arguments, family
+        ):
+            return invocation.profile
+    for name, profile in declaration.profiles.items():
+        if profile["image"] == image and not profile["invoked"]:
+            return name
+    raise LaunchRefusedError("invocation_undeclared", image)
+
+
+def reference_define(
+    declaration: ApplicationEnvironment,
+    family: str,
+    profile_name: str,
+    ambient: Mapping[str, str],
+    *,
+    package: str,
+    root: str,
+    layout_paths: Mapping[str, str],
+) -> dict[str, str]:
+    """Define a profile's environment as the host must, for vectors whose root is already resolved.
+
+    Directory and executable launch parameters are not checked against a filesystem here.
+    """
+    path_type: type[PurePath] = PureWindowsPath if family == "windows" else PurePosixPath
+    folded = family == "windows"
+
+    def get(name: str) -> str | None:
+        found = None
+        for key, value in ambient.items():
+            if (key.upper() == name.upper()) if folded else (key == name):
+                found = value
+        return found
+
+    profile = declaration.profiles[profile_name]
+    if profile["inherit"]:
+        return dict(ambient)
+    defined: dict[str, str] = {}
+
+    def put(name: str, value: str) -> None:
+        for key in [key for key in defined if (key.upper() == name.upper() if folded else key == name)]:
+            del defined[key]
+        defined[name] = value
+
+    parameters: list[tuple[str, str]] = []
+    for slot in profile["slots"]:
+        value = get(slot.name)
+        if value is None:
+            if slot.required:
+                raise LaunchRefusedError("launch_value_missing", slot.name)
+            continue
+        if slot.kind == "port" and not (value.isdigit() and value.isascii() and int(value) <= 0xFFFF):
+            raise LaunchRefusedError("launch_value_malformed", slot.name)
+        parameters.append((slot.name, value))
+    base = [name for group in profile["base_groups"] for name in declaration.base[family][group]]
+    for name in (*base, *profile["operator"], *profile["pass"]):
+        value = get(name)
+        if value is not None:
+            put(name, value)
+    package_path = path_type(package)
+    if profile["pins"]:
+        member = declaration.temporary_member["name"]
+        admitted = member in profile["operator"] or member in profile["pass"]
+        override = get(member) if admitted else None
+        temporary = path_type(root) / (override or declaration.temporary_member["default"])
+        put(declaration.root["variable"], str(path_type(root)))
+        for name in declaration.temporary:
+            put(name, str(temporary))
+        put(declaration.authority.name, str(package_path / layout_paths[declaration.authority.value]))
+    for fixed in profile["fixed"]:
+        put(fixed.name, fixed.value if fixed.source == "value" else str(package_path / fixed.value))
+    for name, value in parameters:
+        put(name, value)
+    if profile["package_path"]:
+        entries: list[str] = []
+        for entry in declaration.path_entries:
+            if entry == "executable":
+                entries.append(str(package_path))
+            elif entry == "native":
+                entries.append(str(package_path / layout_paths["native"]))
+            elif entry == "system":
+                if family == "windows":
+                    system = get(declaration.windows_system[0])
+                    if system is None:
+                        raise ValueError("The Windows system directory variable is missing")
+                    entries.append(str(path_type(system, *declaration.windows_system[1])))
+                else:
+                    entries.extend(declaration.posix_system)
+        put("PATH", (";" if family == "windows" else ":").join(entries))
+    return defined
