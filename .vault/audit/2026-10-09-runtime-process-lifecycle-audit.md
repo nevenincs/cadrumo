@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#runtime-process-lifecycle'
 date: '2026-10-09'
-modified: '2026-10-12'
+modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:81fe5e584ec053734afcbf16e2120b89a8d075576ee39cdb728bb60941ae6ec7'
+body_hash: 'sha256:ceb77c349de0c064bf7cb03a0949842bd87a35bdf58caae30ba9cbd312694c3c'
 related:
   - "[[2026-10-09-runtime-process-lifecycle-plan]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -15,41 +15,11 @@ related:
   - "[[2026-10-09-desktop-service-installation-adr]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace runtime-process-lifecycle with a kebab-case feature tag, e.g. #foo-bar.
-     Exactly these two tags are allowed; do not append additional tags.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - Cite code as inline backtick locators: `src/module.py:42`; never as a
-       markdown link. -->
-
 # `runtime-process-lifecycle` audit: `Integrated lifecycle and public account observation review`
 
 ## Scope
 
-<!-- What was audited and why -->
-
 ## Findings
-
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
-
-       ### Integrated lifecycle and public account observation review | {level} | {summary}
-
-     followed by a paragraph carrying the detail. Integrated lifecycle and public account observation review is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
 
 ### native-admission-removal | low | Authorized launch-context gates removed
 
@@ -115,16 +85,12 @@ FAIL for shipping application acceptance. The user launched stage/Release/app/ca
 
 The attempted source-tree rebuild failed because the user app retained cadrumo_python.dll. Assembly reset removed part of stage/Release before that failure. The user was asked to close the app before rebuilding; do not terminate the user process or report the partial stage as usable.
 
-
 - `build-shutdown-20261010` | `low` | Progressive build shutdown is implemented. Ownership requires a build image or matching Cadrumo installation identity; recursive product children are retained with process creation identities. A graceful window-close request has a ten-second deadline, then remaining supervisors and children are forcibly terminated and given ten seconds to exit. Surviving or respawned owners fail replacement. Real-process tests establish graceful exit, escalation after timeout, child reaping and survival of an unrelated process. Nine focused packaging/shutdown tests pass; the three shutdown tests also pass after progress-message refinement. Integrated package rebuild remains pending, so S10 remains open.
 - `native-test-expectations-20261010` | `low` | Two preexisting native assertions were incompatible with the current operator workspace and CMD environment. The live TUI test now verifies workspace CWD independently of pinned storage and passes. CMD reproduces the environment parity failure: CPython omits inherited hidden drive-directory entries from os.environ. The parity assertion now compares visible entries and independently requires native retention of inherited hidden entries. Before this last correction, the native suite result was 239 passing and one failing out of 240; verification of the correction is pending. These results do not establish installed-manager or shipping application health.
 
-
 - `native-projection-correction-20261010` | `low` | The CMD-only parity failure also exposed a production path-representation mismatch: CMake supplied forward-slash executable paths while the interpreter derived backslash paths from current_exe. The native prepared environment now normalizes the executable before deriving PATH and CADRUMO_AUTHORITY_ROOT. The hidden-drive parity distinction remains explicitly checked. The full CMake-configured CMD package suite now passes all 240 cases with zero ignored tests; evidence is build/windows-x64/desktop-native-tests.log. Desktop-host Clippy passes after replacing an unnecessary owned PathBuf comparison in the existing sign-in test with a borrowed Path. The complete bundle rebuild is in progress; shipping installation/dispatch acceptance remains PENDING.
 
-
 - `build-shutdown-integrated-20261010` | `low` | S10 review: PASS. The canonical Release bundle graph ran the shutdown dependency before rebuilding the product binaries and successfully replaced its staged application payload after the final assembly shutdown guard. This combines the real graceful/force/child/exclusion regressions with an actual canonical replacement. Step S10 is closed. S08 installation-kit delivery and S09 positive installed-manager dispatch/provisioning acceptance remain open; overall shipping-health review is PENDING, not PASS. No host installation or logon registration was performed.
-
 
 - `complete-delivery-20261010` | `low` | S08 review: PASS. The canonical Release bundle build completed successfully with a matching adjacent services/kit.json, authenticated maintenance runner, and four user/machine version/registration MSI artifacts. Actual bundle inventory, images, entrypoint and direct/CMD launch tests pass (seven tests); package-acceptance.log records the separate health failure. S08 is closed. The prior missing installation kit in the delivered staged package is resolved.
 - `shipping-health-gate-20261010` | `high` | S09 review: PENDING positive installed startup/provisioning acceptance. The rebuilt production cadrumo.exe --check-health returns exit 1, package_unavailable during manager discovery. Read-only current-user and machine EntryPoint lookups find no registered manager in this runner. Selecting only bundle.runtime-lifecycle now includes the actual launch and health fixtures: launch PASS, health FAIL, lifecycle NOT RUN for failed dependency, overall CTest exit 8. This establishes that isolated fixture success cannot hide shipping startup failure; it does not establish an installed manager running successfully. Evidence: build/windows-x64/application-health.log, package-acceptance.log and lifecycle-acceptance-gate.log. Development-host installation/logon registration was not performed. Overall shipping-health verdict remains PENDING, not PASS.
@@ -293,7 +259,6 @@ Actual configured native installer tests passed after the test-pointer correctio
 
 These results establish source and compiled-database behavior, not installed health. The independent per-user rollback native error five/product State five/publication fence remains unresolved pending the new genuine guest precommit scenario. The exact stopped guest clean baseline was restored with qemu-img check success, retained at build/runtime-lifecycle-windows-guest/baseline/restore-20261011-before-feature-fixed-install.json. Default canonical bundle acceptance is being enrolled to execute both actual installed scopes synchronously; candidate producer/health results cannot close S09, S11, S12 or S13.
 
-
 ### Corrected feature cohort: genuine precommit rollback still fails
 
 The 0.6.2 feature-fixed candidate's canonical native producer, complete four-product MSI database verification and kit check completed. An initial follow-up health invocation used the wrong storage variable and failed before launching the product; the separate corrected command with CADRUMO_LOCAL_STORAGE_ROOT passed actual packaged supervision, verified IPC and exact runtime crash recovery. Immutable C-drive cohort 0.6.2-feature-fixed-candidate was sealed (1,151,429,073 archive bytes); it is not installed acceptance.
@@ -310,11 +275,9 @@ User-directed temporary cleanup used canonical cargo clean on exact inactive Rus
 
 Within existing versioned ownership coverage, the repair groups only per-user immutable non-executable files in the same destination directory, retains individual images/libraries/help files and all shared registration components, retains HKCU keypaths, and derives distinct group GUIDs plus independent per-file identifiers. Producer and actual read-only Python/native MSI guards reserve an extra costing entry for each registry keypath and refuse budgets above 65,535. The actual failed 0.6.2 user MSI is now refused read-only before mutation. Seventeen focused Python ownership/boundary tests passed; the first native suite failed one isolated MSI fixture after its table schema changed. That failure must be repaired and rerun before producer or installed acceptance. No installed-success claim is made.
 
-
 2026-10-11 MSI repair verification continuation: the corrected native installer CMake Rust test target, Clippy and release binary targets passed after correcting the existing multi-file test fixture's newly required Component.Attributes INSERT. All 228 existing Windows MSI unit cases passed. The existing real four-product MSI test passed with configured pinned WiX 5.0.2 and the rebuilt native adapter, including actual Component/File/HKCU Registry mappings; an earlier invocation without WiX on PATH failed and remains recorded. The old failed 0.6.2 MSI is now refused by the read-only component costing guard before mutation. Review identified and closed a narrow grouping-test gap: .exe and both extensionless entrypoints now share directories with data, proving exclusion via singleton ownership (2 scope cases pass).
 
 Guest transport refinements remain actual-guest pending: native logoff waits for the exact selected WTS session to settle; machine reboot readiness rejects and closes same-boot connections until an exact UUID/SID/TLS-admitted guest reports a distinct native boot timestamp. Existing raw AuthenticationId, LSA/CredRead and boot-phase refusal checks remain intact. The focused parser/native declarations and old/old/new boot poll test passed. No installed acceptance, Step closure or release readiness is inferred from these focused checks. Corrected full 0.6.3 package producer is running; S09/S11/S12/S13 remain open.
-
 
 2026-10-11 corrected package continuation: all four genuine full 0.6.3 MSI products compiled, passed actual database/admission checks and were published together with the new canonical installation kit. User-version authoring retains all 35,640 payload files in 1,894 components/HKCU keypaths, conservative expanded budget 3,788; machine-version remains 35,640 individually owned components. Auxiliary uv --no-sync verification initially failed before launching the application because an empty snapshot environment lacked cadrumo; the actual configured CMake builder interpreter was then used and the complete kit verification plus packaged supervision/verified IPC/exact-runtime crash recovery passed (session35749 exit0). Failure is retained in the same log, not erased.
 
@@ -322,13 +285,11 @@ The immutable 0.6.3-component-fixed-candidate was sealed with archive SHA256 54b
 
 Original failure-evidence owners were refined and independently reviewed: finite sanitized native failure facts persist before cleanup, original exceptions retain type-only secondary cleanup notes, and existing guest evidence collection preserves this run's bounded native receipt bytes, hashes and cohort association before reset. Task creation timestamp now precedes launch. Twenty-two focused failure/cleanup cases and six collector/parser/start-boundary checks passed with applicable lint/type checks. Guarded six-owner snapshot overlay recorded before sealing. Private genuine successor 0.6.4 changes exactly seven version metadata files, including three exact companion pins and only four local lock versions; both offline lock checks passed. Original release metadata remains0.6.0. New successor producer is running. Full default CMake installed campaign, logoff/login, machine boot, upgrade/rollback and native cleanup remain pending; S09/S11/S12/S13 remain open.
 
-
 ### Actual installed P1 launch failure retained (2026-10-11 22:02 UTC)
 
 The component-fixed 0.6.3 guest user hold task `9eaf7839e045473fb842ac1447761777` returned exit 1: `No kernel-verified installed same-logon manager appeared`. The installed manifest exists, while only the shared manager image remained live and no version worker appeared. Cleanup also failed with the finite `native_removal_refused` receipt; its secondary exception did not replace the primary startup timeout. Raw task streams/status, native facts, failure receipt, hashes, and settled transport-task removal are retained in `build/runtime-lifecycle-windows-guest/evidence/component-fixed-pilot/user-hold-9eaf7839e045473fb842ac1447761777`. This is failed installed acceptance, not successful package delivery.
 
 Read-only source analysis found the harness sets `CADRUMO_AUTHORITY_ROOT` for client probes before native installation/startup, but its manager launch scrubs only storage pins. The installed shared manager explicitly rejects inherited authority overrides during managed-location resolution. Correcting this test-owned launch environment must preserve production admission and authentication, then repeat the actual installed campaign; source analysis alone does not establish installed health. The pilot collector expects both P1/P2 directories, so this single-cohort pilot retained its exact P1 failure receipt directly after the standard collector copied task streams. No guest installation or pending publication was deleted, and no cleanup acceptance is claimed.
-
 
 ### Copied-package cold startup reaches the outer deadline (2026-10-11)
 
@@ -338,19 +299,15 @@ Recovered `cadrumo-package-health-iiwp485x` facts show supervisor start at 80,56
 
 Source inspection places full manifest/digest verification plus the separately bounded 30-second runtime identity probe before `supervisor_started`; runtime readiness itself took about 9.1 seconds in the recovered run. Fresh portable inspection has no safe persistent verification cache; existing delegated-byte and ancestor-walk reuse remain intact. A bounded correction will align the desktop outer allowance with the existing supervisor readiness ceiling and the health observer's total budget with startup, hold and cleanup. No file/mtime cache, authentication relaxation, skipped inventory or passing cached receipt is authorized. Primary-failure retention source changes passed two focused Python cases and independent review; canonical Rust compilation and actual corrected launches remain pending.
 
-
 - 2026-10-12 continuation: the corrected-native-environment P1 user hold (ea9bd4e031bb46fa9fd8e6b15109a526) failed: the actual native maintenance install exceeded its 900-second bound. Windows emitted MSI success events at 22:25:32Z and 22:31:27Z, but these do not prove transaction commit or native publication finished. Cleanup independently returned native_removal_owner_unknown/native_rolled_back; no accepted cleanup or installed readiness is claimed. Exact streams, finite native failure receipt, publication inventory and task settlement are retained under build/runtime-lifecycle-windows-guest/evidence/native-env-pilot. The settled task was removed; installation residue is preserved for diagnosis.
 - Native source inspection finds post-MSI commit, complete namespace ACL/reparse admission, exact product/registration ownership checks and another complete package hash before publication. The timeout phase remains unproved; do not increase its bound or weaken integrity based on MSI success events.
 - The private 0.6.4 producer and its actual staged package supervision/recovery check passed (build/shipping-0.6.4-component-fixed-successor.log). This is producer evidence only, not installed acceptance. The later six-owner readiness/primary-failure refinement is being compiled separately. Original-tree desktop verification failed before Cargo because documentation inputs changed during its 421-second build; no Rust or Clippy pass is claimed for that invocation. Canonical frozen-snapshot desktop-host-test and desktop-host-clippy are running serially with guarded overlay receipt build/desktop-readiness-overlay.json.
-
 
 - 2026-10-12 bounded native-phase refinement: existing command execution canceled its communicate reader at timeout, then created another reader; already consumed chunks could therefore be lost. The same shielded reader now survives until exact tree termination and the existing bounded drain, with actual real-grandchild stdout/stderr retention and termination checks passing. Native installation emits finite secret-free enter/completed/failed bookends for its eight major phases on stderr, leaving final stdout and transaction results unchanged. Ordinary and timed-out native test receipts retain only bounded allowlisted phase facts; malformed/deep JSON is discarded and the same primary TimeoutExpired remains primary. No timeout increase, authentication bypass, scan omission or new product state file was introduced.
 - Canonical frozen desktop verification passed all252 tests. Clippy initially failed test-module placement; relocation alone corrected it and canonical Clippy passed, with behavioral evidence unchanged. Native installer.rust passed39 tests with one pre-existing assembled-kit-only ignored test; the new phase result/privacy test ran. Native check_installer Clippy passed. Shipping producer/rebuilt package and actual installed acceptance are still pending.
 - Exact failed guest streams/state/events were retained before its exact-owned stop. The actual tracked clean-baseline restore then proved a new boot at2026-10-11T23:05:14Z and absence of both acceptance/product prefixes; genuine pinned RDP session readiness and disabled autologin followed. Baseline restoration is fixture preparation, not a passed native uninstall.
 
-
 2026-10-12 repaired private 0.6.4 shipping candidate: the guarded snapshot canonical native-installer producer completed with the reviewed 180-second desktop readiness budget and finite native maintenance phase diagnostics. Strict documentation generation and all four genuine scoped MSI products completed, bootstrap kit verification passed, and the actual packaged Cadrumo headless health check returned success after verified native runtime readiness, exact runtime crash and supervisor-owned recovery. The health-owned temporary directory was removed by the successful check. Evidence: build/shipping-0.6.4-native-phase-candidate.log in the frozen runtime-health-build-20261011 snapshot. This is shipping producer/health evidence, not default complete installed acceptance. The prior genuine user-install 900-second failure remains failed and retained; service boot/login, two-version cutover/rollback and native cleanup remain unaccepted. An immutable 0.6.4-native-phase-candidate copy is now being preserved in the existing authorized cohort directory; no existing package or evidence was moved.
-
 
 2026-10-12 immutable C-path regression failed: 0.6.4-native-phase-candidate was sealed with archive SHA256 3095cf5374b55797a0fe451c29c95a8c69ef3b9811541c84658d306a35574c9f, 1148326574 bytes, and passed kit binding. Actual C-path shipping health then exited1: primary manager timed_out at the existing180-second ceiling, secondary cleanup_failed/TimedOut after35 seconds. Finite receipt and public native event projection are retained under snapshot var/storage/tmp/cadrumo-package-health-2fhi8py9 and build/sealed-0.6.4-native-phase-health-public-events.json; full check failure is build/sealed-0.6.4-native-phase-candidate-health.log. No supervisor/runtime-launch facts were observed; this does not prove the exact blocking operation. Source reviews found initial DesktopHost InstalledRuntime inspection uses an uncancelled package inspection, and identity-probe kill/reap has no independent settlement bound. Those are concrete shutdown gaps; inspection, probe, binding and ownership resolution remain candidate causes until finite phase evidence identifies one. The genuine guest transfer verified archive/version/all11 critical members, but no installed hold/task was started. The prior source-stage health pass remains valid only for that path; C-path and complete installation acceptance remain failed/unaccepted. In-scope correction will preserve all admission/authentication checks and ceilings, propagate existing cancellation, bound genuine child settlement, and reuse existing stage diagnostics before another actual run.
 
@@ -378,19 +335,15 @@ The corrected canonical application-only payload producer PASSes in `build/packa
 
 Read-only installer mapping confirms shared parallelism applies to both candidate_verification and publication_hash; publication_admission still serially verifies full-prefix owner/DACL/resource custody, while product/native registration verification follows declared product/resources. A concrete diagnostic gap is found: cached registration MSI native ownership, ACL custody and metadata parsing previously occurred outside the eight phase guards. A minimal original runner refinement includes that work inside existing registration_verification and retains definition/cached/resource custody through unchanged publication. Guarded overlay/preimage is `build/registration-phase-coverage-overlay.json`; runner52af3f431caeeb45b00599a4ebb94a3884e416a8cf239ef312160c5645251a01. Actual configured installer CTest and existing check_installer now run serially before rebuilding the full four-product kit. User/machine login/boot, installed authenticated clients, conflict, fallback, upgrade/rollback and successful native removal remain required; no Step is closed from this app-only health pass.
 
-
 2026-10-12 continuation checkpoint: the registration_verification coverage correction passed configured installer.rust CTest (30.78 seconds), configured check_installer (12.76 seconds), pinned formatting, and independent source review. The final runner source digest is 52af3f431caeeb45b00599a4ebb94a3884e416a8cf239ef312160c5645251a01; logs are retained in the private build snapshot under build/registration-phase-coverage-native-tests.log and build/registration-phase-coverage-clippy.log. The current native-installer producer is still running and has not established a new sealed or accepted cohort.
 
 The exact tracked guest baseline was restored after settling its former connection and RDP client. Fresh boot 2026-10-12T01:22:04.5000000Z, dynamically verified UUID/SID, absent C:\CadrumoAcceptance, disabled auto-login, and genuine subsequent RDP login are retained in build/runtime-lifecycle-windows-guest/parallel-verification-clean-readiness.json. Transient cold-boot WinRM TLS failures preceded the successful session and are not installation outcomes. Reset is fixture recovery, not native uninstall or cleanup acceptance. No product has yet been installed following this reset. S09/S11/S12/S13 remain open.
 
 The build-preparation ancestor-link query was investigated read-only. A possible one-lstat refinement has unmeasured benefit and was not implemented; containment resolution, link policy, and package integrity scans remain unchanged.
 
-
 2026-10-12 current-shipping supervision result: the canonical builder executed dev.packaging.native.package_launch_smoke --health against the settled current 0.6.4 stage/Release/app/cadrumo.exe with the generated CMake storage variable CADRUMO_LOCAL_STORAGE_ROOT and returned zero. build/shipping-0.6.4-parallel-verification-health-canonical.log retains the actual verified IPC, exact-runtime crash recovery and owned-process settlement success. This is portable application supervision evidence; native-installer production, the repaired sealed C-path kit, installed publication and full user/machine campaign remain pending. The preceding manual invocation used the wrong storage variable and failed its pre-launch assertion; its separate log remains retained and is not counted as an application run.
 
-
 2026-10-12 repaired full-kit checkpoint: the final explicit native-installer build and current stage kit check returned zero. The actual current kit was written at 2026-10-12T02:02:24.6934127Z and contains user-version, user-registration, machine-version, machine-registration and the native maintenance runner. Existing sealer produced the new immutable C-path 0.6.4-parallel-verification-candidate archive (1148612026 bytes, SHA256 42c64f7e26728ff18585de271aacc04c2ac5b11ab2317c8b745b4ec255e50361), binding its current manifest, kit, seven test owners and two registration sources. The sealed C-path kit check and shipping health check both returned zero; build/shipping-0.6.4-parallel-verification-sealed-health.log retains actual verified runtime IPC, exact-runtime recovery and owned-process settlement success. Existing Stage-GuestCohort verified receipt/archive/version and staged a copy. Guest import is running; no installed or default bundle acceptance is claimed. All failed immutable cohorts and native cleanup failures remain retained.
-
 
 ### Installed user pilot and authentic launch investigation | high | FAILED acceptance retained; production dispatch settlement unresolved
 
@@ -400,20 +353,17 @@ Native owned-PID observation established PID6520 was inside a Job and displayed 
 
 Helper settlement remains a material gap: direct canonical helper tasks exceeded their PT1M/PT2M transport limits; actual run_command with its15-second deadline timed out despite dispatched=true output. A diagnostic wrapper around the real CoUninitialize observed enter/leave, zero interface count and interpreter-exit, then settled0; this does not establish a persistent COM hang. No timed-out acknowledgement is accepted. Initial harness activation is being refined to reuse a sealed/hash-bound copy of the canonical dispatcher, while later activate=False genuine HKCU login observation remains untouched. Focused offline transport plus canonical dispatcher tests passed26 tests; Ruff/format/Ty passed the changed Python scope. Source refinement and exact GUI invocation settlement are still under investigation. S09/S11/S12/S13 remain open; P2, both-scope boot/login/upgrade/native cleanup and default accepted bundle remain unproven.
 
-
 ### Explorer dispatch timing narrowed | high | acceptance remains FAILED
 
 The unchanged shipping `python.exe -I -c` canonical dispatcher settled successfully with EOF, exit 0 and its exact acknowledgement in 28.027 seconds under a diagnostic 120-second bound. This does not pass the production 15-second allowance. Timed canonical execution measured import at 0.015 seconds, dispatch completion at 28.375 seconds, and COM uninitialization completion at 28.378 seconds. A line-timed replay settled in 28.137 seconds: Explorer acquisition completed by 0.079 seconds and the `ShellExecute` call returned at 27.282 seconds. Noninheritable standard handles and closed-input experiments still failed the 15-second bound; no production COM, handle or termination shortcut is supported by those experiments.
 
 Evidence is retained in `build/runtime-lifecycle-windows-guest/evidence/parallel-verification-pilot/user-hold-6485e5bcc6594fa9afb4235f3500f680/dispatch-{measured,timing,lines}-task-facts.json` with diagnostic sources. The stranded direct-launch process is being settled with native image, exact creation-time, SID, logon and retained-handle guards before another replay; this does not replace authentic native unregister or relabel the failed campaign. No production deadline has been increased. S09, S11, S12 and S13 remain open.
 
-
 ### Explorer completion allowance | low | scoped review PASS; full acceptance PENDING
 
 The stranded shared manager was retained by native image, SID, session, raw logon identity and exact `GetProcessTimes` FILETIME matching `2026-10-12T02:18:44.6344600Z`. WM_CLOSE settled it gracefully with exit 69; no forced termination was needed. The unchanged canonical launch still failed its 15-second allowance afterwards, so the modal process has not been established as the delay's cause. The canonical shipping replay under a 60-second allowance then completed in 28.060 seconds with EOF, exit 0 and the exact acknowledgement. Evidence: `stranded-settlement-exact-task-facts.json` and `dispatch-clean-60-task-facts.json` under the retained failed pilot.
 
 Only the desktop dispatch, manager tray dispatch and installed-harness helper completion allowances changed from 15 to 60 seconds. Canonical COM code, successful exit/EOF checks, native image/SID/session/logon checks, the 180-second verified-readiness ceiling and the 90-second exact-manager observation window remain intact. Independent `startup_review` scoped review PASS. The existing 26 acceptance/dispatcher unit cases passed in 11.44 seconds; Ruff, format and Ty passed; configured `manager.rust` CTest passed in 40.96 seconds; pinned rustfmt passed. Desktop checks and authentic native cleanup are running, followed by rebuild and fresh installed acceptance. These results do not close S09, S11, S12 or S13.
-
 
 ### Installed manager survives completed removal with active menu | high | REVISION REQUIRED
 
@@ -480,10 +430,6 @@ The disposable Windows fixture was restored only after the prior failing task an
 The Y build drive reached only a few MiB free and remains below the required rebuild working space. Automatic approval review rejected deletion of two independently confirmed inactive retired Rust Debug caches (about1.9GiB), the earlier proof scratch, and a settled temporary audit body, reporting only blocked by policy. Those paths remain intact; no alternate deletion bypass or movement was attempted. Root requested at least6GiB free space before the retry. The frozen source correction and passing native checks remain available; S09/S11/S12/S13 stay open and package acceptance remains FAILED.
 
 ## Recommendations
-
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
 
 ## Context
 

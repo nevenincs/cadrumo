@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#complexity-remediation'
 date: '2026-10-02'
-modified: '2026-10-03'
+modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:86fb6d6fb00bfbdc9425cc656edecf034d46615876b37156f286c02e12ff1798'
+body_hash: 'sha256:05de8486876e6fc3f828b8eb490cd3c21bcf5b4179882d2dd98b480459302388'
 related:
   - "[[2026-10-02-complexity-remediation-plan]]"
 ---

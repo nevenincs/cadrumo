@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#runtime-manager-architecture'
 date: '2026-10-04'
-modified: '2026-10-10'
+modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:6640b497a0a509141937cc2f636682eb463128c5e0e80ad09a126fc1f056f7e3'
+body_hash: 'sha256:5300a6b372f7e3100635ecb5f2e9a1f9da84ab0f27bf817cf4588253096dd984'
 related:
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
   - "[[2026-10-04-runtime-manager-architecture-requirements-research]]"
@@ -104,7 +104,6 @@ Unconfirmed work keeps its lease until normal expiry. The settle must fit inside
 
 **Readiness.** Client readiness remains the authenticated handshake. A `ready` line is the launched process's own assertion and never stands in for client readiness.
 
-
 ### 2026-10-09 authorized admission amendment
 
 The user explicitly removed desktop/logon launch-context admission. Earlier requirements to reject Session 0, missing desktop witnesses, or elevated launch contexts are superseded within Windows manager/runtime operation. A verified same-account native process and its actual token logon may authenticate without a desktop. Desktop lock observation remains applicable when a desktop is positively bound; a native non-desktop logon has no screen-lock surface. Passwords, receipts and approved exact-profile MCP grants remain required. Native peer identity, executable verification, storage ownership, credential revocation and process ownership are unchanged. Runtime recovery follows the owning manager lifetime until explicit stop or session-end, rather than requiring an active WTS desktop. Evidence and implementation: `2026-10-09-runtime-process-lifecycle-plan`.
@@ -112,7 +111,6 @@ The user explicitly removed desktop/logon launch-context admission. Earlier requ
 ### 2026-10-10 authorized Windows optional-installation amendment
 
 The user's explicit continuation accepts the revised topology in 2026-10-04-runtime-manager-architecture-adr: optional machine installation owns an automatic SCM lifecycle broker, user installation owns unprivileged login startup, and a running GUI hosts the shared manager core when no installed manager owns its session. This supersedes earlier no-service, mandatory-installation and separate-manager-only statements within Windows product startup. The boot broker launches only verified machine-installed manager workers using genuine per-user logon tokens and owns no taxpayer runtime or credentials as SYSTEM. Native authentication, profile/session binding, runtime supervisor framing, operation custody and connect-only CLI/TUI/MCP remain unchanged. Registered service existence is distinct from running state and authenticated runtime readiness. Actual boot/login/service acceptance must be reported independently from authored metadata and command-only package fallback evidence.
-
 
 ## Implementation
 

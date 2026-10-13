@@ -3,42 +3,16 @@ tags:
   - '#exec'
   - '#cmake-e2e-build'
 date: '2026-10-08'
-modified: '2026-10-09'
+modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:f86f920b212986bb5ebc491bee229c2e43dc40af1b876babc86cc3a2095e48b1'
+body_hash: 'sha256:11a98e45a924b650ebfe5c7cb2c7078525ef286765849b7ce2621b2b39d090a9'
 related:
   - "[[2026-10-08-cmake-e2e-build-plan]]"
 ---
 
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
-
 # `cmake-e2e-build` ledger
 
 ## Changes
-
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 
 - `S01` `M` `native/cmake/Docs.cmake`
 - `S01` `M` `native/cmake/Packaging.cmake`

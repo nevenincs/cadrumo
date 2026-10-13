@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#modelo-100-renta-full-calc'
 date: '2026-08-16'
-modified: '2026-10-12'
+modified: '2026-10-13'
 body_schema: 'body-v2'
 body_hash: 'sha256:c06f67e5ce1ec7c435e52749e3b654211d9d5670d0bc88bae8ba599022fd96cc'
 related: []

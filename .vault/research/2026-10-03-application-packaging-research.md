@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#application-packaging'
 date: '2026-10-03'
-modified: '2026-10-03'
+modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:1d84d5d091a039fbcb786ee1bd040bbd6cd11193453078dc9dfb07527f4bca43'
+body_hash: 'sha256:9259732046e0d68261a650f79e4889b6f385c757a9f6a1bd36c066b861ada1fe'
 related:
   - "[[2026-10-03-runtime-without-service-manager-adr]]"
   - "[[2026-06-28-product-packaging-adr]]"

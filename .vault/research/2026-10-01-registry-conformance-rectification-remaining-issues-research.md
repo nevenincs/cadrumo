@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#registry-conformance-rectification'
 date: '2026-10-01'
-modified: '2026-10-01'
+modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:4a566600325998046c30fb4496202a64c80cf2a9d05786f503620cf9d02dff0f'
+body_hash: 'sha256:f6f34fc1445199c91a20bb254c19674d8ac0e62cf0b693fee5cbb46a448b1621'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
   - "[[2026-09-27-registry-conformance-rectification-research]]"

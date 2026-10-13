@@ -6,9 +6,9 @@ date: '2026-10-07'
 tier: L1
 related:
   - '[[2026-10-03-application-packaging-interpreter-foundation-adr]]'
-modified: '2026-10-07'
+modified: '2026-10-13'
 body_schema: body-v2
-body_hash: 'sha256:a44f58f868fceef2a4cc45b84c6f10b54ca584085334e11fb0233af26da815f3'
+body_hash: 'sha256:318df6b55d395bae2af6b9a8abfa1029fdd1bdd2f182c05358802d1f6f9d2a6a'
 ---
 
 # `cmake-incremental-build` plan
@@ -18,7 +18,6 @@ body_hash: 'sha256:a44f58f868fceef2a4cc45b84c6f10b54ca584085334e11fb0233af26da81
 Approved 2026-10-07
 
 The user explicitly authorized fixing all seven CMake review findings and establishing fingerprints and stable incremental outputs. The accepted interpreter foundation's CMake amendment governs build, install, ZIP and cleanup ownership. These are implementation corrections within that decision. Preserve concurrent source edits. Source discovery uses direct reads because the semantic service is unavailable.
-
 
 Approved follow-up 2026-10-07: the user selected missing-only authority compilation for ordinary builds, explicit CMake republication on request, and reuse of existing local publications without compiler/source freshness checks. S05 implements this selection consistently through CMake and the wheel hook. Existing publication validation and independent registry currency checks remain. The accepted authority boundary's legal-only identity and explicit compiler republication policy apply; no artifact format or runtime identity change is introduced.
 

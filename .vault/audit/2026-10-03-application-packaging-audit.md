@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#application-packaging'
 date: '2026-10-03'
-modified: '2026-10-03'
+modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:9a2b36d3268352719193f27b90e2f965d702dbdeb2a4684ad5b3a88a85f598be'
+body_hash: 'sha256:57d935047435c046a285ab1c644612421c1849c492a61c4bb5549ab3efc2b052'
 related:
   - "[[2026-10-03-application-packaging-plan]]"
 ---

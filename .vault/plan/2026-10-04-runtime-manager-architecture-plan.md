@@ -10,9 +10,9 @@ related:
   - '[[2026-10-04-canonical-environment-adr]]'
   - '[[2026-10-04-desktop-shell-adr]]'
   - '[[2026-10-08-canonical-environment-darwin-transport-adr]]'
-modified: '2026-10-09'
+modified: '2026-10-13'
 body_schema: body-v2
-body_hash: 'sha256:76fc9eb0e67ce308578a5c986120440b2240492c6d408ae7d0fc8bc0c0634d7e'
+body_hash: 'sha256:3ecaf2b5396d450e61c2bf6f5cbd789076a771037ee37b98dae1c176cb4b3a35'
 ---
 
 # `runtime-manager-architecture` plan
@@ -54,7 +54,6 @@ Named follow-on decisions remain outside this plan:
 2026-10-07 corrective authorization: the operator requested fixing the identified high, medium and low issues while retaining current binary placement and authority, then selected "Fix defects and the discovery blocker". P02.S09 repairs the three reproduced supervision defects. P03.S27 implements the already accepted stable-entry/versioned-install commitment across packaging, shared discovery, manager startup and desktop dispatch. This authorization includes those owning source areas; remaining tray, autostart, cutover/rollback and platform rollout are excluded. The existing format-specific upgrade, removal and disposable-host acceptance gates remain open.
 
 2026-10-08 expanded authorization: the operator requested coding and building everything except signing certificates, which will not be available, and authorized dependency installation. This supersedes the earlier session limitation to defects and discovery: remaining installer, IPC/readiness, preferences, cutover/rollback, uninstall detection and platform source/build work are authorized. Produce unsigned artifacts and retain truthful platform/interactive acceptance limits; absence of signing must not be presented as completion of platform APIs requiring signed identity. No permission to publish, purchase certificates or treat a development host as a disposable acceptance machine is inferred.
-
 
 2026-10-09 recovery authorization: the operator requests managing and fixing the verified bootstrap/recovery defects and checking the Session 0 premise. The concurrent desktop-service-installation session owns installer, layout and desktop bootstrap/sign-in files; this recovery continuation owns native/manager only. Session 0 is the Windows noninteractive services session, not a machine-specific value or a blanket application prohibition. Retain the interactive manager's native session/elevation/desktop checks, expose an explicit --retry activation using existing authenticated manager IPC, and preserve the intent through version dispatch and job escape. Ordinary manual activation retains Reveal, sign-in retains opt-out and failed-version restoration, and Retry never forces a stop or bypasses ownership/cutover gates. Shared native validation uses isolated output directories while the desktop installation session is active. Code semantic discovery was unavailable; bounded current-code inspection supplements the linked decisions.
 

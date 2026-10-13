@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-workbook-compiler'
 date: '2026-10-05'
-modified: '2026-10-07'
+modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:092ab66d4e5c31e5113fee19d03d8cd2b470edad0f4d647cd01dd69f6c3fe20b'
+body_hash: 'sha256:9b236b68800a5b39fbd1a6987f30712ec1fad4014dba0f243a0f805bb7153d45'
 related:
   - "[[2026-10-05-registry-workbook-compiler-plan]]"
 ---

@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#registry-conformance-rectification'
 date: '2026-09-27'
-modified: '2026-10-03'
+modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:f93afb84e04d0fd688fb047a95d045dbffe96eb931c253db461d0cbbf2b79689'
+body_hash: 'sha256:5307b55bcc8347068cdccbbb46c736c9ef832bb8a92674eb5e2446703071de5b'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---

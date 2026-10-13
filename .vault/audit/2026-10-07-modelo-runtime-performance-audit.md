@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#modelo-runtime-performance'
 date: '2026-10-07'
-modified: '2026-10-08'
+modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:4052327bef239e269dd83707b6865a2d4cd2d3ca949d1422d390d50c8196783e'
+body_hash: 'sha256:adca593acf7287d5434410d566fd38626e96844b5d0d9b0e740d180c96e2c797'
 related:
   - "[[2026-10-07-modelo-runtime-performance-plan]]"
   - "[[2026-10-07-blocking-code-quality-repair-audit]]"
@@ -140,9 +140,7 @@ The fifteen-page native retry finishes with two page passes and thirteen failure
 
 A retained real single filing-calendar sequence passes in71.85 s. The mixed eight-journey retained batch then passes all eight, including both M100 inspect and export, IVA export, profile deletion and the previously failing calendar/auth/ledger routes. All609 parent exchanges return; no primary exchange/pre-containment/non-cancellation worker failure is recorded, and all nine terminal child drains join to received parent acknowledgements before normal containment. Artifacts .tmp/s11-exchange-load-01/results.json and per-owner JSONL preserve scalar-only transport diagnostics and synthetic owner logs. The helper preimports child service modules for observation, so these successes are not assumed equivalent to the normal worker path or the full page workload. The original thirteen failed pages remain unresolved evidence; a parent-only normal-worker page replay is being prepared. Nonblocking py-spy snapshots of root-owned page processes preserve Python stacks without locals, but recursive launcher inspection fails version detection; partial dumps are observation only and do not prove deadlock.
 
-
 Follow-up focused native batch, 2026-10-07 16:26 UTC: five collected items completed uncapped in 497.54s (two isolated worker/import smoke tests PASS, one bounded-check calibration FAIL, two profile-delete mask-honesty tests ERROR through their shared setup). The unbounded IRPF clean calibration returned a real runtime_deadline_exceeded on profile edit in irpf-lifecycle-agenda before the intentional half-duration expiry run could begin. The real deletion setup returned plain conflict before confirmation; no receipt timestamp or mask assertion was reached. Durable evidence: .tmp/modelo-performance-followup-deadline-delete-proof.txt and test-run 20261007T161820.214287Z-pytest-80612-a9f44141/run.log. These are actual unresolved product refusals, not generic pytest/process timer expiries. Retain the April completed_at golden; the fixture connection-thread clock correction requires a successful real deletion proof before acceptance. Source inspection locates a nonblocking drain-guard conflict shared with runtime polling, but does not establish that this branch caused the observed conflict. Next replay preserves the default bare worker startup and original product deadlines while retaining per-sequence sandboxes and safe parent failure receipts. The earlier instrumented eight-sequence PASS does not establish default-worker startup equivalence: import order/bootstrap timing and diagnostic scheduling differ, even though both paths import the worker graph before admission and neither explicitly advances graph composition/authority leasing.
-
 
 Second full follow-up blocking aggregate completed, 2026-10-07: just check-code reports 11/12 PASS. The sole failing import-boundary signal exits 7 because the scanned source snapshot changed during its run; its underlying graph has all 15 contracts KEPT, loadability 4522/4522 with zero root causes, and subordinate checker exit 0. All three types, style, format, data-format, dependency declarations, module reachability, symbol usage, export consumption, secure-store writes, persistence writes and docstring references PASS. Evidence: .tmp/modelo-performance-followup-check-code-retry.txt. Do not label the aggregate clean: final stable import-boundary replay remains required. Preserve this correct source-snapshot refusal and do not relax its detector.
 
@@ -234,7 +232,6 @@ S21 repairs the generic converter's dependency order while preserving chronologi
 
 The guarded parent closure observer passed four standalone delegation/failure/restoration checks and independent static review. One actual canonical default-worker M100 export completed in116.270s with zero expectation, export-evidence or observer failures and unchanged27 source guards. All131 held-authority sections and131 authority connections returned;127 worker replies returned and no failed-exchange retirement occurred. The only two containments happen after the last reply, with no active exception, no frame and stopping already true: ordinary cleanup. Maximum observed held body was11.310s and reply13.523s. No original native wait returned a worker exit code. This diagnostic does not reproduce or explain the preceding uncapped bare-test export closure and does not establish a production fix. A further nine-page challenge uses the original eight-worker pool and unchanged product bounds; its outcome is pending. The plan's stale ordinary300s requirement was corrected through the owning CLI to match the user's explicit uncapped correctness-test instruction.
 
-
 ### Stable source proofs, original-pool containment and M216 citation drift | high | PENDING final publication and runtime repair
 
 S22's actual twelve owning scenario tests pass in26.60s; Ruff and scoped ty on all three platforms pass. Independent complete proposal review passes and all eight original test bodies/nineteen assertions remain. The first unsupported ty JSON-output invocation exited before checking and is not counted as a pass. S19's actual generic source-only apply03 changes two declaration coordinates and three bytes with unchanged financial materialization; five edition export byte comparisons pass. The early2026 export still refuses the published019 late-only annual Orden projection. Fresh no-op04 has changedFalse, completeTrue and passed equivalence/minimality; its own compaction_status is incomplete and publication_readiness not_checked, so this does not imply full inventory completion. Fresh source inspection04 reports publication_validTrue and zero findings at fingerprint bcd361114005eed30c0de6251e3ae3d665ca40a891ebf6809b67bf7cf98a4e55. The independent registry-wide assessment is still running against unchanged inputs. Finish final source writers before the owning final authority publication, then replay existing export verification without fabricated authority identities or relaxed guards.
@@ -245,8 +242,6 @@ Four owned point stack samples observe active schema construction, migration wra
 
 The actual unfiltered public2025 dependency inventory replay refuses Modelo216/current2024-and-following/2025/1T at the canonical source-window check in2.806864s. Four inherited application lifecycle links cite guidance ending2023. The enrolled AEAT procedure explicitly covers2024 and following; the minimal guarded S23 proposal changes exactly those four citation lists and preserves link semantics, historical sources, formulas, filing windows and validators. Nine prepared regression cases exercise current2024/25/26 snapshots, historical2022/23 snapshots and deliberate expired-citation refusal for each link. Static review is sound; source installation, owning tests/types/style, truthful canonical agent review stamp, final stable publication, full public inventory and normal native fixture replay remain pending. No failed or unwitnessed transcript is eligible for golden refresh.
 
-
-
 ### Independent comparator and observation selection repairs | medium | PENDING actual source and native acceptance
 
 The first source-stable independent registry assessment has completed all58 modelo-family reports and remains active in registry-wide indexed authority capability comparison. An owned point sample observes the actual comparison call chain, not a hang duration or a performance verdict. It has no ordinary elapsed ceiling. Root has not changed its original source/data/tool inputs or published authority while it runs. The369 family report exposes a verifier representation defect: all924 formula declarations (220 exterior,226 import,478 union) are unchanged, but a canonical lifted declaration default differs. The false-positive evidence does not authorize financial source edits.
@@ -256,8 +251,6 @@ S24 proposal02 was independently rejected before application because extending a
 The exact installed phase02 closure observer preserves the original27 candidate source pins and default native worker. Root's actual sampler02 stand-ins pass all27 pure selection/privacy cases, but independent review still finds a duplicate-switch mismatch: its first-value selector can differ from argparse's last-value execution. Sampler02 has not been executed for observation. A fresh sampler must reject duplicate and equals-form guarded switches, retain fresh creation/image/ancestry checks, and describe its one initial enumeration plus at most eight fresh selected-leaf checks accurately. Existing seven observer delegation/refusal/context stand-ins remain passing; native phase02 request/action attribution and production acceptance remain pending. Every point stack is source-position evidence only, with no locals or command-header persistence.
 
 Evidence: .tmp/s19-s20-independent-review/s24-collapse-comparison-01/review.json, .tmp/current-iva-q1-temporal-review/collapse-representation-review-01/proposal-03/final-01/, .tmp/s18-phase-review/closure-phase-sampler-02/pure-checks-result.json, and .tmp/s18-phase-review/closure-phase-sampler-independent-02/review.md. Both rejected proposals and the earlier native failures remain retained; no failed financial or unwitnessed transcript becomes an accepted golden.
-
-
 
 ### Completed independent generation and homogeneous M100 probe | medium | PENDING final publication and mixed native acceptance
 
@@ -275,8 +268,6 @@ The390 canonical preview passes source equivalence, complete compaction and mini
 
 Evidence: .tmp/s19-independent-collapse-01/summary.json; .tmp/s23-modelo216-focused-01.txt; .tmp/s23-s24-root-applied-receipt-01.json; .tmp/s24-collapse-focused-01.txt; .tmp/s18-phase-review/closure-phase-eight-analysis-01/review.md; .tmp/s23-public-inventory-source-preflight-independent-02/; .tmp/m390-normalization-preview-01.txt. Earlier rejected proposals and failed native runs remain historical evidence.
 
-
-
 ### Applied390 normalization and current blocking gates | medium | PENDING final authority and native acceptance
 
 The malformed shared enum fixture is now repaired through SourceReference validation with canonical EvidenceTier and RegistrySourceKind values. The actual26 existing serialization, authority-database, snapshot-identity and pinned-cache cases pass under warnings-as-errors12.51s. Ruff and all3 configured ty platform checks pass. This is a fixture correction; it suppresses no warning and changes no production serializer.
@@ -288,8 +279,6 @@ The artifact-only integrated S20–S25 review identifies no concrete correctness
 The owning final authority publisher is now running against the repaired live source. Source installation, validated publication, runtime adoption and successful native/golden coherence remain separate proof obligations. The earlier mixed-page connection failures are unresolved. No failed or unwitnessed transcript has been accepted as a golden, and no product custody, reply or durability deadline was widened.
 
 Evidence: .tmp/s24-typed-fixture-warning-focused-01.txt; .tmp/s25-m390-export-focused-01.txt; .tmp/m390-preview-02-root-guard.json; .tmp/m390-applied-root-guard-01.json; .tmp/s20-s25-integrated-review-01/review.md; actual completed check-code tool session80716. Final acceptance remains open.
-
-
 
 ### Current published M100 completion and303 target boundary | medium | PENDING final compact target and mixed native acceptance
 
@@ -307,8 +296,6 @@ Final source capture proposals are sealed but unexecuted. They preserve the old2
 
 Evidence: .tmp/modelo-performance-final-authority-publish-01.txt; .tmp/modelo-performance-final-check-registry-01.txt; .tmp/modelo-performance-final-published-m100-01.txt; .tmp/s25-final-numeric-01.txt; .tmp/s19-generated-inheritance-focused-01.txt; .tmp/current-iva-q1-temporal-review/compact-continuity-retention-review-01/review.md; .tmp/s26-sql-focused-02.txt; .tmp/s26-floor-api-proof-result-01.json; .tmp/s26-result-type-followup-review-01/final-02/review.md.
 
-
-
 ### Completed target census and uncapped completion controls | medium | PENDING compact publication and native acceptance
 
 The second actual registry-health run completes the census after the optional inheritance fallback:102current targets, one never-committed early2026 Modelo303 target, zero stale targets and zero record-byte drift. Currency, runtime loadability, registry validity, oracle bindings and placement pass on generation1b5ede53b7fdf14252486103e74fe9bf5ed93d835040549b75d0e72a1d744d24. The canonical303 generic report also completes unchanged in6.42s with fingerprint8e978de5873160f65e92994eae61441b9c6cfbb32ebc3e75b5077e076ceceec3,6282086bytes, complete/equivalence/minimality passed, no redundant members and all seven editions unchanged. Its compaction status remains incomplete and publication readiness not_checked. Minimal source short-circuits before round-trip staging; this result does not compare any of the six export scenarios. A separately sealed source-to-current-published exporter parity helper is proposed, not executed, and is not a historical full-copy migration proof.
@@ -322,8 +309,6 @@ Evidence: .tmp/modelo-performance-final-check-registry-02.txt; .tmp/s19-m303-fin
 Independent review of immutable final01 confirms its ordinary after-cutover whole-source byte fence could be bypassed by a direct canonical publisher with no/custom final callback. Immutable final02 moves that fence into the canonical ordinary publication rollback block before package verification and after its optional callback, but review finds a second recovered-success bypass: recovery can finalize and return before the ordinary fence. Direct retained compact contexts also lack categorical refusal of incompatible manual supersession/export-clearance bundles. These are unapplied proposal findings, not a claim that the current missing-target refusal has installed an unsafe target. Root holds source application. The nine-owner final03 correction is being prepared: exact origin/non-export fences around recovery and explicit mixed-mode/revision-bundle admission refusals, preserving existing recovery/journal/rollback and all original10cases/45assertions. Real currentness, atomic publication, compact storage, whole-source/evolution preservation, rollback/recovery, independent minimality and no-op must pass before installing the target. The plan now links the two accepted governing edition-authoring and generator-authority decisions through the owning vault verbs.
 
 Evidence: .tmp/compact-continuity-independent-review-01/blocked-final01/review.json; .tmp/compact-continuity-independent-review-01/blocked-final02/review.json; .tmp/current-iva-q1-temporal-review/compact-continuity-retention-proposal-01/final-02/review.md; .tmp/s19-compact-final02-guard-01.txt. The root's guard passes9source preimages and133actual303inputs; no proposal is applied and no new scoped test has run yet.
-
-
 
 ### Compact continuity publication installed | high proposal findings RESOLVED; final acceptance PENDING
 
@@ -340,8 +325,6 @@ Root reviews the diagnostic and actually runs its five pure forwarding/restorati
 S27 is canonically scoped to an ephemeral owned lifecycle handoff: only a delete already colliding with actual routine polling may join a FIFO queue, later polling cannot overtake it, and genuine competing deletion/exclusive close/drain retains conflict behavior. Existing execution, fresh native-login/peer/pointer/fingerprint/custody checks, journals,32 serving slots, client/product deadlines and accepted-commit disconnect completion remain authoritative. No blind retry, new wire deadline, widened limit or alternate deletion writer is authorized. An artifact-only implementation and deterministic real native overlap regression are pending; production source is unchanged at this checkpoint.
 
 Evidence: .tmp/s27-profile-delete-lifecycle-diagnostic-01/review.md; .tmp/s27-profile-delete-observer-stdlib-01.txt; .tmp/s27-profile-delete-observation-01/summary.json; .tmp/s27-profile-delete-observation-01/metrics.json; S27 and its linked accepted profile-access and lifecycle decisions.
-
-
 
 ### Registry publication and newly exposed carry coordinates | partial acceptance; corrective work OPEN
 
@@ -360,8 +343,6 @@ Root actually runs16 pure tests PASS1.15s and all10 protected Windows native tes
 The wider five-case real CLI workflow ends2PASS/2FAIL/1 existing OS-keychain SKIP107.70s. Both failures occur at config logout before deletion and report runtime_unavailable; no actual holder/cause is yet established and S27 guard causation is not claimed. The skip is the existing real credential-store logon-session refusal, reported as unverified, not a new skip added to conceal a finding. The profile-delete two-run normal mask proof is now running uncapped. Wider logout investigation, mask/native golden/coherence acceptance, final full blocking gates and final mixed M100 acceptance remain required.
 
 Evidence: .tmp/s27-profile-delete-coordination-independent-review-01/blocked01/review.json, .tmp/s27-profile-delete-coordination-independent-review-01/final02/review.json, .tmp/s27-profile-delete-coordination-independent-review-01/applied-followup03/review.json, .tmp/s27-lifecycle-final02-apply-01.txt, .tmp/s27-lifecycle-guard-focused-01.txt, .tmp/s27-bootstrap-delete-focused-01.txt, .tmp/s27-cli-profile-delete-focused-01.txt. S27 and the overall audit remain open.
-
-
 
 ### Carry-coordinate and valid financial fixture corrections | actual owning acceptance PASS
 
@@ -383,8 +364,6 @@ The outer finally wipes proof even if opening/closing fails. Existing receipt_re
 
 Evidence: .tmp/s27-profile-delete-mask-focused-01.txt, .tmp/s27-profile-delete-mask-focused-02.txt, .tmp/s27-cli-logout-runtime-unavailable-research-01/review.json, .tmp/s27-cli-profile-lifecycle-fixture-independent-review-01/review.json, .tmp/s27-cli-fixture-final02-apply-01.txt, .tmp/s27-cli-profile-delete-focused-02.txt. No complete/native-portability claim follows from this checkpoint.
 
-
-
 ### Fresh published exports and CLI pointer observations | actual owning acceptance PASS
 
 The original unchanged eleven-guard exporter helper completes on logical41858e7155f27bc30e74bdc6342f05299bb5a773593b972cb5fab3b79d99b2b3/databasebfdb8295734680e0560f6482f98c0a1b176ae0a1561863d552d5b8fd67ed36b9. Complete compiled validation, canonical published authority currency before/after, and every guard pass. All six nonempty current M303 exports are byte-identical across independent calls:2023/1T8006bytes, early2024/1T8006, late2024/3T8006,2025/1T8200, early2026/1T8205, late2026/2T8205. No taxpayer payload is persisted. The fresh generic M303 normalization replay completes8.130s with all seven editions unchanged, zero redundant overrides, typed whole-model equivalence and independent minimality PASS. Its short-circuit compaction remains incomplete/publication unchecked; separate actual publication03 and health04 provide the disclosed current-authority proof. This is not a full compaction round-trip claim.
@@ -395,15 +374,11 @@ Only the two changed CLI cases rerun03 and both PASS41.11s. The two unchanged pa
 
 Evidence: .tmp/s25-final-m303-current-export-proof-03/summary.json, .tmp/s19-m303-final-published-replay-02.txt, .tmp/s19-final-current-six-export-noop-ledger-01.json, .tmp/s27-cli-profile-delete-focused-02.txt, .tmp/s27-cli-profile-delete-focused-03.txt, .tmp/s27-cli-profile-pointer-followup-research-01/review.json, .tmp/s27-cli-profile-lifecycle-fixture-independent-review-01/applied-followup02/review.json, .tmp/s27-cli-final-pointer-actual-ledger-01.json. The fresh full twelve blocking gates remain running. Frozen whole-source refresh04 is independently reviewed but not prepared/applied at this checkpoint; canonical frozen currency, normal full34 default-pool native capture, reviewed golden deltas and subsequent independent golden/coherence, final normal M100 and whole3481 independent registry acceptance remain required. No portable performance or completed full acceptance claim follows.
 
-
-
 ### Final corrected source population | all twelve blocking quality gates PASS
 
 Root awaits actual session49998 completion for just check-code and observes exit0. This final fresh whole-source suite includes all applied S19 carry-coordinate facts/typed query, S20 valid real ledger fixtures, S26 SQLAlchemy result changes, S27 lifecycle coordination, readiness/cleanup follow-ups, mask helper, guide prose and explicit CLI fixture roots. The quiet aggregate stdout .tmp/modelo-performance-final-repaired-check-code-02.txt contains no findings. Its authoritative twelve rows all complete: style, format, data format, all configured type engines/platforms, import boundaries, dependency declarations, module reachability, symbol usage, export consumption, secure-store write paths, persistence write paths and docstring references. No advisory security/complexity/dead-code scan is included or claimed. No timeout, early termination or partial-row success replaces the actual suite result.
 
 This closes the final static blocking population only. Root proceeds to the independently reviewed frozen source/authority refresh04, which preserves the existing bound environment and historical evidence, stages/hashes the actual public database before enrolled source mutation and hands off the descriptor last. Root must review the whole dynamically prepared owner cohort and exact plan SHA before application, then require canonical complete frozen authority currency. Bare full34 default-eight-pool native capture, every golden delta review, exact guarded golden adoption and subsequent independent native equality/coherence, the measured explicit expiry specimen, final normal M100 and unconditional whole3481 independent registry acceptance remain pending. No full production acceptance or portable timing claim follows from static gates alone.
-
-
 
 ### Current frozen refresh PASS | native capture incomplete and verification subject unavailable
 
@@ -417,8 +392,6 @@ Two separate grounded repairs are prepared but not applied at this checkpoint: t
 
 Evidence: .tmp/s25-final-native-refresh04-actual-ledger-01.json, .tmp/s25-final-native-refresh04-currency-01.txt, .tmp/s25-native-capture-incomplete-receipt-01.json, .tmp/s25-final-native-golden-capture-01.txt, .tmp/s19-m303-docs-selected-revision-drift-proposal-01/, .tmp/s19-m303-docs-selected-revision-drift-clarification-01/, .tmp/s19-m303-early-capital-goods-research-01/, .tmp/s28-final-mixed-native-profile-status-research-01/phase-proposal01/. Complete current native/golden/M100/expiry and unconditional whole3481 registry acceptance, final integration and owned Step commits remain pending.
 
-
-
 ### Period-correct M303 parameter admission and Censo expectation | applied owning acceptance PASS
 
 Root enrolls the exact new S19 scope through the owning CLI, then performs guarded application of the reviewed four Python owners and one Censo contract. Both production lookups now use Period.end_date instead of Dec31 and the nonempty source drops its unused date import. resolved_on intentionally becomes the actual filing-period end; complete provenance bytes are not claimed unchanged. Annual regularisation/disposal math, registry figures, definitive-prorrata refusal, revision-window checks and bundle/result provenance equality remain unchanged. The explicit303/2026/1T Censo readiness contract now expects its enrolled early revision and retains all seven assertions.
@@ -429,8 +402,6 @@ Both original phase-observer stand-in selections complete separately: seven orig
 
 Evidence: .tmp/s19-bienes-period-date-actual-ledger-01.json, .tmp/s19-bienes-period-date-focused-01.txt, .tmp/s19-m303-applied-admission-review-01/, .tmp/s28-phase-stdlib-checks-01.txt, .tmp/s28-phase-exchange-checks-01.txt, .tmp/s28-public-schema-current-readiness-before-01.txt, .tmp/s28-public-schema-current-cost-01.txt, .tmp/s28-public-schema-current-readiness-refusal-actual-01.txt. New independently admitted verification subject, native phase attribution/optimization and final current acceptance/owned commits remain required.
 
-
-
 ### Public primitive costs and fresh-source copy refusal | native attribution pending
 
 The independently reviewed current-root public probe02 and its before/after admission checks all actually exit0. Strict schema construction takes1.448–5.969ms, fresh JSON adapter construction0.769–1.065ms, and the small import graph1.340468s. Repeated schemas retain byte parity and source guards remain unchanged. These measurements exclude full native DESCRIBE, child custody reads and mixed workload scheduling; no cache or native cause is inferred. The explicit one-source-generation successor preserves the failed probe01 and admits the peer session_owner bytes without endorsing their semantics.
@@ -440,8 +411,6 @@ Fresh-subject final03 repairs the independently found pre-descriptor physical-me
 The next bounded diagnostic will admit its actual runtime/engine source guards in the live root and use synthetic storage, preserving the ordinary worker and all deadlines. This permits unrelated test repairs to continue; it does not replace the still-required stable full-source corpus, golden, current M100 and whole-registry acceptance.
 
 Evidence: .tmp/s28-public-schema-current-cost-02/public-schema-costs.json, .tmp/s28-public-schema-current-root-proposal02/, .tmp/fresh-verification-subject-independent-review-01/final03/, .tmp/fresh-verification-subject-type-repairs-record-review-01/, .tmp/fresh-subject-final03-copy-refusal-receipt-01.json. Native attribution and final acceptance remain pending.
-
-
 
 ### Live-root mixed native failures | worktree constraint and next child attribution
 
@@ -458,7 +427,6 @@ The independently reviewed warm synthetic custody A/B/B/A benchmark and before/a
 Root now collects frames-only samples of the exact default native child throughout the same single M390 setup, in tui, with all ordinary completion limits absent and original product contracts intact. Failed/unknown sampler output is discarded and command headers are removed in memory. Sampling is diagnostic; uninstrumented full34/current-M100/whole-registry/golden/gate acceptance and17 Step closures remain pending. Previously committed S09/S16 and BI source must not be staged through obsolete historical patches.
 
 Evidence: .tmp/s28-live-choose-phase01-actual-receipt.json; .tmp/s28-live-default8-phase01/results.json and child summaries/parent-closure-metrics.json; .tmp/s28-live-root-phase-independent-review-01/completed-children-snapshot01/; .tmp/s28-live-m390-stack01/; .tmp/s28-custody-load-benchmark-proposal01/results-01/results.json; current handover .tmp/modelo-runtime-session-handover-current.md. The active sampled successor is .tmp/s28-live-m390-stack02; no completion or final acceptance is claimed for it here.
-
 
 ### Per-catalogue public serializer reuse | S28 source and scoped verification
 
@@ -544,7 +512,6 @@ Retain the real native benchmark and wall/CPU/read-count diagnostics for regress
 ## Context
 
 The user explicitly expanded authorization from static quality repair to production performance on 2026-10-07. The previous blocking-quality audit remains historical; its accepted unverified-fixture limit does not satisfy this performance plan. Existing peer runtime and desktop work is preserved. RAG service is unavailable, with semantic vault search still usable and known code ownership confirmed through exact source reads.
-
 
 ### filing-catalogue-reuse | low | duplicate full read removed with focused parity proven
 

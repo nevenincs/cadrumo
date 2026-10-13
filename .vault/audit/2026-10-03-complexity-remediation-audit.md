@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#complexity-remediation'
 date: '2026-10-03'
-modified: '2026-10-03'
+modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:710b682784188705776cb71df0d6ddfb62eec1f11f6fa9a59fbf165598206fba'
+body_hash: 'sha256:c5f412e4db99fc3de854cc836975f2922978bd9a8dc6048e13b3269aa610db5e'
 related:
   - "[[2026-10-02-complexity-remediation-plan]]"
   - "[[2026-07-01-import-centralization-adr]]"
