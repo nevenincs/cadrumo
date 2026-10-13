@@ -710,6 +710,11 @@ verify-live-sign-in PACKAGE *ARGS:
 verify-reviewed-operation PACKAGE *ARGS:
     uv run --no-sync python -m dev.runtime_lifecycle.reviewed_operation --package {{quote(PACKAGE)}} {{ARGS}}
 
+[doc('Prove the live agent reads and changes a signed-in profile through Cadrumo tools, on a built package; spends model credit.')]
+[group('test')]
+verify-agent-live PACKAGE *ARGS:
+    uv run --no-sync python -m dev.runtime_lifecycle.agent_live --package {{quote(PACKAGE)}} {{ARGS}}
+
 # ── Devcontainer ─────────────────────────────────────────────────────────────
 
 # Two questions about the same artifacts. actionlint asks whether the YAML is

@@ -4647,6 +4647,7 @@
         "dev.runtime_lifecycle.client_probes",
         "dev.runtime_lifecycle.harness",
         "dev.runtime_lifecycle.live_sign_in",
+        "dev.runtime_lifecycle.agent_live",
         "dev.runtime_lifecycle.reviewed_operation",
         "dev.sanitizer",
         "dev.sanitizer._determinism",
