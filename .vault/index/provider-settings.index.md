@@ -6,9 +6,10 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:946a687d0901e0b63f08716b8adbdc31de507cc6f8c4680a290130546b8ad930'
+body_hash: 'sha256:b10905d1b318c8c15deeca1add899222537645686f8d1a6347c02855f25f0f9a'
 related:
   - '[[2026-10-13-provider-settings-adr]]'
+  - '[[2026-10-13-provider-settings-desktop-contract-reference]]'
   - '[[2026-10-13-provider-settings-ledger]]'
   - '[[2026-10-13-provider-settings-plan]]'
   - '[[2026-10-13-provider-settings-reference]]'
@@ -34,4 +35,5 @@ Auto-generated index of all documents tagged with `#provider-settings`.
 
 ### reference
 
+- `2026-10-13-provider-settings-desktop-contract-reference` - `provider-settings` reference: `Provider settings desktop contract`
 - `2026-10-13-provider-settings-reference` - `provider-settings` reference: `Provider settings seams in tui`

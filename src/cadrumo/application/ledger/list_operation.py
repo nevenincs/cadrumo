@@ -21,10 +21,10 @@ from ..review.errors import FilterParseError
 from ..review.filter import LedgerReviewFilterSpec
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .action_ports import LedgerActionPortsFactory
 from .actions_manual import ledger_transaction_payload
 from .list_query import LedgerTransactionListQuery, query_ledger_transaction_list
 from .read_access import resolve_ledger_read_access
+from .read_ports import LedgerReadPortsFactory
 from .review_projection import ledger_transaction_review_status
 from .transaction_projection import LedgerTransactionProjection, LedgerTransactionReviewProjection
 
@@ -91,7 +91,7 @@ class LedgerListProjection(BaseModel):
 class LedgerListExecutor:
     """Host the canonical list query without frontend persistence access."""
 
-    def __init__(self, ports: LedgerActionPortsFactory) -> None:
+    def __init__(self, ports: LedgerReadPortsFactory) -> None:
         """Retain the exact-profile port factory."""
         self._ports = ports
 
@@ -147,7 +147,7 @@ class LedgerListExecutor:
         return await capture_read_result(context, read, task_name="ledger-list")
 
 
-def build_ledger_list_definition(ports: LedgerActionPortsFactory) -> OperationDefinition:
+def build_ledger_list_definition(ports: LedgerReadPortsFactory) -> OperationDefinition:
     """Register a private-query read without commit or provider authority."""
     return build_single_phase_definition(
         definition_id=LEDGER_LIST_OPERATION_DEFINITION_ID,

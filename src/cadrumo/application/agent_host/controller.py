@@ -113,6 +113,10 @@ class AgentProcess(Protocol):
         """End the whole tree and confirm no member remains."""
         ...
 
+    def contains_process_id(self, process_id: int) -> bool:
+        """Whether this live process belongs to the agent's tree, as the kernel's containment says."""
+        ...
+
 
 class AgentProcessLauncher(Protocol):
     """Start an agent tree in a containment the host owns."""
@@ -224,6 +228,21 @@ class AgentHostController:
     def stop(self) -> None:
         """Close admission, signal the agent to stop, then end the tree if it overruns."""
         self._retire()
+
+    def contains_process_id(self, process_id: int) -> bool:
+        """Whether the process is a member of this controller's agent tree, starting or running.
+
+        A failed check answers ``True``: a process that cannot be shown to be
+        outside the tree is treated as the agent.
+        """
+        with self._lock:
+            process = self._process
+        if process is None:
+            return False
+        try:
+            return process.contains_process_id(process_id)
+        except Exception:
+            return True
 
     def restart(self) -> AgentReady:
         """Retire the current tree and start a new one from the committed credentials."""

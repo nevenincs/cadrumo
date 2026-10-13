@@ -174,7 +174,7 @@ def main() -> None:
     """Run one CMake action with scoped development-tool storage."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=("sdk", "provision", "product", "assemble", "run", "tools", "agent"))
-    parser.add_argument("--cmake")
+    parser.add_argument("--agent-source", type=Path)
     parser.add_argument("--build", type=Path)
     parser.add_argument("--inputs", type=Path)
     parser.add_argument("--config", choices=("Debug", "Release"))
@@ -316,10 +316,10 @@ def build_action(build: Path, arguments: argparse.Namespace, *, timings: BuildTi
     sdk_root = paths.get("python_sdk", runtime)
     sdk = sdk_root / contract["sdk"]["root"]
     if arguments.action == "agent":
-        if not arguments.cmake:
-            raise ValueError("Agent construction requires the CMake executable")
+        if arguments.agent_source is None:
+            raise ValueError("Agent construction requires the configured source folder")
         destination = reset(build, str(paths["agent"].relative_to(build)))
-        build_agent(destination, paths["agent_source"] / "source.tar.gz", arguments.cmake, selected_uv(configured))
+        build_agent(destination, arguments.agent_source, selected_uv(configured))
     elif arguments.action == "sdk":
         destination = reset(build, str(sdk_root.relative_to(build)))
         pin = (REPO_ROOT / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip()

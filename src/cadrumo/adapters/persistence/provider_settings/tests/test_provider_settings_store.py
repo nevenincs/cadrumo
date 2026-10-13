@@ -18,7 +18,6 @@ from .....application.agent_host.controller import AgentGenerations, AgentHostEr
 from .....application.agent_host.credential_frame import wipe
 from .....application.provider_settings.agent_credentials import ProviderSettingsAgentCredentialSource
 from .....application.provider_settings.contracts import (
-    ABSENT_REVISION,
     ProviderCredentialSource,
     ProviderReadiness,
     ProviderSettingsActionAccepted,
@@ -38,6 +37,7 @@ from .....application.provider_settings.resolution import (
 )
 from .....application.provider_settings.service import AssistantAuthChoice, BaseUrlChange, ProviderSettingsService
 from .....core.config import Settings, load_settings
+from .....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from .....core.storage_environment import StorageMode
 from .....core.time.clock import now
 from .....domain.provider_settings.catalog import ProviderConsumer, load_provider_catalog
@@ -63,7 +63,7 @@ _BUCKET_ID = "6f1e2d3c-4b5a-4968-8776-a5b4c3d2e1f0"
 
 def _settings_with_environment(profile: TestRuntimeProfile) -> Settings:
     """Return a scoped settings copy carrying a fake development key; global settings stay untouched."""
-    return profile.settings.model_copy(update={"cadrumo_llm_anthropic_api_key": SecretStr(_ENV_KEY)})
+    return profile.settings.model_copy(update={"cadrumo_llm_claude_api_key": SecretStr(_ENV_KEY)})
 
 
 def _service(
@@ -129,10 +129,12 @@ def test_key_is_ciphertext_at_rest_and_never_in_status_or_reprs(tmp_path: Path) 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         service = _service(profile)
 
-        result = service.set_credential("anthropic", secret=SecretStr(_KEY_A), expected_revision=ABSENT_REVISION)
+        result = service.set_credential(
+            "claude_api", secret=SecretStr(_KEY_A), expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+        )
         entry = _accepted(result)
         status = _status(service)
-        resolved = _direct(_resolver(profile).resolve("anthropic", ProviderConsumer.EXTRACTION))
+        resolved = _direct(_resolver(profile).resolve("claude_api", ProviderConsumer.ASSISTANT))
         at_rest = read_db_at_rest_bytes(profile.paths.database_file)
         raw_rows = [
             row
@@ -167,13 +169,13 @@ def test_status_lists_every_catalogued_provider(tmp_path: Path) -> None:
 
     assert tuple(entry.id for entry in status.providers) == load_provider_catalog().provider_ids
     by_id = {entry.id: entry for entry in status.providers}
-    assert by_id["anthropic"].readiness is ProviderReadiness.MISSING
-    assert by_id["anthropic"].reason is ProviderStatusReason.NOT_CONFIGURED
-    assert by_id["codex"].readiness is ProviderReadiness.SIGN_IN_REQUIRED
-    assert by_id["zai"].default_base_url == "https://api.z.ai/api/anthropic"
-    assert by_id["qwen"].default_base_url is None
+    assert by_id["claude_api"].readiness is ProviderReadiness.MISSING
+    assert by_id["claude_api"].reason is ProviderStatusReason.NOT_CONFIGURED
+    assert by_id["codex_cli"].readiness is ProviderReadiness.SIGN_IN_REQUIRED
+    assert by_id["zai_cli"].default_base_url == "https://api.z.ai/api/anthropic"
+    assert by_id["qwen_cli"].default_base_url is None
     assert all(entry.mode is ProviderSettingsMode.UNSET for entry in status.providers)
-    assert all(entry.revision == ABSENT_REVISION for entry in status.providers)
+    assert all(entry.revision == ABSENT_SECURE_OBJECT_REVISION_ID for entry in status.providers)
     assert all(entry.base_url is None for entry in status.providers)
 
 
@@ -182,18 +184,20 @@ def test_profiles_are_isolated(tmp_path: Path) -> None:
         primary = runtime.primary
         secondary = runtime.secondary
         _accepted(
-            _service(primary).set_credential("openai", secret=SecretStr(_KEY_A), expected_revision=ABSENT_REVISION)
+            _service(primary).set_credential(
+                "codex_api", secret=SecretStr(_KEY_A), expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+            )
         )
         with runtime.switch_to_secondary():
-            secondary_before = _entry(_service(secondary), "openai")
+            secondary_before = _entry(_service(secondary), "codex_api")
             _accepted(
                 _service(secondary).set_credential(
-                    "openai", secret=SecretStr(_KEY_B), expected_revision=ABSENT_REVISION
+                    "codex_api", secret=SecretStr(_KEY_B), expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
                 )
             )
-            secondary_key = _direct(_resolver(secondary).resolve("openai", ProviderConsumer.ASSISTANT))
-            primary_from_secondary = _resolver(primary).resolve("openai", ProviderConsumer.ASSISTANT)
-        primary_key = _direct(_resolver(primary).resolve("openai", ProviderConsumer.ASSISTANT))
+            secondary_key = _direct(_resolver(secondary).resolve("codex_api", ProviderConsumer.ASSISTANT))
+            primary_from_secondary = _resolver(primary).resolve("codex_api", ProviderConsumer.ASSISTANT)
+        primary_key = _direct(_resolver(primary).resolve("codex_api", ProviderConsumer.ASSISTANT))
 
     assert secondary_before.mode is ProviderSettingsMode.UNSET
     assert secondary_key.secret.get_secret_value() == _KEY_B
@@ -205,7 +209,9 @@ def test_profiles_are_isolated(tmp_path: Path) -> None:
 def test_locked_expired_and_signed_out_profiles_refuse(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         _accepted(
-            _service(profile).set_credential("anthropic", secret=SecretStr(_KEY_A), expected_revision=ABSENT_REVISION)
+            _service(profile).set_credential(
+                "claude_api", secret=SecretStr(_KEY_A), expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+            )
         )
         sealed = BucketSession.open_resumed(
             bucket_id=profile.bucket_id,
@@ -218,7 +224,7 @@ def test_locked_expired_and_signed_out_profiles_refuse(tmp_path: Path) -> None:
         sealed.close()
         with activate_session(sealed):
             sealed_status = _service(profile).status()
-            sealed_resolution = _resolver(profile).resolve("anthropic", ProviderConsumer.EXTRACTION)
+            sealed_resolution = _resolver(profile).resolve("claude_api", ProviderConsumer.ASSISTANT)
         opened_at = datetime(2000, 1, 1, tzinfo=UTC)
         expired = BucketSession.open_resumed(
             bucket_id=profile.bucket_id,
@@ -230,10 +236,10 @@ def test_locked_expired_and_signed_out_profiles_refuse(tmp_path: Path) -> None:
         )
         with activate_session(expired):
             expired_set = _service(profile).set_credential(
-                "openai", secret=SecretStr(_KEY_B), expected_revision=ABSENT_REVISION
+                "codex_api", secret=SecretStr(_KEY_B), expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
             )
     signed_out_status = _service(profile).status()
-    signed_out_resolution = _resolver(profile).resolve("anthropic", ProviderConsumer.EXTRACTION)
+    signed_out_resolution = _resolver(profile).resolve("claude_api", ProviderConsumer.ASSISTANT)
 
     assert _refusal_code(sealed_status) is ProviderSettingsRefusalCode.PROFILE_LOCKED
     assert _unavailable_reason(sealed_resolution) is ProviderCredentialUnavailableReason.PROFILE_LOCKED
@@ -246,24 +252,26 @@ def test_malformed_record_fails_closed_until_reset(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         profile.repository.save(
             namespace=PROVIDER_SETTINGS_NAMESPACE.namespace,
-            object_key="anthropic",
+            object_key="claude_api",
             classification=PROVIDER_SETTINGS_NAMESPACE.sensitivity,
             schema_version=PROVIDER_SETTINGS_NAMESPACE.schema_version,
             written_at=now(),
-            payload=b'{"schema_version":1,"provider":"anthropic","credential_state":"configured"}',
+            payload=b'{"schema_version":1,"provider":"claude_api","credential_state":"configured"}',
         )
         service = _service(profile, settings=_settings_with_environment(profile))
-        broken = _entry(service, "anthropic")
+        broken = _entry(service, "claude_api")
         resolution = _resolver(profile, settings=_settings_with_environment(profile)).resolve(
-            "anthropic", ProviderConsumer.EXTRACTION
+            "claude_api", ProviderConsumer.ASSISTANT
         )
-        absent_guard = service.set_credential("anthropic", secret=SecretStr(_KEY_A), expected_revision=ABSENT_REVISION)
-        reset = _accepted(service.reset("anthropic", expected_revision=broken.revision))
+        absent_guard = service.set_credential(
+            "claude_api", secret=SecretStr(_KEY_A), expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+        )
+        reset = _accepted(service.reset("claude_api", expected_revision=broken.revision))
 
     assert broken.readiness is ProviderReadiness.UNUSABLE
     assert broken.reason is ProviderStatusReason.RECORD_UNREADABLE
     assert broken.available is False
-    assert broken.revision != ABSENT_REVISION
+    assert broken.revision != ABSENT_SECURE_OBJECT_REVISION_ID
     assert _unavailable_reason(resolution) is ProviderCredentialUnavailableReason.RECORD_UNREADABLE
     assert _refusal_code(absent_guard) is ProviderSettingsRefusalCode.REVISION_CONFLICT
     assert reset.mode is ProviderSettingsMode.UNSET
@@ -273,13 +281,21 @@ def test_malformed_record_fails_closed_until_reset(tmp_path: Path) -> None:
 def test_actions_are_revision_guarded(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         service = _service(profile)
-        first = _accepted(service.set_credential("kimi", secret=SecretStr(_KEY_A), expected_revision=ABSENT_REVISION))
-        stale_create = service.set_credential("kimi", secret=SecretStr(_KEY_B), expected_revision=ABSENT_REVISION)
-        second = _accepted(service.set_credential("kimi", secret=SecretStr(_KEY_B), expected_revision=first.revision))
-        stale_replace = service.set_credential("kimi", secret=SecretStr(_KEY_A), expected_revision=first.revision)
-        stale_reset = service.reset("kimi", expected_revision=first.revision)
-        malformed_guard = service.remove_credential("kimi", expected_revision="not-a-revision")
-        resolved = _direct(_resolver(profile).resolve("kimi", ProviderConsumer.ASSISTANT))
+        first = _accepted(
+            service.set_credential(
+                "kimi_cli", secret=SecretStr(_KEY_A), expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+            )
+        )
+        stale_create = service.set_credential(
+            "kimi_cli", secret=SecretStr(_KEY_B), expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+        )
+        second = _accepted(
+            service.set_credential("kimi_cli", secret=SecretStr(_KEY_B), expected_revision=first.revision)
+        )
+        stale_replace = service.set_credential("kimi_cli", secret=SecretStr(_KEY_A), expected_revision=first.revision)
+        stale_reset = service.reset("kimi_cli", expected_revision=first.revision)
+        malformed_guard = service.remove_credential("kimi_cli", expected_revision="not-a-revision")
+        resolved = _direct(_resolver(profile).resolve("kimi_cli", ProviderConsumer.ASSISTANT))
 
     assert first.revision != second.revision
     assert _refusal_code(stale_create) is ProviderSettingsRefusalCode.REVISION_CONFLICT
@@ -296,22 +312,22 @@ def test_precedence_stored_disabled_environment_and_storage_mode(tmp_path: Path)
         dev_resolver = _resolver(profile, settings=settings)
         installed_resolver = _resolver(profile, settings=settings, storage_mode=StorageMode.INSTALLED)
 
-        unset_dev = _entry(development, "anthropic")
-        unset_installed = _entry(_service(profile, settings=settings, storage_mode=StorageMode.INSTALLED), "anthropic")
-        from_environment = _direct(dev_resolver.resolve("anthropic", ProviderConsumer.EXTRACTION))
-        installed_unset = installed_resolver.resolve("anthropic", ProviderConsumer.EXTRACTION)
+        unset_dev = _entry(development, "claude_api")
+        unset_installed = _entry(_service(profile, settings=settings, storage_mode=StorageMode.INSTALLED), "claude_api")
+        from_environment = _direct(dev_resolver.resolve("claude_api", ProviderConsumer.ASSISTANT))
+        installed_unset = installed_resolver.resolve("claude_api", ProviderConsumer.ASSISTANT)
 
         stored = _accepted(
-            development.set_credential("anthropic", secret=SecretStr(_KEY_A), expected_revision=unset_dev.revision)
+            development.set_credential("claude_api", secret=SecretStr(_KEY_A), expected_revision=unset_dev.revision)
         )
-        stored_dev = _direct(dev_resolver.resolve("anthropic", ProviderConsumer.EXTRACTION))
-        stored_installed = _direct(installed_resolver.resolve("anthropic", ProviderConsumer.EXTRACTION))
+        stored_dev = _direct(dev_resolver.resolve("claude_api", ProviderConsumer.ASSISTANT))
+        stored_installed = _direct(installed_resolver.resolve("claude_api", ProviderConsumer.ASSISTANT))
 
-        removed = _accepted(development.remove_credential("anthropic", expected_revision=stored.revision))
-        removed_dev = dev_resolver.resolve("anthropic", ProviderConsumer.EXTRACTION)
+        removed = _accepted(development.remove_credential("claude_api", expected_revision=stored.revision))
+        removed_dev = dev_resolver.resolve("claude_api", ProviderConsumer.ASSISTANT)
 
-        reset = _accepted(development.reset("anthropic", expected_revision=removed.revision))
-        reset_dev = _direct(dev_resolver.resolve("anthropic", ProviderConsumer.ASSISTANT))
+        reset = _accepted(development.reset("claude_api", expected_revision=removed.revision))
+        reset_dev = _direct(dev_resolver.resolve("claude_api", ProviderConsumer.ASSISTANT))
 
     assert _global_settings_untouched()
     assert unset_dev.source is ProviderCredentialSource.ENVIRONMENT
@@ -329,13 +345,13 @@ def test_precedence_stored_disabled_environment_and_storage_mode(tmp_path: Path)
     assert removed.readiness is ProviderReadiness.DISABLED
     assert _unavailable_reason(removed_dev) is ProviderCredentialUnavailableReason.PROVIDER_DISABLED
     assert reset.mode is ProviderSettingsMode.UNSET
-    assert reset.revision == ABSENT_REVISION
+    assert reset.revision == ABSENT_SECURE_OBJECT_REVISION_ID
     assert reset_dev.secret.get_secret_value() == _ENV_KEY
 
 
 def _global_settings_untouched() -> bool:
     """The development key lived only on a scoped copy, never the cached global settings."""
-    configured = load_settings().cadrumo_llm_anthropic_api_key
+    configured = load_settings().cadrumo_llm_claude_api_key
     return configured is None or configured.get_secret_value() != _ENV_KEY
 
 
@@ -344,24 +360,30 @@ def test_assistant_sign_in_choice_keeps_the_stored_token(tmp_path: Path) -> None
         service = _service(profile)
         resolver = _resolver(profile)
         token = _accepted(
-            service.set_credential("claude", secret=SecretStr(_OAUTH_FAKE), expected_revision=ABSENT_REVISION)
+            service.set_credential(
+                "claude_cli", secret=SecretStr(_OAUTH_FAKE), expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+            )
         )
         sign_in = _accepted(
             service.set_assistant_auth(
-                "claude", choice=AssistantAuthChoice.PROVIDER_SIGN_IN, expected_revision=token.revision
+                "claude_cli", choice=AssistantAuthChoice.PROVIDER_SIGN_IN, expected_revision=token.revision
             )
         )
-        resolved_sign_in = resolver.resolve("claude", ProviderConsumer.ASSISTANT)
+        resolved_sign_in = resolver.resolve("claude_cli", ProviderConsumer.ASSISTANT)
         direct = _accepted(
             service.set_assistant_auth(
-                "claude", choice=AssistantAuthChoice.DIRECT_API, expected_revision=sign_in.revision
+                "claude_cli", choice=AssistantAuthChoice.DIRECT_API, expected_revision=sign_in.revision
             )
         )
-        resolved_token = _direct(resolver.resolve("claude", ProviderConsumer.ASSISTANT))
-        codex = resolver.resolve("codex", ProviderConsumer.ASSISTANT)
-        refused_key = service.set_credential("codex", secret=SecretStr(_KEY_A), expected_revision=ABSENT_REVISION)
+        resolved_token = _direct(resolver.resolve("claude_cli", ProviderConsumer.ASSISTANT))
+        codex = resolver.resolve("codex_cli", ProviderConsumer.ASSISTANT)
+        refused_key = service.set_credential(
+            "codex_cli", secret=SecretStr(_KEY_A), expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+        )
         refused_sign_in = service.set_assistant_auth(
-            "anthropic", choice=AssistantAuthChoice.PROVIDER_SIGN_IN, expected_revision=ABSENT_REVISION
+            "claude_api",
+            choice=AssistantAuthChoice.PROVIDER_SIGN_IN,
+            expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID,
         )
 
     assert token.mode is ProviderSettingsMode.OAUTH
@@ -379,29 +401,31 @@ def test_input_refusals_and_base_urls(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         service = _service(profile)
         resolver = _resolver(profile)
-        absent = ABSENT_REVISION
-        masked = service.set_credential("zai", secret=SecretStr("sk-****************7f3e"), expected_revision=absent)
-        blank = service.set_credential("zai", secret=SecretStr("   "), expected_revision=absent)
-        plain_http = service.set_credential(
-            "zai", secret=SecretStr(_KEY_A), base_url="http://gateway.example.invalid", expected_revision=absent
+        absent = ABSENT_SECURE_OBJECT_REVISION_ID
+        masked = service.set_credential(
+            "zai_cli", secret=SecretStr("sk-****************7f3e"), expected_revision=absent
         )
-        qwen_without_url = service.set_credential("qwen", secret=SecretStr(_KEY_A), expected_revision=absent)
+        blank = service.set_credential("zai_cli", secret=SecretStr("   "), expected_revision=absent)
+        plain_http = service.set_credential(
+            "zai_cli", secret=SecretStr(_KEY_A), base_url="http://gateway.example.invalid", expected_revision=absent
+        )
+        qwen_without_url = service.set_credential("qwen_cli", secret=SecretStr(_KEY_A), expected_revision=absent)
         url_on_plain_key = service.set_credential(
-            "openai", secret=SecretStr(_KEY_A), base_url="https://gateway.example.invalid", expected_revision=absent
+            "codex_api", secret=SecretStr(_KEY_A), base_url="https://gateway.example.invalid", expected_revision=absent
         )
         unknown = service.set_credential("nope", secret=SecretStr(_KEY_A), expected_revision=absent)
-        zai = _accepted(service.set_credential("zai", secret=SecretStr(_KEY_A), expected_revision=absent))
+        zai = _accepted(service.set_credential("zai_cli", secret=SecretStr(_KEY_A), expected_revision=absent))
         qwen = _accepted(
             service.set_credential(
-                "qwen",
+                "qwen_cli",
                 secret=SecretStr(_KEY_B),
                 base_url="https://gateway.example.invalid/anthropic",
                 expected_revision=absent,
             )
         )
-        zai_resolved = _direct(resolver.resolve("zai", ProviderConsumer.ASSISTANT))
-        qwen_resolved = _direct(resolver.resolve("qwen", ProviderConsumer.ASSISTANT))
-        gemini_assistant = resolver.resolve("gemini", ProviderConsumer.ASSISTANT)
+        zai_resolved = _direct(resolver.resolve("zai_cli", ProviderConsumer.ASSISTANT))
+        qwen_resolved = _direct(resolver.resolve("qwen_cli", ProviderConsumer.ASSISTANT))
+        gemini = resolver.resolve("gemini", ProviderConsumer.ASSISTANT)
 
     assert _refusal_code(masked) is ProviderSettingsRefusalCode.INVALID_KEY_FORMAT
     assert _refusal_code(blank) is ProviderSettingsRefusalCode.INVALID_KEY_FORMAT
@@ -414,20 +438,26 @@ def test_input_refusals_and_base_urls(tmp_path: Path) -> None:
     assert qwen.base_url == "https://gateway.example.invalid/anthropic"
     assert zai_resolved.base_url == "https://api.z.ai/api/anthropic"
     assert qwen_resolved.base_url == "https://gateway.example.invalid/anthropic"
-    assert _unavailable_reason(gemini_assistant) is ProviderCredentialUnavailableReason.CONSUMER_NOT_SUPPORTED
+    assert _unavailable_reason(gemini) is ProviderCredentialUnavailableReason.UNKNOWN_PROVIDER
 
 
 def test_status_json_matches_the_desktop_contract(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         service = _service(profile)
-        _accepted(service.set_credential("openai", secret=SecretStr(_KEY_A), expected_revision=ABSENT_REVISION))
+        _accepted(
+            service.set_credential(
+                "codex_api", secret=SecretStr(_KEY_A), expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+            )
+        )
         document = json.loads(_status(service).model_dump_json())
 
     assert set(document) == {"development", "providers"}
     assert document["development"] is True
     entries = {entry["id"]: entry for entry in document["providers"]}
-    assert set(entries["openai"]) == {
+    assert set(entries["codex_api"]) == {
         "id",
+        "provider",
+        "transport",
         "display_name",
         "auth_kind",
         "consumers",
@@ -438,15 +468,20 @@ def test_status_json_matches_the_desktop_contract(tmp_path: Path) -> None:
         "reason",
         "base_url",
         "default_base_url",
+        "cli_state",
         "revision",
     }
-    assert entries["openai"]["mode"] == "key"
-    assert entries["openai"]["readiness"] == "not_verified"
-    assert entries["openai"]["reason"] is None
-    assert entries["openai"]["revision"] != "absent"
-    assert entries["kimi"]["revision"] == "absent"
-    assert entries["codex"]["reason"] == "sign_in_with_provider_tool"
-    assert entries["qwen"]["default_base_url"] is None
+    assert entries["codex_api"]["provider"] == "codex"
+    assert entries["codex_api"]["transport"] == "api"
+    assert entries["codex_api"]["cli_state"] is None
+    assert entries["codex_cli"]["cli_state"] == "unknown"
+    assert entries["codex_api"]["mode"] == "key"
+    assert entries["codex_api"]["readiness"] == "not_verified"
+    assert entries["codex_api"]["reason"] is None
+    assert entries["codex_api"]["revision"] != ABSENT_SECURE_OBJECT_REVISION_ID
+    assert entries["kimi_cli"]["revision"] == ABSENT_SECURE_OBJECT_REVISION_ID
+    assert entries["codex_cli"]["reason"] == "sign_in_with_provider_tool"
+    assert entries["qwen_cli"]["default_base_url"] is None
 
 
 def test_agent_credential_source_hands_fresh_buffers_under_current_generations(tmp_path: Path) -> None:
@@ -464,7 +499,16 @@ def test_agent_credential_source_hands_fresh_buffers_under_current_generations(t
         observed_again = source.current_generations()
         idle_after_observing = session.idle_deadline
 
-        _accepted(service.set_credential("zai", secret=SecretStr(_KEY_A), expected_revision=ABSENT_REVISION))
+        _accepted(
+            service.set_credential(
+                "zai_cli", secret=SecretStr(_KEY_A), expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+            )
+        )
+        _accepted(
+            service.set_credential(
+                "claude_api", secret=SecretStr(_KEY_B), expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+            )
+        )
         resolved = source.resolve_for_agent()
         current = source.current_generations()
         zai_secret = bytes(resolved.credentials["zai"].secret)
@@ -499,22 +543,31 @@ def test_base_url_is_stored_kept_or_cleared(tmp_path: Path) -> None:
         service = _service(profile)
         custom = "https://gateway.example.invalid/anthropic"
         stored = _accepted(
-            service.set_credential("zai", secret=SecretStr(_KEY_A), expected_revision=ABSENT_REVISION, base_url=custom)
+            service.set_credential(
+                "zai_cli", secret=SecretStr(_KEY_A), expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID, base_url=custom
+            )
         )
-        kept = _accepted(service.set_credential("zai", secret=SecretStr(_KEY_B), expected_revision=stored.revision))
+        kept = _accepted(service.set_credential("zai_cli", secret=SecretStr(_KEY_B), expected_revision=stored.revision))
         cleared = _accepted(
             service.set_credential(
-                "zai", secret=SecretStr(_KEY_B), expected_revision=kept.revision, base_url=BaseUrlChange.CLEAR
+                "zai_cli", secret=SecretStr(_KEY_B), expected_revision=kept.revision, base_url=BaseUrlChange.CLEAR
             )
         )
         qwen = _accepted(
-            service.set_credential("qwen", secret=SecretStr(_KEY_A), expected_revision=ABSENT_REVISION, base_url=custom)
+            service.set_credential(
+                "qwen_cli",
+                secret=SecretStr(_KEY_A),
+                expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID,
+                base_url=custom,
+            )
         )
-        qwen_kept = _accepted(service.set_credential("qwen", secret=SecretStr(_KEY_B), expected_revision=qwen.revision))
+        qwen_kept = _accepted(
+            service.set_credential("qwen_cli", secret=SecretStr(_KEY_B), expected_revision=qwen.revision)
+        )
         qwen_cleared = service.set_credential(
-            "qwen", secret=SecretStr(_KEY_B), expected_revision=qwen_kept.revision, base_url=BaseUrlChange.CLEAR
+            "qwen_cli", secret=SecretStr(_KEY_B), expected_revision=qwen_kept.revision, base_url=BaseUrlChange.CLEAR
         )
-        resolved = _direct(_resolver(profile).resolve("zai", ProviderConsumer.ASSISTANT))
+        resolved = _direct(_resolver(profile).resolve("zai_cli", ProviderConsumer.ASSISTANT))
         installed_status = _service(profile, storage_mode=StorageMode.INSTALLED).status()
 
     assert stored.base_url == custom

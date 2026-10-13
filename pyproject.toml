@@ -44,6 +44,10 @@ dependencies = [
   # password-hashing primitive; ships pre-built wheels for
   # Linux/macOS/Windows.
   "argon2-cffi>=23.1.0,<26",
+  # The supervised profile KDF child calls the Argon2 C binding directly:
+  # it is launched for every wrap and unwrap, and the `argon2` package's
+  # import closure costs several times the binding's on that path.
+  "argon2-cffi-bindings>=25.1.0,<27",
   # HTML parsing for status readers. The `lxml` extra is load-bearing, not a
   # preference: every AEAT page read goes through one constructor
   # (`adapters/outbound/aeat/_html.py`) that names "lxml" as the parser

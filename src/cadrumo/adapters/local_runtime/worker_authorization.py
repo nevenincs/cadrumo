@@ -14,7 +14,6 @@ from uuid import UUID, uuid4, uuid5
 
 from pydantic import SecretBytes
 
-from ...application.local_reader_contracts import LOCAL_READER_OPERATION_DEFINITION_ID
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError, RuntimeServerHello
 from ...application.runtime.profile_access import RuntimeAccessRefusal
 from ...application.runtime.profile_worker import ProfileWorkerIdentity
@@ -375,6 +374,10 @@ class WorkerAuthorizationServer:
         operation admits the instruction. The worker sends no program and no
         environment, so its containment still bounds everything it can run.
         """
+        # The provisioning contracts reach the model installer; the profile
+        # worker shares this module and must not import them to start.
+        from ...application.local_reader_contracts import LOCAL_READER_OPERATION_DEFINITION_ID
+
         if (
             request.request.action is not AccessAction.COMMIT
             or request.request.definition_id != LOCAL_READER_OPERATION_DEFINITION_ID

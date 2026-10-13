@@ -8,7 +8,7 @@ test("Settings has no account switcher and sign out appears only in the header m
 }) => {
   await page.goto("/scenarios.html?scenario=signed-in&latency=0&bar=off");
   await page
-    .getByRole("button", { name: label("desktop.rail.settings") })
+    .getByRole("button", { name: label("desktop.rail.settings"), exact: true })
     .click();
   const settings = page.locator(".settings");
   await expect(settings).toBeVisible();
@@ -77,6 +77,58 @@ test("the header chooses the named credential target and never signs out twice",
   expect(calls.filter((call) => call === "signOut")).toHaveLength(1);
   expect(calls).toContain("signInProfile 2");
 });
+
+// A sign-out says what the product reports still stands after it, and only
+// that. The saved automation setting is on in both scenarios; a key issued for
+// an external agent keeps admitting only in the second, and only that is said.
+for (const [scenario, remains] of [
+  ["signed-in", false],
+  ["signed-in-keys-issued", true],
+] as const)
+  test(`signing out of ${scenario}: ${remains ? "the keys issued for external agents are said to stay active" : "no access is said to remain"}`, async ({
+    page,
+  }) => {
+    await page.goto(`/scenarios.html?scenario=${scenario}&latency=0&bar=off`);
+    await page
+      .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
+      .click();
+    await page
+      .getByRole("menuitem", {
+        name: label("desktop.account.sign_out"),
+        exact: true,
+      })
+      .click();
+    await expect
+      .poll(async () =>
+        (await page.evaluate(() => window.__scenarioHostCalls ?? [])).filter(
+          (call) => call === "signOut",
+        ),
+      )
+      .toHaveLength(1);
+    // The menu stays open on the sign-out, and offers sign-in.
+    const menu = page.locator(".account-menu");
+    await expect(
+      menu.getByRole("menuitem", {
+        name: label("desktop.signin.submit"),
+        exact: true,
+      }),
+    ).toBeVisible();
+    const said = menu.getByText(label("desktop.account.remaining_access"), {
+      exact: true,
+    });
+    if (remains) {
+      await expect(said).toHaveCount(1);
+      await expect(said).toHaveText(
+        "Keys you issued for external agents stay active.",
+      );
+      // Information, not a warning: a neutral note announced politely.
+      const note = menu.getByRole("status").filter({
+        hasText: label("desktop.account.remaining_access"),
+      });
+      await expect(note).toHaveAttribute("data-tone", "neutral");
+      await expect(menu.getByRole("alert")).toHaveCount(0);
+    } else await expect(said).toHaveCount(0);
+  });
 
 test("header sizing leaves the workspace and panel inside the client window", async ({
   page,

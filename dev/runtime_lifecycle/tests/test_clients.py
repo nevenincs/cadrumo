@@ -81,7 +81,9 @@ async def test_packaged_client_authentication_and_profile_scope(harness: Lifecyc
             await key_mcp.initialize()
             key_profile_human = harness.connect(first.profile_id)
             await asyncio.to_thread(key_profile_human.client.resume_receipt)
-            await asyncio.to_thread(key_profile_human.client.human_sign_out)
+            signed_out_of_a = await asyncio.to_thread(key_profile_human.client.human_sign_out)
+            # The key the person issued for A is not tied to the sign-in, and the report says so.
+            assert signed_out_of_a.agent_access_remains is True
             await _mcp_read(key_mcp, first)
             # The agent reads and changes A's own values while no person is signed in to A.
             await mcp_edit_profile(key_mcp, first, path="identity.name", previous=None, value="Lifecycle Agent")
@@ -105,6 +107,8 @@ async def test_packaged_client_authentication_and_profile_scope(harness: Lifecyc
             )
             signed_out = await asyncio.to_thread(harness.cli, "logout")
             assert signed_out["result"]["human_receipt_revoked"] is True
+            # No key was issued for B, so signing B out leaves no agent access to it.
+            assert signed_out["result"]["agent_access_remains"] is False
             await asyncio.to_thread(harness.cli, "profile", "view", expect_success=False)
             await asyncio.to_thread(_tui, harness, second, admitted=False)
             await _call(mcp, "describe", {"definition_id": "auth.local-read"}, admitted=False)

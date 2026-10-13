@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:a671044e09ce8296430bd2633a19690d3d38d1c7104d3f5bdc3a15a6b3120210'
+body_hash: 'sha256:e678304097a5b67845b9d03186db6ce00b7fd34b3ed5bd0693c6207feff16284'
 related:
   - "[[2026-10-12-desktop-agent-host-adr]]"
   - "[[2026-10-12-desktop-agent-host-reference]]"

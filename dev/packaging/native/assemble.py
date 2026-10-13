@@ -19,7 +19,7 @@ from dev._paths import REPO_ROOT
 
 from ..runtime_wheel_selection import active_requirements
 from ..runtime_wheelhouse_contract import target_platform
-from .agent import agent_pin, locked_requirements
+from .agent import locked_requirements
 from .build_log import BuildLog, display_path
 from .build_timing import BuildTimings
 from .docs_stage import verified_stage
@@ -191,8 +191,11 @@ def assemble(
     for name, requirement in requirements.items():
         if distributions[name] not in requirement.specifier:
             raise ValueError(f"Production dependency version differs from lock: {name} {distributions[name]}")
-    if not interpreter and distributions["cadrumo-agent"] != agent_pin()["version"]:
-        raise ValueError("Installed agent version differs from the source pin")
+    agent_metadata = {} if interpreter else (provenance or {}).get("agent", {})
+    if not isinstance(agent_metadata, Mapping):
+        raise ValueError("Agent build provenance must be a mapping")
+    if not interpreter and distributions["cadrumo-agent"] != agent_metadata.get("version"):
+        raise ValueError("Installed agent version differs from the built wheel")
     if not interpreter and {distributions[name] for name in PRODUCT_IDENTITY.cohort_distributions} != {
         build_identity["version"]
     }:
@@ -347,7 +350,7 @@ def assemble(
         "python": (REPO_ROOT / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip(),
         "lock_sha256": digest(REPO_ROOT / "uv.lock"),
         "inputs": dict(provenance or {}),
-        "agent": {"bundled": not interpreter, **({} if interpreter else agent_pin())},
+        "agent": {"bundled": not interpreter, **agent_metadata},
         "relocation": relocation,
         "patches": patches,
         "pruned": pruned,

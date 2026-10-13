@@ -561,13 +561,11 @@ desktop:
         antes de volver a intentarlo.
       wait: 'Tarda alrededor de medio minuto: se está generando la clave del perfil
         a partir de su contraseña.'
-    create_profile: Configurar un perfil
     first_run_lead: Crea un perfil para empezar.
-    in_tui: Sigues en la TUI
     new_profile: Nuevo perfil
     no_profile: Ningún perfil activo
-    no_profile_lead: Crea un perfil o elige uno en la TUI.
-    remaining_access: El acceso de agentes que activaste sigue activo.
+    no_profile_lead: Todavía no hay ningún perfil en este equipo.
+    remaining_access: Las claves que emitiste para agentes externos siguen activas.
     services_down: Los servicios en segundo plano no están en marcha
     sign_out: Cerrar sesión
     sign_out_failed: No se ha podido cerrar la sesión ({code}).
@@ -590,9 +588,9 @@ desktop:
   agent:
     add_files: Añadir archivos
     agent_replied: El agente respondió
-    approval_allow_always: Permitir siempre
+    approval_allow_always: Permitir
     approval_allow_once: Permitir una vez
-    approval_reject_always: No permitir nunca
+    approval_reject_always: No permitir
     approval_reject_once: No permitir
     approval_review_title: Revisa esto antes de que Cadrumo lo haga
     approval_tool_title: El agente quiere usar una herramienta
@@ -610,8 +608,18 @@ desktop:
     cancel: Cancelar
     capabilities: 'Puede: {list}'
     choose_model: Elige un modelo
+    choose_provider: Elige un proveedor
     close_documents: Cerrar los documentos
     collapse_members: Ocultar los archivos de {name}
+    condition_budget_exhausted: Presupuesto agotado
+    condition_credits_exhausted: Sin créditos
+    condition_invalid_request: El proveedor rechazó la petición
+    condition_network_unreachable: No se puede contactar con el proveedor
+    condition_provider_overloaded: El proveedor está sobrecargado
+    condition_throttled: El proveedor está limitando las peticiones
+    condition_unauthenticated: Sin autenticar con el proveedor
+    condition_unknown: Causa desconocida
+    condition_usage_exhausted: Límite de uso alcanzado
     consent_allow: Enviar a {provider}
     consent_decline: No enviar
     consent_items: Lo que se enviaría
@@ -635,6 +643,7 @@ desktop:
     drop_release_single: Suelta para añadir 1 archivo
     drop_title: Añadir a esta conversación
     effort: Esfuerzo
+    effort_default: Por defecto
     effort_high: Alto
     effort_low: Bajo
     effort_max: Máximo
@@ -647,38 +656,51 @@ desktop:
     history: Historial
     history_empty: Todavía no hay conversaciones
     history_no_match: Ninguna conversación coincide con «{query}».
-    lane_no_catalog: no se han podido listar los modelos
-    lane_not_admitted: no permitido aquí
-    lane_not_configured: sin configurar
+    lane_no_catalog: No se han podido listar los modelos
+    lane_not_admitted: No permitido aquí
+    lane_not_configured: Sin configurar
     lane_notice: 'Entorno de desarrollo: las conversaciones se guardan sin cifrar
       en este almacenamiento de prueba. Usa solo datos inventados.'
-    lane_signed_out: sin sesión iniciada
-    lane_unreachable: no se puede conectar
+    lane_signed_out: Sin sesión iniciada
+    lane_unreachable: No se puede conectar
     members_multiple: '{count} archivos'
     members_single: 1 archivo
     message_label: Mensaje
     message_placeholder: Pregunta por un modelo, un plazo o tus registros
     model: Modelo
+    model_written: Este proveedor no lista sus modelos. Escribe el identificador del
+      modelo tal como lo nombra el proveedor.
     more_files: +{count} más
     new_conversation: Nueva conversación
     no_models: No hay modelos para elegir
     no_provider: El agente aún no tiene ningún proveedor que pueda usar.
     provider: Proveedor
-    provider_unavailable: '{provider}: {reason}'
     questions_answer: Responder
+    questions_clear: Borrar esta respuesta
+    questions_control: 'Una respuesta es una sola línea: no puede llevar saltos de
+      línea, tabuladores ni otros caracteres de control'
     questions_decline: No responder
+    questions_invalid: Corrige primero las respuestas marcadas
     questions_lead: Responde aquí abajo, o escribe un mensaje para responder con tus
       palabras.
     questions_missing: Responde primero todas las preguntas que no son opcionales
     questions_optional: (opcional)
     questions_title: El agente necesita unas respuestas
+    questions_too_long: Esta respuesta tiene {count} caracteres; el máximo es {max}
     queued: Esperando para subir
+    ran_with: 'Se ejecutó con: {selection}'
     ready: Listo
     refused: Rechazado
     remove_all: Quitar todo
     remove_document: Quitar {name}
     remove_file: Quitar {name}
+    reply_deleting: Eliminándose
     reply_failed: Esta respuesta no se ha completado.
+    reply_in_progress: Todavía hay una respuesta en curso.
+    reply_queued: 'Mensajes en espera: {count}'
+    reply_reconciling: Conciliando…
+    reply_repair_needed: Necesita reparación
+    reply_stopping: Deteniendo…
     resize: Cambiar el tamaño del agente
     restore: Restaurar
     retry: Vuelve a intentarlo
@@ -690,12 +712,15 @@ desktop:
     search_history: Buscar conversaciones
     send: Enviar
     send_nothing: Escribe un mensaje o añade un archivo primero
+    send_too_long: Este mensaje tiene {count} caracteres; el máximo es {max}
     send_waiting: Espera a que se suban todos los archivos
     sent_files: Archivos enviados con este mensaje
     service_absent: El agente no está instalado.
     service_credential_missing: No hay ninguna clave configurada para este proveedor.
     service_failed: El agente ha dejado de funcionar.
     service_incompatible: Esta versión del agente no funciona con este Cadrumo.
+    service_root_unmarked: Este almacenamiento de prueba no está marcado como entorno
+      de desarrollo del agente.
     service_runtime_unavailable: El servicio en segundo plano de Cadrumo no está en
       marcha.
     service_signed_out: Inicia sesión para hablar con el agente.
@@ -707,6 +732,7 @@ desktop:
     settings_title: Ajustes del modelo
     show: Mostrar el agente
     show_active: Mostrar activas
+    sign_in_first: Inicia sesión para usar el agente
     status_extracting: Leyendo
     status_failed: Con error
     status_needs_review: Por revisar
@@ -716,18 +742,86 @@ desktop:
     stop: Detener
     stopped: Detenido
     tool_done: Hecho
+    tool_failed: Con error
+    tool_kind_delete: Elimina
+    tool_kind_edit: Edita
+    tool_kind_execute: Ejecuta
+    tool_kind_fetch: Obtiene
+    tool_kind_move: Mueve
+    tool_kind_other: Otra
+    tool_kind_read: Lee
+    tool_kind_search: Busca
+    tool_kind_switch_mode: Cambia de modo
+    tool_kind_think: Piensa
+    tool_pending: Pendiente
     tool_running: En curso
     transcript: Conversación
     transcript_empty: Aún no hay mensajes
     unavailable: Aún no está disponible
     uploading: Subiendo
     uploading_name: Subiendo {name}
+    usage: 'Tokens: {input} de entrada, {output} de salida'
     waiting_on_you: Esperando tu respuesta
     welcome_lead: ¿Algo sobre impuestos? Pregunta por un modelo o un plazo, o añade
       recibos, facturas y extractos bancarios con +.
     welcome_title: ¿En qué trabajamos hoy?
     working: Trabajando…
     you_said: Has dicho
+  agent_keys:
+    cancel: Cancelar
+    cleanup_pending: Revocada. Su clave guardada aún se está eliminando de este equipo.
+    copied: Copiada
+    copy: Copiar referencia
+    copy_failed: No se ha podido copiar. Selecciona la referencia y cópiala tú.
+    done: Hecho
+    empty: Aún no hay claves. Un agente ajeno a Cadrumo no puede acceder a este perfil
+      hasta que emitas una.
+    expired_on: Caducó el {date}
+    expires_on: Caduca el {date}
+    issue: Emitir una clave
+    issue_lead: Un agente con esta clave siempre puede leer y cambiar los valores
+      de este perfil, y ver las operaciones que ejecuta.
+    issue_submit: Emitir clave
+    issued_lead: Dale esta referencia a tu cliente MCP como referencia de credencial.
+      La clave en sí se queda en el almacén seguro de este equipo y nunca se muestra.
+    issued_on: Emitida el {date}
+    issued_once: Se muestra una sola vez. Cuando la cierres, no se podrá volver a
+      mostrar.
+    issued_title: Clave emitida
+    issuing: Emitiendo…
+    key_title: Clave {id}
+    last_used: 'Último uso: {date}'
+    lead: Una clave permite que un agente de IA ajeno a Cadrumo, que accede a él mediante
+      su servidor MCP, trabaje en este perfil. Solo tú puedes emitir o revocar claves.
+    never_used: Aún sin usar
+    reference_label: Referencia de credencial
+    refresh: Actualizar
+    refused_not_found: Esa clave ya no está en la lista.
+    refused_not_signed_in: Inicia sesión para gestionar las claves.
+    refused_outcome_unknown: Cadrumo no ha recibido respuesta. Puede que la clave
+      se haya emitido o no; actualiza para comprobarlo.
+    refused_person_act_required: Solo tú puedes gestionar las claves, aquí.
+    refused_profile_locked: Este perfil está bloqueado.
+    revoke: Revocar
+    revoke_confirm: ¿Revocar esta clave? Al agente que la usa se le rechazará desde
+      ese momento. No se puede deshacer.
+    revoke_confirm_action: Revocar clave
+    revoking: Revocando…
+    scope_all_operations: Ejecuta cualquier operación permitida a un agente
+    scope_no_tax_values: No lee valores fiscales
+    scope_operations_seen: Ve las operaciones que ejecuta
+    scope_profile_values: Lee y cambia los valores del perfil
+    scope_some_operations: Ejecuta solo algunas operaciones
+    scope_tax_values: Lee valores fiscales
+    standing_active: Activa
+    standing_expired: Caducada
+    standing_pending: Pendiente de aprobación
+    standing_revoked: Revocada
+    standing_suspended: En pausa
+    tax_values: Permitirle también leer valores fiscales
+    tax_values_note: Importes calculados y presentaciones. Si lo dejas desactivado,
+      el agente no los ve.
+    title: Claves de API para agentes MCP
   calendar:
     aeat:
       accepted: Aceptada
@@ -862,8 +956,10 @@ desktop:
     base_url_label: URL base
     base_url_required: 'Obligatoria: este proveedor no tiene una por defecto.'
     cancel: Cancelar
-    consumer_assistant: Agente
-    consumer_extraction: Lectura de documentos
+    cli_installed_signed_in: Instalado y con la sesión iniciada
+    cli_installed_signed_out: Instalado, sin la sesión iniciada
+    cli_not_installed: No instalado
+    cli_unknown: Aún no comprobado
     development_note: En esta versión de desarrollo, un proveedor sin clave propia
       usa la del entorno de desarrollo.
     disable: Desactivar
@@ -911,8 +1007,6 @@ desktop:
     through: A través de {url}
     title: Proveedores de IA
     token_label: Token OAuth de {provider}
-    transport_api: API
-    transport_cli: CLI
   rail:
     aeat: Sede de la AEAT
     agent: Agente
@@ -961,13 +1055,10 @@ desktop:
     install_machine_services: Instalar para todos los usuarios
     install_user_services: Instalar para este usuario
     lead: Escribe la contraseña de tu perfil para abrir tu espacio de trabajo.
-    open_tui: Abrir la TUI
-    open_tui_hint: ¿Configuración inicial, otro perfil o recuperación? Usa la TUI.
     password: Contraseña
     profile: Perfil
     profiles_unread: No se han podido leer los perfiles de este equipo.
     recovering_services: Recuperando los servicios en segundo plano…
-    recovery_hint: ¿Has perdido la contraseña o el perfil está bloqueado? Usa la TUI.
     refused:
       custody_changed: La contraseña o la configuración de recuperación de este perfil
         ha cambiado. Vuelve a iniciar sesión.
@@ -982,14 +1073,15 @@ desktop:
       installation_unsettled: No se pudo confirmar la instalación. Consulta los registros
         antes de reintentarlo.
       invalid: Esa contraseña no ha funcionado. Vuelve a intentarlo.
-      keyring_unavailable: Cadrumo no puede mantener tu sesión en este dispositivo,
-        así que la TUI te pedirá la contraseña.
+      keyring_unavailable: Cadrumo no puede mantener tu sesión en este dispositivo.
+        El llavero del sistema no está disponible.
       login_mismatch: Tu inicio de sesión es de una sesión anterior en este ordenador.
         Vuelve a iniciar sesión.
       manager: No se han podido iniciar los servicios en segundo plano ({code}). Abre
         Registros para ver los detalles.
       other: No se ha podido iniciar sesión ({code}).
-      profile_locked: Este perfil está bloqueado. Continúa en la TUI para desbloquearlo.
+      profile_locked: Este perfil está bloqueado. Inicia sesión con su contraseña
+        para desbloquearlo.
       receipt_absent: No has iniciado sesión.
       receipt_expired: Tu sesión ha caducado. Vuelve a iniciar sesión.
       runtime_unavailable: Los servicios en segundo plano de Cadrumo no están en marcha.

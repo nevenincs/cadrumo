@@ -178,3 +178,34 @@ def test_an_agent_speaking_another_hosting_contract_is_not_published(tmp_path: P
         controller.start()
     assert refused.value.reason is AgentHostRefusal.NOT_READY
     assert controller.state is AgentHostState.DETACHED
+
+
+def test_the_agent_job_admits_no_breakaway_and_knows_its_own_members(tmp_path: Path) -> None:
+    import os
+
+    import win32job
+
+    from ..agent_process import WindowsAgentProcess
+
+    process = WindowsAgentProcessLauncher().launch(
+        executable=native_python(),
+        arguments=fixture_arguments(_FIXTURE, "ready", str(tmp_path)),
+        directory=tmp_path,
+        environment=fixture_environment(),
+    )
+    assert isinstance(process, WindowsAgentProcess)
+    try:
+        process.write_input(build_credential_frame({"anthropic": AgentCredential(bytearray(_FAKE))}))
+        process.read_output_line(limit=4096, timeout=30)
+        breakaway = win32job.JOB_OBJECT_LIMIT_BREAKAWAY_OK | win32job.JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK
+        flags = process.job_limit_flags()
+        assert flags & breakaway == 0
+        assert flags & win32job.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+        grandchild = _received(tmp_path)["grandchild"]
+        assert isinstance(grandchild, int)
+        # A descendant of the agent is a member; this test process is not.
+        assert process.contains_process_id(grandchild)
+        assert not process.contains_process_id(os.getpid())
+    finally:
+        process.close_input()
+        process.terminate(timeout=10)

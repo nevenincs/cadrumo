@@ -9,7 +9,7 @@ cadrumo_product_inputs(product_inputs "${PROJECT_SOURCE_DIR}" ${product_director
 include("${CMAKE_CURRENT_LIST_DIR}/Authority.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/CachedCommand.cmake")
 list(APPEND product_inputs "${CADRUMO_PATH_RUNTIME}/ready" "${CADRUMO_PATH_AGENT}/ready"
-  "${PROJECT_SOURCE_DIR}/native/agent.json" "${PROJECT_SOURCE_DIR}/native/agent/${CADRUMO_TARGET}.txt")
+  "${PROJECT_SOURCE_DIR}/native/agent/${CADRUMO_TARGET}.txt")
 list(JOIN product_inputs "\n" input_lines)
 file(GENERATE OUTPUT "${PROJECT_BINARY_DIR}/inputs-product.txt" CONTENT "${input_lines}\n")
 cadrumo_build_step(step_comment python_product GROUP dependencies
@@ -156,7 +156,7 @@ else()
 endif()
 list(APPEND assembly_inputs "${PROJECT_SOURCE_DIR}/native/interpreter/bootstrap.py")
 foreach(input uv.lock pyproject.toml dev/packaging/release-python-version
-    native/agent.json dev/packaging/native/agent.py native/agent/${CADRUMO_TARGET}.txt
+    dev/packaging/native/agent.py native/agent/${CADRUMO_TARGET}.txt
     dev/packaging/runtime_wheel_selection.py dev/packaging/runtime_wheelhouse_contract.py
     dev/packaging/native/action_cache.py dev/packaging/native/build_toolchain.py)
   list(APPEND assembly_inputs "${PROJECT_SOURCE_DIR}/${input}")

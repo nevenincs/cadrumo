@@ -97,12 +97,13 @@ def _query(proof: str | Unproven, *queries: str) -> Counterpart:
 
 _RUNTIME_TESTS: Final = "src/cadrumo/entrypoints/runtime/tests"
 _ENTRYPOINT_TESTS: Final = "src/cadrumo/entrypoints/tests"
+_CLI_TESTS: Final = "src/cadrumo/entrypoints/cli/tests"
 _CONFIG_TESTS: Final = "src/cadrumo/entrypoints/cli/config/tests"
 _STORAGE_PROOF: Final = (
-    f"{_RUNTIME_TESTS}/test_installation_storage.py::test_each_storage_command_prints_the_document_its_act_replies_with"
+    f"{_CONFIG_TESTS}/test_installation_storage.py::test_each_storage_command_prints_the_document_its_act_replies_with"
 )
 _REFERENCE_PROOF: Final = (
-    f"{_ENTRYPOINT_TESTS}/test_reference_catalogue_parity.py::test_tool_report_equals_the_command_line_result"
+    f"{_CLI_TESTS}/test_reference_catalogue_parity.py::test_tool_report_equals_the_command_line_result"
 )
 _REPAIR_OPERATIONS: Final = f"{_CONFIG_TESTS}/test_diagnostics_repair_command_parity.py"
 _PROVISION_PROOF: Final = (
@@ -130,7 +131,7 @@ IN_PROCESS_COMMAND_COUNTERPARTS: Final[Mapping[CliPath, Counterpart]] = MappingP
         # The command sends the runtime's disclosure read, which MCP reaches through the status tool's argument.
         ("config", "profile", "disclosures"): Counterpart(
             (ToolRoute("status"),),
-            f"{_ENTRYPOINT_TESTS}/test_disclosure_summary.py::test_every_frontend_counts_and_pages_the_same_disclosures",
+            f"{_CLI_TESTS}/test_disclosure_summary.py::test_every_frontend_counts_and_pages_the_same_disclosures",
         ),
         # The command parses the certificate itself before it submits the facts it read.
         ("config", "profile", "censo", "import"): _operation(
@@ -204,62 +205,62 @@ def _installation(proof: str | Unproven, *acts: InstallationAct) -> PersonAct:
 PERSON_ACT_COMMANDS: Final[Mapping[CliPath, PersonAct]] = MappingProxyType(
     {
         ("app", "modelo", "review-package", "verify"): _installation(
-            f"{_RUNTIME_TESTS}/test_installation_artefacts.py"
+            f"{_CONFIG_TESTS}/test_installation_artefacts.py"
             "::test_a_genuine_package_verifies_clean_and_the_act_and_the_command_give_one_document",
             InstallationAct.REVIEW_PACKAGE_VERIFY,
         ),
         ("app", "modelo", "review-package", "verify-receipt"): _installation(
-            f"{_RUNTIME_TESTS}/test_installation_artefacts.py"
+            f"{_CONFIG_TESTS}/test_installation_artefacts.py"
             "::test_a_receipt_holds_only_for_both_keys_and_the_package_it_was_made_for",
             InstallationAct.REVIEW_PACKAGE_VERIFY_RECEIPT,
         ),
         ("app", "modelo", "review-package", "verify-signature"): _installation(
-            f"{_RUNTIME_TESTS}/test_installation_artefacts.py"
+            f"{_CONFIG_TESTS}/test_installation_artefacts.py"
             "::test_a_signature_holds_for_its_signer_and_fails_for_any_other_key_or_a_changed_package",
             InstallationAct.REVIEW_PACKAGE_VERIFY_SIGNATURE,
         ),
         ("app", "modelo", "work", "report-verify"): _installation(
-            f"{_RUNTIME_TESTS}/test_installation_artefacts.py"
+            f"{_CONFIG_TESTS}/test_installation_artefacts.py"
             "::test_a_summary_is_checked_by_its_own_bytes_and_the_act_and_the_command_give_one_document",
             InstallationAct.REPORT_VERIFY_DOCUMENT,
         ),
         ("config", "profile", "archive", "import"): _installation(
-            f"{_RUNTIME_TESTS}/test_installation_profiles.py"
+            f"{_CONFIG_TESTS}/test_installation_profiles.py"
             "::test_an_import_republishes_the_prepared_source_and_answers_what_the_command_prints",
             InstallationAct.ARCHIVE_IMPORT_PREPARE,
             InstallationAct.ARCHIVE_IMPORT,
         ),
         ("config", "profile", "archive", "inspect"): _installation(
-            f"{_RUNTIME_TESTS}/test_installation_profiles.py"
+            f"{_CONFIG_TESTS}/test_installation_profiles.py"
             "::test_the_inspect_act_reports_the_header_the_command_prints_and_refuses_what_is_no_archive",
             InstallationAct.ARCHIVE_INSPECT,
         ),
         ("config", "profile", "list"): _installation(
-            f"{_RUNTIME_TESTS}/test_installation_profiles.py"
+            f"{_CONFIG_TESTS}/test_installation_profiles.py"
             "::test_the_listing_act_answers_every_frontend_with_what_the_command_prints",
             InstallationAct.PROFILE_LIST,
         ),
         ("config", "profile", "recovery", "enable"): _installation(
-            f"{_RUNTIME_TESTS}/test_installation_profiles.py"
+            f"{_CONFIG_TESTS}/test_installation_profiles.py"
             "::test_enrolment_hands_out_a_code_that_resets_the_passphrase_and_answers_what_the_command_prints",
             InstallationAct.RECOVERY_ENROLL,
         ),
         ("config", "repair"): _installation(
-            f"{_RUNTIME_TESTS}/test_installation_repair.py"
+            f"{_CONFIG_TESTS}/test_installation_repair.py"
             "::test_the_report_act_replies_with_the_diagnosis_the_command_prints",
             InstallationAct.REPAIR_REPORT,
         ),
         ("config", "repair", "logs"): _installation(
-            f"{_RUNTIME_TESTS}/test_installation_repair.py::test_the_logs_act_replies_with_the_tail_the_command_prints",
+            f"{_CONFIG_TESTS}/test_installation_repair.py::test_the_logs_act_replies_with_the_tail_the_command_prints",
             InstallationAct.REPAIR_LOGS,
         ),
         ("config", "repair", "profile"): _installation(
-            f"{_RUNTIME_TESTS}/test_installation_repair.py"
+            f"{_CONFIG_TESTS}/test_installation_repair.py"
             "::test_the_profile_act_on_a_healthy_root_inspects_the_named_record_and_clears_nothing",
             InstallationAct.REPAIR_PROFILE,
         ),
         ("config", "reset", "status"): _installation(
-            f"{_RUNTIME_TESTS}/test_installation_reset.py"
+            f"{_CONFIG_TESTS}/test_installation_reset.py"
             "::test_each_reset_act_replies_with_the_document_its_command_prints",
             InstallationAct.RESET_STATUS,
         ),
@@ -287,7 +288,7 @@ PERSON_ACT_COMMANDS: Final[Mapping[CliPath, PersonAct]] = MappingProxyType(
         ("config", "profile", "recovery", "disable"): PersonAct(
             _TYPED_BY_THE_PERSON,
             operations=("user-profile.recovery.revoke",),
-            proof=f"{_ENTRYPOINT_TESTS}/test_recovery_revoke_operation.py"
+            proof=f"{_CLI_TESTS}/test_recovery_revoke_operation.py"
             "::test_revocation_proves_the_passphrase_removes_the_wrapper_and_prints_what_the_command_prints",
         ),
         ("config", "profile", "resume"): PersonAct(_TYPED_BY_THE_PERSON),
@@ -311,6 +312,9 @@ _PRINTS_HELP: Final = "invoked bare, it prints the help of its group, which ever
 COMMANDS_WITH_NO_WORK_TO_SHARE: Final[Mapping[CliPath, str]] = MappingProxyType(
     {
         ("app",): _PRINTS_HELP,
+        ("app", "agent", "serve"): (
+            "it serves the hosted agent itself, for the desktop host that holds it open; an agent never starts itself"
+        ),
         ("app", "diagnostics"): _PRINTS_HELP,
         ("app", "tui"): "it starts the terminal interface itself",
         ("config",): _PRINTS_HELP,

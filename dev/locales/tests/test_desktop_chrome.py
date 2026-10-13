@@ -213,8 +213,6 @@ _AWAITING_CONSUMER_CEILING = frozenset(
         "desktop.account.unknown",
         "desktop.signin.checking",
         "desktop.signin.lead",
-        "desktop.signin.open_tui",
-        "desktop.signin.open_tui_hint",
         "desktop.signin.password",
         "desktop.signin.refused.custody_changed",
         "desktop.signin.refused.generation_changed",

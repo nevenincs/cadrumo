@@ -213,6 +213,13 @@ owns bundled typefaces; `base.css` owns document, focus and reduced-motion rules
 `utilities.css` owns token-backed content grids and third-party adjustments.
 There are no CSS modules: components compose utilities and shared primitives.
 
+Pills use the solid, borderless variants in `ui/badge.tsx`. Status labels,
+counts, sent-file chips and toasts use `Badge`; interactive filter pills use
+the `Button` pill variant. Calendar windows read the same badge variants,
+with rounded ends only where the window begins or ends. Colour, type and
+spacing come from the shared palette roles and tokens. Keyboard focus and
+selection keep their shared indicators.
+
 Public shell components use PascalCase filenames under `src/components/`.
 Feature internals live in `calendar/`, `account/` and `records/`, with a descriptive
 component per module. Generic primitives keep shadcn's kebab-case filenames
@@ -316,17 +323,15 @@ The calendar has two faces over the one read, in
   its window is open, ending on the day that binds, in a row of its own where
   windows overlap. A window is named in full, Modelo and period, where it
   is first drawn in a month; the weeks it goes on across carry its Modelo
-  alone, quietly. Its closing end is its heaviest edge,
-  `--calendar-deadline-edge`, and hovered it takes the shared wash over its
+  alone. Its ends are rounded, and hovered it takes the shared wash over its
   own fill (`hover-wash`). What was observed is a mark on its day, filled for a
   filing made and hollow for a message from the agency. The day the product
   evaluated is marked: filled and said as today where it is today here,
   ringed and said as its date where it is not. The months run from the
   range's first to its last, and on to the month in which the last window
   open in the range closes, a year past the range at most.
-  A window's reading is never told by colour alone: what is late has a
-  dashed edge and what is not known a dotted one, and a window with room
-  carries the reading's mark. Where the system forces its colours the edge,
+  A window uses the shared solid pill fill and carries its state's icon,
+  including in narrow windows. Where the system forces its colours the fill,
   the mark, the day and an outline on what is chosen remain.
   A window whose opening is null is drawn on its closing day alone and says
   the opening was not reported: an opening is never guessed. A week shows

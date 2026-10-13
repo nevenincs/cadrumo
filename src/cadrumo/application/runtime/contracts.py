@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import IntEnum, StrEnum
 from types import MappingProxyType
-from typing import Annotated, Literal, Protocol, override
+from typing import Annotated, ClassVar, Literal, Protocol, override
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -156,6 +156,10 @@ class RuntimeClientHello(BaseModel):
     storage_identity: ContentDigest
     authority_generation: RuntimeAuthorityGeneration | None = None
     lifecycle_notices: Literal["v1"] | None = None
+
+    #: Members left out of the frame while unset: a peer built before they
+    #: existed refuses a document that carries them.
+    frame_omits_when_unset: ClassVar[frozenset[str]] = frozenset({"lifecycle_notices"})
 
 
 class RuntimeServerHello(BaseModel):

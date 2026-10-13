@@ -14,7 +14,7 @@ from cadrumo.application.bucket_maintenance.deletion_preflight import (
     ProfileDeletionRefusal,
     assess_named_profile_deletion,
 )
-from cadrumo.entrypoints.tests.command_line_rendering import (
+from cadrumo.entrypoints.cli.tests.command_line_rendering import (
     as_the_command_line_renders,
     command_error,
     command_result,

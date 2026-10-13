@@ -31,7 +31,8 @@ from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_va
 from ...core.aggregation import BindingSourceKind
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.i18n.translatable import Translatable as tr
-from ...core.logging import LogExtra, get_logger
+from ...core.log_extra import LogExtra
+from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...domain.calculations.registry.invoice_bindings import (

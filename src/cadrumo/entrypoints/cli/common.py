@@ -194,7 +194,7 @@ EU_MEMBER_STATE_CHOICE: typer_click_types.ParamType = cast(
 if TYPE_CHECKING:
     from ...application.modelo.work_lifecycle import ModeloWorkLifecycleContinuation
     from ...application.operator_actions.models import ActionReference, PreconditionVerdict
-    from ...application.operator_surface.command_ports import VerbInputSchema
+    from ...application.operator_surface.verb_input_contracts import VerbInputSchema
     from ...core.json_contract import ResolvedNoticeAction
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
@@ -645,7 +645,7 @@ def _powershell_action_token(token: str) -> str:
 
 def _action_text_lines(notices: Sequence[Notice]) -> tuple[str, ...]:
     """Derive executable text commands from the same resolved action DTOs as JSON."""
-    from ...application.operator_surface.command_ports import cli_argv_for
+    from ...application.operator_surface.verb_input_contracts import cli_argv_for
     from ...core.json_contract import ResolvedNoticeAction
     from ...core.product_identity import PRODUCT_IDENTITY
 

@@ -433,6 +433,7 @@ def config_logout(
         receipt_removed=None if outcome is None else outcome.receipt_removed,
         keychain_removed=None if outcome is None else outcome.keychain_removed,
         automation_enabled=None if outcome is None else outcome.automation_enabled,
+        agent_access_remains=None if outcome is None else outcome.agent_access_remains,
     )
     notices: tuple[Notice, ...] = ()
     if signed_out is None:
@@ -453,6 +454,7 @@ def config_logout(
             f"receipt_removed\t{result.receipt_removed}",
             f"keychain_removed\t{result.keychain_removed}",
             f"automation_enabled\t{result.automation_enabled}",
+            f"agent_access_remains\t{result.agent_access_remains}",
             *(notice.message for notice in notices),
         ),
         notices=notices,

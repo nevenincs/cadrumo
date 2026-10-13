@@ -22,7 +22,8 @@ import pytest
 
 from cadrumo.core import logging as _logging_mod
 from cadrumo.core.config import override_settings
-from cadrumo.core.logging import LogExtra, SecretScrubbingFilter, configure_logging, default_log_file_path, get_logger
+from cadrumo.core.log_extra import LogExtra
+from cadrumo.core.logging import SecretScrubbingFilter, configure_logging, default_log_file_path, get_logger
 from cadrumo.core.observability.tests.sink_scope import attach_run_sink, detach_run_sink
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

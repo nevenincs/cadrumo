@@ -1,5 +1,15 @@
 cli:
   app:
+    agent:
+      app_help: Serveix l'assistent allotjat per al teu perfil amb la sessió iniciada.
+      serve:
+        agent_source_help: Camí absolut d'un arbre de codi de cadrumo-agent des del
+          qual s'executa l'assistent. Si no l'indiques, s'executa l'assistent inclòs
+          a Cadrumo.
+        help: Inicia l'assistent allotjat amb la teva sessió desada i mantén-lo en
+          marxa fins que es tanqui l'entrada estàndard. Llegeix una línia JSON amb
+          el testimoni de la passarel·la a l'entrada estàndard i escriu línies JSON
+          d'esdeveniments a la sortida estàndard.
     ledger:
       account:
         account_id_help: L'identificador del compte propi, per exemple acc-01.

@@ -170,7 +170,10 @@ const SURFACES: {
     scenario: "signed-in",
     reach: async (target) => {
       await target
-        .getByRole("button", { name: label("desktop.rail.settings") })
+        .getByRole("button", {
+          name: label("desktop.rail.settings"),
+          exact: true,
+        })
         .click();
       await expect(target.locator(".settings")).toBeVisible();
     },

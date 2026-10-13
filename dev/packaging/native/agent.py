@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
-import shutil
+import sys
 from pathlib import Path
 
 from packaging.requirements import Requirement
@@ -24,16 +24,6 @@ from .build_toolchain import selected_uv
 from .hashing import digest
 from .product import BUNDLED_EXTRAS
 from .target import uv_platform
-
-
-def agent_pin() -> dict[str, str]:
-    """Read the single immutable source identity."""
-    record = json.loads((REPO_ROOT / "native/agent.json").read_text(encoding="utf-8"))
-    if not isinstance(record, dict) or any(
-        not isinstance(key, str) or not isinstance(value, str) for key, value in record.items()
-    ):
-        raise ValueError("Agent source identity must contain string fields")
-    return {str(key): str(value) for key, value in record.items()}
 
 
 def locked_requirements(target: str, python: str) -> dict[str, Requirement]:
@@ -72,51 +62,55 @@ def locked_requirements(target: str, python: str) -> dict[str, Requirement]:
     return requirements
 
 
-def build_agent(output: Path, archive: Path, cmake: str, uv: str) -> None:
-    """Acquire only through CMake, then build and inventory one private wheel."""
-    pin = agent_pin()
-    if digest(archive) != pin["sha256"]:
-        raise ValueError("Agent source archive checksum mismatch")
+def build_agent(output: Path, source: Path, uv: str) -> None:
+    """Build the configured local project through the native CMake action."""
+    source = source.resolve(strict=True)
+    project = parse_toml((source / "pyproject.toml").read_text(encoding="utf-8"))["project"]
+    if canonicalize_name(project["name"]) != "cadrumo-agent":
+        raise ValueError("Configured agent directory must contain cadrumo-agent")
     output.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(archive, output / "source.tar.gz")
+    wheels = output / "wheels"
     result = run_command(
         [
-            cmake,
-            f"-DAGENT_OUTPUT={output}",
-            f"-DAGENT_REVISION={pin['revision']}",
-            f"-DAGENT_SHA256={pin['sha256']}",
-            "-P",
-            str(REPO_ROOT / "native/cmake/AgentSource.cmake"),
+            uv,
+            "build",
+            "--python",
+            sys.executable,
+            "--no-build-isolation",
+            "--no-sources",
+            "--wheel",
+            "--out-dir",
+            str(wheels),
+            str(source),
         ],
         cwd=REPO_ROOT,
     )
-    if result.returncode:
-        raise RuntimeError(result.stderr)
-    source = output / "source"
-    project = parse_toml((source / "pyproject.toml").read_text(encoding="utf-8"))["project"]
-    if project["name"] != "cadrumo-agent" or project["version"] != pin["version"]:
-        raise ValueError("Agent source metadata differs from its pin")
-    wheels = output / "wheels"
-    result = run_command([uv, "build", "--no-sources", "--wheel", "--out-dir", str(wheels), str(source)], cwd=REPO_ROOT)
     if result.returncode:
         raise RuntimeError(result.stderr)
     artifacts = list(wheels.glob("*.whl"))
     if len(artifacts) != 1:
         raise ValueError("Agent build must produce exactly one wheel")
     metadata = read_wheel_metadata(artifacts[0])
-    if metadata["Name"] != "cadrumo-agent" or metadata["Version"] != pin["version"]:
-        raise ValueError("Agent wheel metadata differs from its pin")
+    if metadata["Name"] != "cadrumo-agent" or metadata["Version"] != project["version"]:
+        raise ValueError("Agent wheel metadata differs from the configured project")
     (output / "agent-wheel.json").write_text(
-        json.dumps(dict(pin, wheel=artifacts[0].name, wheel_sha256=digest(artifacts[0])), indent=2) + "\n",
+        json.dumps(
+            dict(
+                source=str(source),
+                version=metadata["Version"],
+                wheel=artifacts[0].name,
+                wheel_sha256=digest(artifacts[0]),
+            ),
+            indent=2,
+        )
+        + "\n",
         encoding="utf-8",
     )
 
 
 def agent_wheel(output: Path) -> Path:
-    """Admit the built wheel against its recorded checksum and source pin."""
+    """Verify the built wheel against its recorded artifact checksum."""
     record = json.loads((output / "agent-wheel.json").read_text(encoding="utf-8"))
-    if any(record.get(key) != value for key, value in agent_pin().items()):
-        raise ValueError("Agent wheel was built from another source pin")
     name = record["wheel"]
     if not isinstance(name, str) or Path(name).name != name or not name.endswith(".whl"):
         raise ValueError("Invalid agent wheel path")
@@ -142,7 +136,8 @@ def validate_wheel_dependencies(wheel: Path, target: str, python: str) -> None:
 def update_lock(build: Path, target: str) -> None:
     """Resolve a supplemental lock explicitly, constrained by the app's lock."""
     paths = build_paths(build)
-    source = paths["agent"] / "source"
+    receipt = json.loads((paths["agent"] / "agent-wheel.json").read_text(encoding="utf-8"))
+    source = Path(receipt["source"])
     requirements = parse_toml((source / "pyproject.toml").read_text(encoding="utf-8"))["project"]["dependencies"]
     work = paths["testing"] / "agent-lock" / target
     work.mkdir(parents=True, exist_ok=True)

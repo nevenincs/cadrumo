@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import ctypes
 import json
 import os
 import queue
@@ -133,6 +132,7 @@ def windows_available_memory_bytes() -> int:
     platform that does not ship them.
     """
     if sys.platform == "win32":
+        import ctypes
 
         class _MemoryStatus(ctypes.Structure):
             _fields_ = [

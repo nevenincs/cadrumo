@@ -49,7 +49,7 @@ test("a list that could not be read coherently names nobody", () => {
   expect(targetOf(stale, null)).toBeNull();
   expect(targetOf(stale, "Berta")).toBeNull();
   // And is not a list of profiles to sign in to.
-  expect(phaseOf(true, status(), false, stale)).toBe("no-profile");
+  expect(phaseOf(true, status(), stale)).toBe("no-profile");
 });
 
 test("a name the product's command line would rewrite is refused, and not passed", () => {
@@ -124,22 +124,22 @@ test("a password is refused under eight characters and over the product's bounds
 
 test("with no profile selected, the profiles that exist are still there to sign in to", () => {
   const none = status();
-  expect(phaseOf(true, none, false)).toBe("no-profile");
-  expect(phaseOf(true, none, false, list([]))).toBe("no-profile");
-  expect(phaseOf(true, none, false, list(["Ana", "Berta"]))).toBe("signed-out");
-  expect(canSignIn(phaseOf(true, none, false, list(["Ana"])), null)).toBe(true);
+  expect(phaseOf(true, none)).toBe("no-profile");
+  expect(phaseOf(true, none, list([]))).toBe("no-profile");
+  expect(phaseOf(true, none, list(["Ana", "Berta"]))).toBe("signed-out");
+  expect(canSignIn(phaseOf(true, none, list(["Ana"])))).toBe(true);
   // Until a host that lists profiles has answered, none selected is not
   // yet none at all: the window is still finding out.
-  expect(phaseOf(true, none, false, null, true)).toBe("checking");
-  expect(phaseOf(true, none, false, list([]), false)).toBe("no-profile");
-  expect(
-    phaseOf(true, status({ active_profile: "Ana" }), false, null, true),
-  ).toBe("signed-out");
+  expect(phaseOf(true, none, null, true)).toBe("checking");
+  expect(phaseOf(true, none, list([]), false)).toBe("no-profile");
+  expect(phaseOf(true, status({ active_profile: "Ana" }), null, true)).toBe(
+    "signed-out",
+  );
   // What comes before it in the reading is not changed by a list.
+  expect(phaseOf(true, status({ state: "present" }), list(["Ana"]))).toBe(
+    "signed-in",
+  );
   expect(
-    phaseOf(true, status({ state: "present" }), false, list(["Ana"])),
-  ).toBe("signed-in");
-  expect(
-    phaseOf(true, status({ runtimeAvailable: false }), false, list(["Ana"])),
+    phaseOf(true, status({ runtimeAvailable: false }), list(["Ana"])),
   ).toBe("services-down");
 });

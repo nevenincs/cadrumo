@@ -98,10 +98,8 @@ def _validate_supervisor_configuration(
         raise ValueError("operation lease duration must be positive")
     require_positive_duration("operation execution timeout", execution_timeout)
     require_positive_duration("operation cleanup timeout", cleanup_timeout)
-    for definition in registry.definitions:
-        declaration = definition.ephemeral_secret
-        if declaration is not None and declaration.lifetime >= lease_duration:
-            raise ValueError("ephemeral secret lifetime must be shorter than the owner lease")
+    if any(lifetime >= lease_duration for lifetime in registry.ephemeral_secret_lifetimes()):
+        raise ValueError("ephemeral secret lifetime must be shorter than the owner lease")
 
 
 class OperationSupervisor(
@@ -177,9 +175,7 @@ class OperationSupervisor(
                 settle_expiry=self._settle_pre_entry_financial_expiry,
             )
         )
-        if self._typed_financial_operands is None and any(
-            definition.transient_financial_operand is not None for definition in registry.definitions
-        ):
+        if self._typed_financial_operands is None and registry.declares_transient_financial_operands():
             raise ValueError("typed financial operations require hardened durable custody")
         _validate_supervisor_configuration(
             registry,

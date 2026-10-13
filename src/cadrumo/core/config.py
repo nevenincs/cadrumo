@@ -928,6 +928,8 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
         "cadrumo_llm_anthropic_api_key",
         "cadrumo_llm_openai_api_key",
         "cadrumo_llm_gemini_api_key",
+        "cadrumo_llm_claude_api_key",
+        "cadrumo_llm_codex_api_key",
         "cadrumo_llm_kimi_api_key",
         "cadrumo_llm_zai_api_key",
         "cadrumo_llm_zhipu_api_key",

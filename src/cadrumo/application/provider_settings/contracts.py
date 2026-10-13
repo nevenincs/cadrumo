@@ -11,24 +11,21 @@ key.
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Annotated, Final
+from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints
 
 from ...core.hex import is_hex64
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...domain.provider_settings.catalog import ProviderAuthKind, ProviderConsumer, ProviderId
+from ...domain.provider_settings.catalog import ProviderAuthKind, ProviderConsumer, ProviderId, ProviderTransport
 
-ABSENT_REVISION: Final[str] = "absent"
-"""The revision of a provider with no stored record, and the guard that creates one."""
-
-ProviderSettingsRevision = Annotated[str, StringConstraints(pattern=r"^(absent|[0-9a-f]{64})$")]
-"""A status revision: ``absent`` or the stored row's opaque revision."""
+ProviderSettingsRevision = Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{64}$")]
+"""A status revision: the stored row's opaque revision, or all zeros when no record exists."""
 
 
 def is_provider_settings_revision(value: str) -> bool:
     """Return whether ``value`` is a well-formed revision token."""
-    return value == ABSENT_REVISION or is_hex64(value)
+    return is_hex64(value)
 
 
 class ProviderSettingsMode(StrEnum):
@@ -73,12 +70,29 @@ class ProviderStatusReason(StrEnum):
     RECORD_UNREADABLE = "record_unreadable"
 
 
+class CliState(StrEnum):
+    """What Cadrumo knows about a cli lane's program on this machine.
+
+    ``unknown`` is reported whenever Cadrumo has not established the state
+    without reading a provider-owned credential file.
+    """
+
+    INSTALLED_SIGNED_IN = "installed_signed_in"
+    INSTALLED_SIGNED_OUT = "installed_signed_out"
+    NOT_INSTALLED = "not_installed"
+    UNKNOWN = "unknown"
+
+
 class ProviderStatusEntry(BaseModel):
     """Masked status of one provider."""
 
     model_config = _STRICT_FROZEN
 
     id: ProviderId
+    """The lane id every change addresses."""
+    provider: ProviderId
+    """The provider identity the lane reaches; frontends key icons by it."""
+    transport: ProviderTransport
     display_name: str
     auth_kind: ProviderAuthKind
     consumers: tuple[ProviderConsumer, ...]
@@ -90,6 +104,8 @@ class ProviderStatusEntry(BaseModel):
     base_url: str | None
     """The person's stored base URL only; never the catalog default."""
     default_base_url: str | None
+    cli_state: CliState | None
+    """Whether a cli lane's program is installed and signed in; ``None`` for an api lane."""
     revision: ProviderSettingsRevision
 
 
@@ -137,7 +153,7 @@ type ProviderSettingsActionResult = ProviderSettingsActionAccepted | ProviderSet
 
 
 __all__ = [
-    "ABSENT_REVISION",
+    "CliState",
     "ProviderCredentialSource",
     "ProviderReadiness",
     "ProviderSettingsActionAccepted",

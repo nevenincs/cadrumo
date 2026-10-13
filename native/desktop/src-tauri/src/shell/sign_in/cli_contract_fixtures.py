@@ -98,6 +98,7 @@ def documents() -> dict[str, object]:
                 receipt_removed=True,
                 keychain_removed=True,
                 automation_enabled=automation,
+                agent_access_remains=automation,
             ),
         ).model_dump(mode="json")
     other = "22222222-2222-4222-8222-222222222222"

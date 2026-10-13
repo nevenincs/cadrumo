@@ -12,7 +12,7 @@ from dev._paths import REPO_ROOT
 
 from ...runtime_wheel_selection import active_requirements
 from ...runtime_wheelhouse_contract import target_platform
-from ..agent import agent_pin, locked_requirements
+from ..agent import locked_requirements
 from ..assemble import assemble
 from ..product import BUNDLED_EXTRAS
 
@@ -40,7 +40,7 @@ def test_invalid_cohort_never_reaches_payload_copy(tmp_path: Path, defect: str, 
         versions[name] = next(iter(requirement.specifier)).version
     for name, requirement in locked_requirements("windows-x86-64", "3.13.11").items():
         versions[name] = next(iter(requirement.specifier)).version
-    versions["cadrumo-agent"] = agent_pin()["version"]
+    versions["cadrumo-agent"] = "0.1.0"
     companion = PRODUCT_IDENTITY.companion_distributions[0]
     if defect == "missing":
         del versions[companion]
@@ -86,5 +86,6 @@ def test_invalid_cohort_never_reaches_payload_copy(tmp_path: Path, defect: str, 
             images={},
             binary_dir=tmp_path,
             target="windows-x86-64",
+            provenance={"agent": {"version": "0.1.0"}},
         )
     assert not destination.exists()

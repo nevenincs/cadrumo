@@ -13,10 +13,12 @@ from ...config_payloads import (
     ApoderadoConfigureResult,
     ApoderadoStatusResult,
 )
-from ...main import app as root_app
+from ...main import cli_app
 from ...tests.cli_runner import invoke_typer_app
 from ...tests.diagnostics_native_support import diagnostics_native_profile, invoke_diagnostics_cli
 from ...tests.runtime_profile_cli_fixture import NativeCliProfileFixture
+
+root_app = cli_app()
 
 pytestmark = [
     pytest.mark.integration,

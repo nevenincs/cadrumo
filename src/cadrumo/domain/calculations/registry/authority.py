@@ -56,41 +56,35 @@ from .authority_store import (
     SQLiteAuthorityReader,
 )
 from .errors import RegistrySnapshotError, RegistryValidationError
-from .facts.resolution import (
-    GovernedFactQuery,
-    MappingFactQuery,
-    ResolvedGovernedFact,
-    ResolvedMappingFact,
-    resolve_governed_fact,
-    resolve_validated_governed_fact,
-)
-from .facts.schema import GovernedFact
-from .governed_fact_scope import validating_governed_facts
-from .ids import RevisionId
-from .schema import (
-    ModeloDefinition,
-    ModeloRevision,
-    RegistryCatalogues,
-    RegistrySnapshot,
-    SnapshotGlobalCatalogues,
-    SupportedFilingYearsCatalogue,
-)
-from .schema_base import DateAxis
-from .schema_deadlines import DeadlineWindowDefinition
-from .schema_exports import ExportLayoutDefinition
-from .schema_form_layouts import FormLayoutDefinition
-from .schema_references import LegalReference, SourceReference
-from .snapshot import build_validated_snapshot, collect_snapshot_ref_ids
-from .static_inspection import RegistryRevisionInspection
-from .temporal import ModeloRevisionDirectory, select_revision, select_revision_metadata
 
 if TYPE_CHECKING:
+    # The typed registry -- modelo schema, governed facts, snapshots and
+    # temporal selection -- is imported by the methods that evaluate it. A
+    # profile decode needs only the generation pin and the profile schema, and
+    # every sign-in pays for whatever this module imports.
     from ...user_profile.schema import ProfileSchemaDefinition
+    from .facts.resolution import GovernedFactQuery, ResolvedGovernedFact
+    from .facts.schema import GovernedFact
+    from .ids import RevisionId
+    from .schema import (
+        ModeloDefinition,
+        ModeloRevision,
+        RegistryCatalogues,
+        RegistrySnapshot,
+        SnapshotGlobalCatalogues,
+        SupportedFilingYearsCatalogue,
+    )
+    from .schema_deadlines import DeadlineWindowDefinition
+    from .schema_exports import ExportLayoutDefinition
+    from .schema_form_layouts import FormLayoutDefinition
+    from .schema_references import LegalReference, SourceReference
+    from .static_inspection import RegistryRevisionInspection
+    from .temporal import ModeloRevisionDirectory
 
 _LOGGER = get_logger(__name__)
 
 _SnapshotKey = tuple[str, int, str, date | None, str | None, RegistryAuthorityGrade]
-_DeadlineWindow = tuple[str, ModeloRevision, DeadlineWindowDefinition]
+type _DeadlineWindow = tuple[str, ModeloRevision, DeadlineWindowDefinition]
 
 
 type RegistryAuthorityProjection = RegistryRevisionInspection | RegistrySnapshot
@@ -269,6 +263,9 @@ class ValidatedRegistryAuthority:
         effective_date: date | None = None,
     ) -> TaxDomain:
         """Return a syntax-valid tax domain only when this authority declares it."""
+        from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+        from .schema_base import DateAxis
+
         normalized = TaxDomain(tax_domain)
         resolved = self.resolve_governed_fact(
             MappingFactQuery(
@@ -287,6 +284,8 @@ class ValidatedRegistryAuthority:
 
     def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
         """Resolve one typed governed-fact query through this validated authority."""
+        from .facts.resolution import resolve_governed_fact
+
         with self._state_lock:
             if not self._identity_digest:
                 raise RegistryValidationError("governed fact resolution requires an authority identity digest")
@@ -330,6 +329,9 @@ class ValidatedRegistryAuthority:
         a :class:`RegistrySnapshot`; callers that need filing eligibility must
         use :meth:`snapshot` instead.
         """
+        from .static_inspection import RegistryRevisionInspection
+        from .temporal import select_revision
+
         with self._state_lock:
             modelo = self.modelo(modelo_id)
             revision = select_revision(
@@ -396,6 +398,9 @@ class ValidatedRegistryAuthority:
         grade: RegistryAuthorityGrade,
     ) -> RegistrySnapshot:
         """Share an admitted immutable projection within the bounded context cache."""
+        from .governed_fact_scope import validating_governed_facts
+        from .snapshot import build_validated_snapshot
+
         normalized_modelo_id = Modelo(modelo_id).value
         key = (normalized_modelo_id, filing_year, period, on, revision_id, grade)
         cached = self._snapshots.get(key)
@@ -486,6 +491,8 @@ class ValidatedRegistryAuthority:
         stricter corpus validation verdict.  This is selection, not
         deduplication: every row in the selected revision remains observable.
         """
+        from .temporal import select_revision
+
         out: list[_DeadlineWindow] = []
         for modelo in self._selected_modelos(modelos):
             candidates = tuple(
@@ -570,6 +577,8 @@ class PinnedAuthorityOperation:
 
     def governed_fact(self, fact_id: str) -> GovernedFact:
         """Load one raw governed fact by canonical identity."""
+        from .facts.schema import GovernedFact
+
         value = self.load(GovernedFactComponentQuery(fact_id), pin=self.generation)
         if not isinstance(value, GovernedFact):
             raise RegistryValidationError("governed fact component decoded to an unexpected type")
@@ -577,6 +586,8 @@ class PinnedAuthorityOperation:
 
     def snapshot_globals(self) -> SnapshotGlobalCatalogues:
         """Load the registry-wide globals published with this generation."""
+        from .schema import SnapshotGlobalCatalogues
+
         value = self.load(SnapshotGlobalsComponentQuery(), pin=self.generation)
         if not isinstance(value, SnapshotGlobalCatalogues):
             raise RegistryValidationError("snapshot globals component decoded to an unexpected type")
@@ -606,6 +617,8 @@ class PinnedAuthorityOperation:
 
     def revision(self, modelo_id: str | Modelo, revision_id: str) -> ModeloRevision:
         """Load one typed base revision without separately addressed export layouts."""
+        from .schema import ModeloRevision
+
         normalized = Modelo(modelo_id).value
         try:
             value = self._reader.load(ModeloRevisionComponentQuery(normalized, revision_id), pin=self.generation)
@@ -635,6 +648,8 @@ class PinnedAuthorityOperation:
 
     def modelo_directory(self, modelo_id: str | Modelo) -> ModeloRevisionDirectory:
         """Load the small selector-complete directory for one modelo."""
+        from .temporal import ModeloRevisionDirectory
+
         normalized = Modelo(modelo_id).value
         try:
             value = self.load(ModeloDirectoryComponentQuery(normalized), pin=self.generation)
@@ -670,6 +685,8 @@ class PinnedAuthorityOperation:
         revision_id: RevisionId | None = None,
     ) -> ModeloRevision:
         """Select by complete metadata, then load exactly one complete revision."""
+        from .temporal import select_revision_metadata
+
         normalized = Modelo(modelo_id).value
         selected = select_revision_metadata(
             self.modelo_directory(normalized),
@@ -691,6 +708,10 @@ class PinnedAuthorityOperation:
         grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
     ) -> RegistrySnapshot:
         """Build one validated snapshot from same-generation point components."""
+        from .schema import RegistryCatalogues
+        from .snapshot import build_validated_snapshot, collect_snapshot_ref_ids
+        from .temporal import select_revision_metadata
+
         normalized = Modelo(modelo_id).value
         directory = self.modelo_directory(normalized)
         selected = select_revision_metadata(
@@ -724,6 +745,8 @@ class PinnedAuthorityOperation:
 
     def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
         """Resolve one fact once per query without revalidating its static component."""
+        from .facts.resolution import resolve_validated_governed_fact
+
         with self._state_lock:
             cached = self._fact_resolutions.get(query)
             if cached is not None:
@@ -746,6 +769,8 @@ class PinnedAuthorityOperation:
 
     def legal_reference(self, reference_id: str) -> LegalReference:
         """Load one legal declaration by canonical identity."""
+        from .schema_references import LegalReference
+
         value = self.load(
             ReferenceComponentQuery(reference_id, AuthorityComponentKind.LEGAL_REFERENCE),
             pin=self.generation,
@@ -756,6 +781,8 @@ class PinnedAuthorityOperation:
 
     def source_reference(self, reference_id: str) -> SourceReference:
         """Load one public-source declaration by canonical identity."""
+        from .schema_references import SourceReference
+
         value = self.load(
             ReferenceComponentQuery(reference_id, AuthorityComponentKind.SOURCE_REFERENCE),
             pin=self.generation,
@@ -771,6 +798,8 @@ class PinnedAuthorityOperation:
         layout_id: str,
     ) -> ExportLayoutDefinition:
         """Load one separately addressable export layout."""
+        from .schema_exports import ExportLayoutDefinition
+
         value = self._reader.load(
             ExportLayoutComponentQuery(Modelo(modelo_id).value, revision_id, layout_id),
             pin=self.generation,
@@ -785,6 +814,8 @@ class PinnedAuthorityOperation:
         Absence is the inspection-only arm, not an error: the revision exists
         and has no published layout. An unknown revision still refuses.
         """
+        from .schema_form_layouts import FormLayoutDefinition
+
         normalized = Modelo(modelo_id).value
         query = FormLayoutComponentQuery(normalized, revision_id)
         if query not in self._reader.component_queries():
@@ -820,6 +851,10 @@ class PinnedAuthorityOperation:
         the snapshot admission path. The capture compares current against every
         coordinate read from the same admitted generation in this process.
         """
+        from .snapshot import collect_snapshot_ref_ids
+        from .static_inspection import RegistryRevisionInspection
+        from .temporal import select_revision_metadata
+
         normalized = Modelo(modelo_id).value
         projection: RegistryAuthorityProjection
         if grade is None:
@@ -876,6 +911,8 @@ class IndexedRegistryAuthority:
     @contextmanager
     def operation(self) -> Generator[PinnedAuthorityOperation]:
         """Pin one reader incarnation for a complete application operation."""
+        from .governed_fact_scope import validating_governed_facts
+
         with self.lease_operation() as operation, validating_governed_facts(operation):
             yield operation
 

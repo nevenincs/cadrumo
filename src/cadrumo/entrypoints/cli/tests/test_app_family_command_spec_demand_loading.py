@@ -28,9 +28,10 @@ def test_app_family_help_is_graph_exact_and_imports_no_behavior_target(family: s
 import json
 import sys
 from typer.testing import CliRunner
-from cadrumo.entrypoints.cli.main import app
+from cadrumo.entrypoints.cli.main import cli_app
 from cadrumo.entrypoints.cli.command_spec import NON_LEAF_COMMAND_KINDS
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
+app = cli_app()
 
 nodes = COMMAND_GRAPH.nodes()
 families = {{
@@ -105,8 +106,9 @@ def test_real_state_free_leaf_invocation_loads_only_its_own_family_behavior() ->
 import json
 import sys
 from typer.testing import CliRunner
-from cadrumo.entrypoints.cli.main import app
+from cadrumo.entrypoints.cli.main import cli_app
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
+app = cli_app()
 
 nodes = COMMAND_GRAPH.nodes()
 selected = next(node for node in nodes if node.path == ("aeat", "app", "live", "portals", "list"))

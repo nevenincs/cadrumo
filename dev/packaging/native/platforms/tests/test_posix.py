@@ -17,6 +17,7 @@ from dev.packaging.native import layout as native_layout
 from dev.packaging.native.hashing import digest
 from dev.packaging.native.platforms import linux, macos, posix
 from dev.packaging.native.platforms.posix import acquire_sdk, dependencies_by_name, relative_loader_path
+from dev.packaging.native.tests.binary_fixtures import elf_image
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -421,10 +422,10 @@ def test_sdk_extensions_follow_declared_exclusions_with_recorded_reasons(tmp_pat
     packages = root / "packages"
     for directory in (sdk / "extensions", native, packages):
         directory.mkdir(parents=True)
-    _elf(sdk / "runtime.so")
+    elf_image(sdk / "runtime.so")
     suffix = ".cpython-313-x86_64-linux-gnu.so"
     for name in ("_tkinter", "_ctypes_test", "_dbm", "_sqlite3"):
-        _elf(sdk / "extensions" / (name + suffix))
+        elf_image(sdk / "extensions" / (name + suffix))
     contract = {
         "sdk": {
             "native_files": ["runtime.so"],
@@ -485,16 +486,8 @@ def test_external_probe_is_fresh_executable_outside_the_package(
         probe_factory(tmp_path)
 
 
-def _elf(path: Path, machine: int = 62) -> Path:
-    data = bytearray(64)
-    data[:6] = b"\x7fELF\x02\x01"
-    struct.pack_into("<H", data, 18, machine)
-    path.write_bytes(data)
-    return path
-
-
 def test_elf_wrong_machine_is_refused_before_tools(tmp_path: Path) -> None:
-    image = _elf(tmp_path / "wrong.so", 183)
+    image = elf_image(tmp_path / "wrong.so", 183)
     with pytest.raises(ValueError, match="architecture"):
         linux.relocate(
             [image], tmp_path, {"platform": "linux-x86-64", "native_tools": {}, "native_system_libraries": []}
@@ -507,9 +500,9 @@ def test_elf_dependency_search_is_assigned_to_every_requesting_object(
 ) -> None:
     (tmp_path / "libs").mkdir()
     (tmp_path / "vendor").mkdir()
-    application = _elf(tmp_path / "app")
-    library = _elf(tmp_path / "libs/dependency.so")
-    nested = _elf(tmp_path / "vendor/nested.so")
+    application = elf_image(tmp_path / "app")
+    library = elf_image(tmp_path / "libs/dependency.so")
+    nested = elf_image(tmp_path / "vendor/nested.so")
     needed = {str(application): "dependency.so", str(library): "nested.so", str(nested): "libc.so.6"}
     written: dict[str, str] = {}
 
@@ -558,7 +551,7 @@ def test_elf_floor_and_missing_dependency_refusals(
     needed: str,
     reason: str,
 ) -> None:
-    image = _elf(tmp_path / "image.so")
+    image = elf_image(tmp_path / "image.so")
 
     def read_tool(tool: str, *arguments: str) -> str:
         assert arguments[0] in {"--version-info", "--print-needed"}, "must refuse before mutation"

@@ -16,9 +16,9 @@ related:
   - '[[2026-07-08-mcp-protocol-hardening-adr]]'
   - '[[2026-07-31-mcp-sdk-major-carry-adr]]'
   - '[[2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr]]'
-modified: '2026-10-12'
+modified: '2026-10-13'
 body_schema: body-v2
-body_hash: 'sha256:3bff551f5db9a6da79386d02e0fcc7f1302ae7433237e5b73c0e47e279b0a1e8'
+body_hash: 'sha256:03e4a69f3f6f84b91b4279517dc813276a476c15c2f27da3f511466e4d3b8ed7'
 ---
 
 <!-- RETIRED: P03, P07, S20, S21, S22, S23, S24, S25, S26, S31, S32, S36, S40, S41, S43 -->
@@ -179,6 +179,12 @@ Delivers the owner's ruling of 2026-10-12: replies summarise the session's discl
 - [x] `P11.S71` - Carry in the status, session and similar replies the count and a per-category summary of the session effective_scope disclosures instead of the full list, add a paged read of the full list served alike on the command line, the terminal interface and MCP, and regenerate the contracts, surface pins and agent command reference that derive from them; `src/cadrumo/application/user_profile/access_contracts.py`.
 - [x] `P11.S72` - Let the person issue a key for an agent (MCP) with its data categories from config automation create on the command line and the terminal interface, bind the release destination to the key in the runtime enrollment so results go to whichever local MCP client presents it, and prove against a running runtime with a synthetic encrypted profile that the MCP server of a key issued on the command line reads a profile value back; `src/cadrumo/application/user_profile/automation_administration_service.py`.
 - [x] `P11.S73` - Extend the live agent lane so the access-api-key phase checks that the agent reads profile values back through the issued key, not only that its submissions are accepted; `dev/agent_eval/live/access.py`.
+- [ ] `P11.S74` - Add per-key suspend and resume as person acts on human frontends, refused on MCP, with no password and no sign-out, so the person can pause one agent key without locking the profile; `src/cadrumo/application/user_profile/automation_lifecycle_service.py, src/cadrumo/entrypoints/cli/config/`.
+- [ ] `P11.S75` - Let the person name a key at issue with a non-secret label, shown in the key inventory; `src/cadrumo/application/user_profile/, src/cadrumo/entrypoints/cli/config/`.
+- [ ] `P11.S76` - Give review_not_found, review_digest_mismatch and target_mismatch typed refusal codes in error.context.reason through the registered error catalogue; `src/cadrumo/core/errors/, src/cadrumo/application/user_profile/`.
+- [ ] `P11.S77` - Let a signed-in person on a human frontend issue an agent key in one act, without re-entering the password or running a second concurrent approval child, per the owner's ruling against confirming an act the person already took; `src/cadrumo/entrypoints/cli/runtime_automation_request.py, src/cadrumo/application/user_profile/automation_approval_session.py`.
+- [ ] `P11.S78` - Report each grant's use in automation list, so a frontend can show only keys issued for an agent; `src/cadrumo/application/user_profile/, src/cadrumo/entrypoints/cli/config/`.
+- [ ] `P11.S79` - Answer revoking an unknown grant with a distinct typed code instead of a silent no-op; `src/cadrumo/application/user_profile/automation_administration.py`.
 
 ## Parallelization
 

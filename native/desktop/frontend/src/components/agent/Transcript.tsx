@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef } from "react";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/components/ui/cn";
 import { Empty, EmptyDescription } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
@@ -37,9 +38,10 @@ function listFormat(locale: string): Intl.ListFormat {
 
 function toolWords(t: Translate): Record<ToolActivityState, string> {
   return {
-    running: t("desktop.agent.tool_running"),
-    done: t("desktop.agent.tool_done"),
-    refused: t("desktop.agent.refused"),
+    pending: t("desktop.agent.tool_pending"),
+    in_progress: t("desktop.agent.tool_running"),
+    completed: t("desktop.agent.tool_done"),
+    failed: t("desktop.agent.tool_failed"),
   };
 }
 
@@ -60,25 +62,18 @@ function SentFiles({
       className="flex max-w-full flex-wrap justify-end gap-1"
     >
       {shown.map((file) => (
-        <li
-          key={file.id}
-          title={file.name}
-          className="flex h-control-xs max-w-40 min-w-0 items-center gap-1 rounded-full border bg-card px-2 text-xs text-foreground"
-        >
-          <Icon
-            name={KIND_GLYPH[file.kind]}
-            size="xs"
-            className="text-muted-foreground"
-          />
-          <span className="truncate">{file.name}</span>
+        <li key={file.id} title={file.name} className="min-w-0">
+          <Badge className="h-control-xs max-w-40 min-w-0">
+            <Icon name={KIND_GLYPH[file.kind]} size="xs" />
+            <span className="truncate">{file.name}</span>
+          </Badge>
         </li>
       ))}
       {folded.length > 0 && (
-        <li
-          title={listFormat(locale).format(folded.map((file) => file.name))}
-          className="flex h-control-xs items-center rounded-full border bg-card px-2 text-xs text-muted-foreground"
-        >
-          {t("desktop.agent.more_files", { count: folded.length })}
+        <li title={listFormat(locale).format(folded.map((file) => file.name))}>
+          <Badge className="h-control-xs">
+            {t("desktop.agent.more_files", { count: folded.length })}
+          </Badge>
         </li>
       )}
     </ul>
@@ -176,21 +171,25 @@ function AgentTurn({
 function ToolRow({ activity }: { activity: TranscriptToolActivity }) {
   const t = useStrings();
   const { state } = activity;
-  const refused = state === "refused";
+  const failed = state === "failed";
   return (
     <li className="flex min-w-0 items-start gap-2 pr-4 text-sm text-muted-foreground">
-      {state === "running" ? (
+      {state === "pending" || state === "in_progress" ? (
         <Spinner className="mt-0.5" />
       ) : (
         <Icon
-          name={refused ? "alert" : "check"}
-          className={cn("mt-0.5", refused && "text-destructive")}
+          name={failed ? "alert" : "check"}
+          className={cn("mt-0.5", failed && "text-destructive")}
         />
       )}
       <div className="grid min-w-0 flex-1">
         <span className="wrap-anywhere">
           {activity.label}
-          <span className="sr-only">, {toolWords(t)[state]}</span>
+          {/* A failed call is said in words, not by its icon alone. */}
+          <span className={failed ? "ml-1.5 text-destructive" : "sr-only"}>
+            {failed ? "" : ", "}
+            {toolWords(t)[state]}
+          </span>
         </span>
         {activity.detail && (
           <span className="text-xs wrap-anywhere">{activity.detail}</span>

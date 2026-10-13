@@ -67,6 +67,7 @@ ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
             "review",
             "quickfile",
             "diagnostics",
+            "agent",
         ),
     ),
 )
@@ -247,6 +248,14 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         child="diagnostics",
         operator_question=("report recent local LLM run health, latency, errors, and usage over the active bucket"),
         service_owner="cadrumo.application.diagnostics_run_health",
+        mutability=OperatorMutability.LOCAL_STATE_MUTATING,
+    ),
+    MountedCommandFamily(
+        domain=MountedCommandDomain.AGENT,
+        root=RootSurfaceName.APP,
+        child="agent",
+        operator_question="serve the hosted assistant for the signed-in profile while its host keeps it open",
+        service_owner="cadrumo.application.agent_host",
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
 )

@@ -1,6 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ComponentProps, ReactNode } from "react";
 import { Specimen } from "@/dev/catalogue/Frame";
+import { FIXTURE_CATALOG } from "@/dev/fixtures/agentCatalog";
+import { catalogChoices, offeredSelection } from "../../shell/agentCatalog";
+import { SOURCE_LOCALE, translator } from "../../shell/strings";
 import { Composer } from "./Composer";
 import type {
   AgentSelection,
@@ -22,53 +25,19 @@ export const NOOP = () => undefined;
 /** Keeps a draft in place: the specimen never sends it. */
 export const KEEP_DRAFT = () => false;
 
-export const PROVIDERS: ProviderOption[] = [
-  { id: "anthropic", name: "Anthropic", selectable: true },
-  {
-    id: "local",
-    name: "On this computer",
-    selectable: false,
-    unavailableReason: "No local model is installed",
-  },
-];
+// The specimen's providers and models are the scenario host's catalog, as
+// the column deduces its choices from it: every model in it is made up and
+// named as a fixture.
+const CHOICES = catalogChoices(translator(SOURCE_LOCALE), FIXTURE_CATALOG);
 
-// A specimen's efforts, as a model's catalog entry would list them.
-const EFFORTS = [
-  { id: "low", name: "Low" },
-  { id: "medium", name: "Medium" },
-  { id: "high", name: "High" },
-];
+export const PROVIDERS: ProviderOption[] = CHOICES.providers;
 
-export const MODELS: Record<string, ModelOption[]> = {
-  anthropic: [
-    {
-      id: "opus",
-      name: "Opus 5.5",
-      description: "Most capable, for careful work across many documents",
-      efforts: EFFORTS,
-      defaultEffort: "high",
-    },
-    {
-      id: "sonnet",
-      name: "Sonnet 5",
-      description: "Balanced speed and depth for everyday questions",
-      efforts: EFFORTS,
-      defaultEffort: "medium",
-    },
-    {
-      id: "haiku",
-      name: "Haiku 5",
-      description: "Quick answers to short questions",
-      efforts: [],
-    },
-  ],
-  local: [],
-};
+export const MODELS: Record<string, ModelOption[]> = CHOICES.models;
 
-export const SELECTION: AgentSelection = {
-  providerId: "anthropic",
-  modelId: "opus",
-  effort: "high",
+export const SELECTION: AgentSelection = offeredSelection(CHOICES, null) ?? {
+  providerId: "",
+  wayId: "",
+  modelId: "",
 };
 
 // Pictures for image tiles, drawn inline: no request leaves the catalogue.

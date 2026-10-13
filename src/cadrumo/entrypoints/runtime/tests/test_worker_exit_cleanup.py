@@ -35,7 +35,7 @@ from cadrumo.application.runtime.profile_worker import (
 )
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
-from cadrumo.entrypoints.runtime import worker, worker_service
+from cadrumo.entrypoints.runtime import worker, worker_operation_requests, worker_service
 from cadrumo.entrypoints.runtime.operation_host import ProfileWorkerOperationHost
 from cadrumo.entrypoints.runtime.profile_login import ProfileWorkerHumanLogin
 
@@ -73,9 +73,9 @@ def test_description_keeps_loop_responsive_and_retains_host_until_thread_settles
                 return describe(session_id, definition_id)
 
         # This path raises before channel or custody access; bind only its host.
-        context = object.__new__(worker_service._WorkerControl)
-        object.__setattr__(context, "operations", DescriptionOperations())
-        handler = asyncio.create_task(worker_service._handle_metadata_control(context, request))
+        handler = asyncio.create_task(
+            worker_operation_requests.describe_contract(cast(WorkerChannel, object()), DescriptionOperations(), request)
+        )
         started = asyncio.create_task(entered.wait())
         try:
             await asyncio.wait((handler, started), return_when=asyncio.FIRST_COMPLETED)

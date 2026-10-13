@@ -98,6 +98,12 @@ class ProfileConnectionAttendanceMixin:
             renewed = self._renew_attended(connection, host, request.request_id)
             if renewed is not None:
                 return renewed
+            owner = self._agent_tree_owner(context)
+            if owner is not None:
+                # The person approved this agent when they started it: its tree is attended under that lease.
+                if owner.profile_id != request.profile_id:
+                    return AccessDenied(code=AccessDenialCode.PROFILE_MISMATCH)
+                return self._attend_agent_tree(connection, host, owner, request.request_id)
             with self._guard:
                 spent = context.connection_id in self._attendance_spent
             if spent or not self._attendance_holder_present(request.profile_id):
@@ -152,6 +158,8 @@ class ProfileConnectionAttendanceMixin:
             ):
                 raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
             return previous
+        # A process of a hosted agent's tree is attended only as an agent, never on a person's frontend.
+        self._refuse_agent_tree_person_access(context, request.frontend)
         login = self._capture(channel)
         observed = login.observe(credential_facilities=Availability.UNAVAILABLE)
         if not observed.active or observed.os_owner_id != context.peer.os_owner_id:

@@ -299,7 +299,7 @@ _EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         "leaf",
         "cli.ledger.export.help",
         "profile-bound",
-        "cadrumo.entrypoints.cli._ledger_read_cli:ledger_export",
+        "cadrumo.entrypoints.cli._ledger_export_cli:ledger_export",
         _expected_result_schema(
             _TARGET, "cadrumo.entrypoints.cli._ledger_payloads:LedgerExportPayload", "ledger.export"
         ),

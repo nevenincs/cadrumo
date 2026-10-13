@@ -124,6 +124,29 @@ class _DeclaredErrorCode:
         return get_registered_error_code(owner)
 
 
+# Subclasses created before the error-code registry module is imported. The
+# registry is a pydantic module; importing it from class creation would make
+# every exception import -- and so every process start -- build its models.
+# Until the registry installs its binder no catalogue can be loaded, so these
+# classes are exactly the ones the registry would defer anyway.
+_classes_awaiting_binder: list[type[BaseException]] = []
+_error_code_binder: Callable[[type[BaseException]], object] | None = None
+
+
+def install_error_code_binder(binder: Callable[[type[BaseException]], object]) -> None:
+    """Route subclass creation through the error-code registry's binder.
+
+    The registry calls this once at import; every subclass created before then
+    is handed to ``binder`` immediately, in creation order.
+    """
+    global _error_code_binder
+    _error_code_binder = binder
+    awaiting = tuple(_classes_awaiting_binder)
+    _classes_awaiting_binder.clear()
+    for error_type in awaiting:
+        binder(error_type)
+
+
 class CadrumoError(Exception):
     """Base exception for all registered Cadrumo errors."""
 
@@ -134,9 +157,10 @@ class CadrumoError(Exception):
     def __init_subclass__(cls, **kwargs: object) -> None:
         """Bind a registered :class:`ErrorCode` to each declared subclass."""
         super().__init_subclass__(**kwargs)
-        from .error_codes import bind_error_code
-
-        bind_error_code(cls)
+        if _error_code_binder is None:
+            _classes_awaiting_binder.append(cls)
+            return
+        _error_code_binder(cls)
 
     def __init__(
         self,

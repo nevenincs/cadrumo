@@ -450,6 +450,20 @@ class WindowsProcessScope:
             validated = cast("tuple[int, ...]", values)
             return tuple(int(pid) for pid in validated)
 
+    def limit_flags(self) -> int:
+        """Read this job's basic limit flags back from the kernel, as they hold now."""
+        if sys.platform != "win32":
+            raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+        import win32job
+
+        with self._lock:
+            if self._job is None:
+                raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+            query_job = cast("Callable[[int, int], object]", win32job.QueryInformationJobObject)
+            information = cast("dict[str, object]", query_job(self._job, win32job.JobObjectExtendedLimitInformation))
+        limits = cast("dict[str, object]", information["BasicLimitInformation"])
+        return int(cast("int", limits["LimitFlags"]))
+
     def contains_process(self, process_handle: int) -> bool:
         """Corroborate a retained live native process against this exact Job."""
         if sys.platform != "win32":

@@ -279,6 +279,8 @@ def test_receipt_proof_reenters_without_password_or_api_promotion(
                             assert second_human_id in revoked.session_ids
                             assert revoked.receipt_removed and revoked.keychain_removed
                             assert revoked.automation_enabled is True
+                            # The issued key is not tied to the sign-in, so agent access remains.
+                            assert revoked.agent_access_remains is True
                         else:
                             with host.guard:
                                 native_login.lock_state = OsLockState.LOCKED

@@ -148,6 +148,9 @@ def _doors(runtime: StoredSignInRuntime, frontend: OperationFrontendProjection, 
     resumed.resume_receipt()
     locking = _client(runtime, frontend)
     locking.resume_receipt()
+    # On the person's frontends the submission starts the operation, so it holds a connection of its own.
+    submitting = _client(runtime, frontend)
+    submitting.resume_receipt()
     answers["session_inventory"] = _answer(resumed.sessions)
     answers["deny_automation"] = _answer(lambda: resumed.deny_automation(AutomationDenialKind.ALL))
     answers["enrollment_prepare"] = _answer(
@@ -166,8 +169,8 @@ def _doors(runtime: StoredSignInRuntime, frontend: OperationFrontendProjection, 
         lambda: resumed.describe(PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID, deadline=time.monotonic() + 30)
     )
     answers["secret_operation_submit"] = _answer(
-        lambda: resumed.operation(
-            _bundle_export(runtime, resumed.session_id, scratch / f"{frontend.value}.bundle"),
+        lambda: submitting.operation(
+            _bundle_export(runtime, submitting.session_id, scratch / f"{frontend.value}.bundle"),
             deadline=time.monotonic() + 30,
         )
     )

@@ -12,6 +12,7 @@ from ...application.runtime.access_management import (
     RuntimeSessionInventory,
     RuntimeSessionInventoryReply,
 )
+from ...application.runtime.agent_host import RuntimeAgentRefused, RuntimeAgentStart, RuntimeAgentStarted
 from ...application.runtime.attendance import (
     RuntimeAttendanceAsk,
     RuntimeAttendanceDecide,
@@ -47,6 +48,7 @@ from ...application.runtime.profile_access import (
     RuntimeDisclosurePageRequest,
     RuntimeProfileLogin,
     RuntimeProfileStatus,
+    RuntimeSecretReady,
     RuntimeSessionRequest,
     RuntimeSessionsLocked,
 )
@@ -383,3 +385,28 @@ class RuntimeProfileTransport(RuntimeVerifiedTransport):
                 raise
             finally:
                 secret[:] = bytes(len(secret))
+
+    def agent_start(
+        self, request: RuntimeAgentStart, bearer: bytearray, *, deadline: float
+    ) -> RuntimeAgentStarted | RuntimeAgentRefused | RuntimeAccessRefusal:
+        """Ask for this session's hosted agent; the bearer goes only on the secret frame the runtime authorizes."""
+        with self._exchange(deadline=deadline, secret=bearer):
+            try:
+                if self._closed:
+                    raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+                write_document(self._channel, request, deadline=deadline)
+                ready = self._reply(request.request_id, deadline=deadline).root
+                if isinstance(ready, RuntimeAgentRefused | RuntimeAccessRefusal):
+                    return ready
+                if not isinstance(ready, RuntimeSecretReady):
+                    raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                self.send_secret(bearer, deadline=deadline)
+                result = self._reply(request.request_id, deadline=deadline).root
+                if not isinstance(result, RuntimeAgentStarted | RuntimeAgentRefused | RuntimeAccessRefusal):
+                    raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                return result
+            except BaseException as error:
+                self._close_after_failure(error)
+                raise
+            finally:
+                bearer[:] = bytes(len(bearer))

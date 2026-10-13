@@ -1685,6 +1685,20 @@ def profile_free_adapter_composition() -> Generator[None]:
 
 
 @contextmanager
+def runtime_read_adapter_composition() -> Generator[ProfileAdapterComposition]:
+    """Bind frontend profile metadata while the runtime owns ledger persistence."""
+    from ..adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
+    from ..core.redaction.tax_identity_admission import bind_tax_identity_admission
+    from ..domain.calculations.registry.tax_identity_admission import RegistryTaxIdentityAdmission
+
+    with (
+        bind_tax_identity_admission(RegistryTaxIdentityAdmission()),
+        composed_profile_persistence_ports() as profile_custody,
+    ):
+        yield ProfileAdapterComposition(profile_custody=profile_custody)
+
+
+@contextmanager
 def profile_adapter_composition(
     *, automation_secrets_store: AutomationSecretStore | None = None
 ) -> Generator[ProfileAdapterComposition]:

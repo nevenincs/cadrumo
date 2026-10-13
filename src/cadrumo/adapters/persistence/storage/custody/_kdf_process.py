@@ -25,7 +25,8 @@ def launch_worker(
     neutral_root: Path,
     request_read: int,
     result_write: int,
-) -> tuple[subprocess.Popen[bytes], _WindowsJob | None]:
+) -> tuple[subprocess.Popen[bytes], _WindowsJob | None, frozenset[str]]:
+    """Launch one contained worker; also name the environment it was given, for its attestation."""
     command, launch_kwargs = worker_command(
         neutral_root=neutral_root,
         request_read=request_read,
@@ -47,9 +48,13 @@ def launch_worker(
             raise
         finally:
             clear_worker_handle_inheritance(request_read=request_read, result_write=result_write)
-        return process, job
+        return process, job, _environment_keys(launch_kwargs)
     process = _launch_worker_process(command, launch_kwargs)
-    return process, None
+    return process, None, _environment_keys(launch_kwargs)
+
+
+def _environment_keys(launch_kwargs: dict[str, object]) -> frozenset[str]:
+    return frozenset(cast("dict[str, str]", launch_kwargs["env"]))
 
 
 def _launch_worker_process(command: list[str], launch_kwargs: dict[str, object]) -> subprocess.Popen[bytes]:
@@ -81,7 +86,7 @@ def worker_command(
     result_write: int,
 ) -> tuple[list[str], dict[str, object]]:
     neutral_cwd = str(neutral_root.resolve())
-    command = [sys.executable, "-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker"]
+    command = [*worker_interpreter(), "-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker"]
     environment = worker_environment(neutral_root=neutral_root)
     common: dict[str, object] = {
         "close_fds": True,
@@ -121,6 +126,24 @@ def worker_command(
             )
         )
     return command, common
+
+
+def worker_interpreter() -> tuple[str, ...]:
+    """Return the interpreter argv prefix that starts the worker.
+
+    On Windows the child receives its import roots through PYTHONPATH (see
+    :func:`worker_environment`), so it runs the base CPython directly and
+    without ``site``: a virtual environment's ``python.exe`` is a launcher
+    that starts the base interpreter as a second process, and the
+    site-packages ``.pth`` hooks import modules the child never uses. Both are
+    pure start-up cost on every wrap and unwrap. Elsewhere the interpreter
+    itself resolves the environment, so it is kept as is.
+    """
+    if sys.platform != "win32":
+        return (sys.executable,)
+    base = getattr(sys, "_base_executable", None)
+    executable = base if isinstance(base, str) and base and Path(base).is_file() else sys.executable
+    return (executable, "-S")
 
 
 def worker_environment(*, neutral_root: Path) -> dict[str, str]:
@@ -183,4 +206,5 @@ __all__ = [
     "terminate_process_tree",
     "worker_command",
     "worker_environment",
+    "worker_interpreter",
 ]

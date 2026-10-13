@@ -10,11 +10,26 @@ from typing import TYPE_CHECKING
 
 from ..application.ledger.action_ports import LedgerActionPorts
 from ..application.ledger.import_ports import LedgerImportPorts
+from ..application.ledger.read_ports import LedgerReadPorts
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..domain.usage_ratios.model import UsageRatioProfile
 
 if TYPE_CHECKING:
     from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+
+
+def compose_ledger_read_ports(*, bucket_id: str, operation: PinnedAuthorityOperation) -> LedgerReadPorts:
+    """Bind only the transaction and event repositories used by ledger reads."""
+    from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
+    from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+
+    objects = secure_object_repository_for_bucket(bucket_id)
+    return LedgerReadPorts(
+        operation=operation,
+        transaction_repository=TransactionCatalogueRepository(bucket_id=bucket_id),
+        bucket_event_repository=BucketEventHistoryRepository(objects=objects),
+    )
 
 
 def compose_ledger_action_ports(

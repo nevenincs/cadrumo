@@ -23,7 +23,6 @@ function Screen({ account, create = false }: ScreenArgs) {
       <SignedOut
         account={account}
         onSignIn={() => undefined}
-        onOpenTui={() => undefined}
         signInButton={button}
       />
       <SignInDialog
@@ -31,7 +30,6 @@ function Screen({ account, create = false }: ScreenArgs) {
         open
         onOpenChange={() => undefined}
         onClosed={() => button.current?.focus()}
-        onOpenTui={() => undefined}
         create={create}
       />
     </div>
@@ -221,7 +219,6 @@ function Pane({ account }: { account: SignInController }) {
       <SignedOut
         account={account}
         onSignIn={() => undefined}
-        onOpenTui={() => undefined}
         signInButton={{ current: null }}
       />
     </div>
@@ -241,15 +238,10 @@ function Beside({ account }: { account: SignInController }) {
           lead={t("desktop.calendar.signed_out")}
           quiet
           onSignIn={() => undefined}
-          onOpenTui={() => undefined}
         />
       </div>
       <div className="flex bg-background" data-scheme="dark">
-        <SignedOut
-          account={account}
-          onSignIn={() => undefined}
-          onOpenTui={() => undefined}
-        />
+        <SignedOut account={account} onSignIn={() => undefined} />
       </div>
     </div>
   );

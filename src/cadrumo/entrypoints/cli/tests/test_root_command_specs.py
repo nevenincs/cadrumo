@@ -9,7 +9,9 @@ from typer.testing import CliRunner
 from .._command_target import resolve_deferred_target
 from .._root_command_specs import ROOT_COMMAND_SPECS
 from ..command_graph import CommandSpecGraph
-from ..main import app
+from ..main import cli_app
+
+app = cli_app()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

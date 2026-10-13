@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from threading import RLock, Thread
 from typing import TYPE_CHECKING
 from uuid import UUID
@@ -64,6 +64,8 @@ class ProfileConnectionDrainMixin:
             hosts = tuple(self._profiles.items())
         self._enrollments.close()
         failures: list[Exception] = []
+        if self._close_agents():
+            failures.append(RuntimeShutdownIncompleteError())
         for profile_id, host in hosts:
             try:
                 host.close()
@@ -96,6 +98,8 @@ class ProfileConnectionDrainMixin:
             return self._drain_result
         records = self._snapshot_drain_records(deadline=deadline)
         self._enrollments.close()
+        # Drain contains workers without retiring each lease, so it reaps the agent trees itself.
+        unreaped_agents = self._close_agents(deadline=deadline)
         session_end = isinstance(self.stop, RuntimeStop) and self.stop.reason is RuntimeExitReason.SESSION_END_SETTLE
         approval_failures = self._prepare_drain_requests(records, deadline=deadline, session_end=session_end)
         self._join_drain_requests(records, deadline=deadline)
@@ -104,6 +108,8 @@ class ProfileConnectionDrainMixin:
         if session_end:
             self._settle_terminated_operations(records, deadline=deadline)
         result = self._collect_drain_result(records, approval_failures, deadline=deadline)
+        if unreaped_agents:
+            result = replace(result, uncontained=tuple(sorted(set(result.uncontained) | unreaped_agents)))
         if not result.uncontained and not result.unsettled:
             self._commit_drain_result(result, deadline=deadline)
         return result

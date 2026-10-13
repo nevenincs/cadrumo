@@ -15,9 +15,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 @pytest.mark.parametrize("storage_mode", [StorageMode.DEVELOPMENT, StorageMode.INSTALLED])
 def test_unset_provider_environment_fallback_respects_storage_mode(storage_mode: StorageMode) -> None:
-    settings = Settings(cadrumo_llm_anthropic_api_key=SecretStr("synthetic-development-key"))
+    settings = Settings(cadrumo_llm_claude_api_key=SecretStr("synthetic-development-key"))
 
-    credential = development_fallback("anthropic", settings=settings, storage_mode=storage_mode)
+    credential = development_fallback("claude_api", settings=settings, storage_mode=storage_mode)
 
     if storage_mode is StorageMode.INSTALLED:
         assert credential is None
@@ -28,6 +28,6 @@ def test_unset_provider_environment_fallback_respects_storage_mode(storage_mode:
 
 
 def test_unset_provider_without_a_development_key_is_unavailable() -> None:
-    settings = Settings(cadrumo_llm_anthropic_api_key=None)
+    settings = Settings(cadrumo_llm_claude_api_key=None)
 
-    assert development_fallback("anthropic", settings=settings, storage_mode=StorageMode.DEVELOPMENT) is None
+    assert development_fallback("claude_api", settings=settings, storage_mode=StorageMode.DEVELOPMENT) is None

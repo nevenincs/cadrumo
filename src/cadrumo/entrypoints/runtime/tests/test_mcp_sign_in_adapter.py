@@ -237,6 +237,8 @@ async def test_after_the_person_signs_out_the_adapter_is_refused_until_a_new_sig
             person = RuntimeFrontendClient(runtime.connect(), profile_id=runtime.profile_id, frontend=_CLI)
             signed_out = await asyncio.to_thread(person.human_sign_out)
             assert first_id in signed_out.session_ids
+            # No key was issued, so nothing is left that could admit an agent.
+            assert signed_out.agent_access_remains is False
             assert runtime.stored_sign_in() is None
             assert await asyncio.to_thread(adapter._retired.wait, 10)
 

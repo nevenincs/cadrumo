@@ -61,6 +61,14 @@ class CadrumoLlmSettings(CadrumoIntegrationSettings):
         default=None,
         description="Google Gemini API key (optional)",
     )
+    cadrumo_llm_claude_api_key: SecretStr | None = Field(
+        default=None,
+        description="Claude API key for the development-mode provider-settings fallback (optional)",
+    )
+    cadrumo_llm_codex_api_key: SecretStr | None = Field(
+        default=None,
+        description="Codex (OpenAI) API key for the development-mode provider-settings fallback (optional)",
+    )
     cadrumo_llm_kimi_api_key: SecretStr | None = Field(
         default=None,
         description="Kimi API key for the development-mode provider-settings fallback (optional)",

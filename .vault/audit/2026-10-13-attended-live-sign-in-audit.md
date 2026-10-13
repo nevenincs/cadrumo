@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:475d993e4948264ca822198b104540e5fb42d51d01f61e2d011f77ef864e5a3d'
+body_hash: 'sha256:4c413fe0380b6d13a1f0d43ef29e112c0d52ffeb5bb5a52013cfced98cd31fbc'
 related:
   - "[[2026-10-12-attended-live-sign-in-plan]]"
   - "[[2026-10-12-mcp-parity-attended-live-sign-in-adr]]"

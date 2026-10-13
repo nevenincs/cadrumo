@@ -419,7 +419,7 @@ test("the palette and settings fit the screen", async ({ page: target }) => {
   }
   await target.keyboard.press("Escape");
   await target
-    .getByRole("button", { name: label("desktop.rail.settings") })
+    .getByRole("button", { name: label("desktop.rail.settings"), exact: true })
     .tap();
   const settings = await target.locator(".settings").boundingBox();
   expect(

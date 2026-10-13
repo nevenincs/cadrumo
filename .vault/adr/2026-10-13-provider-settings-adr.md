@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:2db7eeb2bd4c86bb3c4c99970b60d41ff4d371cfa6fb5b006515e692bb46a8a7'
+body_hash: 'sha256:75ab4abedd0078351c9ac0488ebc31212f72f7e2e494d21898ac417b3418a640'
 related:
   - "[[2026-10-13-provider-settings-reference]]"
   - "[[2026-10-11-mcp-parity-full-parity-adr]]"
@@ -19,6 +19,7 @@ related:
   - "[[2026-10-12-desktop-agent-host-adr]]"
   - "[[2026-10-13-desktop-agent-host-live-lane-adr]]"
   - "[[2026-07-14-google-optional-adapter-boundary-adr]]"
+  - '[[2026-10-13-provider-settings-desktop-contract-reference]]'
 ---
 
 # `provider-settings` adr: `Each signed-in profile owns its model-provider credentials in encrypted custody, and they reach cadrumo-agent only on a standard-input frame` | (**status:** `accepted`)
@@ -63,14 +64,14 @@ Binding:
    An absent record means `unset`. A record that is corrupt, unreadable or stale refuses; it never reads as absent.
 3. **Provider catalog.** Which providers exist, their credential kinds and which consumers may use each are declarative Cadrumo data, not code branches.
    - `auth_kind` is one of `api_key`, `api_key_with_base_url`, `oauth_token_or_provider_sign_in` or `provider_sign_in_only`.
-   - `consumers` is a subset of `extraction` and `assistant`. The Gemini extraction key is an `api_key` whose only consumer is `extraction`.
-   - The catalog covers every provider cadrumo-agent supports, as listed in `2026-10-13-provider-settings-reference`, plus Cadrumo's Gemini extraction key.
+   - `consumers` is a subset of `extraction` and `assistant`. The Gemini extraction key is an `api_key` whose only consumer is `extraction`. (Superseded in part on 2026-10-13 by constraint 11.)
+   - The catalog covers every provider cadrumo-agent supports, as listed in `2026-10-13-provider-settings-reference`, plus Cadrumo's Gemini extraction key. (Superseded in part on 2026-10-13 by constraint 11.)
    - Each provider has a `display_name`, its brand name, the same in every locale.
    - Each provider has a catalog `default_base_url`; qwen has none. The person may store a `base_url`. The effective URL is the stored one, else the default. A provider with no default refuses a key stored without a base URL.
    - Listing a provider in settings does not widen hosted-lane eligibility. cadrumo-agent's hosting contract owns that, and today it admits anthropic and claude only.
    - Each provider that the agent can use names its `agent_credential_id`, the id cadrumo-agent keys that credential by: `anthropic` is the agent's `claude`, `openai` is its `codex`, and the gateway providers and `kimi` keep their ids. `gemini` and Cadrumo's `claude` sign-in entry have none. (Amended 2026-10-13 after review by the other sessions; before that the record assumed Cadrumo's ids were the agent's.)
    - Each provider that takes a key names its development environment value. (Amended 2026-10-13 after review by the other sessions; before that only the Anthropic, OpenAI and Gemini names existed.)
-4. **Two axes.** How the assistant authenticates is a choice separate from the stored direct credential. Choosing provider sign-in never erases a stored key. Extraction always uses a direct key; a CLI subscription is not an extraction key. Provider CLI sign-in stays provider-owned in its redirected home. Cadrumo never imports, stores or encrypts that credential.
+4. **Two axes.** How the assistant authenticates is a choice separate from the stored direct credential. Choosing provider sign-in never erases a stored key. Extraction always uses a direct key; a CLI subscription is not an extraction key. Provider CLI sign-in stays provider-owned in its redirected home. Cadrumo never imports, stores or encrypts that credential. (Superseded in part on 2026-10-13 by constraint 11.)
 5. **Resolution.** Storage mode, as `detect_storage_mode` decides it (`src/cadrumo/core/storage_environment.py:288`), selects the path:
    - **Development mode.** A provider whose profile record is `unset` takes its key from the named Cadrumo environment value for that provider, with no manual step. This happens only after profile authentication. Status reports the source as `environment` automatically. Development sessions running from a checkout use this path.
    - **Lanes that run a packaged copy** are installed mode, so they have no fallback. This covers the live-agent evaluation lanes and the desktop agent lane. Each such lane's harness stores the developer's key into its throwaway profile through `aeat config provider set --secrets-stdin` before the run. The person still takes no manual step, and the run exercises the real set path. (Amended 2026-10-13 after review by the other sessions; before that this constraint said agent sessions and the live-agent evaluation lane use the development path, which is not true of a packaged copy.)
@@ -122,13 +123,22 @@ Binding:
 9. **Lifecycle.**
    - Sign-out, lock, idle or absolute expiry, host loss and a credential change all do the same: close admission, discard stale results, cancel with a bounded grace period, stop and reap the whole agent tree, and retire scoped extraction clients. Rebuilding uses committed values only. A restart that fails reports stored-but-unavailable and never reuses the old key or process.
    - When authentication of candidate profile B fails, profile A is kept.
-   - When it succeeds, A's work stops before B's pointer is published, at one canonical cross-process barrier that covers every entrypoint.
+   - When it succeeds, A's work stops before B's pointer is published, at one canonical cross-process barrier that covers every entrypoint. Concretely, A's human sessions are retired, and their agent trees are stopped, after B's authentication succeeds but before B is admitted or its receipt minted. (Amended 2026-10-13 after review by tui-b3; before that the record named only the barrier; the runtime today retires A after admitting B.)
+   - The agent tree is keyed to the exact human lease that started it. An attended child's routine retirement between reissues never stops it. A runtime stop or drain reaps it as surely as a retirement does. The retirement funnel only enqueues a non-blocking stop and never raises back into the funnel; a separate bounded owner does the cancel and reap, and runtime shutdown waits for that owner. (Amended 2026-10-13 after review by tui-b3; before that the record did not say where the stop runs.)
+   - The agent host watches its lease's idle and absolute deadlines itself, because expiry is otherwise noticed only when requests arrive. It reads the deadlines without refreshing them, and it never re-mints or extends a receipt. (Amended 2026-10-13 after review by tui-b3; before that the record did not say who observes expiry.)
    - Work is bound to the exact login and configuration generations; a bucket identity alone is not enough.
    - Background polling never refreshes the idle deadline.
 10. **Portability.**
    - Credentials are durable on this machine only. They are excluded from portable export, from remote mirroring (`remote_mirror_policy` `LOCAL_ONLY`) and from restorative backup. After a restore the person enters them again.
    - The namespace is enrolled in inventory, deletion, reset and uninstall.
    - Removing a key locally does not revoke it at the provider, and does not erase backups taken earlier.
+
+11. **Owner rulings of the afternoon of 2026-10-13, first-hand, relayed by UI-DESIGN1.** These supersede the parts of constraints 3, 4 and 7 they contradict. (Amended 2026-10-13; before that the record served extraction as well, had one entry per provider, and placed the settings in the profile area.)
+   - "The cadrumo app has no API keys to use, it doesn't make any sense. API keys are for MCPs that operate outside of the cadrumo application." Provider settings serve the agent's lanes only. The `extraction` consumer and the Gemini entry are dropped. Cadrumo's own document reading keeps its existing key handling until the owner rules on it, and plan step P03.S12 is held for that ruling.
+   - "Claude can be API or CLI, two separate providers under the same name that need to be exposed." Each cadrumo-agent lane is its own entry with `transport` `api` or `cli`: anthropic (api), claude (cli), openai (api), codex (cli), kimi (cli), the six gateways (cli, with key and base URL) and antigravity (cli). `display_name` is the product name. A `cli` entry also reports whether its program is installed and signed in, without reading the provider's own credential files.
+   - "The AI settings are bound to the agent panel." The desktop shows provider settings only in the agent column, not in profile management or sign-in.
+   - "The user profile schema needs to be extended and enriched with the API keys." The user profile schema declares the provider-settings section. Its secret values are held only in the SECRET namespace of constraint 1. They are never profile facts, never readable through profile reads, MCP or the agent, and never exported.
+   - "We have already established that the agent operates against a signed-in user profile, so there should be no agent capability at all if the user is not authenticated." This covers the agent Cadrumo itself hosts: signing out, a lock or expiry of the person's sign-in stops the desktop's agent tree (constraint 9). It does not cover API keys the person issued. Owner correction, first-hand, 2026-10-13: "the api key exists so that it isn't pegged to the login cycle". A key-admitted session survives sign-out, and a key admits whether or not the person is signed in. The sign-out result reports `agent_access_remains` truthfully: true while an issued key can still admit. (Amended 2026-10-13 on the owner's correction; before that this bullet also ended key-admitted sessions at sign-out and amended `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr` accordingly, which was withdrawn.)
 
 ## Implementation
 

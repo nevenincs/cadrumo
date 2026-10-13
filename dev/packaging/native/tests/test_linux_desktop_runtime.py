@@ -29,7 +29,7 @@ from ..linux_desktop_runtime import (
 )
 from ..linux_packages import PREINSTALL, author_gates, inspect_artifact
 from ..platforms import linux
-from ..platforms.tests.test_posix import _elf
+from .binary_fixtures import elf_image
 from .test_distribution_prepare import _configure_distribution, _paths
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -96,10 +96,10 @@ def test_copied_desktop_flag_cannot_admit_another_image(field: str, value: str) 
 def test_desktop_external_dependency_never_admits_another_requester(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, requester: str
 ) -> None:
-    desktop = _elf(tmp_path / "cadrumo")
+    desktop = elf_image(tmp_path / "cadrumo")
     other = tmp_path / requester
     other.parent.mkdir(exist_ok=True)
-    _elf(other)
+    elf_image(other)
     layout = load_layout("linux-x86-64")
     layout["native_tools"] = {"readelf": "readelf", "patchelf": "patchelf"}
     monkeypatch.setattr(
@@ -112,7 +112,7 @@ def test_desktop_external_dependency_never_admits_another_requester(
 def test_desktop_accepts_exact_external_libraries_and_erases_build_paths(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    desktop = _elf(tmp_path / "cadrumo")
+    desktop = elf_image(tmp_path / "cadrumo")
     layout = load_layout("linux-x86-64")
     layout["native_tools"] = {"readelf": "readelf", "patchelf": "patchelf"}
     rpath = "/builder/private/lib"
@@ -130,7 +130,7 @@ def test_desktop_accepts_exact_external_libraries_and_erases_build_paths(
     monkeypatch.setattr(linux, "command", tool)
     linux.relocate([desktop], tmp_path, layout)
     assert not rpath
-    shadow = _elf(tmp_path / "libgtk-3.so.0")
+    shadow = elf_image(tmp_path / "libgtk-3.so.0")
     with pytest.raises(ValueError, match="shadows"):
         linux.relocate([desktop, shadow], tmp_path, layout)
 

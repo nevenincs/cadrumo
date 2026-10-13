@@ -23,6 +23,7 @@ import {
   type FixtureAsks,
   type FixtureStream,
 } from "./agentFixtureHost";
+import { agentAccessFixture } from "./agentAccessFixture";
 import { BUSY_CALENDAR } from "./fixtures/calendarBusy";
 import { providerSettingsFixture } from "./providerSettingsFixture";
 import {
@@ -258,11 +259,17 @@ export function scenarioHost(
     readable,
   });
 
+  const agentAccess = agentAccessFixture({
+    say,
+    wait: () => wait(options.latencyMs),
+    readable,
+  });
+
   return {
     available: true,
     ...(scenario.views === "none"
       ? {}
-      : { views, agent, agentSession, providerSettings }),
+      : { views, agent, agentSession, providerSettings, agentAccess }),
     ...(scenario.profiles === "absent" ? {} : { profiles }),
     ...managerCommand,
     ...(supervision
@@ -417,8 +424,15 @@ export function scenarioHost(
       if (scenario.signIn.signOutFailure)
         throw failure(scenario.signIn.signOutFailure, "cli");
       presence = "absent";
+      // The product's reply: the saved setting, which a sign-out keeps, and
+      // whether an issued key can still admit.
+      const access = scenario.signIn.signOutAccess;
       return {
-        remainingAccess: { automationEnabled: true, automationRevoked: false },
+        remainingAccess: {
+          automationEnabled: access ? access.automationEnabled : true,
+          agentAccessRemains: access ? access.agentAccessRemains : false,
+          automationRevoked: false,
+        },
       };
     },
 

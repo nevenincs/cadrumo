@@ -14,7 +14,7 @@ from ...adapters.local_runtime.profile_worker import ProfileWorkerProcess, unret
 from ...adapters.persistence.storage.custody.sign_in_generation import SignInGeneration, SignInGenerationCustody
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.profile_access import RuntimeHumanProof
-from ...application.runtime.profile_worker import ProfileWorkerIdentity
+from ...application.runtime.profile_worker import ProfileWorkerAgentCredentials, ProfileWorkerIdentity
 from ...application.runtime.worker_authorization import WorkerAuthorizationOwner
 from ...application.user_profile.access_contracts import AccessSession
 from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
@@ -122,6 +122,12 @@ class ProfileWorkerSessionOwner:
                 raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
             self._worker.require_alive()
             return self._worker
+
+    def agent_credentials(
+        self, session_id: UUID, providers: tuple[str, ...]
+    ) -> tuple[ProfileWorkerAgentCredentials, bytearray]:
+        """Ask the admitted worker, never a new one, for the assistant's credentials under one live session."""
+        return self.operation_worker().agent_credentials(session_id, providers)
 
     def in_flight_operation_count(self, *, deadline: float) -> int | None:
         """Observe the exact worker count without constructing or renewing custody."""

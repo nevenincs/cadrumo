@@ -554,13 +554,11 @@ desktop:
         abans de tornar-ho a provar.
       wait: 'Triga al voltant de mig minut: s''està generant la clau del perfil a
         partir de la contrasenya.'
-    create_profile: Configura un perfil
     first_run_lead: Crea un perfil per començar.
-    in_tui: Continues a la TUI
     new_profile: Perfil nou
     no_profile: Cap perfil actiu
-    no_profile_lead: Crea un perfil o tria'n un a la TUI.
-    remaining_access: L'accés d'agents que vas activar continua actiu.
+    no_profile_lead: Encara no hi ha cap perfil en aquest ordinador.
+    remaining_access: Les claus que vas emetre per a agents externs continuen actives.
     services_down: Els serveis en segon pla no estan en marxa
     sign_out: Tanca la sessió
     sign_out_failed: No s'ha pogut tancar la sessió ({code}).
@@ -584,9 +582,9 @@ desktop:
   agent:
     add_files: Afegeix fitxers
     agent_replied: L'agent ha respost
-    approval_allow_always: Permet-ho sempre
+    approval_allow_always: Permet-ho
     approval_allow_once: Permet-ho un cop
-    approval_reject_always: No ho permetis mai
+    approval_reject_always: No ho permetis
     approval_reject_once: No ho permetis
     approval_review_title: Revisa això abans que Cadrumo ho faci
     approval_tool_title: L'agent vol fer servir una eina
@@ -604,8 +602,18 @@ desktop:
     cancel: Cancel·la
     capabilities: 'Pot: {list}'
     choose_model: Tria un model
+    choose_provider: Tria un proveïdor
     close_documents: Tanca els documents
     collapse_members: Amaga els fitxers de {name}
+    condition_budget_exhausted: Pressupost esgotat
+    condition_credits_exhausted: Sense crèdits
+    condition_invalid_request: El proveïdor ha rebutjat la petició
+    condition_network_unreachable: No es pot contactar amb el proveïdor
+    condition_provider_overloaded: El proveïdor està sobrecarregat
+    condition_throttled: El proveïdor està limitant les peticions
+    condition_unauthenticated: Sense autenticar amb el proveïdor
+    condition_unknown: Causa desconeguda
+    condition_usage_exhausted: Límit d'ús assolit
     consent_allow: Envia-ho a {provider}
     consent_decline: No ho enviïs
     consent_items: Què s'enviaria
@@ -630,6 +638,7 @@ desktop:
     drop_release_single: Deixa anar per afegir 1 fitxer
     drop_title: Afegeix a aquesta conversa
     effort: Esforç
+    effort_default: Per defecte
     effort_high: Alt
     effort_low: Baix
     effort_max: Màxim
@@ -642,38 +651,51 @@ desktop:
     history: Historial
     history_empty: Encara no hi ha converses
     history_no_match: Cap conversa no coincideix amb «{query}».
-    lane_no_catalog: no s'han pogut llistar els models
-    lane_not_admitted: no permès aquí
-    lane_not_configured: sense configurar
+    lane_no_catalog: No s'han pogut llistar els models
+    lane_not_admitted: No permès aquí
+    lane_not_configured: Sense configurar
     lane_notice: 'Entorn de desenvolupament: les converses es desen sense xifrar en
       aquest emmagatzematge de prova. Fes servir només dades inventades.'
-    lane_signed_out: sense la sessió iniciada
-    lane_unreachable: no s'hi pot connectar
+    lane_signed_out: Sense la sessió iniciada
+    lane_unreachable: No s'hi pot connectar
     members_multiple: '{count} fitxers'
     members_single: 1 fitxer
     message_label: Missatge
     message_placeholder: Pregunta per un model, un termini o els teus registres
     model: Model
+    model_written: Aquest proveïdor no llista els seus models. Escriu l'identificador
+      del model tal com el nomena el proveïdor.
     more_files: +{count} més
     new_conversation: Conversa nova
     no_models: No hi ha models per triar
     no_provider: L'agent encara no té cap proveïdor que pugui fer servir.
     provider: Proveïdor
-    provider_unavailable: '{provider}: {reason}'
     questions_answer: Respon
+    questions_clear: Esborra aquesta resposta
+    questions_control: 'Una resposta és una sola línia: no pot dur salts de línia,
+      tabuladors ni altres caràcters de control'
     questions_decline: No responguis
+    questions_invalid: Corregeix primer les respostes marcades
     questions_lead: Respon aquí sota, o escriu un missatge per respondre amb les teves
       paraules.
     questions_missing: Respon primer totes les preguntes que no són opcionals
     questions_optional: (opcional)
     questions_title: L'agent necessita unes respostes
+    questions_too_long: Aquesta resposta té {count} caràcters; el màxim és {max}
     queued: Esperant per pujar
+    ran_with: 'S''ha executat amb: {selection}'
     ready: A punt
     refused: Rebutjat
     remove_all: Treu-ho tot
     remove_document: Treu {name}
     remove_file: Treu {name}
+    reply_deleting: S'està eliminant
     reply_failed: Aquesta resposta no s'ha completat.
+    reply_in_progress: Encara hi ha una resposta en curs.
+    reply_queued: 'Missatges en espera: {count}'
+    reply_reconciling: Conciliant…
+    reply_repair_needed: Necessita reparació
+    reply_stopping: Aturant…
     resize: Canvia la mida de l'agent
     restore: Restaura
     retry: Torna-ho a provar
@@ -685,12 +707,15 @@ desktop:
     search_history: Cerca converses
     send: Envia
     send_nothing: Primer escriu un missatge o afegeix un fitxer
+    send_too_long: Aquest missatge té {count} caràcters; el màxim és {max}
     send_waiting: Espera que es pugin tots els fitxers
     sent_files: Fitxers enviats amb aquest missatge
     service_absent: L'agent no està instal·lat.
     service_credential_missing: No hi ha cap clau configurada per a aquest proveïdor.
     service_failed: L'agent ha deixat de funcionar.
     service_incompatible: Aquesta versió de l'agent no funciona amb aquest Cadrumo.
+    service_root_unmarked: Aquest emmagatzematge de prova no està marcat com a entorn
+      de desenvolupament de l'agent.
     service_runtime_unavailable: El servei en segon pla de Cadrumo no està en marxa.
     service_signed_out: Inicia la sessió per parlar amb l'agent.
     service_starting: S'està iniciant l'agent…
@@ -701,6 +726,7 @@ desktop:
     settings_title: Configuració del model
     show: Mostra l'agent
     show_active: Mostra les actives
+    sign_in_first: Inicia la sessió per fer servir l'agent
     status_extracting: S'està llegint
     status_failed: Amb error
     status_needs_review: Per revisar
@@ -710,18 +736,87 @@ desktop:
     stop: Atura
     stopped: Aturat
     tool_done: Fet
+    tool_failed: Amb error
+    tool_kind_delete: Elimina
+    tool_kind_edit: Edita
+    tool_kind_execute: Executa
+    tool_kind_fetch: Obté
+    tool_kind_move: Mou
+    tool_kind_other: Altra
+    tool_kind_read: Llegeix
+    tool_kind_search: Cerca
+    tool_kind_switch_mode: Canvia de mode
+    tool_kind_think: Pensa
+    tool_pending: Pendent
     tool_running: En curs
     transcript: Conversa
     transcript_empty: Encara no hi ha missatges
     unavailable: Encara no està disponible
     uploading: S'està pujant
     uploading_name: S'està pujant {name}
+    usage: 'Tokens: {input} d''entrada, {output} de sortida'
     waiting_on_you: Esperant la teva resposta
     welcome_lead: Alguna cosa d'impostos? Pregunta per un model o un termini, o afegeix
       rebuts, factures i extractes bancaris amb +.
     welcome_title: En què treballem avui?
     working: Treballant…
     you_said: Has dit
+  agent_keys:
+    cancel: Cancel·la
+    cleanup_pending: Revocada. La clau desada encara s'està eliminant d'aquest equip.
+    copied: Copiada
+    copy: Copia la referència
+    copy_failed: No s'ha pogut copiar. Selecciona la referència i copia-la tu.
+    done: Fet
+    empty: Encara no hi ha cap clau. Un agent aliè a Cadrumo no pot accedir a aquest
+      perfil fins que n'emetis una.
+    expired_on: Va caducar el {date}
+    expires_on: Caduca el {date}
+    issue: Emet una clau
+    issue_lead: Un agent amb aquesta clau sempre pot llegir i canviar els valors d'aquest
+      perfil, i veure les operacions que executa.
+    issue_submit: Emet la clau
+    issued_lead: Dona aquesta referència al teu client MCP com a referència de credencial.
+      La clau en si es queda a l'emmagatzem segur d'aquest equip i no es mostra mai.
+    issued_on: Emesa el {date}
+    issued_once: Es mostra una sola vegada. Quan la tanquis, no es podrà tornar a
+      mostrar.
+    issued_title: Clau emesa
+    issuing: S'està emetent…
+    key_title: Clau {id}
+    last_used: 'Últim ús: {date}'
+    lead: Una clau permet que un agent d'IA aliè a Cadrumo, que hi accedeix mitjançant
+      el seu servidor MCP, treballi en aquest perfil. Només tu pots emetre o revocar
+      claus.
+    never_used: Encara sense usar
+    reference_label: Referència de credencial
+    refresh: Actualitza
+    refused_not_found: Aquesta clau ja no és a la llista.
+    refused_not_signed_in: Inicia la sessió per gestionar les claus.
+    refused_outcome_unknown: Cadrumo no ha rebut resposta. Pot ser que la clau s'hagi
+      emès o no; actualitza per comprovar-ho.
+    refused_person_act_required: Només tu pots gestionar les claus, aquí.
+    refused_profile_locked: Aquest perfil està bloquejat.
+    revoke: Revoca
+    revoke_confirm: Vols revocar aquesta clau? A l'agent que la fa servir se li rebutjarà
+      a partir d'aquest moment. No es pot desfer.
+    revoke_confirm_action: Revoca la clau
+    revoking: S'està revocant…
+    scope_all_operations: Executa qualsevol operació permesa a un agent
+    scope_no_tax_values: No llegeix valors fiscals
+    scope_operations_seen: Veu les operacions que executa
+    scope_profile_values: Llegeix i canvia els valors del perfil
+    scope_some_operations: Executa només algunes operacions
+    scope_tax_values: Llegeix valors fiscals
+    standing_active: Activa
+    standing_expired: Caducada
+    standing_pending: Pendent d'aprovació
+    standing_revoked: Revocada
+    standing_suspended: En pausa
+    tax_values: Permet-li també llegir valors fiscals
+    tax_values_note: Imports calculats i presentacions. Si ho deixes desactivat, l'agent
+      no els veu.
+    title: Claus d'API per a agents MCP
   calendar:
     aeat:
       accepted: Acceptada
@@ -854,8 +949,10 @@ desktop:
     base_url_label: URL base
     base_url_required: 'Obligatòria: aquest proveïdor no en té cap per defecte.'
     cancel: Cancel·la
-    consumer_assistant: Agent
-    consumer_extraction: Lectura de documents
+    cli_installed_signed_in: Instal·lat i amb la sessió iniciada
+    cli_installed_signed_out: Instal·lat, sense la sessió iniciada
+    cli_not_installed: No instal·lat
+    cli_unknown: Encara no comprovat
     development_note: En aquesta versió de desenvolupament, un proveïdor sense clau
       pròpia fa servir la de l'entorn de desenvolupament.
     disable: Desactiva
@@ -905,8 +1002,6 @@ desktop:
     through: A través de {url}
     title: Proveïdors d'IA
     token_label: Testimoni OAuth de {provider}
-    transport_api: API
-    transport_cli: CLI
   rail:
     aeat: Seu de l'AEAT
     agent: Agent
@@ -955,15 +1050,10 @@ desktop:
     install_machine_services: Instal·lar per a tots els usuaris
     install_user_services: Instal·lar per a aquest usuari
     lead: Escriu la contrasenya del teu perfil per obrir el teu espai de treball.
-    open_tui: Obre la TUI
-    open_tui_hint: Configuració inicial, un altre perfil o recuperació? Fes servir
-      la TUI.
     password: Contrasenya
     profile: Perfil
     profiles_unread: No s'han pogut llegir els perfils d'aquest equip.
     recovering_services: S’estan recuperant els serveis en segon pla…
-    recovery_hint: Has perdut la contrasenya o el perfil està bloquejat? Fes servir
-      la TUI.
     refused:
       custody_changed: La contrasenya o la configuració de recuperació d'aquest perfil
         ha canviat. Torna a iniciar la sessió.
@@ -978,14 +1068,15 @@ desktop:
       installation_unsettled: No s’ha pogut confirmar la instal·lació. Consulta els
         registres abans de tornar-ho a provar.
       invalid: Aquesta contrasenya no ha funcionat. Torna-ho a provar.
-      keyring_unavailable: Cadrumo no pot mantenir la teva sessió en aquest dispositiu,
-        així que la TUI et demanarà la contrasenya.
+      keyring_unavailable: Cadrumo no pot mantenir la teva sessió en aquest dispositiu.
+        El clauer del sistema no està disponible.
       login_mismatch: El teu inici de sessió és d'una sessió anterior en aquest ordinador.
         Torna a iniciar la sessió.
       manager: No s'han pogut iniciar els serveis en segon pla ({code}). Obre Registres
         per veure els detalls.
       other: No s'ha pogut iniciar la sessió ({code}).
-      profile_locked: Aquest perfil està bloquejat. Continua a la TUI per desbloquejar-lo.
+      profile_locked: Aquest perfil està bloquejat. Inicia la sessió amb la seva contrasenya
+        per desbloquejar-lo.
       receipt_absent: No has iniciat la sessió.
       receipt_expired: La teva sessió ha caducat. Torna a iniciar la sessió.
       runtime_unavailable: Els serveis en segon pla de Cadrumo no estan en marxa.

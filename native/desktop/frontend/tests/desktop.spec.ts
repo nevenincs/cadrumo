@@ -35,6 +35,10 @@ async function signInHost(
         activeStatusReads: 0,
         activeListReads: 0,
         signOuts: 0,
+        // What the product reports a sign-out leaves standing: the saved
+        // setting is on, and whether an issued key can still admit is a
+        // separate answer.
+        agentAccessRemains: false as boolean | null,
         tuiStarts: 0,
         tuiCloses: 0,
         terminalStarts: [] as string[],
@@ -218,6 +222,7 @@ async function signInHost(
                 return {
                   remainingAccess: {
                     automationEnabled: true,
+                    agentAccessRemains: state.agentAccessRemains,
                     automationRevoked: false,
                   },
                 };
@@ -534,6 +539,86 @@ test("sign-in gates TUI, sends a raw secret once, clears it and refreshes refusa
   ).not.toContain("secret á漢");
 });
 
+const markSignedIn = (target: Page, extra: object = {}) =>
+  target.evaluate((fields) => {
+    Object.assign(
+      (window as unknown as { __signInTest: object }).__signInTest,
+      { presence: "present", ...fields },
+    );
+    window.dispatchEvent(new Event("focus"));
+  }, extra);
+
+test("the agent is there only while a profile is signed in", async ({
+  page: target,
+}) => {
+  await signInHost(target);
+  const rail = target.getByRole("navigation", {
+    name: label("desktop.rail.label"),
+  });
+  const held = rail.getByRole("button", {
+    name: `${label("desktop.rail.agent")}, ${label("desktop.agent.sign_in_first")}`,
+    exact: true,
+  });
+  // Signed out, there is no agent: its column is not shown, and its button
+  // stays in the rail, held, saying why. Pressing it does nothing. The
+  // sign-in dialog is dismissed to reach the rail behind it.
+  await expect(target.locator(".pane-agent")).toBeHidden();
+  await target.keyboard.press("Escape");
+  await expect(target.locator(".sign-in")).toHaveCount(0);
+  await expect(held).toHaveAttribute("aria-disabled", "true");
+  await held.click({ force: true });
+  await expect(target.locator(".pane-agent")).toBeHidden();
+  await markSignedIn(target);
+  await expect(target.locator(".pane-agent")).toBeVisible();
+  const available = rail.getByRole("button", {
+    name: label("desktop.rail.agent"),
+    exact: true,
+  });
+  await expect(available).not.toHaveAttribute("aria-disabled", "true");
+  await target
+    .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
+    .click();
+  await target
+    .getByRole("menuitem", {
+      name: label("desktop.account.sign_out"),
+      exact: true,
+    })
+    .click();
+  await expect.poll(async () => (await signInState(target)).signOuts).toBe(1);
+  await expect(target.locator(".pane-agent")).toBeHidden();
+  await expect(held).toHaveAttribute("aria-disabled", "true");
+});
+
+// What a sign-out leaves standing is what the product reports of it. The
+// saved setting is on in every case; only an issued key that can still admit
+// is said, and what the product does not answer is not said.
+for (const remains of [false, null, true] as const)
+  test(`signing out with agent access remaining ${String(remains)} ${remains ? "says" : "says nothing of"} issued keys`, async ({
+    page: target,
+  }) => {
+    await signInHost(target);
+    await markSignedIn(target, { agentAccessRemains: remains });
+    await expect(target.locator(".pane-agent")).toBeVisible();
+    await target
+      .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
+      .click();
+    await target
+      .getByRole("menuitem", {
+        name: label("desktop.account.sign_out"),
+        exact: true,
+      })
+      .click();
+    await expect.poll(async () => (await signInState(target)).signOuts).toBe(1);
+    // The menu stays open on the sign-out and offers sign-in.
+    const menu = target.locator(".account-menu");
+    await expect(
+      menu.getByRole("menuitem", { name: label("desktop.signin.submit") }),
+    ).toBeVisible();
+    await expect(
+      menu.getByText(label("desktop.account.remaining_access")),
+    ).toHaveCount(remains ? 1 : 0);
+  });
+
 for (const pending of ["status", "list"] as const)
   test(`persisted sign-in displays immediately beside a held ${pending} read without another status call`, async ({
     page: target,
@@ -766,7 +851,7 @@ test("a profile is created through the host with one raw password body, its labe
   expect(state.tuiStarts).toBe(0);
 });
 
-test("throttling counts down without retry and a successful sign-in hands over to TUI", async ({
+test("throttling counts down without retry and a successful sign-in starts the TUI", async ({
   page: target,
 }) => {
   await signInHost(target);
@@ -822,14 +907,22 @@ test("throttling counts down without retry and a successful sign-in hands over t
       window as unknown as { __signInTest: { releaseStatus: () => void } }
     ).__signInTest.releaseStatus(),
   );
-  await expect(
-    target.getByText(label("desktop.account.remaining_access")),
-  ).toBeVisible();
   // Signing out here leaves the signed-out pane; the dialog is not thrown
   // back at the person who has just chosen to sign out.
   await expect(
     target.getByText(label("desktop.signin.signed_out_lead")),
   ).toBeVisible();
+  // The product kept the saved automation setting and reports that no issued
+  // key can admit: the menu, still open on the sign-out, says nothing of
+  // access that is not there.
+  await expect(
+    target
+      .locator(".account-menu")
+      .getByRole("menuitem", { name: label("desktop.signin.submit") }),
+  ).toBeVisible();
+  await expect(
+    target.getByText(label("desktop.account.remaining_access")),
+  ).toHaveCount(0);
   await expect(
     target.getByLabel(label("desktop.signin.password"), { exact: true }),
   ).toHaveCount(0);
@@ -853,44 +946,166 @@ test("throttling counts down without retry and a successful sign-in hands over t
   expect((await signInState(target)).tuiStarts).toBe(1);
 });
 
-test("TUI handover remains available for locked profiles and refreshes on focus", async ({
+test("a locked profile is said beside the sign-in form, which stays available and never leads to the TUI", async ({
   page: target,
 }) => {
   await signInHost(target);
   await target.evaluate(() => {
     Object.assign(
       (window as unknown as { __signInTest: object }).__signInTest,
-      { refusal: { code: "PROFILE_LOCKED", retryAfterSeconds: null } },
+      {
+        refusal: { code: "PROFILE_LOCKED", retryAfterSeconds: null },
+        submitCode: "PROFILE_LOCKED",
+      },
     );
     window.dispatchEvent(new Event("focus"));
   });
-  // Said in the dialog, and in the pane behind it.
-  await expect(target.locator(".sign-in")).toContainText(
+  const dialog = target.locator(".sign-in");
+  const gate = target.locator(".pane-tui [data-slot=empty]");
+  const password = dialog.getByLabel(label("desktop.signin.password"), {
+    exact: true,
+  });
+  const submit = dialog.getByRole("button", {
+    name: label("desktop.signin.submit"),
+    exact: true,
+  });
+  // Said in the dialog, with the form beside it and no way to the TUI.
+  await expect(dialog).toContainText(
     label("desktop.signin.refused.profile_locked"),
   );
-  await expect(target.locator(".pane-tui")).toContainText(
+  await expect(password).toBeVisible();
+  await expect(dialog.getByRole("button", { name: /TUI/ })).toHaveCount(0);
+  // Put aside, the pane behind it says the same, with the way to try again.
+  await target.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(gate).toContainText(
     label("desktop.signin.refused.profile_locked"),
+  );
+  const again = gate.getByRole("button", {
+    name: label("desktop.signin.submit"),
+    exact: true,
+  });
+  await expect(again).toBeVisible();
+  await expect(gate.getByRole("button", { name: /TUI/ })).toHaveCount(0);
+  await again.click();
+  await expect(password).toBeFocused();
+  // A try is refused again, said again, and the form is still there.
+  await password.fill("secret á漢");
+  await submit.click();
+  await expect
+    .poll(async () => (await signInState(target)).submissions)
+    .toBe(1);
+  await expect(dialog).toContainText(
+    label("desktop.signin.refused.profile_locked"),
+  );
+  await expect(password).toBeEnabled();
+  expect((await signInState(target)).tuiStarts).toBe(0);
+  // The profile is unlocked in the host: the next try signs in.
+  const reads = (await signInState(target)).statusReads as number;
+  await target.evaluate(() => {
+    Object.assign(
+      (window as unknown as { __signInTest: object }).__signInTest,
+      { refusal: null, submitCode: "" },
+    );
+    window.dispatchEvent(new Event("focus"));
+  });
+  await expect
+    .poll(async () => (await signInState(target)).statusReads)
+    .toBeGreaterThan(reads);
+  await password.fill("secret á漢");
+  await submit.click();
+  await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
+  expect((await signInState(target)).submissions).toBe(2);
+});
+
+// A refusal is the reason the last try failed. Whatever its code, the dialog
+// and the account menu still offer sign-in afterwards, and neither sends the
+// person to the TUI to unlock, recover or sign in.
+const REFUSALS = {
+  PROFILE_LOCKED: label("desktop.signin.refused.profile_locked"),
+  KEYRING_UNAVAILABLE: label("desktop.signin.refused.keyring_unavailable"),
+  CREDENTIAL_REJECTED: label("desktop.signin.refused.invalid"),
+  // The wait runs down, so only the words before it are fixed.
+  THROTTLED:
+    label("desktop.signin.refused.throttled").split("{seconds}")[0]?.trim() ??
+    "",
+} as const;
+
+for (const [code, said] of Object.entries(REFUSALS))
+  test(`${code}: said as the reason of the last try, with sign-in still offered and no way to the TUI`, async ({
+    page: target,
+  }) => {
+    await signInHost(target);
+    await target.evaluate((code) => {
+      Object.assign(
+        (window as unknown as { __signInTest: object }).__signInTest,
+        {
+          submitCode: code,
+          retryAfterSeconds: code === "THROTTLED" ? 30 : null,
+        },
+      );
+    }, code);
+    const dialog = target.locator(".sign-in");
+    const password = dialog.getByLabel(label("desktop.signin.password"), {
+      exact: true,
+    });
+    const signIn = { name: label("desktop.signin.submit"), exact: true };
+    await password.fill("secret á漢");
+    await dialog.getByRole("button", signIn).click();
+    await expect
+      .poll(async () => (await signInState(target)).submissions)
+      .toBe(1);
+    // The reason is said, the form is still there, and the TUI is not offered.
+    await expect(dialog).toContainText(said);
+    await expect(password).toBeVisible();
+    await expect(dialog.getByRole("button", signIn)).toBeVisible();
+    await expect(dialog.getByRole("button", { name: /TUI/ })).toHaveCount(0);
+
+    // Put aside, the account menu still offers sign-in, and not the TUI.
+    await target.keyboard.press("Escape");
+    await expect(dialog).toHaveCount(0);
+    await target
+      .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
+      .click();
+    const menu = target.locator(".account-menu");
+    await expect(menu.getByRole("menuitem", signIn)).toBeVisible();
+    await expect(menu.getByRole("menuitem", { name: /TUI/ })).toHaveCount(0);
+    // What outlasts the attempt is still said there.
+    if (code !== "CREDENTIAL_REJECTED") await expect(menu).toContainText(said);
+
+    // And it opens the form again.
+    await menu.getByRole("menuitem", signIn).click();
+    await expect(dialog).toBeVisible();
+    await expect(password).toBeVisible();
+    expect((await signInState(target)).tuiStarts).toBe(0);
+  });
+
+test("the end of the TUI's session reads the account again", async ({
+  page: target,
+}) => {
+  await signInHost(target);
+  await target.evaluate(() =>
+    Object.assign(
+      (window as unknown as { __signInTest: object }).__signInTest,
+      { submitCode: "" },
+    ),
   );
   await target
-    .locator(".sign-in")
-    .getByRole("button", {
-      name: label("desktop.signin.open_tui"),
-      exact: true,
-    })
+    .getByLabel(label("desktop.signin.password"), { exact: true })
+    .fill("secret á漢");
+  await target
+    .getByRole("button", { name: label("desktop.signin.submit"), exact: true })
     .click();
   await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
-  expect((await signInState(target)).submissions).toBe(0);
   const reads = (await signInState(target)).statusReads as number;
   await target.evaluate(() =>
     (
       window as unknown as { __signInTest: { exitTui: () => void } }
     ).__signInTest.exitTui(),
   );
-  // Back at the gate, with the status read again: still locked, still said.
-  await expect(target.locator(".sign-in")).toContainText(
-    label("desktop.signin.refused.profile_locked"),
-  );
-  expect((await signInState(target)).statusReads).toBeGreaterThan(reads);
+  await expect
+    .poll(async () => (await signInState(target)).statusReads)
+    .toBeGreaterThan(reads);
 });
 
 test("runtime-unavailable remains distinct from unknown presence", async ({
@@ -1030,8 +1245,17 @@ test("without a host the shell lays out every area and invents nothing", async (
     name: label("desktop.rail.label"),
   });
   await expect(rail.getByRole("button")).toHaveCount(7);
-  // The agent and the TUI are shown; the documentation waits to be asked for.
-  await expect(target.locator(".pane-agent")).toBeVisible();
+  // The TUI is shown; the documentation waits to be asked for. The agent
+  // works only for a signed-in profile, and with no host nobody is: its
+  // column is not shown, and its button stays in the rail, held, saying why.
+  await expect(target.locator(".pane-agent")).toBeHidden();
+  const agent = rail.getByRole("button", {
+    name: `${label("desktop.rail.agent")}, ${label("desktop.agent.sign_in_first")}`,
+    exact: true,
+  });
+  await expect(agent).toHaveAttribute("aria-disabled", "true");
+  await agent.click({ force: true });
+  await expect(target.locator(".pane-agent")).toBeHidden();
   await expect(target.locator(".pane-docs")).toBeHidden();
   await expect(target.locator(".pane-docs")).toContainText(
     label("desktop.host.unavailable"),
@@ -1191,7 +1415,7 @@ test("bridge messages from any window but the documentation frame are ignored", 
 test("the remembered layout survives a reload", async ({ page: target }) => {
   await target.goto("/");
   await target
-    .getByRole("button", { name: label("desktop.rail.settings") })
+    .getByRole("button", { name: label("desktop.rail.settings"), exact: true })
     .click();
   const settings = target.getByRole("dialog", {
     name: label("desktop.settings.title"),
@@ -1301,7 +1525,7 @@ test("a forced appearance reaches the documentation through the bridge", async (
 }) => {
   await openWithDocs(target);
   await target
-    .getByRole("button", { name: label("desktop.rail.settings") })
+    .getByRole("button", { name: label("desktop.rail.settings"), exact: true })
     .click();
   await target
     .getByRole("radiogroup", { name: label("desktop.settings.appearance") })
@@ -1377,7 +1601,7 @@ test("the shell runs under the window's content security policy without a violat
   ).toBeVisible();
   await target.keyboard.press("Escape");
   await target
-    .getByRole("button", { name: label("desktop.rail.settings") })
+    .getByRole("button", { name: label("desktop.rail.settings"), exact: true })
     .click();
   await expect(target.locator(".settings")).toBeVisible();
   await target.keyboard.press("Escape");

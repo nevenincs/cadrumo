@@ -1,7 +1,9 @@
 //! Short-lived canonical CLI invocations. No runtime connection or credential is retained.
 mod observation;
-mod process;
-mod wire;
+// The child runner and the envelope decoder are also the provider settings'
+// channel: one set of lanes, one deadline, one output bound, one settlement.
+pub(crate) mod process;
+pub(crate) mod wire;
 use observation::{
     __cmd__sign_in_subscribe, __cmd__sign_in_unsubscribe, __tauri_command_name_sign_in_subscribe,
     __tauri_command_name_sign_in_unsubscribe, sign_in_subscribe, sign_in_unsubscribe,
@@ -39,7 +41,7 @@ const LABEL_LIMIT: usize = 160;
 /// package created `%USERNAME% y Cia` as the user's name followed by "y Cia"
 /// and `Taller [2025]` as the name of a file beside it. A label holding one
 /// would name another profile, so it is not passed at all.
-const REWRITTEN: [char; 5] = ['*', '?', '[', '%', '$'];
+pub(crate) const REWRITTEN: [char; 5] = ['*', '?', '[', '%', '$'];
 
 /// One command under `config`: its words, the name its answer must carry,
 /// whether it only reads, and whether it uses the enrollment deadline.

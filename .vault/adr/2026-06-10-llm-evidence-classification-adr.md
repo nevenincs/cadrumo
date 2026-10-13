@@ -405,3 +405,46 @@ axis is multi-valued.
 The reversal is left as a dated follow-up because the prior section was true when written
 and reading it as an error would misdescribe the corpus. Both notes together are the
 history; either alone is wrong about HEAD.
+
+## Amendment (2026-10-13): session and remembered consent scopes for agent reads
+
+**Basis.** On 2026-10-13 the owner ruled first-hand, relayed by the coordinator: "once per
+session but concent should have two forms: allow once (so ever action is concented) and
+allow this session allow once and remembed choice for future asks. that is the norm in
+wevery agent ap". `2026-10-13-agent-attachments-adr` applies that ruling.
+
+**What changes.** Ruling 2, and the Constraints wording that the acknowledgement "must be
+re-affirmed each invocation (not a sticky setting)", no longer require a fresh
+acknowledgement for every off-host read. The person now chooses one of three scopes when
+approving an off-host read:
+
+- **Once.** Covers this read only. This is the scope the record had before this amendment.
+- **For the agent session.** Covers matching reads until the agent session ends: sign-out,
+  lock, expiry or the agent stopping.
+- **Remembered.** A persisted grant that covers future matching reads until the person
+  revokes it.
+
+**What stays the same.**
+
+- **Who grants.** Every grant is the person's act, taken only on a person frontend and held
+  in encrypted custody. An agent never grants, asserts or revokes one.
+- **Binding.** Every grant is bound to the action kind, the provider and the model, and to
+  the document for a document read.
+- **Ledger.** Every release is appended to the consent ledger before content leaves the
+  machine, whatever the grant's scope.
+- **Revocation.** It takes effect from the next read.
+- **Bars and exclusions.** The gestor bar, the deployment opt-in and per-profile
+  eligibility still apply to every grant and every release. The CLI-agent file-path route
+  stays excluded. On-host reading stays the default.
+
+**Wording now superseded.** The record's earlier words "never sticky" and "re-affirmed
+each invocation" read, after 2026-10-13, as "never granted without the person's explicit
+choice of scope".
+
+**Still to change in code.** `cloud_evidence_read_permitted` still says "never sticky"
+(`src/cadrumo/adapters/outbound/llm/consent.py:155-157`). That wording, and the token's
+missing provider, model and action-kind fields, change with the implementation under
+`2026-10-13-agent-attachments-adr`.
+
+**Unchanged.** The ledger extraction operation keeps its per-invocation acknowledgement.
+This amendment offers the wider scopes only on the agent's approval card.

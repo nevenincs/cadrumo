@@ -252,6 +252,8 @@ export function App({ host }: { host: Host }) {
   const gated = account.gated;
   const phase = account.phase;
   const signedIn = phase === "signed-in";
+  // Signed out, the agent is not there to fill the window.
+  if (!signedIn && maximized === "agent") setMaximized(null);
   const accountRef = useRef(account);
   accountRef.current = account;
   const signOut = useCallback(() => {
@@ -301,7 +303,10 @@ export function App({ host }: { host: Host }) {
   const besideRail = Math.max(0, viewportWidth - railWidth);
   const agentFits = besideRail >= agentMin + splitMinA;
   const mainOccupied = firstPaneShown || tuiVisible || panelVisible;
+  // The agent works only for a profile signed in here: signed out, it is
+  // not there at all, and it comes back as it was laid out on signing in.
   const agentVisible =
+    signedIn &&
     (layout.agentShown || maximized === "agent") &&
     unhidden("agent") &&
     (maximized === "agent" || agentFits || !mainOccupied);
@@ -323,11 +328,6 @@ export function App({ host }: { host: Host }) {
   if (calendarKept.reader !== reader)
     setCalendarKept({ reader, memory: { current: {} } });
   const calendarMemory = calendarKept.memory;
-  const [rechecking, setRechecking] = useState(false);
-  const lookAgain = useCallback(() => {
-    setRechecking(true);
-    void recheckAccount().finally(() => setRechecking(false));
-  }, [recheckAccount]);
   const calendar = useFilingCalendar(
     views,
     reader,
@@ -361,9 +361,6 @@ export function App({ host }: { host: Host }) {
       )?.focus();
     calendarWas.current = calendarVisible;
   }, [calendarVisible, firstPaneShown]);
-  useEffect(() => {
-    if (calendarVisible && phase === "in-tui") void recheckAccount();
-  }, [calendarVisible, phase, recheckAccount]);
   const askSignIn = useCallback(() => {
     const element = document.activeElement;
     signInOpener.current = {
@@ -555,15 +552,6 @@ export function App({ host }: { host: Host }) {
     patch({ tuiShown: true });
     focusView("tui");
   }, [patch, focusView]);
-  // Every way into the TUI's own flow, from the pane, the dialog, settings
-  // or the palette: the TUI is shown and the keyboard goes to it.
-  const continueInTui = useCallback(() => {
-    // Wherever it was asked from, the keyboard goes on to the TUI.
-    signInOpener.current = null;
-    accountRef.current.openTui();
-    setSettingsOpen(false);
-    showTui();
-  }, [showTui]);
   // Whether the last render showed a gate the person could act on, with
   // the dialog put aside. The first status read is a gate too, but not one
   // anybody was standing at: being let through it at startup moves no
@@ -705,10 +693,7 @@ export function App({ host }: { host: Host }) {
         tuiVisible &&
           (signInButton.current !== null ||
             (!gated && status.tui.phase !== "unavailable")),
-        () =>
-          signInButton.current
-            ? signInButton.current.focus()
-            : terminals.current.tui?.focus(),
+        () => focusView("tui"),
       ];
       const stops: Stop[] = [
         ["agent", agentVisible, () => agentBody.current?.focus()],
@@ -724,7 +709,7 @@ export function App({ host }: { host: Host }) {
             // Without a session there is no terminal to focus; its tab is.
             else if (status[layout.tab].phase === "unavailable")
               document.getElementById(`tab-${layout.tab}`)?.focus();
-            else terminals.current[layout.tab]?.focus();
+            else focusView(layout.tab);
           },
         ],
         ["rail", true, focusRail],
@@ -748,6 +733,7 @@ export function App({ host }: { host: Host }) {
       layout.tab,
       gated,
       status,
+      focusView,
       focusRail,
     ],
   );
@@ -896,6 +882,7 @@ export function App({ host }: { host: Host }) {
         chords: [
           { mod: true, shift: true, code: "KeyA", key: "A", scope: "global" },
         ],
+        enabled: () => signedIn,
         run: () => toggleColumn("agent"),
       },
       {
@@ -1159,34 +1146,13 @@ export function App({ host }: { host: Host }) {
         run: askSignIn,
       },
       {
-        // The TUI's own flow, wherever the account is not settled: the way
-        // on when no password can settle it.
-        id: "account.openTui",
-        label: t("desktop.signin.open_tui"),
-        group: "account",
-        icon: "tui",
-        keywords: "unlock recovery another profile",
-        enabled: () =>
-          gated &&
-          phase !== "checking" &&
-          phase !== "starting" &&
-          phase !== "no-profile",
-        run: continueInTui,
-      },
-      {
         id: "account.createProfile",
-        // In the window where the host can make one, else in the TUI.
-        label: t(
-          canCreateProfile
-            ? "desktop.account.new_profile"
-            : "desktop.account.create_profile",
-        ),
+        label: t("desktop.account.new_profile"),
         group: "account",
-        icon: canCreateProfile ? "userAdd" : "user",
+        icon: "userAdd",
         keywords: "register new account add another",
-        enabled: () =>
-          canCreateProfile ? offersProfiles : phase === "no-profile",
-        run: canCreateProfile ? askNewProfile : continueInTui,
+        enabled: () => canCreateProfile && offersProfiles,
+        run: askNewProfile,
       },
       {
         id: "account.signOut",
@@ -1265,20 +1231,17 @@ export function App({ host }: { host: Host }) {
       maximized,
       docsSearchReady,
       docsEntry,
-      phase,
       views,
       messages,
       say,
       showTui,
       calendarOn,
       calendarVisible,
-      gated,
       askSignIn,
       askNewProfile,
       canCreateProfile,
       offersProfiles,
       mayEnterPassword,
-      continueInTui,
       signedIn,
       signOut,
       switchProfile,
@@ -1734,6 +1697,7 @@ export function App({ host }: { host: Host }) {
       label: t("desktop.rail.agent"),
       shortcut: primaryChord(byId("agent.toggle")),
       pressed: agentVisible,
+      ...(signedIn ? {} : { heldBy: t("desktop.agent.sign_in_first") }),
       divided: true,
       onClick: () => runAction("agent.toggle"),
     },
@@ -1853,13 +1817,8 @@ export function App({ host }: { host: Host }) {
       onStatus={(k, s) => {
         setStatus((all) => ({ ...all, [k]: s }));
         if (k !== "tui") return;
-        // The TUI's own flow has ended, or never began: the person is back
-        // at the gate, and is told when it was because it could not start.
-        if (s.phase === "failed" && accountRef.current.phase === "in-tui") {
-          say(t("desktop.session.failed", { reason: s.message }));
-          // The focus asked for the TUI that did not start is not owed.
-          wanted.current = null;
-        }
+        // The TUI's session has ended: what it did to the account is read
+        // again.
         if (s.phase === "exited" || s.phase === "failed") account.tuiExited();
       }}
       onMenu={terminalMenu}
@@ -1918,32 +1877,14 @@ export function App({ host }: { host: Host }) {
           today={calendar.today}
           memory={calendarMemory}
           // Withheld, it says what the TUI pane says of the account, with
-          // the same ways on. While the person carries on in the TUI the
-          // window does not know how that went: it offers to look again.
+          // the same ways on.
           withheld={
-            phase === "in-tui" ? (
-              <Empty>
-                <EmptyMedia>
-                  <Icon name="tui" />
-                </EmptyMedia>
-                <EmptyTitle>{t("desktop.account.in_tui")}</EmptyTitle>
-                <Button
-                  variant="outline"
-                  pending={rechecking}
-                  onClick={lookAgain}
-                >
-                  {t("desktop.calendar.refresh")}
-                </Button>
-              </Empty>
-            ) : (
-              <SignedOut
-                account={account}
-                lead={t("desktop.calendar.signed_out")}
-                quiet
-                onSignIn={askSignIn}
-                onOpenTui={continueInTui}
-              />
-            )
+            <SignedOut
+              account={account}
+              lead={t("desktop.calendar.signed_out")}
+              quiet
+              onSignIn={askSignIn}
+            />
           }
           locale={locale}
           refreshing={calendar.refreshing}
@@ -2049,7 +1990,6 @@ export function App({ host }: { host: Host }) {
         <SignedOut
           account={account}
           onSignIn={askSignIn}
-          onOpenTui={continueInTui}
           signInButton={signInButton}
         />
       ) : (
@@ -2069,6 +2009,8 @@ export function App({ host }: { host: Host }) {
         agent={host.agent}
         session={host.agentSession}
         providerSettings={host.providerSettings}
+        agentAccess={host.agentAccess}
+        writeClipboard={(text) => host.writeClipboard(text)}
         // The agent works only for a profile that is signed in here: not
         // for one the shell cannot tell about.
         reader={signedIn ? (account.status?.active_profile ?? null) : null}
@@ -2112,7 +2054,12 @@ export function App({ host }: { host: Host }) {
       <div className="flex flex-wrap justify-center gap-2">
         {(
           [
-            ["agent.toggle", "agent", "desktop.agent.show", !agentVisible],
+            [
+              "agent.toggle",
+              "agent",
+              "desktop.agent.show",
+              signedIn && !agentVisible,
+            ],
             ["tui.toggle", "tui", "desktop.tui.show", true],
             ["docs.toggle", "book", "desktop.docs.show", true],
           ] as const
@@ -2148,7 +2095,6 @@ export function App({ host }: { host: Host }) {
               }}
               onSignOut={signOut}
               onCreate={askNewProfile}
-              onOpenTui={continueInTui}
             />
           </Titlebar>
           <div
@@ -2454,7 +2400,6 @@ export function App({ host }: { host: Host }) {
                 setSignInDismissed(!open);
                 if (!open) accountRef.current.settle();
               }}
-              onOpenTui={continueInTui}
               create={creatingProfile}
               onCreateChange={setCreatingProfile}
               // Opened by the gate closing rather than by a press, the dialog

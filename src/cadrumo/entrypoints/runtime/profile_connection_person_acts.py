@@ -40,6 +40,30 @@ class ProfileConnectionPersonActMixin:
         if not is_persons_frontend(frontend):
             raise ProfileAccessRefusedError(AccessDenialCode.PERSON_ACT_REQUIRED)
 
+    def _agent_tree_peer(self: RuntimeProfileConnections, context: RuntimeConnectionContext) -> bool:
+        """Whether the connection's kernel-verified peer runs inside a hosted agent's tree.
+
+        The answer comes from the agent's containment, not from any frontend
+        the connection declares: a process the agent started is the agent's,
+        whichever program it is. A peer whose process is unknown while any
+        agent is hosted cannot be shown to be outside it.
+        """
+        process_id = context.peer.process_id
+        if process_id is None:
+            return self._agents.hosting()
+        return self._agents.contains_process_id(process_id)
+
+    def _refuse_agent_tree_person_access(
+        self: RuntimeProfileConnections,
+        context: RuntimeConnectionContext,
+        frontend: OperationFrontendProjection,
+        *,
+        method: str | None = None,
+    ) -> None:
+        """Refuse a person's frontend, or the person's own sign-in, to a peer inside a hosted agent's tree."""
+        if (is_persons_frontend(frontend) or method in {"password", "receipt"}) and self._agent_tree_peer(context):
+            raise ProfileAccessRefusedError(AccessDenialCode.PERSON_ACT_REQUIRED)
+
     def _connection_frontend(
         self: RuntimeProfileConnections, context: RuntimeConnectionContext
     ) -> OperationFrontendProjection | None:
@@ -65,6 +89,9 @@ class ProfileConnectionPersonActMixin:
         try:
             if frontend is not None:
                 self._require_persons_frontend(frontend)
+            if self._agent_tree_peer(context):
+                # Whatever frontend it names, a process of the agent's tree never takes a person's act.
+                raise ProfileAccessRefusedError(AccessDenialCode.PERSON_ACT_REQUIRED)
         except ProfileAccessRefusedError as refused:
             write_document(
                 channel,

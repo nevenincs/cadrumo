@@ -163,7 +163,7 @@ LEDGER_OPERATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _LEDGER_ACTOR_OPTION,
         ),
         policy=_POLICY_10,
-        handler=LazyBinding.available(DeferredTarget("._ledger_read_cli", "ledger_export", __package__)),
+        handler=LazyBinding.available(DeferredTarget("._ledger_export_cli", "ledger_export", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget("._ledger_payloads", "LedgerExportPayload", __package__),

@@ -10,12 +10,17 @@ import { Empty, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
 import { failureCode } from "../errors";
+import { useAgentAccess, type AgentAccess } from "../shell/agentAccess";
 import {
   catalogChoices,
   offeredSelection,
   selectionRecord,
 } from "../shell/agentCatalog";
-import { useAgentStatus, useLiveConversation } from "../shell/agentLive";
+import {
+  newestReply,
+  useAgentStatus,
+  useLiveConversation,
+} from "../shell/agentLive";
 import type {
   AgentApproval,
   AgentQuestionnaire,
@@ -26,13 +31,14 @@ import type {
 } from "../shell/agentSession";
 import {
   archivedCount,
-  conversationDocument,
+  replyFacts,
   transcriptItems,
   useAgentRead,
   useConversationGroups,
   type AgentRead,
   type AgentViews,
 } from "../shell/agentViews";
+import { queuedWords, runStateWords } from "../shell/agentWords";
 import {
   useProviderSettings,
   type ProviderSettings,
@@ -42,9 +48,9 @@ import { AgentHeader } from "./agent/AgentHeader";
 import { AgentWelcome } from "./agent/AgentWelcome";
 import { ApprovalPrompt } from "./agent/ApprovalPrompt";
 import { Composer } from "./agent/Composer";
-import { DocumentsPanel } from "./agent/DocumentsPanel";
 import { HistoryList } from "./agent/HistoryList";
 import { QuestionsPrompt } from "./agent/QuestionsPrompt";
+import { AgentAccess as AgentAccessSection } from "./settings/AgentAccess";
 import { ProviderSettings as ProviderSettingsSection } from "./settings/ProviderSettings";
 import { Transcript } from "./agent/Transcript";
 import type {
@@ -59,9 +65,13 @@ import type {
 const NO_ATTACHMENTS: StagedAttachment[] = [];
 const NO_PROVIDERS: ProviderOption[] = [];
 const NO_MODELS: Record<string, ModelOption[]> = {};
-const NO_SELECTION: AgentSelection = { providerId: "", modelId: "" };
+const NO_SELECTION: AgentSelection = {
+  providerId: "",
+  wayId: "",
+  modelId: "",
+};
 
-type Panel = "none" | "history" | "documents" | "settings";
+type Panel = "none" | "history" | "settings";
 
 /** Why the agent service is not serving, in words; null when it is. */
 function serviceWords(t: Translate, status: AgentServiceStatus): string | null {
@@ -84,8 +94,12 @@ function refusalWords(t: Translate, code: string): string {
       return t("desktop.agent.service_runtime_unavailable");
     case "agent_provider_credential_missing":
       return t("desktop.agent.service_credential_missing");
+    case "agent_root_unmarked":
+      return t("desktop.agent.service_root_unmarked");
     case "agent_service_failed":
       return t("desktop.agent.service_failed");
+    case "agent_reply_in_progress":
+      return t("desktop.agent.reply_in_progress");
     default:
       return t("desktop.messages.failed", { code });
   }
@@ -93,17 +107,21 @@ function refusalWords(t: Translate, code: string): string {
 
 /**
  * The agent column's content: its header, the conversation or the history or
- * its documents, and the composer. What it shows comes from the host's agent
+ * the settings, and the composer. What it shows comes from the host's agent
  * views, read as the signed-in profile's, and a conversation is kept up to
  * date from the host's agent session as replies are written. A host that
  * serves neither leaves every one of its doors saying it is not available
- * yet. Nothing here is made up: the providers, models and what each can do
- * are the agent's own catalog, and only what the person sends is sent.
+ * yet, and so does what the agent does not serve, such as a conversation's
+ * documents. Nothing here is made up: the providers, models and what each can
+ * do are the agent's own catalog, a conversation's records are what the agent
+ * kept of its runs, and only what the person sends is sent.
  */
 export function AgentColumn({
   agent,
   session,
   providerSettings,
+  agentAccess,
+  writeClipboard,
   reader,
   shown,
   locale,
@@ -117,6 +135,11 @@ export function AgentColumn({
   /** The profile's model providers and their keys, where the host offers
    * them. */
   providerSettings: ProviderSettings | undefined;
+  /** The keys the profile issued to agents outside Cadrumo, where the host
+   * offers them. */
+  agentAccess?: AgentAccess;
+  /** Puts text on the clipboard, where the host offers it. */
+  writeClipboard?: (text: string) => Promise<void>;
   /** Whose the conversations are: the signed-in profile, or null while the
    * account withholds them. */
   reader: string | null;
@@ -141,6 +164,8 @@ export function AgentColumn({
     chosen: null as AgentSelection | null,
     sending: false,
     sendFailure: null as string | null,
+    // Why the history's last archive was refused.
+    archiveFailure: null as string | null,
     // The composer is drawn anew with this draft when a send is given back.
     draft: { key: 0, text: "" },
     // Counts the messages sent and the replies finished, each a reason to
@@ -156,6 +181,7 @@ export function AgentColumn({
       chosen: null,
       sending: false,
       sendFailure: null,
+      archiveFailure: null,
       draft: { key: view.draft.key + 1, text: "" },
       revision: 0,
     });
@@ -165,8 +191,8 @@ export function AgentColumn({
 
   const readable = agent !== undefined && reader !== null && shown;
   // The conversations are read while the history is open, and while one of
-  // them is shown, for its title and its documents' count. Opening the
-  // history asks again, so it is never the list from the last time.
+  // them is shown, for its title. Opening the history asks again, so it is
+  // never the list from the last time.
   const historyOpen = panel === "history";
   const wanted = historyOpen || conversationId !== null;
   const readConversations = useMemo(
@@ -178,18 +204,6 @@ export function AgentColumn({
   );
   // Asked again once a reply has finished, for a title the agent gave.
   const conversations = useAgentRead(readConversations, revision);
-  const documentsOpen = panel === "documents";
-  const readDocuments = useMemo(
-    () =>
-      readable && agent && documentsOpen && conversationId !== null
-        ? () =>
-            agent
-              .documents(conversationId)
-              .then((records) => records.map(conversationDocument))
-        : null,
-    [readable, agent, documentsOpen, conversationId],
-  );
-  const documents = useAgentRead(readDocuments);
   // The conversation shown, read whenever it is shown again and followed
   // while it is.
   const conversationShown = panel === "none" && conversationId !== null;
@@ -204,33 +218,29 @@ export function AgentColumn({
     enabled: readable && conversationShown,
     onSettled,
   });
-  // A reply held on the person's answer or decision says it waits for them,
-  // on the newest turn it is writing.
-  const heldOnPerson =
-    live.questionnaires.length > 0 || live.approvals.length > 0;
   const history = useMemo((): AgentRead<ReturnType<typeof transcriptItems>> => {
     if (live.read.kind !== "ready") return live.read;
-    const items = transcriptItems(live.read.value, locale);
-    let newest = -1;
-    items.forEach((item, index) => {
-      if (item.kind === "agent" && item.state === "working") newest = index;
-    });
     return {
       kind: "ready",
-      value:
-        heldOnPerson && newest >= 0
-          ? items.map((item, index) =>
-              index === newest && item.kind === "agent"
-                ? { ...item, waitingOnPerson: true }
-                : item,
-            )
-          : items,
+      value: transcriptItems(live.read.value, locale, t),
     };
-  }, [live.read, locale, heldOnPerson]);
+  }, [live.read, locale, t]);
+  // What the agent served of the conversation's replies beside their words: the
+  // state of the newest, what they ran with, and the tokens they used.
+  const newest =
+    live.read.kind === "ready" ? newestReply(live.read.value) : undefined;
+  const facts = useMemo(
+    () =>
+      live.read.kind === "ready"
+        ? replyFacts(live.read.value, locale, t)
+        : { ranWith: null, usage: null },
+    [live.read, locale, t],
+  );
   const groups = useConversationGroups(conversations, {
     locale,
     archived,
     currentId: conversationId,
+    untitled: t("desktop.agent.unavailable"),
   });
 
   // The service, and what it can run, while the column could send.
@@ -252,6 +262,9 @@ export function AgentColumn({
     conversations.kind === "ready" && conversationId !== null
       ? conversations.value.find((record) => record.id === conversationId)
       : undefined;
+  // Archiving is the agent's, one run at a time and for good: the history
+  // offers it where the host does, and never an undo.
+  const archiveHost = session?.archive ? session : undefined;
   const open = useCallback(
     (id: string) =>
       setView((held) => ({
@@ -259,6 +272,7 @@ export function AgentColumn({
         panel: "none",
         conversationId: id,
         sendFailure: null,
+        archiveFailure: null,
       })),
     [],
   );
@@ -272,8 +286,9 @@ export function AgentColumn({
     reader,
     settingsOpen && shown,
   );
+  const access = useAgentAccess(agentAccess, reader, settingsOpen && shown);
   const openSettings =
-    providerSettings && reader !== null
+    (providerSettings || agentAccess) && reader !== null
       ? () => change({ panel: "settings" })
       : undefined;
 
@@ -288,7 +303,10 @@ export function AgentColumn({
   const deliver = async (request: AgentSendRequest) => {
     if (!session) return;
     try {
-      live.sent(await session.send(request));
+      const { reply_id } = await session.send(request);
+      // The agent returns no id for the message, so it is shown as sent until
+      // the history has it.
+      live.sent({ reply_id, text: request.text, at: "start" });
       // A message sent may name the conversation, so it is read again.
       setView((held) => ({
         ...held,
@@ -338,8 +356,11 @@ export function AgentColumn({
     if (!session) return;
     change({ sending: true, sendFailure: null });
     try {
-      const result = await session.answerQuestions(asked, reply);
-      if (result.person_turn) live.sent({ person_turn: result.person_turn });
+      await session.answerQuestions(asked, reply);
+      // An answer in words continues the run in place: shown as sent, as a
+      // message is.
+      if (reply.kind === "message")
+        live.sent({ reply_id: asked.reply_id, text: reply.text, at: "end" });
       live.resolved(asked.request_id);
       change({ sending: false });
     } catch (error) {
@@ -359,10 +380,22 @@ export function AgentColumn({
     }
   };
   const answering = session && ready && !view.sending;
+  // The agent takes no message while a run needs repair or is being
+  // reconciled.
+  const heldByRun =
+    newest?.status === "repair_needed" ||
+    newest?.status === "reconciling" ||
+    newest?.status === "deleting";
+  // A selection the catalog names in full: a model not yet chosen or written
+  // cannot be run.
+  const runnable =
+    catalog.kind === "ready" &&
+    selection !== null &&
+    selectionRecord(catalog.value, selection) !== null;
   const send =
     answering && questionnaire
       ? (text: string) => void answer(questionnaire, { kind: "message", text })
-      : answering && selection
+      : answering && selection && runnable && !heldByRun
         ? (text: string) => {
             change({ sending: true, sendFailure: null });
             void submit(text, selection);
@@ -373,40 +406,44 @@ export function AgentColumn({
       ? () => {
           const replyId = live.open;
           if (replyId)
-            session
-              .cancel(replyId)
-              .catch((error: unknown) =>
-                change({ sendFailure: failureCode(error) }),
-              );
+            session.cancel(replyId).then(
+              () => live.stopping(replyId),
+              (error: unknown) => change({ sendFailure: failureCode(error) }),
+            );
         }
       : undefined;
 
   // No provider the agent can run: a key is missing, or every lane is held
   // back. That is not a failure, and the way to a key is offered.
+  const incompatible = offer?.incompatible === true;
   const noProvider =
-    (status?.state === "refused" &&
+    !incompatible &&
+    ((status?.state === "refused" &&
       status.code === "agent_provider_credential_missing") ||
-    (offer !== null &&
-      !offer.providers.some(
-        (provider) =>
-          provider.selectable && (offer.models[provider.id] ?? []).length > 0,
-      ));
-  const notice = noProvider
-    ? t("desktop.agent.no_provider")
-    : status
-      ? serviceWords(t, status)
-      : null;
+      (offer !== null &&
+        !offer.providers.some((provider) => provider.selectable)));
+  const notice = incompatible
+    ? t("desktop.agent.service_incompatible")
+    : noProvider
+      ? t("desktop.agent.no_provider")
+      : status
+        ? serviceWords(t, status)
+        : null;
 
   return (
     <>
       <AgentHeader
-        // A conversation is untitled until the agent names it.
-        title={current?.title || t("desktop.agent.new_conversation")}
-        documentCount={current?.document_count ?? 0}
+        // A conversation not yet started has no title; one the agent was
+        // given none for says so.
+        title={
+          current
+            ? current.title || t("desktop.agent.unavailable")
+            : t("desktop.agent.new_conversation")
+        }
         historyOpen={historyOpen}
-        documentsOpen={documentsOpen}
         // Each door opens only where a host serves the agent; elsewhere it
-        // says it is not available yet.
+        // says it is not available yet. The documents door is never open:
+        // Cadrumo's custody serves the agent none yet.
         onNewConversation={
           agent
             ? () =>
@@ -418,7 +455,6 @@ export function AgentColumn({
             : undefined
         }
         onToggleHistory={agent ? () => toggle("history") : undefined}
-        onToggleDocuments={agent ? () => toggle("documents") : undefined}
         settingsOpen={settingsOpen}
         onToggleSettings={openSettings ? () => toggle("settings") : undefined}
         onToggleMaximize={onToggleMaximize}
@@ -441,54 +477,86 @@ export function AgentColumn({
         className="agent-body flex min-h-0 flex-1 flex-col overflow-y-auto focus-visible:-outline-offset-2"
       >
         {settingsOpen ? (
-          settings.read.kind === "ready" ? (
-            <div className="p-3">
-              <ProviderSettingsSection
-                providers={settings.read.value.providers}
-                development={settings.read.value.development}
-                busyId={settings.busyId}
-                outcomes={settings.outcomes}
-                onSave={settings.save}
-                onTurnOff={settings.turnOff}
-                onReset={settings.reset}
-                onRefresh={settings.refresh}
+          // Each section the host offers is read, and shown or said, on its
+          // own: the providers' keys and the keys of agents outside Cadrumo.
+          <div className="grid gap-6 p-3">
+            {providerSettings &&
+              (settings.read.kind === "ready" ? (
+                <ProviderSettingsSection
+                  providers={settings.read.value.providers}
+                  development={settings.read.value.development}
+                  busyId={settings.busyId}
+                  outcomes={settings.outcomes}
+                  onSave={settings.save}
+                  onTurnOff={settings.turnOff}
+                  onReset={settings.reset}
+                  onRefresh={settings.refresh}
+                />
+              ) : (
+                <ReadState read={settings.read} icon="settings" />
+              ))}
+            {agentAccess &&
+              (access.read.kind === "ready" ? (
+                <AgentAccessSection
+                  credentials={access.read.value.credentials}
+                  locale={locale}
+                  busyId={access.busyId}
+                  outcomes={access.outcomes}
+                  issuing={access.issuing}
+                  issueRefusal={access.issueRefusal}
+                  issued={access.issued}
+                  onIssue={access.issue}
+                  onCloseIssue={access.closeIssue}
+                  onRevoke={access.revoke}
+                  onRefresh={access.refresh}
+                  onCopy={writeClipboard}
+                />
+              ) : (
+                <ReadState read={access.read} icon="settings" />
+              ))}
+          </div>
+        ) : historyOpen ? (
+          groups ? (
+            <div className="flex min-h-0 flex-1 flex-col">
+              {view.archiveFailure !== null && (
+                <p
+                  role="alert"
+                  className="flex shrink-0 items-start gap-2 px-3 pt-3 text-sm"
+                >
+                  <Icon name="alert" className="mt-0.5 text-destructive" />
+                  <span>{refusalWords(t, view.archiveFailure)}</span>
+                </p>
+              )}
+              <HistoryList
+                groups={groups}
+                viewingArchived={archived}
+                archivedCount={
+                  conversations.kind === "ready"
+                    ? archivedCount(conversations.value)
+                    : 0
+                }
+                onToggleArchived={() => change({ archived: !archived })}
+                onOpen={open}
+                onArchive={
+                  archiveHost
+                    ? (id) => {
+                        change({ archiveFailure: null });
+                        archiveHost.archive?.(id).then(
+                          () =>
+                            setView((held) => ({
+                              ...held,
+                              revision: held.revision + 1,
+                            })),
+                          (error: unknown) =>
+                            change({ archiveFailure: failureCode(error) }),
+                        );
+                      }
+                    : undefined
+                }
               />
             </div>
           ) : (
-            <ReadState read={settings.read} icon="settings" />
-          )
-        ) : historyOpen ? (
-          groups ? (
-            <HistoryList
-              groups={groups}
-              viewingArchived={archived}
-              archivedCount={
-                conversations.kind === "ready"
-                  ? archivedCount(conversations.value)
-                  : 0
-              }
-              onToggleArchived={() => change({ archived: !archived })}
-              onOpen={open}
-            />
-          ) : (
             <ReadState read={conversations} icon="clock" />
-          )
-        ) : documentsOpen ? (
-          conversationId === null ? (
-            // A conversation not yet started has no documents to read.
-            <DocumentsPanel
-              documents={[]}
-              locale={locale}
-              onClose={() => change({ panel: "none" })}
-            />
-          ) : documents.kind === "ready" ? (
-            <DocumentsPanel
-              documents={documents.value}
-              locale={locale}
-              onClose={() => change({ panel: "none" })}
-            />
-          ) : (
-            <ReadState read={documents} icon="page" />
           )
         ) : conversationId === null ? (
           <AgentWelcome />
@@ -500,20 +568,18 @@ export function AgentColumn({
           <ReadState read={history} icon="agent" />
         )}
       </section>
-      {/* The history and the documents take the column's whole height, as
-          the composer would sit under a list it does not write to. */}
-      {!historyOpen && !documentsOpen && !settingsOpen && (
+      {/* The history and the settings take the column's whole height, as the
+          composer would sit under a list it does not write to. */}
+      {!historyOpen && !settingsOpen && (
         <div className="grid shrink-0 gap-2 p-3 pt-0">
           {live.approvals.map((approval) => (
             <ApprovalPrompt
               key={approval.request_id}
               source={approval.source}
-              title={approval.title}
+              toolCall={approval.tool_call}
+              toolKind={approval.tool_kind}
               description={approval.description}
-              options={approval.options.map((option) => ({
-                id: option.option_id,
-                kind: option.kind,
-              }))}
+              options={approval.options}
               onDecide={
                 answering
                   ? (optionId) => void decide(approval, optionId)
@@ -536,6 +602,18 @@ export function AgentColumn({
                   ? () => void answer(questionnaire, { kind: "decline" })
                   : undefined
               }
+            />
+          )}
+          {conversationId !== null && (
+            <ReplyFacts
+              state={newest ? runStateWords(t, newest.status) : null}
+              queued={
+                newest?.queued_messages
+                  ? queuedWords(t, newest.queued_messages)
+                  : null
+              }
+              ranWith={facts.ranWith}
+              usage={facts.usage}
             />
           )}
           {view.sendFailure !== null ? (
@@ -578,6 +656,51 @@ export function AgentColumn({
             }
           />
         </div>
+      )}
+    </>
+  );
+}
+
+/** What the agent served of the conversation's newest reply beside its words:
+ * a run state the transcript draws no indicator for, the messages queued behind
+ * it, what the replies ran with and the tokens they used. Each is said only
+ * where the agent served it. */
+function ReplyFacts({
+  state,
+  queued,
+  ranWith,
+  usage,
+}: {
+  state: string | null;
+  queued: string | null;
+  ranWith: string | null;
+  usage: string | null;
+}) {
+  return (
+    <>
+      {[state, queued].map(
+        (words) =>
+          words && (
+            <p
+              key={words}
+              role="status"
+              className="agent-reply-state flex items-start gap-2 text-sm text-muted-foreground"
+            >
+              <Icon name="info" className="mt-0.5" />
+              <span>{words}</span>
+            </p>
+          ),
+      )}
+      {[ranWith, usage].map(
+        (words) =>
+          words && (
+            <p
+              key={words}
+              className="agent-reply-facts text-xs text-muted-foreground"
+            >
+              {words}
+            </p>
+          ),
       )}
     </>
   );

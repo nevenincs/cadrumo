@@ -1,7 +1,7 @@
-// A provider of the profile's settings as the settings section shows it:
-// what kind of credential it takes, what uses it, and where it stands. No
-// stored key is ever part of it; the section can say whether a key is there,
-// never what it is.
+// A way into a provider of the profile's settings as the settings section
+// shows it: what kind of credential it takes and where it stands. No stored
+// key is ever part of it; the section can say whether a key is there, never
+// what it is.
 
 /** How a provider is reached: by a key, a key and a gateway's address, a
  * token or the provider's own sign-in, or only that sign-in. */
@@ -27,24 +27,31 @@ export type ProviderReadiness =
 /** Where the provider's credential comes from. */
 export type ProviderSource = "profile" | "environment" | "none";
 
-/** What in Cadrumo may use a provider. */
-export type ProviderConsumer = "assistant" | "extraction";
-
 /** How Cadrumo reaches a provider: its web API, or its own command-line
  * app on this computer. One provider can be reached both ways, and each way
  * is set up on its own. */
 export type ProviderTransport = "api" | "cli";
 
+/** Where a command-line app stands on this computer. */
+export type CliState =
+  "installed_signed_in" | "installed_signed_out" | "not_installed" | "unknown";
+
+/** One way into a provider: its API, or its command-line app. */
 export type ProviderStatus = {
+  /** The way's own id, which a change to it names. */
   id: string;
-  /** The provider's own name, the same in every language. */
+  /** The provider it reaches, as cadrumo-agent names it; the ways of one
+   * provider share it, and it picks the provider's mark. */
+  provider: string;
+  /** The provider's own name, the same in every language and on each way. */
   name: string;
   transport: ProviderTransport;
   authKind: ProviderAuthKind;
-  consumers: readonly ProviderConsumer[];
   mode: ProviderMode;
   readiness: ProviderReadiness;
   source: ProviderSource;
+  /** Where the app stands, for a command-line way. */
+  cliState?: CliState;
   /** Why it is not ready, as a stable code, where it says. */
   reason?: string;
   /** The gateway address the person stored, if any. */

@@ -1,103 +1,25 @@
 import { useId, useState, type ReactElement } from "react";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { startingSelection } from "../../shell/agentCatalog";
 import { useStrings } from "../../shell/strings";
-import type {
-  AgentSelection,
-  ModelControl,
-  ModelOption,
-  ProviderOption,
-} from "./types";
-
-/** The effort a model starts at: its default where it accepts that, else
- * its first, else none. */
-function startingEffort(model: ModelOption | undefined): string | undefined {
-  if (!model) return undefined;
-  if (
-    model.defaultEffort &&
-    model.efforts.some((effort) => effort.id === model.defaultEffort)
-  )
-    return model.defaultEffort;
-  return model.efforts[0]?.id;
-}
-
-/** The settings a model starts with, keeping any still offered. */
-function startingControls(
-  model: ModelOption,
-  held: AgentSelection["controls"],
-): Record<string, string> | undefined {
-  if (!model.controls?.length) return undefined;
-  return Object.fromEntries(
-    model.controls.map((control) => {
-      const kept = held?.[control.id];
-      const offered = control.options.some((option) => option.id === kept);
-      return [
-        control.id,
-        offered && kept
-          ? kept
-          : (control.defaultOptionId ?? control.options[0]?.id ?? ""),
-      ];
-    }),
-  );
-}
-
-/** The model a provider starts with: its recommended one, else its first. */
-function startingModel(
-  provider: ProviderOption | undefined,
-  models: readonly ModelOption[],
-): ModelOption | undefined {
-  return (
-    models.find((model) => model.id === provider?.defaultModelId) ?? models[0]
-  );
-}
-
-/** One of a model's own settings, as a list to choose from. */
-function ControlField({
-  control,
-  value,
-  onChange,
-}: {
-  control: ModelControl;
-  value: string | undefined;
-  onChange: (optionId: string) => void;
-}) {
-  const id = useId();
-  const chosen = control.options.find((option) => option.id === value);
-  return (
-    <Field>
-      <FieldLabel htmlFor={id}>{control.name}</FieldLabel>
-      <NativeSelect
-        id={id}
-        controlSize="sm"
-        value={value ?? ""}
-        onChange={(event) => onChange(event.target.value)}
-      >
-        {control.options.map((option) => (
-          <option key={option.id} value={option.id}>
-            {option.name}
-          </option>
-        ))}
-      </NativeSelect>
-      {(chosen?.description ?? control.description) && (
-        <FieldDescription>
-          {chosen?.description ?? control.description}
-        </FieldDescription>
-      )}
-    </Field>
-  );
-}
+import { ProviderSelect } from "./ProviderSelect";
+import type { AgentSelection, ModelOption, ProviderOption } from "./types";
 
 /**
- * The provider, model, effort and model settings of the conversation,
- * chosen in a popover opened from `children`. Every list is what it is
- * given, however long: the providers there are, each one's models, and the
- * efforts and settings of the model chosen. It holds no choice of its own:
- * every change is handed to `onChange`, and what it shows is `selection`.
+ * The provider, the model and the effort of the conversation, chosen in a
+ * popover opened from `children`. Every list is what it is given, however
+ * long: the providers there are, the models of the one chosen, and the
+ * efforts of the model chosen. A provider reached more than one way is more
+ * than one entry of the first list, and choosing an entry chooses the way.
+ * It holds no choice of its own: every change is handed to `onChange`, and
+ * what it shows is `selection`.
  */
 export function AgentSettingsPopover({
   providers,
@@ -107,7 +29,7 @@ export function AgentSettingsPopover({
   children,
 }: {
   providers: readonly ProviderOption[];
-  /** Each provider's models, by provider id. */
+  /** Each way's models, by way id. */
   models: Readonly<Record<string, readonly ModelOption[]>>;
   selection: AgentSelection;
   onChange: (selection: AgentSelection) => void;
@@ -120,37 +42,39 @@ export function AgentSettingsPopover({
   const modelId = useId();
   const effortId = useId();
   const provider = providers.find((held) => held.id === selection.providerId);
-  const offered = models[selection.providerId] ?? [];
+  const way = provider?.ways.find((held) => held.id === selection.wayId);
+  const offered = models[selection.wayId] ?? [];
   const model = offered.find((option) => option.id === selection.modelId);
-  const efforts = model?.efforts ?? [];
+  const efforts = way?.modelWritten?.efforts ?? model?.efforts ?? [];
+  const hasDefault = Boolean(model?.defaultEffort);
 
-  const chooseProvider = (next: string) => {
-    const chosen = providers.find((held) => held.id === next);
-    const first = startingModel(chosen, models[next] ?? []);
-    if (!chosen?.selectable || !first) return;
-    const controls = startingControls(first, undefined);
-    onChange({
-      providerId: next,
-      modelId: first.id,
-      effort: startingEffort(first),
-      ...(controls ? { controls } : {}),
-    });
+  // An entry of the list is one lane of one provider, and it starts with
+  // that lane's own starting model.
+  const chooseEntry = (wayId: string) => {
+    for (const next of providers) {
+      const chosen = next.ways.find((held) => held.id === wayId);
+      if (!chosen) continue;
+      if (!chosen.selectable) return;
+      const first = startingSelection(next, chosen, models[chosen.id] ?? []);
+      if (first) onChange(first);
+      return;
+    }
   };
   const chooseModel = (next: string) => {
     const chosen = offered.find((option) => option.id === next);
     if (!chosen) return;
-    // The effort and settings carry over where the new model takes them.
+    // An effort the person chose carries over where the new model takes it;
+    // otherwise the new model's own default applies.
     const effort =
       selection.effort &&
       chosen.efforts.some((held) => held.id === selection.effort)
         ? selection.effort
-        : startingEffort(chosen);
-    const controls = startingControls(chosen, selection.controls);
+        : undefined;
     onChange({
       providerId: selection.providerId,
+      wayId: selection.wayId,
       modelId: chosen.id,
-      effort,
-      ...(controls ? { controls } : {}),
+      ...(effort ? { effort } : {}),
     });
   };
 
@@ -167,38 +91,46 @@ export function AgentSettingsPopover({
           <FieldLabel htmlFor={providerId}>
             {t("desktop.agent.provider")}
           </FieldLabel>
-          <NativeSelect
+          <ProviderSelect
             id={providerId}
-            controlSize="sm"
-            value={selection.providerId}
-            onChange={(event) => chooseProvider(event.target.value)}
-          >
-            {!provider && (
-              <option value="">{t("desktop.agent.choose_model")}</option>
-            )}
-            {providers.map((option) => {
-              const empty = (models[option.id] ?? []).length === 0;
-              const reason = !option.selectable
-                ? (option.unavailableReason ?? t("desktop.agent.unavailable"))
-                : empty
-                  ? t("desktop.agent.no_models")
-                  : null;
-              return (
-                <option key={option.id} value={option.id} disabled={!!reason}>
-                  {reason
-                    ? t("desktop.agent.provider_unavailable", {
-                        provider: option.name,
-                        reason,
-                      })
-                    : option.name}
-                </option>
-              );
-            })}
-          </NativeSelect>
+            providers={providers}
+            value={selection.wayId}
+            onChange={chooseEntry}
+          />
+          {/* What the lane has been proven to do on this computer. */}
+          {way?.capabilities && way.capabilities.length > 0 && (
+            <FieldDescription>
+              {t("desktop.agent.capabilities", {
+                // In the language the shell shows, which the page carries.
+                list: new Intl.ListFormat(
+                  document.documentElement.lang || undefined,
+                  { type: "conjunction" },
+                ).format(way.capabilities),
+              })}
+            </FieldDescription>
+          )}
         </Field>
         <Field>
           <FieldLabel htmlFor={modelId}>{t("desktop.agent.model")}</FieldLabel>
-          {offered.length === 0 ? (
+          {way?.modelWritten ? (
+            <>
+              <Input
+                id={modelId}
+                controlSize="sm"
+                value={selection.modelId}
+                spellCheck={false}
+                autoCapitalize="off"
+                autoCorrect="off"
+                autoComplete="off"
+                onChange={(event) =>
+                  onChange({ ...selection, modelId: event.target.value })
+                }
+              />
+              <FieldDescription>
+                {t("desktop.agent.model_written")}
+              </FieldDescription>
+            </>
+          ) : offered.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               {t("desktop.agent.no_models")}
             </p>
@@ -219,15 +151,6 @@ export function AgentSettingsPopover({
           {model?.description && (
             <FieldDescription>{model.description}</FieldDescription>
           )}
-          {model?.capabilities && model.capabilities.length > 0 && (
-            <FieldDescription>
-              {t("desktop.agent.capabilities", {
-                list: new Intl.ListFormat(undefined, {
-                  type: "conjunction",
-                }).format(model.capabilities),
-              })}
-            </FieldDescription>
-          )}
         </Field>
         {efforts.length > 0 && (
           <Field>
@@ -237,13 +160,23 @@ export function AgentSettingsPopover({
             <NativeSelect
               id={effortId}
               controlSize="sm"
-              value={selection.effort ?? ""}
+              value={selection.effort ?? model?.defaultEffort ?? ""}
               onChange={(event) => {
                 const effort = event.target.value;
-                if (efforts.some((held) => held.id === effort))
+                if (effort === "")
+                  onChange({
+                    providerId: selection.providerId,
+                    wayId: selection.wayId,
+                    modelId: selection.modelId,
+                  });
+                else if (efforts.some((held) => held.id === effort))
                   onChange({ ...selection, effort });
               }}
             >
+              {/* The provider's own default, where the catalog names none. */}
+              {!hasDefault && (
+                <option value="">{t("desktop.agent.effort_default")}</option>
+              )}
               {efforts.map((effort) => (
                 <option key={effort.id} value={effort.id}>
                   {effort.name}
@@ -252,19 +185,6 @@ export function AgentSettingsPopover({
             </NativeSelect>
           </Field>
         )}
-        {model?.controls?.map((control) => (
-          <ControlField
-            key={control.id}
-            control={control}
-            value={selection.controls?.[control.id]}
-            onChange={(optionId) =>
-              onChange({
-                ...selection,
-                controls: { ...selection.controls, [control.id]: optionId },
-              })
-            }
-          />
-        ))}
       </PopoverContent>
     </Popover>
   );

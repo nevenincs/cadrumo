@@ -19,10 +19,12 @@ from ...application.operations.frontend_requests import OperationResponseControl
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.operation_access import operation_management_action
 from ...application.runtime.profile_worker import (
+    ProfileWorkerContractRequest,
     ProfileWorkerLeaseTransferRequest,
     ProfileWorkerManageRequest,
     ProfileWorkerObservation,
     ProfileWorkerObserveRequest,
+    ProfileWorkerOperationContract,
     ProfileWorkerOperationReceipt,
     ProfileWorkerOperationRequest,
     ProfileWorkerProjection,
@@ -145,7 +147,35 @@ async def _dispatch_request(
         async with _management_reply(operations, request) as reply:
             write_document(channel, reply, deadline=time.monotonic() + 5)
         return
+    if isinstance(request, ProfileWorkerContractRequest):
+        await describe_contract(channel, operations, request)
+        return
     raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+
+
+async def describe_contract(
+    channel: WorkerChannel, operations: ProfileWorkerOperationHost, request: ProfileWorkerContractRequest
+) -> None:
+    """Answer one contract on the operation channel, composing the registry if this is its first use.
+
+    The composition and schema projection run off the service loop, and the
+    handler retains its ownership if shutdown cancels it while the thread
+    still uses the host.
+    """
+    description = await await_cancellation_complete(
+        asyncio.to_thread(operations.describe, request.session_id, request.definition_id),
+        task_name="profile-worker-description",
+    )
+    write_document(
+        channel,
+        ProfileWorkerOperationContract(
+            identity=operations.custody.identity,
+            request_id=request.request_id,
+            contract=description.contract,
+            request_json_schema=description.request_json_schema,
+        ),
+        deadline=time.monotonic() + 5,
+    )
 
 
 async def _handle_submission(

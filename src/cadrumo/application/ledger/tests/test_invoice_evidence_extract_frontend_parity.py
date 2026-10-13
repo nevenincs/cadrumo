@@ -81,9 +81,8 @@ def _granted(*, off_host: bool, frontend: OperationFrontendProjection, action: A
     return resolved.policy
 
 
-_PERSONS_FRONTENDS = [
-    frontend for frontend in OperationFrontendProjection if frontend is not OperationFrontendProjection.MCP
-]
+_PERSONS_FRONTENDS = [OperationFrontendProjection.CLI, OperationFrontendProjection.TUI]
+"""The person's frontends, written out rather than read from the predicate under test."""
 
 
 @pytest.mark.parametrize("action", _ACCESSES)
@@ -103,8 +102,13 @@ def test_a_read_is_granted_the_same_policy_on_every_frontend_that_may_ask_for_it
         assert (AccessAction.COMMIT in policy.actions) is off_host
 
 
+@pytest.mark.parametrize(
+    "frontend", [OperationFrontendProjection.MCP, OperationFrontendProjection.AGENT_HOST], ids=lambda item: item.value
+)
 @pytest.mark.parametrize("action", _ACCESSES)
-def test_the_agents_frontend_is_refused_the_consent_to_an_off_host_read(action: AccessAction) -> None:
+def test_each_agents_frontend_is_refused_the_consent_to_an_off_host_read(
+    action: AccessAction, frontend: OperationFrontendProjection
+) -> None:
     with pytest.raises(ProfileAccessRefusedError) as refused:
-        _granted(off_host=True, frontend=OperationFrontendProjection.MCP, action=action)
+        _granted(off_host=True, frontend=frontend, action=action)
     assert refused.value.reason == AccessDenialCode.PERSON_ACT_REQUIRED.value

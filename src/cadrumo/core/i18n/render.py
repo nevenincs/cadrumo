@@ -14,25 +14,24 @@ import sys
 from collections.abc import Callable, Generator, Mapping
 from contextlib import contextmanager
 from contextvars import ContextVar
-from functools import lru_cache
+from functools import cache, lru_cache
 from pathlib import Path
 from string import Formatter
 from typing import TYPE_CHECKING
 
-import i18n
-import yaml
-
 from ..errors.hierarchy import CoreError
-from ..external_constants import DEFAULT_OUTPUT_LANGUAGE, OUTPUT_LANGUAGE_ENV_VAR, SUPPORTED_OUTPUT_LANGUAGES
-from ..logging import get_logger
 from ..product_identity import PRODUCT_IDENTITY, normalise_product_identity_references
 from ..type_guards import is_object_mapping
-from ._lazy_catalogue import load_yaml_handle
 
 if TYPE_CHECKING:
+    import logging
+
     from ._lazy_catalogue import LazyLocaleCatalogue
 
-_log = get_logger(__name__)
+# Importing this module must stay cheap: every entrypoint reaches it before it
+# has parsed a command. The catalogue parser, the python-i18n fallback, the
+# typed external-constants registry and the logging configuration are loaded
+# by the first render that needs them, not by the import.
 _initialised = False
 _PLACEHOLDER_RE = re.compile(r"%\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)\}")
 _FORMAT_FIELD_ROOT_RE = re.compile(r"(?P<name>[A-Za-z_][A-Za-z0-9_]*)(?=$|[.\[])")
@@ -122,11 +121,19 @@ def register_profile_language_resolver(fn: Callable[[], str | None]) -> None:
     _profile_language_resolver = fn
 
 
+def _logger() -> logging.Logger:
+    from ..logging import get_logger
+
+    return get_logger(__name__)
+
+
 def _ensure_initialised() -> None:
     """Lazy-initialise the ``python-i18n`` backend on first call."""
     global _initialised
     if _initialised:
         return
+    import i18n
+
     i18n.load_path.append(str(importlib.resources.files(PRODUCT_IDENTITY.python_package).joinpath("locales")))
     i18n.set("filename_format", "{locale}.{format}")
     i18n.set("file_format", "yml")
@@ -209,10 +216,11 @@ def clear_output_language_cache_for_settings_override() -> None:
     clear_output_language_cache()
 
 
-_OUTPUT_LANGUAGE_KEY_ENV_VARS: tuple[str, ...] = (
-    OUTPUT_LANGUAGE_ENV_VAR,
-    "CADRUMO_DATABASE_URL",
-)
+@cache
+def _output_language_key_env_vars() -> tuple[str, ...]:
+    from ..external_constants import OUTPUT_LANGUAGE_ENV_VAR
+
+    return (OUTPUT_LANGUAGE_ENV_VAR, "CADRUMO_DATABASE_URL")
 
 
 def _active_settings_override() -> object | None:
@@ -257,7 +265,7 @@ def _output_language_cache_key() -> tuple[object, ...]:
     #
     # os.environ.get allowlist: these reads compute a cache-key signature, not
     # a settings value, and do not bypass the Pydantic merge order.
-    env_signature = tuple(os.environ.get(name) for name in _OUTPUT_LANGUAGE_KEY_ENV_VARS)
+    env_signature = tuple(os.environ.get(name) for name in _output_language_key_env_vars())
     return (
         "env",
         *env_signature,
@@ -288,11 +296,12 @@ def _resolve_output_language() -> str:
         return _resolve_output_language_before_profile_composition()
     from ..config import load_settings
     from ..config_state_root import FormerProductStateError
+    from ..external_constants import DEFAULT_OUTPUT_LANGUAGE
 
     try:
         settings = load_settings()
     except (CoreError, FormerProductStateError, KeyError, ValueError, AttributeError) as exc:
-        _log.debug(
+        _logger().debug(
             "i18n: unable to load settings for output language; falling back to default (%s)",
             type(exc).__name__,
             exc_info=True,
@@ -333,6 +342,7 @@ def _resolve_output_language_before_profile_composition() -> str:
     """
     from .._config_runtime import active_profile_pointer_observation
     from ..config_state_root import FormerProductStateError, default_storage_root, refuse_former_product_database
+    from ..external_constants import DEFAULT_OUTPUT_LANGUAGE, OUTPUT_LANGUAGE_ENV_VAR
     from ..paths import normalize_project_relative_path
 
     try:
@@ -344,7 +354,7 @@ def _resolve_output_language_before_profile_composition() -> str:
             bucket_id = (pointer.bucket_id or "").strip()
             refuse_former_product_database(root, bucket_id=bucket_id or None)
     except (CoreError, FormerProductStateError, KeyError, ValueError, AttributeError) as exc:
-        _log.debug(
+        _logger().debug(
             "i18n: state root cannot back settings for output language; falling back to default (%s)",
             type(exc).__name__,
             exc_info=True,
@@ -367,7 +377,7 @@ def _active_profile_output_language() -> str | None:
     try:
         return normalise_supported_language(resolver() or "")
     except Exception as exc:
-        _log.debug(
+        _logger().debug(
             "i18n: unable to resolve active-profile output language; falling back to settings (%s)",
             type(exc).__name__,
             exc_info=True,
@@ -563,7 +573,7 @@ def override_locales_root(root: Path) -> Generator[None]:
 
 
 def locale_map(locale: str) -> Mapping[str, str | None]:
-    from ._lazy_catalogue import LazyLocaleCatalogue
+    from ._lazy_catalogue import LazyLocaleCatalogue, load_yaml_handle
 
     override = _I18N_LOCALES_ROOT.get()
     if override is not None:
@@ -577,7 +587,7 @@ def locale_map(locale: str) -> Mapping[str, str | None]:
     return _packaged_locale_map(locale)
 
 
-@lru_cache(maxsize=len(SUPPORTED_OUTPUT_LANGUAGES))
+@cache
 def _packaged_locale_map(locale: str) -> LazyLocaleCatalogue:
     from ._lazy_catalogue import LazyLocaleCatalogue
 
@@ -611,12 +621,14 @@ def lookup_translation(translation_key: str, /, *, locale: str) -> str | None:
 
 def lookup_translation_entry(translation_key: str, /, *, locale: str) -> tuple[bool, str | None]:
     """Return catalogue membership separately from its optional scalar value."""
+    from yaml import YAMLError
+
     normalized_locale = normalise_supported_language(locale)
     if normalized_locale is None:
         return False, None
     try:
         catalogue_entries = locale_map(normalized_locale)
-    except (OSError, yaml.YAMLError, IndexError):
+    except (OSError, YAMLError, IndexError):
         return False, None
     if translation_key not in catalogue_entries:
         return False, None
@@ -627,17 +639,21 @@ def lookup_translation_entry(translation_key: str, /, *, locale: str) -> tuple[b
 
 
 def _lookup_translation(locale: str, translation_key: str, *, default: object | None = None) -> str:
+    from yaml import YAMLError
+
     rendered: str | None
     try:
         rendered = locale_map(locale).get(translation_key)
-    except (OSError, yaml.YAMLError, IndexError) as exc:
-        _log.debug(
+    except (OSError, YAMLError, IndexError) as exc:
+        _logger().debug(
             "i18n: unable to load locale %s; falling back to python-i18n (%s)",
             locale,
             type(exc).__name__,
             exc_info=True,
         )
         _ensure_initialised()
+        import i18n
+
         fallback = i18n.t(translation_key, locale=locale)
         rendered = fallback if isinstance(fallback, str) else None
     # A value equal to its own key is the scaffold placeholder for "declared
@@ -701,7 +717,7 @@ def _interpolate_with_status(
     try:
         return rendered.format(**values), True
     except (KeyError, IndexError, ValueError) as exc:
-        _log.debug(
+        _logger().debug(
             "i18n: unable to interpolate locale key %s; returning partially rendered value (%s)",
             translation_key,
             type(exc).__name__,
@@ -711,8 +727,6 @@ def _interpolate_with_status(
 
 
 __all__ = [
-    "DEFAULT_OUTPUT_LANGUAGE",
-    "SUPPORTED_OUTPUT_LANGUAGES",
     "MissingTranslationError",
     "UnmatchedPlaceholderError",
     "extract_placeholders",

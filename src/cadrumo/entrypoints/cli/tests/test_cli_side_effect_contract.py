@@ -89,7 +89,8 @@ _PROBE = textwrap.dedent(
     import typer.main
     from click.testing import CliRunner
 
-    from cadrumo.entrypoints.cli.main import app
+    from cadrumo.entrypoints.cli.main import cli_app
+    app = cli_app()
 
     command = typer.main.get_command(app)
     observed = {import_root: scan(import_root)}

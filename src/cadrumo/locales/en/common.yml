@@ -535,13 +535,11 @@ desktop:
         it among the profiles before trying again.
       wait: 'This takes about half a minute: the profile''s key is being made from
         its password.'
-    create_profile: Set up a profile
     first_run_lead: Create a profile to start.
-    in_tui: Continuing in the TUI
     new_profile: New profile
     no_profile: No active profile
-    no_profile_lead: Create a profile, or choose one, in the TUI.
-    remaining_access: Agent access you enabled stays on.
+    no_profile_lead: There's no profile on this computer yet.
+    remaining_access: Keys you issued for external agents stay active.
     services_down: Background services aren't running
     sign_out: Sign out
     sign_out_failed: Signing out didn't work ({code}).
@@ -564,9 +562,9 @@ desktop:
   agent:
     add_files: Add files
     agent_replied: Agent replied
-    approval_allow_always: Always allow
+    approval_allow_always: Allow
     approval_allow_once: Allow once
-    approval_reject_always: Never allow
+    approval_reject_always: Don't allow
     approval_reject_once: Don't allow
     approval_review_title: Review this before Cadrumo does it
     approval_tool_title: The agent wants to use a tool
@@ -584,8 +582,18 @@ desktop:
     cancel: Cancel
     capabilities: 'Can: {list}'
     choose_model: Choose a model
+    choose_provider: Choose a provider
     close_documents: Close the documents
     collapse_members: Hide the files in {name}
+    condition_budget_exhausted: Budget used up
+    condition_credits_exhausted: Out of credits
+    condition_invalid_request: The provider rejected the request
+    condition_network_unreachable: The provider can't be reached
+    condition_provider_overloaded: The provider is overloaded
+    condition_throttled: The provider is limiting requests
+    condition_unauthenticated: Not authenticated with the provider
+    condition_unknown: Unknown cause
+    condition_usage_exhausted: Usage limit reached
     consent_allow: Send to {provider}
     consent_decline: Don't send
     consent_items: What would be sent
@@ -609,6 +617,7 @@ desktop:
     drop_release_single: Release to add 1 file
     drop_title: Add to this conversation
     effort: Effort
+    effort_default: Default
     effort_high: High
     effort_low: Low
     effort_max: Max
@@ -621,38 +630,51 @@ desktop:
     history: History
     history_empty: No conversations yet
     history_no_match: No conversations match “{query}”.
-    lane_no_catalog: models couldn't be listed
-    lane_not_admitted: not allowed here
-    lane_not_configured: not set up
+    lane_no_catalog: Models couldn't be listed
+    lane_not_admitted: Not allowed here
+    lane_not_configured: Not set up
     lane_notice: 'Development lane: conversations are kept unencrypted on this test
       storage. Use made-up data only.'
-    lane_signed_out: not signed in
-    lane_unreachable: can't be reached
+    lane_signed_out: Not signed in
+    lane_unreachable: Can't be reached
     members_multiple: '{count} files'
     members_single: 1 file
     message_label: Message
     message_placeholder: Ask about a modelo, a deadline or your records
     model: Model
+    model_written: This provider doesn't list its models. Write the model's id as
+      the provider names it.
     more_files: +{count} more
     new_conversation: New conversation
     no_models: No models to choose from
     no_provider: The agent has no provider it can use yet.
     provider: Provider
-    provider_unavailable: '{provider}: {reason}'
     questions_answer: Answer
+    questions_clear: Clear this answer
+    questions_control: 'An answer is one line: it can''t hold line breaks, tabs or
+      other control characters'
     questions_decline: Don't answer
+    questions_invalid: Correct the answers marked first
     questions_lead: Answer below, or write a message instead to answer in your own
       words.
     questions_missing: Answer every question not marked optional first
     questions_optional: (optional)
     questions_title: The agent needs a few answers
+    questions_too_long: This answer has {count} characters; {max} is the most
     queued: Waiting to upload
+    ran_with: 'Ran with: {selection}'
     ready: Ready
     refused: Refused
     remove_all: Remove all
     remove_document: Remove {name}
     remove_file: Remove {name}
+    reply_deleting: Being deleted
     reply_failed: This reply didn't finish.
+    reply_in_progress: A reply is still in progress.
+    reply_queued: 'Messages waiting: {count}'
+    reply_reconciling: Reconciling…
+    reply_repair_needed: Needs repair
+    reply_stopping: Stopping…
     resize: Resize the agent
     restore: Restore
     retry: Try again
@@ -664,12 +686,15 @@ desktop:
     search_history: Search conversations
     send: Send
     send_nothing: Write a message or add a file first
+    send_too_long: This message has {count} characters; {max} is the most
     send_waiting: Wait until every file has uploaded
     sent_files: Files sent with this message
     service_absent: The agent isn't installed.
     service_credential_missing: No key is set up for this provider.
     service_failed: The agent stopped working.
     service_incompatible: This version of the agent doesn't work with this Cadrumo.
+    service_root_unmarked: This test storage isn't marked as the agent's development
+      lane.
     service_runtime_unavailable: Cadrumo's background service isn't running.
     service_signed_out: Sign in to talk to the agent.
     service_starting: Starting the agent…
@@ -680,6 +705,7 @@ desktop:
     settings_title: Model settings
     show: Show the agent
     show_active: Show active
+    sign_in_first: Sign in to use the agent
     status_extracting: Reading
     status_failed: Failed
     status_needs_review: Needs review
@@ -689,18 +715,85 @@ desktop:
     stop: Stop
     stopped: Stopped
     tool_done: Done
+    tool_failed: Failed
+    tool_kind_delete: Deletes
+    tool_kind_edit: Edits
+    tool_kind_execute: Runs
+    tool_kind_fetch: Fetches
+    tool_kind_move: Moves
+    tool_kind_other: Other
+    tool_kind_read: Reads
+    tool_kind_search: Searches
+    tool_kind_switch_mode: Switches mode
+    tool_kind_think: Thinks
+    tool_pending: Pending
     tool_running: Running
     transcript: Conversation
     transcript_empty: No messages yet
     unavailable: Not available yet
     uploading: Uploading
     uploading_name: Uploading {name}
+    usage: 'Tokens: {input} in, {output} out'
     waiting_on_you: Waiting for you
     welcome_lead: Something tax related? Ask about a modelo or a deadline, or add
       receipts, invoices and bank exports with +.
     welcome_title: What are we working on today?
     working: Working…
     you_said: You said
+  agent_keys:
+    cancel: Cancel
+    cleanup_pending: Revoked. Its stored key is still being removed from this computer.
+    copied: Copied
+    copy: Copy reference
+    copy_failed: Couldn't copy. Select the reference and copy it yourself.
+    done: Done
+    empty: No keys yet. An agent outside Cadrumo can't reach this profile until you
+      issue one.
+    expired_on: Expired {date}
+    expires_on: Expires {date}
+    issue: Issue a key
+    issue_lead: An agent with this key can always read and change this profile's values,
+      and see the operations it runs.
+    issue_submit: Issue key
+    issued_lead: Give this reference to your MCP client as its credential reference.
+      The key itself stays in this computer's secure store and is never shown.
+    issued_on: Issued {date}
+    issued_once: This is shown once. When you close it, it can't be shown again.
+    issued_title: Key issued
+    issuing: Issuing…
+    key_title: Key {id}
+    last_used: Last used {date}
+    lead: A key lets an AI agent outside Cadrumo, one that reaches it through its
+      MCP server, work in this profile. Only you can issue or revoke keys.
+    never_used: Not used yet
+    reference_label: Credential reference
+    refresh: Refresh
+    refused_not_found: That key isn't in the list any more.
+    refused_not_signed_in: Sign in to manage keys.
+    refused_outcome_unknown: Cadrumo didn't hear back. The key may or may not have
+      been issued; refresh to check.
+    refused_person_act_required: Keys can only be managed by you, here.
+    refused_profile_locked: This profile is locked.
+    revoke: Revoke
+    revoke_confirm: Revoke this key? The agent using it is refused from then on. This
+      can't be undone.
+    revoke_confirm_action: Revoke key
+    revoking: Revoking…
+    scope_all_operations: Runs every operation an agent may run
+    scope_no_tax_values: Doesn't read tax values
+    scope_operations_seen: Sees the operations it runs
+    scope_profile_values: Reads and changes the profile's values
+    scope_some_operations: Runs only some operations
+    scope_tax_values: Reads tax values
+    standing_active: Active
+    standing_expired: Expired
+    standing_pending: Waiting for approval
+    standing_revoked: Revoked
+    standing_suspended: Paused
+    tax_values: Also let it read tax values
+    tax_values_note: Calculated amounts and filings. Left off, the agent doesn't see
+      them.
+    title: API keys for MCP agents
   calendar:
     aeat:
       accepted: Accepted
@@ -833,8 +926,10 @@ desktop:
     base_url_label: Base URL
     base_url_required: 'Required: this provider has no default.'
     cancel: Cancel
-    consumer_assistant: Agent
-    consumer_extraction: Reading documents
+    cli_installed_signed_in: Installed and signed in
+    cli_installed_signed_out: Installed, not signed in
+    cli_not_installed: Not installed
+    cli_unknown: Not checked yet
     development_note: In this development build, a provider with no key of its own
       uses the development environment's.
     disable: Disable
@@ -879,8 +974,6 @@ desktop:
     through: Through {url}
     title: AI providers
     token_label: '{provider} OAuth token'
-    transport_api: API
-    transport_cli: CLI
   rail:
     aeat: AEAT website
     agent: Agent
@@ -927,13 +1020,10 @@ desktop:
     install_machine_services: Install for all users
     install_user_services: Install for this user
     lead: Enter your profile password to open your workspace.
-    open_tui: Open the TUI
-    open_tui_hint: First-time setup, another profile or recovery? Use the TUI.
     password: Password
     profile: Profile
     profiles_unread: The profiles on this computer could not be read.
     recovering_services: Recovering background services…
-    recovery_hint: Lost the password, or the profile is locked? Use the TUI.
     refused:
       custody_changed: This profile's password or recovery settings changed. Sign
         in again.
@@ -947,13 +1037,14 @@ desktop:
       installation_unsettled: Installation could not be confirmed. Check the logs
         before retrying.
       invalid: That password didn't work. Try again.
-      keyring_unavailable: Cadrumo can't keep you signed in on this device, so the
-        TUI will ask for your password.
+      keyring_unavailable: Cadrumo can't keep you signed in on this device. The system
+        keychain isn't available.
       login_mismatch: Your sign-in is from an earlier session on this computer. Sign
         in again.
       manager: Background services could not start ({code}). Open Logs for details.
       other: Signing in didn't work ({code}).
-      profile_locked: This profile is locked. Continue in the TUI to unlock it.
+      profile_locked: This profile is locked. Sign in with its password to unlock
+        it.
       receipt_absent: You're not signed in.
       receipt_expired: Your sign-in expired. Sign in again.
       runtime_unavailable: Cadrumo's background services aren't running.

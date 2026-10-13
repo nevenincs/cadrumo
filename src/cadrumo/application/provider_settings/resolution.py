@@ -27,6 +27,7 @@ from ...core.config import Settings
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG as _STRICT_FROZEN_HIDDEN_INPUT
+from ...core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from ...core.storage_environment import StorageMode
 from ...domain.provider_settings.catalog import (
     ProviderAuthKind,
@@ -43,7 +44,7 @@ from ...domain.provider_settings.record import (
     new_settings_generation,
 )
 from .contracts import (
-    ABSENT_REVISION,
+    CliState,
     ProviderCredentialSource,
     ProviderReadiness,
     ProviderSettingsMode,
@@ -136,7 +137,7 @@ def read_revision(read: ProviderRecordRead) -> str:
         return read.revision
     if isinstance(read, UnreadableProviderRecord) and read.revision is not None:
         return read.revision
-    return ABSENT_REVISION
+    return ABSENT_SECURE_OBJECT_REVISION_ID
 
 
 def _environment_secret(entry: ProviderCatalogEntry, settings: Settings, storage_mode: StorageMode) -> SecretStr | None:
@@ -158,8 +159,9 @@ def status_entry(
     *,
     settings: Settings,
     storage_mode: StorageMode,
+    cli_state: CliState | None,
 ) -> ProviderStatusEntry:
-    """Project one provider's read into masked status."""
+    """Project one lane's read into masked status."""
     mode = provider_mode(read)
     stored = read.record if isinstance(read, StoredProviderRecord) else None
     available, source, readiness, reason = _availability(
@@ -167,6 +169,8 @@ def status_entry(
     )
     return ProviderStatusEntry(
         id=entry.id,
+        provider=entry.provider,
+        transport=entry.transport,
         display_name=entry.display_name,
         auth_kind=entry.auth_kind,
         consumers=entry.consumers,
@@ -177,6 +181,7 @@ def status_entry(
         reason=reason,
         base_url=stored.credential.base_url if stored is not None and stored.credential is not None else None,
         default_base_url=entry.default_base_url,
+        cli_state=cli_state,
         revision=read_revision(read),
     )
 
@@ -254,15 +259,14 @@ class ProviderCredentialResolver:
             return _unavailable(entry.id, consumer, ProviderCredentialUnavailableReason.RECORD_UNREADABLE)
         record = read.record if isinstance(read, StoredProviderRecord) else None
         if record is not None and record.credential_state is CredentialState.DISABLED:
-            if consumer is ProviderConsumer.ASSISTANT and record.assistant_auth is AssistantAuth.PROVIDER_SIGN_IN:
+            if record.assistant_auth is AssistantAuth.PROVIDER_SIGN_IN:
                 return ResolvedProviderSignIn(provider=entry.id, consumer=consumer, generation=record.generation)
             return _unavailable(entry.id, consumer, ProviderCredentialUnavailableReason.PROVIDER_DISABLED)
-        if consumer is ProviderConsumer.ASSISTANT:
-            sign_in = self._assistant_sign_in(entry, record)
-            if sign_in is not None:
-                return sign_in
-            if record is not None and record.assistant_auth is AssistantAuth.DISABLED:
-                return _unavailable(entry.id, consumer, ProviderCredentialUnavailableReason.PROVIDER_DISABLED)
+        sign_in = self._assistant_sign_in(entry, record)
+        if sign_in is not None:
+            return sign_in
+        if record is not None and record.assistant_auth is AssistantAuth.DISABLED:
+            return _unavailable(entry.id, consumer, ProviderCredentialUnavailableReason.PROVIDER_DISABLED)
         if record is not None and record.credential is not None:
             return ResolvedDirectCredential(
                 provider=entry.id,

@@ -25,6 +25,7 @@ from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEv
 from .actions_common import resolve_bucket_event_repository, resolve_transaction_repository
 
 if TYPE_CHECKING:
+    from ...domain.transactions.models import TransactionCatalogue
     from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 
 from .protocols import BucketEventHistoryCoCommitWriterProtocol, TransactionCatalogueCoCommitWriterProtocol
@@ -90,6 +91,7 @@ def ledger_history_object_ids(
     transaction_id: str,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
     include_split_siblings: bool = False,
+    catalogue: TransactionCatalogue | None = None,
 ) -> tuple[str, ...]:
     """Return every event-anchor id whose events belong to ``transaction_id``.
 
@@ -103,7 +105,8 @@ def ledger_history_object_ids(
     parent, not earlier names for this row -- so they are included only when
     the caller opts in.
     """
-    catalogue = transaction_repository.load()
+    if catalogue is None:
+        catalogue = transaction_repository.load()
     transaction = catalogue.get(transaction_id)
     object_ids: list[str] = [transaction_id]
     if transaction is not None:
@@ -124,6 +127,7 @@ def read_ledger_history(
     bucket_id: str,
     transaction_repository: TransactionCatalogueCoCommitWriterProtocol,
     bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol,
+    transaction_catalogue: TransactionCatalogue | None = None,
 ) -> LedgerHistoryV1:
     """Assemble one transaction's chronological event chain.
 
@@ -132,6 +136,7 @@ def read_ledger_history(
         bucket_id: The owning profile bucket.
         transaction_repository: Explicit bucket-scoped catalogue port.
         bucket_event_repository: Explicit bucket-scoped event-history port.
+        transaction_catalogue: The catalogue already read for prefix resolution, if any.
 
     Returns:
         The chain, ordered by occurrence, with the anchor ids it came from.
@@ -142,6 +147,7 @@ def read_ledger_history(
         transaction_id=query.transaction_id,
         transaction_repository=tx_repo,
         include_split_siblings=query.include_split_siblings,
+        catalogue=transaction_catalogue,
     )
     catalogue = event_repo.load()
     anchored = set(object_ids)

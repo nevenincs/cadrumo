@@ -7,6 +7,7 @@ import type {
   SignInSignal,
   WindowPresentation,
 } from "../ipc/contract";
+import type { AgentAccess } from "./agentAccess";
 import type {
   AgentServiceStatus,
   AgentSession,
@@ -16,10 +17,16 @@ import type { AgentViews } from "./agentViews";
 import type { Host } from "./host";
 import type { HostCall } from "./hostCall";
 import { hostCall } from "./hostCall";
+import type {
+  ProviderSettings,
+  ProviderSettingsAnswer,
+  ProviderSettingsRecord,
+} from "./providerSettings";
 import { openTauriTerminal } from "./tauriTerminal";
 
 const TOKEN_PATTERN = /^[0-9a-f]{64}$/;
 const PROFILE_HEADER = "x-cadrumo-profile";
+const TOKEN_HEADER = "x-cadrumo-token";
 
 // The host defines the token getter only on the shell's top frame, and it
 // answers once. Read it here, at module load, and keep it in this closure: it
@@ -131,7 +138,99 @@ export function tauriHost(): Host {
       return chosen;
     },
     openExternal: (url) => call("open_external", { url }).then(() => undefined),
+    providerSettings: tauriProviderSettings(token),
+    agentAccess: tauriAgentAccess(call),
     ...tauriAgent(call),
+  };
+}
+
+// The signed-in profile's model providers, served by the host's provider
+// settings commands. A key travels once, as the raw body of the call that
+// saves it, in a buffer this overwrites as soon as the call settles; the
+// provider, the revision it was read at and the gateway address travel as
+// headers, so that the body is the key and nothing else. Nothing here keeps a
+// key or reads one back. A refusal rejects with the host's `{ code }`.
+
+const PROVIDER_HEADER = "x-cadrumo-provider";
+const REVISION_HEADER = "x-cadrumo-revision";
+const BASE_URL_HEADER = "x-cadrumo-base-url";
+const CLEAR_BASE_URL_HEADER = "x-cadrumo-clear-base-url";
+/** What a header can carry as text, and the host will read as one word. */
+const HEADER_TEXT = /^[\x21-\x7e]+$/;
+
+/** A refusal the window words from its code, as the host would send it. */
+function refusal(code: string): Error & { code: string } {
+  return Object.assign(new Error(code), { code });
+}
+
+function tauriProviderSettings(token: ShellToken | null): ProviderSettings {
+  const unavailable = () =>
+    Promise.reject(new Error("Missing desktop launch token."));
+  const command = <Result>(
+    name: string,
+    args: Record<string, string>,
+  ): Promise<Result> =>
+    token ? invoke<Result>(name, { ...args, token }) : unavailable();
+  return {
+    status: () =>
+      command<ProviderSettingsAnswer>("provider_settings_status", {}),
+    async set({ provider, revision, secret, base_url }) {
+      if (!token) return unavailable();
+      // An empty address is the catalogue's default; absent keeps the stored one.
+      if (
+        base_url !== undefined &&
+        base_url !== "" &&
+        !HEADER_TEXT.test(base_url)
+      )
+        throw refusal("base_url_rejected");
+      const key = new TextEncoder().encode(secret);
+      try {
+        return await invoke<ProviderSettingsRecord>(
+          "provider_settings_set",
+          key,
+          {
+            headers: {
+              [TOKEN_HEADER]: token,
+              [PROVIDER_HEADER]: provider,
+              [REVISION_HEADER]: revision,
+              ...(base_url === undefined
+                ? {}
+                : base_url === ""
+                  ? { [CLEAR_BASE_URL_HEADER]: "1" }
+                  : { [BASE_URL_HEADER]: base_url }),
+            },
+          },
+        );
+      } finally {
+        key.fill(0);
+      }
+    },
+    turnOff: ({ provider, revision }) =>
+      command<ProviderSettingsRecord>("provider_settings_remove", {
+        provider,
+        revision,
+      }),
+    reset: ({ provider, revision }) =>
+      command<ProviderSettingsRecord>("provider_settings_reset", {
+        provider,
+        revision,
+      }),
+  };
+}
+
+// The keys the signed-in profile has issued to agents outside Cadrumo, served
+// by the host's agent access commands. No call carries a password or a key:
+// each is one token-checked call, and a refusal rejects with the host's
+// `{ code }`. The host refuses to issue a key (`issue_unavailable`) until the
+// product offers issuing as one act of the person's.
+
+function tauriAgentAccess(call: HostCall): AgentAccess {
+  return {
+    list: () => call("agent_access_list", {}),
+    issue: ({ tax_values }) =>
+      call("agent_access_issue", { taxValues: tax_values }),
+    revoke: ({ grant_id }) =>
+      call("agent_access_revoke", { grantId: grant_id }),
   };
 }
 

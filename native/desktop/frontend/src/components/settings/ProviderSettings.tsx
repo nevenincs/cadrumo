@@ -5,8 +5,9 @@ import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { useStrings, type Translate } from "../../shell/strings";
+import { ProviderMark } from "../agent/ProviderMark";
 import type {
-  ProviderConsumer,
+  CliState,
   ProviderOutcome,
   ProviderReadiness,
   ProviderSecret,
@@ -42,10 +43,17 @@ function readinessWords(t: Translate, readiness: ProviderReadiness): string {
   }
 }
 
-function consumerWords(t: Translate, consumer: ProviderConsumer): string {
-  return consumer === "assistant"
-    ? t("desktop.providers.consumer_assistant")
-    : t("desktop.providers.consumer_extraction");
+function cliStateWords(t: Translate, state: CliState): string {
+  switch (state) {
+    case "installed_signed_in":
+      return t("desktop.providers.cli_installed_signed_in");
+    case "installed_signed_out":
+      return t("desktop.providers.cli_installed_signed_out");
+    case "not_installed":
+      return t("desktop.providers.cli_not_installed");
+    case "unknown":
+      return t("desktop.providers.cli_unknown");
+  }
 }
 
 /** Why a change was not made, in words where it is a refusal we know. */
@@ -210,7 +218,9 @@ function SecretForm({
   );
 }
 
-function ProviderRow({
+/** One lane of a provider, named and drawn as the agent's provider list names
+ * and draws it: its status and the person's ways to change it. */
+function WayRow({
   provider,
   busy,
   outcome,
@@ -228,7 +238,7 @@ function ProviderRow({
   onRefresh: () => void;
 }) {
   const t = useStrings();
-  const nameId = useId();
+  const headingId = useId();
   const [editing, setEditing] = useState(false);
   const signInOnly = provider.authKind === "provider_sign_in_only";
   const token = provider.authKind === "oauth_token_or_provider_sign_in";
@@ -248,29 +258,29 @@ function ProviderRow({
       : undefined;
   return (
     <li
-      aria-labelledby={nameId}
-      className="provider grid gap-2 border-b py-3 last:border-b-0"
+      aria-labelledby={headingId}
+      data-lane={provider.id}
+      className="way grid gap-2 rounded-lg border bg-card p-3"
     >
-      <div className="flex min-w-0 items-start justify-between gap-2">
-        <div className="grid min-w-0 gap-0.5">
-          <h4 id={nameId} className="font-medium text-foreground">
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-1">
+        <div className="flex min-w-0 items-center gap-2">
+          <ProviderMark provider={provider.provider} size="md" />
+          <h4
+            id={headingId}
+            className="min-w-0 font-medium wrap-anywhere text-foreground"
+          >
             {provider.name}
-            <span className="ml-1.5 font-normal text-muted-foreground">
-              {provider.transport === "api"
-                ? t("desktop.providers.transport_api")
-                : t("desktop.providers.transport_cli")}
-            </span>
           </h4>
-          <p className="text-xs text-muted-foreground">
-            {provider.consumers
-              .map((consumer) => consumerWords(t, consumer))
-              .join(" · ")}
-          </p>
         </div>
         <Badge variant={READINESS_LOOK[provider.readiness]}>
           {readinessWords(t, provider.readiness)}
         </Badge>
       </div>
+      {provider.cliState && (
+        <p className="text-sm text-muted-foreground">
+          {cliStateWords(t, provider.cliState)}
+        </p>
+      )}
       {sentence && <p className="text-sm text-muted-foreground">{sentence}</p>}
       {why && <p className="text-sm text-foreground">{why}</p>}
       {address && (
@@ -337,11 +347,25 @@ function ProviderRow({
   );
 }
 
+/** The lanes with a provider's lanes together, in the order the provider's
+ * first lane was served, its API lane before the other. */
+function inListOrder(providers: readonly ProviderStatus[]) {
+  const groups = new Map<string, ProviderStatus[]>();
+  for (const lane of providers)
+    groups.set(lane.provider, [...(groups.get(lane.provider) ?? []), lane]);
+  return [...groups.values()].flatMap((lanes) =>
+    [...lanes].sort(
+      (a, b) => Number(a.transport === "cli") - Number(b.transport === "cli"),
+    ),
+  );
+}
+
 /**
- * The AI providers of the signed-in profile: for each, what uses it and
- * where it stands, and the person's ways to add, replace, turn off or reset
- * its key. A stored key is never shown, and only these controls, pressed by
- * the person, change one.
+ * The AI providers of the signed-in profile, one card for each lane the agent
+ * has: named and drawn as the agent's provider list names and draws it, with
+ * what it needs and where it stands, and the person's ways to add, replace,
+ * disable or reset its key. A stored key is never shown, and only these
+ * controls, pressed by the person, change one.
  */
 export function ProviderSettings({
   providers,
@@ -357,9 +381,9 @@ export function ProviderSettings({
   /** A development build, where a provider with no key uses the
    * environment's. */
   development: boolean;
-  /** The provider whose change is on its way. */
+  /** The way whose change is on its way. */
   busyId?: string | null;
-  /** How the last change to each provider ended, by provider id. */
+  /** How the last change to each way ended, by way id. */
   outcomes?: Readonly<Record<string, ProviderOutcome>>;
   onSave: (providerId: string, secret: ProviderSecret) => void;
   onTurnOff: (providerId: string) => void;
@@ -389,16 +413,16 @@ export function ProviderSettings({
             : t("desktop.providers.reset_note")}
         </p>
       </div>
-      <ul className="grid">
-        {providers.map((provider) => (
-          <ProviderRow
-            key={provider.id}
-            provider={provider}
-            busy={busyId === provider.id}
-            outcome={outcomes[provider.id]}
-            onSave={(secret) => onSave(provider.id, secret)}
-            onTurnOff={() => onTurnOff(provider.id)}
-            onReset={() => onReset(provider.id)}
+      <ul className="grid gap-2">
+        {inListOrder(providers).map((lane) => (
+          <WayRow
+            key={lane.id}
+            provider={lane}
+            busy={busyId === lane.id}
+            outcome={outcomes[lane.id]}
+            onSave={(secret) => onSave(lane.id, secret)}
+            onTurnOff={() => onTurnOff(lane.id)}
+            onReset={() => onReset(lane.id)}
             onRefresh={onRefresh}
           />
         ))}

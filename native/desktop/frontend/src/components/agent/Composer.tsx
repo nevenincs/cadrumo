@@ -1,32 +1,52 @@
 import { useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
+import {
+  MAX_CONTINUATION_CHARS,
+  characters,
+} from "../../shell/agentClarification";
 import { readPx } from "../../shell/metrics";
 import { useStrings } from "../../shell/strings";
 import { AgentIconAction, AgentTextAction } from "./AgentAction";
 import { AgentSettingsPopover } from "./AgentSettingsPopover";
 import { AttachmentWell } from "./AttachmentWell";
+import { ProviderMark } from "./ProviderMark";
 import type {
   AgentSelection,
   ModelOption,
   ProviderOption,
+  ProviderWay,
   StagedAttachment,
 } from "./types";
 
 /** The lines the message field grows to before it scrolls. */
 const MAX_LINES = 8;
 
-/** The model and effort, as the settings button names them. */
+/** The model and effort, as the settings button names them, and the way into
+ * its provider; null while none is chosen. */
 function selectionWords(
+  providers: readonly ProviderOption[],
   models: Readonly<Record<string, readonly ModelOption[]>>,
   selection: AgentSelection,
-): string | null {
-  const model = (models[selection.providerId] ?? []).find(
+): { provider: ProviderOption; way: ProviderWay; words: string } | null {
+  const provider = providers.find((held) => held.id === selection.providerId);
+  const way = provider?.ways.find((held) => held.id === selection.wayId);
+  if (!provider || !way) return null;
+  const model = (models[way.id] ?? []).find(
     (option) => option.id === selection.modelId,
   );
-  if (!model) return null;
-  const effort = model.efforts.find((held) => held.id === selection.effort);
-  return effort ? `${model.name} · ${effort.name}` : model.name;
+  const name = way.modelWritten ? selection.modelId.trim() : model?.name;
+  if (!name) return null;
+  const efforts = way.modelWritten?.efforts ?? model?.efforts ?? [];
+  // The effort chosen, or else the one the model's catalog applies.
+  const effort = efforts.find(
+    (held) => held.id === (selection.effort ?? model?.defaultEffort),
+  );
+  return {
+    provider,
+    way,
+    words: effort ? `${name} · ${effort.name}` : name,
+  };
 }
 
 /**
@@ -119,11 +139,19 @@ export function Composer({
   );
   const sendable =
     draft.trim() !== "" || attachments.some((file) => file.state === "ready");
+  // A message of the agent is one to 65536 characters, counted as code points.
+  const length =
+    draft.length > MAX_CONTINUATION_CHARS ? characters(draft) : draft.length;
   const heldBy = waiting
     ? t("desktop.agent.send_waiting")
-    : !sendable
-      ? t("desktop.agent.send_nothing")
-      : undefined;
+    : length > MAX_CONTINUATION_CHARS
+      ? t("desktop.agent.send_too_long", {
+          count: length,
+          max: MAX_CONTINUATION_CHARS,
+        })
+      : !sendable
+        ? t("desktop.agent.send_nothing")
+        : undefined;
 
   const send = () => {
     if (!onSend || heldBy || running) return;
@@ -143,11 +171,21 @@ export function Composer({
     send();
   };
 
-  const current = selectionWords(models, selection);
-  const settingsText = current ?? t("desktop.agent.choose_model");
+  const current = selectionWords(providers, models, selection);
+  const settingsText = current?.words ?? t("desktop.agent.choose_model");
+  // The name says which provider the words are for.
   const settingsName = t("desktop.agent.settings_label", {
-    current: settingsText,
+    current: current
+      ? `${current.provider.name}, ${current.words}`
+      : settingsText,
   });
+  const settingsLook = (
+    <>
+      {current && <ProviderMark provider={current.provider.id} />}
+      <span className="truncate">{settingsText}</span>
+      <Icon name="chevronDown" size="xs" />
+    </>
+  );
   const settingsButton = (
     <Button
       variant="ghost"
@@ -155,8 +193,7 @@ export function Composer({
       aria-label={settingsName}
       className="min-w-0"
     >
-      <span className="truncate">{settingsText}</span>
-      <Icon name="chevronDown" size="xs" />
+      {settingsLook}
     </Button>
   );
 
@@ -195,8 +232,7 @@ export function Composer({
             className="min-w-0"
             aria-label={`${settingsName}, ${t("desktop.agent.unavailable")}`}
           >
-            <span className="truncate">{settingsText}</span>
-            <Icon name="chevronDown" size="xs" />
+            {settingsLook}
           </AgentTextAction>
         )}
         <span className="flex-1" />

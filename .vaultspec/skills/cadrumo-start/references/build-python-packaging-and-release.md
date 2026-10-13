@@ -14,7 +14,7 @@ User documentation is Sphinx (MyST, Furo) configured at `docs/conf.py` and drive
 
 ## Working notes
 
-- Native builds add the private `cadrumo-agent` wheel from the CMake-owned source pin and the target-specific hashed closure in `native/agent/`. Shared dependency versions must equal the root lock. These supplemental locks and the source/wheel hashes are recorded in native provenance; no Python index publication or development-checkout import supplies the agent ([owner](../../../../native/cmake/Agent.cmake), [admission](../../../../dev/packaging/native/agent.py), [probe](../../../../native/tests/agent_smoke.py)).
+- Native builds add the private `cadrumo-agent` wheel from the CMake-configured local project folder and the target-specific hashed closure in `native/agent/`. Shared dependency versions must equal the root lock. These supplemental locks and the built wheel checksum are recorded in native provenance; no Python index publication or development-checkout import supplies the agent ([owner](../../../../native/cmake/Agent.cmake), [admission](../../../../dev/packaging/native/agent.py), [probe](../../../../native/tests/agent_smoke.py)).
 
 - Pins: `.python-version` must stay a minor ([test](../../../../dev/ci/tests/test_python_version_pin.py#L37)); version surfaces belong to release-please ([config](../../../../release-please-config.json#L16)).
 - Before finishing: `just check-code`, `just check-registry-gate`, `just test-gate`, then read `just report-code-health`; a failure on untouched code is reported, not fixed ([CONTRIBUTING](../../../../CONTRIBUTING.md#L97)).

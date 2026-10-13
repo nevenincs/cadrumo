@@ -20,6 +20,7 @@ import type {
   WindowPresentation,
 } from "../ipc/contract";
 import type { ProfileAccounts } from "./profiles";
+import type { AgentAccess } from "./agentAccess";
 import type { AgentSession } from "./agentSession";
 import type { AgentViews } from "./agentViews";
 import type { ProviderSettings } from "./providerSettings";
@@ -101,6 +102,9 @@ export interface Host {
   /** The signed-in profile's model providers and their keys, where this
    * host offers them. A key is handed to it once and never comes back. */
   readonly providerSettings?: ProviderSettings;
+  /** The keys the signed-in profile issued to agents outside Cadrumo, which
+   * reach it through its MCP server, where this host offers them. */
+  readonly agentAccess?: AgentAccess;
 }
 
 export class HostUnavailable extends Error {

@@ -13,6 +13,7 @@ from ...application.runtime.access_management import (
     RuntimeProfileResume,
     RuntimeSessionInventory,
 )
+from ...application.runtime.agent_host import RuntimeAgentStart
 from ...application.runtime.attendance import (
     RuntimeAttendanceAsk,
     RuntimeAttendanceDecide,
@@ -89,6 +90,7 @@ type _ProfileConnectionRequest = (
     | RuntimeEnrollmentRequest
     | RuntimeAccessManagementRequest
     | RuntimeInstallationActRequest
+    | RuntimeAgentStart
 )
 
 
@@ -234,6 +236,9 @@ class RuntimeConnectionHandling:
             )
         if isinstance(request, RuntimeProfileDeletePrepare | RuntimeProfileDelete):
             self.profiles.bootstrap_delete(context, channel, request)
+            return None
+        if isinstance(request, RuntimeAgentStart):
+            self.profiles.agent(context, channel, request)
             return None
         if isinstance(request, RuntimePasswordResetPrepare | RuntimePasswordReset):
             self.profiles.bootstrap(context, channel, request)

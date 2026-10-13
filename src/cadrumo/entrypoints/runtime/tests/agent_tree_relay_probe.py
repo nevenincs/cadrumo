@@ -1,0 +1,42 @@
+"""The MCP relay, as a process of a hosted agent's tree runs it: read and edit the profile, and report.
+
+Run with the profile named by ``CADRUMO_ACTIVE_PROFILE``. It builds the real
+MCP server over the real runtime adapter, which signs in the only way the
+relay knows, and drives it through the MCP SDK's memory transport. It prints
+one JSON line with the admission the server reports.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import json
+import os
+from uuid import UUID
+
+from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
+from cadrumo_harness.mcp.server import build_server
+from cadrumo_harness.mcp.tests.agent_key_reads import edit_profile_and_read_back
+from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
+
+
+async def _relay(profile_id: UUID) -> dict[str, object]:
+    adapter = RuntimeMcpAdapter(profile_id=None, client=None, resumes_sign_in=True)
+    try:
+        async with connected_server_and_client_session(build_server(adapter)) as sdk:
+            status = await sdk.call_tool("status", {})
+            if status.is_error:
+                return {"admitted": False, "status": status.structured_content}
+            await edit_profile_and_read_back(sdk, profile_id)
+            return {"admitted": True, "session": status.structured_content.get("session")}
+    finally:
+        await adapter.close()
+
+
+def main() -> None:
+    """Relay once for the active profile and print what it was admitted as."""
+    result = asyncio.run(_relay(UUID(os.environ["CADRUMO_ACTIVE_PROFILE"])))
+    print(json.dumps(result, default=str))
+
+
+if __name__ == "__main__":
+    main()

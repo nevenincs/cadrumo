@@ -64,6 +64,9 @@ class ProfileWorkerOperationClient(ProfileWorkerTransport):
                 )
             ),
             ProfileWorkerOperationContract,
+            # The first contract may compose the worker's registry: it is
+            # operation work, so it never holds the custody and sign-in channel.
+            operation=True,
             deadline=exchange_deadline(),
         )
         return OperationPublicDefinitionDescriptionV1(

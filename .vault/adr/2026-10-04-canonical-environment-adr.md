@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:042ed77385b9e79ef332f6ed1f2b2fe89f679daefe66e11378ecce158e0124e9'
+body_hash: 'sha256:7da80ff7952f8bd6f06eb299f6bd9f6023d257716c50895ecc5e6109bb634f6f'
 related:
   - "[[2026-10-04-canonical-environment-reference]]"
   - "[[2026-08-03-canonical-storage-management-adr]]"
@@ -59,7 +59,7 @@ Binding commitments.
 - **Per-channel roots.** Each release channel has its own default root. The channel comes from the identity projection (`dev/packaging/native/identity.py`, `CADRUMO_ID_*`, `data/build.json`) and nowhere else. Python never derives a channel; a native package pins the root before Python runs.
 - **No migration, no compatibility reader.** Existing `var/storage` trees created by installed builds under a launch directory are not discovered, read or moved. Relocation remains refuse-and-instruct (`2026-08-03-canonical-storage-management-adr` R7). The pre-release regime applies.
 - **Prior rulings reused, subject to the 2026-10-08 Darwin transport exception below.** `2026-09-20-lud-authority-adr`: the configured root is application-owned and created idempotently even when selected explicitly; explicit member overrides must pre-exist. `2026-08-03-canonical-storage-management-adr` R1, R3, R5, R10: members are typed, member paths are preserved except the separately accepted relocations, and `FIXED` members carry no variable. `2026-07-13-data-output-standardization-adr` R1 and `2026-07-03-claude-ecosystem-packaging-adr`: installed runs use a platform user-data root, checkouts use `var/storage`.
-- **Scope exclusion.** No configuration file is introduced. The product reads the process environment only (`src/cadrumo/core/config.py:199-214`); the proposed `U/config/application.env` in `2026-10-03-application-packaging-adr` stays proposed and is a separate decision. Model-provider credentials come from the authenticated profile's encrypted provider settings. Installed and release builds read none from the environment and load no `.env` file. In development storage mode, a provider whose profile record is unset takes its key from the named Cadrumo environment value after profile authentication, and a persisted `disabled` record blocks that fallback. (Amended 2026-10-13 under `2026-10-13-provider-settings-adr`; before that this exclusion also covered the provider keys that `src/cadrumo/core/config_llm_fields.py:52-63` reads from the environment in every mode.)
+- **Scope exclusion.** No configuration file is introduced. The product reads the process environment only (`src/cadrumo/core/config.py:199-214`); the proposed `U/config/application.env` in `2026-10-03-application-packaging-adr` stays proposed and is a separate decision. The credentials of cadrumo-agent's provider lanes come from the authenticated profile's encrypted provider settings. Installed and release builds read none of those from the environment and load no `.env` file. In development storage mode, a provider whose profile record is unset takes its key from the named Cadrumo environment value after profile authentication, and a persisted `disabled` record blocks that fallback. (Amended 2026-10-13 under `2026-10-13-provider-settings-adr`; before that this exclusion also covered the provider keys that `src/cadrumo/core/config_llm_fields.py:52-63` reads from the environment in every mode. Narrowed the same day under that record's constraint 11: Cadrumo's own document reading keeps reading its keys from the environment until the owner rules on it.)
 
 ## Implementation
 

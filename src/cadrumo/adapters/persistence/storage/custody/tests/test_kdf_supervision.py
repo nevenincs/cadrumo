@@ -614,8 +614,8 @@ def test_expired_deadline_refuses_and_releases_the_supervised_child_boundary(tmp
     assert captured.value.refusal is ProfileCustodyRefusal.KDF_SUPERVISION_UNAVAILABLE
 
 
-_PERMIT_HELD_SECONDS = 18.0
-"""Longer than the fifteen seconds an unwrap once had for the permit, the child and the derivation together."""
+_PERMIT_HELD_SECONDS = 6.0
+"""A substantial share of the unwrap's budget, leaving room for its own child and derivation afterwards."""
 
 
 def test_a_correct_password_waits_out_another_derivation_holding_the_permit(tmp_path: Path) -> None:

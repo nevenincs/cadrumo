@@ -25,10 +25,10 @@ from enum import StrEnum
 from pydantic import SecretStr
 
 from ...core.config import Settings
-from ...core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from ...core.storage_environment import StorageMode
 from ...core.time.clock import now
 from ...domain.provider_settings.catalog import (
+    CliProgram,
     ProviderAuthKind,
     ProviderCatalog,
     ProviderCatalogEntry,
@@ -46,7 +46,7 @@ from ...domain.provider_settings.record import (
     new_settings_generation,
 )
 from .contracts import (
-    ABSENT_REVISION,
+    CliState,
     ProviderSettingsActionAccepted,
     ProviderSettingsActionResult,
     ProviderSettingsRefusal,
@@ -90,6 +90,7 @@ class ProviderSettingsService:
         settings: Settings,
         storage_mode: StorageMode,
         clock: Callable[[], datetime] = now,
+        cli_state_probe: Callable[[CliProgram], CliState] | None = None,
     ) -> None:
         """Bind the service to one profile's store and the process's storage mode."""
         self._store = store
@@ -97,6 +98,7 @@ class ProviderSettingsService:
         self._settings = settings
         self._storage_mode = storage_mode
         self._clock = clock
+        self._cli_state_probe = cli_state_probe
 
     def status(self) -> ProviderSettingsStatus | ProviderSettingsRefusal:
         """Return masked status of every catalogued provider, or a typed refusal."""
@@ -106,7 +108,13 @@ class ProviderSettingsService:
         return ProviderSettingsStatus(
             development=self._storage_mode is StorageMode.DEVELOPMENT,
             providers=tuple(
-                status_entry(entry, read, settings=self._settings, storage_mode=self._storage_mode)
+                status_entry(
+                    entry,
+                    read,
+                    settings=self._settings,
+                    storage_mode=self._storage_mode,
+                    cli_state=self._cli_state(entry),
+                )
                 for entry, read in zip(self._catalog.providers, reads, strict=True)
             ),
         )
@@ -218,7 +226,7 @@ class ProviderSettingsService:
             return _refused(ProviderSettingsRefusalCode.UNKNOWN)
         if not is_provider_settings_revision(expected_revision):
             return _refused(ProviderSettingsRefusalCode.REVISION_CONFLICT)
-        refusal = self._store.delete(entry.id, expected_revision=_store_revision(expected_revision))
+        refusal = self._store.delete(entry.id, expected_revision=expected_revision)
         if refusal is not None:
             return _refusal_for_store(refusal.code)
         reads = self._store.read((entry.id,))
@@ -266,7 +274,7 @@ class ProviderSettingsService:
         record: ProviderSettingsRecord,
         expected_revision: str,
     ) -> ProviderSettingsActionResult:
-        refusal = self._store.write(record, expected_revision=_store_revision(expected_revision))
+        refusal = self._store.write(record, expected_revision=expected_revision)
         if refusal is not None:
             return _refusal_for_store(refusal.code)
         reads = self._store.read((entry.id,))
@@ -277,9 +285,23 @@ class ProviderSettingsService:
             return _refused(ProviderSettingsRefusalCode.COMMITTED_READBACK_FAILED)
         return self._accepted(entry, read)
 
+    def _cli_state(self, entry: ProviderCatalogEntry) -> CliState | None:
+        """Return a cli lane's program state; ``unknown`` until a safe probe is supplied."""
+        if entry.cli_program is None:
+            return None
+        if self._cli_state_probe is None:
+            return CliState.UNKNOWN
+        return self._cli_state_probe(entry.cli_program)
+
     def _accepted(self, entry: ProviderCatalogEntry, read: ProviderRecordRead) -> ProviderSettingsActionAccepted:
         return ProviderSettingsActionAccepted(
-            entry=status_entry(entry, read, settings=self._settings, storage_mode=self._storage_mode),
+            entry=status_entry(
+                entry,
+                read,
+                settings=self._settings,
+                storage_mode=self._storage_mode,
+                cli_state=self._cli_state(entry),
+            ),
         )
 
 
@@ -301,11 +323,6 @@ def _base_url_acceptable(entry: ProviderCatalogEntry, base_url: str) -> bool:
     except ValueError:
         return False
     return True
-
-
-def _store_revision(token: str) -> str:
-    """Translate a status revision token into the store's compare-and-swap guard."""
-    return ABSENT_SECURE_OBJECT_REVISION_ID if token == ABSENT_REVISION else token
 
 
 def _refused(code: ProviderSettingsRefusalCode) -> ProviderSettingsRefusal:

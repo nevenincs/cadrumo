@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from datetime import timedelta
 from enum import StrEnum
 from functools import cached_property
 from typing import Literal, Protocol, Self, runtime_checkable
@@ -628,6 +629,18 @@ class OperationRegistry(BaseModel):
             if definition.action_reference == action:
                 return definition
         raise KeyError(f"operator action is not mapped to an operation definition: {action.action_id!r}")
+
+    def declares_transient_financial_operands(self) -> bool:
+        """Whether any registered operation takes a transient financial operand."""
+        return any(definition.transient_financial_operand is not None for definition in self.definitions)
+
+    def ephemeral_secret_lifetimes(self) -> tuple[timedelta, ...]:
+        """The lifetime of every declared ephemeral secret."""
+        return tuple(
+            definition.ephemeral_secret.lifetime
+            for definition in self.definitions
+            if definition.ephemeral_secret is not None
+        )
 
     def resolve_credential_free_payload(self, definition_id: str, raw: str | bytes) -> BaseModel:
         """Hydrate a journal-safe payload only for its exact registered definition."""

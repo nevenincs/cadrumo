@@ -40,7 +40,7 @@ from cadrumo.domain.censo.certificado import (
 )
 from cadrumo.domain.user_profile.values import UserProfileRecord
 from cadrumo.entrypoints.cli.config._censo_payloads import CensoFactPayload, CensoFileIngestResult
-from cadrumo.entrypoints.tests.command_line_rendering import (
+from cadrumo.entrypoints.cli.tests.command_line_rendering import (
     Printed,
     as_the_command_line_renders,
     command_error,
@@ -248,5 +248,7 @@ def test_every_frontend_resolves_the_same_access_and_a_preview_declares_no_commi
             ).policy
             for frontend in OperationFrontendProjection
         }
-        assert all(policy == policies[command_line] for policy in policies.values())
+        assert all(policy == policies[command_line] for policy in policies.values()), {
+            frontend.value: policy.model_dump() for frontend, policy in policies.items()
+        }
         assert (AccessAction.COMMIT in policies[command_line].actions) is not preview

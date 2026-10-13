@@ -202,6 +202,7 @@ source = { editable = "." }
 dependencies = [
     { name = "anyio" },
     { name = "argon2-cffi" },
+    { name = "argon2-cffi-bindings" },
     { name = "beautifulsoup4", extra = ["lxml"] },
     { name = "cadrumo-data-manuals" },
     { name = "cadrumo-data-normatives" },
@@ -357,6 +358,7 @@ requires-dist = [
     { name = "anthropic", marker = "extra == 'anthropic'", specifier = ">=1.13.0,<2" },
     { name = "anyio", specifier = ">=4.5,<5" },
     { name = "argon2-cffi", specifier = ">=23.1.0,<26" },
+    { name = "argon2-cffi-bindings", specifier = ">=25.1.0,<27" },
     { name = "beautifulsoup4", extras = ["lxml"], specifier = ">=4.12,<5" },
     { name = "cadrumo", extras = ["anthropic"], marker = "extra == 'all'" },
     { name = "cadrumo", extras = ["browser"], marker = "extra == 'all'" },

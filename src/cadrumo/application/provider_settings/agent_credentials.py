@@ -7,6 +7,10 @@ wipes after writing the standard-input frame. Providers the assistant reaches
 through their own CLI sign-in carry no credential and are left out of the
 frame, as are providers with nothing configured or turned off.
 
+Each key is keyed in the frame by cadrumo-agent's own provider identity, the
+name its hosting contract accepts. Only key-bearing lanes are carried; a
+provider's own sign-in token never enters the frame.
+
 Generations are observed without touching the session's idle time, so the
 controller can poll them to decide whether a running agent is still current.
 """
@@ -15,7 +19,7 @@ from __future__ import annotations
 
 from typing import override
 
-from ...domain.provider_settings.catalog import ProviderCatalog, ProviderConsumer
+from ...domain.provider_settings.catalog import ProviderAuthKind, ProviderCatalog, ProviderConsumer
 from ..agent_host.controller import (
     AgentCredentialSource,
     AgentGenerations,
@@ -32,6 +36,7 @@ from .resolution import (
     ResolvedDirectCredential,
 )
 
+_FRAMED_KINDS = frozenset({ProviderAuthKind.API_KEY, ProviderAuthKind.API_KEY_WITH_BASE_URL})
 _SIGNED_OUT_REASONS = frozenset(
     {ProviderCredentialUnavailableReason.NOT_SIGNED_IN, ProviderCredentialUnavailableReason.PROFILE_LOCKED},
 )
@@ -46,7 +51,7 @@ _SKIPPED_REASONS = frozenset(
 
 
 class ProviderSettingsAgentCredentialSource(AgentCredentialSource):
-    """Resolve every usable assistant key for one admitted profile, keyed by agent credential id.
+    """Resolve every usable assistant key for one admitted profile, keyed by cadrumo-agent's provider identity.
 
     A provider whose record is unset with no fallback, turned off or unreadable
     is left out of the frame; its status says why. Only a profile that is not
@@ -63,10 +68,10 @@ class ProviderSettingsAgentCredentialSource(AgentCredentialSource):
         """Bind the source to one profile's store and resolver."""
         self._store = store
         self._resolver = resolver
-        self._agent_providers = tuple(
-            (entry.id, entry.agent_credential_id)
+        self._agent_lanes = tuple(
+            (entry.id, str(entry.provider))
             for entry in catalog.providers
-            if entry.agent_credential_id is not None and entry.serves(ProviderConsumer.ASSISTANT)
+            if entry.auth_kind in _FRAMED_KINDS and entry.serves(ProviderConsumer.ASSISTANT)
         )
 
     @override
@@ -84,10 +89,10 @@ class ProviderSettingsAgentCredentialSource(AgentCredentialSource):
             raise AgentHostError(AgentHostRefusal.SIGNED_OUT)
         credentials: dict[str, AgentCredential] = {}
         try:
-            for provider_id, agent_credential_id in self._agent_providers:
-                resolution = self._resolver.resolve(provider_id, ProviderConsumer.ASSISTANT)
+            for lane_id, provider in self._agent_lanes:
+                resolution = self._resolver.resolve(lane_id, ProviderConsumer.ASSISTANT)
                 if isinstance(resolution, ResolvedDirectCredential):
-                    credentials[agent_credential_id] = AgentCredential(
+                    credentials[provider] = AgentCredential(
                         secret=bytearray(resolution.secret.get_secret_value().encode("utf-8")),
                         base_url=resolution.base_url,
                     )

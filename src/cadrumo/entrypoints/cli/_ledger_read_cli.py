@@ -14,33 +14,11 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from datetime import date
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import typer
 
-from ...application.export.tabular import ExportSerializationFormat
-from ...application.operator_actions.models import ActionReference
-from ...application.reference_catalogue import read_ledger_categories
-from ...core.decimal.coercion import coerce_decimal_strict
-from ...core.i18n.render import tr
-from ...core.json_contract import (
-    Notice,
-    NoticeSeverity,
-    ResolvedActionArgument,
-    strict_round_trip,
-)
 from ...core.ledger_sort import LedgerSortField, LedgerSortOrder
-from ...core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
-from ._decimal_parsing import optional_decimal_text
-from .common import (
-    active_profile_label,
-    bad,
-    emit_envelope,
-    resolve_notice_action,
-)
-from .period_parsing import _canonical_period, _optional_canonical_period
-from .state_projection_support import authority_operation
 
 if TYPE_CHECKING:
     from ...application.ledger.llm_diagnostics import (
@@ -53,6 +31,7 @@ if TYPE_CHECKING:
     from ...application.ledger.track_operation import LedgerTrackProjection
     from ...application.ledger.view_operation import LedgerViewProjection
     from ...application.reference_catalogue_contracts import LedgerCategoriesResult
+    from ...core.json_contract import Notice
     from ...domain.invoices.service import LinkInconsistency
     from ._ledger_rule_payloads import LedgerLlmDiagnosticsResult
 
@@ -61,7 +40,10 @@ def ledger_llm_diagnostics(
     ctx: typer.Context, since: str | None = None, until: str | None = None, low_confidence_below: float = 0.5
 ) -> None:
     """Report existing LLM usage, cost, and classification-confidence metrics."""
+    from ...core.decimal.coercion import coerce_decimal_strict
+    from ...core.i18n.render import tr
     from ...core.unit_proportion import is_unit_proportion
+    from .common import bad, emit_envelope
     from .runtime_ledger_llm_diagnostics import read_ledger_llm_diagnostics_for_cli
 
     since_date = _parse_iso_date(since, "--since")
@@ -124,6 +106,8 @@ def _llm_usage_provider_payload(row: LlmUsageCostProviderMetrics) -> dict[str, o
 
 
 def _llm_confidence_provider_payload(row: LlmConfidenceProviderMetrics) -> dict[str, object]:
+    from ._decimal_parsing import optional_decimal_text
+
     return {
         "provider": row.provider,
         "classified_count": row.classified_count,
@@ -137,6 +121,10 @@ def _llm_confidence_provider_payload(row: LlmConfidenceProviderMetrics) -> dict[
 
 
 def _llm_diagnostics_lines_and_notices(report: LlmDiagnosticsReport) -> tuple[list[str], list[Notice]]:
+    from ...core.i18n.render import tr
+    from ...core.json_contract import Notice, NoticeSeverity
+    from ._decimal_parsing import optional_decimal_text
+
     lines = [
         f"{row.provider}\tcalls={row.calls}\tcache_hits={row.cache_hits}"
         f"\ttokens={row.total_tokens}\tcost_usd="
@@ -172,6 +160,8 @@ def _parse_iso_date(value: str | None, option: str) -> date | None:
 
 
 def _irpf_purpose_label(purpose: str) -> str:
+    from ...core.i18n.render import tr
+
     if purpose == "activity_income_withholding":
         return tr("cli.ledger.categories.irpf_purpose_activity_income_withholding")
     if purpose == "rent_expense_withholding":
@@ -182,6 +172,8 @@ def _irpf_purpose_label(purpose: str) -> str:
 
 
 def _category_lines(result: LedgerCategoriesResult) -> list[str]:
+    from ...core.i18n.render import tr
+
     lines = [
         tr("cli.ledger.categories.header"),
         f"{tr('cli.ledger.categories.id_column')}\t{tr('cli.ledger.categories.family_column')}",
@@ -216,6 +208,10 @@ def _category_lines(result: LedgerCategoriesResult) -> list[str]:
 
 def ledger_categories(ctx: typer.Context) -> None:
     """List the recognised `--category-id` spending-category catalogue."""
+    from ...application.reference_catalogue import read_ledger_categories
+    from .common import emit_envelope
+    from .state_projection_support import authority_operation
+
     # The category catalogue is registry authority, read under the command's lease.
     authority_operation(ctx)
     result = read_ledger_categories()
@@ -235,6 +231,12 @@ def _link_inconsistency_notices(rows: tuple[LinkInconsistency, ...]) -> list[Not
     untrustworthy and names the verb that repairs it. Re-running ``link`` for
     the reported pair rewrites both sides in one commit.
     """
+    from ...application.operator_actions.models import ActionReference
+    from ...core.i18n.render import tr
+    from ...core.json_contract import Notice, NoticeSeverity, ResolvedActionArgument
+    from ...core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
+    from .common import resolve_notice_action
+
     if not rows:
         return []
     context = {"link_inconsistency_count": str(len(rows))}
@@ -279,6 +281,8 @@ def ledger_check(
 ) -> None:
     """Surface ledger anomalies and broken invoice links without mutating state."""
     from ._ledger_payloads import LedgerCheckResult, LedgerLinkInconsistencyPayload
+    from .common import emit_envelope
+    from .period_parsing import _optional_canonical_period
     from .runtime_ledger_check import read_ledger_check_for_cli
 
     check = read_ledger_check_for_cli(
@@ -329,6 +333,10 @@ def _ledger_check_issue_lines_from_items(issues: Sequence[LedgerPreflightIssue])
 
 def ledger_preflight(ctx: typer.Context, period: str, year: int) -> None:
     """Surface modelo-readiness gaps for the active bucket without mutating ledger state."""
+    from ...core.i18n.render import tr
+    from ...core.json_contract import Notice, NoticeSeverity
+    from .common import emit_envelope
+    from .period_parsing import _canonical_period
     from .runtime_ledger_preflight import read_ledger_preflight_for_cli
 
     canonical = _canonical_period(period, year=year)
@@ -368,6 +376,8 @@ def ledger_preflight(ctx: typer.Context, period: str, year: int) -> None:
 
 def ledger_history(ctx: typer.Context, transaction_id: str, include_split_siblings: bool = False) -> None:
     """Emit the chronological event chain for one ledger transaction id."""
+    from ...core.i18n.render import tr
+    from .common import emit_envelope
     from .runtime_ledger_history import read_ledger_history_for_cli
 
     history = read_ledger_history_for_cli(
@@ -398,48 +408,6 @@ def ledger_history(ctx: typer.Context, transaction_id: str, include_split_siblin
     )
 
 
-def ledger_export(
-    ctx: typer.Context,
-    output: Path,
-    export_kind: ExportSerializationFormat = ExportSerializationFormat.CSV,
-    include_inactive: bool = False,
-    period: str | None = None,
-    year: int | None = None,
-    actor: str | None = None,
-) -> None:
-    """Export canonical exact-profile ledger rows through the authenticated worker."""
-    from .runtime_ledger_export_link import export_ledger_for_cli
-
-    projection = export_ledger_for_cli(
-        ctx,
-        output=output,
-        export_format=export_kind,
-        include_inactive=include_inactive,
-        period=_optional_canonical_period(period, year=year),
-        actor=actor,
-    )
-    from ._ledger_payloads import LedgerExportPayload
-
-    result = LedgerExportPayload.model_validate(
-        {
-            **projection.model_dump(mode="json", exclude={"profile_id", "output_path"}),
-            "output_path": str(output),
-        }
-    )
-    emit_envelope(
-        ctx,
-        command="ledger.export",
-        result=result,
-        lines=[
-            f"{tr('cli.ledger.labels.bucket')}\t{result.bucket_id}",
-            f"{tr('cli.ledger.labels.export_id')}\t{result.export_id}",
-            f"{tr('cli.ledger.labels.rows')}\t{result.row_count}",
-            f"{tr('cli.ledger.labels.sha256')}\t{result.sha256}",
-            f"{tr('cli.ledger.labels.output')}\t{output}",
-        ],
-    )
-
-
 def ledger_list(
     ctx: typer.Context,
     filters: tuple[str, ...] = (),
@@ -459,6 +427,7 @@ def ledger_list(
     from ...application.review.filter import LedgerReviewFilterSpec
     from ._ledger_list import project_ledger_list
     from ._ledger_support import ledger_cli_no_recovery
+    from .common import emit_envelope
     from .runtime_ledger_list import read_ledger_list_for_cli
 
     resolved_filters = list(filters)
@@ -515,6 +484,8 @@ def ledger_view(ctx: typer.Context, transaction_id: str) -> None:
 
     Emits a :class:`~cadrumo.entrypoints.cli._ledger_payloads.LedgerViewResult`.
     """
+    from ...core.i18n.render import tr
+    from .common import emit_envelope
     from .runtime_ledger_view import read_ledger_view_for_cli
 
     projection = read_ledger_view_for_cli(ctx, transaction_id=transaction_id)
@@ -581,6 +552,10 @@ def ledger_view(ctx: typer.Context, transaction_id: str) -> None:
 
 def ledger_status(ctx: typer.Context, period: str | None = None, year: int | None = None) -> None:
     """Summarize active-bucket ledger state through the backend status service."""
+    from ...core.i18n.render import tr
+    from ...core.json_contract import strict_round_trip
+    from .common import active_profile_label, emit_envelope
+    from .period_parsing import _optional_canonical_period
     from .runtime_ledger_status import read_ledger_status_for_cli
 
     projection = read_ledger_status_for_cli(ctx, period=_optional_canonical_period(period, year=year))
@@ -648,6 +623,7 @@ def ledger_status(ctx: typer.Context, period: str | None = None, year: int | Non
 def ledger_track(ctx: typer.Context, transaction_id: str) -> None:
     """Render admitted audit lineage without opening frontend profile custody."""
     from ._ledger_payloads import LedgerTrackResult
+    from .common import emit_envelope
     from .runtime_ledger_track import read_ledger_track_for_cli
 
     projection = read_ledger_track_for_cli(ctx, transaction_id=transaction_id)
@@ -675,6 +651,9 @@ def ledger_track(ctx: typer.Context, transaction_id: str) -> None:
 
 def _latest_llm_rejection_notice(projection: LedgerViewProjection) -> Notice | None:
     """Render the standing rejection already resolved inside worker custody."""
+    from ...core.i18n.render import tr
+    from ...core.json_contract import Notice, NoticeSeverity
+
     latest = projection.latest_llm_rejection
     if latest is None:
         return None
@@ -718,6 +697,8 @@ def _ledger_status_readiness_issue_line(issue: LedgerReadinessIssueV1) -> str:
 
 def _ledger_track_lines(projection: LedgerTrackProjection) -> list[str]:
     """Render the canonical lineage and imported provenance supplied by custody."""
+    from ...core.i18n.render import tr
+
     tracking = projection.tracking
     lines = [
         f"{tr('cli.ledger.labels.id')}\t{tracking.transaction_id}",
@@ -737,7 +718,6 @@ def _ledger_track_lines(projection: LedgerTrackProjection) -> list[str]:
 __all__ = [
     "ledger_categories",
     "ledger_check",
-    "ledger_export",
     "ledger_history",
     "ledger_list",
     "ledger_llm_diagnostics",

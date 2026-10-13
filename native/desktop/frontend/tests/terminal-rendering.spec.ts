@@ -313,7 +313,7 @@ test("user input cancels focus owed to a terminal awaiting fonts", async ({
   await consoleButton.click();
   await consoleButton.click();
   await rail
-    .getByRole("button", { name: label("desktop.rail.settings") })
+    .getByRole("button", { name: label("desktop.rail.settings"), exact: true })
     .click();
   const size = page.getByRole("radiogroup", {
     name: label("desktop.settings.terminal_text"),
@@ -508,7 +508,7 @@ test("font changes while hidden preserve the PTY size until the pane is shown", 
     return { cols, rows };
   });
   await rail
-    .getByRole("button", { name: label("desktop.rail.settings") })
+    .getByRole("button", { name: label("desktop.rail.settings"), exact: true })
     .click();
   await page
     .getByRole("radiogroup", { name: label("desktop.settings.terminal_text") })

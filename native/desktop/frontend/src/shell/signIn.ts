@@ -49,8 +49,6 @@ export type AccountPhase =
   /** This platform signs in inside the TUI; the shell offers nothing. */
   | "unsupported"
   | "signed-in"
-  /** The person chose to carry on in the TUI's own flow. */
-  | "in-tui"
   /** There is no runtime to ask. */
   | "services-down"
   /** The status read failed, or the runtime could not say. */
@@ -72,7 +70,6 @@ export const GATED: ReadonlySet<AccountPhase> = new Set([
 export function phaseOf(
   available: boolean,
   status: SignInStatus | null,
-  handover: boolean,
   profiles: ProfileList | null = null,
   /** The host lists profiles and has not answered yet. */
   listPending = false,
@@ -82,7 +79,6 @@ export function phaseOf(
   if (!status.runtimeAvailable) return "services-down";
   if (!status.supported) return "unsupported";
   if (status.state === "present") return "signed-in";
-  if (handover) return "in-tui";
   if (status.state === "unknown") return "unknown";
   // With none selected, the profiles that exist are still there to choose
   // from: only where none is known is there nothing to sign in to. Until
@@ -94,25 +90,19 @@ export function phaseOf(
   return "signed-out";
 }
 
-/** Refusals a password cannot answer: the way on is the TUI's own flow. */
-const HANDED_OVER: ReadonlySet<string> = new Set([
+/** Refusals that outlast the attempt that met them. */
+const STANDING: ReadonlySet<string> = new Set([
   "PROFILE_LOCKED",
   "KEYRING_UNAVAILABLE",
+  "THROTTLED",
 ]);
 
-/** Refusals that outlast the attempt that met them. */
-const STANDING: ReadonlySet<string> = new Set([...HANDED_OVER, "THROTTLED"]);
-
-/** Whether a password can settle the account as it stands. Every element
- * that offers sign-in asks this, so none offers a form that is not there. */
-export function canSignIn(
-  phase: AccountPhase,
-  refusal: SignInRefusal | null,
-): boolean {
-  return (
-    (phase === "signed-out" || phase === "unknown") &&
-    !(refusal && HANDED_OVER.has(refusal.code.toUpperCase()))
-  );
+/** Whether the account can be signed in to as it stands. Signing in is
+ * Cadrumo's and the runtime's, and is always offered here while nobody is
+ * signed in: a refusal says why the last try failed, and the next try is
+ * the person's to make. Every element that offers sign-in asks this. */
+export function canSignIn(phase: AccountPhase): boolean {
+  return phase === "signed-out" || phase === "unknown";
 }
 
 const COUNTDOWN_TICK_MS = 250;
@@ -179,7 +169,6 @@ export function useSignIn(host: Host) {
   );
   const startingManager = useRef(false);
   const latestStatus = useRef<SignInStatus | null>(null);
-  const [handover, setHandover] = useState(false);
   // The profiles to choose from, where the host offers them; the one the
   // person chose; and what became of the last attempt to create one.
   const [profiles, setProfiles] = useState<ProfileList | null>(null);
@@ -372,7 +361,6 @@ export function useSignIn(host: Host) {
       latestStatus.current = unavailable;
       setStatus(unavailable);
       setRefusal(null);
-      setHandover(false);
       setChosen(null);
       listed.current = null;
       setProfiles(null);
@@ -464,7 +452,6 @@ export function useSignIn(host: Host) {
         setStatus(next);
         setRefusal(null);
         setChosen(null);
-        setHandover(false);
         if (next.runtimeAvailable) setObservingStartup(false);
         listed.current = null;
         setProfiles(null);
@@ -572,7 +559,6 @@ export function useSignIn(host: Host) {
   const settledPhase = phaseOf(
     host.available,
     status,
-    handover,
     profiles,
     host.profiles !== undefined && profiles === null,
   );
@@ -795,7 +781,6 @@ export function useSignIn(host: Host) {
       )
         return;
       setRemaining(remaining);
-      setHandover(false);
     } catch (error) {
       if (mounted.current && generation === request.current)
         setSignOutFailure(refusalFrom(error));
@@ -847,7 +832,7 @@ export function useSignIn(host: Host) {
     remaining,
     signOutFailure,
     gated: GATED.has(phase),
-    canSignIn: canSignIn(phase, currentRefusal),
+    canSignIn: canSignIn(phase),
     submit,
     signOut,
     /** The person has seen what was refused: a refusal that came from an
@@ -863,9 +848,8 @@ export function useSignIn(host: Host) {
     },
     /** Read the status again: something else has shown it may be stale. */
     recheck: () => refresh(),
-    openTui: () => setHandover(true),
+    /** The TUI's session ended: what it did to the account is read again. */
     tuiExited: () => {
-      setHandover(false);
       setRefusal(null);
       void refresh();
     },

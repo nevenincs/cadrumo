@@ -632,6 +632,17 @@ def _stringify_collection_context_value(value: object) -> str | None:
     return None
 
 
+def _install_binder() -> None:
+    # Imported here, after every binding name exists: the hierarchy may be
+    # mid-import itself when it first reaches this module.
+    from .hierarchy import install_error_code_binder
+
+    install_error_code_binder(bind_error_code)
+
+
+_install_binder()
+
+
 __all__ = [
     "ERROR_CONTEXT_LABEL_KEYS",
     "ErrorCategory",

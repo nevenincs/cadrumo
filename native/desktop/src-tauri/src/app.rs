@@ -132,6 +132,8 @@ pub fn run(launch: Launch) -> Result<i32> {
             shell::commands(),
             shell::window_controls::commands(),
             shell::sign_in::commands(),
+            shell::provider_settings::commands(),
+            shell::agent_access::commands(),
             manager::commands(),
             agent::commands(),
         ],
@@ -359,6 +361,8 @@ mod tests {
             shell::commands(),
             shell::window_controls::commands(),
             shell::sign_in::commands(),
+            shell::provider_settings::commands(),
+            shell::agent_access::commands(),
             manager::commands(),
             agent::commands(),
         ];

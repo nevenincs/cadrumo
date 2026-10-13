@@ -12,13 +12,13 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
+from functools import cache
 from pathlib import PurePath
-from typing import Final, cast, get_args
+from typing import TYPE_CHECKING, Final, cast, get_args
 
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from ....core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant
-from ....core.identity.documents import TAX_ID_FORMAT_CONTEXT
 from ....core.type_guards import (
     is_object_list_or_tuple,
     is_object_mapping,
@@ -42,26 +42,30 @@ from .authority_artifact import (
     RuntimeCatalogueComponentQuery,
     SnapshotGlobalsComponentQuery,
 )
-from .facts.atoms import TAGGED_FACT_ATOM_CONTEXT, FactAtomField, OptionalFactAtomField, tagged_fact_atom_json
-from .facts.resolution import GovernedFactQuery, ResolvedGovernedFact
-from .facts.schema import GovernedFact, GovernedFactCatalogue
-from .governed_fact_scope import CandidateFactAuthority, validating_governed_facts
 from .provenance import NormativeCorpusProvenance
-from .revision_contracts import DeclaredPredecessor, NoPredecessor
-from .runtime_catalogues import RuntimeRegistryCatalogues
-from .schema import ModeloRevision, SnapshotGlobalCatalogues, SupportedFilingYearsCatalogue
-from .schema_exports import ExportLayoutDefinition
-from .schema_form_layouts import FormLayoutDefinition
-from .schema_references import TemporalSupportEnvelope
-from .tax_id_format import tax_id_format_from_catalogue
-from .temporal import ModeloRevisionDirectory
+
+if TYPE_CHECKING:
+    # Each decoder imports the typed registry family it admits. A profile
+    # schema decode, which every sign-in performs, then loads no modelo schema,
+    # governed-fact or temporal machinery.
+    from .facts.resolution import GovernedFactQuery, ResolvedGovernedFact
+    from .governed_fact_scope import CandidateFactAuthority
+    from .schema_references import TemporalSupportEnvelope
 
 __all__ = ["decode_authority_component", "encode_authority_component"]
 
-_FACT_ATOM_VALIDATORS: Final = frozenset(
-    (get_args(FactAtomField)[1], get_args(OptionalFactAtomField)[1]),
-)
-_TAGGED_DECODE_CONTEXT: Final = {TAGGED_FACT_ATOM_CONTEXT: True}
+
+@cache
+def _fact_atom_validators() -> frozenset[object]:
+    from .facts.atoms import FactAtomField, OptionalFactAtomField
+
+    return frozenset((get_args(FactAtomField)[1], get_args(OptionalFactAtomField)[1]))
+
+
+def _tagged_decode_context() -> dict[str, object]:
+    from .facts.atoms import TAGGED_FACT_ATOM_CONTEXT
+
+    return {TAGGED_FACT_ATOM_CONTEXT: True}
 
 
 def encode_authority_component(query: AuthorityComponentQuery, value: object) -> bytes:
@@ -113,8 +117,8 @@ def decode_authority_component(
         raise AuthorityComponentCodecError(f"authority component {query!r} failed typed decoding") from exc
 
 
-_FactQueryObserver = Callable[[GovernedFactQuery], None] | None
-_ComponentDecoder = Callable[[AuthorityComponentQuery, object, tuple[object, ...], _FactQueryObserver], object]
+type _FactQueryObserver = Callable[[GovernedFactQuery], None] | None
+type _ComponentDecoder = Callable[[AuthorityComponentQuery, object, tuple[object, ...], _FactQueryObserver], object]
 
 
 def _decode_typed_component(
@@ -146,7 +150,9 @@ def _decode_governed_fact(
     _dependencies: tuple[object, ...],
     _observer: _FactQueryObserver,
 ) -> object:
-    return GovernedFact.model_validate(document, strict=False, context=_TAGGED_DECODE_CONTEXT)
+    from .facts.schema import GovernedFact
+
+    return GovernedFact.model_validate(document, strict=False, context=_tagged_decode_context())
 
 
 def _decode_modelo_revision(
@@ -155,10 +161,17 @@ def _decode_modelo_revision(
     dependencies: tuple[object, ...],
     fact_query_observer: _FactQueryObserver,
 ) -> object:
+    from ....core.identity.documents import TAX_ID_FORMAT_CONTEXT
+    from .facts.schema import GovernedFact, GovernedFactCatalogue
+    from .governed_fact_scope import CandidateFactAuthority, validating_governed_facts
+    from .schema import ModeloRevision
+    from .tax_id_format import tax_id_format_from_catalogue
+    from .temporal import ModeloRevisionDirectory
+
     facts = tuple(item for item in dependencies if isinstance(item, GovernedFact))
     fact_catalogue = GovernedFactCatalogue(facts={fact.fact_id: fact for fact in facts})
     tax_id_format = tax_id_format_from_catalogue(fact_catalogue)
-    context = {**_TAGGED_DECODE_CONTEXT, TAX_ID_FORMAT_CONTEXT: tax_id_format}
+    context = {**_tagged_decode_context(), TAX_ID_FORMAT_CONTEXT: tax_id_format}
     directories = tuple(item for item in dependencies if isinstance(item, ModeloRevisionDirectory))
     if len(directories) != 1 or directories[0].supported_filing_years is None:
         raise AuthorityComponentCodecError(
@@ -185,6 +198,8 @@ def _decode_modelo_directory(
     _dependencies: tuple[object, ...],
     _observer: _FactQueryObserver,
 ) -> object:
+    from .temporal import ModeloRevisionDirectory
+
     return ModeloRevisionDirectory.model_validate(document, strict=False)
 
 
@@ -194,6 +209,8 @@ def _decode_runtime_catalogue(
     _dependencies: tuple[object, ...],
     _observer: _FactQueryObserver,
 ) -> object:
+    from .runtime_catalogues import RuntimeRegistryCatalogues
+
     runtime_query = cast(RuntimeCatalogueComponentQuery, query)
     field = RuntimeRegistryCatalogues.model_fields.get(runtime_query.family)
     if field is None or field.annotation is None:
@@ -207,6 +224,10 @@ def _decode_snapshot_globals(
     dependencies: tuple[object, ...],
     fact_query_observer: _FactQueryObserver,
 ) -> object:
+    from .facts.schema import GovernedFact, GovernedFactCatalogue
+    from .governed_fact_scope import CandidateFactAuthority, validating_governed_facts
+    from .schema import SnapshotGlobalCatalogues, SupportedFilingYearsCatalogue
+
     facts = tuple(item for item in dependencies if isinstance(item, GovernedFact))
     fact_catalogue = GovernedFactCatalogue(facts={fact.fact_id: fact for fact in facts})
     if not is_object_mapping(document):
@@ -267,6 +288,8 @@ def _decode_export_layout(
     _dependencies: tuple[object, ...],
     _observer: _FactQueryObserver,
 ) -> object:
+    from .schema_exports import ExportLayoutDefinition
+
     return ExportLayoutDefinition.model_validate(document, strict=False)
 
 
@@ -276,6 +299,8 @@ def _decode_form_layout(
     _dependencies: tuple[object, ...],
     _observer: _FactQueryObserver,
 ) -> object:
+    from .schema_form_layouts import FormLayoutDefinition
+
     return FormLayoutDefinition.model_validate(document, strict=False)
 
 
@@ -310,6 +335,8 @@ class _ObservedFactAuthority:
 
 def _json_value(value: object) -> object:
     """Project registry values to JSON, omitting only schema-declared defaults."""
+    from .revision_contracts import DeclaredPredecessor, NoPredecessor
+
     if isinstance(value, DeclaredPredecessor | NoPredecessor):
         # The predecessor union intentionally owns a compact authored wire
         # dialect. Its serializer is a semantic projection, unlike ordinary
@@ -322,6 +349,8 @@ def _json_value(value: object) -> object:
 
 
 def _json_model_value(value: BaseModel) -> object:
+    from .facts.atoms import tagged_fact_atom_json
+
     if type(value).__pydantic_decorators__.model_serializers:
         # A model that declares its own serialiser is authored in that shape,
         # and its parser accepts only that shape back.
@@ -329,7 +358,7 @@ def _json_model_value(value: BaseModel) -> object:
     return {
         field_name: (
             tagged_fact_atom_json(getattr(value, field_name))
-            if _FACT_ATOM_VALIDATORS.intersection(field.metadata)
+            if _fact_atom_validators().intersection(field.metadata)
             else _json_value(getattr(value, field_name))
         )
         for field_name, field in type(value).model_fields.items()

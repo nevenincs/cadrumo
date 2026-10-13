@@ -103,6 +103,7 @@ class _SupervisedKdfWorker:
         self._job: _WindowsJob | None = None
         self._neutral_directory: tempfile.TemporaryDirectory[str] | None = None
         self._ready_payload: dict[str, object] | None = None
+        self._environment_keys: frozenset[str] | None = None
         self._expected_posix_file_descriptors: tuple[int, int] | None = None
         self._started_ns = 0
         self._phase_elapsed_ms: dict[_KdfStage, float | None] = dict.fromkeys(_PHASE_FIELDS)
@@ -135,6 +136,22 @@ class _SupervisedKdfWorker:
         except BaseException as error:
             self._close_with_diagnostic(failed=True, primary_error=error)
             raise
+
+    def adopt(self, *, deadline: float) -> bool:
+        """Hand this attested, still idle child to one operation under that operation's deadline.
+
+        A child launched ahead of need has proved its limits but received no
+        request. It is handed over only while its process is still running
+        inside its containment; otherwise the caller discards it and launches
+        a fresh one.
+        """
+        process = self._process
+        if self._ready_payload is None or process is None or process.poll() is not None:
+            return False
+        if sys.platform == "win32" and (self._job is None or not self._job.contains(process)):
+            return False
+        self._deadline = deadline
+        return True
 
     def __exit__(self, exc_type: object, exc_value: object, _traceback: object) -> None:
         primary = exc_value if isinstance(exc_value, BaseException) else None
@@ -333,7 +350,7 @@ class _SupervisedKdfWorker:
             )
             try:
                 self._launch_attempted = True
-                self._process, self._job = _launch_worker(
+                self._process, self._job, self._environment_keys = _launch_worker(
                     neutral_root=Path(self._neutral_directory.name),
                     request_read=request_read,
                     result_write=result_write,
@@ -385,6 +402,7 @@ class _SupervisedKdfWorker:
         _verify_ready_worker(
             payload,
             neutral_directory=self._neutral_directory,
+            environment_keys=self._environment_keys,
             expected_posix_file_descriptors=self._expected_posix_file_descriptors,
             process=process,
             job=self._job,

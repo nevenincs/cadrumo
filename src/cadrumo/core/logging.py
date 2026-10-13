@@ -34,8 +34,6 @@ log records and plaintext diagnostic log files rooted by settings.
 from __future__ import annotations
 
 import logging
-import logging.config
-import logging.handlers
 import re
 import sys
 from collections import deque
@@ -43,8 +41,6 @@ from collections.abc import Iterable, Iterator, Mapping
 from contextvars import ContextVar
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, overload, override
-
-from pydantic import ConfigDict, RootModel
 
 if TYPE_CHECKING:
     from .observability.context import RunContextInfo
@@ -94,49 +90,6 @@ SCRUB_FIELD_PATTERNS: tuple[str, ...] = (
 (the tree-wide shared base) plus this module's own generic logging-domain
 additions. See :data:`cadrumo.core.redaction.ALWAYS_REDACT_KEY_TERMS` for why
 the base is never redeclared independently."""
-
-
-LogExtraValue = str | int | float | bool | None
-"""Closed union of stdlib-loggable scalar types accepted by :class:`LogExtra`."""
-
-
-#: dictConfig resolves a handler by dotted path, so the name must be a string.
-#: Derived from the class rather than hand-spelled: the literal and the import
-#: below could otherwise drift apart, and a typo would only surface at the first
-#: file-logging run.
-_ROTATING_FILE_HANDLER_PATH = (
-    f"{logging.handlers.RotatingFileHandler.__module__}.{logging.handlers.RotatingFileHandler.__qualname__}"
-)
-
-
-class LogExtra(RootModel[dict[str, LogExtraValue]]):
-    """Typed logging ``extra`` payload restricted to flat loggable scalars.
-
-    Upgrades the historical ``Mapping[str, object]`` return annotation on
-    service-layer ``as_extra()`` log-field helpers (e.g.
-    :class:`~cadrumo.application.aggregation.service.PerModeloAggregationLogFields`,
-    :class:`~cadrumo.application.operator_surface.models.OperatorSurfaceContract`'s
-    ``log_fields``): every current emitter only ever writes flat, non-secret
-    scalars into :meth:`logging.Logger.debug`'s ``extra=`` mapping, so
-    accepting bare ``object`` values understated the real contract. A future
-    field that accidentally carried a nested mapping, a Decimal, or another
-    non-serialisable value now fails loudly at construction with a
-    :class:`pydantic.ValidationError` naming the offending field, instead of
-    surfacing later as a JSONL-sink serialisation surprise.
-
-    Use :meth:`for_logging` to materialise the plain ``dict`` the stdlib
-    ``logging`` module's ``extra=`` parameter expects; the model itself is not
-    iterable the way :meth:`logging.Logger.makeRecord` requires.
-    """
-
-    # NOT the canonical STRICT_FROZEN_CONFIG: this is a RootModel, and pydantic
-    # refuses `extra` on one outright, while the canonical carries
-    # extra="forbid". A constraint-shape divergence, not a weaker config.
-    model_config = ConfigDict(frozen=True)
-
-    def for_logging(self) -> dict[str, LogExtraValue]:
-        """Return the payload as the plain ``dict`` ``logging`` extras expect."""
-        return dict(self.root)
 
 
 def _is_cli_metadata_invocation() -> bool:
@@ -806,6 +759,18 @@ def _install_secret_scrubbing_filters() -> None:
             handler.addFilter(SecretScrubbingFilter())
 
 
+def _rotating_file_handler_path() -> str:
+    """Name the rotating file handler by the dotted path dictConfig resolves.
+
+    Derived from the class rather than hand-spelled, so a typo cannot hide
+    until the first file-logging run; imported here because only a host that
+    configures file logging needs the handler module.
+    """
+    from logging.handlers import RotatingFileHandler
+
+    return f"{RotatingFileHandler.__module__}.{RotatingFileHandler.__qualname__}"
+
+
 def configure_logging() -> None:
     """Configure the project-wide diagnostic logging defaults.
 
@@ -857,7 +822,7 @@ def configure_logging() -> None:
         configured_handlers["file"] = {
             "level": settings.cadrumo_log_file_level,
             "formatter": "standard",
-            "class": _ROTATING_FILE_HANDLER_PATH,
+            "class": _rotating_file_handler_path(),
             "filename": str(log_file),
             "maxBytes": settings.cadrumo_log_file_max_bytes,
             "backupCount": settings.cadrumo_log_file_backup_count,
@@ -865,7 +830,9 @@ def configure_logging() -> None:
             "filters": ["drop_run_event", "third_party_debug"],
         }
         root_handlers.append("file")
-    logging.config.dictConfig(
+    from logging.config import dictConfig
+
+    dictConfig(
         {
             "version": 1,
             "disable_existing_loggers": False,

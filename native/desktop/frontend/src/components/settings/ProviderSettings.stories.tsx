@@ -1,100 +1,63 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ComponentProps } from "react";
+import { DECLARED_SETTINGS_LANES } from "@/dev/fixtures/agentLanes.generated";
 import { ProviderSettings } from "./ProviderSettings";
 import type { ProviderStatus } from "./types";
 
-// Appearance only: the providers of a made-up profile in each state they
-// can be in. Saving, turning off and resetting do nothing here, and no key
-// is stored or shown.
+// Appearance only: the lanes cadrumo-agent declares, grouped by provider, in
+// each state they can be in. Which lanes there are and what each takes come
+// from cadrumo-agent; where each stands is made up. Saving, disabling and
+// resetting do nothing here, and no key is stored or shown.
 
 type Args = ComponentProps<typeof ProviderSettings>;
 
 const NOOP = () => undefined;
 
-export const PROVIDERS: ProviderStatus[] = [
-  {
-    id: "anthropic",
-    name: "Claude",
-    transport: "api",
-    authKind: "api_key",
-    consumers: ["assistant", "extraction"],
-    mode: "key",
-    readiness: "ready",
-    source: "profile",
-  },
-  {
-    id: "claude",
-    name: "Claude",
-    transport: "cli",
-    authKind: "oauth_token_or_provider_sign_in",
-    consumers: ["assistant"],
+/** Where each made-up lane stands; the rest have nothing set. */
+const STANDING: Record<string, Partial<ProviderStatus>> = {
+  claude_api: { mode: "key", readiness: "ready", source: "profile" },
+  claude_cli: {
     mode: "provider_sign_in",
     readiness: "ready",
     source: "profile",
+    cliState: "installed_signed_in",
   },
-  {
-    id: "openai",
-    name: "OpenAI",
-    transport: "api",
-    authKind: "api_key",
-    consumers: ["assistant"],
-    mode: "key",
-    readiness: "not_verified",
-    source: "profile",
+  codex_api: { mode: "key", readiness: "not_verified", source: "profile" },
+  codex_cli: {
+    mode: "provider_sign_in",
+    readiness: "sign_in_required",
+    reason: "sign_in_with_provider_tool",
+    cliState: "installed_signed_out",
   },
-  {
-    id: "gemini",
-    name: "Gemini",
-    transport: "api",
-    authKind: "api_key",
-    consumers: ["extraction"],
-    mode: "unset",
-    readiness: "missing",
-    source: "none",
+  antigravity_cli: {
+    readiness: "unusable",
+    reason: "not_configured",
+    cliState: "not_installed",
   },
-  {
-    id: "deepseek",
-    name: "DeepSeek",
-    transport: "cli",
-    authKind: "api_key_with_base_url",
-    consumers: ["assistant"],
-    mode: "unset",
-    readiness: "missing",
-    source: "none",
-    defaultBaseUrl: "https://gateway.example/deepseek",
-  },
-  {
-    id: "qwen",
-    name: "Qwen",
-    transport: "cli",
-    authKind: "api_key_with_base_url",
-    consumers: ["assistant"],
+  kimi_cli: { mode: "disabled", readiness: "disabled", cliState: "unknown" },
+  qwen_cli: {
     mode: "key",
     readiness: "unusable",
     source: "profile",
     baseUrl: "https://gateway.example/qwen",
   },
-  {
-    id: "kimi",
-    name: "Kimi",
-    transport: "cli",
-    authKind: "api_key",
-    consumers: ["assistant"],
-    mode: "disabled",
-    readiness: "disabled",
-    source: "none",
-  },
-  {
-    id: "codex",
-    name: "Codex",
-    transport: "cli",
-    authKind: "provider_sign_in_only",
-    consumers: ["assistant"],
+};
+
+export const PROVIDERS: ProviderStatus[] = DECLARED_SETTINGS_LANES.map(
+  (lane): ProviderStatus => ({
+    id: lane.id,
+    provider: lane.provider,
+    name: lane.display_name,
+    transport: lane.transport,
+    authKind: lane.auth_kind,
     mode: "unset",
-    readiness: "sign_in_required",
+    readiness: "missing",
     source: "none",
-  },
-];
+    ...(lane.transport === "cli" ? { cliState: "installed_signed_in" } : {}),
+    ...(lane.default_base_url ? { defaultBaseUrl: lane.default_base_url } : {}),
+    ...STANDING[lane.id],
+  }),
+);
 
 const meta = {
   title: "Shell/Settings/AI providers",
@@ -132,16 +95,16 @@ export const Development: Story = {
 };
 
 export const Saving: Story = {
-  args: { busyId: "openai" },
+  args: { busyId: "claude_api" },
 };
 
 export const Outcomes: Story = {
   name: "Saved but unread, and refused",
   args: {
     outcomes: {
-      openai: { kind: "saved_unread" },
-      qwen: { kind: "refused", code: "base_url_rejected" },
-      kimi: { kind: "refused", code: "revision_conflict" },
+      codex_api: { kind: "saved_unread" },
+      qwen_cli: { kind: "refused", code: "base_url_rejected" },
+      kimi_cli: { kind: "refused", code: "revision_conflict" },
     },
   },
 };

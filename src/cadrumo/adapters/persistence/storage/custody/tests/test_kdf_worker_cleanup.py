@@ -214,7 +214,8 @@ def test_real_blocked_reader_cleanup_settles_child_before_descriptor_close(
     )
 
     def launch(command: list[str], launch_kwargs: dict[str, object]) -> subprocess.Popen[bytes]:
-        return launch_process([command[0], "-c", source, *command[3:]], launch_kwargs)
+        entry = command.index("-m")
+        return launch_process([*command[:entry], "-c", source, *command[entry + 2 :]], launch_kwargs)
 
     monkeypatch.setattr(process_boundary, "_launch_worker_process", launch)
     worker = _SupervisedKdfWorker(

@@ -363,8 +363,8 @@ def test_the_reset_describes_the_saved_progress_and_then_discards_it_under_the_s
     assert reloaded.model_dump(exclude={"updated_at"}) == WorkflowState().model_dump(exclude={"updated_at"})
     # The actor is attribution: an agent's reset is recorded as its session, and nothing else differs.
     expected_actor = (
-        f"agent:mcp.{SessionKind.API_KEY.value}.{_AGENT_CLIENT}"
-        if frontend is OperationFrontendProjection.MCP
+        f"agent:{frontend.value}.{SessionKind.API_KEY.value}.{_AGENT_CLIENT}"
+        if frontend in {OperationFrontendProjection.MCP, OperationFrontendProjection.AGENT_HOST}
         else WORKFLOW_PROGRESS_RESET_ACTOR
     )
     assert actors == [expected_actor]

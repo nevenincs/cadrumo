@@ -5,10 +5,9 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:1ccf33f2c89b25d3d1ab007d90b12c6a64c9e7884c48854ed35356459a271d12'
+body_hash: 'sha256:9e4bb54dc3c460451af3ddec4e6beea9fa533299859942371cce54fc7c2a077b'
 related: []
 ---
-
 # `native-agent` audit: `Native agent dependency ownership`
 
 ## Scope
@@ -31,4 +30,4 @@ Two real CMake configure attempts refused the duplicated `src/*` glob in `native
 
 ## Recommendations
 
-The native-agent decision must bind private source acquisition to CMake, retain an immutable source pin and hash-pinned compatible dependency locks, and verify the installed agent using the assembled application's interpreter. Runtime consumers must never fetch, install, build or add a source checkout to import paths. Source-only unit checks can diagnose build tooling; they do not establish installed-product acceptance.
+The owner clarified that CMake must accept a configurable local agent project folder, with no source SHA pin or download. Compatible dependency locks remain required, and the installed agent must be verified using the assembled application's interpreter. Runtime consumers must never fetch, install, build or add a source checkout to import paths. Source-only unit checks can diagnose build tooling; they do not establish installed-product acceptance.

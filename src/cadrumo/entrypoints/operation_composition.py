@@ -44,6 +44,7 @@ from ..adapters.persistence.profile.sync_runs import SyncRunRecordRepository
 from ..adapters.persistence.profile.taxation_comparison import build_taxation_comparison_ports
 from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ..adapters.persistence.profile.verify_observations import VerifyObservationRepository
+from ..adapters.persistence.provider_settings.store import build_provider_settings_store
 from ..adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from ..adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from ..application.actividad_asset.registered_operations import (
@@ -298,6 +299,7 @@ from ..application.ledger.ratios_operation import (
     build_ledger_ratios_validate_definition,
     build_ledger_ratios_validate_registration,
 )
+from ..application.ledger.read_ports import LedgerReadPortsFactory
 from ..application.ledger.remove_operation import build_ledger_remove_definition, build_ledger_remove_registration
 from ..application.ledger.reset_operation import build_ledger_reset_definition, build_ledger_reset_registration
 from ..application.ledger.review_operation import build_ledger_review_definition, build_ledger_review_registration
@@ -689,6 +691,14 @@ from ..application.prorrata_register.registered_operations import (
     build_prorrata_seed_sector_definition,
     build_prorrata_settle_sector_definition,
 )
+from ..application.provider_settings.registered_operations import (
+    ProviderSettingsOperationPorts,
+    build_provider_settings_change_definitions,
+    build_provider_settings_change_registrations,
+    build_provider_settings_status_definition,
+    build_provider_settings_status_registration,
+)
+from ..application.provider_settings.service import ProviderSettingsService
 from ..application.review.read_contracts import (
     ReviewReadOperationPorts,
 )
@@ -769,8 +779,10 @@ from ..core.hex import Hex64Str
 from ..core.identity.tax_id import tax_id_identity_token
 from ..core.identity_check_verdict import IdentityCheckVerdictValue
 from ..core.paths import effective_storage_root
+from ..core.storage_environment import storage_mode
 from ..core.time.clock import now
 from ..domain.currency.service import CurrencyNormalizationService
+from ..domain.provider_settings.catalog import load_provider_catalog
 from .actividad_asset_composition import build_activity_asset_operation_ports
 from .adapter_composition import (
     build_active_work_lifecycle_ports,
@@ -815,7 +827,11 @@ from .justificante_composition import (
     build_justificante_registration_ports,
     load_reconciliation_filed_observation,
 )
-from .ledger_action_composition import compose_ledger_action_ports, compose_ledger_import_ports
+from .ledger_action_composition import (
+    compose_ledger_action_ports,
+    compose_ledger_import_ports,
+    compose_ledger_read_ports,
+)
 from .ledger_evidence_ingestion_operation_composition import build_ledger_evidence_ingestion_operation_ports
 from .ledger_export_link_operation_composition import build_ledger_export_link_operation_ports
 from .ledger_llm_diagnostics_composition import build_ledger_llm_diagnostics_operation_ports
@@ -992,6 +1008,17 @@ def _google_sheets_export_prepare_port():
     return prepare
 
 
+def _provider_settings_service(profile_id: UUID) -> ProviderSettingsService:
+    """Bind the provider-settings service to the worker's exact profile and this package's storage mode."""
+    settings = load_settings()
+    return ProviderSettingsService(
+        store=build_provider_settings_store(bucket_id=str(profile_id), settings=settings),
+        catalog=load_provider_catalog(),
+        settings=settings,
+        storage_mode=storage_mode().mode,
+    )
+
+
 def build_auth_operation_ports(operator_scope_ports: OperatorScopePorts | None = None) -> AuthOperationPorts:
     """Compose the outer capabilities the registered auth executors run against."""
     return AuthOperationPorts(
@@ -1040,6 +1067,7 @@ def build_production_operation_registry(
     modelo_edit_receipt_repository_factory: ModeloEditReceiptRepositoryFactory = build_modelo_edit_receipt_repository,
     verification_repository_bundle_factory: VerificationRepositoryBundleFactory = build_verification_repository_bundle,
     ledger_action_ports_factory: LedgerActionPortsFactory = compose_ledger_action_ports,
+    ledger_read_ports_factory: LedgerReadPortsFactory = compose_ledger_read_ports,
     ledger_rule_repository_factory: LedgerClassificationRuleRepositoryFactory = LedgerClassificationRuleRepository,
     counterparty_repository_factory: CounterpartyEstablishmentRepositoryFactory | None = None,
     own_account_repository_factory: OwnAccountRepositoryFactory | None = None,
@@ -1130,6 +1158,9 @@ def build_production_operation_registry(
             certificate_secret_backend_factory=resolved_auth_ports.certificate_secret_backend_factory,
         )
     )
+    provider_settings_ports = ProviderSettingsOperationPorts(service=_provider_settings_service)
+    provider_settings_status_definition = build_provider_settings_status_definition(provider_settings_ports)
+    provider_settings_change_definitions = build_provider_settings_change_definitions(provider_settings_ports)
     certificate_source_register_definition = build_certificate_source_register_definition(certificate_source_ports)
     certificate_source_list_definition = build_certificate_source_list_definition(certificate_source_ports)
     certificate_source_select_definition = build_certificate_source_select_definition(certificate_source_ports)
@@ -1459,8 +1490,8 @@ def build_production_operation_registry(
     ledger_status_definition = build_ledger_status_definition(
         ledger_action_ports_factory, verification_repository_bundle_factory
     )
-    ledger_history_definition = build_ledger_history_definition(ledger_action_ports_factory)
-    ledger_history_typed_definition = build_ledger_history_typed_definition(ledger_action_ports_factory)
+    ledger_history_definition = build_ledger_history_definition(ledger_read_ports_factory)
+    ledger_history_typed_definition = build_ledger_history_typed_definition(ledger_read_ports_factory)
     ledger_export_definition = build_ledger_export_definition(
         build_ledger_export_link_operation_ports, execution_caller_reader=execution_caller_reader
     )
@@ -1608,7 +1639,7 @@ def build_production_operation_registry(
     ledger_check_definition = build_ledger_check_definition(ledger_action_ports_factory)
     ledger_preflight_definition = build_ledger_preflight_definition(ledger_action_ports_factory)
     ledger_review_definition = build_ledger_review_definition(ledger_action_ports_factory)
-    ledger_list_definition = build_ledger_list_definition(ledger_action_ports_factory)
+    ledger_list_definition = build_ledger_list_definition(ledger_read_ports_factory)
     ledger_view_definition = build_ledger_view_definition(ledger_action_ports_factory)
     ledger_track_definition = build_ledger_track_definition(
         ledger_action_ports_factory, ledger_participation_repository_factory
@@ -1678,6 +1709,8 @@ def build_production_operation_registry(
                 recipient_list_definition,
                 recipient_remove_definition,
                 *certificate_secret_definitions,
+                provider_settings_status_definition,
+                *provider_settings_change_definitions,
                 certificate_source_register_definition,
                 certificate_source_list_definition,
                 certificate_source_select_definition,
@@ -1889,6 +1922,8 @@ def build_production_operation_registry(
                 build_review_package_recipient_list_registration(recipient_list_definition),
                 build_review_package_recipient_remove_registration(recipient_remove_definition),
                 *build_certificate_secret_operation_registrations(certificate_secret_definitions),
+                build_provider_settings_status_registration(provider_settings_status_definition),
+                *build_provider_settings_change_registrations(provider_settings_change_definitions),
                 build_certificate_source_register_registration(certificate_source_register_definition),
                 build_certificate_source_list_registration(certificate_source_list_definition),
                 build_certificate_source_select_registration(certificate_source_select_definition),

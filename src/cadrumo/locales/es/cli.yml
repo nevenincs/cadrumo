@@ -1,5 +1,15 @@
 cli:
   app:
+    agent:
+      app_help: Sirve el asistente alojado para tu perfil con sesión iniciada.
+      serve:
+        agent_source_help: Ruta absoluta de un árbol de código de cadrumo-agent desde
+          el que ejecutar el asistente. Si no la indicas, se ejecuta el asistente
+          incluido en Cadrumo.
+        help: Inicia el asistente alojado con tu sesión guardada y mantenlo en marcha
+          hasta que se cierre la entrada estándar. Lee una línea JSON con el token
+          de la pasarela en la entrada estándar y escribe líneas JSON de eventos en
+          la salida estándar.
     ledger:
       account:
         account_id_help: El identificador de la cuenta propia, por ejemplo acc-01.

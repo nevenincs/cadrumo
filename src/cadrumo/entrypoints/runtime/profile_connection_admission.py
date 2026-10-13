@@ -33,8 +33,10 @@ from ...application.runtime.profile_access import (
 )
 from ...application.runtime.transport import RuntimeConnectionContext
 from ...application.user_profile.access_contracts import (
+    AccessDenialCode,
     Availability,
 )
+from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.automation_custody_port import (
     AutomationCustodyCode,
     AutomationCustodyError,
@@ -105,7 +107,7 @@ class ProfileConnectionAdmissionMixin:
                         recipient=self._enrollments.recipient,
                         worker_script=self._worker_script,
                         wall_clock=self._wall_clock,
-                        retired=self._events.publish,
+                        retired=self._publish_retirement,
                     )
                     if not self._admitting():
                         raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
@@ -157,6 +159,8 @@ class ProfileConnectionAdmissionMixin:
         request: RuntimeProfileLogin,
     ) -> tuple[ProfileConnection, RuntimeProfileHost]:
         self._validate_login_request(request)
+        # A process of a hosted agent's tree never signs in as the person, whatever frontend it names.
+        self._refuse_agent_tree_person_access(context, request.frontend, method=request.method)
         if request.method == "password":
             # Signing in by password is the person's act, never an agent's.
             self._require_persons_frontend(request.frontend)
@@ -309,6 +313,9 @@ class ProfileConnectionAdmissionMixin:
         """Bind a verified native context without publishing a profile access lease."""
         if context.runtime_boot_id != self.boot or context.peer != channel.peer:
             raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+        if self._agent_tree_peer(context):
+            # Enrollment, recovery and reset are the person's acts; the agent's tree takes none.
+            raise ProfileAccessRefusedError(AccessDenialCode.PERSON_ACT_REQUIRED)
         with self._guard:
             if context.connection_id in self._connections:
                 raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)

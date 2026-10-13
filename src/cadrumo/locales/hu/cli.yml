@@ -1,5 +1,15 @@
 cli:
   app:
+    agent:
+      app_help: A bejelentkezett profilodhoz tartozó hosztolt asszisztens kiszolgálása.
+      serve:
+        agent_source_help: Egy cadrumo-agent forrásfa abszolút útvonala, amelyből
+          az asszisztens fut. Ha nem adod meg, a Cadrumóval együtt telepített asszisztens
+          fut.
+        help: Elindítja a hosztolt asszisztenst a mentett bejelentkezéseddel, és futva
+          tartja, amíg a szabványos bemenet le nem zárul. A szabványos bemeneten egy
+          JSON-sort olvas az átjáró hozzáférési tokenjével, a szabványos kimenetre
+          JSON-eseménysorokat ír.
     ledger:
       account:
         account_id_help: A saját számla azonosítója, például acc-01.

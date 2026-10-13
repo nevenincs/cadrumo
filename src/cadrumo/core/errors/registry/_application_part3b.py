@@ -319,7 +319,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.operator_surface.command_ports.SchemaResolutionError",
+        "cadrumo.application.operator_surface.verb_input_contracts.SchemaResolutionError",
         ErrorCode(
             code="INTERNAL_SCHEMA_RESOLUTION",
             category=ErrorCategory.INTERNAL,

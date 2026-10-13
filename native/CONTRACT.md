@@ -473,8 +473,7 @@ enrolled name elsewhere, stops with the enrolled names.
 | `_deps/python-sdk/` | Verified pinned CPython SDK, independent of runtime wheel changes |
 | `_deps/runtime/` | Locked third-party wheels installed for staging |
 | `_deps/build-tools/` | Pinned SVG renderer; never shipped |
-| `_deps/agent-source/` | Private agent archive acquired by CMake and checked against `native/agent.json` |
-| `_deps/agent/` | Verified agent source, built wheel and content inventory; never used as a runtime import path |
+| `_deps/agent/` | Built agent wheel and content inventory; never used as a runtime import path |
 | `product/build/wheels/` | Existing CADRUMO three-wheel cohort built from source |
 | `product/dependencies/` | Exact production closure plus those product wheels |
 | `generated/` | Native contracts, metadata, icon and resource source |
@@ -510,11 +509,11 @@ divergence before staging. ZIP acceptance also checks the reported Windows versi
 | --- | --- |
 | default / `bundle` | Build the application payload and, for Windows desktop deliveries, its matching background-services installation kit at `stage/<Config>/services` |
 | `app-distro` | Compatibility target for the complete `bundle` |
-| `agent_source`, `agent_project` | Acquire the private archive pinned by `native/agent.json`, then build and inventory its wheel; neither target installs or publishes a public package |
+| `agent_project` | Build and inventory the wheel from the local project folder configured with `-DCADRUMO_AGENT_SOURCE_DIR=<path>`; no download or source SHA pin is involved |
 | `agent-install` | Build the complete bundle with the agent installed in `cadrumo/site-packages`; `cmake --install` copies that built payload to the selected prefix |
 | `agent-uninstall` | Remove generated product dependencies and the selected staged bundle; the next bundle build reconstructs the complete dependency set |
-| `agent-rebuild` | Remove the built agent wheel and dependent payloads, then rebuild the complete bundle using the pinned archive |
-| `agent-checksum` | Build or reuse the agent, then check its source identity and wheel SHA-256 |
+| `agent-rebuild` | Remove the built agent wheel and dependent payloads, then rebuild the complete bundle from the configured project folder |
+| `agent-checksum` | Build or reuse the agent, then check its recorded wheel checksum |
 | `agent-lock-<target>` | Explicitly regenerate the target's hash-pinned supplemental dependency lock under `native/agent/`, constrained by Cadrumo's current locked versions |
 | `app-payload` | Internal payload assembly at `stage/<Config>/app`, including application images, runtime and documentation; a Windows desktop payload alone is not a complete delivery |
 | `native-process-quiesce` | Before replacing product images, request shutdown of verified running product processes and children, wait 10 seconds, then terminate survivors and refuse replacement if any remain alive |
@@ -1226,9 +1225,16 @@ stopped when the window closes.
 | --- | --- | --- | --- |
 | `sign_in_status` | `token` | `config sign-in-status` | `{supported, state, active_profile, runtimeAvailable, refusal}`. `state` is `present`, `absent` or `unknown`; `active_profile` is the selected profile's label or null. Reading it never resumes or extends a sign-in. |
 | `sign_in_submit` | Raw UTF-8 password body, whose JSON encoding must fit the product's 8192-byte read (twice over for a creation); header `x-cadrumo-token`; optional header `x-cadrumo-profile` | `config login --secrets-stdin`, then `-- LABEL` when a profile is named | `{kind: "signed-in"}`, or `{kind: "refused", code, retryAfterSeconds}`. Unnamed, it signs in to the selected profile. One attempt: nothing is retried. |
-| `sign_out` | `token` | `config logout` | `{remainingAccess: {automationEnabled, automationRevoked: false}}`. A refusal rejects with `{code, retryAfterSeconds}`. |
+| `sign_out` | `token` | `config logout` | `{remainingAccess: {automationEnabled, agentAccessRemains, automationRevoked: false}}`. `automationEnabled` is the person's saved automation setting, which a sign-out keeps; it is not access. `agentAccessRemains` is whether a key issued for an external agent can still admit, since keys do not follow the sign-in: `true` or `false`, and `null` when the product could not say, because its automation store was unreadable or it had no sign-in to end. The product writes the field in every result, so a result without it, or with a value that is neither a boolean nor null, fails with `read_failed` rather than reading as no access. A refusal rejects with `{code, retryAfterSeconds}`. |
 | `profile_list` | `token` | `config profile list` | `{profiles: [{name, active}], complete}`, in the product's order. It needs no password, session or runtime. `complete` is false when the product reports that it could not read its profiles coherently: the list is then no evidence of which profiles exist. |
 | `profile_create` | Raw UTF-8 password body, whose JSON encoding must fit the product's 8192-byte read (twice over for a creation); headers `x-cadrumo-token` and `x-cadrumo-profile` | `config profile create --quiet --secrets-stdin -- LABEL` | `{kind: "created", name}`, or `{kind: "refused", code, retryAfterSeconds}`. The new profile is selected and left signed out. A label already in use is refused with the code `profile_already_exists`. One attempt: nothing is retried. |
+| `provider_settings_status` | `token` | `config provider status` | `{development, providers: [{id, provider, display_name, transport, auth_kind, consumers, mode, available, source, readiness, reason, base_url, default_base_url, revision, cli_state}]}`, every value a closed set. No field carries a key or anything derived from one. |
+| `provider_settings_set` | Raw UTF-8 key body; headers `x-cadrumo-token`, `x-cadrumo-provider`, `x-cadrumo-revision`, and `x-cadrumo-base-url` or `x-cadrumo-clear-base-url: 1` | `config provider set PROVIDER --expected-revision REVISION [--base-url URL \| --clear-base-url] --secrets-stdin`; the key is written once to standard input as `{"secret"}`, which is then closed | The provider's new status entry, or a refusal `{code}`: `not_signed_in`, `profile_locked`, `invalid_key_format`, `base_url_rejected`, `revision_conflict`, `committed_readback_failed`, `person_act_required` or `unknown`. One attempt: nothing is retried. |
+| `provider_settings_remove` | `token`, `provider`, `revision` | `config provider remove PROVIDER --expected-revision REVISION` | The provider's new status entry, disabled, or a refusal as for `provider_settings_set`. |
+| `provider_settings_reset` | `token`, `provider`, `revision` | `config provider reset PROVIDER --expected-revision REVISION` | The provider's new status entry, unset, or a refusal as for `provider_settings_set`. |
+| `agent_access_list` | `token` | `config profile automation list` | `{credentials: [{id, state, issued_at, expires_at, last_used_at, categories, all_operations}]}`, one per grant, ended ones included. `id` is the grant's UUID, `state` is `pending`, `active`, `suspended` or `revoked`, `issued_at` is when the grant became valid, `last_used_at` is the latest use of any of its keys or null, and `categories` are `profile_values`, `operation_metadata` or `tax_values`. A value outside those sets is a protocol failure. No field carries a key or anything derived from one. Refusals reject with `{code}`: `not_signed_in`, `profile_locked`, `person_act_required` or `unknown`. |
+| `agent_access_issue` | `token`, `taxValues` | None yet | Refused with `{code: "issue_unavailable"}` and nothing is run. Issuing becomes one act of the person's, with no password and no second approval process, when the product offers it; the answer will then be `{credential_reference}`, the reference of the key put in this computer's secure store, never the key. |
+| `agent_access_revoke` | `token`, `grantId` | `config profile automation deny grant GRANT_ID` | `{cleanup_pending}`: access is denied, and the stored key is still to be removed from this computer when it is true. `grantId` must be a UUID. Refusals reject with `{code}` as for `agent_access_list`, and `outcome_unknown` when the host did not hear how the revoke ended, which the window answers by listing again. One attempt: nothing is retried. The product answers the same for a grant it does not hold, so `not_found` is not yet sent. |
 
 `x-cadrumo-profile` carries a profile's label as UTF-8, percent-encoded, since
 a header carries no other text. The product prints no profile identity, so the
@@ -1731,7 +1737,7 @@ descriptor and a literal-false launch condition. Native transaction publication,
 scope admission, same-version byte checks, retained anchors and safe in-use
 maintenance must be implemented and validated before replacing that condition.
 The explicit Windows compiler test lane uses a configured WiX tool on `PATH`:
-`uv run --no-sync pytest -q -n 0 -m windows_only dev/packaging/tests/test_windows_msi.py`.
+`uv run --no-sync pytest -q -n 0 -m windows_only dev/packaging/native/tests/test_windows_msi.py`.
 It compiles all four sources for desktop and runtime-only payloads with warnings
 treated as errors, then reads the MSI databases back to verify product identities,
 the install block and the absence of version-removal upgrades. This verifies the

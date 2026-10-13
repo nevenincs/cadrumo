@@ -1,4 +1,9 @@
-"""Strict bounded document and secret frames with complete projection transfers."""
+"""Strict bounded document and secret frames with complete projection transfers.
+
+Every runtime peer frames through this module, the profile worker included, so
+it imports only the frame contracts. The runtime's request and reply documents
+are imported by the transfers that carry them.
+"""
 
 from __future__ import annotations
 
@@ -7,31 +12,14 @@ import json
 import struct
 from collections.abc import Generator
 from contextlib import contextmanager
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ValidationError
 
-from ...application.runtime.access_management import (
-    RuntimeProfileResume,
-    RuntimeSessionInventoryReply,
-    RuntimeSessionInventoryTransfer,
-)
-from ...application.runtime.bootstrap import RuntimePasswordReset
 from ...application.runtime.contracts import (
     RuntimeByteChannel,
-    RuntimeClientHello,
     RuntimeRefusalCode,
     RuntimeRefusalError,
-)
-from ...application.runtime.enrollment_access import (
-    RuntimeEnrollmentSubmit,
-)
-from ...application.runtime.operation_access import (
-    RuntimeOperationSecret,
-)
-from ...application.runtime.profile_access import (
-    RuntimeProfileLogin,
-    RuntimeProfileStatus,
-    RuntimeProfileStatusTransfer,
 )
 from ...application.runtime.session_events import RuntimeConnectionEvent, RuntimeEventFrame
 from ...application.runtime.submission_payload import (
@@ -42,6 +30,21 @@ from ...application.runtime.submission_payload import (
 )
 from ...core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant, sha256_hex
 from .runtime_transport_cleanup import close_runtime_transport_after_failure
+
+if TYPE_CHECKING:
+    from ...application.runtime.access_management import (
+        RuntimeProfileResume,
+        RuntimeSessionInventoryReply,
+        RuntimeSessionInventoryTransfer,
+    )
+    from ...application.runtime.bootstrap import RuntimePasswordReset
+    from ...application.runtime.enrollment_access import RuntimeEnrollmentSubmit
+    from ...application.runtime.operation_access import RuntimeOperationSecret
+    from ...application.runtime.profile_access import (
+        RuntimeProfileLogin,
+        RuntimeProfileStatus,
+        RuntimeProfileStatusTransfer,
+    )
 
 MAXIMUM_FRAME_BYTES = 64 * 1024
 
@@ -132,13 +135,13 @@ def _unnamed_optional_members(document: BaseModel) -> set[str]:
     """Name the members a document leaves out while they are unset.
 
     A peer built before such a member existed refuses a document that carries
-    it, so the member travels only when it says something.
+    it, so the member travels only when it says something. The document's
+    model declares those members as ``frame_omits_when_unset``.
     """
-    if isinstance(document, RuntimeClientHello) and document.lifecycle_notices is None:
-        return {"lifecycle_notices"}
-    if isinstance(document, RuntimeProfileLogin) and document.surface is None:
-        return {"surface"}
-    return set()
+    omitted: object = getattr(type(document), "frame_omits_when_unset", frozenset())
+    if not isinstance(omitted, frozenset):
+        return set()
+    return {name for name in omitted if isinstance(name, str) and getattr(document, name) is None}
 
 
 def document_frame(document: BaseModel) -> bytes:
@@ -161,6 +164,8 @@ def write_document(channel: RuntimeByteChannel, document: BaseModel, *, deadline
 
 def write_profile_status(channel: RuntimeByteChannel, status: RuntimeProfileStatus, *, deadline: float) -> None:
     """Retain the complete effective scope while every individual frame stays bounded."""
+    from ...application.runtime.profile_access import RuntimeProfileStatusTransfer
+
     _write_bounded_reply(channel, status, RuntimeProfileStatusTransfer, deadline=deadline)
 
 
@@ -168,6 +173,8 @@ def write_session_inventory(
     channel: RuntimeByteChannel, inventory: RuntimeSessionInventoryReply, *, deadline: float
 ) -> None:
     """Retain every session and scope fact through the existing bounded transfer."""
+    from ...application.runtime.access_management import RuntimeSessionInventoryTransfer
+
     _write_bounded_reply(channel, inventory, RuntimeSessionInventoryTransfer, deadline=deadline)
 
 
@@ -216,6 +223,8 @@ def read_profile_status(
     channel: RuntimeByteChannel, header: RuntimeProfileStatusTransfer, *, deadline: float
 ) -> RuntimeProfileStatus:
     """Release only a complete, strictly decoded status matching its transfer identity."""
+    from ...application.runtime.profile_access import RuntimeProfileStatus
+
     return _read_bounded_reply(channel, header, RuntimeProfileStatus, deadline=deadline)
 
 
@@ -223,6 +232,8 @@ def read_session_inventory(
     channel: RuntimeByteChannel, header: RuntimeSessionInventoryTransfer, *, deadline: float
 ) -> RuntimeSessionInventoryReply:
     """Release only a complete inventory matching the admitted native reply identity."""
+    from ...application.runtime.access_management import RuntimeSessionInventoryReply
+
     return _read_bounded_reply(channel, header, RuntimeSessionInventoryReply, deadline=deadline)
 
 

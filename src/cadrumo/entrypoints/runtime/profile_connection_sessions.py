@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
+from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -40,19 +41,39 @@ from ...application.user_profile.access_contracts import (
     AccessDenied,
     AccessScope,
     AccessSession,
+    AuthorityState,
     Availability,
 )
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.automation_custody_port import (
     AutomationCustodyError,
+    AutomationCustodySnapshot,
 )
 from ...application.user_profile.session_retirement import SessionRetirementKind
+from ...core.time.clock import now
 from .profile_host import ProfileConnection, RuntimeProfileHost
 from .sign_in_status import observe_sign_in
 from .sign_in_sweep import revoke_other_saved_sign_ins
 
 if TYPE_CHECKING:
     from .profile_connections import RuntimeProfileConnections
+
+
+def _issued_key_can_admit(snapshot: AutomationCustodySnapshot, instant: datetime) -> bool:
+    """Say whether an issued key could still admit an agent: a sign-out ends no key session."""
+    if not snapshot.automation_enabled:
+        return False
+    live_grants = {
+        grant.grant_id
+        for grant in snapshot.grants
+        if grant.state is AuthorityState.ACTIVE and grant.unattended and grant.valid_from <= instant < grant.expires_at
+    }
+    return any(
+        key.grant_id in live_grants
+        and key.state is AuthorityState.ACTIVE
+        and key.valid_from <= instant < key.expires_at
+        for key in snapshot.keys
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -94,6 +115,9 @@ class ProfileConnectionSessionMixin:
         channel: RuntimeByteChannel,
         request: RuntimeProfileLogin,
     ) -> RuntimeProfileStatus | AccessDenied:
+        if self._agent_tree_peer(context):
+            # A process of a hosted agent's tree is that agent, under the lease that started it, and nothing else.
+            return self._login_agent_tree(context, channel, request)
         connection, host = self._prepare(context, channel, request)
         write_document(
             channel,
@@ -138,6 +162,8 @@ class ProfileConnectionSessionMixin:
         for host in hosts.values():
             _deletion, retired = host.revoke_human_sign_in(kind=SessionRetirementKind.SIGNED_OUT)
             self._retired(retired)
+        # Their agent trees are gone before this sign-in is answered and its profile is usable.
+        self._stop_profile_agents(frozenset(hosts))
         if installation is not None:
             revoke_other_saved_sign_ins(
                 root=self.root, installation=installation, keep=keep, hosted_profiles=frozenset(hosts)
@@ -277,6 +303,10 @@ class ProfileConnectionSessionMixin:
         except AutomationCustodyError:
             automation_enabled = None
         deletion, retired = host.revoke_human_sign_in()
+        try:
+            agent_access_remains: bool | None = _issued_key_can_admit(host.store.snapshot(), now())
+        except AutomationCustodyError:
+            agent_access_remains = None
         self._retired(retired)
         return RuntimeHumanSignedOut(
             request_id=request.request_id,
@@ -287,6 +317,7 @@ class ProfileConnectionSessionMixin:
             receipt_removed=deletion is not ReceiptDeletion.RECEIPT_RETAINED,
             keychain_removed=deletion in {ReceiptDeletion.DELETED, ReceiptDeletion.NOT_REQUIRED},
             automation_enabled=automation_enabled,
+            agent_access_remains=agent_access_remains,
         )
 
     def _lock_session(

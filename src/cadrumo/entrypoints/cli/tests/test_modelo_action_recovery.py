@@ -18,7 +18,7 @@ from cadrumo.tests.audited_process import run_audited_process
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.modelo.work_lifecycle import discard_work_unit, get_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
-from ....application.operator_surface.command_ports import cli_argv_for
+from ....application.operator_surface.verb_input_contracts import cli_argv_for
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.config import load_settings, override_settings
 from ....tests.os_keychain_hook import require_os_credential_store

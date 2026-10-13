@@ -11,9 +11,9 @@ pub mod activation_probe;
 pub mod background;
 pub mod contract;
 pub mod custody;
-pub mod diagnostics;
 #[cfg(windows)]
 pub mod desktop_host;
+pub mod diagnostics;
 pub mod identity;
 #[cfg(windows)]
 pub mod installation;
@@ -22,11 +22,11 @@ pub mod invocation;
 pub mod ipc;
 pub mod lifecycle;
 pub mod preferences;
-pub mod session;
-#[cfg(windows)]
-pub mod service_windows;
 #[cfg(windows)]
 pub mod process_job;
+#[cfg(windows)]
+pub mod service_windows;
+pub mod session;
 pub mod startup;
 pub mod strings;
 pub mod supervision;

@@ -9,7 +9,22 @@ import { label } from "../support/strings";
 const open = async (target: Page, scenario = "signed-in") => {
   await target.goto(`/scenarios.html?scenario=${scenario}&latency=0&bar=off`);
   // Panel interaction tests open it explicitly after each fresh launch.
-  await target.keyboard.press("Control+Backquote");
+  if (scenario === "signed-in") {
+    await expect(
+      target
+        .getByRole("navigation", { name: label("desktop.rail.label") })
+        .getByRole("button", {
+          name: label("desktop.rail.agent"),
+          exact: true,
+        }),
+    ).not.toHaveAttribute("aria-disabled", "true");
+    await openPanelTab(target, "console");
+    await expect(
+      target.locator('[data-terminal="console"] textarea'),
+    ).toBeFocused();
+  } else if (scenario === "loading") {
+    await openPanelTab(target, "console");
+  } else await target.keyboard.press("Control+Backquote");
 };
 
 const rail = (target: Page) =>
@@ -414,6 +429,36 @@ test("F6 moves focus from area to area and back", async ({ page: target }) => {
   ).toBeFocused();
 });
 
+test("F6 keeps a terminal focus request while its fonts load", async ({
+  page: target,
+}) => {
+  const waiting: (() => Promise<void>)[] = [];
+  const fonts = /jetbrains-mono.*\.woff2/;
+  await target.route(fonts, (route) => {
+    waiting.push(() => route.continue());
+  });
+  await seedLayout(target, {
+    layout: { agentShown: false, docsShown: false },
+  });
+  await target.goto("/scenarios.html?scenario=signed-in&latency=0&bar=off", {
+    waitUntil: "domcontentloaded",
+  });
+  await expect(
+    rail(target).getByRole("button", {
+      name: label("desktop.rail.agent"),
+      exact: true,
+    }),
+  ).not.toHaveAttribute("aria-disabled", "true");
+  await expect.poll(() => waiting.length).toBeGreaterThan(0);
+  const input = target.locator('[data-terminal="tui"] textarea');
+  await expect(input).toHaveCount(0);
+  await rail(target).getByRole("button").first().focus();
+  await target.keyboard.press("F6");
+  await Promise.all(waiting.map((release) => release()));
+  await target.unroute(fonts);
+  await expect(input).toBeFocused();
+});
+
 test("settings opens on the current choice, moves by arrows and returns focus", async ({
   page: target,
 }) => {
@@ -466,6 +511,9 @@ test("one Escape closes settings while a tooltip is showing elsewhere", async ({
   page: target,
 }) => {
   await open(target);
+  await rail(target)
+    .getByRole("button", { name: label("desktop.rail.settings"), exact: true })
+    .focus();
   await target.keyboard.press("Control+Comma");
   const settings = target.locator(".settings");
   await expect(settings).toBeVisible();

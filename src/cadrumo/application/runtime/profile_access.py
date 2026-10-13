@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import TYPE_CHECKING, Annotated, Literal, Protocol
+from typing import TYPE_CHECKING, Annotated, ClassVar, Literal, Protocol
 from uuid import UUID
 
 from pydantic import BaseModel, Field, RootModel, model_validator
@@ -34,6 +34,7 @@ from .access_management import (
     RuntimeSessionInventory,
     RuntimeSessionInventoryTransfer,
 )
+from .agent_host import RuntimeAgentRefused, RuntimeAgentStart, RuntimeAgentStarted
 from .attendance import (
     RuntimeAttendanceAsk,
     RuntimeAttendanceDecide,
@@ -111,6 +112,10 @@ class RuntimeProfileLogin(BaseModel):
     persist_receipt: bool = False
     surface: Annotated[str, Field(min_length=1, max_length=64)] | None = None
 
+    #: Members left out of the frame while unset: a peer built before they
+    #: existed refuses a document that carries them.
+    frame_omits_when_unset: ClassVar[frozenset[str]] = frozenset({"surface"})
+
 
 class RuntimeSessionRequest(BaseModel):
     """Address one connection-bound lease; its identifier is never a bearer."""
@@ -154,7 +159,8 @@ class RuntimeRequest(
             | RuntimeOperationRequest
             | RuntimeEnrollmentRequest
             | RuntimeAccessManagementRequest
-            | RuntimeInstallationActRequest,
+            | RuntimeInstallationActRequest
+            | RuntimeAgentStart,
             Field(discriminator="action"),
         ]
     ]
@@ -316,6 +322,8 @@ class RuntimeReply(
             | RuntimeAccessManagementReply
             | RuntimeInstallationReply
             | RuntimeInstallationReplyTransfer
+            | RuntimeAgentStarted
+            | RuntimeAgentRefused
             | RuntimeAccessRefusal,
             Field(discriminator="kind"),
         ]
@@ -432,6 +440,10 @@ class RuntimeProfileHandler(Protocol):
         request: RuntimeInstallationActRequest,
     ) -> None:
         """Serve one sessionless installation act on the verified native channel."""
+        ...
+
+    def agent(self, context: RuntimeConnectionContext, channel: RuntimeByteChannel, request: RuntimeAgentStart) -> None:
+        """Start the hosted agent bound to this connection's own session, answering on the channel."""
         ...
 
     def poll(self) -> None:

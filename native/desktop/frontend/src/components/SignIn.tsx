@@ -51,7 +51,6 @@ export function SignInDialog({
   onOpenChange,
   onClosed,
   onOpening,
-  onOpenTui,
   create,
   onCreateChange,
 }: {
@@ -62,15 +61,12 @@ export function SignInDialog({
   onOpening?: (from: Element | null) => void;
   /** The dialog has closed: put focus where the person continues. */
   onClosed: () => void;
-  /** Carry on in the TUI's own flow. */
-  onOpenTui: () => void;
   /** The person asked to create a profile rather than sign in to one. */
   create?: boolean;
   onCreateChange?: (create: boolean) => void;
 }) {
   const t = useStrings();
   const input = useRef<HTMLInputElement>(null);
-  const handover = useRef<HTMLButtonElement>(null);
   const nameField = useRef<HTMLInputElement>(null);
   const choice = useRef<HTMLSelectElement>(null);
   const [revealed, setRevealed] = useState(false);
@@ -117,7 +113,7 @@ export function SignInDialog({
   // anew, so nothing would place focus in it: it is placed here, whenever
   // the dialog is opened.
   useEffect(() => {
-    if (open) (nameField.current ?? input.current ?? handover.current)?.focus();
+    if (open) (nameField.current ?? input.current)?.focus();
   }, [open]);
 
   // Nothing to show until the account is known: a dialog opened on a
@@ -129,9 +125,10 @@ export function SignInDialog({
   const rejected =
     account.refusal?.code.toUpperCase() === "CREDENTIAL_REJECTED";
   // Where a password cannot help, the form is not offered: with no profile
-  // the dialog offers the way to set one up, and with no services running it
-  // says so in its title, as the rest of the window does.
-  const setUpInTui = account.phase === "no-profile" && !creating;
+  // and a host that cannot make one, the dialog says there is none, and with
+  // no services running it says so in its title, as the rest of the window
+  // does.
+  const noProfile = account.phase === "no-profile" && !creating;
   const servicesDown = account.phase === "services-down";
   const waitingForServices =
     account.startingServices && !status.runtimeAvailable;
@@ -147,19 +144,17 @@ export function SignInDialog({
   // A profile the host would not name as written can be signed in to only
   // while it is the selected one.
   const unnameable = choices.some((p) => !p.active && !nameable(p.name));
-  // A refusal that hands over to the TUI is the explanation: no lead then
-  // says it a second way.
+  // A refusal is shown beside the form and is the explanation of the last
+  // try: the lead says only what signing in gives.
   const lead = creating
     ? t("desktop.account.create.lead")
-    : setUpInTui
+    : noProfile
       ? t("desktop.account.no_profile_lead")
       : servicesDown
         ? null
         : answerable
           ? t("desktop.signin.lead")
-          : account.refusal
-            ? null
-            : t("desktop.signin.open_tui_hint");
+          : null;
   // Titled as a sign-in only where there is something to sign in with.
   const title = waitingForServices
     ? "desktop.signin.starting_services"
@@ -190,8 +185,8 @@ export function SignInDialog({
         {...(lead ? {} : { "aria-describedby": undefined })}
         onOpenAutoFocus={(event) => {
           onOpening?.(document.activeElement);
-          // The first field where there is one, else the way on.
-          const target = nameField.current ?? input.current ?? handover.current;
+          // The first field where there is one.
+          const target = nameField.current ?? input.current;
           if (!target) return;
           event.preventDefault();
           target.focus();
@@ -365,7 +360,7 @@ export function SignInDialog({
               {t(busy ? "desktop.signin.submitting" : "desktop.signin.submit")}
             </Button>
           </form>
-        ) : setUpInTui ? null : (
+        ) : noProfile ? null : (
           <AccountRefusal refusal={account.refusal} seconds={seconds} />
         )}
 
@@ -420,34 +415,8 @@ export function SignInDialog({
                 {t("desktop.account.new_profile")}
               </Button>
             )}
-            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-              <p className="min-w-40 flex-1 text-sm text-muted-foreground">
-                {t(
-                  account.canCreate
-                    ? "desktop.signin.recovery_hint"
-                    : "desktop.signin.open_tui_hint",
-                )}
-              </p>
-              <Button
-                ref={handover}
-                variant="outline"
-                size="sm"
-                aria-disabled={busy || undefined}
-                onClick={busy ? undefined : onOpenTui}
-              >
-                {t("desktop.signin.open_tui")}
-              </Button>
-            </div>
           </>
-        ) : (
-          <Button ref={handover} className="w-full" onClick={onOpenTui}>
-            {t(
-              setUpInTui
-                ? "desktop.account.create_profile"
-                : "desktop.signin.open_tui",
-            )}
-          </Button>
-        )}
+        ) : null}
       </DialogContent>
     </Dialog>
   );
@@ -490,7 +459,6 @@ export function SignedOut({
   lead,
   quiet = false,
   onSignIn,
-  onOpenTui,
   signInButton,
 }: {
   account: SignInController;
@@ -501,7 +469,6 @@ export function SignedOut({
    * quietly: one filled button in the window, not two. */
   quiet?: boolean;
   onSignIn: () => void;
-  onOpenTui: () => void;
   signInButton?: RefObject<HTMLButtonElement | null>;
 }) {
   const t = useStrings();
@@ -529,10 +496,16 @@ export function SignedOut({
   // With no profile on this computer, and a host that can make one, the way
   // on is the form that does: the dialog is that form in this phase.
   const makes = account.phase === "no-profile" && account.canCreate;
-  // A refusal no password can answer takes the lead's place: it is why the
-  // only way on is the TUI.
+  // A refusal takes the lead's place: it says why the last try failed, and
+  // signing in is still offered beside it. A wrong password is said by the
+  // dialog's field, where it was typed; a wait that has run out says nothing
+  // more. Either way the lead stays.
+  const code = account.refusal?.code.toUpperCase();
   const refused =
-    !password && account.refusal && account.phase !== "no-profile";
+    account.refusal &&
+    account.phase !== "no-profile" &&
+    code !== "CREDENTIAL_REJECTED" &&
+    !(code === "THROTTLED" && account.retrySeconds <= 0);
   return (
     <Empty>
       <EmptyMedia>
@@ -569,18 +542,6 @@ export function SignedOut({
             {t(makes ? "desktop.account.new_profile" : "desktop.signin.submit")}
           </Button>
         )}
-        <Button
-          ref={password || makes ? undefined : signInButton}
-          variant={password || makes ? "ghost" : quiet ? "outline" : "primary"}
-          aria-disabled={account.busy || undefined}
-          onClick={account.busy ? undefined : onOpenTui}
-        >
-          {t(
-            account.phase === "no-profile" && !makes
-              ? "desktop.account.create_profile"
-              : "desktop.signin.open_tui",
-          )}
-        </Button>
       </div>
     </Empty>
   );

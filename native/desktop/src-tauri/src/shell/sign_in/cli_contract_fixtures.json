@@ -96,6 +96,7 @@
     "command": "config.logout",
     "notices": [],
     "result": {
+      "agent_access_remains": false,
       "already_logged_out": false,
       "automation_enabled": false,
       "automation_revoked": false,
@@ -113,6 +114,7 @@
     "command": "config.logout",
     "notices": [],
     "result": {
+      "agent_access_remains": null,
       "already_logged_out": false,
       "automation_enabled": null,
       "automation_revoked": false,
@@ -149,6 +151,7 @@
     "command": "config.logout",
     "notices": [],
     "result": {
+      "agent_access_remains": true,
       "already_logged_out": false,
       "automation_enabled": true,
       "automation_revoked": false,

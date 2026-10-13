@@ -22,6 +22,9 @@ export type RailItem = {
   /** A hollow pin where a count would be: what the item counts is not
    * known, or could not be read. Never drawn together with a count. */
   pin?: "unknown" | "failed";
+  /** Why the item cannot be used now. It stays in place and says so,
+   * and a press does nothing. */
+  heldBy?: string;
   /** Starts a new cluster: a divider is drawn before this item. */
   divided?: boolean;
   onClick: () => void;
@@ -37,15 +40,16 @@ function RailButton({ item }: { item: RailItem }) {
         <IconButton
           label={item.label}
           shortcut={item.shortcut}
-          hint={item.badge ? item.badgeLabel : item.hint}
+          hint={item.heldBy ?? (item.badge ? item.badgeLabel : item.hint)}
           size="lg"
           side="right"
           aria-pressed={item.pressed}
+          aria-disabled={item.heldBy ? true : undefined}
           aria-expanded={item.expanded}
           aria-haspopup={item.expanded === undefined ? undefined : "dialog"}
           // A locale-independent handle for drivers outside the shell.
           data-rail={item.id}
-          onClick={item.onClick}
+          onClick={item.heldBy ? undefined : item.onClick}
           // The chosen item carries a bar on the rail's edge as well as its
           // surface, so the choice does not rest on a tint alone. A button
           // whose surface is open is marked the same way.
@@ -56,7 +60,7 @@ function RailButton({ item }: { item: RailItem }) {
             <Badge
               variant="count"
               aria-hidden="true"
-              className="absolute -top-0.5 -right-0.5 ring-2 ring-chrome"
+              className="absolute -top-0.5 -right-0.5"
             >
               {item.badge > BADGE_LIMIT ? `${BADGE_LIMIT}+` : item.badge}
             </Badge>

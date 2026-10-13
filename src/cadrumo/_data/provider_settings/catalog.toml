@@ -1,130 +1,143 @@
-# Model-provider credential catalog.
+# GENERATED FILE - DO NOT EDIT.
+# Regenerate with: just generate-provider-catalog (python -m dev.provider_catalog.generate)
+# Source of truth: cadrumo-agent's provider, lane, gateway and CLI definitions.
 #
-# Read at runtime by cadrumo.domain.provider_settings.catalog, which validates
-# every entry strictly. This is the one place that says which providers a
-# profile can hold a credential for, what kind of credential each takes, and
-# which Cadrumo consumers may use it. Listing a provider here does not make it
-# eligible for the hosted assistant lane; cadrumo-agent's hosting contract owns
-# that.
-#
-# auth_kind:
-#   api_key                          one direct API key
-#   api_key_with_base_url            a direct API key for an Anthropic-compatible
-#                                    gateway; the effective URL is the stored one,
-#                                    else default_base_url
-#   oauth_token_or_provider_sign_in  a person-entered OAuth token, or the
-#                                    provider's own CLI sign-in
-#   provider_sign_in_only            the provider's own CLI sign-in; Cadrumo holds
-#                                    no credential
-#
-# development_setting names the Cadrumo settings field read as the fallback for
-# an unset record in development storage mode only. Installed builds never read
-# it.
-#
-# agent_credential_id is the id cadrumo-agent keys this credential by in the
-# hosted-agent standard-input frame. It is absent for a credential the agent
-# never receives: an extraction-only key, and any provider-owned sign-in.
+# One entry per cadrumo-agent lane. id is <provider>_<transport>; provider is
+# the identity it reaches; credential_field is the agent settings field that
+# receives the lane's credential and keys the hosted-agent frame.
 
 schema_version = 1
 
-[[providers]]
-id = "anthropic"
-display_name = "Anthropic"
-auth_kind = "api_key"
-consumers = ["extraction", "assistant"]
-development_setting = "cadrumo_llm_anthropic_api_key"
-agent_credential_id = "claude"
+[source]
+agent_version = "0.1.0"
+agent_source_digest = "13426ed2a34cdfa1923f41d57bcf9dd0d3f3fd64d96a3255ad5aa2a39891c63b"
 
 [[providers]]
-id = "openai"
-display_name = "OpenAI"
-auth_kind = "api_key"
-consumers = ["extraction", "assistant"]
-development_setting = "cadrumo_llm_openai_api_key"
-agent_credential_id = "codex"
-
-[[providers]]
-id = "gemini"
-display_name = "Gemini"
-auth_kind = "api_key"
-consumers = ["extraction"]
-development_setting = "cadrumo_llm_gemini_api_key"
-
-[[providers]]
-id = "kimi"
-display_name = "Kimi"
+id = "claude_api"
+provider = "claude"
+transport = "api"
+display_name = "Claude"
 auth_kind = "api_key"
 consumers = ["assistant"]
-development_setting = "cadrumo_llm_kimi_api_key"
-agent_credential_id = "kimi"
+credential_field = "claude_api_key"
+development_setting = "cadrumo_llm_claude_api_key"
 
 [[providers]]
-id = "zai"
+id = "claude_cli"
+provider = "claude"
+transport = "cli"
+display_name = "Claude"
+auth_kind = "oauth_token_or_provider_sign_in"
+consumers = ["assistant"]
+credential_field = "claude_code_oauth_token"
+cli_program = "claude"
+
+[[providers]]
+id = "codex_api"
+provider = "codex"
+transport = "api"
+display_name = "Codex"
+auth_kind = "api_key"
+consumers = ["assistant"]
+credential_field = "codex_api_key"
+development_setting = "cadrumo_llm_codex_api_key"
+
+[[providers]]
+id = "codex_cli"
+provider = "codex"
+transport = "cli"
+display_name = "Codex"
+auth_kind = "provider_sign_in_only"
+consumers = ["assistant"]
+cli_program = "codex"
+
+[[providers]]
+id = "antigravity_cli"
+provider = "antigravity"
+transport = "cli"
+display_name = "Antigravity"
+auth_kind = "provider_sign_in_only"
+consumers = ["assistant"]
+cli_program = "agy"
+
+[[providers]]
+id = "kimi_cli"
+provider = "kimi"
+transport = "cli"
+display_name = "Kimi Code"
+auth_kind = "api_key"
+consumers = ["assistant"]
+credential_field = "kimi_api_key"
+cli_program = "kimi"
+development_setting = "cadrumo_llm_kimi_api_key"
+
+[[providers]]
+id = "zai_cli"
+provider = "zai"
+transport = "cli"
 display_name = "Z.ai"
 auth_kind = "api_key_with_base_url"
 consumers = ["assistant"]
 default_base_url = "https://api.z.ai/api/anthropic"
+credential_field = "zai_api_key"
+cli_program = "claude"
 development_setting = "cadrumo_llm_zai_api_key"
-agent_credential_id = "zai"
 
 [[providers]]
-id = "zhipu"
+id = "zhipu_cli"
+provider = "zhipu"
+transport = "cli"
 display_name = "Zhipu AI"
 auth_kind = "api_key_with_base_url"
 consumers = ["assistant"]
 default_base_url = "https://open.bigmodel.cn/api/anthropic"
+credential_field = "zhipu_api_key"
+cli_program = "claude"
 development_setting = "cadrumo_llm_zhipu_api_key"
-agent_credential_id = "zhipu"
 
 [[providers]]
-id = "deepseek"
+id = "deepseek_cli"
+provider = "deepseek"
+transport = "cli"
 display_name = "DeepSeek"
 auth_kind = "api_key_with_base_url"
 consumers = ["assistant"]
 default_base_url = "https://api.deepseek.com/anthropic"
+credential_field = "deepseek_api_key"
+cli_program = "claude"
 development_setting = "cadrumo_llm_deepseek_api_key"
-agent_credential_id = "deepseek"
 
 [[providers]]
-id = "moonshot"
+id = "moonshot_cli"
+provider = "moonshot"
+transport = "cli"
 display_name = "Moonshot AI"
 auth_kind = "api_key_with_base_url"
 consumers = ["assistant"]
 default_base_url = "https://api.moonshot.ai/anthropic"
+credential_field = "moonshot_api_key"
+cli_program = "claude"
 development_setting = "cadrumo_llm_moonshot_api_key"
-agent_credential_id = "moonshot"
 
 [[providers]]
-id = "minimax"
+id = "minimax_cli"
+provider = "minimax"
+transport = "cli"
 display_name = "MiniMax"
 auth_kind = "api_key_with_base_url"
 consumers = ["assistant"]
 default_base_url = "https://api.minimax.io/anthropic"
+credential_field = "minimax_api_key"
+cli_program = "claude"
 development_setting = "cadrumo_llm_minimax_api_key"
-agent_credential_id = "minimax"
 
 [[providers]]
-id = "qwen"
-display_name = "Qwen"
+id = "qwen_cli"
+provider = "qwen"
+transport = "cli"
+display_name = "Qwen (Alibaba Model Studio)"
 auth_kind = "api_key_with_base_url"
 consumers = ["assistant"]
+credential_field = "qwen_api_key"
+cli_program = "claude"
 development_setting = "cadrumo_llm_qwen_api_key"
-agent_credential_id = "qwen"
-
-[[providers]]
-id = "claude"
-display_name = "Claude"
-auth_kind = "oauth_token_or_provider_sign_in"
-consumers = ["assistant"]
-
-[[providers]]
-id = "codex"
-display_name = "Codex"
-auth_kind = "provider_sign_in_only"
-consumers = ["assistant"]
-
-[[providers]]
-id = "antigravity"
-display_name = "Antigravity"
-auth_kind = "provider_sign_in_only"
-consumers = ["assistant"]

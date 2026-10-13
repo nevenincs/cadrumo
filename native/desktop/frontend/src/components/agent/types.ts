@@ -9,29 +9,42 @@ export type Choice = {
   description?: string;
 };
 
-/** A model provider the person can choose, or see and not choose. */
-export type ProviderOption = {
+/** How a provider is reached: its web API, or its own command-line app on
+ * this computer. */
+export type ProviderTransport = "api" | "cli";
+
+/** One way into a provider, with the models it offers. */
+export type ProviderWay = {
+  /** Keys the way's models. Nothing about the way is to be read from it. */
   id: string;
-  name: string;
+  transport: ProviderTransport;
   selectable: boolean;
   /** Why it cannot be chosen, shown beside it when `selectable` is false. */
   unavailableReason?: string;
   /** The model chosen with it, where its catalog recommends one. */
   defaultModelId?: string;
+  /** What the way has been proven able to do on this computer, already
+   * worded. A proof belongs to the way, never to one of its models. */
+  capabilities?: readonly string[];
+  /** Present where the way lists no models, so the person writes a model's
+   * id; the efforts the way accepts with any model they write. */
+  modelWritten?: { efforts: readonly Choice[] };
 };
 
-/** A setting of the provider's own that a model takes, such as a service
- * tier, with the options it offers. */
-export type ModelControl = {
+/** A model provider the person can choose, or see and not choose. It is one
+ * provider however many ways reach it. */
+export type ProviderOption = {
+  /** The provider's id, which picks its mark. */
   id: string;
   name: string;
-  description?: string;
-  options: readonly Choice[];
-  defaultOptionId?: string;
+  /** Some way into it can be chosen. */
+  selectable: boolean;
+  /** Its ways, the API before the command-line app. */
+  ways: readonly ProviderWay[];
 };
 
-/** A model one provider offers, with the efforts it can work at and the
- * settings it takes, each the model's own. */
+/** A model one way into a provider offers, with the efforts it can work at,
+ * each the model's own. */
 export type ModelOption = {
   id: string;
   name: string;
@@ -41,18 +54,18 @@ export type ModelOption = {
    * no effort setting. */
   efforts: readonly Choice[];
   defaultEffort?: string;
-  controls?: readonly ModelControl[];
-  /** What it has been proven able to do, already worded. */
-  capabilities?: readonly string[];
 };
 
-/** The provider, model, effort and settings a conversation runs with. */
+/** The provider, the way into it, the model and the effort a conversation
+ * runs with. */
 export type AgentSelection = {
   providerId: string;
+  /** The way into the provider, by `ProviderWay.id`. */
+  wayId: string;
+  /** The model's id: chosen from the way's list, or written where the way
+   * lists none. */
   modelId: string;
   effort?: string;
-  /** The option chosen for each of the model's settings, by setting id. */
-  controls?: Readonly<Record<string, string>>;
 };
 
 /** What a file is, as far as how it is drawn goes. */
@@ -161,18 +174,18 @@ export type TranscriptMessage =
       waitingOnPerson?: boolean;
     };
 
-/** Where a Cadrumo tool the agent called is: still running, finished, or
- * refused. */
-export type ToolActivityState = "running" | "done" | "refused";
+/** Where a tool the agent called is, in cadrumo-agent's own four states. */
+export type ToolActivityState =
+  "pending" | "in_progress" | "completed" | "failed";
 
-/** A Cadrumo tool the agent called, such as reading ledger entries. */
+/** A tool the agent called, such as reading ledger entries. */
 export type TranscriptToolActivity = {
   kind: "tool";
   id: string;
-  /** What the tool does, worded by the caller, e.g. "Read ledger entries". */
+  /** The tool's title, as the agent names it. */
   label: string;
   state: ToolActivityState;
-  /** More about the call, such as why it was refused. */
+  /** More about the call, such as what kind of tool it is, already worded. */
   detail?: string;
 };
 

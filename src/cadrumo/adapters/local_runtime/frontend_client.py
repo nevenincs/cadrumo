@@ -24,6 +24,7 @@ from ...application.runtime.access_management import (
     RuntimeSessionInventory,
     RuntimeSessionInventoryReply,
 )
+from ...application.runtime.agent_host import RuntimeAgentRefused, RuntimeAgentStart, RuntimeAgentStarted
 from ...application.runtime.attendance import (
     RuntimeAttendanceAsk,
     RuntimeAttendanceDecide,
@@ -59,6 +60,7 @@ from ...application.runtime.operation_access import (
 )
 from ...application.runtime.profile_access import (
     PROFILE_ADMISSION_TIMEOUT_SECONDS,
+    RuntimeAccessRefusal,
     RuntimeDisclosurePage,
     RuntimeDisclosurePageRequest,
     RuntimeProfileLogin,
@@ -82,6 +84,9 @@ from .frontend_client_contracts import RuntimeFrontendRefusedError
 from .frontend_profile_view_client import RuntimeProfileViewFrontend
 from .runtime_transport_cleanup import RuntimeTransportCleanup
 from .startup import RuntimeLaunchDoor
+
+AGENT_START_TIMEOUT_SECONDS: Final = 120.0
+"""Covers a cold credential read in the worker and the agent's own start within its ready bound."""
 
 _RUNTIME_RECEIPT_REFUSALS: Final[dict[str, ProfileSessionRefusalReason]] = {
     # The runtime deleted a receipt that no longer signs this login in.
@@ -457,6 +462,35 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
             )
         finally:
             secret[:] = bytes(len(secret))
+
+    def start_agent(
+        self,
+        bearer: bytearray,
+        *,
+        agent_source: str | None,
+        timeout: float = AGENT_START_TIMEOUT_SECONDS,
+    ) -> RuntimeAgentStarted | RuntimeAgentRefused:
+        """Ask the runtime for this session's hosted agent, handing it the gateway bearer on the secret frame.
+
+        The runtime binds the agent to this session; its end, this
+        connection's end included, stops the agent.
+        """
+        try:
+            reply = self._connection.agent_start(
+                RuntimeAgentStart(
+                    request_id=uuid4(),
+                    profile_id=self.profile_id,
+                    session_id=self._session(),
+                    agent_source=agent_source,
+                ),
+                bearer,
+                deadline=deadline_after(timeout),
+            )
+        finally:
+            bearer[:] = bytes(len(bearer))
+        if isinstance(reply, RuntimeAccessRefusal):
+            raise RuntimeFrontendRefusedError(reply.code.value)
+        return reply
 
     def _session_status(
         self, action: Literal["session_status", "session_refresh"], *, timeout: float

@@ -297,6 +297,20 @@ class ProfileWorkerManageRequest(BaseModel):
     management: OperationManagementRequest
 
 
+class ProfileWorkerAgentCredentialsRequest(BaseModel):
+    """Resolve the hosted assistant's credentials under one live exact-profile session.
+
+    The reply names the providers and their nonsecret base URLs; the secrets
+    follow on one protected frame on the same private control pipe.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    action: Literal["agent_credentials"] = "agent_credentials"
+    request_id: UUID
+    session_id: UUID
+    providers: Annotated[tuple[Annotated[str, Field(pattern=r"^[a-z][a-z0-9_-]{0,63}$")], ...], Field(max_length=8)]
+
+
 class ProfileWorkerRequest(
     RootModel[
         Annotated[
@@ -319,7 +333,8 @@ class ProfileWorkerRequest(
             | ProfileWorkerProjectRequest
             | ProfileWorkerProjectPageRequest
             | ProfileWorkerManageRequest
-            | ProfileWorkerObserveRequest,
+            | ProfileWorkerObserveRequest
+            | ProfileWorkerAgentCredentialsRequest,
             Field(discriminator="action"),
         ]
     ]
@@ -492,6 +507,35 @@ class ProfileWorkerProjectionPage(BaseModel):
     release: WorkerAuthorityRequest
 
 
+class ProfileWorkerAgentCredential(BaseModel):
+    """One resolved provider credential's nonsecret description; its bytes travel on the secret frame."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    provider: Annotated[str, Field(pattern=r"^[a-z][a-z0-9_-]{0,63}$")]
+    base_url: Annotated[str, Field(min_length=1, max_length=2048)] | None
+    secret_bytes: Annotated[int, Field(ge=1, le=16 * 1024)]
+
+
+class ProfileWorkerAgentCredentials(BaseModel):
+    """The assistant credentials resolved under the session; secrets follow in one frame, in this order.
+
+    ``generation`` names the provider-settings state they were resolved from
+    and is never derived from a key. An empty ``credentials`` sends no frame.
+    ``unset`` names the requested providers whose profile record holds no
+    credential and does not block a fallback; only the runtime, which keeps
+    the process environment the worker is not given, may apply development
+    mode's fallback to them.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["agent_credentials"] = "agent_credentials"
+    identity: ProfileWorkerIdentity
+    request_id: UUID
+    generation: Hex64Str
+    credentials: Annotated[tuple[ProfileWorkerAgentCredential, ...], Field(max_length=8)]
+    unset: Annotated[tuple[Annotated[str, Field(pattern=r"^[a-z][a-z0-9_-]{0,63}$")], ...], Field(max_length=8)] = ()
+
+
 class ProfileWorkerReply(
     RootModel[
         Annotated[
@@ -507,7 +551,8 @@ class ProfileWorkerReply(
             | ProfileWorkerOperationReceipt
             | ProfileWorkerObservation
             | ProfileWorkerProjection
-            | ProfileWorkerProjectionPage,
+            | ProfileWorkerProjectionPage
+            | ProfileWorkerAgentCredentials,
             Field(discriminator="kind"),
         ]
     ]

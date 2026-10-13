@@ -34,6 +34,5 @@ export function accountLabel(phase: AccountPhase): string | null {
   if (phase === "checking") return "desktop.signin.checking";
   if (phase === "starting") return "desktop.signin.starting_services";
   if (phase === "signed-in") return "desktop.account.signed_in";
-  if (phase === "in-tui") return "desktop.account.in_tui";
   return GATES[phase]?.title ?? null;
 }

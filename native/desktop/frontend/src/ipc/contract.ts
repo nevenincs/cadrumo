@@ -17,11 +17,16 @@ import type {
   AgentServiceStatus,
   AgentStreamEvent,
 } from "../shell/agentSession";
+import type { AgentAccessAnswer } from "../shell/agentAccess";
 import type {
   AgentConversationRecord,
   AgentDocumentRecord,
   AgentTurnRecord,
 } from "../shell/agentViews";
+import type {
+  ProviderSettingsAnswer,
+  ProviderSettingsRecord,
+} from "../shell/providerSettings";
 
 // ---------------------------------------------------------------------------
 // Launch token
@@ -657,7 +662,13 @@ export type SignInResult =
 
 export type SignOutResult = {
   remainingAccess: {
+    /** The person's saved automation setting. A sign-out keeps it; it is not
+     * access. */
     automationEnabled: boolean | null;
+    /** Whether a key issued for an external agent can still admit. Keys do
+     * not follow the sign-in, so this is true while one can. Null when the
+     * product could not say. */
+    agentAccessRemains: boolean | null;
     automationRevoked: false;
   };
 };
@@ -885,6 +896,34 @@ export interface HostCommands {
   agent_documents: {
     args: Authorized<{ conversationId: string }>;
     result: AgentDocumentRecord[];
+  };
+  // provider_settings_set takes the key as a raw body, with the provider,
+  // revision and base URL in headers, as sign_in_submit takes a password.
+  provider_settings_status: {
+    args: Authorized;
+    result: ProviderSettingsAnswer;
+  };
+  provider_settings_remove: {
+    args: Authorized<{ provider: string; revision: string }>;
+    result: ProviderSettingsRecord;
+  };
+  provider_settings_reset: {
+    args: Authorized<{ provider: string; revision: string }>;
+    result: ProviderSettingsRecord;
+  };
+  // The keys issued to agents outside Cadrumo. None carries a password or a
+  // key; issuing is refused with `issue_unavailable` for now.
+  agent_access_list: {
+    args: Authorized;
+    result: AgentAccessAnswer;
+  };
+  agent_access_issue: {
+    args: Authorized<{ taxValues: boolean }>;
+    result: { credential_reference: string };
+  };
+  agent_access_revoke: {
+    args: Authorized<{ grantId: string }>;
+    result: { cleanup_pending: boolean };
   };
 }
 

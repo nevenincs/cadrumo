@@ -18,6 +18,7 @@ from ...adapters.persistence.storage.master_key.profile_worker_custody import Pr
 from ...application.operations.drain import OperationDrainResult
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.profile_worker import (
+    ProfileWorkerAgentCredentialsRequest,
     ProfileWorkerContractRequest,
     ProfileWorkerControlRequest,
     ProfileWorkerDrained,
@@ -28,7 +29,6 @@ from ...application.runtime.profile_worker import (
     ProfileWorkerLeaseRequest,
     ProfileWorkerManageRequest,
     ProfileWorkerObserveRequest,
-    ProfileWorkerOperationContract,
     ProfileWorkerOperationRequest,
     ProfileWorkerProjectRequest,
     ProfileWorkerRefusal,
@@ -151,25 +151,6 @@ async def _handle_custody_control(context: _WorkerControl, request: object) -> _
 
 
 async def _handle_metadata_control(context: _WorkerControl, request: object) -> _ControlDisposition | None:
-    if isinstance(request, ProfileWorkerContractRequest):
-        # Admission prepares the host before publishing custody. Keep warm
-        # schema projection off the service loop, and retain its ownership if
-        # shutdown cancels this handler while the thread still uses the host.
-        description = await await_cancellation_complete(
-            asyncio.to_thread(context.operations.describe, request.session_id, request.definition_id),
-            task_name="profile-worker-description",
-        )
-        write_document(
-            context.channel,
-            ProfileWorkerOperationContract(
-                identity=context.custody.identity,
-                request_id=request.request_id,
-                contract=description.contract,
-                request_json_schema=description.request_json_schema,
-            ),
-            deadline=time.monotonic() + 5,
-        )
-        return "handled"
     if isinstance(request, ProfileWorkerSettlementRequest):
         settled = await context.operations.settlement(request.operation_identity, timeout=request.wait_seconds)
         write_document(
@@ -186,9 +167,7 @@ async def _handle_metadata_control(context: _WorkerControl, request: object) -> 
     return None
 
 
-async def _handle_human_control(
-    context: _WorkerControl, request: object, failed: asyncio.Event
-) -> _ControlDisposition | None:
+async def _handle_human_control(context: _WorkerControl, request: object) -> _ControlDisposition | None:
     if not isinstance(request, ProfileWorkerControlRequest) or request.action not in {"password", "receipt"}:
         return None
     with (
@@ -199,15 +178,6 @@ async def _handle_human_control(
             candidate, login = context.human.authenticate(secret)
         else:
             candidate, login = context.human.resume(secret, login_id=request.originating_login_id)
-    try:
-        context.operations.prepare()
-    except BaseException as primary:
-        try:
-            context.human.cancel()
-        except BaseException as cleanup:
-            _worker_cleanup.retain_task_failures(primary, (cleanup,))
-            failed.set()
-        raise
     write_document(
         context.channel,
         ProfileWorkerHumanOutcome(
@@ -218,6 +188,7 @@ async def _handle_human_control(
         ),
         deadline=time.monotonic() + 5,
     )
+    # A sign-in never composes the registry; the first operation does.
     return "handled"
 
 
@@ -253,7 +224,10 @@ async def _handle_action_control(context: _WorkerControl, request: object) -> _C
 async def _dispatch_control_request(context: _WorkerControl, request: object) -> _ControlDisposition:
     if isinstance(
         request,
-        ProfileWorkerSubmitRequest
+        # A contract may compose the registry; it travels on the operation
+        # channel so sign-in and custody control never queue behind it.
+        ProfileWorkerContractRequest
+        | ProfileWorkerSubmitRequest
         | ProfileWorkerSubmissionBeginRequest
         | ProfileWorkerSubmissionChunkRequest
         | ProfileWorkerSubmissionFinishRequest
@@ -266,13 +240,18 @@ async def _dispatch_control_request(context: _WorkerControl, request: object) ->
         | ProfileWorkerSecretRequest,
     ):
         raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    if isinstance(request, ProfileWorkerAgentCredentialsRequest):
+        from .worker_agent_credentials import serve_agent_credentials
+
+        await asyncio.to_thread(serve_agent_credentials, context.channel, context.custody, request)
+        return "handled"
     disposition = await _handle_custody_control(context, request)
     if disposition is not None:
         return disposition
     disposition = await _handle_metadata_control(context, request)
     if disposition is not None:
         return disposition
-    disposition = await _handle_human_control(context, request, context.failed)
+    disposition = await _handle_human_control(context, request)
     if disposition is not None:
         return disposition
     disposition = await _handle_action_control(context, request)

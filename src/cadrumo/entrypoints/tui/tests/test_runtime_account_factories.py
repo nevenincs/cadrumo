@@ -96,6 +96,7 @@ class _StrictClient(RuntimeFrontendClient):
             receipt_removed=True,
             keychain_removed=True,
             automation_enabled=True,
+            agent_access_remains=False,
         )
 
     @override

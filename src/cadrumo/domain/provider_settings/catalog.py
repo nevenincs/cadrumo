@@ -1,10 +1,13 @@
-"""The declarative model-provider catalog and its strict loader.
+"""The cadrumo-agent lane catalog and its strict loader.
 
-Which providers a profile can hold a credential for, the kind of credential
-each takes, its default gateway URL and the Cadrumo consumers allowed to use it
-are bundled data (``cadrumo/_data/provider_settings/catalog.toml``), not code
-branches. This module validates that document once per process and answers
-lookups by provider id.
+Each entry is one lane: one way into a cadrumo-agent provider identity, over its
+API or through its CLI. The lane id is the agent's own execution-lane id;
+``provider`` is the identity the lane belongs to, so the Claude API lane and the
+Claude CLI lane share ``provider = "claude"``. Which credential each lane takes,
+its default gateway URL and the agent settings field that receives the
+credential are bundled data (``cadrumo/_data/provider_settings/catalog.toml``)
+generated from the agent's own definitions by a development generator, never
+hand-edited. This module validates that document once per process.
 
 The catalog lives beside the other shipped runtime data rather than under
 ``_data/registry/cadrumo``: that tree is a compiler input excluded from every
@@ -30,18 +33,24 @@ from ...core.resources.bundled_data import packaged_data
 from ...core.toml import TomlDecodeError, parse_toml
 
 PROVIDER_CATALOG_DATA_PARTS: Final[tuple[str, ...]] = ("provider_settings", "catalog.toml")
-PROVIDER_CATALOG_SCHEMA_VERSION: Final[int] = 1
 BASE_URL_MAX_LENGTH: Final[int] = 2048
+_BASE_URL_FORBIDDEN: Final[frozenset[str]] = frozenset("*?[%$")
 
-_PROVIDER_ID_PATTERN: Final[str] = r"^[a-z][a-z0-9_]{0,31}$"
+_PROVIDER_ID_PATTERN: Final[str] = r"^[a-z][a-z0-9_]{0,39}$"
 _PROVIDER_ID: Final[re.Pattern[str]] = re.compile(_PROVIDER_ID_PATTERN)
 
 ProviderId = Annotated[str, StringConstraints(pattern=_PROVIDER_ID_PATTERN)]
-"""A catalog provider identifier: a lowercase storage-safe slug."""
+"""A lane or provider identity id: a lowercase storage-safe slug."""
+
+CredentialField = Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_]{0,63}$")]
+"""The name of the cadrumo-agent settings field that receives a credential."""
+
+CliProgram = Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_-]{0,63}$")]
+"""The executable name a cli lane runs."""
 
 
 class ProviderAuthKind(StrEnum):
-    """How one provider authenticates."""
+    """How one lane authenticates."""
 
     API_KEY = "api_key"
     API_KEY_WITH_BASE_URL = "api_key_with_base_url"
@@ -55,7 +64,7 @@ class ProviderAuthKind(StrEnum):
 
     @property
     def accepts_provider_sign_in(self) -> bool:
-        """Return whether the provider's own CLI sign-in can serve the assistant."""
+        """Return whether the provider's own CLI sign-in can serve the lane."""
         return self in {ProviderAuthKind.OAUTH_OR_PROVIDER_SIGN_IN, ProviderAuthKind.PROVIDER_SIGN_IN_ONLY}
 
     @property
@@ -65,10 +74,20 @@ class ProviderAuthKind(StrEnum):
 
 
 class ProviderConsumer(StrEnum):
-    """A Cadrumo capability that consumes provider credentials."""
+    """A capability that consumes lane credentials.
 
-    EXTRACTION = "extraction"
+    Only the agent's assistant lanes read provider settings; Cadrumo's own
+    extraction keeps its separate configuration.
+    """
+
     ASSISTANT = "assistant"
+
+
+class ProviderTransport(StrEnum):
+    """How a lane reaches its provider identity."""
+
+    API = "api"
+    CLI = "cli"
 
 
 def validate_https_base_url(value: str) -> str:
@@ -77,14 +96,19 @@ def validate_https_base_url(value: str) -> str:
     Only an absolute ``https`` URL with a host is accepted. Embedded
     credentials, a query and a fragment are refused, because a base URL is
     stored as non-secret data and joined with request paths by the consumer.
+    The desktop host applies the same rule before a value reaches a child
+    process: printable ASCII only, no leading ``-``, and none of the shell or
+    pattern characters ``* ? [ % $``.
 
     Raises:
         ValueError: When the URL is not an acceptable gateway URL.
     """
     if not value or len(value) > BASE_URL_MAX_LENGTH or value != value.strip():
         raise ValueError("base URL must be a non-empty trimmed string within the length bound")
-    if any(character.isspace() or ord(character) < 0x20 or ord(character) == 0x7F for character in value):
-        raise ValueError("base URL must not contain whitespace or control characters")
+    if any(character.isspace() or not 0x20 < ord(character) < 0x7F for character in value):
+        raise ValueError("base URL must be printable ASCII without whitespace")
+    if value.startswith("-") or any(character in _BASE_URL_FORBIDDEN for character in value):
+        raise ValueError("base URL must not start with '-' or carry a shell or pattern character")
     parts = urlsplit(value)
     if parts.scheme != "https":
         raise ValueError("base URL must use https")
@@ -98,18 +122,26 @@ def validate_https_base_url(value: str) -> str:
 
 
 class ProviderCatalogEntry(BaseModel):
-    """One provider the profile can manage a credential for."""
+    """One cadrumo-agent lane a profile can manage a credential for."""
 
     model_config = _STRICT_FROZEN
 
     id: ProviderId
+    """The agent's execution-lane id; commands address a lane by it."""
+    provider: ProviderId
+    """The agent provider identity this lane reaches."""
+    transport: ProviderTransport
     display_name: str = Field(min_length=1, max_length=64)
+    """The identity's product name, the same on every lane of that identity."""
     auth_kind: ProviderAuthKind
     consumers: tuple[ProviderConsumer, ...] = Field(min_length=1)
     default_base_url: str | None = None
+    credential_field: CredentialField | None = None
+    """The agent settings field that receives this lane's credential; the frame is keyed by it."""
+    cli_program: CliProgram | None = None
+    """The executable a cli lane runs; absent for an api lane."""
     development_setting: str | None = Field(default=None, min_length=1)
-    agent_credential_id: ProviderId | None = None
-    """The id cadrumo-agent keys this credential by in the hosted-agent frame, if it receives one."""
+    """The Cadrumo settings field read for an unset record in development storage mode only."""
 
     @field_validator("default_base_url")
     @classmethod
@@ -134,55 +166,71 @@ class ProviderCatalogEntry(BaseModel):
         if len(set(self.consumers)) != len(self.consumers):
             raise ValueError("consumers must not repeat")
         if self.default_base_url is not None and not self.auth_kind.accepts_base_url:
-            raise ValueError("only api_key_with_base_url providers declare a default base URL")
-        if ProviderConsumer.EXTRACTION in self.consumers and self.auth_kind is not ProviderAuthKind.API_KEY:
-            raise ValueError("extraction consumes direct API keys only")
+            raise ValueError("only api_key_with_base_url lanes declare a default base URL")
+        if (self.transport is ProviderTransport.CLI) != (self.cli_program is not None):
+            raise ValueError("a cli lane names its program and an api lane names none")
+        if self.transport is ProviderTransport.API and self.auth_kind is not ProviderAuthKind.API_KEY:
+            raise ValueError("an api lane authenticates with a direct API key")
+        if self.id != f"{self.provider}_{self.transport.value}":
+            raise ValueError("a lane id is its provider and transport joined by an underscore")
+        if (self.credential_field is not None) != self.auth_kind.accepts_direct_credential:
+            raise ValueError("a lane names a credential field exactly when it takes a credential")
         if self.development_setting is not None and not self.auth_kind.accepts_direct_credential:
-            raise ValueError("a provider-sign-in-only provider has no development credential")
-        if self.agent_credential_id is not None and (
-            ProviderConsumer.ASSISTANT not in self.consumers or self.auth_kind.accepts_provider_sign_in
-        ):
-            raise ValueError("only a direct assistant key reaches the hosted agent")
+            raise ValueError("a provider-sign-in-only lane has no development credential")
         return self
 
     def serves(self, consumer: ProviderConsumer) -> bool:
-        """Return whether ``consumer`` may use this provider's credential."""
+        """Return whether ``consumer`` may use this lane's credential."""
         return consumer in self.consumers
 
 
+class ProviderCatalogSource(BaseModel):
+    """Which cadrumo-agent definitions the catalog was generated from."""
+
+    model_config = _STRICT_FROZEN
+
+    agent_version: str = Field(min_length=1, max_length=64)
+    agent_source_digest: Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{64}$")]
+
+
 class ProviderCatalog(BaseModel):
-    """The validated provider catalog."""
+    """The validated lane catalog."""
 
     model_config = _STRICT_FROZEN
 
     schema_version: Literal[1]
+    source: ProviderCatalogSource
     providers: tuple[ProviderCatalogEntry, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
-    def _provider_ids_are_unique(self) -> Self:
+    def _lanes_are_coherent(self) -> Self:
         ids = [entry.id for entry in self.providers]
         if len(ids) != len(set(ids)):
-            raise ValueError("provider ids must be unique")
-        agent_ids = [entry.agent_credential_id for entry in self.providers if entry.agent_credential_id is not None]
-        if len(agent_ids) != len(set(agent_ids)):
-            raise ValueError("agent credential ids must be unique")
+            raise ValueError("lane ids must be unique")
+        fields = [entry.credential_field for entry in self.providers if entry.credential_field is not None]
+        if len(fields) != len(set(fields)):
+            raise ValueError("credential fields must be unique")
+        names: dict[str, str] = {}
+        for entry in self.providers:
+            if names.setdefault(entry.provider, entry.display_name) != entry.display_name:
+                raise ValueError("every lane of one identity carries the same display name")
         return self
 
     @property
     def provider_ids(self) -> tuple[str, ...]:
-        """Return every provider id in catalog order."""
+        """Return every lane id in catalog order."""
         return tuple(entry.id for entry in self.providers)
 
     def entry(self, provider_id: str) -> ProviderCatalogEntry | None:
-        """Return the entry for ``provider_id``, or ``None`` when it is not catalogued."""
+        """Return the lane ``provider_id`` names, or ``None`` when it is not catalogued."""
         if not _PROVIDER_ID.fullmatch(provider_id):
             return None
         return next((entry for entry in self.providers if entry.id == provider_id), None)
 
 
 def parse_provider_catalog(text: str) -> ProviderCatalog:
-    """Parse and strictly validate a provider catalog document.
+    """Parse and strictly validate a lane catalog document.
 
     Raises:
         CoreValidationError: When the document is not valid TOML or does not
@@ -205,19 +253,22 @@ def parse_provider_catalog(text: str) -> ProviderCatalog:
 
 @cache
 def load_provider_catalog() -> ProviderCatalog:
-    """Return the bundled provider catalog, validated once per process."""
+    """Return the bundled lane catalog, validated once per process."""
     return parse_provider_catalog(packaged_data(*PROVIDER_CATALOG_DATA_PARTS).read_text(encoding="utf-8"))
 
 
 __all__ = [
     "BASE_URL_MAX_LENGTH",
     "PROVIDER_CATALOG_DATA_PARTS",
-    "PROVIDER_CATALOG_SCHEMA_VERSION",
+    "CliProgram",
+    "CredentialField",
     "ProviderAuthKind",
     "ProviderCatalog",
     "ProviderCatalogEntry",
+    "ProviderCatalogSource",
     "ProviderConsumer",
     "ProviderId",
+    "ProviderTransport",
     "load_provider_catalog",
     "parse_provider_catalog",
     "validate_https_base_url",

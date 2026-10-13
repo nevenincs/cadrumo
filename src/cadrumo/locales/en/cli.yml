@@ -1,5 +1,13 @@
 cli:
   app:
+    agent:
+      app_help: Serve the hosted assistant for your signed-in profile.
+      serve:
+        agent_source_help: Absolute path of a cadrumo-agent source tree to run the
+          assistant from. Without it, the assistant packaged with Cadrumo runs.
+        help: Start the hosted assistant for your stored sign-in and keep it running
+          until standard input closes. Reads one JSON line with the gateway bearer
+          on standard input and writes JSON event lines on standard output.
     ledger:
       account:
         account_id_help: The own account id, for example acc-01.

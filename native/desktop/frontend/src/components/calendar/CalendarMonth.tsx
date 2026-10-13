@@ -1,6 +1,7 @@
 import { useId, useRef } from "react";
 import { flushSync } from "react-dom";
 import { Button } from "@/components/ui/button";
+import { badgeVariants } from "@/components/ui/badge";
 import { cn } from "@/components/ui/cn";
 import { Icon } from "@/components/ui/icon";
 import {
@@ -15,26 +16,7 @@ import { entryKey, entrySpan } from "@/shell/calendarEntries";
 import { isoDay as day } from "@/shared/dates";
 import { dateFormats } from "@/shared/dateFormats";
 import { useStrings } from "@/shell/strings";
-import type { CalendarUserState } from "@/shell/views";
-import { EVENT_MARK, STATE_MARK } from "./calendarMarks";
-
-// How a filing window is drawn for each of the product's readings: a wash
-// and an edge in the reading's colour, with the words in ink, so the colour
-// never carries the text. Colour is not the only teller: the edge is drawn
-// differently for what is late and what is not known, and a window with
-// room for it carries the reading's mark. What is filed is drawn hollow,
-// what is still to do filled. Where the system forces its own colours the
-// wash and the hue are gone: the edge and the mark remain, and what is
-// filed takes a double edge in place of its hollow.
-const BAR_TONE: Record<CalendarUserState, string> = {
-  // The plainest reading has the quietest edge: still three to one against
-  // the card and against its own fill, in both schemes, and no more.
-  due: "border-muted-foreground/80 bg-secondary",
-  late: "border-dashed border-destructive bg-destructive/10",
-  filed:
-    "border-success bg-transparent forced-colors:border-y-(length:--forced-double-edge) forced-colors:border-double",
-  unknown: "border-dotted border-warning bg-warning/10",
-};
+import { EVENT_MARK, STATE_MARK, STATE_TONE } from "./calendarMarks";
 
 export function CalendarMonth({
   month,
@@ -216,19 +198,20 @@ export function CalendarMonth({
                     gridRow: lane + 2,
                   }}
                   className={cn(
-                    "calendar-bar @container flex h-control-xs min-w-0 cursor-pointer items-center border-y px-1 text-xs font-medium text-foreground",
+                    badgeVariants({
+                      variant: STATE_TONE[bar.entry.user_state],
+                    }),
+                    "calendar-bar @container flex h-control-xs w-auto min-w-0 cursor-pointer justify-start gap-0 rounded-none px-1",
                     "scroll-mt-[calc(var(--calendar-head)+--spacing(8))] hover-wash focus-visible:z-(--layer-separator) data-selected:ring-2 data-selected:ring-ring data-selected:ring-inset",
                     // A ring is a shadow, which forced colours do not draw.
                     "forced-colors:data-selected:outline-2 forced-colors:data-selected:-outline-offset-2 forced-colors:data-selected:outline-[Highlight]",
-                    BAR_TONE[bar.entry.user_state],
                     // A window is closed at the end it has inside this week,
                     // and runs to the edge where it goes on.
                     // The gap between one window's end and the next one's start is
                     // given up under a finger, where a day is barely a fingertip
                     // wide and a window of one day needs all of it.
-                    bar.opens && "rounded-l-md border-l pointer-fine:ml-0.5",
-                    bar.closes &&
-                      "rounded-r-md border-r-(length:--calendar-deadline-edge) pointer-fine:mr-0.5",
+                    bar.opens && "rounded-l-full pointer-fine:ml-0.5",
+                    bar.closes && "rounded-r-full pointer-fine:mr-0.5",
                   )}
                   onClick={(event) => {
                     onSelect(key);
@@ -248,21 +231,16 @@ export function CalendarMonth({
                     <Icon
                       name={STATE_MARK[bar.entry.user_state] ?? "info"}
                       size="xs"
-                      className="mr-1 @max-calendar-bar:hidden"
+                      className="mr-1 shrink-0"
                     />
                   )}
                   {/* The Modelo is what a window too short for more keeps. */}
-                  <span
-                    className={cn(
-                      "shrink-0",
-                      !lead && "font-normal text-muted-foreground",
-                    )}
-                  >
+                  <span className={cn("shrink-0", !lead && "font-normal")}>
                     {bar.entry.modelo}
                   </span>{" "}
                   <span
                     className={cn(
-                      "ml-1 min-w-0 truncate font-normal text-muted-foreground @max-calendar-bar:hidden",
+                      "ml-1 min-w-0 truncate font-normal @max-calendar-bar:hidden",
                       !lead && "hidden",
                     )}
                   >

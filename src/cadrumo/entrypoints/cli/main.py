@@ -17,90 +17,64 @@ application functions and pydantic records.
 
 from __future__ import annotations
 
-import json
 import os
 from collections.abc import Collection, Generator
 from contextlib import AbstractContextManager, contextmanager, nullcontext
-from dataclasses import fields, is_dataclass
-from enum import Enum
-from pathlib import Path
-from tempfile import TemporaryDirectory
+from functools import cache
 from typing import TYPE_CHECKING
 
-import typer
-from pydantic import BaseModel
-
-from ...core.errors.hierarchy import InternalInvariantError
-
-if TYPE_CHECKING:
-    from .command_spec import CommandSpec
 from ...core.cli_metadata import is_metadata_invocation as _is_metadata_invocation
 from ...core.product_identity import PRODUCT_IDENTITY as _PRODUCT_IDENTITY
 from ...core.storage_environment import STORAGE_ROOT, storage_directory
 from ...core.type_guards import is_object_collection, is_object_dict
-from ._command_policy import CommandExecutionPolicy as _CommandExecutionPolicy
-from ._command_runtime import build_command_app as _build_command_app
-from ._framework_localisation import (
-    localise_help_section_headers as _localise_help_section_headers,
-)
-from ._framework_localisation import (
-    localise_typer_parse_error_messages as _localise_typer_parse_error_messages,
-)
-from ._stdio import configure_stdio_for_utf8 as _configure_stdio_for_utf8
-from ._stdio import disable_rich_cli_rendering as disable_rich_cli_rendering
 from .command_specs import COMMAND_GRAPH as _COMMAND_GRAPH
-from .common import attach_cli_policy_verdict, resolve_cli_precondition_action
-from .errors import decorate_typer_app as _decorate_typer_app
-from .language_argv import apply_language_argv_to_environment as _apply_language_argv_to_environment
-from .operator_surface_reconciliation import current_operator_surface_reconciliation
 
-# Force UTF-8 on stdout / stderr before any echo, log, or Rich console
-# instantiation. Default Windows terminals expose cp1252; emoji,
-# CJK, the U+2192 arrow used by the review queue, and the § sign
-# in some IVA citations all crash typer.echo on cp1252. See
-# :mod:`._stdio` for the rationale.
-_configure_stdio_for_utf8()
+if TYPE_CHECKING:
+    import typer
 
-# Disable Typer/Click's Rich-based help, error, and traceback rendering
-# for every Typer() app in the command tree (module-level, read live by
-# every render call — see :func:`._stdio.disable_rich_cli_rendering`).
-# Plain text keeps option/argument tables readable regardless of the
-# invoking terminal's real width.
-disable_rich_cli_rendering()
+    from ._command_policy import CommandExecutionPolicy
+    from .command_spec import CommandSpec
 
-CommandExecutionPolicy = _CommandExecutionPolicy
-
-# The command tree is assembled lazily: each leaf command module pulls
-# the application layer and, transitively, the ~0.6 s registry parse.
-# Importing every module just to build the Cadrumo app object made
-# ``aeat --version`` and ``aeat --help`` pay that cost even though they
-# never dispatch into a subcommand. Modules are imported by their
-# :class:`_LazySubcommand` loader only when an operator actually invokes
-# something in the owning subtree (see :mod:`.command_suggestions`).
-# ``--version`` / ``--help`` / the bare landing surface short-circuit
-# in the callbacks below before any subcommand is resolved.
-
-# ---------------------------------------------------------------------
-# Root app + callback
-# ---------------------------------------------------------------------
+# Importing this module costs the declarative command graph and nothing else.
+# Typer, the error boundary, the locale catalogues and every command module are
+# loaded when the app is first built or a command first runs: ``aeat --help``
+# and the import-only consumers of this module must not pay for a dispatch they
+# never make. Each subtree is materialized by its :class:`LazySubcommand`
+# loader only when an operator invokes something in it (see
+# :mod:`.command_suggestions`).
 
 
-app = _build_command_app(_COMMAND_GRAPH)
-_decorate_typer_app(app)
+@cache
+def cli_app() -> typer.Typer:
+    """Build the root Typer app from the command graph, once per process."""
+    from ._command_runtime import build_command_app
+    from ._stdio import configure_stdio_for_utf8, disable_rich_cli_rendering
+    from .errors import decorate_typer_app
+
+    # UTF-8 streams before any echo: default Windows consoles expose cp1252,
+    # on which the review queue's arrow and IVA citations' section sign crash
+    # typer.echo (see :mod:`._stdio`). Plain-text help keeps option tables
+    # readable whatever the terminal's real width.
+    configure_stdio_for_utf8()
+    disable_rich_cli_rendering()
+    app = build_command_app(_COMMAND_GRAPH)
+    decorate_typer_app(app)
+    return app
 
 
 def _declared_execution_policy_for_cli_path(
     cli_path: tuple[str, ...],
-) -> _CommandExecutionPolicy:
+) -> CommandExecutionPolicy:
     declared = _COMMAND_GRAPH.resolve_path((_PRODUCT_IDENTITY.cli_executable, *cli_path))
     return _execution_policy_from_spec(declared)
 
 
-def _execution_policy_from_spec(spec: CommandSpec) -> _CommandExecutionPolicy:
+def _execution_policy_from_spec(spec: CommandSpec) -> CommandExecutionPolicy:
     from ...application.operator_surface.command_ports import CommandCapabilityClass
+    from ._command_policy import CommandExecutionPolicy
 
     declared = spec.policy
-    return _CommandExecutionPolicy(
+    return CommandExecutionPolicy(
         classification=CommandCapabilityClass(
             declared.capabilities,
             declared.side_effects,
@@ -115,7 +89,7 @@ def _execution_policy_from_spec(spec: CommandSpec) -> _CommandExecutionPolicy:
 
 def command_execution_policy_for_cli_path(
     cli_path: tuple[str, ...],
-) -> _CommandExecutionPolicy:
+) -> CommandExecutionPolicy:
     """Return CommandSpec-owned policy for one live path.
 
     The concrete policy type remains owned by the CLI command graph. This
@@ -125,9 +99,6 @@ def command_execution_policy_for_cli_path(
     return _declared_execution_policy_for_cli_path(cli_path)
 
 
-#: The per-verb input-schema projection re-exported from this facade. The module
-#: walks the live command tree and pulls in the operator-action catalogue, so it
-#: stays off the eager import path with the other lazy re-exports below.
 def main() -> None:
     """Console-script entry point.
 
@@ -139,16 +110,23 @@ def main() -> None:
     render their ``tr(...)``-bound help, so the flag genuinely localises help
     text (see :mod:`.language_argv`).
     The Rich ``--help`` section headers are then rebound to the same resolved
-    locale (see :func:`_localise_help_section_headers`).
+    locale (see :func:`cadrumo.entrypoints.cli._framework_localisation.localise_help_section_headers`).
     """
     import sys
 
+    import typer
+
+    from ._framework_localisation import localise_help_section_headers, localise_typer_parse_error_messages
+    from ._stdio import configure_stdio_for_utf8
+    from .language_argv import apply_language_argv_to_environment
+
+    configure_stdio_for_utf8()
     arguments = sys.argv[1:]
     if arguments == ["--cadrumo-command-surface"]:
         _emit_command_surface_manifest()
         return
     metadata_invocation = _is_metadata_invocation(arguments)
-    if _apply_language_argv_to_environment(arguments) is not None:
+    if apply_language_argv_to_environment(arguments) is not None:
         # load_settings() holds a process-wide Settings singleton cached by
         # the active-profile pointer, not by env var (core/config.py,
         # _constructed_settings), so the CADRUMO_OUTPUT_LANGUAGE write above is
@@ -163,8 +141,8 @@ def main() -> None:
         from ...core.config import reset_settings_cache
 
         reset_settings_cache()
-    _localise_help_section_headers()
-    _localise_typer_parse_error_messages()
+    localise_help_section_headers()
+    localise_typer_parse_error_messages()
     # Route the Cl@ve auth-wait progress banner (which carries the AEAT
     # verification code the operator must confirm in their Cl@ve app) to
     # stderr, so a headless operator sees it during the wait instead of
@@ -181,7 +159,7 @@ def main() -> None:
 
             progress_sink = operator_progress_sink(_emit_operator_progress)
         with _metadata_state_isolation(arguments), progress_sink:
-            app(prog_name=_PRODUCT_IDENTITY.cli_executable)
+            cli_app()(prog_name=_PRODUCT_IDENTITY.cli_executable)
 
 
 def _pointer_repair_scope(arguments: list[str]) -> AbstractContextManager[None]:
@@ -213,6 +191,7 @@ def _admit_authority_at_startup() -> None:
     )
     from ...core.config_state_root import FormerProductStateError
     from ...core.errors.hierarchy import ActiveProfilePointerError, CadrumoError
+    from .common import attach_cli_policy_verdict
     from .errors import CliRefusedBoundaryError, emit_error_and_exit, project_cli_boundary_error
 
     try:
@@ -250,6 +229,10 @@ def _metadata_state_isolation(arguments: list[str]) -> Generator[None]:
     # Metadata commands still isolate themselves from the operator's active
     # database, while their throwaway files follow the configured Cadrumo temp
     # directory instead of the OS-wide temp directory.
+    from pathlib import Path
+    from tempfile import TemporaryDirectory
+
+    from ...core.errors.hierarchy import InternalInvariantError
     from ...core.storage_taxonomy import StorageCategory
     from ...core.storage_taxonomy_locations import storage_location
 
@@ -278,6 +261,8 @@ def _metadata_state_isolation(arguments: list[str]) -> Generator[None]:
 
 async def _emit_operator_progress(progress: object) -> None:
     """Write an in-process operator progress banner to stderr, keeping stdout pure."""
+    import typer
+
     from ...core.operator_progress import OperatorProgress
 
     if not isinstance(progress, OperatorProgress):
@@ -294,6 +279,11 @@ def _jsonable_command_surface_value(value: object) -> object:
     intentionally local to the CLI transport: the application port owns the
     wire records, while this root owns the graph-specific dataclass projection.
     """
+    from dataclasses import fields, is_dataclass
+    from enum import Enum
+
+    from pydantic import BaseModel
+
     if isinstance(value, Enum):
         return value.value
     if is_dataclass(value) and not isinstance(value, type):
@@ -316,6 +306,10 @@ def _emit_command_surface_manifest() -> None:
     therefore remain authoritative in the CLI composition root without making
     the harness import a sibling entrypoint.
     """
+    import json
+
+    import typer
+
     from .command_schema import command_registration_projection, command_schema_refs, command_schema_type
     from .operator_surface_reconciliation import recorded_command_operation_join
     from .verb_input_schema import build_verb_input_schemas, is_exposable_command
@@ -363,12 +357,9 @@ def _emit_command_surface_manifest() -> None:
 
 
 __all__ = [
-    "CommandExecutionPolicy",
-    "app",
+    "cli_app",
     "command_execution_policy_for_cli_path",
-    "current_operator_surface_reconciliation",
     "main",
-    "resolve_cli_precondition_action",
 ]
 
 

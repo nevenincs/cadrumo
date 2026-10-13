@@ -20,13 +20,11 @@ export function AccountMenu({
   onSignIn,
   onSignOut,
   onCreate,
-  onOpenTui,
 }: {
   account: SignInController;
   onSignIn: () => void;
   onSignOut: () => void;
   onCreate: () => void;
-  onOpenTui: () => void;
 }) {
   const t = useStrings();
   const [open, setOpen] = useState(false);
@@ -56,16 +54,11 @@ export function AccountMenu({
     account.offering && account.profiles?.complete
       ? account.profiles.profiles
       : [];
-  const handover =
-    ((!account.canSignIn && account.gated) || phase === "no-profile") &&
-    phase !== "checking" &&
-    phase !== "starting";
   const hasActions =
     signedIn ||
     choices.length > 0 ||
     account.canSignIn ||
-    (account.offering && account.canCreate) ||
-    handover;
+    (account.offering && account.canCreate);
   return (
     <DropdownMenu
       modal={false}
@@ -172,19 +165,6 @@ export function AccountMenu({
                   {t("desktop.account.new_profile")}
                 </DropdownMenuItem>
               )}
-              {handover && (
-                <DropdownMenuItem
-                  disabled={account.busy}
-                  onSelect={() => transfer(onOpenTui)}
-                >
-                  <Icon name="tui" />
-                  {t(
-                    phase === "no-profile"
-                      ? "desktop.account.create_profile"
-                      : "desktop.signin.open_tui",
-                  )}
-                </DropdownMenuItem>
-              )}
             </>
           )}
         </div>
@@ -205,18 +185,19 @@ export function AccountMenu({
             {t("desktop.signin.profiles_unread")}
           </Alert>
         )}
-        {!account.canSignIn && (
-          <AccountRefusal
-            refusal={account.refusal}
-            seconds={account.retrySeconds}
-          />
+        {/* The reason the last try failed, beside the sign-in it leaves open. */}
+        <AccountRefusal
+          refusal={account.refusal}
+          seconds={account.retrySeconds}
+        />
+        {/* Only what the product says stands is said. The saved setting
+            stays after a sign-out; whether a key can still admit is a
+            separate answer, and null is no answer. */}
+        {account.remaining?.remainingAccess.agentAccessRemains === true && (
+          <Alert icon={<Icon name="info" />}>
+            {t("desktop.account.remaining_access")}
+          </Alert>
         )}
-        {account.remaining &&
-          account.remaining.remainingAccess.automationEnabled !== false && (
-            <Alert icon={<Icon name="info" />}>
-              {t("desktop.account.remaining_access")}
-            </Alert>
-          )}
         {failure && (
           <Alert tone="danger" role="alert" icon={<Icon name="alert" />}>
             {t("desktop.account.sign_out_failed", { code: failure.code })}

@@ -63,7 +63,15 @@ class RuntimeSignInStatusReply(BaseModel):
 
 
 class RuntimeHumanSignedOut(BaseModel):
-    """Human revocation outcome, with deletion and retained automation explicit."""
+    """Human revocation outcome, with deletion and remaining agent access explicit.
+
+    ``automation_enabled`` is the profile's persisted automation setting. It is
+    not access. ``agent_access_remains`` reports whether an agent can still
+    reach the profile after the sign-out: a key the person issued is not tied to
+    the sign-in, so it is true while automation is enabled and an active,
+    unexpired key of an active unattended grant remains, false otherwise, and
+    absent when the automation store could not be read.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["human_signed_out"] = "human_signed_out"
@@ -75,3 +83,4 @@ class RuntimeHumanSignedOut(BaseModel):
     receipt_removed: bool
     keychain_removed: bool
     automation_enabled: bool | None
+    agent_access_remains: bool | None

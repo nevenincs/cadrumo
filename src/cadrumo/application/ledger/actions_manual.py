@@ -119,6 +119,7 @@ from .protocols import (
     RevisionGuardedTransactionCatalogueCoCommitWriterProtocol,
     TransactionCatalogueCoCommitWriterProtocol,
 )
+from .read_ports import LedgerReadPorts
 from .review_projection import ledger_transaction_review_status, project_ledger_review_query
 from .usage_ratio_repository import UsageRatioProfileLoader
 
@@ -493,7 +494,7 @@ def get_manual_transaction(
 def list_manual_transactions(
     *,
     bucket_id: str,
-    ports: LedgerActionPorts,
+    ports: LedgerReadPorts,
     catalogue: TransactionCatalogue | None = None,
 ) -> tuple[ManualLedgerTransactionResult, ...]:
     """Return every transaction in a bucket, sorted by effective date and id.
@@ -522,7 +523,7 @@ def list_manual_transactions(
 def query_ledger_review_rows(
     query: LedgerReviewQuery,
     *,
-    ports: LedgerActionPorts,
+    ports: LedgerReadPorts,
     catalogue: TransactionCatalogue | None = None,
 ) -> LedgerReviewQueryResult:
     """Return review rows for bucket-local ledger transactions.

@@ -1,14 +1,15 @@
 """Child-only Argon2id and password-wrap AEAD execution.
 
 Started as a fresh interpreter for every wrap, unwrap and calibration, so its
-import closure is the standard library, :mod:`argon2` and :mod:`cryptography`
-plus stdlib-only custody leaves. Records arrive as JSON and are checked
+import closure is the standard library, the Argon2 C binding, :mod:`cryptography`
+and stdlib-only custody leaves. The binding is called directly rather than
+through the :mod:`argon2` package, whose import closure (dataclasses,
+inspect, platform, socket) cost several times the binding on this path. Records arrive as JSON and are checked
 against the same rules the pydantic custody records use.
 """
 
 from __future__ import annotations
 
-import argparse
 import base64
 import binascii
 import json
@@ -18,8 +19,7 @@ import time
 from collections.abc import Mapping
 from typing import cast
 
-from argon2.exceptions import Argon2Error
-from argon2.low_level import Type, hash_secret_raw
+from _argon2_cffi_bindings import ffi, lib
 from cryptography.exceptions import InvalidTag
 
 from ..crypto.aes_gcm import GCM_TAG_SIZE, KEY_SIZE, open_sealed, seal
@@ -42,19 +42,18 @@ from ._recovery_secret_codec import decode_recovery_secret
 _CALIBRATION_PASSWORD = b"cadrumo-profile-kdf-calibration-v1"
 
 
+_WORKER_OPTIONS = frozenset(
+    {"--request-fd", "--result-fd", "--request-handle", "--result-handle", "--descriptor-bound"}
+)
+
+
 def main() -> int:
-    parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument("--request-fd", type=int)
-    parser.add_argument("--result-fd", type=int)
-    parser.add_argument("--request-handle", type=int)
-    parser.add_argument("--result-handle", type=int)
-    parser.add_argument("--descriptor-bound", type=int)
-    args = parser.parse_args()
+    args = _parse_worker_options(sys.argv[1:])
     request_fd, result_fd = _worker_fds(args)
     _close_unallowlisted_posix_file_descriptors(
         request_fd=request_fd,
         result_fd=result_fd,
-        descriptor_bound=args.descriptor_bound,
+        descriptor_bound=args.get("--descriptor-bound"),
     )
     try:
         write_kdf_frame(
@@ -79,7 +78,7 @@ def main() -> int:
             )
         else:
             write_kdf_frame(result_fd, KDF_FAILED_FRAME, kind=KDF_FRAME_CONTROL)
-    except (Argon2Error, InvalidTag, ValueError, TypeError, UnicodeError, binascii.Error):
+    except (InvalidTag, ValueError, TypeError, UnicodeError, binascii.Error):
         write_kdf_frame(result_fd, KDF_FAILED_FRAME, kind=KDF_FRAME_CONTROL)
     finally:
         os.close(request_fd)
@@ -108,7 +107,24 @@ def _close_unallowlisted_posix_file_descriptors(
     os.closerange(range_start, descriptor_bound)
 
 
-def _worker_fds(args: argparse.Namespace) -> tuple[int, int]:
+def _parse_worker_options(argv: list[str]) -> dict[str, int]:
+    """Read the supervisor's fixed ``--name value`` integer options.
+
+    Hand-rolled rather than :mod:`argparse`, whose import closure (``re``,
+    ``gettext``) would be paid by every wrap and unwrap. The supervisor builds
+    this argv itself, so anything else is refused outright.
+    """
+    if len(argv) % 2:
+        raise ValueError("profile KDF worker options are malformed")
+    options: dict[str, int] = {}
+    for name, value in zip(argv[::2], argv[1::2], strict=True):
+        if name not in _WORKER_OPTIONS or name in options or not value.isdecimal():
+            raise ValueError("profile KDF worker options are malformed")
+        options[name] = int(value)
+    return options
+
+
+def _worker_fds(args: Mapping[str, int]) -> tuple[int, int]:
     """Resolve the worker's request/result descriptors from either transport.
 
     The ``sys.platform == "win32"`` block, rather than a guard at the call
@@ -117,14 +133,16 @@ def _worker_fds(args: argparse.Namespace) -> tuple[int, int]:
     narrows on, so those references resolve when the tree is analysed for a
     platform that does not ship them.
     """
-    if args.request_fd is not None and args.result_fd is not None:
-        return cast(int, args.request_fd), cast(int, args.result_fd)
-    if sys.platform == "win32" and args.request_handle is not None and args.result_handle is not None:
+    request_fd, result_fd = args.get("--request-fd"), args.get("--result-fd")
+    if request_fd is not None and result_fd is not None:
+        return request_fd, result_fd
+    request_handle, result_handle = args.get("--request-handle"), args.get("--result-handle")
+    if sys.platform == "win32" and request_handle is not None and result_handle is not None:
         import msvcrt
 
         return (
-            msvcrt.open_osfhandle(args.request_handle, os.O_RDONLY),
-            msvcrt.open_osfhandle(args.result_handle, os.O_WRONLY),
+            msvcrt.open_osfhandle(request_handle, os.O_RDONLY),
+            msvcrt.open_osfhandle(result_handle, os.O_WRONLY),
         )
     raise ValueError("profile KDF worker pipe handles are incomplete")
 
@@ -202,16 +220,31 @@ def _wrap(payload: Mapping[str, object], *, recovery: bool = False) -> bytes:
 
 
 def _derive_key(*, secret: bytes, kdf: KdfParameterValues) -> bytes:
-    return hash_secret_raw(
-        secret=secret,
-        salt=_decode_b64(kdf.salt_b64),
-        time_cost=kdf.iterations,
-        memory_cost=kdf.memory_mib * 1024,
-        parallelism=kdf.parallelism,
-        hash_len=kdf.output_bytes,
-        type=Type.ID,
-        version=kdf.version,
+    """Derive the raw Argon2id key exactly as ``argon2.low_level.hash_secret_raw`` does.
+
+    A refusal from the library is a :class:`ValueError`, which :func:`main`
+    turns into the failure frame like every other invalid request.
+    """
+    salt = _decode_b64(kdf.salt_b64)
+    output = ffi.new("uint8_t[]", kdf.output_bytes)
+    status = lib.argon2_hash(
+        kdf.iterations,
+        kdf.memory_mib * 1024,
+        kdf.parallelism,
+        ffi.new("uint8_t[]", secret),
+        len(secret),
+        ffi.new("uint8_t[]", salt),
+        len(salt),
+        output,
+        kdf.output_bytes,
+        ffi.NULL,
+        0,
+        lib.Argon2_id,
+        kdf.version,
     )
+    if status != lib.ARGON2_OK:
+        raise ValueError("profile KDF derivation was refused by Argon2")
+    return bytes(ffi.buffer(output, kdf.output_bytes))
 
 
 def _decode_b64(value: object) -> bytes:

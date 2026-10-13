@@ -38,6 +38,14 @@ export type Scenario = {
     submit: SubmitOutcome;
     /** Sign-out answers, or rejects with this host failure. */
     signOutFailure?: HostErrorCode;
+    /** What the product reports as left standing once sign-out answers: the
+     * person's saved automation setting, and whether a key issued for an
+     * external agent can still admit. Where it is left out, the setting is on
+     * and no issued key can admit. */
+    signOutAccess?: {
+      automationEnabled: boolean | null;
+      agentAccessRemains: boolean | null;
+    };
     /** The active profile's name; null when the host knows none. */
     profile?: string | null;
     /** What creating a profile meets. Accepted where it is left out. */
@@ -330,6 +338,18 @@ export const SCENARIOS: readonly Scenario[] = [
   },
   {
     ...base,
+    id: "signed-in-keys-issued",
+    title: "Signed in, keys issued",
+    summary:
+      "A live sign-in is present and a key issued for an external agent can still admit; signing out reports that, since keys do not follow the sign-in.",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      submit: { kind: "accept" },
+      signOutAccess: { automationEnabled: true, agentAccessRemains: true },
+    },
+  },
+  {
+    ...base,
     id: "wrong-password",
     title: "Wrong password",
     summary: "Every submission is refused with CREDENTIAL_REJECTED.",
@@ -357,7 +377,7 @@ export const SCENARIOS: readonly Scenario[] = [
     id: "profile-locked",
     title: "Profile locked",
     summary:
-      "Status carries PROFILE_LOCKED: the view hands over to the TUI's own resume.",
+      "Status carries PROFILE_LOCKED: the refusal shows beside the sign-in form, which stays offered and signs in as ever.",
     signIn: {
       status: {
         ...signedOut,
@@ -375,7 +395,7 @@ export const SCENARIOS: readonly Scenario[] = [
     id: "no-profile",
     title: "No active profile, no profile commands",
     summary:
-      "A host that cannot list or create profiles, as the desktop host is today, and names none: the way on is the TUI.",
+      "A host that cannot list or create profiles, as the desktop host is today, and names none: the dialog and the menu say there is no profile, and offer no sign-in.",
     signIn: { status: signedOut, submit: { kind: "accept" }, profile: null },
     profiles: "absent",
   },
@@ -828,7 +848,7 @@ export const SCENARIOS: readonly Scenario[] = [
     id: "tui-unavailable",
     title: "TUI cannot start",
     summary:
-      "Signed out, and every session fails to start: carrying on in the TUI comes back to the gate.",
+      "Signed out, and every session fails to start: sign-in is still offered, and once one is accepted the pane says the session could not start.",
     signIn: { status: signedOut, submit: { kind: "accept" } },
     terminals: "failed",
   },

@@ -13,7 +13,6 @@ import {
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/components/ui/cn";
 import { Empty, EmptyDescription, EmptyMedia } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
@@ -608,7 +607,6 @@ export const RecordList = memo(function RecordList({
     states.length > 0 &&
     states.every(([, state]) => state.kind === "available") &&
     visible.length === 0;
-  const chip = "shrink-0 rounded-full";
   // Follow stands where each shape of the bar wants it: last in a wide bar,
   // after the level in a narrow one, and first in the one-row bar of a short
   // panel, where it also stays put while the rest scrolls sideways under it.
@@ -616,9 +614,9 @@ export const RecordList = memo(function RecordList({
   // it in the order the eye does.
   const followButton = (place: string) => (
     <Button
-      variant="outline"
+      variant="pill"
       size="sm"
-      className={cn(chip, place)}
+      className={place}
       data-follow=""
       aria-pressed={follow}
       title={t("desktop.logs.follow_hint")}
@@ -664,7 +662,7 @@ export const RecordList = memo(function RecordList({
       <div className="flex shrink-0 flex-col gap-1.5 border-b px-2.5 py-1.5 @4xl:flex-row @4xl:items-center panel-short:flex-row panel-short:items-center panel-short:scroll-cue-x panel-short:overflow-x-auto panel-short:[scrollbar-width:none] panel-short:[&::-webkit-scrollbar]:hidden">
         <div className="flex min-w-0 items-center gap-1.5 @4xl:contents panel-short:contents panel-short:*:shrink-0">
           {followButton(
-            "sticky left-0 z-(--layer-separator) hidden bg-background panel-short:inline-flex",
+            "sticky left-0 z-(--layer-separator) hidden panel-short:inline-flex",
           )}
           <Input
             ref={filterInput}
@@ -711,9 +709,8 @@ export const RecordList = memo(function RecordList({
             {sources.map((source) => (
               <Button
                 key={source}
-                variant="outline"
+                variant="pill"
                 size="sm"
-                className={chip}
                 aria-pressed={!filters.hiddenSources.includes(source)}
                 onClick={() =>
                   setFilters({
@@ -730,9 +727,8 @@ export const RecordList = memo(function RecordList({
           </div>
           {filters.logger && (
             <Button
-              variant="outline"
+              variant="pill"
               size="sm"
-              className={chip}
               aria-pressed="true"
               aria-label={`${t("desktop.logs.clear_logger")}: ${shortLogger(filters.logger)}`}
               title={t("desktop.logs.clear_logger")}

@@ -47,7 +47,7 @@ test("settings remain usable during startup", async ({ page }) => {
   await page.goto("/scenarios.html?scenario=runtime-starting&latency=0");
   await expect(ghost(page).first()).toBeVisible();
   await page
-    .getByRole("button", { name: label("desktop.rail.settings") })
+    .getByRole("button", { name: label("desktop.rail.settings"), exact: true })
     .click();
   await expect(page.locator(".settings")).toBeVisible();
   expect(await calls(page, "signIn")).toBe(0);

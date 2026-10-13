@@ -17,10 +17,9 @@ from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .evidence import PurchaseInvoiceEvidence
 from .protocols import (
-    BucketEventHistoryCoCommitWriterProtocol,
     InvoiceCatalogueCoCommitWriterProtocol,
-    TransactionCatalogueCoCommitWriterProtocol,
 )
+from .read_ports import LedgerReadPorts
 from .usage_ratio_repository import UsageRatioProfileLoader
 
 if TYPE_CHECKING:
@@ -28,12 +27,9 @@ if TYPE_CHECKING:
 
 
 @dataclass(frozen=True)
-class LedgerActionPorts:
+class LedgerActionPorts(LedgerReadPorts):
     """All persistence ports one ledger action may need for one bucket."""
 
-    operation: PinnedAuthorityOperation
-    transaction_repository: TransactionCatalogueCoCommitWriterProtocol
-    bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol
     invoice_repository: InvoiceCatalogueCoCommitWriterProtocol
     attachment_store: AttachmentStoreProtocol
     usage_ratio_profile: UsageRatioProfile

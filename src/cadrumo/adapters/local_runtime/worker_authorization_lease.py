@@ -9,7 +9,6 @@ from importlib.metadata import version
 from pathlib import Path
 from uuid import uuid4
 
-from ...application.local_reader_contracts import LOCAL_READER_OPERATION_DEFINITION_ID
 from ...application.runtime.approval_binding import RuntimeApprovalBinding
 from ...application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.profile_access import RuntimeAccessRefusal
@@ -177,6 +176,10 @@ class WorkerAuthorizationLease:
         nothing. Nothing this process located is sent: the runtime resolves the
         program and its environment itself.
         """
+        # The provisioning contracts reach the model installer; only this
+        # operation's own request loads them, never a worker's start.
+        from ...application.local_reader_contracts import LOCAL_READER_OPERATION_DEFINITION_ID
+
         channel, permit, request = self._channel, self._permit, self.request
         if (
             channel is None

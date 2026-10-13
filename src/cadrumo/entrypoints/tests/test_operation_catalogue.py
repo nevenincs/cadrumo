@@ -501,11 +501,15 @@ def _shared_seam_exposures() -> frozenset[str]:
 
 
 def _exposures_for(projection: OperationFrontendProjection) -> frozenset[str]:
-    """Every operation a projection can actually reach in the source tree."""
+    """Every operation a projection can actually reach in the source tree.
+
+    A frontend with no package of its own, as the agent host, which reaches
+    operations only through the MCP server its agent starts, names none.
+    """
     references = _references_by_package()
-    prefix = _FRONTEND_PACKAGES[projection]
+    prefix = _FRONTEND_PACKAGES.get(projection)
     own: set[str] = set()
-    for path in _paths_under(prefix):
+    for path in () if prefix is None else _paths_under(prefix):
         own |= references.get(path, _NO_IDS)
     return frozenset(own | _shared_seam_exposures())
 

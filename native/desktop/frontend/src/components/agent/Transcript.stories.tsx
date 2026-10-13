@@ -67,7 +67,7 @@ export const EXCHANGE: TranscriptItem[] = [
     kind: "tool",
     id: "t1",
     label: "Read the attached documents",
-    state: "done",
+    state: "completed",
   },
   {
     kind: "agent",
@@ -106,7 +106,7 @@ const LONG: TranscriptItem[] = QUESTIONS.flatMap((question, index) => [
     kind: "tool",
     id: `r${index}`,
     label: index % 2 === 0 ? "Read ledger entries" : "Read filed declarations",
-    state: "done",
+    state: "completed",
   },
   {
     kind: "agent",
@@ -127,7 +127,7 @@ const WORKING: TranscriptItem[] = [
     kind: "tool",
     id: "w2",
     label: "Read the filing calendar",
-    state: "done",
+    state: "completed",
   },
   {
     kind: "agent",
@@ -146,22 +146,23 @@ const TOOLS: TranscriptItem[] = [
   {
     kind: "tool",
     id: "x2",
-    label: "Read ledger entries",
-    state: "done",
-    detail: "48 entries from April to June",
+    label: "ledger_list",
+    state: "completed",
+    detail: "Reads",
   },
   {
     kind: "tool",
     id: "x3",
-    label: "Read filed declarations from the tax agency",
-    state: "refused",
-    detail: "No signed-in AEAT session for this profile",
+    label: "aeat_filed_declarations",
+    state: "failed",
+    detail: "Fetches",
   },
   {
     kind: "tool",
     id: "x4",
-    label: "Compare the ledger with the saved 303",
-    state: "running",
+    label: "ledger_compare",
+    state: "in_progress",
+    detail: "Searches",
   },
   { kind: "agent", id: "x5", state: "working", text: "" },
 ];
@@ -279,7 +280,7 @@ export const AgentWaitingOnPerson: Story = {
 };
 
 export const ToolActivity: Story = {
-  name: "Tool activity: done, refused, running",
+  name: "Tool activity: completed, failed, in progress",
   args: { items: TOOLS },
 };
 

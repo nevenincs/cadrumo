@@ -41,9 +41,9 @@ from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .action_ports import LedgerActionPortsFactory
 from .history_query import LedgerHistoryQuery, LedgerHistoryV1, read_ledger_history
 from .id_resolution import resolve_lineage_transaction_id
+from .read_ports import LedgerReadPortsFactory
 
 LEDGER_HISTORY_OPERATION_DEFINITION_ID = "ledger.history"
 LEDGER_HISTORY_TYPED_OPERATION_DEFINITION_ID = "ledger.history.typed"
@@ -230,26 +230,28 @@ class LedgerHistoryTypedProjection(BaseModel):
 
 
 def _selected_history(
-    ports_factory: LedgerActionPortsFactory, payload: LedgerHistoryRequest, operation: PinnedAuthorityOperation
+    ports_factory: LedgerReadPortsFactory, payload: LedgerHistoryRequest, operation: PinnedAuthorityOperation
 ) -> LedgerHistoryV1:
     """Resolve the lineage handle and read its event chain under the pinned authority."""
     bucket_id = str(payload.profile_id)
     ports = ports_factory(bucket_id=bucket_id, operation=operation)
     if ports.transaction_repository.bucket_id != bucket_id or ports.operation is not operation:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    selected = resolve_lineage_transaction_id(payload.transaction_prefix, ports.transaction_repository.load())
+    catalogue = ports.transaction_repository.load()
+    selected = resolve_lineage_transaction_id(payload.transaction_prefix, catalogue)
     return read_ledger_history(
         LedgerHistoryQuery(transaction_id=selected, include_split_siblings=payload.include_split_siblings),
         bucket_id=bucket_id,
         transaction_repository=ports.transaction_repository,
         bucket_event_repository=ports.bucket_event_repository,
+        transaction_catalogue=catalogue,
     )
 
 
 class LedgerHistoryExecutor:
     """Resolve the supplied handle and read its lineage only in worker custody."""
 
-    def __init__(self, ports: LedgerActionPortsFactory) -> None:
+    def __init__(self, ports: LedgerReadPortsFactory) -> None:
         """Retain the ports used for ledger lineage reads."""
         self._ports = ports
 
@@ -279,7 +281,7 @@ class LedgerHistoryExecutor:
 class LedgerHistoryTypedExecutor:
     """Read the same lineage as the history and retain only its declared facts."""
 
-    def __init__(self, ports: LedgerActionPortsFactory) -> None:
+    def __init__(self, ports: LedgerReadPortsFactory) -> None:
         """Retain the ports used for ledger lineage reads."""
         self._ports = ports
 
@@ -308,7 +310,7 @@ class LedgerHistoryTypedExecutor:
         return await capture_read_result(context, read, task_name="ledger-history-typed")
 
 
-def build_ledger_history_definition(ports: LedgerActionPortsFactory) -> OperationDefinition:
+def build_ledger_history_definition(ports: LedgerReadPortsFactory) -> OperationDefinition:
     """Declare a recorded local read without COMMIT or provider effects."""
     return build_single_phase_definition(
         definition_id=LEDGER_HISTORY_OPERATION_DEFINITION_ID,
@@ -321,7 +323,7 @@ def build_ledger_history_definition(ports: LedgerActionPortsFactory) -> Operatio
     )
 
 
-def build_ledger_history_typed_definition(ports: LedgerActionPortsFactory) -> OperationDefinition:
+def build_ledger_history_typed_definition(ports: LedgerReadPortsFactory) -> OperationDefinition:
     """Declare the typed read of the same lineage, without COMMIT or provider effects."""
     return build_single_phase_definition(
         definition_id=LEDGER_HISTORY_TYPED_OPERATION_DEFINITION_ID,

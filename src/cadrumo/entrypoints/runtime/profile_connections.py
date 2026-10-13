@@ -16,6 +16,7 @@ from cadrumo.adapters.persistence.storage.custody.automation_store_composition i
 
 from ...adapters.local_runtime.installation import read_runtime_installation
 from ...adapters.local_runtime.login import capture_runtime_login
+from ...application.agent_host.controller import AgentProcessLauncher
 from ...application.operations.registry import OperationRegistry
 from ...application.runtime.contracts import (
     RuntimeByteChannel,
@@ -45,6 +46,7 @@ from ...core.logging import get_logger
 from ...core.time.clock import now
 from ..operation_composition import build_production_operation_registry
 from .access_management import RuntimeAccessManagement
+from .agent_hosts import RuntimeAgentHosts
 from .bootstrap_delete import RuntimeBootstrapDeleteMixin
 from .bootstrap_reset import RuntimeBootstrapMixin
 from .enrollment_connections import RuntimeEnrollmentConnections
@@ -53,6 +55,7 @@ from .lifecycle_guard import RuntimeLifecycleGuard
 from .notice_observation import NoticeObservation, start_notice_observation
 from .profile_connection_access import ProfileConnectionAccessMixin
 from .profile_connection_admission import ProfileConnectionAdmissionMixin
+from .profile_connection_agents import ProfileConnectionAgentMixin, default_agent_launcher
 from .profile_connection_attendance import (
     AttendedConnection,
     PendingAttendance,
@@ -78,6 +81,7 @@ class RuntimeProfileConnections(
     RuntimeBootstrapDeleteMixin,
     RuntimeInstallationDoorMixin,
     ProfileConnectionPersonActMixin,
+    ProfileConnectionAgentMixin,
     ProfileConnectionAdmissionMixin,
     ProfileConnectionAccessMixin,
     ProfileConnectionAttendanceMixin,
@@ -101,6 +105,7 @@ class RuntimeProfileConnections(
         wall_clock: Callable[[], datetime] = now,
         os_owner_id: str | None = None,
         installation_acts: InstallationActRegistry | None = None,
+        agent_launcher: AgentProcessLauncher | None = None,
     ) -> None:
         """Defer installation/profile/store access until an eligible peer requests login.
 
@@ -131,6 +136,8 @@ class RuntimeProfileConnections(
         # Connections whose approval ended with the person's session; only a new connection may ask again.
         self._attendance_spent: set[UUID] = set()
         self._events = RuntimeSessionEvents()
+        self._agents = RuntimeAgentHosts(revalidate=self.poll)
+        self._agent_launcher = default_agent_launcher() if agent_launcher is None else agent_launcher
         self._notice_connections: dict[UUID, tuple[RuntimeConnectionContext, RuntimeLoginEvidence]] = {}
         self._notice_observation: NoticeObservation | None = None
         self._logins: dict[str, RuntimeLoginEvidence] = {}

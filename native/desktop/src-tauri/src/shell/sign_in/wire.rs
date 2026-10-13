@@ -101,10 +101,16 @@ pub enum ProfileCreateResult {
 /// The notice a listing carries when its observation could not be trusted.
 const INCOHERENT_LISTING: &str = "config.profile.list.incoherent_observation";
 
+/// What the product reports as still standing after a sign-out.
+/// `automation_enabled` is the person's persisted setting, which a sign-out
+/// keeps: it is not access. `agent_access_remains` is whether an issued key
+/// can still admit; null when the product could not say, because its
+/// automation store was unreadable or it had no sign-in to end.
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RemainingAccess {
     automation_enabled: Option<bool>,
+    agent_access_remains: Option<bool>,
     automation_revoked: bool,
 }
 #[derive(Debug, Serialize)]
@@ -304,6 +310,14 @@ pub fn login(outcome: Outcome) -> Result<SignInResult> {
     }
 }
 
+/// A boolean that must be present in the document, though it may be null.
+fn reported<'de, D>(deserializer: D) -> std::result::Result<Option<bool>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    Option::<bool>::deserialize(deserializer)
+}
+
 pub fn logout(outcome: Outcome) -> std::result::Result<SignOutResult, CommandFailure> {
     match outcome {
         Outcome::Refused { refusal, .. } => Err(CommandFailure::Refused(refusal)),
@@ -311,6 +325,11 @@ pub fn logout(outcome: Outcome) -> std::result::Result<SignOutResult, CommandFai
             #[derive(Deserialize)]
             struct Logout {
                 automation_enabled: Option<bool>,
+                // The product writes every field of a result, null included. Serde
+                // would read an absent key as null, which here would make a product
+                // that predates the field look like one that reported nothing.
+                #[serde(deserialize_with = "reported")]
+                agent_access_remains: Option<bool>,
                 automation_revoked: bool,
             }
             let result: Logout =
@@ -321,6 +340,7 @@ pub fn logout(outcome: Outcome) -> std::result::Result<SignOutResult, CommandFai
             Ok(SignOutResult {
                 remaining_access: RemainingAccess {
                     automation_enabled: result.automation_enabled,
+                    agent_access_remains: result.agent_access_remains,
                     automation_revoked: false,
                 },
             })
@@ -553,14 +573,82 @@ mod tests {
         .unwrap();
         assert!(matches!(refused, SignInResult::Refused { .. }));
         let signed_out = logout(Outcome::Success {
-            result: serde_json::json!({"automation_enabled":null,"automation_revoked":false}),
+            result: serde_json::json!({"automation_enabled":null,"agent_access_remains":null,"automation_revoked":false}),
             active_profile: None,
         })
         .ok()
         .unwrap();
         assert_eq!(
             serde_json::to_value(signed_out).unwrap(),
-            serde_json::json!({"remainingAccess":{"automationEnabled":null,"automationRevoked":false}})
+            serde_json::json!({"remainingAccess":{"automationEnabled":null,"agentAccessRemains":null,"automationRevoked":false}})
         );
+    }
+
+    fn logout_with(fields: serde_json::Value) -> Option<serde_json::Value> {
+        logout(Outcome::Success {
+            result: fields,
+            active_profile: None,
+        })
+        .ok()
+        .map(|result| serde_json::to_value(result).unwrap())
+    }
+
+    #[test]
+    fn logout_reports_whether_an_issued_key_can_still_admit_and_never_guesses_it() {
+        // The setting a sign-out keeps and the access it leaves are separate
+        // facts: a key may stay configured while admitting nothing, and the
+        // other way round.
+        for (enabled, remains) in [(true, true), (true, false), (false, true), (false, false)] {
+            assert_eq!(
+                logout_with(serde_json::json!({
+                    "automation_enabled": enabled,
+                    "agent_access_remains": remains,
+                    "automation_revoked": false
+                })),
+                Some(serde_json::json!({"remainingAccess":{
+                    "automationEnabled": enabled,
+                    "agentAccessRemains": remains,
+                    "automationRevoked": false
+                }}))
+            );
+        }
+        // Null is the product saying it could not tell. It stays null.
+        assert_eq!(
+            logout_with(serde_json::json!({
+                "automation_enabled": null,
+                "agent_access_remains": null,
+                "automation_revoked": false
+            })),
+            Some(serde_json::json!({"remainingAccess":{
+                "automationEnabled": null,
+                "agentAccessRemains": null,
+                "automationRevoked": false
+            }}))
+        );
+        // A result without the field is a product that does not know the question,
+        // not one that answered no. It is refused, as is any value that is not a
+        // boolean or null.
+        assert_eq!(
+            logout_with(serde_json::json!({
+                "automation_enabled": true,
+                "automation_revoked": false
+            })),
+            None
+        );
+        for value in [
+            serde_json::json!("false"),
+            serde_json::json!(0),
+            serde_json::json!(1),
+            serde_json::json!([]),
+        ] {
+            assert_eq!(
+                logout_with(serde_json::json!({
+                    "automation_enabled": true,
+                    "agent_access_remains": value,
+                    "automation_revoked": false
+                })),
+                None
+            );
+        }
     }
 }

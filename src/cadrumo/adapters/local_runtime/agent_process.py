@@ -84,6 +84,30 @@ class WindowsAgentProcess:
             self.close_input()
             self._output.close()
 
+    def job_limit_flags(self) -> int:
+        """The agent job's limit flags as the kernel holds them; it never admits breakaway."""
+        return self._scope.limit_flags()
+
+    def contains_process_id(self, process_id: int) -> bool:
+        """Whether the live process with this identifier is a member of the agent's job.
+
+        The caller holds the process's identity steady: the runtime's transport
+        retains the peer's own handle, so its identifier cannot be reused while
+        the question is asked.
+        """
+        import pywintypes
+        import win32api
+        import win32con
+
+        try:
+            handle = win32api.OpenProcess(win32con.SYNCHRONIZE | 0x1000, False, process_id)
+        except pywintypes.error:
+            return False
+        try:
+            return self._scope.contains_process(int(handle))
+        finally:
+            win32api.CloseHandle(handle)
+
     def _read_line(self, limit: int) -> None:
         try:
             line = self._output.readline(limit + 1)

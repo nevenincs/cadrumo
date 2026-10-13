@@ -24,7 +24,6 @@ from .command_spec import NON_LEAF_COMMAND_KINDS
 
 if TYPE_CHECKING:
     from ...application.operator_surface.command_operations import CommandOperationJoin
-    from ...application.operator_surface.command_ports import VerbInputSchema
     from ...application.operator_surface.manifest import (
         CommandSchemaRef,
         ExplicitExclusionInventoryRow,
@@ -36,6 +35,7 @@ if TYPE_CHECKING:
         ResultSchemaInventoryRow,
         SurfaceExposureInventoryRow,
     )
+    from ...application.operator_surface.verb_input_contracts import VerbInputSchema
     from .command_spec import CommandSpec, CommandSpecNode
 
 __all__ = [

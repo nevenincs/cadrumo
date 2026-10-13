@@ -9,6 +9,8 @@ from ...application.operator_surface.command_ports import (
     JsonType,
     ParameterKind,
     ProfileAuthenticationContractMetadata,
+)
+from ...application.operator_surface.verb_input_contracts import (
     RecoveryHandoffContract,
     ResolvedVerbLeaf,
     SchemaResolutionError,

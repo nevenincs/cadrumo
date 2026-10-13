@@ -18,13 +18,15 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import close
 from cadrumo.application.flows.errors import FlowRunAbandonedError
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.view_operation import ProfileViewPageKind
-from cadrumo.entrypoints.cli.main import app
+from cadrumo.entrypoints.cli.main import cli_app
 from cadrumo.entrypoints.cli.runtime_profile_binding import bind_profile_client
 
 from .._profile_support import require_active_profile_pointer
 from ..runtime_descendant_door import run_runtime_descendant_door
 from .isolated_storage_fixture import CREDENTIAL_INPUT, native_profile_view_server
 from .isolated_storage_fixture import live_cli_profile as live_cli_profile
+
+app = cli_app()
 
 pytestmark = [
     pytest.mark.integration,

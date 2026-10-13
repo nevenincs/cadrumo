@@ -70,9 +70,10 @@ from typer.main import get_command
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from cadrumo.core.i18n.render import lookup_translation_entry
 from cadrumo.core.json_contract import OutputRootSchema, OutputSchema
-from cadrumo.entrypoints.cli.main import app
+from cadrumo.entrypoints.cli.main import cli_app
 from cadrumo.entrypoints.cli.command_shared_contracts import DeferredTarget, TranslationKey
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
+app = cli_app()
 
 def walk(value, kind):
     if isinstance(value, kind):

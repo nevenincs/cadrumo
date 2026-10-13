@@ -188,12 +188,20 @@ fn python_logout_keeps_known_and_unknown_automation_separate_and_propagates_refu
         ("logout-false", json!(false)),
         ("logout-none", Value::Null),
     ] {
+        // The access a sign-out leaves is whatever the producer wrote, carried
+        // as it is: the setting and the access are separate facts.
+        let access = fixture(case)["result"]["agent_access_remains"].clone();
         let outcome = logout(from_document(fixture(case)).unwrap()).ok().unwrap();
         assert_eq!(
             serde_json::to_value(outcome).unwrap(),
             json!({
-                "remainingAccess":{"automationEnabled":enabled,"automationRevoked":false}
-            })
+                "remainingAccess":{
+                    "automationEnabled":enabled,
+                    "agentAccessRemains":access,
+                    "automationRevoked":false
+                }
+            }),
+            "{case}"
         );
     }
     let refusal = logout(from_document(fixture("logout-refused")).unwrap())
@@ -206,6 +214,36 @@ fn python_logout_keeps_known_and_unknown_automation_separate_and_propagates_refu
     let mut revoked = fixture("logout-true");
     revoked["result"]["automation_revoked"] = json!(true);
     assert!(logout(from_document(revoked).unwrap()).is_err());
+}
+
+#[test]
+fn python_logout_access_is_carried_for_both_values_and_refused_when_absent() {
+    // A key the person issued that can still admit, and one that cannot.
+    for remains in [json!(true), json!(false), Value::Null] {
+        let mut document = fixture("logout-true");
+        document["result"]["agent_access_remains"] = remains.clone();
+        let outcome = logout(from_document(document).unwrap()).ok().unwrap();
+        assert_eq!(
+            serde_json::to_value(outcome).unwrap()["remainingAccess"]["agentAccessRemains"],
+            remains
+        );
+    }
+    // The producer writes the field in every logout result. Its absence is a
+    // product that does not know the question, so it is not read as an answer.
+    for case in ["logout-true", "logout-false", "logout-none"] {
+        let mut document = fixture(case);
+        document["result"]
+            .as_object_mut()
+            .unwrap()
+            .remove("agent_access_remains")
+            .unwrap();
+        assert!(logout(from_document(document).unwrap()).is_err(), "{case}");
+    }
+    for malformed in [json!("true"), json!(0), json!(1), json!({}), json!([])] {
+        let mut document = fixture("logout-true");
+        document["result"]["agent_access_remains"] = malformed;
+        assert!(logout(from_document(document).unwrap()).is_err());
+    }
 }
 
 fn output_of(document: Value) -> Output {

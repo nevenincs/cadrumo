@@ -11,6 +11,7 @@ from threading import RLock
 from typing import Final
 from uuid import UUID, uuid4
 
+from ...adapters.persistence.storage.custody.kdf_supervision import ProfileKdfPrewarm
 from ...adapters.persistence.storage.custody.sign_in_generation import SignInGeneration
 from ...adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
 from ...application.user_profile.access_contracts import AccessDenialCode, AccessSession, SessionKind
@@ -72,19 +73,25 @@ class ProfileWorkerHumanLogin:
         self._resumed_login: str | None = None
         self._lifetime = ExitStack()
         self._pending: dict[UUID, _PendingReceipt] = {}
+        # A password proof's key derivation runs in a fresh contained child;
+        # launching the next one now keeps its interpreter start-up off the
+        # person's sign-in.
+        self._kdf_prewarm = ProfileKdfPrewarm()
+        self._kdf_prewarm.refill()
 
     def authenticate(self, password: bytearray) -> tuple[UUID, ProfileLoginOutcome]:
         """Prove the exact password without disturbing another admitted lease."""
         with self._lock:
             self.cancel()
             try:
-                candidate = self._lifetime.enter_context(
-                    authenticate_profile_candidate(
-                        bucket_id=self.custody.identity.binding.profile_id,
-                        passphrase_callback=lambda: password.decode("utf-8"),
-                        profile_decode_context=self.decode(),
+                with self._kdf_prewarm.bound():
+                    candidate = self._lifetime.enter_context(
+                        authenticate_profile_candidate(
+                            bucket_id=self.custody.identity.binding.profile_id,
+                            passphrase_callback=lambda: password.decode("utf-8"),
+                            profile_decode_context=self.decode(),
+                        )
                     )
-                )
                 identity = uuid4()
                 self._candidate = identity, candidate, now() + timedelta(minutes=5), time.monotonic() + 300
                 return identity, candidate.outcome
@@ -251,6 +258,7 @@ class ProfileWorkerHumanLogin:
                 for item in pending:
                     release.push(item.lifetime)
                 release.callback(self.cancel)
+                release.callback(self._kdf_prewarm.close)
 
 
 def _abandoned(candidate: ProfileLoginCandidate, deadline: UtcInstant, monotonic_deadline: float) -> bool:

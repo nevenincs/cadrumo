@@ -1,5 +1,11 @@
 """Lazy canonical operation composition within one immutable profile worker.
 
+The worker serves its channels before any of this composition exists. The
+production registry, its handlers and the pinned tax authority are imported
+and built the first time an operation needs them, never to admit a worker or a
+sign-in, so the modules below stay off the worker's startup path and every
+heavier dependency is imported inside the method that first uses it.
+
 Core types: :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
 """
 
@@ -7,24 +13,19 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncGenerator, Generator
-from contextlib import ExitStack, asynccontextmanager, contextmanager
+from contextlib import AbstractContextManager, ExitStack, asynccontextmanager, contextmanager
 from datetime import timedelta
 from math import isfinite
+from threading import RLock
 from time import monotonic
 from typing import TYPE_CHECKING
 from uuid import UUID
 
 from pydantic import BaseModel, JsonValue, TypeAdapter, ValidationError
 
-from ...adapters.local_runtime.worker_authorization_client import WorkerAuthorizationClient
 from ...adapters.persistence.storage.errors import RepositoryError
-from ...adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
-from ...application.auth.operation_definitions import PROFILE_ROTATION_OPERATION_DEFINITION_ID
-from ...application.local_reader_provisioning import RuntimeServerOwnerStart
-from ...application.operations.composition import OperationComposedServices, OperationSubmission
 from ...application.operations.drain import OperationDrainResult
 from ...application.operations.errors import OperationSubjectBusyError, OperationUnsettledError
-from ...application.operations.execution_actor import OperationExecutionCaller
 from ...application.operations.frontend_requests import (
     OperationCancellationRequestV1,
     OperationDetachRequestV1,
@@ -43,30 +44,11 @@ from ...application.operations.models import (
     OperationStoredInvocation,
     new_operation_id,
 )
-from ...application.operations.persistence.journal import OperationRecoveryInventoryDisposition
-from ...application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionContractV1,
-    OperationPublicDefinitionDescriptionV1,
-    OperationRegistry,
-)
 from ...application.operations.secret_submission import OperationSecretRequirement, zeroize_secret_buffer
-from ...application.overview.home import HomeAccountSession, HomeSessionPosture
 from ...application.runtime.operation_access import OperationManagementRequest, operation_management_action
-from ...application.runtime.worker_authorization import WorkerAuthorityRequest
 from ...application.user_profile.access_contracts import AccessAction, AccessDenialCode
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
-from ...application.user_profile.automation_enrollment import AutomationInventory
-from ...application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
-from ...application.user_profile.profile_record_repository import ProfileRecordRepository
-from ...application.user_profile.projections import projection_for_taxpayer
-from ...application.workbench_generation_contracts import WorkbenchGenerationV1
-from ...application.workbench_generation_operation import (
-    WORKBENCH_GENERATION_OPERATION_DEFINITION_ID,
-    WorkbenchGenerationOperationRequest,
-)
-from ...application.workflow.profile_bucket_scan import read_profile_bucket_by_id
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.config import override_settings
 from ...core.errors.hierarchy import CadrumoError
@@ -75,21 +57,29 @@ from ...core.operations import OperationLifecycle
 from ...core.request_faults import registered_error_fault, request_faults
 from ...core.startup_phase_log import startup_phase
 from ...core.time.clock import now
-from ...domain.calculations.registry.authority import (
-    PinnedAuthorityOperation,
-    bundled_indexed_authority,
-    release_bundled_indexed_authority,
-)
-from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
-from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from ...domain.deadlines.models import TaxpayerProfile
-from ..operation_composition import compose_operation_dependencies
-from ..workbench_generation_composition import compose_secure_workbench_generation_provider
-from .automation_execution import WorkerAutomationAdministration
-from .operation_authority import ProfileWorkerOperationAuthority, WorkerOperationBinding
 
 if TYPE_CHECKING:
+    from ...adapters.local_runtime.worker_authorization_client import WorkerAuthorizationClient
+    from ...adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
+    from ...application.operations.composition import OperationComposedServices, OperationSubmission
+    from ...application.operations.execution_actor import OperationExecutionCaller
+    from ...application.operations.registry import (
+        OperationFrontendProjection,
+        OperationPublicDefinitionContractV1,
+        OperationPublicDefinitionDescriptionV1,
+        OperationRegistry,
+    )
     from ...application.operations.supervisor import OperationSupervisor
+    from ...application.runtime.worker_authorization import WorkerAuthorityRequest
+    from ...application.user_profile.automation_enrollment import AutomationInventory
+    from ...application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
+    from ...application.workbench_generation_contracts import WorkbenchGenerationV1
+    from ...application.workbench_generation_operation import WorkbenchGenerationOperationRequest
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
+    from ...domain.deadlines.models import TaxpayerProfile
+    from .automation_execution import WorkerAutomationAdministration
+    from .operation_authority import ProfileWorkerOperationAuthority
 
 _PROJECTION_DOCUMENT = TypeAdapter(dict[str, JsonValue])
 #: How often, at most, a used profile looks for operations whose owner lapsed.
@@ -143,31 +133,68 @@ class ProfileWorkerOperationHost:
         self._unsettled: set[OperationId] = set()
         self._lapse_lock = asyncio.Lock()
         self._lapse_checked_at: float | None = None
+        # One composition and one authority lease, whichever thread asks first:
+        # a worker thread serving an operation or the service loop.
+        self._composition_lock = RLock()
 
     def _bind_execution(self, registry: OperationRegistry) -> ProfileWorkerOperationAuthority:
+        from .operation_authority import ProfileWorkerOperationAuthority
+
         self._execution = ProfileWorkerOperationAuthority(
             custody=self.custody, client=self._client, registry=registry, authority_operation=self._pinned()
         )
         return self._execution
 
+    def _governed(self) -> AbstractContextManager[None]:
+        """Scope governed facts to this worker's one pinned authority generation."""
+        from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
+
+        return validating_governed_facts(self._pinned())
+
     def _composed(self) -> OperationComposedServices:
         if self._closed:
             raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
-        if self._services is None:
-            with validating_governed_facts(self._pinned()):
-                self._services = compose_operation_dependencies(
-                    authority_operation=self._pinned(),
-                    operation_owner_id=self.custody.identity.operation_owner_id,
-                    execution_authority_factory=self._bind_execution,
-                    automation_inventory_reader=self._automation_inventory,
-                    automation_administration_factory=self._automation_administration,
-                    workbench_generation_reader=self._workbench_generation,
-                    profile_rotation_finalizer=self._finalize_password_rotation,
-                    modelo_profile_resolver=self._modelo_profile,
-                    execution_caller_reader=self._execution_caller,
-                    runtime_server_owner_start=RuntimeServerOwnerStart(self._start_runtime_server),
-                )
-        return self._services
+        services = self._services
+        if services is not None:
+            return services
+        with self._composition_lock:
+            if self._closed:
+                raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+            if self._services is None:
+                self._services = self._compose()
+            return self._services
+
+    def _await_composition(self) -> None:
+        with self._composition_lock:
+            return
+
+    async def _composed_off_loop(self) -> OperationComposedServices:
+        """Join or start the one composition without holding the service loop.
+
+        The first operation after a person's sign-in composes the registry; the
+        loop keeps serving sign-ins and status on the other channel meanwhile.
+        """
+        if self._services is not None:
+            return self._composed()
+        return await asyncio.to_thread(self._composed)
+
+    def _compose(self) -> OperationComposedServices:
+        from ...application.local_reader_provisioning import RuntimeServerOwnerStart
+        from ..operation_composition import compose_operation_dependencies
+
+        with startup_phase(_log, "worker_operation_compose"), self._governed():
+            return compose_operation_dependencies(
+                authority_operation=self._pinned(),
+                operation_owner_id=self.custody.identity.operation_owner_id,
+                execution_authority_factory=self._bind_execution,
+                automation_inventory_reader=self._automation_inventory,
+                automation_administration_factory=self._automation_administration,
+                workbench_generation_reader=self._workbench_generation,
+                profile_rotation_finalizer=self._finalize_password_rotation,
+                modelo_profile_resolver=self._modelo_profile,
+                execution_caller_reader=self._execution_caller,
+                runtime_server_owner_start=RuntimeServerOwnerStart(self._start_runtime_server),
+            )
 
     def in_flight_operation_count(self) -> int:
         """Read the owning supervisor without creating services or touching custody."""
@@ -175,11 +202,11 @@ class ProfileWorkerOperationHost:
         return 0 if services is None else services.submission.supervisor.in_flight_operation_count()
 
     def prepare(self) -> None:
-        """Finish cold registry composition before any admitted lease is published.
+        """Finish cold registry composition before the caller continues.
 
-        The first contract and submission retain their ordinary short worker
-        exchange deadlines. Admission owns this one-time compilation cost while
-        the profile is already pinned and before a client can start an operation.
+        Key-based admission keeps this one-time cost inside its own preparation
+        budget. A person's sign-in never composes: the first operation a
+        session asks for does, off the service loop.
         """
         with startup_phase(_log, "worker_operation_prepare"):
             self._composed()
@@ -198,6 +225,9 @@ class ProfileWorkerOperationHost:
 
     def _modelo_profile(self, operation: PinnedAuthorityOperation) -> TaxpayerProfile:
         """Read filing facts only from this worker's immutable profile custody."""
+        from ...application.user_profile.profile_record_repository import ProfileRecordRepository
+        from ...application.user_profile.projections import projection_for_taxpayer
+
         profile_id = str(self.custody.identity.binding.profile_id)
         repository = ProfileRecordRepository.for_current_session(
             profile_id, profile_decode_context=operation.profile_decode_context()
@@ -219,6 +249,10 @@ class ProfileWorkerOperationHost:
         self, identity: OperationIdentity, payload: WorkbenchGenerationOperationRequest
     ) -> WorkbenchGenerationV1:
         """Retain native read authority through one exact-profile generation capture."""
+        from ...application.overview.home import HomeAccountSession, HomeSessionPosture
+        from ...application.workflow.profile_bucket_scan import read_profile_bucket_by_id
+        from ..workbench_generation_composition import compose_secure_workbench_generation_provider
+
         execution, services = self._execution, self._services
         if execution is None or services is None or self._closed:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
@@ -255,6 +289,8 @@ class ProfileWorkerOperationHost:
     ) -> WorkerAutomationAdministration:
         if self._execution is None or self._closed:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+        from .automation_execution import WorkerAutomationAdministration
+
         return WorkerAutomationAdministration(self._execution, identity, profile_id)
 
     async def _automation_inventory(self, identity: OperationIdentity, profile_id: UUID) -> AutomationInventory:
@@ -264,9 +300,15 @@ class ProfileWorkerOperationHost:
         return await self._execution.automation_inventory(identity, profile_id)
 
     def _pinned(self) -> PinnedAuthorityOperation:
-        if self._authority is None:
-            self._authority = self._lifetime.enter_context(bundled_indexed_authority().lease_operation())
-        return self._authority
+        authority = self._authority
+        if authority is not None:
+            return authority
+        from ...domain.calculations.registry.authority import bundled_indexed_authority
+
+        with self._composition_lock:
+            if self._authority is None:
+                self._authority = self._lifetime.enter_context(bundled_indexed_authority().lease_operation())
+            return self._authority
 
     def profile_decode_context(self) -> ProfileDecodeContext:
         """Use the same publication for password candidates and hosted operations."""
@@ -287,7 +329,9 @@ class ProfileWorkerOperationHost:
         async with self._inventory_lock:
             if self._inventory_verified:
                 return
-            services = self._composed()
+            services = await self._composed_off_loop()
+            from ...application.operations.persistence.journal import OperationRecoveryInventoryDisposition
+
             after = None
             refused = False
             unsettled: set[OperationId] = set()
@@ -366,6 +410,8 @@ class ProfileWorkerOperationHost:
         execution = self._execution
         if execution is None:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+        from .operation_authority import WorkerOperationBinding
+
         operation_id = new_operation_id()
         execution.bind(operation_id, WorkerOperationBinding(session_id, frontend, request))
 
@@ -416,7 +462,7 @@ class ProfileWorkerOperationHost:
         self._require_owner(operation_id, session_id)
         await self._require_current_inventory()
         try:
-            with validating_governed_facts(self._pinned()):
+            with self._governed():
                 return await self._composed().submission.start(operation_id)
         except (RepositoryError, ValueError):
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE) from None
@@ -433,6 +479,8 @@ class ProfileWorkerOperationHost:
         return await self._await_settlement(supervisor, identity, timeout)
 
     def _settlement_supervisor(self, identity: OperationIdentity, timeout: float) -> OperationSupervisor:
+        from ...application.auth.operation_definitions import PROFILE_ROTATION_OPERATION_DEFINITION_ID
+
         original = self._submissions.get(identity.operation_id)
         services = self._services
         if (
@@ -515,12 +563,14 @@ class ProfileWorkerOperationHost:
         execution = self._execution
         if execution is None:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+        from .operation_authority import WorkerOperationBinding
+
         binding = WorkerOperationBinding(session_id, frontend, invocation.request, invocation.provenance)
         async with execution.guard_binding(invocation.identity, AccessAction.RESUME, binding):
             execution.bind_reentry(operation_id, binding)
         try:
             # START/RESUME at actual entry and COMMIT each acquire fresh guards.
-            with validating_governed_facts(self._pinned()):
+            with self._governed():
                 return await services.submission.continue_operation(operation_id)
         except (RepositoryError, ValueError):
             execution.discard(operation_id)
@@ -552,6 +602,9 @@ class ProfileWorkerOperationHost:
         if task is None or task in self._output_tasks:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
         self._output_tasks[task] = operation_id
+        from ...application.workbench_generation_operation import WORKBENCH_GENERATION_OPERATION_DEFINITION_ID
+        from .operation_authority import WorkerOperationBinding
+
         try:
             invocation = await self._stored_invocation(operation_id)
             binding = WorkerOperationBinding(session_id, frontend, invocation.request, invocation.provenance)
@@ -614,7 +667,7 @@ class ProfileWorkerOperationHost:
         self, operation_id: OperationId, *, require_idle: bool = False
     ) -> OperationStoredInvocation:
         try:
-            with validating_governed_facts(self._pinned()):
+            with self._governed():
                 return await self._composed().submission.stored_invocation(operation_id, require_idle=require_idle)
         except (RepositoryError, KeyError, ValueError):
             # Unknown, damaged, foreign-profile and stale-contract records have
@@ -710,11 +763,12 @@ class ProfileWorkerOperationHost:
         from ...application.modelo.edit_operator_input import prepare_modelo_edit_operand
         from ...application.operations.financial_operand_contract import OperationFinancialOperandRefusedError
 
+        await self._composed_off_loop()
         contract = self.contract(session_id, definition_id)
         if contract.transient_financial_operand is None:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
         # A fault of the operand is a validator's message and never the operand itself.
-        with _refusing_what_its_readers_refuse(), validating_governed_facts(self._pinned()):
+        with _refusing_what_its_readers_refuse(), self._governed():
             prepared = prepare_modelo_edit_operand(
                 definition_id=definition_id,
                 profile_id=self.custody.identity.binding.profile_id,
@@ -764,10 +818,11 @@ class ProfileWorkerOperationHost:
         idempotency_key: str | None = None,
     ) -> OperationSubmission:
         """Decode through the exact registered model after exact-profile custody."""
+        await self._composed_off_loop()
         self.contract(session_id, definition_id)
         if self._execution is None:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        with _refusing_what_its_readers_refuse(), validating_governed_facts(self._pinned()):
+        with _refusing_what_its_readers_refuse(), self._governed():
             payload = self._execution.registry.decode_request_payload(definition_id, payload_json)
         return await self.submit(
             session_id=session_id,
@@ -785,6 +840,11 @@ class ProfileWorkerOperationHost:
         if self._drain_result is not None:
             return self._drain_result
         self._closed = True
+        # A composition an operation already started finishes, off the loop, and
+        # is drained like any other; none can start once the host is closed.
+        await await_cancellation_complete(
+            asyncio.to_thread(self._await_composition), task_name="profile-operation-compose-join"
+        )
         result = (
             await await_cancellation_complete(
                 self._services.drain(timedelta(seconds=5)), task_name="profile-operation-drain"
@@ -802,7 +862,10 @@ class ProfileWorkerOperationHost:
         self._drain_result = result
         if not result.needs_containment:
             self._lifetime.close()
-            # The worker admitted the process-shared owner for this lease; close its
-            # database handles with the host rather than at interpreter teardown.
-            release_bundled_indexed_authority()
+            if self._authority is not None:
+                from ...domain.calculations.registry.authority import release_bundled_indexed_authority
+
+                # The worker admitted the process-shared owner for this lease; close its
+                # database handles with the host rather than at interpreter teardown.
+                release_bundled_indexed_authority()
         return result

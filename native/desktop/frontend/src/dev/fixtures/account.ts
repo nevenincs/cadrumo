@@ -25,15 +25,11 @@ export const refused = (
 ): SignInRefusal => ({ code, retryAfterSeconds });
 
 export function accountFixture(
-  change: Partial<Omit<SignInController, "phase" | "gated" | "canSignIn">> & {
-    /** The person chose to carry on in the TUI. */
-    handover?: boolean;
-  } = {},
+  rest: Partial<Omit<SignInController, "phase" | "gated" | "canSignIn">> = {},
 ): SignInController {
-  const { handover = false, ...rest } = change;
   const status = "status" in rest ? (rest.status ?? null) : SIGNED_OUT;
   const profiles = rest.profiles ?? null;
-  const phase = phaseOf(true, status, handover, profiles);
+  const phase = phaseOf(true, status, profiles);
   const offering = phase === "signed-out" || phase === "no-profile";
   const target = offering ? targetOf(profiles, null) : null;
   const refusal = rest.refusal ?? status?.refusal ?? null;
@@ -67,13 +63,12 @@ export function accountFixture(
     signOut: async () => undefined,
     settle: () => undefined,
     recheck: async () => undefined,
-    openTui: () => undefined,
     tuiExited: () => undefined,
     ...rest,
     profiles,
     status,
     phase,
     gated: GATED.has(phase),
-    canSignIn: canSignIn(phase, refusal),
+    canSignIn: canSignIn(phase),
   };
 }

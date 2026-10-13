@@ -258,7 +258,7 @@ const agentButton = (target: Page, key: string) =>
     .getByRole("button", { name: label(key), exact: false })
     .first();
 
-test("the agent's history lists the host's conversations and opens one with its documents", async ({
+test("the agent's history lists the host's conversations and opens one", async ({
   page: target,
 }) => {
   await open(target);
@@ -273,16 +273,17 @@ test("the agent's history lists the host's conversations and opens one with its 
       name: "IVA del tercer trimestre",
     }),
   ).toBeVisible();
-  // Its turns, as the host's history has them: the person's message with
-  // the files sent with it, the operations the agent called, its reply.
+  // Its turns, as the host's history has them: the person's message, the
+  // tools the agent called, its reply.
   const log = body.getByRole("log");
   await expect(log).toContainText("¿Me preparas el 303?");
-  await expect(log).toContainText("ticket-gasolinera.jpg");
-  await expect(log).toContainText("Registrar la factura 2026-031");
+  await expect(log).toContainText("ledger_register_invoice");
   await expect(log).toContainText("He leído 42 apuntes del trimestre.");
-  await agentButton(target, "desktop.agent.documents").click();
-  await expect(body.getByText("factura-2026-031.pdf")).toBeVisible();
-  await expect(body.getByText("facturas-proveedores.zip")).toBeVisible();
+  // Its documents are Cadrumo's custody's, which serves none yet.
+  await expect(agentButton(target, "desktop.agent.documents")).toHaveAttribute(
+    "aria-disabled",
+    "true",
+  );
   // A new conversation leaves it, with nothing open.
   await agentButton(target, "desktop.agent.new_conversation").click();
   await expect(

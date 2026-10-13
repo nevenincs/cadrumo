@@ -1,115 +1,166 @@
-"""The bundled provider catalog and its strict loader."""
+"""The bundled lane catalog and its strict loader."""
 
 from __future__ import annotations
+
+import re
 
 import pytest
 
 from ....core.errors.hierarchy import CoreValidationError
-from ..catalog import ProviderAuthKind, ProviderConsumer, load_provider_catalog, parse_provider_catalog
+from ..catalog import (
+    ProviderAuthKind,
+    ProviderTransport,
+    load_provider_catalog,
+    parse_provider_catalog,
+    validate_https_base_url,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_EXPECTED_PROVIDERS = {
-    "anthropic": (ProviderAuthKind.API_KEY, {"extraction", "assistant"}, None),
-    "openai": (ProviderAuthKind.API_KEY, {"extraction", "assistant"}, None),
-    "gemini": (ProviderAuthKind.API_KEY, {"extraction"}, None),
-    "kimi": (ProviderAuthKind.API_KEY, {"assistant"}, None),
-    "zai": (ProviderAuthKind.API_KEY_WITH_BASE_URL, {"assistant"}, "https://api.z.ai/api/anthropic"),
-    "zhipu": (ProviderAuthKind.API_KEY_WITH_BASE_URL, {"assistant"}, "https://open.bigmodel.cn/api/anthropic"),
-    "deepseek": (ProviderAuthKind.API_KEY_WITH_BASE_URL, {"assistant"}, "https://api.deepseek.com/anthropic"),
-    "moonshot": (ProviderAuthKind.API_KEY_WITH_BASE_URL, {"assistant"}, "https://api.moonshot.ai/anthropic"),
-    "minimax": (ProviderAuthKind.API_KEY_WITH_BASE_URL, {"assistant"}, "https://api.minimax.io/anthropic"),
-    "qwen": (ProviderAuthKind.API_KEY_WITH_BASE_URL, {"assistant"}, None),
-    "claude": (ProviderAuthKind.OAUTH_OR_PROVIDER_SIGN_IN, {"assistant"}, None),
-    "codex": (ProviderAuthKind.PROVIDER_SIGN_IN_ONLY, {"assistant"}, None),
-    "antigravity": (ProviderAuthKind.PROVIDER_SIGN_IN_ONLY, {"assistant"}, None),
-}
+_GATEWAYS = ("zai", "zhipu", "deepseek", "moonshot", "minimax", "qwen")
 
-_VALID_ENTRY = """
+_HEADER = """schema_version = 1
+
+[source]
+agent_version = "0.1.0"
+agent_source_digest = "0000000000000000000000000000000000000000000000000000000000000000"
+"""
+
+_API_LANE = """
 [[providers]]
-id = "anthropic"
-display_name = "Anthropic"
+id = "claude_api"
+provider = "claude"
+transport = "api"
+display_name = "Claude"
 auth_kind = "api_key"
-consumers = ["extraction"]
+consumers = ["assistant"]
+credential_field = "claude_api_key"
 """
 
 
-def test_bundled_catalog_declares_every_supported_provider() -> None:
+def test_bundled_catalog_has_one_entry_per_agent_lane() -> None:
     catalog = load_provider_catalog()
 
-    declared = {
-        entry.id: (entry.auth_kind, {consumer.value for consumer in entry.consumers}, entry.default_base_url)
-        for entry in catalog.providers
+    lanes = {entry.id: (entry.provider, entry.transport, entry.auth_kind) for entry in catalog.providers}
+    assert lanes["claude_api"] == ("claude", ProviderTransport.API, ProviderAuthKind.API_KEY)
+    assert lanes["claude_cli"] == ("claude", ProviderTransport.CLI, ProviderAuthKind.OAUTH_OR_PROVIDER_SIGN_IN)
+    assert lanes["codex_api"] == ("codex", ProviderTransport.API, ProviderAuthKind.API_KEY)
+    assert lanes["codex_cli"] == ("codex", ProviderTransport.CLI, ProviderAuthKind.PROVIDER_SIGN_IN_ONLY)
+    assert lanes["antigravity_cli"] == ("antigravity", ProviderTransport.CLI, ProviderAuthKind.PROVIDER_SIGN_IN_ONLY)
+    assert lanes["kimi_cli"] == ("kimi", ProviderTransport.CLI, ProviderAuthKind.API_KEY)
+    for gateway in _GATEWAYS:
+        assert lanes[f"{gateway}_cli"] == (gateway, ProviderTransport.CLI, ProviderAuthKind.API_KEY_WITH_BASE_URL)
+    assert set(lanes) == {
+        "claude_api",
+        "claude_cli",
+        "codex_api",
+        "codex_cli",
+        "antigravity_cli",
+        "kimi_cli",
+        *(f"{gateway}_cli" for gateway in _GATEWAYS),
     }
-    assert declared == _EXPECTED_PROVIDERS
-    assert all(entry.display_name for entry in catalog.providers)
-    development = {
-        entry.id: entry.development_setting
-        for entry in catalog.providers
-        if entry.development_setting is not None and entry.development_setting
-    }
-    key_providers = {"anthropic", "openai", "gemini", "kimi", "zai", "zhipu", "deepseek", "moonshot", "minimax", "qwen"}
-    assert development == {provider: f"cadrumo_llm_{provider}_api_key" for provider in key_providers}
-    agent_ids = {entry.id: entry.agent_credential_id for entry in catalog.providers if entry.agent_credential_id}
-    assert agent_ids == {
-        "anthropic": "claude",
-        "openai": "codex",
-        **{provider: provider for provider in ("kimi", "zai", "zhipu", "deepseek", "moonshot", "minimax", "qwen")},
-    }
+
+
+def test_lanes_of_one_identity_share_its_name_and_never_a_credential_field() -> None:
+    catalog = load_provider_catalog()
+    by_id = {entry.id: entry for entry in catalog.providers}
+
+    assert by_id["claude_api"].display_name == by_id["claude_cli"].display_name == "Claude"
+    assert by_id["codex_api"].display_name == by_id["codex_cli"].display_name == "Codex"
+    assert by_id["claude_api"].credential_field == "claude_api_key"
+    assert by_id["claude_cli"].credential_field == "claude_code_oauth_token"
+    assert by_id["codex_api"].credential_field == "codex_api_key"
+    assert by_id["codex_cli"].credential_field is None
+    assert by_id["qwen_cli"].default_base_url is None
+    assert by_id["zai_cli"].default_base_url == "https://api.z.ai/api/anthropic"
+    assert all(by_id[f"{gateway}_cli"].cli_program == "claude" for gateway in _GATEWAYS)
+    assert by_id["claude_api"].cli_program is None
 
 
 def test_catalog_lookup_refuses_unknown_and_malformed_ids() -> None:
     catalog = load_provider_catalog()
 
-    assert catalog.entry("anthropic") is not None
-    assert catalog.entry("not-a-provider") is None
-    assert catalog.entry("../anthropic") is None
-    gemini = catalog.entry("gemini")
-    assert gemini is not None
-    assert gemini.serves(ProviderConsumer.EXTRACTION)
-    assert not gemini.serves(ProviderConsumer.ASSISTANT)
+    assert catalog.entry("claude_api") is not None
+    assert catalog.entry("anthropic") is None
+    assert catalog.entry("not-a-lane") is None
+    assert catalog.entry("../claude_api") is None
+
+
+def test_lane_ids_fit_the_desktop_host_grammar() -> None:
+    grammar = re.compile(r"^[a-z][a-z0-9_]{0,39}$")
+
+    for entry in load_provider_catalog().providers:
+        assert grammar.fullmatch(entry.id), entry.id
+        assert entry.id == f"{entry.provider}_{entry.transport.value}"
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "http://gateway.example.invalid",
+        "https://",
+        "https://user:pw@gateway.example.invalid",
+        "https://gateway.example.invalid/?q=1",
+        "https://gateway.example.invalid/a*b",
+        "https://gateway.example.invalid/a[b",
+        "https://gateway.example.invalid/%41",
+        "https://gateway.example.invalid/$HOME",
+        "https://gatewäy.example.invalid",
+        "https://gateway.example.invalid/" + chr(7),
+        "-https://gateway.example.invalid",
+        "https://gateway.example.invalid/" + "a" * 2048,
+    ],
+)
+def test_base_url_rejections_match_the_desktop_host(url: str) -> None:
+    with pytest.raises(ValueError):
+        validate_https_base_url(url)
+
+
+def test_acceptable_base_url_passes() -> None:
+    assert validate_https_base_url("https://api.z.ai/api/anthropic") == "https://api.z.ai/api/anthropic"
 
 
 def test_valid_minimal_catalog_parses() -> None:
-    catalog = parse_provider_catalog("schema_version = 1\n" + _VALID_ENTRY)
+    catalog = parse_provider_catalog(_HEADER + _API_LANE)
 
-    assert catalog.provider_ids == ("anthropic",)
+    assert catalog.provider_ids == ("claude_api",)
 
 
 @pytest.mark.parametrize(
     "document",
     [
-        pytest.param("schema_version = 2\n" + _VALID_ENTRY, id="unknown-schema-version"),
-        pytest.param("schema_version = 1\n" + _VALID_ENTRY + _VALID_ENTRY, id="duplicate-id"),
+        pytest.param(_HEADER.replace("schema_version = 1", "schema_version = 2") + _API_LANE, id="schema-version"),
+        pytest.param(_HEADER + _API_LANE + _API_LANE, id="duplicate-lane"),
+        pytest.param(_API_LANE.join(("schema_version = 1\n", "")), id="missing-source"),
         pytest.param(
-            "schema_version = 1\n"
-            + _VALID_ENTRY.replace(
-                'consumers = ["extraction"]',
-                'consumers = ["extraction"]\ndefault_base_url = "https://example.invalid/anthropic"',
-            ),
+            _HEADER + _API_LANE.replace('consumers = ["assistant"]', 'consumers = ["extraction"]'),
+            id="extraction-consumer",
+        ),
+        pytest.param(_HEADER + _API_LANE + 'cli_program = "claude"\n', id="api-lane-with-program"),
+        pytest.param(
+            _HEADER + _API_LANE.replace('transport = "api"', 'transport = "cli"'),
+            id="cli-lane-without-program",
+        ),
+        pytest.param(
+            _HEADER + _API_LANE + 'default_base_url = "https://gateway.example.invalid"\n',
             id="default-url-on-plain-key",
         ),
         pytest.param(
-            "schema_version = 1\n"
-            + _VALID_ENTRY.replace('"api_key"', '"api_key_with_base_url"').replace(
-                'consumers = ["extraction"]', 'consumers = ["assistant"]\ndefault_base_url = "http://example.invalid"'
-            ),
-            id="plain-http-default",
+            _HEADER + _API_LANE.replace('credential_field = "claude_api_key"\n', ""),
+            id="key-lane-without-field",
         ),
+        pytest.param(_HEADER + _API_LANE + 'development_setting = "cadrumo_llm_model"\n', id="setting-not-secret"),
         pytest.param(
-            "schema_version = 1\n" + _VALID_ENTRY.replace('"api_key"', '"provider_sign_in_only"'),
-            id="extraction-without-direct-key",
+            _HEADER
+            + _API_LANE
+            + _API_LANE.replace('id = "claude_api"', 'id = "claude_cli"')
+            .replace('transport = "api"', 'transport = "cli"')
+            .replace('"Claude"', '"Other"')
+            .replace("claude_api_key", "claude_code_oauth_token")
+            + 'cli_program = "claude"\n',
+            id="identity-names-disagree",
         ),
-        pytest.param(
-            "schema_version = 1\n" + _VALID_ENTRY + 'development_setting = "cadrumo_llm_model"\n',
-            id="development-setting-not-secret",
-        ),
-        pytest.param("schema_version = 1\n" + _VALID_ENTRY + 'unexpected = "x"\n', id="unknown-field"),
-        pytest.param(
-            "schema_version = 1
-" + _VALID_ENTRY + 'agent_credential_id = "claude"
-', id="agent-id-without-assistant"
-        ),
+        pytest.param(_HEADER + _API_LANE + 'unexpected = "x"\n', id="unknown-field"),
         pytest.param("schema_version = [", id="not-toml"),
     ],
 )

@@ -96,8 +96,9 @@ def configure_child_exit(monkeypatch: pytest.MonkeyPatch) -> Callable[[int, bool
         source += f"worker.main()\nraise SystemExit({exit_code})\n"
 
         def launch(command: list[str], launch_kwargs: dict[str, object]) -> subprocess.Popen[bytes]:
-            assert command[1:3] == ["-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker"]
-            return launch_process([command[0], "-c", source, *command[3:]], launch_kwargs)
+            entry = command.index("-m")
+            assert command[entry + 1] == "cadrumo.adapters.persistence.storage.custody._kdf_worker"
+            return launch_process([*command[:entry], "-c", source, *command[entry + 2 :]], launch_kwargs)
 
         monkeypatch.setattr(process_boundary, "_launch_worker_process", launch)
 

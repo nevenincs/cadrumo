@@ -61,6 +61,7 @@ export const Status: Story = {
         <Badge variant="success">Signed in</Badge>
         <Badge variant="warning">3 warnings</Badge>
         <Badge variant="danger">2 errors</Badge>
+        <Badge variant="inverse">Copied</Badge>
       </Specimen>
       <Specimen title="Key hints">
         <Kbd>Esc</Kbd>

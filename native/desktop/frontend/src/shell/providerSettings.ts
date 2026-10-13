@@ -7,19 +7,24 @@ import type {
 import { failureCode } from "../errors";
 import { useAgentRead, type AgentRead } from "./agentViews";
 
-// The model providers of the signed-in profile, as a host serves them: each
-// provider's masked status, and the person's ways to set, turn off or reset
-// its key. A key goes to the host once, in the call that saves it, and comes
+// The model providers of the signed-in profile, as a host serves them: the
+// masked status of each lane (a provider's API, or its command-line app),
+// and the person's ways to set, disable or reset its key. A key goes to the host once, in the call that saves it, and comes
 // back from nowhere: no answer here carries a key, and nothing keeps one.
 
 export type ProviderSettingsRecord = {
+  /** The lane's id, `<provider>_<transport>`, which each change names. One
+   * provider has a lane for its API and one for its command-line app. */
   id: string;
-  /** The provider's own name, the same in every language. */
+  /** The provider the lane reaches, as cadrumo-agent names it: shared by
+   * every lane of that provider. */
+  provider: string;
+  /** The provider's product name, the same in every language and on each of
+   * its lanes. */
   display_name: string;
   /** Its web API, or its command-line app. */
   transport: ProviderStatus["transport"];
   auth_kind: ProviderStatus["authKind"];
-  consumers: ProviderStatus["consumers"][number][];
   mode: ProviderStatus["mode"];
   available: boolean;
   source: ProviderStatus["source"];
@@ -31,8 +36,12 @@ export type ProviderSettingsRecord = {
   base_url?: string | null;
   default_base_url?: string | null;
   /** Sent back with a change, so a record changed elsewhere is not
-   * overwritten. */
+   * overwritten: 64 lowercase hex digits, all zeros for a lane that has no
+   * record. */
   revision: string;
+  /** Where the lane's command-line app stands on this computer; only a
+   * command-line lane has one. */
+  cli_state?: ProviderStatus["cliState"] | null;
 };
 
 export type ProviderSettingsAnswer = {
@@ -64,7 +73,7 @@ export interface ProviderSettings {
     secret: string;
     base_url?: string;
   }): Promise<ProviderSettingsRecord>;
-  /** Turns the provider off: nothing, not even the environment, is used. */
+  /** Disables the lane: nothing, not even the environment, is used. */
   turnOff(change: {
     provider: string;
     revision: string;
@@ -78,13 +87,14 @@ export interface ProviderSettings {
 
 const providerStatus = (record: ProviderSettingsRecord): ProviderStatus => ({
   id: record.id,
+  provider: record.provider,
   name: record.display_name,
   transport: record.transport,
   authKind: record.auth_kind,
-  consumers: record.consumers,
   mode: record.mode,
   readiness: record.readiness,
   source: record.source,
+  ...(record.cli_state ? { cliState: record.cli_state } : {}),
   ...(record.reason ? { reason: record.reason } : {}),
   ...(record.base_url ? { baseUrl: record.base_url } : {}),
   ...(record.default_base_url

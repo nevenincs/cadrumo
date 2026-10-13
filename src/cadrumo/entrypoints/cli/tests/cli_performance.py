@@ -822,7 +822,9 @@ def _resolve_cli_path(command_path: tuple[str, ...]) -> None:
     from typer._click.core import Context
     from typer.main import get_command
 
-    from ..main import app
+    from ..main import cli_app
+
+    app = cli_app()
 
     command = get_command(app)
     for token in command_path:
@@ -1028,7 +1030,9 @@ def measure_resolution_costs(
     probe_modules = _cadrumo_modules()
     from typer.main import get_command
 
-    from ..main import app
+    from ..main import cli_app
+
+    app = cli_app()
 
     get_command(app)
     baseline = _capture_baseline(probe_modules)

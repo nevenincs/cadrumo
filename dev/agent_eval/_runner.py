@@ -564,7 +564,9 @@ def _invoke_canonical_cli(argv: Sequence[str]):
     # the one that accepts that tree without a cross-fork cast.
     from typer.testing import CliRunner
 
-    from cadrumo.entrypoints.cli.main import app
+    from cadrumo.entrypoints.cli.main import cli_app
+
+    app = cli_app()
 
     return CliRunner().invoke(app, ["--format", "json", *argv])
 

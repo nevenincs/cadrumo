@@ -1,9 +1,11 @@
+pub mod agent_access;
 pub mod channel;
 mod clipboard;
 mod external;
 mod interrupts;
 mod menu;
 pub mod navigation;
+pub mod provider_settings;
 pub mod sign_in;
 pub mod single_instance;
 pub mod token;

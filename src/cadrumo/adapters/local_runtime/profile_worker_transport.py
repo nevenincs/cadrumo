@@ -12,6 +12,8 @@ from ...application.operations.models import OperationIdentity
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.deadline_budget import remaining_budget
 from ...application.runtime.profile_worker import (
+    ProfileWorkerAgentCredentials,
+    ProfileWorkerAgentCredentialsRequest,
     ProfileWorkerControlRequest,
     ProfileWorkerDrained,
     ProfileWorkerHumanBindingRequest,
@@ -31,7 +33,7 @@ from ...application.user_profile.automation_custody_port import AutomationCustod
 from .linux_worker_process import LinuxProcessScope
 from .macos_worker_process import MacosProcessScope
 from .profile_worker_lifetime import ProfileWorkerNativeLifetime
-from .runtime_frame_io import read_document, write_document, write_secret
+from .runtime_frame_io import read_document, read_secret, write_document, write_secret
 from .runtime_transport_cleanup import RuntimeTransportCleanup
 from .worker_admission_budget import WORKER_ADMISSION_PREPARE_TIMEOUT_SECONDS
 from .worker_lease_transfer import write_worker_lease
@@ -158,6 +160,43 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
             )
         finally:
             self.close(deadline=deadline)
+
+    def agent_credentials(
+        self, session_id: UUID, providers: tuple[str, ...]
+    ) -> tuple[ProfileWorkerAgentCredentials, bytearray]:
+        """Resolve the hosted assistant's credentials under one live session.
+
+        Returns the worker's description and a fresh buffer holding the secrets
+        in that order; the caller owns and wipes the buffer.
+        """
+        request = ProfileWorkerRequest(
+            ProfileWorkerAgentCredentialsRequest(request_id=uuid4(), session_id=session_id, providers=providers)
+        )
+        deadline = time.monotonic() + _CONTROL_EXCHANGE_SECONDS
+        material = bytearray()
+        acquired = False
+        try:
+            _acquire_exchange_lock(self._lock, deadline)
+            acquired = True
+            try:
+                channel = self._exchange_channel(False)
+                reply = self._read_exchange_reply(channel, request, ProfileWorkerAgentCredentials, None, deadline)
+                if reply.credentials:
+                    with read_secret(channel, deadline=deadline) as secret:
+                        if len(secret) != sum(item.secret_bytes for item in reply.credentials):
+                            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                        material += secret
+            finally:
+                self._lock.release()
+        except (AutomationCustodyError, ProfileAccessRefusedError):
+            material[:] = bytes(len(material))
+            raise
+        except BaseException as error:
+            material[:] = bytes(len(material))
+            if acquired:
+                self._retire_failed_exchange(error, deadline)
+            raise
+        return reply, material
 
     def _exchange_channel(self, operation: bool) -> WorkerChannel:
         """Require a retained channel and current native containment while its transport lock is held."""
