@@ -402,7 +402,7 @@ def run_subordinate(
                 ),
                 CheckResult((), 0),
             )
-        environment = _subordinate_environment(authority)
+        environment = _subordinate_environment()
         with tempfile.TemporaryDirectory(
             prefix="cadrumo-import-checker-", dir=prepare_temporary_directory()
         ) as temporary:
@@ -857,10 +857,14 @@ def _set_subordinate_environment(environment: dict[str, str], import_paths: list
     environment["PYTHONIOENCODING"] = UTF_8
 
 
-def _subordinate_environment(authority: Authority) -> dict[str, str]:
+def _subordinate_environment() -> dict[str, str]:
     """Subordinate environment."""
+    harness_roots = _load_harness_import_roots()
+    if isinstance(harness_roots, str):
+        raise RuntimeError(harness_roots)
     environment = os.environ.copy()
-    import_paths = [str(_CHECKER_PATH.parents[2]), *(str(root.source_root) for root in authority.roots)]
+    # The checker parses audited sources as data; its imports belong to the tool tree.
+    import_paths = list(harness_roots)
     existing = environment.get("PYTHONPATH")
     if existing is not None and existing:
         import_paths.append(existing)

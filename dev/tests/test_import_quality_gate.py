@@ -1035,6 +1035,23 @@ def test_clean_fixture_has_a_nonzero_governed_scan_and_passes_the_component(tmp_
     assert loadability["loaded"] == attempted and loadability["failed"] == 0, output
 
 
+def test_the_subordinate_checker_does_not_import_the_audited_support_modules(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = _fixture_root(tmp_path)
+    _write_module(root, "cadrumo.core.storage_environment", "raise RuntimeError('audited support must not execute')\n")
+    _compile_load_targets(root)
+    read = read_authority(root)
+    assert read.authority is not None and not read.findings
+    monkeypatch.setenv("PYTHONPATH", str(root / "src"))
+
+    component, checker = run_subordinate(read.authority)
+
+    assert component.returncode == 0, component.output
+    assert checker.files_scanned > 0
+    assert not checker.findings
+
+
 def test_the_isolated_worker_imports_the_audited_tree_rather_than_the_tool_tree(tmp_path: Path) -> None:
     root = _fixture_root(tmp_path)
     # The tool tree defines a module of the same name that loads cleanly; only
