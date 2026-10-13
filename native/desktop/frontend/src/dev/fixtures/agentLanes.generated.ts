@@ -1,5 +1,5 @@
 // GENERATED FILE - DO NOT EDIT.
-// Regenerate: CADRUMO_AGENT_CHECKOUT=<cadrumo-agent checkout> node scripts/agent-catalog-fixture.mjs
+// Regenerate: CADRUMO_DEV_AGENT_CHECKOUT=<cadrumo-agent checkout> node scripts/agent-catalog-fixture.mjs
 //
 // What cadrumo-agent declares about its provider lanes, read from its own
 // registry (provider_definitions.py, graph/enums.py, providers/registry.py,
@@ -15,7 +15,7 @@
 // far each capability is proven. The scenario host adds those, named as
 // fixtures. A lane is addressed as <provider>_<transport>.
 //
-// Agent source digest (sha256, line endings normalised): 7d713810f214beb9867f3112e2d9d7dfb270a2a23e2957900a63b5ac1b5851ac
+// Agent source digest (sha256, line endings normalised): 645dd5f528373a4d87ff6bbc6f064ac837567a151b0dab3c5ef370ca5eff1c8d
 
 import type {
   AgentLaneCapability,

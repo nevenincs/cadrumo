@@ -3,10 +3,10 @@
 // modes, the efforts a gateway declares, and the credential each lane takes.
 // Every value is read from the agent's own registry and its catalog response
 // by `agent_catalog_dump.py`, run with the interpreter of the checkout named
-// by CADRUMO_AGENT_CHECKOUT; none is typed here.
+// by CADRUMO_DEV_AGENT_CHECKOUT; none is typed here.
 //
-//   CADRUMO_AGENT_CHECKOUT=<absolute path> node scripts/agent-catalog-fixture.mjs
-//   CADRUMO_AGENT_CHECKOUT=<absolute path> node scripts/agent-catalog-fixture.mjs --check
+//   CADRUMO_DEV_AGENT_CHECKOUT=<absolute path> node scripts/agent-catalog-fixture.mjs
+//   CADRUMO_DEV_AGENT_CHECKOUT=<absolute path> node scripts/agent-catalog-fixture.mjs --check
 //
 // `--check` writes nothing and fails when the file on disk is not what the
 // agent would generate now.
@@ -28,10 +28,10 @@ const backend = resolve(
 
 const { values } = parseArgs({ options: { check: { type: "boolean" } } });
 
-const checkout = process.env.CADRUMO_AGENT_CHECKOUT;
+const checkout = process.env.CADRUMO_DEV_AGENT_CHECKOUT;
 if (!checkout || !isAbsolute(checkout))
   fail(
-    "Set CADRUMO_AGENT_CHECKOUT to the absolute path of a cadrumo-agent checkout.",
+    "Set CADRUMO_DEV_AGENT_CHECKOUT to the absolute path of a cadrumo-agent checkout.",
   );
 const python = join(
   checkout,
@@ -60,7 +60,7 @@ if (ran.status !== 0)
 const agent = JSON.parse(ran.stdout);
 
 const source = `// GENERATED FILE - DO NOT EDIT.
-// Regenerate: CADRUMO_AGENT_CHECKOUT=<cadrumo-agent checkout> node scripts/agent-catalog-fixture.mjs
+// Regenerate: CADRUMO_DEV_AGENT_CHECKOUT=<cadrumo-agent checkout> node scripts/agent-catalog-fixture.mjs
 //
 // What cadrumo-agent declares about its provider lanes, read from its own
 // registry (provider_definitions.py, graph/enums.py, providers/registry.py,

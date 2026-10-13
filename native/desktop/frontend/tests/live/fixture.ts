@@ -24,10 +24,10 @@ const ATTACH_TIMEOUT = 60_000;
 type Goto = Page["goto"];
 
 function endpoint(): string {
-  const value = process.env.CADRUMO_AGENT_LIVE_ENDPOINT;
+  const value = process.env.CADRUMO_DEV_DESKTOP_LIVE_ENDPOINT;
   if (!value)
     throw new Error(
-      "The live project attaches to a running lane desktop. Run it with `just desktop-agent-live`, or set CADRUMO_AGENT_LIVE_ENDPOINT to the desktop's DevTools endpoint.",
+      "The live project attaches to a running lane desktop. Run it with `just desktop-agent-live`, or set CADRUMO_DEV_DESKTOP_LIVE_ENDPOINT to the desktop's DevTools endpoint.",
     );
   const url = new URL(value);
   if (url.hostname !== "127.0.0.1" && url.hostname !== "[::1]")
@@ -37,7 +37,7 @@ function endpoint(): string {
 
 /** The shell entry the desktop loads, packaged or served. */
 export function shellEntry(): URL {
-  return new URL(process.env.CADRUMO_AGENT_LIVE_ENTRY || PACKAGED_ENTRY);
+  return new URL(process.env.CADRUMO_DEV_DESKTOP_LIVE_ENTRY || PACKAGED_ENTRY);
 }
 
 /**

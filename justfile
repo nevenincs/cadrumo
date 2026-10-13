@@ -529,14 +529,14 @@ check-corpus-sidecars:
     @uv run --no-sync python -m dev.corpus.extract_corpus_sidecars --check
 
 # Operator-run: regenerate the provider-settings lane catalog from a cadrumo-agent
-# checkout named by CADRUMO_AGENT_CHECKOUT; writes committed derived state.
-[doc('Generate the provider-settings lane catalog from the cadrumo-agent checkout in CADRUMO_AGENT_CHECKOUT.')]
+# checkout named by CADRUMO_DEV_AGENT_CHECKOUT; writes committed derived state.
+[doc('Generate the provider-settings lane catalog from the cadrumo-agent checkout in CADRUMO_DEV_AGENT_CHECKOUT.')]
 [group('generate')]
 generate-provider-catalog:
     @uv run --no-sync python -m dev.provider_catalog.generate
 
 # Freshness gate: fail when the committed lane catalog drifts from the
-# cadrumo-agent checkout in CADRUMO_AGENT_CHECKOUT. Refuses (exit 2) when no
+# cadrumo-agent checkout in CADRUMO_DEV_AGENT_CHECKOUT. Refuses (exit 2) when no
 # checkout is supplied, so it cannot pass vacuously where the agent is absent.
 [doc('Freshness gate: fail when the provider-settings lane catalog drifts from cadrumo-agent.')]
 [group('check')]

@@ -1,13 +1,16 @@
 include_guard(GLOBAL)
-set(CADRUMO_AGENT_SOURCE_DIR "$ENV{CADRUMO_AGENT_SOURCE_DIR}" CACHE PATH "Local cadrumo-agent project directory")
-# A configure that names the folder only in its environment still selects it once the cache holds none.
-if(NOT CADRUMO_AGENT_SOURCE_DIR AND DEFINED ENV{CADRUMO_AGENT_SOURCE_DIR})
-  set(CADRUMO_AGENT_SOURCE_DIR "$ENV{CADRUMO_AGENT_SOURCE_DIR}" CACHE PATH "Local cadrumo-agent project directory" FORCE)
+# The folder is selected by this cache variable alone. The process environment is never read, so
+# no environment name carries the selection into the build or its child processes.
+set(CADRUMO_PACKAGE_AGENT_SOURCE_DIR "" CACHE PATH "Local cadrumo-agent project directory; set with -D or a CMake user preset")
+if("${CADRUMO_PACKAGE_AGENT_SOURCE_DIR}" STREQUAL "")
+  message(FATAL_ERROR "The CMake cache variable CADRUMO_PACKAGE_AGENT_SOURCE_DIR is not set. "
+    "Configure with -DCADRUMO_PACKAGE_AGENT_SOURCE_DIR=<cadrumo-agent project folder> or set it in a CMake user preset; the environment is not consulted.")
 endif()
-if(NOT CADRUMO_AGENT_SOURCE_DIR OR NOT EXISTS "${CADRUMO_AGENT_SOURCE_DIR}/pyproject.toml")
-  message(FATAL_ERROR "Set CADRUMO_AGENT_SOURCE_DIR, in the environment or with -D, to the cadrumo-agent project folder")
+if(NOT EXISTS "${CADRUMO_PACKAGE_AGENT_SOURCE_DIR}/pyproject.toml")
+  message(FATAL_ERROR "The CMake cache variable CADRUMO_PACKAGE_AGENT_SOURCE_DIR is \"${CADRUMO_PACKAGE_AGENT_SOURCE_DIR}\", which holds no pyproject.toml. "
+    "Set it to the cadrumo-agent project folder.")
 endif()
-get_filename_component(agent_source "${CADRUMO_AGENT_SOURCE_DIR}" ABSOLUTE BASE_DIR "${PROJECT_SOURCE_DIR}")
+get_filename_component(agent_source "${CADRUMO_PACKAGE_AGENT_SOURCE_DIR}" ABSOLUTE BASE_DIR "${PROJECT_SOURCE_DIR}")
 file(GLOB_RECURSE agent_source_inputs CONFIGURE_DEPENDS "${agent_source}/src/*")
 foreach(agent_file pyproject.toml README.md LICENSE NOTICE .gitignore)
   if(EXISTS "${agent_source}/${agent_file}")

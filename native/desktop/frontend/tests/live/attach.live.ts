@@ -6,7 +6,7 @@ import { shellEntry } from "./fixture";
 // column mounted. Its name keeps it out of the other projects.
 
 test("the specs drive the desktop's own shell", async ({ page }) => {
-  const endpoint = new URL(process.env.CADRUMO_AGENT_LIVE_ENDPOINT ?? "");
+  const endpoint = new URL(process.env.CADRUMO_DEV_DESKTOP_LIVE_ENDPOINT ?? "");
   expect(["127.0.0.1", "[::1]"]).toContain(endpoint.hostname);
   await page.goto("/scenarios.html?scenario=signed-in");
   expect(new URL(page.url()).origin).toBe(shellEntry().origin);

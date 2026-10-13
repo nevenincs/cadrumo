@@ -139,7 +139,7 @@ def test_check_mode_reports_drift_and_refuses_without_a_checkout(
 ) -> None:
     agent = _agent_tree(tmp_path / "agent")
     committed = target_path().read_bytes()
-    monkeypatch.delenv("CADRUMO_AGENT_CHECKOUT", raising=False)
+    monkeypatch.delenv("CADRUMO_DEV_AGENT_CHECKOUT", raising=False)
 
     refused = main(["--check"])
     drift = main(["--check", "--agent-root", str(agent)])

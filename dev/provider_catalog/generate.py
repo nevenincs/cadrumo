@@ -43,7 +43,7 @@ from cadrumo.core.config import Settings
 from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT, UTF_8
 
-AGENT_CHECKOUT_ENV: Final = "CADRUMO_AGENT_CHECKOUT"
+AGENT_CHECKOUT_ENV: Final = "CADRUMO_DEV_AGENT_CHECKOUT"
 _AGENT_SOURCES: Final = (
     "provider_definitions.py",
     "graph/enums.py",

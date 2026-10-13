@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 // The live project: the shared agent specs, unchanged, against the packaged
 // desktop. The lane (`just desktop-agent-live`) starts the desktop with a
-// loopback DevTools port and names it in CADRUMO_AGENT_LIVE_ENDPOINT. This
+// loopback DevTools port and names it in CADRUMO_DEV_DESKTOP_LIVE_ENDPOINT. This
 // configuration starts no server and no browser; it only attaches.
 //
 // The tsconfig beside this file resolves "@playwright/test" to the live
@@ -14,7 +14,7 @@ import { fileURLToPath } from "node:url";
 // "live" here and absent on the scenario project.
 const here = fileURLToPath(new URL(".", import.meta.url));
 const results =
-  process.env.CADRUMO_AGENT_LIVE_RESULTS ||
+  process.env.CADRUMO_DEV_DESKTOP_LIVE_RESULTS ||
   resolve(buildPath("desktop_results"), "agent-live");
 
 export default defineConfig({

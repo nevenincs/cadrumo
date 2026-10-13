@@ -41,7 +41,7 @@ Exit 0 means every spec passed and both checks were clean, 1 means a failure,
 and 3 means a prerequisite is absent.
 
 The lane reads your key only from its own environment, as
-`CADRUMO_LLM_ANTHROPIC_API_KEY`, and exits 3 naming that variable when it is
+`CADRUMO_LLM_CLAUDE_API_KEY`, and exits 3 naming that variable when it is
 unset. It writes the key once to the set command's standard input. The key is
 never placed on a command line, in a file, a log or another process's
 environment.

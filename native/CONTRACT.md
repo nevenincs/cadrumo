@@ -521,7 +521,7 @@ divergence before staging. ZIP acceptance also checks the reported Windows versi
 | --- | --- |
 | default / `bundle` | Build the application payload and, for Windows desktop deliveries, its matching background-services installation kit at `stage/<Config>/services` |
 | `app-distro` | Compatibility target for the complete `bundle` |
-| `agent_project` | Build and inventory the wheel from the local project folder configured with `-DCADRUMO_AGENT_SOURCE_DIR=<path>`; no download or source SHA pin is involved |
+| `agent_project` | Build and inventory the wheel from the local project folder configured with the cache-only variable `-DCADRUMO_PACKAGE_AGENT_SOURCE_DIR=<path>`, which no environment variable supplies; no download or source SHA pin is involved |
 | `agent-install` | Build the complete bundle with the agent installed in `cadrumo/site-packages`; `cmake --install` copies that built payload to the selected prefix |
 | `agent-uninstall` | Remove generated product dependencies and the selected staged bundle; the next bundle build reconstructs the complete dependency set |
 | `agent-rebuild` | Remove the built agent wheel and dependent payloads, then rebuild the complete bundle from the configured project folder |
