@@ -5,9 +5,10 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:2eb350df538ed0c61a48cd5f6bac8c07f1b9030bf7e6598be74783a071652870'
+body_hash: 'sha256:94b219f03c41772394c817fe2c869ec0f1df12f2f5c7db3f7405a9d71390fde4'
 related:
   - "[[2026-10-13-native-agent-audit]]"
+  - '[[2026-10-13-canonical-environment-application-internals-adr]]'
 ---
 # `native-agent` adr: `CMake owns the private agent dependency` | (**status:** `accepted`)
 
@@ -21,7 +22,7 @@ The native-agent audit identifies the missing dependency owner, external-checkou
 
 ## Considered options
 
-The owner clarified the source choice: CMake accepts a configurable local project folder through `CADRUMO_AGENT_SOURCE_DIR`. No source SHA pin, repository download or Git operation is involved. A public package release contradicts the existing owner ruling. Developer checkout launches and test-time installation contradict this task's explicit instructions.
+The owner clarified the source choice: CMake accepts a configurable local project folder through the cache-only variable `CADRUMO_PACKAGE_AGENT_SOURCE_DIR`. (Amended 2026-10-13 under `2026-10-13-canonical-environment-application-internals-adr`; before that this read: "CMake accepts a configurable local project folder through `CADRUMO_AGENT_SOURCE_DIR`.") No source SHA pin, repository download or Git operation is involved. A public package release contradicts the existing owner ruling. Developer checkout launches and test-time installation contradict this task's explicit instructions.
 
 ## Constraints
 

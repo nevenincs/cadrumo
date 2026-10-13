@@ -3,15 +3,16 @@ tags:
   - '#adr'
   - '#canonical-storage-management'
 date: '2026-08-03'
-modified: '2026-10-08'
+modified: '2026-10-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:71cb40a661927d6cd1033b91794d1d74c865245b9d1fcf36131be6cef6a52dcb'
+body_hash: 'sha256:fb88a463ad0da535b96892b616e53316a7053d805d5dbf0180c8e92991e9b84d'
 related:
   - "[[2026-08-03-canonical-storage-management-research]]"
   - "[[2026-07-13-data-output-standardization-adr]]"
   - "[[2026-08-07-dev-harness-bleed-adr]]"
   - "[[2026-08-07-pdf-sanitizer-contributor-tooling-adr]]"
   - '[[2026-10-08-canonical-environment-darwin-transport-adr]]'
+  - '[[2026-10-13-canonical-environment-application-internals-adr]]'
 ---
 
 # `canonical-storage-management` adr: `canonical storage management API and config storage surface` | (**status:** `accepted`)
@@ -186,7 +187,7 @@ membership test, and its enforcing property are fixed.
 pydantic `StorageLocation` model carries the axes a bare member cannot: the
 literal POSIX relative subpath, the node kind, the scope, the override policy,
 the lifecycle class, and the fingerprint-exclusion flag. One `STORAGE_TAXONOMY`
-mapping keyed by the enum is the single declaration. Both halves are required:
+mapping keyed by the enum is the single declaration. It declares the CLI's own locations. It is not the source of any package environment contract; `native/application-environment.toml` declares which variables a packaged image passes, and the package's own component locations are declared there, not as taxonomy members (added 2026-10-13 under `2026-10-13-canonical-environment-application-internals-adr`). Both halves are required:
 the enum because the CLI boundary mandate needs a closed type to render the
 accepted set and production code must pass members rather than strings; the
 model because a member cannot carry six axes without becoming a string that

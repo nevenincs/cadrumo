@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:dbb788d4758406531d54fad5c29a27deb81f54e8101bd658bc33b212cf2bc9cd'
+body_hash: 'sha256:d471a102f1131da898c30e4eb73d2c541717b0f8dbcb5c256e3ebc7479cc2ccd'
 related:
   - "[[2026-10-13-native-agent-adr]]"
   - "[[2026-10-12-live-agent-evaluation-adr]]"
@@ -78,7 +78,7 @@ Affected records, with proposed wording for owner approval:
 - `2026-10-12-live-agent-evaluation-adr`, Consequences, under "Where it stops": add "It does not exercise cadrumo-agent. The agent integration is proved by `dev/runtime_lifecycle/agent_live.py` against the same package, under `2026-10-13-package-verification-adr`."
 - `2026-10-13-desktop-agent-host-live-lane-adr` (proposed): replace deviation L2 and the Implementation's "cadrumo-agent from its source tree". New text: "The lane starts cadrumo-agent only through the runtime's hosted door, from the package's bundled agent. It waits on the first recorded tool-access proof. The `agent-direct-start` feature is removed." Remove the corresponding sentence in Rationale.
 - `2026-08-05-packaging-smoke-architecture-adr` and `2026-08-14-test-harness-sanity-successor-adr`: no change.
-- cadrumo-agent records, proposed to their owner: `2026-10-10-cadrumo-integration-capability-proofs-adr` and `2026-10-11-cadrumo-integration-entry-network-proof-adr` state that a Cadrumo-facing proof is earned on the agent as Cadrumo's package ships it. `2026-10-11-cadrumo-integration-hosting-contract-adr` names `CADRUMO_AGENT_HOSTED_RELAY_EXECUTABLE`, which the code already uses, and records the retirement of the two program-path variables it still names.
+- cadrumo-agent records, proposed to their owner: `2026-10-10-cadrumo-integration-capability-proofs-adr` and `2026-10-11-cadrumo-integration-entry-network-proof-adr` state that a Cadrumo-facing proof is earned on the agent as Cadrumo's package ships it. `2026-10-11-cadrumo-integration-hosting-contract-adr` names `CADRUMO_AGENT_HOSTED_RELAY_EXECUTABLE`, which the code already uses, and leaves to the agent owner whether the two program-path variables stay, now that the agent may run Cadrumo's command line and Python (`2026-10-13-canonical-environment-application-internals-adr` constraint 17) (amended 2026-10-13 under `2026-10-13-canonical-environment-application-internals-adr`; before that this read: "and records the retirement of the two program-path variables it still names").
 
 ## Implementation
 
@@ -109,7 +109,7 @@ Using the agent's existing development setting with the package's binaries is th
   - cadrumo-agent reads `development_tool_server` only from the environment or from a settings file named by an environment variable (`cadrumo-agent: control/settings_base.py:15-30`), so there is no other carrier today.
   - The cadrumo-agent owner prefers to keep the environment as the one carrier, and to have the host admit the agent's names for the agent's launch and its worker. The gateway already refuses the development setting beside a hosted root or under `enforce`. That choice belongs to the canonical-environment record.
 
-  This record builds no workaround for the stripping.
+  This record builds no workaround for the stripping. `2026-10-13-canonical-environment-application-internals-adr` adopts the agent owner's preference through the agent gateway and worker launch profiles of a dedicated agent image (added 2026-10-13 under `2026-10-13-canonical-environment-application-internals-adr`).
 - Removing `agent-direct-start` drops the desktop lane's fast loop until the hosted door admits the agent.
 - Reconsider if a shipped platform cannot run its package in development, or if cadrumo-agent changes how a proof is recorded.
 - Accepted 2026-10-13 on the owner's first-hand approval ("approved"), together with the proposed wording for the affected records above. Acceptance records the decision. It is not evidence that any of it is built.

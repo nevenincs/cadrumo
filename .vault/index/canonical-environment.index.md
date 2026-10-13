@@ -6,7 +6,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:0be99a5da0655bda5412e8cf1ecdcd590d97e4a0f4ee1669829948ee56cd3177'
+body_hash: 'sha256:a33b06e84f1f2441c5914bf4d6889e4037229e1f64242528570a031cdf0414ab'
 related:
   - '[[2026-10-04-canonical-environment-adr]]'
   - '[[2026-10-04-canonical-environment-ledger]]'
@@ -14,6 +14,7 @@ related:
   - '[[2026-10-04-canonical-environment-reference]]'
   - '[[2026-10-08-canonical-environment-darwin-transport-adr]]'
   - '[[2026-10-13-canonical-environment-application-internals-adr]]'
+  - '[[2026-10-13-canonical-environment-plan]]'
 ---
 
 # `canonical-environment` feature index
@@ -26,7 +27,7 @@ Auto-generated index of all documents tagged with `#canonical-environment`.
 
 - `2026-10-04-canonical-environment-adr` - `canonical-environment` adr: `Canonical location and environment contract` | (**status:** `accepted`)
 - `2026-10-08-canonical-environment-darwin-transport-adr` - `canonical-environment` adr: `Darwin transient transport namespace` | (**status:** `accepted`)
-- `2026-10-13-canonical-environment-application-internals-adr` - `canonical-environment` adr: `One packaged internals declaration from which every interpreter host defines its process environment` | (**status:** `proposed`)
+- `2026-10-13-canonical-environment-application-internals-adr` - `canonical-environment` adr: `One packaged internals declaration from which every interpreter host defines its process environment` | (**status:** `accepted`)
 
 ### exec
 
@@ -35,6 +36,7 @@ Auto-generated index of all documents tagged with `#canonical-environment`.
 ### plan
 
 - `2026-10-04-canonical-environment-plan` - `canonical-environment` plan
+- `2026-10-13-canonical-environment-plan` - `canonical-environment` plan
 
 ### reference
 

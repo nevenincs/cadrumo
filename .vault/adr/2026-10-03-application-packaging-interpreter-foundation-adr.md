@@ -3,13 +3,14 @@ tags:
   - '#adr'
   - '#application-packaging'
 date: '2026-10-03'
-modified: '2026-10-09'
+modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:6a5c64afc96f1c90aacb190a745ea22dc76824aea833b8b86e37dcc035a524fe'
+body_hash: 'sha256:367b18bb3cf7f64ec6370c3c0ba0f35d771a4b8b6221488ca7c3b620de14d417'
 related:
   - "[[2026-10-03-application-packaging-research]]"
   - "[[2026-10-03-application-packaging-adr]]"
   - '[[2026-10-04-runtime-manager-architecture-adr]]'
+  - '[[2026-10-13-canonical-environment-application-internals-adr]]'
 ---
 # `application-packaging` adr: `authorized interpreter foundation` | (**status:** `accepted`)
 
@@ -31,11 +32,11 @@ The existing research and proposed packaging ADR remain the design context. Sett
 
 Acceptance is based on the user's explicit 2026-10-03 foundation brief and subsequent instruction to keep work to application layout and Python provisioning. It does not accept the unresolved choices in `2026-10-03-application-packaging-adr`. Tauri remains settled but unimplemented here. Linux has a mapping only; macOS implementation is deferred. No installer, provisioning service, runtime manager or storage migration is authorized. Existing local storage is ignored for this work as the user directed; core development defaults remain unchanged.
 
-The native application consumes the existing Python product and its three exact-version distributions. Existing encryption, authentication, bucket/keystore separation and application authority remain unchanged. Native bootstrap supplies the packaged Settings environment before Python starts; it does not reimplement business configuration.
+The native application consumes the existing Python product and its three exact-version distributions. Existing encryption, authentication, bucket/keystore separation and application authority remain unchanged. Native bootstrap defines each packaged image's process environment from its launch profile in `native/application-environment.toml` before Python starts; it does not reimplement business configuration. (Amended 2026-10-13 under `2026-10-13-canonical-environment-application-internals-adr`; before that this read: "Native bootstrap supplies the packaged Settings environment before Python starts")
 
 ## Implementation
 
-Authored sources are `native/interpreter/`, `native/platform/`, `native/package-layout.json`, `native/toolchain.json` and `dev/packaging/native/`. Generated bindings, SDK acquisition, builds and assembly stay under `.artifacts/native/`. The generator projects Settings names, identity and storage declarations; package-specific paths have one JSON owner. `native/CONTRACT.md` records the platform matrix.
+Authored sources are `native/interpreter/`, `native/platform/`, `native/package-layout.json`, `native/toolchain.json` and `dev/packaging/native/`. Generated bindings, SDK acquisition, builds and assembly stay under `.artifacts/native/`. The generator projects the package environment declaration and identity; package-specific paths have one JSON owner. (Amended 2026-10-13 under `2026-10-13-canonical-environment-application-internals-adr`; before that this read: "The generator projects Settings names, identity and storage declarations") `native/CONTRACT.md` records the platform matrix.
 
 Use the existing 3.13.11 release pin with the official CPython NuGet SDK, SHA256-pinned in the toolchain input. Compile the C host and bridge with matching headers and import library. This first build consumes upstream CPython binaries; it does not rebuild CPython from source. No CPython patch is required. The full 3.13 initialization API configures isolated import paths, disabled site/user-site and bytecode writes, explicit executable identity, UTF-8 streams and normal invocation parsing. The static host establishes restricted DLL lookup before loading the bundled Python DLL and initialization bridge.
 
@@ -86,8 +87,7 @@ mapping obligations remain open; no placeholder implementation implies support.
 The user subsequently directed this work to consume the existing core storage
 owner and preserve repository-local development defaults and explicit overrides.
 This supersedes the earlier Known Folder and empty-override policy paragraphs.
-Native generation projects `Settings.storage_env_var_names()` and storage taxonomy
-values. The interpreter consumes the installed per-user default declared by the core
+Native generation projects `native/application-environment.toml`; it does not derive the environment contract from the CLI. (Amended 2026-10-13 under `2026-10-13-canonical-environment-application-internals-adr`; before that this read: "Native generation projects `Settings.storage_env_var_names()` and storage taxonomy values.") The interpreter consumes the installed per-user default declared by the core
 storage owner in `2026-10-04-canonical-environment-adr` and migrates no storage. Package-specific external binary directories are explicitly
 allowlisted; they affect executable PATH without widening DLL search.
 
