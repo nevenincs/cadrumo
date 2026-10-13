@@ -29,6 +29,7 @@ from typing import Final
 COMMAND_OPERATION_ROWS: Final[tuple[tuple[tuple[str, ...], str | None], ...]] = (
     ((), None),
     (("app",), None),
+    (("app", "agent", "serve"), None),
     (("app", "diagnostics"), None),
     (("app", "diagnostics", "errors"), "diagnostics.read"),
     (("app", "diagnostics", "latency"), "diagnostics.read"),
@@ -454,6 +455,8 @@ OPERATIONS_WITHOUT_COMMAND: Final[tuple[str, ...]] = (
 """Every registered operation no command submits."""
 
 COMMAND_RUNTIME_REQUEST_ROWS: Final[tuple[tuple[tuple[str, ...], str], ...]] = (
+    (("app", "agent", "serve"), "agent_start"),
+    (("app", "agent", "serve"), "profile_login"),
     (("app", "diagnostics", "errors"), "profile_login"),
     (("app", "diagnostics", "latency"), "profile_login"),
     (("app", "diagnostics", "llm-usage"), "profile_login"),
