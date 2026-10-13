@@ -26,6 +26,7 @@ from .hashing import digest
 from .layout import ApplicationImage, application_images, backend, entrypoint_files, load_layout
 from .linux_desktop_runtime import stage as stage_linux_desktop_runtime
 from .package_inventory import DELEGATED_INVENTORIES, USER_DOCS, package_inventory
+from .product import BUNDLED_EXTRAS
 from .stdlib import bundle as bundle_stdlib
 from .stdlib import compile_packages_bytecode
 
@@ -168,7 +169,9 @@ def assemble(
         raise ValueError("Application assembly requires product dependencies")
     allowed = set() if interpreter else set(PRODUCT_IDENTITY.cohort_distributions)
     requirements = (
-        {} if interpreter else active_requirements(REPO_ROOT, target_platform(target), build_identity["python"])
+        {}
+        if interpreter
+        else active_requirements(REPO_ROOT, target_platform(target), build_identity["python"], extras=BUNDLED_EXTRAS)
     )
     allowed.update(requirements)
     installed = [] if dependencies is None else list(importlib.metadata.distributions(path=[str(dependencies)]))

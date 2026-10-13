@@ -30,7 +30,7 @@ from .build_toolchain import builder_inputs, native_toolchain_identity, selected
 from .docs_stage import RECONFIGURE
 from .layout import backend, load_layout
 from .process_quiescence import quiesce
-from .product import build_product
+from .product import BUNDLED_EXTRAS, build_product
 from .provision import provision, provisioning_tools
 from .target import toolchain_for_target
 
@@ -48,7 +48,8 @@ def action_toolchain(configured: Mapping[str, object], action: str, target: str)
         selected["pins"] = {name: value for name, value in pins.items() if name.startswith("cpython_")}
         if action == "provision":
             python = (REPO_ROOT / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip()
-            selected["wheels"] = [asdict(wheel) for wheel in plan_target_wheels(REPO_ROOT, target, python)]
+            wheels = plan_target_wheels(REPO_ROOT, target, python, extras=BUNDLED_EXTRAS)
+            selected["wheels"] = [asdict(wheel) for wheel in wheels]
         if action == "sdk" and "cpython_archive_decoder" in configured:
             selected["cpython_archive_decoder"] = configured["cpython_archive_decoder"]
     elif action == "tools":

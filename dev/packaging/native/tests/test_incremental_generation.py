@@ -183,7 +183,7 @@ def test_cargo_crate_types_and_consumer_preserve_sibling_artifacts(tmp_path: Pat
 def test_changed_wheel_closure_reuses_sdk(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """A runtime dependency update neither calls SDK acquisition nor touches SDK bytes."""
     wheel = LockedWheel("fixture", "1", "fixture-1-py3-none-any.whl", "https://example.test/one", "a" * 64, 1)
-    monkeypatch.setattr(cmake_build, "plan_target_wheels", lambda *args: (wheel,))
+    monkeypatch.setattr(cmake_build, "plan_target_wheels", lambda *args, **kwargs: (wheel,))
     sdk_identity = action_toolchain({}, "sdk", "windows-x86-64")
     dependency_identity = action_toolchain({}, "provision", "windows-x86-64")
     wheel = LockedWheel("fixture", "2", "fixture-2-py3-none-any.whl", "https://example.test/two", "b" * 64, 1)
@@ -202,7 +202,7 @@ def test_changed_wheel_closure_reuses_sdk(tmp_path: Path, monkeypatch: pytest.Mo
     monkeypatch.setattr(cmake_build, "load_layout", lambda target: {"sdk": {"root": "sdk"}})
     monkeypatch.setattr(provision, "load_layout", lambda target: {"sdk": {"root": "sdk"}})
     monkeypatch.setattr(provision, "selected_uv", lambda *args, **kwargs: "configured-uv")
-    monkeypatch.setattr(provision, "plan_target_wheels", lambda *args: (wheel,))
+    monkeypatch.setattr(provision, "plan_target_wheels", lambda *args, **kwargs: (wheel,))
 
     def unexpected_sdk(*args: object) -> None:
         raise AssertionError("A dependency closure build must not reacquire the SDK")

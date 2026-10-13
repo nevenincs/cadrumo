@@ -13,6 +13,7 @@ from dev._paths import REPO_ROOT
 from ...runtime_wheel_selection import active_requirements
 from ...runtime_wheelhouse_contract import target_platform
 from ..assemble import assemble
+from ..product import BUNDLED_EXTRAS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -21,6 +22,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
     ("defect", "message"),
     [
         ("missing", "closure mismatch"),
+        ("core-only", "closure mismatch"),
         ("mixed", "cohort versions"),
         ("duplicate", "Duplicate installed"),
         ("target", "target/layout ABI"),
@@ -30,11 +32,14 @@ def test_invalid_cohort_never_reaches_payload_copy(tmp_path: Path, defect: str, 
     dependencies = tmp_path / "dependencies"
     dependencies.mkdir()
     versions = {name: "1.2.3" for name in PRODUCT_IDENTITY.cohort_distributions}
-    for name, requirement in active_requirements(REPO_ROOT, target_platform("windows-x86-64"), "3.13.11").items():
+    bundled = active_requirements(REPO_ROOT, target_platform("windows-x86-64"), "3.13.11", extras=BUNDLED_EXTRAS)
+    for name, requirement in bundled.items():
         versions[name] = next(iter(requirement.specifier)).version
     companion = PRODUCT_IDENTITY.companion_distributions[0]
     if defect == "missing":
         del versions[companion]
+    if defect == "core-only":
+        del versions["nvidia-ml-py"]
     if defect == "mixed":
         versions[companion] = "1.2.2"
     for name, version in versions.items():

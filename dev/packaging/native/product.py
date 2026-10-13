@@ -28,6 +28,13 @@ from .build_toolchain import selected_uv
 from .hashing import digest
 from .target import uv_environment, uv_platform
 
+BUNDLED_EXTRAS: tuple[str, ...] = ("llm",)
+"""Optional extras the native application ships with its core closure.
+
+The application serves the local model's review operations, which refuse
+without ``llm``; the wheel's core install stays without it.
+"""
+
 
 def build_product(
     output: Path,

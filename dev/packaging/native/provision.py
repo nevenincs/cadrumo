@@ -18,6 +18,7 @@ from .build_log import BuildLog, display_path
 from .build_toolchain import selected_uv
 from .hashing import digest
 from .layout import backend, load_layout
+from .product import BUNDLED_EXTRAS
 from .target import toolchain_for_target, uv_environment, uv_platform
 
 
@@ -56,7 +57,7 @@ def provision(
     pin = (REPO_ROOT / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip()
     tools = provisioning_tools(target, build_toolchain)
     contract = load_layout(target)
-    wheels = plan_target_wheels(REPO_ROOT, target, pin)
+    wheels = plan_target_wheels(REPO_ROOT, target, pin, extras=BUNDLED_EXTRAS)
     if sdk is None:
         produced = backend(contract).provision_sdk(destination, pin, tools, contract)
         if not isinstance(produced, Path):
