@@ -8,7 +8,7 @@ related:
   - '[[2026-10-12-mcp-parity-attended-live-sign-in-adr]]'
 modified: '2026-10-13'
 body_schema: body-v2
-body_hash: 'sha256:71ffa0edb9bf4e22bb7a869cc879c497fb07806d13ddfd39a2de504034d2a6fc'
+body_hash: 'sha256:3afd67a5195959190233bc3f5fd7dfe4bb247301cbc342c8de089ace86ff16d7'
 ---
 
 # `attended-live-sign-in` plan
@@ -27,4 +27,8 @@ Approved 2026-10-12. The operator approved `2026-10-12-mcp-parity-attended-live-
 
 ## Parallelization
 
+None. One session executed the Steps in order, each building on the last; other sessions sharing the worktree owned none of these paths.
+
 ## Verification
+
+Each Step closes on its own focused tests, lint and type checks, recorded in the ledger. Plan acceptance is the packaged proof `just verify-live-sign-in build/windows-x64/stage/Release/app` exiting 0 on a rebuilt bundle, with the expiry and reviewed-operation steps included; synthetic-login integration tests are not acceptance evidence. Desktop persisted sign-in stays a separate check that needs an interactive desktop logon.

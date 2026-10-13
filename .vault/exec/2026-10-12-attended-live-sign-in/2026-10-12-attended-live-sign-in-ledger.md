@@ -5,7 +5,7 @@ tags:
 date: '2026-10-12'
 modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:e0469b882fe7be7b868f07204025f97e02720098a53f4615e188fdbc41d9ac07'
+body_hash: 'sha256:e0e3bdbd79ff1c22e33fe3ed7e013bd1406062beeba98bdd8b6b770653a86c65'
 related:
   - "[[2026-10-12-attended-live-sign-in-plan]]"
 ---
@@ -79,6 +79,10 @@ related:
 - `S05` `verify:` `just verify-live-sign-in build/windows-x64/stage/Release/app` -> `fail`
 - `S05` `verify:` `just verify-live-sign-in build/windows-x64/stage/Release/app --skip-review` -> `fail`
 - `S05` `verify:` `just verify-live-sign-in build/windows-x64/stage/Release/app` -> `pass`
+- `S05` `M` `native/CONTRACT.md`
+- `S05` `M` `native/package-layout.json`
+- `S05` `M` `src/cadrumo/adapters/local_runtime/frontend_client.py`
+- `S05` `M` `src/cadrumo_harness/mcp/runtime_adapter.py`
 
 ## Notes
 
@@ -91,3 +95,4 @@ related:
 - `S05` Package built from HEAD e11fb302f2 with 21 dirty paths from other sessions; packaged `runtime_adapter.py` predates a408f4b773.
 - `S05` Package manifest 50301ff0bf9402f117e7e995cece9cef71d78ed5f3186f8fc568d16e752338ec. With --skip-review the run exits 3 (incomplete) and every attended lifecycle step passes: decline, wrong profile, approved read with search, sign-out, input close, logout, lock/resume, expiry, runtime stop, no stored sign-in, default root unchanged, no survivors. Reveal identifiers works in the package. The full run fails at review approval: the bundle is core-only with no llm extra, so ledger.classify.review refuses with `ERROR_OPTIONAL_EXTRA_MISSING` at ledger.llm.acquire, effect none, the absent-llm lane's tested contract. Bundling the llm extra awaits an operator decision. The driver now stops the model runner with its server; four orphaned llama-server runners were reaped.
 - `S05` Package manifest ec2e4fac443201e94e0b4c714328b8214db3e3f8ec36053af18c5730311d4e38 bundles the llm extra (c77c8d074a, ruling e4124e5b53). The full run passed with expiry and review: ledger.classify.review classified BUSINESS by llm:local-text:qwen3:1.7b, reviewed, nothing written before the decision, read back by the CLI. No model runner survived.
+- `S05` Rows for fa4f7dc9c5 appended after the plan-close review found them unlogged. The package-layout change admits `CADRUMO_CLI_REVEAL_IDENTIFIERS` to the installed overrides, which the operator asked for on 2026-10-12.
