@@ -13,117 +13,162 @@ related:
 
 # `desktop-agent-host` adr: `A development live lane runs the real agent column on a disposable synthetic profile` | (**status:** `proposed`)
 
-Not accepted. On 2026-10-13 the owner ruled first-hand on the tool surface: "I don't want read only tools. I want to verify that the agent platform is functional." That ruling is applied below. The owner also directed that this record is reviewed by the cadrumo-agent project and by Cadrumo's engineering sessions, and verified before any ruling on it: "I don't want you to improvise. You have to ask for reviews, ruling, check verifications." The remaining choices stay open for the owner.
+Revision 2, 2026-10-13. It answers the five reviews in `2026-10-13-desktop-agent-host-live-lane-review-audit` and goes back to those reviewers before any ruling.
 
-On 2026-10-13 the owner also ruled first-hand: "do not allow my api keys to be exposed". That ruling removes the former deviation L3, which passed the Anthropic key through the agent's environment block, and binds the key constraint below.
+Owner rulings this revision applies, all first-hand on 2026-10-13:
+- "I don't want read only tools. I want to verify that the agent platform is functional."
+- "I don't want you to improvise. You have to ask for reviews, ruling, check verifications."
+- On API keys, in sequence:
+  - "do not allow my api keys to be exposed"
+  - "The processes can have the api keys in the env"
+  - "in the env but do not save them to disk or upload them to providers"
+  - "they're secret; the machine has them, if you upload them they're fucked"
+  - Encrypted custody was confirmed safe.
+  - For the hand-off to the agent, relayed by CADRUMO-ARCHITECTURE: "do standard input frame".
+- "I don't care about anything but that we test the agent ui against the real agent backend so we can debug and iterate fast."
 
 ## Problem Statement
 
-On 2026-10-13 the owner asked for a running agent column they can use live against a real provider, "so we can for real begin working against the cadrumo api and agent backend". The production path in `2026-10-12-desktop-agent-host-adr` (proposed) needs encrypted agent stores, a key door, a recorded tool-server proof and bundling, and none of them is built. cadrumo-agent refuses every hosted start today. The development display on port 15370 runs the browser host, which serves nothing, so it can never run the agent (`2026-10-12-desktop-agent-host-reference`, fourth audit and live-lane reuse sections). This record decides how a real, interactive run happens before the production path is complete, without breaking the owner's 2026-10-12 rulings.
+The owner wants the agent column tested and iterated against the real agent backend. That means the real desktop, the real cadrumo-agent, the real Anthropic API and the real Cadrumo runtime, including tool calls that change records, questionnaires and approvals. The production path in `2026-10-12-desktop-agent-host-adr` is not built, and it needs work in cadrumo-agent and in Cadrumo's packaging. The first revision of this record failed review with thirteen critical findings. This revision decides the live lane's topology and the controls those findings require.
 
 ## Considerations
 
-- The 2026-10-12 rulings bind: encrypted storage for private data, explicit consent naming the provider and the content, packaging through the normal build, no mock hosts, and the location supplied by Cadrumo (`2026-10-12-desktop-agent-host-adr`, Problem Statement).
-- Synthetic test data may use ordinary storage. An observed plaintext gap with private data needs remediation, not a new storage exception (rule 05, private-data invariants).
-- cadrumo-agent's non-hosted `serve` starts and streams a direct-lane turn today, with model ids taken from the Models API. Its hosted start is gated on a Cadrumo tool-server proof, and only a live, signed-in Cadrumo can record that proof (reference, fourth audit).
-- Cadrumo can already stand a packaged bundle up on a fresh root with a synthetic profile, and admit an MCP server by a key the person issued, without the password (reference, live-lane reuse).
-- An uncommitted change in the cadrumo-agent checkout moves its relay toward Cadrumo's served tools. Its owner is not reachable from this machine.
+- cadrumo-agent mounts the Cadrumo relay and earns its tool proofs only through its own hosted-parts assembly. Run from its source tree, that assembly is what its live tests use. A bundled, non-hosted service cannot mount the relay (audit: `agent-relay-unmountable-in-bundle`, `agent-proofs-unearnable-on-lane`).
+- Bundling the agent's 39-package closure needs a lane lock, a widened assembly and a lane preset (audit: `packaging-closure-and-lane-lock`, `lane-build-option-wording`). None of that is needed to test the UI.
+- With the full surface, the agent can apply its own review, and no person door answers a review an agent session raised (audit: `agent-self-approved-review`, `review-door-for-agent-reviews`).
+- A new frontend kind inherits person authority wherever the refusal is written "is MCP" (audit: `agent-host-person-authority`, `agent-frontend-predicate`).
+- The desktop owns no long-lived child and contains none, and cadrumo-agent's ports are fixed (audit: `desktop-child-containment`, `fixed-agent-ports`).
+- cadrumo-agent's history and stream do not keep the turn order, ids or offsets the webview contract needs (audit: `history-cannot-serve-session-contract`).
+- The owner has approved a provider-settings design, which CADRUMO-ARCHITECTURE is implementing:
+  - the Anthropic key in an encrypted, person-only SECRET namespace;
+  - one resolver for every consumer;
+  - delivery to the agent on a standard-input frame;
+  - an app-owned lifecycle that reaps the agent tree on logout, lock, expiry, key change or profile switch.
 
 ## Considered options
 
-- **A development live lane (proposed).** Every component is real. The lane runs only on a storage root it created and marked, with a profile made there holding synthetic data. Two named deviations are allowed, each retired by a named delivery, and lane builds are the only builds that carry them. It gives live use within the first stage and builds the production pieces in production form.
-- Wait for the full production path. This keeps every constraint, but there is no live use until contracts 3 and 4 and the tool-server proof land, and the last two belong to an unreachable owner.
-- A browser development bridge that serves the host interface from the development server. Rejected: it is a second host implementation, it needs the CSP opened, and it exposes a signed-in profile on the network address the owner browses from.
-- A live run on the person's own profile with plaintext agent stores. Rejected: it breaks the at-rest ruling.
+- **The packaged Cadrumo with cadrumo-agent run from its source tree under its own hosted-parts assembly (proposed).** Every component is real, and the relay mounts the way cadrumo-agent proves it. A UI or agent change needs no repackaging. Bundling moves to the last stage.
+- The packaged Cadrumo with cadrumo-agent bundled and non-hosted. Rejected: the relay cannot mount there, its writes can repeat, and the bundle strips its variables.
+- Waiting for the production path. Rejected by the owner's direction to test against the real backend now.
+- A browser bridge, or the person's real profile. Rejected as in revision 1: the bridge is a second host and opens the network, and the real profile breaks the at-rest ruling.
 
 ## Constraints
 
 Binding if accepted:
 
-- Nothing under test is simulated:
-  - the packaged desktop executable with its Rust agent host;
-  - the launcher `aeat app agent serve`;
-  - cadrumo-agent, built into the bundle from an explicit source path;
+**Topology**
+- These are real and run unmodified:
+  - the packaged desktop with its Rust agent host;
+  - the launcher `aeat app agent serve` in the same package;
+  - cadrumo-agent from an explicit source path, in its own project environment, with its hosted-parts assembly;
   - the Anthropic API and the Cadrumo runtime.
-  There is no mock host, scripted model or stand-in.
-- The lane runs only on a storage root that it created empty and marked as a live-lane root.
-  - While any deviation is in effect, the launcher refuses a root without the mark, and refuses the per-user default root outright.
-  - The person creates the profile on that root through the desktop's own flow, and it holds synthetic data only.
-- The agent column shows a lasting notice: this is a development lane, conversations are kept unencrypted on this test root, and only synthetic data belongs in it.
-- A build option, off by default and refused by release presets, compiles the deviations in. A release build has no code path for them.
-- Allowed deviations, each named with what retires it:
-  - **L1.** Agent stores, logs and the replay log are plaintext, under `<storage-root>/agent/<profile-id>/` only. Retired by contract 4 of the parent record (encrypted stores).
-  - **L2.** cadrumo-agent runs in non-hosted mode with its `warn` proof policy. Retired by a recorded Cadrumo tool-server proof, which opens the hosted start.
-- No exception exists for provider API keys, in the lane or anywhere else.
-  - The Anthropic key never appears in an environment block, file, command line, log, transcript, trace, crash report or the webview. That covers every process, the lane's included.
-  - It travels only from Cadrumo custody, through the runtime door, into launcher memory, then in the agent's standard-input frame into agent memory. Copies are wiped after use.
-  - cadrumo-agent passes it to no child process. The `cadrumo-mcp` relay and the worker receive environments without it.
-  - Stage 1 therefore needs cadrumo-agent to read the key from its standard-input frame (parent contract 4, the key-frame item).
-  - Stage 1 acceptance adds a scan of every started process's environment block and command line, and of the root's files and logs, for the key. A finding fails the stage.
-- The gateway bearer is a local token, not a provider key. Whether it may stay in the agent's environment during the lane, or must also travel in the frame, is open for the owner.
-- Everything else follows the parent record unchanged:
-  - The shell holds no runtime connection, session or provider credential.
-  - The provider key lives in Cadrumo custody, and only the admitted launcher receives it.
-  - Consent is a Cadrumo person act, and the host checks it before every send.
-  - Documents enter custody only.
-- Only the direct Anthropic lane is offered. The host drops other providers from the catalog and never selects one. Model ids come from the catalog, which reads the Models API.
-- A send the person makes in the lane is real private content to Anthropic. The consent prompt names Anthropic, the model and each item exactly as in production.
+  There is no mock host, scripted model or stand-in under test. The fixture host stays an appearance tool.
+- The launcher builds on the provider-settings controller. It does not add a second lifecycle owner.
+
+**Storage root**
+- The lane runs only on a storage root it created empty and marked.
+- The guard compares the root the connected runtime reports it serves, after canonical resolution (junctions, case folding, substituted drives), with the marked root, and refuses on any difference. A non-default root hosts its own supervisor, so the lane desktop does not attach to an installed manager on the default root (`native/desktop/src-tauri/src/manager.rs:370`, `:427-431`).
+- The launcher starts the agent with:
+  - its project root, home, workspace root, temporary directory and logs all under `<storage-root>/agent/<profile-id>/`;
+  - no `.env` or operator settings file read;
+  - tracing variables removed.
+- The relay starts the lane package's `cadrumo-mcp` by absolute path, with the pinned storage root, never by bare name.
+
+**Keys**
+- Every provider key lives in Cadrumo's encrypted SECRET custody. It reaches cadrumo-agent through the provider-settings resolver on a standard-input frame, and is held in process memory. cadrumo-agent passes it to its worker over a pipe, never through an environment variable.
+- The key is never:
+  - written to disk in plaintext (files, `.env`, logs, caches, crash output);
+  - put on a command line;
+  - sent off the machine (model prompts or context, tool results, transcripts, telemetry, tracing, git);
+  - shown in the webview.
+- A child that does not need the key does not receive it. The `cadrumo-mcp` relay is already scrubbed (`agent:workspace/environment.py:155-183`).
+- The key is entered through the protected input channel, never in a webview that is open to a debugger.
+- Every lane run scans the started processes' command lines, and the root's files and logs, for any `sk-ant-` pattern. A hit fails the run.
+
+**Authority**
+- One predicate names the person frontends, `cli` and `tui`. Every person-act refusal and admission gate uses it in place of "is MCP": `src/cadrumo/application/operations/person_acts.py:81-83`, `src/cadrumo/application/user_profile/operation_access_policy.py:213-219`, `src/cadrumo/entrypoints/runtime/profile_connection_admission.py:161-163`, `:277`, `profile_connection_sessions.py:229-231`, `profile_connection_access.py:163-168`, `profile_connection_person_acts.py:37-40`, `src/cadrumo/application/ledger/invoice_evidence_extract_operation.py:282-284`.
+- A door-by-frontend matrix test proves that `mcp` and `agent-host` reach no person act.
+- `agent-host` admits only by receipt resume (`src/cadrumo/entrypoints/runtime/profile_connection_attendance.py:81`).
+- Reviews:
+  - The agent never applies a review: `respond` with `apply` is refused on agent frontends.
+  - A new person door lets the signed-in person answer a review that an agent session in the same profile raised.
+  - The desktop shows the review, worded by Cadrumo. Only a deliberate gesture of the person releases it, through an `aeat` child on the person's frontend.
+  - This is new runtime authority and amends `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`.
+- Tool permissions and questionnaires raised by cadrumo-agent are answered only through the host's commands behind a person gesture. The model cannot answer them.
+- Consent stays a person act checked before every send.
+
+**Processes**
+- The Rust host owns the launcher through a new supervised runner, distinct from the short-call runner (`native/desktop/src-tauri/src/shell/sign_in/process.rs:23-27`). It places the launcher in a kill-on-close Job Object.
+- The launcher starts the agent tree inside `WindowsProcessScope` (`src/cadrumo/adapters/local_runtime/windows_process.py:189-232`), so the gateway, the worker and `cadrumo-mcp` end when it ends, however it ends.
+- Every stop trigger also stops the launcher: sign-out, lock, idle or absolute expiry, a key change, a profile switch, the runtime becoming unavailable, and window close.
+- The gateway and worker take ephemeral loopback ports, reported in `agent_ready`.
+
+**Writes**
+- Mutating Cadrumo operations through the agent are tested only after cadrumo-agent's write-proof cases pass in its own tests: refusal, exactly once, worker loss and repeat. Until then the lane runs the full surface, and stage 1 acceptance covers reads, questionnaires, tool permissions and refused writes.
 
 ## Implementation
 
-We will build a development live lane in four stages. Each stage builds the production pieces in their production form, and each stage retires a deviation.
+We will run the live lane as the packaged Cadrumo plus cadrumo-agent from its source tree, in four stages.
 
-- **Stage 1, a working agent.** Live chat with the full Cadrumo tool surface. There are no documents yet.
+- **Stage 1, the agent column against the real backend.**
   - Cadrumo backend:
-    - a stored provider credential, set by a person act with the secret on standard input;
+    - the person-frontend predicate and its matrix test;
     - the `agent-host` frontend;
-    - the launcher's start, supervise and stop behaviour (parent contract 2, without encryption);
-    - the agent root `<storage-root>/agent/<profile-id>/`;
-    - consent grant, withdraw and list as person acts;
-    - the live-lane mark check.
+    - the launcher on the provider-settings controller;
+    - the root guard;
+    - consent person acts;
+    - the review person door, with `respond` apply refused on agent frontends.
   - Rust host:
-    - the launcher's lifecycle;
-    - a loopback gateway client holding the bearer;
-    - the closed command list behind `native/desktop/frontend/src/shell/agentSession.ts` and `shell/agentViews.ts`;
-    - the stream mapped from gateway SSE onto a Tauri channel;
-    - consent and credential acts through `aeat` children.
-  - Webview: the wiring, owned by the desktop design session.
-  - Tools:
-    - The relay mounts `cadrumo-mcp --surface full` inside the signed-in profile, so the agent can read, run operations, and take reviews to the person.
-    - The runtime still refuses the person's own acts on the MCP frontend (`src/cadrumo/application/operations/person_acts.py:1-24`). That is the accepted access rule, not a restriction added by this lane.
-    - The first live run records cadrumo-agent's tool-access and tool-write proofs on this real Cadrumo. Recording them retires L2.
-- **Stage 2, hosted mode.** The service restarts under its hosted root once the proofs are recorded.
-- **Stage 3, documents.** Custody intake, conversation links and text projections (parent contract 5), with documents as consent items.
-- **Stage 4, encryption.**
-  - The SQLCipher stores retire L1.
-  - The mark check and the lane build option are removed.
-  - The lane becomes the parent record's packaged-build verification.
+    - the supervised runner and Job;
+    - the loopback gateway client;
+    - the command list behind `native/desktop/frontend/src/shell/agentSession.ts`, including questionnaires and approvals;
+    - the stream mapped onto a Tauri channel.
+  - cadrumo-agent:
+    - ordered turn records with stable ids, a turn in progress in history, text offsets, the person turn id, and continued runs without duplicated turns;
+    - an optional `provider` filter on the catalog;
+    - the settled-run fix and the write-proof tests;
+    - committing its relay change without deleting its proof route.
+  - Webview: questionnaire and approval views, owned by the desktop design session.
+- **Stage 2, writes.** Mutating operations through the agent, once its write proofs are recorded.
+- **Stage 3, documents.** Parent contract 5.
+- **Stage 4, production.** Encrypted agent stores retire L1. Bundling follows BUILD1's route: a lane lock, an agent statement, and a lane preset refused by Release configurations. Hosted start retires L2. The lane collapses into the parent record's packaged verification.
 
-Acceptance:
+Remaining deviations:
+- **L1.** Plaintext agent stores on the marked root only, and tool results in them are synthetic profile data.
+- **L2.** The hosted parts are assembled from cadrumo-agent's source tree rather than through a hosted root.
 
-- Every stage is verified live on the signed-in Windows desktop by an opt-in, credit-spending project lane, and by the owner's own interactive use.
-- Stage 1 passes when:
-  - the agent completes a real Cadrumo operation that changes a record, with its review answered by the person, and the record reads back;
-  - a typed message streams Claude's reply into the transcript;
-  - stopping settles the reply as `stopped`;
-  - a reload shows the same turns;
-  - a send without consent is refused;
-  - signing out stops the agent with no process left.
+Test framework:
+- A Playwright driver attaches to the packaged desktop's WebView2 over a remote-debugging port. Only the lane build opens that port, and only on loopback.
+- One set of specs runs against two hosts: the fixture host, which is fast and free, and the real lane.
+- For iteration, the lane desktop may load its webview from the development server with hot reload, while the Rust host, launcher and agent stay real.
+- Each run follows the `dev/runtime_lifecycle` pattern:
+  - a fresh marked root;
+  - the password on standard input only;
+  - a Job;
+  - a check that no started process survives;
+  - the key scan;
+  - exits 0, 1 and 3.
+- It can also check outcomes in the backend, by reading the gateway's history and the Cadrumo record through `aeat`.
 
-The stage contents are hypotheses that may change within these constraints.
+Stage 1 passes when, live:
+- a typed message streams the reply;
+- stopping settles the reply as `stopped`;
+- a reload shows the same turns;
+- a questionnaire is answered;
+- a tool permission is decided by the person;
+- the agent's attempt to apply a review is refused;
+- a send without consent is refused;
+- signing out leaves no process and no key in any scanned place.
+
+These stage contents are hypotheses within the constraints.
 
 ## Rationale
 
-The lane gives the owner live use at the first stage. It spends that effort on production pieces: the credential, the launcher, consent, the host commands and the wiring. Each deviation is confined to synthetic data on a marked, disposable root and named with the delivery that ends it. That satisfies the private-data rule as written, rather than opening a standing exception. Waiting would stall on work owned outside this machine. A bridge or a real profile breaks a ruling outright.
+Running cadrumo-agent from its source tree under its own assembly is the only configuration in which its relay mounts, by its own records and tests, and it makes every UI or agent change testable without repackaging. That serves the owner's speed ruling. The authority constraints close the holes the reviews found before the full surface is reachable. The process and root constraints keep a lane from touching the person's real profile or leaving processes behind. Gating writes on cadrumo-agent's own write proofs keeps a repeated write off even synthetic data until it is proven.
 
 ## Consequences
 
-- The owner can use a real agent, with Cadrumo's full tool surface, once stage 1 lands. Hosted mode follows in stage 2, documents in stage 3, and real profile data only in stage 4.
-- The notice informs the person but cannot stop them typing private information into the lane. The constraint relies on the person following it.
-- The lane needs these remaining choices of the parent record settled first: the launcher identity, the Rust host owner, cadrumo-agent provisioning from a source path, model choice from the live list, and consent granularity. Each stays open for the owner. The parent record stays `proposed` for the production path.
-- cadrumo-agent needs four things, to be raised through its handover:
-  - a way to confine the catalog to the `anthropic` lane in non-hosted mode, so its other lanes' command-line handshakes do not run;
-  - the relay change committed;
-  - the joint access and write proof run;
-  - the key frame and the encrypted stores.
-- If the owner rejects any deviation, the lane waits for the delivery that removes it.
+- Most of stage 1's cadrumo-agent items belong to that project. Its owner relays by hand; no direct channel exists from this session.
+- The person review door and the person-frontend predicate are new runtime authority. They need owner acceptance through the mcp-parity amendment.
+- L2 assembles cadrumo-agent's test-tree hosted parts in a lane. Its relay-mount and capability-proofs records must allow that for a synthetic profile, or the lane waits on hosted start.
+- The key frame is a cadrumo-agent change: a frame read in `agent:api/app.py` main(), and the worker's pipe in place of `DEVNULL`. Stage 1 waits on it.
