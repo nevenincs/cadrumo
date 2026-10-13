@@ -11,7 +11,8 @@ from threading import RLock
 from uuid import UUID
 
 from .....application.runtime.profile_worker import ProfileWorkerIdentity
-from .....application.user_profile.access_contracts import AccessSession, SessionKind, SessionState
+from .....application.user_profile.access_contracts import AccessDenialCode, AccessSession, SessionKind, SessionState
+from .....application.user_profile.access_errors import ProfileAccessRefusedError
 from .....application.user_profile.access_policy import intersect_scopes
 from .....application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from .....application.user_profile.profile_record_repository import close_active_profile_record_session
@@ -21,6 +22,9 @@ from ..custody.automation_profile import validate_automation_profile_binding
 from .active_session import bind_active_bucket_session, close_active_bucket_session, current_active_bucket_session
 from .bucket_session import BucketSession
 from .profile_worker_binding import profile_worker_binding
+
+_LAPSED_MEMORY = 256
+"""How many lapsed lease ids custody remembers, so a late request hears that its session ended."""
 
 
 class ProfileWorkerCustody:
@@ -45,6 +49,7 @@ class ProfileWorkerCustody:
         profile_worker_binding.bind(identity, storage_root=storage_root)
         self.identity, self.root, self.clock, self.monotonic = identity, storage_root, clock, monotonic
         self._leases: dict[UUID, AccessSession] = {}
+        self._lapsed: dict[UUID, None] = {}
         self._lock = RLock()
         self._closed = False
         self._sections = 0
@@ -121,6 +126,9 @@ class ProfileWorkerCustody:
             self.expire()
             lease = self._leases.get(session_id)
             if lease is None:
+                if session_id in self._lapsed:
+                    # Its lifetime ran out: the session ended, and nothing presented was wrong.
+                    raise ProfileAccessRefusedError(AccessDenialCode.SESSION_EXPIRED)
                 raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
             self._validate(lease)
             return lease
@@ -169,17 +177,22 @@ class ProfileWorkerCustody:
                     raise
             for identity in tuple(self._leases):
                 if identity in self._leases and not self._live(self._leases[identity]):
-                    self.retire(identity)
+                    for lapsed in self.retire(identity):
+                        self._lapsed[lapsed] = None
+            while len(self._lapsed) > _LAPSED_MEMORY:
+                del self._lapsed[next(iter(self._lapsed))]
 
-    def retire(self, session_id: UUID) -> None:
-        """Drop one lineage; the process remains pinned after its last lease ends."""
+    def retire(self, session_id: UUID) -> frozenset[UUID]:
+        """Drop one lineage and name the leases it held; the process remains pinned after its last lease ends."""
         with self._lock:
+            dropped: set[UUID] = set()
             pending = {session_id}
             while pending:
                 retired = pending
                 pending = {lease.session_id for lease in self._leases.values() if lease.parent_session_id in retired}
                 for identity in retired:
-                    self._leases.pop(identity, None)
+                    if self._leases.pop(identity, None) is not None:
+                        dropped.add(identity)
             if not self._leases:
                 self._release_material()
             else:
@@ -188,6 +201,7 @@ class ProfileWorkerCustody:
                     self.close()
                     raise AutomationCustodyError(AutomationCustodyCode.MISSING)
                 self._replace_key_session(self._leases.copy(), session.dek)
+            return frozenset(dropped)
 
     def _replace_key_session(self, leases: dict[UUID, AccessSession], dek: bytes) -> None:
         if not leases:

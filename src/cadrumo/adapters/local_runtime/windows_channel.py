@@ -66,7 +66,7 @@ class WindowsRuntimeChannel:
             self.image_path = windows_image_path(process)
             if expected_image is not None and self.image_path != expected_image.resolve():
                 raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
-            self._peer = RuntimePeer(os_owner_id=owner, process_id=pid)
+            self._peer = RuntimePeer(os_owner_id=owner, process_id=pid, image_path=str(self.image_path))
         except pywintypes.error:
             refusal = RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
             close_runtime_transport_after_failure(self, refusal)

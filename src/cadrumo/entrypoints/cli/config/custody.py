@@ -389,17 +389,23 @@ def config_logout(
             from ..runtime_profile_binding import subscribe_profile_notices
 
             subscribe_profile_notices(ctx, client)
-            if machine_secret is not None:
+            if machine_secret is None:
+                outcome = client.human_sign_out()
+            else:
                 payload = read_machine_secret_payload(LoginSecrets, selection=machine_secret)
                 try:
                     proof = bytearray(payload.passphrase.get_secret_value(), "utf-8")
                 finally:
                     del payload
                 try:
-                    client.login_password(proof, persist_receipt=False)
+                    try:
+                        # A stored sign-in that resumes proves the person; the password is the fallback.
+                        outcome = client.human_sign_out()
+                    except ProfileReceiptRefusedError:
+                        client.login_password(proof, persist_receipt=False)
+                        outcome = client.human_sign_out()
                 finally:
                     proof[:] = bytes(len(proof))
-            outcome = client.human_sign_out()
         except RuntimeFrontendRefusedError as error:
             from .._profile_session_gate import raise_runtime_refusal
 

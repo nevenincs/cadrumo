@@ -8,7 +8,7 @@ related:
   - '[[2026-10-12-mcp-parity-attended-live-sign-in-adr]]'
 modified: '2026-10-13'
 body_schema: body-v2
-body_hash: 'sha256:3afd67a5195959190233bc3f5fd7dfe4bb247301cbc342c8de089ace86ff16d7'
+body_hash: 'sha256:b9768fc55b65bc85a49308b7d823806727cb05688032807071402aa95be2180f'
 ---
 
 # `attended-live-sign-in` plan
@@ -17,6 +17,8 @@ body_hash: 'sha256:3afd67a5195959190233bc3f5fd7dfe4bb247301cbc342c8de089ace86ff1
 
 Approved 2026-10-12. The operator approved `2026-10-12-mcp-parity-attended-live-sign-in-adr` as proposed and asked for its flow to be implemented and proven on the rebuilt package under the current headless logon. That decision governs every Step. The Steps run sequentially in this session; review happens at plan close.
 
+On 2026-10-13 the operator asked for the plan-close review findings in `2026-10-13-attended-live-sign-in-audit` to be fixed. S06 carries those fixes within the same decision. Each fix implements a constraint the decision already states, so no amendment is needed.
+
 ## Steps
 
 - [x] `S01` - Runtime: held human sign-in, MCP attendance request, pending inventory and exact-request decision wired to the authority's delegation with a human parent and no grant; cascade on holder end, sign-out, lock, expiry, stop; `src/cadrumo/application/runtime, src/cadrumo/application/user_profile, src/cadrumo/entrypoints/runtime, src/cadrumo/adapters/local_runtime`.
@@ -24,6 +26,7 @@ Approved 2026-10-12. The operator approved `2026-10-12-mcp-parity-attended-live-
 - [x] `S03` - MCP: request attendance when no key and no receipt resumes; admit only the approved attended child; typed refusals otherwise; `src/cadrumo_harness/mcp`.
 - [x] `S04` - Docs and governance: separate-storage guide setup/teardown contract, amendments to the four related ADRs; `docs/how-to, .vault/adr`.
 - [x] `S05` - Packaged lifecycle proof: rebuild the bundle and prove operator auth, attended MCP reads, review approval, refusals, logout/lock/expiry, runtime stop and no persistence; `dev/runtime_lifecycle, justfile`.
+- [x] `S06` - Fix the plan-close review findings: expired attended leases refuse as session expired, the holder sees the asking program's path, a refused approval restores the recipient's client id, an ended approval makes no unclaimed ask, logout tries the stored sign-in before the password, and the attendance bounds are tested; `src/cadrumo, docs/how-to`.
 
 ## Parallelization
 

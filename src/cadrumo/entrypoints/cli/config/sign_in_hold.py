@@ -171,6 +171,7 @@ def _hold(client: RuntimeFrontendClient, lines: _InputLines) -> tuple[_Ending, i
                 "attendance_request",
                 attendance_id=str(candidate.attendance_id),
                 process_id=candidate.process_id,
+                image_path=candidate.image_path,
                 frontend=candidate.frontend.value,
                 surface=candidate.surface,
                 expires_at=candidate.expires_at.isoformat(),

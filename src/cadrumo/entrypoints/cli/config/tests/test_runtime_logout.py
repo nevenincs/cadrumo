@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
 from pathlib import Path
 from uuid import UUID, uuid4
@@ -31,6 +32,8 @@ from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo.core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 
+from .isolated_storage_fixture import CREDENTIAL_INPUT
+
 __all__ = ["_isolated_cli_backend"]
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -42,9 +45,15 @@ class _Client:
         self.profile_id = profile_id
         self.calls: list[str] = []
         self.on_logout: Callable[[], None] | None = None
+        self.receipt = True
+        self.signed_in = False
+        self.proofs: list[bytes] = []
 
     def human_sign_out(self) -> RuntimeHumanSignedOut:
         self.calls.append("sign_out")
+        if not self.signed_in and not self.receipt:
+            # As the real client does: with no session it resumes the stored sign-in, and none resumes.
+            raise ProfileReceiptRefusedError(ProfileSessionRefusalReason.ABSENT)
         if self.on_logout is not None:
             self.on_logout()
         return RuntimeHumanSignedOut(
@@ -57,6 +66,12 @@ class _Client:
             keychain_removed=True,
             automation_enabled=True,
         )
+
+    def login_password(self, secret: bytearray, *, persist_receipt: bool) -> None:
+        assert not persist_receipt
+        self.calls.append("password")
+        self.proofs.append(bytes(secret))
+        self.signed_in = True
 
     def sign_in_status(self) -> RuntimeSignInStatusReply:
         self.calls.append("status")
@@ -163,3 +178,25 @@ def test_logout_refuses_corrupt_default_without_claiming_idempotence(_isolated_c
     assert result.exit_code != 0
     assert pointer_path(root).read_bytes() == corrupt
     assert '"already_logged_out": true' not in result.output
+
+
+@pytest.mark.parametrize("receipt", [True, False], ids=["receipt_resumes", "no_receipt"])
+def test_logout_proves_the_person_by_a_stored_sign_in_before_the_password(
+    monkeypatch: pytest.MonkeyPatch, receipt: bool
+) -> None:
+    """The password is the fallback proof: it signs in only when no stored sign-in resumes."""
+    profile_id = UUID(register_cli_profile(label="Held sign-in", log_in=False))
+    client = _Client(profile_id)
+    client.receipt = receipt
+    _install_client(monkeypatch, client)
+    result = invoke_cached_cli(
+        ("--format", "json", "config", "logout", "--secrets-stdin"), input=json.dumps({"passphrase": CREDENTIAL_INPUT})
+    )
+    assert result.exit_code == 0, result.output
+    assert CREDENTIAL_INPUT not in result.output
+    if receipt:
+        assert client.calls == ["sign_out", "close"]
+        assert client.proofs == []
+    else:
+        assert client.calls == ["sign_out", "password", "sign_out", "close"]
+        assert client.proofs == [CREDENTIAL_INPUT.encode()]

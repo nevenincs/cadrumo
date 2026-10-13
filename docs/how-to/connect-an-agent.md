@@ -313,8 +313,10 @@ written to the credential store or to the profile's storage.
   - `held` gives the `profile_id` and the `session_expires_at` deadline.
   - `attendance_request` reports an MCP connection that asks to follow this
     sign-in. It gives the `attendance_id`, the `process_id` of the asking
-    process as the operating system reports it, the `frontend`, the `surface`
-    and when the ask lapses (`expires_at`, two minutes after it was made).
+    process as the operating system reports it, the `image_path` of that
+    process's program on Windows (`null` elsewhere), the `frontend`, the
+    `surface` and when the ask lapses (`expires_at`, two minutes after it was
+    made).
   - `attendance_decided` and `attendance_refused` report your answers.
   - `signed_out` and `session_ended` report the end of the sign-in.
   - `ended` comes last, with the `reason`: `input_closed`, `signed_out` or
@@ -324,7 +326,8 @@ written to the credential store or to the profile's storage.
 - **Decisions.** Each later line of standard input is one JSON object:
   `{"approve": "ATTENDANCE_ID"}`, `{"decline": "ATTENDANCE_ID"}`, or
   `{"sign_out": true}`. Approve only an ask whose `process_id` is the
-  `cadrumo-mcp` process you started, or one of its descendants. Nothing else
+  `cadrumo-mcp` process you started, or one of its descendants, and whose
+  `image_path`, where given, is the program you started. Nothing else
   admits a connection: not a profile ID, a storage path, the runtime's
   endpoint, or an attendance ID copied to another process.
 

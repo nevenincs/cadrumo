@@ -18,6 +18,7 @@ from pathlib import Path
 from threading import Event
 from uuid import UUID, uuid4
 
+import psutil
 import pytest
 
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
@@ -29,7 +30,7 @@ from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.attendance import RuntimeAttendancePending
-from cadrumo.application.runtime.contracts import RuntimeClientHello
+from cadrumo.application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.runtime.profile_access import RuntimeProfileStatus
 from cadrumo.application.user_profile.access_contracts import (
     AccessDenialCode,
@@ -40,6 +41,7 @@ from cadrumo.application.user_profile.access_contracts import (
 )
 
 from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
+from .. import profile_connection_attendance
 from ..profile_connections import RuntimeProfileConnections
 
 pytestmark = [
@@ -176,6 +178,9 @@ def test_an_ask_is_admitted_only_by_the_persons_approval_and_ends_with_their_ses
             (candidate,) = holder.attendance_inventory().candidates
             assert candidate.attendance_id == ask.attendance_id
             assert candidate.process_id == os.getpid()
+            # The program is read from the asking process itself, never from anything it sent.
+            assert candidate.image_path is not None
+            assert Path(candidate.image_path) == Path(psutil.Process(os.getpid()).exe()).resolve()
             assert candidate.frontend is mcp
 
             # The agent cannot decide asks: that is the person's act.
@@ -234,6 +239,13 @@ def test_a_declined_ask_admits_nothing_and_closing_the_holder_ends_attendance(tm
                     assert _eventually_refused(later.request_attendance) == (
                         AccessDenialCode.AUTHENTICATION_REQUIRED.value
                     )
+                with _client(launch, profile_id, cli) as successor:
+                    successor.login_password(bytearray(PROFILE_INPUT.encode()), timeout=120)
+                    successor.attendance_inventory()
+                    # The approval ended with the person's session; this connection makes no ask that
+                    # nobody would claim, even with a sign-in held again.
+                    assert _refusal(agent.request_attendance) == AccessDenialCode.AUTHENTICATION_REQUIRED.value
+                    assert successor.attendance_inventory().candidates == ()
         finally:
             holder.close()
 
@@ -264,3 +276,48 @@ def test_a_lapsed_attended_lease_is_issued_again_to_the_approved_connection(
         assert again.status.denial is None
         assert again.status.session_id != first.status.session_id
         assert holder.attendance_inventory().candidates == ()
+
+
+def test_asks_are_bounded_in_number_and_time_and_only_an_agent_may_ask(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(profile_connection_attendance, "ATTENDANCE_PENDING_LIMIT", 2)
+    monkeypatch.setattr(profile_connection_attendance, "ATTENDANCE_PENDING_SECONDS", 3)
+    mcp, cli = OperationFrontendProjection.MCP, OperationFrontendProjection.CLI
+    with (
+        _runtime(tmp_path) as (profile_id, _other, launch),
+        _client(launch, profile_id, cli) as holder,
+        _client(launch, profile_id, mcp) as first,
+        _client(launch, profile_id, mcp) as second,
+        _client(launch, profile_id, mcp) as third,
+    ):
+        holder.login_password(bytearray(PROFILE_INPUT.encode()), timeout=120)
+        holder.attendance_inventory()
+        # A person's frontend never asks to follow another sign-in: it signs in with its own proof.
+        with _client(launch, profile_id, cli) as person:
+            with pytest.raises((RuntimeFrontendRefusedError, RuntimeRefusalError)) as refused:
+                person.request_attendance()
+            assert str(refused.value.reason) == RuntimeRefusalCode.INVALID_FRAME.value
+        assert holder.attendance_inventory().candidates == ()
+
+        ask = _pending(first.request_attendance())
+        # One connection keeps one ask; a second while it waits is a conflict, not a new ask.
+        assert _refusal(first.request_attendance) == "conflict"
+        _pending(second.request_attendance())
+        # The profile's pending asks are capped; a further ask waits for none.
+        assert _refusal(third.request_attendance) == AccessDenialCode.AUTHENTICATION_REQUIRED.value
+        assert len(holder.attendance_inventory().candidates) == 2
+
+        time.sleep(4)
+        # Unanswered asks lapse: they leave the person's list and admit nothing.
+        assert holder.attendance_inventory().candidates == ()
+        assert _refusal(lambda: first.attendance_status(ask.attendance_id)) == (
+            AccessDenialCode.AUTHENTICATION_REQUIRED.value
+        )
+        assert _refusal(lambda: holder.decide_attendance(ask.attendance_id, approve=True)) == (
+            AccessDenialCode.OPERATION_UNAVAILABLE.value
+        )
+        # A lapsed ask frees its place.
+        assert _pending(third.request_attendance()).attendance_id in {
+            candidate.attendance_id for candidate in holder.attendance_inventory().candidates
+        }

@@ -28,13 +28,15 @@ import pytest
 from cadrumo.application.runtime.profile_worker import ProfileWorkerIdentity
 from cadrumo.application.user_profile.access_contracts import (
     AccessAction,
+    AccessDenialCode,
     AccessScope,
     AccessSession,
     ProfileAccessBinding,
     SessionKind,
     SessionState,
 )
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
+from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
+from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.core.config import override_settings
 from cadrumo.core.time.clock import frozen_clock, now
 from cadrumo.tests.audited_process import run_audited_process
@@ -115,6 +117,28 @@ def _reissued(lease: AccessSession, clock: _Clock, *, minutes: int) -> AccessSes
     )
 
 
+def _assert_expired(custody: ProfileWorkerCustody, session_id: UUID) -> None:
+    with pytest.raises(ProfileAccessRefusedError) as expired:
+        custody.require(session_id)
+    assert expired.value.reason is AccessDenialCode.SESSION_EXPIRED
+
+
+def _child(parent: AccessSession, clock: _Clock, *, minutes: int) -> AccessSession:
+    issued = now()
+    return AccessSession.model_validate(
+        {
+            **{name: getattr(parent, name) for name in AccessSession.model_fields},
+            "session_id": uuid4(),
+            "connection_id": uuid4(),
+            "kind": SessionKind.ATTENDED,
+            "parent_session_id": parent.session_id,
+            "issued_at": issued,
+            "issued_monotonic": clock.monotonic(),
+            "expires_at": issued + timedelta(minutes=minutes),
+        }
+    )
+
+
 def _key_session() -> BucketSession:
     session = current_active_bucket_session()
     assert session is not None
@@ -147,8 +171,7 @@ def _sign_in_lease(custody: ProfileWorkerCustody, clock: _Clock, key: bytes) -> 
     with clock.at(minutes=15):
         with pytest.raises(SessionExpiredError):
             repository.list_namespaces()
-        with pytest.raises(AutomationCustodyError):
-            custody.require(human.session_id)
+        _assert_expired(custody, human.session_id)
         assert custody.live_sessions() == ()
         assert current_active_bucket_session() is None
         assert session.sealed
@@ -177,8 +200,7 @@ def _api_key_lease(custody: ProfileWorkerCustody, clock: _Clock, key: bytes) -> 
     with clock.at(minutes=9):
         with pytest.raises(SessionExpiredError):
             repository.list_namespaces()
-        with pytest.raises(AutomationCustodyError):
-            custody.require(refreshed.session_id)
+        _assert_expired(custody, refreshed.session_id)
         assert current_active_bucket_session() is None
 
 
@@ -198,8 +220,10 @@ def _mixed_leases(custody: ProfileWorkerCustody, clock: _Clock, key: bytes) -> N
         assert shared.idle_deadline == human.expires_at
     with clock.at(minutes=3):
         custody.retire(human.session_id)
-        with pytest.raises(AutomationCustodyError):
+        # A retired lease did not run out: it is refused as no longer presentable, never as expired.
+        with pytest.raises(AutomationCustodyError) as retired:
             custody.require(human.session_id)
+        assert retired.value.reason is AutomationCustodyCode.CREDENTIAL_REJECTED
         assert custody.require(api_key.session_id) == api_key
         remaining = _key_session()
         assert remaining is not shared and shared.sealed
@@ -240,7 +264,32 @@ def _latest_lease_expiry(custody: ProfileWorkerCustody, clock: _Clock, key: byte
         assert custody.live_sessions() == ()
 
 
+def _attended_child_lapse(custody: ProfileWorkerCustody, clock: _Clock, key: bytes) -> None:
+    with clock.at(minutes=0):
+        human = _lease(custody.identity, clock, SessionKind.HUMAN, minutes=15)
+        custody.install(human, bytearray(key))
+        child = _child(human, clock, minutes=5)
+        custody.share(child)
+        assert custody.require(child.session_id) == child
+    with clock.at(minutes=5):
+        # The short child ran out under a live parent: a request on it hears that its session ended.
+        _assert_expired(custody, child.session_id)
+        assert custody.require(human.session_id) == human
+        _read_storage()
+    with clock.at(minutes=6):
+        second = _child(human, clock, minutes=5)
+        custody.share(second)
+        custody.retire(human.session_id)
+        # Retiring the parent ends its child with it; neither ran out.
+        for retired in (human.session_id, second.session_id):
+            with pytest.raises(AutomationCustodyError) as refused:
+                custody.require(retired)
+            assert refused.value.reason is AutomationCustodyCode.CREDENTIAL_REJECTED
+        _assert_expired(custody, child.session_id)
+
+
 _CASES: dict[str, Callable[[ProfileWorkerCustody, _Clock, bytes], None]] = {
+    "attended_child_lapse": _attended_child_lapse,
     "sign_in_lease": _sign_in_lease,
     "api_key_lease": _api_key_lease,
     "mixed_leases": _mixed_leases,

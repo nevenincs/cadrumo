@@ -128,6 +128,8 @@ class RuntimeProfileConnections(
         self._attendance: dict[UUID, PendingAttendance] = {}
         self._attendance_holders: dict[UUID, UUID] = {}
         self._attended: dict[UUID, AttendedConnection] = {}
+        # Connections whose approval ended with the person's session; only a new connection may ask again.
+        self._attendance_spent: set[UUID] = set()
         self._events = RuntimeSessionEvents()
         self._notice_connections: dict[UUID, tuple[RuntimeConnectionContext, RuntimeLoginEvidence]] = {}
         self._notice_observation: NoticeObservation | None = None

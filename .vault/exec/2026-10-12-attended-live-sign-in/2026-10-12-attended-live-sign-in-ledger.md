@@ -5,7 +5,7 @@ tags:
 date: '2026-10-12'
 modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:e0e3bdbd79ff1c22e33fe3ed7e013bd1406062beeba98bdd8b6b770653a86c65'
+body_hash: 'sha256:54713145daa51eb0db790fb03caf952818d7a09a364857062ee3522891354647'
 related:
   - "[[2026-10-12-attended-live-sign-in-plan]]"
 ---
@@ -83,6 +83,25 @@ related:
 - `S05` `M` `native/package-layout.json`
 - `S05` `M` `src/cadrumo/adapters/local_runtime/frontend_client.py`
 - `S05` `M` `src/cadrumo_harness/mcp/runtime_adapter.py`
+- `S06` `M` `src/cadrumo/adapters/persistence/storage/master_key/profile_worker_custody.py`
+- `S06` `M` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_profile_worker_custody_lease_window.py`
+- `S06` `M` `src/cadrumo/application/runtime/contracts.py`
+- `S06` `M` `src/cadrumo/application/runtime/attendance.py`
+- `S06` `M` `src/cadrumo/adapters/local_runtime/windows_channel.py`
+- `S06` `M` `src/cadrumo/entrypoints/runtime/profile_connection_attendance.py`
+- `S06` `M` `src/cadrumo/entrypoints/runtime/profile_connections.py`
+- `S06` `M` `src/cadrumo/entrypoints/runtime/tests/test_attendance.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/config/sign_in_hold.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/config/custody.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_logout.py`
+- `S06` `M` `docs/how-to/connect-an-agent.md`
+- `S06` `M` `.vault/audit/2026-10-13-attended-live-sign-in-audit.md`
+- `S06` `M` `.vault/plan/2026-10-12-attended-live-sign-in-plan.md`
+- `S06` `verify:` `pytest test_profile_worker_custody_lease_window.py` -> `pass`
+- `S06` `verify:` `pytest test_attendance.py` -> `pass`
+- `S06` `verify:` `pytest test_runtime_logout.py` -> `pass`
+- `S06` `verify:` `ruff check, ruff format --check, ty check on touched files` -> `pass`
+- `S06` `verify:` `just check-import-boundaries` -> `fail`
 
 ## Notes
 
@@ -96,3 +115,6 @@ related:
 - `S05` Package manifest 50301ff0bf9402f117e7e995cece9cef71d78ed5f3186f8fc568d16e752338ec. With --skip-review the run exits 3 (incomplete) and every attended lifecycle step passes: decline, wrong profile, approved read with search, sign-out, input close, logout, lock/resume, expiry, runtime stop, no stored sign-in, default root unchanged, no survivors. Reveal identifiers works in the package. The full run fails at review approval: the bundle is core-only with no llm extra, so ledger.classify.review refuses with `ERROR_OPTIONAL_EXTRA_MISSING` at ledger.llm.acquire, effect none, the absent-llm lane's tested contract. Bundling the llm extra awaits an operator decision. The driver now stops the model runner with its server; four orphaned llama-server runners were reaped.
 - `S05` Package manifest ec2e4fac443201e94e0b4c714328b8214db3e3f8ec36053af18c5730311d4e38 bundles the llm extra (c77c8d074a, ruling e4124e5b53). The full run passed with expiry and review: ledger.classify.review classified BUSINESS by llm:local-text:qwen3:1.7b, reviewed, nothing written before the decision, read back by the CLI. No model runner survived.
 - `S05` Rows for fa4f7dc9c5 appended after the plan-close review found them unlogged. The package-layout change admits `CADRUMO_CLI_REVEAL_IDENTIFIERS` to the installed overrides, which the operator asked for on 2026-10-12.
+- `S06` Neighbouring tests: 205 passed, 3 failed in `test_config_custody_profile_lifecycle.py.` All three fail with `runtime_deadline_exceeded` because another session's uncommitted `holder_operation_id` field in `profile_connection_operations.py` fails RuntimeAccessRefusal validation; none of those files is in this Step.
+- `S06` check-import-boundaries: all 15 contracts kept; its 188 hard findings are in test files outside this Step, and the tree changed during the run. ruff format flags `sign_in_hold.py:99,` unchanged since HEAD.
+- `S06` Image path is read on Windows only; Linux and macOS report null (audit finding attendance-peer-facts-posix). The client-id restore on a refused approval has no direct test.

@@ -178,6 +178,8 @@ class RuntimePeer(BaseModel):
 
     os_owner_id: Annotated[str, Field(min_length=1, max_length=256)]
     process_id: Annotated[int, Field(gt=0)] | None
+    image_path: Annotated[str, Field(min_length=1, max_length=32767)] | None = None
+    """The peer's program, read from the process the transport retains; ``None`` where none is read."""
 
 
 class RuntimeByteChannel(Protocol):

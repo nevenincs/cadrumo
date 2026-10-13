@@ -54,6 +54,7 @@ class PendingAttendance:
     profile_id: UUID
     connection_id: UUID
     process_id: int | None
+    image_path: str | None
     surface: McpSurfaceName | None
     requested_at: UtcInstant
     expires_at: UtcInstant
@@ -95,7 +96,11 @@ class ProfileConnectionAttendanceMixin:
             renewed = self._renew_attended(connection, host, request.request_id)
             if renewed is not None:
                 return renewed
-            if not self._attendance_holder_present(request.profile_id):
+            with self._guard:
+                spent = context.connection_id in self._attendance_spent
+            if spent or not self._attendance_holder_present(request.profile_id):
+                # A connection whose approval ended is let go and asks again on a new
+                # connection, so an ask made here would wait for nobody.
                 return AccessDenied(code=AccessDenialCode.AUTHENTICATION_REQUIRED)
             requested_at = self._wall_clock()
             ask = PendingAttendance(
@@ -103,6 +108,7 @@ class ProfileConnectionAttendanceMixin:
                 profile_id=request.profile_id,
                 connection_id=context.connection_id,
                 process_id=context.peer.process_id,
+                image_path=context.peer.image_path,
                 surface=surface,
                 requested_at=requested_at,
                 expires_at=requested_at + timedelta(seconds=ATTENDANCE_PENDING_SECONDS),
@@ -213,6 +219,7 @@ class ProfileConnectionAttendanceMixin:
             # The person's session has ended; the approval ended with it.
             with self._guard:
                 self._attended.pop(connection.context.connection_id, None)
+                self._attendance_spent.add(connection.context.connection_id)
             return None
         connection.session_id = child.session_id
         return self._status(connection, host, request_id, child.session_id)
@@ -261,6 +268,7 @@ class ProfileConnectionAttendanceMixin:
                     RuntimeAttendanceCandidate(
                         attendance_id=item.attendance_id,
                         process_id=item.process_id,
+                        image_path=item.image_path,
                         frontend=OperationFrontendProjection.MCP,
                         surface=item.surface,
                         requested_at=item.requested_at,
@@ -300,14 +308,20 @@ class ProfileConnectionAttendanceMixin:
                 return AccessDenied(code=AccessDenialCode.OPERATION_UNAVAILABLE)
             # Disclosures name the person's sign-in as their destination: the attended
             # connection receives what the person's own session may receive, and nothing more.
-            recipient.client_id = holder.client_id
-            child = host.authority.attend(
-                connection_id=context.connection_id,
-                parent_session_id=request.session_id,
-                recipient_connection_id=ask.connection_id,
-                surface=recipient.surface,
-            )
+            own_client_id, recipient.client_id = recipient.client_id, holder.client_id
+            try:
+                child = host.authority.attend(
+                    connection_id=context.connection_id,
+                    parent_session_id=request.session_id,
+                    recipient_connection_id=ask.connection_id,
+                    surface=recipient.surface,
+                )
+            except BaseException:
+                recipient.client_id = own_client_id
+                raise
             if isinstance(child, AccessDenied):
+                # Nothing was admitted, so the connection keeps only its own identity.
+                recipient.client_id = own_client_id
                 with self._guard:
                     self._attendance.pop(ask.attendance_id, None)
                 return child
@@ -329,6 +343,7 @@ class ProfileConnectionAttendanceMixin:
         with self._guard:
             self._attendance_holders.pop(connection_id, None)
             self._attended.pop(connection_id, None)
+            self._attendance_spent.discard(connection_id)
             for identity in [
                 item.attendance_id for item in self._attendance.values() if item.connection_id == connection_id
             ]:
@@ -336,6 +351,7 @@ class ProfileConnectionAttendanceMixin:
             for recipient, attended in tuple(self._attended.items()):
                 if attended.holder_connection_id == connection_id:
                     del self._attended[recipient]
+                    self._attendance_spent.add(recipient)
 
 
 def _named_surface(name: str | None) -> McpSurfaceName | None:

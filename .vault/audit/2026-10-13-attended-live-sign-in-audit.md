@@ -58,3 +58,18 @@ When `_renew_attendance` finds no approval it has already created a fresh ask (`
 - client-identity-aliasing: restore the recipient's own client id when an approval is denied, and add a test asserting that no authority is keyed on client id alone.
 - logout-proof-order: amend the constraint wording to the implemented behaviour, or attempt receipt resume first.
 - orphan-ask: forget the ask of a connection whose renewal failed, or let renewal ask without creating a pending entry.
+
+## Resolutions
+
+The operator asked on 2026-10-13 for the findings to be fixed; S06 of `2026-10-12-attended-live-sign-in-plan` carries the fixes. Each one implements a constraint the decision already states, so the decision is unchanged.
+
+- expired-lease-refusal-shape: fixed at the source. Worker custody remembers the leases its expiry dropped (`src/cadrumo/adapters/persistence/storage/master_key/profile_worker_custody.py:181`), and a request on one is refused as `session_expired` (`profile_worker_custody.py:131`). That code is already in `_SESSION_ENDED`, so an attended connection renews on its next call. A lease that was retired, not run out, keeps `credential_rejected`. Covered by the `attended_child_lapse` case and tightened assertions in `src/cadrumo/adapters/persistence/storage/master_key/tests/test_profile_worker_custody_lease_window.py:267`. The refused call itself is not retried, because the refusal can arrive after the operation began.
+- attendance-peer-facts: fixed on Windows. `RuntimePeer` carries `image_path` (`src/cadrumo/application/runtime/contracts.py:181`), read from the retained process handle (`src/cadrumo/adapters/local_runtime/windows_channel.py:69`), and it travels through the ask and the candidate to the hold command's `attendance_request` event. The how-to now tells the person to check it. Asserted against an independent read of the process image in `src/cadrumo/entrypoints/runtime/tests/test_attendance.py:162`.
+- attendance-coverage: fixed. `test_asks_are_bounded_in_number_and_time_and_only_an_agent_may_ask` (`test_attendance.py:281`) covers refusal of a person's frontend, the duplicate-ask conflict, the pending cap, the lapse and the freed slot. It uses a real transport and real workers, with the cap and lapse lowered for the test.
+- client-identity-aliasing: fixed. A refused or failed approval restores the recipient's own client id (`src/cadrumo/entrypoints/runtime/profile_connection_attendance.py:311`). No test reaches an authority denial at that point.
+- logout-proof-order: fixed in code to match constraint 4. Logout with a secrets channel first tries the stored sign-in and uses the password only when none resumes (`src/cadrumo/entrypoints/cli/config/custody.py:402`). Covered by `test_logout_proves_the_person_by_a_stored_sign_in_before_the_password`.
+- orphan-ask: fixed. A connection whose approval ended is marked spent (`profile_connection_attendance.py:222`, `:354`) and makes no new ask (`:100`); it must reconnect to ask again, which is what the MCP harness does. Covered in `test_a_declined_ask_admits_nothing_and_closing_the_holder_ends_attendance`.
+
+### attendance-peer-facts-posix | low | Linux and macOS still report no image path
+
+The POSIX transport reads only the uid and pid (`src/cadrumo/adapters/local_runtime/posix_channel.py:83`), so `image_path` is `null` there. On macOS the audit-token path read deliberately never discloses the path (`src/cadrumo/adapters/local_runtime/macos_login.py:87`). Linux has no retained process handle, so a path read from the pid could race pid reuse. Closing this needs either a pidfd-anchored Linux read and a macOS audit-token read, or an amendment to constraint 2 that limits the image path to Windows.
