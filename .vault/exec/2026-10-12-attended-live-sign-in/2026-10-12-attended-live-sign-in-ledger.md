@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#attended-live-sign-in'
 date: '2026-10-12'
-modified: '2026-10-12'
+modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:4b9ed36c511d0de0189be082d11f63cf1c59fdda7df0d4e7828d5ebe32c671e6'
+body_hash: 'sha256:57eb17be7be976eb144471939a67eb99eb4d0bc648532bf7d77139e7b6dd29d1'
 related:
   - "[[2026-10-12-attended-live-sign-in-plan]]"
 ---
@@ -101,6 +101,9 @@ related:
 - `S05` `verify:` `pytest -m integration test_attendance.py five consecutive runs` -> `pass`
 - `S05` `verify:` `pytest application/user_profile + MCP test_sign_in_resume (1002)` -> `pass`
 - `S05` `by:` `claude`
+- `S05` `M` `dev/runtime_lifecycle/live_sign_in.py`
+- `S05` `verify:` `just verify-live-sign-in build/windows-x64/stage/Release/app` -> `fail`
+- `S05` `verify:` `just verify-live-sign-in build/windows-x64/stage/Release/app --skip-review` -> `fail`
 
 ## Notes
 
@@ -111,3 +114,4 @@ related:
 - `S05` Unproven: a safe operation with a real review response. Every review-gated operation (ledger.classify.review, ledger.split.review, config.google.login, export.google-review, user-profile.censo-review) reaches a remote service, hands data to a model, or needs a censal document no parser accepts. S05 stays open for that item.
 - `S05` Observed, not ours: the package redacts profile ids even with `CADRUMO_CLI_REVEAL_IDENTIFIERS=1` (dev env reveals them); MCP search failed on person-act describe refusals, fixed by another session in 07b729934c after this package was built.
 - `S05` Package built from HEAD e11fb302f2 with 21 dirty paths from other sessions; packaged `runtime_adapter.py` predates a408f4b773.
+- `S05` Package manifest 50301ff0bf9402f117e7e995cece9cef71d78ed5f3186f8fc568d16e752338ec. With --skip-review the run exits 3 (incomplete) and every attended lifecycle step passes: decline, wrong profile, approved read with search, sign-out, input close, logout, lock/resume, expiry, runtime stop, no stored sign-in, default root unchanged, no survivors. Reveal identifiers works in the package. The full run fails at review approval: the bundle is core-only with no llm extra, so ledger.classify.review refuses with `ERROR_OPTIONAL_EXTRA_MISSING` at ledger.llm.acquire, effect none, the absent-llm lane's tested contract. Bundling the llm extra awaits an operator decision. The driver now stops the model runner with its server; four orphaned llama-server runners were reaped.
