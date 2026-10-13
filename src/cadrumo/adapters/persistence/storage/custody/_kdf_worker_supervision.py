@@ -83,6 +83,14 @@ _PHASE_FIELDS: dict[_KdfStage, str] = {
 }
 
 
+_NEVER_ATTESTED = "_kdf_worker_never_attested"
+
+
+def kdf_worker_never_attested(error: BaseException) -> bool:
+    """Whether ``error`` is a deadline that elapsed before the child attested, so no derivation began."""
+    return error.__dict__.get(_NEVER_ATTESTED) is True
+
+
 class _SupervisedKdfWorker:
     """One process with a complete no-fallback lifecycle and bounded pipes."""
 
@@ -116,7 +124,11 @@ class _SupervisedKdfWorker:
             with self._phase("start"):
                 self._start()
             with self._phase("ready_wait"):
-                ready = self._read_response_frame()
+                try:
+                    ready = self._read_response_frame()
+                except TimeoutError as error:
+                    error.__dict__[_NEVER_ATTESTED] = True
+                    raise
             with self._phase("ready_attestation"):
                 self._verify_ready_attestation(ready)
             return self

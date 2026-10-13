@@ -12,7 +12,7 @@ from ...application.operations.models import OperationId
 from ...application.operations.registry import OperationPublicDefinitionContractV1
 from ...application.operations.schema_identity import OperationSchemaIdentityV1
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from ...application.runtime.deadline_budget import remaining_budget
+from ...application.runtime.deadline_budget import exchange_timeout
 from ...application.runtime.operation_access import (
     RuntimeOperationAcknowledged,
     RuntimeOperationControl,
@@ -91,7 +91,7 @@ def submit_registered_secret(
             or requirement.identity.subject_ref != subject_ref
         ):
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-        acknowledged = client.submit_secret(requirement, secret, timeout=min(20, remaining_budget(call_deadline())))
+        acknowledged = client.submit_secret(requirement, secret, timeout=exchange_timeout(call_deadline()))
         if acknowledged.operation_id != operation_id:
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
 

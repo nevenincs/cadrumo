@@ -24,7 +24,7 @@ from ...application.user_profile.login_session import ProfileHumanLoginReceipt, 
 from ...application.user_profile.login_session_port import ProfileSignInGenerationPort
 from ...core.async_cleanup import AsyncResourceCleanupError
 from .profile_worker_operation_client import ProfileWorkerOperationClient
-from .worker_admission_budget import WORKER_ADMISSION_PREPARE_TIMEOUT_SECONDS
+from .worker_admission_budget import WORKER_HUMAN_PROOF_TIMEOUT_SECONDS
 from .worker_resource_cleanup import WorkerResourceCleanup, release_worker_resources
 
 
@@ -47,7 +47,7 @@ class ProfileWorkerHumanAdmission(ProfileWorkerOperationClient):
         """
         with self._human_lock:
             started = time.monotonic()
-            transaction_deadline = started + WORKER_ADMISSION_PREPARE_TIMEOUT_SECONDS + 10
+            transaction_deadline = started + WORKER_HUMAN_PROOF_TIMEOUT_SECONDS + 10
             primary: BaseException | None = None
             try:
                 self._human_deadline = transaction_deadline
@@ -60,7 +60,7 @@ class ProfileWorkerHumanAdmission(ProfileWorkerOperationClient):
                     ProfileWorkerRequest(request),
                     ProfileWorkerHumanOutcome,
                     secret,
-                    deadline=started + WORKER_ADMISSION_PREPARE_TIMEOUT_SECONDS,
+                    deadline=started + WORKER_HUMAN_PROOF_TIMEOUT_SECONDS,
                 )
                 self._human_candidate = result.candidate_id
                 yield result.login

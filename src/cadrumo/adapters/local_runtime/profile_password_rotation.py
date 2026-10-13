@@ -27,7 +27,7 @@ from ...application.operations.models import OperationId
 from ...application.operations.registry import OperationPublicDefinitionContractV1
 from ...application.operations.secret_submission import OperationSecretRequirement
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from ...application.runtime.deadline_budget import bounded_deadline_after, remaining_budget
+from ...application.runtime.deadline_budget import bounded_deadline_after, exchange_timeout, remaining_budget
 from ...application.runtime.operation_access import (
     RuntimeOperationAcknowledged,
     RuntimeOperationControl,
@@ -188,7 +188,7 @@ def _read_with_replacement(
             if reader.profile_id != original.profile_id or reader.frontend is not original.frontend:
                 raise RuntimeFrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
             try:
-                reader.login_password(bytearray(replacement), timeout=min(20.0, remaining_budget(deadline)))
+                reader.login_password(bytearray(replacement), timeout=exchange_timeout(deadline))
             except RuntimeFrontendRefusedError as error:
                 # Only an old host still retiring may defer fresh admission.
                 # A rejected password is never retried or treated as success.

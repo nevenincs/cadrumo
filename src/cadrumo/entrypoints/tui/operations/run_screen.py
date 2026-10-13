@@ -24,6 +24,7 @@ from textual.widgets import Button, Input, Select, Static, TextArea
 from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ....application.runtime.deadline_budget import RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS
 from ....core.async_cleanup import await_cancellation_complete
 from ....core.errors.error_codes import resolve_error_message
 from ....core.errors.hierarchy import CadrumoError
@@ -53,7 +54,7 @@ from .request_form import (
 from .run_result import receipt_text, result_pages, stopped_operation_text
 from .runtime_controller import RuntimeOperationController
 
-_CONTRACT_READ_SECONDS = 30.0
+_CONTRACT_READ_SECONDS = RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS
 _ACTION_MIN_COLUMN_WIDTH = 16
 _REPLAY_KEY_MAX_LENGTH = 256
 """The longest replay key the operation request model accepts."""

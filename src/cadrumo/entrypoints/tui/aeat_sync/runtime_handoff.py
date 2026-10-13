@@ -31,7 +31,7 @@ from ....application.operations.registry import (
 from ....application.operations.schema_identity import OperationSchemaIdentityV1
 from ....application.operator_actions.models import ActionReference
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from ....application.runtime.deadline_budget import remaining_budget
+from ....application.runtime.deadline_budget import RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS, remaining_budget
 from ....application.user_profile.censal_operation import (
     CENSAL_OPERATION_DEFINITION_ID,
     CENSAL_REVIEW_PROJECTION_SCHEMA_BINDING,
@@ -66,7 +66,7 @@ _NOTIFICATIONS_LIST_ACTION_ID = "operator.live.notifications.list"
 _NOTIFICATIONS_LIST_ACTION = ActionReference(action_id=_NOTIFICATIONS_LIST_ACTION_ID)
 _CENSAL_REVIEW_ACTION_ID = "operator.profile.edit"
 _CENSAL_REVIEW_ACTION = ActionReference(action_id=_CENSAL_REVIEW_ACTION_ID)
-_CONTRACT_TIMEOUT_SECONDS = 10.0
+_CONTRACT_TIMEOUT_SECONDS = RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS
 _CENSAL_PREPARE_TIMEOUT_SECONDS = 60.0
 
 

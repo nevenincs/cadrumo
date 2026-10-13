@@ -8,7 +8,7 @@ from uuid import UUID, uuid4
 from pydantic import SecretBytes
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from ...application.runtime.deadline_budget import deadline_after
+from ...application.runtime.deadline_budget import RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS, deadline_after
 from ...application.runtime.enrollment_access import (
     EnrollmentCredentialBinding,
     RuntimeEnrollmentDelivery,
@@ -162,7 +162,9 @@ class NativeEnrollmentClient:
                 return None
             raise
 
-    def submit(self, proposal: EnrollmentProposal, *, timeout: float = 10.0) -> AutomationReceiptProjection:
+    def submit(
+        self, proposal: EnrollmentProposal, *, timeout: float = RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS
+    ) -> AutomationReceiptProjection:
         """Submit only protected proposal bytes, then pin the first safe review."""
         self._live()
         request = RuntimeEnrollmentSubmit(
@@ -177,7 +179,7 @@ class NativeEnrollmentClient:
             secret[:] = bytes(len(secret))
         return self._pin_receipt(self._checked(reply, request_id=request.request_id).receipt)
 
-    def inspect(self, *, timeout: float = 10.0) -> AutomationReceiptProjection | None:
+    def inspect(self, *, timeout: float = RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS) -> AutomationReceiptProjection | None:
         """Read a current safe receipt without touching login or candidate custody."""
         self._live()
         request = RuntimeEnrollmentInspect(
@@ -193,7 +195,7 @@ class NativeEnrollmentClient:
             return None
         return self._pin_receipt(reply.receipt)
 
-    def poll(self, *, timeout: float = 10.0) -> RuntimeEnrollmentDelivery | None:
+    def poll(self, *, timeout: float = RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS) -> RuntimeEnrollmentDelivery | None:
         """Respond to one exact delivery command using the current native store."""
         self._live()
         if self._receipt is None:

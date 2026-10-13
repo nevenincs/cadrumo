@@ -52,10 +52,33 @@ def remaining_budget(deadline: float) -> float:
     return remaining
 
 
+def exchange_timeout(deadline: float | None = None) -> float:
+    """Return how long one frontend exchange may wait for the runtime's reply.
+
+    The runtime is legitimately slow while another caller holds a profile
+    guard, a worker starts or a supervised KDF child attests on a loaded host.
+    A client that stops waiting earlier closes its connection on a reply that
+    was coming, and for a mutation leaves the outcome unknown. So an exchange
+    may use its command's remaining ``deadline``, or the runtime's documented
+    single-exchange maximum when it has none, but never more than that maximum:
+    a runtime that has really stalled still fails within a bounded time.
+    """
+    if deadline is None:
+        return RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS
+    return min(remaining_budget(deadline), RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS)
+
+
+def exchange_deadline(deadline: float | None = None) -> float:
+    """Return :func:`exchange_timeout` as an absolute deadline for one exchange of a longer command."""
+    return time.monotonic() + exchange_timeout(deadline)
+
+
 __all__ = [
     "RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS",
     "bounded_deadline_after",
     "deadline_after",
+    "exchange_deadline",
+    "exchange_timeout",
     "remaining_budget",
     "require_finite_budget",
 ]

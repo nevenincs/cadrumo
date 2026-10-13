@@ -75,9 +75,11 @@ if TYPE_CHECKING:
 
 type RuntimeHumanProofMethod = Literal["password", "receipt"]
 
-# One cold profile admission can launch and prepare an isolated worker before
-# its first reply. The same budget covers human proof and protected references.
-PROFILE_ADMISSION_TIMEOUT_SECONDS = 75.0
+# One cold profile admission can launch and prepare an isolated worker, then
+# run its supervised password KDF, before its first reply; on a loaded host each
+# takes many seconds. The same budget covers human proof and protected
+# references, and uses the whole of the runtime's single-exchange maximum.
+PROFILE_ADMISSION_TIMEOUT_SECONDS = 120.0
 
 
 @dataclass(frozen=True, slots=True)

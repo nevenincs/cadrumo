@@ -24,7 +24,7 @@ import json
 import sys
 import time
 from collections.abc import Callable, Iterator
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import Future, ThreadPoolExecutor
 from contextlib import contextmanager
 from contextvars import copy_context
 from dataclasses import dataclass
@@ -50,6 +50,7 @@ from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import delete_profile_session
 from cadrumo.adapters.persistence.storage.custody.automation_profile import current_automation_profile_binding
 from cadrumo.adapters.persistence.storage.custody.automation_store import AutomationControlStore
+from cadrumo.adapters.persistence.storage.custody.kdf_supervision import profile_kdf_lease
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.registry import OperationFrontendProjection
@@ -66,6 +67,8 @@ from cadrumo.application.user_profile.automation_agent_key import agent_key_prop
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentStage
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind
 from cadrumo.application.user_profile.history_operation import PROFILE_HISTORY_OPERATION_DEFINITION_ID
+from cadrumo.application.user_profile.profile_operation_contracts import ProfilePatchOperationRequest, ProfilePatchValue
+from cadrumo.application.user_profile.view_operation import ProfileViewFactItem, ProfileViewPageKind
 from cadrumo.core.config import override_settings
 from cadrumo.entrypoints.cli.config import runtime_automation_request
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
@@ -76,6 +79,7 @@ from cadrumo_harness.mcp.tests.agent_key_reads import edit_profile_and_read_back
 from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
 
 from .....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
+from .._runtime_profile_mutation import execute_profile_mutation, read_mutation_baseline
 
 pytestmark = [
     pytest.mark.integration,
@@ -410,3 +414,112 @@ def test_an_approval_after_the_requester_left_names_the_departed_requester(
             item for item in runtime.store.enrollment_state().requests if item.request_id == submitted.request_id
         )
         assert record.stage is not EnrollmentStage.COMPLETE
+
+
+_KDF_PERMIT_HELD_SECONDS = 35
+"""Longer than the fifteen seconds a worker's password unwrap once had and the thirty its human proof once had."""
+
+_STATUS_FENCE_HELD_SECONDS = 8
+"""Longer than the five seconds a session status read was once allowed."""
+
+
+def test_a_persons_sign_in_waits_out_another_derivation_holding_the_kdf_permit(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The worker's password unwrap queues for the installation's one KDF permit; the sign-in is late, not refused."""
+    with _running_runtime(tmp_path, monkeypatch) as runtime:
+        held = Event()
+
+        def hold_permit() -> None:
+            with (
+                override_settings(cadrumo_local_storage_root=runtime.root),
+                profile_kdf_lease(deadline=time.monotonic() + 30),
+            ):
+                held.set()
+                time.sleep(_KDF_PERMIT_HELD_SECONDS)
+
+        holding = runtime.pool.submit(copy_context().run, hold_permit)
+        assert held.wait(30)
+        started = time.monotonic()
+        person = _human(runtime.endpoint, runtime.profile_id)
+        try:
+            waited = time.monotonic() - started
+            assert person.status().status.connected
+        finally:
+            person.close()
+        holding.result(timeout=30)
+        assert waited >= _KDF_PERMIT_HELD_SECONDS - 5
+
+
+def _hold_fence(runtime: _Runtime, seconds: float) -> Future[None]:
+    """Hold the profile's publication fence for ``seconds``, as a person's commit on a loaded host does."""
+    held = Event()
+
+    def hold() -> None:
+        with runtime.profiles._profiles[runtime.profile_id].guard:
+            held.set()
+            time.sleep(seconds)
+
+    holding = runtime.pool.submit(hold)
+    assert held.wait(30)
+    return holding
+
+
+def test_a_status_read_waits_out_the_profile_fence_and_keeps_its_connection(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A read held behind the profile's fence, as a person's commit holds it, answers late on the same connection."""
+    with _running_runtime(tmp_path, monkeypatch) as runtime:
+        person = _human(runtime.endpoint, runtime.profile_id)
+        try:
+            holding = _hold_fence(runtime, _STATUS_FENCE_HELD_SECONDS)
+            started = time.monotonic()
+            status = person.status()
+            waited = time.monotonic() - started
+            holding.result(timeout=30)
+            assert status.status.connected and status.status.session_id == person.session_id
+            assert waited >= _STATUS_FENCE_HELD_SECONDS - 2
+            assert person.sessions()
+        finally:
+            person.close()
+
+
+_COMMAND_SECONDS_LEFT = 3
+"""What a command has left when it submits its change, after a slow baseline read spent the rest."""
+
+_CHANGE_FENCE_HELD_SECONDS = 8
+"""How long the change then waits behind the fence: longer than its command had left."""
+
+
+def test_a_change_submitted_late_in_its_command_keeps_a_full_operation_budget(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A slow baseline read cannot starve the change into an unknown outcome.
+
+    On a loaded host the read that precedes a profile change can spend most of
+    the command's budget. The change waits behind the fence for longer than the
+    command had left, commits, and the command reads the committed revision back.
+    """
+    with _running_runtime(tmp_path, monkeypatch) as runtime:
+        person = _human(runtime.endpoint, runtime.profile_id)
+        try:
+            baseline = read_mutation_baseline(person, deadline=time.monotonic() + 120)
+            holding = _hold_fence(runtime, _CHANGE_FENCE_HELD_SECONDS)
+            completed, current = execute_profile_mutation(
+                person,
+                ProfilePatchOperationRequest(
+                    profile_id=runtime.profile_id,
+                    expected_revision=baseline.record_revision,
+                    expected_content_digest=baseline.content_digest,
+                    values=(ProfilePatchValue(question_id="name", value="Persona"),),
+                ),
+                deadline=time.monotonic() + _COMMAND_SECONDS_LEFT,
+            )
+            holding.result(timeout=60)
+        finally:
+            person.close()
+        assert current.record_revision == completed.projection.record_revision > baseline.record_revision
+        facts = [
+            item.value for item in current.items(ProfileViewPageKind.FACTS) if isinstance(item, ProfileViewFactItem)
+        ]
+        assert "Persona" in facts

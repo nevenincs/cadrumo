@@ -46,7 +46,7 @@ from ...application.runtime.bootstrap_delete import (
     RuntimeProfileDeleteRefused,
 )
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from ...application.runtime.deadline_budget import deadline_after
+from ...application.runtime.deadline_budget import RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS, deadline_after
 from ...application.runtime.enrollment_access import (
     RuntimeEnrollmentPrepare,
     RuntimeEnrollmentPrepared,
@@ -203,7 +203,7 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
         *,
         profile_id: UUID,
         frontend: OperationFrontendProjection,
-        timeout: float = 10,
+        timeout: float = RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS,
         surface: McpSurfaceName | None = None,
     ) -> Self:
         """Use the canonical owner-verified launch door before any credential."""
@@ -347,7 +347,9 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
         """Observe this connection's own ask; an approved one binds the attended session here."""
         return self._attendance(self._attendance_ask("attendance_status", attendance_id), timeout=timeout)
 
-    def attendance_inventory(self, *, timeout: float = 5) -> RuntimeAttendanceInventory:
+    def attendance_inventory(
+        self, *, timeout: float = RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS
+    ) -> RuntimeAttendanceInventory:
         """List the asks pending for this person's profile, as the holder of its live sign-in."""
         return self._reply(
             self._connection.attendance(
@@ -362,7 +364,9 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
             RuntimeAttendanceInventory,
         )
 
-    def decide_attendance(self, attendance_id: UUID, *, approve: bool, timeout: float = 10) -> RuntimeAttendanceDecided:
+    def decide_attendance(
+        self, attendance_id: UUID, *, approve: bool, timeout: float = RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS
+    ) -> RuntimeAttendanceDecided:
         """Approve or decline one exact ask under this connection's own human session."""
         return self._reply(
             self._connection.attendance(
@@ -430,7 +434,11 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
         return admitted
 
     def submit_secret(
-        self, requirement: OperationSecretRequirement, secret: bytearray, *, timeout: float = 20
+        self,
+        requirement: OperationSecretRequirement,
+        secret: bytearray,
+        *,
+        timeout: float = RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS,
     ) -> RuntimeOperationAcknowledged:
         """Consume a secret through its exact operation's protected handoff."""
         try:
@@ -470,11 +478,13 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         return reply
 
-    def status(self, *, timeout: float = 5) -> RuntimeProfileStatus:
+    def status(self, *, timeout: float = RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS) -> RuntimeProfileStatus:
         """Recheck the current connection-bound session without refreshing it."""
         return self._session_status("session_status", timeout=timeout)
 
-    def disclosure_page(self, request: DisclosurePageRequest, *, timeout: float = 5) -> DisclosurePage:
+    def disclosure_page(
+        self, request: DisclosurePageRequest, *, timeout: float = RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS
+    ) -> DisclosurePage:
         """Read one page of the disclosures this session's status counts."""
         reply = self._reply(
             self._connection.disclosure_page(
@@ -489,7 +499,7 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         return reply.page
 
-    def sign_in_status(self, *, timeout: float = 5) -> RuntimeSignInStatusReply:
+    def sign_in_status(self, *, timeout: float = RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS) -> RuntimeSignInStatusReply:
         """Observe shared presence without borrowing proof or authenticating this connection."""
         return self._reply(
             self._connection.sign_in_status(
@@ -499,7 +509,7 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
             RuntimeSignInStatusReply,
         )
 
-    def human_sign_out(self, *, timeout: float = 10) -> RuntimeHumanSignedOut:
+    def human_sign_out(self, *, timeout: float = RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS) -> RuntimeHumanSignedOut:
         """Revoke profile-wide human access using this connection's proven human session."""
         if self._session_id is None:
             self.resume_receipt(timeout=timeout)
@@ -517,7 +527,7 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
         self._session_id = None
         return result
 
-    def refresh_api_key(self, *, timeout: float = 5) -> RuntimeProfileStatus:
+    def refresh_api_key(self, *, timeout: float = RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS) -> RuntimeProfileStatus:
         """Explicitly renew this connection's API-key lease under current authority."""
         reply = self._session_status("session_refresh", timeout=timeout)
         status = reply.status
@@ -533,7 +543,7 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         return reply
 
-    def lock(self, *, timeout: float = 5) -> RuntimeSessionsLocked:
+    def lock(self, *, timeout: float = RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS) -> RuntimeSessionsLocked:
         """Retire this lease through the runtime's own-session lock door."""
         session_id = self._session()
         reply = self._reply(
@@ -550,7 +560,9 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
         self._session_id = None
         return reply
 
-    def revoke_session(self, target_session_id: UUID, *, timeout: float = 5) -> RuntimeSessionsLocked:
+    def revoke_session(
+        self, target_session_id: UUID, *, timeout: float = RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS
+    ) -> RuntimeSessionsLocked:
         """Request an explicit session cascade; the runtime requires human authority."""
         session_id = self._session()
         reply = self._reply(
@@ -570,7 +582,7 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
             self._session_id = None
         return reply
 
-    def sessions(self, *, timeout: float = 5) -> tuple[PublicAccessSession, ...]:
+    def sessions(self, *, timeout: float = RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS) -> tuple[PublicAccessSession, ...]:
         """Read only this session's authorized exact-profile public inventory."""
         request = RuntimeSessionInventory(request_id=uuid4(), profile_id=self.profile_id, session_id=self._session())
         reply = self._reply(
@@ -579,7 +591,11 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
         return reply.sessions
 
     def deny_automation(
-        self, kind: AutomationDenialKind, *, target_id: UUID | None = None, timeout: float = 10
+        self,
+        kind: AutomationDenialKind,
+        *,
+        target_id: UUID | None = None,
+        timeout: float = RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS,
     ) -> AutomationDenialReceipt:
         """Request a durable authority reduction under this exact current session."""
         request = RuntimeAutomationDeny(
@@ -596,7 +612,9 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
             self._session_id = None
         return reply.receipt
 
-    def delete_profile(self, fingerprint: BucketDeletionFingerprint, *, timeout: float = 30) -> RuntimeProfileDeleted:
+    def delete_profile(
+        self, fingerprint: BucketDeletionFingerprint, *, timeout: float = RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS
+    ) -> RuntimeProfileDeleted:
         """Confirm the named target's preflight on a fresh bootstrap connection."""
         if self._connection_purpose != "fresh" or self._session_id is not None:
             raise RuntimeFrontendRefusedError(AutomationCustodyCode.CONFLICT.value)
@@ -648,7 +666,7 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
         recovery_code: bytearray,
         new_passphrase: bytearray,
         new_passphrase_confirmation: bytearray,
-        timeout: float = 75,
+        timeout: float = RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS,
     ) -> RuntimePasswordResetCompleted:
         """Use recovery proof without local DEK custody or a live human session."""
         from ...application.user_profile.login_session import ProfileLoginThrottledError
@@ -709,7 +727,11 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
             new_passphrase_confirmation[:] = bytes(len(new_passphrase_confirmation))
 
     def recover_profile(
-        self, password: bytearray, *, grants: frozenset[UUID] = frozenset(), timeout: float = 20
+        self,
+        password: bytearray,
+        *,
+        grants: frozenset[UUID] = frozenset(),
+        timeout: float = RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS,
     ) -> AutomationResumeReceipt:
         """Resume selected grants on a dedicated unadmitted connection with one proof."""
         try:
@@ -741,7 +763,7 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
             password[:] = bytes(len(password))
 
     def prepare_enrollment(
-        self, secrets_store: AutomationSecretStore, *, timeout: float = 10
+        self, secrets_store: AutomationSecretStore, *, timeout: float = RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS
     ) -> NativeEnrollmentClient:
         """Prepare one pre-unlock client handoff on a fresh verified connection."""
         if self._connection_purpose != "fresh" or self._session_id is not None:
@@ -757,7 +779,7 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
         return NativeEnrollmentClient(connection=self._connection, prepared=prepared, secrets_store=secrets_store)
 
     def prepare_grant_change(
-        self, secrets_store: AutomationSecretStore, *, timeout: float = 10
+        self, secrets_store: AutomationSecretStore, *, timeout: float = RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS
     ) -> NativeEnrollmentClient:
         """Request review for this root key's grant without extending its lease.
 
@@ -781,7 +803,9 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
         )
         return NativeEnrollmentClient(connection=self._connection, prepared=prepared, secrets_store=secrets_store)
 
-    def reconcile_enrollment(self, request_id: UUID, *, timeout: float = 10) -> AutomationReceiptProjection:
+    def reconcile_enrollment(
+        self, request_id: UUID, *, timeout: float = RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS
+    ) -> AutomationReceiptProjection:
         """Recover terminal own-grant metadata without restoring an old offer.
 
         The runtime requires current root API-key authority. A receipt grants

@@ -47,7 +47,7 @@ from ....application.operations.persistence.replay import OperationReplayLimit
 from ....application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
 from ....application.operations.schema_identity import OperationSchemaIdentityV1
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from ....application.runtime.deadline_budget import remaining_budget
+from ....application.runtime.deadline_budget import exchange_timeout, remaining_budget
 from ....application.runtime.operation_access import (
     OperationManagementRequest,
     RuntimeOperationAcknowledged,
@@ -72,7 +72,6 @@ _CANCELLATION = TypeAdapter[OperationCancellationResultV1](OperationCancellation
 _DETACH = TypeAdapter[OperationDetachResultV1](OperationDetachResultV1)
 _RESPONSE_CONTROL = TypeAdapter[OperationResponseControlResultV1](OperationResponseControlResultV1)
 _RESPONSE_MUTATION = TypeAdapter[OperationResponseMutationResultV1](OperationResponseMutationResultV1)
-_SECRET_DELIVERY_SECONDS = 20.0
 
 
 def _settled_result_expected[ResultT: BaseModel](
@@ -218,7 +217,7 @@ async def _deliver_submission_secret(
             client.submit_secret,
             requirement,
             secret,
-            timeout=min(_SECRET_DELIVERY_SECONDS, remaining_budget(deadline)),
+            timeout=exchange_timeout(deadline),
         ),
         task_name="tui-runtime-secret",
     )

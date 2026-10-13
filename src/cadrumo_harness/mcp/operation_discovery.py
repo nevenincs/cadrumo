@@ -17,6 +17,7 @@ from cadrumo.application.operations.mcp_surfaces import McpSurface
 from cadrumo.application.operations.person_acts import operation_is_persons_act
 from cadrumo.application.operations.registry import OperationPublicDefinitionDescriptionV1
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo.application.runtime.deadline_budget import RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS
 from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 
 from .operation_contract_cache import OperationContractCache
@@ -52,7 +53,7 @@ _UNAVAILABLE_OPERATION = frozenset(
 # Reading one contract is one exchange with the runtime, and an exchange cut short
 # by its deadline closes the connection and the session it holds. A search's own
 # budget is therefore checked between reads, and each read is bounded by itself.
-_CONTRACT_READ_SECONDS = 10.0
+_CONTRACT_READ_SECONDS = RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS
 
 
 def search_operations(

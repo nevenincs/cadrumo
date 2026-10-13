@@ -7,6 +7,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 from collections.abc import Callable
 from itertools import product
@@ -594,6 +595,11 @@ def test_wrong_password_and_canonical_sentinel_substitution_do_not_release_a_dek
 
 
 def test_expired_deadline_refuses_and_releases_the_supervised_child_boundary(tmp_path: Path) -> None:
+    """A budget that ends before the child attests names the supervised child, not the host's memory.
+
+    No derivation began, so the refusal is supervision's; the permit is free and
+    is acquired at once, and no interpreter attests within fifty milliseconds.
+    """
     envelope, sentinel = _unlock_inputs()
 
     with pytest.raises(ProfileCustodyRefusedError) as captured:
@@ -602,8 +608,62 @@ def test_expired_deadline_refuses_and_releases_the_supervised_child_boundary(tmp
             _PASSPHRASE,
             sentinel=sentinel,
             settings=_settings(tmp_path),
-            timeout_seconds=0.0001,
+            timeout_seconds=0.05,
         )
+
+    assert captured.value.refusal is ProfileCustodyRefusal.KDF_SUPERVISION_UNAVAILABLE
+
+
+_PERMIT_HELD_SECONDS = 18.0
+"""Longer than the fifteen seconds an unwrap once had for the permit, the child and the derivation together."""
+
+
+def test_a_correct_password_waits_out_another_derivation_holding_the_permit(tmp_path: Path) -> None:
+    """A busy installation's permit makes an unwrap late, not refused as a resource limit."""
+    envelope, sentinel = _unlock_inputs()
+    settings = _settings(tmp_path)
+    held, holding = threading.Event(), threading.Event()
+
+    def hold() -> None:
+        with profile_kdf_lease(settings=settings, deadline=time.monotonic() + 5):
+            held.set()
+            holding.wait(_PERMIT_HELD_SECONDS)
+
+    holder = threading.Thread(target=hold, name="kdf-permit-holder", daemon=True)
+    holder.start()
+    try:
+        assert held.wait(5)
+        started = time.monotonic()
+        unlock = unlock_profile_custody(envelope, _PASSPHRASE, sentinel=sentinel, settings=settings)
+        waited = time.monotonic() - started
+    finally:
+        holding.set()
+        holder.join(timeout=10)
+
+    assert unlock.dek == _DEK
+    assert waited >= _PERMIT_HELD_SECONDS - 1
+
+
+def test_a_budget_spent_waiting_for_the_permit_is_refused_as_a_resource_limit(tmp_path: Path) -> None:
+    """While another derivation holds the installation's permit past the whole budget, the host is busy."""
+    envelope, sentinel = _unlock_inputs()
+    settings = _settings(tmp_path)
+    held, holding = threading.Event(), threading.Event()
+
+    def hold() -> None:
+        with profile_kdf_lease(settings=settings, deadline=time.monotonic() + 5):
+            held.set()
+            holding.wait(10)
+
+    holder = threading.Thread(target=hold, name="kdf-permit-holder", daemon=True)
+    holder.start()
+    try:
+        assert held.wait(5)
+        with pytest.raises(ProfileCustodyRefusedError) as captured:
+            unlock_profile_custody(envelope, _PASSPHRASE, sentinel=sentinel, settings=settings, timeout_seconds=0.5)
+    finally:
+        holding.set()
+        holder.join(timeout=10)
 
     assert captured.value.refusal is ProfileCustodyRefusal.KDF_RESOURCE_LIMIT
 

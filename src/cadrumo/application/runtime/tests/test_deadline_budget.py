@@ -13,6 +13,8 @@ from ..deadline_budget import (
     RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS,
     bounded_deadline_after,
     deadline_after,
+    exchange_deadline,
+    exchange_timeout,
     remaining_budget,
     require_finite_budget,
 )
@@ -72,3 +74,23 @@ def test_require_finite_budget_refuses_an_empty_or_non_finite_budget(timeout: fl
 @pytest.mark.parametrize("timeout", [0.001, 3.0, 3600.0])
 def test_require_finite_budget_returns_a_positive_finite_budget_unchanged(timeout: float) -> None:
     assert require_finite_budget(timeout) == timeout
+
+
+@pytest.mark.usefixtures("frozen_clock")
+@pytest.mark.parametrize(
+    ("deadline", "expected"),
+    [(None, RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS), (1_007.5, 7.5), (1_120.0, 120.0), (5_000.0, 120.0)],
+)
+def test_an_exchange_uses_its_commands_remaining_budget_up_to_the_runtime_maximum(
+    deadline: float | None, expected: float
+) -> None:
+    assert exchange_timeout(deadline) == expected
+    assert exchange_deadline(deadline) == 1_000.0 + expected
+
+
+@pytest.mark.usefixtures("frozen_clock")
+@pytest.mark.parametrize("deadline", [1_000.0, 999.0, math.nan, math.inf])
+def test_an_exchange_of_a_command_past_its_deadline_is_refused(deadline: float) -> None:
+    with pytest.raises(RuntimeRefusalError) as refused:
+        exchange_timeout(deadline)
+    assert refused.value.reason is RuntimeRefusalCode.DEADLINE_EXCEEDED

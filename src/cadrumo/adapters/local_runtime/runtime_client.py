@@ -15,6 +15,7 @@ from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.application.operations.mcp_surfaces import McpSurfaceName
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo.application.runtime.deadline_budget import RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from cadrumo.core.paths import effective_storage_root
 from cadrumo.domain.calculations.registry.authority_location import published_authority_generation
@@ -56,7 +57,7 @@ async def open_installed_runtime_client(
     *,
     profile_id: UUID,
     frontend: OperationFrontendProjection,
-    timeout: float = 10,
+    timeout: float = RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS,
     surface: McpSurfaceName | None = None,
 ) -> RuntimeFrontendClient:
     """Connect to the exact running owner through the installed transport.

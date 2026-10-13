@@ -40,7 +40,7 @@ from ._kdf_records import (
 from ._kdf_refusals import resource_refusal as _resource_refusal
 from ._kdf_refusals import supervision_refusal as _supervision_refusal
 from ._kdf_worker_limits import PROFILE_CUSTODY_KDF_WORKER_MEMORY_BYTES
-from ._kdf_worker_supervision import _SupervisedKdfWorker
+from ._kdf_worker_supervision import _SupervisedKdfWorker, kdf_worker_never_attested
 from ._profile_password_codec import encode_profile_password
 from ._recovery_secret_codec import encode_recovery_secret
 from .errors import (
@@ -65,6 +65,13 @@ PROFILE_CUSTODY_KDF_CALIBRATION_VERSION: Final = 1
 PROFILE_CUSTODY_KDF_SAMPLE_COUNT: Final = 5
 PROFILE_CUSTODY_KDF_SAMPLE_DEADLINE_SECONDS: Final = 2.0
 PROFILE_CUSTODY_KDF_TOTAL_DEADLINE_SECONDS: Final = 15.0
+#: Wall-clock bound on one wrap or unwrap: waiting for the installation's single
+#: KDF permit, launching and attesting a fresh child, then the derivation. The
+#: derivation's own cost is bounded by the child's operating-system CPU-time and
+#: memory ceilings; this bound only guarantees a stalled child is abandoned. On a
+#: saturated host a child's interpreter alone has taken over 15 seconds to
+#: attest, so a tighter wall clock refused correct passwords as a resource limit.
+PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS: Final = 60.0
 PROFILE_CUSTODY_KDF_TARGET_MIN_SECONDS: Final = 0.250
 PROFILE_CUSTODY_KDF_TARGET_MAX_SECONDS: Final = 0.500
 _MEBIBYTE: Final = 1024 * 1024
@@ -337,7 +344,7 @@ def unlock_profile_custody(
     *,
     sentinel: ProfileCustodySentinelRecord,
     settings: Settings | None = None,
-    timeout_seconds: float = PROFILE_CUSTODY_KDF_TOTAL_DEADLINE_SECONDS,
+    timeout_seconds: float = PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS,
 ) -> ProfileCustodyUnlock:
     """Return a DEK only after supervised unwrap and parent sentinel proof."""
     dek = unlock_profile_custody_password_material(
@@ -374,7 +381,7 @@ def unlock_profile_custody_password_material(
     associated_data: bytes,
     sentinel: ProfileCustodySentinelRecord,
     settings: Settings | None = None,
-    timeout_seconds: float = PROFILE_CUSTODY_KDF_TOTAL_DEADLINE_SECONDS,
+    timeout_seconds: float = PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS,
 ) -> bytes:
     """Supervise one current-format wrapper unwrap and prove its immutable DEK.
 
@@ -397,8 +404,8 @@ def unlock_profile_custody_password_material(
                 wrapped_dek=wrapped_dek,
                 associated_data=associated_data,
             )
-    except TimeoutError:
-        raise _resource_refusal() from None
+    except TimeoutError as error:
+        raise _timeout_refusal(error) from None
     if dek is None:
         raise ProfileCustodyPasswordError("profile password did not authenticate the custody envelope")
     verify_profile_custody_sentinel(
@@ -417,7 +424,7 @@ def wrap_profile_custody_password_material(
     kdf: ProfileCustodyKdfParameters,
     associated_data: bytes,
     settings: Settings | None = None,
-    timeout_seconds: float = PROFILE_CUSTODY_KDF_TOTAL_DEADLINE_SECONDS,
+    timeout_seconds: float = PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS,
 ) -> ProfileCustodyWrappedDek:
     """Build one wrapper only inside the existing supervised KDF boundary."""
     if timeout_seconds <= 0:
@@ -437,8 +444,8 @@ def wrap_profile_custody_password_material(
                 kdf=kdf,
                 associated_data=associated_data,
             )
-    except TimeoutError:
-        raise _resource_refusal() from None
+    except TimeoutError as error:
+        raise _timeout_refusal(error) from None
     if wrapped_dek is None:
         raise ProfileCustodyRecordError("supervised profile custody wrapper creation failed")
     return wrapped_dek
@@ -454,7 +461,7 @@ def unlock_profile_custody_recovery_material(
     associated_data: bytes,
     sentinel: ProfileCustodySentinelRecord,
     settings: Settings | None = None,
-    timeout_seconds: float = PROFILE_CUSTODY_KDF_TOTAL_DEADLINE_SECONDS,
+    timeout_seconds: float = PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS,
 ) -> bytes:
     """Unlock the DEK using the recovery secret, inside the same supervised KDF boundary.
 
@@ -483,8 +490,8 @@ def unlock_profile_custody_recovery_material(
                 associated_data=associated_data,
                 recovery=True,
             )
-    except TimeoutError:
-        raise _resource_refusal() from None
+    except TimeoutError as error:
+        raise _timeout_refusal(error) from None
     if dek is None:
         raise ProfileCustodyRecoverySecretError("profile recovery secret did not authenticate the custody envelope")
     verify_profile_custody_sentinel(dek=dek, profile_id=profile_id, dek_epoch=dek_epoch, sentinel=sentinel)
@@ -498,7 +505,7 @@ def wrap_profile_custody_recovery_material(
     kdf: ProfileCustodyKdfParameters,
     associated_data: bytes,
     settings: Settings | None = None,
-    timeout_seconds: float = PROFILE_CUSTODY_KDF_TOTAL_DEADLINE_SECONDS,
+    timeout_seconds: float = PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS,
 ) -> ProfileCustodyWrappedDek:
     """Wrap the DEK under the recovery secret, inside the same supervised KDF boundary.
 
@@ -522,11 +529,16 @@ def wrap_profile_custody_recovery_material(
             ) as worker,
         ):
             wrapped = worker.wrap(secret=secret_bytes, dek=dek, kdf=kdf, associated_data=associated_data, recovery=True)
-    except TimeoutError:
-        raise _resource_refusal() from None
+    except TimeoutError as error:
+        raise _timeout_refusal(error) from None
     if wrapped is None:
         raise ProfileCustodyRecordError("supervised profile recovery wrapper creation failed")
     return wrapped
+
+
+def _timeout_refusal(error: TimeoutError) -> ProfileCustodyRefusedError:
+    """Name a child that never attested as supervision; a late permit or derivation as the busy host's limit."""
+    return _supervision_refusal() if kdf_worker_never_attested(error) else _resource_refusal()
 
 
 def _measure_profile_kdf(
@@ -643,6 +655,7 @@ def _release_kdf_file_lease(descriptor: int) -> None:
 
 __all__ = [
     "PROFILE_CUSTODY_KDF_CALIBRATION_VERSION",
+    "PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS",
     "PROFILE_CUSTODY_KDF_SAMPLE_COUNT",
     "PROFILE_CUSTODY_KDF_SAMPLE_DEADLINE_SECONDS",
     "PROFILE_CUSTODY_KDF_TARGET_MAX_SECONDS",

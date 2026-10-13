@@ -33,6 +33,7 @@ from cadrumo.application.operations.subject_reference import (
 )
 from cadrumo.application.operator_output.runtime_remedies import runtime_unavailable_remedy
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo.application.runtime.deadline_budget import RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS
 from cadrumo.application.runtime.operation_access import (
     RuntimeOperationAcknowledged,
     RuntimeOperationControl,
@@ -61,7 +62,8 @@ from .protocol_contract import (
 from .result_request import resolve_result_request, stopped_operation_detail
 from .runtime_admission import NO_SESSION, AdmissionDenial, McpAdmission, status_on_surface
 
-_TIMEOUT = 30.0
+#: One tool call's budget: its exchanges may wait as long as the runtime's single-exchange maximum.
+_TIMEOUT = RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS
 
 
 class _AdmittedConnection(Protocol):

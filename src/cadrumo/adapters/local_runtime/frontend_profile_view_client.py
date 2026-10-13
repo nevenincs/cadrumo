@@ -21,7 +21,7 @@ from ...application.operations.registry import (
     OperationPublicDefinitionContractV1,
 )
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from ...application.runtime.deadline_budget import deadline_after, remaining_budget
+from ...application.runtime.deadline_budget import deadline_after, exchange_deadline, remaining_budget
 from ...application.runtime.operation_access import (
     RuntimeOperationAcknowledged,
     RuntimeOperationControl,
@@ -197,7 +197,7 @@ class RuntimeProfileViewFrontend(RuntimeOperationFrontend):
 
         _require_profile_view_request(page_kinds, max_pages, expected_revision, expected_content_digest)
         deadline = deadline_after(timeout)
-        contract = self.contract(PROFILE_VIEW_OPERATION_DEFINITION_ID, deadline=deadline)
+        contract = self.contract(PROFILE_VIEW_OPERATION_DEFINITION_ID, deadline=exchange_deadline(deadline))
         pages: list[ProfileViewOperationProjection] = []
         pin: _ProfileViewPin | None = None
         for kind in page_kinds:
@@ -240,14 +240,14 @@ class RuntimeProfileViewFrontend(RuntimeOperationFrontend):
         self, request: ProfileViewOperationRequest, contract: OperationPublicDefinitionContractV1, deadline: float
     ) -> ProfileViewOperationProjection:
         """Require one successful registered operation and its exact addressed page."""
-        operation_id = self.submit(request, deadline=deadline)
-        self.start(operation_id, deadline=deadline)
+        operation_id = self.submit(request, deadline=exchange_deadline(deadline))
+        self.start(operation_id, deadline=exchange_deadline(deadline))
         projection = self._await_profile_view_terminal(operation_id, deadline)
         page = self.result(
             operation_id,
             terminal_revision=projection.revision,
             contract=contract,
-            deadline=deadline,
+            deadline=exchange_deadline(deadline),
         )
         if (
             page.profile_id != self.profile_id
@@ -265,7 +265,7 @@ class RuntimeProfileViewFrontend(RuntimeOperationFrontend):
         """Poll one submitted read within the shared deadline and require success."""
         while True:
             remaining_budget(deadline)
-            observed = self.observe(operation_id, deadline=deadline)
+            observed = self.observe(operation_id, deadline=exchange_deadline(deadline))
             projection = observed.projection
             if projection.lifecycle is OperationLifecycle.TERMINAL:
                 break

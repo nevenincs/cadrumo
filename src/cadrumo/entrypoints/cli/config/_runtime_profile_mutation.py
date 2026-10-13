@@ -13,7 +13,7 @@ from ....adapters.local_runtime.profile_mutations import (
     run_profile_mutation,
 )
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from ....application.runtime.deadline_budget import remaining_budget
+from ....application.runtime.deadline_budget import RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS, remaining_budget
 from ....application.user_profile.view_operation import ProfileViewPageKind
 from ....domain.user_profile.values import ProfileSetupState
 from ..errors import CliRefusedBoundaryError
@@ -23,12 +23,20 @@ if TYPE_CHECKING:
     from ....adapters.local_runtime.frontend_client_contracts import ProfileViewCollection
 
 
-_MUTATION_TIMEOUT_SECONDS = 120.0
+#: How long a command may spend reading the profile it is about to change. A
+#: complete view is one read operation per page; on a loaded host one baseline
+#: took longer than two minutes. Abandoning a read loses nothing, so it may wait
+#: longer than a mutation, each of its exchanges still within the runtime's maximum.
+_VIEW_READ_SECONDS = 300.0
+
+#: The mutation's own operation budget. A slow baseline read must not starve it:
+#: a mutation cut short after submission leaves its outcome unknown.
+_MUTATION_OPERATION_SECONDS = RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS
 
 
 def mutation_deadline() -> float:
-    """Give baseline, canonical mutation and readback one total deadline."""
-    return time.monotonic() + _MUTATION_TIMEOUT_SECONDS
+    """Bound the command's baseline read; the mutation and its readback keep their own budgets."""
+    return time.monotonic() + _VIEW_READ_SECONDS
 
 
 def read_mutation_baseline(
@@ -48,9 +56,14 @@ def execute_profile_mutation(
     deadline: float,
     expected_setup_state: ProfileSetupState | None = None,
 ) -> tuple[ProfileMutationCompletion, ProfileViewCollection]:
-    """Require an exact post-settlement revision before disclosing its digest."""
+    """Require an exact post-settlement revision before disclosing its digest.
+
+    A command already past ``deadline`` submits nothing. Once submitted, the
+    mutation has its full operation budget, and the readback its own read budget.
+    """
+    remaining_budget(deadline)
     try:
-        completed = run_profile_mutation(client, request, timeout=remaining_budget(deadline))
+        completed = run_profile_mutation(client, request, timeout=_MUTATION_OPERATION_SECONDS)
     except ProfileMutationRunError as error:
         context = {
             "reason": error.reason,
@@ -62,7 +75,7 @@ def execute_profile_mutation(
         raise CliRefusedBoundaryError(error.reason, context=context) from error
 
     try:
-        current = client.read_profile_view((ProfileViewPageKind.FACTS,), timeout=remaining_budget(deadline))
+        current = client.read_profile_view((ProfileViewPageKind.FACTS,), timeout=_VIEW_READ_SECONDS)
         if current.record_revision != completed.projection.record_revision or (
             expected_setup_state is not None and current.setup_state is not expected_setup_state
         ):
