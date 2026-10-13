@@ -579,9 +579,11 @@ desktop:
     consent_items: What would be sent
     consent_lead: To answer, {model} needs the content below. Sending it takes it
       off this computer to {provider}.
+    consent_messages: Your message and this conversation so far
     consent_note: Nothing is sent until you choose. If you don't send it, it stays
       on this computer.
     consent_title: Send this to {provider}?
+    consent_tool_results: What Cadrumo's tools found for this conversation
     delete: Delete
     delete_confirm: Delete “{title}” and its documents ({count})? This can't be undone.
     delete_confirm_bare: Delete “{title}”? This can't be undone.
@@ -603,6 +605,8 @@ desktop:
     history: History
     history_empty: No conversations yet
     history_no_match: No conversations match “{query}”.
+    lane_notice: 'Development lane: conversations are kept unencrypted on this test
+      storage. Use made-up data only.'
     members_multiple: '{count} files'
     members_single: 1 file
     message_label: Message
@@ -633,6 +637,14 @@ desktop:
     send_nothing: Write a message or add a file first
     send_waiting: Wait until every file has uploaded
     sent_files: Files sent with this message
+    service_absent: The agent isn't installed.
+    service_credential_missing: No key is set up for this provider.
+    service_failed: The agent stopped working.
+    service_incompatible: This version of the agent doesn't work with this Cadrumo.
+    service_runtime_unavailable: Cadrumo's background service isn't running.
+    service_signed_out: Sign in to talk to the agent.
+    service_starting: Starting the agent…
+    service_stopped: The agent isn't running.
     settings_label: 'Model and effort: {current}'
     settings_title: Model settings
     show: Show the agent

@@ -15,15 +15,10 @@ import type {
   SignInSignal,
   SignInStatus,
 } from "../ipc/contract";
-import type { AgentViews } from "../shell/agentViews";
 import type { Host } from "../shell/host";
 import type { ProfileAccounts } from "../shell/profiles";
 import type { ProfileViews } from "../shell/views";
-import {
-  FIXTURE_CONVERSATIONS,
-  FIXTURE_DOCUMENTS,
-  FIXTURE_HISTORY,
-} from "./fixtures/agent";
+import { fixtureAgent, type FixtureStream } from "./agentFixtureHost";
 import { BUSY_CALENDAR } from "./fixtures/calendarBusy";
 import {
   AHEAD_CALENDAR,
@@ -71,6 +66,8 @@ export type ScenarioHostOptions = {
    * was evaluated on, everything ahead, that day inside a month, or the
    * turn of a year with many windows open at once. */
   calendar?: CalendarShape | null;
+  /** How the agent's reply streams: in order, or with a piece missing. */
+  agentStream?: FixtureStream;
   /** Receives one line per host call; never a password or its length. */
   onCall?: (call: string) => void;
 };
@@ -235,36 +232,21 @@ export function scenarioHost(
     },
   };
 
-  // The agent's views go with the profile's: offered, empty, refused or not
-  // offered together. They are read as the signed-in profile's too.
-  const agent: AgentViews = {
-    async conversations() {
-      say("agentConversations");
-      await wait(options.latencyMs);
-      if (!readable()) throw failure("timed_out", "cli");
-      return scenario.views === "empty" ? [] : FIXTURE_CONVERSATIONS;
-    },
-    async history(conversationId) {
-      say(`agentHistory ${conversationId}`);
-      await wait(options.latencyMs);
-      if (!readable()) throw failure("timed_out", "cli");
-      return scenario.views === "empty"
-        ? []
-        : (FIXTURE_HISTORY[conversationId] ?? []);
-    },
-    async documents(conversationId) {
-      say(`agentDocuments ${conversationId}`);
-      await wait(options.latencyMs);
-      if (!readable()) throw failure("timed_out", "cli");
-      return scenario.views === "empty"
-        ? []
-        : (FIXTURE_DOCUMENTS[conversationId] ?? []);
-    },
-  };
+  // The agent goes with the profile's views: offered, empty, refused or not
+  // offered together. Its conversations are read as the signed-in
+  // profile's too.
+  const { agent, session: agentSession } = fixtureAgent({
+    say,
+    wait: () => wait(options.latencyMs),
+    readable,
+    empty: scenario.views === "empty",
+    stream: options.agentStream ?? "steady",
+    refused: () => failure("timed_out", "cli"),
+  });
 
   return {
     available: true,
-    ...(scenario.views === "none" ? {} : { views, agent }),
+    ...(scenario.views === "none" ? {} : { views, agent, agentSession }),
     ...(scenario.profiles === "absent" ? {} : { profiles }),
     ...managerCommand,
     ...(supervision

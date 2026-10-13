@@ -64,6 +64,9 @@ function readParams() {
       shape !== null && shape in CALENDAR_SHAPES
         ? (shape as CalendarShape)
         : null)(params.get("calendar")),
+    // The agent's reply with a piece of its stream missing, for how the
+    // column recovers it.
+    agentStream: params.get("stream") === "gap" ? ("gap" as const) : undefined,
   };
 }
 
@@ -111,6 +114,7 @@ function Scenarios() {
       logRecords: initial.logRecords,
       logFeedMs: initial.logFeedMs,
       calendar: initial.calendar,
+      agentStream: initial.agentStream,
       language: run.language,
       latencyMs: initial.latencyMs,
       onCall: (call) => {

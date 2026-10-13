@@ -94,9 +94,13 @@ export type AgentRead<T> =
 /**
  * Reads what `read` asks for whenever it changes, and drops the answer to a
  * question no longer asked. Null means the host does not offer the read, or
- * nobody it would belong to is signed in.
+ * nobody it would belong to is signed in. A change of `again` asks the same
+ * question again, keeping the last answer on screen until the new one.
  */
-export function useAgentRead<T>(read: (() => Promise<T>) | null): AgentRead<T> {
+export function useAgentRead<T>(
+  read: (() => Promise<T>) | null,
+  again = 0,
+): AgentRead<T> {
   const [state, setState] = useState<{
     for: (() => Promise<T>) | null;
     read: AgentRead<T>;
@@ -119,7 +123,7 @@ export function useAgentRead<T>(read: (() => Promise<T>) | null): AgentRead<T> {
     return () => {
       current = false;
     };
-  }, [read]);
+  }, [read, again]);
   if (!read) return { kind: "unavailable" };
   // An answer belongs to the read that asked for it: a new read is loading
   // until it has its own.

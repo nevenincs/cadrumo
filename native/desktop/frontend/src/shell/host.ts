@@ -20,6 +20,7 @@ import type {
   WindowPresentation,
 } from "../ipc/contract";
 import type { ProfileAccounts } from "./profiles";
+import type { AgentSession } from "./agentSession";
 import type { AgentViews } from "./agentViews";
 import type { ProfileViews } from "./views";
 
@@ -92,6 +93,10 @@ export interface Host {
   /** What the agent column reads, where this host serves the agent.
    * Without it each of the column's views says it is not available yet. */
   readonly agent?: AgentViews;
+  /** Working with the agent: its state, the models it can run, consent,
+   * sending and the live stream. Without it the column can read but not
+   * send, and says so. */
+  readonly agentSession?: AgentSession;
 }
 
 export class HostUnavailable extends Error {

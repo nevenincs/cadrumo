@@ -599,9 +599,11 @@ desktop:
     consent_items: Què s'enviaria
     consent_lead: Per respondre, {model} necessita el contingut següent. Si l'envies,
       surt d'aquest ordinador i va a {provider}.
+    consent_messages: El teu missatge i aquesta conversa fins ara
     consent_note: No s'envia res fins que triïs. Si no l'envies, es queda en aquest
       ordinador.
     consent_title: Vols enviar això a {provider}?
+    consent_tool_results: El que han trobat les eines de Cadrumo per a aquesta conversa
     delete: Suprimeix
     delete_confirm: Vols suprimir «{title}» i els seus documents ({count})? No es
       pot desfer.
@@ -624,6 +626,8 @@ desktop:
     history: Historial
     history_empty: Encara no hi ha converses
     history_no_match: Cap conversa no coincideix amb «{query}».
+    lane_notice: 'Entorn de desenvolupament: les converses es desen sense xifrar en
+      aquest emmagatzematge de prova. Fes servir només dades inventades.'
     members_multiple: '{count} fitxers'
     members_single: 1 fitxer
     message_label: Missatge
@@ -654,6 +658,14 @@ desktop:
     send_nothing: Primer escriu un missatge o afegeix un fitxer
     send_waiting: Espera que es pugin tots els fitxers
     sent_files: Fitxers enviats amb aquest missatge
+    service_absent: L'agent no està instal·lat.
+    service_credential_missing: No hi ha cap clau configurada per a aquest proveïdor.
+    service_failed: L'agent ha deixat de funcionar.
+    service_incompatible: Aquesta versió de l'agent no funciona amb aquest Cadrumo.
+    service_runtime_unavailable: El servei en segon pla de Cadrumo no està en marxa.
+    service_signed_out: Inicia la sessió per parlar amb l'agent.
+    service_starting: S'està iniciant l'agent…
+    service_stopped: L'agent no està en marxa.
     settings_label: 'Model i esforç: {current}'
     settings_title: Configuració del model
     show: Mostra l'agent

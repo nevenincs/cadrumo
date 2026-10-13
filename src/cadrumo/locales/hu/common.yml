@@ -588,9 +588,11 @@ desktop:
     consent_items: Ezt küldenénk el
     consent_lead: 'A válaszhoz a modellnek ({model}) szüksége van az alábbi tartalomra.
       Ha elküldöd, elhagyja ezt a számítógépet, és ide kerül: {provider}.'
+    consent_messages: Az üzeneted és ez a beszélgetés eddig
     consent_note: Semmi sem megy el, amíg nem döntesz. Ha nem küldöd el, ezen a számítógépen
       marad.
     consent_title: 'Elküldöd ezt ide: {provider}?'
+    consent_tool_results: Amit a Cadrumo eszközei ehhez a beszélgetéshez találtak
     delete: Törlés
     delete_confirm: 'Törlöd ezt: „{title}”, a dokumentumaival együtt ({count})? Ez
       nem vonható vissza.'
@@ -613,6 +615,8 @@ desktop:
     history: Előzmények
     history_empty: Még nincs beszélgetés
     history_no_match: 'Egy beszélgetés sem felel meg ennek: „{query}”.'
+    lane_notice: 'Fejlesztői környezet: a beszélgetések titkosítás nélkül maradnak
+      ezen a teszttárhelyen. Csak kitalált adatokat használj.'
     members_multiple: '{count} fájl'
     members_single: 1 fájl
     message_label: Üzenet
@@ -643,6 +647,14 @@ desktop:
     send_nothing: Előbb írj üzenetet, vagy adj hozzá fájlt
     send_waiting: Várd meg, amíg minden fájl feltöltődik
     sent_files: Az üzenettel küldött fájlok
+    service_absent: Az ügynök nincs telepítve.
+    service_credential_missing: Ehhez a szolgáltatóhoz nincs beállítva kulcs.
+    service_failed: Az ügynök leállt.
+    service_incompatible: Az ügynök ezen verziója nem működik ezzel a Cadrumóval.
+    service_runtime_unavailable: A Cadrumo háttérszolgáltatása nem fut.
+    service_signed_out: Jelentkezz be, hogy beszélhess az ügynökkel.
+    service_starting: Az ügynök indul…
+    service_stopped: Az ügynök nem fut.
     settings_label: 'Modell és ráfordítás: {current}'
     settings_title: Modellbeállítások
     show: Ügynök megjelenítése

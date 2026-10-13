@@ -2067,6 +2067,7 @@ export function App({ host }: { host: Host }) {
           and close as every column has them. */}
       <AgentColumn
         agent={host.agent}
+        session={host.agentSession}
         reader={reader}
         shown={agentVisible}
         locale={locale}
