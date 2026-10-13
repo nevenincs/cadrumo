@@ -15,8 +15,8 @@ export type ProviderOption = {
 export type ModelOption = {
   id: string;
   name: string;
-  /** One line saying what the model is for. */
-  description: string;
+  /** One line saying what the model is for, where the provider says. */
+  description?: string;
   /** The efforts it accepts, as shown to the person, in the order shown.
    * Empty when the model takes no effort setting. */
   efforts: readonly string[];

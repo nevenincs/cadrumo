@@ -146,9 +146,11 @@ export function AgentSettingsPopover({
                     <span className="truncate font-medium text-foreground">
                       {option.name}
                     </span>
-                    <span className="text-sm text-muted-foreground">
-                      {option.description}
-                    </span>
+                    {option.description ? (
+                      <span className="text-sm text-muted-foreground">
+                        {option.description}
+                      </span>
+                    ) : null}
                   </span>
                   <span className="flex size-icon-md shrink-0 items-center justify-center pt-0.5">
                     <RadioGroupPrimitive.Indicator>
