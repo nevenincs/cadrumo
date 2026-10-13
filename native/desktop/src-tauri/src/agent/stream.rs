@@ -2,11 +2,13 @@
 //! mapped onto the column's stream events.
 //!
 //! Frames are droppable and carry less than the column's contract asks for,
-//! so this maps only what one stream proves and ends with `lost` where it
-//! cannot. Text offsets are counted here, per message, from the run's first
-//! frame: the stream must be contiguous from sequence 1, every chunk must be
-//! uncut, and a gap, a drop notice, an unnumbered chunk or a chunk at the
-//! frame's text cap ends the stream as lost. cadrumo-agent keeps one message
+//! so this maps only what the stream proves. Text offsets are counted here,
+//! per message, from the run's first frame: the stream must be contiguous
+//! from sequence 1 and every chunk uncut. A gap in the sequence is not a
+//! loss yet: the stream is reopened after the last frame mapped, and the
+//! gateway's replay fills it. Only what a replay cannot cover ends the
+//! stream as lost: a drop notice, a refused stream, a first frame after
+//! sequence 1, an unnumbered chunk, or a chunk at the frame's text cap. cadrumo-agent keeps one message
 //! across a reply's tool rounds; text that resumes after a tool frame is a new
 //! agent turn, named here `<message id>#<n>`, since the frames name none.
 
@@ -129,6 +131,9 @@ pub enum Step {
     ReadQuestionnaire(String),
     /// The run settled; a failed one's reason is read from its status.
     Settle(Settled),
+    /// A frame was skipped: reopen the stream after the last frame mapped,
+    /// whose replay serves what was missed.
+    Resume,
     /// Nothing more is read from this stream.
     End,
 }
@@ -234,7 +239,7 @@ impl Mapping {
             if self.last_sequence == 0 {
                 self.from_start = sequence == 1;
             } else if sequence != self.last_sequence + 1 {
-                return self.lost();
+                return vec![Step::Resume];
             }
             self.last_sequence = sequence;
         }
@@ -615,7 +620,6 @@ mod tests {
         for (name, frames) in [
             // Attached after the run's first frame: earlier text is unknown.
             ("late attach", vec![chunk(4, "m1", "a")]),
-            ("gap", vec![chunk(1, "m1", "a"), chunk(3, "m1", "b")]),
             (
                 "unnumbered chunk",
                 vec![frame(
@@ -679,6 +683,48 @@ mod tests {
             assert_eq!(last[last.len() - 2..], lost[..], "{name}");
             assert!(mapping.ended(), "{name}");
         }
+    }
+
+    #[test]
+    fn a_gap_resumes_after_the_last_frame_and_the_replay_fills_it() {
+        let mut mapping = Mapping::new("run-1");
+        let mut seen = events(mapping.frame(&chunk(1, "m1", "ab")));
+        seen.extend(events(mapping.frame(&chunk(2, "m1", "cd"))));
+        // Frame 3 never arrived on this connection.
+        assert_eq!(mapping.frame(&chunk(4, "m1", "gh")), [Step::Resume]);
+        assert!(!mapping.ended());
+        assert_eq!(mapping.resume_cursor().as_deref(), Some("run-1:2"));
+        // The reopened stream: its snapshot, then the replay from sequence 3.
+        seen.extend(events(mapping.frame(&frame(
+            "stream_snapshot",
+            None,
+            json!({"status": "running"}),
+        ))));
+        seen.extend(events(mapping.frame(&chunk(3, "m1", "ef"))));
+        seen.extend(events(mapping.frame(&chunk(4, "m1", "gh"))));
+        let texts: Vec<_> = seen
+            .iter()
+            .filter_map(|event| match event {
+                StreamEvent::Text { offset, delta, .. } => Some((*offset, delta.as_str())),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(texts, [(0, "ab"), (2, "cd"), (4, "ef"), (6, "gh")]);
+        // A replay that cannot reach back far enough says so, and that is a loss.
+        let steps = mapping.frame(&frame(
+            "progress_dropped",
+            None,
+            json!({"reason": "replay_window_exceeded", "dropped_type": null, "first_sequence": 9}),
+        ));
+        assert_eq!(
+            steps,
+            [
+                Step::Emit(StreamEvent::Lost {
+                    reply_id: Some("run-1".into())
+                }),
+                Step::End
+            ]
+        );
     }
 
     #[test]

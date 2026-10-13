@@ -135,6 +135,8 @@ pub type Launch = Arc<dyn Fn() -> Result<Command> + Send + Sync>;
 pub struct Gateway {
     pub port: u16,
     pub bearer: Arc<Zeroizing<String>>,
+    /// The profile's agent workspace the launcher reported.
+    pub workspace_root: String,
     /// Which launcher reported it; a later one is another gateway.
     pub generation: u64,
 }
@@ -497,10 +499,12 @@ async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
         Signal::Event(Event::Ready {
             gateway_port,
             agent_version,
+            workspace_root,
         }) => {
             *lock(&shared.gateway) = Some(Gateway {
                 port: gateway_port,
                 bearer,
+                workspace_root,
                 generation,
             });
             publish(shared, State::Ready { agent_version });
@@ -739,6 +743,7 @@ mod tests {
             assert_eq!(length, "64", "the launcher read the minted bearer");
             let gateway = rig.supervisor.gateway().unwrap();
             assert_eq!(gateway.port, 4000);
+            assert_eq!(gateway.workspace_root, r"C:\lane\ws");
             assert_eq!(gateway.bearer.len(), 64);
             let launcher = lock(&rig.supervisor.shared.running)
                 .as_ref()

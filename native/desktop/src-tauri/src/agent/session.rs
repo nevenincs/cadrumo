@@ -2,12 +2,12 @@
 //! behind `AgentSession` and `AgentViews`, each answered from the gateway or
 //! refused with a typed code where nothing honest can answer.
 //!
-//! A conversation is the workspace directory `<agent workspaces>/<id>`. The
-//! launcher creates and reports no such directory today, so every read and
-//! act that names a conversation, and the provider catalog, which the gateway
-//! serves only for a workspace, is refused with a code that says so. A reply
-//! is one gateway run, and only a run this host is watching can be stopped or
-//! answered.
+//! Every run starts in the profile's one agent workspace, which the launcher
+//! reports when it is ready, and the provider catalog is read for it. A
+//! conversation is a chain of runs there; until the column's contract names
+//! a conversation by its first run, every read and act that names one is
+//! refused with a code that says so. A reply is one gateway run, and only a
+//! run this host is watching can be stopped or answered.
 
 use super::{
     Refused,
@@ -208,15 +208,12 @@ impl Session {
         }
     }
 
-    /// The workspace directory of a conversation. The launcher protocol
-    /// creates and reports none, so no conversation has one yet.
+    /// The workspace of a conversation. Every run is in the profile's one
+    /// workspace, and a conversation is a chain of runs there, but the
+    /// column's contract does not yet name a conversation by its first run,
+    /// so no conversation id resolves.
     fn workspace(_conversation: &str) -> Result<String, Refused> {
         Err(refused("agent_conversation_unavailable"))
-    }
-
-    /// The workspace the provider catalog is read for. As for a conversation.
-    fn catalog_workspace() -> Result<String, Refused> {
-        Err(refused("agent_workspace_unavailable"))
     }
 
     /// Every watch of `reply` this host streams: its mapping and channel.
@@ -238,9 +235,9 @@ impl Session {
 
     pub fn provider_catalog(&self, supervisor: &Supervisor) -> Result<Value, Refused> {
         let gateway = Self::gateway(supervisor)?;
-        let workspace = Self::catalog_workspace()?;
-        // Relayed as served: every lane, runnable or not.
-        Client::new(&gateway).provider_catalog(&workspace)
+        // Relayed as served, for the workspace every run starts in: every
+        // lane, runnable or not.
+        Client::new(&gateway).provider_catalog(&gateway.workspace_root)
     }
 
     pub fn send(&self, supervisor: &Supervisor, request: &SendRequest) -> Result<Value, Refused> {
@@ -405,7 +402,11 @@ fn pump(
                 emit(channel, lock(mapping).interrupted());
                 return;
             };
+            let mut resume = false;
             for event in events {
+                if resume {
+                    break;
+                }
                 let steps = lock(mapping).frame(&event.data);
                 for step in steps {
                     match step {
@@ -434,8 +435,12 @@ fn pump(
                             let _ = channel.send(lock(mapping).settled(state, reason));
                         }
                         Step::End => return,
+                        Step::Resume => resume = true,
                     }
                 }
+            }
+            if resume {
+                break;
             }
             attempts = 0;
         }

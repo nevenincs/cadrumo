@@ -284,7 +284,7 @@ pub(crate) mod tests {
         let seen = Arc::new(Mutex::new(Vec::new()));
         let sink = seen.clone();
         read_events(
-            &b"{\"event\":\"agent_ready\",\"gateway_port\":5000,\"agent_version\":\"1\",\"lane\":\"development\"}\nnot json\n{\"event\":\"agent_stopped\",\"reason\":\"x\"}\n"[..],
+            &b"{\"event\":\"agent_ready\",\"gateway_port\":5000,\"agent_version\":\"1\",\"lane\":\"development\",\"workspace_root\":\"C:\\\\ws\"}\nnot json\n{\"event\":\"agent_stopped\",\"reason\":\"x\"}\n"[..],
             move |signal| sink.lock().unwrap().push(signal),
         );
         assert_eq!(
@@ -292,7 +292,8 @@ pub(crate) mod tests {
             [
                 Signal::Event(Event::Ready {
                     gateway_port: 5000,
-                    agent_version: "1".into()
+                    agent_version: "1".into(),
+                    workspace_root: r"C:\ws".into()
                 }),
                 Signal::Violation,
                 Signal::Ended
@@ -343,7 +344,7 @@ pub(crate) mod tests {
              $bearer = ($line | ConvertFrom-Json).bearer; \
              $grandchild = Start-Process -PassThru -WindowStyle Hidden -FilePath $env:SystemRoot\\System32\\WindowsPowerShell\\v1.0\\powershell.exe -ArgumentList '-NoProfile','-Command','Start-Sleep -Seconds 120'; \
              [Console]::Error.WriteLine('grandchild ' + $grandchild.Id); \
-             [Console]::Out.WriteLine('{{\"event\":\"agent_ready\",\"gateway_port\":4000,\"agent_version\":\"' + $bearer.Length + '-' + $grandchild.Id + '\",\"lane\":\"development\"}}'); \
+             [Console]::Out.WriteLine('{{\"event\":\"agent_ready\",\"gateway_port\":4000,\"agent_version\":\"' + $bearer.Length + '-' + $grandchild.Id + '\",\"lane\":\"development\",\"workspace_root\":\"C:\\\\lane\\\\ws\"}}'); \
              [Console]::Out.Flush(); \
              {}",
             if ignore_end {

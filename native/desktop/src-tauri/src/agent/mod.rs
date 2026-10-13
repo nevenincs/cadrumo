@@ -161,7 +161,7 @@ async fn agent_provider_catalog(
     .await
 }
 
-/// The launcher protocol creates no conversation workspace.
+/// The contract has no conversation without a first run.
 #[tauri::command]
 async fn agent_conversation_start() -> std::result::Result<Value, Refused> {
     refused("agent_conversation_unavailable")
@@ -248,14 +248,14 @@ async fn agent_unobserve(
     Ok(())
 }
 
-/// No conversation workspace is reported, so none can be listed.
+/// The contract does not yet name a conversation by its run chain.
 #[tauri::command]
 async fn agent_conversations() -> std::result::Result<Value, Refused> {
     refused("agent_conversation_unavailable")
 }
 
 /// cadrumo-agent's history keeps no turn order, no turn in progress and no
-/// person turn id, and no conversation workspace is reported.
+/// person turn id, and the contract names no conversation by its run chain.
 #[tauri::command]
 async fn agent_history(conversation_id: String) -> std::result::Result<Value, Refused> {
     let _ = conversation_id;

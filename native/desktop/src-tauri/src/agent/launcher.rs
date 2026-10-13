@@ -7,6 +7,8 @@ use zeroize::Zeroizing;
 pub const LINE_LIMIT: usize = 4096;
 /// The longest agent version the column is asked to show.
 const VERSION_LIMIT: usize = 128;
+/// `MAX_WORKSPACE_ROOT_LENGTH`: the longest workspace root a run may name.
+const WORKSPACE_LIMIT: usize = 4096;
 
 /// One event the launcher reports on its standard output.
 #[derive(Debug, PartialEq, Eq)]
@@ -14,6 +16,9 @@ pub enum Event {
     Ready {
         gateway_port: u16,
         agent_version: String,
+        /// The profile's one agent workspace, which the launcher created:
+        /// every run starts in it and the catalog is read for it.
+        workspace_root: String,
     },
     Refused {
         code: String,
@@ -50,6 +55,18 @@ fn code(value: &str) -> bool {
             .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'_')
 }
 
+/// Absolute under either convention, as cadrumo-agent's own workspace check
+/// reads a root: a POSIX root, a drive root or a UNC share.
+fn absolute(path: &str) -> bool {
+    let bytes = path.as_bytes();
+    path.starts_with('/')
+        || path.starts_with(r"\\")
+        || (bytes.len() > 2
+            && bytes[0].is_ascii_alphabetic()
+            && bytes[1] == b':'
+            && matches!(bytes[2], b'\\' | b'/'))
+}
+
 /// Reads one event line, without its terminator.
 pub fn decode(line: &[u8]) -> Result<Event, Violation> {
     #[derive(Deserialize)]
@@ -60,6 +77,7 @@ pub fn decode(line: &[u8]) -> Result<Event, Violation> {
             gateway_port: u64,
             agent_version: String,
             lane: String,
+            workspace_root: String,
         },
         #[serde(rename = "agent_refused")]
         Refused { code: String },
@@ -75,6 +93,7 @@ pub fn decode(line: &[u8]) -> Result<Event, Violation> {
             gateway_port,
             agent_version,
             lane,
+            workspace_root,
         } => {
             let gateway_port = u16::try_from(gateway_port).map_err(|_| Violation)?;
             if gateway_port == 0
@@ -82,12 +101,16 @@ pub fn decode(line: &[u8]) -> Result<Event, Violation> {
                 || agent_version.is_empty()
                 || agent_version.chars().count() > VERSION_LIMIT
                 || agent_version.chars().any(char::is_control)
+                || !absolute(&workspace_root)
+                || workspace_root.chars().count() > WORKSPACE_LIMIT
+                || workspace_root.chars().any(char::is_control)
             {
                 return Err(Violation);
             }
             Ok(Event::Ready {
                 gateway_port,
                 agent_version,
+                workspace_root,
             })
         }
         Wire::Refused { code: refused } if code(&refused) => Ok(Event::Refused { code: refused }),
@@ -109,10 +132,11 @@ mod tests {
     #[test]
     fn each_event_the_protocol_declares_is_read() {
         assert_eq!(
-            decode(br#"{"event": "agent_ready", "gateway_port": 49213, "agent_version": "0.4.1", "lane": "development"}"#),
+            decode(br#"{"event": "agent_ready", "gateway_port": 49213, "agent_version": "0.4.1", "lane": "development", "workspace_root": "C:\\lane\\agent\\p\\workspace"}"#),
             Ok(Event::Ready {
                 gateway_port: 49213,
-                agent_version: "0.4.1".into()
+                agent_version: "0.4.1".into(),
+                workspace_root: r"C:\lane\agent\p\workspace".into()
             })
         );
         assert_eq!(
@@ -138,14 +162,17 @@ mod tests {
         for line in [
             &b""[..],
             b"agent_ready",
-            br#"{"event":"agent_ready","gateway_port":0,"agent_version":"1","lane":"development"}"#,
-            br#"{"event":"agent_ready","gateway_port":65536,"agent_version":"1","lane":"development"}"#,
-            br#"{"event":"agent_ready","gateway_port":-1,"agent_version":"1","lane":"development"}"#,
-            br#"{"event":"agent_ready","gateway_port":4000,"agent_version":"1","lane":"production"}"#,
-            br#"{"event":"agent_ready","gateway_port":4000,"agent_version":"","lane":"development"}"#,
-            br#"{"event":"agent_ready","gateway_port":4000,"agent_version":"1\n","lane":"development"}"#,
-            br#"{"event":"agent_ready","gateway_port":4000,"lane":"development"}"#,
-            br#"{"event":"agent_ready","gateway_port":4000,"agent_version":"1","lane":"development","token":"x"}"#,
+            br#"{"event":"agent_ready","gateway_port":0,"agent_version":"1","lane":"development","workspace_root":"C:\\ws"}"#,
+            br#"{"event":"agent_ready","gateway_port":65536,"agent_version":"1","lane":"development","workspace_root":"C:\\ws"}"#,
+            br#"{"event":"agent_ready","gateway_port":-1,"agent_version":"1","lane":"development","workspace_root":"C:\\ws"}"#,
+            br#"{"event":"agent_ready","gateway_port":4000,"agent_version":"1","lane":"production","workspace_root":"C:\\ws"}"#,
+            br#"{"event":"agent_ready","gateway_port":4000,"agent_version":"","lane":"development","workspace_root":"C:\\ws"}"#,
+            br#"{"event":"agent_ready","gateway_port":4000,"agent_version":"1\n","lane":"development","workspace_root":"C:\\ws"}"#,
+            br#"{"event":"agent_ready","gateway_port":4000,"lane":"development","workspace_root":"C:\\ws"}"#,
+            br#"{"event":"agent_ready","gateway_port":4000,"agent_version":"1","lane":"development","workspace_root":"C:\\ws","token":"x"}"#,
+            br#"{"event":"agent_ready","gateway_port":4000,"agent_version":"1","lane":"development" }"#,
+            br#"{"event":"agent_ready","gateway_port":4000,"agent_version":"1","lane":"development","workspace_root":"relative\\ws"}"#,
+            br#"{"event":"agent_ready","gateway_port":4000,"agent_version":"1","lane":"development","workspace_root":"C:\\w\n"}"#,
             br#"{"event":"agent_refused","code":"Agent Failed"}"#,
             br#"{"event":"agent_refused","code":""}"#,
             br#"{"event":"agent_stopped","reason":"sk-ant-\u0000"}"#,

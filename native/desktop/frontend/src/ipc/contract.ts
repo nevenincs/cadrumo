@@ -819,8 +819,7 @@ export interface HostCommands {
    * The agent host. Every agent command refuses with `{ code }`: the
    * service's own refusal while it is not ready, `agent_reply_unknown` for
    * a reply this host is not watching, and `agent_conversation_unavailable`
-   * for any conversation, since the launcher reports no conversation
-   * workspace yet.
+   * for any conversation, which is not yet named by its run chain.
    */
   agent_status: { args: Authorized; result: AgentServiceStatus };
   agent_status_subscribe: {
