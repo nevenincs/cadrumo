@@ -5,13 +5,15 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:4ea51c11d1f2377d6997a0ea55b6059b7d2c67b4b770af9aaeedace5ca04342e'
+body_hash: 'sha256:3b4e60baab240047d421e74f5bc8511180babf3f6cdd25b356b9184b9b9e648e'
 related:
   - "[[2026-10-12-desktop-agent-host-adr]]"
   - "[[2026-10-12-desktop-agent-host-reference]]"
 ---
 
 # `desktop-agent-host` adr: `A development live lane runs the real agent column on a disposable synthetic profile` | (**status:** `proposed`)
+
+Not accepted. On 2026-10-13 the owner ruled first-hand on the tool surface: "I don't want read only tools. I want to verify that the agent platform is functional." That ruling is applied below. The owner also directed that this record is reviewed by the cadrumo-agent project and by Cadrumo's engineering sessions, and verified before any ruling on it: "I don't want you to improvise. You have to ask for reviews, ruling, check verifications." The remaining choices stay open for the owner.
 
 ## Problem Statement
 
@@ -63,7 +65,7 @@ Binding if accepted:
 
 We will build a development live lane in four stages. Each stage builds the production pieces in their production form, and each stage retires a deviation.
 
-- **Stage 1, live chat.** No Cadrumo tools and no documents.
+- **Stage 1, a working agent.** Live chat with the full Cadrumo tool surface. There are no documents yet.
   - Cadrumo backend:
     - a stored provider credential, set by a person act with the secret on standard input;
     - the `agent-host` frontend;
@@ -78,7 +80,11 @@ We will build a development live lane in four stages. Each stage builds the prod
     - the stream mapped from gateway SSE onto a Tauri channel;
     - consent and credential acts through `aeat` children.
   - Webview: the wiring, owned by the desktop design session.
-- **Stage 2, Cadrumo tools.** The relay mounts Cadrumo's `read_only_local` surface inside the signed-in profile. A joint live run on the lane's real Cadrumo records cadrumo-agent's tool-access proof, which retires L2.
+  - Tools:
+    - The relay mounts `cadrumo-mcp --surface full` inside the signed-in profile, so the agent can read, run operations, and take reviews to the person.
+    - The runtime still refuses the person's own acts on the MCP frontend (`src/cadrumo/application/operations/person_acts.py:1-24`). That is the accepted access rule, not a restriction added by this lane.
+    - The first live run records cadrumo-agent's tool-access and tool-write proofs on this real Cadrumo. Recording them retires L2.
+- **Stage 2, hosted mode.** The service restarts under its hosted root once the proofs are recorded.
 - **Stage 3, documents.** Custody intake, conversation links and text projections (parent contract 5), with documents as consent items.
 - **Stage 4, encryption.**
   - The SQLCipher stores and the key frame retire L1 and L3.
@@ -89,6 +95,7 @@ Acceptance:
 
 - Every stage is verified live on the signed-in Windows desktop by an opt-in, credit-spending project lane, and by the owner's own interactive use.
 - Stage 1 passes when:
+  - the agent completes a real Cadrumo operation that changes a record, with its review answered by the person, and the record reads back;
   - a typed message streams Claude's reply into the transcript;
   - stopping settles the reply as `stopped`;
   - a reload shows the same turns;
@@ -103,17 +110,12 @@ The lane gives the owner live use at the first stage. It spends that effort on p
 
 ## Consequences
 
-- The owner can use a real agent once stage 1 lands. Cadrumo tools follow in stage 2, documents in stage 3, and real profile data only in stage 4.
+- The owner can use a real agent, with Cadrumo's full tool surface, once stage 1 lands. Hosted mode follows in stage 2, documents in stage 3, and real profile data only in stage 4.
 - The notice informs the person but cannot stop them typing private information into the lane. The constraint relies on the person following it.
-- The lane needs four of the parent record's remaining choices settled first:
-  - the launcher identity;
-  - the Rust host owner;
-  - cadrumo-agent provisioning from a source path;
-  - model choice from the live list.
-  The fifth, consent granularity, applies from stage 2.
+- The lane needs these remaining choices of the parent record settled first: the launcher identity, the Rust host owner, cadrumo-agent provisioning from a source path, model choice from the live list, and consent granularity. Each stays open for the owner. The parent record stays `proposed` for the production path.
 - cadrumo-agent needs four things, to be raised through its handover:
   - a way to confine the catalog to the `anthropic` lane in non-hosted mode, so its other lanes' command-line handshakes do not run;
   - the relay change committed;
-  - the joint proof run;
+  - the joint access and write proof run;
   - the key frame and the encrypted stores.
 - If the owner rejects any deviation, the lane waits for the delivery that removes it.
