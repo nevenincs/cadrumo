@@ -11,7 +11,7 @@ from mcp.client.stdio import StdioServerParameters, stdio_client
 
 from cadrumo.core.storage_environment import ChildEnvironmentProfile, child_environment
 
-from ..client_probes import _call, _mcp_read, _mcp_refuse_profile, _tui, issue_key
+from ..client_probes import _call, _mcp_read, _mcp_refuse_profile, _tui, issue_key, mcp_edit_profile
 from ..harness import LifecycleHarness
 
 pytestmark = [
@@ -60,9 +60,15 @@ async def test_packaged_client_authentication_and_profile_scope(harness: Lifecyc
                 await asyncio.to_thread(_tui, harness, profile, admitted=True)
                 await _mcp_read(mcp, profile)
                 await _mcp_refuse_profile(mcp, other)
-            # The person issues a key for A; the agent only receives its reference at launch and
-            # stays pinned to A while the human selector is B.
+            # The person issues a key for A on the command line; the agent only receives its
+            # reference at launch and stays pinned to A while the human selector is B.
+            await asyncio.to_thread(
+                harness.cli, "login", "Client A", "--secrets-stdin", secret={"passphrase": first.password}
+            )
             reference = await asyncio.to_thread(issue_key, harness, first)
+            await asyncio.to_thread(
+                harness.cli, "login", "Client B", "--secrets-stdin", secret={"passphrase": second.password}
+            )
             keyed_parameters = parameters.model_copy(
                 update={"args": ["--profile-id", str(first.profile_id), "--credential-reference", str(reference)]}
             )
@@ -77,6 +83,8 @@ async def test_packaged_client_authentication_and_profile_scope(harness: Lifecyc
             await asyncio.to_thread(key_profile_human.client.resume_receipt)
             await asyncio.to_thread(key_profile_human.client.human_sign_out)
             await _mcp_read(key_mcp, first)
+            # The agent reads and changes A's own values while no person is signed in to A.
+            await mcp_edit_profile(key_mcp, first, path="identity.name", previous=None, value="Lifecycle Agent")
             await _mcp_read(mcp, second)
             await _mcp_refuse_profile(key_mcp, second)
             retained = harness.connect(second.profile_id)
@@ -91,6 +99,10 @@ async def test_packaged_client_authentication_and_profile_scope(harness: Lifecyc
             await _mcp_read(mcp, second)
             # The key session was lost with the runtime; the launch reference admits it again.
             await _mcp_read(key_mcp, first)
+            # The earlier edit survived the crash, and the re-admitted agent can edit again.
+            await mcp_edit_profile(
+                key_mcp, first, path="identity.name", previous="Lifecycle Agent", value="Lifecycle Agent Two"
+            )
             signed_out = await asyncio.to_thread(harness.cli, "logout")
             assert signed_out["result"]["human_receipt_revoked"] is True
             await asyncio.to_thread(harness.cli, "profile", "view", expect_success=False)

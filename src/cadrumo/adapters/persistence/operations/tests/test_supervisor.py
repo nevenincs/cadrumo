@@ -3379,6 +3379,9 @@ def test_an_expired_lease_of_an_unsettled_holder_refuses_rather_than_taking_over
 
         assert not isinstance(refused.value, ValueError)
         assert get_registered_error_code(refused.value).code == "REFUSED_OPERATION_SUBJECT_BUSY"
+        # The holder is named for the runtime's log only; the refusal's message stays free of it.
+        assert refused.value.holder_operation_id == unsettled
+        assert unsettled not in resolve_error_message(refused.value)
         assert _shared_scope_holder(leases, observed_at=lapsed_at) == expired_lease
         assert asyncio.run(journal.load(unsettled)).lifecycle is OperationLifecycle.CREATED
 

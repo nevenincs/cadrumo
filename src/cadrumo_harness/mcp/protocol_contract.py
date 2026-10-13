@@ -109,7 +109,7 @@ PROFILE_CHANGED_REMEDY: Final = (
 
 _ADMISSION_REFUSALS: Final = frozenset(
     {*(code.value for code in AccessDenialCode), *(code.value for code in AutomationCustodyCode)}
-) - {AccessDenialCode.PERSON_ACT_REQUIRED.value}
+) - {AccessDenialCode.PERSON_ACT_REQUIRED.value, AccessDenialCode.SUBJECT_BUSY.value}
 
 
 def sign_in_remedy(code: str, facts: Mapping[str, Any] | None = None) -> str | None:
@@ -285,6 +285,8 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         "accepted; it may quote the value it refused. A fault with an empty location and a registered error "
         "code as its type refuses the whole request, with the message the command line prints for that error. "
         "No fault attaches the refused input itself. "
+        "A refusal with code subject_busy means an earlier operation of this definition on the same subject has "
+        "not settled; signing in again changes nothing, so report it to the person rather than retrying. "
         "Every call submits a new operation, so two identical calls run twice. "
         "idempotency_key is optional, and giving one makes a repeat safe: a repeat with the same key, operation "
         f"and payload answers with the operation already recorded and submits nothing. {_UNKNOWN_OUTCOME} "

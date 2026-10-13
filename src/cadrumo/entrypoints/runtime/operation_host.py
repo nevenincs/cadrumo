@@ -344,7 +344,16 @@ class ProfileWorkerOperationHost:
                         # Replay does not revive the original response bearer.
                         execution.discard(operation_id)
                     return submitted
-            except (RepositoryError, OperationSubjectBusyError):
+            except OperationSubjectBusyError as busy:
+                execution.discard(operation_id)
+                # Only this local log names the holder: it is the operation an operator resumes.
+                _log.warning(
+                    "operation subject busy definition=%s holder=%s",
+                    request.definition_id,
+                    busy.holder_operation_id or "unknown",
+                )
+                raise ProfileAccessRefusedError(AccessDenialCode.SUBJECT_BUSY) from None
+            except RepositoryError:
                 execution.discard(operation_id)
                 raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE) from None
             except BaseException:
@@ -509,6 +518,48 @@ class ProfileWorkerOperationHost:
                 yield authorization
         finally:
             self._output_tasks.pop(task, None)
+
+    @asynccontextmanager
+    async def release_submission(
+        self, session_id: UUID, operation_id: OperationId, frontend: OperationFrontendProjection
+    ) -> AsyncGenerator[WorkerAuthorityRequest]:
+        """Release a fresh admission's receipt, settling the admission when its submitter is refused it.
+
+        The admission is durable before its receipt is released. Withheld, the
+        receipt leaves nobody able to start the operation, and an unstarted
+        operation keeps its subject's lease and refuses every later submission
+        for that subject.
+        """
+        released = False
+        try:
+            async with self.release(session_id, operation_id, frontend, AccessAction.SUBMIT) as authorization:
+                released = True
+                yield authorization
+        except (ProfileAccessRefusedError, AutomationCustodyError) as refusal:
+            if not released:
+                await self._settle_undelivered_admission(operation_id, session_id, refusal)
+            raise
+
+    async def _settle_undelivered_admission(
+        self, operation_id: OperationId, session_id: UUID, refusal: ProfileAccessRefusedError | AutomationCustodyError
+    ) -> None:
+        original = self._submissions.get(operation_id)
+        if original is None or original[0] != session_id:
+            # A replayed receipt names an earlier admission, which keeps its own course.
+            return
+        reason = (
+            refusal
+            if isinstance(refusal, ProfileAccessRefusedError)
+            else ProfileAccessRefusedError(AccessDenialCode.AUTHENTICATION_REQUIRED)
+        )
+        try:
+            await self._composed().submission.supervisor.settle_refused_start(operation_id, reason)
+        except (RepositoryError, ValueError):
+            _log.warning("undelivered admission left unsettled operation=%s", operation_id)
+            return
+        self._submissions.pop(operation_id, None)
+        if self._execution is not None:
+            self._execution.discard(operation_id)
 
     async def _stored_invocation(
         self, operation_id: OperationId, *, require_idle: bool = False

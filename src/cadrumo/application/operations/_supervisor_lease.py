@@ -214,7 +214,7 @@ class OperationSupervisorLeaseMixin:
             or (await self._journal.load(holder.operation_id)).lifecycle is OperationLifecycle.CREATED
             or (await self.reconcile(holder.operation_id)).lifecycle is not OperationLifecycle.TERMINAL
         ):
-            raise OperationSubjectBusyError()
+            raise OperationSubjectBusyError(holder.operation_id)
         # Crash recovery, not the settlement path: settlement clears the lease
         # in the same critical section that writes the terminal record, so a
         # settled holder still owning the subject can only be left by a
@@ -227,7 +227,8 @@ class OperationSupervisorLeaseMixin:
         existing_operation_id = await self._resolve_idempotency(claim)
         if existing_operation_id is not None:
             return existing_operation_id
-        raise OperationSubjectBusyError()
+        contender = reacquired.current if reacquired.disposition is OperationLeaseDisposition.CONFLICT else None
+        raise OperationSubjectBusyError(None if contender is None else contender.operation_id)
 
     async def _holder_is_settled(self, holder: OperationOwnerLease) -> bool:
         """Tell whether the operation a subject's lease names has a terminal journal.

@@ -6,7 +6,6 @@ import asyncio
 import json
 import time
 from concurrent.futures import ThreadPoolExecutor
-from datetime import timedelta
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -14,14 +13,12 @@ from mcp import ClientSession
 
 from cadrumo.adapters.local_runtime.automation_decision import AutomationDecisionRunError, run_automation_decision
 from cadrumo.adapters.local_runtime.automation_inventory import read_automation_inventory
-from cadrumo.adapters.local_runtime.automation_requester import AutomationRequesterJourney
 from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError, frontend_failure_code
 from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CLIENT_NAMESPACE
 from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
 from cadrumo.application.auth.auth_read_contracts import AuthReadProjection, AuthReadRequest
 from cadrumo.application.diagnostics_read_contracts import DiagnosticsReadProjection, DiagnosticsReadRequest
 from cadrumo.application.operations.frontend_requests import (
-    OPERATION_OBSERVATION_PROJECTION_ID,
     OperationObservationRequestV1,
     OperationObservationSuccessV1,
     OperationPublicTerminalEventV1,
@@ -43,19 +40,23 @@ from cadrumo.application.runtime.operation_access import (
 )
 from cadrumo.application.runtime.profile_access import RuntimeAccessRefusal
 from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
     AccessDenialCode,
-    AccessScope,
     DisclosureCategory,
-    DisclosurePermission,
 )
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
-from cadrumo.application.user_profile.automation_enrollment import EnrollmentKind, EnrollmentProposal
 from cadrumo.application.user_profile.automation_operations import AUTOMATION_APPROVE_OPERATION_DEFINITION_ID
-from cadrumo.application.user_profile.view_operation import ProfileViewPageKind
+from cadrumo.application.user_profile.profile_operation_contracts import (
+    PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
+    ProfileMutationOperationProjection,
+)
+from cadrumo.application.user_profile.view_operation import (
+    PROFILE_VIEW_OPERATION_DEFINITION_ID,
+    ProfileViewFactItem,
+    ProfileViewOperationProjection,
+    ProfileViewPageKind,
+)
 from cadrumo.core.operations import OperationLifecycle, OperationTerminalCondition, profile_operation_subject
 from cadrumo.core.storage_environment import ChildEnvironmentProfile, child_environment
-from cadrumo.core.time.clock import now
 from dev.packaging.command_execution import run_command
 
 from .harness import Connection, LifecycleHarness, Profile
@@ -152,18 +153,25 @@ async def _call(
     return document
 
 
-async def _mcp_read(client: ClientSession, profile: Profile) -> None:
-    described = await _call(client, "describe", {"definition_id": "auth.local-read"})
+async def _mcp_settle(
+    client: ClientSession,
+    profile: Profile,
+    definition_id: str,
+    payload: dict[str, Any],
+    *,
+    idempotency_key: str | None = None,
+) -> dict[str, Any]:
+    """Run one operation over MCP to a successful terminal and return its released projection."""
+    described = await _call(client, "describe", {"definition_id": definition_id})
     contract = described["description"]["contract"]
-    submitted = await _call(
-        client,
-        "execute",
-        {
-            "definition_id": "auth.local-read",
-            "subject_ref": profile_operation_subject(str(profile.profile_id)),
-            "payload": {"profile_id": str(profile.profile_id), "kind": "status"},
-        },
-    )
+    request: dict[str, Any] = {
+        "definition_id": definition_id,
+        "subject_ref": profile_operation_subject(str(profile.profile_id)),
+        "payload": payload,
+    }
+    if idempotency_key is not None:
+        request["idempotency_key"] = idempotency_key
+    submitted = await _call(client, "execute", request)
     operation_id = submitted["receipt"]["operation_id"]
     deadline = time.monotonic() + 60
     while True:
@@ -184,7 +192,7 @@ async def _mcp_read(client: ClientSession, profile: Profile) -> None:
         if isinstance(event, OperationPublicTerminalEventV1) and event.failure_error_code is not None
     )
     if not (terminal is not None and terminal.value == "succeeded"):
-        raise AssertionError(f"MCP private operation terminal={terminal}; failure_codes={failure_codes}")
+        raise AssertionError(f"MCP {definition_id} terminal={terminal}; failure_codes={failure_codes}")
     result = await _call(
         client,
         "result",
@@ -197,9 +205,86 @@ async def _mcp_read(client: ClientSession, profile: Profile) -> None:
             }
         },
     )
-    body = AuthReadProjection.model_validate_json(json.dumps(result["document"]["projection"]))
+    return result["document"]["projection"]
+
+
+async def _mcp_read(client: ClientSession, profile: Profile) -> None:
+    document = await _mcp_settle(
+        client, profile, "auth.local-read", {"profile_id": str(profile.profile_id), "kind": "status"}
+    )
+    body = AuthReadProjection.model_validate_json(json.dumps(document))
     if not (body.profile_id == profile.profile_id and body.status is not None):
         raise AssertionError("Protected application probe failed")
+
+
+async def _mcp_profile_facts(client: ClientSession, profile: Profile) -> ProfileViewOperationProjection:
+    """Read every stored fact of the profile over MCP, pinned to one revision."""
+    payload: dict[str, Any] = {"profile_id": str(profile.profile_id), "page_kind": ProfileViewPageKind.FACTS.value}
+    first = ProfileViewOperationProjection.model_validate_json(
+        json.dumps(await _mcp_settle(client, profile, PROFILE_VIEW_OPERATION_DEFINITION_ID, payload))
+    )
+    if not (first.profile_id == profile.profile_id and first.outcome == "page"):
+        raise AssertionError("MCP profile view was not released")
+    items = list(first.items)
+    cursor = first.next_cursor
+    while cursor is not None:
+        page = ProfileViewOperationProjection.model_validate_json(
+            json.dumps(
+                await _mcp_settle(
+                    client,
+                    profile,
+                    PROFILE_VIEW_OPERATION_DEFINITION_ID,
+                    payload
+                    | {
+                        "cursor": cursor,
+                        "expected_revision": first.record_revision,
+                        "expected_content_digest": str(first.content_digest),
+                    },
+                )
+            )
+        )
+        if not (page.outcome == "page" and page.record_revision == first.record_revision):
+            raise AssertionError("MCP profile view changed revision while paging")
+        items.extend(page.items)
+        cursor = page.next_cursor
+    return first.model_copy(update={"items": tuple(items), "next_cursor": None})
+
+
+def _fact(view: ProfileViewOperationProjection, path: str) -> str | None:
+    return next(
+        (item.value for item in view.items if isinstance(item, ProfileViewFactItem) and item.path == path), None
+    )
+
+
+async def mcp_edit_profile(
+    client: ClientSession, profile: Profile, *, path: str, previous: str | None, value: str
+) -> None:
+    """Read the profile, change one fact and read it back, all as the agent."""
+    before = await _mcp_profile_facts(client, profile)
+    if _fact(before, path) != previous:
+        raise AssertionError("The agent did not read the profile value it expected before editing")
+    mutation = ProfileMutationOperationProjection.model_validate_json(
+        json.dumps(
+            await _mcp_settle(
+                client,
+                profile,
+                PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
+                {
+                    "profile_id": str(profile.profile_id),
+                    "expected_revision": before.record_revision,
+                    "expected_content_digest": str(before.content_digest),
+                    "path": path,
+                    "value": value,
+                },
+                idempotency_key=str(uuid4()),
+            )
+        )
+    )
+    after = await _mcp_profile_facts(client, profile)
+    if not (after.record_revision > before.record_revision and after.record_revision == mutation.record_revision):
+        raise AssertionError("The agent's profile edit did not publish a new revision")
+    if _fact(after, path) != value:
+        raise AssertionError("The agent did not read back the profile value it wrote")
 
 
 def _observe_read(
@@ -379,78 +464,40 @@ def _refused(reply: object) -> None:
 def issue_key(harness: LifecycleHarness, profile: Profile) -> UUID:
     """Issue one profile's key as the person does, returning the reference an agent is launched with.
 
-    The person requests the key from a fresh connection, as
-    ``config profile automation create`` does, and approves it from a signed-in
-    one. The agent never takes part: it is started with the reference.
+    The person runs ``config profile automation create --use agent`` for the
+    selected profile and approves the request from a signed-in connection. The
+    agent never takes part: it is started with the reference.
     """
-    requester = harness.connect(profile.profile_id)
-    enrollment = requester.client.prepare_enrollment(installed_automation_secret_store())
-    destination = enrollment.prepared.destination_id
-    expires = now() + timedelta(minutes=30)
-    scope = AccessScope(
-        operations=frozenset({"auth.local-read"}),
-        actions=frozenset({AccessAction.SUBMIT, AccessAction.START, AccessAction.OBSERVE, AccessAction.RESULT}),
-        disclosures=frozenset(
-            {
-                DisclosurePermission(
-                    destination_id=destination,
-                    projection_id="auth.local-read.result",
-                    category=DisclosureCategory.PROFILE_VALUES,
-                ),
-                DisclosurePermission(
-                    destination_id=destination,
-                    projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                    category=DisclosureCategory.OPERATION_METADATA,
-                ),
-            }
-        ),
-        periods=None,
-        allow_period_independent=True,
-        allow_delegation=False,
-    )
-    proposal = EnrollmentProposal(
-        kind=EnrollmentKind.ENROLL,
-        scope=scope,
-        expires_at=expires,
-        key_expires_at=expires,
-        # API-key admission requires an explicitly approved unattended grant.
-        unattended=True,
-        allow_os_lock=False,
-    )
-    journey = AutomationRequesterJourney(enrollment, timeout=120)
-    submitted = journey.submit(proposal)
-    human = harness.connect(profile.profile_id)
-    human.client.resume_receipt()
-    inventory = read_automation_inventory(human.client).projection
-    review = next(item for item in inventory.requests if item.receipt.request_id == submitted.request_id)
-    diagnostic_deadline = time.monotonic() + 120
+    deadline = time.monotonic() + 120
     with ThreadPoolExecutor(max_workers=1) as pool:
-        approval = pool.submit(
-            run_automation_decision,
-            human.client,
-            review,
-            decision="approve",
-            password=bytearray(profile.password, "utf-8"),
+        creating = pool.submit(
+            harness.cli, "profile", "automation", "create", "--use", "agent", profile_secret=profile.password
         )
-        primary: BaseException | None = None
+        human = harness.connect(profile.profile_id)
+        human.client.resume_receipt()
+        while not (requests := read_automation_inventory(human.client).projection.requests):
+            if creating.done():
+                creating.result()
+                raise AssertionError("The key request ended before it reached the person")
+            if time.monotonic() >= deadline:
+                raise AssertionError("The key request never reached the person")
+            time.sleep(0.5)
+        (review,) = requests
+        # An agent key always grants the profile's values and its own operations' metadata.
+        if {item.category for item in review.proposal.scope.disclosure_categories} != {
+            DisclosureCategory.PROFILE_VALUES,
+            DisclosureCategory.OPERATION_METADATA,
+        }:
+            raise AssertionError("The agent key request did not grant exactly its data categories")
         try:
-            completed = journey.wait_for_terminal()
-        except BaseException as error:
-            primary = error
+            decided = run_automation_decision(
+                human.client, review, decision="approve", password=bytearray(profile.password, "utf-8")
+            )
+        except AutomationDecisionRunError as error:
+            error.add_note("approval_failure " + json.dumps(_approval_facts(human, error, deadline)))
             raise
-        finally:
-            # A native approval may have published; join it before releasing its connection.
-            try:
-                decided = approval.result()
-            except AutomationDecisionRunError as error:
-                error.add_note("approval_failure " + json.dumps(_approval_facts(human, error, diagnostic_deadline)))
-                if primary is not None:
-                    raise BaseExceptionGroup("Enrollment requester and approval failed", [primary, error]) from None
-                raise
-    credential = completed.credential
-    if credential is None:
-        raise AssertionError("Completed enrollment has no credential reference")
-    reference = credential.credential_reference
+        created = creating.result(timeout=120)
+    reference = UUID(created["result"]["credential_reference"])
     harness.resources.callback(installed_automation_secret_store().delete, CLIENT_NAMESPACE, str(reference))
     if decided.effect.value != "updated":
         raise AssertionError("Enrollment approval did not update native custody")

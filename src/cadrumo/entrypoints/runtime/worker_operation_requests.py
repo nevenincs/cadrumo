@@ -238,8 +238,8 @@ async def _submit_payload_reply(
             payload_json=payload.payload_json,
             idempotency_key=payload.idempotency_key,
         )
-    async with operations.release(
-        payload.session_id, submitted.receipt.operation_id, payload.frontend, AccessAction.SUBMIT
+    async with operations.release_submission(
+        payload.session_id, submitted.receipt.operation_id, payload.frontend
     ) as release:
         write_document(
             channel,

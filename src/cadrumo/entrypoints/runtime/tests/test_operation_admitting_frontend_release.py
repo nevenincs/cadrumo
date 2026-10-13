@@ -190,6 +190,10 @@ class _SessionsWitness(ProfileWorkerCustody):
         self.require(session_id)
         yield
 
+    @override
+    def retire(self, session_id: UUID) -> None:
+        self._sessions.pop(session_id, None)
+
 
 class _ScopeCeilingPermit(WorkerAuthorizationClient):
     """Hold each reader to its own lease's scope ceiling; no native authorization is claimed."""
@@ -597,5 +601,41 @@ def test_an_invocation_re_entered_on_another_frontend_is_read_whole_on_both(
         assert await worker.admitting_frontend(operation_id) is admitting
         assert _location(await worker.result(first, admitting, operation_id)) == _LOCATION
         assert _location(await worker.result(second, resuming, operation_id)) == _LOCATION
+
+    _exercise(tmp_path, scenario)
+
+
+def test_an_admission_whose_receipt_is_refused_settles_and_frees_its_subject(tmp_path: Path) -> None:
+    """A submitter that loses its session before its receipt leaves no unstarted operation holding the subject."""
+
+    async def scenario(worker: _Worker) -> None:
+        operation_id = await worker.submit(worker.key, _MCP, worker.request())
+        worker.host.custody.retire(worker.key.session_id)
+
+        with pytest.raises(AutomationCustodyError):
+            async with worker.host.release_submission(worker.key.session_id, operation_id, _MCP):
+                pytest.fail("a refused submitter must not receive its receipt")
+
+        settled = await worker.host._composed().submission.supervisor.inspect(operation_id)
+        assert settled.lifecycle is OperationLifecycle.TERMINAL
+        assert settled.terminal_condition is OperationTerminalCondition.REFUSED
+        assert settled.effect is OperationEffect.NONE
+        assert await worker.run(worker.person, _CLI) != operation_id
+
+    _exercise(tmp_path, scenario)
+
+
+def test_a_subject_held_by_an_unsettled_operation_is_refused_as_busy(tmp_path: Path) -> None:
+    """The refusal names the busy subject, not an unavailable operation or a sign-in problem."""
+
+    async def scenario(worker: _Worker) -> None:
+        held = await worker.submit(worker.person, _CLI, worker.request())
+
+        refused = await _refusal(worker.submit(worker.key, _MCP, worker.request()))
+
+        assert refused is AccessDenialCode.SUBJECT_BUSY
+        # A receipt the holder's own session takes is released as before.
+        async with worker.host.release_submission(worker.person.session_id, held, _CLI) as receipt:
+            assert receipt.request.frontend is _CLI
 
     _exercise(tmp_path, scenario)

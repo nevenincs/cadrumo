@@ -33,12 +33,14 @@ class OperationSubjectBusyError(CadrumoError):
 
     A submission is refused while the definition-and-subject conflict lease
     belongs to an operation that has not settled -- one still running, or one
-    whose owner lapsed and awaits recovery. The operator waits for it; nothing
-    about the holder is carried, so the refusal exposes no operation internals.
+    whose owner lapsed and awaits recovery. The refusal's message names nothing
+    about the holder; ``holder_operation_id`` is kept for the runtime's own log,
+    so an operator can find and recover a holder that will not settle by itself.
     """
 
-    def __init__(self) -> None:
-        """Refuse without naming the operation that holds the subject."""
+    def __init__(self, holder_operation_id: str | None = None) -> None:
+        """Refuse without naming the holder in the message."""
+        self.holder_operation_id = holder_operation_id
         super().__init__("another operation still owns this definition subject")
 
 
