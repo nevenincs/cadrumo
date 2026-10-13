@@ -12,7 +12,7 @@ related:
   - '[[2026-10-13-canonical-environment-application-internals-adr]]'
 modified: '2026-10-13'
 body_schema: body-v2
-body_hash: 'sha256:3ba309604163a052eaf6a46f982e99704124971f95f8181c5b690df7acc78c66'
+body_hash: 'sha256:e8458d4637ad8675035f5d59bdf24adac2ab1d25a59cef2ff90eacb28180d0a3'
 ---
 
 <!-- LINK RULES:
@@ -138,7 +138,7 @@ Dependencies outside this plan:
 - [ ] `S02` - Extend the bundle.agent CTest probe to launch the bundled agent the way the runtime does, wait for its ready line and stop it; `native/tests/agent_smoke.py`.
 - [ ] `S03` - Repoint the agent live lane onto the staged package: drop the checkout option and run the staged interpreter's bundled agent with the staged cadrumo-mcp relay; `dev/runtime_lifecycle/agent_live.py`.
 - [x] `S04` - Remove the desktop direct-start feature and repoint the desktop agent live lane onto the runtime's hosted agent door with the catalog's provider and key names; `native/desktop/src-tauri/src/agent/direct.rs`.
-- [ ] `S05` - Drive the one-time hosted tool-access proof run on the staged package for the cadrumo-agent owner to record; `dev/runtime_lifecycle/agent_live.py`.
+- [ ] `S05` - Drive the packaged proof runs for the cadrumo-agent owner to record: re-earn the claude/api completed-turn proof and earn the first hosted tool-access proof, with each packaged program start and each relay call approved per start as the person; `dev/runtime_lifecycle/agent_live.py`.
 
 <!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or
 `L4`) determines the structure under this section:
