@@ -38,15 +38,10 @@ import pytest
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
-from ....adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
-from ....core.period import Period
 from ....core.storage_taxonomy import StorageCategory
 from ....domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context as _profile_creation_context_for_test,
 )
-from ....domain.calculations.registry.tests.published_authority import published_snapshot
-from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....tests.cli_envelope import unwrap_schema_envelope
 from ....tests.pdf_fixtures import text_pdf_bytes
@@ -150,34 +145,20 @@ def _seed_ready_profile(root: Path, profile_id: str) -> None:
     )
 
 
-def _seed_zero_iva_compensation_decision(profile: TestRuntimeProfile) -> None:
-    """Record the canonical zero prior-compensation decision the 2T Modelo 303 asks for.
+def _seed_zero_iva_compensation() -> None:
+    """Declare, through the wallet seed verb, that the first quarter left nothing to compensate.
 
     The machine purchase is the subject here, not the wallet reconciliation: the
-    activity has no prior Modelo 303 compensation to carry, and the calculation
-    refuses to guess that. Declaring it zero is the same answer the operator
-    would give through the wallet workflow.
+    activity has no prior Modelo 303 compensation to carry, and the 2T
+    calculation refuses to guess that. The first quarter was never filed in this
+    synthetic profile, so the operator declares its nil carry as an opening
+    balance, which is the answer the wallet workflow takes.
     """
-    period = Period.from_year_and_code(2025, "2T")
-    IvaWalletDecisionRepository(objects=profile.repository).save_decision(
-        IvaCompensationReconciliationDecision(
-            taxpayer_nif="12345678Z",
-            target_year=2025,
-            target_period=period,
-            target_registry_snapshot_ref=published_snapshot("303", filing_year=2025, period="2T").snapshot_ref,
-            source_registry_snapshot_refs=(),
-            selected_authority="aeat_wallet",
-            selected_amount=Decimal("0.00"),
-            wallet_amount=Decimal("0.00"),
-            local_recurrence_amount=None,
-            override_amount=None,
-            divergence="match",
-            blocked=False,
-            stale_wallet=False,
-            reason_identity="first_period_zero_aeat_wallet",
-            wallet_captured_at=_T0,
-            decided_at=_T0,
-        ),
+    _result(
+        [
+            *("app", "modelo", "iva-wallet", "seed"),
+            *("--filing-year", "2025", "--period", "1T", "--amount", "0", "--confirm"),
+        ]
     )
 
 
@@ -377,7 +358,7 @@ def test_register_owned_acquisition_deducts_the_charge_and_keeps_its_input_iva(t
     _prepare_cli_directories(tmp_path)
     with runtime_cli_profile(tmp_path=tmp_path, label="asset acquisition") as profile:
         _seed_ready_profile(profile.storage_root, profile.bucket_id)
-        _seed_zero_iva_compensation_decision(profile)
+        _seed_zero_iva_compensation()
         transaction_id = _add_machine_purchase(_add_supplier_invoice_evidence(tmp_path))
         _register_machine(transaction_id)
         charge = _claim_2025_charge()

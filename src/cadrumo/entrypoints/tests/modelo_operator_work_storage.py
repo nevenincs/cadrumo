@@ -7,9 +7,10 @@ ports, so a test drives the same calculation boundary, edit executor and
 persistence writer production uses. Every value is synthetic.
 
 A Modelo 303 unit additionally needs what every real 303 calculation needs: an
-activity start that grounds the first period's zero compensation, the
-persisted zero IVA-wallet decision that gate reads, and the operator's filing
-evidence for the first calculation.
+activity start years earlier, the operator's nil opening balance for the
+preceding quarter declared through the IVA-wallet seed service, from which the
+wallet gate derives the compensation, and the operator's filing evidence for
+the first calculation.
 """
 
 from __future__ import annotations
@@ -26,7 +27,6 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from ...adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from ...adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts,
     seed_test_profile_record,
@@ -52,6 +52,7 @@ from ...application.modelo.edit_models import (
 from ...application.modelo.edit_operator_input import ModeloEditOperatorInputV2, prepare_modelo_edit_operand
 from ...application.modelo.edit_receipt_ports import ModeloEditReceiptRepositoryFactory
 from ...application.modelo.edit_transient_operand import modelo_edit_financial_operand
+from ...application.modelo.iva_wallet_seed import seed_iva_compensation_period_for_bucket
 from ...application.modelo.operation_definitions import (
     MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
     MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
@@ -70,7 +71,6 @@ from ...core.hashing import content_hash_hex
 from ...core.operations import OperationEffect
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from ...domain.modelos.work_unit import WorkUnit
@@ -79,14 +79,13 @@ from ..adapter_composition import (
     build_attachment_store,
     build_calculation_action_ports,
     build_modelo_edit_receipt_repository,
+    build_modelo_iva_wallet_seed_ports,
     build_work_lifecycle_ports,
 )
 from ..operation_composition import build_production_operation_registry
 
 SEEDED_AT = datetime(2026, 4, 2, 9, 0, tzinfo=UTC)
 _BUCKET_ID = "13000000-0000-4000-8000-000000000730"
-_SEEDED_TAX_ID = next(str(fact.value) for fact in MODELO_READY_PROFILE_FACTS if fact.path == "identity.tax_id")
-"""The identity.tax_id the modelo readiness baseline seeds; the wallet decision is filed under it."""
 _ACTIVITY_START = UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1))
 
 
@@ -338,31 +337,28 @@ class SeededOperatorWork:
         )
 
 
-def _first_period_zero_iva_decision(unit: WorkUnit, *, operation: PinnedAuthorityOperation) -> None:
-    """Persist the zero compensation decision a first 303 period's wallet gate reads.
+_QUARTERS = ("1T", "2T", "3T", "4T")
+
+
+def _seed_nil_preceding_iva_compensation(unit: WorkUnit, *, operation: PinnedAuthorityOperation) -> None:
+    """Declare, through the wallet seed service, that the preceding 303 quarter carried nothing.
 
     Zero is the grounded answer: the seeded activity start is years earlier and
-    no prior 303 exists in this fresh bucket, so nothing is pending compensation.
+    no 303 was filed in this fresh bucket, so the operator declares the nil
+    opening balance the wallet gate then derives the unit's compensation from.
     """
-    period_code = unit.period.registry_token
-    IvaWalletDecisionRepository().save_decision(
-        IvaCompensationReconciliationDecision(
-            taxpayer_nif=_SEEDED_TAX_ID,
-            target_year=unit.filing_year,
-            target_period=unit.period,
-            target_registry_snapshot_ref=operation.snapshot(
-                "303", filing_year=unit.filing_year, period=period_code
-            ).snapshot_ref,
-            source_registry_snapshot_refs=(),
-            selected_authority="aeat_wallet",
-            selected_amount=Decimal("0"),
-            wallet_amount=Decimal("0"),
-            divergence="match",
-            blocked=False,
-            stale_wallet=False,
-            reason_identity="first_period_zero_aeat_wallet",
-            decided_at=SEEDED_AT,
-        )
+    quarter = _QUARTERS.index(unit.period.registry_token)
+    preceding = (
+        Period.from_year_and_code(unit.filing_year, _QUARTERS[quarter - 1])
+        if quarter
+        else Period.from_year_and_code(unit.filing_year - 1, _QUARTERS[-1])
+    )
+    seed_iva_compensation_period_for_bucket(
+        bucket_id=unit.bucket_id,
+        period=preceding,
+        amount=Decimal("0"),
+        ports=build_modelo_iva_wallet_seed_ports(bucket_id=unit.bucket_id, operation=operation),
+        operation=operation,
     )
 
 
@@ -408,7 +404,7 @@ def seeded_operator_work(
             operation=operation,
         )
         if modelo == "303":
-            _first_period_zero_iva_decision(unit, operation=operation)
+            _seed_nil_preceding_iva_compensation(unit, operation=operation)
         yield SeededOperatorWork(
             work_unit=unit,
             ports=build_calculation_action_ports(bucket_id=profile.bucket_id, operation=operation),

@@ -18,7 +18,6 @@ reads the register and never the earlier year's ledger row.
 from __future__ import annotations
 
 import hashlib
-from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import cast
@@ -26,16 +25,11 @@ from typing import cast
 import pytest
 from click.testing import Result
 
-from ....adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
 from ....application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from ....core.bucket_pointer import resolve_active_bucket_id
-from ....core.period import Period
-from ....domain.calculations.registry.tests.published_authority import published_snapshot
-from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ....tests.cli_envelope import require_error_document, unwrap_schema_envelope
 from ._m303_ordinary_cli_support import admit_ordinary_m303_secure_evidence, joint_return_options
 from ._modelo_work_ux_support import operator_profile_facts
@@ -59,8 +53,6 @@ _INVESTMENT_BASE = Decimal("4000.00")
 _INVESTMENT_CUOTA = Decimal("840.00")
 _ASSET_ID = "BI-TORNO-CNC"
 
-_COMPENSATION_DECIDED_AT = datetime(2025, 1, 2, 10, tzinfo=UTC)
-
 
 def _invoke(args: list[str]) -> Result:
     return invoke_cached_cli(["--format", "json", *args])
@@ -78,33 +70,26 @@ def _seed_operator(request: pytest.FixtureRequest, *, activity_start_date: str) 
     return bucket_id
 
 
-def _seed_nil_compensation(bucket_id: str) -> None:
-    """Record the nil prior-period compensation every quarter asks before it calculates."""
-    with open_test_profile_session(bucket_id):
-        repository = IvaWalletDecisionRepository()
-        for quarter in _QUARTERS:
-            repository.save_decision(
-                IvaCompensationReconciliationDecision(
-                    taxpayer_nif="12345678Z",
-                    target_year=_YEAR,
-                    target_period=Period.from_year_and_code(_YEAR, quarter),
-                    target_registry_snapshot_ref=published_snapshot(
-                        "303", filing_year=_YEAR, period=quarter
-                    ).snapshot_ref,
-                    source_registry_snapshot_refs=(),
-                    selected_authority="aeat_wallet",
-                    selected_amount=Decimal("0.00"),
-                    wallet_amount=Decimal("0.00"),
-                    local_recurrence_amount=None,
-                    override_amount=None,
-                    divergence="match",
-                    blocked=False,
-                    stale_wallet=False,
-                    reason_identity="first_period_zero_aeat_wallet" if quarter == "1T" else "aeat_wallet_validated",
-                    wallet_captured_at=_COMPENSATION_DECIDED_AT,
-                    decided_at=_COMPENSATION_DECIDED_AT,
-                )
-            )
+def _seed_nil_compensation(*, activity_year: int) -> None:
+    """Declare, through the wallet seed verb, that no quarter before each calculated one carries a compensation.
+
+    Each quarter's casilla [110] reads the carry its preceding quarter left. None
+    of these quarters was filed, so the operator declares that nil carry for every
+    preceding quarter since the activity began; the first quarter of the activity
+    needs none, its zero is grounded by the activity start itself.
+    """
+    preceding = [(_YEAR, quarter) for quarter in _QUARTERS[:-1]]
+    if activity_year < _YEAR:
+        preceding.insert(0, (_YEAR - 1, _QUARTERS[-1]))
+    for filing_year, quarter in preceding:
+        seeded = _invoke(
+            [
+                *("app", "modelo", "iva-wallet", "seed"),
+                *("--filing-year", str(filing_year), "--period", quarter),
+                *("--amount", "0", "--confirm"),
+            ]
+        )
+        assert seeded.exit_code == 0, seeded.output
 
 
 def _added_transaction_id(result: Result) -> str:
@@ -269,8 +254,8 @@ def test_every_quarter_of_the_acquisition_year_calculates(
     tmp_path: Path,
 ) -> None:
     """A good bought in 2T leaves 1T, 3T and 4T calculating, and only 2T declares it."""
-    bucket_id = _seed_operator(request, activity_start_date=f"{_YEAR}-01-01")
-    _seed_nil_compensation(bucket_id)
+    _seed_operator(request, activity_start_date=f"{_YEAR}-01-01")
+    _seed_nil_compensation(activity_year=_YEAR)
     _add_quarterly_sales()
     _declare(
         acquisition_year=_YEAR,
@@ -301,8 +286,8 @@ def test_a_record_naming_no_ledger_row_refuses_the_quarters_of_its_year(
     request: pytest.FixtureRequest,
 ) -> None:
     """The register cannot claim a good the ledger never bought, in any quarter of the year."""
-    bucket_id = _seed_operator(request, activity_start_date=f"{_YEAR}-01-01")
-    _seed_nil_compensation(bucket_id)
+    _seed_operator(request, activity_start_date=f"{_YEAR}-01-01")
+    _seed_nil_compensation(activity_year=_YEAR)
     _add_quarterly_sales()
     _declare(
         acquisition_year=_YEAR,
@@ -330,8 +315,8 @@ def test_a_good_acquired_in_an_earlier_year_leaves_every_later_quarter_calculati
     regularización, and with the initial 100 % prorrata unchanged the proposed
     casilla [43] is zero.
     """
-    bucket_id = _seed_operator(request, activity_start_date=f"{_YEAR - 1}-01-01")
-    _seed_nil_compensation(bucket_id)
+    _seed_operator(request, activity_start_date=f"{_YEAR - 1}-01-01")
+    _seed_nil_compensation(activity_year=_YEAR - 1)
     _declare(
         acquisition_year=_YEAR - 1,
         acquisition_ledger_id=_add_investment_purchase(tmp_path, day=f"{_YEAR - 1}-05-20"),
