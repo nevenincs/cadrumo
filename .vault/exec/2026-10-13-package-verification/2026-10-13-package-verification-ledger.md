@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:c43507eef8dd14b73b373d6ca3b616ecfa56242657c0378ca1a89e3b9c3c7571'
+body_hash: 'sha256:81da7bbc8f74ee45eca4980e548f352a1669629a40d8f3399758b04ce8e5ec12'
 related:
   - "[[2026-10-13-package-verification-plan]]"
 ---
@@ -52,7 +52,15 @@ related:
 - `S01` `verify:` `just check-import-boundaries` -> `pass`
 - `S01` `verify:` `ruff check` -> `pass`
 - `S01` `verify:` `dev/tests/test_lane_reachability.py` -> `fail`
+- `S01` `A` `dev/ci/lane_ctest_commands.py`
+- `S01` `M` `dev/ci/lane_reachability.py`
+- `S01` `M` `dev/tests/test_lane_reachability.py`
+- `S01` `M` `dev/tests/test_dev_cli_justfile_wiring.py`
+- `S01` `M` `justfile`
+- `S01` `verify:` `dev/tests/test_lane_reachability.py` -> `pass`
+- `S01` `verify:` `dev/tests/test_dev_cli_justfile_wiring.py` -> `pass`
 
 ## Notes
 
 - `S01` lane-reachability and justfile-wiring failures are pre-existing: unenrolled `dev/desktop_agent_live,` `dev/agent_eval/live` and other sessions' new tests; none involve S01 paths. dev/audit semantic, `semantic_duplication,` `legal_attribution_screen,` `legal_excerpt_vintage_screen` and `registry_temporal_range_sweep` kept as live gates or documented tools
+- `S01` owner asked to fix the pre-existing census failures: CTest's package pytest suite is now a lane of test-native-bundle; orphan test paths enrolled in their capability lanes

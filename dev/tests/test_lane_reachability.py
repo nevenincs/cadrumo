@@ -77,6 +77,7 @@ import pytest
 from dev._paths import REPO_ROOT
 from dev.ci.lane_configuration import configured_testpaths
 from dev.ci.lane_contracts import Lane
+from dev.ci.lane_ctest_commands import CTEST_MODULE_DIR, CTEST_RECIPE
 from dev.ci.lane_marker_inventory import (
     discover_test_directories,
     discover_test_files,
@@ -155,6 +156,9 @@ _CANONICAL_POPULATION_RECIPES: frozenset[str] = frozenset(
         "test-ingest-corpus",
         "test-powershell-literal",
         "test-calculation-summary-pdf",
+        # CTest owns the tests that need the built application package; this
+        # recipe builds the package and runs that suite.
+        "test-native-bundle",
     },
 )
 _FOCUSED_SELECTORS: frozenset[str] = frozenset({"test-cli", "test-tui", "test-smoke"})
@@ -499,6 +503,45 @@ def test_no_test_file_sits_outside_every_lane_path() -> None:
         "these test files sit outside every lane's path scope, so no marker "
         "expression could ever reach them:\n  " + "\n  ".join(report.unnamed)
     )
+
+
+_CTEST_MODULE: str = """add_test(NAME bundle.lifecycle COMMAND "${CADRUMO_DEV_PYTHON}" -B -m pytest
+    -n 0 -m integration "${PROJECT_SOURCE_DIR}/dev/lifecycle/tests"
+    --package "${CADRUMO_PATH_STAGE}/$<CONFIG>/app")
+add_test(NAME bundle.entrypoint COMMAND "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/bin/aeat" --help)
+"""
+
+
+def test_a_ctest_pytest_invocation_is_a_lane_of_the_bundle_recipe(tmp_path: Path) -> None:
+    """CTest's package suite counts as a lane, and only its repository paths are lane paths."""
+    _synthetic_repository(tmp_path, lane="pytest -q src -m unit")
+    module = tmp_path / CTEST_MODULE_DIR / "Packaging.cmake"
+    module.parent.mkdir(parents=True)
+    module.write_text(_CTEST_MODULE, encoding="utf-8")
+
+    lanes = [lane for lane in declared_lanes(tmp_path) if lane.recipe == CTEST_RECIPE]
+
+    assert [(lane.paths, lane.marker_expression) for lane in lanes] == [(("dev/lifecycle/tests",), "integration")]
+
+
+def test_a_test_only_ctest_runs_is_reachable_and_unreachable_without_it(tmp_path: Path) -> None:
+    """The CTest lane reaches its suite, and removing it orphans the same suite."""
+    _synthetic_repository(tmp_path, lane="pytest -q src -m unit")
+    _write_test(
+        tmp_path / "dev" / "lifecycle" / "tests" / "test_package.py",
+        _UNIT_MODULE.format(name="package").replace("unit", "integration"),
+    )
+    files = discover_test_files(tmp_path)
+
+    orphaned = analyse_reachability(tmp_path, files=files)
+    module = tmp_path / CTEST_MODULE_DIR / "Packaging.cmake"
+    module.parent.mkdir(parents=True)
+    module.write_text(_CTEST_MODULE, encoding="utf-8")
+    reached = analyse_reachability(tmp_path, files=files)
+
+    assert orphaned.unnamed == ("dev/lifecycle/tests/test_package.py",)
+    assert reached.unnamed == ()
+    assert reached.unreachable == ()
 
 
 def test_the_path_check_catches_what_the_per_test_check_cannot(tmp_path: Path) -> None:

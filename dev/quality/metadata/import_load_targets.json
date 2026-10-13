@@ -3670,6 +3670,7 @@
         "dev.ci.change_scope",
         "dev.ci.lane_configuration",
         "dev.ci.lane_contracts",
+        "dev.ci.lane_ctest_commands",
         "dev.ci.lane_marker_inventory",
         "dev.ci.lane_reachability",
         "dev.ci.lane_recipe_commands",

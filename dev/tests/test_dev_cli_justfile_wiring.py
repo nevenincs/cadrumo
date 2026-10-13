@@ -11,6 +11,8 @@ from dev._paths import REPO_ROOT
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _EXPECTED_WIRING: Final[dict[str, str]] = {
+    "dev.agent_eval.live": "eval-agent-live",
+    "dev.desktop_agent_live": "desktop-agent-live",
     "dev.docs.sequences": "docs-generate-sequences",
     "dev.docs.terminology.coverage": "report-terminology-coverage",
     "dev.docs.terminology.synonyms": "docs-synonyms-maintain",

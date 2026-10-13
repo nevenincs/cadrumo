@@ -493,7 +493,7 @@ test-packaging-source:
 [doc('Run portable non-serial packaging contract tests with explicit marker boundaries.')]
 [group('test')]
 test-packaging-contracts:
-    @uv run --no-sync pytest -v -n auto --no-loadscope-reorder -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/packaging/tests dev/packaging/native native/tests
+    @uv run --no-sync pytest -v -n auto --no-loadscope-reorder -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/packaging/tests dev/packaging/native native/tests packaging/homebrew/tests
 
 [doc('Run packaging dependency, source, and contract preflight as independent verdicts.')]
 [group('test')]
@@ -1082,13 +1082,13 @@ test-test-policy:
 [doc('Run repository and developer-tool contract tests outside the registry, packaging, CI, documentation-build, and capability populations.')]
 [group('test')]
 test-repository-contracts:
-    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/acceptance dev/agent_eval/tests dev/audit/tests dev/corpus/tests dev/docs dev/env/tests dev/identity/tests dev/ingest_harness/tests dev/init/tests dev/locales/tests dev/quality/tests dev/readme/tests dev/sanitizer/tests dev/smoke/tests dev/tui/tests dev/tui/harness/tests --ignore=dev/docs/tests --ignore=dev/docs/apidocs/tests --ignore=dev/docs/terminology/tests/test_sweep_live_service.py --ignore=dev/quality/tests/test_fixes.py --ignore=dev/quality/tests/test_ty_fix_boundary.py
+    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/acceptance dev/agent_eval/tests dev/audit/tests dev/corpus/tests dev/desktop_agent_live/tests dev/docs dev/env/tests dev/identity/tests dev/ingest_harness/tests dev/init/tests dev/locales/tests dev/provider_catalog/tests dev/quality/tests dev/readme/tests dev/runtime_lifecycle/tests dev/sanitizer/tests dev/smoke/tests dev/tui/tests dev/tui/harness/tests --ignore=dev/docs/tests --ignore=dev/docs/apidocs/tests --ignore=dev/docs/terminology/tests/test_sweep_live_service.py --ignore=dev/quality/tests/test_fixes.py --ignore=dev/quality/tests/test_ty_fix_boundary.py
     @uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/acceptance dev/agent_eval/tests
 
 [doc('Run the packaging and container tooling contracts, parallel then serial; the serial pass includes the installed-artifact oracles.')]
 [group('test')]
 test-release-tooling:
-    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/packaging/tests dev/packaging/native native/tests --ignore=dev/packaging/tests/test_installed_oracles.py
+    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/packaging/tests dev/packaging/native native/tests packaging/homebrew/tests --ignore=dev/packaging/tests/test_installed_oracles.py
     @uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/packaging/tests
 
 # Split into a deterministic half and a `perf` half because the two have
@@ -1290,7 +1290,7 @@ test-integration-serial:
 [doc('Run Windows-only packaging, registry publication, and authentication frontend tests.')]
 [group('test')]
 test-windows:
-    uv run --no-sync pytest -v -n0 -m "windows_only and not os_keychain" dev/packaging/tests dev/registry/tests/test_authority_generation_publication.py dev/agent_eval/tests src/cadrumo/adapters/local_runtime/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/entrypoints
+    uv run --no-sync pytest -v -n0 -m "windows_only and not os_keychain" dev/packaging/tests dev/packaging/native/tests dev/desktop_agent_live/tests dev/registry/tests/test_authority_generation_publication.py dev/agent_eval/tests src/cadrumo/adapters/local_runtime/tests src/cadrumo/adapters/outbound/model_runtime/tests src/cadrumo_harness/mcp/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/entrypoints
 
 [doc('Run native macOS and Linux peer, worker containment, and custody tests on their owning host.')]
 [group('test')]
@@ -1310,7 +1310,7 @@ test-native-host-facilities:
 [doc('Run the OS-credential-store custody tests (interactive desktop session only).')]
 [group('test')]
 test-os-keychain:
-    uv run --no-sync pytest -v -n0 -m os_keychain src/cadrumo/application/user_profile/tests src/cadrumo/entrypoints/cli/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/adapters/persistence/storage/master_key/tests src/cadrumo/adapters/persistence/storage/tests dev/agent_eval/tests
+    uv run --no-sync pytest -v -n0 -m os_keychain src/cadrumo/application/user_profile/tests src/cadrumo/entrypoints/cli/tests src/cadrumo/entrypoints/cli/config/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/adapters/persistence/storage/master_key/tests src/cadrumo/adapters/persistence/storage/tests dev/agent_eval/tests
 
 [doc('Test current-source password login and logout against the real runtime (signed-in Windows desktop).')]
 [group('test')]
