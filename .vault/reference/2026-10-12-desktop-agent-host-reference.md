@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#desktop-agent-host'
 date: '2026-10-12'
-modified: '2026-10-12'
+modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:5fc4804e0cb5c78a56be734636b53cda451b261c86825b7c32838e949a362091'
+body_hash: 'sha256:1bd17050732b00417d1c91f7bfbe24eec19aaa4ba0d103d37269981d0e06862a'
 related: []
 ---
 
@@ -185,3 +185,41 @@ anthropic is not in Cadrumo's bundled base closure today. Bundling cadrumo-agent
 - 16.1.1 satisfies both.
 
 Six runtime packages resolve at Cadrumo's older pins, which the agent has not been tested against: pydantic, pydantic-core, sqlalchemy, opentelemetry-api, pycparser and rpds-py. All of the agent's runtime-only native packages have cp313 wheels for the four targets.
+
+### cadrumo-agent: the live-run path (fourth audit, 2026-10-13)
+
+Read from `git show HEAD:` at cadrumo-agent 4c5f6f5. The checkout at that commit carries about 250 uncommitted source files, among them a 12-tool `cadrumo` relay entry in place of 18. That work is in progress, not this audit's evidence.
+
+**Startable modes.**
+- Without a hosted root, `serve` starts (`agent:src/cadrumo_agent/cli/main.py:249`; `agent:src/cadrumo_agent/api/app.py:908`). Stores migrate at start (`app.py:384-385`), and the proof policy is `warn` (`agent:src/cadrumo_agent/control/infra_config.py:338`). Implemented.
+- With `CADRUMO_AGENT_HOSTED_ROOT`, the relay is mandatory (`agent:src/cadrumo_agent/providers/lane_registry.py:237`). Plugins, the only other switch, are refused beside a root (`infra_config.py:1041-1061`). The proof sets are still empty (`agent:src/cadrumo_agent/providers/lane_admission.py:481-484`), so a start exits 78 (`app.py:157`, `:194`). Gated. Verified by `agent:src/cadrumo_agent/control/tests/test_hosted_start_refusals.py:319`.
+- `desktop-serve` refuses every run with 503 without a verified OS isolation backend (`agent:src/cadrumo_agent/control/provider_execution.py:21-35`). Gated.
+- The hosted parts without a root (strict limits, no provider sign-in) are reachable only through a test-tree plugin (`agent:src/cadrumo_agent/testing/lanes/hosted_parts.py:51-76`). Missing for a host.
+
+**Relay.** HEAD launches `cadrumo-mcp --surface full` by bare name and declares 18 tools (`agent:src/cadrumo_agent/providers/_harness_mcp_registry.py:386-408`). A served-tool mismatch fails only that run's mount (`agent:src/cadrumo_agent/providers/_direct_mcp.py:299-315`), and run start answers 422 (`agent:src/cadrumo_agent/api/routes/_gateway_run_start.py:237-272`).
+
+**Credentials and token.**
+- The Anthropic key is read only from the environment variable `CADRUMO_AGENT_ANTHROPIC_API_KEY` (`agent:src/cadrumo_agent/control/env_registry.py:80-81`, `:144`; `agent:src/cadrumo_agent/providers/provider_readiness.py:136-154`). Implemented.
+- The gateway bearer is `CADRUMO_AGENT_GATEWAY_TOKEN`, or a per-process token published in an owner-only handoff file (`app.py:951`; `agent:src/cadrumo_agent/lifecycle/discovery.py:402-457`). Implemented.
+- No stdin frame exists for either. Missing.
+
+**Models.** The anthropic catalog lists models through `client.models.list(limit=100)` (`agent:src/cadrumo_agent/providers/anthropic_catalog.py:235`). No Claude id is hardcoded. Implemented.
+
+**One turn over HTTP.** All routes are Implemented.
+- `POST /v1/runs` takes `run_id`, `message` and `agent.provider` and `agent.workspace_root`, plus optional `model`, `effort`, `title` and `continues_run_id` (`agent:src/cadrumo_agent/api/schemas/gateway.py:150-174`).
+- `GET /v1/runs/{id}/stream` serves SSE frames: `message_chunk`, `thought_chunk`, `tool_call_start`, `tool_call_update`, `error`, `stream_snapshot`, `thread_terminal`, `permission_request`, `heartbeat` and `progress_dropped` (`agent:src/cadrumo_agent/streaming/sse_frames.py:316-403`). `Last-Event-ID: -` replays.
+- `POST /v1/runs/{id}/messages` needs an `Idempotency-Key`. `POST /v1/runs/{id}/cancel` cancels.
+- Readiness is `GET /health`, or `runs_settled` in `service.json`.
+
+**Workspace.** The host creates `<workspaces>/<id>` itself. Admission refuses a directory that does not exist (`agent:src/cadrumo_agent/control/workspace.py:65-86`). No code maps a conversation id to a workspace.
+
+**Live evidence.** `agent:src/cadrumo_agent/service_tests/test_hosted_direct_lane_live.py` proves a direct-lane turn under the hosted layout, through the test plugin, with the relay off and the `warn` policy. It does not prove a gateway given a hosted root or any Cadrumo tool call. It runs with `-m service` and needs `CADRUMO_AGENT_ANTHROPIC_API_KEY`. Verified for the lane only.
+
+### Cadrumo: what a live lane can reuse (2026-10-13)
+
+- `dev/agent_eval/live/isolated_host.py:1-12` starts a verified copy of the packaged bundle on a fresh storage root. It passes the person's secrets only on the protected stdin channel, and gives every packaged process an allow-listed environment (`:41-64`).
+- `dev/agent_eval/live/access.py:212-249` has the person request and approve an agent key. Only the key's reference comes back. This admission path exists for a Cadrumo MCP server and never involves the password.
+- The `read_only_local` MCP surface serves 10 tools: every tool except the two review tools, restricted to operations that change no record and contact no other host (`src/cadrumo/application/operations/mcp_surfaces.py:103-150`).
+- Cadrumo reads its Anthropic key only from the environment variable behind `cadrumo_llm_anthropic_api_key` (`src/cadrumo/core/config_llm_fields.py:52-55`). The desktop clears unlisted `CADRUMO_` variables from every child it starts (`src/cadrumo/core/storage_environment.py:646-650`). No stored provider credential exists.
+- The desktop frontend's browser host serves nothing (`native/desktop/frontend/src/shell/host.ts:1-7`), so the development display on port 15370 can never run the agent. Only the Tauri host can.
+- `native/desktop/frontend/src/shell/agentSession.ts` declares the webview's session contract, served by no host.
