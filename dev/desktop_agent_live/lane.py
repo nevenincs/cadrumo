@@ -31,7 +31,7 @@ server (``just dev``) for iterating on it; the host, launcher and agent stay
 real.
 
 The key comes only from this lane's own environment, under the name the
-provider-settings resolver reads in development, ``CADRUMO_LLM_ANTHROPIC_API_KEY``.
+provider-settings resolver reads in development, ``CADRUMO_LLM_CLAUDE_API_KEY``.
 It is written once to the set command's standard input and never placed on a
 command line, in a file, a log or another process's environment.
 """
@@ -91,10 +91,10 @@ _WATCH_SECONDS: Final = 1.0
 _DESKTOP_UNAVAILABLE: Final = 69
 """The desktop host's exit when the logon has no interactive desktop for its window."""
 
-PROVIDER: Final = "anthropic"
+PROVIDER: Final = "claude_api"
 """The provider whose key the agent column's model uses."""
 
-KEY_VARIABLE: Final = "CADRUMO_LLM_ANTHROPIC_API_KEY"
+KEY_VARIABLE: Final = "CADRUMO_LLM_CLAUDE_API_KEY"
 """Where this lane reads the developer's key: the provider-settings resolver's development name for it."""
 
 
@@ -180,7 +180,7 @@ def provision_provider_key(programs: Programs, environment: Mapping[str, str]) -
     code, _envelope = run_cli(programs, environment, "--language", "en", "config", "provider", "--help")
     if code != 0:
         raise UnavailableError("this package has no `aeat config provider` commands yet, so no key can be stored")
-    payload = bytearray(json.dumps({"api_key": os.environ[KEY_VARIABLE]}), "utf-8")
+    payload = bytearray(json.dumps({"secret": os.environ[KEY_VARIABLE]}), "utf-8")
     try:
         result = run_command(
             [str(programs.aeat), "--format", "json", "config", "provider", "set", PROVIDER, "--secrets-stdin"],
@@ -332,9 +332,9 @@ def playwright(entry: str, endpoint: str, results: Path, arguments: list[str]) -
     }
     environment |= {
         "CADRUMO_CMAKE_BINARY_DIR": str(_BUILD),
-        "CADRUMO_AGENT_LIVE_ENDPOINT": endpoint,
-        "CADRUMO_AGENT_LIVE_ENTRY": entry,
-        "CADRUMO_AGENT_LIVE_RESULTS": str(results),
+        "CADRUMO_DEV_DESKTOP_LIVE_ENDPOINT": endpoint,
+        "CADRUMO_DEV_DESKTOP_LIVE_ENTRY": entry,
+        "CADRUMO_DEV_DESKTOP_LIVE_RESULTS": str(results),
     }
     npx = shutil.which("npx.cmd") or shutil.which("npx")
     if npx is None:

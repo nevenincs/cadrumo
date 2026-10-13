@@ -6,7 +6,6 @@
 //! launcher's loopback gateway, with each run's stream on a Tauri channel.
 //! The launcher admits the agent bundled by CMake or returns a typed refusal.
 
-mod direct;
 mod gateway;
 mod launcher;
 mod runner;
@@ -24,7 +23,7 @@ use cadrumo_application::{diagnostics::Diagnostics, error::application::Result};
 use serde::Serialize;
 use serde_json::Value;
 use session::{Answer, RequestRef, SendRequest, Session};
-use std::{path::PathBuf, sync::Arc};
+use std::sync::Arc;
 use stream::StreamEvent;
 use supervisor::{Observation, Status, Supervisor};
 use tauri::{Manager, Runtime, State, ipc::Channel, plugin::TauriPlugin};
@@ -48,7 +47,7 @@ pub struct AgentHost {
 }
 
 impl AgentHost {
-    fn new(sign_in: Arc<SignIn>, diagnostics: Arc<Diagnostics>, storage: PathBuf) -> Self {
+    fn new(sign_in: Arc<SignIn>, diagnostics: Arc<Diagnostics>) -> Self {
         let observed = sign_in.clone();
         let observe = Arc::new(move || {
             let sign_in = observed.clone();
@@ -62,22 +61,13 @@ impl AgentHost {
                 })
             }) as std::pin::Pin<Box<dyn Future<Output = Result<Observation>> + Send>>
         });
-        let launcher: supervisor::Launch = Arc::new(move |_bearer: &str, _profile: &str| {
+        let launch: supervisor::Launch = Arc::new(move |_bearer: &str, _profile: &str| {
             let mut command = sign_in.cli()?.command();
             command.args(["app", "agent", "serve"]);
-            Ok(supervisor::Prepared {
-                command,
-                direct: None,
-            })
+            Ok(supervisor::Prepared { command })
         });
-        let direct = if cfg!(feature = "agent-direct-start") {
-            direct::launch(storage)
-        } else {
-            None
-        };
-        let launch = Some(direct.unwrap_or(launcher));
         Self {
-            supervisor: Supervisor::new(observe, launch, diagnostics),
+            supervisor: Supervisor::new(observe, Some(launch), diagnostics),
             session: Session::default(),
         }
     }
@@ -92,15 +82,10 @@ impl AgentHost {
 /// Registers the host once the shell's sign-in owner exists.
 pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
     let diagnostics = launch.diagnostics.clone();
-    let storage = launch.working_directory.clone();
     tauri::plugin::Builder::new("cadrumo-agent")
         .setup(move |app, _| {
             let sign_in = app.state::<Arc<SignIn>>().inner().clone();
-            app.manage(Arc::new(AgentHost::new(
-                sign_in,
-                diagnostics,
-                storage.clone(),
-            )));
+            app.manage(Arc::new(AgentHost::new(sign_in, diagnostics.clone())));
             Ok(())
         })
         .build()

@@ -133,66 +133,6 @@ pub type Launch = Arc<dyn Fn(&str, &str) -> Result<Prepared> + Send + Sync>;
 /// What one start runs.
 pub struct Prepared {
     pub command: Command,
-    /// A gateway started directly rather than through the launcher: it
-    /// speaks no launcher protocol, so readiness is read from the gateway.
-    pub direct: Option<Direct>,
-}
-
-/// Where a directly started gateway listens, and the workspace it serves.
-pub struct Direct {
-    pub gateway_port: u16,
-    pub workspace_root: String,
-}
-
-/// How long a directly started gateway has to answer.
-const DIRECT_READINESS: Duration = Duration::from_secs(180);
-
-/// Reads a direct gateway's service state until it answers with the
-/// bearer, then reports it ready as a launcher would.
-fn await_direct(direct: Direct, bearer: Arc<Zeroizing<String>>, signal: impl Fn(Signal)) {
-    let agent: ureq::Agent = ureq::Agent::config_builder()
-        .http_status_as_error(false)
-        .proxy(None)
-        .max_redirects(0)
-        .timeout_global(Some(Duration::from_secs(5)))
-        .build()
-        .into();
-    let url = format!("http://127.0.0.1:{}/v1/service", direct.gateway_port);
-    let authorization = Zeroizing::new(format!("Bearer {}", bearer.as_str()));
-    let deadline = Instant::now() + DIRECT_READINESS;
-    while Instant::now() < deadline {
-        let answered = agent
-            .get(&url)
-            .header("Authorization", authorization.as_str())
-            .call()
-            .ok()
-            .filter(|response| response.status().as_u16() == 200)
-            .and_then(|response| {
-                response
-                    .into_body()
-                    .with_config()
-                    .limit(1024 * 1024)
-                    .read_to_vec()
-                    .ok()
-            })
-            .and_then(|body| serde_json::from_slice::<serde_json::Value>(&body).ok());
-        if let Some(service) = answered {
-            let agent_version = service
-                .get("service_version")
-                .and_then(serde_json::Value::as_str)
-                .filter(|version| !version.is_empty() && version.len() <= 128)
-                .unwrap_or("unknown")
-                .to_owned();
-            signal(Signal::Event(Event::Ready {
-                gateway_port: direct.gateway_port,
-                agent_version,
-                workspace_root: direct.workspace_root,
-            }));
-            return;
-        }
-        std::thread::sleep(Duration::from_millis(500));
-    }
-    signal(Signal::Violation);
 }
 
 /// How the gateway of the running launcher is reached. The bearer goes
@@ -439,16 +379,15 @@ async fn start(
     signals: &mpsc::UnboundedSender<(u64, Signal)>,
 ) -> Result<()> {
     let bearer = Arc::new(mint_bearer()?);
-    let Prepared { command, direct } = launch(&bearer, &profile)?;
+    let Prepared { command } = launch(&bearer, &profile)?;
     let generation = shared.generation.fetch_add(1, Ordering::AcqRel) + 1;
     let sender = signals.clone();
     let diagnostics = shared.diagnostics.clone();
     let secret = bearer.clone();
-    let protocol = direct.is_none();
     let supervised = tauri::async_runtime::spawn_blocking(move || {
         runner::start_child(
             command,
-            protocol.then_some(secret.as_str()),
+            Some(secret.as_str()),
             move |signal| {
                 let _ = sender.send((generation, signal));
             },
@@ -457,15 +396,6 @@ async fn start(
     })
     .await
     .map_err(|_| ApplicationError::new(ErrorCode::Panic, Operation::Cli))??;
-    if let Some(direct) = direct {
-        let sender = signals.clone();
-        let secret = bearer.clone();
-        std::thread::spawn(move || {
-            await_direct(direct, secret, move |signal| {
-                let _ = sender.send((generation, signal));
-            });
-        });
-    }
     let refused = {
         let mut running = lock(&shared.running);
         if shared.closed.load(Ordering::Acquire) {
@@ -765,7 +695,6 @@ mod tests {
             let launch: Launch = Arc::new(move |_, _| {
                 Ok(Prepared {
                     command: powershell(&launcher_script(ignore_end)),
-                    direct: None,
                 })
             });
             let supervisor = Supervisor::with_timing(
@@ -935,7 +864,6 @@ mod tests {
             let launch: Launch = Arc::new(move |_, _| {
                 counted.fetch_add(1, Ordering::AcqRel);
                 Ok(Prepared {
-                    direct: None,
                     command: powershell(
                         "$null = [Console]::In.ReadLine(); [Console]::Out.WriteLine('{\"event\":\"agent_refused\",\"code\":\"agent_root_unmarked\"}'); exit 3",
                     ),

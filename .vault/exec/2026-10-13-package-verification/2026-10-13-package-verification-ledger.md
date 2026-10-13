@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:81da7bbc8f74ee45eca4980e548f352a1669629a40d8f3399758b04ce8e5ec12'
+body_hash: 'sha256:118938828fa641601766933909f101b7d7ab1b7cd4c61a527587033c6603e6b9'
 related:
   - "[[2026-10-13-package-verification-plan]]"
 ---
@@ -59,8 +59,17 @@ related:
 - `S01` `M` `justfile`
 - `S01` `verify:` `dev/tests/test_lane_reachability.py` -> `pass`
 - `S01` `verify:` `dev/tests/test_dev_cli_justfile_wiring.py` -> `pass`
+- `S04` `D` `native/desktop/src-tauri/src/agent/direct.rs`
+- `S04` `M` `native/desktop/src-tauri/src/agent/mod.rs`
+- `S04` `M` `native/desktop/src-tauri/src/agent/supervisor.rs`
+- `S04` `M` `native/desktop/src-tauri/Cargo.toml`
+- `S04` `M` `dev/desktop_agent_live/lane.py`
+- `S04` `verify:` `native/desktop/tests/run-backend.ps1 -Mode Unit -Filter agent` -> `pass`
+- `S04` `verify:` `native/desktop/tests/run-backend.ps1 -Mode Clippy` -> `pass`
+- `S04` `verify:` `ruff check dev/desktop_agent_live` -> `pass`
 
 ## Notes
 
 - `S01` lane-reachability and justfile-wiring failures are pre-existing: unenrolled `dev/desktop_agent_live,` `dev/agent_eval/live` and other sessions' new tests; none involve S01 paths. dev/audit semantic, `semantic_duplication,` `legal_attribution_screen,` `legal_excerpt_vintage_screen` and `registry_temporal_range_sweep` kept as live gates or documented tools
 - `S01` owner asked to fix the pre-existing census failures: CTest's package pytest suite is now a lane of test-native-bundle; orphan test paths enrolled in their capability lanes
+- `S04` built in an isolated scratch build root and cargo target; the live desktop lane itself waits on the hosted proof and a built package with the agent image
