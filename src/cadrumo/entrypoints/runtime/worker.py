@@ -26,6 +26,7 @@ from ...application.runtime.contracts import RuntimeClientHello, RuntimeRefusalC
 from ...application.runtime.profile_worker import (
     ProfileWorkerIdentity,
 )
+from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.automation_custody_port import AutomationCustodyError
 from ...core.async_cleanup import (
     AsyncCloseable,
@@ -278,10 +279,10 @@ def _run_process(
     if sys.platform not in {"win32", "linux", "darwin"} or not sys.flags.isolated:
         return 2
     resources = _WorkerRunResources()
-    refusal: RuntimeRefusalError | AutomationCustodyError | None = None
+    refusal: RuntimeRefusalError | AutomationCustodyError | ProfileAccessRefusedError | None = None
     try:
         _run_worker(options, resources, composition_factory)
-    except (RuntimeRefusalError, AutomationCustodyError) as error:
+    except (RuntimeRefusalError, AutomationCustodyError, ProfileAccessRefusedError) as error:
         refusal = error
         for failure in _collect_worker_failures(error)[1:]:
             diagnostic_event(
@@ -297,7 +298,7 @@ def _run_process(
             fields={
                 **diagnostic_error_fields(error),
                 "reason_code": error.reason.value
-                if isinstance(error, RuntimeRefusalError)
+                if isinstance(error, (RuntimeRefusalError, ProfileAccessRefusedError))
                 else "automation_custody_refused",
                 "outcome": "refused",
             },

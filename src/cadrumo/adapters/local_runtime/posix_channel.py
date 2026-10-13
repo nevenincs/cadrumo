@@ -65,22 +65,56 @@ def _require_live_linux_pidfd(descriptor: int) -> None:
     raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
 
 
+def _linux_pidfd_process_id(descriptor: int) -> int | None:
+    with open(f"/proc/self/fdinfo/{descriptor}", encoding="ascii") as info:
+        for line in info:
+            name, _, value = line.partition(":")
+            if name == "Pid":
+                return int(value)
+    return None
+
+
+def _linux_peer_image_path(sock: socket.socket, pid: int) -> str | None:
+    """Read the peer's program while its pidfd pins the process, so a reused pid cannot answer.
+
+    The program is evidence shown to a person, not an admission check: a
+    kernel without peer pidfds, or a read that does not hold, reports none.
+    """
+    try:
+        descriptor = _linux_peer_pidfd(sock)
+    except RuntimeRefusalError:
+        return None
+    try:
+        _require_live_linux_pidfd(descriptor)
+        if _linux_pidfd_process_id(descriptor) != pid:
+            return None
+        path = os.readlink(f"/proc/{pid}/exe")
+        # Still alive after the read: the pid named this process throughout.
+        _require_live_linux_pidfd(descriptor)
+    except (OSError, ValueError, RuntimeRefusalError):
+        return None
+    finally:
+        os.close(descriptor)
+    return path or None
+
+
 def _peer(sock: socket.socket) -> RuntimePeer:
     if sys.platform == "win32":
         raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
     try:
         if sys.platform.startswith("linux"):
             pid, uid, _gid = _linux_peer_credentials(sock)
+            image_path = _linux_peer_image_path(sock, pid) if pid > 0 else None
         elif sys.platform == "darwin":
             from .macos_login import macos_peer_audit_token
 
             token = macos_peer_audit_token(sock, expected_owner=str(posix_owner_uid()))
-            uid, pid = token.effective_user_id, token.process_id
+            uid, pid, image_path = token.effective_user_id, token.process_id, token.image_path
         else:
             raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
         if uid != posix_owner_uid() or pid <= 0:
             raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
-        return RuntimePeer(os_owner_id=str(uid), process_id=pid)
+        return RuntimePeer(os_owner_id=str(uid), process_id=pid, image_path=image_path)
     except OSError:
         raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED) from None
 

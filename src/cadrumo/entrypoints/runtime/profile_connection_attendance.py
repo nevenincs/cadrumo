@@ -34,6 +34,7 @@ from ...application.runtime.contracts import RuntimeByteChannel, RuntimeRefusalC
 from ...application.runtime.profile_access import RuntimeProfileStatus
 from ...application.runtime.transport import RuntimeConnectionContext
 from ...application.user_profile.access_contracts import AccessDenialCode, AccessDenied, Availability
+from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ...core.time.utc import UtcInstant
 from .profile_host import ProfileConnection
@@ -216,11 +217,18 @@ class ProfileConnectionAttendanceMixin:
             surface=connection.surface,
         )
         if isinstance(child, AccessDenied):
-            # The person's session has ended; the approval ended with it.
-            with self._guard:
-                self._attended.pop(connection.context.connection_id, None)
-                self._attendance_spent.add(connection.context.connection_id)
-            return None
+            try:
+                host.authority.human_administration_facts(
+                    connection_id=attended.holder_connection_id, session_id=attended.parent_session_id
+                )
+            except (ProfileAccessRefusedError, AutomationCustodyError):
+                # The person's session has ended; the approval ended with it.
+                with self._guard:
+                    self._attended.pop(connection.context.connection_id, None)
+                    self._attendance_spent.add(connection.context.connection_id)
+                return None
+            # The person's session lives: this refusal passes, and the approval stands for a later call.
+            return child
         connection.session_id = child.session_id
         return self._status(connection, host, request_id, child.session_id)
 
@@ -308,7 +316,8 @@ class ProfileConnectionAttendanceMixin:
                 return AccessDenied(code=AccessDenialCode.OPERATION_UNAVAILABLE)
             # Disclosures name the person's sign-in as their destination: the attended
             # connection receives what the person's own session may receive, and nothing more.
-            own_client_id, recipient.client_id = recipient.client_id, holder.client_id
+            with self._guard:
+                own_client_id, recipient.client_id = recipient.client_id, holder.client_id
             try:
                 child = host.authority.attend(
                     connection_id=context.connection_id,
@@ -317,12 +326,13 @@ class ProfileConnectionAttendanceMixin:
                     surface=recipient.surface,
                 )
             except BaseException:
-                recipient.client_id = own_client_id
+                with self._guard:
+                    recipient.client_id = own_client_id
                 raise
             if isinstance(child, AccessDenied):
                 # Nothing was admitted, so the connection keeps only its own identity.
-                recipient.client_id = own_client_id
                 with self._guard:
+                    recipient.client_id = own_client_id
                     self._attendance.pop(ask.attendance_id, None)
                 return child
             recipient.session_id = child.session_id

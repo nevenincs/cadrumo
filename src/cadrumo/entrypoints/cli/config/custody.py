@@ -399,13 +399,14 @@ def config_logout(
                     del payload
                 try:
                     try:
-                        # A stored sign-in that resumes proves the person; the password is the fallback.
-                        outcome = client.human_sign_out()
-                    except ProfileReceiptRefusedError:
+                        # A stored sign-in that resumes proves the person; the password is the fallback
+                        # whenever it does not, whatever the reason the runtime gives.
+                        client.resume_receipt()
+                    except (ProfileReceiptRefusedError, RuntimeFrontendRefusedError):
                         client.login_password(proof, persist_receipt=False)
-                        outcome = client.human_sign_out()
                 finally:
                     proof[:] = bytes(len(proof))
+                outcome = client.human_sign_out()
         except RuntimeFrontendRefusedError as error:
             from .._profile_session_gate import raise_runtime_refusal
 

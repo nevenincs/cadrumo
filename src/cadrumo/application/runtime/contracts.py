@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import IntEnum, StrEnum
 from types import MappingProxyType
-from typing import Annotated, Literal, Protocol
+from typing import Annotated, Literal, Protocol, override
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -180,6 +180,22 @@ class RuntimePeer(BaseModel):
     process_id: Annotated[int, Field(gt=0)] | None
     image_path: Annotated[str, Field(min_length=1, max_length=32767)] | None = None
     """The peer's program, read from the process the transport retains; ``None`` where none is read."""
+
+    @override
+    def __eq__(self, other: object) -> bool:
+        """Compare identity only: the owner and process, never the program path shown to a person.
+
+        Two reads of one process's path can differ when a link in it is
+        replaced between them, and that must not make the process another peer.
+        """
+        if not isinstance(other, RuntimePeer):
+            return NotImplemented
+        return (self.os_owner_id, self.process_id) == (other.os_owner_id, other.process_id)
+
+    @override
+    def __hash__(self) -> int:
+        """Hash the identity that equality compares."""
+        return hash((self.os_owner_id, self.process_id))
 
 
 class RuntimeByteChannel(Protocol):

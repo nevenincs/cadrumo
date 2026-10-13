@@ -314,9 +314,9 @@ written to the credential store or to the profile's storage.
   - `attendance_request` reports an MCP connection that asks to follow this
     sign-in. It gives the `attendance_id`, the `process_id` of the asking
     process as the operating system reports it, the `image_path` of that
-    process's program on Windows (`null` elsewhere), the `frontend`, the
-    `surface` and when the ask lapses (`expires_at`, two minutes after it was
-    made).
+    process's program as the operating system reports it (`null` where it
+    cannot be read), the `frontend`, the `surface` and when the ask lapses
+    (`expires_at`, two minutes after it was made).
   - `attendance_decided` and `attendance_refused` report your answers.
   - `signed_out` and `session_ended` report the end of the sign-in.
   - `ended` comes last, with the `reason`: `input_closed`, `signed_out` or

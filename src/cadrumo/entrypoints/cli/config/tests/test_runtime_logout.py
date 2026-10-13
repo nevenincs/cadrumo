@@ -10,6 +10,7 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import TypeAdapter
 
+from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend
 from cadrumo.application.operations.registry import OperationFrontendProjection
@@ -45,15 +46,15 @@ class _Client:
         self.profile_id = profile_id
         self.calls: list[str] = []
         self.on_logout: Callable[[], None] | None = None
-        self.receipt = True
+        self.receipt_refusal: Exception | None = None
         self.signed_in = False
         self.proofs: list[bytes] = []
 
     def human_sign_out(self) -> RuntimeHumanSignedOut:
         self.calls.append("sign_out")
-        if not self.signed_in and not self.receipt:
+        if not self.signed_in and self.receipt_refusal is not None:
             # As the real client does: with no session it resumes the stored sign-in, and none resumes.
-            raise ProfileReceiptRefusedError(ProfileSessionRefusalReason.ABSENT)
+            raise self.receipt_refusal
         if self.on_logout is not None:
             self.on_logout()
         return RuntimeHumanSignedOut(
@@ -66,6 +67,12 @@ class _Client:
             keychain_removed=True,
             automation_enabled=True,
         )
+
+    def resume_receipt(self) -> None:
+        self.calls.append("resume")
+        if self.receipt_refusal is not None:
+            raise self.receipt_refusal
+        self.signed_in = True
 
     def login_password(self, secret: bytearray, *, persist_receipt: bool) -> None:
         assert not persist_receipt
@@ -180,23 +187,32 @@ def test_logout_refuses_corrupt_default_without_claiming_idempotence(_isolated_c
     assert '"already_logged_out": true' not in result.output
 
 
-@pytest.mark.parametrize("receipt", [True, False], ids=["receipt_resumes", "no_receipt"])
+@pytest.mark.parametrize(
+    "refusal",
+    [
+        None,
+        ProfileReceiptRefusedError(ProfileSessionRefusalReason.ABSENT),
+        # A denial the receipt refusals do not name still leaves the password to prove the person.
+        RuntimeFrontendRefusedError("operation_denied"),
+    ],
+    ids=["receipt_resumes", "no_receipt", "unmapped_refusal"],
+)
 def test_logout_proves_the_person_by_a_stored_sign_in_before_the_password(
-    monkeypatch: pytest.MonkeyPatch, receipt: bool
+    monkeypatch: pytest.MonkeyPatch, refusal: Exception | None
 ) -> None:
     """The password is the fallback proof: it signs in only when no stored sign-in resumes."""
     profile_id = UUID(register_cli_profile(label="Held sign-in", log_in=False))
     client = _Client(profile_id)
-    client.receipt = receipt
+    client.receipt_refusal = refusal
     _install_client(monkeypatch, client)
     result = invoke_cached_cli(
         ("--format", "json", "config", "logout", "--secrets-stdin"), input=json.dumps({"passphrase": CREDENTIAL_INPUT})
     )
     assert result.exit_code == 0, result.output
     assert CREDENTIAL_INPUT not in result.output
-    if receipt:
-        assert client.calls == ["sign_out", "close"]
+    if refusal is None:
+        assert client.calls == ["resume", "sign_out", "close"]
         assert client.proofs == []
     else:
-        assert client.calls == ["sign_out", "password", "sign_out", "close"]
+        assert client.calls == ["resume", "password", "sign_out", "close"]
         assert client.proofs == [CREDENTIAL_INPUT.encode()]

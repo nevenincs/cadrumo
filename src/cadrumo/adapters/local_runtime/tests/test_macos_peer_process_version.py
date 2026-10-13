@@ -71,6 +71,8 @@ def test_current_kernel_process_version_releases_only_the_audit_identity(monkeyp
     _install(monkeypatch, query=query)
     observed = macos_login.macos_peer_audit_token(cast(socket.socket, _KernelPeer()), expected_owner="501")
     assert observed.process_id == 123 and observed.process_version == 7
+    # The program is the version-checked query's answer for that exact incarnation.
+    assert observed.image_path == "/bin/peer"
     assert query.tokens == [struct.unpack("=8I", _PAYLOAD)]
 
 

@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import ctypes
 import errno
+import os
 import socket
 import struct
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.user_profile.access_contracts import Availability, LoginEligibility, OsLockState, OsLoginContext
@@ -24,6 +25,8 @@ class MacosPeerAuditToken:
     process_id: int
     audit_session_id: int
     process_version: int
+    image_path: str | None = None
+    """The program of that exact incarnation, read by the kernel's version-checked path query."""
 
 
 def decode_macos_peer_audit_token(payload: bytes, *, expected_owner: str) -> MacosPeerAuditToken:
@@ -75,16 +78,15 @@ def macos_peer_audit_token(sock: socket.socket, *, expected_owner: str) -> Macos
             raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
         if read_macos_process(pid, expected_owner=expected_owner) != before:
             raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
-        _require_current_process_version(payload)
-        return token
+        return replace(token, image_path=_require_current_process_version(payload))
     except (OSError, struct.error):
         raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED) from None
 
 
-def _require_current_process_version(payload: bytes) -> None:
+def _require_current_process_version(payload: bytes) -> str:
     # The public libproc API compares the token's pidversion inside the kernel.
     # BSD birth timestamps alone remain unchanged when the peer executes a new
-    # program. Its path is only a bounded output buffer and is never disclosed.
+    # program. The path it answers is therefore that exact incarnation's program.
     value = (ctypes.c_uint32 * 8).from_buffer_copy(payload)
     buffer = (ctypes.c_ubyte * 4096)()
     try:
@@ -98,6 +100,7 @@ def _require_current_process_version(payload: bytes) -> None:
             raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
         if type(count) is not int or not 0 < count < ctypes.sizeof(buffer) or buffer[count] != 0:
             raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+        return os.fsdecode(bytes(buffer[:count]))
     except (AttributeError, OSError):
         raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE) from None
     finally:

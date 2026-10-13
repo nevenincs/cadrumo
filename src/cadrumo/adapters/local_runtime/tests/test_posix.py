@@ -553,6 +553,19 @@ def test_malformed_frames_refuse_without_echoing_input(payload: bytes) -> None:
         right.close()
 
 
+@pytest.mark.skipif(not sys.platform.startswith("linux"), reason="reads the peer's program under its Linux pidfd")
+def test_the_peer_program_is_read_while_its_pidfd_pins_it() -> None:
+    left, right = socket.socketpair()
+    channel = PosixRuntimeChannel(left)
+    try:
+        # A socket pair's peer is this process, so the kernel's own record of its program is the expected value.
+        assert channel.peer.process_id == os.getpid()
+        assert channel.peer.image_path == os.readlink("/proc/self/exe")
+    finally:
+        channel.close()
+        right.close()
+
+
 def test_oversize_is_refused_from_header_without_waiting_for_body() -> None:
     left, right = socket.socketpair()
     channel = PosixRuntimeChannel(left)
