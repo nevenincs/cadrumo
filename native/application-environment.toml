@@ -1,0 +1,357 @@
+# The application package's declaration of every packaged image's process environment.
+#
+# The packaging generator validates this file and compiles it into contract.json,
+# contract.rs and contract.h. Each image the package builds defines its own process
+# environment from its compiled launch profile before Python starts: a name this
+# file does not declare for a profile never reaches that profile's process.
+#
+# Name kinds: text, language, boolean, integer, number, directory, file,
+# directory_list, port, executable, descriptor.
+# Name roles: location (a storage root or member an operator may relocate),
+# operator (an operator setting with no custody, location, authority or secret
+# effect), package (a package-owned override), pin (set by the host from its
+# resolution), fixed (a package fact), slot (a launch parameter a parent supplies).
+
+schema = 1
+
+# ---------------------------------------------------------------------------
+# Environment names the package sets, passes or lets operators override.
+# ---------------------------------------------------------------------------
+
+[names]
+CADRUMO_LOCAL_STORAGE_ROOT = { kind = "directory", role = "location" }
+CADRUMO_ATTACHMENTS_DIR = { kind = "directory", role = "location" }
+CADRUMO_BLOB_STORE_DIR = { kind = "directory", role = "location" }
+CADRUMO_CHROMIUM_DATA_ROOT = { kind = "directory", role = "location" }
+CADRUMO_CORPUS_SEARCH_CACHE_DIR = { kind = "directory", role = "location" }
+CADRUMO_DRAFTS_DIR = { kind = "directory", role = "location" }
+CADRUMO_FILED_DECLARATIONS_DIR = { kind = "directory", role = "location" }
+CADRUMO_FILING_HISTORY_DIR = { kind = "directory", role = "location" }
+CADRUMO_FINANCIAL_TXS_DIR = { kind = "directory", role = "location" }
+CADRUMO_GNOME_EXTENSIONS_DIR = { kind = "directory", role = "location" }
+CADRUMO_INVOICES_DIR = { kind = "directory", role = "location" }
+CADRUMO_IVA_COMPENSATION_HISTORY_DIR = { kind = "directory", role = "location" }
+CADRUMO_IVA_READ_EVIDENCE_DIR = { kind = "directory", role = "location" }
+CADRUMO_JUSTIFICANTES_DIR = { kind = "directory", role = "location" }
+CADRUMO_LIVE_STATE_DIR = { kind = "directory", role = "location" }
+CADRUMO_LLM_CACHE_DIR = { kind = "directory", role = "location" }
+CADRUMO_LLM_RUN_RECORD_DIR = { kind = "directory", role = "location" }
+CADRUMO_LLM_USAGE_DIR = { kind = "directory", role = "location" }
+CADRUMO_LOG_DIR = { kind = "directory", role = "location" }
+CADRUMO_OLLAMA_HOME_DIR = { kind = "directory", role = "location" }
+CADRUMO_OLLAMA_MODELS_DIR = { kind = "directory", role = "location" }
+CADRUMO_PLAYWRIGHT_BROWSERS_DIR = { kind = "directory", role = "location" }
+CADRUMO_RUNS_DIR = { kind = "directory", role = "location" }
+CADRUMO_RUNTIME_SOCKET_DIR = { kind = "directory", role = "location" }
+CADRUMO_SECRET_STORE_DIR = { kind = "directory", role = "location" }
+CADRUMO_SUBMISSIONS_DIR = { kind = "directory", role = "location" }
+CADRUMO_TEMP_DIR = { kind = "directory", role = "location" }
+CADRUMO_TOKEN_DIR = { kind = "directory", role = "location" }
+CADRUMO_USAGE_RATIOS_PATH = { kind = "file", role = "location" }
+CADRUMO_WEBVIEW_DIR = { kind = "directory", role = "location" }
+CADRUMO_WORKFLOW_RUNS_DIR = { kind = "directory", role = "location" }
+
+CADRUMO_LOG_LEVEL = { kind = "text", role = "operator" }
+CADRUMO_LOG_STDERR_LEVEL = { kind = "text", role = "operator" }
+CADRUMO_LOG_FILE_LEVEL = { kind = "text", role = "operator" }
+CADRUMO_LOG_ROOT_LEVEL = { kind = "text", role = "operator" }
+CADRUMO_OUTPUT_LANGUAGE = { kind = "language", role = "operator" }
+CADRUMO_FALLBACK_LANGUAGES = { kind = "text", role = "operator" }
+NO_COLOR = { kind = "boolean", role = "operator" }
+CADRUMO_FORCE_COLOR = { kind = "boolean", role = "operator" }
+CADRUMO_TUI_APPEARANCE = { kind = "text", role = "operator" }
+CADRUMO_DEADLINE_DUE_SOON_DAYS = { kind = "integer", role = "operator" }
+CADRUMO_INBOX_ALERT_LEAD_DAYS = { kind = "integer", role = "operator" }
+CADRUMO_CERT_WARN_DAYS = { kind = "integer", role = "operator" }
+CADRUMO_CERT_CRITICAL_DAYS = { kind = "integer", role = "operator" }
+
+CADRUMO_AUTH_TIMEOUT_MS = { kind = "integer", role = "operator" }
+CADRUMO_CLAVE_MOVIL_TIMEOUT_MS = { kind = "integer", role = "operator" }
+CADRUMO_CLAVE_PERMANENTE_TIMEOUT_MS = { kind = "integer", role = "operator" }
+CADRUMO_BROWSER_HEADLESS = { kind = "boolean", role = "operator" }
+CADRUMO_BROWSER_VIEWPORT_WIDTH = { kind = "integer", role = "operator" }
+CADRUMO_BROWSER_VIEWPORT_HEIGHT = { kind = "integer", role = "operator" }
+CADRUMO_BROWSER_NAVIGATION_TIMEOUT_MS = { kind = "integer", role = "operator" }
+CADRUMO_BROWSER_FORM_INTERACTION_TIMEOUT_MS = { kind = "integer", role = "operator" }
+CADRUMO_BROWSER_SELECTOR_PROBE_TIMEOUT_MS = { kind = "integer", role = "operator" }
+CADRUMO_BROWSER_VER_CLICK_TIMEOUT_MS = { kind = "integer", role = "operator" }
+CADRUMO_BROWSER_BUSCAR_SETTLE_MS = { kind = "integer", role = "operator" }
+CADRUMO_BROWSER_CLOSE_TIMEOUT_MS = { kind = "integer", role = "operator" }
+CADRUMO_LIVE_FILED_REGISTER_WALK_TIMEOUT_MS = { kind = "integer", role = "operator" }
+CADRUMO_LIVE_IVA_SURFACE_TIMEOUT_MS = { kind = "integer", role = "operator" }
+CADRUMO_LIVE_IVA_DECLARATION_CAPTURE_TIMEOUT_MS = { kind = "integer", role = "operator" }
+CADRUMO_LIVE_IVA_CANCELLATION_DRAIN_MS = { kind = "integer", role = "operator" }
+CADRUMO_RATE_LIMIT_DELAY_SECONDS = { kind = "number", role = "operator" }
+SITE_HEALTH_RATE_LIMIT_RETRY_AFTER_DEFAULT = { kind = "integer", role = "operator" }
+CADRUMO_FX_RATE_LOOKUP_TIMEOUT_S = { kind = "integer", role = "operator" }
+CADRUMO_MANUALS_HTTP_TIMEOUT_S = { kind = "number", role = "operator" }
+CADRUMO_CALC_SHEETS_RECALC_DELAY_S = { kind = "number", role = "operator" }
+CADRUMO_LLM_DEFAULT_TIMEOUT_S = { kind = "integer", role = "operator" }
+CADRUMO_LLM_VISION_READ_TIMEOUT_S = { kind = "integer", role = "operator" }
+
+CADRUMO_CLI_REVEAL_IDENTIFIERS = { kind = "boolean", role = "package" }
+CADRUMO_EXTERNAL_BIN_DIRS = { kind = "directory_list", role = "package" }
+
+TEMP = { kind = "directory", role = "pin" }
+TMP = { kind = "directory", role = "pin" }
+TMPDIR = { kind = "directory", role = "pin" }
+CADRUMO_AUTHORITY_ROOT = { kind = "directory", role = "fixed" }
+
+# ---------------------------------------------------------------------------
+# Name groups that profiles admit from their caller's environment.
+# ---------------------------------------------------------------------------
+
+[groups]
+locations = [
+  "CADRUMO_ATTACHMENTS_DIR",
+  "CADRUMO_BLOB_STORE_DIR",
+  "CADRUMO_CHROMIUM_DATA_ROOT",
+  "CADRUMO_CORPUS_SEARCH_CACHE_DIR",
+  "CADRUMO_DRAFTS_DIR",
+  "CADRUMO_FILED_DECLARATIONS_DIR",
+  "CADRUMO_FILING_HISTORY_DIR",
+  "CADRUMO_FINANCIAL_TXS_DIR",
+  "CADRUMO_GNOME_EXTENSIONS_DIR",
+  "CADRUMO_INVOICES_DIR",
+  "CADRUMO_IVA_COMPENSATION_HISTORY_DIR",
+  "CADRUMO_IVA_READ_EVIDENCE_DIR",
+  "CADRUMO_JUSTIFICANTES_DIR",
+  "CADRUMO_LIVE_STATE_DIR",
+  "CADRUMO_LLM_CACHE_DIR",
+  "CADRUMO_LLM_RUN_RECORD_DIR",
+  "CADRUMO_LLM_USAGE_DIR",
+  "CADRUMO_LOG_DIR",
+  "CADRUMO_OLLAMA_HOME_DIR",
+  "CADRUMO_OLLAMA_MODELS_DIR",
+  "CADRUMO_PLAYWRIGHT_BROWSERS_DIR",
+  "CADRUMO_RUNS_DIR",
+  "CADRUMO_RUNTIME_SOCKET_DIR",
+  "CADRUMO_SECRET_STORE_DIR",
+  "CADRUMO_SUBMISSIONS_DIR",
+  "CADRUMO_TEMP_DIR",
+  "CADRUMO_TOKEN_DIR",
+  "CADRUMO_USAGE_RATIOS_PATH",
+  "CADRUMO_WEBVIEW_DIR",
+  "CADRUMO_WORKFLOW_RUNS_DIR",
+]
+presentation = [
+  "CADRUMO_LOG_LEVEL",
+  "CADRUMO_LOG_STDERR_LEVEL",
+  "CADRUMO_LOG_FILE_LEVEL",
+  "CADRUMO_LOG_ROOT_LEVEL",
+  "CADRUMO_OUTPUT_LANGUAGE",
+  "CADRUMO_FALLBACK_LANGUAGES",
+  "NO_COLOR",
+  "CADRUMO_FORCE_COLOR",
+  "CADRUMO_TUI_APPEARANCE",
+  "CADRUMO_DEADLINE_DUE_SOON_DAYS",
+  "CADRUMO_INBOX_ALERT_LEAD_DAYS",
+  "CADRUMO_CERT_WARN_DAYS",
+  "CADRUMO_CERT_CRITICAL_DAYS",
+]
+remote = [
+  "CADRUMO_AUTH_TIMEOUT_MS",
+  "CADRUMO_CLAVE_MOVIL_TIMEOUT_MS",
+  "CADRUMO_CLAVE_PERMANENTE_TIMEOUT_MS",
+  "CADRUMO_BROWSER_HEADLESS",
+  "CADRUMO_BROWSER_VIEWPORT_WIDTH",
+  "CADRUMO_BROWSER_VIEWPORT_HEIGHT",
+  "CADRUMO_BROWSER_NAVIGATION_TIMEOUT_MS",
+  "CADRUMO_BROWSER_FORM_INTERACTION_TIMEOUT_MS",
+  "CADRUMO_BROWSER_SELECTOR_PROBE_TIMEOUT_MS",
+  "CADRUMO_BROWSER_VER_CLICK_TIMEOUT_MS",
+  "CADRUMO_BROWSER_BUSCAR_SETTLE_MS",
+  "CADRUMO_BROWSER_CLOSE_TIMEOUT_MS",
+  "CADRUMO_LIVE_FILED_REGISTER_WALK_TIMEOUT_MS",
+  "CADRUMO_LIVE_IVA_SURFACE_TIMEOUT_MS",
+  "CADRUMO_LIVE_IVA_DECLARATION_CAPTURE_TIMEOUT_MS",
+  "CADRUMO_LIVE_IVA_CANCELLATION_DRAIN_MS",
+  "CADRUMO_RATE_LIMIT_DELAY_SECONDS",
+  "SITE_HEALTH_RATE_LIMIT_RETRY_AFTER_DEFAULT",
+  "CADRUMO_FX_RATE_LOOKUP_TIMEOUT_S",
+  "CADRUMO_MANUALS_HTTP_TIMEOUT_S",
+  "CADRUMO_CALC_SHEETS_RECALC_DELAY_S",
+  "CADRUMO_LLM_DEFAULT_TIMEOUT_S",
+  "CADRUMO_LLM_VISION_READ_TIMEOUT_S",
+]
+package = ["CADRUMO_CLI_REVEAL_IDENTIFIERS", "CADRUMO_EXTERNAL_BIN_DIRS"]
+
+# ---------------------------------------------------------------------------
+# Operating-system names a profile's base takes from its caller's environment.
+# Windows compares names without case; each platform lists its own spelling.
+# ---------------------------------------------------------------------------
+
+[base.windows]
+system = [
+  "SYSTEMROOT",
+  "SYSTEMDRIVE",
+  "WINDIR",
+  "PATHEXT",
+  "NUMBER_OF_PROCESSORS",
+  "PROCESSOR_ARCHITECTURE",
+  "OS",
+  "USERPROFILE",
+  "HOMEDRIVE",
+  "HOMEPATH",
+  "LOCALAPPDATA",
+  "APPDATA",
+  "PROGRAMDATA",
+  "PROGRAMFILES",
+  "PROGRAMFILES(X86)",
+  "COMMONPROGRAMFILES",
+  "USERNAME",
+  "USERDOMAIN",
+]
+session = [
+  "COMSPEC",
+  "COMPUTERNAME",
+  "PUBLIC",
+  "ALLUSERSPROFILE",
+  "PROGRAMW6432",
+  "COMMONPROGRAMFILES(X86)",
+  "COMMONPROGRAMW6432",
+  "PROCESSOR_IDENTIFIER",
+  "PROCESSOR_LEVEL",
+  "PROCESSOR_REVISION",
+  "LOGONSERVER",
+  "SESSIONNAME",
+  "USERDOMAIN_ROAMINGPROFILE",
+]
+terminal = ["TERM", "COLORTERM", "COLUMNS", "LINES", "WT_SESSION", "WT_PROFILE_ID", "TERM_PROGRAM", "TERM_PROGRAM_VERSION"]
+display = []
+network = ["HTTP_PROXY", "HTTPS_PROXY", "NO_PROXY", "ALL_PROXY", "SSL_CERT_FILE", "SSL_CERT_DIR", "REQUESTS_CA_BUNDLE"]
+
+[base.posix]
+system = ["HOME", "USER", "LOGNAME", "LANG", "LC_ALL", "LC_CTYPE", "TZ"]
+session = [
+  "SHELL",
+  "LC_COLLATE",
+  "LC_MESSAGES",
+  "LC_MONETARY",
+  "LC_NUMERIC",
+  "LC_TIME",
+  "XDG_RUNTIME_DIR",
+  "XDG_DATA_HOME",
+  "XDG_CONFIG_HOME",
+  "XDG_CACHE_HOME",
+  "XDG_STATE_HOME",
+  "DBUS_SESSION_BUS_ADDRESS",
+]
+terminal = ["TERM", "COLORTERM", "COLUMNS", "LINES", "TERM_PROGRAM", "TERM_PROGRAM_VERSION"]
+display = ["DISPLAY", "WAYLAND_DISPLAY", "XAUTHORITY", "XDG_SESSION_TYPE", "XDG_CURRENT_DESKTOP"]
+network = [
+  "HTTP_PROXY",
+  "HTTPS_PROXY",
+  "NO_PROXY",
+  "ALL_PROXY",
+  "http_proxy",
+  "https_proxy",
+  "no_proxy",
+  "all_proxy",
+  "SSL_CERT_FILE",
+  "SSL_CERT_DIR",
+  "REQUESTS_CA_BUNDLE",
+]
+
+# ---------------------------------------------------------------------------
+# Host pins: values the host resolves and sets. A profile with pins = true
+# resolves and pins the storage root by the package rule, pins the temporary
+# variables to the temporary-files member and sets the authority root.
+# ---------------------------------------------------------------------------
+
+[pins]
+temporary = ["TEMP", "TMP", "TMPDIR"]
+authority = { name = "CADRUMO_AUTHORITY_ROOT", layout_path = "authority" }
+
+# ---------------------------------------------------------------------------
+# PATH: composed from the package's binary directories, an admitted
+# CADRUMO_EXTERNAL_BIN_DIRS, and the platform's system directories.
+# ---------------------------------------------------------------------------
+
+[path]
+entries = ["executable", "external", "native", "system"]
+external = "CADRUMO_EXTERNAL_BIN_DIRS"
+windows_system = { variable = "SYSTEMROOT", subpaths = ["System32"] }
+posix_system = ["/usr/bin", "/bin"]
+
+# ---------------------------------------------------------------------------
+# Launch profiles. Each names the image it is compiled into. A profile with an
+# invocation is selected by its exact argument pattern; the image's profile
+# without one serves every other invocation. An image with no such default
+# refuses an undeclared invocation before Python starts.
+#
+# base: "groups" takes the listed base groups, "inherit" passes the caller's
+# whole environment unchanged. path: "package" sets the composed PATH,
+# "inherit" leaves the caller's.
+# ---------------------------------------------------------------------------
+
+[profiles.python]
+image = "python"
+base = "groups"
+base_groups = ["system", "session", "terminal", "display", "network"]
+pins = true
+operator = ["locations", "presentation", "remote", "package"]
+path = "package"
+
+[profiles.kdf-child]
+image = "python"
+base = "inherit"
+pins = false
+path = "inherit"
+
+[profiles.aeat]
+image = "aeat"
+base = "groups"
+base_groups = ["system", "session", "terminal", "display", "network"]
+pins = true
+operator = ["locations", "presentation", "remote", "package"]
+path = "package"
+
+[profiles.cadrumo-mcp]
+image = "cadrumo-mcp"
+base = "groups"
+base_groups = ["system", "session", "terminal", "display", "network"]
+pins = true
+operator = ["locations", "presentation", "remote", "package"]
+path = "package"
+
+[profiles.cadrumo-runtime]
+image = "cadrumo-runtime"
+base = "groups"
+base_groups = ["system", "session", "display", "network"]
+pins = true
+path = "package"
+
+# ---------------------------------------------------------------------------
+# Invocation tables. Arguments follow the image's own path. A literal must
+# match exactly; a typed argument is validated by its kind before Python starts.
+# ---------------------------------------------------------------------------
+
+[[invocations]]
+profile = "kdf-child"
+platform = "windows"
+arguments = [
+  { literal = "-m" },
+  { literal = "cadrumo.adapters.persistence.storage.custody._kdf_worker" },
+  { literal = "--request-handle" },
+  { slot = "request", kind = "handle" },
+  { literal = "--result-handle" },
+  { slot = "result", kind = "handle" },
+]
+distinct = [["request", "result"]]
+
+[[invocations]]
+profile = "kdf-child"
+platform = "posix"
+arguments = [
+  { literal = "-m" },
+  { literal = "cadrumo.adapters.persistence.storage.custody._kdf_worker" },
+  { literal = "--request-fd" },
+  { slot = "request", kind = "descriptor", minimum = 3 },
+  { literal = "--result-fd" },
+  { slot = "result", kind = "descriptor", minimum = 3 },
+  { literal = "--descriptor-bound" },
+  { slot = "bound", kind = "descriptor", minimum = 1 },
+]
+distinct = [["request", "result"]]
+greater = [["bound", "request"], ["bound", "result"]]

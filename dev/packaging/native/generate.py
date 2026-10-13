@@ -27,6 +27,7 @@ from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import STORAGE_TAXONOMY
 from dev.locales.manager_chrome import manager_chrome_strings
 
+from . import application_environment
 from .identity import identity
 from .layout import distribution_target, entrypoint_files, load_layout
 from .linux_desktop_runtime import declaration as desktop_runtime_declaration
@@ -287,6 +288,7 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
     ``channel`` is the release channel the identity projection validated for this build.
     """
     layout = load_layout(target, root=root)
+    launch = application_environment.compile_section(application_environment.load(root), layout)
     release = identity(distribution_target(layout), channel, project_file=root / "pyproject.toml")
     build_channel = release.channel
     version = (root / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip()
@@ -339,6 +341,7 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
             "refusal": StorageRootRefusal.INVALID_PATH_INPUT.value,
         },
         "runtime_exit": runtime_exit_section(),
+        "application_environment": launch,
         "desktop_defaults": {
             "console_workspace": STORAGE_TAXONOMY[StorageCategory.CONSOLE_WORKSPACE].subpath,
             "webview": STORAGE_TAXONOMY[StorageCategory.DESKTOP_WEBVIEW].subpath,
@@ -385,12 +388,14 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
     rust.extend(_rust_root_and_environment(contract))
     rust.extend(rust_transport(contract["runtime_transport"]))
     rust.extend(rust_runtime_exit_reasons(contract["runtime_exit"]))
+    rust.extend(application_environment.rust_lines(launch))
     destination.mkdir(parents=True, exist_ok=True)
     write_text(destination / "contract.rs", "\n".join(rust) + "\n")
     write_text(
         destination / "contract.h",
         f'#define CADRUMO_PYTHON_VERSION "{version}"\n#define CADRUMO_PLATFORM_ABI {layout["abi"]}\n'
-        f"#define CADRUMO_CONTRACT_SCHEMA {CONTRACT_SCHEMA}\n",
+        f"#define CADRUMO_CONTRACT_SCHEMA {CONTRACT_SCHEMA}\n"
+        + "".join(f"{line}\n" for line in application_environment.c_lines(launch)),
     )
     write_text(destination / "contract.json", json.dumps(contract, indent=2) + "\n")
 

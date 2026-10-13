@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:275496012b593c03de767b489f9006724549c36e79e795169c27b5192e6ece96'
+body_hash: 'sha256:f37e76648624d93f389029e1bd18145d157a6f623002518b64bb8a2d37dfca89'
 related:
   - "[[2026-10-13-canonical-environment-plan]]"
 ---
@@ -57,9 +57,22 @@ related:
 - `S11` `verify:` `cmake -P on the real Agent.cmake selector lines: unset, old env name, new env name, missing pyproject, valid -D` -> `pass`
 - `S11` `verify:` `node scripts/agent-catalog-fixture.mjs --check with CADRUMO_DEV_AGENT_CHECKOUT` -> `pass`
 - `S11` `by:` `rename-lane`
+- `S01` `A` `native/application-environment.toml`
+- `S01` `A` `dev/packaging/native/application_environment.py`
+- `S01` `M` `dev/packaging/native/generate.py`
+- `S01` `M` `native/cmake/Contract.cmake`
+- `S01` `A` `dev/packaging/native/tests/test_application_environment.py`
+- `S01` `M` `native/platform/src/installation.rs`
+- `S01` `verify:` `uv run --no-sync pytest dev/packaging/native/tests/test_application_environment.py` -> `pass`
+- `S01` `verify:` `ruff check/format dev/packaging/native` -> `pass`
+- `S01` `verify:` `ty check touched generator files` -> `pass`
+- `S01` `verify:` `cargo +1.96.0 clippy --all-targets -D warnings and cargo test native/platform` -> `pass`
+- `S01` `verify:` `cargo +1.96.0 clippy native/manager lib` -> `pass`
+- `S01` `by:` `vaultspec-high-executor`
 
 ## Notes
 
 - `S11` The lane.py counterpart of the `CADRUMO_DEV_DESKTOP_LIVE_ENDPOINT,` `_ENTRY` and `_RESULTS` rename is owned by package-verification S04; `agent_live.py` `CADRUMO_AGENT_CHECKOUT` is owned by package-verification S03.
 - `S11` No full CMake configure was run: build/windows-x64 belongs to the native lane. The selector lines were exercised in script mode instead.
 - `S11` agentLanes.generated.ts was regenerated from its generator, so its digest line also moved to the current cadrumo-agent main; the lane data is unchanged.
+- `S01` native/platform/src/installation.rs: fixed a pre-existing clippy `manual_is_multiple_of` failure to keep -D warnings green; native/manager test build carries a pre-existing clashing TrackPopupMenu extern warning, untouched

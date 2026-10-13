@@ -14,7 +14,7 @@ related:
   - '[[2026-10-04-runtime-manager-architecture-adr]]'
 modified: '2026-10-13'
 body_schema: body-v2
-body_hash: 'sha256:2e52b8273475b5ee9cef34764bad7bfd64749e9b6609c7bc4b846314699522b1'
+body_hash: 'sha256:4b6b634a7936a9694915c158db69448d93e4abdfb5a4bc2fd53b7efffe91418a'
 ---
 
 # `canonical-environment` plan
@@ -55,7 +55,7 @@ Grounding notes, to be confirmed by the executing Step:
 
 native/application-environment.toml exists, is validated and compiled into contract.json, contract.rs and contract.h, and the generator no longer imports CLI declarations for the environment contract.
 
-- [ ] `P01.S01` - Author native/application-environment.toml schema 1 (environment names with kind and validation, per-image launch profiles with base, operator-overridable names, fixed values and pins, PATH policy, pass-through names, launch-parameter slots and invocation tables) and a stdlib-tomllib validator in the generator that refuses schema violations and compiles every profile and invocation table into contract.json, contract.rs and contract.h; declare the file as an input of the contract step beside native/package-layout.json (Contract.cmake:11-13); cover schema validation, malformed-file refusal and file-to-contract.json-to-contract.rs parity; `native/application-environment.toml (new), dev/packaging/native/application_environment.py (new), dev/packaging/native/generate.py, native/cmake/Contract.cmake, dev/packaging/native/tests/test_application_environment.py (new)`.
+- [x] `P01.S01` - Author native/application-environment.toml schema 1 (environment names with kind and validation, per-image launch profiles with base, operator-overridable names, fixed values and pins, PATH policy, pass-through names, launch-parameter slots and invocation tables) and a stdlib-tomllib validator in the generator that refuses schema violations and compiles every profile and invocation table into contract.json, contract.rs and contract.h; declare the file as an input of the contract step beside native/package-layout.json (Contract.cmake:11-13); cover schema validation, malformed-file refusal and file-to-contract.json-to-contract.rs parity; `native/application-environment.toml (new), dev/packaging/native/application_environment.py (new), dev/packaging/native/generate.py, native/cmake/Contract.cmake, dev/packaging/native/tests/test_application_environment.py (new)`.
 - [ ] `P01.S02` - Move the package facts the generator now reads from the CLI into the file and drop those imports: the storage-root variable, installed default rule per platform and channel and its vectors (storage_vectors.py:8), the package-component locations and desktop defaults (generate.py:342-353; storage_taxonomy.py:224-225 and :291-295 members), the package overrides (package-layout.json:38-41), and the native-host exit range (runtime_exit_reasons.py:8, contracts.py:108-120); remove the Settings, PROCESS_ENVIRONMENT, product_env_var_names and STORAGE_TAXONOMY imports (generate.py:11-27, :127-150, :296-308) and the settings_inputs glob (Contract.cmake:24-26); add a static test that the generator imports no cadrumo module for the environment contract, while product identity and runtime transport stay as non-environment inputs; `dev/packaging/native/generate.py, dev/packaging/native/storage_vectors.py, dev/packaging/native/runtime_exit_reasons.py, native/application-environment.toml, native/package-layout.json, native/cmake/Contract.cmake, dev/packaging/native/tests/test_generator_imports.py (new)`.
 
 ### Phase `P02` - Host defines each image's environment

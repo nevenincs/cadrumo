@@ -8,7 +8,9 @@ if(platform_contract_name STREQUAL "windows-x86-64")
   set(platform_contract_name windows-x64)
 endif()
 set(platform_contract_inputs "${CADRUMO_SOURCE_ROOT}/native/platforms/${platform_contract_name}.json")
-set(contract_inputs "${CADRUMO_SOURCE_ROOT}/native/package-layout.json" ${platform_contract_inputs}
+set(contract_inputs "${CADRUMO_SOURCE_ROOT}/native/package-layout.json"
+  "${CADRUMO_SOURCE_ROOT}/native/application-environment.toml" ${platform_contract_inputs}
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/application_environment.py"
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/layout.py"
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/linux_desktop_runtime.py")
 if(CADRUMO_TARGET MATCHES "^linux-")
