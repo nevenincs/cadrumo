@@ -40,6 +40,12 @@
     "cadrumo-mcp": "CADRUMO MCP server",
     "cadrumo-runtime": "CADRUMO local runtime"
   },
+  "bundled_images": {
+    "cadrumo-agent": {
+      "distribution": "cadrumo-agent",
+      "description": "CADRUMO agent"
+    }
+  },
   "user_docs": {
     "directory": "user",
     "manifest": "manifest.json",

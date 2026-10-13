@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:33badc93522236bcffa77cfee1da5878c92f94c20d9a87de98120aee962674fd'
+body_hash: 'sha256:b8409c065705c1e26de1a304094a6dba60df17f2ef2c98912fb63333611bec91'
 related:
   - "[[2026-10-13-canonical-environment-plan]]"
 ---
@@ -175,6 +175,29 @@ related:
 - `S06` `verify:` `cargo +1.96.0 clippy --all-targets -D warnings native/application (platform) and test --test platform` -> `pass`
 - `S06` `verify:` `cargo +1.96.0 clippy --all-targets -D warnings native/desktop/src-tauri (with and without live-package-tests) via a scratch mirror` -> `pass`
 - `S06` `by:` `vaultspec-high-executor`
+- `S07` `M` `dev/packaging/native/application_environment.py`
+- `S07` `M` `dev/packaging/native/assemble.py`
+- `S07` `M` `dev/packaging/native/generate.py`
+- `S07` `M` `dev/packaging/native/layout.py`
+- `S07` `M` `dev/packaging/native/metadata.py`
+- `S07` `M` `dev/packaging/native/process_quiescence.py`
+- `S07` `M` `dev/packaging/native/tests/test_launch_profile_vectors.py`
+- `S07` `M` `native/application-environment.toml`
+- `S07` `M` `native/cmake/platforms/Posix.cmake`
+- `S07` `M` `native/cmake/platforms/Windows.cmake`
+- `S07` `M` `native/interpreter/bootstrap.py`
+- `S07` `M` `native/interpreter/launch_profile.h`
+- `S07` `M` `native/interpreter/posix/host.c`
+- `S07` `M` `native/interpreter/windows/host.c`
+- `S07` `M` `native/package-layout.json`
+- `S07` `A` `dev/packaging/native/tests/test_agent_image.py`
+- `S07` `verify:` `uv run --no-sync pytest test_agent_image, launch vectors, application environment, generator imports, storage contract, layout entrypoints, application images, startup presence, delegated inventory, process quiescence (177)` -> `pass`
+- `S07` `verify:` `ruff check/format and ty dev/packaging` -> `pass`
+- `S07` `verify:` `cl /W4 /WX compile of windows/host.c as python, entrypoint and cadrumo-agent images` -> `pass`
+- `S07` `verify:` `cmake --preset windows-installers-x64 scratch configure generates cadrumo_bundled_cadrumo_agent with CADRUMO_BUNDLED_IMAGE, its version resource and the launch guard; directory removed afterwards` -> `pass`
+- `S07` `verify:` `cargo +1.96.0 clippy native/platform (win, linux, darwin) and test (45, agent vectors replayed)` -> `pass`
+- `S07` `verify:` `cargo +1.96.0 test native/manager --lib --test environment` -> `pass`
+- `S07` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -194,3 +217,6 @@ related:
 - `S06` `native/manager/src/windows_lifecycle.rs:` its test TrackPopupMenu declaration now matches `windows_tray.rs,` clearing a clashing-extern warning that failed clippy -D warnings on all targets
 - `S06` Environment-dependent failures outside this change: native/application `package_inspection` junction fixture and desktop `startup_logging` projection test both need a target directory inside a checkout or mklink support; the scratch target directory has neither
 - `S06` `cadrumo_platform_prepare` is retired with the filter; the C consumer's prepare modes are removed and `cadrumo_platform_define` covers definition
+- `S07` Packaging.cmake and LaunchGuard.cmake needed no edit: the agent image target joins `CADRUMO_ENTRYPOINT_TARGETS,` which they already stage, quiesce and link the launch guard into
+- `S07` The runtime image's profile fixes `CADRUMO_PACKAGE_AGENT_EXECUTABLE` and `CADRUMO_PACKAGE_RELAY_EXECUTABLE` for P03.S09
+- `S07` sys.frozen and sys.executable are held by a static source test and the bootstrap package-root test; a launched-image check belongs to the P04.S14 probe

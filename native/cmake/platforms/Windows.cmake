@@ -14,6 +14,19 @@ if(entrypoint_count GREATER 0)
     list(APPEND entrypoint_resources "${CONTRACT_DIR}/entrypoint-${entrypoint}.rc")
   endforeach()
 endif()
+# Images declared for a bundled distribution share the host source and the native directory.
+set(CADRUMO_BUNDLED_IMAGES)
+string(JSON bundled_count ERROR_VARIABLE bundled_error LENGTH "${package_layout}" bundled_images)
+if(NOT bundled_error AND bundled_count GREATER 0)
+  math(EXPR bundled_last "${bundled_count} - 1")
+  foreach(index RANGE ${bundled_last})
+    string(JSON bundled_image MEMBER "${package_layout}" bundled_images ${index})
+    list(APPEND CADRUMO_BUNDLED_IMAGES "${bundled_image}")
+  endforeach()
+endif()
+foreach(bundled_image IN LISTS CADRUMO_BUNDLED_IMAGES)
+  list(APPEND entrypoint_resources "${CONTRACT_DIR}/entrypoint-${bundled_image}.rc")
+endforeach()
 cadrumo_cached_command(metadata_command native_metadata SHARED
   INPUTS ${metadata_inputs} "${CONTRACT_DIR}/identity.json"
     "${PROJECT_SOURCE_DIR}/docs/_static/cadrumo-favicon.svg" "${CADRUMO_PATH_TOOLS}/ready"
@@ -113,6 +126,17 @@ foreach(entrypoint IN LISTS CADRUMO_ENTRYPOINTS)
     "${CONTRACT_DIR}/entrypoint-${entrypoint}.rc")
   set_target_properties(${target} PROPERTIES OUTPUT_NAME "${entrypoint}")
   target_compile_definitions(${target} PRIVATE "$<$<COMPILE_LANGUAGE:C>:CADRUMO_ENTRYPOINT=\"${entrypoint}\">")
+  list(APPEND CADRUMO_ENTRYPOINT_TARGETS ${target})
+endforeach()
+foreach(bundled_image IN LISTS CADRUMO_BUNDLED_IMAGES)
+  string(MAKE_C_IDENTIFIER "cadrumo_bundled_${bundled_image}" target)
+  add_executable(${target} interpreter/windows/host.c interpreter/windows/host.rc
+    "${CONTRACT_DIR}/entrypoint-${bundled_image}.rc")
+  set_target_properties(${target} PROPERTIES OUTPUT_NAME "${bundled_image}")
+  target_compile_definitions(${target} PRIVATE
+    "$<$<COMPILE_LANGUAGE:C>:CADRUMO_BUNDLED_IMAGE=\"${bundled_image}\">")
+  cadrumo_describe_target(${target} GROUP native SUMMARY "compile the ${bundled_image} bundled image"
+    OUTPUTS "${CADRUMO_PATH_BIN}/$<CONFIG>/${bundled_image}${CMAKE_EXECUTABLE_SUFFIX}")
   list(APPEND CADRUMO_ENTRYPOINT_TARGETS ${target})
 endforeach()
 set(host_targets cadrumo_python cadrumo_python_d ${CADRUMO_ENTRYPOINT_TARGETS})

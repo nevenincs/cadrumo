@@ -49,6 +49,7 @@ def _replay(declaration: ApplicationEnvironment, vector: Mapping[str, Any]) -> l
             package=package,
             root=root,
             layout_paths=load_layout(target)["paths"],
+            suffix=load_layout(target)["entrypoint_suffix"],
         )
     except LaunchRefusedError as refused:
         expected = vector["refusal"]

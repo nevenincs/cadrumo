@@ -156,7 +156,10 @@ def quiesce(build: Path, target: str, *, graceful_timeout: float = 10, terminate
         names.add(Path(development).name.casefold())
     supervisors = {image.file.casefold() for image in images if image.startup}
     manager_pids: set[int] = set()
-    names.update(f"{name}{layout['entrypoint_suffix']}".casefold() for name in layout["entrypoints"])
+    names.update(
+        f"{name}{layout['entrypoint_suffix']}".casefold()
+        for name in (*layout["entrypoints"], *layout.get("bundled_images", {}))
+    )
     excluded = {os.getpid(), *(process.pid for process in psutil.Process().parents())}
 
     stop_service(build, identity["application_id"], names)

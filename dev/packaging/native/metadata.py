@@ -11,7 +11,7 @@ from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT
 
 from .identity import identity
-from .layout import backend, distribution_target, load_layout
+from .layout import backend, bundled_images, distribution_target, load_layout
 from .stable_output import write_text
 
 
@@ -53,7 +53,8 @@ def generate(
     }
     header = "\n".join(f"#define CADRUMO_{name} {json.dumps(value)}" for name, value in values.items())
     write_text(destination / "build_metadata.h", header + "\n")
-    backend(layout).resources(destination, version, number, date, tools, layout["entrypoints"])
+    images = {**layout["entrypoints"], **{name: entry["description"] for name, entry in bundled_images(layout).items()}}
+    backend(layout).resources(destination, version, number, date, tools, images)
 
 
 if __name__ == "__main__":

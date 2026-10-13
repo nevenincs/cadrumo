@@ -10,7 +10,8 @@
 # Name roles: location (a storage root or member an operator may relocate),
 # operator (an operator setting with no custody, location, authority or secret
 # effect), package (a package-owned override), pin (set by the host from its
-# resolution), fixed (a package fact), slot (a launch parameter a parent supplies).
+# resolution), fixed (a package fact), slot (a launch parameter a parent supplies),
+# pass (a component's own setting its parent passes through unchanged).
 
 schema = 1
 
@@ -96,6 +97,34 @@ TEMP = { kind = "directory", role = "pin" }
 TMP = { kind = "directory", role = "pin" }
 TMPDIR = { kind = "directory", role = "pin" }
 CADRUMO_AUTHORITY_ROOT = { kind = "directory", role = "fixed" }
+CADRUMO_PACKAGE_AGENT_EXECUTABLE = { kind = "executable", role = "fixed" }
+CADRUMO_PACKAGE_RELAY_EXECUTABLE = { kind = "executable", role = "fixed" }
+
+# The bundled agent's settings, under the agent's hosting contract. Cadrumo
+# defines none of them for its own use; only the agent image admits them.
+CADRUMO_AGENT_HOSTED_ROOT = { kind = "directory", role = "slot" }
+CADRUMO_AGENT_PORT = { kind = "port", role = "slot" }
+CADRUMO_AGENT_WORKER_PORT = { kind = "port", role = "slot" }
+CADRUMO_AGENT_HOSTED_RELAY_EXECUTABLE = { kind = "executable", role = "slot" }
+CADRUMO_AGENT_DEVELOPMENT_TOOL_SERVER = { kind = "boolean", role = "pass" }
+CADRUMO_AGENT_PROVIDER_PROOF_POLICY = { kind = "text", role = "pass" }
+CADRUMO_AGENT_GATEWAY_URL = { kind = "text", role = "pass" }
+CADRUMO_AGENT_WORKER_HOST = { kind = "text", role = "pass" }
+CADRUMO_AGENT_GATEWAY_LIFETIME_ID = { kind = "text", role = "pass" }
+CADRUMO_AGENT_WORKER_GENERATION = { kind = "integer", role = "pass" }
+# The non-hosted worker's IPC token, admitted to the worker profile only until the
+# agent hands it over on the worker's standard input as it does for a hosted worker.
+CADRUMO_AGENT_INTERNAL_TOKEN = { kind = "text", role = "pass" }
+
+[agent]
+image = "cadrumo-agent"
+prefix = "CADRUMO_AGENT_"
+hosting_contract = 1
+never_admitted = [
+  "CADRUMO_AGENT_ENV_FILE",
+  "CADRUMO_AGENT_HOSTED_CLI_EXECUTABLE",
+  "CADRUMO_AGENT_HOSTED_PYTHON_EXECUTABLE",
+]
 
 # ---------------------------------------------------------------------------
 # Name groups that profiles admit from their caller's environment.
@@ -406,12 +435,64 @@ image = "cadrumo-runtime"
 base = "groups"
 base_groups = ["system", "session", "display", "network"]
 pins = true
+fixed = [
+  { name = "CADRUMO_PACKAGE_AGENT_EXECUTABLE", image = "cadrumo-agent" },
+  { name = "CADRUMO_PACKAGE_RELAY_EXECUTABLE", image = "cadrumo-mcp" },
+]
+path = "package"
+
+# The agent image runs only its gateway and its worker. It keeps itself as the
+# interpreter, so the worker the gateway starts re-executes this image.
+[profiles.agent-gateway]
+image = "cadrumo-agent"
+base = "groups"
+base_groups = ["system"]
+pins = true
+pass = ["CADRUMO_AGENT_DEVELOPMENT_TOOL_SERVER", "CADRUMO_AGENT_PROVIDER_PROOF_POLICY"]
+slots = [
+  { name = "CADRUMO_AGENT_HOSTED_ROOT", required = false },
+  { name = "CADRUMO_AGENT_PORT", required = false },
+  { name = "CADRUMO_AGENT_WORKER_PORT", required = false },
+  { name = "CADRUMO_AGENT_HOSTED_RELAY_EXECUTABLE", required = false },
+]
+path = "package"
+
+[profiles.agent-worker]
+image = "cadrumo-agent"
+base = "groups"
+base_groups = ["system"]
+pins = true
+pass = [
+  "CADRUMO_AGENT_DEVELOPMENT_TOOL_SERVER",
+  "CADRUMO_AGENT_PROVIDER_PROOF_POLICY",
+  "CADRUMO_AGENT_GATEWAY_URL",
+  "CADRUMO_AGENT_WORKER_HOST",
+  "CADRUMO_AGENT_GATEWAY_LIFETIME_ID",
+  "CADRUMO_AGENT_WORKER_GENERATION",
+  "CADRUMO_AGENT_INTERNAL_TOKEN",
+]
+slots = [
+  { name = "CADRUMO_AGENT_HOSTED_ROOT", required = false },
+  { name = "CADRUMO_AGENT_PORT", required = false },
+  { name = "CADRUMO_AGENT_WORKER_PORT", required = false },
+  { name = "CADRUMO_AGENT_HOSTED_RELAY_EXECUTABLE", required = false },
+]
 path = "package"
 
 # ---------------------------------------------------------------------------
 # Invocation tables. Arguments follow the image's own path. A literal must
 # match exactly; a typed argument is validated by its kind before Python starts.
 # ---------------------------------------------------------------------------
+
+[[invocations]]
+profile = "agent-gateway"
+platform = "all"
+arguments = [{ literal = "-m" }, { literal = "cadrumo_agent.cli.main" }, { literal = "serve" }]
+
+[[invocations]]
+profile = "agent-worker"
+platform = "all"
+arguments = [{ literal = "-m" }, { literal = "cadrumo_agent.worker" }]
 
 [[invocations]]
 profile = "kdf-child"
@@ -477,7 +558,7 @@ image = "cadrumo-runtime"
 arguments = []
 ambient = { SYSTEMROOT = "C:\\Windows", TERM = "xterm", CADRUMO_LOG_LEVEL = "DEBUG", CADRUMO_TEMP_DIR = "scratch", CADRUMO_CLI_REVEAL_IDENTIFIERS = "1", CADRUMO_AGENT_PORT = "0" }
 profile = "cadrumo-runtime"
-environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\launch-vector\\state", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\launch-vector\\state", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority", CADRUMO_PACKAGE_AGENT_EXECUTABLE = "C:\\launch-vector\\package\\bin\\cadrumo-agent.exe", CADRUMO_PACKAGE_RELAY_EXECUTABLE = "C:\\launch-vector\\package\\bin\\cadrumo-mcp.exe" }
 path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
 
 [[launch_vectors]]
@@ -536,6 +617,90 @@ arguments = ["-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker", "
 ambient = { HOME = "/home/ada", NEUTRAL = "dropped" }
 profile = "python"
 environment = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "/launch-vector/state", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
+
+[[launch_vectors]]
+name = "windows-agent-gateway-admits-its-slots-and-declared-names-only"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "serve"]
+ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\launch-vector\\state", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_DEVELOPMENT_TOOL_SERVER = "true", CADRUMO_AGENT_PROVIDER_PROOF_POLICY = "warn", CADRUMO_AGENT_ENV_FILE = "C:\\agent.env", CADRUMO_AGENT_INTERNAL_TOKEN = "must-not-cross", CADRUMO_AGENT_HOSTED_CLI_EXECUTABLE = "C:\\aeat.exe", CADRUMO_LOG_LEVEL = "DEBUG", ANTHROPIC_API_KEY = "must-not-cross", TERM = "xterm" }
+profile = "agent-gateway"
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_DEVELOPMENT_TOOL_SERVER = "true", CADRUMO_AGENT_PROVIDER_PROOF_POLICY = "warn", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\launch-vector\\state", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "windows-agent-worker-admits-the-gateway-settings"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.worker"]
+ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "49152", CADRUMO_AGENT_WORKER_PORT = "49153", CADRUMO_AGENT_GATEWAY_URL = "http://127.0.0.1:49152", CADRUMO_AGENT_WORKER_HOST = "127.0.0.1", CADRUMO_AGENT_GATEWAY_LIFETIME_ID = "lifetime", CADRUMO_AGENT_WORKER_GENERATION = "1", CADRUMO_AGENT_INTERNAL_TOKEN = "synthetic-token", CADRUMO_AGENT_ENV_FILE = "C:\\agent.env" }
+profile = "agent-worker"
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "49152", CADRUMO_AGENT_WORKER_PORT = "49153", CADRUMO_AGENT_GATEWAY_URL = "http://127.0.0.1:49152", CADRUMO_AGENT_WORKER_HOST = "127.0.0.1", CADRUMO_AGENT_GATEWAY_LIFETIME_ID = "lifetime", CADRUMO_AGENT_WORKER_GENERATION = "1", CADRUMO_AGENT_INTERNAL_TOKEN = "synthetic-token", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\launch-vector\\state", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "windows-agent-image-refuses-an-undeclared-invocation"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-c", "print(1)"]
+ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "0" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "windows-agent-gateway-refuses-a-malformed-port"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "serve"]
+ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "65536" }
+refusal = { code = "launch_value_malformed", subject = "CADRUMO_AGENT_PORT" }
+
+[[launch_vectors]]
+name = "windows-runtime-names-the-agent-and-relay-images"
+platform = "windows"
+image = "cadrumo-runtime"
+arguments = []
+ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_PACKAGE_AGENT_EXECUTABLE = "C:\\elsewhere.exe" }
+profile = "cadrumo-runtime"
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\launch-vector\\state", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority", CADRUMO_PACKAGE_AGENT_EXECUTABLE = "C:\\launch-vector\\package\\bin\\cadrumo-agent.exe", CADRUMO_PACKAGE_RELAY_EXECUTABLE = "C:\\launch-vector\\package\\bin\\cadrumo-mcp.exe" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "posix-agent-gateway-admits-its-slots-and-declared-names-only"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "serve"]
+ambient = { HOME = "/home/ada", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_DEVELOPMENT_TOOL_SERVER = "true", CADRUMO_AGENT_ENV_FILE = "/agent.env", CADRUMO_AGENT_INTERNAL_TOKEN = "must-not-cross", CADRUMO_AGENT_HOSTED_PYTHON_EXECUTABLE = "/python", DISPLAY = ":0" }
+profile = "agent-gateway"
+environment = { HOME = "/home/ada", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_DEVELOPMENT_TOOL_SERVER = "true", CADRUMO_LOCAL_STORAGE_ROOT = "/launch-vector/state", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
+
+[[launch_vectors]]
+name = "posix-agent-worker-admits-the-gateway-settings"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.worker"]
+ambient = { HOME = "/home/ada", CADRUMO_AGENT_WORKER_PORT = "49153", CADRUMO_AGENT_INTERNAL_TOKEN = "synthetic-token", CADRUMO_AGENT_GATEWAY_LIFETIME_ID = "lifetime" }
+profile = "agent-worker"
+environment = { HOME = "/home/ada", CADRUMO_AGENT_WORKER_PORT = "49153", CADRUMO_AGENT_INTERNAL_TOKEN = "synthetic-token", CADRUMO_AGENT_GATEWAY_LIFETIME_ID = "lifetime", CADRUMO_LOCAL_STORAGE_ROOT = "/launch-vector/state", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
+
+[[launch_vectors]]
+name = "posix-agent-image-refuses-a-module-it-does-not-declare"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "stores-state"]
+ambient = { HOME = "/home/ada" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "posix-runtime-names-the-agent-and-relay-images"
+platform = "posix"
+image = "cadrumo-runtime"
+arguments = []
+ambient = { HOME = "/home/ada" }
+profile = "cadrumo-runtime"
+environment = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "/launch-vector/state", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority", CADRUMO_PACKAGE_AGENT_EXECUTABLE = "/launch-vector/package/bin/cadrumo-agent", CADRUMO_PACKAGE_RELAY_EXECUTABLE = "/launch-vector/package/bin/cadrumo-mcp" }
 path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
 
 # ---------------------------------------------------------------------------

@@ -24,7 +24,15 @@ from .build_log import BuildLog, display_path
 from .build_timing import BuildTimings
 from .docs_stage import verified_stage
 from .hashing import digest
-from .layout import ApplicationImage, application_images, backend, entrypoint_files, load_layout
+from .layout import (
+    ApplicationImage,
+    application_images,
+    backend,
+    bundled_image_files,
+    bundled_images,
+    entrypoint_files,
+    load_layout,
+)
 from .linux_desktop_runtime import stage as stage_linux_desktop_runtime
 from .package_inventory import DELEGATED_INVENTORIES, USER_DOCS, package_inventory
 from .product import BUNDLED_EXTRAS
@@ -194,6 +202,9 @@ def assemble(
     agent_metadata = {} if interpreter else (provenance or {}).get("agent", {})
     if not isinstance(agent_metadata, Mapping):
         raise ValueError("Agent build provenance must be a mapping")
+    for image, declaration in ({} if interpreter else bundled_images(contract)).items():
+        if declaration["distribution"] not in distributions:
+            raise ValueError(f"Bundled image {image} names a distribution the package does not bundle")
     if not interpreter and distributions["cadrumo-agent"] != agent_metadata.get("version"):
         raise ValueError("Installed agent version differs from the built wheel")
     if not interpreter and {distributions[name] for name in PRODUCT_IDENTITY.cohort_distributions} != {
@@ -271,7 +282,9 @@ def assemble(
     executable.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(build / executable.name, executable)
     # Console entrypoints share the native directory; the platform context maps them back to the package root.
-    entrypoints = [] if interpreter else sorted(entrypoint_files(contract).values())
+    entrypoints = (
+        [] if interpreter else sorted((*entrypoint_files(contract).values(), *bundled_image_files(contract).values()))
+    )
     for relative in entrypoints:
         shutil.copy2(build / Path(relative).name, root / relative)
     # Application images are not interpreter hosts; each enters the startup check only by opting in.

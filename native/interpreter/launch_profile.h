@@ -5,10 +5,15 @@
 #include "cadrumo_platform.h"
 #include "contract.h"
 
-/* An image's identity is compiled in: an entrypoint is its console script, the
- * interpreter is the generic Python image. No environment value selects it. */
-#ifdef CADRUMO_ENTRYPOINT
+/* An image's identity is compiled in: an entrypoint is its console script, a
+ * bundled image is the distribution image it is declared as, and the interpreter
+ * is the generic Python image. No environment value selects it. */
+#if defined(CADRUMO_ENTRYPOINT) && defined(CADRUMO_BUNDLED_IMAGE)
+#error "An interpreter host is either a console entrypoint or a bundled image"
+#elif defined(CADRUMO_ENTRYPOINT)
 #define CADRUMO_LAUNCH_IMAGE CADRUMO_ENTRYPOINT
+#elif defined(CADRUMO_BUNDLED_IMAGE)
+#define CADRUMO_LAUNCH_IMAGE CADRUMO_BUNDLED_IMAGE
 #else
 #define CADRUMO_LAUNCH_IMAGE CADRUMO_LAUNCH_IMAGE_PYTHON
 #endif

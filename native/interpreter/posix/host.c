@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
         fprintf(stderr, "CADRUMO: installed package is unavailable for launch\n");
         goto done;
     }
-#ifndef CADRUMO_ENTRYPOINT
+#if !defined(CADRUMO_ENTRYPOINT) && !defined(CADRUMO_BUNDLED_IMAGE)
     if (argc == 2 && (!strcmp(argv[1], "--version") || !strcmp(argv[1], "-V"))) {
         printf("CADRUMO %s build %s (%s), Python %s [%s]\n", CADRUMO_VERSION,
             CADRUMO_BUILD_NUMBER, CADRUMO_BUILD_DATE, CADRUMO_PYTHON_VERSION,
@@ -107,6 +107,10 @@ int main(int argc, char **argv) {
     for (int i = 1; i < argc; ++i) forwarded[i + 2] = argv[i];
     result = run(argc + 2, forwarded, (const char **)paths, CADRUMO_DEVELOPMENT);
     free(forwarded);
+#elif defined(CADRUMO_BUNDLED_IMAGE)
+    /* The image stays sys.executable, so a child it starts with sys.executable re-enters
+     * this image and its launch profiles; sys.frozen is never set. */
+    result = run(argc, argv, (const char **)paths, CADRUMO_DEVELOPMENT);
 #else
     if (argc == 2 && !strcmp(argv[1], "--check-package")) {
         char *check[] = {argv[0], "-c", "import _cadrumo_bootstrap; _cadrumo_bootstrap.verify(full=True); print('CADRUMO package verified')", NULL};

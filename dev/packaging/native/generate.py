@@ -14,7 +14,7 @@ from dev.locales.manager_chrome import manager_chrome_strings
 from . import application_environment
 from .application_environment import ApplicationEnvironment, channel_directory
 from .identity import identity
-from .layout import distribution_target, entrypoint_files, load_layout
+from .layout import bundled_image_files, distribution_target, entrypoint_files, load_layout
 from .linux_desktop_runtime import declaration as desktop_runtime_declaration
 from .linux_desktop_runtime import desktop_path
 from .runtime_exit_reasons import runtime_exit_section, rust_runtime_exit_reasons
@@ -287,7 +287,9 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
     rust.extend(f"pub const {key}: &str = {_rust_string(value)};" for key, value in package_strings.items())
     rust.append(f"pub const TEMPORARY_CREATE_EXPLICIT: bool = {str(temporary['create_explicit']).lower()};")
     # Declared entrypoint images live in NATIVE; the platform context maps them back to the package root.
-    entrypoints = [Path(relative).name for relative in entrypoint_files(layout).values()]
+    entrypoints = [
+        Path(relative).name for relative in (*entrypoint_files(layout).values(), *bundled_image_files(layout).values())
+    ]
     rust.append(f"pub const ENTRYPOINT_FILES: &[&str] = {_rust_strings(entrypoints)};")
     rust.extend(_rust_root_and_environment(contract))
     rust.extend(rust_transport(contract["runtime_transport"]))

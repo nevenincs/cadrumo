@@ -104,6 +104,21 @@ def _require_build(identity):
         raise ImportError("Incompatible CADRUMO CPython version")
 
 
+def _package_root():
+    """Return the package root of this interpreter image.
+
+    The generic interpreter and its console entrypoints run with the package's interpreter as
+    ``sys.executable``; a bundled-distribution image runs as itself from the native directory.
+    """
+    executable = Path(sys.executable)
+    directory = executable.parent
+    bundled = {f"{name}{LAYOUT['entrypoint_suffix']}" for name in LAYOUT.get("bundled_images", {})}
+    if executable.name in bundled:
+        for _ in Path(LAYOUT["paths"]["native"]).parts:
+            directory = directory.parent
+    return (directory / LAYOUT["package_root_from_executable"]).resolve()
+
+
 def verify(full=False):
     """Refuse a mixed build at every start; with ``full``, check and hash the whole package.
 
@@ -111,7 +126,7 @@ def verify(full=False):
     assembled package is the build's guarantee; listing, hashing or parsing its whole inventory
     belongs to ``python.exe --check-package``, not to each interpreter start.
     """
-    root = (Path(sys.executable).parent / LAYOUT["package_root_from_executable"]).resolve()
+    root = _package_root()
     files = LAYOUT["files"]
     if not full:
         _require_build(json.loads(_inside(root, files["build_metadata"]).read_text(encoding="utf-8")))
@@ -171,7 +186,7 @@ def run_entrypoint(name):
 
 def install():
     """Apply explicit wheel paths and retain native search handles until exit."""
-    root = (Path(sys.executable).parent / LAYOUT["package_root_from_executable"]).resolve()
+    root = _package_root()
     verify()
     manifest = json.loads(_inside(root, LAYOUT["files"]["native_manifest"]).read_text(encoding="utf-8"))
     _cadrumo_native.prepare(root, manifest)

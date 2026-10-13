@@ -28,7 +28,7 @@ NAME_KINDS = frozenset(
         "descriptor",
     }
 )
-NAME_ROLES = frozenset({"location", "operator", "package", "pin", "fixed", "slot"})
+NAME_ROLES = frozenset({"location", "operator", "package", "pin", "fixed", "slot", "pass"})
 ARGUMENT_KINDS = frozenset({"handle", "descriptor"})
 BASE_GROUPS = ("system", "session", "terminal", "display", "network")
 PLATFORMS = ("windows", "posix")
@@ -610,6 +610,24 @@ def channel_directory(root: Mapping[str, Any], channel: str) -> str:
     return f"{names['product_directory']}{names['separator']}{channel}"
 
 
+def _agent(raw: object, names: Mapping[str, Mapping[str, str]], profiles: Mapping[str, Mapping[str, Any]]) -> None:
+    """Hold the agent's names to the agent image: no other profile admits or sets them."""
+    entry = _table(raw, "agent")
+    _keys(entry, "agent", {"image", "prefix", "hosting_contract", "never_admitted"})
+    image, prefix = entry["image"], entry["prefix"]
+    if not isinstance(prefix, str) or not re.fullmatch(r"[A-Z][A-Z0-9]*(_[A-Z0-9]+)*_", prefix):
+        raise _fail("agent.prefix must be an upper-case prefix ending in an underscore")
+    _integer(entry["hosting_contract"], "agent.hosting_contract")
+    never = _strings(entry["never_admitted"], "agent.never_admitted", _NAME)
+    if not all(name.startswith(prefix) for name in never) or set(never) & set(names):
+        raise _fail("agent.never_admitted names carry the agent prefix and are declared nowhere")
+    for profile, declared in profiles.items():
+        spelled = [*declared["operator"], *declared["pass"], *(slot.name for slot in declared["slots"])]
+        spelled += [value.name for value in declared["fixed"]]
+        if declared["image"] != image and any(name.startswith(prefix) for name in spelled):
+            raise _fail(f"profiles.{profile} admits an agent name outside the {image} image")
+
+
 def _text_table(raw: object, where: str) -> dict[str, str]:
     table = _table(raw, where)
     if not all(isinstance(value, str) for value in table.values()):
@@ -684,7 +702,7 @@ def parse(text: str) -> ApplicationEnvironment:
         "the declaration",
         {"schema", "names", "groups", "base", "pins", "path", "profiles", "host_classes", "native_host"}
         | {"components", "root"},
-        {"invocations", "launch_vectors"},
+        {"invocations", "launch_vectors", "agent"},
     )
     if document["schema"] != SCHEMA or isinstance(document["schema"], bool):
         raise _fail(f"schema must be {SCHEMA}")
@@ -719,6 +737,8 @@ def parse(text: str) -> ApplicationEnvironment:
     root_table = _table(document["root"], "root")
     root = _root(root_table, names)
     profiles = _profiles(document["profiles"], names, groups)
+    if "agent" in document:
+        _agent(document["agent"], names, profiles)
     invocations = _invocations(document.get("invocations", []))
     native_host = _native_host(document["native_host"])
     for invocation in invocations:
@@ -775,7 +795,11 @@ def _platform_family(layout: Mapping[str, Any]) -> str:
 
 def images(layout: Mapping[str, Any]) -> tuple[str, ...]:
     """Name every interpreter-host image the layout builds: the interpreter and each entrypoint."""
-    return ("python", *(str(name) for name in layout["entrypoints"]))
+    return (
+        "python",
+        *(str(name) for name in layout["entrypoints"]),
+        *(str(name) for name in layout.get("bundled_images", {})),
+    )
 
 
 def _package_relative(layout: Mapping[str, Any], key: str) -> str:
@@ -1083,6 +1107,7 @@ def reference_define(
     package: str,
     root: str,
     layout_paths: Mapping[str, str],
+    suffix: str,
 ) -> dict[str, str]:
     """Define a profile's environment as the host must, for vectors whose root is already resolved.
 
@@ -1134,7 +1159,13 @@ def reference_define(
             put(name, str(temporary))
         put(declaration.authority.name, str(package_path / layout_paths[declaration.authority.value]))
     for fixed in profile["fixed"]:
-        put(fixed.name, fixed.value if fixed.source == "value" else str(package_path / fixed.value))
+        if fixed.source == "value":
+            put(fixed.name, fixed.value)
+        elif fixed.source == "image":
+            image = package_path / (layout_paths["executable"] if fixed.value == "python" else layout_paths["native"])
+            put(fixed.name, str(image if fixed.value == "python" else image / f"{fixed.value}{suffix}"))
+        else:
+            put(fixed.name, str(package_path / layout_paths[fixed.value]))
     for name, value in parameters:
         put(name, value)
     if profile["package_path"]:
