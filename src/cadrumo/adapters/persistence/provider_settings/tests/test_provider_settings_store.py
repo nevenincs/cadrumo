@@ -501,4 +501,27 @@ def test_base_url_is_stored_kept_or_cleared(tmp_path: Path) -> None:
         stored = _accepted(
             service.set_credential("zai", secret=SecretStr(_KEY_A), expected_revision=ABSENT_REVISION, base_url=custom)
         )
-        kept = _accepted(service.set_cr
+        kept = _accepted(service.set_credential("zai", secret=SecretStr(_KEY_B), expected_revision=stored.revision))
+        cleared = _accepted(
+            service.set_credential(
+                "zai", secret=SecretStr(_KEY_B), expected_revision=kept.revision, base_url=BaseUrlChange.CLEAR
+            )
+        )
+        qwen = _accepted(
+            service.set_credential("qwen", secret=SecretStr(_KEY_A), expected_revision=ABSENT_REVISION, base_url=custom)
+        )
+        qwen_kept = _accepted(service.set_credential("qwen", secret=SecretStr(_KEY_B), expected_revision=qwen.revision))
+        qwen_cleared = service.set_credential(
+            "qwen", secret=SecretStr(_KEY_B), expected_revision=qwen_kept.revision, base_url=BaseUrlChange.CLEAR
+        )
+        resolved = _direct(_resolver(profile).resolve("zai", ProviderConsumer.ASSISTANT))
+        installed_status = _service(profile, storage_mode=StorageMode.INSTALLED).status()
+
+    assert stored.base_url == custom
+    assert kept.base_url == custom
+    assert cleared.base_url is None
+    assert resolved.base_url == "https://api.z.ai/api/anthropic"
+    assert qwen_kept.base_url == custom
+    assert _refusal_code(qwen_cleared) is ProviderSettingsRefusalCode.BASE_URL_REJECTED
+    assert isinstance(installed_status, ProviderSettingsStatus)
+    assert installed_status.development is False

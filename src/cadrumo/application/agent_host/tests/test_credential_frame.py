@@ -77,3 +77,17 @@ def test_a_credential_never_shows_its_secret() -> None:
     credential = AgentCredential(bytearray(_FAKE), "https://api.z.ai/api/anthropic")
     assert _FAKE.decode() not in repr(credential)
     assert _FAKE.decode() not in str(credential)
+
+
+def test_the_gateway_bearer_rides_the_same_frame_under_the_same_rules() -> None:
+    bearer = bytearray(b"bearer-test-NOT-A-REAL-TOKEN")
+    frame = build_credential_frame({"anthropic": AgentCredential(bytearray(_FAKE))}, gateway_bearer=bearer)
+    assert json.loads(frame) == {
+        "version": 1,
+        "credentials": {"anthropic": {"secret": _FAKE.decode()}},
+        "gateway_bearer": "bearer-test-NOT-A-REAL-TOKEN",
+    }
+    with pytest.raises(CredentialFrameError) as refused:
+        build_credential_frame({}, gateway_bearer=bytearray(b'bad"bearer'))
+    assert refused.value.reason is CredentialFrameRefusal.BEARER_INVALID
+    assert "bad" not in str(refused.value)

@@ -22,7 +22,8 @@ def main() -> None:
     """Run one mode against the record directory named on the command line."""
     mode, record = sys.argv[1], Path(sys.argv[2])
     frame = sys.stdin.buffer.readline()
-    providers = sorted(json.loads(frame)["credentials"]) if frame.strip() else []
+    document = json.loads(frame) if frame.strip() else {}
+    providers = sorted(document.get("credentials", {}))
     grandchild = None
     if mode == "ready":
         grandchild = subprocess.Popen(
@@ -36,6 +37,11 @@ def main() -> None:
             {
                 "frame_sha256": hashlib.sha256(frame).hexdigest(),
                 "providers": providers,
+                "bearer_sha256": (
+                    hashlib.sha256(document["gateway_bearer"].encode()).hexdigest()
+                    if "gateway_bearer" in document
+                    else None
+                ),
                 "environment": dict(os.environ),
                 "arguments": sys.argv,
                 "grandchild": None if grandchild is None else grandchild.pid,

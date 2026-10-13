@@ -127,4 +127,6 @@ Execution uses a model-split team, on the owner's instruction:
   - credential rotation, failed and successful profile switches (including a switch from an external CLI), and startup racing logout;
   - host death and reaping of descendants;
   - no key in any environment block, argv, file, log or tool child.
-- Gates, all clean before a Step closes: `just check-code check-format check-types check-import-boundaries check-secure-store-write-paths check-persistence-write-paths`, then the 
+- Gates, all clean before a Step closes: `just check-code check-format check-types check-import-boundaries check-secure-store-write-paths check-persistence-write-paths`, then the integration and interactive OS-keychain lanes where their subjects apply.
+- P06 needs a real provider turn and useful authenticated MCP work. A handshake or a constructed component is not capability proof. A missing prerequisite is reported as a failure, never simulated.
+- Report each command and its exact result.

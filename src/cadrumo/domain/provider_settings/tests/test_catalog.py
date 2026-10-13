@@ -48,10 +48,13 @@ def test_bundled_catalog_declares_every_supported_provider() -> None:
         for entry in catalog.providers
         if entry.development_setting is not None and entry.development_setting
     }
-    assert development == {
-        "anthropic": "cadrumo_llm_anthropic_api_key",
-        "openai": "cadrumo_llm_openai_api_key",
-        "gemini": "cadrumo_llm_gemini_api_key",
+    key_providers = {"anthropic", "openai", "gemini", "kimi", "zai", "zhipu", "deepseek", "moonshot", "minimax", "qwen"}
+    assert development == {provider: f"cadrumo_llm_{provider}_api_key" for provider in key_providers}
+    agent_ids = {entry.id: entry.agent_credential_id for entry in catalog.providers if entry.agent_credential_id}
+    assert agent_ids == {
+        "anthropic": "claude",
+        "openai": "codex",
+        **{provider: provider for provider in ("kimi", "zai", "zhipu", "deepseek", "moonshot", "minimax", "qwen")},
     }
 
 
@@ -102,6 +105,11 @@ def test_valid_minimal_catalog_parses() -> None:
             id="development-setting-not-secret",
         ),
         pytest.param("schema_version = 1\n" + _VALID_ENTRY + 'unexpected = "x"\n', id="unknown-field"),
+        pytest.param(
+            "schema_version = 1
+" + _VALID_ENTRY + 'agent_credential_id = "claude"
+', id="agent-id-without-assistant"
+        ),
         pytest.param("schema_version = [", id="not-toml"),
     ],
 )

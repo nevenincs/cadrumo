@@ -105,4 +105,17 @@ class ProviderSettingsAgentCredentialSource(AgentCredentialSource):
     def current_generations(self) -> AgentGenerations | None:
         """Return the sign-in and provider-settings generations without refreshing idle time."""
         observed = self._store.observe_generations()
-        if
+        if observed is None:
+            return None
+        return AgentGenerations(sign_in=observed.sign_in, provider_settings=observed.provider_settings)
+
+
+def _refuse_unless_skippable(reason: ProviderCredentialUnavailableReason) -> None:
+    if reason in _SKIPPED_REASONS:
+        return
+    if reason in _SIGNED_OUT_REASONS:
+        raise AgentHostError(AgentHostRefusal.SIGNED_OUT)
+    raise AgentHostError(AgentHostRefusal.CREDENTIALS_UNAVAILABLE)
+
+
+__all__ = ["ProviderSettingsAgentCredentialSource"]

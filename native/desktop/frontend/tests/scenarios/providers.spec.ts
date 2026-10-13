@@ -1,10 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
 import { label } from "../support/strings";
 
-// The profile's model providers: opened from the account menu, or from the
-// agent when it has none it can use. A key is written, saved and forgotten;
-// it is never shown again, and never left behind in the page, its storage,
-// its address or what the host was asked.
+// The agent's settings: the signed-in profile's model providers, each
+// reached by its API or its command-line app, opened from the agent's own
+// header and only for a profile signed in here. A key is written, saved and
+// forgotten; it is never shown again, and never left behind in the page, its
+// storage, its address or what the host was asked.
 
 const FAKE_KEY = "FAKE-KEY-not-a-real-key-0000";
 
@@ -12,20 +13,28 @@ const open = (target: Page, scenario = "signed-in") =>
   target.goto(`/scenarios.html?scenario=${scenario}&latency=0&bar=off`);
 
 const settings = (target: Page) =>
-  target.getByRole("dialog", { name: label("desktop.providers.dialog_title") });
+  target
+    .locator(".pane-agent")
+    .getByRole("region", { name: label("desktop.providers.title") });
 
-const row = (target: Page, name: string) =>
+const settingsButton = (target: Page) =>
+  target
+    .locator(".pane-agent")
+    .getByRole("button", { name: label("desktop.agent.settings") });
+
+/** A provider reached one way, by its name and that way's word. */
+const row = (target: Page, name: string, transport: "api" | "cli") =>
   settings(target)
     .getByRole("listitem")
-    .filter({ has: target.getByRole("heading", { name, exact: true }) });
+    .filter({
+      has: target.getByRole("heading", {
+        name: `${name} ${label(`desktop.providers.transport_${transport}`)}`,
+        exact: true,
+      }),
+    });
 
 async function openSettings(target: Page) {
-  await target
-    .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
-    .click();
-  await target
-    .getByRole("menuitem", { name: label("desktop.providers.open") })
-    .click();
+  await settingsButton(target).click();
   await expect(settings(target)).toBeVisible();
 }
 
@@ -33,10 +42,11 @@ async function openSettings(target: Page) {
 async function saveKey(
   target: Page,
   name: string,
+  transport: "api" | "cli",
   secret: string,
   baseUrl?: string,
 ) {
-  const provider = row(target, name);
+  const provider = row(target, name, transport);
   await provider
     .getByRole("button", { name: /^(Add|Replace) (key|token)$/ })
     .click();
@@ -63,7 +73,9 @@ test("a key is saved from the profile's settings and never kept anywhere", async
 }) => {
   await open(target);
   await openSettings(target);
-  const anthropic = row(target, "Anthropic");
+  // One provider, two ways in, each set up on its own.
+  await expect(row(target, "Claude", "cli")).toBeVisible();
+  const anthropic = row(target, "Claude", "api");
   await expect(anthropic).toContainText(
     label("desktop.providers.readiness_missing"),
   );
@@ -71,7 +83,7 @@ test("a key is saved from the profile's settings and never kept anywhere", async
   await anthropic
     .getByRole("button", { name: label("desktop.providers.add_key") })
     .click();
-  const field = anthropic.getByLabel(/^Anthropic /);
+  const field = anthropic.getByLabel(/^Claude /);
   await expect(field).toHaveAttribute("type", "password");
   await expect(field).not.toHaveAttribute("placeholder", /.+/);
   await expect(
@@ -126,11 +138,11 @@ test("a key that is not one is refused, and says so", async ({
 }) => {
   await open(target);
   await openSettings(target);
-  await saveKey(target, "OpenAI", "not a key");
-  await expect(row(target, "OpenAI").getByRole("alert")).toHaveText(
+  await saveKey(target, "OpenAI", "api", "not a key");
+  await expect(row(target, "OpenAI", "api").getByRole("alert")).toHaveText(
     label("desktop.providers.refused_invalid_key_format"),
   );
-  await expect(row(target, "OpenAI")).toContainText(
+  await expect(row(target, "OpenAI", "api")).toContainText(
     label("desktop.providers.readiness_missing"),
   );
 });
@@ -141,11 +153,11 @@ test("a gateway takes its address, and one with no default needs it", async ({
   await open(target);
   await openSettings(target);
   // With a default, the address may be left empty.
-  await expect(row(target, "DeepSeek")).toContainText(
+  await expect(row(target, "DeepSeek", "cli")).toContainText(
     "https://deepseek.gateway.example/anthropic",
   );
   // Without one, Save waits for it too.
-  const qwen = row(target, "Qwen");
+  const qwen = row(target, "Qwen", "cli");
   await qwen
     .getByRole("button", { name: label("desktop.providers.add_key") })
     .click();
@@ -161,20 +173,26 @@ test("a gateway takes its address, and one with no default needs it", async ({
   await expect(qwen.getByRole("alert")).toHaveText(
     label("desktop.providers.refused_base_url_rejected"),
   );
-  await saveKey(target, "Qwen", FAKE_KEY, "https://qwen.gateway.example");
+  await saveKey(
+    target,
+    "Qwen",
+    "cli",
+    FAKE_KEY,
+    "https://qwen.gateway.example",
+  );
   await expect(qwen).toContainText(
     label("desktop.providers.through", { url: "https://qwen.gateway.example" }),
   );
 });
 
-test("a provider is turned off and reset by the person alone", async ({
+test("a provider is disabled and reset by the person alone", async ({
   page: target,
 }) => {
   await open(target);
   await openSettings(target);
-  const kimi = row(target, "Kimi");
+  const kimi = row(target, "Kimi", "cli");
   await kimi
-    .getByRole("button", { name: label("desktop.providers.turn_off") })
+    .getByRole("button", { name: label("desktop.providers.disable") })
     .click();
   await expect(kimi).toContainText(
     label("desktop.providers.readiness_disabled"),
@@ -186,5 +204,16 @@ test("a provider is turned off and reset by the person alone", async ({
     label("desktop.providers.readiness_missing"),
   );
   // A provider that signs in on its own offers no key to change.
-  await expect(row(target, "Codex").getByRole("button")).toHaveCount(0);
+  await expect(row(target, "Codex", "cli").getByRole("button")).toHaveCount(0);
+});
+
+test("without a profile signed in here, the agent offers no settings and asks nothing", async ({
+  page: target,
+}) => {
+  await open(target, "signed-out");
+  await expect(settingsButton(target)).toHaveAttribute("aria-disabled", "true");
+  await expect(settings(target)).toHaveCount(0);
+  // Nothing of the agent's, and none of its settings, is asked of the host.
+  const calls = await target.evaluate(() => window.__scenarioHostCalls ?? []);
+  expect(calls.filter((call) => /^(agent|provider)/.test(call))).toEqual([]);
 });
