@@ -1754,7 +1754,7 @@ The catalogue alone does not implement manager cutover or obsolete-version remov
 Linux installs under `/opt/cadrumo` with desktop/icon registrations
 under `/usr/share`. Preview uses separate names. macOS packages a CADRUMO.app
 bundle for the Applications folder. Runtime storage remains owned by Settings;
-current packaging adds no services, scheduled tasks or automatic launch.
+current packaging adds no services or automatic launch.
 
 For development, `cmake --install <build> --prefix <absolute-test-prefix>` uses
 relative installation definitions. Set `CADRUMO_UNINSTALL_PREFIX` to that exact

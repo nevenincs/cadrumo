@@ -70,7 +70,7 @@ The 206 articles are grouped by their original topic assignments. Each article r
 
 - [Local runtime clients and native OS bindings](005-local-runtime-clients-and-native-os-bindings.md) — `STAGE-2-005`
 - [Local runtime transport, worker custody, and lifecycle](006-local-runtime-transport-worker-custody-and-lifecycle.md) — `STAGE-2-006`
-- [Windows login, task control, and worker authority](007-windows-login-task-control-and-worker-authority.md) — `STAGE-2-007`
+- [Windows login, process containment, and worker authority](007-windows-login-process-containment-and-worker-authority.md) — `STAGE-2-007`
 - [AEAT certificate and Cl@ve browser authentication](008-aeat-certificate-and-cl-ve-browser-authentication.md) — `STAGE-2-008`
 - [Cl@ve Permanente, browser support, and Sede read primitives](009-cl-ve-permanente-browser-support-and-sede-read-primitives.md) — `STAGE-2-009`
 - [Censal reads, filed-declaration capture, and GROI checks](010-censal-reads-filed-declaration-capture-and-groi-checks.md) — `STAGE-2-010`

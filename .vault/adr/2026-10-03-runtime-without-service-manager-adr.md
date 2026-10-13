@@ -43,7 +43,7 @@ Preserve the runtime executable, isolated bootstrap, verified local IPC and hand
 
 Transient worker containment remains part of runtime safety, including native Job Objects and Linux transient worker scopes. Login observation remains an admission input. Neither authorizes persistent runtime registration or a health-management interface.
 
-Scheduled tasks are unsupported, including temporary testing, authentication, desktop-session bridges and recovery workarounds. Do not create, register, run or recreate them. There is no provisioned runtime application at present; developers manage the runtime manually for testing. Missing desktop access is reported, never bridged through scheduled tasks or services. An unavailable runtime is the per-user manager's to recover.
+There is no provisioned runtime application at present; developers manage the runtime manually for testing. Missing desktop access is reported, never bridged through services. An unavailable runtime is the per-user manager's to recover.
 
 Management controls on the runtime transport stay excluded. The runtime hosts only the private supervisor contract in `2026-10-04-runtime-manager-architecture-supervisor-contract-adr`. Product lifecycle management, including login registration, belongs to the per-user manager in `2026-10-04-runtime-manager-architecture-adr`. Clients connect to a verified runtime and report typed unavailability when no verified endpoint exists; they never start one.
 
@@ -69,4 +69,4 @@ The runtime remains the shared execution and custody authority. Clients require 
 
 The earlier service-installation and health-management approach is withdrawn. Management is deferred, not permanently prohibited: reconsider it only with application bundling, building and provisioning. Acceptance records the operator-authorized scope; code removal and cross-platform verification must be reported separately.
 
-Amendment accepted 2026-10-04 under the operator's approval of `2026-10-04-runtime-manager-architecture-adr`. That record resolves the launch and management deferral. The removal of the old scheduled-task management, the development session override and the test-owned lifetimes stand unchanged.
+Amendment accepted 2026-10-04 under the operator's approval of `2026-10-04-runtime-manager-architecture-adr`. That record resolves the launch and management deferral. The removal of the old ad hoc launcher, the development session override and the test-owned lifetimes stand unchanged.

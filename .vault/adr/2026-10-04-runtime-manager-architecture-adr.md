@@ -28,7 +28,7 @@ related:
 
 ## Problem Statement
 
-The CLI, the TUI and the MCP servers do nothing without a running runtime, and nothing in the product starts one, so an MCP host has nothing to connect to. `2026-10-03-runtime-without-service-manager-adr` removed an unprincipled scheduled-task launcher and deferred launch and management policy to application provisioning.
+The CLI, the TUI and the MCP servers do nothing without a running runtime, and nothing in the product starts one, so an MCP host has nothing to connect to. `2026-10-03-runtime-without-service-manager-adr` removed an unprincipled ad hoc launcher and deferred launch and management policy to application provisioning.
 
 On 2026-10-04 the operator ruled:
 - Runtime management is a definite target.
@@ -72,7 +72,7 @@ This record decides the installed topology. The runtime-side contract is `2026-1
 - **Clients spawn the runtime on demand:** rejected. The runtime would join the client's job and die with it.
 - **The runtime starts at sign-in with no manager:** rejected. Nothing would recover crashes, hangs or version changes.
 - **Upgrade by stopping and replacing in place:** rejected by the operator.
-- **SCM service, SYSTEM broker or scheduled task:** rejected on the 10-03 evidence and by the operator.
+- **SCM service or SYSTEM broker:** rejected on the 10-03 evidence and by the operator.
 
 ## Constraints
 
@@ -123,7 +123,7 @@ This record decides the installed topology. The runtime-side contract is `2026-1
 - A machine has at most one scope registered for a given account:
   - the installer refuses a second scope where the other is present
   - if both are nevertheless found, the this-user installation takes precedence: the all-users manager checks for it before taking the session lock and stands down for that account
-- Excluded: scheduled tasks, SCM services, system daemons, units that need an enable step the product cannot perform, and pre-login execution.
+- Excluded: SCM services, system daemons, units that need an enable step the product cannot perform, and pre-login execution.
 
 **Versions.**
 - The product never removes or replaces files of a version that a process is using. Removal by an external package manager is detected and handled as a crash followed by cutover.
@@ -309,16 +309,16 @@ Letting the old manager orchestrate the cutover keeps the only supervisor channe
 
   The first two are replaced by: "Management controls on the runtime transport stay excluded. The runtime hosts only the private supervisor contract in `2026-10-04-runtime-manager-architecture-supervisor-contract-adr`. Product lifecycle management, including login registration, belongs to the per-user manager in `2026-10-04-runtime-manager-architecture-adr`."
 
-  The third is replaced by: "Missing desktop access is reported, never bridged through scheduled tasks or services. An unavailable runtime is the per-user manager's to recover."
+  The third is replaced by: "Missing desktop access is reported, never bridged through services. An unavailable runtime is the per-user manager's to recover."
 - `2026-10-04-application-distribution-adr`. Two sentences are replaced:
   - "Use per-machine native package ownership for MSI/DEB/RPM, Applications-folder bundle installation on macOS, and explicit prefix installation for development/archives." becomes "Offer all-users and this-user installation scopes for MSI/DEB/RPM, Applications-folder bundle installation on macOS, and explicit prefix installation for development/archives. Install versions side by side under a version-independent entry point per `2026-10-04-runtime-manager-architecture-adr`."
-  - "No service, scheduled task, runtime autostart or storage migration is introduced" becomes "No service, scheduled task or storage migration is introduced. Login start for the runtime manager is registered in the installation scope." Its acceptance evidence includes the manager on disposable hosts.
+  - "No service, runtime autostart or storage migration is introduced" becomes "No service or storage migration is introduced. Login start for the runtime manager is registered in the installation scope." Its acceptance evidence includes the manager on disposable hosts.
 - `2026-10-03-application-packaging-adr` (proposed). Provisioning step 5 is answered: a dual-scope, versioned install with a per-session supervisor process, and runtime ownership independent of any window. The on-demand-supervisor hypothesis is retired, and the runtime-control UI moves to the manager.
 - `2026-10-03-application-packaging-interpreter-foundation-adr`: an extension note authorizing the manager on the platform crate.
 - `2026-10-04-desktop-shell-adr` (proposed), S12: the desktop may start a missing manager by shell dispatch and request `reveal`, and never starts the runtime. Approval prompts belong to the TUI. The desktop shell also owns the cross-version GUI single instance defined under Versions. A newer desktop version launched while an older one is open hands its activation to the open window; the user finishes the switch by closing the old window.
 - `2026-10-03-application-core-packaging-plan`: its autostart and supervision exclusion is reconciled through the plan verbs.
 - Storage taxonomy: register the opt-out, a `LOG_FILE`-style member for `cadrumo-manager.log`, and the `.runtime/` records `boot.json` and `manager-*` together. The existing `runtime` socket member stays distinct.
-- Rule 04 "Runtime lifecycle policy" (owned by the operator). Proposed text: "Scheduled tasks, SCM services and system daemons remain prohibited. The installed per-user runtime manager is the sole product supervisor. The desktop may start it by shell dispatch. Other clients never start, stop or supervise the runtime. Development and CI never register login start, and package acceptance runs on disposable hosts."
+- Rule 04 "Runtime lifecycle policy" (owned by the operator). Proposed text: "SCM services and system daemons remain prohibited. The installed per-user runtime manager is the sole product supervisor. The desktop may start it by shell dispatch. Other clients never start, stop or supervise the runtime. Development and CI never register login start, and package acceptance runs on disposable hosts."
 
 **Follow-on decisions** (named, not made):
 - Restore per-session peer admission, or state in `2026-09-26-mcp-purpose-authentication-profile-access-adr` that attended-session lifetime follows the runtime's desktop when one user has several sessions.

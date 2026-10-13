@@ -35,7 +35,7 @@ Authorization is the user's 2026-10-04 instruction to implement identity, build 
 
 Reuse the canonical four-target inventory and declared deployment floors. CMake policy compatibility is explicit and target flags are scoped. A declared OS floor requires eventual execution evidence; generated metadata is not that evidence. Do not claim native compatibility for missing runners or placeholders.
 
-Installation manages immutable program files. User data stays under the existing Settings/storage owner and is preserved on uninstall. No service, scheduled task or storage migration is introduced. Login start for the runtime manager is registered in the installation scope. Signing is explicit and must not claim publisher verification without actual credentials and verification.
+Installation manages immutable program files. User data stays under the existing Settings/storage owner and is preserved on uninstall. No service or storage migration is introduced. Login start for the runtime manager is registered in the installation scope. Signing is explicit and must not claim publisher verification without actual credentials and verification.
 
 ### 2026-10-10 authorized Windows optional-installation amendment
 
