@@ -14,8 +14,15 @@ import pytest
 from cadrumo.adapters.local_runtime.profile_worker import ProfileWorkerProcess
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import PROFILE_INPUT, changed, lease, worker_profiles
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
-from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
-from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo.adapters.persistence.operations.secure_references import (
+    OperationSecureReferenceRepository,
+    operation_secure_reference_repository,
+)
+from cadrumo.adapters.persistence.storage.master_key.active_session import (
+    close_active_bucket_session,
+    current_active_bucket_session,
+)
+from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.application.operations.frontend_requests import (
     OperationObservationRequestV1,
@@ -55,6 +62,13 @@ def _record(root: Path, profile_id: UUID):
         return ProfileRecordRepository.for_current_session(profile_id, profile_decode_context=decode).load(profile_id)
     finally:
         close_active_bucket_session()
+
+
+def _session_operands() -> OperationSecureReferenceRepository:
+    # Bound to the signed-in profile's bucket: the durable pointer names whichever profile was created last.
+    session = current_active_bucket_session()
+    assert session is not None
+    return operation_secure_reference_repository(objects=secure_object_repository_for_bucket(session.bucket_id))
 
 
 def _request(profile_id: UUID, revision: int, digest: str) -> OperationRequest[ProfileFieldMutationOperationRequest]:
@@ -221,7 +235,7 @@ def test_restarted_worker_refuses_damaged_original_provenance_before_entry(tmp_p
                     name=str(profile_id), passphrase_callback=lambda: PROFILE_INPUT, profile_decode_context=decode
                 )
                 try:
-                    operands = operation_secure_reference_repository()
+                    operands = _session_operands()
                     current_ref = document["snapshot"]["admission_provenance_reference"]
                     original = asyncio.run(operands.resolve(current_ref, OperationAdmissionProvenance))
                     altered = changed(original, authority_generation="f" * 64)
@@ -288,7 +302,7 @@ def test_old_provenance_custody_blocks_reentry_but_current_profile_can_observe_h
                 name=str(profile_id), passphrase_callback=lambda: PROFILE_INPUT, profile_decode_context=decode
             )
             try:
-                operands = operation_secure_reference_repository()
+                operands = _session_operands()
                 original = asyncio.run(
                     operands.resolve(
                         document["snapshot"]["admission_provenance_reference"], OperationAdmissionProvenance
