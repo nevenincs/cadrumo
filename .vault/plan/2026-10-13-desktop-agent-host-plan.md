@@ -10,7 +10,7 @@ related:
   - '[[2026-10-13-desktop-agent-host-live-lane-review-audit]]'
 modified: '2026-10-13'
 body_schema: body-v2
-body_hash: 'sha256:f4939aad03aec04ca1b0362f59ee870e7224e39724d3ebf4ac57d5282d719893'
+body_hash: 'sha256:dfa0f9c3b2db91ab28c16f6539fc511db4a93d0fe22799c917c7c75c1434b330'
 ---
 
 # `desktop-agent-host` plan
@@ -47,8 +47,8 @@ Open dependencies outside this plan:
 - [ ] `S02` - Build the agent launcher that resumes the sign-in, guards the served root, and starts cadrumo-agent from its source tree inside a kill-on-close process scope on ephemeral ports; `src/cadrumo/entrypoints/cli/agent_host/`.
 - [ ] `S03` - Supervise the launcher from the desktop host in a Job Object and stop it on every sign-in, profile and window trigger; `native/desktop/src-tauri/src/agent/`.
 - [ ] `S04` - Serve the agent session to the webview through a gateway client, stream frames mapped onto session events over a Tauri channel, and the closed command list; `native/desktop/src-tauri/src/agent/`.
-- [ ] `S05` - Drive the packaged desktop over WebView2 remote debugging with the shared agent specs, with no-survivor and key-pattern scans; `native/desktop/frontend/tests/live/`.
-- [ ] `S06` - Add the desktop agent live recipe that builds the lane, creates and marks a fresh root, and runs the live specs; `justfile`.
+- [x] `S05` - Drive the packaged desktop over WebView2 remote debugging with the shared agent specs, with no-survivor and key-pattern scans; `native/desktop/frontend/tests/live/`.
+- [x] `S06` - Add the desktop agent live recipe that builds the lane, creates and marks a fresh root, and runs the live specs; `justfile`.
 - [ ] `S07` - Run stage 1 acceptance live and record its evidence; `native/desktop/frontend/tests/live/`.
 
 ## Parallelization
