@@ -54,18 +54,35 @@ def test_anything_but_one_relay_tool_offered_once_is_rejected(request_: dict[str
     assert answer_for(request_) == {"decision": "reject"}
 
 
-def test_the_stored_answers_agree_only_when_every_given_answer_was_stored_and_nothing_else() -> None:
-    given = {"req-1": {"option_id": "a"}, "req-2": {"decision": "reject"}}
+def _entry(request_id: str, answer: dict[str, str], action: str, option_id: str | None) -> dict[str, object]:
+    return {
+        "number": 1,
+        "request": {"request_id": request_id, "tool_call": "execute"},
+        "stored": {"tool_name": "execute", "action": action, "option_id": option_id},
+        "answer": answer,
+    }
+
+
+def test_the_stored_answers_agree_only_when_every_given_answer_was_relayed_and_stored_and_nothing_else() -> None:
+    given = {"req-1": {"option_id": "allow_once"}, "req-2": {"decision": "reject"}}
     stored = [
-        {"request": {"request_id": "req-1"}, "answer": {"option_id": "a"}},
-        {"request": {"request_id": "req-2"}, "answer": {"decision": "reject"}},
+        _entry("req-1", {"option_id": "allow_once"}, "approved", "allow_once"),
+        _entry("req-2", {"decision": "reject"}, "rejected", "reject_once"),
     ]
 
     assert stored_answers_disagree(given, stored) == []
-    assert stored_answers_disagree(given, stored[:1]) == ["req-2: given {'decision': 'reject'}, stored None"]
-    changed = [stored[0], {"request": {"request_id": "req-2"}, "answer": {"option_id": "b"}}]
-    assert stored_answers_disagree(given, changed) == ["req-2: given {'decision': 'reject'}, stored {'option_id': 'b'}"]
-    extra = [*stored, {"request": {"request_id": "req-3"}, "answer": {"option_id": "c"}}]
+    assert stored_answers_disagree(given, stored[:1]) == [
+        "req-2: given {'decision': 'reject'}, relayed None, stored None"
+    ]
+    relayed_otherwise = [stored[0], _entry("req-2", {"option_id": "allow_once"}, "rejected", "reject_once")]
+    assert stored_answers_disagree(given, relayed_otherwise) == [
+        "req-2: given {'decision': 'reject'}, relayed {'option_id': 'allow_once'}, stored {'decision': 'reject'}"
+    ]
+    stored_otherwise = [_entry("req-1", {"option_id": "allow_once"}, "rejected", "reject_once"), stored[1]]
+    assert stored_answers_disagree(given, stored_otherwise) == [
+        "req-1: given {'option_id': 'allow_once'}, relayed {'option_id': 'allow_once'}, stored {'decision': 'reject'}"
+    ]
+    extra = [*stored, _entry("req-3", {"option_id": "allow_once"}, "approved", "allow_once")]
     assert stored_answers_disagree(given, extra) == ["req-3: stored but never given here"]
     assert stored_answers_disagree(given, [{"answer": {"option_id": "a"}}])[0].startswith("a stored permission")
 

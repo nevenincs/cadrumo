@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:27fe266d179069fdcef81860c2dad665121f8aeb9f7046330a456c529360f279'
+body_hash: 'sha256:91978f58ac6fd7e817837b0dd37bfb6578ae73c9cff3064da8da647abadcec84'
 related:
   - "[[2026-10-13-package-verification-plan]]"
 ---
@@ -84,3 +84,4 @@ related:
 - `S03` person side and file exchange built to the protocol agreed with CADRUMO-AGENT-CODE; step stays open until verify-agent-live passes against a staged package with the agent package runner
 - `S02` covered by the canonical-environment plan's P04.S14 (73f13535cd, authored by tui-ee): CTest bundle.environment-launch starts bin/cadrumo-agent the way the runtime does and requires `hosted_tool_server_unproven` now, `agent_ready` once proofs exist; it has not yet run against a staged package
 - `S03` relay calls are matched by their bare registry names, as CADRUMO-AGENT-CODE verified on the claude/api lane
+- `S03` each receipt permission's gateway-recorded decision must also equal the answer given

@@ -146,19 +146,36 @@ def answer_for(request: Mapping[str, Any]) -> dict[str, str]:
     return {"decision": "reject"}
 
 
+def _as_answer(decision: object) -> dict[str, Any] | None:
+    """Read the gateway's own recorded decision as the answer it records, or ``None`` when it is not one."""
+    if not isinstance(decision, Mapping):
+        return None
+    if decision.get("action") == "approved":
+        return {"option_id": decision.get("option_id")}
+    if decision.get("action") == "rejected":
+        return {"decision": "reject"}
+    return None
+
+
 def stored_answers_disagree(given: Mapping[str, Mapping[str, str]], stored: list[Any]) -> list[str]:
-    """Name every difference between the answers given here and the ones the gateway stored, by request id."""
+    """Name every difference between the answers given here and the ones the gateway stored, by request id.
+
+    Each entry carries both the answer the runner relayed and the gateway's own
+    recorded decision; both must be the answer given here.
+    """
+    relayed: dict[str, Any] = {}
     recorded: dict[str, Any] = {}
     for entry in stored:
         request = entry.get("request") if isinstance(entry, Mapping) else None
         request_id = request.get("request_id") if isinstance(request, Mapping) else None
         if not isinstance(request_id, str):
             return [f"a stored permission names no request: {entry!r}"]
-        recorded[request_id] = entry.get("answer")
+        relayed[request_id] = entry.get("answer")
+        recorded[request_id] = _as_answer(entry.get("stored"))
     differences = [
-        f"{request_id}: given {answer}, stored {recorded.get(request_id)}"
+        f"{request_id}: given {answer}, relayed {relayed.get(request_id)}, stored {recorded.get(request_id)}"
         for request_id, answer in given.items()
-        if recorded.get(request_id) != answer
+        if relayed.get(request_id) != answer or recorded.get(request_id) != answer
     ]
     differences.extend(f"{request_id}: stored but never given here" for request_id in recorded.keys() - given.keys())
     return differences
