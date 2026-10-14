@@ -111,12 +111,12 @@ behavior. Native code owns bootstrap before Python exists.
 | Shared Rust platform implementation and C ABI | `native/platform/` | `<binary-dir>/cargo/native/` |
 | Rust application library and compatibility probes | `native/application/` | `<binary-dir>/cargo/native/<rust-target>/<profile>/` |
 | Shared package declarations and physical platform mappings | `native/package-layout.json`, `native/platforms/` | `<binary-dir>/generated/` |
+| Every packaged image's process environment: names and kinds, name groups, launch profiles, invocation tables, the storage-root rule and its vectors, package component locations, the native-host exit range | `native/application-environment.toml` | The `application_environment` section of the JSON contract, with matching Rust constants and C definitions |
 | Build-time contract projection | `dev/packaging/native/` | C header, Rust constants, JSON contract |
 | Build graph and packaging targets | `CMakeLists.txt`, `CMakePresets.json`, `native/cmake/` | Selected CMake binary directory |
 | Package assembly operations | `dev/packaging/native/` | `<binary-dir>/stage/<Config>/app/` |
-| Product identity | `src/cadrumo/core/product_identity.py` | Native product identity |
-| Settings names and validation | `src/cadrumo/core/config.py` | Reserved environment names |
-| Storage defaults, overrides and tool locations | `src/cadrumo/core/config.py`, `storage_environment.py`, `storage_taxonomy_locations.py` | Native Settings projection |
+| Product identity, runtime transport and runtime exit reasons | `src/cadrumo/core/product_identity.py`, `runtime_transport.py`, `src/cadrumo/application/runtime/contracts.py` | Native identity, transport names and exit-reason table (never an environment input) |
+| The command line's settings, built-in default root and member locations | `src/cadrumo/core/config.py`, `storage_environment.py`, `storage_taxonomy_locations.py` | None. They serve runs outside a package; the package-side conformance check holds them to the package declaration |
 | Exact Python version | `dev/packaging/release-python-version` | Build input |
 | Third-party dependency closure | `pyproject.toml`, `uv.lock`, existing constraint exporter | Installed locked dependencies |
 | Python release cohort | `dev/packaging/python_cohort.py` | Existing three-wheel cohort |
@@ -137,9 +137,9 @@ No Windows mapping is silently reused for another target.
 
 Generated files never become an alternative authored inventory. Development
 generators do not ship. Each assembly starts in a fresh directory. Runtime paths
-are resolved from the executable and the canonical Settings storage contract,
-never compiled from the build machine. Runtime state is separate from the
-immutable application package.
+are resolved from the executable and the storage-root rule that
+`native/application-environment.toml` declares, never compiled from the build
+machine. Runtime state is separate from the immutable application package.
 
 Both Rust crates use the CMake Cargo command in `native/cmake/Rust.cmake` and
 the selected platform adapter's compiler/linker environment. `rust_application`
@@ -170,12 +170,16 @@ selected artifact and does not establish a successful fresh `bundle` build.
 
 ## Platform mappings
 
-`P` means installed package root; `U` means the effective storage root that the
-storage owner declares in `src/cadrumo/core/storage_environment.py`. An absolute
+`P` means installed package root; `U` means the effective storage root. The rule
+that selects it is declared in `native/application-environment.toml` and applied
+by the platform crate to every packaged image. An absolute
 `CADRUMO_LOCAL_STORAGE_ROOT` wins in every mode. Without it, a source checkout
 uses `var/storage` beneath the checkout and an installed package uses the
-per-user, per-channel default in the mutable-root row. The storage owner decides
-the mode by where the package tree lives, never by the working directory.
+per-user, per-channel default in the mutable-root row. The platform crate decides
+the mode by where the package tree lives, never by the working directory. The
+command line keeps its own resolver and built-in default for runs outside a
+package. The package takes nothing from it; the package-side conformance check
+only compares the two defaults.
 `<name>` is `cadrumo` for the stable channel and `cadrumo-<channel>` for any
 other, such as `cadrumo-preview`; the channel comes from the identity projection.
 
@@ -231,6 +235,128 @@ the ABI before creating a context. Both C linkage consumers passed; delivery use
 static linkage so platform loading needs no application DLL before main. Static
 copies share code policy, not process state.
 
+### Launch profiles
+
+`native/application-environment.toml` is the package's one declaration of every
+packaged image's process environment. The `dev/packaging/native` generator
+validates it against its schema (`schema = 1`) with the standard-library TOML
+reader, refuses a violation, and compiles it into the `application_environment`
+section of `contract.json` and into matching constants in `contract.rs` and
+`contract.h`. No TOML parser enters a C host or the platform crate. The file is a
+declared input of the contract step in `native/cmake/Contract.cmake`. The
+generator imports no `cadrumo` module for the environment contract. Its
+remaining inputs from the Python product describe the product or its runtime
+protocol, not any process environment: product identity, runtime transport, the
+runtime's exit-reason table and the manager's locale strings. A static test holds
+that list. The command line reads no packaging file, manifest or contract.
+
+The file declares:
+
+- the environment names the package uses, each with a kind and a role (location,
+  operator, package, pin, fixed, slot or pass), and the groups of names a profile
+  admits from its caller;
+- the operating-system name groups (`system`, `session`, `terminal`, `display`,
+  `network`) a profile's base takes per platform family;
+- the host pins: the temporary variables and the registry authority root;
+- the storage root: its variable, the installed default per platform and channel,
+  and the conformance vectors every resolver replays;
+- the package's own component locations beneath the root (console workspace,
+  webview, manager records and log) and the command line's log location, format
+  and limits, which the desktop reads without asking Python;
+- the name classes that a native parent's strict child filter clears when the
+  child runs no interpreter image, such as the manager's dispatch to another
+  manager image;
+- the `PATH` composition;
+- the native-host exit range and refusal codes;
+- one launch profile per image or invocation, the invocation table that selects a
+  profile, and launch vectors authored by hand.
+
+Each image defines its process environment from its compiled profile before
+Python starts. An image's identity is compiled into it: the generic `python`
+image, a console entrypoint or a bundled image. No environment value or file
+selects a profile at run time. The C hosts call `cadrumo_platform_define`; the
+manager and the desktop reach the same `define_environment` function through the
+crate, for the runtime image and for the environment they project.
+
+A profile declares its base (the operating-system groups it takes from its
+caller, or its caller's whole environment unchanged), its operator-overridable
+names, its pass-through names, its pins, its fixed package values, its launch
+parameters and its `PATH` policy. An undeclared name does not survive. Later
+sources win over earlier ones: base names, operator and pass-through names,
+host pins, package fixed values, then validated launch parameters, then `PATH`.
+The host passes an operator or pass-through name unchanged and does not judge how
+a component uses it; the command line validates its own settings as before. The
+operator groups are the relocatable storage members, presentation settings,
+remote-interaction timings and display settings, and the two package overrides.
+No secret, authority, endpoint or consent name is in them. The runtime image's
+profile admits no operator names, so the runtime and the workers it starts take no
+operator overrides. The generated environment reference lists each group and which
+names each program passes.
+
+- A launch parameter is a name a parent supplies within a slot the profile
+  declares by name and kind, never by value. The host checks the kind first: a
+  directory is an existing absolute directory, a port is a decimal integer from 0
+  to 65535, an executable is an existing absolute file that is not a batch file,
+  and a descriptor is a positive integer. Any other kind is non-empty. A missing
+  required slot or a malformed slot refuses the launch.
+- A profile that pins the root resolves it by the package's rule and sets
+  `CADRUMO_LOCAL_STORAGE_ROOT`, the temporary variables beneath it and the
+  authority root. A profile may instead take the root as a launch parameter
+  without pinning it.
+- `PATH` is set by the host and by no parent. For a profile whose policy is
+  `package`, it holds the directory of the package's interpreter, the existing
+  absolute directories of `CADRUMO_EXTERNAL_BIN_DIRS` where the profile admits
+  that name, the package's native directory and the platform's system
+  directory, in the order the file declares. The native directory holds the
+  entrypoint images and the bundled agent image. A relative or missing external
+  directory fails the launch as a platform failure, not as a profile refusal.
+  A profile whose policy is `inherit` leaves `PATH` as its caller set it.
+
+An invocation is the exact argument pattern that selects a profile. The host
+matches the arguments after the image's own path against the compiled table before
+Python starts: a literal matches exactly, and a typed argument (a Windows handle or
+a POSIX descriptor) is validated by its kind and its declared ordering. A match
+selects the invocation's profile. The image's profile without an invocation serves
+every other invocation; an image with no such default refuses any invocation its
+table does not declare.
+
+- The generic `python` image has a default profile and a `kdf-child` invocation
+  for each platform family: the exact supervised key-derivation worker pattern,
+  which the C hosts no longer recognise in code. The `kdf-child` profile passes its parent-defined environment
+  unchanged with no pin or override. Isolated paths and package verification still
+  apply to it, as to every profile.
+- The `cadrumo-agent` image has no default profile; see Bundled interpreter
+  images.
+
+A launch the profile refuses never starts Python. The host writes one JSON object
+as the last line on standard error and exits with status 125:
+`{"native_refusal":"<code>","subject":"<name>"}`. The code is closed:
+`launch_value_missing`, `launch_value_malformed` or `invocation_undeclared`. The
+subject is the declared variable name, or the image for an undeclared invocation.
+The value is never written. 125 is the last status of the native-host range 120 to
+125 that the file declares and the generator emits to the hosts as
+`CADRUMO_LAUNCH_PROFILE_REFUSED_EXIT`. The runtime's reserved table equals it,
+which the package-side check verifies. A supervisor reads 125 as a launch failure,
+never as a runtime exit reason; the manager's exit classification does so, and
+runtime exit reasons stay in 64 to 73. When the agent gateway or worker exits 125
+before its ready line, the runtime ends the launch with its existing closed code
+`agent_service_failed`. It reads the last line of the agent's standard error from a
+bounded private tail and records the native code and subject in its redacted
+diagnostics. The desktop's closed set of launch refusals does not change.
+
+Environment definition is not a process sandbox. A profile decides which names a
+process receives and not what the process does with them.
+
+Per-profile vectors authored in the file (an image, its arguments and its caller's
+environment in; the selected profile and the exact defined environment, or a
+refusal, out) are replayed by the platform crate's tests, run as
+`platform.resolver`, and by `dev/packaging/native/tests/test_launch_profile_vectors.py`.
+Vectors for the POSIX family are replayed in Rust only on a POSIX build. The C
+ABI function `cadrumo_platform_define` is exercised by the C consumers
+(`platform.static` and `platform.dll`), including a supervised key-derivation
+invocation, and on POSIX `platform.invocation` checks the refusal line the host
+writes.
+
 ### Console entrypoints
 
 `native/package-layout.json` names the console scripts that ship as native
@@ -251,10 +377,11 @@ the desktop `cadrumo.exe`, keeps the package root as its own directory. Because
 `/DEPENDENTLOADFLAG:0x800` so its load-time imports resolve from System32, and
 assembly refuses a bundled DLL whose name matches a host import.
 
-An entrypoint host performs the same platform preparation, loader setup and
-isolated initialization as `python.exe`, then runs the installed console
+An entrypoint host applies its own launch profile, then performs the same loader
+setup and isolated initialization as `python.exe`, and runs the installed console
 script through `_cadrumo_bootstrap.run_entrypoint`. All arguments pass to the
-script; the host intercepts none. `sys.executable` remains `python.exe`,
+script; the host intercepts none, and an entrypoint's profile has no invocation
+table. `sys.executable` remains `python.exe`,
 because runtime workers and the supervised KDF child relaunch it with
 interpreter arguments. Entrypoint executables are startup files, hashed by the
 package bootstrap before application code runs. CTest checks that each staged
@@ -275,6 +402,92 @@ metadata. `-m`, `-c`, scripts, stdin and child startup use the bundled executabl
 The caller's working directory is retained for explicit script/file arguments;
 it is not an implicit import root. This is environment isolation, not a sandbox.
 
+### Bundled interpreter images
+
+`bundled_images` in `native/package-layout.json` declares interpreter-host images
+for a distribution that the package bundles and that is not one of Cadrumo's
+`[project.scripts]`. Each entry carries the `distribution` it runs and the
+`description` for its version resource. The layout loader refuses a name that is
+not a lowercase hyphenated token or that is also a console entrypoint, and an
+entry with other fields. Assembly refuses an image whose distribution the package
+does not bundle. CMake compiles the same host source once per image with the image
+name fixed at compile time, into the native directory beside the entrypoints. The
+package declares one, `cadrumo-agent`, for the bundled agent; it is
+`P/bin/cadrumo-agent.exe` on Windows and `P/bin/cadrumo-agent` elsewhere.
+
+A bundled image differs from a console entrypoint in what `sys.executable` is. An
+entrypoint host hands `sys.executable` back to `python.exe`. A bundled image stays
+`sys.executable` and never sets `sys.frozen`, so a child that the agent starts with
+`sys.executable` re-enters the same image and its launch profiles. The package
+bootstrap finds the package root from the image's place in the native directory.
+
+The image has no default profile. It admits the invocations declared in its
+invocation table in `native/application-environment.toml`, each selecting its own
+profile, and refuses any other module, `-c` or script before Python starts. The
+table includes the gateway, which runs the agent's command-line module, and the
+worker, which runs the agent's worker module. The profiles `agent-gateway` and
+`agent-worker` name what each receives.
+
+- **The agent's settings.** The agent reads its settings only from its process
+  environment. The package admits the names under the agent's environment prefix
+  to this image's profiles and to no other: the generic `python` image and every
+  other profile drop the whole prefix. The package never admits the agent's
+  settings-file variable or the two retired hosted program-path variables; the file's
+  `agent` table lists them with the prefix and the agent's hosting-contract version.
+  The host does not decide hosted versus non-hosted policy: the agent's own
+  refusals apply to what the profiles admit. No profile admits a credential to the
+  gateway; the agent's credentials travel only on its standard-input frame. The one
+  secret in a profile is the non-hosted worker's internal token, admitted to the
+  worker profile alone until the agent moves it to standard input.
+- **Launch parameters.** The gateway takes the storage root, the hosted root, the
+  gateway and worker ports and the relay program as optional launch parameters. The
+  worker takes the same parameters and the settings the gateway writes for it:
+  its gateway address, host, lifetime identifier, generation and, until the agent
+  moves it to standard input, its internal token. Both profiles pass the agent's
+  development-tool-server switch and provider proof policy from their parent.
+  Neither profile pins the storage root, so the root a parent hands the gateway
+  reaches the worker and the relay the worker starts. Both pin the temporary
+  variables and the authority root.
+- **Search path.** Both profiles take the package's `PATH` composition, so the agent
+  finds `aeat`, `cadrumo-mcp` and the bundled `python` beside the system directory.
+  They do not admit `CADRUMO_EXTERNAL_BIN_DIRS`.
+- **Runtime start.** The runtime image's profile fixes
+  `CADRUMO_PACKAGE_AGENT_EXECUTABLE` and `CADRUMO_PACKAGE_RELAY_EXECUTABLE` as the
+  paths of the agent image and of `cadrumo-mcp`. The runtime starts the agent image
+  at the first of them and reads no package manifest. Beyond the operating-system
+  names the profile takes from it, it supplies only the gateway's declared launch
+  parameters.
+
+The package-side conformance check, registered in CTest as
+`bundle.environment-conformance`, runs the assembled package's own interpreter
+and compares what the package sets, passes or lets operators override with what the
+installed command line, the runtime and the bundled agent declare. It fails on any
+disagreement. Its comparisons are:
+
+- each name and kind the package declares for the command line, against the
+  command line's settings;
+- each agent name, the prefix and the hosting-contract version, against the bundled
+  agent's settings, its credentials and the settings its gateway writes for its worker;
+- the gateway's launch parameters, against exactly what the runtime's composer
+  writes, and the fixed agent and relay paths the runtime reads;
+- the native-host exit range, the refusal status and the refusal codes, against the
+  runtime's reserved table;
+- the command line's built-in storage-root rule (its variables, development
+  default and the directory names of the `stable` and `preview` channels) and the
+  installed default it resolves, against the declared root rule;
+- the command line's diagnostic-log directory and file name, including a relative
+  relocation anchored beneath the root, against the declared components.
+
+`bundle.environment-launch` starts the assembled package's agent image the way the
+runtime does, through the runtime's own composer, and checks that a launch the
+profile does not declare is refused with the closed refusal line, that a hosted
+gateway reaches the agent's own refusal `hosted_tool_server_unproven` (or
+`agent_ready` once the agent's proofs exist), that the worker reports the port it
+bound, and that the generic `python` image clears every name only the agent image
+admits, sets the declared `PATH` and pins the root to the command line's default.
+The agent's names are read from the contract and from the installed agent, never
+spelled in the probe.
+
 ### Application images
 
 The platform mapping's `application_images` list declares the native executables
@@ -293,7 +506,8 @@ scripts. Each entry carries:
 | `version_arguments` | Arguments that make the image print the product version |
 
 The loader refuses an unknown or missing field, a duplicate name or artifact
-variable, a second desktop image, a name that is a console entrypoint, and a file
+variable, a second desktop image, a name that is a console entrypoint or a bundled
+interpreter image, and a file
 name that equals, ignoring case, the first component of any declared package path
 or file. Configure lists each image and whether it stages. `bundle` depends on
 each staged image's target and artifact. Assembly copies each artifact into the
@@ -329,13 +543,14 @@ resource compiler, from the `CADRUMO_ID_*` identity projection.
 
 ## Mutable data and reconciliation
 
-The native bootstrap projects canonical storage environment names and defaults.
-Python continues to own bucket routing, encryption, authorization and member
-defaults. A checkout keeps its repository-local default and an installed package
-uses the per-user, per-channel default of the platform mappings. A relative
-`CADRUMO_LOCAL_STORAGE_ROOT` anchors at the checkout in development and is
-refused when installed. Python resolves only the stable channel's default; a
-native package pins the root for its own channel before Python starts. The
+The native bootstrap applies the storage-root rule that
+`native/application-environment.toml` declares. Python continues to own bucket
+routing, encryption, authorization and member defaults. A checkout keeps its
+repository-local default and an installed package uses the per-user, per-channel
+default of the platform mappings. A relative `CADRUMO_LOCAL_STORAGE_ROOT` anchors
+at the checkout in development and is refused when installed. The command line's
+own built-in default is the stable channel's; a native package pins the root for
+its own channel before Python starts, and a pinned root is never re-resolved. The
 native host is installed when its package root holds the package manifest and
 in development when a checkout marker is above the executable; otherwise it
 refuses. It never reads the working directory. Installed Windows resolves the
@@ -345,18 +560,21 @@ storage is migrated: a tree that an earlier installed build created beneath a
 launch directory is neither read nor moved, and an operator who wants it sets
 `CADRUMO_LOCAL_STORAGE_ROOT` to it.
 
-Package-only anchors are declared once. Existing taxonomy members remain owned
-by Python and are projected at build time. The native host clears inherited Python
-configuration and reserved Settings except the product allowlist that
-`Settings.storage_env_var_names()` returns: the primary root variable
-`CADRUMO_LOCAL_STORAGE_ROOT` and the settings field of each operator-overridable
-taxonomy member. The development root variable `CADRUMO_STORAGE_ROOT` and the
-development tool locations are not in it. Package-owned `CADRUMO_EXTERNAL_BIN_DIRS`
-accepts existing absolute directories for external executables. These directories
-affect child-process PATH, not DLL search. `CADRUMO_CLI_REVEAL_IDENTIFIERS` also
-passes, so the installed command line can show profile and bucket identifiers
-when the person asks for them; it reveals no credential. No development environment template is
-copied into the package.
+The package declares its own names and locations once, in
+`native/application-environment.toml`. The command line's taxonomy declares only
+the locations the command line creates under a root it is given; it is not an
+environment source for the package. The file's `locations` group names the storage
+members an operator may relocate, and each launch profile says which name groups it
+passes, so an inherited Python variable or any other name no profile declares never
+reaches a packaged image. The development root variable `CADRUMO_STORAGE_ROOT` and
+the development tool locations are declared for no installed profile. Package-owned
+`CADRUMO_EXTERNAL_BIN_DIRS` accepts existing absolute directories for external
+executables. These directories affect child-process PATH, not DLL search.
+`CADRUMO_CLI_REVEAL_IDENTIFIERS` is in the same group, so the installed command
+line can show profile and bucket identifiers when the person asks for them; it
+reveals no credential. In a package, a setting that no profile passes takes the
+command line's default. No development environment template is copied into the
+package.
 
 Temporary and cache locations follow the canonical storage declarations. Managed browsers,
 model services, WebView profiles, exports and update staging require later owner
@@ -827,34 +1045,34 @@ preserving inherited file and pipe handles; they never allocate a new console.
 The host takes its package root from `CADRUMO_DESKTOP_PACKAGE_ROOT` when that is
 set and otherwise from its own directory. It checks the package manifest's
 platform and ABI against the generated contract and the interpreter against its
-manifest digest. On Windows, default member settings use the shared native
-platform preparation and generated canonical Settings, storage and logging
-defaults, without starting Python. Explicit nonblank member overrides use the
-fixed query below. Profile and
-pointer validation stays with the canonical account CLI read after the window
-opens. Other platforms always use the query.
+manifest digest. It then defines the environment its children receive with the
+platform crate, by applying the `python` launch profile to its own environment,
+without starting Python and on every platform. The result carries
+`CADRUMO_LOCAL_STORAGE_ROOT` set to the root the package's rule resolved; every
+other name is one that profile passes or sets (see Launch profiles). The host
+spawns no Python process to learn a location. Profile and pointer validation
+stays with the canonical account CLI read after the window opens.
 
-The fallback runs the fixed query `src-tauri/src/python/environment.py`
-as `python.exe -I -c` with the caller's environment and working directory, a 30 s
-deadline, 1 MiB of standard output and 64 KiB of standard error. The output is
-parsed and never retained, because the environment can hold credentials.
-
-The query reports the child environment, the storage root, the log directory,
-log file, line format and rotation limits, the output language and the canonical
-console workspace. The child environment carries `CADRUMO_LOCAL_STORAGE_ROOT` set to
-the absolute root that `configured_storage_root()` resolved, and the query refuses
-with `storage_root_disagreement` when Settings resolves a different root. The host
-refuses a projection with a relative path, a log file outside the log directory,
-an empty line format, an output language that is not lowercase ASCII, a pin under
-a name outside the product allowlist, or an environment that does not carry
-exactly that root under that name. The
-host, every terminal kind and the CLI passthrough therefore share one root
-whatever their working directory. The host adds no storage, log or Settings
-variable of its own.
+The projection reports the child environment, the storage root, the webview, the
+console workspace and the manager log, the log directory, log file, line format
+and rotation limits, and the output language. The webview, workspace and manager
+log are package component locations that the file declares beneath the pinned root.
+The log directory is the declared `logs` location, moved to the value of
+`CADRUMO_LOG_DIR` when the profile passed that override, with a relative value
+anchored beneath the root. The log file name, line format and rotation limits are
+the package's declared copy of the command line's own, which a package-side test
+holds equal. The output language is the value the profile passed for
+`CADRUMO_OUTPUT_LANGUAGE`, or the declared default. The host refuses a projection
+with a relative path, a log file outside the log directory, an empty line format,
+an output language that is not lowercase ASCII, a root variable the package does
+not declare as a location, or an environment that does not carry exactly that root
+under that name. The host, every terminal kind and the CLI passthrough therefore
+share one root whatever their working directory. The host adds no storage, log or
+Settings variable of its own.
 
 The webview profile directory is the absolute path the projection resolves for the
-storage taxonomy's `webview` member (`U/webview`, override
-`CADRUMO_WEBVIEW_DIR`), and the host refuses a projection without one. The
+package's `webview` component (`U/webview`; no variable relocates it), and the host
+refuses a projection without one. The
 window state, `window-state.json`, lives in the same directory: the host restores
 each window's size, position and maximized state when the window is ready,
 shrunk and moved to lie within a current display, and on close writes the
@@ -1038,11 +1256,12 @@ payloads and terminal kinds cannot invoke it; it carries no runtime state.
 | `python` | `P/python.exe` with no arguments | Console workspace | `repl` |
 | `tui` | `P/python.exe -m cadrumo.entrypoints.tui` | Console workspace | `tui` |
 
-Every kind receives the same pinned child environment, with the package's native
-entrypoint directory and bundled interpreter directory ahead of inherited `PATH`
-entries. This also applies to subprocesses launched from the Python REPL or TUI.
+Every kind receives the same child environment, the one the `python` launch
+profile defines for the host, with the package's native entrypoint directory and
+bundled interpreter directory ahead of the `PATH` that profile composes. This
+also applies to subprocesses launched from the Python REPL or TUI.
 The shell program is resolved as an absolute path from fixed system locations,
-never through `PATH`. The taxonomy-owned console workspace is created under the
+never through `PATH`. The package-declared console workspace is created under the
 canonical storage root for operator scripts and scratch files; it is separate
 from encrypted profile custody. Shell startup profiles still run and may apply
 the operator's own cwd or search-path customizations. On
@@ -1089,10 +1308,10 @@ bytes never enter host diagnostics or the log view.
 `src-tauri/src/logs/` merges Python file records and in-memory native events,
 polled every 100 ms. `source` is an open enumeration:
 
-- `python`: the log file the query reports (`cadrumo.log` in the log directory)
-  and its numbered rotations, which Python writes through its secret-scrubbing
-  filter. The
-  line format comes from the query, so the host holds no copy of it.
+- `python`: the log file the launch projection reports (`cadrumo.log` in the log
+  directory) and its numbered rotations, which Python writes through its
+  secret-scrubbing filter. The line format is the package's declared copy of the
+  command line's own, which a package-side test holds equal.
   Continuation lines such as tracebacks become the record's `detail`, up to
   64 KiB. A record completes after its file has been quiet for 250 ms. Python
   records carry their raw timestamp and parse canonical UTC timestamps with
@@ -1145,7 +1364,7 @@ subscription. `logs_unsubscribe` (`token`, `subscription`) refuses an unknown id
 with `invalid_arguments`.
 
 The host also writes its own diagnostics events to `cadrumo-native.jsonl` in the
-log directory, rotated by the same Settings limits.
+log directory, rotated by the same declared limits.
 
 ### Shell commands
 
@@ -1462,13 +1681,15 @@ Python canonical JSON and Rust parse the shared vectors in
 `manager/tests/session_record_vectors.json`; real-process custody tests verify
 the lock and record interchange. Keep this grammar stable across side-by-side
 releases, or introduce an explicit migration before either reader changes.
-The canonical storage taxonomy enrolls the boot record, start claim, Quit,
-failed-version record, `manager-preferences.json`, and `logs/cadrumo-manager.log`.
-These mutable lifecycle records are excluded from profile fingerprints. Logs
-rotate through the generated native log policy; coordination and preferences
-remain outside generic age-based reclamation.
+The command line's storage taxonomy enrolls the runtime boot record,
+`.runtime/boot.json`, and none of the manager's records; a package-side test holds
+this. The manager names its start claim and Quit marker itself, beneath
+`.runtime/`. `native/application-environment.toml` declares the failed-version
+record, `manager-preferences.json` and `logs/cadrumo-manager.log` as package
+component locations, and a package-side test checks their places. Logs rotate
+through the generated native log policy.
 
-The failed-version record uses the taxonomy-projected `MANAGER_FAILED_VERSIONS`
+The failed-version record uses the package-declared `MANAGER_FAILED_VERSIONS`
 path, `.runtime/manager-failed-versions.json`. It is one owner-only UTF-8 JSON
 object of at most 4096 bytes with exactly `schema` (integer `1`) and `versions`
 (at most 32 objects). Each entry has exactly `version` and `previous`, canonical
@@ -1503,8 +1724,8 @@ configured only when a desktop is available. Recovery follows the manager proces
 lifetime until an explicit stop or session end; it does not consult the session's
 connection state. Startup verifies the selected package and queries its installed
 interpreter for the canonical physical storage identity and application version.
-The query uses the same strict child environment as runtime launch and acquires
-no runtime endpoint. Ownership supplies either a start permit, direct same-session
+The query uses the environment the runtime image's launch profile defines, as
+runtime launch does, and acquires no runtime endpoint. Ownership supplies either a start permit, direct same-session
 adoption, or an observer/wait role; observers never signal another session's runtime.
 
 Supervisor heartbeat messages carry required `in_flight_operations`, an exact

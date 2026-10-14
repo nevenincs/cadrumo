@@ -1,11 +1,13 @@
 <!-- GENERATED FILE - DO NOT EDIT.
 Regenerate with: uv run --no-sync python -m dev.docs.env_reference
-Source of truth: cadrumo.core.config.Settings -->
+Sources of truth: cadrumo.core.config.Settings and native/application-environment.toml -->
 
 # Environment overrides
 
 This page covers every environment variable the application reads, generated
-from the live settings model. Environment overrides are advanced deployment
+from the live settings model. The last section states which names an installed
+package passes to each program it ships, generated from the package's own
+declaration. Environment overrides are advanced deployment
 and development configuration: every user workflow works without them through
 prompts, command flags, and `aeat config` commands. Set an override only when
 you administer a deployment and know why the default does not fit.
@@ -186,3 +188,132 @@ value already present in your shell always wins.
 | `SITE_HEALTH_RATE_LIMIT_RETRY_AFTER_DEFAULT` | int | `300` | Fallback Retry-After seconds when a 429/503 omits the header |
 
 Secrets are never printed by the application and are marked `(secret)` above. Defaults marked `(derived)` are computed from the storage root or project location at runtime.
+
+## Installed package
+
+An installed Cadrumo package defines the process environment of each program it ships before Python starts, from the launch profile that program was built with. Unless its profile starts from its caller's whole environment, a program passes only the names its profile lists. Every other name in the environment you start it with is dropped, so setting a name that a program's profile does not list has no effect on that program. A run from a source checkout, `pip` or `uvx` uses no package: the table above applies to it and this section does not. The desktop application and the background manager define the environment of the programs they start from the same profiles.
+
+### Name groups
+
+A profile passes whole groups of names from its caller.
+
+| Group | Names |
+| --- | --- |
+| `locations` | `CADRUMO_ATTACHMENTS_DIR`, `CADRUMO_BLOB_STORE_DIR`, `CADRUMO_CHROMIUM_DATA_ROOT`, `CADRUMO_CORPUS_SEARCH_CACHE_DIR`, `CADRUMO_DRAFTS_DIR`, `CADRUMO_FILED_DECLARATIONS_DIR`, `CADRUMO_FILING_HISTORY_DIR`, `CADRUMO_FINANCIAL_TXS_DIR`, `CADRUMO_GNOME_EXTENSIONS_DIR`, `CADRUMO_INVOICES_DIR`, `CADRUMO_IVA_COMPENSATION_HISTORY_DIR`, `CADRUMO_IVA_READ_EVIDENCE_DIR`, `CADRUMO_JUSTIFICANTES_DIR`, `CADRUMO_LIVE_STATE_DIR`, `CADRUMO_LLM_CACHE_DIR`, `CADRUMO_LLM_RUN_RECORD_DIR`, `CADRUMO_LLM_USAGE_DIR`, `CADRUMO_LOG_DIR`, `CADRUMO_OLLAMA_HOME_DIR`, `CADRUMO_OLLAMA_MODELS_DIR`, `CADRUMO_PLAYWRIGHT_BROWSERS_DIR`, `CADRUMO_RUNS_DIR`, `CADRUMO_RUNTIME_SOCKET_DIR`, `CADRUMO_SECRET_STORE_DIR`, `CADRUMO_SUBMISSIONS_DIR`, `CADRUMO_TEMP_DIR`, `CADRUMO_TOKEN_DIR`, `CADRUMO_USAGE_RATIOS_PATH`, `CADRUMO_WORKFLOW_RUNS_DIR` |
+| `presentation` | `CADRUMO_LOG_LEVEL`, `CADRUMO_LOG_STDERR_LEVEL`, `CADRUMO_LOG_FILE_LEVEL`, `CADRUMO_LOG_ROOT_LEVEL`, `CADRUMO_OUTPUT_LANGUAGE`, `CADRUMO_FALLBACK_LANGUAGES`, `NO_COLOR`, `CADRUMO_FORCE_COLOR`, `CADRUMO_TUI_APPEARANCE`, `CADRUMO_DEADLINE_DUE_SOON_DAYS`, `CADRUMO_INBOX_ALERT_LEAD_DAYS`, `CADRUMO_CERT_WARN_DAYS`, `CADRUMO_CERT_CRITICAL_DAYS` |
+| `remote` | `CADRUMO_AUTH_TIMEOUT_MS`, `CADRUMO_CLAVE_MOVIL_TIMEOUT_MS`, `CADRUMO_CLAVE_PERMANENTE_TIMEOUT_MS`, `CADRUMO_BROWSER_HEADLESS`, `CADRUMO_BROWSER_VIEWPORT_WIDTH`, `CADRUMO_BROWSER_VIEWPORT_HEIGHT`, `CADRUMO_BROWSER_NAVIGATION_TIMEOUT_MS`, `CADRUMO_BROWSER_FORM_INTERACTION_TIMEOUT_MS`, `CADRUMO_BROWSER_SELECTOR_PROBE_TIMEOUT_MS`, `CADRUMO_BROWSER_VER_CLICK_TIMEOUT_MS`, `CADRUMO_BROWSER_BUSCAR_SETTLE_MS`, `CADRUMO_BROWSER_CLOSE_TIMEOUT_MS`, `CADRUMO_LIVE_FILED_REGISTER_WALK_TIMEOUT_MS`, `CADRUMO_LIVE_IVA_SURFACE_TIMEOUT_MS`, `CADRUMO_LIVE_IVA_DECLARATION_CAPTURE_TIMEOUT_MS`, `CADRUMO_LIVE_IVA_CANCELLATION_DRAIN_MS`, `CADRUMO_RATE_LIMIT_DELAY_SECONDS`, `SITE_HEALTH_RATE_LIMIT_RETRY_AFTER_DEFAULT`, `CADRUMO_FX_RATE_LOOKUP_TIMEOUT_S`, `CADRUMO_MANUALS_HTTP_TIMEOUT_S`, `CADRUMO_CALC_SHEETS_RECALC_DELAY_S`, `CADRUMO_LLM_DEFAULT_TIMEOUT_S`, `CADRUMO_LLM_VISION_READ_TIMEOUT_S` |
+| `package` | `CADRUMO_CLI_REVEAL_IDENTIFIERS`, `CADRUMO_EXTERNAL_BIN_DIRS` |
+
+### Operating-system names
+
+A profile starts from the operating-system groups it lists, taken from its caller's environment. Windows compares names without regard to case.
+
+| Group | Windows | Linux and macOS |
+| --- | --- | --- |
+| `system` | `SYSTEMROOT`, `SYSTEMDRIVE`, `WINDIR`, `PATHEXT`, `NUMBER_OF_PROCESSORS`, `PROCESSOR_ARCHITECTURE`, `OS`, `USERPROFILE`, `HOMEDRIVE`, `HOMEPATH`, `LOCALAPPDATA`, `APPDATA`, `PROGRAMDATA`, `PROGRAMFILES`, `PROGRAMFILES(X86)`, `COMMONPROGRAMFILES`, `USERNAME`, `USERDOMAIN` | `HOME`, `USER`, `LOGNAME`, `LANG`, `LC_ALL`, `LC_CTYPE`, `TZ` |
+| `session` | `COMSPEC`, `COMPUTERNAME`, `PUBLIC`, `ALLUSERSPROFILE`, `PROGRAMW6432`, `COMMONPROGRAMFILES(X86)`, `COMMONPROGRAMW6432`, `PROCESSOR_IDENTIFIER`, `PROCESSOR_LEVEL`, `PROCESSOR_REVISION`, `LOGONSERVER`, `SESSIONNAME`, `USERDOMAIN_ROAMINGPROFILE` | `SHELL`, `LC_COLLATE`, `LC_MESSAGES`, `LC_MONETARY`, `LC_NUMERIC`, `LC_TIME`, `XDG_RUNTIME_DIR`, `XDG_DATA_HOME`, `XDG_CONFIG_HOME`, `XDG_CACHE_HOME`, `XDG_STATE_HOME`, `DBUS_SESSION_BUS_ADDRESS` |
+| `terminal` | `TERM`, `COLORTERM`, `COLUMNS`, `LINES`, `WT_SESSION`, `WT_PROFILE_ID`, `TERM_PROGRAM`, `TERM_PROGRAM_VERSION` | `TERM`, `COLORTERM`, `COLUMNS`, `LINES`, `TERM_PROGRAM`, `TERM_PROGRAM_VERSION` |
+| `display` | none | `DISPLAY`, `WAYLAND_DISPLAY`, `XAUTHORITY`, `XDG_SESSION_TYPE`, `XDG_CURRENT_DESKTOP` |
+| `network` | `HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY`, `ALL_PROXY`, `SSL_CERT_FILE`, `SSL_CERT_DIR`, `REQUESTS_CA_BUNDLE` | `HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY`, `ALL_PROXY`, `http_proxy`, `https_proxy`, `no_proxy`, `all_proxy`, `SSL_CERT_FILE`, `SSL_CERT_DIR`, `REQUESTS_CA_BUNDLE` |
+
+### Programs
+
+Each profile belongs to one program. The host validates a launch parameter against its kind before Python starts: a `directory` is an existing absolute directory, a `port` is an integer from 0 to 65535, an `executable` is an existing absolute file that is not a batch file, and a `descriptor` is a positive integer. Any other kind must be non-empty. In an invocation, `<name:kind>` stands for a value the host checks by kind: a `handle` is a Windows handle number and a `descriptor` is a file descriptor number.
+
+#### `python`
+
+- **Program:** `python`
+- **Started with:** any arguments
+- **Starts from:** only the operating-system groups `system`, `session`, `terminal`, `display` and `network`
+- **Passes from its caller:** the name groups `locations`, `presentation`, `remote` and `package`
+- **Sets itself:** `CADRUMO_LOCAL_STORAGE_ROOT` to the storage root the package's rule resolves (an absolute value you set wins, otherwise the per-user, per-channel default), `TEMP`, `TMP` and `TMPDIR` to the temporary-files location beneath the storage root and `CADRUMO_AUTHORITY_ROOT` to the package's registry authority
+- **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the existing absolute directories `CADRUMO_EXTERNAL_BIN_DIRS` names; the package's native program directory; the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
+
+#### `kdf-child`
+
+- **Program:** `python`
+- **Started with:** `-m cadrumo.adapters.persistence.storage.custody._kdf_worker --request-handle <request:handle> --result-handle <result:handle>` on Windows; `-m cadrumo.adapters.persistence.storage.custody._kdf_worker --request-fd <request:descriptor> --result-fd <result:descriptor> --descriptor-bound <bound:descriptor>` on Linux and macOS
+- **Starts from:** its caller's whole environment, unchanged
+- **Sets itself:** nothing
+- **Search path (`PATH`):** left as its caller sets it
+
+#### `aeat`
+
+- **Program:** `aeat`
+- **Started with:** any arguments
+- **Starts from:** only the operating-system groups `system`, `session`, `terminal`, `display` and `network`
+- **Passes from its caller:** the name groups `locations`, `presentation`, `remote` and `package`
+- **Sets itself:** `CADRUMO_LOCAL_STORAGE_ROOT` to the storage root the package's rule resolves (an absolute value you set wins, otherwise the per-user, per-channel default), `TEMP`, `TMP` and `TMPDIR` to the temporary-files location beneath the storage root and `CADRUMO_AUTHORITY_ROOT` to the package's registry authority
+- **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the existing absolute directories `CADRUMO_EXTERNAL_BIN_DIRS` names; the package's native program directory; the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
+
+#### `cadrumo-mcp`
+
+- **Program:** `cadrumo-mcp`
+- **Started with:** any arguments
+- **Starts from:** only the operating-system groups `system`, `session`, `terminal`, `display` and `network`
+- **Passes from its caller:** the name groups `locations`, `presentation`, `remote` and `package`
+- **Sets itself:** `CADRUMO_LOCAL_STORAGE_ROOT` to the storage root the package's rule resolves (an absolute value you set wins, otherwise the per-user, per-channel default), `TEMP`, `TMP` and `TMPDIR` to the temporary-files location beneath the storage root and `CADRUMO_AUTHORITY_ROOT` to the package's registry authority
+- **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the existing absolute directories `CADRUMO_EXTERNAL_BIN_DIRS` names; the package's native program directory; the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
+
+#### `cadrumo-runtime`
+
+- **Program:** `cadrumo-runtime`
+- **Started with:** any arguments
+- **Starts from:** only the operating-system groups `system`, `session`, `display` and `network`
+- **Passes from its caller:** nothing beyond its operating-system groups
+- **Sets itself:** `CADRUMO_LOCAL_STORAGE_ROOT` to the storage root the package's rule resolves (an absolute value you set wins, otherwise the per-user, per-channel default), `TEMP`, `TMP` and `TMPDIR` to the temporary-files location beneath the storage root, `CADRUMO_AUTHORITY_ROOT` to the package's registry authority, `CADRUMO_PACKAGE_AGENT_EXECUTABLE` to the path of the `cadrumo-agent` program and `CADRUMO_PACKAGE_RELAY_EXECUTABLE` to the path of the `cadrumo-mcp` program
+- **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the package's native program directory; the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
+
+#### `agent-gateway`
+
+- **Program:** `cadrumo-agent`
+- **Started with:** `-m cadrumo_agent.cli.main serve`
+- **Starts from:** only the operating-system group `system`
+- **Passes from its caller:** the names `CADRUMO_AGENT_DEVELOPMENT_TOOL_SERVER` and `CADRUMO_AGENT_PROVIDER_PROOF_POLICY`
+- **Accepts from its parent:** `CADRUMO_LOCAL_STORAGE_ROOT` (directory, optional), `CADRUMO_AGENT_HOSTED_ROOT` (directory, optional), `CADRUMO_AGENT_PORT` (port, optional), `CADRUMO_AGENT_WORKER_PORT` (port, optional) and `CADRUMO_AGENT_HOSTED_RELAY_EXECUTABLE` (executable, optional)
+- **Sets itself:** `TEMP`, `TMP` and `TMPDIR` to the temporary-files location beneath the storage root and `CADRUMO_AUTHORITY_ROOT` to the package's registry authority
+- **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the package's native program directory; the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
+
+#### `agent-worker`
+
+- **Program:** `cadrumo-agent`
+- **Started with:** `-m cadrumo_agent.worker`
+- **Starts from:** only the operating-system group `system`
+- **Passes from its caller:** the names `CADRUMO_AGENT_DEVELOPMENT_TOOL_SERVER`, `CADRUMO_AGENT_PROVIDER_PROOF_POLICY`, `CADRUMO_AGENT_GATEWAY_URL`, `CADRUMO_AGENT_WORKER_HOST`, `CADRUMO_AGENT_GATEWAY_LIFETIME_ID`, `CADRUMO_AGENT_WORKER_GENERATION` and `CADRUMO_AGENT_INTERNAL_TOKEN`
+- **Accepts from its parent:** `CADRUMO_LOCAL_STORAGE_ROOT` (directory, optional), `CADRUMO_AGENT_HOSTED_ROOT` (directory, optional), `CADRUMO_AGENT_PORT` (port, optional), `CADRUMO_AGENT_WORKER_PORT` (port, optional) and `CADRUMO_AGENT_HOSTED_RELAY_EXECUTABLE` (executable, optional)
+- **Sets itself:** `TEMP`, `TMP` and `TMPDIR` to the temporary-files location beneath the storage root and `CADRUMO_AUTHORITY_ROOT` to the package's registry authority
+- **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the package's native program directory; the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
+
+### Names only the package declares
+
+The settings table above does not list these names.
+
+| Name | Kind | What it is |
+| --- | --- | --- |
+| `CADRUMO_AGENT_DEVELOPMENT_TOOL_SERVER` | boolean | a component's own setting that its parent passes through unchanged |
+| `CADRUMO_AGENT_GATEWAY_LIFETIME_ID` | text | a component's own setting that its parent passes through unchanged |
+| `CADRUMO_AGENT_GATEWAY_URL` | text | a component's own setting that its parent passes through unchanged |
+| `CADRUMO_AGENT_HOSTED_RELAY_EXECUTABLE` | executable | a launch parameter its parent supplies |
+| `CADRUMO_AGENT_HOSTED_ROOT` | directory | a launch parameter its parent supplies |
+| `CADRUMO_AGENT_INTERNAL_TOKEN` | text | a component's own setting that its parent passes through unchanged |
+| `CADRUMO_AGENT_PORT` | port | a launch parameter its parent supplies |
+| `CADRUMO_AGENT_PROVIDER_PROOF_POLICY` | text | a component's own setting that its parent passes through unchanged |
+| `CADRUMO_AGENT_WORKER_GENERATION` | integer | a component's own setting that its parent passes through unchanged |
+| `CADRUMO_AGENT_WORKER_HOST` | text | a component's own setting that its parent passes through unchanged |
+| `CADRUMO_AGENT_WORKER_PORT` | port | a launch parameter its parent supplies |
+| `CADRUMO_EXTERNAL_BIN_DIRS` | directory_list | a package-owned override |
+| `CADRUMO_PACKAGE_AGENT_EXECUTABLE` | executable | a package fact the host sets |
+| `CADRUMO_PACKAGE_RELAY_EXECUTABLE` | executable | a package fact the host sets |
+| `TEMP` | directory | set by the program's host from its resolution |
+| `TMP` | directory | set by the program's host from its resolution |
+| `TMPDIR` | directory | set by the program's host from its resolution |
+
+### Refused launches
+
+A program whose profile refuses a launch exits with status 125 before Python starts. Its last line on standard error is one JSON object, `{"native_refusal": "<code>", "subject": "<name>"}`, where the subject is a variable name or a program and never a value. The code is one of:
+
+- `launch_value_missing`: a required launch parameter is absent.
+- `launch_value_malformed`: a launch parameter fails the check its kind declares.
+- `invocation_undeclared`: the program was started with arguments its table does not declare.
+
+`cadrumo-agent` accepts only the invocations its profiles list above and refuses every other, so it does not serve as a general interpreter.

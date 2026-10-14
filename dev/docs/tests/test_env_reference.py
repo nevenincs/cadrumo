@@ -1,8 +1,12 @@
 """Drift gates binding the environment-overrides surface to the settings model.
 
-Three surfaces describe the product environment overrides:
+Four surfaces describe the product environment overrides:
 
-- :class:`cadrumo.core.config.Settings` — the live model, the source of truth;
+- :class:`cadrumo.core.config.Settings` — the live model, the source of truth
+  for the command line;
+- ``native/application-environment.toml`` — the package's declaration of which
+  names each packaged program passes, the source of truth for the installed
+  package section of the generated page;
 - ``docs/reference/environment-overrides.md`` — the generated reference page
   (:mod:`dev.docs.env_reference`);
 - ``env/.env.example`` — the hand-annotated template operators copy.
@@ -18,6 +22,7 @@ under ``docs/reference``.
 from __future__ import annotations
 
 import re
+from dataclasses import replace
 
 import pytest
 
@@ -25,8 +30,9 @@ from cadrumo.core.storage_environment import TOOL_STORAGE_LOCATIONS
 from dev._paths import REPO_ROOT
 from dev.cache_root import DEV_CACHE_ROOT_ENV
 from dev.deploy.docs_delivery_contracts import DELIVERY_CREDENTIAL_ENV
+from dev.packaging.native.application_environment import ApplicationEnvironment, load
 
-from ..env_reference import render_environment_reference, target_path
+from ..env_reference import render_environment_reference, render_installed_package, target_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -120,3 +126,91 @@ def test_every_settings_field_carries_a_description() -> None:
         name for name, field in Settings.model_fields.items() if field.description is None or not field.description
     )
     assert not missing, f"Settings fields without descriptions: {missing}"
+
+
+def _declaration() -> ApplicationEnvironment:
+    return load(_REPO_ROOT)
+
+
+def _profile_text(page: str, name: str) -> str:
+    """Return the page's text for one launch profile, from its heading to the next heading."""
+    heading = f"#### `{name}`\n"
+    assert heading in page, f"the page has no section for profile {name}"
+    start = page.index(heading) + len(heading)
+    end = page.find("\n#", start)
+    return page[start : end if end != -1 else len(page)]
+
+
+def test_every_name_a_profile_admits_is_on_its_section_of_the_page() -> None:
+    """The page states, per profile, every name the declaration passes, accepts or sets."""
+    declaration = _declaration()
+    page = render_environment_reference()
+    assert declaration.profiles, "the declaration has no profiles; this gate would pass over an empty page"
+    for name, profile in declaration.profiles.items():
+        section = _profile_text(page, name)
+        admitted = {
+            *profile["pass"],
+            *(slot.name for slot in profile["slots"]),
+            *(fixed.name for fixed in profile["fixed"]),
+        }
+        for group, members in declaration.groups.items():
+            if members and set(members) <= set(profile["operator"]):
+                assert f"`{group}`" in section, f"profile {name} passes group {group}; its section omits it"
+                admitted -= set(members)
+        missing = sorted(variable for variable in admitted if f"`{variable}`" not in section)
+        assert not missing, f"profile {name} admits {missing}; its section on the page omits them"
+        assert f"`{profile['image']}`" in section
+
+
+def test_every_name_group_and_refusal_is_listed_once_on_the_page() -> None:
+    """Groups, operating-system names, the refusal status and every refusal code are stated."""
+    declaration = _declaration()
+    page = render_environment_reference()
+    for group, members in declaration.groups.items():
+        row = next(line for line in page.splitlines() if line.startswith(f"| `{group}` | `{members[0]}`"))
+        assert all(f"`{member}`" in row for member in members), f"group {group} is not listed whole"
+    for family, base in declaration.base.items():
+        for names in base.values():
+            assert all(f"`{name}`" in page for name in names), f"operating-system names of {family} are missing"
+    assert f"status {declaration.native_host['launch_profile_refused']}" in page
+    assert all(f"`{code}`" in page for code in declaration.native_host["refusals"])
+
+
+def test_the_installed_package_section_follows_the_declaration() -> None:
+    """A name added to a profile of the declaration reaches the page; nothing is kept as a copy."""
+    declaration = _declaration()
+    planted_name = "CADRUMO_PLANTED_PASS_THROUGH"
+    profiles = {
+        name: {**profile, "pass": (*profile["pass"], planted_name)} if name == "aeat" else profile
+        for name, profile in declaration.profiles.items()
+    }
+    planted = replace(
+        declaration,
+        names={**declaration.names, planted_name: {"kind": "text", "role": "pass"}},
+        profiles=profiles,
+    )
+    section = render_installed_package(planted, ())
+    assert f"`{planted_name}`" in _profile_text(section, "aeat")
+    assert f"`{planted_name}`" not in _profile_text(section, "python")
+    assert f"| `{planted_name}` | text |" in section
+    assert planted_name not in render_installed_package(declaration, ())
+
+
+def test_names_the_settings_table_lists_are_not_repeated_among_package_only_names() -> None:
+    """The package-only table holds exactly the declared names the settings model does not read."""
+    declaration = _declaration()
+    page = render_environment_reference()
+    only_package = page[page.index("### Names only the package declares") : page.index("### Refused launches")]
+    for name in declaration.names:
+        listed = f"| `{name}` |" in only_package
+        assert listed == (name not in _settings_env_names()), f"{name} is misplaced in the package-only table"
+
+
+def test_a_refusal_code_the_page_does_not_describe_stops_generation() -> None:
+    """A new refusal code in the declaration fails generation until the page describes it."""
+    declaration = _declaration()
+    undescribed_code = replace(
+        declaration, native_host={**declaration.native_host, "refusals": [*declaration.native_host["refusals"], "x"]}
+    )
+    with pytest.raises(RuntimeError, match="does not describe"):
+        render_installed_package(undescribed_code, ())

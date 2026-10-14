@@ -1,8 +1,12 @@
 """Generated environment-overrides reference for the Cadrumo settings surface.
 
 Introspects the live :class:`cadrumo.core.config.Settings` model — the single
-declarative home of every environment override the application supports — and
-renders ``docs/reference/environment-overrides.md``. The page is generated in
+declarative home of every environment override the command line supports — and
+renders ``docs/reference/environment-overrides.md``. A closing section states
+which names each program of an installed package passes. It is rendered from the
+package's own declaration, ``native/application-environment.toml``, read through
+the package's validator, so the command line never reads that file and the
+package never reads the settings model. The page is generated in
 full; hand edits are overwritten on the next run, mirroring the
 ``generated-reference-is-cli-owned`` discipline the CLI reference follows.
 
@@ -24,15 +28,24 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+from collections.abc import Iterable, Mapping, Sequence
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Any, Final
 
 from pydantic import SecretStr
 from pydantic_core import PydanticUndefined
 
 from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT, UTF_8
+from dev.packaging.native.application_environment import (
+    BASE_GROUPS,
+    NAME_ROLES,
+    ApplicationEnvironment,
+    Invocation,
+    InvocationArgument,
+    load,
+)
 
 from ._locale_chrome import docs_chrome
 from .build import docs_build_language
@@ -44,12 +57,14 @@ if TYPE_CHECKING:
 
 _HEADER = """<!-- GENERATED FILE - DO NOT EDIT.
 Regenerate with: uv run --no-sync python -m dev.docs.env_reference
-Source of truth: cadrumo.core.config.Settings -->
+Sources of truth: cadrumo.core.config.Settings and native/application-environment.toml -->
 
 # Environment overrides
 
 This page covers every environment variable the application reads, generated
-from the live settings model. Environment overrides are advanced deployment
+from the live settings model. The last section states which names an installed
+package passes to each program it ships, generated from the package's own
+declaration. Environment overrides are advanced deployment
 and development configuration: every user workflow works without them through
 prompts, command flags, and `aeat config` commands. Set an override only when
 you administer a deployment and know why the default does not fit.
@@ -91,8 +106,251 @@ def _escape(text: str) -> str:
     return " ".join(text.split()).replace("|", "\\|")
 
 
-def render_environment_reference() -> str:
-    """Render the full generated page from the live settings model."""
+_ROLE_MEANING: Final[Mapping[str, str]] = {
+    "location": "a storage location an operator may relocate",
+    "operator": "an operator setting",
+    "package": "a package-owned override",
+    "pin": "set by the program's host from its resolution",
+    "fixed": "a package fact the host sets",
+    "slot": "a launch parameter its parent supplies",
+    "pass": "a component's own setting that its parent passes through unchanged",
+}
+"""What each role the declaration gives a name means; a role without an entry stops generation."""
+
+_REFUSAL_MEANING: Final[Mapping[str, str]] = {
+    "launch_value_missing": "a required launch parameter is absent",
+    "launch_value_malformed": "a launch parameter fails the check its kind declares",
+    "invocation_undeclared": "the program was started with arguments its table does not declare",
+}
+"""What each refusal code the declaration names means; a code without an entry stops generation."""
+
+_PLATFORM_LABEL: Final[Mapping[str, str]] = {"windows": "Windows", "posix": "Linux and macOS"}
+
+
+def _codes(names: Iterable[str]) -> str:
+    """Join names as code spans, in the order given."""
+    return ", ".join(f"`{name}`" for name in names)
+
+
+def _list_in_words(items: Sequence[str]) -> str:
+    """Join phrases as prose: ``a``, ``a and b`` or ``a, b and c``."""
+    if len(items) <= 2:
+        return " and ".join(items)
+    return ", ".join(items[:-1]) + " and " + items[-1]
+
+
+def _argument_text(argument: InvocationArgument) -> str:
+    """Spell one invocation argument: a literal as itself, a typed value as ``<slot:kind>``."""
+    if argument.literal is not None:
+        return argument.literal
+    return f"<{argument.slot}:{argument.kind}>"
+
+
+def _invocation_text(invocation: Invocation) -> str:
+    """Spell one invocation as a code span, naming its platform when it is not shared."""
+    text = "`" + " ".join(_argument_text(argument) for argument in invocation.arguments) + "`"
+    label = _PLATFORM_LABEL.get(invocation.platform)
+    return text if label is None else f"{text} on {label}"
+
+
+def _started_with(declaration: ApplicationEnvironment, profile_name: str) -> str:
+    """Say which arguments select a profile: its declared invocations, or any."""
+    selecting = [invocation for invocation in declaration.invocations if invocation.profile == profile_name]
+    return "; ".join(_invocation_text(invocation) for invocation in selecting) if selecting else "any arguments"
+
+
+def _passed_text(declaration: ApplicationEnvironment, profile: Mapping[str, Any]) -> str:
+    """Say what a profile takes from its caller: whole groups first, then the names left over."""
+    operator = set(profile["operator"])
+    groups = [group for group, members in declaration.groups.items() if members and set(members) <= operator]
+    covered = {name for group in groups for name in declaration.groups[group]}
+    singles = [name for name in profile["operator"] if name not in covered] + list(profile["pass"])
+    parts = []
+    if groups:
+        parts.append(f"the name groups {_list_in_words([f'`{group}`' for group in groups])}")
+    if singles:
+        parts.append(f"the names {_list_in_words([f'`{name}`' for name in singles])}")
+    return " and ".join(parts) if parts else "nothing beyond its operating-system groups"
+
+
+def _fixed_text(source: str, value: str) -> str:
+    """Spell the value a package fact is set to."""
+    if source == "image":
+        return f"the path of the `{value}` program"
+    if source == "layout_path":
+        return f"the package location `{value}`"
+    return f"`{value}`"
+
+
+def _sets_text(declaration: ApplicationEnvironment, profile: Mapping[str, Any]) -> list[str]:
+    """List what a profile sets itself: pins and package facts."""
+    pins = profile["pins"]
+    sets = []
+    if "root" in pins:
+        sets.append(
+            f"`{declaration.root['variable']}` to the storage root the package's rule resolves "
+            "(an absolute value you set wins, otherwise the per-user, per-channel default)"
+        )
+    if "temporary" in pins:
+        sets.append(
+            f"{_list_in_words([f'`{name}`' for name in declaration.temporary])} "
+            "to the temporary-files location beneath the storage root"
+        )
+    if "authority" in pins:
+        sets.append(f"`{declaration.authority.name}` to the package's registry authority")
+    sets.extend(f"`{fixed.name}` to {_fixed_text(fixed.source, fixed.value)}" for fixed in profile["fixed"])
+    return sets
+
+
+def _search_path_text(declaration: ApplicationEnvironment, profile: Mapping[str, Any]) -> str:
+    """Say how a profile's ``PATH`` is composed: the declared entries, in order."""
+    if not profile["package_path"]:
+        return "left as its caller sets it"
+    admitted = {*profile["operator"], *profile["pass"]}
+    variable, subpaths = declaration.windows_system
+    windows_system = "`%" + variable + "%\\" + "\\".join(subpaths) + "`"
+    posix_system = _list_in_words([f"`{directory}`" for directory in declaration.posix_system])
+    entries = {
+        "executable": "the directory of the package's interpreter",
+        "native": "the package's native program directory",
+        "system": f"the system directory ({windows_system} on Windows, {posix_system} elsewhere)",
+    }
+    parts = []
+    for entry in declaration.path_entries:
+        if entry == "external":
+            if declaration.path_external in admitted:
+                parts.append(f"the existing absolute directories `{declaration.path_external}` names")
+        else:
+            parts.append(entries[entry])
+    return "set by the package to " + "; ".join(parts) + ", in that order"
+
+
+def _profile_section(declaration: ApplicationEnvironment, name: str, profile: Mapping[str, Any]) -> list[str]:
+    """Render one launch profile as a heading and a list of what it passes, accepts and sets."""
+    if profile["inherit"]:
+        starts = "its caller's whole environment, unchanged"
+    else:
+        groups = _list_in_words([f"`{group}`" for group in profile["base_groups"]])
+        noun = "group" if len(profile["base_groups"]) == 1 else "groups"
+        starts = f"only the operating-system {noun} {groups}"
+    lines = [
+        f"#### `{name}`",
+        "",
+        f"- **Program:** `{profile['image']}`",
+        f"- **Started with:** {_started_with(declaration, name)}",
+        f"- **Starts from:** {starts}",
+    ]
+    if not profile["inherit"]:
+        lines.append(f"- **Passes from its caller:** {_passed_text(declaration, profile)}")
+    slots = [f"`{slot.name}` ({slot.kind}, {'required' if slot.required else 'optional'})" for slot in profile["slots"]]
+    if slots:
+        lines.append(f"- **Accepts from its parent:** {_list_in_words(slots)}")
+    sets = _sets_text(declaration, profile)
+    lines.append(f"- **Sets itself:** {_list_in_words(sets)}" if sets else "- **Sets itself:** nothing")
+    lines.append(f"- **Search path (`PATH`):** {_search_path_text(declaration, profile)}")
+    return lines
+
+
+def render_installed_package(declaration: ApplicationEnvironment, settings_names: Iterable[str]) -> str:
+    """Render the section that states which names each program of an installed package passes.
+
+    Everything is read from ``declaration``; ``settings_names`` only separates the names the
+    settings table above already describes from the ones only the package declares.
+    """
+    absent_roles = set(NAME_ROLES) - set(_ROLE_MEANING)
+    absent_codes = set(declaration.native_host["refusals"]) - set(_REFUSAL_MEANING)
+    if absent_roles or absent_codes:
+        raise RuntimeError(
+            f"the environment reference does not describe roles {sorted(absent_roles)} "
+            f"or refusals {sorted(absent_codes)}"
+        )
+    known = set(settings_names)
+    lines = [
+        "## Installed package",
+        "",
+        "An installed Cadrumo package defines the process environment of each program it ships before Python "
+        "starts, from the launch profile that program was built with. Unless its profile starts from its "
+        "caller's whole environment, a program passes only the names its profile lists. Every other name in "
+        "the environment you start it with is dropped, so setting a name that a program's profile does not "
+        "list has no effect on that program. A run from a source checkout, "
+        "`pip` or `uvx` uses no package: the table above applies to it and this section does not. The desktop "
+        "application and the background manager define the environment of the programs they start from the "
+        "same profiles.",
+        "",
+        "### Name groups",
+        "",
+        "A profile passes whole groups of names from its caller.",
+        "",
+        "| Group | Names |",
+        "| --- | --- |",
+    ]
+    lines.extend(f"| `{group}` | {_codes(members)} |" for group, members in declaration.groups.items())
+    lines += [
+        "",
+        "### Operating-system names",
+        "",
+        "A profile starts from the operating-system groups it lists, taken from its caller's environment. "
+        "Windows compares names without regard to case.",
+        "",
+        "| Group | Windows | Linux and macOS |",
+        "| --- | --- | --- |",
+    ]
+    for group in BASE_GROUPS:
+        windows, posix = declaration.base["windows"][group], declaration.base["posix"][group]
+        lines.append(f"| `{group}` | {_codes(windows) or 'none'} | {_codes(posix) or 'none'} |")
+    lines += [
+        "",
+        "### Programs",
+        "",
+        "Each profile belongs to one program. The host validates a launch parameter against its kind before "
+        "Python starts: a `directory` is an existing absolute directory, a `port` is an integer from 0 to 65535, "
+        "an `executable` is an existing absolute file that is not a batch file, and a `descriptor` is a positive "
+        "integer. Any other kind must be non-empty. In an invocation, `<name:kind>` stands for a value the host "
+        "checks by kind: a `handle` is a Windows handle number and a `descriptor` is a file descriptor number.",
+        "",
+    ]
+    for name, profile in declaration.profiles.items():
+        lines += _profile_section(declaration, name, profile)
+        lines.append("")
+    lines += [
+        "### Names only the package declares",
+        "",
+        "The settings table above does not list these names.",
+        "",
+        "| Name | Kind | What it is |",
+        "| --- | --- | --- |",
+    ]
+    lines.extend(
+        f"| `{name}` | {entry['kind']} | {_ROLE_MEANING[entry['role']]} |"
+        for name, entry in sorted(declaration.names.items())
+        if name not in known
+    )
+    native_host = declaration.native_host
+    defaulted = {profile["image"] for profile in declaration.profiles.values() if not profile["invoked"]}
+    refusing = sorted({profile["image"] for profile in declaration.profiles.values()} - defaulted)
+    refusals = [f"- `{code}`: {_REFUSAL_MEANING[code]}." for code in native_host["refusals"]]
+    lines += [
+        "",
+        "### Refused launches",
+        "",
+        f"A program whose profile refuses a launch exits with status {native_host['launch_profile_refused']} "
+        "before Python starts. Its last line on standard error is one JSON object, "
+        '`{"native_refusal": "<code>", "subject": "<name>"}`, where the subject is a variable name or a '
+        "program and never a value. The code is one of:",
+        "",
+        *refusals,
+    ]
+    if refusing:
+        lines += [
+            "",
+            f"{_list_in_words([f'`{image}`' for image in refusing])} accepts only the invocations its profiles "
+            "list above and refuses every other, so it does not serve as a general interpreter.",
+        ]
+    return "\n".join(lines) + "\n"
+
+
+def render_environment_reference(declaration: ApplicationEnvironment | None = None) -> str:
+    """Render the full generated page from the live settings model and the package declaration."""
     from cadrumo.core.config import Settings
 
     # Keyed on the model's own environment inventory rather than every field:
@@ -114,7 +372,8 @@ def render_environment_reference() -> str:
     )
     rows.sort()
     footer = "\n" + docs_chrome("docs.cli.env.secrets_note", language) + "\n"
-    return _HEADER + "\n".join(rows) + "\n" + footer
+    package = render_installed_package(load(REPO_ROOT) if declaration is None else declaration, environment_names)
+    return _HEADER + "\n".join(rows) + "\n" + footer + "\n" + package
 
 
 def target_path(repo_root: Path | None = None) -> Path:

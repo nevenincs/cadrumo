@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:62cfcf08a286f17106bd3c0aaab0ade5399fcc43524c3a9ed6826d9f444c2da3'
+body_hash: 'sha256:1a0b898b21df11b1e7a8d7f8953533b96a909a3fb703464f24eccc1d5f59da66'
 related:
   - "[[2026-10-13-canonical-environment-plan]]"
 ---
@@ -283,6 +283,16 @@ related:
 - `S14` `verify:` `uv run --no-sync ruff check and format --check on the touched files` -> `pass`
 - `S14` `verify:` `uv run --no-sync pytest dev/quality/tests/test_no_git_cli.py` -> `pass`
 - `S14` `by:` `implementation-engineer-standard`
+- `S15` `M` `native/CONTRACT.md`
+- `S15` `M` `dev/docs/env_reference.py`
+- `S15` `M` `dev/docs/tests/test_env_reference.py`
+- `S15` `M` `docs/reference/environment-overrides.md`
+- `S15` `verify:` `uv run --no-sync pytest dev/docs/tests/test_env_reference.py --deselect test_generated_page_is_fresh (8 cases)` -> `pass`
+- `S15` `verify:` `committed page equals render_environment_reference over HEAD's committed native/application-environment.toml (byte-identical)` -> `pass`
+- `S15` `verify:` `uv run --no-sync pytest dev/quality/tests/test_agent_prefix_spelling.py dev/quality/tests/test_no_git_cli.py dev/docs/tests/test_rag_is_dev_only.py dev/docs/tests/test_localized_surface_exclusions.py dev/docs/tests/test_docs.py` -> `pass`
+- `S15` `verify:` `uv run --no-sync ruff check dev/docs, ruff format --check and ty check on dev/docs/env_reference.py and its test` -> `pass`
+- `S15` `verify:` `uv run --no-sync pytest dev/docs/tests/test_env_reference.py::test_generated_page_is_fresh against the working tree` -> `fail`
+- `S15` `by:` `implementation-engineer-standard`
 
 ## Notes
 
@@ -322,3 +332,5 @@ related:
 - `S14` Deviation from the plan row: the probe does not call cadrumo-agent stores-state through the agent image. The image admits only the gateway and worker invocations, and the declaration's own vector names stores-state as an undeclared invocation it refuses (exit 125). The probe makes the synthetic hosted root's stores current by running the agent's setup step in the generic interpreter, since a hosted serve refuses `hosted_stores_mismatch` before it reaches `hosted_tool_server_unproven;` that refusal is reported as a set-up error.
 - `S14` Open question for the orchestrator: no route admitted by the package runs the agent's setup or migrate steps on a hosted root, so the runtime's hosted start will refuse `hosted_stores_mismatch` until something sets up the stores; the plan and the ADR do not say who does.
 - `S14` The PATH check covers the generic interpreter image only: it is the one image that runs caller code to report its environment. The agent images are covered by the launch-profile vectors.
+- `S15` Freshness test fails in the working tree only because of the native lane's uncommitted edits to native/application-environment.toml (six agent invocations, an option argument); the committed page is generated from HEAD's committed declaration and the P05.S17 owner regenerates it, with the option renderer, after its invocation-table commit.
+- `S15` just check-import-boundaries reports unavailable: 15 of 15 contracts kept, 0 hard findings, but the cadrumo load-target inventory is stale and the governed tree changed during the run, both from other sessions' new modules `(store_lifecycle.py` and others). just check-types leaves diagnostics in other sessions' files and `dev/packaging/native/tests/test_agent_image.py;` its one diagnostic in `dev/docs/env_reference.py` is fixed. `dev/quality/tests/test_doc_privacy.py` fails on home paths in .vault records, none in the touched files.
