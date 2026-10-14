@@ -1,8 +1,8 @@
 //! The manager consumes the canonical strict environment in isolated synthetic roots.
 
 use cadrumo_manager::contract::{
-    AUTHORITY, HOST_INHERITED_ENV, LAUNCH_NAMES, NATIVE, PINNED_ENV, ROOT_VARIABLE,
-    TEMPORARY_DEFAULT, TEMPORARY_ENV,
+    AUTHORITY, HOST_INHERITED_ENV, LAUNCH_NAMES, LAUNCH_PROFILES, NATIVE, PINNED_ENV,
+    ROOT_VARIABLE, TEMPORARY_DEFAULT, TEMPORARY_ENV,
 };
 use cadrumo_manager::supervision::environment::{ManagedLocations, runtime_environment};
 use std::ffi::OsString;
@@ -122,6 +122,51 @@ fn fixture_children_do_not_receive_a_package_authority_pin() {
     );
     // A fixture image has no package composition; it keeps its caller's PATH.
     assert!(environment.contains(&(OsString::from("PATH"), OsString::from("os-path"))));
+    // Nor does it receive a package fact that locates a file in a package it does not have.
+    for fixed in located_fixed_values() {
+        assert!(
+            !environment.iter().any(|(name, _)| name == fixed),
+            "fixture received {fixed}"
+        );
+    }
+}
+
+/// The runtime profile's fixed values that name a file inside its package.
+fn located_fixed_values() -> Vec<&'static str> {
+    let runtime = LAUNCH_PROFILES
+        .iter()
+        .find(|profile| profile.name == "cadrumo-runtime")
+        .expect("the runtime image declares a launch profile");
+    let located: Vec<&str> = runtime
+        .fixed
+        .iter()
+        .filter(|fixed| matches!(fixed.source, "package" | "image"))
+        .map(|fixed| fixed.name)
+        .collect();
+    assert!(
+        !located.is_empty(),
+        "the runtime profile fixes package files"
+    );
+    located
+}
+
+#[test]
+fn package_children_receive_the_package_files_their_profile_fixes() {
+    let root = Root::new();
+    let storage = root.0.join("storage");
+    let package = root.0.join("package");
+    let environment = runtime_environment(&storage, Some(&package), system()).unwrap();
+    for fixed in located_fixed_values() {
+        let value = environment
+            .iter()
+            .find(|(name, _)| name == fixed)
+            .map(|(_, value)| PathBuf::from(value))
+            .unwrap_or_else(|| panic!("package child lacks {fixed}"));
+        assert!(
+            value.starts_with(&package),
+            "{fixed} is outside the package"
+        );
+    }
 }
 
 #[cfg(windows)]

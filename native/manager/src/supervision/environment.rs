@@ -123,8 +123,8 @@ fn same_name(name: &std::ffi::OsStr, declared: &str) -> bool {
 ///
 /// The runtime host defines the same environment again from what it receives. Package
 /// authority comes only from the selected package, never the ambient environment. A
-/// fixture image has no package: it receives no authority pin and keeps its caller's
-/// `PATH`.
+/// fixture image has no package: it receives no authority pin and no fixed value that
+/// locates a package file, and it keeps its caller's `PATH`.
 pub fn runtime_environment(
     root: &Path,
     package: Option<&Path>,
@@ -163,8 +163,14 @@ pub fn runtime_environment(
     launch::create_directories(&defined).map_err(failed)?;
     let mut environment = defined.environment;
     if package.is_none() {
-        environment
-            .retain(|(name, _)| !same_name(name, LAUNCH_AUTHORITY_PIN) && !same_name(name, "PATH"));
+        let located = |name: &OsString| {
+            profile.fixed.iter().any(|fixed| {
+                matches!(fixed.source, "package" | "image") && same_name(name, fixed.name)
+            })
+        };
+        environment.retain(|(name, _)| {
+            !same_name(name, LAUNCH_AUTHORITY_PIN) && !same_name(name, "PATH") && !located(name)
+        });
         environment.extend(caller_path.map(|path| (OsString::from("PATH"), path)));
     }
     Ok(environment)
