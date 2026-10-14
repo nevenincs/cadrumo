@@ -8,7 +8,7 @@ related:
   - '[[2026-10-13-startup-performance-operation-contract-manifest-adr]]'
 modified: '2026-10-14'
 body_schema: body-v2
-body_hash: 'sha256:68228e0902096f87a3679657a2b3869fd5983dd0d78275400d35e45677e75028'
+body_hash: 'sha256:8af98a37346a21bf918f8b0e4f1e336b329c432edd0150ff6711d8ad07d65006'
 ---
 
 <!-- LINK RULES:
@@ -120,9 +120,9 @@ The accepted ADR `2026-10-13-startup-performance-operation-contract-manifest-adr
 ## Steps
 
 - [x] `S01` - Split the monolithic production registry builder (operation_composition.py:1033-2145) into named composition groups, one per owning operation module, each importing its builders inside its function; move the shared composition inputs into one lazily resolving inputs object and keep build_production_operation_registry composing every group eagerly; `src/cadrumo/entrypoints/operation_composition.py`.
-- [ ] `S02` - Add the dev generator that composes the eager registry and writes the manifest through OperationContractManifestV1.from_registry (contract_manifest.py:118-133), generate the shipped manifest, add the generate and check recipes beside generate-provider-catalog (justfile:537-546), a drift test in the owning package and a planted-defect test proving the check fails on a stale manifest; `dev/operation_contract_manifest/generate.py, src/cadrumo/_data/operations/contract_manifest.json, justfile, src/cadrumo/entrypoints/tests/test_operation_contract_manifest.py`.
-- [ ] `S03` - Compose a manifest-backed registry (ManifestOperationRegistry.from_manifest, contract_manifest.py:166-172) over the group table and make the worker's compose_operation_dependencies (operation_composition.py:2148-2262, called from runtime/operation_host.py:183) use it; prove stale-manifest refusal and pin with a module-graph gate that reading every contract imports no operation handler module; `src/cadrumo/entrypoints/operation_composition.py, src/cadrumo/entrypoints/tests/test_operation_contract_manifest.py`.
-- [ ] `S04` - Switch the runtime registry preparation (runtime/profile_connections.py:370) and the terminal interface registry door (tui/installed_session.py:336-343) to the manifest-backed registry, coordinating the runtime file with its active owner; `src/cadrumo/entrypoints/runtime/profile_connections.py, src/cadrumo/entrypoints/tui/installed_session.py`.
+- [x] `S02` - Add the dev generator that composes the eager registry and writes the manifest through OperationContractManifestV1.from_registry (contract_manifest.py:118-133), generate the shipped manifest, add the generate and check recipes beside generate-provider-catalog (justfile:537-546), a drift test in the owning package and a planted-defect test proving the check fails on a stale manifest; `dev/operation_contract_manifest/generate.py, src/cadrumo/_data/operations/contract_manifest.json, justfile, src/cadrumo/entrypoints/tests/test_operation_contract_manifest.py`.
+- [x] `S03` - Compose a manifest-backed registry (ManifestOperationRegistry.from_manifest, contract_manifest.py:166-172) over the group table and make the worker's compose_operation_dependencies (operation_composition.py:2148-2262, called from runtime/operation_host.py:183) use it; prove stale-manifest refusal and pin with a module-graph gate that reading every contract imports no operation handler module; `src/cadrumo/entrypoints/operation_composition.py, src/cadrumo/entrypoints/tests/test_operation_contract_manifest.py`.
+- [x] `S04` - Switch the runtime registry preparation (runtime/profile_connections.py:370) and the terminal interface registry door (tui/installed_session.py:336-343) to the manifest-backed registry, coordinating the runtime file with its active owner; `src/cadrumo/entrypoints/runtime/profile_connections.py, src/cadrumo/entrypoints/tui/installed_session.py`.
 
 <!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or
 `L4`) determines the structure under this section:
