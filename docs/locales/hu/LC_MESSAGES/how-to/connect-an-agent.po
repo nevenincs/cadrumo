@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-13 00:06+0200\n"
+"POT-Creation-Date: 2026-10-14 12:38+0200\n"
 "PO-Revision-Date: 2026-07-19 10:00+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
@@ -677,7 +677,7 @@ msgstr ""
 
 #: ../../how-to/connect-an-agent.md:294
 msgid "Hold a sign-in for an agent"
-msgstr ""
+msgstr "Bejelentkezés nyitva tartása egy ügynöknek"
 
 #: ../../how-to/connect-an-agent.md:296
 msgid ""
@@ -686,6 +686,12 @@ msgid ""
 "Windows logon that holds no credentials cannot use that store; there, or "
 "in a harness that should leave nothing behind, hold the sign-in instead:"
 msgstr ""
+"Az `aeat config login` paranccsal létrehozott bejelentkezést a számítógép"
+" védett hitelesítőadat-tárolója őrzi, és a `cadrumo-mcp` onnan követi. "
+"Egy hitelesítő adatokat nem tartalmazó Windows-bejelentkezés nem tudja "
+"használni ezt a tárolót; ilyenkor, vagy egy olyan tesztkörnyezetben, "
+"amely semmit sem hagyhat maga után, inkább tartsd nyitva a "
+"bejelentkezést:"
 
 #: ../../how-to/connect-an-agent.md:305
 msgid ""
@@ -693,6 +699,9 @@ msgid ""
 "storing it, for as long as its standard input stays open. Nothing in it "
 "is written to the credential store or to the profile's storage."
 msgstr ""
+"A parancs bejelentkezik a profilba, és ezt a bejelentkezést mentés nélkül"
+" nyitva tartja, amíg a szabványos bemenete nyitva marad. Ebből semmi sem "
+"kerül a hitelesítőadat-tárolóba vagy a profil tárhelyére."
 
 #: ../../how-to/connect-an-agent.md:309
 #, python-brace-format
@@ -700,55 +709,82 @@ msgid ""
 "**Password.** The first line of standard input is one JSON object, "
 "`{\"passphrase\": \"…\"}`. It is read once and then discarded."
 msgstr ""
+"**Jelszó.** A szabványos bemenet első sora egyetlen JSON-objektum: "
+"`{\"passphrase\": \"…\"}`. Egyszer olvassa be, majd eldobja."
 
 #: ../../how-to/connect-an-agent.md:311
 msgid ""
 "**Events.** Standard output carries one JSON object per line, each naming"
 " its `event`:"
 msgstr ""
+"**Események.** A szabványos kimenet soronként egy JSON-objektumot "
+"tartalmaz, és mindegyik megnevezi a saját `event` értékét:"
 
 #: ../../how-to/connect-an-agent.md:313
 msgid "`held` gives the `profile_id` and the `session_expires_at` deadline."
 msgstr ""
+"A `held` megadja a `profile_id` értéket és a `session_expires_at` "
+"határidőt."
 
 #: ../../how-to/connect-an-agent.md:314
 msgid ""
 "`attendance_request` reports an MCP connection that asks to follow this "
 "sign-in. It gives the `attendance_id`, the `process_id` of the asking "
-"process as the operating system reports it, the `frontend`, the `surface`"
-" and when the ask lapses (`expires_at`, two minutes after it was made)."
+"process as the operating system reports it, the `image_path` of that "
+"process's program as the operating system reports it (`null` where it "
+"cannot be read), the `frontend`, the `surface` and when the ask lapses "
+"(`expires_at`, two minutes after it was made)."
 msgstr ""
-
-#: ../../how-to/connect-an-agent.md:318
-msgid "`attendance_decided` and `attendance_refused` report your answers."
-msgstr ""
-
-#: ../../how-to/connect-an-agent.md:319
-msgid "`signed_out` and `session_ended` report the end of the sign-in."
-msgstr ""
+"Az `attendance_request` egy olyan MCP-kapcsolatot jelez, amely kéri, hogy"
+" követhesse ezt a bejelentkezést. Megadja az `attendance_id` azonosítót, "
+"a kérő folyamat `process_id` értékét az operációs rendszer szerint, a "
+"folyamat programjának `image_path` útvonalát az operációs rendszer "
+"szerint (`null`, ha nem olvasható), a `frontend` és a `surface` értéket, "
+"valamint azt, hogy a kérés mikor jár le (`expires_at`, két perccel a "
+"létrehozása után)."
 
 #: ../../how-to/connect-an-agent.md:320
+msgid "`attendance_decided` and `attendance_refused` report your answers."
+msgstr "Az `attendance_decided` és az `attendance_refused` a válaszaidat jelzi."
+
+#: ../../how-to/connect-an-agent.md:321
+msgid "`signed_out` and `session_ended` report the end of the sign-in."
+msgstr "A `signed_out` és a `session_ended` a bejelentkezés végét jelzi."
+
+#: ../../how-to/connect-an-agent.md:322
 msgid ""
 "`ended` comes last, with the `reason`: `input_closed`, `signed_out` or "
 "`session_ended`."
 msgstr ""
+"Az `ended` érkezik utoljára, a `reason` értékkel: `input_closed`, "
+"`signed_out` vagy `session_ended`."
 
-#: ../../how-to/connect-an-agent.md:323
+#: ../../how-to/connect-an-agent.md:325
 msgid "The command's result follows the events."
-msgstr ""
+msgstr "A parancs eredménye az eseményeket követi."
 
-#: ../../how-to/connect-an-agent.md:324
+#: ../../how-to/connect-an-agent.md:326
 #, python-brace-format
 msgid ""
 "**Decisions.** Each later line of standard input is one JSON object: "
 "`{\"approve\": \"ATTENDANCE_ID\"}`, `{\"decline\": \"ATTENDANCE_ID\"}`, "
 "or `{\"sign_out\": true}`. Approve only an ask whose `process_id` is the "
-"`cadrumo-mcp` process you started, or one of its descendants. Nothing "
-"else admits a connection: not a profile ID, a storage path, the runtime's"
-" endpoint, or an attendance ID copied to another process."
+"`cadrumo-mcp` process you started, or one of its descendants, and whose "
+"`image_path`, where given, is the program you started. Nothing else "
+"admits a connection: not a profile ID, a storage path, the runtime's "
+"endpoint, or an attendance ID copied to another process."
 msgstr ""
+"**Döntések.** A szabványos bemenet minden további sora egyetlen JSON-"
+"objektum: `{\"approve\": \"ATTENDANCE_ID\"}`, `{\"decline\": "
+"\"ATTENDANCE_ID\"}` vagy `{\"sign_out\": true}`. Csak olyan kérést hagyj "
+"jóvá, amelynek `process_id` értéke az általad indított `cadrumo-mcp` "
+"folyamat vagy annak egyik leszármazottja, és amelynek `image_path` "
+"értéke, ha meg van adva, az általad indított program. Semmi más nem enged"
+" be egy kapcsolatot: sem egy profilazonosító, sem egy tárolási útvonal, "
+"sem a futtatókörnyezet végpontja, sem egy másik folyamatba átmásolt "
+"jelenléti azonosító."
 
-#: ../../how-to/connect-an-agent.md:331
+#: ../../how-to/connect-an-agent.md:334
 msgid ""
 "Start `cadrumo-mcp` with the same two settings and without `--credential-"
 "reference`. When it has no stored sign-in to follow, its first call that "
@@ -761,44 +797,68 @@ msgid ""
 "connection while the held sign-in lives. When its short lease runs out, "
 "it is renewed without a new decision."
 msgstr ""
+"Indítsd a `cadrumo-mcp` parancsot ugyanazzal a két beállítással és "
+"`--credential-reference` nélkül. Ha nincs követhető mentett "
+"bejelentkezése, az első, profilt igénylő hívása megkéri a bejelentkezést "
+"nyitva tartó folyamatot, hogy engedje be, és legfeljebb 90 másodpercig "
+"vár a válaszra. Jóváhagyás után a `status` eszköze ezt jelzi: "
+"`\"session\": \"attended\"`. Az ügynök ezután ebben a profilban dolgozik,"
+" a kiszolgált felület alatt, ugyanazokkal a művelet-, jóváhagyási és "
+"közzétételi ellenőrzésekkel, mint bármely munkamenet. Az olyan műveletet,"
+" amelyet csak a személy futtathat, például a bejelentkezést vagy a "
+"kulcsok kezelését, elutasítja neki. A jóváhagyás arra az egy MCP-"
+"kapcsolatra érvényes, amíg a nyitva tartott bejelentkezés él. Amikor a "
+"rövid bérlete lejár, új döntés nélkül megújul."
 
-#: ../../how-to/connect-an-agent.md:342
+#: ../../how-to/connect-an-agent.md:345
 msgid ""
 "Access ends for every connection that follows the held sign-in when any "
 "of these happens, and each later call is refused:"
 msgstr ""
+"A hozzáférés minden olyan kapcsolat számára véget ér, amely a nyitva "
+"tartott bejelentkezést követi, ha az alábbiak bármelyike bekövetkezik, és"
+" minden későbbi hívást elutasít:"
 
-#: ../../how-to/connect-an-agent.md:345
+#: ../../how-to/connect-an-agent.md:348
 msgid "the holder's standard input closes, or the holder exits;"
 msgstr ""
+"a bejelentkezést nyitva tartó folyamat szabványos bemenete bezárul, vagy "
+"a folyamat kilép;"
 
-#: ../../how-to/connect-an-agent.md:346
+#: ../../how-to/connect-an-agent.md:349
 #, python-brace-format
 msgid "you send `{\"sign_out\": true}` to the holder;"
 msgstr ""
+"elküldöd a `{\"sign_out\": true}` objektumot a bejelentkezést nyitva "
+"tartó folyamatnak;"
 
-#: ../../how-to/connect-an-agent.md:347
+#: ../../how-to/connect-an-agent.md:350
 #, python-brace-format
 msgid ""
 "another process signs the person out with `aeat --format json config "
 "logout --secrets-stdin`, reading `{\"passphrase\": \"…\"}`;"
 msgstr ""
+"egy másik folyamat kijelentkezteti a személyt az `aeat --format json "
+"config logout --secrets-stdin` paranccsal, amely a `{\"passphrase\": "
+"\"…\"}` objektumot olvassa;"
 
-#: ../../how-to/connect-an-agent.md:350
+#: ../../how-to/connect-an-agent.md:353
 msgid "the profile is locked with `config profile lock --all`;"
-msgstr ""
+msgstr "a profilt a `config profile lock --all` paranccsal zárolják;"
 
-#: ../../how-to/connect-an-agent.md:351
+#: ../../how-to/connect-an-agent.md:354
 msgid ""
 "the sign-in reaches its deadline: by default 15 minutes after you entered"
 " the password, and agent activity does not extend it;"
 msgstr ""
+"a bejelentkezés eléri a határidejét: alapértelmezés szerint 15 perccel a "
+"jelszó megadása után, és az ügynök tevékenysége nem hosszabbítja meg;"
 
-#: ../../how-to/connect-an-agent.md:353
+#: ../../how-to/connect-an-agent.md:356
 msgid "the runtime stops."
-msgstr ""
+msgstr "a futtatókörnyezet leáll."
 
-#: ../../how-to/connect-an-agent.md:355
+#: ../../how-to/connect-an-agent.md:358
 #, python-brace-format
 msgid ""
 "A command that runs without a terminal reads its profile password from "
@@ -807,16 +867,25 @@ msgid ""
 "never follows a held sign-in. In full, with the two settings in the "
 "environment of every command:"
 msgstr ""
+"A terminál nélkül futó parancs a profil jelszavát a gyökérszintű "
+"`--profile-secrets-stdin` csatornáról olvassa `{\"profile_passphrase\": "
+"\"…\"}` formában; lásd: [Védd az adataidhoz való hozzáférést](protect-"
+"data-access.md). Soha nem követ nyitva tartott bejelentkezést. Teljes "
+"egészében, a két beállítással minden parancs környezetében:"
 
-#: ../../how-to/connect-an-agent.md:368
+#: ../../how-to/connect-an-agent.md:371
 #, python-brace-format
 msgid ""
 "`profile create` reads `{\"passphrase\": \"…\", "
 "\"passphrase_confirmation\": \"…\"}`. Keep the holder's input open while "
 "the agent works, and approve its ask when it arrives."
 msgstr ""
+"A `profile create` a `{\"passphrase\": \"…\", "
+"\"passphrase_confirmation\": \"…\"}` objektumot olvassa. Tartsd nyitva a "
+"bejelentkezést nyitva tartó folyamat bemenetét, amíg az ügynök dolgozik, "
+"és hagyd jóvá a kérését, amikor megérkezik."
 
-#: ../../how-to/connect-an-agent.md:372
+#: ../../how-to/connect-an-agent.md:375
 msgid ""
 "When you are done, close the holder's input, close the MCP client, close "
 "the runtime's standard input and wait for it to exit with code 64, then "

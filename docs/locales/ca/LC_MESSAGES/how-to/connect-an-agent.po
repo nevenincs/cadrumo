@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-13 00:06+0200\n"
+"POT-Creation-Date: 2026-10-14 12:38+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0000\n"
 "Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -666,7 +666,7 @@ msgstr ""
 
 #: ../../how-to/connect-an-agent.md:294
 msgid "Hold a sign-in for an agent"
-msgstr ""
+msgstr "Mantenir un inici de sessió per a un agent"
 
 #: ../../how-to/connect-an-agent.md:296
 msgid ""
@@ -675,6 +675,11 @@ msgid ""
 "Windows logon that holds no credentials cannot use that store; there, or "
 "in a harness that should leave nothing behind, hold the sign-in instead:"
 msgstr ""
+"Un inici de sessió fet amb `aeat config login` es desa al magatzem de "
+"credencials protegit d'aquest ordinador, i `cadrumo-mcp` el segueix des "
+"d'allà. Una sessió de Windows que no conté credencials no pot fer servir "
+"aquest magatzem; en aquest cas, o en un entorn de proves que no hagi de "
+"deixar res enrere, mantén l'inici de sessió:"
 
 #: ../../how-to/connect-an-agent.md:305
 msgid ""
@@ -682,6 +687,10 @@ msgid ""
 "storing it, for as long as its standard input stays open. Nothing in it "
 "is written to the credential store or to the profile's storage."
 msgstr ""
+"L'ordre inicia la sessió al perfil i manté obert aquest inici de sessió, "
+"sense desar-lo, mentre la seva entrada estàndard continuï oberta. Res "
+"d'ell no s'escriu al magatzem de credencials ni a l'emmagatzematge del "
+"perfil."
 
 #: ../../how-to/connect-an-agent.md:309
 #, python-brace-format
@@ -689,55 +698,81 @@ msgid ""
 "**Password.** The first line of standard input is one JSON object, "
 "`{\"passphrase\": \"…\"}`. It is read once and then discarded."
 msgstr ""
+"**Contrasenya.** La primera línia de l'entrada estàndard és un objecte "
+"JSON, `{\"passphrase\": \"…\"}`. Es llegeix una vegada i després es "
+"descarta."
 
 #: ../../how-to/connect-an-agent.md:311
 msgid ""
 "**Events.** Standard output carries one JSON object per line, each naming"
 " its `event`:"
 msgstr ""
+"**Esdeveniments.** La sortida estàndard porta un objecte JSON per línia, "
+"i cadascun indica el seu `event`:"
 
 #: ../../how-to/connect-an-agent.md:313
 msgid "`held` gives the `profile_id` and the `session_expires_at` deadline."
-msgstr ""
+msgstr "`held` indica el `profile_id` i el termini `session_expires_at`."
 
 #: ../../how-to/connect-an-agent.md:314
 msgid ""
 "`attendance_request` reports an MCP connection that asks to follow this "
 "sign-in. It gives the `attendance_id`, the `process_id` of the asking "
-"process as the operating system reports it, the `frontend`, the `surface`"
-" and when the ask lapses (`expires_at`, two minutes after it was made)."
+"process as the operating system reports it, the `image_path` of that "
+"process's program as the operating system reports it (`null` where it "
+"cannot be read), the `frontend`, the `surface` and when the ask lapses "
+"(`expires_at`, two minutes after it was made)."
 msgstr ""
-
-#: ../../how-to/connect-an-agent.md:318
-msgid "`attendance_decided` and `attendance_refused` report your answers."
-msgstr ""
-
-#: ../../how-to/connect-an-agent.md:319
-msgid "`signed_out` and `session_ended` report the end of the sign-in."
-msgstr ""
+"`attendance_request` informa d'una connexió MCP que demana seguir aquest "
+"inici de sessió. Indica l'identificador `attendance_id`, el `process_id` "
+"del procés que ho demana tal com l'informa el sistema operatiu, el "
+"`image_path` del programa d'aquest procés tal com l'informa el sistema "
+"operatiu (`null` quan no es pot llegir), el `frontend`, el `surface` i "
+"quan caduca la petició (`expires_at`, dos minuts després de fer-se)."
 
 #: ../../how-to/connect-an-agent.md:320
+msgid "`attendance_decided` and `attendance_refused` report your answers."
+msgstr ""
+"`attendance_decided` i `attendance_refused` informen de les teves "
+"respostes."
+
+#: ../../how-to/connect-an-agent.md:321
+msgid "`signed_out` and `session_ended` report the end of the sign-in."
+msgstr "`signed_out` i `session_ended` informen del final de l'inici de sessió."
+
+#: ../../how-to/connect-an-agent.md:322
 msgid ""
 "`ended` comes last, with the `reason`: `input_closed`, `signed_out` or "
 "`session_ended`."
 msgstr ""
+"`ended` arriba l'últim, amb el `reason`: `input_closed`, `signed_out` o "
+"`session_ended`."
 
-#: ../../how-to/connect-an-agent.md:323
+#: ../../how-to/connect-an-agent.md:325
 msgid "The command's result follows the events."
-msgstr ""
+msgstr "El resultat de l'ordre segueix els esdeveniments."
 
-#: ../../how-to/connect-an-agent.md:324
+#: ../../how-to/connect-an-agent.md:326
 #, python-brace-format
 msgid ""
 "**Decisions.** Each later line of standard input is one JSON object: "
 "`{\"approve\": \"ATTENDANCE_ID\"}`, `{\"decline\": \"ATTENDANCE_ID\"}`, "
 "or `{\"sign_out\": true}`. Approve only an ask whose `process_id` is the "
-"`cadrumo-mcp` process you started, or one of its descendants. Nothing "
-"else admits a connection: not a profile ID, a storage path, the runtime's"
-" endpoint, or an attendance ID copied to another process."
+"`cadrumo-mcp` process you started, or one of its descendants, and whose "
+"`image_path`, where given, is the program you started. Nothing else "
+"admits a connection: not a profile ID, a storage path, the runtime's "
+"endpoint, or an attendance ID copied to another process."
 msgstr ""
+"**Decisions.** Cada línia posterior de l'entrada estàndard és un objecte "
+"JSON: `{\"approve\": \"ATTENDANCE_ID\"}`, `{\"decline\": "
+"\"ATTENDANCE_ID\"}` o `{\"sign_out\": true}`. Aprova només una petició el"
+" `process_id` de la qual sigui el procés `cadrumo-mcp` que vas iniciar, o"
+" un dels seus descendents, i el `image_path` de la qual, quan s'indiqui, "
+"sigui el programa que vas iniciar. Res més no admet una connexió: ni un "
+"ID de perfil, ni una ruta d'emmagatzematge, ni el punt de connexió de "
+"l'entorn d'execució, ni un ID d'assistència copiat a un altre procés."
 
-#: ../../how-to/connect-an-agent.md:331
+#: ../../how-to/connect-an-agent.md:334
 msgid ""
 "Start `cadrumo-mcp` with the same two settings and without `--credential-"
 "reference`. When it has no stored sign-in to follow, its first call that "
@@ -750,44 +785,65 @@ msgid ""
 "connection while the held sign-in lives. When its short lease runs out, "
 "it is renewed without a new decision."
 msgstr ""
+"Inicia `cadrumo-mcp` amb els mateixos dos paràmetres i sense "
+"`--credential-reference`. Quan no té cap inici de sessió desat per "
+"seguir, la seva primera crida que necessita el perfil demana a qui manté "
+"l'inici de sessió que l'admeti, i espera la resposta fins a 90 segons. Un"
+" cop aprovada, la seva eina `status` informa `\"session\": \"attended\"`."
+" Aleshores l'agent treballa dins d'aquest perfil, sota la superfície "
+"servida i les mateixes comprovacions d'operació, aprovació i divulgació "
+"que qualsevol sessió. Una operació que només pot executar la persona, com"
+" iniciar sessió o gestionar claus, se li rebutja. L'aprovació val per a "
+"aquesta única connexió MCP mentre l'inici de sessió mantingut segueixi "
+"viu. Quan la seva concessió breu s'esgota, es renova sense una nova "
+"decisió."
 
-#: ../../how-to/connect-an-agent.md:342
+#: ../../how-to/connect-an-agent.md:345
 msgid ""
 "Access ends for every connection that follows the held sign-in when any "
 "of these happens, and each later call is refused:"
 msgstr ""
+"L'accés s'acaba per a tota connexió que segueix l'inici de sessió "
+"mantingut quan passa qualsevol d'aquestes coses, i cada crida posterior "
+"es rebutja:"
 
-#: ../../how-to/connect-an-agent.md:345
+#: ../../how-to/connect-an-agent.md:348
 msgid "the holder's standard input closes, or the holder exits;"
 msgstr ""
+"l'entrada estàndard de qui manté l'inici de sessió es tanca, o aquest "
+"procés acaba;"
 
-#: ../../how-to/connect-an-agent.md:346
+#: ../../how-to/connect-an-agent.md:349
 #, python-brace-format
 msgid "you send `{\"sign_out\": true}` to the holder;"
-msgstr ""
+msgstr "envies `{\"sign_out\": true}` a qui manté l'inici de sessió;"
 
-#: ../../how-to/connect-an-agent.md:347
+#: ../../how-to/connect-an-agent.md:350
 #, python-brace-format
 msgid ""
 "another process signs the person out with `aeat --format json config "
 "logout --secrets-stdin`, reading `{\"passphrase\": \"…\"}`;"
 msgstr ""
+"un altre procés tanca la sessió de la persona amb `aeat --format json "
+"config logout --secrets-stdin`, que llegeix `{\"passphrase\": \"…\"}`;"
 
-#: ../../how-to/connect-an-agent.md:350
+#: ../../how-to/connect-an-agent.md:353
 msgid "the profile is locked with `config profile lock --all`;"
-msgstr ""
+msgstr "el perfil es bloqueja amb `config profile lock --all`;"
 
-#: ../../how-to/connect-an-agent.md:351
+#: ../../how-to/connect-an-agent.md:354
 msgid ""
 "the sign-in reaches its deadline: by default 15 minutes after you entered"
 " the password, and agent activity does not extend it;"
 msgstr ""
+"l'inici de sessió arriba al seu termini: per defecte 15 minuts després "
+"d'introduir la contrasenya, i l'activitat de l'agent no l'allarga;"
 
-#: ../../how-to/connect-an-agent.md:353
+#: ../../how-to/connect-an-agent.md:356
 msgid "the runtime stops."
-msgstr ""
+msgstr "l'entorn d'execució s'atura."
 
-#: ../../how-to/connect-an-agent.md:355
+#: ../../how-to/connect-an-agent.md:358
 #, python-brace-format
 msgid ""
 "A command that runs without a terminal reads its profile password from "
@@ -796,16 +852,25 @@ msgid ""
 "never follows a held sign-in. In full, with the two settings in the "
 "environment of every command:"
 msgstr ""
+"Una ordre que s'executa sense terminal llegeix la contrasenya del seu "
+"perfil des del canal arrel `--profile-secrets-stdin` com a "
+"`{\"profile_passphrase\": \"…\"}`; consulta [Protegeix l'accés a les "
+"teves dades](protect-data-access.md). Mai no segueix un inici de sessió "
+"mantingut. Complet, amb els dos paràmetres a l'entorn de cada ordre:"
 
-#: ../../how-to/connect-an-agent.md:368
+#: ../../how-to/connect-an-agent.md:371
 #, python-brace-format
 msgid ""
 "`profile create` reads `{\"passphrase\": \"…\", "
 "\"passphrase_confirmation\": \"…\"}`. Keep the holder's input open while "
 "the agent works, and approve its ask when it arrives."
 msgstr ""
+"`profile create` llegeix `{\"passphrase\": \"…\", "
+"\"passphrase_confirmation\": \"…\"}`. Mantén oberta l'entrada de qui "
+"manté l'inici de sessió mentre l'agent treballa, i aprova la seva petició"
+" quan arribi."
 
-#: ../../how-to/connect-an-agent.md:372
+#: ../../how-to/connect-an-agent.md:375
 msgid ""
 "When you are done, close the holder's input, close the MCP client, close "
 "the runtime's standard input and wait for it to exit with code 64, then "
