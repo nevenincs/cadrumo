@@ -39,6 +39,8 @@ def test_a_relay_tool_is_allowed_once_with_the_option_the_request_offered() -> N
 
     assert answer == {"option_id": "allow_once"}
     assert qualified == {"option_id": "allow_once"}
+    with_session = answer_for(_request("execute", "allow_once", "allow_session", "reject_once"))
+    assert with_session == {"option_id": "allow_once"}
 
 
 @pytest.mark.parametrize(
@@ -52,6 +54,7 @@ def test_a_relay_tool_is_allowed_once_with_the_option_the_request_offered() -> N
         pytest.param(_request("write_file", "allow_once", server=None), id="the-agents-own-file-tool"),
         pytest.param(_request(None, "allow_once"), id="no-tool-named"),
         pytest.param(_request("execute", "reject_once"), id="no-allow-once-offered"),
+        pytest.param(_request("execute", "allow_session", "reject_once"), id="only-a-session-allow-offered"),
         pytest.param(_request("execute", "allow_once", "allow_once"), id="two-allow-once-options"),
     ],
 )

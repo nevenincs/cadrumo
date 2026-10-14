@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:195fb290bfe630cc252dd1f5d41be66c4fb0f5a67878daeb995b45e8a64306a1'
+body_hash: 'sha256:642127dca79fc57bc7c417baf4e2781f0465ff9184e6b475d202fd53a1a38a56'
 related:
   - "[[2026-10-13-package-verification-plan]]"
 ---
@@ -88,3 +88,4 @@ related:
 - `S03` a run is judged only when its receipt lane is claude/api, the one lane that mounts the relay
 - `S03` the claude/api-only lane check is withdrawn: the owner rules that every provider lane mounts the relay
 - `S03` relayed calls are recognised by the agent's trusted `tool_server` and the bare registry name, on every provider lane
+- `S03` an offered `allow_session` option never replaces the per-call `allow_once` answer
