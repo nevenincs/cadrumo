@@ -20,6 +20,7 @@ from .persistence.financial_operand_custody import (
     OperationTypedFinancialOperandCustodyRepository,
 )
 from .persistence.journal import (
+    OperationEphemeralRouting,
     OperationEventStream,
     OperationInventoryLimit,
     OperationJournal,
@@ -226,6 +227,7 @@ def compose_operation_services(
     cleanup_timeout: timedelta,
     typed_financial_operand_custody: OperationTypedFinancialOperandCustodyRepository | None = None,
     execution_authority: OperationExecutionAuthority | None = None,
+    ephemeral: OperationEphemeralRouting | None = None,
 ) -> OperationComposedServices:
     """Bind one immutable registry to real runtime adapters and safe services.
 
@@ -253,6 +255,7 @@ def compose_operation_services(
         response_authority_issuer=authority_broker,
         typed_financial_operand_custody=typed_financial_operand_custody,
         execution_authority=execution_authority,
+        ephemeral=ephemeral,
     )
     observation = OperationObservationService(reader=reader, registry=registry)
 

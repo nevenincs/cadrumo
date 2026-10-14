@@ -8,7 +8,7 @@ related:
   - '[[2026-08-11-tui-architecture-adr]]'
 modified: '2026-10-14'
 body_schema: body-v2
-body_hash: 'sha256:878bfce18a4fbbc469cd91fddbbba82ad03362c47da7501855dcbf079194df16'
+body_hash: 'sha256:a8dc9fd54e499be594b904b58a9326baecc6e6a548f8c049113b5689e557a7d9'
 ---
 
 <!-- LINK RULES:
@@ -124,7 +124,7 @@ Decision coverage: `2026-08-11-tui-architecture-adr` D5 governs. No new costly d
 ## Steps
 
 - [x] `S01` - Add an in-memory operation store implementing the journal, event-stream, observation-reader, lease and secure-reference ports (application/operations/persistence/journal.py:387-520) with the durable adapter's create, commit, settlement, replay and observation semantics (adapters/persistence/operations/journal.py:270-384, _journal_validation.validate_advance), keyed per operation so ephemeral leases never contend; `src/cadrumo/adapters/persistence/operations/ephemeral_store.py, its owning tests`.
-- [ ] `S02` - Route each operation to the in-memory store or the durable journal by its definition's declared durability at create, and by operation id afterwards; keep recovery inventory and idempotency durable-only, and compose the router where the worker builds its supervisor (entrypoints/operation_composition.py:3213-3235, application/operations/composition.py:240); `src/cadrumo/adapters/persistence/operations/durability_router.py, src/cadrumo/entrypoints/operation_composition.py`.
+- [x] `S02` - Route each operation to the in-memory store or the durable journal by its definition's declared durability at create, and by operation id afterwards; keep recovery inventory and idempotency durable-only, and compose the router where the worker builds its supervisor (entrypoints/operation_composition.py:3213-3235, application/operations/composition.py:240); `src/cadrumo/adapters/persistence/operations/durability_router.py, src/cadrumo/entrypoints/operation_composition.py`.
 - [ ] `S03` - Serve frontend observe, replay and result-page reads of an ephemeral operation from the same composed reader, and answer an operation lost with its process as the typed unknown-operation refusal the frontends already handle; `src/cadrumo/entrypoints/runtime/worker_operation_requests.py, src/cadrumo/application/operations/_projection_read.py`.
 - [ ] `S04` - Declare user-profile.view EPHEMERAL with effect NONE only, no replay and no conflict scope (capabilities.py:98-104; user_profile/operations.py:156), and regenerate the operation contract manifest; `src/cadrumo/application/user_profile/operations.py, src/cadrumo/_data/operations/contract_manifest.json`.
 - [ ] `S05` - Prove it: an ephemeral page read takes zero journal-lock acquisitions and writes no journal file; a durable read is unchanged; a worker ended mid-read leaves no record and no effect and the frontend gets unknown-operation; the docs-sequence profile-view test and the packaged TUI overview read pass under -n 2 with the 60 s view budget unchanged; `src/cadrumo/adapters/persistence/operations/tests, src/cadrumo/entrypoints/runtime/tests, dev/docs/sequences/tests/test_runner.py`.

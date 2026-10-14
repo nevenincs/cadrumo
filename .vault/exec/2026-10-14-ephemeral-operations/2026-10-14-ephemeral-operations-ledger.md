@@ -5,7 +5,7 @@ tags:
 date: '2026-10-14'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:188029361d0a9b6f1c7950ca52b8b90df8aa8788d9eb95120767b947d5506686'
+body_hash: 'sha256:b0006b127af08b20f2776a6d052e3a4eff26fdf5ebcea0cc14baccca19844748'
 related:
   - "[[2026-10-14-ephemeral-operations-plan]]"
 ---
@@ -45,3 +45,21 @@ related:
 - `S01` `M` `src/cadrumo/adapters/persistence/operations/journal.py`
 - `S01` `verify:` `pytest src/cadrumo/adapters/persistence/operations/tests/test_ephemeral_store.py src/cadrumo/adapters/persistence/operations/tests/test_journal.py` -> `pass`
 - `S01` `by:` `vaultspec-high-executor`
+- `S02` `A` `src/cadrumo/adapters/persistence/operations/durability_router.py`
+- `S02` `A` `src/cadrumo/adapters/persistence/operations/tests/test_durability_router.py`
+- `S02` `M` `src/cadrumo/application/operations/persistence/journal.py`
+- `S02` `M` `src/cadrumo/application/operations/supervisor.py`
+- `S02` `M` `src/cadrumo/application/operations/_supervisor_host.py`
+- `S02` `M` `src/cadrumo/application/operations/_supervisor_execution.py`
+- `S02` `M` `src/cadrumo/application/operations/_supervisor_reconciliation.py`
+- `S02` `M` `src/cadrumo/application/operations/_supervisor_submission.py`
+- `S02` `M` `src/cadrumo/application/operations/composition.py`
+- `S02` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S02` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S02` `M` `dev/quality/metadata/import_load_targets.json`
+- `S02` `verify:` `pytest src/cadrumo/application/operations src/cadrumo/adapters/persistence/operations` -> `pass`
+- `S02` `by:` `vaultspec-high-executor`
+
+## Notes
+
+- `S02` 4 failures in `test_execution_authority.py` and `test_failure_custody_settlement.py` fail identically on HEAD without this Step (caplog record assertions); not caused here

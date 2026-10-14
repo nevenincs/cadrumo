@@ -191,7 +191,7 @@ class SupervisorExecutionMixin(SupervisorHost):
         executor_context = _supervisor_context.SupervisorExecutorContext(
             context=context,
             authority_operation=self._authority_operation,
-            operands=self._operands,
+            operands=self._operands_for(snapshot.identity.operation_id),
             ephemeral_secret=BoundEphemeralSecretAccess(
                 requirement=requirement,
                 broker=self._ephemeral_secrets,
@@ -572,7 +572,7 @@ class SupervisorExecutionMixin(SupervisorHost):
                 receipt = await await_cancellation_complete(
                     _validated_refusal_receipt(
                         registry=self.registry,
-                        operands=self._operands,
+                        operands=self._operands_for(snapshot.identity.operation_id),
                         snapshot=snapshot,
                         evidence=result_ref,
                         settled_at=self._clock(),

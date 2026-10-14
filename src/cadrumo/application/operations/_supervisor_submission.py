@@ -149,6 +149,7 @@ class SupervisorSubmissionMixin(SupervisorHost):
             if provenance is not None and self._operands is not None
             else None
         )
+        self._register_durability(identity.operation_id, definition_contract.durability)
         lease = self._candidate(identity, now)
         replayed_operation_id = await self._acquire_submission_lease(lease, claim=claim)
         if replayed_operation_id is not None:

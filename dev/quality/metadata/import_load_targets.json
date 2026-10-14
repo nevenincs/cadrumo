@@ -302,6 +302,8 @@
         "cadrumo.adapters.persistence.llm.usage",
         "cadrumo.adapters.persistence.operations",
         "cadrumo.adapters.persistence.operations._journal_validation",
+        "cadrumo.adapters.persistence.operations.durability_router",
+        "cadrumo.adapters.persistence.operations.ephemeral_store",
         "cadrumo.adapters.persistence.operations.financial_journal_purge",
         "cadrumo.adapters.persistence.operations.journal",
         "cadrumo.adapters.persistence.operations.lease",

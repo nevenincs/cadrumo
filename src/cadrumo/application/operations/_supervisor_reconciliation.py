@@ -343,7 +343,7 @@ class SupervisorReconciliationMixin(SupervisorHost):
         executor_context = _supervisor_context.SupervisorExecutorContext(
             context=context,
             authority_operation=self._authority_operation,
-            operands=self._operands,
+            operands=self._operands_for(snapshot.identity.operation_id),
             ephemeral_secret=BoundEphemeralSecretAccess(
                 requirement=snapshot.secret_requirement,
                 broker=self._ephemeral_secrets,
@@ -377,7 +377,7 @@ class SupervisorReconciliationMixin(SupervisorHost):
         return DefinitionBoundContext(
             snapshot=snapshot,
             registry=self.registry,
-            operands=self._operands,
+            operands=self._operands_for(snapshot.identity.operation_id),
             clock=self._clock,
             resources=self._resources,
             advance=self._advance,

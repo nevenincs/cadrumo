@@ -16,6 +16,7 @@ from ...core.hex import Hex64Str
 from ...core.logging import get_logger
 from ...core.operations import (
     OperationCancellation,
+    OperationDurability,
     OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
@@ -56,6 +57,7 @@ from .persistence.financial_operand_custody import (
     OperationTypedFinancialOperandCustodyRepository,
 )
 from .persistence.journal import (
+    OperationEphemeralRouting,
     OperationEventStream,
     OperationJournal,
     OperationLeaseRepository,
@@ -131,8 +133,13 @@ class OperationSupervisor(
         response_token_factory: Callable[[], str] = _supervisor_context.new_response_token,
         execution_authority: OperationExecutionAuthority | None = None,
         typed_financial_operand_custody: OperationTypedFinancialOperandCustodyRepository | None = None,
+        ephemeral: OperationEphemeralRouting | None = None,
     ) -> None:
-        """Bind the registry and durable ports for one process owner."""
+        """Bind the registry and durable ports for one process owner.
+
+        ``ephemeral`` keeps operations declared ``EPHEMERAL`` in process
+        memory; without it they are journaled durably like every other.
+        """
         self.registry = registry
         self._execution_authority = execution_authority
         self._authority_operation = authority_operation
@@ -140,6 +147,7 @@ class OperationSupervisor(
         self._event_stream = event_stream
         self._leases = leases
         self._operands = operands
+        self._ephemeral = ephemeral
         self._owner_id = owner_id
         self._lease_token = lease_token_factory()
         self._clock = clock
@@ -217,6 +225,19 @@ class OperationSupervisor(
         """Require delivery custody to finish before any terminal receipt is committed."""
         if self._typed_financial_operands is not None:
             await self._typed_financial_operands.settle_operation(operation_id)
+
+    @override
+    def _operands_for(self, operation_id: OperationId) -> OperationSecureReferenceStore | None:
+        """The operand store one operation's executor writes through."""
+        if self._ephemeral is not None and self._ephemeral.routes_ephemeral(operation_id):
+            return self._ephemeral.operands_for(operation_id)
+        return self._operands
+
+    @override
+    def _register_durability(self, identity_operation_id: OperationId, durability: OperationDurability) -> None:
+        """Route an ephemeral operation to process memory before its lease is taken."""
+        if durability is OperationDurability.EPHEMERAL and self._ephemeral is not None:
+            self._ephemeral.register_ephemeral(identity_operation_id)
 
     @property
     def lease_duration(self) -> timedelta:

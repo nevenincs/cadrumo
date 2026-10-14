@@ -499,6 +499,29 @@ class OperationLeaseRepository(Protocol):
         ...
 
 
+@runtime_checkable
+class OperationEphemeralRouting(Protocol):
+    """Where an operation declared ``EPHEMERAL`` keeps its lifecycle for the life of its process.
+
+    The supervisor registers each ephemeral operation before it takes the
+    operation's lease, so every later journal, lease and observation call for
+    that operation stays in process memory. Its executor writes operands
+    through the operation's own store, which forgets them with its record.
+    """
+
+    def register_ephemeral(self, operation_id: OperationId) -> None:
+        """Route every later port call for ``operation_id`` to process memory."""
+        ...
+
+    def routes_ephemeral(self, operation_id: OperationId) -> bool:
+        """Whether ``operation_id`` is held in process memory."""
+        ...
+
+    def operands_for(self, operation_id: OperationId) -> OperationSecureReferenceStore:
+        """The operand store one ephemeral operation writes through."""
+        ...
+
+
 def serialize_operation_operand(operand: BaseModel) -> bytes:
     """Return the exact typed JSON bytes addressed by secure-reference digests."""
     return operand.model_dump_json(
@@ -532,6 +555,7 @@ class OperationSecureReferenceStore(Protocol):
 
 
 __all__ = [
+    "OperationEphemeralRouting",
     "OperationEventStream",
     "OperationInventoryLimit",
     "OperationJournal",

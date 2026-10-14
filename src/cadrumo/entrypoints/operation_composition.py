@@ -3162,6 +3162,7 @@ def compose_operation_dependencies(
     the same graph can own pre-login and post-login execution without retaining
     a stale profile repository.
     """
+    from ..adapters.persistence.operations.durability_router import DurabilityRoutedOperationPersistence
     from ..adapters.persistence.operations.journal import OperationJournalRepository
     from ..adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
     from ..adapters.persistence.operations.secure_references import operation_secure_reference_repository
@@ -3213,16 +3214,23 @@ def compose_operation_dependencies(
     journal = OperationJournalRepository(storage_root=storage_root)
     if execution_authority_factory is not None:
         execution_authority = execution_authority_factory(registry)
-    leases = OperationLeaseFilesystemRepository(storage_root=storage_root)
-    operands = operation_secure_reference_repository()
+    # Operations declared ephemeral run in this process's memory; every other is journaled durably.
+    persistence = DurabilityRoutedOperationPersistence(
+        journal=journal,
+        event_stream=journal,
+        reader=journal,
+        leases=OperationLeaseFilesystemRepository(storage_root=storage_root),
+        operands=operation_secure_reference_repository(),
+    )
     return compose_operation_services(
         registry=registry,
         authority_operation=authority_operation,
-        journal=journal,
-        reader=journal,
-        event_stream=journal,
-        leases=leases,
-        operands=operands,
+        journal=persistence,
+        reader=persistence,
+        event_stream=persistence,
+        leases=persistence,
+        operands=persistence,
+        ephemeral=persistence,
         owner_id=secrets.token_hex(32) if operation_owner_id is None else operation_owner_id,
         lease_token_factory=lambda: secrets.token_hex(32),
         clock=now,

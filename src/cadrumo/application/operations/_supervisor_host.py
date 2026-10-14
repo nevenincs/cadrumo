@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from ...core.operations import (
         OperationCancellation,
         OperationDeadline,
+        OperationDurability,
         OperationEffect,
         OperationLifecycle,
         OperationTerminalCondition,
@@ -96,6 +97,10 @@ class SupervisorHost:
 
         @staticmethod
         def _validate_request_payload(payload: BaseModel, request_type: type[BaseModel]) -> None: ...
+
+        def _operands_for(self, operation_id: OperationId) -> OperationSecureReferenceStore | None: ...
+
+        def _register_durability(self, identity_operation_id: OperationId, durability: OperationDurability) -> None: ...
 
         def _candidate(self, identity: OperationIdentity, now: datetime) -> OperationOwnerLease: ...
 
