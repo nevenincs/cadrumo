@@ -42,7 +42,7 @@ cadrumo-agent today stores conversation content in plaintext SQLite, log files, 
 - Decrypted document bytes live only in memory; bytes never enter MCP results, only registered projections; consent is per invocation and digest-bound (`2026-06-10-llm-evidence-classification-adr`, `2026-09-26-mcp-purpose-authentication-adr`).
 - The capsule directory is content-inventoried and published as an immutable unit; live agent files there would block profile deletion (`2026-10-12-desktop-agent-host-reference`).
 - cadrumo-agent's stores open before any configuration is read, in three processes; every opener must take the key first (`2026-10-12-desktop-agent-host-reference`).
-- The Claude Code lane writes its own plaintext transcripts, credentials and cache, some outside the agent root, beyond cadrumo-agent's control (`2026-10-12-desktop-agent-host-reference`).
+- Which providers and lanes the agent supports, and how each lane keeps its state, belongs to cadrumo-agent. Cadrumo rules on none of it; it states only the at-rest, consent and location terms every lane must meet inside a Cadrumo profile.
 
 ## Considered options
 
@@ -62,11 +62,6 @@ Launcher identity:
 
 - **A new `agent-host` frontend that may resume the stored sign-in, may receive only the agent data key and the provider credential on a dedicated door, and is refused every person act (proposed).**
 - The CLI frontend with a narrow door. Rejected: a CLI session can sign out, delete and approve.
-
-Lanes in hosted mode:
-
-- **Direct Anthropic API lane only (proposed).** Runs in process; all its state goes through the encrypted stores.
-- Claude Code lane. Excluded until a run proves nothing persists in plaintext.
 
 Webview access:
 
@@ -117,7 +112,7 @@ Contract 4, cadrumo-agent storage (owner: cadrumo-agent):
 
 - One SQLCipher connector used by every store opener, keyed from the standard-input frame before any store opens; a store-format identity that refuses plaintext or wrongly keyed stores.
 - No log files in hosted mode; worker standard error not written to disk; no `service.token` or IPC secret files; `tmp` and `scratch` emptied after every run.
-- Hosted lanes limited to the direct Anthropic lane; documents read through Cadrumo projections, not workspace files.
+- Every hosted lane, for whichever supported provider it serves, persists nothing private in plaintext; documents are read through Cadrumo projections, not workspace files.
 
 Contract 5, documents (owner: Cadrumo backend):
 
@@ -135,12 +130,10 @@ Contract 7, packaging and compatibility (owner: Cadrumo build; cadrumo-agent):
 
 - cadrumo-agent is never published to PyPI or any public index. Owner ruling of 2026-10-12, first-hand: "we will not publish cadrumo agent to pypi, ever. we do not have a settled method of provisioning the repo." How its source is provisioned into Cadrumo's build is open (remaining choice 5). Today's wheel selector admits only hashed PyPI registry wheels, so whichever method is chosen must change that selector deliberately. Once provisioned, Cadrumo declares the launcher script, and the package manifest carries an agent statement (bundled, distribution version, hosting-contract version, store-format version) checked like the user-docs statement.
 - Cadrumo declares the supported agent version range and contract versions; the launcher compares them with the manifest and with `cadrumo-agent version --json` before start.
-- Both products use the latest Anthropic SDK release as their floor (1.13.0 on 2026-10-12), with no compatibility path for older SDK versions. Parameters the SDK removed, such as `temperature`, are dropped rather than shimmed. Owner ruling of 2026-10-12, first-hand: "ensure we're working against the latest anthropic versions, no backwards or old version support."
-- Claude model names are never hardcoded. They come from the Anthropic Models API, which gives id, display name, creation time, input and output limits, and a capability tree, and needs are expressed as capability requirements. Owner ruling of 2026-10-12, first-hand: "model names should be derived programmatically from the api!" The API carries no price and no tier, so how a model is chosen per role, and what replaces Cadrumo's per-model price table, is open (remaining choice 6). Node is not bundled while the Claude Code lane is excluded.
 
 Migration implications:
 
-- Cadrumo: new namespaces (agent data key, consent grants), a new storage scope and category, a new deletion journal state and owner value, a package-manifest statement, an attachment-manifest schema version (conversation link, agent source), and the `anthropic` major upgrade. Readers must accept the previous attachment-manifest version; no existing profile data is rewritten.
+- Cadrumo: new namespaces (agent data key, consent grants), a new storage scope and category, a new deletion journal state and owner value, a package-manifest statement, an attachment-manifest schema version (conversation link, agent source). Readers must accept the previous attachment-manifest version; no existing profile data is rewritten.
 - cadrumo-agent: superseding records for the five affected decisions; a hosting-contract version bump (key frame, bearer from the host, no token files); a store-format version. No hosted data can exist today because hosted start is refused, so plaintext stores are refused and re-created rather than converted.
 - Desktop: the shell amendment; the CSP is unchanged.
 
@@ -164,7 +157,6 @@ The launcher puts every authority act where authority already lives: in a Cadrum
 
 - The column can be built now against these contracts, with each capability unavailable until its owner delivers it.
 - Releasing an agent data key to a client process is new and needs the owner's explicit acceptance through the sign-in amendment.
-- The Claude Code lane is unavailable for real data until proven; the direct lane cannot read images or PDFs itself, so document understanding rests on Cadrumo's readers.
 - The owner ruled on 2026-10-12, under `2026-10-04-application-sign-in-adr`, that a message the person sends to the assistant counts as their activity. Until that extension is built, conversations end at the sign-in's idle deadline.
 
 Remaining architectural choices, each named for the owner:
@@ -174,4 +166,4 @@ Remaining architectural choices, each named for the owner:
 3. Withdrawn by the 2026-10-13 approval ruling: no consent granularity remains to choose.
 4. Implementation owner for the Tauri host: no running session claims `native/desktop/src-tauri`.
 5. How the cadrumo-agent repository is provisioned into Cadrumo's build, given that it is never published to PyPI.
-6. Model selection per role from the live Models API: which model to use when several meet a role's capability needs, and what replaces the per-model price table.
+6. Withdrawn: providers, lanes and model selection belong to cadrumo-agent, not to Cadrumo.

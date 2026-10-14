@@ -30,7 +30,7 @@ Owner rulings this revision applies, all first-hand on 2026-10-13:
 
 ## Problem Statement
 
-The owner wants the agent column tested and iterated against the real agent backend. That means the real desktop, the real cadrumo-agent, the real Anthropic API and the real Cadrumo runtime, including tool calls that change records, questionnaires and approvals. The production path in `2026-10-12-desktop-agent-host-adr` is not built, and it needs work in cadrumo-agent and in Cadrumo's packaging. The first revision of this record failed review with thirteen critical findings. This revision decides the live lane's topology and the controls those findings require.
+The owner wants the agent column tested and iterated against the real agent backend. That means the real desktop, the real cadrumo-agent with a provider it supports, and the real Cadrumo runtime, including tool calls that change records, questionnaires and approvals. The production path in `2026-10-12-desktop-agent-host-adr` is not built, and it needs work in cadrumo-agent and in Cadrumo's packaging. The first revision of this record failed review with thirteen critical findings. This revision decides the live lane's topology and the controls those findings require.
 
 ## Considerations
 
@@ -41,7 +41,7 @@ The owner wants the agent column tested and iterated against the real agent back
 - The desktop owns no long-lived child and contains none, and cadrumo-agent's ports are fixed (audit: `desktop-child-containment`, `fixed-agent-ports`).
 - cadrumo-agent's history and stream do not keep the turn order, ids or offsets the webview contract needs (audit: `history-cannot-serve-session-contract`).
 - The owner has approved a provider-settings design, which CADRUMO-ARCHITECTURE is implementing:
-  - the Anthropic key in an encrypted, person-only SECRET namespace;
+  - provider credentials in an encrypted, person-only SECRET namespace;
   - one resolver for every consumer;
   - delivery to the agent on a standard-input frame;
   - an app-owned lifecycle that reaps the agent tree on logout, lock, expiry, key change or profile switch.
@@ -62,7 +62,7 @@ Binding if accepted:
   - the packaged desktop with its Rust agent host;
   - the launcher `aeat app agent serve` in the same package;
   - cadrumo-agent installed into the built app's custom site-packages by CMake, with its hosted-parts assembly admitted from that package;
-  - the Anthropic API and the Cadrumo runtime.
+  - the provider cadrumo-agent is configured for, and the Cadrumo runtime.
   There is no mock host, scripted model or stand-in under test. The fixture host stays an appearance tool.
 - The launcher builds on the provider-settings controller. It does not add a second lifecycle owner.
 
@@ -84,7 +84,7 @@ Binding if accepted:
   - shown in the webview.
 - A child that does not need the key does not receive it. The `cadrumo-mcp` relay is already scrubbed (`agent:workspace/environment.py:155-183`).
 - The key is entered through the protected input channel, never in a webview that is open to a debugger.
-- Every lane run scans the started processes' command lines, and the root's files and logs, for any `sk-ant-` pattern. A hit fails the run.
+- Every lane run scans the started processes' command lines, and the root's files and logs, for the value of any stored provider credential. A hit fails the run.
 
 **Authority**
 - One predicate names the person frontends, `cli` and `tui`. Every person-act refusal and admission gate uses it in place of "is MCP": `src/cadrumo/application/operations/person_acts.py:81-83`, `src/cadrumo/application/user_profile/operation_access_policy.py:213-219`, `src/cadrumo/entrypoints/runtime/profile_connection_admission.py:161-163`, `:277`, `profile_connection_sessions.py:229-231`, `profile_connection_access.py:163-168`, `profile_connection_person_acts.py:37-40`, `src/cadrumo/application/ledger/invoice_evidence_extract_operation.py:282-284`.

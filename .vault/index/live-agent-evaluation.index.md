@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#live-agent-evaluation'
 date: '2026-10-12'
-modified: '2026-10-12'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:8ea701ea9e574283dc8a3a61ec999ebbb7b24cfd07c7945a53ff819222dd6657'
+body_hash: 'sha256:1b6d0ac75c2b1b1cbbcecd6e4abb29234506b1de4512dfc5429c1b322be0b5c2'
 related:
   - '[[2026-10-12-live-agent-evaluation-adr]]'
   - '[[2026-10-12-live-agent-evaluation-ledger]]'
@@ -22,7 +22,7 @@ Auto-generated index of all documents tagged with `#live-agent-evaluation`.
 
 ### adr
 
-- `2026-10-12-live-agent-evaluation-adr` - `live-agent-evaluation` adr: `live agent evaluation runs a haiku agent over MCP against a verified copy of the built package` | (**status:** `accepted`)
+- `2026-10-12-live-agent-evaluation-adr` - `live-agent-evaluation` adr: `live agent evaluation runs an agent client over MCP against a verified copy of the built package` | (**status:** `accepted`)
 
 ### exec
 

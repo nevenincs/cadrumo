@@ -18,14 +18,13 @@ from threading import Thread
 
 import keyring
 import pytest
-from pydantic import SecretStr
 
-from cadrumo.core.config import override_settings, reset_settings_cache
 from cadrumo.core.storage_environment import STORAGE_ROOT
 from cadrumo.entrypoints.runtime.tests.agent_host_support import (
     DEVELOPMENT_KEY_VARIABLE,
     FAKE_BEARER,
     FAKE_KEY,
+    FRAMED_CREDENTIAL_ID,
     mark_lane_root,
     received,
     stand_in_agent_source,
@@ -107,18 +106,14 @@ class _Serve:
 def development_key(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     """Supply the development fallback key to every thread the runtime serves on.
 
-    Development storage mode falls back to the named Cadrumo setting for an
-    unset profile record: the process environment for threads that read the
-    process-wide settings, and the test's own settings override for this one.
+    Development storage mode falls back, for an unset profile record, to the
+    process environment value constructed from the lane id the agent reports.
     """
     monkeypatch.setenv(DEVELOPMENT_KEY_VARIABLE, FAKE_KEY)
-    reset_settings_cache()
     try:
-        with override_settings(cadrumo_llm_claude_api_key=SecretStr(FAKE_KEY)):
-            yield
+        yield
     finally:
         monkeypatch.delenv(DEVELOPMENT_KEY_VARIABLE)
-        reset_settings_cache()
 
 
 def _serve(runtime: StoredSignInRuntime, tmp_path: Path, source: Path | None) -> _Serve:
@@ -160,7 +155,7 @@ def test_serve_reports_ready_and_closing_its_input_stops_and_reaps_the_agent(
         workspace = ready["workspace_root"]
         assert isinstance(workspace, str) and Path(workspace).is_dir()
         assert FAKE_KEY not in json.dumps(ready) and FAKE_BEARER not in json.dumps(ready)
-        assert received(record)["providers"] == ["claude"]
+        assert received(record)["providers"] == [FRAMED_CREDENTIAL_ID]
         serve.close_input()
         assert serve.event() == {"event": "agent_stopped", "reason": "input_closed"}
         assert serve.wait() == 0

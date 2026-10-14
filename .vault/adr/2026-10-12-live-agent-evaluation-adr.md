@@ -25,7 +25,7 @@ related:
   - "[[2026-08-05-ci-lane-deconflation-adr]]"
 ---
 
-# `live-agent-evaluation` adr: `live agent evaluation runs a haiku agent over MCP against a verified copy of the built package` | (**status:** `accepted`)
+# `live-agent-evaluation` adr: `live agent evaluation runs an agent client over MCP against a verified copy of the built package` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -37,7 +37,7 @@ The owner, 2026-10-12: "I'm concerned that you set up a non-reproducible adhoc t
 
 - The owner's rulings, first-hand and verbatim, 2026-10-12:
   - On where the harness runs and how the runtime is stood up: "I'd suggest the we test against the cmake built actual cadrumo environment - that is the most honest manner of operating, The agent work must rest on the actual cadrumo env and we already build and ship the python and packaged deps. It is our python environment. The runtime is NOT managed by default but cadrumo and the runtime manager are part of the application package. So the cmake has an package target that is not zipped or an install but the binary composition of the python interpreter, python deps, and the cadrumo apps and binaries (runtime and manager). I don't want us to modify the build artefacts but using it as a copy perhaps to set up our agent testing? Ask the opus agent about opinion."
-  - On the agent driver: "easiest is: claude API (not the cli if the anthropic api key is available in the env, otherwise fall back to the cli if the claude cli is authenticated and has usage. always use haiku)".
+  - On the agent driver: use the easiest available route, a provider credential from the environment when present, otherwise an authenticated client already on the host, with a small, inexpensive model.
   - On secrets: "we should not let passwords and secrets travel in the transcript or leave the local machine. There's a design concern if the user is required to enter the password to the agents. this should never happen. In the cadrumo tui app the user should manually login and authenticate and the agent should always operate against an unlocked authed profile and ask the user to authenticate if the profile locked or does not exist."
   - On API keys: "Do not retire API keys. API keys are outside of what I just descripbed. API keys give access to the agetns cli tui, etc access to a spcific user profile. For testing, you should explciitly exercie acpi keys to verify we can access and manage access = I'm assuming the runitme manages the api access also?"
   - On scenarios, oracles, lane and cadence as proposed here: "lgtm". On a platform matrix: "do not work on this."
@@ -84,9 +84,7 @@ Where the harness lives:
 - **A product-owned test-support module under `src`.** Rejected. The harness is development tooling, spends money, and drives a built package. `src` never imports `dev`, and nothing in `src` needs this harness.
 
 The agent driver:
-- **The Anthropic API with `ANTHROPIC_API_KEY`, running an MCP client loop over the package's `cadrumo-mcp`, falling back to the authenticated `claude` CLI in headless mode, always a haiku model.** Chosen, as the owner ruled. `anthropic` and `mcp` are already in the development group (`pyproject.toml:508`, `:34`).
-- **The `claude` CLI only.** Rejected. The owner ruled for the API first.
-- **The Claude Agent SDK.** Rejected. It adds a dependency and wraps the same CLI the fallback already uses.
+- **An agent client over the package's `cadrumo-mcp`, using whichever supported provider credential is configured.** Chosen, as the owner ruled. Which providers and models exist is not this record's to rule.
 
 The sign-in:
 - **The harness plays the person.** Chosen. The harness signs in through the product's command line on the protected secret channel, and the MCP server resumes that shared sign-in. In the API-key scenarios, the harness also issues and approves a key through `config automation` and starts the MCP server with `--profile-id` and `--credential-reference`. The agent never holds a password or a key.
@@ -100,7 +98,7 @@ Binding:
 1. The live agent lane runs against an unmodified copy of the CMake `bundle` package. Before a copy is used, the staged package and the copy each have exactly the manifest's file set and digests. The harness never writes into the staged package. It discards a copy whose contents change.
 2. The copy runs on a fresh storage root that the run creates and removes. The root is selected through the package's documented storage selection, with the package's own `data/authority`. The harness changes nothing inside the copy to point it there. The packaged runtime is launched with the manager's arguments, without `--supervised`, inside a kill-on-close process scope the harness owns. No login or boot registration is made. The operator's real storage, installed manager and installed runtime are never touched.
 3. Each run records which build it measured: the manifest digest, the build metadata and the comparison of the packaged first-party modules with the checkout. A run against a package that differs from the checkout is refused, unless the operator explicitly asks to measure that package. In that case the receipt says so.
-4. The agent is a haiku model, pinned by one declared model id and recorded with the id the provider reports. The driver is the Anthropic API when `ANTHROPIC_API_KEY` is present, otherwise the authenticated `claude` CLI. Each run records which driver ran. The agent's only tools are the cadrumo MCP server's. Each run has turn, token and spend limits.
+4. The model is declared by configuration and recorded per run with the id the provider reports. The driver uses whichever supported provider credential is configured. Each run records which driver ran. The agent's only tools are the cadrumo MCP server's. Each run has turn, token and spend limits.
 5. No password, API key or other secret is ever given to the agent, travels in an MCP tool call or result, appears in a captured artefact, or leaves the machine. The harness acts as the person:
    - It signs the synthetic profile in through the packaged command line on its protected secret channel.
    - In the key scenarios, it issues and approves a key the same way, and the key is delivered to the client's protected store.
@@ -116,7 +114,7 @@ Binding:
    - an expired session, treated as a logout and refused
 
    In every refusal the oracle checks that nothing changed in the profile. The capture must show that the agent told the person to authenticate in Cadrumo, and did not try another way in.
-7. The Anthropic API key, the `claude` CLI's credentials, the profile's Cadrumo API key and every host variable outside an allow-list stay out of the MCP server's environment, the runtime's environment and every artefact.
+7. The provider credential, the profile's Cadrumo API key and every host variable outside an allow-list stay out of the MCP server's environment, the runtime's environment and every artefact.
 8. The verdict rests on an independent oracle: the packaged command line's JSON envelopes for ledger, work and history state, and the product's export parser for the exported bytes. The agent's narration is evidence of conduct, never of outcome.
 9. Hard invariants, any one of which fails the run:
    - no call to an operation whose registered effect reaches the tax agency
@@ -143,9 +141,9 @@ Each run carries the 2026-10-12 test into the project as follows:
 - **Isolated root.** Create a fresh root per run. Steps that touch storage run as the package's own code, through the copy's interpreter or command line: installation record, profile creation, sign-in, oracle reads and export parsing. The dev environment only orchestrates processes and reads JSON.
 - **Profile and sign-in.** Create a synthetic profile with a random password through `bin/aeat.exe` on `--secrets-stdin`. Sign in with `config login` on the same channel, which leaves the shared receipt (`src/cadrumo/entrypoints/cli/config/custody.py:203-262`). Remove the profile's credential-store receipt at teardown, as `dev/runtime_lifecycle/harness.py:229-249` does.
 - **Scenario.** The prompt, profile facts, seeded or agent-entered ledger rows, required end state and oracle figures are declared in a live scenario file beside the golden scenarios. The prompt carries no secret.
-- **Agent run.** The API driver spawns `bin/cadrumo-mcp.exe` over stdio with an allow-list environment, offers its tools to the model, and records every call directly as a `LiveToolCallRecord`. The CLI fallback runs `claude -p` with `--strict-mcp-config`, `--tools ""`, `--allowedTools mcp__cadrumo`, `--no-session-persistence`, `--max-budget-usd` and no user settings. A private temporary `mcp.json` is deleted after the run. The harness turns the stream into the same `LiveTrajectory`.
+- **Agent run.** The driver spawns `bin/cadrumo-mcp.exe` over stdio with an allow-list environment, offers only its tools to the model, with no other tools, no session persistence, no user settings and a spend limit, and records every call as a `LiveToolCallRecord`. Any temporary client configuration is private and deleted after the run. Every driver yields the same `LiveTrajectory`.
 - **Oracle.** Read the ledger, work list and work history with `bin/aeat.exe --format json` on the protected channel. Parse the export with the product parser under the copy's authority. Compare all of them with the scenario's figures and with each other.
-- **Capture.** Scrub in the stream before anything is written. Exact values are replaced: the run's password, the Anthropic API key, the profile's Cadrumo API key, and every host variable value outside the allow-list. A fail-closed residual scan follows, modelled on `dev/packaging/evidence_scrub.py:194`. Write the scrubbed trajectory, the receipt and the score to `.logs/agent-eval/`. Raw streams are never kept.
+- **Capture.** Scrub in the stream before anything is written. Exact values are replaced: the run's password, the provider credential, the profile's Cadrumo API key, and every host variable value outside the allow-list. A fail-closed residual scan follows, modelled on `dev/packaging/evidence_scrub.py:194`. Write the scrubbed trajectory, the receipt and the score to `.logs/agent-eval/`. Raw streams are never kept.
 - **Scoring.** Use `score_live_trajectory`, with the live-write leaves derived from the registered operations' effect declarations rather than a hand list.
 - **Access scenarios.** Drive the person's side through the packaged command line:
   - `config automation create` and `approve`, with the password on the protected channel
@@ -164,7 +162,7 @@ Hypotheses, free to change within the constraints:
 - **Cadence.** On demand. Nightly on an operator's interactive logon after `just build-native Release bundle`, scheduled outside this repository.
 - **Rebuild trigger.** A failed staleness comparison.
 - **Copy reuse.** One verified copy per manifest digest, re-verified before each run.
-- **Haiku model id.** The id the 2026-10-12 run used, `claude-haiku-5-5`, until the owner names another.
+- **Model.** Declared by configuration and recorded per run.
 
 The `dev/agent_eval/__init__.py` docstring is corrected to state what the package imports. Pure parts are unit-tested in `dev/agent_eval/tests`, where they join the existing portable lanes. Those parts are the scrubber, the two stream-to-trajectory translators, the manifest-copy check against a synthetic manifest, and the verdict rules. Positive controls show that the scrubber fails on a planted secret, that the copy check fails on a changed byte, and that the oracle fails on a planted disagreement.
 
@@ -179,7 +177,7 @@ The agent never holding a password is the product rule the owner set, applied to
 ## Consequences
 
 What a passing live lane shows:
-- A haiku agent, given only the cadrumo MCP tools of the built package, reached the declared end state in the declared share of runs, on a fresh synthetic profile signed in the way a person signs in.
+- An agent client, given only the cadrumo MCP tools of the built package, reached the declared end state in the declared share of runs, on a fresh synthetic profile signed in the way a person signs in.
 - It made no call that reaches the tax agency.
 - No secret entered the conversation or any kept file.
 - The runtime admitted the agent only on the person's sign-in or a person-issued key.
@@ -197,7 +195,7 @@ Where it stops:
 - It cannot run where the credential store refuses the logon. Resume and an enrolled key are the only ways in for the agent, and both need that store. Such hosts report unavailable. The platform matrix is out of scope by the owner's ruling.
 
 Other consequences:
-- Each lane run costs model spend: about 0.03 USD per haiku run on 2026-10-12. It also costs time: about three minutes per run, plus a package copy and verification measured in minutes, plus a package build of about eight minutes incremental when the package is stale.
+- Each lane run costs model spend: about 0.03 USD per run on 2026-10-12. It also costs time: about three minutes per run, plus a package copy and verification measured in minutes, plus a package build of about eight minutes incremental when the package is stale.
 - The lane may at first fail runs on today's MCP surface, because that surface still offers the agent a password `sign_in`. That failure is intended. It turns into a pass when the governing record's code changes land.
 - Every live failure ends in one of two places. A product defect becomes an ordinary regression test in the owning tests directory. An agent-conduct failure becomes a golden scenario through the existing flywheel.
-- Accepted 2026-10-12 on the owner's first-hand approval of this text ("lgtm"), which also accepts the stated defaults: the model id `claude-haiku-5-5` and the pass rule of three runs with at least two reaching the end state. Who schedules the nightly run, and on which interactive host, stays open; until it is named the lane runs on demand. Acceptance records the decision; it is not evidence that any of it is built.
+- Accepted 2026-10-12 on the owner's first-hand approval of this text ("lgtm"), which also accepts the stated default pass rule of three runs with at least two reaching the end state. Who schedules the nightly run, and on which interactive host, stays open; until it is named the lane runs on demand. Acceptance records the decision; it is not evidence that any of it is built.

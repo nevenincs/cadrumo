@@ -543,7 +543,7 @@ def test_installed_exit_mapping_preserves_cleanup_bearing_refusal(
     monkeypatch.setattr(installed_session, "close_active_profile_record_session", release_bootstrap)
     monkeypatch.setattr(installed_session, "close_active_bucket_session", release_bootstrap)
     monkeypatch.setattr(installed_session, "observe_profile_login_inventory", inventory)
-    monkeypatch.setattr(operation_composition, "build_production_operation_registry", operation_registry)
+    monkeypatch.setattr(operation_composition, "build_manifest_operation_registry", operation_registry)
     monkeypatch.setattr(installed_session, "runtime_login_session", refuse_login)
     if attachment is None:
         assert installed_session.run_installed_workbench_session() == installed_session.SESSION_INVENTORY_UNAVAILABLE

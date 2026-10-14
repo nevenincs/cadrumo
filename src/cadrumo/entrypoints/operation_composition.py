@@ -5,6 +5,7 @@ Core types: :class:`~cadrumo.adapters.persistence.profile.transactions.Transacti
 
 from __future__ import annotations
 
+import os
 import secrets
 from collections.abc import Callable
 from datetime import timedelta
@@ -782,7 +783,6 @@ from ..core.paths import effective_storage_root
 from ..core.storage_environment import storage_mode
 from ..core.time.clock import now
 from ..domain.currency.service import CurrencyNormalizationService
-from ..domain.provider_settings.catalog import load_provider_catalog
 from .actividad_asset_composition import build_activity_asset_operation_ports
 from .adapter_composition import (
     build_active_work_lifecycle_ports,
@@ -1010,11 +1010,13 @@ def _google_sheets_export_prepare_port():
 
 def _provider_settings_service(profile_id: UUID) -> ProviderSettingsService:
     """Bind the provider-settings service to the worker's exact profile and this package's storage mode."""
+    from ..adapters.local_runtime.agent_provider_catalog import process_provider_catalog_source
+
     settings = load_settings()
     return ProviderSettingsService(
         store=build_provider_settings_store(bucket_id=str(profile_id), settings=settings),
-        catalog=load_provider_catalog(),
-        settings=settings,
+        catalog_source=process_provider_catalog_source(),
+        environment=os.environ,
         storage_mode=storage_mode().mode,
     )
 

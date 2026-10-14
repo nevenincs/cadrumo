@@ -97,9 +97,9 @@ from cadrumo.core.request_faults import RequestFault
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
-from cadrumo.entrypoints.tests.test_registered_executor_conformance import seeded_modelo_edit_submission
 
 from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
+from ...tests.registered_executor_seeding_support import seeded_modelo_edit_submission
 from ..profile_connections import RuntimeProfileConnections
 from .test_modelo_metadata import _admit, _connect, _issue_scoped_key, _LoginObservation, _seed_periods
 from .test_modelo_metadata_history import _observe

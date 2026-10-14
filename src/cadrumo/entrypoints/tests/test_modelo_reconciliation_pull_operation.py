@@ -33,6 +33,7 @@ from ...application.modelo.reconciliation_records import (
     ModeloReconciliationVerdict,
     list_modelo_reconciliations,
 )
+from ...application.operations.composition import compose_operation_services
 from ...core.casilla_value_kind import CasillaValueKind
 from ...core.config import override_settings
 from ...core.hashing import sha256_hex
@@ -46,7 +47,7 @@ from ...tests.aeat_literal_fixtures import (
 )
 from ..justificante_composition import build_justificante_capture_service
 from . import modelo_operation_test_support
-from . import test_registered_executor_conformance as conformance
+from . import registered_executor_case_support as conformance
 from .test_modelo_reconciliation_import_operation import _CommitWitness
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -73,7 +74,7 @@ def test_registered_pull_reconciles_encrypted_capture_under_exact_profile_guard(
 ) -> None:
     """A foreign profile cannot read the capture; the correct worker guards its atomic write."""
     witness = _CommitWitness(MODELO_RECONCILIATION_PULL_OPERATION_DEFINITION_ID)
-    original_compose = conformance.compose_operation_services
+    original_compose = compose_operation_services
     monkeypatch.setattr(
         conformance,
         "compose_operation_services",

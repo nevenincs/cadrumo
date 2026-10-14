@@ -14,9 +14,9 @@ related:
   - '[[2026-09-26-mcp-purpose-authentication-adr]]'
   - '[[2026-10-10-mcp-parity-parity-mechanism-adr]]'
   - '[[2026-10-03-application-packaging-adr]]'
-modified: '2026-10-12'
+modified: '2026-10-14'
 body_schema: body-v2
-body_hash: 'sha256:e0e402a9fb70e23dc2050755babfd72d2bc2b3948eba6c8248b997fa96d4749b'
+body_hash: 'sha256:d4cf1118ba925db51e36e1f08ce30ce7d3f1252a3c02f8bbd99c13955be3684e'
 ---
 
 # `desktop-agent-host` plan
@@ -44,11 +44,11 @@ Two rulings committed today in `ba94b05d5f` also bind this plan:
 
 Three further first-hand owner rulings of 2026-10-12, relayed by the coordinator, bind Phase `P04`:
 
-- Latest Anthropic versions only: "ensure we're working against the latest anthropic versions, no backwards or old version support." The `anthropic` SDK floor is the latest release, `anthropic>=1.13.0,<2`, in both `pyproject.toml` entries (the `anthropic` extra and the dev list), with no 0.x compatibility path. Only current Claude models are used; old model ids are not kept.
-- Model names are derived, never hardcoded. `anthropic` is a real optional dependency of Cadrumo (the `anthropic` extra, the default LLM provider). All Anthropic code is updated, and model names come from the Anthropic Models API list, which reports id, display name, creation time, input and output token limits and capabilities, and carries no pricing and no tier or family field. Model roles are capability requirements checked against that list.
+- Latest provider versions only: work against the latest provider SDK releases, with no backwards or old version support. Each provider SDK floor in `pyproject.toml` is its latest release, with no compatibility path for older majors. Old model ids are not kept.
+- Model names are derived, never hardcoded. Model names come from the provider's own model listing, and model roles are capability requirements checked against that list.
 - No PyPI for cadrumo-agent: "we will not publish cadrumo agent to pypi, ever. we do not have a settled method of provisioning the repo." Bundling waits for open decision 5.
 
-The SDK upgrade itself was done as separate direct work outside this plan, and is not a Step. Commits `9f56dd5962` and `3b5bb1d8ee` pin `anthropic>=1.13.0,<2`, and remove `temperature`, which 1.x dropped from `messages.create`, from the Anthropic adapter (`src/cadrumo/adapters/outbound/llm/providers/anthropic.py`). It is declared unsupported through the adapter's unsupported-parameters capability, with no `extra_body` fallback. The commits also update `src/cadrumo/adapters/outbound/llm/tests/test_parameter_capability_boundary.py`, including a loopback wire test. `src/cadrumo/adapters/outbound/llm/role_fitness.py` stays unchanged, because its probe only ever calls the httpx-based local adapter. `P04.S28` builds on that work.
+The SDK upgrade itself was done as separate direct work outside this plan, and is not a Step. Commits `9f56dd5962` and `3b5bb1d8ee` raise the provider SDK floor to its latest major and remove `temperature`, which that major dropped, from the provider adapter under `src/cadrumo/adapters/outbound/llm/providers/`. It is declared unsupported through the adapter's unsupported-parameters capability, with no `extra_body` fallback. The commits also update `src/cadrumo/adapters/outbound/llm/tests/test_parameter_capability_boundary.py`, including a loopback wire test. `src/cadrumo/adapters/outbound/llm/role_fitness.py` stays unchanged, because its probe only ever calls the httpx-based local adapter. `P04.S28` builds on that work.
 
 Contract 7 of the ADR says cadrumo-agent is "a locked dependency in Cadrumo's lock file, installed by the normal provisioning". The no-PyPI ruling means the ADR needs that wording revised before acceptance, to name the method decision 5 settles.
 
@@ -63,7 +63,7 @@ Contract 7 of the ADR says cadrumo-agent is "a locked dependency in Cadrumo's lo
 - `2026-09-26-mcp-purpose-authentication-adr` governs `P01.S07` and `P02.S17` (bytes never enter MCP results; only registered projections).
 - `2026-10-10-mcp-parity-parity-mechanism-adr` governs `P01.S04` to `P01.S10` and `P02.S14` (new capability is a registered operation answered alike on every frontend).
 - `2026-10-03-application-packaging-adr` (proposed) governs `P04.S29` and `P04.S30` (the release manifest binds the Python packages).
-- `P04.S28` rests on the owner's Anthropic rulings below and on open decision 6. No ADR in this vault governs model selection; if decision 6 settles a persisted selection or pricing contract, it is recorded in its own ADR before `P04.S28` executes.
+- `P04.S28` rests on the owner's provider-version and model-name rulings below and on open decision 6. No ADR in this vault governs model selection; if decision 6 settles a persisted selection or pricing contract, it is recorded in its own ADR before `P04.S28` executes.
 
 The ADR's affected cadrumo-agent records (conversation-data-posture, profile-data-root, shipping-and-versioning, project-boundary, hosting-contract) are amended in that repository, not here.
 
@@ -85,13 +85,13 @@ Phases `P01` and `P02` (except the per-conversation part of `P02.S17`), the decl
 
 ### Cross-project dependency
 
-cadrumo-agent owns contract 4 of the ADR and its own packaging. That covers: one SQLCipher connector for every store opener, keyed from the standard-input frame; no log files, token files or IPC secret files in hosted mode; `tmp` and `scratch` emptied after every run; hosted lanes limited to the direct Anthropic lane; documents read through Cadrumo projections; a hosting-contract version bump and a store-format version; a `__main__` module; a relay tool list without the removed MCP tools; an `anthropic` range that admits `>=1.13.0,<2`; and superseding records for its five affected decisions. These were handed over to cadrumo-agent on 2026-10-12 and are not Steps here. cadrumo-agent is never published to PyPI; `P04.S29` waits for open decision 5.
+cadrumo-agent owns contract 4 of the ADR and its own packaging. That covers: one SQLCipher connector for every store opener, keyed from the standard-input frame; no log files, token files or IPC secret files in hosted mode; `tmp` and `scratch` emptied after every run; documents read through Cadrumo projections; a hosting-contract version bump and a store-format version; a `__main__` module; a relay tool list without the removed MCP tools and superseding records for its five affected decisions. These were handed over to cadrumo-agent on 2026-10-12 and are not Steps here. cadrumo-agent is never published to PyPI; `P04.S29` waits for open decision 5.
 
 Hosted use with real data waits for two proofs: cadrumo-agent's recorded tool-access proof for the `cadrumo` tool server, and `2026-10-10-mcp-parity-plan` `P10.S70` (live proof of MCP inside the signed-in profile). Until both exist, the agent column shows the agent as unavailable. `P06.S44` produces Cadrumo's side of that evidence.
 
 ### Scope and hypotheses
 
-Out of scope: the Claude Code lane (excluded until a run proves nothing persists in plaintext), Node bundling, and any change in the cadrumo-agent repository.
+Out of scope: which providers, lanes and models cadrumo-agent supports (cadrumo-agent alone decides), and any change in the cadrumo-agent repository.
 
 Hypotheses within the ADR, free to change in execution: operation ids `documents.add`, `documents.list`, `documents.remove`, `documents.role`, `documents.text` and the consent ids; CLI leaves under `aeat app documents` and `aeat app consent`; new packages `src/cadrumo/application/documents/`, `src/cadrumo/application/consent/`, `src/cadrumo/application/agent_host/`, `src/cadrumo/domain/consent/` and `native/desktop/src-tauri/src/shell/agent/`; the lane `dev/runtime_lifecycle/desktop_agent_host.py` modelled on `dev/runtime_lifecycle/live_sign_in.py`. The ADR names the launcher `aeat agent serve`, but the CLI rule keeps the root families `config` and `app`; `P03.S25` settles the leaf placement before it lands.
 
@@ -140,11 +140,11 @@ Deliver the profile-scoped agent root, the per-profile agent data key, the agent
 
 ### Phase `P04` - packaging and compatibility
 
-Bundle a compatible cadrumo-agent inside the package by the provisioning method open decision 5 settles, with a manifest agent statement, a declared supported range and typed absent or incompatible refusals, and derive every Claude model from the Anthropic Models API; the anthropic SDK upgrade runs as separate direct work outside this plan.
+Bundle a compatible cadrumo-agent inside the package by the provisioning method open decision 5 settles, with a manifest agent statement, a declared supported range and typed absent or incompatible refusals, and derive models from the provider's own model listing rather than hardcoded ids.
 
 - [ ] `P04.S27` - Declare the supported cadrumo-agent version range, hosting-contract and store-format versions, the comparison with the manifest and with cadrumo-agent version JSON, and the typed agent_service_absent and agent_service_incompatible refusals in the error catalogue; the installed-distribution comparison follows the provisioning method of open decision 5; `src/cadrumo/application/agent_host/compatibility.py, src/cadrumo/core/errors/error_codes.py`.
-- [ ] `P04.S28` - Remove every hardcoded Claude model id: derive models from the Anthropic Models API list (id, display name, creation time, token limits, capabilities), express each model role as a capability requirement such as image input for vision, replace the id-keyed price table and the name-prefix tiering, and drop the hardcoded config defaults; the selection policy and the price-table replacement wait for open decision 6; `src/cadrumo/core/model_catalogue.py, src/cadrumo/adapters/outbound/llm/client.py, src/cadrumo/adapters/outbound/llm/pricing.py, src/cadrumo/domain/transactions/model_tier.py, src/cadrumo/core/config_llm_fields.py, src/cadrumo/core/config_runtime_fields.py, src/cadrumo/core/tests/test_model_catalogue.py`.
-- [ ] `P04.S29` - Bundle cadrumo-agent into the build by the provisioning method open decision 5 settles, never from PyPI, adapting as that method requires the wheel selector, the constraint export and the product-cohort check, which today accept only single registry wheels and exclude path sources; declare the launcher entry it needs, and assert that no Node runtime or adapter enters the bundle; `dev/packaging/runtime_wheel_selection.py, dev/packaging/uv_constraints.py, dev/packaging/native/product.py, dev/packaging/native/layout.py, pyproject.toml, uv.lock`.
+- [ ] `P04.S28` - Remove every hardcoded model id: derive models from the provider's model listing (id, display name, creation time, token limits, capabilities), express each model role as a capability requirement such as image input for vision, replace the id-keyed price table and the name-prefix tiering, and drop the hardcoded config defaults; the selection policy and the price-table replacement stay open; `src/cadrumo/core/model_catalogue.py, src/cadrumo/adapters/outbound/llm/client.py, src/cadrumo/adapters/outbound/llm/pricing.py, src/cadrumo/domain/transactions/model_tier.py, src/cadrumo/core/config_llm_fields.py, src/cadrumo/core/config_runtime_fields.py, src/cadrumo/core/tests/test_model_catalogue.py`.
+- [ ] `P04.S29` - Bundle cadrumo-agent into the build by the provisioning method open decision 5 settles, never from PyPI, adapting as that method requires the wheel selector, the constraint export and the product-cohort check, which today accept only single registry wheels and exclude path sources; declare the launcher entry it needs; `dev/packaging/runtime_wheel_selection.py, dev/packaging/uv_constraints.py, dev/packaging/native/product.py, dev/packaging/native/layout.py, pyproject.toml, uv.lock`.
 - [ ] `P04.S30` - Add the manifest agent statement (bundled, distribution version, hosting-contract version, store-format version) mirroring the user-docs statement, mapped to Bundled, NotBundled or Undeclared in the native package reader and the desktop environment; the Bundled path follows open decision 5 and P04.S29; `dev/packaging/native/assemble.py, native/application/src/package.rs, native/desktop/src-tauri/src/environment.rs`.
 
 ### Phase `P05` - desktop host
@@ -202,7 +202,7 @@ Plan-wide checks, each with its final exit status read and the intended tests co
 - `just check-locales` passes for every new key in every supported locale.
 - `uv run --no-sync pytest dev/quality/tests/test_no_git_cli.py` passes.
 - For Phase `P04`: `just test-packaging-preflight` and `just test-native-bundle` pass, and the built manifest carries the agent statement.
-- For `P04.S28`: `rg -n "claude-[a-z0-9.-]+" src/cadrumo --glob "!**/tests/**"` finds no model id in product code, and `src/cadrumo/core/tests/test_model_catalogue.py` proves each role resolves by capability against a Models API list.
+- For `P04.S28`: a search of `src/cadrumo` outside tests finds no hardcoded model id in product code, and `src/cadrumo/core/tests/test_model_catalogue.py` proves each role resolves by capability against a Models API list.
 - For Phase `P05`: `just test-native-host` passes, and `npm run check` and `npm test` in `native/desktop/frontend` pass.
 - `just verify-desktop-agent-host PACKAGE` (created by `P06.S38`) passes each of the nine ADR criteria on the packaged build with a synthetic encrypted profile.
 

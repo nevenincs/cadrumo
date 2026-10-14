@@ -334,12 +334,16 @@ def run_installed_workbench_session(
     registry: OperationRegistry | None = None
 
     def operation_registry() -> OperationRegistry:
-        """Compose the registry once, on first use: it is the one place this interface does."""
+        """Bind the manifest-backed registry once, on first use: it is the one place this interface does.
+
+        Contracts come from the generated manifest; an operation's definition
+        is composed only when a surface needs it.
+        """
         nonlocal registry
         if registry is None:
-            from ..operation_composition import build_production_operation_registry
+            from ..operation_composition import build_manifest_operation_registry
 
-            registry = build_production_operation_registry()
+            registry = build_manifest_operation_registry()
         return registry
 
     choose_profile = False

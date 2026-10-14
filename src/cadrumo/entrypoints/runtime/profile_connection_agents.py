@@ -30,6 +30,7 @@ from ...adapters.local_runtime.agent_programs import (
     profile_agent_root,
     profile_agent_workspace,
 )
+from ...adapters.local_runtime.agent_provider_catalog import AgentProviderCatalogSource
 from ...adapters.local_runtime.runtime_frame_io import read_secret, write_document
 from ...application.agent_host.controller import (
     AgentGenerations,
@@ -45,12 +46,12 @@ from ...application.agent_host.development_fallback import development_fallback
 from ...application.agent_host.lane_root import is_marked_lane_root
 from ...application.agent_host.launch_environment import agent_launch_environment
 from ...application.agent_host.launcher_protocol import (
-    HOSTED_ASSISTANT_PROVIDERS,
     AgentLauncherRefusal,
     launcher_refusal_for,
 )
 from ...application.agent_host.store_lifecycle import AgentInvocationRunner, AgentStoreLifecycle
 from ...application.operations.registry import OperationFrontendProjection
+from ...application.provider_settings.ports import ProviderCatalogSource, ProviderCatalogUnavailableError
 from ...application.runtime.agent_host import RuntimeAgentRefused, RuntimeAgentStart, RuntimeAgentStarted
 from ...application.runtime.contracts import RuntimeByteChannel, RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.profile_access import (
@@ -64,10 +65,9 @@ from ...application.runtime.transport import RuntimeConnectionContext
 from ...application.user_profile.access_contracts import AccessDenialCode, AccessDenied, Availability
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.automation_custody_port import AutomationCustodyError
-from ...core.config import load_settings
 from ...core.logging import get_logger
 from ...core.storage_environment import storage_mode
-from ...domain.provider_settings.catalog import ProviderCatalog, load_provider_catalog
+from ...domain.provider_settings.catalog import ProviderCatalog
 from .agent_hosts import AgentTreeOwner
 from .profile_connection_attendance import ATTENDANCE_METHOD, AttendedConnection
 from .profile_host import ProfileConnection, RuntimeProfileHost
@@ -92,7 +92,9 @@ class _SessionAgentCredentials:
         session_id: UUID,
         is_current: Callable[[UUID], bool],
         bearer: bytearray,
+        catalog_source: ProviderCatalogSource,
     ) -> None:
+        self._catalog_source = catalog_source
         self._host = host
         self._session_id = session_id
         self._is_current = is_current
@@ -101,7 +103,12 @@ class _SessionAgentCredentials:
 
     def resolve_for_agent(self) -> ResolvedAgentCredentials:
         try:
-            description, material = self._host.owner.agent_credentials(self._session_id, HOSTED_ASSISTANT_PROVIDERS)
+            catalog = self._catalog_source.catalog()
+        except ProviderCatalogUnavailableError as error:
+            _LOGGER.warning("agent provider catalog unavailable reason=%s", error.reason.value)
+            raise AgentHostError(AgentHostRefusal.CREDENTIALS_UNAVAILABLE) from error
+        try:
+            description, material = self._host.owner.agent_credentials(self._session_id, catalog)
         except (AutomationCustodyError, ProfileAccessRefusedError, RuntimeRefusalError) as error:
             _LOGGER.warning(
                 "agent credentials refused by the profile worker error_type=%s reason=%s",
@@ -109,8 +116,7 @@ class _SessionAgentCredentials:
                 error.reason,
             )
             raise AgentHostError(AgentHostRefusal.SIGNED_OUT) from error
-        # The frame names each credential by the id the agent keys it by; a lane with none contributes nothing.
-        catalog = load_provider_catalog()
+        # The frame names each credential by the id the agent declares for its lane; none declared, none carried.
         credentials: dict[str, AgentCredential] = {}
         try:
             offset = 0
@@ -124,10 +130,14 @@ class _SessionAgentCredentials:
                 credentials[credential_id] = AgentCredential(secret, item.base_url)
         finally:
             wipe(material)
-        settings = load_settings()
         for provider in description.unset:
             credential_id = _agent_credential_id(catalog, provider)
-            fallback = development_fallback(provider, settings=settings, storage_mode=storage_mode().mode)
+            fallback = development_fallback(
+                provider,
+                catalog_source=self._catalog_source,
+                environment=os.environ,
+                storage_mode=storage_mode().mode,
+            )
             if credential_id is not None and fallback is not None:
                 credentials[credential_id] = AgentCredential(
                     bytearray(fallback.secret.get_secret_value(), "utf-8"), fallback.base_url
@@ -282,7 +292,11 @@ class ProfileConnectionAgentMixin:
             self._agents.release(request.session_id)
             raise
         source = _SessionAgentCredentials(
-            host=host, session_id=request.session_id, is_current=self._agents.is_current, bearer=bearer
+            host=host,
+            session_id=request.session_id,
+            is_current=self._agents.is_current,
+            bearer=bearer,
+            catalog_source=AgentProviderCatalogSource(agent_source=request.agent_source),
         )
         controller = AgentHostController(
             launcher=self._agent_launcher,

@@ -32,7 +32,7 @@ from ...application.user_profile.access_contracts import SessionKind
 from ...core.operations import OperationTerminalCondition, profile_operation_subject
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..adapter_composition import build_ledger_evidence_ports
-from . import test_registered_executor_conformance as conformance
+from . import registered_executor_case_support as conformance
 from .invoice_evidence_operation_test_support import prepare_invoice_evidence_conformance_case
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

@@ -43,7 +43,7 @@ from ...core.operations import OperationEffect, OperationTerminalCondition, prof
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..justificante_composition import build_justificante_capture_service
 from . import modelo_operation_test_support
-from . import test_registered_executor_conformance as conformance
+from . import registered_executor_case_support as conformance
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

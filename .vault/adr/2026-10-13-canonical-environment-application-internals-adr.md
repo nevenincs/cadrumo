@@ -98,7 +98,7 @@ The consequence is a live defect at two launches.
   - `2026-10-13-package-verification-adr` proposes to the agent owner that the contract name `CADRUMO_AGENT_HOSTED_RELAY_EXECUTABLE`, which the runtime already sends, and retire the two program-path names.
 - Other drift:
   - The CMake source selector is `CADRUMO_AGENT_SOURCE_DIR` (`2026-10-13-native-agent-adr`).
-  - The development direct start reads `CADRUMO_AGENT_ANTHROPIC_API_KEY` from its own process and puts the key and bearer in the agent's environment (`native/desktop/src-tauri/src/agent/direct.rs:27-29`, `:148-158`). `2026-10-13-package-verification-adr` removes that path.
+  - The development direct start reads a provider key variable from its own process and puts the key and bearer in the agent's environment (`native/desktop/src-tauri/src/agent/direct.rs:27-29`, `:148-158`). `2026-10-13-package-verification-adr` removes that path.
 - Secrets already have a channel: stdin frames and secret descriptors (`2026-10-13-provider-settings-adr` constraint 8, `2026-10-12-desktop-agent-host-adr`). Rule 13 keeps profile selection out of the environment. Rule 00 forbids Git in product code, tests and build definitions.
 
 ## Considered options
@@ -219,7 +219,7 @@ Binding if accepted.
     - When the agent gateway or worker exits 125 before its ready line, the runtime ends the launch with the existing closed launcher code `agent_service_failed` (`src/cadrumo/application/agent_host/launcher_protocol.py:40-49`, through `launcher_refusal_for` at `:65`). It records the native code and subject in its redacted diagnostics. The desktop's closed refusal set does not change.
 20. **No Cadrumo-defined `CADRUMO_AGENT_` value.**
     - The CMake selector `CADRUMO_AGENT_SOURCE_DIR` (`native/cmake/Agent.cmake:2-9`) becomes the cache-only CMake variable `CADRUMO_PACKAGE_AGENT_SOURCE_DIR`, set with `-D` or a CMake user preset. Its environment fallback is removed, so no process environment carries it, and `2026-10-13-native-agent-adr`'s selector is renamed accordingly.
-    - The development direct start that read `CADRUMO_AGENT_ANTHROPIC_API_KEY` is removed by `2026-10-13-package-verification-adr`.
+    - The development direct start that read a provider key variable is removed by `2026-10-13-package-verification-adr`.
     - A structural gate refuses any `CADRUMO_AGENT_` spelling in Cadrumo outside the package file, the runtime's launch composer and the generated contract.
 
 21. **The runtime owns the agent's store lifecycle (added 2026-10-14 under operator approval).** The agent's own accepted hosting-contract and shipping-and-versioning records give the host the lifecycle of the agent's two stores. A hosted `serve` only checks them, and refuses `hosted_stores_mismatch` when they do not match its build, a fresh root included. Before every `serve` of a hosted root the runtime therefore runs this sequence through the same launch composer, image and environment as `serve`:

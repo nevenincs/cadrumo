@@ -32,7 +32,7 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.operations import OperationLifecycle, OperationTerminalCondition, profile_operation_subject
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..operation_composition import build_production_operation_registry
-from .test_registered_executor_conformance import (
+from .registered_executor_case_support import (
     _CloseWitness,
     _model_runtime_for,
     _runtime,

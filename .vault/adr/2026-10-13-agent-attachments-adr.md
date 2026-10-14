@@ -31,18 +31,12 @@ The desktop agent column lets a person add files to a conversation. Its "+ Add f
 
 - The host places the file at `<workspace_root>/attachments/<name>` (`cadrumo-agent: src/cadrumo_agent/control/attachments.py:56`). It then calls `POST /v1/conversations/attachments/register {workspace_root, name}` (`src/cadrumo_agent/api/routes/_gateway_attachment_endpoints.py:91-112`, `:152-158`; the request and response are at `src/cadrumo_agent/api/schemas/attachments.py:38-71`).
 - Registration reads the file through one checked handle and returns its size and SHA-256 (`control/attachments.py:184-220`). It writes nothing: "the directory is the record". Listing and removal act on that directory (`:223-259`, `:262-276`). Files may be up to 50 MiB (`src/cadrumo_agent/domain_config.py:254-261`). Nothing is encrypted.
-- The model's only route to an attachment is the direct lane's `read_file` tool, which is confined to the workspace (`src/cadrumo_agent/providers/_direct_tools.py:139-194`, offered at `:485-519`).
-  - It returns UTF-8 text up to 262,144 bytes (`:59`) and refuses binary files.
-  - It is offered only when the run holds a filesystem-read grant (`providers/hosted_limits.py:285`).
-  - No message carries attachment content as a document block or an image block.
-- The Claude Code lane runs with the workspace as its working directory (`providers/_acp_session.py:823-837`). Its CLI keeps its own transcript in its config home, so any file it reads is persisted there in plaintext.
-- Hosted runs are forced to run autonomously (`src/cadrumo_agent/api/routes/_gateway_run_start.py:169-180`).
-  - The direct lane's relayed MCP tool calls `session.call_tool` immediately (`providers/_direct_mcp.py:225-252`, the call at `:233`).
-  - Tool-policy decisions are reached only from the ACP and codex lanes.
-  - On the hosted direct lane, therefore, `permission_request` never fires.
-- Where permission options exist, cadrumo-agent always prefers the allow-once option over the remembering one (`graph/acp_options.py:225-246`; the remembering kinds are listed at `:62`).
-- `_read_workspace_text` (`providers/_direct_tools.py:139-166`) reads any workspace path.
-- Tool results are retained in run checkpoints (`retained_tool_result`, `providers/anthropic_chat_model.py:405`). Nothing in cadrumo-agent's stores is encrypted today.
+- The model reaches an attachment only through a workspace file-read tool, which returns UTF-8 text and refuses binary files. No message carries attachment content as a document block or an image block.
+- A lane that runs its own program in the workspace can keep its own copy of anything it reads, outside cadrumo-agent's stores.
+- Hosted runs are forced to run autonomously (`src/cadrumo_agent/api/routes/_gateway_run_start.py:169-180`), so relayed MCP tool calls run without a `permission_request`.
+- Where permission options exist, cadrumo-agent always prefers the allow-once option over the remembering one.
+- The workspace file read accepts any workspace path.
+- Tool results are retained in run checkpoints. Nothing in cadrumo-agent's stores is encrypted today.
 - `POST /v1/conversations/delete` (`api/routes/_gateway_conversation_endpoints.py:103`, which goes through `control/conversation_deletion.py`) removes the whole workspace. It has no hook that purges stored text for a single reference. With one workspace per profile, it deletes every conversation in the profile.
 
 The result: the model cannot read an attached PDF or scan at all, and it can read a text file only from plaintext on disk. The owner has ruled that attachments must be encrypted.
@@ -118,7 +112,7 @@ This record decides five things:
 
 **Approval mechanism.**
 
-- **Chosen, (b):** cadrumo-agent wires per-call permission requests on its hosted direct lane.
+- **Chosen, (b):** cadrumo-agent wires per-call permission requests on every hosted lane it offers attachments on.
   - The owner ruled that tool calls in general are approval-gated, so this wiring is needed anyway.
   - Cadrumo still records and enforces the person's grant through an `aeat` person act, so the agent cannot fabricate consent.
 - **Fallback, (a), favoured by UI-DESIGN1:** a review interaction raised by Cadrumo and answered through the person door for agent-raised reviews.
@@ -222,14 +216,14 @@ Binding:
    Why `2026-10-10-mcp-parity-approval-step-adr` (rejected) does not apply:
    - A grant is not an MCP `respond`, and MCP cannot reach it.
    - A grant is not a claim relayed by the host. The runtime executes it as a person act and enforces it at the projection tool.
-   - Residual risk: the runtime does not authenticate a client's frontend kind (`2026-10-04-application-sign-in-adr`). The design therefore relies on the agent having no means to start a process, and constraint 7 excludes every lane that has one.
+   - Residual risk: the runtime does not authenticate a client's frontend kind (`2026-10-04-application-sign-in-adr`). The design therefore relies on the agent having no means to start a process, and constraint 7 requires that a lane offering attachments has none.
 
-7. **Lanes.** Attachments are offered only on lanes that meet all three conditions:
+7. **Lanes.** Every lane cadrumo-agent offers attachments on must meet all three conditions:
    - everything the lane persists is kept under the agent data key;
    - every tool call raises a permission request with the three choices;
-   - the lane's tools are Cadrumo MCP only. The direct lane offers `run_program` and `write_file` only when configured (`providers/_direct_tools.py:485-519`), and hosted attachment runs configure neither.
+   - the lane's tools are Cadrumo MCP only, with no means to start a process or write files.
 
-   Today only the direct Anthropic lane can qualify, and only once BUILD2 items 2 and 4 land. The backend serves a per-lane `attachments` capability from the provider catalog or host status. The column reads that capability and never hardcodes which lanes support attachments.
+   Which providers and lanes meet them is cadrumo-agent's to decide and prove; Cadrumo makes no ruling on it. The backend serves a per-lane `attachments` capability from the provider catalog or host status. The column reads that capability and never hardcodes which lanes support attachments.
 
 8. **Deletion and holds.**
    - Removing an attachment, or deleting a conversation, removes the link and its references. cadrumo-agent then purges stored projection content for those references.
@@ -290,12 +284,12 @@ Cadrumo backend:
 cadrumo-agent, owned by BUILD2. Items 2 and 4 are preconditions for every lane:
 
 1. **Reference store.** Replace `control/attachments.py:184-276`, `api/routes/_gateway_attachment_endpoints.py:39` and `:91-158` with a store mapping each conversation id to its references and their metadata. Today the directory itself is the record (`:187`).
-2. **Per-call approval on the hosted direct lane.** Add a `permission_request` interrupt before every relayed MCP call (`providers/_direct_mcp.py:225-252`), using the ACP lane's graph and permission service. Hosted runs stop being forced to run autonomously (`api/routes/_gateway_run_start.py:169-180`).
-3. **The three choices.** `permission_request` offers Allow once, Allow for this session, and Allow and remember. Today the remembering options lose to the once-only option (`graph/acp_options.py:225-246`). The agent's own remembering never replaces Cadrumo's grant check.
-4. **Encrypted stores.** Encrypt retained tool results (`providers/anthropic_chat_model.py:405`) and checkpoints, as contract 4 requires.
-5. **`read_file` guard.** `_read_workspace_text` (`providers/_direct_tools.py:139-166`) refuses `attachments/` paths. The old register route is refused in hosted mode.
+2. **Per-call approval on hosted lanes.** A `permission_request` before every relayed MCP call on every hosted lane offering attachments. Hosted runs stop being forced to run autonomously (`api/routes/_gateway_run_start.py:169-180`).
+3. **The three choices.** `permission_request` offers Allow once, Allow for this session, and Allow and remember. Today the remembering options lose to the once-only option. The agent's own remembering never replaces Cadrumo's grant check.
+4. **Encrypted stores.** Encrypt retained tool results and checkpoints, as contract 4 requires.
+5. **Workspace read guard.** The workspace file read refuses `attachments/` paths. The old register route is refused in hosted mode.
 6. **Per-chain deletion.** Deleting one run chain purges stored projection content for each of its references. This replaces the workspace-wide `conversations/delete` (`control/conversation_deletion.py`).
-7. **Image relay.** Image content from the MCP page-image projection is relayed to the provider as image blocks in the tool result. The direct lane carries no image blocks today.
+7. **Image relay.** Image content from the MCP page-image projection is relayed to the provider as image content in the tool result.
 8. **Reference listing.** Tell the model which references a turn carries.
 9. **Shipping.** Ship through the CMake-owned build.
 
@@ -316,7 +310,7 @@ Verification, on the packaged build with a synthetic encrypted profile:
 - After conversations that read a PDF and send page images, a byte scan finds no attachment content outside the encrypted stores.
 - References belonging to another profile or conversation are refused.
 - A projection with no grant is refused, and gestor mode always refuses.
-- Every projection call on the hosted direct lane waits on `permission_request`, and Deny prevents the call.
+- Every projection call on a hosted lane offering attachments waits on `permission_request`, and Deny prevents the call.
 - A session grant ends at sign-out, lock, expiry and agent stop.
 - A remembered grant survives a restart, and stops working once revoked.
 - A grant attempted from MCP is refused with `person_act_required`.
@@ -332,8 +326,6 @@ Option A alone meets the owner's encryption ruling and the accepted rules togeth
 - No source bytes enter MCP.
 - The provider receives Cadrumo's reduced form of the document, never the file itself.
 
-It also closes the direct lane's current gap: today that lane cannot read a PDF at all.
-
 The owner's rulings settle consent. The card and its Approve click are the consent, and the three choices follow the norm the owner cited for agent apps. Grants are Cadrumo person acts, enforced at the projection tool and recorded in the consent ledger for every release. The agent therefore cannot grant itself consent.
 
 ## Consequences
@@ -341,7 +333,7 @@ The owner's rulings settle consent. The card and its Approve click are the conse
 - Attachments are encrypted at rest. They can be reused as ledger evidence after review, and deletion respects holds.
 - The model sees Cadrumo's transcribed text or, with a separate approval, page images that Cadrumo renders. Layout and handwriting reach it only as well as Cadrumo renders them.
 - The person decides at the scope they choose: one action, the session, or a remembered grant. Remembered grants persist until revoked. Content already sent stays with the provider under the provider's own retention.
-- No lane offers attachments until BUILD2 items 2 and 4 land: per-call approval on the hosted direct lane, and encrypted agent stores. Until then, "+ Add files" stays disabled everywhere. Attachments also wait on:
+- No lane offers attachments until BUILD2 items 2 and 4 land: per-call approval on hosted lanes, and encrypted agent stores. Until then, "+ Add files" stays disabled everywhere. Attachments also wait on:
   - Cadrumo's intake, projections and grants;
   - the agent's reference store;
   - the three choices;

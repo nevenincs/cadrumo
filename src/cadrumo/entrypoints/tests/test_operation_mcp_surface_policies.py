@@ -41,6 +41,12 @@ from ...application.user_profile.access_contracts import AccessAction, Availabil
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...core.errors.hierarchy import CadrumoError
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from .registered_executor_case_support import (
+    _CloseWitness,
+    _model_runtime_for,
+    _runtime,
+    _seeded_conformance_submission,
+)
 from .test_operation_frontend_parity import _PROBE_PROFILE, _probe_requests
 from .test_operation_mcp_surfaces import (
     _ALLOWED,
@@ -48,12 +54,6 @@ from .test_operation_mcp_surfaces import (
     _FRONTEND_DENIED,
     _registry,
     answer_for_resolved_access,
-)
-from .test_registered_executor_conformance import (
-    _CloseWitness,
-    _model_runtime_for,
-    _runtime,
-    _seeded_conformance_submission,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

@@ -46,7 +46,7 @@ from cadrumo.core.operations import (
 from cadrumo.core.paths import effective_storage_root
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
-from . import test_registered_executor_conformance as conformance
+from . import registered_executor_case_support as conformance
 from .test_censal_operation_operand import _operand
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

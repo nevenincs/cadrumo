@@ -52,7 +52,7 @@ from ...domain.transactions.enums import (
 )
 from ...domain.transactions.models import Transaction
 from ..ledger_action_composition import compose_ledger_action_ports
-from . import test_registered_executor_conformance as conformance
+from . import registered_executor_case_support as conformance
 from .ledger_attachment_operation_test_support import prepare_ledger_attachment_operation_conformance_case
 from .ledger_lifecycle_operation_test_support import prepare_ledger_lifecycle_operation_conformance_case
 from .test_operation_catalogue import _registry

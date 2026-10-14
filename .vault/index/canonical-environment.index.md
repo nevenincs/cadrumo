@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#canonical-environment'
 date: '2026-10-04'
-modified: '2026-10-13'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:a33b06e84f1f2441c5914bf4d6889e4037229e1f64242528570a031cdf0414ab'
+body_hash: 'sha256:36e9aa9e8975032f4e06322d29f32a3678c5bb8f9dc11e5e3e8cd7989115a7a6'
 related:
   - '[[2026-10-04-canonical-environment-adr]]'
   - '[[2026-10-04-canonical-environment-ledger]]'
@@ -14,6 +14,7 @@ related:
   - '[[2026-10-04-canonical-environment-reference]]'
   - '[[2026-10-08-canonical-environment-darwin-transport-adr]]'
   - '[[2026-10-13-canonical-environment-application-internals-adr]]'
+  - '[[2026-10-13-canonical-environment-ledger]]'
   - '[[2026-10-13-canonical-environment-plan]]'
 ---
 
@@ -32,6 +33,7 @@ Auto-generated index of all documents tagged with `#canonical-environment`.
 ### exec
 
 - `2026-10-04-canonical-environment-ledger` - `canonical-environment` ledger
+- `2026-10-13-canonical-environment-ledger` - `canonical-environment` ledger
 
 ### plan
 

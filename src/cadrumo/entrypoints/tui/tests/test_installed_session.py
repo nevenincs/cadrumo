@@ -216,7 +216,7 @@ def test_sessions_without_a_requester_do_not_build_the_operation_registry(
         raise AssertionError("ordinary installed session built requester contracts")
 
     monkeypatch.setattr(installed_session, "_run_registration_screen", register)
-    monkeypatch.setattr(operation_composition, "build_production_operation_registry", refuse_build)
+    monkeypatch.setattr(operation_composition, "build_manifest_operation_registry", refuse_build)
     assert installed_session.run_installed_workbench_session(headless=scenario == "headless") == 0
     assert screens == []
     assert registrations == (1 if scenario in {"empty", "registration"} else 0)
@@ -237,7 +237,7 @@ def test_each_requester_receives_the_same_fully_validated_public_contract_set(
         builds += 1
         return registry
 
-    monkeypatch.setattr(operation_composition, "build_production_operation_registry", build)
+    monkeypatch.setattr(operation_composition, "build_manifest_operation_registry", build)
     assert installed_session.run_installed_workbench_session() == 0
     assert builds == 1 and len(screens) == 2
     screen = screens[0]
@@ -271,7 +271,7 @@ def test_unavailable_inventory_preserves_refusal_without_building_requester_cont
         offered.append(reason_code)
         return False
 
-    monkeypatch.setattr(operation_composition, "build_production_operation_registry", refuse_build)
+    monkeypatch.setattr(operation_composition, "build_manifest_operation_registry", refuse_build)
     monkeypatch.setattr(installed_session, "_run_installation_area", offer_installation_area)
     assert installed_session.run_installed_workbench_session() == installed_session.SESSION_INVENTORY_UNAVAILABLE
     assert capsys.readouterr().err.strip() == reason
@@ -402,7 +402,7 @@ def test_the_operation_registry_is_shared_across_recomposition_but_fresh_in_a_se
         observed.append(first)
         return AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.CHANGE_USER) if len(observed) == 1 else None
 
-    monkeypatch.setattr(operation_composition, "build_production_operation_registry", build)
+    monkeypatch.setattr(operation_composition, "build_manifest_operation_registry", build)
     monkeypatch.setattr(installed_session, "_attempt_runtime_session", attempt)
     assert installed_session.run_installed_workbench_session() == 0
     assert len(registries) == 1 and observed[0] is observed[1]
@@ -439,7 +439,7 @@ def test_a_failed_registry_composition_propagates_and_publishes_nothing(
         suppliers.append(supplier)
         supplier()
 
-    monkeypatch.setattr(operation_composition, "build_production_operation_registry", build)
+    monkeypatch.setattr(operation_composition, "build_manifest_operation_registry", build)
     monkeypatch.setattr(installed_session, "_attempt_runtime_session", attempt)
     with pytest.raises(InternalInvariantError, match="no public contract composition"):
         installed_session.run_installed_workbench_session()

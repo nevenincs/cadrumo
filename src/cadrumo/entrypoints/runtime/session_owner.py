@@ -21,6 +21,7 @@ from ...application.user_profile.automation_custody_port import AutomationCustod
 from ...application.user_profile.login_session import ProfileHumanLoginReceipt, ProfileLoginOutcome
 from ...application.user_profile.session_authority_contracts import SessionAuthorityFacts
 from ...core.time.clock import now
+from ...domain.provider_settings.catalog import ProviderCatalog
 
 
 class ProfileWorkerSessionOwner:
@@ -124,10 +125,10 @@ class ProfileWorkerSessionOwner:
             return self._worker
 
     def agent_credentials(
-        self, session_id: UUID, providers: tuple[str, ...]
+        self, session_id: UUID, catalog: ProviderCatalog
     ) -> tuple[ProfileWorkerAgentCredentials, bytearray]:
         """Ask the admitted worker, never a new one, for the assistant's credentials under one live session."""
-        return self.operation_worker().agent_credentials(session_id, providers)
+        return self.operation_worker().agent_credentials(session_id, catalog)
 
     def in_flight_operation_count(self, *, deadline: float) -> int | None:
         """Observe the exact worker count without constructing or renewing custody."""

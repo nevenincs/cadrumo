@@ -49,7 +49,7 @@ from cadrumo.entrypoints.tests.modelo_operation_test_support import (
 )
 
 from ..adapter_composition import build_work_lifecycle_ports
-from .test_registered_executor_conformance import _CloseWitness, _runtime
+from .registered_executor_case_support import _CloseWitness, _runtime
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

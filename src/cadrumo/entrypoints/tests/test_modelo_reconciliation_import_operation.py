@@ -32,6 +32,7 @@ from ...application.modelo.reconciliation_records import (
     ModeloReconciliationEvidenceKind,
     ModeloReconciliationRecord,
 )
+from ...application.operations.composition import compose_operation_services
 from ...application.operations.models import OperationIdentity, OperationRequest
 from ...application.user_profile.access_contracts import AccessAction
 from ...core.config import override_settings
@@ -41,7 +42,7 @@ from ...domain.buckets.event import BucketEvent
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from . import modelo_operation_test_support
-from . import test_registered_executor_conformance as conformance
+from . import registered_executor_case_support as conformance
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.schema import RegistrySnapshot
@@ -105,7 +106,7 @@ def test_registered_import_checks_exact_profile_and_guards_atomic_persistence(
 ) -> None:
     """The real registered executor refuses retargeting and settles its write as UPDATED."""
     witness = _CommitWitness()
-    original_compose = conformance.compose_operation_services
+    original_compose = compose_operation_services
     monkeypatch.setattr(
         conformance,
         "compose_operation_services",

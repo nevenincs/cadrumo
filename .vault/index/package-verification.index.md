@@ -6,9 +6,10 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:65e1a2bf194cbb2cb34067d7381a8442c668c0bc78c155e5156d423c877f7394'
+body_hash: 'sha256:38b4033b68ef37ba5b7de3d162f8e1911fd363bac2bd935311f3e5f896b04368'
 related:
   - '[[2026-10-13-package-verification-adr]]'
+  - '[[2026-10-13-package-verification-ledger]]'
   - '[[2026-10-13-package-verification-plan]]'
 ---
 
@@ -21,6 +22,10 @@ Auto-generated index of all documents tagged with `#package-verification`.
 ### adr
 
 - `2026-10-13-package-verification-adr` - `package-verification` adr: `Application-level verification runs only against the CMake package` | (**status:** `accepted`)
+
+### exec
+
+- `2026-10-13-package-verification-ledger` - `package-verification` ledger
 
 ### plan
 

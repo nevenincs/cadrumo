@@ -55,7 +55,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..adapter_composition import build_inventory_service_ports
 from ..justificante_composition import build_justificante_capture_service
 from . import modelo_operation_test_support
-from . import test_registered_executor_conformance as conformance
+from . import registered_executor_case_support as conformance
 from .ledger_frontend_parity_test_support import seed_row_a_rule_classified
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

@@ -114,7 +114,7 @@ def test_a_ready_worker_excludes_the_operation_graph() -> None:
 
 @pytest.mark.parametrize(
     "prelude_target",
-    ["cadrumo.entrypoints.operation_composition", "cadrumo.domain.calculations.registry.schema"],
+    ["cadrumo.application.modelo.operation_definitions", "cadrumo.domain.calculations.registry.schema"],
 )
 def test_the_exclusion_probe_bites(prelude_target: str) -> None:
     """A heavy import re-added ahead of readiness is reported by both checks.

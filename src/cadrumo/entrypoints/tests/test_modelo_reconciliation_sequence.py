@@ -86,7 +86,7 @@ from ...tests.aeat_literal_fixtures import SEDE_TEST_URL_FIXTURE
 from ..justificante_composition import build_justificante_capture_service, load_reconciliation_filed_observation
 from ..live_state_composition import compose_filed_observation_persistence_ports
 from . import modelo_operation_test_support
-from . import test_registered_executor_conformance as conformance
+from . import registered_executor_case_support as conformance
 from .test_modelo_reconciliation_frontend_parity import _JUSTIFICANTE_FIXTURE, _session_host
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

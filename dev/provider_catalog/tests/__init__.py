@@ -1,1 +1,0 @@
-"""Lane-catalog generator tests."""

@@ -67,7 +67,7 @@ from cadrumo.entrypoints.tests.modelo_operation_test_support import seeded_model
 from .conformance_family_contract import ConformanceFamily
 from .conformance_maritime_preview_support import MARITIME_QUICKFILE_MATERIAL_CONFORMANCE_FAMILY
 from .conformance_review_package_exchange_support import _profile_recipient_keypair
-from .test_registered_executor_conformance import (
+from .registered_executor_case_support import (
     _CloseWitness,
     _ExecutionDriver,
     _model_runtime_for,

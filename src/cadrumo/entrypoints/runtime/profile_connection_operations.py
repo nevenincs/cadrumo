@@ -34,6 +34,7 @@ from ...application.runtime.operation_access import (
 )
 from ...application.runtime.profile_access import (
     RuntimeAccessRefusal,
+    RuntimeProfileStatus,
     RuntimeSecretReady,
 )
 from ...application.runtime.profile_worker import ProfileWorkerOperationReceipt
@@ -239,17 +240,17 @@ class ProfileConnectionOperationMixin:
         *,
         release_guard: ExitStack,
     ) -> tuple[RuntimeOperationContractReply, datetime | None]:
-        # Public registry discovery has no private domain operands. Hold the
-        # profile fence while observing its current scope.
-        release_guard.enter_context(host.guard)
-        status = self._status(connection, host, request.request_id, request.session_id)
-        if isinstance(status, AccessDenied):
-            raise ProfileAccessRefusedError(status.code)
-        if status.status.denial is not None:
-            raise ProfileAccessRefusedError(status.status.denial)
-        if request.definition_id not in status.status.effective_scope.operations:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+        # Public registry discovery has no private domain operands. The first
+        # description after a sign-in composes the worker's registry, so the
+        # profile fence is not held while the worker answers: every other
+        # request of the profile would queue behind that composition.
+        with host.guard:
+            self._contract_scope(connection, host, request)
         description = host.owner.operation_worker().describe(request.session_id, request.definition_id)
+        # Authority may have changed meanwhile; observe it again and hold the
+        # fence through the final write, as before.
+        release_guard.enter_context(host.guard)
+        status = self._contract_scope(connection, host, request)
         contract = description.contract
         _require_surface_admits(connection, contract.definition_id)
         if operation_is_persons_act(
@@ -265,6 +266,22 @@ class ProfileConnectionOperationMixin:
             request_json_schema=description.request_json_schema,
         )
         return reply, status.status.session_expires_at
+
+    def _contract_scope(
+        self: RuntimeProfileConnections,
+        connection: ProfileConnection,
+        host: RuntimeProfileHost,
+        request: RuntimeOperationContract,
+    ) -> RuntimeProfileStatus:
+        """Observe, under the caller's profile fence, that the session may see this definition now."""
+        status = self._status(connection, host, request.request_id, request.session_id)
+        if isinstance(status, AccessDenied):
+            raise ProfileAccessRefusedError(status.code)
+        if status.status.denial is not None:
+            raise ProfileAccessRefusedError(status.status.denial)
+        if request.definition_id not in status.status.effective_scope.operations:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+        return status
 
     def _submit_payload_reply(
         self: RuntimeProfileConnections,

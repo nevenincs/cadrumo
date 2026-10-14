@@ -35,10 +35,10 @@ from ...application.user_profile.profile_record_repository import ProfileRecordR
 from ...application.user_profile.projections import record_to_effective_facts
 from ...core.paths import effective_storage_root
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from . import test_registered_executor_conformance as conformance
+from . import registered_executor_case_support as conformance
 from .censal_review_test_support import review_censal_with_services
+from .registered_executor_case_support import _CloseWitness, _runtime
 from .test_censal_operation_operand import _operand
-from .test_registered_executor_conformance import _CloseWitness, _runtime
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

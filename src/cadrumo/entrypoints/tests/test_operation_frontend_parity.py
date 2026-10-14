@@ -70,6 +70,12 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.operations import profile_operation_subject
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from .registered_executor_case_support import (
+    _CloseWitness,
+    _model_runtime_for,
+    _runtime,
+    _seeded_conformance_submission,
+)
 from .test_operation_catalogue import _registry
 from .test_operation_mcp_surfaces import (
     _ALLOWED,
@@ -83,12 +89,6 @@ from .test_operation_mcp_surfaces import (
     human_lease,
 )
 from .test_operation_subject_binding import _REVIEW_DIGEST, _REVIEWED_DECISIONS
-from .test_registered_executor_conformance import (
-    _CloseWitness,
-    _model_runtime_for,
-    _runtime,
-    _seeded_conformance_submission,
-)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

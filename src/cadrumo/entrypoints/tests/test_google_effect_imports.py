@@ -33,8 +33,8 @@ from ...application.storage.calc_sheets.records import (
 )
 from ...application.storage.calc_sheets.review_workbook import ReviewLabelResolver
 from ...core.period import Period
+from .. import google_export_operation_composition as export_composition
 from .. import google_review_operation_composition as review_composition
-from .. import operation_composition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -91,11 +91,11 @@ assert not any(name == 'googleapiclient' or name.startswith('googleapiclient.') 
 from datetime import UTC, datetime
 from cadrumo.application.storage.calc_sheets.records import SheetExportMetadata, SheetExportPlan, SheetGuideContent
 from cadrumo.core.period import Period
-from cadrumo.entrypoints import operation_composition
+from cadrumo.entrypoints import google_export_operation_composition as export_composition
 
-operation_composition.resolve_drive_root_folder_id = lambda **kwargs: 'fixture-root'
-operation_composition.build_google_credentials = lambda **kwargs: object()
-prepared = operation_composition._google_sheets_export_prepare_port()('fixture-profile')
+export_composition.resolve_drive_root_folder_id = lambda **kwargs: 'fixture-root'
+export_composition.build_google_credentials = lambda **kwargs: object()
+prepared = export_composition.build_google_sheets_export_prepare_port()('fixture-profile')
 plan = SheetExportPlan(
     metadata=SheetExportMetadata(
         modelo_id='303', revision_id='2026', filing_year=2026,
@@ -148,9 +148,9 @@ def test_prepared_export_forwards_current_adapter_and_normalizes_result(
     sync_repository = object()
     plan = _plan()
     calls: list[str] = []
-    monkeypatch.setattr(operation_composition, "resolve_drive_root_folder_id", lambda **kwargs: "fixture-root")
-    monkeypatch.setattr(operation_composition, "build_google_credentials", lambda **kwargs: credentials)
-    monkeypatch.setattr(operation_composition, "SyncRunRecordRepository", lambda: sync_repository)
+    monkeypatch.setattr(export_composition, "resolve_drive_root_folder_id", lambda **kwargs: "fixture-root")
+    monkeypatch.setattr(export_composition, "build_google_credentials", lambda **kwargs: credentials)
+    monkeypatch.setattr(export_composition, "SyncRunRecordRepository", lambda: sync_repository)
 
     def preview(actual_plan: SheetExportPlan, *, credentials: object, root_folder_id: str):
         assert actual_plan is plan
@@ -185,8 +185,8 @@ def test_prepared_export_forwards_current_adapter_and_normalizes_result(
 
     credential_marker = credentials
     monkeypatch.setattr(calc_sheets_apply, "preview_export_plan", preview)
-    monkeypatch.setattr(operation_composition, "export_modelo_to_sheets", apply)
-    prepared = operation_composition._google_sheets_export_prepare_port()(str(PROFILE_ID))
+    monkeypatch.setattr(export_composition, "export_modelo_to_sheets", apply)
+    prepared = export_composition.build_google_sheets_export_prepare_port()(str(PROFILE_ID))
     result = prepared.execute(plan, dry_run)
     assert result.dry_run is dry_run
     assert result.root_folder_id == "fixture-root"
@@ -207,15 +207,15 @@ def test_prepared_export_forwards_current_adapter_and_normalizes_result(
 
 def test_prepared_export_preserves_application_refusal(monkeypatch: pytest.MonkeyPatch) -> None:
     marker = OutboundStorageValidationError("fixture refusal")
-    monkeypatch.setattr(operation_composition, "resolve_drive_root_folder_id", lambda **kwargs: "fixture-root")
-    monkeypatch.setattr(operation_composition, "build_google_credentials", lambda **kwargs: object())
-    monkeypatch.setattr(operation_composition, "SyncRunRecordRepository", object)
+    monkeypatch.setattr(export_composition, "resolve_drive_root_folder_id", lambda **kwargs: "fixture-root")
+    monkeypatch.setattr(export_composition, "build_google_credentials", lambda **kwargs: object())
+    monkeypatch.setattr(export_composition, "SyncRunRecordRepository", object)
 
     def refuse(*args: object, **kwargs: object) -> None:
         raise marker
 
-    monkeypatch.setattr(operation_composition, "export_modelo_to_sheets", refuse)
-    prepared = operation_composition._google_sheets_export_prepare_port()(str(PROFILE_ID))
+    monkeypatch.setattr(export_composition, "export_modelo_to_sheets", refuse)
+    prepared = export_composition.build_google_sheets_export_prepare_port()(str(PROFILE_ID))
     with pytest.raises(OutboundStorageValidationError) as caught:
         prepared.execute(_plan(), False)
     assert caught.value is marker

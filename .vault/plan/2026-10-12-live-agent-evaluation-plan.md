@@ -8,18 +8,18 @@ related:
   - '[[2026-10-12-live-agent-evaluation-adr]]'
   - '[[2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr]]'
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
-modified: '2026-10-13'
+modified: '2026-10-14'
 body_schema: body-v2
-body_hash: 'sha256:5da728e58cc493182a3737b15c88e91f20393d4dafadca4b425cbc198f925813'
+body_hash: 'sha256:d43b7a31de5306b255a35db1cfe16bed590eb00f5edd1d01ea4ac8bf3346ba78'
 ---
 
 # `live-agent-evaluation` plan
 
-Carry the 2026-10-12 live agent test into the project as a reproducible, opt-in lane that runs a haiku agent over MCP against a verified copy of the built package.
+Carry the 2026-10-12 live agent test into the project as a reproducible, opt-in lane that runs an agent client over MCP against a verified copy of the built package.
 
 ## Description
 
-Approved 2026-10-12. Basis: the owner's first-hand "lgtm" on `2026-10-12-live-agent-evaluation-adr`, which also accepts its defaults (model `claude-haiku-5-5`, three runs with at least two reaching the end state), and the owner's standing instruction that agent work be finished and verified live.
+Approved 2026-10-12. Basis: the owner's first-hand "lgtm" on `2026-10-12-live-agent-evaluation-adr`, which also accepts its default pass rule (three runs with at least two reaching the end state), and the owner's standing instruction that agent work be finished and verified live.
 
 This plan builds `dev/agent_eval/live/` and its two recipes as the governing ADR's Implementation section lays out. Decision coverage: `2026-10-12-live-agent-evaluation-adr` governs every Step (package copy, isolated root, scenarios, drivers, capture, oracle, access scenarios, recipes, floor). `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr` governs the access rules the lane holds from its own side in S03, S05, S06 and S08: the agent never authenticates, never holds a secret, and is refused without a live sign-in or a valid key. `2026-07-02-agent-harness-refoundation-adr` R7 is the substrate the lane drives (`LiveTrajectory`, `score_live_trajectory`). No new costly decision is involved; the evidence is `2026-10-12-live-agent-evaluation-reference`.
 
@@ -31,7 +31,7 @@ Scope bounds: the lane never edits `src/cadrumo_harness/mcp` or runtime code, wh
 - [x] `S02` - Verify the staged bundle package against its manifest, copy it to the development build root, verify and re-verify the copy, and compare its first-party modules with the checkout, refusing a stale package unless asked, with positive controls for a changed byte and a stale module; `dev/agent_eval/live/package_copy.py`.
 - [x] `S03` - Host the copied package on a fresh isolated storage root, running the installation record, profile creation, sign-in and teardown as package code through the copy's interpreter and command line, with the runtime launched unsupervised with the manager's arguments inside a kill-on-close scope and an allow-listed environment, and classify an unusable credential store as unavailable; `dev/agent_eval/live/isolated_host.py`.
 - [x] `S04` - Declare the live scenario files, Modelo 130 on the DR 130 worked example first and then Modelo 303 for the same quarter, with their loader and required subsequences; `dev/agent_eval/live/scenarios`.
-- [x] `S05` - Drive the agent through the Anthropic API with an MCP client loop or the authenticated claude CLI fallback, always claude-haiku-5-5, both producing one LiveTrajectory, with turn, token and spend limits; `dev/agent_eval/live/drivers.py`.
+- [x] `S05` - Drive an agent client over the package's cadrumo-mcp with the configured provider credential and the model declared by configuration, producing one LiveTrajectory per run with turn, token and spend limits; `dev/agent_eval/live/drivers.py`.
 - [x] `S06` - Scrub the stream before anything is written and capture the scrubbed trajectory, receipt and score to .logs/agent-eval/ behind a fail-closed residual scan, with a positive control on a planted secret; `dev/agent_eval/live/capture.py`.
 - [x] `S07` - Read the oracle through the packaged command line JSON envelopes and the product export parser under the copy's authority, and fail on any disagreement, with a positive control on a planted disagreement; `dev/agent_eval/live/oracle.py`.
 - [x] `S08` - Drive the access scenarios from the person's side through the packaged command line: key issue, use in scope, refusal out of scope, revocation mid-run, locked, signed out and expired, each requiring the agent to send the person back to Cadrumo; `dev/agent_eval/live/access.py`.

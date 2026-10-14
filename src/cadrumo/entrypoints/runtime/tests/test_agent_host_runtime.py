@@ -22,7 +22,6 @@ from pathlib import Path
 from uuid import UUID, uuid4
 
 import pytest
-from pydantic import SecretStr
 
 from cadrumo.adapters.local_runtime.agent_process import WindowsAgentInvocationRunner
 from cadrumo.adapters.local_runtime.agent_programs import (
@@ -57,13 +56,13 @@ from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.agent_host import RuntimeAgentRefused, RuntimeAgentStart, RuntimeAgentStarted
 from cadrumo.application.runtime.profile_access import RuntimeAccessRefusal, RuntimeProfileStatus
 from cadrumo.application.user_profile.access_contracts import AccessDenialCode, OsLockState
-from cadrumo.core.config import override_settings, reset_settings_cache
 from cadrumo.core.storage_environment import STORAGE_ROOT
 
 from .agent_host_support import (
     DEVELOPMENT_KEY_VARIABLE,
     FAKE_BEARER,
     FAKE_KEY,
+    FRAMED_CREDENTIAL_ID,
     assert_no_secret_exposed,
     invocations,
     launched,
@@ -138,18 +137,14 @@ def _start(
 def development_key(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     """Supply the development fallback key to every thread the runtime serves on.
 
-    Development storage mode falls back to the named Cadrumo setting for an
-    unset profile record: the process environment for threads that read the
-    process-wide settings, and the test's own settings override for this one.
+    Development storage mode falls back, for an unset profile record, to the
+    process environment value constructed from the lane id the agent reports.
     """
     monkeypatch.setenv(DEVELOPMENT_KEY_VARIABLE, FAKE_KEY)
-    reset_settings_cache()
     try:
-        with override_settings(cadrumo_llm_claude_api_key=SecretStr(FAKE_KEY)):
-            yield
+        yield
     finally:
         monkeypatch.delenv(DEVELOPMENT_KEY_VARIABLE)
-        reset_settings_cache()
 
 
 @pytest.mark.usefixtures("development_key")
@@ -164,7 +159,7 @@ def test_the_agent_starts_with_its_key_only_on_its_frame_and_stops_with_the_pers
         assert isinstance(started, RuntimeAgentStarted), started
         assert started.gateway_port == 47001
         document = received(record)
-        assert document["providers"] == ["claude"]
+        assert document["providers"] == [FRAMED_CREDENTIAL_ID]
         assert document["bearer_sha256"] == hashlib.sha256(FAKE_BEARER.encode()).hexdigest()
         assert_no_secret_exposed(document)
         environment = document["environment"]
@@ -280,7 +275,6 @@ def test_the_mcp_frontend_is_refused_and_starts_nothing(tmp_path: Path, monkeypa
 
 def test_no_usable_credential_is_typed_and_leaves_no_agent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv(DEVELOPMENT_KEY_VARIABLE, raising=False)
-    reset_settings_cache()
     _, record = _packaged_agent(tmp_path, monkeypatch)
     with stored_sign_in_runtime(tmp_path, monkeypatch) as runtime:
         mark_lane_root(runtime.root)
@@ -541,7 +535,7 @@ def test_older_stores_are_copied_aside_then_migrated_and_the_copy_goes_once_they
         assert invocations(record)[2]["aside"] == sorted([PRIMARY, CHECKPOINT, WRITE_AHEAD_LOG])
         assert _stores(hosted_root)[PRIMARY] == EXPECTED_PRIMARY
         assert not (hosted_root / STORES_ASIDE).exists()
-        assert received(record)["providers"] == ["claude"]
+        assert received(record)["providers"] == [FRAMED_CREDENTIAL_ID]
 
 
 @pytest.mark.usefixtures("development_key")

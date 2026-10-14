@@ -13,6 +13,10 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel
 
+from ...adapters.persistence.storage.tests.profile_capsule_runtime import (
+    profile_authority_contexts as _profile_contexts_for_test,
+)
+from ...application.operations.composition import compose_operation_services
 from ...application.operations.models import OperationIdentity, OperationRequest
 from ...application.user_profile.access_contracts import AccessAction
 from ...application.user_profile.capsule_record import ProfileRecordStore
@@ -32,7 +36,7 @@ from ...core.operations import OperationEffect, OperationTerminalCondition, prof
 from ...domain.buckets.event import BucketEventType
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
-from . import test_registered_executor_conformance as conformance
+from . import registered_executor_case_support as conformance
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -87,7 +91,7 @@ def test_registered_file_import_refuses_foreign_profile_and_guards_persistence(
 ) -> None:
     """The real supervisor fences profile-record and workflow writes as UPDATED."""
     witness = _CommitWitness()
-    original_compose = conformance.compose_operation_services
+    original_compose = compose_operation_services
     monkeypatch.setattr(
         conformance,
         "compose_operation_services",
@@ -138,7 +142,7 @@ def test_registered_file_import_refuses_foreign_profile_and_guards_persistence(
 
     monkeypatch.setattr(WorkflowStateRepository, "save", guarded_workflow_save)
 
-    _profile_create_context, profile_decode_context = conformance._profile_contexts_for_test()
+    _profile_create_context, profile_decode_context = _profile_contexts_for_test()
     with conformance._runtime(
         tmp_path / "censal-file-import",
         cleanup=conformance._CloseWitness(),

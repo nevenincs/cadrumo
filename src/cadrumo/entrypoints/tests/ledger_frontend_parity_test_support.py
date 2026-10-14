@@ -42,7 +42,7 @@ from ...domain.iva.classification import InvoiceKind
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...domain.transactions.models import Transaction
 from ..ledger_action_composition import compose_ledger_action_ports
-from . import test_registered_executor_conformance as conformance
+from . import registered_executor_case_support as conformance
 
 SESSION_CLIENT = UUID("5aa00000-0000-4000-8000-0000000000dd")
 AGENT_LABEL = f"agent:mcp.attended.{SESSION_CLIENT}"

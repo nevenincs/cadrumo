@@ -59,7 +59,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ...domain.calculations.registry.tests.cross_period_seeding import resolved_revision
 from . import modelo_operation_test_support
-from . import test_registered_executor_conformance as conformance
+from . import registered_executor_case_support as conformance
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

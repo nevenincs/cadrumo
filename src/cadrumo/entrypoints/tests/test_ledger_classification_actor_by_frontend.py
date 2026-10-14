@@ -30,7 +30,7 @@ from ...application.user_profile.access_contracts import SessionKind
 from ...core.operations import OperationTerminalCondition
 from ...domain.buckets.event import BucketEvent, BucketEventType
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from . import test_registered_executor_conformance as conformance
+from . import registered_executor_case_support as conformance
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

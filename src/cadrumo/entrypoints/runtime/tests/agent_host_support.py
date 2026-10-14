@@ -25,10 +25,17 @@ from typing import Final
 from cadrumo.adapters.local_runtime.tests import agent_host_fixture, agent_store_fixture
 from cadrumo.application.agent_host.lane_root import LANE_MARK_KIND, LANE_MARK_NAME
 from cadrumo.application.agent_host.launch_environment import HOSTED_ROOT_VARIABLE
+from cadrumo.application.provider_settings.tests.synthetic_catalog import (
+    KEY_LANE,
+    development_variable,
+    synthetic_document,
+)
 
 FAKE_KEY: Final = "sk-test-NOT-A-REAL-KEY"
 FAKE_BEARER: Final = "bearer-test-NOT-A-REAL-TOKEN"
-DEVELOPMENT_KEY_VARIABLE: Final = "CADRUMO_LLM_CLAUDE_API_KEY"
+DEVELOPMENT_KEY_VARIABLE: Final = development_variable(KEY_LANE)
+FRAMED_CREDENTIAL_ID: Final = "example"
+"""The id the stand-in agent's synthetic catalog declares for the key lane; the frame is keyed by it."""
 
 _STAND_IN_MAIN: Final = """\
 import json, os, runpy, subprocess, sys, threading
@@ -36,6 +43,9 @@ from pathlib import Path
 
 config_path = Path(__file__).resolve().parents[2] / "stand_in.json"
 config = json.loads(config_path.read_text(encoding="utf-8"))
+if sys.argv[1:] == ["providers", "--declared", "--json"]:
+    sys.stdout.write(config["catalog"])
+    raise SystemExit(0)
 if sys.argv[1:2] != ["serve"]:
     sys.argv = [config["stores_fixture"], str(config_path), config["record"], *sys.argv[1:]]
     runpy.run_path(config["stores_fixture"], run_name="__main__")
@@ -123,6 +133,7 @@ def _plant_agent_package(
                 "stores_fixture": agent_store_fixture.__file__,
                 "hosted_root_variable": HOSTED_ROOT_VARIABLE,
                 "stores": {} if stores is None else stores,
+                "catalog": synthetic_document(),
                 "mode": mode,
                 "record": str(record),
                 "probe": probe,

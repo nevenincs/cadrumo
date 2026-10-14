@@ -27,7 +27,7 @@ The owner, 2026-10-13: "we're working on ensuring that nothing in the codebase i
 ## Considerations
 
 - `2026-10-13-native-agent-adr` already rules that only CMake builds the agent wheel and that test runners never import an external checkout. Its CTest probe imports `cadrumo_agent.cli.main` and nothing more (`native/tests/agent_smoke.py`). So the runtime's launch of `-m cadrumo_agent`, a module with no `__main__.py`, went undetected.
-- `2026-10-12-live-agent-evaluation-adr` already runs its lane against a verified copy of the package. It drives `cadrumo-mcp` with a haiku client and does not exercise cadrumo-agent.
+- `2026-10-12-live-agent-evaluation-adr` already runs its lane against a verified copy of the package. It drives `cadrumo-mcp` with an agent client and does not exercise cadrumo-agent.
 - `dev/runtime_lifecycle/caller_owned_root.py`, `live_sign_in.py` and `reviewed_operation.py` already require `--package` and resolve the package's own entry points (`caller_owned_root.py:74-77`, `:440`).
 - `dev/runtime_lifecycle/agent_live.py` uses the package's `cadrumo-mcp` as the relay, but starts the gateway from a cadrumo-agent checkout (`agent_live.py:246`, `--agent-checkout`).
 - The desktop's `agent-direct-start` Cargo feature (`native/desktop/src-tauri/Cargo.toml:12-17`, `native/desktop/src-tauri/src/agent/direct.rs`) starts the agent from `CADRUMO_AGENT_SOURCE_DIR`. `dev/desktop_agent_live` depends on it, and so does the proposed `2026-10-13-desktop-agent-host-live-lane-adr` through its deviation L2.

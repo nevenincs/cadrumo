@@ -35,7 +35,7 @@ The native application package installs only the locked base closure of the `cad
 
 - Applies to the native application package only. The wheel's default install stays core-only, and the absent-llm lane keeps proving the instructive refusal there; it is not loosened.
 - The added distributions come from the same `uv.lock` resolution, version-pinned, wheel-only and target-selected, under the same assembly refusals as the base closure.
-- `ANTHROPIC_EXTRA` and any other extra stay out of the bundle; this ruling names `llm` alone.
+- Every other extra stays out of the bundle; this ruling names `llm` alone.
 - No model weights enter any artifact.
 
 ## Implementation

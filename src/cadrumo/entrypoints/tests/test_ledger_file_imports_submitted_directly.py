@@ -37,7 +37,7 @@ from ...core.operations import OperationEffect, OperationTerminalCondition, prof
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.iva.classification import InvoiceKind
 from ..ledger_action_composition import compose_ledger_action_ports
-from . import test_registered_executor_conformance as conformance
+from . import registered_executor_case_support as conformance
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

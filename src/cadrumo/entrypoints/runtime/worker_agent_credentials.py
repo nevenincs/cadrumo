@@ -10,6 +10,7 @@ caches or persists a secret.
 
 from __future__ import annotations
 
+import os
 import time
 
 from ...adapters.local_runtime.runtime_frame_io import write_document, write_secret
@@ -17,6 +18,7 @@ from ...adapters.local_runtime.worker_transport import WorkerChannel
 from ...adapters.persistence.provider_settings.store import build_provider_settings_store
 from ...adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
 from ...application.agent_host.credential_frame import wipe
+from ...application.provider_settings.catalog_source import ProvidedProviderCatalogSource
 from ...application.provider_settings.resolution import (
     ProviderCredentialResolver,
     ProviderCredentialUnavailable,
@@ -29,12 +31,11 @@ from ...application.runtime.profile_worker import (
     ProfileWorkerAgentCredentialsRequest,
 )
 from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
-from ...core.config import load_settings
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import sha256_hex
 from ...core.logging import get_logger
 from ...core.storage_environment import storage_mode
-from ...domain.provider_settings.catalog import ProviderConsumer, load_provider_catalog
+from ...domain.provider_settings.catalog import ProviderConsumer
 
 _LOGGER = get_logger(__name__)
 
@@ -74,8 +75,8 @@ def _resolve(
     try:
         resolver = ProviderCredentialResolver(
             store=build_provider_settings_store(bucket_id=str(custody.identity.binding.profile_id)),
-            catalog=load_provider_catalog(),
-            settings=load_settings(),
+            catalog_source=ProvidedProviderCatalogSource(request.catalog),
+            environment=os.environ,
             storage_mode=storage_mode().mode,
         )
     except CadrumoError as error:
@@ -83,7 +84,7 @@ def _resolve(
     credentials: list[ProfileWorkerAgentCredential] = []
     unset: list[str] = []
     states: list[str] = []
-    for provider in request.providers:
+    for provider in request.catalog.credential_lane_ids:
         resolved = resolver.resolve(provider, ProviderConsumer.ASSISTANT)
         if isinstance(resolved, ProviderCredentialUnavailable):
             if resolved.reason in _SESSION_REFUSALS:

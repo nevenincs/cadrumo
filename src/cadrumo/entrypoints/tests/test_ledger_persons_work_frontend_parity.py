@@ -53,7 +53,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.transactions.classification_origin import ClassificationOrigin, classification_facts
 from ...domain.transactions.enums import BusinessClassification, TransactionLifecycleState
 from ...domain.transactions.models import Transaction
-from . import test_registered_executor_conformance as conformance
+from . import registered_executor_case_support as conformance
 from .ledger_frontend_parity_test_support import (
     AGENT_LABEL,
     SwitchableSessionHost,
