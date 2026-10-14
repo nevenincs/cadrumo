@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#runtime-manager-architecture'
 date: '2026-10-08'
-modified: '2026-10-08'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:ffd8b772eff2925f794e95f92d229f77d829e41e9dee50ff1e359e326ce182c6'
+body_hash: 'sha256:729c330a5093519171126ca8001ecc3925bb2ab8eda938e5639e72cebaf1ab94'
 related:
   - "[[2026-10-04-canonical-environment-adr]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -20,7 +20,7 @@ The supplied Mac's normal installed storage roots cannot host the current runtim
 
 ### The existing default already exceeds the runtime's bound
 
-Read-only SSH confirmed HOME=/Users/gergely.wootsch. The declared stable socket directory is /Users/gergely.wootsch/Library/Application Support/cadrumo/runtime (66 bytes), and preview adds eight bytes. The slash, 32 hexadecimal identity characters and .sock suffix add 38 bytes. `src/cadrumo/adapters/local_runtime/posix_endpoint.py:189` selects the typed runtime member and `:201` refuses both resulting paths before bind. `native/manager/src/macos/ipc.rs:26` uses an even longer owner/session-qualified basename. No product directories were created and no installed application was launched to establish these lengths.
+Read-only SSH confirmed a 22-byte HOME, written <home> here. The declared stable socket directory is <home>/Library/Application Support/cadrumo/runtime (66 bytes with that HOME), and preview adds eight bytes. The slash, 32 hexadecimal identity characters and .sock suffix add 38 bytes. `src/cadrumo/adapters/local_runtime/posix_endpoint.py:189` selects the typed runtime member and `:201` refuses both resulting paths before bind. `native/manager/src/macos/ipc.rs:26` uses an even longer owner/session-qualified basename. No product directories were created and no installed application was launched to establish these lengths.
 
 ### The current managed contract permits no shorter ambient override
 

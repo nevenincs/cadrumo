@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#runtime-manager-architecture'
 date: '2026-10-08'
-modified: '2026-10-08'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:a340d0170b9f577ad237f2376cfb0acb569c2fbb399a45d0deae30a486c26d85'
+body_hash: 'sha256:a196c2c639c6b4ef295c4a7287e839f050684fbe7af82532c80eabfbbef8d72b'
 related:
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
   - "[[2026-10-05-runtime-manager-architecture-audit]]"
@@ -39,7 +39,7 @@ Keeping mandatory user-systemd placement leaves Linux release activation blocked
 
 2026-10-08 additional native evidence: a root-owned isolated Ubuntu 24.04.5 ARM-independent x86-64 KVM guest was provisioned from Canonical's release-20260926 cloud image (SHA256 6a81c37564db9b1ee84e141922625e1d7c5b389b99bb3c572e0243607d5bb4d2; SHA256SUMS signature verified with the packaged ubuntu-cloudimage-keyring). GNOME/X11 autologin produced native logind session 1, user runner/UID 1000, Remote=no, Class=user, Active=yes, State=active, LockedHint=no. An ordinary XDG autostart process called native sd_pid_get_session(0) and received -61/ENODATA, with cgroup 0::/user.slice/user-1000.slice/user@1000.service/app.slice/app-gnome-cadrumo\\x2drunner\\x2devidence-23658.scope. Thus a real local graphical session exists while its ordinary autostart process lacks the session mapping required by current admission. Inference: merely launching a direct child from this default GNOME autostart placement does not restore that mapping. This does not prove all desktop profiles behave identically or establish application lifecycle acceptance.
 
-Runner artifacts and the source of the read-only native probe are retained at /home/hello/.local/share/cadrumo-runners/noble-20261008 in WSL and build/windows-installers-x64/verification/linux_runner_seed.py. No CADRUMO product was installed. After the user emphasized that their supplied Windows and Mac machines are non-disposable, root powered down this temporary guest cleanly and retained its disk. Existing real hosts are reserved for isolated builds and read-only verification; no reset or product installation was performed.
+Runner artifacts and the source of the read-only native probe are retained at <home>/.local/share/cadrumo-runners/noble-20261008 in WSL and build/windows-installers-x64/verification/linux_runner_seed.py. No CADRUMO product was installed. After the user emphasized that their supplied Windows and Mac machines are non-disposable, root powered down this temporary guest cleanly and retained its disk. Existing real hosts are reserved for isolated builds and read-only verification; no reset or product installation was performed.
 
 ## Sources
 
