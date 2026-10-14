@@ -63,9 +63,6 @@ _HOME_ATTRIBUTE: Final[str] = "home"
 #: state owned by something OUTSIDE this project, which is the only reason the
 #: home directory is the right place to look.
 _HOME_IS_CORRECT: Final[dict[str, str]] = {
-    "dev/packaging/native/tests/test_desktop_rust_environment.py": (
-        "finds the explicitly pinned toolchain installed and owned by external Rustup, never creates a project cache"
-    ),
     "src/cadrumo/application/provisioning_host.py": (
         "where each platform's official Ollama installer places the runtime binary, which that "
         "installer chooses and this project only looks for"

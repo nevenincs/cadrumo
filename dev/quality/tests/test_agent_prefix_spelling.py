@@ -299,7 +299,7 @@ def test_the_same_sources_without_the_prefix_are_accepted(tmp_path: Path, langua
         _join("CADRUMO_PACKAGE", "_AGENT_SOURCE_DIR"),
         _join("CADRUMO_LLM", "_ANTHROPIC_API_KEY"),
         _join("CADRUMO", "_AGENT"),
-        _join(".cadrumo", "-agent-lane.json"),
+        _join(".cadrumo-agent", "-lane.json"),
         _join("cadrumo", "_agent.worker"),
     ],
 )
