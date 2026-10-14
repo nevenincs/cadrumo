@@ -14,7 +14,6 @@ not decrypt or validate is reported unreadable, never absent.
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Mapping
 from typing import Final, override
 
@@ -33,6 +32,7 @@ from ....application.provider_settings.ports import (
 )
 from ....core.config import Settings, load_settings
 from ....core.errors.hierarchy import CadrumoError
+from ....core.hashing import sha256_hex
 from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from ....core.time.clock import now
 from ....domain.provider_settings.record import (
@@ -177,7 +177,7 @@ class SecureProviderSettingsStore(ProviderSettingsStore):
 
 
 def _digest(parts: tuple[str, ...]) -> str:
-    return hashlib.sha256("".join(parts).encode("utf-8")).hexdigest()
+    return sha256_hex("".join(parts).encode("utf-8"))
 
 
 def _session_refusal_code(exc: BaseException) -> StoreRefusalCode | None:
