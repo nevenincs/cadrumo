@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 import threading
 from collections.abc import Callable, Coroutine, Mapping
-from contextlib import nullcontext
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Protocol
@@ -501,7 +500,9 @@ async def provision_local_reader(
     language = payload.output_language
     # A licence advisory is prose, written where the model is selected; the
     # frontend that asked must read it in its own language, not this host's.
-    with nullcontext() if language is None else override_settings(cadrumo_output_language=language.value):
+    if language is None:
+        return await provisioner.run(payload)
+    with override_settings(cadrumo_output_language=language.value):
         return await provisioner.run(payload)
 
 

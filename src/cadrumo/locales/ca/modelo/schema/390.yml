@@ -1592,6 +1592,21 @@ modelo:
         modelo-390-iva-resumen-anual:
           field:
             title: Declaració-resum anual de IVA
+        modelo-390-printed-disclosure-arithmetic-2022:
+          field:
+            title: 'Model 390: totals que imprimeix el formulari, exercici 2022'
+        modelo-390-printed-disclosure-arithmetic-2023:
+          field:
+            title: 'Model 390: totals que imprimeix el formulari, exercici 2023'
+        modelo-390-printed-disclosure-arithmetic-2024:
+          field:
+            title: 'Model 390: totals que imprimeix el formulari, exercici 2024'
+        modelo-390-printed-disclosure-arithmetic-2025:
+          field:
+            title: 'Model 390: totals que imprimeix el formulari, exercici 2025'
+        modelo-390-printed-disclosure-arithmetic-2026:
+          field:
+            title: 'Model 390: totals que imprimeix el formulari, exercici 2026'
       field:
         official_name: Modelo 390. Declaració-resum anual de l'Impost sobre el Valor
           Afegit.

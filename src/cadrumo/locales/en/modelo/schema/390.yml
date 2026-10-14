@@ -1599,6 +1599,21 @@ modelo:
         modelo-390-iva-resumen-anual:
           field:
             title: Annual VAT summary return
+        modelo-390-printed-disclosure-arithmetic-2022:
+          field:
+            title: 'Modelo 390: totals the form prints, 2022'
+        modelo-390-printed-disclosure-arithmetic-2023:
+          field:
+            title: 'Modelo 390: totals the form prints, 2023'
+        modelo-390-printed-disclosure-arithmetic-2024:
+          field:
+            title: 'Modelo 390: totals the form prints, 2024'
+        modelo-390-printed-disclosure-arithmetic-2025:
+          field:
+            title: 'Modelo 390: totals the form prints, 2025'
+        modelo-390-printed-disclosure-arithmetic-2026:
+          field:
+            title: 'Modelo 390: totals the form prints, 2026'
       field:
         official_name: Modelo 390. Annual summary return for Value Added Tax.
         title: VAT. Annual summary return

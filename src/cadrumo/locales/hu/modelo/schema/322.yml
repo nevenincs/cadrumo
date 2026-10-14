@@ -656,6 +656,18 @@ modelo:
         modelo-322-papel-actividades:
           field:
             title: Tevékenységek
+        modelo-322-printed-disclosure-arithmetic-2008-2022:
+          field:
+            title: 'Modelo 322: a nyomtatványon szereplő összesítések, 2008-tól 2022-ig'
+        modelo-322-printed-disclosure-arithmetic-2023:
+          field:
+            title: 'Modelo 322: a nyomtatványon szereplő összesítések, 2023'
+        modelo-322-printed-disclosure-arithmetic-2024-2025:
+          field:
+            title: 'Modelo 322: a nyomtatványon szereplő összesítések, 2024 és 2025'
+        modelo-322-printed-disclosure-arithmetic-2026-y-siguientes:
+          field:
+            title: 'Modelo 322: a nyomtatványon szereplő összesítések, 2026-tól'
       field:
         official_name: Modelo 322. Hozzáadottérték-adó. Cégcsoport. Egyedi nyomtatvány.
           Havi önbevallás.

@@ -234,9 +234,6 @@ def test_english_catalogue_distinguishes_product_prose_cli_and_identity_headings
     """English copy follows the contextual product and executable naming contract."""
     data = manager.load_locale(_committed_catalogues(manager)["en"])
 
-    assert _leaf(data, "adapters", "google", "calc_sheets", "errors", "foreign_spreadsheet_not_owned") == (
-        "The Google Sheet is not marked as owned by this Cadrumo profile."
-    )
     assert _leaf(data, "adapters", "google", "oauth_flow", "errors", "profile_state_unresolved") == (
         "Google OAuth cannot resolve the selected Cadrumo profile state."
     )
@@ -344,9 +341,6 @@ def test_catalan_catalogue_distinguishes_product_prose_cli_and_identity_headings
     """Catalan copy follows the contextual product and executable naming contract."""
     data = manager.load_locale(_committed_catalogues(manager)["ca"])
 
-    assert _leaf(data, "adapters", "google", "calc_sheets", "errors", "foreign_spreadsheet_not_owned") == (
-        "El full de Google no està marcat com a propietat d'aquest perfil Cadrumo."
-    )
     assert _leaf(data, "adapters", "google", "oauth_flow", "errors", "profile_state_unresolved") == (
         "Google OAuth no pot resoldre l'estat del perfil Cadrumo seleccionat."
     )

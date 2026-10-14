@@ -549,6 +549,13 @@ _SANCTIONED_LANGUAGE_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
         ("application/overview/read_operation.py", "_capture"),
         ("application/review/read_operation.py", "_capture"),
         ("entrypoints/runtime/operation_host.py", "capture"),
+        # The local-reader provisioning operation writes its licence advisory in the
+        # requesting frontend's language inside one with-block around the run.
+        ("application/local_reader_provisioning.py", "provision_local_reader"),
+        # The terminal interface's installation area returns the override as a context
+        # manager its callers enter only around synchronous rendering, never across a wait,
+        # so the first-profile page can word an area before any profile holds a language.
+        ("entrypoints/tui/installation/texts.py", "worded_in"),
     },
 )
 
@@ -580,6 +587,7 @@ _PROJECTION_SCOPED_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
         ("application/overview/read_operation.py", "_capture"),
         ("application/review/read_operation.py", "_capture"),
         ("entrypoints/runtime/operation_host.py", "capture"),
+        ("application/local_reader_provisioning.py", "provision_local_reader"),
     }
 )
 

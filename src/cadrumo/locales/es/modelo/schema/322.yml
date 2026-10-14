@@ -660,6 +660,20 @@ modelo:
         modelo-322-papel-actividades:
           field:
             title: Actividades
+        modelo-322-printed-disclosure-arithmetic-2008-2022:
+          field:
+            title: 'Modelo 322: totales que imprime el formulario, ejercicios 2008
+              a 2022'
+        modelo-322-printed-disclosure-arithmetic-2023:
+          field:
+            title: 'Modelo 322: totales que imprime el formulario, ejercicio 2023'
+        modelo-322-printed-disclosure-arithmetic-2024-2025:
+          field:
+            title: 'Modelo 322: totales que imprime el formulario, ejercicios 2024
+              y 2025'
+        modelo-322-printed-disclosure-arithmetic-2026-y-siguientes:
+          field:
+            title: 'Modelo 322: totales que imprime el formulario, desde 2026'
       field:
         official_name: Modelo 322. Impuesto sobre el Valor Añadido. Grupo de entidades.
           Modelo individual. Autoliquidación mensual.

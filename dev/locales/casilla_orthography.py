@@ -48,8 +48,9 @@ _RESTORABLE: Final[dict[str, dict[str, str]]] = {
 _FOREIGN_DICTIONARIES: Final[dict[str, tuple[str, ...]]] = {"es": (), "ca": ("en", "es"), "hu": ("en", "es")}
 _DIACRITICS: Final = frozenset("".join(chars for table in _RESTORABLE.values() for chars in table.values()))
 _WORD: Final = re.compile(r"[^\W\d_]+")
-#: Registry identifiers quoted in help text, and words cut short by an ellipsis, are not prose.
-_NOT_PROSE: Final = re.compile(r"[\w-]+(?:\.[\w-]+)+|\b[a-z]\d+(?:-[\w]+)+|\w+(?=\.\.\.|…)")
+#: Registry identifiers quoted in help text, snake_case tokens such as a stable category id, and
+#: words cut short by an ellipsis, are not prose.
+_NOT_PROSE: Final = re.compile(r"[\w-]+(?:\.[\w-]+)+|\b[a-z]\d+(?:-[\w]+)+|\w+_\w+|\w+(?=\.\.\.|…)")
 _MIN_LENGTH: Final = 4
 _MAX_RESTORED: Final = 3
 
@@ -165,7 +166,8 @@ def unaccented_words(
 _KEPT_SPANISH: Final = frozenset({"modelo", "modelos", "contraparte", "importe"})
 #: Per locale, Spanish words a translation keeps on purpose: Latin ("inter vivos"), the
 #: names of official programmes and deductions, registry and form field identifiers, and
-#: terms the product states in Spanish everywhere ("perceptor", "recargo de equivalencia").
+#: terms the product states in Spanish everywhere ("perceptor", "recargo de equivalencia", "prorrata"),
+#: and the official term an English gloss names in parentheses ("instalment payment (pago fraccionado)").
 REVIEWED_SPANISH_TERMS: Final[dict[str, frozenset[str]]] = {
     "en": frozenset(
         {
@@ -173,8 +175,11 @@ REVIEWED_SPANISH_TERMS: Final[dict[str, frozenset[str]]] = {
             "ejercicio",
             "equivalencia",
             "favor",
+            "fraccionado",
+            "pago",
             "perceptor",
             "periodo",
+            "prorrata",
             "rata",
             "recargo",
             "tecnológica",
@@ -204,8 +209,11 @@ REVIEWED_SPANISH_TERMS: Final[dict[str, frozenset[str]]] = {
             "deportivo",
             "ejercicio",
             "foral",
+            "fraccionado",
             "interno",
+            "pago",
             "periodo",
+            "prorrata",
             "tecnológica",
             "tipo",
             "vinculada",
