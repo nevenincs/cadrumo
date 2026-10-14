@@ -1,27 +1,41 @@
-"""Prove the live agent reads and changes a signed-in profile through Cadrumo's own tools, end to end.
+"""Be the person behind a live agent run on the built package, and judge its outcome independently.
 
-Everything is a real process on a fresh storage root: the package's
-``cadrumo-runtime --configured-root``, its ``aeat`` command line, a held
-sign-in, the cadrumo-agent gateway from a cadrumo-agent checkout, the real
-Anthropic API, and the package's own ``cadrumo-mcp`` as the agent's tool
-relay. Nobody types anything: the person's steps go through the command line
-with the password on its standard input, and the holder approves only an
-attendance ask whose process this driver launched. The run proves, one
-receipt line per step:
+The agent side runs in cadrumo-agent: its package runner starts the package's
+own ``bin/cadrumo-agent`` gateway, with the package's ``cadrumo-mcp`` as the
+tool relay, and drives the turns. This driver never starts the agent and never
+holds its bearer. On a fresh, marked storage root it:
 
-- a disposable profile with synthetic taxpayer facts, signed in and held;
-- the agent answers a question about the profile with the taxpayer's name,
-  which it can know only by calling Cadrumo's tools inside that profile;
-- the agent adds one ledger row through Cadrumo's ``ledger.add`` operation,
-  and the command line, an independent reader, lists exactly that row once;
-- the gateway, its worker and the relay end with the run, the runtime stops,
-  and nothing this run started survives.
+- starts the package's ``cadrumo-runtime --configured-root`` and creates a
+  disposable profile with synthetic taxpayer facts through the package's
+  ``aeat``, the password on its standard input only;
+- signs that profile in and holds the sign-in;
+- writes the hand-off for the runner into a private exchange directory and
+  waits for it;
+- approves a Cadrumo attendance ask only from the package's relay running under
+  the gateway the runner announced, and denies every other ask;
+- inspects each permission request the runner files and answers it: allow once
+  for a Cadrumo relay tool, reject and fail the run for anything else;
+- reads the runner's receipt and checks it against what it saw itself: the
+  reply names the taxpayer, ``aeat`` lists the scenario's ledger row exactly
+  once, and the answers the gateway stored are the answers given here;
+- stops the runtime and requires that nothing it started survives.
 
-It spends model credit. Run it with ``just verify-agent-live PACKAGE``. The
-cadrumo-agent checkout comes from ``--agent-checkout`` or
-``CADRUMO_AGENT_CHECKOUT``; its Anthropic key is read from that checkout's
-``.env`` and given only to the gateway's own environment. Without a key the
-run is reported unproven.
+The exchange directory holds JSON files written whole, each by one side:
+
+- ``handoff.json`` (this driver): the package, the storage root, the profile,
+  the relay and the scenario;
+- ``gateway.json`` (runner): the gateway's process id, its URL, its home and its
+  workspace;
+- ``requests/<n>.json`` (runner): a pending permission, as the gateway's run
+  status serves it, with its run id;
+- ``answers/<n>.json`` (this driver): ``{"option_id": ...}`` naming an offered
+  ``allow_once`` option, or ``{"decision": "reject"}``;
+- ``runner-receipt.json`` or ``runner-failed.json`` (runner): how the agent side
+  ended.
+
+Run it with ``just verify-agent-live --package DIR``, then start cadrumo-agent's
+package runner on the exchange directory it prints. Exit 0 means every step
+held, 1 names the step that did not.
 """
 
 from __future__ import annotations
@@ -29,21 +43,15 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import secrets
 import shutil
-import socket
-import subprocess
 import tempfile
 import threading
 import time
-import urllib.error
-import urllib.parse
-import urllib.request
-import uuid
 from collections.abc import Generator, Mapping
 from contextlib import contextmanager, suppress
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Final
 
 import psutil
 
@@ -67,232 +75,157 @@ from .live_sign_in import (
     state_taxpayer,
 )
 
-_PROFILE = "agent-live-acceptance"
-_TAXPAYER = "Daniel Persona"
-_LEDGER_MARKER = "agent live acceptance"
-_KEY_NAME = "CADRUMO_AGENT_CLAUDE_API_KEY"
-# The agent's own names for the lane this run uses: Claude by its API key. The agent keeps Claude's API and
-# command-line lanes under one provider name, so a run names the transport as well.
-_AGENT_PROVIDER = "claude"
-_AGENT_TRANSPORT = "api"
-_LANE_LABEL = f"{_AGENT_PROVIDER} {_AGENT_TRANSPORT}"
-_REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
-_GATEWAY_START_SECONDS = 180
-_RUN_START_SECONDS = 240
-_TURN_SECONDS = 600
-
-
-def _source_programs(directory: Path) -> Programs:
-    """Locate the three entry points in a directory of console scripts."""
-    suffix = ".exe" if os.name == "nt" else ""
-    names = ("aeat", "cadrumo-runtime", "cadrumo-mcp")
-    return Programs(*((directory / f"{name}{suffix}").resolve(strict=True) for name in names))
-
-
-def _claude_api_lane(catalog: Mapping[str, Any]) -> Mapping[str, Any] | None:
-    """Return the agent catalog's Claude API lane; its command-line lane shares the provider name."""
-    return next(
-        (
-            lane
-            for lane in catalog["providers"]
-            if lane["provider_id"] == _AGENT_PROVIDER and lane["transport"] == _AGENT_TRANSPORT
-        ),
-        None,
-    )
-
-
-def _run_selection(workspace: Path, model: str) -> dict[str, str]:
-    """Return the ``agent`` member of a run start: the agent's own provider and transport names."""
-    return {
-        "provider": _AGENT_PROVIDER,
-        "transport": _AGENT_TRANSPORT,
-        "model": model,
-        "workspace_root": str(workspace),
+_PROFILE: Final = "agent-live-acceptance"
+_PROTOCOL: Final = 1
+_SCENARIO: Final[dict[str, Any]] = {
+    "taxpayer": "Daniel Persona",
+    "ledger": {"description": "agent live acceptance", "amount": "12.34", "currency": "EUR", "date": "2026-01-15"},
+}
+#: The relay's registry entry, as the agent qualifies the tools it mounts from it.
+_RELAY_TOOL_PREFIX: Final = "mcp__cadrumo__"
+#: The tools the relay entry declares (cadrumo-agent's harness MCP registry).
+_RELAY_TOOLS: Final = frozenset(
+    {
+        "authority",
+        "control",
+        "corpus_search",
+        "describe",
+        "execute",
+        "observe",
+        "respond",
+        "result",
+        "result_page",
+        "review",
+        "search",
+        "status",
     }
+)
+_REPOSITORY_ROOT: Final = Path(__file__).resolve().parents[2]
+_GATEWAY_SECONDS: Final = 600.0
+_RUN_SECONDS: Final = 1800.0
+_POLL_SECONDS: Final = 0.5
 
 
-def _free_port() -> int:
-    with socket.socket() as probe:
-        probe.bind(("127.0.0.1", 0))
-        return int(probe.getsockname()[1])
+def write_whole(path: Path, document: Mapping[str, Any]) -> None:
+    """Write ``document`` so a reader never sees a partial file: a sibling first, then a rename."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    partial = path.with_name(f".{path.name}.partial")
+    partial.write_text(json.dumps(document, ensure_ascii=False, indent=2), encoding="utf-8")
+    os.replace(partial, path)
 
 
-def _anthropic_key(checkout: Path) -> str | None:
-    """Read the agent's Anthropic key from its checkout's operator file; never print it."""
-    with suppress(OSError):
-        for line in (checkout / ".env").read_text(encoding="utf-8").splitlines():
-            if line.startswith(f"{_KEY_NAME}="):
-                value = line.split("=", 1)[1].strip().strip('"').strip("'")
-                return value or None
-    return None
+def read_document(path: Path) -> dict[str, Any] | None:
+    """Return a whole JSON object the other side wrote, or ``None`` while it is absent."""
+    try:
+        document = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return None
+    require(isinstance(document, dict), f"{path.name} is not a JSON object")
+    require(document.get("version", _PROTOCOL) == _PROTOCOL, f"{path.name} speaks protocol {document.get('version')}")
+    return document
 
 
-class _Gateway:
-    """The cadrumo-agent gateway this run owns, reached over loopback with its own bearer."""
+def answer_for(request: Mapping[str, Any]) -> dict[str, str]:
+    """Inspect one pending permission and return the person's answer to it.
 
-    def __init__(self, port: int, token: str, process: subprocess.Popen[bytes]) -> None:
-        self.base = f"http://127.0.0.1:{port}"
-        self._token = token
-        self.process = process
-
-    def _request(self, method: str, path: str, body: Mapping[str, object] | None, timeout: float) -> Any:
-        request = urllib.request.Request(  # noqa: S310 -- loopback gateway this run started.
-            f"{self.base}{path}",
-            data=None if body is None else json.dumps(body).encode(),
-            method=method,
-            headers={"Authorization": f"Bearer {self._token}", "Content-Type": "application/json"},
-        )
-        try:
-            with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310
-                return json.load(response)
-        except urllib.error.HTTPError as error:
-            raise AcceptanceError(f"gateway {method} {path}: {error.code} {error.read()[:400]!r}") from None
-
-    def wait_ready(self) -> None:
-        deadline = time.monotonic() + _GATEWAY_START_SECONDS
-        while time.monotonic() < deadline:
-            require(self.process.poll() is None, f"the gateway exited during startup ({self.process.poll()})")
-            with (
-                suppress(OSError, urllib.error.URLError),
-                urllib.request.urlopen(f"{self.base}/health", timeout=5) as response,  # noqa: S310
-            ):
-                if response.status == 200:
-                    return
-            time.sleep(1)
-        raise AcceptanceError(f"the gateway did not answer /health in {_GATEWAY_START_SECONDS}s")
-
-    def model(self, workspace: Path, requested: str | None) -> str:
-        """Return the model to run: the requested one, or the catalog's own recommendation from the live API."""
-        catalog = self._request(
-            "GET", f"/v1/provider-catalog?workspace_root={urllib.parse.quote(str(workspace))}", None, 180
-        )
-        lane = _claude_api_lane(catalog)
-        if lane is None:
-            raise AcceptanceError(f"the gateway offers no {_LANE_LABEL} lane")
-        require(lane["health"]["selectable"], f"the {_LANE_LABEL} lane is not selectable: {lane['health']['reasons']}")
-        models = lane["catalog"]["models"]
-        require(bool(models), f"the {_LANE_LABEL} catalog lists no model")
-        if requested is not None:
-            require(any(entry["model"] == requested for entry in models), f"{requested} is not in the live catalog")
-            return requested
-        recommended = lane["catalog"].get("recommended_entry_id")
-        chosen = next((entry for entry in models if entry["entry_id"] == recommended), models[0])
-        return str(chosen["model"])
-
-    def turn(
-        self, workspace: Path, model: str, message: str, continues: str | None
-    ) -> tuple[str, str, list[str], list[str]]:
-        """Run one turn to its end, approving each tool call once as the person would.
-
-        Returns the run id, the reply text, the Cadrumo tools it called and the
-        approvals it was asked for. Only an ``allow_once`` option is chosen, so
-        every later call must ask again.
-        """
-        run_id = str(uuid.uuid4())
-        self._request(
-            "POST",
-            "/v1/runs",
-            {
-                "run_id": run_id,
-                "message": message,
-                "title": "agent live acceptance",
-                **({"continues_run_id": continues} if continues is not None else {}),
-                "agent": _run_selection(workspace, model),
-            },
-            _RUN_START_SECONDS,
-        )
-        stream = urllib.request.Request(  # noqa: S310 -- loopback gateway this run started.
-            f"{self.base}/v1/runs/{run_id}/stream?last_event_id=-",
-            headers={"Authorization": f"Bearer {self._token}"},
-        )
-        reply: list[str] = []
-        tools: list[str] = []
-        approvals: list[str] = []
-        status = None
-        event = None
-        with urllib.request.urlopen(stream, timeout=_TURN_SECONDS) as response:  # noqa: S310
-            for raw in response:
-                line = raw.decode("utf-8", "replace").rstrip("\r\n")
-                if line.startswith("event:"):
-                    event = line[6:].strip()
-                    continue
-                if not line.startswith("data:"):
-                    continue
-                data = json.loads(line[5:])
-                if event == "message_chunk":
-                    reply.append(str(data.get("content", "")))
-                elif event == "tool_call_start" and data.get("title"):
-                    tools.append(str(data["title"]))
-                elif event == "permission_request":
-                    option = next(
-                        (choice for choice in data.get("options", []) if choice.get("kind") == "allow_once"), None
-                    )
-                    if option is None:
-                        raise AcceptanceError(f"an approval offered no allow_once option: {data.get('options')}")
-                    approvals.append(str(data.get("description") or data.get("tool_call")))
-                    self._request(
-                        "POST",
-                        f"/v1/runs/{run_id}/permissions/{data['request_id']}/respond",
-                        {"option_id": option["option_id"]},
-                        60,
-                    )
-                elif event == "thread_terminal":
-                    status = data.get("status")
-                    break
-        require(status == "completed", f"the turn ended {status}")
-        return run_id, "".join(reply), tools, approvals
-
-
-@contextmanager
-def _gateway(
-    checkout: Path, programs: Programs, environment: Mapping[str, str], scratch: Path, key: str
-) -> Generator[_Gateway]:
-    """Start the agent's gateway on this run's root, with the package's ``cadrumo-mcp`` as its tool relay."""
-    port, token = _free_port(), secrets.token_hex(32)
-    agent_environment = dict(environment)
-    agent_environment.update(
-        {
-            "PATH": os.pathsep.join((str(programs.mcp.parent), environment.get("PATH", ""))),
-            "CADRUMO_AGENT_PROJECT_ROOT": str(scratch / "agent"),
-            "CADRUMO_AGENT_HOST": "127.0.0.1",
-            "CADRUMO_AGENT_PORT": str(port),
-            "CADRUMO_AGENT_WORKER_PORT": str(_free_port()),
-            "CADRUMO_AGENT_ENVIRONMENT": "development",
-            "CADRUMO_AGENT_GATEWAY_TOKEN": token,
-            "CADRUMO_AGENT_DEVELOPMENT_TOOL_SERVER": "true",
-            _KEY_NAME: key,
-        }
+    Only a call of one of the relay's declared tools is allowed, and only once:
+    the answer names the ``allow_once`` option the request itself offered.
+    Anything else is rejected, and the caller fails the run on a rejection.
+    """
+    tool = request.get("tool_call")
+    options = request.get("options")
+    allowed = (
+        isinstance(tool, str)
+        and tool.startswith(_RELAY_TOOL_PREFIX)
+        and tool.removeprefix(_RELAY_TOOL_PREFIX) in _RELAY_TOOLS
     )
-    (scratch / "agent").mkdir()
-    with (scratch / "agent.log").open("wb") as log:
-        process = subprocess.Popen(  # noqa: S603 -- the checkout's own console script; no shell.
-            [str(checkout / ".venv" / "Scripts" / "cadrumo-agent.exe"), "serve"],
-            cwd=scratch / "agent",
-            env=agent_environment,
-            stdin=subprocess.DEVNULL,
-            stdout=log,
-            stderr=subprocess.STDOUT,
+    once = [
+        option["option_id"]
+        for option in options or ()
+        if isinstance(option, Mapping)
+        and option.get("kind") == "allow_once"
+        and isinstance(option.get("option_id"), str)
+    ]
+    if allowed and len(once) == 1:
+        return {"option_id": once[0]}
+    return {"decision": "reject"}
+
+
+def stored_answers_disagree(given: Mapping[str, Mapping[str, str]], stored: list[Any]) -> list[str]:
+    """Name every difference between the answers given here and the ones the gateway stored, by request id."""
+    recorded: dict[str, Any] = {}
+    for entry in stored:
+        request = entry.get("request") if isinstance(entry, Mapping) else None
+        request_id = request.get("request_id") if isinstance(request, Mapping) else None
+        if not isinstance(request_id, str):
+            return [f"a stored permission names no request: {entry!r}"]
+        recorded[request_id] = entry.get("answer")
+    differences = [
+        f"{request_id}: given {answer}, stored {recorded.get(request_id)}"
+        for request_id, answer in given.items()
+        if recorded.get(request_id) != answer
+    ]
+    differences.extend(f"{request_id}: stored but never given here" for request_id in recorded.keys() - given.keys())
+    return differences
+
+
+def is_announced_relay(process_id: int, relay: Path, gateway: int | None) -> bool:
+    """Whether ``process_id`` is the package's relay running under the announced gateway."""
+    if gateway is None:
+        return False
+    with suppress(psutil.Error, OSError):
+        process = psutil.Process(process_id)
+        return Path(process.exe()).resolve() == relay and any(parent.pid == gateway for parent in process.parents())
+    return False
+
+
+@dataclass(slots=True)
+class Exchange:
+    """The private directory this driver and the runner exchange whole files through."""
+
+    directory: Path
+    given: dict[str, dict[str, str]] = field(default_factory=dict)
+    answered: set[str] = field(default_factory=set)
+
+    def gateway(self) -> dict[str, Any] | None:
+        """Return the runner's gateway announcement, or ``None`` before it is written."""
+        return read_document(self.directory / "gateway.json")
+
+    def ended(self) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
+        """Return the runner's receipt and its failure, each ``None`` until written."""
+        return read_document(self.directory / "runner-receipt.json"), read_document(
+            self.directory / "runner-failed.json"
         )
-        try:
-            gateway = _Gateway(port, token, process)
-            gateway.wait_ready()
-            yield gateway
-        finally:
-            tree = [process]
-            with suppress(psutil.Error):
-                tree = [psutil.Process(process.pid), *psutil.Process(process.pid).children(recursive=True)]
-            for member in reversed(tree):
-                with suppress(psutil.Error, ProcessLookupError):
-                    member.terminate()
-            psutil.wait_procs([p for p in tree if isinstance(p, psutil.Process)], timeout=20)
-            for member in tree:
-                with suppress(psutil.Error, ProcessLookupError):
-                    member.kill()
+
+    def answer_pending(self) -> list[str]:
+        """Answer each request the runner filed since the last call; return the rejected ones."""
+        rejected: list[str] = []
+        requests = self.directory / "requests"
+        for path in sorted(requests.glob("*.json")) if requests.is_dir() else ():
+            if path.name in self.answered:
+                continue
+            request = read_document(path)
+            if request is None:
+                continue
+            answer = answer_for(request)
+            write_whole(self.directory / "answers" / path.name, answer)
+            self.answered.add(path.name)
+            self.given[str(request.get("request_id"))] = answer
+            print(
+                json.dumps(
+                    {"step": "permission_answered", "tool_call": request.get("tool_call"), "answer": answer},
+                    sort_keys=True,
+                ),
+                flush=True,
+            )
+            if answer == {"decision": "reject"}:
+                rejected.append(f"{request.get('tool_call')!r}: {request.get('description')!r}")
+        return rejected
 
 
 @contextmanager
-def _attending(holder: Holder) -> Generator[list[int]]:
-    """Approve, for the life of the block, every attendance ask from a process this driver launched."""
+def _attending(holder: Holder, relay: Path, gateway: Mapping[str, int | None]) -> Generator[list[int]]:
+    """Approve, for the life of the block, each attendance ask from the announced gateway's relay."""
     stop = threading.Event()
     approved: list[int] = []
     failures: list[str] = []
@@ -307,12 +240,9 @@ def _attending(holder: Holder) -> Generator[list[int]]:
                 failures.append(str(refusal))
                 return
             process_id = ask.get("process_id")
-            launched = False
-            if isinstance(process_id, int):
-                with suppress(psutil.Error):
-                    launched = any(parent.pid == os.getpid() for parent in psutil.Process(process_id).parents())
-            holder.decide(str(ask["attendance_id"]), approve=launched)
-            if launched and isinstance(process_id, int):
+            relay_ask = isinstance(process_id, int) and is_announced_relay(process_id, relay, gateway.get("pid"))
+            holder.decide(str(ask["attendance_id"]), approve=relay_ask)
+            if relay_ask:
                 approved.append(process_id)
 
     watcher = threading.Thread(target=attend, name="agent-live-attendance", daemon=True)
@@ -339,61 +269,84 @@ def _ledger_text(programs: Programs, environment: Mapping[str, str], profile: Pr
     return json.dumps(envelope.get("result"), ensure_ascii=False)
 
 
-def run(programs: Programs, package: Path | None, scratch: Path, *, checkout: Path, model: str | None) -> Receipt:
-    """Run both turns against a fresh root below ``scratch``."""
+def _await_runner(exchange: Exchange, gateway: dict[str, int | None]) -> dict[str, Any]:
+    """Serve the runner until it ends: note its gateway, answer its requests, return its receipt."""
+    started = time.monotonic()
+    while True:
+        receipt, failed = exchange.ended()
+        if failed is not None:
+            raise AcceptanceError(f"the runner failed at {failed.get('stage')}: {failed.get('reason')}")
+        if gateway.get("pid") is None and (announced := exchange.gateway()) is not None:
+            require(isinstance(announced.get("pid"), int), f"gateway.json names no process: {announced}")
+            gateway["pid"] = announced["pid"]
+            print(json.dumps({"step": "gateway_announced", "gateway_url": announced.get("gateway_url")}), flush=True)
+        rejected = exchange.answer_pending()
+        require(not rejected, f"the agent asked for something other than a Cadrumo relay tool: {rejected}")
+        if receipt is not None:
+            return receipt
+        elapsed = time.monotonic() - started
+        require(gateway.get("pid") is not None or elapsed < _GATEWAY_SECONDS, "the runner announced no gateway")
+        require(elapsed < _RUN_SECONDS, "the runner never ended")
+        time.sleep(_POLL_SECONDS)
+
+
+def _judge(receipt: Mapping[str, Any], exchange: Exchange, root: Path, after: str) -> dict[str, Any]:
+    """Check the runner's receipt against what this driver saw; return the facts worth keeping."""
+    require(receipt.get("storage_root_passed") == str(root), f"the runner passed another root: {receipt}")
+    replies = " ".join(str(run.get("reply", "")) for run in receipt.get("runs", ()) if isinstance(run, Mapping))
+    require(_SCENARIO["taxpayer"].lower() in replies.lower(), "no reply names the profile's taxpayer")
+    disagreements = stored_answers_disagree(exchange.given, list(receipt.get("permissions", ())))
+    require(not disagreements, f"the gateway stored other answers than were given: {disagreements}")
+    require(bool(exchange.given), "the agent asked no permission, so no relay call was approved")
+    description = _SCENARIO["ledger"]["description"]
+    require(after.count(description) == 1, f"the ledger holds the scenario row {after.count(description)} times")
+    return {
+        "runs": [run.get("run_id") for run in receipt.get("runs", ()) if isinstance(run, Mapping)],
+        "proofs": receipt.get("proofs"),
+        "permissions_given": len(exchange.given),
+        "wheel_sha256": receipt.get("wheel_sha256"),
+    }
+
+
+def run(package: Path, scratch: Path) -> Receipt:
+    """Serve one runner on a fresh root below ``scratch``."""
+    programs = Programs.of(package)
     receipt = Receipt()
     receipt.record("artifact", **package_identity(package))
-    key = _anthropic_key(checkout)
-    if key is None:
-        receipt.unproven.append(f"live agent: no {_KEY_NAME} in {checkout / '.env'}")
-        return receipt
-    root, secret_store, workspace = scratch / "storage", scratch / "secrets", scratch / "workspace"
+    root, secret_store, directory = scratch / "storage", scratch / "secrets", scratch / "exchange"
     secret_store.mkdir(parents=True)
-    workspace.mkdir()
+    directory.mkdir()
+    exchange = Exchange(directory)
     environment = consumer_environment(root, secret_store)
-    authority_root = os.environ.get("CADRUMO_AUTHORITY_ROOT")
-    if package is None and authority_root is not None:
-        # Source programs read the authority this checkout publishes; a package carries its own.
-        environment["CADRUMO_AUTHORITY_ROOT"] = authority_root
     log = scratch / "processes.log"
     profile = create_profile(programs, environment, _PROFILE, log)
     with caller_owned_runtime(programs, environment, scratch / "runtime-stderr.log") as runtime:
         receipt.record("runtime_ready", product_version=runtime.ready().get("product_version"))
         profile = identify_profile(programs, environment, profile, log)
         state_taxpayer(programs, environment, profile)
+        before = _ledger_text(programs, environment, profile)
+        require(_SCENARIO["ledger"]["description"] not in before, "the ledger already holds the scenario row")
         holder = Holder(programs, environment, profile, log)
         try:
             holder.event("held")
             receipt.record("signed_in_and_held")
-            with _attending(holder) as approved, _gateway(checkout, programs, environment, scratch, key) as gateway:
-                chosen = gateway.model(workspace, model)
-                receipt.record("gateway_ready", model=chosen)
-                first, answer, tools, _ = gateway.turn(
-                    workspace,
-                    chosen,
-                    "Use your Cadrumo tools to read my profile. Reply with the taxpayer's full name exactly as "
-                    "the profile records it, and nothing else.",
-                    None,
+            gateway: dict[str, int | None] = {"pid": None}
+            with _attending(holder, programs.mcp, gateway) as approved:
+                write_whole(
+                    directory / "handoff.json",
+                    {
+                        "version": _PROTOCOL,
+                        "package": str(package),
+                        "storage_root": str(root),
+                        "profile": str(profile.profile_id),
+                        "relay": str(programs.mcp),
+                        "scenario": _SCENARIO,
+                    },
                 )
-                require(bool(tools), f"the agent called no Cadrumo tool: {answer!r}")
-                require(_TAXPAYER.lower() in answer.lower(), f"the answer does not name the taxpayer: {answer!r}")
-                receipt.record("read_through_tools", tools=tools, answer=answer.strip()[:200])
-                before = _ledger_text(programs, environment, profile)
-                require(_LEDGER_MARKER not in before, "the ledger already holds the acceptance row")
-                _, answer, tools, approvals = gateway.turn(
-                    workspace,
-                    chosen,
-                    "Use your Cadrumo tools to add one ledger expense: 12.34 EUR on 2026-01-15, description "
-                    f"'{_LEDGER_MARKER}'. Use the ledger.add operation and add it exactly once.",
-                    first,
-                )
+                receipt.record("exchange_ready", exchange=str(directory))
+                runner = _await_runner(exchange, gateway)
                 after = _ledger_text(programs, environment, profile)
-                require(
-                    after.count(_LEDGER_MARKER) == 1, f"the ledger holds the row {after.count(_LEDGER_MARKER)} times"
-                )
-                receipt.record(
-                    "wrote_through_tools", tools=tools, approvals=approvals, attended_processes=len(approved)
-                )
+                receipt.record("agent_judged", attended_relays=len(approved), **_judge(runner, exchange, root, after))
             holder.close_input()
             reason, exit_code = holder.finish()
             require(reason == "input_closed" and exit_code == 0, f"holder: {reason} {exit_code}")
@@ -409,34 +362,17 @@ def run(programs: Programs, package: Path | None, scratch: Path, *, checkout: Pa
 
 
 def main(arguments: list[str] | None = None) -> int:
-    """Run the proof; exit 0 when every step held, 1 on a contradicted step, 3 when a step was left out."""
+    """Run the person side; exit 0 when every step held and 1 on a contradicted step."""
     parser = argparse.ArgumentParser(prog="agent-live", description=__doc__.splitlines()[0])
-    target = parser.add_mutually_exclusive_group(required=True)
-    target.add_argument("--package", type=Path, help="A built package directory.")
-    target.add_argument(
-        "--programs",
-        type=Path,
-        help="A directory holding aeat, cadrumo-runtime and cadrumo-mcp, such as a checkout's environment scripts.",
-    )
-    parser.add_argument(
-        "--agent-checkout",
-        type=Path,
-        default=os.environ.get("CADRUMO_AGENT_CHECKOUT"),
-        help="A cadrumo-agent checkout with its environment synced (default: $CADRUMO_AGENT_CHECKOUT).",
-    )
-    parser.add_argument("--model", default=None, help="A model id from the live catalog (default: its recommendation).")
-    parser.add_argument("--keep", action="store_true", help="Keep the disposable root for inspection.")
+    parser.add_argument("--package", type=Path, required=True, help="A built package directory (stage/<Config>/app).")
+    parser.add_argument("--keep", action="store_true", help="Keep the disposable root and exchange for inspection.")
     options = parser.parse_args(arguments)
-    if options.agent_checkout is None:
-        parser.error("give --agent-checkout or set CADRUMO_AGENT_CHECKOUT")
-    package = None if options.package is None else Path(options.package).resolve(strict=True)
-    programs = Programs.of(package) if package is not None else _source_programs(Path(options.programs))
-    checkout = Path(options.agent_checkout).resolve(strict=True)
+    package = Path(options.package).resolve(strict=True)
     base = _REPOSITORY_ROOT / "build" / "acceptance"
     base.mkdir(parents=True, exist_ok=True)
     scratch = Path(tempfile.mkdtemp(prefix="agent-live-", dir=base))
     try:
-        receipt = run(programs, package, scratch, checkout=checkout, model=options.model)
+        run(package, scratch)
     except (AcceptanceError, BaseExceptionGroup) as failure:
         reason = acceptance_failure(failure)
         if reason is None:
@@ -445,9 +381,6 @@ def main(arguments: list[str] | None = None) -> int:
         return 1
     if not options.keep:
         shutil.rmtree(scratch, ignore_errors=True)
-    if receipt.unproven:
-        print(json.dumps({"step": "incomplete", "unproven": receipt.unproven}), flush=True)
-        return 3
     print(json.dumps({"step": "passed"}), flush=True)
     return 0
 

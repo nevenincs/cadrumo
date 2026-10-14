@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#package-verification'
 date: '2026-10-13'
-modified: '2026-10-13'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:118938828fa641601766933909f101b7d7ab1b7cd4c61a527587033c6603e6b9'
+body_hash: 'sha256:43a836d25aa08492928cba271ba45a6c147298aaa16bc2da47d3f2b09728623d'
 related:
   - "[[2026-10-13-package-verification-plan]]"
 ---
@@ -67,9 +67,15 @@ related:
 - `S04` `verify:` `native/desktop/tests/run-backend.ps1 -Mode Unit -Filter agent` -> `pass`
 - `S04` `verify:` `native/desktop/tests/run-backend.ps1 -Mode Clippy` -> `pass`
 - `S04` `verify:` `ruff check dev/desktop_agent_live` -> `pass`
+- `S03` `M` `dev/runtime_lifecycle/agent_live.py`
+- `S03` `M` `dev/runtime_lifecycle/tests/test_agent_live.py`
+- `S03` `verify:` `dev/runtime_lifecycle/tests/test_agent_live.py` -> `pass`
+- `S03` `verify:` `ruff check` -> `pass`
+- `S03` `verify:` `ty check` -> `pass`
 
 ## Notes
 
 - `S01` lane-reachability and justfile-wiring failures are pre-existing: unenrolled `dev/desktop_agent_live,` `dev/agent_eval/live` and other sessions' new tests; none involve S01 paths. dev/audit semantic, `semantic_duplication,` `legal_attribution_screen,` `legal_excerpt_vintage_screen` and `registry_temporal_range_sweep` kept as live gates or documented tools
 - `S01` owner asked to fix the pre-existing census failures: CTest's package pytest suite is now a lane of test-native-bundle; orphan test paths enrolled in their capability lanes
 - `S04` built in an isolated scratch build root and cargo target; the live desktop lane itself waits on the hosted proof and a built package with the agent image
+- `S03` person side and file exchange built to the protocol agreed with CADRUMO-AGENT-CODE; step stays open until verify-agent-live passes against a staged package with the agent package runner
