@@ -193,6 +193,9 @@ _SIGN_IN: Final = "it signs the person in or out, locks a session or reads the s
 _SESSIONS: Final = "it lists or denies the profile's sessions and keys, which is the person's administration of access"
 _KEYS: Final = "it requests, approves, declines, changes or lists an automation key, which only the person issues"
 _TYPED_BY_THE_PERSON: Final = "it takes a password or another secret, which only the person types"
+_AGENT_START: Final = (
+    "it starts the hosted agent under the person's own live sign-in, for the desktop host; an agent never starts one"
+)
 _PROVIDER_CREDENTIAL: Final = "it sets, removes or resets a model provider's credential, which only the person manages"
 _INSTALLATION: Final = (
     "it does installation work that belongs to no single profile, outside the profile an agent works in"
@@ -270,6 +273,7 @@ PERSON_ACT_COMMANDS: Final[Mapping[CliPath, PersonAct]] = MappingProxyType(
         ("config", "storage", "list"): _installation(_STORAGE_PROOF, InstallationAct.STORAGE_INVENTORY),
         ("config", "storage", "reclaim"): _installation(_STORAGE_PROOF, InstallationAct.STORAGE_RECLAIM),
         ("config", "storage", "view"): _installation(_STORAGE_PROOF, InstallationAct.STORAGE_INVENTORY),
+        ("app", "agent", "serve"): PersonAct(_AGENT_START),
         ("config", "auth", "apoderado", "configure"): PersonAct(_TYPED_BY_THE_PERSON),
         ("config", "auth", "certificate", "secret", "set"): PersonAct(_TYPED_BY_THE_PERSON),
         ("config", "login"): PersonAct(_SIGN_IN),
@@ -316,9 +320,6 @@ _PRINTS_HELP: Final = "invoked bare, it prints the help of its group, which ever
 COMMANDS_WITH_NO_WORK_TO_SHARE: Final[Mapping[CliPath, str]] = MappingProxyType(
     {
         ("app",): _PRINTS_HELP,
-        ("app", "agent", "serve"): (
-            "it serves the hosted agent itself, for the desktop host that holds it open; an agent never starts itself"
-        ),
         ("app", "diagnostics"): _PRINTS_HELP,
         ("app", "tui"): "it starts the terminal interface itself",
         ("config",): _PRINTS_HELP,
@@ -426,6 +427,7 @@ _INSTALLATION_ACTIONS: Final = frozenset(act.value for act in InstallationAct)
 
 PERSON_RUNTIME_REQUESTS: Final = frozenset(
     {
+        "agent_start",
         "automation_deny",
         "enrollment_inspect",
         "enrollment_poll",
@@ -445,6 +447,9 @@ PERSON_RUNTIME_REQUESTS: Final = frozenset(
     }
 )
 """The requests of the runtime's own door that authenticate or administer sessions, keys or the profile.
+
+Starting the hosted agent is one too: the runtime admits it only on the agent host's own
+connection, under a live human lease, and refuses it to anything inside an agent tree.
 
 Every installation act is the person's act as well: it belongs to no single
 profile. A sign-in by password is too; a key the person configured is

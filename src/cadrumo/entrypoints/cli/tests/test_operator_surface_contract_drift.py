@@ -65,6 +65,18 @@ def _direct_children(command: click.Command) -> dict[str, click.Command]:
     return children
 
 
+def _envelope_free_families() -> frozenset[tuple[str, str]]:
+    """Name each ``(root, child)`` family whose every leaf declares no result schema."""
+    from ..command_specs import COMMAND_GRAPH
+
+    leaves: dict[tuple[str, str], list[bool]] = {}
+    for node in COMMAND_GRAPH.nodes():
+        if node.spec.kind != "leaf" or len(node.path) < 3:
+            continue
+        leaves.setdefault((node.path[1], node.path[2]), []).append(node.spec.result_schema.target is not None)
+    return frozenset(family for family, schemas in leaves.items() if not any(schemas))
+
+
 def _resolve_live_surface() -> dict[str, dict[str, frozenset[str]]]:
     """Resolve ``{root: {family-child: frozenset(sub-verb)}}`` from the live tree.
 
@@ -81,15 +93,18 @@ def _resolve_live_surface() -> dict[str, dict[str, frozenset[str]]]:
     root = _typer_get_command(live_app)
     root.name = live_app.info.name or "cadrumo"
 
+    envelope_free = _envelope_free_families()
     surface: dict[str, dict[str, frozenset[str]]] = {}
     for root_name, root_cmd in _direct_children(cast(click.Command, root)).items():
         if root_name not in _PINNED_ROOTS:
             continue
         families: dict[str, frozenset[str]] = {}
         for child_name, child_cmd in _direct_children(root_cmd).items():
-            # The TUI leaf hands control to a separate interface process; it
-            # is not an operator-service family represented by this contract.
-            if root_name == "app" and child_name == "tui":
+            # A family none of whose leaves prints a result envelope hands its
+            # standard streams to another process (the terminal interface, the
+            # agent launcher protocol). It is not an operator-service family, and
+            # the manifest the contract feeds cannot list it.
+            if (root_name, child_name) in envelope_free:
                 continue
             sub_verbs = frozenset(_direct_children(child_cmd))
             families[child_name] = sub_verbs or frozenset({child_name})

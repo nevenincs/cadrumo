@@ -42,6 +42,8 @@ ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
         required_children=(
             "profile",
             "login",
+            "sign-in-status",
+            "sign-in-hold",
             "logout",
             "passphrase",
             "auth",
@@ -68,7 +70,6 @@ ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
             "review",
             "quickfile",
             "diagnostics",
-            "agent",
         ),
     ),
 )
@@ -106,6 +107,16 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         operator_question="observe the active profile's human sign-in state without extending its session",
         service_owner="cadrumo.application.user_profile",
         mutability=OperatorMutability.READ_ONLY,
+    ),
+    MountedCommandFamily(
+        domain=MountedCommandDomain.CUSTODY,
+        root=RootSurfaceName.CONFIG,
+        child="sign-in-hold",
+        operator_question=(
+            "hold a password sign-in for the life of standard input and decide which agent connections follow it"
+        ),
+        service_owner="cadrumo.application.user_profile",
+        mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
     MountedCommandFamily(
         domain=MountedCommandDomain.CUSTODY,
@@ -260,14 +271,6 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         child="diagnostics",
         operator_question=("report recent local LLM run health, latency, errors, and usage over the active bucket"),
         service_owner="cadrumo.application.diagnostics_run_health",
-        mutability=OperatorMutability.LOCAL_STATE_MUTATING,
-    ),
-    MountedCommandFamily(
-        domain=MountedCommandDomain.AGENT,
-        root=RootSurfaceName.APP,
-        child="agent",
-        operator_question="serve the hosted assistant for the signed-in profile while its host keeps it open",
-        service_owner="cadrumo.application.agent_host",
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
 )

@@ -37,7 +37,7 @@ without its options and arguments.
 | --- | --- | --- |
 | `aeat` | none | `execute` `overview.status` |
 | `aeat app` | none | none |
-| `aeat app agent serve` | none | none |
+| `aeat app agent serve` | none | the person's act |
 | `aeat app diagnostics` | none | none |
 | `aeat app diagnostics errors` | `diagnostics.read` | none |
 | `aeat app diagnostics latency` | `diagnostics.read` | none |

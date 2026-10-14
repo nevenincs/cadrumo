@@ -22,8 +22,10 @@ from .command_shared_contracts import translation_key as _key
 from .command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
 
 _METADATA = ExecutionPolicySpec(frozenset({"state-free"}), frozenset({"none"}), "metadata", CommandWriteRoute.NONE)
+# It resumes the person's sign-in and asks the runtime to start an agent that works on the
+# profile's encrypted facts. The runtime owns every write; this process writes no storage itself.
 _SERVE = ExecutionPolicySpec(
-    frozenset({"profile-custody"}), frozenset({"local-state"}), "interactive", CommandWriteRoute.BOOTSTRAP_ROOT
+    frozenset({"profile-custody", "encrypted-facts"}), frozenset({"local-state"}), "interactive", CommandWriteRoute.NONE
 )
 _LANG = ValueContract(DeferredTarget("...core.external_constants", "OutputLanguage", __package__))
 
