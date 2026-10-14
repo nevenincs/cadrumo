@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-from collections import OrderedDict
 from collections.abc import Callable, Mapping
 from copy import deepcopy
 from dataclasses import dataclass, field
@@ -137,6 +136,7 @@ class _VerifiedRegistry:
 
     owner: ReferenceType[GovernedFactSource]
     snapshot: RegistrySnapshot
+    payload_bytes: int
     registry_digest: str | None = None
     rendering_digests: dict[_RenderingDigestKey, str] = field(default_factory=dict)
 
@@ -155,12 +155,16 @@ class _VerifiedRegistryMemo:
     validated snapshot, so altered bytes or a mismatched claim are refused as
     before. Entries hold public registry content only, never taxpayer values,
     and are released with the pinned authority that owns them.
+
+    Retention is bounded by the saved bytes it stands for. A full memo admits
+    nothing new rather than evicting: a catalogue read walks its revisions in
+    one order, so eviction would discard each entry just before it is needed.
     """
 
-    def __init__(self, *, maxsize: int) -> None:
-        """Start empty with a bound on retained snapshots."""
-        self._maxsize = maxsize
-        self._entries: OrderedDict[_RegistryKey, _VerifiedRegistry] = OrderedDict()
+    def __init__(self, *, max_payload_bytes: int) -> None:
+        """Start empty with a bound on the saved bytes of retained snapshots."""
+        self._max_payload_bytes = max_payload_bytes
+        self._entries: dict[_RegistryKey, _VerifiedRegistry] = {}
         self._by_snapshot: dict[int, _VerifiedRegistry] = {}
         self._lock = RLock()
 
@@ -180,7 +184,6 @@ class _VerifiedRegistryMemo:
         with self._lock:
             entry = self._entries.get(key)
             if entry is not None and entry.owner() is owner:
-                self._entries.move_to_end(key)
                 return entry.snapshot
         snapshot = validate()
         try:
@@ -188,14 +191,13 @@ class _VerifiedRegistryMemo:
         except TypeError:
             return snapshot
         with self._lock:
-            self._forget(key)
-            entry = _VerifiedRegistry(owner=owner_ref, snapshot=snapshot)
-            self._entries[key] = entry
-            self._by_snapshot[id(snapshot)] = entry
             for stale in [item for item, held in self._entries.items() if held.owner() is None]:
                 self._forget(stale)
-            while len(self._entries) > self._maxsize:
-                self._forget(next(iter(self._entries)))
+            retained = sum(held.payload_bytes for held in self._entries.values())
+            if key not in self._entries and retained + len(payload) <= self._max_payload_bytes:
+                entry = _VerifiedRegistry(owner=owner_ref, snapshot=snapshot, payload_bytes=len(payload))
+                self._entries[key] = entry
+                self._by_snapshot[id(snapshot)] = entry
         return snapshot
 
     def registry_digest(self, snapshot: RegistrySnapshot, compute: Callable[[], str]) -> str:
@@ -242,8 +244,10 @@ def _is_revision_id_set(value: object) -> TypeGuard[frozenset[str]]:
     return isinstance(value, frozenset) and all(isinstance(item, str) for item in value)
 
 
-#: Distinct registry coordinates a profile's saved revisions reference at once.
-_VERIFIED_REGISTRY = _VerifiedRegistryMemo(maxsize=8)
+#: About 175 MiB resident: a validated snapshot occupies roughly 5.5 times its
+#: saved JSON. This covers a year of quarterly and annual returns; one
+#: catalogue read already holds all of its snapshots at once.
+_VERIFIED_REGISTRY = _VerifiedRegistryMemo(max_payload_bytes=32 * 1024 * 1024)
 
 
 class SavedRenderingLabel(BaseModel):

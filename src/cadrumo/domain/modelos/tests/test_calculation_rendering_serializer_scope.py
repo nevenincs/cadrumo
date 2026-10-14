@@ -33,7 +33,7 @@ def _governed_fact_scope() -> Iterator[None]:
 @pytest.fixture(autouse=True)
 def _cold_registry_reads(monkeypatch: pytest.MonkeyPatch) -> None:
     """Measure the serializer scope on reads that validate every snapshot in full."""
-    monkeypatch.setattr(rendering, "_VERIFIED_REGISTRY", rendering._VerifiedRegistryMemo(maxsize=0))
+    monkeypatch.setattr(rendering, "_VERIFIED_REGISTRY", rendering._VerifiedRegistryMemo(max_payload_bytes=0))
 
 
 class _RenderingBatch(BaseModel):

@@ -7,7 +7,7 @@ import json
 from collections.abc import Iterator
 
 import pytest
-from pydantic import ValidationError
+from pydantic import TypeAdapter, ValidationError
 from pydantic_core import SchemaSerializer
 
 from ....core.identity.documents import TAX_ID_FORMAT_CONTEXT
@@ -28,7 +28,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 @pytest.fixture(autouse=True)
 def _fresh_memo(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(rendering, "_VERIFIED_REGISTRY", rendering._VerifiedRegistryMemo(maxsize=8))
+    monkeypatch.setattr(
+        rendering, "_VERIFIED_REGISTRY", rendering._VerifiedRegistryMemo(max_payload_bytes=32 * 1024 * 1024)
+    )
 
 
 @pytest.fixture
@@ -96,7 +98,9 @@ def test_a_warm_memo_refuses_the_same_tampering_as_a_cold_read(
     tampered = json.dumps(payload)
     with pytest.raises(ValidationError) as cold:
         _read(tampered)
-    monkeypatch.setattr(rendering, "_VERIFIED_REGISTRY", rendering._VerifiedRegistryMemo(maxsize=8))
+    monkeypatch.setattr(
+        rendering, "_VERIFIED_REGISTRY", rendering._VerifiedRegistryMemo(max_payload_bytes=32 * 1024 * 1024)
+    )
 
     assert _read(saved) == _read(saved)
     with pytest.raises(ValidationError) as warm:
@@ -160,3 +164,22 @@ def test_a_read_with_caller_validation_context_is_validated_in_full(
 
     assert again == first
     assert again.registry_snapshot is not first.registry_snapshot
+
+
+def test_a_full_memo_keeps_its_entries_instead_of_evicting_them(
+    operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    first_saved = _saved(operation)
+    second_saved = CalculationRenderingSnapshot.capture(
+        operation.snapshot("303", filing_year=2026, period="2T"),
+        authority_generation=operation.pin().logical_generation,
+    ).model_dump_json()
+    budget = len(TypeAdapter(object).dump_json(json.loads(first_saved)["registry_snapshot"]))
+    monkeypatch.setattr(rendering, "_VERIFIED_REGISTRY", rendering._VerifiedRegistryMemo(max_payload_bytes=budget))
+
+    # A catalogue read walks its revisions in the same order every time.
+    passes = [(_read(first_saved).registry_snapshot, _read(second_saved).registry_snapshot) for _ in range(2)]
+
+    assert passes[1][0] is passes[0][0]
+    assert passes[1][1] is not passes[0][1]
+    assert passes[1][1] == passes[0][1]
