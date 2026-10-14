@@ -1,64 +1,39 @@
-"""The desktop's Python fallback prepares the canonical operator workspace."""
+"""The desktop takes its locations from the package's declaration, never from a Python query."""
 
 from __future__ import annotations
 
 import json
-import os
-import sys
 from pathlib import Path
 
 import pytest
 
-from cadrumo.core.config import Settings
-from cadrumo.core.storage_environment import STORAGE_ROOT
 from dev._paths import REPO_ROOT
 
-from ...command_execution import CommandResult, run_command
+from ..application_environment import load
+from ..generate import generate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+_DESKTOP = REPO_ROOT / "native/desktop/src-tauri/src"
 
-def _project(root: Path) -> CommandResult:
-    environment = {
-        key: value for key, value in os.environ.items() if key.upper() not in Settings.storage_env_var_names()
+
+def test_the_contract_carries_every_location_the_desktop_projects(tmp_path: Path) -> None:
+    generate(REPO_ROOT, tmp_path, target="windows-x86-64")
+    defaults = json.loads((tmp_path / "contract.json").read_text(encoding="utf-8"))["desktop_defaults"]
+    components = load(REPO_ROOT).components
+    assert {key: defaults[key] for key in ("console_workspace", "webview", "manager_log_file", "logs")} == {
+        key: components[key] for key in ("console_workspace", "webview", "manager_log_file", "logs")
     }
-    environment[STORAGE_ROOT.variable] = str(root)
-    return run_command(
-        [sys.executable, str(REPO_ROOT / "native/desktop/src-tauri/src/python/environment.py")],
-        cwd=REPO_ROOT,
-        environment=environment,
-        timeout_seconds=None,
-    )
+    # Only the command line's log directory may be relocated, by the one declared location name.
+    assert defaults["log_variable"] in load(REPO_ROOT).groups["locations"]
+    assert defaults["output_language_variable"] == components["language_variable"]
 
 
-def test_projection_creates_workspace_and_keeps_absolute_storage_pin(tmp_path: Path) -> None:
-    root = tmp_path / "storage"
-    result = _project(root)
-    assert result.returncode == 0, result.stderr
-    projected = json.loads(result.stdout)
-    assert Path(projected["console_workspace"]) == root / "workspace"
-    assert (root / "workspace").is_dir()
-    assert Path(projected["environment"][STORAGE_ROOT.variable]) == root
-    (root / "workspace" / "operator.txt").write_text("synthetic operator file")
-    assert _project(root).returncode == 0
-    assert (root / "workspace" / "operator.txt").read_text() == "synthetic operator file"
-
-
-def test_projection_refuses_workspace_file(tmp_path: Path) -> None:
-    root = tmp_path / "storage"
-    root.mkdir()
-    (root / "workspace").write_text("synthetic non-directory")
-    assert _project(root).returncode != 0
-
-
-def test_projection_refuses_linked_workspace(tmp_path: Path) -> None:
-    root = tmp_path / "storage"
-    root.mkdir()
-    destination = tmp_path / "elsewhere"
-    destination.mkdir()
-    try:
-        (root / "workspace").symlink_to(destination, target_is_directory=True)
-    except OSError:
-        pytest.skip("directory symlink creation unavailable")
-    assert _project(root).returncode != 0
-    assert not list(destination.iterdir())
+def test_the_desktop_embeds_no_location_query_for_python() -> None:
+    environment = (_DESKTOP / "environment.rs").read_text(encoding="utf-8")
+    assert 'include_str!("python/environment.py")' not in environment
+    assert not (_DESKTOP / "python/environment.py").exists()
+    for source in _DESKTOP.rglob("*.py"):
+        text = source.read_text(encoding="utf-8")
+        for member in ("DESKTOP_WEBVIEW", "CONSOLE_WORKSPACE", "MANAGER_LOG_FILE"):
+            assert member not in text, (source, member)

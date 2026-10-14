@@ -54,6 +54,7 @@ def test_desktop_defaults_project_the_package_declaration(tmp_path: Path) -> Non
         "log_max_bytes": components["log_max_bytes"],
         "log_backups": components["log_backups"],
         "output_language": components["language_default"],
+        "output_language_variable": components["language_variable"],
     }
     # The desktop reads the command line's log and language without asking Python, so both state the same values.
     assert components["logs"] == STORAGE_TAXONOMY[StorageCategory.LOGS].subpath

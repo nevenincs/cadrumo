@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#canonical-environment'
 date: '2026-10-13'
-modified: '2026-10-13'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:b8409c065705c1e26de1a304094a6dba60df17f2ef2c98912fb63333611bec91'
+body_hash: 'sha256:fadb24bca7a40ef7e2f525078cdc9146f62abd98637d617b87529c249b806ed2'
 related:
   - "[[2026-10-13-canonical-environment-plan]]"
 ---
@@ -198,6 +198,14 @@ related:
 - `S07` `verify:` `cargo +1.96.0 clippy native/platform (win, linux, darwin) and test (45, agent vectors replayed)` -> `pass`
 - `S07` `verify:` `cargo +1.96.0 test native/manager --lib --test environment` -> `pass`
 - `S07` `by:` `vaultspec-high-executor`
+- `S06` `M` `dev/packaging/native/tests/test_desktop_workspace.py`
+- `S06` `M` `native/desktop/tests/packaged.test.mjs`
+- `S06` `D` `native/desktop/src-tauri/src/python/environment.py`
+- `S06` `verify:` `uv run --no-sync pytest desktop workspace, storage contract, application environment, launch vectors, agent image, generator imports (62)` -> `pass`
+- `S06` `verify:` `ruff and ty dev/packaging` -> `pass`
+- `S06` `verify:` `cargo +1.96.0 test native/platform (45)` -> `pass`
+- `S06` `verify:` `cargo +1.96.0 clippy --all-targets -D warnings native/desktop/src-tauri with and without live-package-tests, and test environment (8, including the relocated-log override case)` -> `pass`
+- `S06` `verify:` `prettier --check and node --check native/desktop/tests/packaged.test.mjs` -> `pass`
 
 ## Notes
 
@@ -220,3 +228,4 @@ related:
 - `S07` Packaging.cmake and LaunchGuard.cmake needed no edit: the agent image target joins `CADRUMO_ENTRYPOINT_TARGETS,` which they already stage, quiesce and link the launch guard into
 - `S07` The runtime image's profile fixes `CADRUMO_PACKAGE_AGENT_EXECUTABLE` and `CADRUMO_PACKAGE_RELAY_EXECUTABLE` for P03.S09
 - `S07` sys.frozen and sys.executable are held by a static source test and the bootstrap package-root test; a launched-image check belongs to the P04.S14 probe
+- `S06` Follow-up within this Step's retirement scope, on orchestrator instruction: the desktop no longer queries the command line's Python for package locations; webview, console workspace and manager log come from the compiled components under the pinned root, the command line's log directory follows its declared override, and `CADRUMO_WEBVIEW_DIR` is no longer a declared location

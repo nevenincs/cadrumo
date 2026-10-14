@@ -4,7 +4,7 @@
 // and writes one PASS, FAIL, SKIP or INFO line per check to a results
 // directory. It needs an interactive desktop session; see run-packaged.ps1.
 import assert from "node:assert/strict";
-import { spawn, spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import { createHash, randomBytes } from "node:crypto";
 import {
   copyFileSync,
@@ -155,38 +155,31 @@ function htmlTitle(html) {
     .trim();
 }
 
-/** Runs the host's own projection query and keeps only the paths it declares. */
-function projection(config, packageRoot, env) {
+/**
+ * The locations the host projects, from the package contract's declared
+ * components under the pinned storage root; the environment carries no
+ * relocated member here.
+ */
+function projection(config, env) {
   const contract = JSON.parse(
     readFileSync(process.env.CADRUMO_NATIVE_CONTRACT, "utf8"),
   );
-  const query = readFileSync(
-    new URL("../src-tauri/src/python/environment.py", import.meta.url),
-    "utf8",
+  const defaults = contract.desktop_defaults;
+  const storage = env[config.storageVariable];
+  assert(isAbsolute(storage), "the host environment pins the storage root");
+  assert(
+    !(defaults.log_variable in env),
+    "the packaged run relocates no log directory",
   );
-  const result = spawnSync(
-    resolve(packageRoot, contract.layout.paths.executable),
-    ["-I", "-c", query],
-    {
-      cwd: config.run,
-      env,
-      encoding: "utf8",
-      timeout: 60000,
-      windowsHide: true,
-    },
-  );
-  if (result.status !== 0)
-    throw new Error(
-      `projection query exited ${result.status}: ${result.stderr.slice(0, 300)}`,
-    );
-  const value = JSON.parse(result.stdout);
+  const logs = resolve(storage, defaults.logs);
   return {
-    storage: value.storage,
-    webview: value.webview,
-    logs: value.logs,
-    logFile: value.log_file,
-    outputLanguage: value.output_language,
-    consoleWorkspace: value.console_workspace,
+    storage,
+    webview: resolve(storage, defaults.webview),
+    logs,
+    logFile: resolve(logs, defaults.log_file.split("/").pop()),
+    outputLanguage:
+      env[defaults.output_language_variable] || defaults.output_language,
+    consoleWorkspace: resolve(storage, defaults.console_workspace),
   };
 }
 
@@ -299,11 +292,7 @@ test("packaged desktop window", { timeout: 45 * 60 * 1000 }, async (t) => {
         "utf8",
       ),
     );
-    projected = projection(
-      config,
-      config.packageRoot,
-      hostEnvironment(config).env,
-    );
+    projected = projection(config, hostEnvironment(config).env);
     summary.webview = projected.webview;
     evidence("projection.json", projected);
 

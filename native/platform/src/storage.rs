@@ -537,15 +537,19 @@ pub fn resolve_storage_root_with(
     )
 }
 
-/// The temporary-files member beneath `root`, honouring an operator override in `lookup`.
-pub(crate) fn temporary_path(
+/// A member `variable` may relocate: an override in `lookup` (absolute, `~`-relative or
+/// relative to `root`), else `default`, a slash-separated path beneath `root`. Also reports
+/// whether an override selected it.
+fn located_member(
     root: &Path,
+    variable: &str,
+    default: &str,
     lookup: &dyn Fn(&str) -> Option<OsString>,
-) -> Result<PathBuf, Refusal> {
-    let explicit = nonblank(lookup, TEMPORARY_ENV)?;
+) -> Result<(PathBuf, bool), Refusal> {
+    let explicit = nonblank(lookup, variable)?;
     let path = match &explicit {
         Some(value) => expand_home(value, lookup)?,
-        None => relative_components(TEMPORARY_DEFAULT),
+        None => relative_components(default),
     };
     if !path.is_absolute()
         && (path.has_root()
@@ -563,7 +567,26 @@ pub(crate) fn temporary_path(
     } else {
         root.join(path)
     })?;
-    if explicit.is_some() && !TEMPORARY_CREATE_EXPLICIT && !path.is_dir() {
+    Ok((path, explicit.is_some()))
+}
+
+/// The location of a member `variable` may relocate beneath `root`, without creating it.
+pub fn member_path(
+    root: &Path,
+    variable: &str,
+    default: &str,
+    lookup: &dyn Fn(&str) -> Option<OsString>,
+) -> Result<PathBuf, Refusal> {
+    located_member(root, variable, default, lookup).map(|(path, _)| path)
+}
+
+/// The temporary-files member beneath `root`, honouring an operator override in `lookup`.
+pub(crate) fn temporary_path(
+    root: &Path,
+    lookup: &dyn Fn(&str) -> Option<OsString>,
+) -> Result<PathBuf, Refusal> {
+    let (path, explicit) = located_member(root, TEMPORARY_ENV, TEMPORARY_DEFAULT, lookup)?;
+    if explicit && !TEMPORARY_CREATE_EXPLICIT && !path.is_dir() {
         return Err(refusal(
             ROOT_REFUSAL_FILESYSTEM_PATH_REFUSED,
             "An explicit member must already exist".into(),

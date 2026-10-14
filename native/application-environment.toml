@@ -49,7 +49,6 @@ CADRUMO_SUBMISSIONS_DIR = { kind = "directory", role = "location" }
 CADRUMO_TEMP_DIR = { kind = "directory", role = "location" }
 CADRUMO_TOKEN_DIR = { kind = "directory", role = "location" }
 CADRUMO_USAGE_RATIOS_PATH = { kind = "file", role = "location" }
-CADRUMO_WEBVIEW_DIR = { kind = "directory", role = "location" }
 CADRUMO_WORKFLOW_RUNS_DIR = { kind = "directory", role = "location" }
 
 CADRUMO_LOG_LEVEL = { kind = "text", role = "operator" }
@@ -160,7 +159,6 @@ locations = [
   "CADRUMO_TEMP_DIR",
   "CADRUMO_TOKEN_DIR",
   "CADRUMO_USAGE_RATIOS_PATH",
-  "CADRUMO_WEBVIEW_DIR",
   "CADRUMO_WORKFLOW_RUNS_DIR",
 ]
 presentation = [
