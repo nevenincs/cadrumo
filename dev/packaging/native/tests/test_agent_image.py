@@ -117,7 +117,7 @@ def test_the_contract_compiles_exactly_the_six_invocations_of_the_agent_image(tm
         assert retired not in section["names"]
 
 
-def test_agent_names_reach_only_the_agent_image_and_the_token_only_its_worker() -> None:
+def test_agent_names_reach_only_the_agent_image_and_the_worker_token_none() -> None:
     section = compile_section(load(REPO_ROOT), load_layout("windows-x86-64"))
     for profile in section["profiles"]:
         admitted = [
@@ -129,8 +129,8 @@ def test_agent_names_reach_only_the_agent_image_and_the_token_only_its_worker() 
         agent_names = [name for name in admitted if name.startswith("CADRUMO_AGENT_")]
         if profile["image"] != _AGENT:
             assert agent_names == [], profile["name"]
-        token = "CADRUMO_AGENT_INTERNAL_TOKEN" in admitted
-        assert token == (profile["name"] == "agent-worker"), profile["name"]
+        # The worker's IPC token travels on its standard input; no profile admits it by name.
+        assert "CADRUMO_AGENT_INTERNAL_TOKEN" not in admitted, profile["name"]
     gateway = next(profile for profile in section["profiles"] if profile["name"] == "agent-gateway")
     assert {slot["name"]: slot["kind"] for slot in gateway["slots"]} == {
         "CADRUMO_LOCAL_STORAGE_ROOT": "directory",

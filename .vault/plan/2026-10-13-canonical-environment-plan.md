@@ -14,7 +14,7 @@ related:
   - '[[2026-10-04-runtime-manager-architecture-adr]]'
 modified: '2026-10-14'
 body_schema: body-v2
-body_hash: 'sha256:a61116041f87cb511aef7ce05352a6ad99cef1a2f266568361c9ce1bcc49851a'
+body_hash: 'sha256:cfd3885e12a1e8b6a87fe9ec1e912a7972529572a6e4d1b553665ddb1e65674d'
 ---
 
 # `canonical-environment` plan
@@ -89,7 +89,7 @@ Renames, the CADRUMO_AGENT_ spelling guard, the package-side drift and data-fold
 - [x] `P04.S13` - Add the package-side conformance check run against the assembled package: the names and kinds each image sets, passes or lets operators override agree with the installed CLI's published environment reference and the bundled agent's setting_env declarations; the runtime composer writes exactly the gateway slots; the runtime's reserved native-host range equals the file's; and the CLI's built-in default root equals the package's declared root for each platform and channel; register it in CTest; `dev/packaging/native/environment_conformance.py (new), dev/packaging/native/tests/test_environment_conformance.py (new), native/cmake/Packaging.cmake`.
 - [x] `P04.S14` - Add the CTest launch probe on the assembled package: through the runtime's real composer and the real host the bundled gateway and its worker receive their declared environment, cadrumo-agent stores-state answers for a synthetic hosted root, a hosted serve given the frame {version 1, empty credentials} writes refused hosted_tool_server_unproven (and is written to accept agent_ready once the agent's proofs exist), the generic python image clears every CADRUMO_AGENT_ name, each image's PATH equals the declared composition, and the default root agrees; agent names are read from contract.json, not spelled; `native/tests/environment_launch_probe.py (new), native/cmake/Packaging.cmake`.
 - [x] `P04.S15` - Update the documentation: native/CONTRACT.md source ownership, bootstrap, application images, mutable data and desktop launch projection sections for the file, launch profiles, the agent image, exit 125 and the renamed selector; and regenerate the environment reference so it states which names a packaged image passes; `native/CONTRACT.md, dev/docs/env_reference.py, docs/reference/environment-overrides.md`.
-- [ ] `P04.S16` - Remove CADRUMO_AGENT_INTERNAL_TOKEN from the agent worker profile and its vectors once cadrumo-agent moves the non-hosted worker IPC token to standard input (gated on agent-owner item A3); `native/application-environment.toml, native/platform/src/conformance_tests.rs, dev/packaging/native/tests/test_launch_profile_vectors.py`.
+- [x] `P04.S16` - Remove CADRUMO_AGENT_INTERNAL_TOKEN from the agent worker profile and its vectors once cadrumo-agent moves the non-hosted worker IPC token to standard input (gated on agent-owner item A3); `native/application-environment.toml, native/platform/src/conformance_tests.rs, dev/packaging/native/tests/test_launch_profile_vectors.py`.
 
 ### Phase `P05` - Agent store lifecycle
 

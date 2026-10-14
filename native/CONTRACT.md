@@ -448,14 +448,12 @@ each receives.
   `agent` table lists them with the prefix and the agent's hosting-contract version.
   The host does not decide hosted versus non-hosted policy: the agent's own
   refusals apply to what the profiles admit. No profile admits a credential to the
-  gateway; the agent's credentials travel only on its standard-input frame. The one
-  secret in a profile is the non-hosted worker's internal token, admitted to the
-  worker profile alone until the agent moves it to standard input.
+  gateway or the worker; the agent's credentials and the worker's internal token
+  travel only on standard input.
 - **Launch parameters.** The gateway takes the storage root, the hosted root, the
   gateway and worker ports and the relay program as optional launch parameters. The
   worker takes the same parameters and the settings the gateway writes for it:
-  its gateway address, host, lifetime identifier, generation and, until the agent
-  moves it to standard input, its internal token. Both profiles pass the agent's
+  its gateway address, host, lifetime identifier and generation. Both profiles pass the agent's
   development-tool-server switch and provider proof policy from their parent.
   Neither profile pins the storage root, so the root a parent hands the gateway
   reaches the worker and the relay the worker starts. Both pin the temporary

@@ -270,7 +270,7 @@ Each profile belongs to one program. The host validates a launch parameter again
 - **Program:** `cadrumo-agent`
 - **Started with:** `-m cadrumo_agent.worker`
 - **Starts from:** only the operating-system group `system`
-- **Passes from its caller:** the names `CADRUMO_AGENT_DEVELOPMENT_TOOL_SERVER`, `CADRUMO_AGENT_PROVIDER_PROOF_POLICY`, `CADRUMO_AGENT_GATEWAY_URL`, `CADRUMO_AGENT_WORKER_HOST`, `CADRUMO_AGENT_GATEWAY_LIFETIME_ID`, `CADRUMO_AGENT_WORKER_GENERATION` and `CADRUMO_AGENT_INTERNAL_TOKEN`
+- **Passes from its caller:** the names `CADRUMO_AGENT_DEVELOPMENT_TOOL_SERVER`, `CADRUMO_AGENT_PROVIDER_PROOF_POLICY`, `CADRUMO_AGENT_GATEWAY_URL`, `CADRUMO_AGENT_WORKER_HOST`, `CADRUMO_AGENT_GATEWAY_LIFETIME_ID` and `CADRUMO_AGENT_WORKER_GENERATION`
 - **Accepts from its parent:** `CADRUMO_LOCAL_STORAGE_ROOT` (directory, optional), `CADRUMO_AGENT_HOSTED_ROOT` (directory, optional), `CADRUMO_AGENT_PORT` (port, optional), `CADRUMO_AGENT_WORKER_PORT` (port, optional) and `CADRUMO_AGENT_HOSTED_RELAY_EXECUTABLE` (executable, optional)
 - **Sets itself:** `TEMP`, `TMP` and `TMPDIR` to the temporary-files location beneath the storage root and `CADRUMO_AUTHORITY_ROOT` to the package's registry authority
 - **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the package's native program directory; the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
@@ -286,7 +286,6 @@ The settings table above does not list these names.
 | `CADRUMO_AGENT_GATEWAY_URL` | text | a component's own setting that its parent passes through unchanged |
 | `CADRUMO_AGENT_HOSTED_RELAY_EXECUTABLE` | executable | a launch parameter its parent supplies |
 | `CADRUMO_AGENT_HOSTED_ROOT` | directory | a launch parameter its parent supplies |
-| `CADRUMO_AGENT_INTERNAL_TOKEN` | text | a component's own setting that its parent passes through unchanged |
 | `CADRUMO_AGENT_PORT` | port | a launch parameter its parent supplies |
 | `CADRUMO_AGENT_PROVIDER_PROOF_POLICY` | text | a component's own setting that its parent passes through unchanged |
 | `CADRUMO_AGENT_WORKER_GENERATION` | integer | a component's own setting that its parent passes through unchanged |

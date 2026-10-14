@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:8d01957ed7fa4bc4653d5597d8172c2ab82c4a8f7778a021855896648aefe86e'
+body_hash: 'sha256:18db9547607c73f26b6c602255be794605e6fc3cb20d55fd2f37af0d45aa9e8e'
 related:
   - "[[2026-10-13-canonical-environment-plan]]"
 ---
@@ -371,6 +371,13 @@ related:
 - `S14` `verify:` `ctest -C Debug -R ^bundle\.environment-launch$ (generic interpreter check)` -> `pass`
 - `S14` `verify:` `uv run --no-sync pytest dev/packaging/native/tests/test_environment_launch_probe.py` -> `pass`
 - `S14` `by:` `implementation-engineer`
+- `S16` `M` `native/application-environment.toml`
+- `S16` `M` `dev/packaging/native/tests/test_agent_image.py`
+- `S16` `M` `native/CONTRACT.md`
+- `S16` `M` `docs/reference/environment-overrides.md`
+- `S16` `verify:` `uv run pytest dev/packaging/native/tests dev/docs/tests/test_env_reference.py dev/quality/tests/test_agent_prefix_spelling.py` -> `pass`
+- `S16` `verify:` `cargo test native/platform` -> `pass`
+- `S16` `by:` `implementation-engineer-high`
 
 ## Notes
 
