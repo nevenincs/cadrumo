@@ -31,7 +31,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _AMBIENT = {
     "SystemRoot": "C:\\Windows",
     "USERPROFILE": "C:\\Users\\someone",
-    "ANTHROPIC_API_KEY": "planted-model-credential-value",
+    "MODEL_PROVIDER_CREDENTIAL": "planted-model-credential-value",
     "HOST_MESSAGING_HANDLE": "planted-host-handle-value",
     "CADRUMO_LOCAL_STORAGE_ROOT": "C:\\the\\operator\\real\\storage",
     "PYTHONPATH": "C:\\elsewhere",
@@ -50,7 +50,7 @@ def test_only_allow_listed_variables_reach_a_packaged_process() -> None:
 
 def test_every_value_outside_the_list_is_handed_to_the_scrubber() -> None:
     outside = dict(host_values_outside_allowlist(_AMBIENT))
-    assert outside["ANTHROPIC_API_KEY"] == "planted-model-credential-value"
+    assert outside["MODEL_PROVIDER_CREDENTIAL"] == "planted-model-credential-value"
     assert outside["HOST_MESSAGING_HANDLE"] == "planted-host-handle-value"
     assert "USERPROFILE" not in outside
 

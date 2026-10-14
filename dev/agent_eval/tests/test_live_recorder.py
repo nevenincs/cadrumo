@@ -1,8 +1,8 @@
-"""Both live drivers produce the same scrubbed trajectory, and the no-secret rule is held from the lane's side.
+"""Every driver produces the same scrubbed trajectory, and the no-secret rule is held from the lane's side.
 
-The stream translator is fed a synthetic ``claude -p --output-format
-stream-json`` transcript in the shape the command line writes; the recorder is
-fed the calls an API run would make. The positive controls are an agent that
+The stream translator is fed a synthetic transcript in the event shape the
+agent command contract names; the recorder is fed the calls a client makes
+directly. The positive controls are an agent that
 calls an authentication tool, an agent that puts the password in a call, a
 result that echoes it, and a server that offers a secret argument.
 """
@@ -14,7 +14,7 @@ import json
 import pytest
 
 from ..live.capture import Scrubber
-from ..live.drivers import DriverKind, DriverReport, translate_cli_stream
+from ..live.drivers import DriverKind, DriverReport, translate_agent_stream
 from ..live.outcome import FailureOwner
 from ..live.recorder import TrajectoryRecorder, amount_faithfulness, surface_failures
 
@@ -29,11 +29,11 @@ def _recorder() -> TrajectoryRecorder:
 
 def _stream() -> list[str]:
     events = [
-        {"type": "system", "subtype": "init", "model": "claude-haiku-5-5", "tools": ["mcp__cadrumo__execute"]},
+        {"type": "system", "subtype": "init", "model": "synthetic-model-1", "tools": ["mcp__cadrumo__execute"]},
         {
             "type": "assistant",
             "message": {
-                "model": "claude-haiku-5-5",
+                "model": "synthetic-model-1",
                 "content": [
                     {"type": "text", "text": "I will book the income row."},
                     {
@@ -70,11 +70,11 @@ def _stream() -> list[str]:
     return ["not json at all", *(json.dumps(event) for event in events)]
 
 
-def test_the_cli_stream_becomes_one_trajectory() -> None:
+def test_the_agent_stream_becomes_one_trajectory() -> None:
     recorder = _recorder()
-    report = DriverReport(driver=DriverKind.CLAUDE_CLI)
-    translate_cli_stream(_stream(), recorder, report)
-    trajectory = recorder.trajectory(scenario="s", persona="haiku", session_id="run-0")
+    report = DriverReport(driver=DriverKind.AGENT_COMMAND)
+    translate_agent_stream(_stream(), recorder, report)
+    trajectory = recorder.trajectory(scenario="s", persona="live-agent", session_id="run-0")
     assert [call.tool_name for call in trajectory.tool_calls] == ["execute"]
     assert trajectory.observed_command_keys == ("ledger.add",)
     assert [narration.text for narration in trajectory.narrations] == [
@@ -82,13 +82,13 @@ def test_the_cli_stream_becomes_one_trajectory() -> None:
         "Booked 12000.00 EUR.",
     ]
     assert trajectory.narrations[1].step == "ledger.add"
-    assert (report.model_reported, report.turns, report.input_tokens) == ("claude-haiku-5-5", 3, 900)
+    assert (report.model_reported, report.turns, report.input_tokens) == ("synthetic-model-1", 3, 900)
     assert recorder.failures == []
 
 
 def test_an_unanswered_tool_use_is_kept_as_an_error() -> None:
     recorder = _recorder()
-    translate_cli_stream(_stream()[:3], recorder, DriverReport(driver=DriverKind.CLAUDE_CLI))
+    translate_agent_stream(_stream()[:3], recorder, DriverReport(driver=DriverKind.AGENT_COMMAND))
     assert [call.is_error for call in recorder.calls] == [True]
 
 

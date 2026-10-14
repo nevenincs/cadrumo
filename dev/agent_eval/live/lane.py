@@ -3,11 +3,11 @@
 One invocation is one lane run of one scenario: ``runs`` independent runs, each
 on a fresh root with a fresh synthetic profile, then the pass rule over all of
 them. The floor drives the scenario with the scripted MCP client and no model;
-the live lane drives it with the haiku agent. Both write the same receipt,
+the live lane drives it with the operator-supplied agent command. Both write the same receipt,
 trajectories and scores to ``.logs/agent-eval``, scrubbed, and both end in one
 outcome class with its own exit code.
 
-A missing prerequisite is never a pass: no model credential, a credential
+A missing prerequisite is never a pass: no agent command, a credential
 store that refuses this logon, a stale or unverified package, a provisional
 scenario or a platform the lane does not run on each end the lane as
 ``unavailable`` with the reason.
@@ -54,10 +54,8 @@ from .drivers import (
     McpLaunch,
     RecordedTools,
     mcp_session,
-    run_api_agent,
-    run_cli_agent,
+    run_agent_command,
     run_scripted,
-    select_driver,
     wait_for_admission,
 )
 from .evidence import settle_run_root
@@ -95,7 +93,7 @@ from .scenario import LiveScenario, load_scenario, scenario_names
 
 DEFAULT_STAGED_PACKAGE: Final = REPO_ROOT / "build" / "windows-x64" / "stage" / "Release" / "app"
 DEFAULT_RUNS: Final = 3
-PERSONA: Final = "cadrumo-haiku-agent"
+PERSONA: Final = "cadrumo-live-agent"
 _SCRIPTED_PERSONA: Final = "scripted-floor-client"
 
 
@@ -124,6 +122,12 @@ class LaneRequest:
     measure_stale_package: bool = False
     staged_package: Path = DEFAULT_STAGED_PACKAGE
     limits: Limits = field(default_factory=Limits)
+    agent_command: tuple[str, ...] = ()
+    """The live agent's argument vector, executable first; placeholders are filled per phase."""
+    model: str = ""
+    """The model id the operator declares; the run records it beside the id the agent reports."""
+    credential_variables: tuple[str, ...] = ()
+    """Names of the operator's own environment variables the agent command needs; their values are scrubbed."""
 
 
 def _scrubber(person: Person | None, ambient: Mapping[str, str]) -> Scrubber:
@@ -133,8 +137,10 @@ def _scrubber(person: Person | None, ambient: Mapping[str, str]) -> Scrubber:
     return Scrubber(secrets)
 
 
-def _known_secrets(person: Person | None, ambient: Mapping[str, str]) -> tuple[str, ...]:
-    values = [ambient.get("ANTHROPIC_API_KEY", "")]
+def _known_secrets(
+    person: Person | None, ambient: Mapping[str, str], credential_variables: tuple[str, ...]
+) -> tuple[str, ...]:
+    values = [ambient.get(name, "") for name in credential_variables]
     if person is not None:
         values.append(person.password)
     return tuple(value for value in values if value)
@@ -239,10 +245,13 @@ def _drive(
     scripted: Callable[[RecordedTools], Awaitable[DriverReport]],
 ) -> DriverReport:
     """Run one session with the selected driver; ``between`` is the person's act before phase n."""
-    if driver is DriverKind.CLAUDE_CLI:
-        return run_cli_agent(
+    if driver is DriverKind.AGENT_COMMAND:
+        return run_agent_command(
             launch,
             recorder,
+            command=request.agent_command,
+            model=request.model,
+            credential_variables=request.credential_variables,
             system=system,
             phases=phases,
             limits=request.limits,
@@ -253,15 +262,7 @@ def _drive(
 
     async def session() -> DriverReport:
         async with mcp_session(launch, work_directory / "mcp.stderr") as client:
-            tools = RecordedTools(client, recorder)
-            if driver is DriverKind.SCRIPTED:
-                return await scripted(tools)
-
-            async def acting(index: int) -> None:
-                if between is not None:
-                    between(index)
-
-            return await run_api_agent(tools, system=system, phases=phases, limits=request.limits, between=acting)
+            return await scripted(RecordedTools(client, recorder))
 
     return anyio.run(session)
 
@@ -287,7 +288,8 @@ def _work_run(
         launch = McpLaunch(command, tuple(arguments), environment, run.run.path)
         offered, live_write, handoff = _surface_and_leaves(run, launch)
         recorder = TrajectoryRecorder(
-            scrubber=_scrubber(person, ambient), known_secrets=_known_secrets(person, ambient)
+            scrubber=_scrubber(person, ambient),
+            known_secrets=_known_secrets(person, ambient, request.credential_variables),
         )
 
         async def scripted(tools: RecordedTools) -> DriverReport:
@@ -386,7 +388,8 @@ def _access_run(
         launch = McpLaunch(command, tuple(arguments), environment, run.run.path)
         offered, live_write, _handoff = _surface_and_leaves(run, launch)
         recorder = TrajectoryRecorder(
-            scrubber=_scrubber(person, ambient), known_secrets=_known_secrets(person, ambient)
+            scrubber=_scrubber(person, ambient),
+            known_secrets=_known_secrets(person, ambient, request.credential_variables),
         )
         fingerprints: list[str] = []
         names: list[str | None] = []
@@ -520,8 +523,11 @@ def run_lane(request: LaneRequest) -> LaneVerdict:
             raise UnavailableError(
                 "platform_unsupported", f"the lane hosts the Windows package; this is {sys.platform}"
             )
-        driver = select_driver(ambient) if request.live else DriverKind.SCRIPTED
+        driver = DriverKind.AGENT_COMMAND if request.live else DriverKind.SCRIPTED
+        if request.live and not request.agent_command:
+            raise UnavailableError("agent_command_missing", "pass the agent command with --agent-arg")
         receipt["driver"] = driver.value
+        receipt["model_requested"] = request.model
         access = ACCESS_SCENARIOS.get(request.scenario)
         work = load_scenario(request.scenario) if access is None else None
         if work is not None and work.provisional:
@@ -585,6 +591,20 @@ def parse_request(argv: list[str] | None = None) -> LaneRequest:
     parser.add_argument("--measure-stale-package", action="store_true")
     parser.add_argument("--staged-package", type=Path, default=DEFAULT_STAGED_PACKAGE)
     parser.add_argument("--max-usd", type=float, default=DEFAULT_MAX_USD)
+    parser.add_argument(
+        "--agent-arg",
+        action="append",
+        default=[],
+        help="one argument of the live agent command, executable first; repeat per argument. "
+        "Placeholders: {mcp_config} {model} {system} {max_turns} {max_usd}",
+    )
+    parser.add_argument("--model", default="", help="the model id the live agent runs, as the agent command expects it")
+    parser.add_argument(
+        "--credential-variable",
+        action="append",
+        default=[],
+        help="name of an environment variable the agent command needs; its value is passed to it and scrubbed",
+    )
     args = parser.parse_args(argv)
     return LaneRequest(
         live=args.lane == "live",
@@ -593,6 +613,9 @@ def parse_request(argv: list[str] | None = None) -> LaneRequest:
         measure_stale_package=args.measure_stale_package,
         staged_package=args.staged_package,
         limits=Limits(max_usd=args.max_usd),
+        agent_command=tuple(args.agent_arg),
+        model=args.model,
+        credential_variables=tuple(args.credential_variable),
     )
 
 

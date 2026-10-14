@@ -1,25 +1,27 @@
-"""Drive the packaged MCP server: a scripted client for the floor, or a haiku agent for the live lane.
+"""Drive the packaged MCP server: a scripted client, or an operator-supplied agent command.
 
 Every driver records into one :class:`~.recorder.TrajectoryRecorder`, so the
-scorer sees one ``LiveTrajectory`` whichever ran. The live agent is always
-``claude-haiku-5-5``. It runs through the Anthropic API when
-``ANTHROPIC_API_KEY`` is set, offering the model the server's tools and
-nothing else; otherwise through the authenticated ``claude`` command line in
-print mode with only the cadrumo server configured, no built-in tools, no
-session persistence and no user settings. Each run has turn, token and spend
-limits.
+scorer sees one ``LiveTrajectory`` whichever ran. Cadrumo names no model
+provider. The live agent is whatever command the operator passes: its argument
+vector may carry the placeholders ``{mcp_config}``, ``{model}``, ``{system}``,
+``{max_turns}`` and ``{max_usd}``. The command receives the task on standard
+input and an MCP configuration file naming only the packaged cadrumo server,
+and it writes one JSON event per line to standard output in the shape
+:func:`translate_agent_stream` reads. The model id and the names of any
+credential variables the command needs come from the operator too. Each run
+has turn, token and spend limits.
 
 A scenario may run in phases. Between two phases the harness acts as the
 person (revoking a key, locking the profile, signing out, letting the sign-in
-lapse) and the agent then continues. Through the API the conversation simply
-continues; the command line starts a fresh print-mode session for the next
-phase, because it keeps no session.
+lapse) and the agent then continues. The command is started afresh for each
+phase, so it keeps no session.
 """
 
 from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import time
 from collections.abc import AsyncGenerator, Awaitable, Callable, Mapping, Sequence
@@ -38,30 +40,25 @@ from dev.packaging.command_execution import run_command
 from .outcome import UnavailableError
 from .recorder import TrajectoryRecorder
 
-HAIKU_MODEL: Final = "claude-haiku-5-5"
-"""The one declared model id; the run records the id the provider reports beside it."""
-
-HAIKU_USD_PER_INPUT_TOKEN: Final = 0.10 / 1_000_000
-HAIKU_USD_PER_OUTPUT_TOKEN: Final = 0.50 / 1_000_000
-"""Published first-party rates for prompts up to 100K tokens; used only to stop a run that overspends."""
-
 MCP_SERVER_NAME: Final = "cadrumo"
-_CLI_TOOL_PREFIX: Final = f"mcp__{MCP_SERVER_NAME}__"
+_TOOL_PREFIX: Final = f"mcp__{MCP_SERVER_NAME}__"
 _SETTLE_SECONDS: Final = 300.0
 _COLD_START_SECONDS: Final = 120.0
 ACTOR: Final = "Synthetic Person"
+PLACEHOLDERS: Final = frozenset({"mcp_config", "model", "system", "max_turns", "max_usd"})
+"""The names an agent argument may put in braces; any other braced word is refused."""
+_PLACEHOLDER: Final = re.compile(r"\{(\w+)\}")
 
 
 class DriverKind(StrEnum):
     """Which driver ran a session."""
 
     SCRIPTED = "scripted"
-    ANTHROPIC_API = "anthropic_api"
-    CLAUDE_CLI = "claude_cli"
+    AGENT_COMMAND = "agent_command"
 
 
 DEFAULT_MAX_USD: Final = 1.00
-"""Spend bound per run; the 2026-10-12 haiku runs cost about 0.03 USD each."""
+"""Spend bound per run; the operator may lower or raise it."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -79,7 +76,7 @@ class DriverReport:
     """What a driver did, for the receipt: never a verdict."""
 
     driver: DriverKind
-    model_requested: str = HAIKU_MODEL
+    model_requested: str = ""
     model_reported: str = ""
     turns: int = 0
     input_tokens: int = 0
@@ -90,9 +87,8 @@ class DriverReport:
     phases_completed: int = 0
 
     def spend(self) -> float:
-        """The spend so far, reported by the provider where it reports it, else from token counts."""
-        estimate = self.input_tokens * HAIKU_USD_PER_INPUT_TOKEN + self.output_tokens * HAIKU_USD_PER_OUTPUT_TOKEN
-        return max(self.cost_usd, estimate)
+        """The spend so far, as the agent command reports it."""
+        return self.cost_usd
 
 
 @dataclass(frozen=True, slots=True)
@@ -107,17 +103,6 @@ class McpLaunch:
 
 BetweenPhases = Callable[[int], Awaitable[None]]
 """The person's act before phase ``n`` (counted from 1)."""
-
-
-def select_driver(ambient: Mapping[str, str]) -> DriverKind:
-    """The API when its key is present, otherwise the authenticated ``claude`` command line, otherwise unavailable."""
-    if bool(ambient.get("ANTHROPIC_API_KEY")):
-        return DriverKind.ANTHROPIC_API
-    if shutil.which("claude", path=ambient.get("PATH")) is not None:
-        return DriverKind.CLAUDE_CLI
-    raise UnavailableError(
-        "model_credential_missing", "neither ANTHROPIC_API_KEY nor an installed `claude` command line is available"
-    )
 
 
 def _text_of(reply: Any) -> str:
@@ -356,7 +341,7 @@ async def run_scripted(
     return run
 
 
-# --- the live agent through the Anthropic API -------------------------------------------------------------------
+# --- the live agent through an operator-supplied command ---------------------------------------------------------
 
 
 def _over(report: DriverReport, limits: Limits, started: float) -> str:
@@ -371,80 +356,25 @@ def _over(report: DriverReport, limits: Limits, started: float) -> str:
     return ""
 
 
-async def run_api_agent(
-    tools: RecordedTools,
-    *,
-    system: str,
-    phases: Sequence[str],
-    limits: Limits,
-    between: BetweenPhases | None = None,
-) -> DriverReport:
-    """Run the haiku agent over the server's tools through the Anthropic API, phase after phase."""
-    import anthropic
-    from anthropic.types import MessageParam, ToolParam, ToolResultBlockParam
-
-    report = DriverReport(driver=DriverKind.ANTHROPIC_API)
-    client = anthropic.AsyncAnthropic()
-    offered = [
-        ToolParam(name=tool["name"], description=tool["description"], input_schema=tool["input_schema"])
-        for tool in await tools.tools()
-    ]
-    messages: list[MessageParam] = []
-    started = time.monotonic()
-    for index, prompt in enumerate(phases):
-        if index and between is not None:
-            await between(index)
-        tools.recorder.begin_phase()
-        messages.append({"role": "user", "content": prompt})
-        while True:
-            report.limit_hit = _over(report, limits, started)
-            if report.limit_hit:
-                return report
-            response = await client.messages.create(
-                model=HAIKU_MODEL, max_tokens=16_000, system=system, tools=offered, messages=messages
-            )
-            report.turns += 1
-            report.model_reported = response.model
-            report.input_tokens += response.usage.input_tokens
-            report.output_tokens += response.usage.output_tokens
-            report.stop_reasons.append(str(response.stop_reason))
-            messages.append({"role": "assistant", "content": response.content})
-            last_step = ""
-            results: list[ToolResultBlockParam] = []
-            for block in response.content:
-                if block.type == "text":
-                    tools.recorder.record_narration(block.text, step=last_step)
-                elif block.type == "tool_use":
-                    arguments: dict[str, Any] = dict(block.input)
-                    _, text, is_error = await tools.call(block.name, arguments)
-                    definition = arguments.get("definition_id")
-                    last_step = definition if isinstance(definition, str) else ""
-                    results.append(
-                        ToolResultBlockParam(type="tool_result", tool_use_id=block.id, content=text, is_error=is_error)
-                    )
-            if response.stop_reason != "tool_use" or not results:
-                break
-            messages.append({"role": "user", "content": results})
-        report.phases_completed = index + 1
-    return report
-
-
-# --- the live agent through the claude command line --------------------------------------------------------------
-
-
-def _cli_environment(ambient: Mapping[str, str]) -> dict[str, str]:
-    """The command line's own allow-listed environment: what it needs to find its sign-in, nothing else."""
+def _agent_environment(ambient: Mapping[str, str], credential_variables: Sequence[str]) -> dict[str, str]:
+    """The agent command's environment: the allow-list, scratch locations and operator-named credentials."""
     from .isolated_host import allowlisted_environment
 
     environment = allowlisted_environment(ambient)
-    for name in ("TEMP", "TMP", "HOME"):
+    for name in ("TEMP", "TMP", "HOME", *credential_variables):
         if name in ambient:
             environment[name] = ambient[name]
     return environment
 
 
+def _substituted(argument: str, values: Mapping[str, str]) -> str:
+    for name, value in values.items():
+        argument = argument.replace("{" + name + "}", value)
+    return argument
+
+
 def _tool_name(name: str) -> str:
-    return name.removeprefix(_CLI_TOOL_PREFIX)
+    return name.removeprefix(_TOOL_PREFIX)
 
 
 def _tool_result_text(content: Any) -> str:
@@ -455,8 +385,13 @@ def _tool_result_text(content: Any) -> str:
     return json.dumps(content)
 
 
-def translate_cli_stream(lines: Sequence[str], recorder: TrajectoryRecorder, report: DriverReport) -> None:
-    """Turn ``claude -p --output-format stream-json`` lines into recorded calls and narrations.
+def translate_agent_stream(lines: Sequence[str], recorder: TrajectoryRecorder, report: DriverReport) -> None:
+    """Turn the agent command's JSON event lines into recorded calls and narrations.
+
+    Events are ``system`` with subtype ``init`` (carrying the model id),
+    ``assistant`` and ``user`` messages with ``text``, ``tool_use`` and
+    ``tool_result`` content blocks, and a closing ``result`` carrying turns,
+    cost and token usage. Tool names carry the server prefix ``mcp__cadrumo__``.
 
     A ``tool_use`` is held until its ``tool_result`` arrives, then recorded as
     one round-trip. Lines that are not JSON are ignored; they never reach a
@@ -506,10 +441,13 @@ def translate_cli_stream(lines: Sequence[str], recorder: TrajectoryRecorder, rep
         recorder.record_call(name, arguments, "", is_error=True, duration_ms=0)
 
 
-def run_cli_agent(
+def run_agent_command(
     launch: McpLaunch,
     recorder: TrajectoryRecorder,
     *,
+    command: Sequence[str],
+    model: str,
+    credential_variables: Sequence[str],
     system: str,
     phases: Sequence[str],
     limits: Limits,
@@ -517,17 +455,23 @@ def run_cli_agent(
     ambient: Mapping[str, str],
     between: Callable[[int], None] | None = None,
 ) -> DriverReport:
-    """Run the haiku agent through the authenticated ``claude`` command line, one print-mode session per phase.
+    """Run the operator's agent command, one process per phase, and record what it streams.
 
     The MCP configuration lives in a private directory inside the run and is
     removed with it. It names the packaged server, its arguments and its
     allow-listed environment, and nothing else.
     """
-    report = DriverReport(driver=DriverKind.CLAUDE_CLI)
-    executable = shutil.which("claude", path=ambient.get("PATH"))
+    report = DriverReport(driver=DriverKind.AGENT_COMMAND, model_requested=model)
+    if not command:
+        raise UnavailableError("agent_command_missing", "no agent command was given")
+    executable = shutil.which(command[0], path=ambient.get("PATH"))
     if executable is None:
-        raise UnavailableError("model_credential_missing", "the `claude` command line is not installed")
-    private = work_directory / "agent-cli"
+        raise UnavailableError("agent_command_missing", f"the agent command `{command[0]}` is not installed")
+    for argument in command[1:]:
+        unknown = sorted(set(_PLACEHOLDER.findall(argument)) - PLACEHOLDERS)
+        if unknown:
+            raise ValueError(f"unknown placeholder {{{unknown[0]}}} in agent argument; known: {sorted(PLACEHOLDERS)}")
+    private = work_directory / "agent-command"
     private.mkdir(parents=True, exist_ok=False)
     configuration = private / "mcp.json"
     configuration.write_text(
@@ -554,38 +498,22 @@ def run_cli_agent(
             report.limit_hit = _over(report, limits, started)
             if report.limit_hit:
                 break
+            values = {
+                "mcp_config": str(configuration),
+                "model": model,
+                "system": system,
+                "max_turns": str(max(1, limits.max_turns - report.turns)),
+                "max_usd": f"{max(0.01, limits.max_usd - report.spend()):.2f}",
+            }
             completed = run_command(
-                [
-                    executable,
-                    "-p",
-                    "--model",
-                    HAIKU_MODEL,
-                    "--output-format",
-                    "stream-json",
-                    "--verbose",
-                    "--strict-mcp-config",
-                    "--mcp-config",
-                    str(configuration),
-                    "--tools=",
-                    "--allowedTools",
-                    f"mcp__{MCP_SERVER_NAME}",
-                    "--no-session-persistence",
-                    "--setting-sources",
-                    "project",
-                    "--max-turns",
-                    str(max(1, limits.max_turns - report.turns)),
-                    "--max-budget-usd",
-                    f"{max(0.01, limits.max_usd - report.spend()):.2f}",
-                    "--system-prompt",
-                    system,
-                ],
+                [executable, *(_substituted(argument, values) for argument in command[1:])],
                 cwd=private,
-                environment=_cli_environment(ambient),
+                environment=_agent_environment(ambient, credential_variables),
                 timeout_seconds=max(1.0, limits.max_seconds - (time.monotonic() - started)),
                 errors="replace",
                 input_text=prompt,
             )
-            translate_cli_stream(completed.stdout.splitlines(), recorder, report)
+            translate_agent_stream(completed.stdout.splitlines(), recorder, report)
             if completed.returncode != 0 and not report.stop_reasons:
                 report.stop_reasons.append(f"exit_{completed.returncode}")
             report.phases_completed = index + 1
@@ -595,5 +523,5 @@ def run_cli_agent(
 
 
 def ambient_environment() -> dict[str, str]:
-    """This process's environment, read once; only the scrubber and the driver selection see all of it."""
+    """This process's environment, read once; only the scrubber and the agent environment see all of it."""
     return dict(os.environ)
