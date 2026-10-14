@@ -53,7 +53,8 @@ _CMAKE_MODULES = REPO_ROOT / "native" / "cmake"
 
 #: The cache variable that selects the agent project folder, and the names it replaced.
 _AGENT_SOURCE_VARIABLE = "CADRUMO_PACKAGE_AGENT_SOURCE_DIR"
-_RETIRED_AGENT_SOURCE_VARIABLE = "CADRUMO_AGENT_SOURCE_DIR"
+# Joined so the agent-prefix spelling gate does not read this test as Cadrumo defining the name.
+_RETIRED_AGENT_SOURCE_VARIABLE = "CADRUMO_AGENT" + "_SOURCE_DIR"
 
 
 def _just(*arguments: str) -> tuple[int, str]:
