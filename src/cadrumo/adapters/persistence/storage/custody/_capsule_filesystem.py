@@ -5,9 +5,12 @@ from __future__ import annotations
 import os
 import stat
 import sys
+import time
 from collections.abc import Mapping
 from pathlib import Path
+from typing import Final
 
+from .....core.windows_contention import WINDOWS_CONTENDED_ACCESS_ERRORS
 from .errors import ProfileCustodyRecordError
 from .filesystem_primitives import (
     PROFILE_CUSTODY_COMMIT_FILENAME,
@@ -18,6 +21,26 @@ from .filesystem_primitives import (
     windows_create_file_api,
     windows_file_information_type,
 )
+
+CAPSULE_PUBLICATION_CONTENTION_BUDGET_SECONDS: Final = 2.0
+"""How long publication waits for another process to release a file inside the stage.
+
+Windows refuses to rename a directory while any handle is open on an entry
+inside it, and reports that as ``ERROR_ACCESS_DENIED``, the same code a denying
+ACL gives. Publication holds no such handle: the stage's files are written,
+fsynced and closed before the rename. What does open them is on-access malware
+scanning and indexing, which read every freshly closed file, and under load
+the queue behind one scan grows. The handle clears on its own; a denying ACL
+never does, so this deadline is the only thing that separates the two.
+
+The rename is no-replace and either moves the stage whole or leaves it where it
+was, so waiting cannot publish twice or expose a partial capsule. Sized for a
+stage of several freshly written files scanned one after another, rather than
+the single leaf the local-record replacement budget waits out. An exhausted
+budget refuses the publication exactly as before.
+"""
+
+_CAPSULE_PUBLICATION_CONTENTION_POLL_SECONDS: Final = 0.025
 
 
 def remove_posix_staging_if_same(parent_fd: int, name: str, identity: os.stat_result) -> None:
@@ -131,14 +154,18 @@ def rename_windows_directory_by_handle(staging_handle: int, destination: Path, *
         set_information = kernel32.SetFileInformationByHandle
         set_information.argtypes = [wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD]
         set_information.restype = wintypes.BOOL
-        if set_information(wintypes.HANDLE(staging_handle), 3, ctypes.byref(rename), len(rename_buffer)):
-            return
-        error = ctypes.get_last_error()
-        if error in {80, 183}:
-            raise ProfileCustodyRecordError("profile capsule destination already exists") from None
-        raise ProfileCustodyRecordError("atomic no-replace profile capsule publication failed") from OSError(
-            error, "SetFileInformationByHandle(FileRenameInfo)"
-        )
+        deadline = time.monotonic() + CAPSULE_PUBLICATION_CONTENTION_BUDGET_SECONDS
+        while True:
+            if set_information(wintypes.HANDLE(staging_handle), 3, ctypes.byref(rename), len(rename_buffer)):
+                return
+            error = ctypes.get_last_error()
+            if error in {80, 183}:
+                raise ProfileCustodyRecordError("profile capsule destination already exists") from None
+            if error not in WINDOWS_CONTENDED_ACCESS_ERRORS or time.monotonic() >= deadline:
+                raise ProfileCustodyRecordError("atomic no-replace profile capsule publication failed") from OSError(
+                    error, "SetFileInformationByHandle(FileRenameInfo)"
+                )
+            time.sleep(_CAPSULE_PUBLICATION_CONTENTION_POLL_SECONDS)
     raise ProfileCustodyRecordError("handle-relative profile capsule publication is not available on this platform")
 
 
