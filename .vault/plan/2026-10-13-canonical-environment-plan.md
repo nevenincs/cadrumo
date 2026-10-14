@@ -14,7 +14,7 @@ related:
   - '[[2026-10-04-runtime-manager-architecture-adr]]'
 modified: '2026-10-14'
 body_schema: body-v2
-body_hash: 'sha256:5756a0623abf96e289ed7ea5dfe821b1180c6deda2360961a4a1c3000eff7a07'
+body_hash: 'sha256:508f2fc722ad376efd8864ec29024ba4fe00a2a4c2c656bbf6c00e6c1859d24b'
 ---
 
 # `canonical-environment` plan
@@ -34,6 +34,8 @@ Decision coverage. `2026-10-13-canonical-environment-application-internals-adr` 
 - `2026-10-04-runtime-manager-architecture-adr`: P02.S06 (the runtime and its workers stay strict, no operator overrides).
 - `2026-10-13-native-agent-adr`, as amended: P02.S07 and P04.S11 (the agent image and the `CADRUMO_PACKAGE_AGENT_SOURCE_DIR` selector).
 - `2026-10-13-package-verification-adr`: P03.S09 and P04.S14 unblock its hosted door and proof run. Its plan, `2026-10-13-package-verification-plan`, owns `native/tests/agent_smoke.py` (its S02), `dev/runtime_lifecycle/agent_live.py` (its S03 and S05) and the removal of `native/desktop/src-tauri/src/agent/direct.rs` (its S04). This plan does not edit those files.
+
+Amendment 2026-10-14. The operator approved on 2026-10-14 an amendment to `2026-10-13-canonical-environment-application-internals-adr`: the agent image admits four more invocations (`stores-state`, `setup`, `migrate`, `version --json`), and the runtime runs the agent's store lifecycle before `serve` (its constraint 21). The basis is the agent owner's ruling that the host owns the agent's store lifecycle. That approval authorizes Phase P05.
 
 Agent-owner items (CADRUMO-AGENT-CODE), as answered from cadrumo-agent `main` at `45edd9f`:
 
@@ -87,6 +89,13 @@ Renames, the CADRUMO_AGENT_ spelling guard, the package-side drift and data-fold
 - [ ] `P04.S15` - Update the documentation: native/CONTRACT.md source ownership, bootstrap, application images, mutable data and desktop launch projection sections for the file, launch profiles, the agent image, exit 125 and the renamed selector; and regenerate the environment reference so it states which names a packaged image passes; `native/CONTRACT.md, dev/docs/env_reference.py, docs/reference/environment-overrides.md`.
 - [ ] `P04.S16` - Remove CADRUMO_AGENT_INTERNAL_TOKEN from the agent worker profile and its vectors once cadrumo-agent moves the non-hosted worker IPC token to standard input (gated on agent-owner item A3); `native/application-environment.toml, native/platform/src/conformance_tests.rs, dev/packaging/native/tests/test_launch_profile_vectors.py`.
 
+### Phase `P05` - Agent store lifecycle
+
+The agent image admits its four store and version invocations, and the runtime brings the hosted root's stores to current before every serve, under the 2026-10-14 amendment to the governing ADR (constraint 21).
+
+- [ ] `P05.S17` - Admit the agent image's four store and version invocations beside gateway and worker (ADR constraints 11, 18, 21): declare -m cadrumo_agent.cli.main with stores-state, setup, migrate with optional --expect-from REV and --expect-head REV typed positions, and version --json in the image's invocation table, each admitting the gateway's environment and slots as the runtime composes them for serve; add launch-profile vectors for each admitted invocation and for refusal of any other verb, extra argument or malformed revision position; update test_agent_image; switch the P04.S14 launch probe from the generic-python setup workaround to the image's own setup invocation; `native/application-environment.toml, dev/packaging/native/application_environment.py, native/platform/src/conformance_tests.rs, dev/packaging/native/tests/test_launch_profile_vectors.py, dev/packaging/native/tests/test_agent_image.py, native/tests/environment_launch_probe.py`.
+- [ ] `P05.S18` - Run the agent store lifecycle before every serve (ADR constraint 21) through the same launch composer, image and environment: version --json (api_version v1), stores-state, then setup on absent or copy-aside of home/state to stores-aside (written as stores-aside.partial, then renamed) and migrate --expect-from/--expect-head on older, refusal on newer, and a stores-state re-check that must read current; run each invocation as a one-shot contained tree with a hard timeout that ends the whole tree, parse its whole stdout strictly (extra keys forbidden, integers and floats refused where text is expected), keep a copy over unsettled stores and refuse later starts until stores read current, remove it once current, run migrate only under the profile's reservation with no tree of the profile starting, running or unconfirmed-reaped, map newer and an incompatible api_version to agent_service_incompatible and every other failure to agent_service_failed (desktop closed set unchanged), and extend the stand-in agent image to answer the four invocations with integration tests for absent to setup to current, older to copy and migrate, newer refused, setup failed, a kept copy, timeout and malformed stdout; `src/cadrumo/application/agent_host/store_lifecycle.py (new), src/cadrumo/application/agent_host/controller.py, src/cadrumo/adapters/local_runtime/agent_programs.py, src/cadrumo/adapters/local_runtime/agent_process.py, src/cadrumo/entrypoints/runtime/agent_hosts.py, src/cadrumo/entrypoints/runtime/profile_connection_agents.py, src/cadrumo/entrypoints/runtime/tests/agent_host_support.py, src/cadrumo/adapters/local_runtime/tests/agent_host_fixture.py, their tests`.
+
 ## Parallelization
 
 Hard ordering:
@@ -99,6 +108,7 @@ Hard ordering:
 - P04.S11 can run alongside P02 and P03. P04.S12 follows P04.S11, P03.S09 and package-verification S03 and S04.
 - P04.S13 and P04.S14 follow P03.S09 and P03.S10 and need an assembled package.
 - P04.S15 runs last. P04.S16 waits on agent-owner item A3 and on P02.S07.
+- P05.S17 and P05.S18 run in parallel. P05.S18 does not need P05.S17's build: its integration tests use the stand-in agent image. P05.S18's end-to-end use on the assembled package needs P05.S17.
 
 Parallel assignments, with disjoint write ownership:
 
@@ -107,6 +117,8 @@ Parallel assignments, with disjoint write ownership:
 - Rename lane: P04.S11, then P04.S12. Owns `native/cmake/Agent.cmake`, `justfile`, `CMakePresets.json`, `dev/provider_catalog`, `native/desktop/frontend`, and `dev/quality/tests/test_agent_prefix_spelling.py`. Its edit to line 524 of `native/CONTRACT.md` goes in before P04.S15.
 - Package-check lane: P04.S13 and P04.S14 together, after the native and runtime lanes. Owns `dev/packaging/native/environment_conformance.py`, `native/tests/environment_launch_probe.py`, and the new test registrations in `native/cmake/Packaging.cmake`. The native lane must have finished its own `Packaging.cmake` edit from P02.S07 first.
 - Documentation: P04.S15, single writer of `native/CONTRACT.md` and `dev/docs/env_reference.py`.
+- Store-lifecycle native lane: P05.S17. Owns `native/`, `dev/packaging/native` and `native/cmake/Packaging.cmake` for its edits.
+- Store-lifecycle runtime lane: P05.S18. Owns `src/cadrumo/application/agent_host`, `src/cadrumo/adapters/local_runtime/agent_programs.py`, `agent_process.py` and the agent host fixture, `src/cadrumo/entrypoints/runtime/agent_hosts.py`, `profile_connection_agents.py` and their tests.
 
 Shared hot spots. `native/cmake`, `native/platform` and `dev/packaging/native/generate.py` serialize within the native lane. A worker outside that lane does not edit them. Contract changes regenerate `contract.rs`, which the platform crate, manager and desktop all compile. Rebuild and run their tests before any commit that touches the generator.
 
