@@ -31,6 +31,7 @@ from ..acceleration_receipt import (
     PROFILE_SESSION_KEYCHAIN_SERVICE,
     PROFILE_SESSION_RECORD_MAX_BYTES,
     AccelerationReceiptRevocationError,
+    ReceiptDeletion,
     _pending_retirement_bytes,
     _profile_session_lock_path,
     _profile_session_retirement_path,
@@ -612,10 +613,11 @@ print(outcome.refusal.value if outcome.refusal is not None else 'resumed')
             assert journal_path.read_bytes() == journal
             assert path.read_bytes() == successor
         else:
-            # On a usable keyring the deliberately absent successor account
-            # becomes an ordinary logged-out receipt after predecessor
-            # retirement and journal clearance.
-            assert recovered == ProfileSessionRefusalReason.KEYCHAIN_ENTRY_MISSING.value
+            # On a usable keyring recovery retires the predecessor and clears
+            # the journal. The runtime door never reads a key from the
+            # keychain; it refuses the successor because no sign-in
+            # generation was committed for it, and deletes that receipt.
+            assert recovered == ProfileSessionRefusalReason.ABSENT.value
             assert not journal_path.exists()
             assert not path.exists()
 
@@ -748,8 +750,8 @@ class TestProfileSessionAcceleration:
             delete_profile_session(storage_root=tmp_path, profile_id=other_profile)
 
     @pytest.mark.os_keychain
-    def test_tampered_aad_record_is_refused_and_cleaned(self, tmp_path: Path) -> None:
-        """A canonical receipt whose AAD-bound field was altered fails authentication.
+    def test_tampered_aad_record_is_refused_and_kept(self, tmp_path: Path) -> None:
+        """A canonical receipt whose AAD-bound field was altered fails authentication and is kept.
 
         The tamper is re-encoded THROUGH the production canonical encoder on
         purpose. Rewriting the receipt with a plain ``json.dumps`` leaves bytes
@@ -783,13 +785,16 @@ class TestProfileSessionAcceleration:
                 f"not any earlier check; got {outcome.refusal}"
             )
             assert resumed is None
-            assert not path.exists()
+            # A proof that fails to unwrap cannot tell a forged key from a
+            # corrupt record, so the runtime door keeps both halves.
+            assert outcome.deletion is ReceiptDeletion.NOT_REQUIRED
+            assert path.read_bytes() == _receipt_bytes(forged)
             assert (
                 keyring.get_password(
                     PROFILE_SESSION_KEYCHAIN_SERVICE,
                     _account(profile_id, record.session_id),
                 )
-                is None
+                is not None
             )
         finally:
             delete_profile_session(storage_root=tmp_path, profile_id=profile_id)
