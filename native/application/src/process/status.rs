@@ -104,15 +104,19 @@ impl Tracker {
             status.finished_ms = Some(timestamp_ms());
         }
     }
-    pub fn capture(&mut self, id: u64, stream: Stream, bytes: &[u8]) {
+    /// Count stream traffic without retaining its potentially private contents.
+    pub fn count(&mut self, id: u64, stream: Stream, bytes: usize) {
         if let Some(status) = self.processes.iter_mut().find(|p| p.id == id) {
             let count = match stream {
                 Stream::Stdout => &mut status.stdout_bytes,
                 Stream::Stderr => &mut status.stderr_bytes,
                 Stream::Terminal => &mut status.terminal_bytes,
             };
-            *count = count.saturating_add(bytes.len() as u64);
+            *count = count.saturating_add(bytes as u64);
         }
+    }
+    pub fn capture(&mut self, id: u64, stream: Stream, bytes: &[u8]) {
+        self.count(id, stream, bytes.len());
         const LIMIT: usize = 256 * 1024;
         let retained = &bytes[bytes.len().saturating_sub(LIMIT)..];
         self.dropped_bytes += (bytes.len() - retained.len()) as u64;

@@ -40,8 +40,8 @@ def compose_runtime_account_factories(
     """Compose controls without acquiring a profile or constructing local custody.
 
     Direct closure is the runtime's current-session lock. The outer login
-    scope owns closing the connection and any later profile selection. Other
-    agents and independent grants are not changed by this session control.
+    scope owns closing the connection and any later profile selection. Independent
+    grants are not changed by this session control.
     """
     if client.frontend is not OperationFrontendProjection.TUI:
         raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)

@@ -6,7 +6,7 @@ import time
 from asyncio import CancelledError
 from collections.abc import Generator
 from contextlib import contextmanager
-from logging import INFO, WARNING
+from logging import DEBUG, ERROR
 from typing import TYPE_CHECKING, Literal
 
 from .diagnostic_log import DiagnosticValue, diagnostic_error_fields, diagnostic_event, diagnostic_scope
@@ -39,7 +39,7 @@ def log_startup_phase(
         logger,
         f"runtime_startup phase={phase} transition={transition} elapsed_seconds={elapsed:.6f}",
         fields=fields,
-        level=WARNING if outcome == "failed" else INFO,
+        level=ERROR if outcome == "failed" else DEBUG,
         primary_error=primary_error,
     )
 

@@ -525,6 +525,13 @@ test("an agent that cannot serve says why, and nothing can be sent", async ({
   await expect(column(target).getByRole("status")).toContainText(
     label("desktop.agent.service_signed_out"),
   );
+  await column(target)
+    .getByRole("button", { name: label("desktop.agent.retry"), exact: true })
+    .click();
+  await expect.poll(() => calls(target)).toContain("agentRetry");
+  await expect(column(target).getByRole("status")).toContainText(
+    label("desktop.agent.service_signed_out"),
+  );
   await field(target).fill("Hola");
   await expect(
     column(target).getByRole("button", {

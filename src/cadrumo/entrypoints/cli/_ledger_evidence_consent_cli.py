@@ -5,7 +5,7 @@ derived from them.
 
 **Both surfaces state that transmitted bytes cannot be recalled, every time.**
 The statement is carried in the JSON payload as well as the rendered lines,
-because an agent consuming the envelope never sees prose, and this is the one
+because a script consuming the envelope never sees prose, and this is the one
 caveat on this surface an operator must not act without. It is unconditional:
 an empty history is still surfaced with the caveat, since an operator with no
 history is precisely the one deciding whether to enable the route.

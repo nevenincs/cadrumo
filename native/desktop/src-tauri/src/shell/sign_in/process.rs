@@ -303,8 +303,12 @@ impl Children {
         let mut measurement = Measurement::new(kind);
         let outcome =
             self.execute_measured(command, secret, kind, slot_wait, deadline, &mut measurement);
-        if outcome.is_ok() {
-            measurement.timing.outcome = HelperOutcome::Completed;
+        if let Ok(output) = &outcome {
+            measurement.timing.outcome = if output.success {
+                HelperOutcome::Completed
+            } else {
+                HelperOutcome::NonzeroExit
+            };
         }
         measurement.timing.total_ms = milliseconds(measurement.started.elapsed());
         self.diagnostics
@@ -620,11 +624,64 @@ mod tests {
         assert_eq!(snapshot.processes[0].role, ProcessRole::SignIn);
         assert_eq!(snapshot.processes[0].exit_code, Some(0));
         assert_eq!(snapshot.processes[0].phase, ProcessPhase::Exited);
+        assert_eq!(
+            snapshot
+                .events
+                .iter()
+                .find_map(|event| event.helper_timing)
+                .unwrap()
+                .outcome,
+            HelperOutcome::Completed
+        );
         assert!(snapshot.output.is_empty());
         assert!(
             !serde_json::to_string(&snapshot.events)
                 .unwrap()
                 .contains("secret-channel-probe")
+        );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn nonzero_exit_is_reported_without_discarding_the_sign_in_refusal() {
+        use super::super::wire;
+        let children = Children::default();
+        let envelope = serde_json::json!({
+            "schema_version": "2", "command": "config.login", "status": "error",
+            "active_profile": "synthetic-private-profile",
+            "error": {"code": "REFUSED_CLI", "context": {"reason": "THROTTLED", "seconds": "9"}}
+        });
+        let script = format!("[Console]::Error.WriteLine('{envelope}'); exit 2");
+        let output = children.run(powershell(&script), None).unwrap();
+        assert!(!output.success);
+        let wire::SignInResult::Refused { refusal } =
+            wire::login(wire::decode("login", &output).unwrap()).unwrap()
+        else {
+            panic!("canonical refusal must survive nonzero exit");
+        };
+        assert_eq!(refusal.code, "THROTTLED");
+        assert_eq!(refusal.retry_after_seconds, Some(9));
+        let snapshot = children.diagnostics.snapshot(0);
+        assert_eq!(snapshot.processes[0].exit_code, Some(2));
+        let timing = snapshot
+            .events
+            .iter()
+            .find_map(|event| event.helper_timing)
+            .unwrap();
+        assert_eq!(timing.outcome, HelperOutcome::NonzeroExit);
+        // The process tracker still records its nonzero exit; the transport
+        // must not turn the useful refusal envelope into an execution error.
+        assert!(
+            snapshot
+                .events
+                .iter()
+                .filter_map(|event| event.failure.as_ref())
+                .all(|error| error.code == ErrorCode::ChildFailed)
+        );
+        assert!(
+            !serde_json::to_string(&snapshot.events)
+                .unwrap()
+                .contains("synthetic-private-profile")
         );
     }
 

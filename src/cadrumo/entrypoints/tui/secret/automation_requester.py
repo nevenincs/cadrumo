@@ -15,8 +15,7 @@ from textual.widgets import Button, Checkbox, Input, Label, Select, SelectionLis
 
 from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ....application.operations.registry import OperationPublicContractSetV1
-from ....application.user_profile.access_contracts import GRANT_DEFAULT_VALIDITY, AccessAction, DisclosureCategory
-from ....application.user_profile.automation_agent_key import AGENT_OPTIONAL_CATEGORIES
+from ....application.user_profile.access_contracts import GRANT_DEFAULT_VALIDITY, AccessAction
 from ....application.user_profile.automation_custody_port import AutomationSecretStore
 from ....application.user_profile.automation_enrollment import (
     AutomationReceiptProjection,
@@ -39,13 +38,6 @@ _KIND_LOCALE_KEYS = {
     EnrollmentKind.ROTATE: "tui.automation_request.rotate",
     EnrollmentKind.RENEW: "tui.automation_request.renew",
     EnrollmentKind.CHANGE_SCOPE: "tui.automation_request.change_scope",
-}
-_USE_LOCALE_KEYS = {
-    _requester_contracts.REQUEST_USE_AGENT: "tui.automation_request.use_agent",
-    _requester_contracts.REQUEST_USE_CUSTOM: "tui.automation_request.use_custom",
-}
-_CATEGORY_LOCALE_KEYS = {
-    DisclosureCategory.TAX_VALUES: "tui.automation_request.category_tax_values",
 }
 _PERIOD_LOCALE_KEYS = {
     "none": "tui.automation_inventory.no_periods",
@@ -73,9 +65,8 @@ class RuntimeAutomationRequesterScreen(
         background: $surface;
     }
     #automation-request-form { height: 1fr; }
-    #automation-request-agent, #automation-request-custom, #automation-request-custom-access { height: auto; }
-    #automation-request-operations, #automation-request-actions, #automation-request-disclosures,
-    #automation-request-categories {
+    #automation-request-custom, #automation-request-custom-access { height: auto; }
+    #automation-request-operations, #automation-request-actions, #automation-request-disclosures {
         height: auto;
         max-height: $cadrumo-log-max-height;
     }
@@ -135,19 +126,6 @@ class RuntimeAutomationRequesterScreen(
                     allow_blank=False,
                     id="automation-request-kind",
                 )
-                yield Label(tr("tui.automation_request.use"))
-                yield Select[str](
-                    [(tr(_USE_LOCALE_KEYS[use]), use) for use in _requester_contracts.REQUEST_USES],
-                    value=_requester_contracts.REQUEST_USE_CUSTOM,
-                    allow_blank=False,
-                    id="automation-request-use",
-                )
-                with Vertical(id="automation-request-agent"):
-                    yield Label(tr("tui.automation_request.categories"))
-                    yield SelectionList[str](
-                        *((tr(_CATEGORY_LOCALE_KEYS[item]), item.value, False) for item in AGENT_OPTIONAL_CATEGORIES),
-                        id="automation-request-categories",
-                    )
                 with Vertical(id="automation-request-custom"):
                     yield from self._compose_custom_scope()
                 yield Input(placeholder=tr("tui.automation_request.grant_expiry"), id="automation-request-expiry")
@@ -247,27 +225,13 @@ class RuntimeAutomationRequesterScreen(
                 self.query_one("#automation-request-expiry", Input).value = (now() + GRANT_DEFAULT_VALIDITY).isoformat()
 
     def on_select_changed(self, event: Select.Changed) -> None:
-        """Clear fields that no longer belong to the selected proposal kind or key use."""
+        """Clear fields that no longer belong to the selected proposal kind."""
         if self._busy:
             return
         if event.select.id == "automation-request-kind" and isinstance(event.value, EnrollmentKind):
             self._show_kind(event.value)
-        elif event.select.id == "automation-request-use" and isinstance(event.value, str):
-            self._show_use(event.value)
-
-    def _show_use(self, use: str) -> None:
-        """An agent key takes only its data categories; a custom scope takes every field."""
-        agent = use == _requester_contracts.REQUEST_USE_AGENT
-        self.query_one("#automation-request-agent", Vertical).display = agent
-        for container in ("#automation-request-custom", "#automation-request-custom-access"):
-            self.query_one(container, Vertical).display = not agent
 
     def _show_kind(self, kind: EnrollmentKind) -> None:
-        use = cast("Select[str]", self.query_one("#automation-request-use", Select))
-        use.display = kind is EnrollmentKind.ENROLL
-        if kind is not EnrollmentKind.ENROLL:
-            use.value = _requester_contracts.REQUEST_USE_CUSTOM
-        self._show_use(str(use.value))
         visible = {
             "key-expiry": kind in {EnrollmentKind.ENROLL, EnrollmentKind.ROTATE},
             "grant": kind is not EnrollmentKind.ENROLL,

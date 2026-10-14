@@ -242,7 +242,7 @@ def _run_runtime_owner(
 def run(options: argparse.Namespace) -> int:
     """Run one user/root owner with independent profile admission; return its exit reason code."""
     with diagnostic_process("runtime"), diagnostic_scope():
-        diagnostic_event(_LOGGER, "runtime_process_started")
+        diagnostic_event(_LOGGER, "runtime_process_started", level=10)
         try:
             exit_code = _run_process(options)
         except BaseException as error:
@@ -262,6 +262,14 @@ def run(options: argparse.Namespace) -> int:
             _LOGGER,
             "runtime_process_exited",
             fields={"exit_code": exit_code, "outcome": "exited"},
+            level=10
+            if exit_code
+            in {
+                int(RuntimeExitReason.SUPERVISOR_STOP),
+                int(RuntimeExitReason.SIGNAL_STOP),
+                int(RuntimeExitReason.SESSION_END_SETTLE),
+            }
+            else 40,
         )
         return exit_code
 

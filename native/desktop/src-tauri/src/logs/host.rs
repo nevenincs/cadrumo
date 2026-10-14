@@ -448,7 +448,10 @@ mod tests {
         ));
         let second = host.poll(&diagnostics);
         assert_eq!(second.len(), 2);
-        assert_eq!(second[0].message, "child_exited: tui pid 4242, exit code 3");
+        assert_eq!(
+            second[0].message,
+            "child_exited: tui pid 4242, exit code 3: child_failed during launch: The child process exited unsuccessfully"
+        );
         assert_eq!(second[0].level, Some(Level::Error));
         assert_eq!(
             second[0].process,

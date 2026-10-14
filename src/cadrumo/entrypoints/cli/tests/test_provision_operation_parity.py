@@ -1,7 +1,7 @@
 """Each ``config provision`` leaf and the operation that serves the same work return the same result.
 
 The command line runs its work in process and needs no session. The terminal
-interface and an agent reach the same work through a registered operation.
+interface reaches the same work through a registered operation.
 Each case runs the leaf through its real handler, then submits the equivalent
 request to the real executor and supervisor, composed with the adapters
 production binds, against the same real loopback runtime state, and compares

@@ -711,14 +711,6 @@ test-native-release CONFIGURATION="Release": (_native-configure CONFIGURATION)
 verify-caller-owned-runtime PACKAGE:
     uv run --no-sync python -m dev.runtime_lifecycle.caller_owned_root --package {{quote(PACKAGE)}}
 
-# Real processes on a disposable root under build/acceptance: hold, exact-process
-# approval, attended MCP reads, and each way access ends. Waits for the sign-in's
-# own deadline (about 15 minutes); pass --skip-expiry in ARGS to leave that out.
-[doc('Prove the held live sign-in and attended MCP lifecycle of a built package through its own programs.')]
-[group('test')]
-verify-live-sign-in PACKAGE *ARGS:
-    uv run --no-sync python -m dev.runtime_lifecycle.live_sign_in --package {{quote(PACKAGE)}} {{ARGS}}
-
 [doc('Prove a review-gated operation is rejected without changing its row and applied exactly once, through a built package.')]
 [group('test')]
 verify-reviewed-operation PACKAGE *ARGS:

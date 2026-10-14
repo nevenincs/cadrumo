@@ -126,7 +126,6 @@ def test_logout_retains_selection_and_status_queries_the_same_profile(monkeypatc
         "receipt_removed": True,
         "keychain_removed": True,
         "automation_enabled": True,
-        "agent_access_remains": False,
         "automation_revoked": False,
     }
     assert observe_active_profile_pointer() == captured

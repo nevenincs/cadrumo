@@ -1,5 +1,6 @@
 //! Short-lived canonical CLI invocations. No runtime connection or credential is retained.
 mod observation;
+mod reads;
 // The child runner and the envelope decoder are also the provider settings'
 // channel: one set of lanes, one deadline, one output bound, one settlement.
 pub(crate) mod process;
@@ -110,6 +111,7 @@ pub struct SignIn {
     child: Result<ChildConfiguration>,
     pub children: Children,
     observation: observation::Observer,
+    reads: Arc<reads::Reads>,
 }
 
 impl SignIn {
@@ -118,6 +120,7 @@ impl SignIn {
             child: resolve_cli(launch),
             children: Children::new(launch.diagnostics.clone()),
             observation: observation::Observer::default(),
+            reads: Arc::new(reads::Reads::default()),
         }
     }
 
@@ -132,7 +135,11 @@ impl SignIn {
             return Ok(SignInStatus::unsupported());
         }
         let state = self.clone();
-        super::blocking(move || wire::status(state.run(&STATUS, None, None)?)).await
+        self.reads
+            .read(move || async move {
+                super::blocking(move || wire::status(state.run(&STATUS, None, None)?)).await
+            })
+            .await
     }
 
     pub async fn stop(&self) -> Result<()> {
@@ -158,6 +165,7 @@ impl SignIn {
         label: Option<&str>,
         secret: Option<Zeroizing<Vec<u8>>>,
     ) -> Result<process::Output> {
+        let _mutation = (!call.reads).then(|| self.reads.mutation());
         let mut command = self.child.as_ref().map_err(Clone::clone)?.command();
         command.args(arguments(call, label, secret.is_some()));
         if call.reads {

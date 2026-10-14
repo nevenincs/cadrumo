@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import time
-from logging import ERROR, INFO, WARNING
+from logging import DEBUG, ERROR, WARNING
 from typing import Protocol
 
 from ...application.runtime.contracts import (
@@ -133,7 +133,7 @@ class RuntimeLaunchDoor:
                         "elapsed_seconds": time.monotonic() - started,
                         "cleanup_incomplete": bool(async_cleanup_failures(error)),
                     },
-                    level=INFO if cancelled else WARNING if refusal else ERROR,
+                    level=DEBUG if cancelled else WARNING if refusal else ERROR,
                     primary_error=error,
                 )
                 raise

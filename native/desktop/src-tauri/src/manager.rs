@@ -230,9 +230,7 @@ impl ManagerStart {
             Ok(StartOutcome::Unsupported) => self
                 .diagnostics
                 .host_outcome(HostStage::Manager, HostOutcome::Unavailable),
-            Err(error) => self
-                .diagnostics
-                .host_failure(HostStage::Manager, error.clone()),
+            Err(_) => {}
         }
         match &outcome {
             Ok(StartOutcome::Unsupported) => {
@@ -358,6 +356,18 @@ impl ManagerStart {
     }
 
     pub fn report_failure(&self, error: ApplicationError) {
+        let changed = self.observation.status().ok().is_none_or(|status| {
+            status.failure.as_ref().is_none_or(|previous| {
+                previous.code != error.code
+                    || previous.operation != error.operation
+                    || previous.io_kind != error.io_kind
+                    || previous.os_code != error.os_code
+            })
+        });
+        if changed {
+            self.diagnostics
+                .host_failure(HostStage::Manager, error.clone());
+        }
         if error.code == ErrorCode::LockPoisoned {
             self.observation.observation_failed(error);
         } else {

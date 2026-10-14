@@ -19,12 +19,6 @@ from ....adapters.local_runtime.automation_requester import AutomationRequesterJ
 from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ....application.operations.registry import OperationFrontendProjection
 from ....application.runtime.deadline_budget import remaining_budget
-from ....application.user_profile.access_contracts import DisclosureCategory
-from ....application.user_profile.automation_agent_key import (
-    AutomationKeyUse,
-    agent_key_proposal,
-    agent_key_scope,
-)
 from ....application.user_profile.automation_enrollment import (
     AutomationReceiptProjection,
     EnrollmentKind,
@@ -32,7 +26,6 @@ from ....application.user_profile.automation_enrollment import (
 )
 from ....core.external_constants import OutputLanguage
 from ....core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ....core.time.clock import now
 from ..common import activate_subcommand_output_language, emit_envelope
 from ..errors import CliRefusedBoundaryError
 from ..runtime_profile_admission import require_automation_change_credential_reference
@@ -117,34 +110,16 @@ type _CreateProposal = Callable[[UUID], EnrollmentProposal]
 """The first-enrollment proposal, given the destination the runtime minted for it."""
 
 
-def refuse_incomplete_create_choice(*, use: object, category: object, proposal_supplied: bool) -> None:
-    """Refuse a mixed or incomplete key choice; nothing is read and no runtime is asked.
-
-    A key is issued either for a use, ``--use agent`` with any added
-    ``--category`` values, or from a whole proposal on the protected channel.
-    """
-    if use is None:
-        if category:
-            raise CliRefusedBoundaryError(
-                translated_message="cli.config.custody.errors.automation_create_agent_categories"
-            )
-        if not proposal_supplied:
-            raise CliRefusedBoundaryError(
-                translated_message="cli.config.custody.errors.automation_create_proposal_required"
-            )
-    elif proposal_supplied:
-        raise CliRefusedBoundaryError(translated_message="cli.config.custody.errors.automation_create_use_conflict")
+def refuse_missing_create_proposal(*, proposal_supplied: bool) -> None:
+    """Refuse a create without a whole proposal on the protected channel; nothing is read and no runtime is asked."""
+    if not proposal_supplied:
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.custody.errors.automation_create_proposal_required"
+        )
 
 
-def _create_proposal(
-    use: str | None, category: tuple[str, ...], selection: MachineSecretSelection | None
-) -> _CreateProposal:
-    refuse_incomplete_create_choice(use=use, category=category, proposal_supplied=selection is not None)
-    if use is not None:
-        match AutomationKeyUse(use):
-            case AutomationKeyUse.AGENT:
-                agent = agent_key_scope(DisclosureCategory(item) for item in category)
-                return lambda destination_id: agent_key_proposal(agent, destination_id=destination_id, now=now())
+def _create_proposal(selection: MachineSecretSelection | None) -> _CreateProposal:
+    refuse_missing_create_proposal(proposal_supplied=selection is not None)
     if selection is None:
         raise CliRefusedBoundaryError(
             translated_message="cli.config.custody.errors.automation_create_proposal_required"
@@ -157,22 +132,13 @@ def _create_proposal(
 
 def automation_create(
     ctx: typer.Context,
-    use: str | None = None,
-    category: tuple[str, ...] = (),
     secrets_stdin: bool = False,
     secrets_fd: int | None = None,
     output_language: OutputLanguage | None = None,
 ) -> None:
-    """Submit one first enrollment and serve protected delivery until terminal.
-
-    ``--use agent`` issues a key for an agent over MCP that reads and writes
-    the profile's values, plus any ``--category`` it adds. Its category grants
-    are bound to the destination the runtime mints for this enrollment, which
-    is the identity every connection presenting the key is admitted as, so its
-    MCP server reads those categories back.
-    """
+    """Submit one first enrollment and serve protected delivery until terminal."""
     selection = select_machine_secret_channel(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
-    create_proposal = _create_proposal(use, category, selection)
+    create_proposal = _create_proposal(selection)
     profile_id = UUID(str(require_active_profile_pointer().bucket_id))
     store = installed_automation_secret_store()
     client = asyncio.run(open_installed_runtime_client(profile_id=profile_id, frontend=OperationFrontendProjection.CLI))
@@ -292,6 +258,6 @@ __all__ = [
     "AutomationCreateInput",
     "automation_change",
     "automation_create",
-    "refuse_incomplete_create_choice",
+    "refuse_missing_create_proposal",
     "stage_automation_change_input",
 ]

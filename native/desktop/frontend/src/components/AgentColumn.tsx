@@ -630,6 +630,21 @@ export function AgentColumn({
                 <Icon name="info" className="mt-0.5" />
                 <span className="grid justify-items-start gap-1.5">
                   {notice}
+                  {status?.state === "refused" && session?.retry && (
+                    <Button
+                      variant="outline"
+                      size="xs"
+                      onClick={() => {
+                        void session
+                          .retry?.()
+                          .catch((error: unknown) =>
+                            change({ sendFailure: failureCode(error) }),
+                          );
+                      }}
+                    >
+                      {t("desktop.agent.retry")}
+                    </Button>
+                  )}
                   {noProvider && openSettings && (
                     <Button variant="outline" size="xs" onClick={openSettings}>
                       {t("desktop.agent.set_up_providers")}

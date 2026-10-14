@@ -166,7 +166,7 @@ def _serve_connected_worker(
             )
         )
         configure_logging()
-        diagnostic_event(_LOGGER, "profile_worker_admitted", fields={"parent_process_id": options.parent_pid})
+        diagnostic_event(_LOGGER, "profile_worker_admitted", fields={"parent_process_id": options.parent_pid}, level=10)
         composition.enter_context((composition_factory or installed_profile_worker_composition)())
         operations = ProfileWorkerOperationHost(
             custody,
@@ -250,7 +250,7 @@ def run(
 ) -> int:
     """Admit only an exact native runtime parent and a contained current-cohort worker."""
     with diagnostic_process("profile_worker"), diagnostic_scope():
-        diagnostic_event(_LOGGER, "profile_worker_process_started")
+        diagnostic_event(_LOGGER, "profile_worker_process_started", level=10)
         try:
             exit_code = _run_process(arguments, composition_factory=composition_factory)
         except BaseException as error:
@@ -266,7 +266,12 @@ def run(
                 primary_error=error,
             )
             raise
-        diagnostic_event(_LOGGER, "profile_worker_process_exited", fields={"exit_code": exit_code, "outcome": "exited"})
+        diagnostic_event(
+            _LOGGER,
+            "profile_worker_process_exited",
+            fields={"exit_code": exit_code, "outcome": "exited"},
+            level=10 if exit_code == 0 else 40,
+        )
         return exit_code
 
 

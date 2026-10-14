@@ -1,6 +1,6 @@
 """Two carry advisories on one calculate must be distinguishable by context alone.
 
-This CLI's operator is an autonomous agent, and the contract directs it to route on
+A caller is directed by the contract to route on
 structured notice fields rather than parse prose. Before this gate the projection
 built a context of only ``reason``, ``source_kind`` and ``resolver_id`` — three
 values that are IDENTICAL across every carry advisory on a revision. Two advisories

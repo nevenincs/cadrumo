@@ -34,7 +34,7 @@ use zeroize::Zeroizing;
 /// How often the sign-in status is read while the agent is supervised: the
 /// cadence of the account menu's own observation.
 pub const POLL: Duration = Duration::from_secs(2);
-/// How long after a refused or failed start another start is tried.
+/// Initial retry delay; later failures back off, up to three retries.
 pub const RETRY: Duration = Duration::from_secs(30);
 
 pub use cadrumo_application::diagnostics::service::AgentRefusal as Refusal;
@@ -135,6 +135,7 @@ struct Shared {
     running: Mutex<Option<Running>>,
     closed: AtomicBool,
     started: AtomicBool,
+    retry_requested: AtomicBool,
     wake: Notify,
     generation: AtomicU64,
     worker: Mutex<Option<tauri::async_runtime::JoinHandle<()>>>,
@@ -214,6 +215,7 @@ impl Supervisor {
                 running: Mutex::new(None),
                 closed: AtomicBool::new(false),
                 started: AtomicBool::new(false),
+                retry_requested: AtomicBool::new(false),
                 wake: Notify::new(),
                 generation: AtomicU64::new(0),
                 worker: Mutex::new(None),
@@ -231,6 +233,14 @@ impl Supervisor {
     pub fn status(&self) -> Status {
         self.begin();
         lock(&self.shared.status).clone()
+    }
+
+    /// An explicit user retry starts a new bounded attempt budget. Passive
+    /// status reads never reset failures; canonical sign-in still gates launch.
+    pub fn retry(&self) {
+        self.shared.retry_requested.store(true, Ordering::Release);
+        self.shared.wake.notify_one();
+        self.begin();
     }
 
     /// The gateway of the launcher that reported ready, while it serves.
@@ -406,15 +416,79 @@ async fn start(
     Ok(())
 }
 
+/// A failed service gets three automatic retries. The last refusal remains
+/// visible until an explicit retry, sign-in/profile change or host reopen.
+#[derive(Default)]
+struct RetryBudget {
+    failures: u32,
+    after: Option<Instant>,
+    refusal: Option<Refusal>,
+}
+
+impl RetryBudget {
+    fn waiting(&self) -> bool {
+        self.failures >= 4 || self.after.is_some_and(|at| Instant::now() < at)
+    }
+
+    fn failed(&mut self, shared: &Shared) {
+        if let State::Refused { code } = lock(&shared.status).state {
+            self.refusal = Some(code);
+        }
+        self.failures = self.failures.saturating_add(1);
+        if self.failures >= 4 {
+            self.after = None;
+            shared.diagnostics.service(
+                None,
+                ServiceFact::AgentRetryExhausted {
+                    attempts: self.failures,
+                },
+            );
+        } else {
+            let delay = shared.retry.saturating_mul(1 << (self.failures - 1));
+            self.after = Some(Instant::now() + delay);
+            shared.diagnostics.service(
+                None,
+                ServiceFact::AgentRetryScheduled {
+                    delay_ms: delay.as_millis().try_into().unwrap_or(u64::MAX),
+                },
+            );
+        }
+    }
+}
+
 async fn supervise(shared: Arc<Shared>, observe: Observe, launch: Launch) {
     let (signals, mut received) = mpsc::unbounded_channel::<(u64, Signal)>();
-    let mut retry_after: Option<Instant> = None;
+    let mut retries = RetryBudget::default();
     let mut serving: Option<String> = None;
-    while !shared.closed.load(Ordering::Acquire) {
+    'supervision: while !shared.closed.load(Ordering::Acquire) {
+        if shared.retry_requested.swap(false, Ordering::AcqRel) {
+            retries = RetryBudget::default();
+        }
         let wake = shared.wake.notified();
         tokio::pin!(wake);
         wake.as_mut().enable();
-        let allowed = allowed(&observe().await);
+        let observation = observe();
+        tokio::pin!(observation);
+        // CLI status reads can take seconds. Launcher refusal/exit must clear
+        // the gateway and publish its cause while that read is still pending.
+        let observed = loop {
+            tokio::select! {
+                biased;
+                _ = &mut wake => {
+                    if shared.closed.load(Ordering::Acquire) {
+                        break 'supervision;
+                    }
+                    continue 'supervision;
+                }
+                Some((generation, signal)) = received.recv() => {
+                    if handle(&shared, generation, signal).await {
+                        retries.failed(&shared);
+                    }
+                }
+                observed = &mut observation => break observed,
+            }
+        };
+        let allowed = allowed(&observed);
         if shared.closed.load(Ordering::Acquire) {
             break;
         }
@@ -428,30 +502,39 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, launch: Launch) {
                     Allowed::Refuse(_) => AgentStopCause::RuntimeUnavailable,
                 };
                 let _ = stop_running(&shared, None, cause).await;
-                serving = None;
                 match &allowed {
-                    Allowed::Refuse(code) => publish(&shared, State::Refused { code: *code }),
+                    Allowed::Refuse(code) => {
+                        if *code == Refusal::SignedOut {
+                            retries = RetryBudget::default();
+                            serving = None;
+                        }
+                        publish(&shared, State::Refused { code: *code });
+                    }
                     // Another profile: the next round starts its own.
                     Allowed::Serve(_) => {
                         publish(&shared, State::Stopped);
-                        retry_after = None;
+                        retries = RetryBudget::default();
                         continue;
                     }
                 }
             }
             (None, Allowed::Refuse(code)) => {
-                retry_after = None;
-                serving = None;
+                // A failed observation is not evidence of a new sign-in. Keep
+                // the same profile's budget through transient runtime failures.
+                if *code == Refusal::SignedOut {
+                    retries = RetryBudget::default();
+                    serving = None;
+                }
                 publish(&shared, State::Refused { code: *code });
             }
             (None, Allowed::Serve(profile)) => {
                 // A refused start waits before it is tried again, unless the
                 // sign-in changed in between.
-                let waiting = retry_after.is_some_and(|at| Instant::now() < at)
-                    && serving.as_deref() == Some(profile.as_str());
-                if !waiting {
+                if serving.as_deref() != Some(profile.as_str()) {
+                    retries = RetryBudget::default();
+                }
+                if !retries.waiting() {
                     serving = Some(profile.clone());
-                    retry_after = None;
                     publish(&shared, State::Starting);
                     if let Err(error) = start(&shared, &launch, profile.clone(), &signals).await {
                         shared.diagnostics.host_failure(
@@ -464,14 +547,12 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, launch: Launch) {
                                 code: Refusal::ServiceFailed,
                             },
                         );
-                        retry_after = Some(Instant::now() + shared.retry);
-                        shared.diagnostics.service(
-                            None,
-                            ServiceFact::AgentRetryScheduled {
-                                delay_ms: shared.retry.as_millis().try_into().unwrap_or(u64::MAX),
-                            },
-                        );
+                        retries.failed(&shared);
                     }
+                } else if let Some(code) = retries.refusal {
+                    // The runtime recovered, but this service's last failure
+                    // still explains why its retry budget is waiting/exhausted.
+                    publish(&shared, State::Refused { code });
                 }
             }
         }
@@ -483,10 +564,7 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, launch: Launch) {
                 _ = &mut deadline => break,
                 Some((generation, signal)) = received.recv() => {
                     if handle(&shared, generation, signal).await {
-                        retry_after = Some(Instant::now() + shared.retry);
-                        shared.diagnostics.service(None, ServiceFact::AgentRetryScheduled {
-                            delay_ms: shared.retry.as_millis().try_into().unwrap_or(u64::MAX),
-                        });
+                        retries.failed(&shared);
                     }
                 }
             }
@@ -669,10 +747,10 @@ mod tests {
             .unwrap(),
             serde_json::json!({"state": "refused", "code": "agent_service_absent"})
         );
-        // A launcher code the column has no word for is a failed start.
+        // Preserve the launcher's actionable root-admission refusal.
         assert_eq!(
             Refusal::from_launcher("agent_root_unmarked"),
-            Refusal::ServiceFailed
+            Refusal::RootUnmarked
         );
         assert_eq!(
             Refusal::from_launcher("agent_signed_out"),
@@ -689,11 +767,248 @@ mod tests {
         assert_ne!(*first, *second);
     }
 
+    #[tokio::test]
+    async fn repeated_start_failures_exhaust_retries_and_profile_change_resets_them() {
+        let source = Arc::new(Mutex::new(observed(true, true, Some("A"))));
+        let current = source.clone();
+        let observe: Observe = Arc::new(move || {
+            let result = lock(&current).clone();
+            Box::pin(async move { result })
+        });
+        let attempts = Arc::new(AtomicU64::new(0));
+        let count = attempts.clone();
+        let launch: Launch = Arc::new(move |_, _| {
+            count.fetch_add(1, Ordering::SeqCst);
+            Err(ApplicationError::new(
+                ErrorCode::SpawnFailed,
+                Operation::Cli,
+            ))
+        });
+        let diagnostics = Arc::new(Diagnostics::default());
+        let supervisor = Supervisor::with_timing(
+            observe,
+            Some(launch),
+            diagnostics.clone(),
+            Duration::from_millis(1),
+            Duration::from_millis(1),
+            Duration::from_millis(2),
+        );
+        supervisor.status();
+        tokio::time::timeout(Duration::from_secs(5), async {
+            while attempts.load(Ordering::SeqCst) < 4 {
+                tokio::time::sleep(Duration::from_millis(5)).await;
+            }
+        })
+        .await
+        .unwrap();
+        tokio::time::sleep(Duration::from_millis(50)).await;
+        assert_eq!(attempts.load(Ordering::SeqCst), 4);
+        assert_eq!(
+            supervisor.status().state,
+            State::Refused {
+                code: Refusal::ServiceFailed
+            }
+        );
+        let facts: Vec<_> = diagnostics
+            .snapshot(u64::MAX)
+            .events
+            .into_iter()
+            .filter_map(|event| event.service)
+            .collect();
+        let delays: Vec<_> = facts
+            .iter()
+            .filter_map(|fact| match fact {
+                ServiceFact::AgentRetryScheduled { delay_ms } => Some(*delay_ms),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(delays, [2, 4, 8]);
+        assert!(
+            facts
+                .iter()
+                .any(|fact| matches!(fact, ServiceFact::AgentRetryExhausted { attempts: 4 }))
+        );
+        // Neither a failed read nor an unavailable runtime creates a new
+        // authorization epoch or replenishes an exhausted attempt budget.
+        for unavailable in [
+            Err(ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)),
+            observed(true, false, Some("A")),
+        ] {
+            *lock(&source) = unavailable;
+            tokio::time::timeout(Duration::from_secs(5), async {
+                while supervisor.status().state
+                    != (State::Refused {
+                        code: Refusal::RuntimeUnavailable,
+                    })
+                {
+                    tokio::time::sleep(Duration::from_millis(2)).await;
+                }
+            })
+            .await
+            .unwrap();
+            *lock(&source) = observed(true, true, Some("A"));
+            tokio::time::timeout(Duration::from_secs(5), async {
+                while supervisor.status().state
+                    != (State::Refused {
+                        code: Refusal::ServiceFailed,
+                    })
+                {
+                    tokio::time::sleep(Duration::from_millis(2)).await;
+                }
+            })
+            .await
+            .unwrap();
+            tokio::time::sleep(Duration::from_millis(30)).await;
+            assert_eq!(attempts.load(Ordering::SeqCst), 4);
+        }
+        supervisor.retry();
+        tokio::time::timeout(Duration::from_secs(5), async {
+            while attempts.load(Ordering::SeqCst) < 8 {
+                tokio::time::sleep(Duration::from_millis(5)).await;
+            }
+        })
+        .await
+        .unwrap();
+        tokio::time::sleep(Duration::from_millis(50)).await;
+        assert_eq!(attempts.load(Ordering::SeqCst), 8);
+        *lock(&source) = observed(true, true, Some("B"));
+        tokio::time::timeout(Duration::from_secs(5), async {
+            while attempts.load(Ordering::SeqCst) < 12 {
+                tokio::time::sleep(Duration::from_millis(5)).await;
+            }
+        })
+        .await
+        .unwrap();
+        supervisor.close().await.unwrap();
+        assert_eq!(attempts.load(Ordering::SeqCst), 12);
+    }
+
+    #[tokio::test]
+    async fn explicit_retry_still_requires_canonical_sign_in() {
+        let calls = Arc::new(AtomicU64::new(0));
+        let count = calls.clone();
+        let observe: Observe = Arc::new(move || {
+            count.fetch_add(1, Ordering::SeqCst);
+            Box::pin(async { observed(false, true, Some("A")) })
+        });
+        let launch: Launch = Arc::new(|_, _| panic!("retry cannot authorize a signed-out profile"));
+        let supervisor = Supervisor::with_timing(
+            observe,
+            Some(launch),
+            Arc::new(Diagnostics::default()),
+            Duration::from_millis(1),
+            Duration::from_secs(60),
+            Duration::from_millis(1),
+        );
+        supervisor.status();
+        tokio::time::timeout(Duration::from_secs(5), async {
+            while supervisor.status().state
+                != (State::Refused {
+                    code: Refusal::SignedOut,
+                })
+            {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .unwrap();
+        let before = calls.load(Ordering::SeqCst);
+        supervisor.retry();
+        tokio::time::timeout(Duration::from_secs(5), async {
+            while calls.load(Ordering::SeqCst) == before {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .unwrap();
+        assert_eq!(
+            supervisor.status().state,
+            State::Refused {
+                code: Refusal::SignedOut
+            }
+        );
+        supervisor.close().await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn closing_does_not_wait_for_a_pending_status_read() {
+        let entered = Arc::new(Notify::new());
+        let notify = entered.clone();
+        let observe: Observe = Arc::new(move || {
+            let notify = notify.clone();
+            Box::pin(async move {
+                notify.notify_one();
+                std::future::pending().await
+            })
+        });
+        let launch: Launch = Arc::new(|_, _| panic!("pending status cannot authorize launch"));
+        let supervisor = Supervisor::new(observe, Some(launch), Arc::new(Diagnostics::default()));
+        supervisor.status();
+        entered.notified().await;
+        tokio::time::timeout(Duration::from_secs(1), supervisor.close())
+            .await
+            .unwrap()
+            .unwrap();
+    }
+
     #[cfg(windows)]
     mod live {
         use super::*;
         use crate::agent::runner::tests::{alive, launcher_script, powershell, reported};
         use tauri::ipc::InvokeResponseBody;
+
+        #[tokio::test(flavor = "multi_thread")]
+        async fn launcher_refusal_is_handled_while_status_read_is_pending() {
+            let calls = Arc::new(AtomicU64::new(0));
+            let count = calls.clone();
+            let observe: Observe = Arc::new(move || {
+                let first = count.fetch_add(1, Ordering::SeqCst) == 0;
+                Box::pin(async move {
+                    if first {
+                        observed(true, true, Some("A"))
+                    } else {
+                        std::future::pending().await
+                    }
+                })
+            });
+            let launch: Launch = Arc::new(|_, _| {
+                Ok(Prepared {
+                    command: powershell(
+                        "$null = [Console]::In.ReadLine(); Start-Sleep -Milliseconds 500; [Console]::Out.WriteLine('{\"event\":\"agent_refused\",\"code\":\"agent_root_unmarked\"}'); exit 3",
+                    ),
+                })
+            });
+            let supervisor = Supervisor::with_timing(
+                observe,
+                Some(launch),
+                Arc::new(Diagnostics::default()),
+                Duration::from_secs(5),
+                Duration::from_millis(5),
+                Duration::from_secs(60),
+            );
+            supervisor.status();
+            tokio::time::timeout(Duration::from_secs(20), async {
+                loop {
+                    if supervisor.status().state
+                        == (State::Refused {
+                            code: Refusal::RootUnmarked,
+                        })
+                        && lock(&supervisor.shared.running).is_none()
+                    {
+                        break;
+                    }
+                    tokio::time::sleep(Duration::from_millis(10)).await;
+                }
+            })
+            .await
+            .unwrap();
+            assert!(
+                calls.load(Ordering::SeqCst) >= 2,
+                "the second status read is still pending"
+            );
+            assert!(supervisor.gateway().is_none());
+            supervisor.close().await.unwrap();
+        }
 
         struct Rig {
             supervisor: Supervisor,
@@ -926,7 +1241,7 @@ mod tests {
             let deadline = Instant::now() + Duration::from_secs(30);
             while supervisor.status().state
                 != (State::Refused {
-                    code: Refusal::ServiceFailed,
+                    code: Refusal::RootUnmarked,
                 })
             {
                 assert!(Instant::now() < deadline);

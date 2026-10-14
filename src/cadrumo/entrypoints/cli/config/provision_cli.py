@@ -15,9 +15,9 @@ The boundaries between the actions are the design:
 * **setup** — install (only with ``--confirm``), start, pull, load and verify as one run.
 
 Every verb runs, in this process, the application function its registered
-operation runs for the terminal interface and an agent, and renders the public
+operation runs for the terminal interface, and renders the public
 result that operation publishes. The work and the result therefore cannot
-differ between the three; this module only binds the host adapters, parses the
+differ between them; this module only binds the host adapters, parses the
 verb's options and projects the result. Provisioning the machine's runtime
 needs no profile session.
 

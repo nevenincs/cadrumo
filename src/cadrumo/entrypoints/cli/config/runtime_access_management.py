@@ -252,7 +252,6 @@ def _scope_lines(scope: AutomationScopeProjection) -> tuple[str, ...]:
     categories = ",".join(f"{item.destination_id}/{item.category.value}" for item in scope.disclosure_categories)
     return (
         f"operations\t{','.join(scope.operations)}",
-        f"all_agent_operations\t{str(scope.all_agent_operations).lower()}",
         f"actions\t{','.join(item.value for item in scope.actions)}",
         f"disclosures\t{scope.disclosure_count}\t{scope.disclosure_digest}",
         *(f"disclosure_category_count\t{item.category.value}\t{item.count}" for item in scope.disclosure_summary),

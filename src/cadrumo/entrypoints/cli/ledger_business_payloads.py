@@ -346,7 +346,7 @@ class EvidenceConsentListResult(OutputSchema):
 
     ``transmitted_bytes_are_unrecallable`` is carried in the payload rather than
     only in the rendered text. A caveat that exists only in prose is invisible
-    to the agent or script consuming this envelope, and this is the one caveat
+    to the script consuming this envelope, and this is the one caveat
     on this surface that must never be missed.
     """
 

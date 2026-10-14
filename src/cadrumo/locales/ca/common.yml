@@ -2016,7 +2016,6 @@ tui:
   automation_inventory:
     access_lost: Aquesta sessió del perfil ja no està disponible.
     actions: Accions
-    all_agent_operations: qualsevol operació que pugui executar un agent
     all_periods: Tots els períodes de declaració
     approve: Aprovar la sol·licitud
     client: Client
@@ -2061,9 +2060,6 @@ tui:
     actions: Accions
     capability_note: Les operacions llistades descriuen capacitats, no la disponibilitat
       actual.
-    categories: 'L''agent llegeix i canvia els valors del perfil. Deixa''l llegir
-      també:'
-    category_tax_values: Valors fiscals
     change_scope: Canvia l'abast
     complete: Aprovat i completat
     credential_reference: UUID de la referència de credencial protegida existent
@@ -2095,9 +2091,6 @@ tui:
     title: Sol·licita accés a l'API
     unattended: Permet l'ús sense supervisió
     uncertain: Resultat desconegut; conserva l'ID de la sol·licitud
-    use: Ús de la clau
-    use_agent: Per a un agent (MCP)
-    use_custom: Abast personalitzat
     waiting: S'està enviant la sol·licitud
   declarations:
     availability:
@@ -3922,8 +3915,8 @@ tui:
         choice: L'operació espera una tria.
         input: L'operació espera una dada.
       no_answer: 'Aquest tipus de petició encara no es pot respondre, ni aquí ni des
-        de la línia d''ordres ni des d''MCP: només es pot aplicar o rebutjar una revisió.
-        Pots cancel·lar l''operació o deixar-la en espera.'
+        de la línia d''ordres: només es pot aplicar o rebutjar una revisió. Pots cancel·lar
+        l''operació o deixar-la en espera.'
       presentation: Demana
     palette:
       help: Obre el formulari de sol·licitud d'aquesta operació

@@ -12,7 +12,7 @@ against itself, and the manifest tests check it against the same
 contract. Neither resolves the real Typer tree, so a whole family
 (``config google``, ``config check``, ``config reset``) or a sub-verb (every
 ``app live`` child but ``filed``) could be — and was — absent from the manifest
-while the CLI mounted it, handing an agent an authoritative-looking tool map with
+while the CLI mounted it, handing its reader an authoritative-looking tool map with
 holes.
 
 The gate forces every lazily-registered subtree to materialise, walks the two
@@ -101,8 +101,7 @@ def _resolve_live_surface() -> dict[str, dict[str, frozenset[str]]]:
         families: dict[str, frozenset[str]] = {}
         for child_name, child_cmd in _direct_children(root_cmd).items():
             # A family none of whose leaves prints a result envelope hands its
-            # standard streams to another process (the terminal interface, the
-            # agent launcher protocol). It is not an operator-service family, and
+            # standard streams to another process (the terminal interface). It is not an operator-service family, and
             # the manifest the contract feeds cannot list it.
             if (root_name, child_name) in envelope_free:
                 continue
@@ -124,7 +123,7 @@ def test_operator_surface_contract_covers_the_live_tree() -> None:
     """The contract declares exactly the mounted families.
 
     Symmetric difference after excluding the separate TUI launcher: a ``root -> child`` group/leaf mounted
-    by the CLI but absent from ``command_families`` (the agent's manifest would
+    by the CLI but absent from ``command_families`` (the manifest would
     omit it), or a contract family with no live mount (a dead manifest entry).
 
     The sub-verb half of this gate is gone because its subject is gone. A family

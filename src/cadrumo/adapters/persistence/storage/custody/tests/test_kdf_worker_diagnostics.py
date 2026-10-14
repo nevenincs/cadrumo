@@ -63,7 +63,7 @@ def _summary(caplog: pytest.LogCaptureFixture) -> tuple[logging.LogRecord, dict[
         for record in caplog.records
         if record.name == supervision.__name__ and record.msg == "kdf_worker_lifecycle"
     ]
-    assert len(records) == 1
+    assert len(records) == 1, [(r.name, r.msg) for r in caplog.records]
     record = records[0]
     rendered = DiagnosticFormatter(LOG_FILE_FORMAT).format(record)
     _, suffix = rendered.split(" | ", 1)
@@ -78,7 +78,7 @@ def _summary(caplog: pytest.LogCaptureFixture) -> tuple[logging.LogRecord, dict[
 def test_success_emits_once_after_cleanup_with_monotonic_spans_and_existing_scope(
     simulated_worker: _SupervisedKdfWorker, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
-    caplog.set_level(logging.INFO, logger=supervision.__name__)
+    caplog.set_level(logging.DEBUG, logger=supervision.__name__)
     ticks = count(step=1_000_000)
     monkeypatch.setattr(supervision.time, "monotonic_ns", lambda: next(ticks))
     cleanup_complete = False
@@ -101,7 +101,11 @@ def test_success_emits_once_after_cleanup_with_monotonic_spans_and_existing_scop
     assert context["outcome"] == context["cleanup_status"] == "completed"
     assert context["stage"] is None and context["error_type"] is None
     assert context["cleanup_error_type"] is None and context["cleanup_incomplete"] is False
-    assert all(context[f"kdf_{phase}_elapsed_ms"] == 1.0 for phase in _PHASE_NAMES)
+    assert all(context[f"kdf_{phase}_elapsed_ms"] == 1.0 for phase in _PHASE_NAMES if phase != "cleanup")
+    assert context["kdf_cleanup_elapsed_ms"] == 5.0
+    assert context["kdf_cleanup_process_elapsed_ms"] is None
+    assert context["kdf_cleanup_pipes_elapsed_ms"] == 1.0
+    assert context["kdf_cleanup_directory_elapsed_ms"] == 1.0
     assert cast("float", context["elapsed_seconds"]) >= 0.007
 
 
@@ -114,7 +118,7 @@ def test_failure_retains_the_exact_phase_type_and_primary_without_private_messag
     monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    caplog.set_level(logging.INFO, logger=supervision.__name__)
+    caplog.set_level(logging.DEBUG, logger=supervision.__name__)
     primary = TimeoutError(_PRIVATE) if stage in {"ready_wait", "result_wait", "clean_exit"} else ValueError(_PRIVATE)
 
     def fail(*_args: object, **_kwargs: object) -> None:
@@ -144,7 +148,7 @@ def test_failure_retains_the_exact_phase_type_and_primary_without_private_messag
     assert escaped.value is primary
     _, context = _summary(caplog)
     assert context["stage"] == stage and context["error_type"] == type(primary).__name__
-    assert context["outcome"] == "failed"
+    assert context["outcome"] == ("sample_rejected" if stage == "result_wait" else "failed")
     assert context[f"kdf_{stage}_elapsed_ms"] is not None and context["kdf_cleanup_elapsed_ms"] is not None
     if stage in {"start", "ready_wait", "ready_attestation"}:
         assert context["kdf_request_write_elapsed_ms"] is None
@@ -155,7 +159,7 @@ def test_failure_retains_the_exact_phase_type_and_primary_without_private_messag
 def test_invalid_result_has_validation_failure_after_the_existing_clean_exit_sequence(
     simulated_worker: _SupervisedKdfWorker, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
-    caplog.set_level(logging.INFO, logger=supervision.__name__)
+    caplog.set_level(logging.DEBUG, logger=supervision.__name__)
     monkeypatch.setattr(
         _SupervisedKdfWorker, "_read_response_frame", lambda _worker: (KDF_FRAME_CONTROL, _PRIVATE.encode())
     )
@@ -170,7 +174,7 @@ def test_invalid_result_has_validation_failure_after_the_existing_clean_exit_seq
 def test_refused_result_does_not_disclose_secret_or_associated_data(
     simulated_worker: _SupervisedKdfWorker, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
-    caplog.set_level(logging.INFO, logger=supervision.__name__)
+    caplog.set_level(logging.DEBUG, logger=supervision.__name__)
     wrapped = ProfileCustodyWrappedDek(
         nonce_b64=base64.b64encode(b"n" * 12).decode(),
         ciphertext_b64=base64.b64encode(b"c" * 32).decode(),
@@ -198,7 +202,7 @@ def test_cleanup_failure_still_escapes_and_records_original_failure_separately(
     monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    caplog.set_level(logging.INFO, logger=supervision.__name__)
+    caplog.set_level(logging.DEBUG, logger=supervision.__name__)
     primary = TimeoutError(_PRIVATE)
     cleanup = OSError(_PRIVATE)
 
@@ -267,7 +271,7 @@ def test_normal_sink_exception_is_nonfatal_after_successful_cleanup(
 def test_returned_cleanup_without_confirmed_child_exit_is_unconfirmed(
     simulated_worker: _SupervisedKdfWorker, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
-    caplog.set_level(logging.INFO, logger=supervision.__name__)
+    caplog.set_level(logging.DEBUG, logger=supervision.__name__)
 
     class UnconfirmedProcess:
         returncode = None

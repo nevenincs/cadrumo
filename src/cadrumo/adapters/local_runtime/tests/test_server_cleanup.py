@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import time
 from concurrent.futures import Future, ThreadPoolExecutor
 from threading import Event, get_ident
 from typing import cast, override
+from uuid import uuid4
 
 import pytest
 
@@ -17,6 +19,7 @@ from cadrumo.application.runtime.contracts import (
     RuntimeRefusalError,
     RuntimeShutdownIncompleteError,
 )
+from cadrumo.application.runtime.transport import RuntimeConnectionContext
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
 
 from ..runtime_transport_cleanup import RuntimeTransportCleanup, close_runtime_transport_after_failure
@@ -96,6 +99,30 @@ def _server(channel: _Channel, *, reject: bool = False) -> tuple[RetainedRuntime
     stop = Event()
     listener = _Listener(channel, stop, reject_on_accept=reject)
     return RetainedRuntimeTransportServer(listener, product_version="cleanup-test", stop=stop), listener
+
+
+@pytest.mark.parametrize("reason", [RuntimeRefusalCode.CONNECTION_CLOSED, RuntimeRefusalCode.INVALID_FRAME])
+def test_idle_peer_close_is_completion_but_other_refusals_propagate(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture, reason: RuntimeRefusalCode
+) -> None:
+    channel = _Channel()
+    server, _ = _server(channel)
+    context = RuntimeConnectionContext(uuid4(), server.identity.boot_id, channel.peer)
+
+    def read_ready() -> bool:
+        raise RuntimeRefusalError(reason)
+
+    monkeypatch.setattr(channel, "read_ready", read_ready)
+    with caplog.at_level(logging.DEBUG):
+        if reason is RuntimeRefusalCode.CONNECTION_CLOSED:
+            server._serve_connection_requests(channel, context)
+            assert "runtime_connection_closed" in caplog.text
+            assert "runtime_connection_refused" not in caplog.text
+        else:
+            with pytest.raises(RuntimeRefusalError) as caught:
+                server._serve_connection_requests(channel, context)
+            assert caught.value.reason is reason
+    assert not server.stop.is_set()
 
 
 @pytest.mark.parametrize("reject", ["stopping", "capacity"])

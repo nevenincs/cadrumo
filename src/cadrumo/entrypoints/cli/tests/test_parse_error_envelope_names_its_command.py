@@ -1,7 +1,6 @@
 """A parse-time refusal names the command when click already resolved one.
 
-The shared envelope spine carries ``command`` so an operator -- which for this
-CLI is an autonomous agent reading JSON -- can tell what failed from the
+The shared envelope spine carries ``command`` so an operator reading JSON can tell what failed from the
 document alone. Runtime refusals populated it; argv-parse refusals did not, on
 the reasoning that no command has resolved yet at parse time.
 
@@ -42,7 +41,7 @@ def _command_is_live(dotted: str) -> bool:
 def test_an_unknown_option_names_the_command_it_was_given_to() -> None:
     """DISCRIMINATING: the command resolved, so the spine must say which.
 
-    This is the shape an agent hits constantly -- a real command with one wrong
+    This is the shape a caller hits constantly -- a real command with one wrong
     flag -- and it was the shape reporting null.
 
     THE COMMAND HAS TO EXIST FOR THIS TO BE THAT SHAPE. The case previously

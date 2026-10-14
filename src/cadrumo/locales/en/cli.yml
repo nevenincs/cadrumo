@@ -1,13 +1,5 @@
 cli:
   app:
-    agent:
-      app_help: Serve the hosted assistant for your signed-in profile.
-      serve:
-        agent_source_help: Absolute path of a cadrumo-agent source tree to run the
-          assistant from. Without it, the assistant packaged with Cadrumo runs.
-        help: Start the hosted assistant for your stored sign-in and keep it running
-          until standard input closes. Reads one JSON line with the gateway bearer
-          on standard input and writes JSON event lines on standard output.
     ledger:
       account:
         account_id_help: The own account id, for example acc-01.
@@ -1323,7 +1315,7 @@ cli:
         actor_help: Actor responsible for the action (free-text label up to 64 chars)
         actor_too_long: The --by label must be at most {limit} characters; received
           {length}. It names the actor on the audit event this command records, so
-          give a short name for yourself or the agent.
+          give a short name for yourself.
         allow_not_applicable_help: Create the declaration even when the modelo does
           not apply to the active profile's taxpayer type.
         amend_help: Build a correction of a return filed outside Cadrumo. Requires
@@ -1942,11 +1934,8 @@ cli:
           requested grant change.
         automation_change_proposal_required: Supply the grant-change proposal through
           --secrets-stdin or --secrets-fd.
-        automation_create_agent_categories: --category applies only with --use agent.
-        automation_create_proposal_required: Choose --use agent, or supply the enrollment
-          proposal through --secrets-stdin or --secrets-fd.
-        automation_create_use_conflict: --use agent builds the proposal itself; do
-          not also supply one through --secrets-stdin or --secrets-fd.
+        automation_create_proposal_required: Supply the enrollment proposal through
+          --secrets-stdin or --secrets-fd.
         echo_suppression_unavailable: This terminal cannot suppress echo, so the secret
           would be visible on screen; use --secrets-stdin or --secrets-fd instead.
         new_passphrase_mismatch: The new passphrase and confirmation do not match.
@@ -2097,13 +2086,13 @@ cli:
           only its own process; supply profile authentication again to the next process.
         session_not_persisted_logon: 'Signed in for this command only: Windows Credential
           Manager refused this logon session (error 1312) because it holds no Windows
-          credentials, so no process in it can keep or follow a sign-in, and cadrumo-mcp
-          and later commands cannot use it. Run Cadrumo from your Windows desktop
-          sign-in, or pass the profile password to each command with --profile-secrets-stdin.'
+          credentials, so no process in it can keep or follow a sign-in, and later
+          commands cannot use it. Run Cadrumo from your Windows desktop sign-in, or
+          pass the profile password to each command with --profile-secrets-stdin.'
         session_not_persisted_no_backend: 'Signed in for this command only: no OS
           keychain is available to this process, so the sign-in cannot be kept for
-          cadrumo-mcp or later commands. Enable the system keychain for this account,
-          or pass the profile password to each command with --profile-secrets-stdin.'
+          later commands. Enable the system keychain for this account, or pass the
+          profile password to each command with --profile-secrets-stdin.'
         session_not_persisted_unconfirmed: 'Signed in for this command only: the runtime
           did not keep this sign-in, although this process can use the OS keychain.
           Either the sign-in changed while this login completed, or the runtime runs
@@ -2113,8 +2102,8 @@ cli:
         at a terminal, or pass --secrets-stdin or --secrets-fd.
       passphrase_prompt: 'Profile passphrase: '
     logout:
-      help: Sign out of this profile across human sessions on this device. Agent access
-        and AEAT sessions stay active.
+      help: Sign out of this profile across human sessions on this device. AEAT sessions
+        stay active.
       notices:
         already_logged_out: No profile is selected; there is nothing to sign out.
     passphrase:
@@ -2190,13 +2179,9 @@ cli:
           help: Request rotation, renewal or a scope change for an existing API grant.
           kind_help: 'The grant change: rotate, renew or change_scope.'
         create:
-          category_help: 'A further data category the agent may read: tax_values.'
-          help: Issue an API key. With --use agent it is a key for an agent over MCP
-            that reads and changes the profile's values, plus any --category you add;
-            otherwise supply a full proposal through --secrets-stdin or --secrets-fd.
-            The key reaches protected storage after your separate approval.
-          use_help: 'What the key is for: agent, a key for an agent over MCP. It always
-            reads and changes the profile''s values.'
+          help: Issue an API key from a full proposal supplied through --secrets-stdin
+            or --secrets-fd. The key reaches protected storage after your separate
+            approval.
         decline:
           digest_help: Exact review digest shown by inspect.
           help: Decline the exact reviewed request.
@@ -2475,48 +2460,6 @@ cli:
       validate_name_help: Optional profile label to validate; defaults to the active
         profile.
       view_help: Show one profile's facts (defaults to the active profile)
-    provider:
-      base_url_help: Store this https base URL with the key instead of the provider's
-        default.
-      clear_base_url_help: Drop the stored base URL and use the provider's default
-        again.
-      expected_revision_help: The revision your last status read reported for this
-        provider; if the provider changed since then, the change is refused.
-      help: Manage the model-provider credentials the agent uses in this profile.
-      provider_id_help: The provider id as cadrumo-agent declares it; run `aeat config
-        provider status` to see them.
-      refused:
-        base_url_rejected: 'The base URL was refused: this provider takes none, it
-          is not an https URL, or this provider needs one and none would be stored.
-          Nothing was changed.'
-        catalog_unavailable: cadrumo-agent could not report its providers, so there
-          is nothing to read or change. Check that the agent is installed.
-        committed_readback_failed: The change was saved, but reading it back failed.
-          Read the status before you change this provider again.
-        invalid_key_format: That is not in a form a provider key can take. Nothing
-          was stored.
-        not_signed_in: Sign in to this profile before you manage its providers.
-        person_act_required: Only you can change a provider credential, from the command
-          line or the terminal interface. An agent cannot.
-        profile_locked: This profile is locked or its session has ended. Sign in again
-          and retry.
-        revision_conflict: This provider changed since your status read. Read the
-          status again and send the revision it reports.
-        runtime_unavailable: The background runtime did not take the request, so nothing
-          was read or changed. Check that the background-services manager is running,
-          then try again.
-        unknown: The request was refused. Check the provider id against `aeat config
-          provider status` and that this provider takes a key. Nothing was changed.
-      remove_help: 'Turn a provider off: its stored key is dropped and no development
-        environment key is used for it.'
-      reset_help: Return a provider to unset. In a development build its environment
-        key applies again; otherwise it stays unavailable until you set a key.
-      secret_prompt: Provider key
-      set_help: Store or replace a provider's key. The key is read from standard input
-        or a prompt that does not echo, never from an argument, and the provider does
-        not check it until its first use.
-      status_help: List every provider cadrumo-agent declares, with its masked status
-        and the revision a change must send back.
     provision:
       browser:
         help: Download the Chromium build that AEAT browser automation launches. Does
@@ -2634,11 +2577,6 @@ cli:
         stays setup-incomplete; `aeat config profile complete-setup` names the facts
         it still needs. Sufficient on its own; combine with --accept-defaults to fill
         the rest from descriptor defaults.
-    sign_in_hold:
-      help: Hold a profile's sign-in, unsaved, while standard input stays open, and
-        approve which agent connections follow it.
-      name_help: Profile UUID or exact label to sign in to; omit to use the selected
-        profile
     sign_in_status:
       help: Check your sign-in status without resuming or extending it.
     status:

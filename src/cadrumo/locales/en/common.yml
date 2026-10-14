@@ -1963,7 +1963,6 @@ tui:
   automation_inventory:
     access_lost: This profile session is no longer available.
     actions: Actions
-    all_agent_operations: every operation an agent may run
     all_periods: All filing periods
     approve: Approve request
     client: Client
@@ -2005,8 +2004,6 @@ tui:
   automation_request:
     actions: Actions
     capability_note: Listed operations describe capabilities, not current readiness.
-    categories: 'The agent reads and changes the profile''s values. Also let it read:'
-    category_tax_values: Tax values
     change_scope: Change scope
     complete: Approved and completed
     credential_reference: Existing protected credential reference UUID
@@ -2038,9 +2035,6 @@ tui:
     title: Request API access
     unattended: Allow unattended use
     uncertain: Outcome unknown; retain request ID
-    use: Key use
-    use_agent: For an agent (MCP)
-    use_custom: Custom scope
     waiting: Submitting request
   declarations:
     availability:
@@ -3828,8 +3822,8 @@ tui:
         choice: The operation is waiting for a choice.
         input: The operation is waiting for an input.
       no_answer: 'This kind of request cannot be answered yet, here or from the command
-        line or MCP: only a review can be applied or rejected. You can cancel the
-        operation or leave it waiting.'
+        line: only a review can be applied or rejected. You can cancel the operation
+        or leave it waiting.'
       presentation: Asks for
     palette:
       help: Open this operation's request form

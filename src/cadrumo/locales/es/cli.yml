@@ -1,15 +1,5 @@
 cli:
   app:
-    agent:
-      app_help: Sirve el asistente alojado para tu perfil con sesión iniciada.
-      serve:
-        agent_source_help: Ruta absoluta de un árbol de código de cadrumo-agent desde
-          el que ejecutar el asistente. Si no la indicas, se ejecuta el asistente
-          incluido en Cadrumo.
-        help: Inicia el asistente alojado con tu sesión guardada y mantenlo en marcha
-          hasta que se cierre la entrada estándar. Lee una línea JSON con el token
-          de la pasarela en la entrada estándar y escribe líneas JSON de eventos en
-          la salida estándar.
     ledger:
       account:
         account_id_help: El identificador de la cuenta propia, por ejemplo acc-01.
@@ -1436,8 +1426,7 @@ cli:
         actor_help: Actor responsable de la acción (etiqueta libre de hasta 64 caracteres)
         actor_too_long: La etiqueta --by debe tener como máximo {limit} caracteres;
           se recibieron {length}. Identifica al actor del evento de auditoría que
-          registra este comando, así que indica un nombre corto para ti o para el
-          agente.
+          registra este comando, así que indica un nombre corto para ti.
         allow_not_applicable_help: Crear la declaración aunque el modelo no aplique
           al tipo de contribuyente del perfil activo.
         amend_help: Construir una corrección de una declaración presentada fuera de
@@ -2089,11 +2078,8 @@ cli:
           con el cambio de autorización solicitado.
         automation_change_proposal_required: Proporciona la propuesta de cambio mediante
           --secrets-stdin o --secrets-fd.
-        automation_create_agent_categories: --category solo se aplica con --use agent.
-        automation_create_proposal_required: Elige --use agent, o proporciona la propuesta
-          de autorización mediante --secrets-stdin o --secrets-fd.
-        automation_create_use_conflict: --use agent construye la propuesta por sí
-          mismo; no proporciones otra mediante --secrets-stdin o --secrets-fd.
+        automation_create_proposal_required: Proporciona la propuesta de autorización
+          mediante --secrets-stdin o --secrets-fd.
         echo_suppression_unavailable: Esta terminal no puede ocultar lo que se escribe,
           por lo que el secreto quedaría visible en pantalla; usa --secrets-stdin
           o --secrets-fd.
@@ -2265,14 +2251,14 @@ cli:
         session_not_persisted_logon: 'Sesión iniciada solo para este comando: el Administrador
           de credenciales de Windows rechazó esta sesión de Windows (error 1312) porque
           no contiene credenciales de Windows, así que ningún proceso de esa sesión
-          puede conservar ni seguir un inicio de sesión, y cadrumo-mcp y los comandos
-          siguientes no pueden usarlo. Ejecuta Cadrumo desde tu sesión de escritorio
-          de Windows o pasa la contraseña del perfil a cada comando con --profile-secrets-stdin.'
+          puede conservar ni seguir un inicio de sesión, y los comandos siguientes
+          no pueden usarlo. Ejecuta Cadrumo desde tu sesión de escritorio de Windows
+          o pasa la contraseña del perfil a cada comando con --profile-secrets-stdin.'
         session_not_persisted_no_backend: 'Sesión iniciada solo para este comando:
           este proceso no tiene ningún almacén de claves del sistema disponible, así
-          que el inicio de sesión no se puede conservar para cadrumo-mcp ni para los
-          comandos siguientes. Activa el almacén de claves del sistema para esta cuenta
-          o pasa la contraseña del perfil a cada comando con --profile-secrets-stdin.'
+          que el inicio de sesión no se puede conservar para los comandos siguientes.
+          Activa el almacén de claves del sistema para esta cuenta o pasa la contraseña
+          del perfil a cada comando con --profile-secrets-stdin.'
         session_not_persisted_unconfirmed: 'Sesión iniciada solo para este comando:
           el runtime no conservó este inicio de sesión, aunque este proceso puede
           usar el almacén de claves del sistema. O bien el inicio de sesión cambió
@@ -2285,7 +2271,7 @@ cli:
       passphrase_prompt: 'Contraseña del perfil: '
     logout:
       help: Cierra la sesión de este perfil en todas las sesiones de usuario de este
-        dispositivo. El acceso de los agentes y las sesiones de la AEAT siguen activos.
+        dispositivo. Las sesiones de la AEAT siguen activas.
       notices:
         already_logged_out: No hay ningún perfil seleccionado; no hay ninguna sesión
           que cerrar.
@@ -2372,14 +2358,9 @@ cli:
             API existente.
           kind_help: 'Cambio de autorización: rotate, renew o change_scope.'
         create:
-          category_help: 'Otra categoría de datos que el agente puede leer: tax_values.'
-          help: Emite una clave API. Con --use agent es una clave para un agente por
-            MCP que lee y cambia los valores del perfil, más cualquier --category
-            que añadas; si no, proporciona una propuesta completa mediante --secrets-stdin
-            o --secrets-fd. La clave llega al almacenamiento protegido tras tu aprobación
-            por separado.
-          use_help: 'Para qué es la clave: agent, una clave para un agente por MCP.
-            Siempre lee y cambia los valores del perfil.'
+          help: Emite una clave API a partir de una propuesta completa proporcionada
+            mediante --secrets-stdin o --secrets-fd. La clave llega al almacenamiento
+            protegido tras tu aprobación por separado.
         decline:
           digest_help: Huella exacta de revisión mostrada por inspect.
           help: Rechazar la solicitud exacta revisada.
@@ -2679,52 +2660,6 @@ cli:
       validate_name_help: Etiqueta opcional del perfil a validar; por defecto el perfil
         activo.
       view_help: Mostrar los hechos de un perfil (por defecto el perfil activo)
-    provider:
-      base_url_help: Guarda esta URL base https con la clave en lugar de la predeterminada
-        del proveedor.
-      clear_base_url_help: Descarta la URL base guardada y vuelve a usar la predeterminada
-        del proveedor.
-      expected_revision_help: La revisión que indicó tu última lectura del estado
-        para este proveedor; si el proveedor ha cambiado desde entonces, se rechaza
-        el cambio.
-      help: Gestiona las credenciales de los proveedores de modelos que usa el agente
-        en este perfil.
-      provider_id_help: El identificador del proveedor tal como lo declara cadrumo-agent;
-        ejecuta `aeat config provider status` para verlos.
-      refused:
-        base_url_rejected: 'Se ha rechazado la URL base: este proveedor no admite
-          ninguna, no es una URL https, o este proveedor necesita una y no quedaría
-          ninguna guardada. No se ha cambiado nada.'
-        catalog_unavailable: cadrumo-agent no ha podido indicar sus proveedores, así
-          que no hay nada que leer ni cambiar. Comprueba que el agente está instalado.
-        committed_readback_failed: El cambio se ha guardado, pero no se ha podido
-          volver a leer. Lee el estado antes de volver a cambiar este proveedor.
-        invalid_key_format: Eso no tiene la forma de una clave de proveedor. No se
-          ha guardado nada.
-        not_signed_in: Inicia sesión en este perfil antes de gestionar sus proveedores.
-        person_act_required: Solo tú puedes cambiar la credencial de un proveedor,
-          desde la línea de comandos o la interfaz de terminal. Un agente no puede.
-        profile_locked: Este perfil está bloqueado o su sesión ha terminado. Vuelve
-          a iniciar sesión y reinténtalo.
-        revision_conflict: Este proveedor ha cambiado desde tu lectura del estado.
-          Vuelve a leer el estado y envía la revisión que indique.
-        runtime_unavailable: El servicio en segundo plano no aceptó la solicitud,
-          así que no se ha leído ni cambiado nada. Comprueba que el gestor de servicios
-          en segundo plano está en marcha y vuelve a intentarlo.
-        unknown: Se ha rechazado la solicitud. Comprueba el identificador del proveedor
-          con `aeat config provider status` y que este proveedor admite una clave.
-          No se ha cambiado nada.
-      remove_help: 'Desactiva un proveedor: se descarta su clave guardada y no se
-        usa para él ninguna clave del entorno de desarrollo.'
-      reset_help: Devuelve un proveedor al estado sin configurar. En una compilación
-        de desarrollo vuelve a aplicarse su clave del entorno; si no, sigue sin estar
-        disponible hasta que guardes una clave.
-      secret_prompt: Clave del proveedor
-      set_help: Guarda o sustituye la clave de un proveedor. La clave se lee de la
-        entrada estándar o de una solicitud sin eco, nunca de un argumento, y el proveedor
-        no la comprueba hasta su primer uso.
-      status_help: Muestra todos los proveedores que declara cadrumo-agent, con su
-        estado enmascarado y la revisión que debe devolver un cambio.
     provision:
       browser:
         help: Descarga la versión del navegador que abre la automatización de la AEAT.
@@ -2853,11 +2788,6 @@ cli:
         config profile complete-setup` indica los datos que aún le faltan. Suficiente
         por sí solo; combínalo con --accept-defaults para rellenar el resto con los
         valores por defecto.
-    sign_in_hold:
-      help: Mantén la sesión de un perfil, sin guardarla, mientras la entrada estándar
-        siga abierta, y aprueba qué conexiones de agentes la siguen.
-      name_help: UUID o etiqueta exacta del perfil en el que iniciar sesión; omítelo
-        para usar el perfil seleccionado
     sign_in_status:
       help: Comprueba si has iniciado sesión sin reanudarla ni prolongarla.
     status:

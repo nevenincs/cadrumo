@@ -94,6 +94,7 @@ pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
 pub fn commands<R: Runtime>() -> Commands<R> {
     crate::app::commands![
         agent_status,
+        agent_retry,
         agent_status_subscribe,
         agent_status_unsubscribe,
         agent_provider_catalog,
@@ -129,6 +130,12 @@ fn refused<T>(code: &str) -> std::result::Result<T, Refused> {
 #[tauri::command]
 async fn agent_status(host: State<'_, Arc<AgentHost>>) -> Result<Status> {
     Ok(host.supervisor.status())
+}
+
+#[tauri::command]
+async fn agent_retry(host: State<'_, Arc<AgentHost>>) -> Result<()> {
+    host.supervisor.retry();
+    Ok(())
 }
 
 #[tauri::command]

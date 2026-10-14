@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from logging import ERROR
+from logging import DEBUG, ERROR
 from typing import TYPE_CHECKING
 
 from ...core.diagnostic_log import diagnostic_error_fields, diagnostic_event, diagnostic_process, diagnostic_scope
@@ -66,7 +66,7 @@ def main(
 
     with diagnostic_process("tui"), diagnostic_scope():
         configure_logging()
-        diagnostic_event(_LOGGER, "tui_process_started", fields={"headless": headless})
+        diagnostic_event(_LOGGER, "tui_process_started", fields={"headless": headless}, level=DEBUG)
         try:
             from .installed_session import run_installed_workbench_session
 
@@ -85,6 +85,7 @@ def main(
                 _LOGGER,
                 "tui_process_exited",
                 fields={"exit_code": status, "outcome": "completed" if status == 0 else "refused"},
+                level=DEBUG if status == 0 else ERROR,
             )
         finally:
             # The scrubber may borrow shared authority; release after the final

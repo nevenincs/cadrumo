@@ -7,6 +7,7 @@ import json
 import logging
 import os
 import sys
+import threading
 import tracemalloc
 from io import StringIO
 from threading import Barrier
@@ -16,6 +17,7 @@ import pytest
 
 from ..diagnostic_log import (
     DiagnosticFormatter,
+    diagnostic_event,
     diagnostic_process,
     diagnostic_scope,
     diagnostic_timing_event,
@@ -65,6 +67,8 @@ def test_utc_record_contains_scrubbed_process_and_attempt_context() -> None:
         "outcome": "refused",
         "process_id": os.getpid(),
         "process_role": "tui",
+        "thread_id": threading.get_ident(),
+        "thread_name": threading.current_thread().name,
         "reason_code": "runtime_unavailable",
     }
 
@@ -117,7 +121,13 @@ def test_login_witness_context_allows_only_fixed_scalar_counts_and_spans() -> No
 
     _, context = _context(record)
 
-    assert context == {"process_id": os.getpid(), "process_role": "python", **fields}
+    assert context == {
+        "process_id": os.getpid(),
+        "process_role": "python",
+        "thread_id": threading.get_ident(),
+        "thread_name": threading.current_thread().name,
+        **fields,
+    }
     assert "canary" not in record.__dict__["diagnostic_context"]
 
     record.__dict__["observed_unknown_count"] = {"private": "synthetic-private-canary"}
@@ -141,6 +151,14 @@ def test_kdf_context_admits_fixed_phase_spans_and_cleanup_without_private_payloa
         "kdf_result_wait_elapsed_ms": None,
         "kdf_clean_exit_elapsed_ms": None,
         "kdf_cleanup_elapsed_ms": 0.125,
+        "kdf_cleanup_process_elapsed_ms": 0.075,
+        "kdf_cleanup_pipes_elapsed_ms": 0.025,
+        "kdf_cleanup_directory_elapsed_ms": 0.025,
+        "request_type": "WorkerControlRequest",
+        "request_action": "status",
+        "operation_channel": False,
+        "budget_seconds": 10.0,
+        "queue_seconds": 0.1,
     }
     record = _record()
     record.__dict__.update(fields)
@@ -158,7 +176,13 @@ def test_kdf_context_admits_fixed_phase_spans_and_cleanup_without_private_payloa
 
     _, context = _context(record)
 
-    assert context == {"process_id": os.getpid(), "process_role": "python", **fields}
+    assert context == {
+        "process_id": os.getpid(),
+        "process_role": "python",
+        "thread_id": threading.get_ident(),
+        "thread_name": threading.current_thread().name,
+        **fields,
+    }
     assert "canary" not in record.__dict__["diagnostic_context"]
     record.__dict__["kdf_start_elapsed_ms"] = {"private": "synthetic-private-kdf-canary"}
     record.__dict__["cleanup_error_type"] = object()
@@ -565,3 +589,23 @@ async def test_timed_task_scopes_cross_threads_and_restore_the_parent_after_fail
         ]
     assert contexts[-1]["diagnostic_id"] == parent
     assert contexts[-1]["phase_monotonic_ns"] == 100
+
+
+@pytest.mark.parametrize("requested", [None, logging.DEBUG, logging.INFO, logging.WARNING])
+def test_declared_worker_failure_cannot_be_logged_below_error(
+    caplog: pytest.LogCaptureFixture, requested: int | None
+) -> None:
+    logger = get_logger("cadrumo.tests.worker_levels")
+    with caplog.at_level(logging.DEBUG, logger=logger.name):
+        diagnostic_event(logger, "worker_lifecycle", fields={"outcome": "failed"}, level=requested)
+    assert caplog.records[-1].levelno == logging.ERROR
+
+
+def test_technical_event_defaults_to_debug_and_operator_info_is_preserved(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    logger = get_logger("cadrumo.tests.worker_levels")
+    with caplog.at_level(logging.DEBUG, logger=logger.name):
+        diagnostic_event(logger, "worker_attestation_started")
+        diagnostic_event(logger, "service_ready", level=logging.INFO)
+    assert [record.levelno for record in caplog.records] == [logging.DEBUG, logging.INFO]

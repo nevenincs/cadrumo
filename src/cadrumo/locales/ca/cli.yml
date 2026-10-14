@@ -1,15 +1,5 @@
 cli:
   app:
-    agent:
-      app_help: Serveix l'assistent allotjat per al teu perfil amb la sessió iniciada.
-      serve:
-        agent_source_help: Camí absolut d'un arbre de codi de cadrumo-agent des del
-          qual s'executa l'assistent. Si no l'indiques, s'executa l'assistent inclòs
-          a Cadrumo.
-        help: Inicia l'assistent allotjat amb la teva sessió desada i mantén-lo en
-          marxa fins que es tanqui l'entrada estàndard. Llegeix una línia JSON amb
-          el testimoni de la passarel·la a l'entrada estàndard i escriu línies JSON
-          d'esdeveniments a la sortida estàndard.
     ledger:
       account:
         account_id_help: L'identificador del compte propi, per exemple acc-01.
@@ -1426,8 +1416,7 @@ cli:
         actor_help: Actor responsable de l'acció (etiqueta lliure de fins a 64 caràcters)
         actor_too_long: L'etiqueta --by ha de tenir com a màxim {limit} caràcters;
           se n'han rebut {length}. Identifica l'actor de l'esdeveniment d'auditoria
-          que registra aquesta ordre, així que indica un nom curt per a tu o per a
-          l'agent.
+          que registra aquesta ordre, així que indica un nom curt per a tu.
         allow_not_applicable_help: Crea la declaració encara que el model no s'apliqui
           al tipus de contribuent del perfil actiu.
         amend_help: Construir una correcció d'una declaració presentada fora de Cadrumo.
@@ -2074,11 +2063,8 @@ cli:
           amb el canvi d'autorització sol·licitat.
         automation_change_proposal_required: Proporciona la proposta de canvi mitjançant
           --secrets-stdin o --secrets-fd.
-        automation_create_agent_categories: --category només s'aplica amb --use agent.
-        automation_create_proposal_required: Tria --use agent, o proporciona la proposta
-          d'autorització mitjançant --secrets-stdin o --secrets-fd.
-        automation_create_use_conflict: --use agent construeix la proposta per si
-          mateix; no en proporcionis una altra mitjançant --secrets-stdin o --secrets-fd.
+        automation_create_proposal_required: Proporciona la proposta d'autorització
+          mitjançant --secrets-stdin o --secrets-fd.
         echo_suppression_unavailable: Aquest terminal no pot ocultar el que s'escriu,
           de manera que el secret quedaria visible a la pantalla; utilitza --secrets-stdin
           o --secrets-fd.
@@ -2252,14 +2238,14 @@ cli:
         session_not_persisted_logon: 'Sessió iniciada només per a aquesta ordre: l''Administrador
           de credencials de Windows ha rebutjat aquesta sessió de Windows (error 1312)
           perquè no conté credencials de Windows, així que cap procés d''aquesta sessió
-          no pot conservar ni seguir un inici de sessió, i cadrumo-mcp i les ordres
-          següents no el poden fer servir. Executa Cadrumo des de la teva sessió d''escriptori
+          no pot conservar ni seguir un inici de sessió, i les ordres següents no
+          el poden fer servir. Executa Cadrumo des de la teva sessió d''escriptori
           de Windows o passa la contrasenya del perfil a cada ordre amb --profile-secrets-stdin.'
         session_not_persisted_no_backend: 'Sessió iniciada només per a aquesta ordre:
           aquest procés no té cap magatzem de claus del sistema disponible, així que
-          l''inici de sessió no es pot conservar per a cadrumo-mcp ni per a les ordres
-          següents. Activa el magatzem de claus del sistema per a aquest compte o
-          passa la contrasenya del perfil a cada ordre amb --profile-secrets-stdin.'
+          l''inici de sessió no es pot conservar per a les ordres següents. Activa
+          el magatzem de claus del sistema per a aquest compte o passa la contrasenya
+          del perfil a cada ordre amb --profile-secrets-stdin.'
         session_not_persisted_unconfirmed: 'Sessió iniciada només per a aquesta ordre:
           el runtime no ha conservat aquest inici de sessió, tot i que aquest procés
           pot fer servir el magatzem de claus del sistema. O bé l''inici de sessió
@@ -2272,7 +2258,7 @@ cli:
       passphrase_prompt: 'Contrasenya del perfil: '
     logout:
       help: Tanca la sessió d’aquest perfil a totes les sessions d’usuari d’aquest
-        dispositiu. L’accés dels agents i les sessions de l’AEAT continuen actius.
+        dispositiu. Les sessions de l’AEAT continuen actives.
       notices:
         already_logged_out: No hi ha cap perfil seleccionat; no hi ha cap sessió per
           tancar.
@@ -2357,14 +2343,9 @@ cli:
             API existent.
           kind_help: 'Canvi d''autorització: rotate, renew o change_scope.'
         create:
-          category_help: 'Una altra categoria de dades que l''agent pot llegir: tax_values.'
-          help: Emet una clau API. Amb --use agent és una clau per a un agent per
-            MCP que llegeix i canvia els valors del perfil, més qualsevol --category
-            que afegeixis; si no, proporciona una proposta completa mitjançant --secrets-stdin
-            o --secrets-fd. La clau arriba a l'emmagatzematge protegit després de
-            la teva aprovació per separat.
-          use_help: 'Per a què és la clau: agent, una clau per a un agent per MCP.
-            Sempre llegeix i canvia els valors del perfil.'
+          help: Emet una clau API a partir d'una proposta completa proporcionada mitjançant
+            --secrets-stdin o --secrets-fd. La clau arriba a l'emmagatzematge protegit
+            després de la teva aprovació per separat.
         decline:
           digest_help: Empremta exacta de revisió mostrada per inspect.
           help: Rebutjar la sol·licitud exacta revisada.
@@ -2658,53 +2639,6 @@ cli:
       validate_name_help: Etiqueta opcional del perfil a validar; per defecte el perfil
         actiu.
       view_help: Mostrar els fets d'un perfil (per defecte el perfil actiu)
-    provider:
-      base_url_help: Desa aquesta URL base https amb la clau en lloc de la predeterminada
-        del proveïdor.
-      clear_base_url_help: Descarta la URL base desada i torna a fer servir la predeterminada
-        del proveïdor.
-      expected_revision_help: La revisió que va indicar la teva última lectura de
-        l'estat per a aquest proveïdor; si el proveïdor ha canviat des de llavors,
-        es rebutja el canvi.
-      help: Gestiona les credencials dels proveïdors de models que fa servir l'agent
-        en aquest perfil.
-      provider_id_help: L'identificador del proveïdor tal com el declara cadrumo-agent;
-        executa `aeat config provider status` per veure'ls.
-      refused:
-        base_url_rejected: 'S''ha rebutjat la URL base: aquest proveïdor no n''admet
-          cap, no és una URL https, o aquest proveïdor en necessita una i no en quedaria
-          cap de desada. No s''ha canviat res.'
-        catalog_unavailable: cadrumo-agent no ha pogut indicar els seus proveïdors,
-          així que no hi ha res per llegir ni canviar. Comprova que l'agent està instal·lat.
-        committed_readback_failed: El canvi s'ha desat, però no s'ha pogut tornar
-          a llegir. Llegeix l'estat abans de tornar a canviar aquest proveïdor.
-        invalid_key_format: Això no té la forma d'una clau de proveïdor. No s'ha desat
-          res.
-        not_signed_in: Inicia la sessió en aquest perfil abans de gestionar-ne els
-          proveïdors.
-        person_act_required: Només tu pots canviar la credencial d'un proveïdor, des
-          de la línia d'ordres o la interfície de terminal. Un agent no pot.
-        profile_locked: Aquest perfil està bloquejat o la seva sessió ha acabat. Torna
-          a iniciar la sessió i torna-ho a provar.
-        revision_conflict: Aquest proveïdor ha canviat des de la teva lectura de l'estat.
-          Torna a llegir l'estat i envia la revisió que indiqui.
-        runtime_unavailable: El servei en segon pla no ha acceptat la sol·licitud,
-          així que no s'ha llegit ni canviat res. Comprova que el gestor de serveis
-          en segon pla està en marxa i torna-ho a provar.
-        unknown: S'ha rebutjat la sol·licitud. Comprova l'identificador del proveïdor
-          amb `aeat config provider status` i que aquest proveïdor admet una clau.
-          No s'ha canviat res.
-      remove_help: 'Desactiva un proveïdor: se''n descarta la clau desada i no s''hi
-        fa servir cap clau de l''entorn de desenvolupament.'
-      reset_help: Torna un proveïdor a l'estat sense configurar. En una compilació
-        de desenvolupament torna a aplicar-se la seva clau de l'entorn; si no, continua
-        sense estar disponible fins que hi desis una clau.
-      secret_prompt: Clau del proveïdor
-      set_help: Desa o substitueix la clau d'un proveïdor. La clau es llegeix de l'entrada
-        estàndard o d'una sol·licitud sense eco, mai d'un argument, i el proveïdor
-        no la comprova fins al primer ús.
-      status_help: Mostra tots els proveïdors que declara cadrumo-agent, amb el seu
-        estat emmascarat i la revisió que ha de tornar un canvi.
     provision:
       browser:
         help: Descarrega la versió del navegador que obre l'automatització de l'AEAT.
@@ -2834,11 +2768,6 @@ cli:
         config profile complete-setup` indica les dades que encara li falten. Suficient
         per si sol; combina amb --accept-defaults per omplir la resta amb els valors
         per defecte.
-    sign_in_hold:
-      help: Mantén la sessió d'un perfil, sense desar-la, mentre l'entrada estàndard
-        segueixi oberta, i aprova quines connexions d'agents la segueixen.
-      name_help: UUID o etiqueta exacta del perfil on iniciar sessió; omet-lo per
-        fer servir el perfil seleccionat
     sign_in_status:
       help: Comprova si has iniciat sessió sense reprendre-la ni prolongar-la.
     status:

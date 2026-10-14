@@ -172,7 +172,9 @@ class RuntimeConnectionHandling:
             # recording only the refusal code and where it was raised.
             diagnostic_event(
                 _LOGGER,
-                "runtime_connection_refused",
+                "runtime_connection_closed"
+                if error.reason is RuntimeRefusalCode.CONNECTION_CLOSED
+                else "runtime_connection_refused",
                 fields={"reason": error.reason.value, **diagnostic_error_fields(error)},
                 # A peer that closes its connection is the ordinary end of every command.
                 level=logging.DEBUG if error.reason is RuntimeRefusalCode.CONNECTION_CLOSED else logging.INFO,
@@ -205,7 +207,16 @@ class RuntimeConnectionHandling:
                 for event in self.profiles.take_events(context):
                     write_session_event(channel, event, deadline=time.monotonic() + 5)
                     self.profiles.event_flushed(context, event)
-            if not channel.read_ready():
+            try:
+                ready = channel.read_ready()
+            except RuntimeRefusalError as error:
+                if error.reason is not RuntimeRefusalCode.CONNECTION_CLOSED:
+                    raise
+                # Between requests an EOF is a completed client lifetime, not
+                # refused admission. Framing/dispatch failures still propagate.
+                diagnostic_event(_LOGGER, "runtime_connection_closed", level=logging.DEBUG)
+                return
+            if not ready:
                 # Short waits after activity avoid a fixed 50ms round-trip tax.
                 # Idle connections quickly return to the existing bounded rate;
                 # Event.wait still wakes immediately when shutdown is requested.

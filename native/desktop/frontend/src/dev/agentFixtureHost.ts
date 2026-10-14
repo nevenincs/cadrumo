@@ -738,6 +738,10 @@ export function fixtureAgent({
   };
 
   const session: AgentSession = {
+    async retry() {
+      say("agentRetry");
+      await wait();
+    },
     async status() {
       say("agentStatus");
       await wait();

@@ -145,7 +145,7 @@ def _session_not_persisted_notice(outcome: ProfileLoginOutcome) -> Notice:
     """Name the prerequisite that kept this sign-in from being stored, and what to do instead.
 
     The runtime reports only that it kept nothing. This process then asks the
-    keychain itself: every later command and ``cadrumo-mcp`` must read the
+    keychain itself: every later command must read the
     proof from it too, so a keychain this process cannot use explains the
     outcome and decides the remedy. A usable keychain here leaves the cause
     with the runtime, and the message says so rather than blaming the keychain.
@@ -435,7 +435,6 @@ def config_logout(
         receipt_removed=None if outcome is None else outcome.receipt_removed,
         keychain_removed=None if outcome is None else outcome.keychain_removed,
         automation_enabled=None if outcome is None else outcome.automation_enabled,
-        agent_access_remains=None if outcome is None else outcome.agent_access_remains,
     )
     notices: tuple[Notice, ...] = ()
     if signed_out is None:
@@ -456,7 +455,6 @@ def config_logout(
             f"receipt_removed\t{result.receipt_removed}",
             f"keychain_removed\t{result.keychain_removed}",
             f"automation_enabled\t{result.automation_enabled}",
-            f"agent_access_remains\t{result.agent_access_remains}",
             *(notice.message for notice in notices),
         ),
         notices=notices,

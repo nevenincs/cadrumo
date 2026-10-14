@@ -519,7 +519,11 @@ export type DiagnosticsEvent = {
 export type HelperTiming = {
   helperKind: "read" | "mutation";
   outcome:
-    "admission_refused" | "spawn_failed" | "execution_failed" | "completed";
+    | "admission_refused"
+    | "spawn_failed"
+    | "execution_failed"
+    | "nonzero_exit"
+    | "completed";
   admissionWaitMs: number;
   spawnMs: number | null;
   executionMs: number | null;
@@ -836,6 +840,7 @@ export interface HostCommands {
    * for any conversation, which is not yet named by its run chain.
    */
   agent_status: { args: Authorized; result: AgentServiceStatus };
+  agent_retry: { args: Authorized; result: null };
   agent_status_subscribe: {
     args: Authorized<{ updates: Channel<AgentServiceStatus> }>;
     result: number;

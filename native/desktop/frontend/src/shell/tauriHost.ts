@@ -246,6 +246,7 @@ function tauriAgent(call: HostCall): {
   return {
     agentSession: {
       status: () => call("agent_status", {}),
+      retry: () => call("agent_retry", {}).then(() => undefined),
       async observeStatus(listener) {
         const updates = new Channel<AgentServiceStatus>();
         updates.onmessage = listener;

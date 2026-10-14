@@ -224,32 +224,6 @@ CONFIG_CUSTODY_COMMAND_SPECS = (
             )
         ),
     ),
-    CommandSpec(
-        "config_sign_in_hold",
-        "config",
-        "sign-in-hold",
-        kind=CommandNodeKind.LEAF,
-        help_key=TranslationKey("cli.config.sign_in_hold.help"),
-        short_help_key=None,
-        invocation=InvocationSpec(context_parameter="ctx"),
-        parameters=(
-            ArgumentSpec(
-                name="name",
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.config.sign_in_hold.name_help"),
-            ),
-            _OUTPUT_LANGUAGE,
-        ),
-        policy=BOOTSTRAP_WRITE,
-        handler=LazyBinding.available(DeferredTarget(".sign_in_hold", "config_sign_in_hold", __package__)),
-        result_schema=ResultSchemaSpec(
-            SchemaState.TARGET,
-            target=DeferredTarget(".custody_payloads", "ConfigSignInHoldResult", __package__),
-            identity="config.sign-in-hold",
-        ),
-        profile_authentication=ProfileAuthenticationPosture.SELF_AUTHENTICATING,
-    ),
 )
 
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-14'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:8d5f45b8018e8c43bb4b83fcb5a70507d7ba90b0ca53cb798420b731d601de66'
+body_hash: 'sha256:b943c092c69d9eea7996c19bf8f5248df0df16a33811a80c03773e2312c44e50'
 related:
   - "[[2026-10-04-desktop-shell-adr]]"
 ---
@@ -81,3 +81,12 @@ The owner explicitly extended scope to all hosted cadrumo-agent diagnostics, inc
 The bridge deduplicates overlapping stream/file copies, frames partial writes, follows file identity across rotation, recognizes truncation and rewritten prefixes, drains final records after tree termination and reports bounded rejection/unreadable/backlog warnings without echoing input. Hosted first-party DEBUG capture is enabled independently of the application's INFO default view; the agent's explicit CADRUMO_AGENT_LOG_LEVEL override can reduce producer output. Safe operational scalars, including ports, elapsed times and trace/span IDs, survive normalization through the existing credential/payload scrubbers. Arbitrary nested tool arguments, private protocol bytes and third-party SDK DEBUG payloads stay outside the plaintext diagnostic feed. Existing logs are baselined before spawning; this change copies new hosted-run diagnostics, not a retroactive import of pre-integration agent history.
 
 Verification: 57 focused Python diagnostic/environment/privacy tests; 16 Windows process/launcher integration tests, including a real gateway process and separate file-only worker PID; 50 native logging tests through the existing Tauri channel; native Clippy. The real process integration verifies original DEBUG and ERROR levels and one record per overlapping output. Packaged interactive GUI acceptance and a provider-backed live agent lane remain unverified. Earlier recommendations about complete live process inventory, installed service registration and replay of desktop-native history remain open. Unrelated concurrent edits were preserved.
+
+
+## Actual-log corrective audit 2026-10-14
+
+Read the real desktop native JSONL and shared Python log under the user's installed storage, and inspected the running desktop Logs through Windows UI Automation. The native history contained 101 child starts, 99 exits and 80 helper timings. Seven Python worker failures were mislabeled WARNING: two ready-attestation ValueErrors and five clean-exit TimeoutErrors, each with outcome failed despite exit code zero. The running staged executable initially predated the fixes.
+
+Successful native child/host lifecycle, startup stages and helper timings now resolve to DEBUG for every role. Child failure carries a typed ChildFailed catalogue error. Manager asynchronous failures emit one ERROR per transition. Runtime, TUI, profile-worker and KDF producers distinguish completed diagnostics from failed operation outcomes; diagnostic_event defaults technical observations to DEBUG and promotes declared failed/error/unconfirmed outcomes even when callers requested INFO or WARNING. Known retained Python failures and routine lifecycle rows are corrected by the desktop reader. Async/task and thread records retain producer identity and reach the shared file.
+
+Verification so far: 53 native log tests, native Clippy, real helper-churn test with 24 processes, 34 diagnostic/privacy tests, five default/severity regressions, 28 real-process KDF diagnostics/exit tests, scoped Ruff lint and format. Initial external test-host GUI attempt exited before WebView startup; its real native log showed manager_unavailable as a failure. The newly changed startup gate requires the host executable's own installed package evidence, so acceptance proceeds through an isolated assembled test package. Full staged rebuild and final interactive Logs acceptance remain pending at this checkpoint. Concurrent same-tree builds interrupted earlier assembly attempts; passing source tests do not establish that the staged app contains the fixes.

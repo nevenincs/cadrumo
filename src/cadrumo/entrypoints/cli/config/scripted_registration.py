@@ -2,7 +2,7 @@
 
 ``create`` serves two audiences through one verb. An operator at a capable
 terminal is diverted to the registration screen; everything else — a script,
-an agent, a CI job, any host without a full-screen console — arrives here.
+a CI job, any host without a full-screen console — arrives here.
 
 That second arm had no creation path at all. It fell through to the setup
 flow, whose ``create`` mode refuses outright because the flow is not a

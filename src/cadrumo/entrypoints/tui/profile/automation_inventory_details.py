@@ -31,9 +31,7 @@ def _scope(scope: AutomationScopeProjection) -> tuple[str, ...]:
     else:
         periods = ", ".join(f"{item.filing_year}/{item.code}" for item in scope.periods)
     return (
-        _detail("operations", tr("tui.automation_inventory.all_agent_operations"))
-        if scope.all_agent_operations
-        else _detail("operations", ", ".join(scope.operations)),
+        _detail("operations", ", ".join(scope.operations)),
         _detail("actions", ", ".join(item.value for item in scope.actions)),
         _detail("disclosures", f"{scope.disclosure_count} ({counted})" if scope.disclosure_count else "0"),
         *((_detail("disclosure_categories", categories),) if categories else ()),

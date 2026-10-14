@@ -665,11 +665,9 @@ def preflight_parsed_leaf(
     _require_discard_confirmation(spec, arguments)
     root, leaf = _select_preflight_channels(ctx, spec=spec, arguments=arguments)
     if spec.key == "config_profile_automation_create":
-        from .config.runtime_automation_request import refuse_incomplete_create_choice
+        from .config.runtime_automation_request import refuse_missing_create_proposal
 
-        refuse_incomplete_create_choice(
-            use=arguments.get("use"), category=arguments.get("category"), proposal_supplied=leaf is not None
-        )
+        refuse_missing_create_proposal(proposal_supplied=leaf is not None)
     source = parsed_root_profile_source(ctx)
     method = source.method
     credential_reference = source.credential_reference

@@ -11,7 +11,6 @@ from textual.widgets import Checkbox, Input, Select, SelectionList
 from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ....application.operations.registry import OperationFrontendProjection
 from ....application.user_profile.access_contracts import AccessAction, DisclosureCategory
-from ....application.user_profile.automation_agent_key import agent_key_scope
 from ....application.user_profile.automation_enrollment import EnrollmentKind
 from ....core.period import Period
 from . import automation_requester_contracts as _contracts
@@ -42,9 +41,6 @@ class RequesterDraftMixin:
 
     def _draft(self: RuntimeAutomationRequesterScreen) -> _contracts.ProposalDraft:
         kind = self._selected_kind()
-        use = cast("Select[str]", self.query_one("#automation-request-use", Select)).value
-        if kind is EnrollmentKind.ENROLL and use == _contracts.REQUEST_USE_AGENT:
-            return self._agent_draft()
         operations = self._selected_operations()
         actions = self._selected_actions()
         disclosures = self._selected_disclosures()
@@ -69,36 +65,6 @@ class RequesterDraftMixin:
             target_grant_id=self._optional_uuid(self.query_one("#automation-request-grant", Input).value),
             target_key_id=self._optional_uuid(self.query_one("#automation-request-key", Input).value),
             credential_reference=reference,
-        )
-
-    def _agent_draft(self: RuntimeAutomationRequesterScreen) -> _contracts.ProposalDraft:
-        """Scope a key for an agent from its added data categories, as the command line does.
-
-        The key needs an unattended grant to be admitted with nobody signed in,
-        and never continues while the OS is locked. Without a key expiry of its
-        own, the key runs as long as its grant.
-        """
-        raw = cast("SelectionList[str]", self.query_one("#automation-request-categories", SelectionList)).selected
-        scope = agent_key_scope(DisclosureCategory(value) for value in raw)
-        expiry = datetime.fromisoformat(self.query_one("#automation-request-expiry", Input).value.strip())
-        key_raw = self.query_one("#automation-request-key-expiry", Input).value.strip()
-        return _contracts.ProposalDraft(
-            kind=EnrollmentKind.ENROLL,
-            operations=frozenset(),
-            actions=scope.actions,
-            disclosures=frozenset(),
-            periods=None,
-            period_independent=True,
-            delegation=False,
-            expires_at=expiry,
-            key_expires_at=datetime.fromisoformat(key_raw) if key_raw else expiry,
-            unattended=True,
-            os_lock=False,
-            target_grant_id=None,
-            target_key_id=None,
-            credential_reference=None,
-            categories=scope.categories,
-            all_agent_operations=True,
         )
 
     def _selected_kind(self: RuntimeAutomationRequesterScreen) -> EnrollmentKind:

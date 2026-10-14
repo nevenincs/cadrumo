@@ -14,7 +14,7 @@ use super::{
 use cadrumo_application::{
     diagnostics::Diagnostics,
     error::application::{ApplicationError, ErrorCode, Operation, Result},
-    process::status::{ProcessPhase, ProcessRole},
+    process::status::{ProcessPhase, ProcessRole, Stream},
 };
 use portable_pty::{ChildKiller, CommandBuilder, MasterPty, PtySize, native_pty_system};
 use std::{
@@ -323,6 +323,7 @@ impl Session {
                             match reader.read(&mut buffer) {
                                 Ok(0) => break,
                                 Ok(count) => {
+                                    output_diagnostics.count(process, Stream::Terminal, count);
                                     if credit.admit(count) == Admission::Deliver {
                                         deliver(
                                             &sink,

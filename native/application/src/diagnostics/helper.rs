@@ -14,7 +14,9 @@ pub enum HelperOutcome {
     AdmissionRefused,
     SpawnFailed,
     ExecutionFailed,
-    /// Native output was returned; its CLI envelope has not been decoded here.
+    /// Native output was returned with a nonzero process exit code.
+    NonzeroExit,
+    /// Successful native exit; its CLI envelope has not been decoded here.
     Completed,
 }
 

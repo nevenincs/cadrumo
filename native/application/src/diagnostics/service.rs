@@ -46,6 +46,8 @@ pub enum AgentRefusal {
     ProviderCredentialMissing,
     #[serde(rename = "agent_service_failed")]
     ServiceFailed,
+    #[serde(rename = "agent_root_unmarked")]
+    RootUnmarked,
 }
 
 impl AgentRefusal {
@@ -56,6 +58,7 @@ impl AgentRefusal {
             "agent_signed_out" => Self::SignedOut,
             "agent_runtime_unavailable" => Self::RuntimeUnavailable,
             "agent_provider_credential_missing" => Self::ProviderCredentialMissing,
+            "agent_root_unmarked" => Self::RootUnmarked,
             _ => Self::ServiceFailed,
         }
     }
@@ -106,6 +109,9 @@ pub enum ServiceFact {
     },
     AgentRetryScheduled {
         delay_ms: u64,
+    },
+    AgentRetryExhausted {
+        attempts: u32,
     },
     AgentProtocolRefused {},
     ManagerInstallationStarted {

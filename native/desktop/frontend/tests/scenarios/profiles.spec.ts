@@ -346,7 +346,7 @@ test("first run: the dialog is the form that creates a profile, and nothing is s
   expect(await calls(target, "createProfile")()).toBe(0);
 });
 
-test("first run: one submission creates the profile, and only its password then signs in", async ({
+test("first run: one submission creates the profile and signs in automatically", async ({
   page: target,
 }) => {
   await open(target, "first-run");
@@ -355,24 +355,8 @@ test("first run: one submission creates the profile, and only its password then 
   await repeated(target).fill("correct horse");
   await createButton(target).click();
 
-  // Created and selected, and not signed in: the sign-in form for it.
-  await expect(password(target)).toBeFocused();
-  await expect(password(target)).toHaveValue("");
-  await expect(dialog(target).getByRole("status")).toHaveText(
-    label("desktop.account.create.done", { name: "Marta Ruiz Ferrer" }),
-  );
-  await expect(
-    dialog(target).getByRole("group", {
-      name: label("desktop.signin.profile"),
-    }),
-  ).toContainText("Marta Ruiz Ferrer");
-  await expect.poll(calls(target, "createProfile")).toBe(1);
-  expect(await calls(target, "signIn")()).toBe(0);
-  await expect(target.locator(".pane-tui .xterm")).toHaveCount(0);
-
-  await password(target).fill("correct horse");
-  await submit(target).click();
   await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
+  await expect(dialog(target)).toHaveCount(0);
   await expect.poll(calls(target, "signIn")).toBe(1);
   expect(await calls(target, "createProfile")()).toBe(1);
 
@@ -393,7 +377,7 @@ test("while a profile is being created the form says how long it takes, and noth
   await repeated(target).press("Enter");
   // Pending: the wait is said, and the fields hold without being disabled.
   await expect(form(target).locator(".create-wait")).toHaveText(
-    label("desktop.account.create.wait"),
+    label("desktop.account.create.submitting"),
   );
   await expect(nameField(target)).toHaveAttribute("readonly", "");
   await expect(newPassword(target)).toHaveValue("");
@@ -409,7 +393,9 @@ test("while a profile is being created the form says how long it takes, and noth
   // Nor is it put aside while the profile is being made.
   await target.keyboard.press("Escape");
   await expect(form(target).locator(".create-wait")).toBeVisible();
-  await expect(password(target)).toBeFocused({ timeout: 10000 });
+  await expect(target.locator(".pane-tui .xterm")).toHaveCount(1, {
+    timeout: 10000,
+  });
   expect(await calls(target, "createProfile")()).toBe(1);
 });
 
@@ -479,7 +465,7 @@ test("a new profile is offered beside sign-in, refuses a name already in use, an
   await expect(form(target)).toHaveCount(0);
 });
 
-test("a profile created beside others is the one then chosen for sign-in", async ({
+test("a profile created beside others is automatically signed in by name", async ({
   page: target,
 }) => {
   await open(target, "signed-out");
@@ -490,17 +476,8 @@ test("a profile created beside others is the one then chosen for sign-in", async
   await newPassword(target).fill("correct horse");
   await repeated(target).fill("correct horse");
   await createButton(target).click();
-  await expect(password(target)).toBeFocused();
-  await expect(choice(target).locator("option")).toHaveCount(4);
-  await expect(choice(target).locator("option:checked")).toHaveText(
-    "Marta Ruiz Ferrer",
-  );
-  await password(target).fill("correct horse");
-  await submit(target).click();
   await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
-  // Created, it is the selected profile: signed in to unnamed, and the one
-  // the window then names.
-  expect(await calls(target, "signInProfile")()).toBe(0);
+  expect(await calls(target, "signInProfile")()).toBe(1);
   await expect(target.locator(".titlebar .profile-name")).toHaveText(
     "Marta Ruiz Ferrer",
   );
@@ -615,16 +592,8 @@ for (const [kind, long] of [
       await nameField(target).fill(long);
       await newPassword(target).fill("correct horse");
       await repeated(target).fill("correct horse");
-      await repeated(target).press("Enter");
-      await expect(password(target)).toBeFocused();
-      // Created: said in the notice and chosen in the choice, both inside.
-      await expect(dialog(target).getByRole("status")).toContainText(
-        long.slice(0, 40),
-      );
       expect(await inside(".sign-in")).toEqual([]);
-
-      await password(target).fill("correct horse");
-      await submit(target).click();
+      await repeated(target).press("Enter");
       await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
       await expect(target.locator(`.titlebar [title="${long}"]`)).toBeVisible();
       await menuButton(target).click();
@@ -755,7 +724,7 @@ test("a refusal the shell does not name is shown with its code", async ({
   expect(await calls(target, "createProfile")()).toBe(1);
 });
 
-test("a list that can no longer be read names nobody: the new profile's password goes to the selected profile, unnamed", async ({
+test("creation acknowledgement names the new sign-in target without rereading the list", async ({
   page: target,
 }) => {
   await open(target, "profiles-read-once");
@@ -767,23 +736,9 @@ test("a list that can no longer be read names nobody: the new profile's password
   await newPassword(target).fill("correct horse");
   await repeated(target).fill("correct horse");
   await repeated(target).press("Enter");
-  await expect(password(target)).toBeFocused();
-  // The rows that were held are older than the creation: no choice is
-  // drawn from them, and the profile named is the one the status names.
-  await expect(dialog(target).locator("select")).toHaveCount(0);
-  await expect(dialog(target)).toContainText(
-    label("desktop.signin.profiles_unread"),
-  );
-  await expect(
-    dialog(target).getByRole("group", {
-      name: label("desktop.signin.profile"),
-    }),
-  ).toContainText("Marta Ruiz Ferrer");
-  await password(target).fill("correct horse");
-  await submit(target).click();
   await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
   await expect.poll(calls(target, "signIn")).toBe(1);
-  expect(await calls(target, "signInProfile")()).toBe(0);
+  expect(await calls(target, "signInProfile")()).toBe(1);
 });
 
 test("a profile under a name the command line would rewrite is listed, not offered, and said to open in the TUI", async ({

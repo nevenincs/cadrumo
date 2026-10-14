@@ -2012,7 +2012,6 @@ tui:
   automation_inventory:
     access_lost: Ez a profil-munkamenet már nem érhető el.
     actions: Engedélyezett lépések
-    all_agent_operations: bármely művelet, amelyet egy ügynök futtathat
     all_periods: Minden bevallási időszak
     approve: Kérelem jóváhagyása
     client: Kliens
@@ -2057,8 +2056,6 @@ tui:
     actions: Tevékenységek
     capability_note: A felsorolt műveletek képességeket írnak le, nem az aktuális
       rendelkezésre állást.
-    categories: 'Az ügynök olvassa és módosítja a profil adatait. Ezt is olvashatja:'
-    category_tax_values: Adóadatok
     change_scope: Hatókör módosítása
     complete: Jóváhagyva és befejezve
     credential_reference: Meglévő védett hitelesítőadat-hivatkozás UUID-ja
@@ -2090,9 +2087,6 @@ tui:
     title: API-hozzáférés kérése
     unattended: Felügyelet nélküli használat engedélyezése
     uncertain: Ismeretlen eredmény; őrizd meg a kérelem azonosítóját
-    use: A kulcs felhasználása
-    use_agent: Ügynöknek (MCP)
-    use_custom: Egyéni hatókör
     waiting: Kérelem beküldése folyamatban
   declarations:
     availability:
@@ -3912,9 +3906,9 @@ tui:
       kind:
         choice: A művelet egy választásra vár.
         input: A művelet egy adat megadására vár.
-      no_answer: 'Erre a kéréstípusra még nem lehet válaszolni sem itt, sem a parancssorból,
-        sem MCP-ből: csak egy felülvizsgálatot lehet alkalmazni vagy elutasítani.
-        Megszakíthatod a műveletet, vagy várakozni hagyhatod.'
+      no_answer: 'Erre a kéréstípusra még nem lehet válaszolni sem itt, sem a parancssorból:
+        csak egy felülvizsgálatot lehet alkalmazni vagy elutasítani. Megszakíthatod
+        a műveletet, vagy várakozni hagyhatod.'
       presentation: Kérés tárgya
     palette:
       help: A művelet kérésűrlapjának megnyitása

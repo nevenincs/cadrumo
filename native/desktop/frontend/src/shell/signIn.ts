@@ -700,8 +700,8 @@ export function useSignIn(host: Host) {
     }
   };
 
-  /** One attempt to create a profile. As with a sign-in, the password is
-   * consumed by the one call and nothing is tried again. */
+  /** Create, then authenticate the acknowledged profile with the confirmed
+   * password. Neither operation is retried; the buffer is cleared on settlement. */
   const create = async (name: string, password: Uint8Array) => {
     const accounts = host.profiles;
     if (!accounts || submitting.current || !managerAllows()) {
@@ -721,6 +721,7 @@ export function useSignIn(host: Host) {
     setRemaining(null);
     setSignOutFailure(null);
     let made: string | null = null;
+    let signedIn = false;
     let unanswered: SignInRefusal | null = null;
     try {
       const result = await accounts.create(name, password);
@@ -730,12 +731,31 @@ export function useSignIn(host: Host) {
         !managerAllows()
       )
         return false;
-      if (result.kind === "created") made = result.name;
-      else setCreateRefusal(result);
+      if (result.kind === "created") {
+        made = result.name;
+        const login = await host.signIn(password, made);
+        if (
+          !mounted.current ||
+          generation !== request.current ||
+          !managerAllows()
+        )
+          return false;
+        if (login.kind === "refused") setRefusal(login);
+        else {
+          signedIn = true;
+          statusReadFailed.current = false;
+          latestStatus.current = login.status;
+          setStatus(login.status);
+          listed.current = null;
+          setProfiles(null);
+        }
+      } else setCreateRefusal(result);
     } catch (error) {
       // No answer: timed out, stopped, unreadable. Not a refusal.
-      if (mounted.current && generation === request.current)
-        unanswered = refusalFrom(error);
+      if (mounted.current && generation === request.current) {
+        if (made !== null) setRefusal(refusalFrom(error));
+        else unanswered = refusalFrom(error);
+      }
     } finally {
       password.fill(0);
       // Whatever was held is older than this creation: read again before
@@ -748,7 +768,7 @@ export function useSignIn(host: Host) {
         listed.current = null;
         setProfiles(null);
       }
-      if (mounted.current && generation === request.current)
+      if (!signedIn && mounted.current && generation === request.current)
         await refresh(true);
       if (
         mounted.current &&
@@ -769,7 +789,8 @@ export function useSignIn(host: Host) {
         mounted.current &&
         epoch === invalidation.current &&
         managerAllows() &&
-        made !== null
+        made !== null &&
+        !signedIn
       ) {
         setChosen(made);
         setCreated(made);

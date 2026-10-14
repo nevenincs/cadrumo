@@ -211,7 +211,7 @@ class NotificationDocumentPullResult(NotificationDocumentPayload):
     certificado already held stores nothing and returns the row that was there,
     which is otherwise indistinguishable from a first store. It is result data
     rather than a diagnostic — the matching operator-facing advisory rides the
-    envelope's ``notices`` channel — and an agent routing on retries needs the
+    envelope's ``notices`` channel — and a script routing on retries needs the
     field, not the prose.
     """
 

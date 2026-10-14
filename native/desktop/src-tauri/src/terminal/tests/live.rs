@@ -322,7 +322,7 @@ fn assert_no_pty_bytes(diagnostics: &Diagnostics) {
                 && !chunk.bytes.windows(4).any(|w| w == b"L000")),
         "PTY bytes reached the diagnostics capture"
     );
-    assert!(snapshot.processes.iter().all(|p| p.terminal_bytes == 0));
+    assert!(snapshot.processes.iter().any(|p| p.terminal_bytes > 0));
 }
 
 #[tokio::test]

@@ -198,6 +198,22 @@ add_custom_target(app-payload
   BYPRODUCTS "${CADRUMO_PATH_STAGE}/$<CONFIG>/ready"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
 add_dependencies(app-payload rust_application)
+# Native iteration uses the existing Python payload. It never depends on the
+# Python product producer or the destructive full-package assembler.
+add_custom_target(app-native
+  COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.update_images
+    --build "${PROJECT_BINARY_DIR}" --config "$<CONFIG>" ${application_image_args}
+  DEPENDS cadrumo_python cadrumo_python_bridge ${CADRUMO_ENTRYPOINT_TARGETS} ${application_image_dependencies}
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
+add_custom_target(app-recover
+  COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.update_images
+    --build "${PROJECT_BINARY_DIR}" --config "$<CONFIG>" ${application_image_args} --recover
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
+add_custom_target(app-agent
+  COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.update_agent
+    --build "${PROJECT_BINARY_DIR}" --config "$<CONFIG>"
+  DEPENDS agent_project
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
 set(desktop_delivery_check)
 if(WIN32 AND desktop_image_staged)
   # Bootstrap admission is required for delivery even when optional tests are off.

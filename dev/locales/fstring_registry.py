@@ -386,7 +386,6 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
         ),
         *_diagnostics_command_spec_registrations(),
         *_custody_stdin_registrations(),
-        *_provider_settings_refusal_registrations(),
         *_modelo_work_help_registrations(),
         *_modelo_workbench_registrations(),
     )
@@ -571,24 +570,6 @@ def _custody_stdin_registrations() -> tuple[FStringKeyRegistration, ...]:
             values=prefixes,
         )
         for tail in ("too_large", "invalid_json", "missing_fields")
-    )
-
-
-def _provider_settings_refusal_registrations() -> tuple[FStringKeyRegistration, ...]:
-    """Register the provider-settings refusal wording, one key per closed refusal code.
-
-    The CLI bridge words every refusal from the code's own value
-    (entrypoints/cli/config/runtime_provider_settings.py), so the enum decides
-    which keys must exist.
-    """
-    from cadrumo.application.provider_settings.contracts import ProviderSettingsRefusalCode
-
-    return (
-        FStringKeyRegistration(
-            description="cli.config.provider.refused.* (ProviderSettingsRefusalCode)",
-            key_factory=lambda v: f"cli.config.provider.refused.{v}",
-            values=_enum_values(ProviderSettingsRefusalCode),
-        ),
     )
 
 

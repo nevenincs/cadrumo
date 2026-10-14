@@ -95,7 +95,6 @@ class MountedCommandDomain(StrEnum):
     REGISTRY = "registry"
     QUICKFILE = "quickfile"
     RUNTIME = "runtime"
-    AGENT = "agent"
 
 
 class RootSurface(BaseModel):

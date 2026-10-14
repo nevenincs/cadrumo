@@ -15,7 +15,7 @@ from __future__ import annotations
 import asyncio
 import sys
 from collections.abc import Callable
-from logging import WARNING
+from logging import DEBUG, ERROR
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -268,7 +268,7 @@ def _unavailable_inventory(inventory: ProfileLoginInventoryV1) -> int | None:
         _LOGGER,
         "tui_inventory_refused",
         fields={"outcome": "refused", "reason_code": inventory.reason_code},
-        level=WARNING,
+        level=ERROR,
     )
     sys.stderr.write(f"{inventory.reason_code}\n")
     return SESSION_INVENTORY_UNAVAILABLE
@@ -290,7 +290,7 @@ def _runtime_session_refusal(error: RuntimeFrontendRefusedError | RuntimeRefusal
         _LOGGER,
         "tui_runtime_session_refused",
         fields={**diagnostic_error_fields(error), "outcome": "refused", "reason_code": reason},
-        level=WARNING,
+        level=ERROR,
         primary_error=error,
     )
     sys.stderr.write(f"{reason}\n")
@@ -355,6 +355,7 @@ def run_installed_workbench_session(
                 _LOGGER,
                 "tui_inventory_observed",
                 fields={"inventory_state": inventory.state.value, "profile_count": len(inventory.choices)},
+                level=DEBUG,
             )
             if (
                 not headless
@@ -388,7 +389,9 @@ def run_installed_workbench_session(
             if recompose is None:
                 return SESSION_COMPLETED
             choose_profile = recompose.reason is AccountRecomposeReasonV1.CHANGE_USER
-            diagnostic_event(_LOGGER, "tui_session_recompose_requested", fields={"reason_code": recompose.reason.value})
+            diagnostic_event(
+                _LOGGER, "tui_session_recompose_requested", fields={"reason_code": recompose.reason.value}, level=DEBUG
+            )
 
 
 __all__ = ["SESSION_COMPLETED", "SESSION_INVENTORY_UNAVAILABLE", "run_installed_workbench_session"]

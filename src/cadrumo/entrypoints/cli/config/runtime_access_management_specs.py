@@ -118,21 +118,6 @@ RUNTIME_ACCESS_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(
-            OptionSpec(
-                name="use",
-                declarations=("--use",),
-                value=ValueContract(DeferredTarget("builtins", "str"), choices=("agent",)),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.config.profile.automation.create.use_help"),
-            ),
-            OptionSpec(
-                name="category",
-                declarations=("--category",),
-                value=ValueContract(DeferredTarget("builtins", "str"), choices=("tax_values",)),
-                default=ParameterDefault.value(()),
-                help_key=TranslationKey("cli.config.profile.automation.create.category_help"),
-                multiple=True,
-            ),
             MACHINE_SECRET_STDIN_OPTION,
             MACHINE_SECRET_FD_OPTION,
             _LANGUAGE,

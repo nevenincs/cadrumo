@@ -297,10 +297,21 @@ def execute_action(build: Path, arguments: argparse.Namespace, timings: BuildTim
                         if changed
                         else "no enrolled file was modified while it ran; the client build identity changed"
                     )
-                    raise RuntimeError(
-                        f"Inputs changed during {arguments.action} ({detail}); completion receipt refused. "
-                        "Build again once nothing edits the checkout."
-                    )
+                    if arguments.action == "product":
+                        # The wheels were built from the producer's isolated
+                        # snapshot. Later checkout edits invalidate reuse, not
+                        # those completed outputs. Give this receipt an identity
+                        # that no checkout fingerprint can claim on a later run.
+                        identity = hashlib.sha256(f"snapshot:{identity}:{time.time_ns()}".encode()).hexdigest()
+                        timings.log.status(
+                            f"Checkout changed during the product snapshot build ({detail}); "
+                            "keeping the completed output without reusable checkout identity"
+                        )
+                    else:
+                        raise RuntimeError(
+                            f"Inputs changed during {arguments.action} ({detail}); completion receipt refused. "
+                            "Build again once nothing edits the checkout."
+                        )
             with timings.phase("output-inventory"):
                 completed(destination, identity)
             timings.log.status(f"built {display_path(destination)}")

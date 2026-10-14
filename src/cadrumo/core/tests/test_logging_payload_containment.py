@@ -154,3 +154,36 @@ def test_ordinary_first_party_debug_diagnostics_are_untouched(log_file: Path) ->
     written = _written_log_text(log_file)
     assert "resolved revision 2026-303-v2 for period 1T across 47 casillas" in written
     assert "<redacted:payload>" not in written, "ordinary diagnostics must not be redacted"
+
+
+def test_async_and_thread_worker_debug_and_errors_reach_shared_log(log_file: Path) -> None:
+    """Real worker records use the same sinks and keep their actual execution identity."""
+    import asyncio
+    from threading import Thread
+
+    logger = logging.getLogger("cadrumo.worker.visibility")
+
+    def worker() -> None:
+        logger.debug("thread worker ready")
+        logger.error("thread worker failed")
+
+    thread = Thread(target=worker, name="visibility-thread")
+    thread.start()
+    thread.join(5)
+    assert not thread.is_alive()
+
+    async def task() -> None:
+        logger.debug("async worker ready")
+        logger.error("async worker failed")
+
+    async def run() -> None:
+        await asyncio.create_task(task(), name="visibility-task")
+
+    asyncio.run(run())
+    written = _written_log_text(log_file)
+    assert "[DEBUG] cadrumo.worker.visibility: thread worker ready" in written
+    assert "[ERROR] cadrumo.worker.visibility: thread worker failed" in written
+    assert "[DEBUG] cadrumo.worker.visibility: async worker ready" in written
+    assert "[ERROR] cadrumo.worker.visibility: async worker failed" in written
+    assert '"thread_name":"visibility-thread"' in written
+    assert '"task_name":"visibility-task"' in written

@@ -375,8 +375,8 @@ const SURFACES: {
     },
   },
   {
-    name: "a profile just created, to sign in to",
-    scenario: "first-run",
+    name: "a created profile whose acknowledgement was lost, to sign in to",
+    scenario: "create-lands-unanswered",
     reach: async (target) => {
       const fields = target.locator(".create-profile input");
       await fields.nth(0).fill("Marta Ruiz Ferrer");

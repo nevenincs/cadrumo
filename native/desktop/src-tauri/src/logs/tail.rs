@@ -87,7 +87,12 @@ impl Draft {
             },
             timestamp: self.timestamp,
             timestamp_ms,
-            level: self.level,
+            level: super::severity::python_level(
+                self.level,
+                self.logger.as_deref(),
+                &self.message,
+                &self.context,
+            ),
             logger: self.logger,
             message: self.message,
             detail: self.detail_lines.then_some(self.detail),

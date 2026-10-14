@@ -665,3 +665,22 @@ fn manager_path_is_taken_from_the_package_projection_and_is_unambiguous() {
     contract.layout.application_images.clear();
     assert!(contract.manager_member().is_err());
 }
+
+#[test]
+fn asynchronous_service_failure_is_logged_once_per_transition() {
+    let manager = fixture(Ok(None));
+    manager.report_failure(failure(ErrorCode::ManagerUnavailable));
+    manager.report_failure(failure(ErrorCode::ManagerUnavailable));
+    let snapshot = manager.diagnostics.snapshot(u64::MAX);
+    let failures: Vec<_> = snapshot
+        .events
+        .iter()
+        .filter(|event| event.failure.is_some())
+        .collect();
+    assert_eq!(failures.len(), 1);
+    assert_eq!(failures[0].stage, Some(HostStage::Manager));
+    assert_eq!(
+        failures[0].failure.as_ref().unwrap().code,
+        ErrorCode::ManagerUnavailable
+    );
+}

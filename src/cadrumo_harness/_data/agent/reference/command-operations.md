@@ -37,7 +37,6 @@ without its options and arguments.
 | --- | --- | --- |
 | `aeat` | none | `execute` `overview.status` |
 | `aeat app` | none | none |
-| `aeat app agent serve` | none | the person's act |
 | `aeat app diagnostics` | none | none |
 | `aeat app diagnostics errors` | `diagnostics.read` | none |
 | `aeat app diagnostics latency` | `diagnostics.read` | none |
@@ -346,10 +345,6 @@ without its options and arguments.
 | `aeat config profile status` | `user-profile.view` | none |
 | `aeat config profile validate` | `user-profile.view` | none |
 | `aeat config profile view` | `user-profile.view` | none |
-| `aeat config provider remove` | `provider-settings.remove` | the person's act |
-| `aeat config provider reset` | `provider-settings.reset` | the person's act |
-| `aeat config provider set` | `provider-settings.set` | the person's act |
-| `aeat config provider status` | `provider-settings.status` | none |
 | `aeat config provision browser` | none | `execute` `browser-runtime.provision` |
 | `aeat config provision install` | none | `execute` `local-reader.provision` |
 | `aeat config provision load` | none | `execute` `local-reader.provision` |
@@ -371,7 +366,6 @@ without its options and arguments.
 | `aeat config reset resume` | none | the person's act |
 | `aeat config reset start` | none | the person's act |
 | `aeat config reset status` | none | the person's act |
-| `aeat config sign-in-hold` | none | the person's act |
 | `aeat config sign-in-status` | none | the person's act |
 | `aeat config storage check` | none | the person's act |
 | `aeat config storage init` | none | the person's act |

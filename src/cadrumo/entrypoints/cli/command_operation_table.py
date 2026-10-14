@@ -29,7 +29,6 @@ from typing import Final
 COMMAND_OPERATION_ROWS: Final[tuple[tuple[tuple[str, ...], str | None], ...]] = (
     ((), None),
     (("app",), None),
-    (("app", "agent", "serve"), None),
     (("app", "diagnostics"), None),
     (("app", "diagnostics", "errors"), "diagnostics.read"),
     (("app", "diagnostics", "latency"), "diagnostics.read"),
@@ -386,10 +385,6 @@ COMMAND_OPERATION_ROWS: Final[tuple[tuple[tuple[str, ...], str | None], ...]] = 
     (("config", "profile", "status"), "user-profile.view"),
     (("config", "profile", "validate"), "user-profile.view"),
     (("config", "profile", "view"), "user-profile.view"),
-    (("config", "provider", "remove"), "provider-settings.remove"),
-    (("config", "provider", "reset"), "provider-settings.reset"),
-    (("config", "provider", "set"), "provider-settings.set"),
-    (("config", "provider", "status"), "provider-settings.status"),
     (("config", "provision", "browser"), None),
     (("config", "provision", "install"), None),
     (("config", "provision", "load"), None),
@@ -411,7 +406,6 @@ COMMAND_OPERATION_ROWS: Final[tuple[tuple[tuple[str, ...], str | None], ...]] = 
     (("config", "reset", "resume"), None),
     (("config", "reset", "start"), None),
     (("config", "reset", "status"), None),
-    (("config", "sign-in-hold"), None),
     (("config", "sign-in-status"), None),
     (("config", "storage", "check"), None),
     (("config", "storage", "init"), None),
@@ -459,8 +453,6 @@ OPERATIONS_WITHOUT_COMMAND: Final[tuple[str, ...]] = (
 """Every registered operation no command submits."""
 
 COMMAND_RUNTIME_REQUEST_ROWS: Final[tuple[tuple[tuple[str, ...], str], ...]] = (
-    (("app", "agent", "serve"), "agent_start"),
-    (("app", "agent", "serve"), "profile_login"),
     (("config", "login"), "human_sign_out"),
     (("config", "login"), "profile_login"),
     (("config", "login"), "session_lock"),
@@ -498,13 +490,6 @@ COMMAND_RUNTIME_REQUEST_ROWS: Final[tuple[tuple[tuple[str, ...], str], ...]] = (
     (("config", "profile", "sessions"), "session_inventory"),
     (("config", "reset", "resume"), "reset_resume"),
     (("config", "reset", "start"), "reset_start"),
-    (("config", "sign-in-hold"), "attendance_decision"),
-    (("config", "sign-in-hold"), "attendance_inventory"),
-    (("config", "sign-in-hold"), "human_sign_out"),
-    (("config", "sign-in-hold"), "profile_login"),
-    (("config", "sign-in-hold"), "session_lock"),
-    (("config", "sign-in-hold"), "session_refresh"),
-    (("config", "sign-in-hold"), "session_status"),
     (("config", "sign-in-status"), "sign_in_status"),
 )
 """One row for each executable command and each runtime request or installation act it can send."""

@@ -72,6 +72,7 @@ impl Observer {
                         .lock()
                         .unwrap_or_else(|error| error.into_inner())
                         .is_some()
+                        && !owner.reads.mutating()
                     {
                         observer.publish(owner.read_status().await);
                     }

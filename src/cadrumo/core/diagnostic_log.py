@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import math
@@ -27,6 +28,15 @@ _LIFECYCLE_FIELDS = tuple(
     sorted(
         {
             "action",
+            "request_type",
+            "operation_channel",
+            "budget_seconds",
+            "request_action",
+            "kdf_cleanup_process_elapsed_ms",
+            "kdf_cleanup_pipes_elapsed_ms",
+            "kdf_cleanup_directory_elapsed_ms",
+            "queue_seconds",
+            "phase",
             "event",
             "service",
             "gateway_port",
@@ -54,6 +64,7 @@ _LIFECYCLE_FIELDS = tuple(
             "inventory_elapsed_ms",
             "inventory_login_count",
             "inventory_state",
+            "kdf_operation",
             "kdf_clean_exit_elapsed_ms",
             "kdf_cleanup_elapsed_ms",
             "kdf_ready_attestation_elapsed_ms",
@@ -116,6 +127,12 @@ def stamp_diagnostic_record(record: logging.LogRecord) -> None:
     """Capture context when a record is made, including deferred records."""
     record.__dict__["_cadrumo_process_role"] = _process_role
     record.__dict__["_cadrumo_diagnostic_id"] = _DIAGNOSTIC_ID.get()
+    try:
+        task = asyncio.current_task()
+    except RuntimeError:
+        task = None
+    record.__dict__["_cadrumo_task_id"] = id(task) if task is not None else None
+    record.__dict__["_cadrumo_task_name"] = task.get_name() if task is not None else None
 
 
 def stamp_diagnostic_scalar_fields(record: logging.LogRecord) -> None:
@@ -135,11 +152,18 @@ def diagnostic_event(
     event: str,
     *,
     fields: Mapping[str, DiagnosticValue] | None = None,
-    level: int = logging.INFO,
+    level: int | None = None,
     primary_error: BaseException | None = None,
 ) -> None:
     """Emit safe scalar diagnostics without displacing an existing primary."""
     try:
+        outcome = fields.get("outcome") if fields else None
+        failed = isinstance(outcome, str) and outcome in {"failed", "error", "unconfirmed"}
+        failed = failed or event.endswith(("_failed", " failed"))
+        if failed and (level is None or level < logging.ERROR):
+            level = logging.ERROR
+        elif level is None:
+            level = logging.DEBUG
         logger.log(level, event, extra=dict(fields or {}))
     except Exception:
         return
@@ -217,6 +241,15 @@ class DiagnosticFormatter(logging.Formatter):
             "process_id": record.process or os.getpid(),
             "process_role": _scalar(record.__dict__.get("_cadrumo_process_role", _process_role)),
         }
+        # Foreign-process records are forwarded by a reader thread; its identity
+        # is not the emitting child's worker identity.
+        if record.process == os.getpid():
+            context["thread_id"] = record.thread
+            context["thread_name"] = _scalar(record.threadName)
+            for key in ("task_id", "task_name"):
+                value = record.__dict__.get(f"_cadrumo_{key}")
+                if value is not None:
+                    context[key] = _scalar(value)
         identifier = record.__dict__.get("_cadrumo_diagnostic_id")
         if isinstance(identifier, str) and identifier:
             context["diagnostic_id"] = _scalar(identifier)

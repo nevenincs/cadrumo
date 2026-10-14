@@ -141,6 +141,11 @@ export function TerminalPane({
     let exited = false;
     let mouseTracking = false;
     let queue = Promise.resolve();
+    let openingInput: Uint8Array[] = [];
+    const clearOpeningInput = () => {
+      for (const bytes of openingInput) bytes.fill(0);
+      openingInput = [];
+    };
     const status = (next: TerminalStatus) => {
       if (!disposed) live.current.onStatus(kind, next);
     };
@@ -149,7 +154,14 @@ export function TerminalPane({
     // applies backpressure, so even a very large paste arrives whole.
     const send = (bytes: Uint8Array) => {
       const target = session;
-      if (!target || disposed) return;
+      if (disposed || exited) return;
+      if (!target) {
+        // ConPTY can request the cursor position before terminal_open returns.
+        // Keep xterm's reply until the session can accept it, or Windows may
+        // leave the child waiting for console initialization indefinitely.
+        openingInput.push(bytes);
+        return;
+      }
       queue = queue
         .then(() => target.write(bytes))
         .catch((error: unknown) =>
@@ -158,6 +170,7 @@ export function TerminalPane({
     };
 
     const start = () => {
+      clearOpeningInput();
       exited = false;
       term.reset();
       status({ phase: "starting" });
@@ -171,6 +184,7 @@ export function TerminalPane({
           } else if (event.type === "started") {
             status({ phase: "running" });
           } else if (event.type === "exited") {
+            clearOpeningInput();
             session = null;
             exited = true;
             mouseTracking = false;
@@ -179,6 +193,7 @@ export function TerminalPane({
             );
             status({ phase: "exited", code: event.code });
           } else {
+            clearOpeningInput();
             session = null;
             exited = true;
             term.write(
@@ -188,14 +203,19 @@ export function TerminalPane({
           }
         })
         .then((opened) => {
-          if (disposed) {
+          if (disposed || exited) {
+            clearOpeningInput();
             void opened.close();
             return;
           }
           session = opened;
+          const pending = openingInput;
+          openingInput = [];
+          for (const bytes of pending) send(bytes);
           void opened.resize(term.cols, term.rows);
         })
         .catch((error: unknown) => {
+          clearOpeningInput();
           if (error instanceof HostUnavailable) {
             setUnavailable(true);
             status({ phase: "unavailable" });
@@ -208,8 +228,8 @@ export function TerminalPane({
 
     const encoder = new TextEncoder();
     const input = term.onData((data) => {
-      if (session) send(encoder.encode(data));
-      else if (exited && data === "\r") start();
+      if (exited && data === "\r") start();
+      else send(encoder.encode(data));
     });
     const binary = term.onBinary((data) =>
       send(Uint8Array.from(data, (char) => char.charCodeAt(0))),
@@ -275,6 +295,7 @@ export function TerminalPane({
       cancelAnimationFrame(frame);
       element.removeEventListener("contextmenu", menu);
       input.dispose();
+      clearOpeningInput();
       binary.dispose();
       modes.dispose();
       modesOff.dispose();

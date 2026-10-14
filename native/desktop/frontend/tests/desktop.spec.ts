@@ -43,6 +43,9 @@ async function signInHost(
         tuiStarts: 0,
         tuiCloses: 0,
         terminalStarts: [] as string[],
+        terminalWrites: [] as string[],
+        deferTui: false,
+        releaseTui: null as (() => void) | null,
         terminalCloses: 0,
         rawPassword: false,
         tokenHeader: false,
@@ -233,6 +236,14 @@ async function signInHost(
                   state.terminalStarts.push(String(args.kind));
                 if (!(args instanceof Uint8Array) && args.kind === "tui") {
                   ++state.tuiStarts;
+                  if (state.deferTui) {
+                    (
+                      args.frames as { onmessage: (data: ArrayBuffer) => void }
+                    ).onmessage(Uint8Array.from([0, 27, 91, 54, 110]).buffer);
+                    await new Promise<void>((resolve) => {
+                      state.releaseTui = resolve;
+                    });
+                  }
                   state.exitTui = () =>
                     (
                       args.frames as { onmessage: (data: ArrayBuffer) => void }
@@ -254,6 +265,10 @@ async function signInHost(
                 if (!(args instanceof Uint8Array) && args.session === 99)
                   ++state.tuiCloses;
                 return {};
+              case "terminal_write":
+                if (args instanceof Uint8Array)
+                  state.terminalWrites.push(new TextDecoder().decode(args));
+                return null;
               case "logs_subscribe":
                 return {
                   subscription: 1,
@@ -284,6 +299,40 @@ const signInState = (target: Page) =>
       (window as unknown as { __signInTest: Record<string, unknown> })
         .__signInTest,
   );
+
+test("terminal cursor replies survive output arriving before session opening completes", async ({
+  page,
+}) => {
+  await signInHost(page);
+  await page.evaluate(() => {
+    Object.assign(
+      (window as unknown as { __signInTest: object }).__signInTest,
+      {
+        submitCode: "",
+        deferTui: true,
+      },
+    );
+  });
+  await page
+    .getByLabel(label("desktop.signin.password"), { exact: true })
+    .fill("secret á漢");
+  await page
+    .getByRole("button", { name: label("desktop.signin.submit"), exact: true })
+    .click();
+  await expect.poll(async () => (await signInState(page)).tuiStarts).toBe(1);
+  // Let xterm consume the cursor query while the host still holds the open reply.
+  await page.evaluate(async () => {
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+    );
+    (
+      window as unknown as { __signInTest: { releaseTui: () => void } }
+    ).__signInTest.releaseTui();
+  });
+  await expect
+    .poll(async () => (await signInState(page)).terminalWrites)
+    .toEqual(["\u001b[1;1R"]);
+});
 
 for (const [severity, value] of [
   ["DEBUG", "0"],
@@ -729,10 +778,15 @@ for (const pending of ["status", "list"] as const)
   });
 
 for (const pending of ["status", "list"] as const)
-  test(`profile creation dispatches before a held ${pending} read and refreshes the selected new profile coherently`, async ({
+  test(`profile creation authenticates before a held ${pending} read settles`, async ({
     page: target,
   }) => {
     await signInHost(target, true, false, pending === "list");
+    await target.evaluate(() => {
+      (
+        window as unknown as { __signInTest: { submitCode: string } }
+      ).__signInTest.submitCode = "";
+    });
     const dialog = target.locator(".sign-in");
     await expect(dialog).toBeVisible();
     if (pending === "status")
@@ -788,14 +842,15 @@ for (const pending of ["status", "list"] as const)
       if (pending === "status") state.releaseStatus();
       else state.releaseList();
     }, pending);
-    await expect(dialog.locator("#profile-password")).toBeFocused();
-    await expect(dialog.locator("#profile-choice option:checked")).toHaveText(
-      "Marta Ruiz á漢",
-    );
+    await expect(dialog).toHaveCount(0);
+    await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
     const state = await signInState(target);
     expect(state.creations).toBe(1);
-    expect(state.statusReads).toBe(Number(reads) + 1);
-    expect(state.submissions).toBe(0);
+    expect(state.statusReads).toBe(reads);
+    expect(state.submissions).toBe(1);
+    expect(state.profileHeader).toBe(state.createdHeader);
+    expect(state.rawPassword).toBe(true);
+    expect(state.secretCleared).toBe(true);
     expect(state.createdHeader).toBe("Marta%20Ruiz%20%C3%A1%E6%BC%A2");
     expect(state.createdRawPassword).toBe(true);
     expect(state.createdTokenHeader).toBe(true);
@@ -846,7 +901,7 @@ test("a chosen profile is named to the host by its label, percent-encoded in a h
   expect(state.tokenHeader).toBe(true);
 });
 
-test("a profile is created through the host with one raw password body, its label in a header", async ({
+test("a created profile remains available when automatic sign-in is refused", async ({
   page: target,
 }) => {
   await signInHost(target);
@@ -867,7 +922,7 @@ test("a profile is created through the host with one raw password body, its labe
   await form
     .getByRole("button", { name: label("desktop.account.create.submit") })
     .click();
-  // Created and selected, and not signed in: its password is asked for.
+  // Creation succeeded, but the runtime refused the subsequent sign-in.
   await expect(dialog.locator("#profile-password")).toBeFocused();
   await expect(dialog.locator("#profile-choice option:checked")).toHaveText(
     "Marta Ruiz á漢",
@@ -878,7 +933,10 @@ test("a profile is created through the host with one raw password body, its labe
   expect(state.createdRawPassword).toBe(true);
   expect(state.createdTokenHeader).toBe(true);
   expect(state.createdSecretCleared).toBe(true);
-  expect(state.submissions).toBe(0);
+  expect(state.submissions).toBe(1);
+  expect(state.profileHeader).toBe(state.createdHeader);
+  expect(state.rawPassword).toBe(true);
+  expect(state.secretCleared).toBe(true);
   expect(state.tuiStarts).toBe(0);
 });
 

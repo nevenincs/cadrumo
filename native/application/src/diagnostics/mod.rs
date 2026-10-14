@@ -380,8 +380,23 @@ impl Diagnostics {
                 EventKind::ChildExited
             },
             Some(id),
-            None,
+            if phase == ProcessPhase::Failed || (phase == ProcessPhase::Exited && code != Some(0)) {
+                Some(ApplicationError::new(
+                    ErrorCode::ChildFailed,
+                    Operation::Launch,
+                ))
+            } else {
+                None
+            },
         );
+    }
+    /// Record byte totals only; terminal contents never enter diagnostic capture.
+    pub fn count(&self, id: u64, stream: Stream, bytes: usize) {
+        self.state
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .tracker
+            .count(id, stream, bytes);
     }
     pub fn capture(&self, id: u64, stream: Stream, bytes: &[u8]) {
         self.state

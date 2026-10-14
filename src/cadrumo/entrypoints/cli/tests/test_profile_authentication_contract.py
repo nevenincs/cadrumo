@@ -87,7 +87,6 @@ def test_leaf_machine_secret_inventory_remains_leaf_only_and_scope_disjoint() ->
         "config.profile.automation.create",
         "config.profile.automation.change",
         "config.auth.certificate.secret.set",
-        "config.provider.set",
         "ledger.account.add",
         "ledger.account.update",
         "modelo.m360.declare",

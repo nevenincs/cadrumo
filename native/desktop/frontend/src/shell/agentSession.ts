@@ -355,6 +355,8 @@ export type AgentStreamEvent =
  * signed in; failures carry a stable code. */
 export interface AgentSession {
   status(): Promise<AgentServiceStatus>;
+  /** Retry service startup after correcting a failure. */
+  retry?(): Promise<void>;
   /** Cleanup cannot remove a newer subscriber. */
   observeStatus(
     listener: (status: AgentServiceStatus) => void,

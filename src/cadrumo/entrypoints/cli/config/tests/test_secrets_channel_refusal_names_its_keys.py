@@ -1,8 +1,8 @@
 """A machine-channel secrets refusal names the keys it would have accepted.
 
 ``--secrets-stdin`` and ``--secrets-fd`` are the channels a caller with NO
-terminal must use, and for this CLI that caller is the ordinary one: an
-autonomous agent cannot be prompted. Both refused a malformed payload with
+terminal must use, and for this CLI that caller is the ordinary one: a
+script cannot be prompted. Both refused a malformed payload with
 "not a valid JSON object" and stopped there, which tells the one operator who
 cannot be prompted nothing it can act on.
 

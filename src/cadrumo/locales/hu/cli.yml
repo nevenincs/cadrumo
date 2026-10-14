@@ -1,15 +1,5 @@
 cli:
   app:
-    agent:
-      app_help: A bejelentkezett profilodhoz tartozó hosztolt asszisztens kiszolgálása.
-      serve:
-        agent_source_help: Egy cadrumo-agent forrásfa abszolút útvonala, amelyből
-          az asszisztens fut. Ha nem adod meg, a Cadrumóval együtt telepített asszisztens
-          fut.
-        help: Elindítja a hosztolt asszisztenst a mentett bejelentkezéseddel, és futva
-          tartja, amíg a szabványos bemenet le nem zárul. A szabványos bemeneten egy
-          JSON-sort olvas az átjáró hozzáférési tokenjével, a szabványos kimenetre
-          JSON-eseménysorokat ír.
     ledger:
       account:
         account_id_help: A saját számla azonosítója, például acc-01.
@@ -1410,7 +1400,7 @@ cli:
           karakter).
         actor_too_long: A --by címke legfeljebb {limit} karakter lehet; {length} érkezett.
           A parancs által rögzített auditesemény szereplőjét nevezi meg, ezért adj
-          meg egy rövid nevet magadnak vagy az ügynöknek.
+          meg egy rövid nevet magadnak.
         allow_not_applicable_help: Bevallás létrehozása akkor is, ha a nyomtatvány
           nem vonatkozik az aktív profil adóalany-típusára.
         amend_help: Helyesbítés készítése egy a Cadrumón kívül benyújtott bevalláshoz.
@@ -2063,12 +2053,8 @@ cli:
           a kért jogosultságmódosítással.
         automation_change_proposal_required: A jogosultságmódosítási kérelmet a --secrets-stdin
           vagy --secrets-fd csatornán add meg.
-        automation_create_agent_categories: A --category csak a --use agent kapcsolóval
-          együtt érvényes.
-        automation_create_proposal_required: Válaszd a --use agent kapcsolót, vagy
-          add meg a jogosultsági kérelmet a --secrets-stdin vagy --secrets-fd csatornán.
-        automation_create_use_conflict: A --use agent maga állítja össze a kérelmet;
-          ne adj meg mellé másikat a --secrets-stdin vagy --secrets-fd csatornán.
+        automation_create_proposal_required: Add meg a jogosultsági kérelmet a --secrets-stdin
+          vagy --secrets-fd csatornán.
         echo_suppression_unavailable: Ez a terminál nem tudja elrejteni a beírt szöveget,
           így a titok láthatóvá válna a képernyőn; használd a --secrets-stdin vagy
           --secrets-fd kapcsolót.
@@ -2236,15 +2222,15 @@ cli:
         session_not_persisted_logon: 'Csak ehhez a parancshoz jelentkeztél be: a Windows
           Hitelesítőadat-kezelő elutasította ezt a Windows-munkamenetet (1312-es hiba),
           mert nem tartalmaz Windows-hitelesítőadatokat, így egyetlen folyamata sem
-          tudja megőrizni vagy követni a bejelentkezést, és a cadrumo-mcp és a későbbi
-          parancsok sem használhatják. Futtasd a Cadrumót a Windows asztali bejelentkezésedből,
+          tudja megőrizni vagy követni a bejelentkezést, és a későbbi parancsok sem
+          használhatják. Futtasd a Cadrumót a Windows asztali bejelentkezésedből,
           vagy add meg a profil jelszavát minden parancsnak a --profile-secrets-stdin
           kapcsolóval.'
         session_not_persisted_no_backend: 'Csak ehhez a parancshoz jelentkeztél be:
           ennek a folyamatnak nincs elérhető rendszerkulcstára, így a bejelentkezés
-          nem őrizhető meg a cadrumo-mcp és a későbbi parancsok számára. Kapcsold
-          be a rendszerkulcstárat ehhez a fiókhoz, vagy add meg a profil jelszavát
-          minden parancsnak a --profile-secrets-stdin kapcsolóval.'
+          nem őrizhető meg a későbbi parancsok számára. Kapcsold be a rendszerkulcstárat
+          ehhez a fiókhoz, vagy add meg a profil jelszavát minden parancsnak a --profile-secrets-stdin
+          kapcsolóval.'
         session_not_persisted_unconfirmed: 'Csak ehhez a parancshoz jelentkeztél be:
           a runtime nem őrizte meg ezt a bejelentkezést, pedig ez a folyamat eléri
           a rendszerkulcstárat. Vagy megváltozott a bejelentkezés, amíg ez a belépés
@@ -2256,7 +2242,7 @@ cli:
       passphrase_prompt: 'Profil jelszava: '
     logout:
       help: Jelentkezz ki ebből a profilból az eszköz összes felhasználói munkamenetében.
-        Az ügynökök hozzáférése és az AEAT-munkamenetek aktívak maradnak.
+        Az AEAT-munkamenetek aktívak maradnak.
       notices:
         already_logged_out: Nincs kiválasztott profil; nincs miből kijelentkezni.
     passphrase:
@@ -2341,14 +2327,9 @@ cli:
             kérelmezése.
           kind_help: 'A módosítás típusa: rotate, renew vagy change_scope.'
         create:
-          category_help: 'További adatkategória, amelyet az ügynök olvashat: tax_values.'
-          help: API-kulcs kiadása. A --use agent kapcsolóval MCP-n keresztül dolgozó
-            ügynöknek szóló kulcs, amely olvassa és módosítja a profil adatait, valamint
-            az általad hozzáadott --category kategóriákat; egyébként teljes kérelmet
-            adj meg a --secrets-stdin vagy --secrets-fd csatornán. A kulcs a külön
-            jóváhagyásod után kerül a védett tárolóba.
-          use_help: 'Mire szól a kulcs: agent, MCP-n keresztül dolgozó ügynöknek szóló
-            kulcs. Mindig olvassa és módosítja a profil adatait.'
+          help: API-kulcs kiadása teljes kérelemből, amelyet a --secrets-stdin vagy
+            --secrets-fd csatornán adsz meg. A kulcs a külön jóváhagyásod után kerül
+            a védett tárolóba.
         decline:
           digest_help: Az inspect által megjelenített pontos felülvizsgálati kivonat.
           help: A felülvizsgált kérelem elutasítása.
@@ -2648,53 +2629,6 @@ cli:
       validate_name_help: 'A validálandó profil opcionális címkéje; alapértelmezett:
         aktív profil.'
       view_help: 'Egy profil adatainak megjelenítése (alapértelmezés: az aktív profil).'
-    provider:
-      base_url_help: Ezt a https alap URL-t menti a kulccsal a szolgáltató alapértelmezése
-        helyett.
-      clear_base_url_help: Törli a mentett alap URL-t, és ismét a szolgáltató alapértelmezését
-        használja.
-      expected_revision_help: A revízió, amelyet a legutóbbi állapotlekérdezésed jelzett
-        ehhez a szolgáltatóhoz; ha a szolgáltató azóta megváltozott, a módosítást
-        elutasítjuk.
-      help: Kezeld a modellszolgáltatók hitelesítő adatait, amelyeket az ügynök ebben
-        a profilban használ.
-      provider_id_help: A szolgáltató azonosítója, ahogyan a cadrumo-agent bejelenti;
-        futtasd az `aeat config provider status` parancsot a megtekintésükhöz.
-      refused:
-        base_url_rejected: 'Az alap URL-t elutasítottuk: ez a szolgáltató nem fogad
-          el ilyet, nem https URL, vagy a szolgáltatónak szüksége van rá, de egy sem
-          maradna mentve. Semmi sem változott.'
-        catalog_unavailable: A cadrumo-agent nem tudta megadni a szolgáltatóit, így
-          nincs mit lekérdezni vagy módosítani. Ellenőrizd, hogy az ügynök telepítve
-          van-e.
-        committed_readback_failed: A módosítást mentettük, de a visszaolvasása nem
-          sikerült. Kérdezd le az állapotot, mielőtt újra módosítod ezt a szolgáltatót.
-        invalid_key_format: Ez nem szolgáltatói kulcs formájú. Semmit sem mentettünk.
-        not_signed_in: Jelentkezz be ebbe a profilba, mielőtt a szolgáltatóit kezelnéd.
-        person_act_required: Szolgáltatói hitelesítő adatot csak te módosíthatsz,
-          a parancssorból vagy a terminálfelületről. Ügynök erre nem képes.
-        profile_locked: Ez a profil zárolva van, vagy lejárt a munkamenete. Jelentkezz
-          be újra, és próbáld meg ismét.
-        revision_conflict: Ez a szolgáltató megváltozott az állapotlekérdezésed óta.
-          Kérdezd le újra az állapotot, és a jelzett revíziót küldd el.
-        runtime_unavailable: A háttérszolgáltatás nem fogadta a kérést, így semmit
-          sem olvastunk be, és semmi sem változott. Ellenőrizd, hogy fut-e a háttérszolgáltatás-kezelő,
-          majd próbáld újra.
-        unknown: A kérést elutasítottuk. Ellenőrizd a szolgáltató azonosítóját az
-          `aeat config provider status` paranccsal, és hogy ez a szolgáltató fogad-e
-          kulcsot. Semmi sem változott.
-      remove_help: 'Szolgáltató kikapcsolása: a mentett kulcsa törlődik, és fejlesztői
-        környezeti kulcs sem használható hozzá.'
-      reset_help: Szolgáltató visszaállítása beállítatlan állapotba. Fejlesztői buildben
-        ismét a környezeti kulcsa érvényes; egyébként nem érhető el, amíg nem mentesz
-        hozzá kulcsot.
-      secret_prompt: Szolgáltatói kulcs
-      set_help: Egy szolgáltató kulcsának mentése vagy cseréje. A kulcsot a szabványos
-        bemenetről vagy visszhang nélküli bekérésből olvassa, sosem argumentumból,
-        és a szolgáltató csak az első használatkor ellenőrzi.
-      status_help: Kilistázza a cadrumo-agent által bejelentett összes szolgáltatót
-        a maszkolt állapotukkal és azzal a revízióval, amelyet egy módosításnak vissza
-        kell küldenie.
     provision:
       browser:
         help: Letölti az AEAT-automatizálás által indított böngészőváltozatot. Ha
@@ -2822,11 +2756,6 @@ cli:
         profil beállítása befejezetlen marad; az `aeat config profile complete-setup`
         megmutatja, mely adatok hiányoznak még. Önmagában is elég; kombináld az --accept-defaults
         kapcsolóval, hogy a többi értéket a leíró alapértékeivel töltsd ki.
-    sign_in_hold:
-      help: Tartsd fenn egy profil bejelentkezését mentés nélkül, amíg a szabványos
-        bemenet nyitva van, és hagyd jóvá, mely ügynökkapcsolatok követhetik.
-      name_help: A profil UUID-ja vagy pontos címkéje, amelybe bejelentkezel; hagyd
-        ki a kiválasztott profil használatához
     sign_in_status:
       help: Ellenőrizd a bejelentkezésed állapotát anélkül, hogy folytatnád vagy meghosszabbítanád.
     status:

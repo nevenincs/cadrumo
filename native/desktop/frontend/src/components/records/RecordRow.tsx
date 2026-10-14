@@ -49,12 +49,24 @@ export const RecordRow = memo(function RecordRow({
     context.phase,
     context.outcome,
     context.reason_code,
+    context.reason,
+    context.error_type,
+    context.request_type,
+    context.request_action,
+    context.kdf_operation,
     context.lifecycle_reason,
     context.service_reason,
     context.service_cause,
     context.service_scope,
     typeof context.total_ms === "number" ? `${context.total_ms} ms` : null,
     typeof retryDelay === "number" ? `retry ${retryDelay} ms` : null,
+    typeof context.exit_code === "number" ? `exit ${context.exit_code}` : null,
+    typeof context.elapsed_seconds === "number"
+      ? `${context.elapsed_seconds.toFixed(3)} s`
+      : null,
+    typeof context.service_attempts === "number"
+      ? `${context.service_attempts} attempts`
+      : null,
   ]
     .filter((value): value is string => typeof value === "string")
     .join(" · ");

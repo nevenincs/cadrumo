@@ -38,7 +38,7 @@ def _raising_filter(error: BaseException) -> logging.Filter:
 
 def _logger() -> tuple[logging.Logger, _Capture]:
     get_logger("cadrumo.tests.startup_phase_log")
-    logger = logging.Logger("cadrumo.tests.startup_phase_log", level=logging.INFO)
+    logger = logging.Logger("cadrumo.tests.startup_phase_log", level=logging.DEBUG)
     logger.propagate = False
     capture = _Capture()
     logger.addHandler(capture)
@@ -59,7 +59,7 @@ def test_enter_record_has_fixed_message_and_extras() -> None:
     log_startup_phase(logger, "manager_start", "enter", 0.0)
 
     (record,) = capture.records
-    assert record.levelno == logging.INFO
+    assert record.levelno == logging.DEBUG
     assert record.name == "cadrumo.tests.startup_phase_log"
     assert record.getMessage() == "runtime_startup phase=manager_start transition=enter elapsed_seconds=0.000000"
     assert _fields(record) == ("manager_start", "enter", 0.0)
@@ -121,7 +121,7 @@ def test_context_manager_propagates_body_error_as_the_primary() -> None:
 
     assert raised.value is primary
     assert [_fields(r)[:2] for r in capture.records] == [("manager_inspect", "enter"), ("manager_inspect", "leave")]
-    assert capture.records[-1].levelno == logging.WARNING
+    assert capture.records[-1].levelno == logging.ERROR
     assert capture.records[-1].__dict__["outcome"] == "failed"
     assert capture.records[-1].__dict__["error_type"] == "ValueError"
     assert "body failure" not in capture.records[-1].getMessage()

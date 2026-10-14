@@ -198,7 +198,7 @@ def test_mounted_command_families_are_backend_owned_and_service_backed() -> None
     custody_children = {
         family.child for family in contract.command_families if family.domain is MountedCommandDomain.CUSTODY
     }
-    assert custody_children == {"login", "sign-in-status", "sign-in-hold", "logout", "passphrase"}
+    assert custody_children == {"login", "sign-in-status", "logout", "passphrase"}
     # The append-only event-history verb merged into the `config profile` group
     # as `config profile history` (D1 family rename); the standalone
     # `config bucket` group was retired, so there is no BUCKET family.

@@ -19,6 +19,23 @@ use std::{
 };
 
 #[test]
+fn terminal_traffic_is_measured_without_retaining_screen_contents() {
+    let diagnostics = Diagnostics::default();
+    let id = diagnostics.start(123, ProcessRole::Tui);
+    diagnostics.count(id, Stream::Terminal, 8192);
+    diagnostics.count(id, Stream::Terminal, 17);
+    diagnostics.finish(id, Some(0), ProcessPhase::Exited);
+    let snapshot = diagnostics.snapshot(0);
+    assert_eq!(snapshot.processes[0].terminal_bytes, 8209);
+    assert!(snapshot.output.is_empty());
+    assert_eq!(snapshot.dropped_bytes, 0);
+    assert_eq!(
+        snapshot.events.last().unwrap().status.as_ref().unwrap().terminal_bytes,
+        8209
+    );
+}
+
+#[test]
 fn private_causes_and_child_payloads_never_enter_native_logs() {
     let directory = tempfile::tempdir_in(env!("CARGO_TARGET_TMPDIR")).unwrap();
     let diagnostics = Diagnostics::default();
@@ -527,10 +544,7 @@ fn failed_configuration_recovers_buffered_events_without_replacing_the_primary()
     diagnostics.configure(&obstruction, 8192, 2).unwrap();
     diagnostics.host_stopped(1);
     let snapshot = diagnostics.snapshot(u64::MAX);
-    assert_eq!(
-        snapshot.log_failure.unwrap().code,
-        ErrorCode::LogUnavailable
-    );
+    assert!(snapshot.log_failure.is_none());
     let log = fs::read_to_string(snapshot.paths.unwrap().current).unwrap();
     assert!(!log.contains("synthetic-private"));
     let records: Vec<serde_json::Value> = log
@@ -587,12 +601,9 @@ fn a_busy_sink_keeps_the_primary_in_memory_and_future_writes_resume() {
     assert_eq!(sequences, [1, 3]);
     let recovered = diagnostics.snapshot(u64::MAX);
     assert_eq!(recovered.events.len(), 3);
-    assert_eq!(
-        recovered.log_failure.unwrap().code,
-        ErrorCode::LogUnavailable
-    );
+    assert!(recovered.log_failure.is_none());
     eprintln!(
-        "native diagnostics busy-sink recovery: persistent_sequences={sequences:?}, memory_sequences=[1, 2, 3], log_failure=log_unavailable"
+        "native diagnostics busy-sink recovery: persistent_sequences={sequences:?}, memory_sequences=[1, 2, 3], log_failure=none"
     );
 }
 

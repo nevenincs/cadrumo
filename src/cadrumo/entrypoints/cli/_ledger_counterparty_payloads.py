@@ -44,7 +44,7 @@ class CounterpartyEstablishmentPayload(OutputSchema):
 
     ``asserted_at`` is a last-seen body field and is deliberately NOT folded into
     ``counterparty_key`` -- the same counterparty addresses the same record on
-    every retry, which is what makes the verb safe for an agent that retries.
+    every retry, which is what makes the verb safe for a script that retries.
     """
 
     counterparty_key: ContentDigest
