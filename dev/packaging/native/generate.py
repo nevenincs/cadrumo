@@ -22,6 +22,7 @@ from .stable_output import write_text
 from .storage_vectors import (
     INVALID_NATIVE_PATH_BYTES,
     INVALID_NATIVE_PATH_UTF16,
+    storage_member_vectors,
     storage_path_vectors,
     storage_root_vectors,
 )
@@ -199,6 +200,23 @@ def _rust_root_and_environment(contract: dict[str, Any]) -> list[str]:
             f"expected_components: {expected}, refusal: {_rust_option(vector['refusal'])} }},"
         )
     lines.append("];")
+    lines += [
+        "pub struct StorageMemberVector { pub name: &'static str, pub platform: &'static str, "
+        "pub variable: &'static str, pub value: &'static str, "
+        "pub expected_components: Option<&'static [&'static str]>, pub refusal: Option<&'static str> }",
+        "pub const STORAGE_MEMBER_VECTORS: &[StorageMemberVector] = &[",
+    ]
+    for vector in contract["member_vectors"]:
+        expected = (
+            "None" if vector["expected_components"] is None else f"Some({_rust_strings(vector['expected_components'])})"
+        )
+        lines.append(
+            f"StorageMemberVector {{ name: {_rust_string(vector['name'])}, "
+            f"platform: {_rust_string(vector['platform'])}, variable: {_rust_string(vector['variable'])}, "
+            f"value: {_rust_string(vector['value'])}, "
+            f"expected_components: {expected}, refusal: {_rust_option(vector['refusal'])} }},"
+        )
+    lines.append("];")
     return lines
 
 
@@ -242,6 +260,7 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
         "mode": _mode_section(layout, declaration),
         "vectors": [vector.as_contract() for vector in storage_root_vectors(root)],
         "path_vectors": [vector.as_contract() for vector in storage_path_vectors()],
+        "member_vectors": [vector.as_contract() for vector in storage_member_vectors()],
         "invalid_native_path": {
             "posix_bytes": list(INVALID_NATIVE_PATH_BYTES),
             "windows_utf16": list(INVALID_NATIVE_PATH_UTF16),

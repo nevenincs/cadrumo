@@ -377,6 +377,36 @@ fn generated_filesystem_vectors_preserve_original_link_evidence_and_have_no_effe
 }
 
 #[test]
+fn member_overrides_reproduce_every_generated_member_vector() {
+    let host = if cfg!(windows) { "windows" } else { "posix" };
+    let vectors: Vec<_> = STORAGE_MEMBER_VECTORS
+        .iter()
+        .filter(|vector| vector.platform == host)
+        .collect();
+    assert!(
+        vectors.len() >= 3,
+        "the contract carries this platform's member vectors"
+    );
+    for vector in vectors {
+        let scratch = Scratch::new("member");
+        let root = scratch.0.join("root");
+        let lookup = |name: &str| (name == vector.variable).then(|| OsString::from(vector.value));
+        let outcome = storage::member_path(&root, vector.variable, "default", &lookup);
+        match (outcome, vector.expected_components, vector.refusal) {
+            (Ok(path), Some(parts), None) => assert_eq!(
+                path,
+                root.join(parts.iter().collect::<PathBuf>()),
+                "{}",
+                vector.name
+            ),
+            (Err(refused), None, Some(code)) => assert_eq!(refused.code, code, "{}", vector.name),
+            outcome => panic!("{}: {outcome:?}", vector.name),
+        }
+        assert!(!root.exists(), "{}", vector.name);
+    }
+}
+
+#[test]
 fn inherited_path_pins_refuse_relative_and_invalid_values_before_creation() {
     for field in HOST_INHERITED_FIELDS
         .iter()

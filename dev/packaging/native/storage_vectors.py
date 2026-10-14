@@ -139,3 +139,57 @@ def storage_path_vectors() -> tuple[StoragePathVector, ...]:
         StoragePathVector("dangling-link-refused", ("link", "child"), (), (), (("link", "absent"),), None, refused),
         StoragePathVector("regular-file-component-refused", ("file", "child"), (), ("file",), (), None, refused),
     )
+
+
+NON_ABSOLUTE_PIN = "non_absolute_pin"
+
+
+class StorageMemberVector(NamedTuple):
+    """One override of a storage member below a fresh absolute root.
+
+    ``platform`` is ``windows`` or ``posix``: both resolvers read a member with
+    their host's path grammar, so a drive-relative spelling is a refusal on
+    Windows and an ordinary relative name elsewhere. ``value`` is the override
+    exactly as an operator writes it. Exactly one of ``expected_components``
+    (the result, relative to the root) and ``refusal`` is set.
+    """
+
+    name: str
+    platform: str
+    variable: str
+    value: str
+    expected_components: tuple[str, ...] | None
+    refusal: str | None
+
+    def as_contract(self) -> dict[str, object]:
+        """Project the override and its independently authored outcome."""
+        return {
+            "name": self.name,
+            "platform": self.platform,
+            "variable": self.variable,
+            "value": self.value,
+            "expected_components": None if self.expected_components is None else list(self.expected_components),
+            "refusal": self.refusal,
+        }
+
+
+def storage_member_vectors() -> tuple[StorageMemberVector, ...]:
+    """A relative member lands below its root; a drive- or root-relative one is never re-anchored."""
+    variable = "CADRUMO_LOG_DIR"
+    refused = NON_ABSOLUTE_PIN
+    return (
+        StorageMemberVector("windows-relative-member-below-root", "windows", variable, "logs", ("logs",), None),
+        StorageMemberVector(
+            "windows-relative-member-normalized", "windows", variable, r"unused\..\logs\run", ("logs", "run"), None
+        ),
+        StorageMemberVector("windows-drive-relative-member-refused", "windows", variable, "C:rooted", None, refused),
+        StorageMemberVector(
+            "windows-rooted-member-without-drive-refused", "windows", variable, r"\rooted", None, refused
+        ),
+        StorageMemberVector("windows-slash-rooted-member-refused", "windows", variable, "/rooted", None, refused),
+        StorageMemberVector("posix-relative-member-below-root", "posix", variable, "logs", ("logs",), None),
+        StorageMemberVector(
+            "posix-relative-member-normalized", "posix", variable, "unused/../logs/run", ("logs", "run"), None
+        ),
+        StorageMemberVector("posix-drive-like-name-is-relative", "posix", variable, "C:rooted", ("C:rooted",), None),
+    )

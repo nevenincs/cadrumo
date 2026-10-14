@@ -135,7 +135,7 @@ def resolve_output_dirs_under_storage_root(settings: Settings) -> Settings:
         if field_name in settings.model_fields_set:
             value = getattr(settings, field_name)
             if isinstance(value, Path) and not value.is_absolute():
-                object.__setattr__(settings, field_name, (settings.cadrumo_local_storage_root / value).resolve())
+                object.__setattr__(settings, field_name, _beneath_storage_root(settings, value))
         else:
             object.__setattr__(settings, field_name, settings.cadrumo_local_storage_root / location.relative_path())
     for location in STORAGE_TAXONOMY.values():
@@ -143,9 +143,20 @@ def resolve_output_dirs_under_storage_root(settings: Settings) -> Settings:
             continue
         value = getattr(settings, location.settings_field)
         if isinstance(value, Path) and not value.is_absolute():
-            resolved = (settings.cadrumo_local_storage_root / value).resolve()
-            object.__setattr__(settings, location.settings_field, resolved)
+            object.__setattr__(settings, location.settings_field, _beneath_storage_root(settings, value))
     return settings
+
+
+def _beneath_storage_root(settings: Settings, value: Path) -> Path:
+    """Place a relative member below the storage root, refusing a drive- or root-relative spelling.
+
+    The storage resolver refuses those spellings, so a setting that rewrote them
+    would name a different location than every other reader of the same variable.
+    """
+    from .storage_environment import refuse_unanchored_storage_member
+
+    refuse_unanchored_storage_member(value)
+    return (settings.cadrumo_local_storage_root / value).resolve()
 
 
 def empty_optional_paths_are_none[ValueT](value: ValueT) -> ValueT | None:

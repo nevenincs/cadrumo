@@ -28,7 +28,7 @@ from dev.packaging.native import generate as generator_module
 from dev.packaging.native.application_environment import load
 from dev.packaging.native.generate import generate
 from dev.packaging.native.layout import load_layout
-from dev.packaging.native.storage_vectors import storage_path_vectors, storage_root_vectors
+from dev.packaging.native.storage_vectors import storage_member_vectors, storage_path_vectors, storage_root_vectors
 from dev.packaging.native.verification_paths import verification_destination
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -183,6 +183,7 @@ def test_schema_one_contract_projects_the_storage_declaration(tmp_path: Path) ->
     }
     assert contract["vectors"] == [vector.as_contract() for vector in storage_root_vectors(REPO_ROOT)]
     assert contract["path_vectors"] == [vector.as_contract() for vector in storage_path_vectors()]
+    assert contract["member_vectors"] == [vector.as_contract() for vector in storage_member_vectors()]
     assert contract["invalid_native_path"]["refusal"] == StorageRootRefusal.INVALID_PATH_INPUT.value
     assert len(contract["vectors"]) >= 1
 
@@ -193,6 +194,8 @@ def test_schema_one_contract_projects_the_storage_declaration(tmp_path: Path) ->
     assert _rust_strings(generated, "MODE_PACKAGE_MANIFEST") == [contract["mode"]["package_manifest"]]
     rust_vectors = re.findall(r'StorageRootVector \{ name: "([^"]+)"', generated)
     assert rust_vectors == [vector["name"] for vector in contract["vectors"]]
+    rust_member_vectors = re.findall(r'StorageMemberVector \{ name: "([^"]+)"', generated)
+    assert rust_member_vectors == [vector["name"] for vector in contract["member_vectors"]]
 
 
 def test_packaged_contract_carries_no_development_tool_location(tmp_path: Path) -> None:

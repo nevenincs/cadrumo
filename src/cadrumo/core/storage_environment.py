@@ -537,9 +537,20 @@ def resolve_storage_path(
     candidate = Path(_expand_home(str(value), platform, environment, _host_path_type()))
     anchor = configured_storage_root() if root is None else root
     anchor = normalize_storage_path(anchor)
+    refuse_unanchored_storage_member(candidate)
+    return normalize_storage_path(candidate if candidate.is_absolute() else anchor / candidate)
+
+
+def refuse_unanchored_storage_member(candidate: PurePath) -> None:
+    r"""Refuse a member that is neither absolute nor plainly relative to its root.
+
+    A drive-relative spelling (``C:member``) or a rooted one without a drive
+    (``\member`` on Windows) names a location on some drive rather than one
+    beneath the storage root, so joining it to the root would silently
+    replace the root's drive or anchor instead of placing the member below it.
+    """
     if not candidate.is_absolute() and (candidate.drive or candidate.root):
         _refuse(StorageRootRefusal.NON_ABSOLUTE_PIN, "A relative storage member cannot replace its root anchor.")
-    return normalize_storage_path(candidate if candidate.is_absolute() else anchor / candidate)
 
 
 def storage_directory(environment_variable: str, default: str, *, root: Path | None = None) -> Path:
