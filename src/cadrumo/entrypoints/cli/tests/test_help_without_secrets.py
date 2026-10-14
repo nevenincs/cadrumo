@@ -36,12 +36,14 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
 
-from ....core.config import load_settings
-from ....tests.os_keychain_hook import require_os_credential_store
+from .cli_runner import invoke_unbound_cli
+from .profile_password_cli import invoke_with_profile_password, refused_for_want_of_an_operator
+from .runtime_profile_cli_fixture import native_cli_profile_scope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -101,18 +103,11 @@ def _passphraseless_env(tmp_path: Path) -> dict[str, str]:
     return env
 
 
-def _run(
-    args: list[str],
-    tmp_path: Path,
-    *,
-    passphrase: str | None = None,
-) -> subprocess.CompletedProcess[str]:
-    """Run the real console script; ``passphrase`` unlocks the store when given."""
+def _run(args: list[str], tmp_path: Path) -> subprocess.CompletedProcess[str]:
+    """Run the real console script with no secret anywhere in its environment."""
     aeat_exe = shutil.which("aeat")
     assert aeat_exe is not None, "aeat console script must be installed for this gate"
     env = _passphraseless_env(tmp_path)
-    if passphrase is not None:
-        env[_CREDENTIAL_ENV_VAR] = passphrase
     return subprocess.run(
         [aeat_exe, *args],
         cwd=Path.cwd(),
@@ -123,50 +118,6 @@ def _run(
         timeout=None,
         check=False,
     )
-
-
-def _provisioning_passphrase() -> str:
-    """Resolve the dev/test passphrase through the sanctioned settings accessor."""
-    return load_settings().cadrumo_dev_test_database_password.get_secret_value()
-
-
-def _provision_profile(tmp_path: Path, passphrase: str) -> None:
-    """Register a REAL encrypted profile in the isolated root, with its pointer.
-
-    Registration runs in-process rather than through the console script,
-    because credential registration is the only creation door and it takes a
-    passphrase as an argument: no CLI verb can mint a profile. Everything the
-    differential control below actually measures still runs in a subprocess
-    against this root.
-
-    The ``master.key`` assertion this helper carried was dropped with the
-    change. That file belongs to the file-fallback secret store the retired
-    creation path provisioned; a registered profile's custody rides its own
-    capsule envelope, and the whole control below runs against a root that
-    never grows a secrets directory. A silently unprovisioned root would
-    still make the control vacuous, so the successful ``ledger list`` run in
-    the caller -- which cannot pass against an empty root -- is what carries
-    that guarantee now.
-    """
-    from ....adapters.persistence.profile.tests.profile_registration import register_cli_profile
-    from ....core.config import override_settings
-
-    with override_settings(
-        cadrumo_local_storage_root=tmp_path / "storage",
-        cadrumo_secret_store_dir=tmp_path / "storage" / "fallback-store",
-        cadrumo_secret_passphrase=passphrase,
-        cadrumo_active_profile=None,
-    ):
-        register_cli_profile(
-            label="control",
-            facts={
-                "identity.tax_id": "12345678Z",
-                "taxpayer_type.entity_type": "natural_person",
-                "identity.name": "Control",
-                "identity.surnames": "Operator",
-                "activities.description": "design",
-            },
-        )
 
 
 @pytest.mark.parametrize(
@@ -250,77 +201,39 @@ def test_bare_config_profile_renders_subgroup_help_without_passphrase(tmp_path: 
     assert "CADRUMO_SECRET_CREDENTIAL_INPUT" not in combined
 
 
-@pytest.mark.os_keychain
-def test_store_writing_verb_still_demands_the_passphrase(tmp_path: Path) -> None:
-    """Anti-tautology: a verb that writes the store still names the secret channel.
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+@pytest.mark.usefixtures("authority_operation")
+def test_the_profile_password_stays_load_bearing_for_a_data_verb_and_a_store_writing_verb(tmp_path: Path) -> None:
+    """Anti-tautology: help needs no secret, but executing a verb still does.
 
-    ``profile edit`` is the store-writing verb here. It replaced
-    ``profile create``, which used to serve this role from a cold start and
-    now refuses every invocation for an unrelated reason -- credential
-    registration is the only creation door -- so it can no longer observe the
-    passphrase gate at all. ``edit`` writes profile facts through the same
-    encrypted store and reaches the same gate, which is the property under
-    test.
-
-    If this ever turns green-by-accident (exit 0), the introspection gate
-    has started skipping the session for real verb execution and every
-    help assertion above is meaningless. Naming the variable is what makes
-    the refusal attributable to the SECRET rather than to any other
-    precondition — a refusal alone would also be produced by an unwritable
-    root or a missing profile, neither of which is the contract under test,
-    which is why the profile is provisioned first.
+    A differential over one variable, against one real encrypted profile
+    served by a real runtime: the SAME verb runs without the person's password
+    and then with it on the protected standard-input channel. It is refused
+    for want of a sign-in without it, before any effect, and served with it.
+    The served run is the load-bearing half: it proves the profile and runtime
+    are usable, so the refusal cannot be explained away by a broken fixture.
+    The environment-variable secret this gate once named is retired; the
+    protected channel is the only way the password reaches a command.
     """
-    # The provisioned profile's session must resume in the child process, which
-    # needs the OS credential store; refuse before provisioning on a host without one.
-    require_os_credential_store()
-    _provision_profile(tmp_path, _provisioning_passphrase())
-
-    result = _run(["config", "profile", "edit", "control", "--quiet", "--activity", "consulting"], tmp_path)
-    combined = f"{result.stdout}\n{result.stderr}"
-    assert result.returncode != 0, combined
-    assert _CREDENTIAL_ENV_VAR in combined, combined
-    # Naming the variable is correct; materializing a value is the leak.
-    assert not _CREDENTIAL_INPUT_VALUE_LEAK_PATTERN.search(combined), combined
-    assert "Traceback" not in combined
-
-
-@pytest.mark.os_keychain
-def test_data_verb_still_refuses_without_passphrase(tmp_path: Path) -> None:
-    """Anti-tautology: the secret stays load-bearing for real verb execution.
-
-    A differential over one variable. The SAME data verb runs twice
-    against the SAME real encrypted profile in the SAME isolated root; the
-    only difference is whether the passphrase is on the environment. It
-    renders with the passphrase and is refused without it, which is what
-    proves the secret is genuinely required to execute a verb — the
-    premise every help assertion above depends on.
-
-    The paired successful run is the load-bearing half: it establishes
-    that the profile and root are usable, so the refusal cannot be
-    explained away by a broken fixture. That is why the refusal is
-    asserted as a differential against a proven-working baseline rather
-    than as a bare non-zero exit, and why no refusal prose is asserted —
-    the wording of the refusal is free to change (a session door now
-    fronts the key gate for this route), the secret's necessity is not.
-    """
-    # The provisioned profile's session must resume in the child process, which
-    # needs the OS credential store; refuse before provisioning on a host without one.
-    require_os_credential_store()
-    passphrase = _provisioning_passphrase()
-    _provision_profile(tmp_path, passphrase)
-
-    unlocked = _run(["app", "ledger", "list"], tmp_path, passphrase=passphrase)
-    unlocked_combined = f"{unlocked.stdout}\n{unlocked.stderr}"
-    assert unlocked.returncode == 0, unlocked_combined
-    assert unlocked.stdout.strip(), unlocked_combined
-
-    refused = _run(["app", "ledger", "list"], tmp_path)
-    refused_combined = f"{refused.stdout}\n{refused.stderr}"
-    assert refused.returncode != 0, refused_combined
-    # The listing the unlocked run rendered must not appear without the secret.
-    assert unlocked.stdout not in refused.stdout, refused_combined
-    assert "Traceback" not in refused_combined
-    # Neither run may materialize the passphrase, in prose or as an assignment.
-    for combined in (unlocked_combined, refused_combined):
-        assert passphrase not in combined, combined
-        assert not _CREDENTIAL_INPUT_VALUE_LEAK_PATTERN.search(combined), combined
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(
+            label="help-without-secrets",
+            facts={"identity.name": "Synthetic", "identity.surnames": "Secret Gate"},
+        )
+        assert profile.label is not None
+        passphrase = profile.passphrase
+        for verb in (
+            ["app", "ledger", "list"],
+            ["config", "profile", "edit", profile.label, "--quiet", "--activity", "consulting"],
+        ):
+            refused = invoke_unbound_cli(["--format", "json", *verb])
+            served = invoke_with_profile_password(["--format", "json", *verb], label=profile.label)
+            assert refused_for_want_of_an_operator(refused), refused.output
+            assert '"result"' not in refused.stdout, refused.output
+            assert served.exit_code == 0, served.output
+            assert '"result"' in served.stdout, served.output
+            for result in (refused, served):
+                assert passphrase not in result.output
+                assert not _CREDENTIAL_INPUT_VALUE_LEAK_PATTERN.search(result.output)
+                assert "Traceback" not in result.output
