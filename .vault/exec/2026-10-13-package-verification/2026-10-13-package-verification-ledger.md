@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:ca0328b428ca96efbe7aa5bbca9a848fb91238f9d9c41d381934d60edf163d3e'
+body_hash: 'sha256:c489df412e665d91e8b4eb780261b488207457e83d06ed20c14763175d67e2f8'
 related:
   - "[[2026-10-13-package-verification-plan]]"
 ---
@@ -86,3 +86,4 @@ related:
 - `S03` relay calls are matched by their bare registry names, as CADRUMO-AGENT-CODE verified on the claude/api lane
 - `S03` each receipt permission's gateway-recorded decision must also equal the answer given
 - `S03` a run is judged only when its receipt lane is claude/api, the one lane that mounts the relay
+- `S03` the claude/api-only lane check is withdrawn: the owner rules that every provider lane mounts the relay
