@@ -20,7 +20,6 @@ from pydantic import SecretBytes
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.profile_worker import ProfileWorkerIdentity
 from cadrumo.application.runtime.worker_authorization import (
-    AUTHORITY_SECTION_MAXIMUM_SECONDS,
     WorkerAuthorityRequest,
     WorkerAuthorizationRequest,
     WorkerAutomationInventoryAllowed,
@@ -63,6 +62,7 @@ class Authority:
         self.process_handle = process_handle
         self.members_at_exit: tuple[int, ...] | None = None
         self.root = root
+        self.signed_out = False
 
     @contextmanager
     def authorize(self, request: WorkerAuthorityRequest) -> Generator[AccessAllowed]:
@@ -70,7 +70,7 @@ class Authority:
             raise ProfileAccessRefusedError(AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED)
         assert request == self.seed.request
         with self.lock:
-            if self.seed.mode == "deny":
+            if self.seed.mode == "deny" or self.signed_out:
                 raise ProfileAccessRefusedError(AccessDenialCode.SESSION_INACTIVE)
             if self.seed.mode == "cancel":
                 (self.root / "authorizing").write_text("1", encoding="ascii")
@@ -79,10 +79,13 @@ class Authority:
                 yield AccessAllowed(
                     profile_id=request.request.profile_id,
                     session_id=request.session_id,
-                    expires_at=now()
-                    + timedelta(seconds=3 if self.seed.mode == "expire" else AUTHORITY_SECTION_MAXIMUM_SECONDS),
+                    # An outlasting stage holds a permit that lapses long before the stage ends.
+                    expires_at=now() + timedelta(seconds=3 if self.seed.mode == "outlast" else 300),
                 )
             finally:
+                if self.seed.mode == "outlast":
+                    # The person signs out once the running stage has finished.
+                    self.signed_out = True
                 try:
                     self.members_at_exit = self.scope.active_process_ids()
                     self.exited.set()
@@ -133,10 +136,16 @@ def wait_process(process_handle: int) -> int:
     return win32process.GetExitCodeProcess(process_handle) & 0xFFFFFFFF
 
 
-@pytest.mark.parametrize("mode", ["release", "disconnect", "expire", "deny", "cancel"])
-def test_native_worker_fence_release_loss_and_expiry(
-    tmp_path: Path, mode: Literal["release", "disconnect", "expire", "deny", "cancel"]
+@pytest.mark.parametrize("mode", ["release", "disconnect", "outlast", "deny", "cancel"])
+def test_native_worker_fence_release_loss_and_long_stage(
+    tmp_path: Path, mode: Literal["release", "disconnect", "outlast", "deny", "cancel"]
 ) -> None:
+    """A held stage ends only by release or worker loss, never by its age.
+
+    ``outlast`` runs a 60 s stage under a permit that lapses after 3 s: the
+    stage completes and its worker survives, and once the person signs out the
+    worker's next stage is refused before it enters.
+    """
     import win32api
     import win32event
 
@@ -219,14 +228,18 @@ def test_native_worker_fence_release_loss_and_expiry(
             descendant = int((tmp_path / "descendant").read_text(encoding="ascii"))
             assert descendant in scope.active_process_ids()
             handles.append(win32api.OpenProcess(0x100000, False, descendant))
-            if mode != "expire":
+            if mode != "outlast":
                 (tmp_path / "release").write_text("1", encoding="ascii")
             authority.completion.result()
             assert authority.exited.wait()
-            if mode in {"disconnect", "expire"}:
+            if mode == "disconnect":
                 assert authority.members_at_exit == ()
             else:
                 wait_file(tmp_path / "done", process_handle)
+            if mode == "outlast":
+                assert wait_process(process_handle) == 0, (tmp_path / "refusal").read_text(encoding="ascii")
+                assert (tmp_path / "denied").is_file()
+                assert (tmp_path / "inside").read_text(encoding="ascii") == "1"
             for handle in handles:
                 assert win32event.WaitForSingleObject(handle, win32event.INFINITE) == win32event.WAIT_OBJECT_0
     finally:

@@ -11,7 +11,7 @@ from pydantic import BaseModel
 
 from ...application.operations.models import OperationIdentity
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from ...application.runtime.deadline_budget import remaining_budget
+from ...application.runtime.deadline_budget import RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS, remaining_budget
 from ...application.runtime.profile_worker import (
     ProfileWorkerAgentCredentials,
     ProfileWorkerAgentCredentialsRequest,
@@ -27,7 +27,6 @@ from ...application.runtime.profile_worker import (
     ProfileWorkerSettlementRequest,
     ProfileWorkerStatus,
 )
-from ...application.runtime.worker_authorization import AUTHORITY_SECTION_MAXIMUM_SECONDS
 from ...application.user_profile.access_contracts import AccessDenialCode, AccessSession
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.automation_custody_port import AutomationCustodyError
@@ -45,11 +44,11 @@ from .worker_resource_cleanup import WorkerResourceCleanup, release_worker_resou
 from .worker_transport import WorkerChannel
 
 #: A worker answers a registered-operation request only after it holds a fresh
-#: runtime authority lease: it may spend 5 s connecting for one and
-#: ``AUTHORITY_SECTION_MAXIMUM_SECONDS + 5`` acquiring it, then writes within
-#: 5 s. A missed reply contains the whole worker, so a shorter wait would stop
-#: every operation it runs while the worker is still inside its own bounded wait.
-_OPERATION_EXCHANGE_SECONDS = AUTHORITY_SECTION_MAXIMUM_SECONDS + 15
+#: runtime authority lease, which the runtime may queue behind a running
+#: COMMIT's fence. The worker allows that acquisition the runtime's
+#: single-exchange budget, so this wait matches it: a missed reply contains the
+#: whole worker, and a shorter wait would stop it while it still waits its turn.
+_OPERATION_EXCHANGE_SECONDS = RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS
 _CONTROL_EXCHANGE_SECONDS = 10
 
 _LOGGER = get_logger(__name__)
@@ -68,16 +67,25 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
         deadline: float | None = None,
     ) -> Result:
         lock = self._operation_lock if operation else self._lock
-        acquired = False
+        dispatched = False
         started = time.monotonic()
+        default_seconds = _OPERATION_EXCHANGE_SECONDS if operation else _CONTROL_EXCHANGE_SECONDS
+        wire_deadline = started + default_seconds if deadline is None else deadline
+        queue_seconds = 0.0
         try:
-            _acquire_exchange_lock(lock, deadline)
-            acquired = True
+            _acquire_exchange_lock(lock, wire_deadline)
             try:
                 channel = self._exchange_channel(operation)
-                default_seconds = _OPERATION_EXCHANGE_SECONDS if operation else _CONTROL_EXCHANGE_SECONDS
-                wire_deadline = time.monotonic() + default_seconds if deadline is None else deadline
-                return self._read_exchange_reply(channel, request, response, secret, wire_deadline)
+                queue_seconds = time.monotonic() - started
+                dispatched = True
+                try:
+                    return self._read_exchange_reply(channel, request, response, secret, wire_deadline)
+                except (AutomationCustodyError, ProfileAccessRefusedError):
+                    raise
+                except BaseException:
+                    # Fence the failed stream before a queued caller can borrow it.
+                    self._stopping.set()
+                    raise
             finally:
                 lock.release()
         except (AutomationCustodyError, ProfileAccessRefusedError):
@@ -85,16 +93,22 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
         except BaseException as error:
             # No frame was sent when a caller merely timed out waiting for
             # this shared channel. Keep other sessions' worker alive.
-            if acquired:
+            if dispatched:
                 # Retiring ends the worker and every session and operation it holds: say which exchange did it.
                 diagnostic_event(
                     _LOGGER,
                     "profile_worker_exchange_failed",
                     fields={
-                        "request": type(request.root).__name__,
+                        "request_type": type(request.root).__name__,
+                        "request_action": request.root.action
+                        if isinstance(request.root, ProfileWorkerControlRequest | ProfileWorkerLeaseRequest)
+                        else None,
                         "operation_channel": operation,
+                        "phase": "exchange",
+                        "reason": error.reason.value if isinstance(error, RuntimeRefusalError) else None,
+                        "queue_seconds": round(queue_seconds, 3),
                         "elapsed_seconds": round(time.monotonic() - started, 3),
-                        "budget_seconds": None if deadline is None else round(deadline - started, 3),
+                        "budget_seconds": round(wire_deadline - started, 3),
                         **diagnostic_error_fields(error),
                     },
                     level=logging.WARNING,
@@ -197,18 +211,24 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
         )
         deadline = time.monotonic() + _CONTROL_EXCHANGE_SECONDS
         material = bytearray()
-        acquired = False
+        dispatched = False
         try:
             _acquire_exchange_lock(self._lock, deadline)
-            acquired = True
             try:
                 channel = self._exchange_channel(False)
-                reply = self._read_exchange_reply(channel, request, ProfileWorkerAgentCredentials, None, deadline)
-                if reply.credentials:
-                    with read_secret(channel, deadline=deadline) as secret:
-                        if len(secret) != sum(item.secret_bytes for item in reply.credentials):
-                            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-                        material += secret
+                dispatched = True
+                try:
+                    reply = self._read_exchange_reply(channel, request, ProfileWorkerAgentCredentials, None, deadline)
+                    if reply.credentials:
+                        with read_secret(channel, deadline=deadline) as secret:
+                            if len(secret) != sum(item.secret_bytes for item in reply.credentials):
+                                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                            material += secret
+                except (AutomationCustodyError, ProfileAccessRefusedError):
+                    raise
+                except BaseException:
+                    self._stopping.set()
+                    raise
             finally:
                 self._lock.release()
         except (AutomationCustodyError, ProfileAccessRefusedError):
@@ -216,7 +236,7 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
             raise
         except BaseException as error:
             material[:] = bytes(len(material))
-            if acquired:
+            if dispatched:
                 self._retire_failed_exchange(error, deadline)
             raise
         return reply, material

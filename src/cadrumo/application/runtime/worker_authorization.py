@@ -30,7 +30,6 @@ from .worker_enrollment import (
     WorkerApprovalRequest,
 )
 
-AUTHORITY_SECTION_MAXIMUM_SECONDS = 30.0
 WORKER_AUTOMATION_INVENTORY_MAX_BYTES = 32 * 1024
 """Conservative complete-inventory IPC limit, below the native 64 KiB frame."""
 

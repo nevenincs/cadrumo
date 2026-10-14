@@ -4,17 +4,16 @@ from __future__ import annotations
 
 import asyncio
 import sys
-import time
 from importlib.metadata import version
 from pathlib import Path
 from uuid import uuid4
 
 from ...application.runtime.approval_binding import RuntimeApprovalBinding
 from ...application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
+from ...application.runtime.deadline_budget import exchange_deadline
 from ...application.runtime.profile_access import RuntimeAccessRefusal
 from ...application.runtime.profile_worker import ProfileWorkerIdentity
 from ...application.runtime.worker_authorization import (
-    AUTHORITY_SECTION_MAXIMUM_SECONDS,
     WorkerAuthorityRequest,
     WorkerAuthorizationAcknowledgement,
     WorkerAuthorizationPermit,
@@ -72,7 +71,6 @@ class WorkerAuthorizationLease:
         self._permit: WorkerAuthorizationPermit | WorkerResponseScopePermit | WorkerAutomationInventoryPermit | None = (
             None
         )
-        self._deadline = 0.0
         self._publication_sent = False
         self._runtime_server_start_sent = False
 
@@ -100,7 +98,8 @@ class WorkerAuthorizationLease:
                 raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
             if isinstance(channel, PosixRuntimeChannel):
                 channel.require_live_peer()
-            deadline = time.monotonic() + AUTHORITY_SECTION_MAXIMUM_SECONDS + 5
+            # The runtime may queue this admission behind a running COMMIT's fence.
+            deadline = exchange_deadline()
             verified = VerifiedRuntimeConnection(
                 channel,
                 expected=RuntimeClientHello(
@@ -124,8 +123,7 @@ class WorkerAuthorizationLease:
                     channel, WorkerAuthorizationAcknowledgement(request_id=self.request.request_id), deadline=deadline
                 )
                 raise_worker_access_refusal(reply)
-            reply, remaining = _validated_authority_permit(reply, self.request, self.identity)
-            self._deadline = time.monotonic() + remaining
+            reply = _validated_authority_permit(reply, self.request, self.identity)
             self._permit, self._channel = reply, channel
             channel = None
             self._commit_phase("permit_validated")
@@ -155,7 +153,7 @@ class WorkerAuthorizationLease:
             phase=phase,
         )
         self._publication_sent = True
-        write_document(channel, command, deadline=self._deadline)
+        write_document(channel, command, deadline=exchange_deadline())
         reply = self._publication_reply(channel, request, permit, command)
         if reply.receipt is None:
             if phase != "commit_review":
@@ -194,8 +192,8 @@ class WorkerAuthorizationLease:
             request_id=request.request_id, permit_id=permit.permit_id, command_id=uuid4()
         )
         self._runtime_server_start_sent = True
-        write_document(channel, command, deadline=self._deadline)
-        reply = read_document(channel, WorkerRuntimeServerStarted, deadline=self._deadline)
+        write_document(channel, command, deadline=exchange_deadline())
+        reply = read_document(channel, WorkerRuntimeServerStarted, deadline=exchange_deadline())
         if (
             reply.request_id != request.request_id
             or reply.permit_id != permit.permit_id
@@ -219,10 +217,10 @@ class WorkerAuthorizationLease:
             write_document(
                 channel,
                 WorkerAuthorizationRelease(request_id=self.request.request_id, permit_id=permit.permit_id),
-                deadline=self._deadline,
+                deadline=exchange_deadline(),
             )
             self._commit_phase("release_write_end")
-            reply = read_document(channel, WorkerAuthorizationReply, deadline=self._deadline).root
+            reply = read_document(channel, WorkerAuthorizationReply, deadline=exchange_deadline()).root
             if (
                 not isinstance(reply, WorkerAuthorizationReleased)
                 or reply.request_id != self.request.request_id
@@ -230,7 +228,9 @@ class WorkerAuthorizationLease:
             ):
                 raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
             write_document(
-                channel, WorkerAuthorizationAcknowledgement(request_id=self.request.request_id), deadline=self._deadline
+                channel,
+                WorkerAuthorizationAcknowledgement(request_id=self.request.request_id),
+                deadline=exchange_deadline(),
             )
         finally:
             channel.close()
@@ -270,7 +270,7 @@ class WorkerAuthorizationLease:
         command: WorkerApprovalPublication,
     ) -> WorkerApprovalPublished:
         """Read the exact publication response and preserve its refusal category."""
-        reply = read_document(channel, WorkerAuthorizationReply, deadline=self._deadline).root
+        reply = read_document(channel, WorkerAuthorizationReply, deadline=exchange_deadline()).root
         if (
             not isinstance(reply, RuntimeAccessRefusal | WorkerApprovalPublished)
             or reply.request_id != request.request_id
@@ -308,7 +308,7 @@ def _validated_authority_permit(
     | WorkerApprovalPublished,
     request: WorkerAuthorityRequest | WorkerAutomationInventoryRequest,
     identity: ProfileWorkerIdentity,
-) -> tuple[WorkerAuthorizationPermit | WorkerResponseScopePermit | WorkerAutomationInventoryPermit, float]:
+) -> WorkerAuthorizationPermit | WorkerResponseScopePermit | WorkerAutomationInventoryPermit:
     """Require an exact request-family, runtime boot, and live held authority permit."""
     if (
         not isinstance(reply, WorkerAuthorizationPermit | WorkerResponseScopePermit | WorkerAutomationInventoryPermit)
@@ -321,7 +321,7 @@ def _validated_authority_permit(
         or isinstance(request, WorkerAuthorizationRequest) != isinstance(reply, WorkerAuthorizationPermit)
     ):
         raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-    remaining = (reply.expires_at - now()).total_seconds()
-    if not 0 < remaining <= AUTHORITY_SECTION_MAXIMUM_SECONDS:
+    # Admission is checked as the stage starts; a lease already ended admits nothing.
+    if reply.expires_at <= now():
         raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
-    return reply, remaining
+    return reply

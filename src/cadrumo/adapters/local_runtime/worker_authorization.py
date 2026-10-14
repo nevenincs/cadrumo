@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import logging
 import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
-from contextlib import suppress
-from datetime import datetime, timedelta
+from contextlib import ExitStack, suppress
+from datetime import datetime
 from importlib.metadata import version
 from pathlib import Path
 from threading import BoundedSemaphore, Event, Thread
@@ -18,7 +19,6 @@ from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalE
 from ...application.runtime.profile_access import RuntimeAccessRefusal
 from ...application.runtime.profile_worker import ProfileWorkerIdentity
 from ...application.runtime.worker_authorization import (
-    AUTHORITY_SECTION_MAXIMUM_SECONDS,
     WORKER_AUTOMATION_INVENTORY_MAX_BYTES,
     WorkerAuthorityEnvelope,
     WorkerAuthorityRequest,
@@ -53,7 +53,9 @@ from ...application.user_profile.access_contracts import (
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.automation_custody_port import AutomationCustodyError
 from ...application.user_profile.automation_enrollment import AutomationInventory
+from ...core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from ...core.hashing import canonical_json_bytes
+from ...core.logging import get_logger
 from ...core.time.clock import now
 from .framing import accept_runtime_handshake
 from .runtime_frame_io import MAXIMUM_FRAME_BYTES, read_document, read_secret, write_document
@@ -70,6 +72,18 @@ def _require_inventory_ipc_budget(inventory: AutomationInventory) -> None:
     size = len(canonical_json_bytes(inventory.model_dump(mode="json")))
     if size > WORKER_AUTOMATION_INVENTORY_MAX_BYTES:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+
+
+_LOGGER = get_logger(__name__)
+
+_FRAME_SECONDS = 5.0
+"""How long one frame of the authority handshake may take to arrive once its first byte is ready."""
+
+_INSTRUCTION_POLL_SECONDS = 0.05
+"""How often the runtime looks for a stage's next frame while it runs."""
+
+_SETTLE_JOIN_SECONDS = 35.0
+"""How long shutdown joins the callback thread; its worker is contained first, so the thread ends promptly."""
 
 
 class WorkerAuthorizationServer:
@@ -166,18 +180,33 @@ class WorkerAuthorizationServer:
                 if isinstance(request, WorkerAutomationInventoryRequest)
                 else owner.authorize(request)
             )
-            with guard as allowed:
-                permit, deadline = self._held_permit(request, allowed, permit_id)
+            # Authority is checked once, as the stage starts. Only a COMMIT keeps the
+            # profile's admission fence through its body: its effects are irreversible,
+            # and an approval publishes on the fence's own thread. Every other stage runs
+            # unfenced, so it never holds up the profile's other requests.
+            hold_fence = (
+                isinstance(request, WorkerAuthorizationRequest) and request.request.action is AccessAction.COMMIT
+            )
+            with ExitStack() as fence:
+                allowed = fence.enter_context(guard)
+                permit = self._held_permit(request, allowed, permit_id)
+                write_document(channel, permit, deadline=time.monotonic() + 5)
+                if not hold_fence:
+                    fence.close()
                 try:
-                    write_document(
-                        channel,
-                        permit,
-                        deadline=deadline,
+                    # A stage is never ended for the time it takes; it ends when the
+                    # worker releases it, its channel dies, or the runtime stops.
+                    self._held_body(channel, request, permit_id=permit_id)
+                except BaseException as error:
+                    # A lost release cannot prove the effect body stopped. Contain
+                    # the owned job before dropping the fence.
+                    diagnostic_event(
+                        _LOGGER,
+                        "profile_worker_permit_contained",
+                        fields={"request_kind": request.kind, **diagnostic_error_fields(error)},
+                        level=logging.WARNING,
+                        primary_error=error,
                     )
-                    self._held_body(channel, request, permit_id=permit_id, deadline=deadline)
-                except BaseException:
-                    # A missing/ambiguous release cannot prove the effect body
-                    # stopped. Contain the owned job before dropping the fence.
                     try:
                         self._contain()
                     except BaseException:
@@ -252,12 +281,14 @@ class WorkerAuthorizationServer:
         request: WorkerAuthorityRequest | WorkerAutomationInventoryRequest,
         *,
         permit_id: UUID,
-        deadline: float,
     ) -> None:
-        """Execute at most one command on the native thread retaining the guard."""
+        """Execute at most one command on the native thread retaining the guard, then await the release."""
         command_seen = False
         while True:
-            instruction = read_document(channel, WorkerAuthorizationInstruction, deadline=deadline).root
+            self._await_instruction(channel)
+            instruction = read_document(
+                channel, WorkerAuthorizationInstruction, deadline=time.monotonic() + _FRAME_SECONDS
+            ).root
             if instruction.request_id != request.request_id or instruction.permit_id != permit_id:
                 raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
             if isinstance(instruction, WorkerAuthorizationRelease):
@@ -270,7 +301,14 @@ class WorkerAuthorizationServer:
                 reply = self._runtime_server_start_result(request, instruction, permit_id)
             else:
                 reply = self._publication_result(self._owner, request, instruction, permit_id)
-            write_document(channel, reply, deadline=deadline)
+            write_document(channel, reply, deadline=time.monotonic() + _FRAME_SECONDS)
+
+    def _await_instruction(self, channel: WorkerChannel) -> None:
+        """Wait for the worker's next frame for as long as its stage runs, ending only on stop or a dead channel."""
+        while not channel.read_ready():
+            if self._stop.is_set():
+                raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
+            self._stop.wait(_INSTRUCTION_POLL_SECONDS)
 
     def require_healthy(self) -> None:
         """A failed or stopping callback owner cannot authorize another operation."""
@@ -281,7 +319,7 @@ class WorkerAuthorizationServer:
         """Stop new permits; do not join a thread while holding its needed profile guard."""
         self._stop.set()
 
-    def settle(self, *, timeout: float = AUTHORITY_SECTION_MAXIMUM_SECONDS + 5) -> None:
+    def settle(self, *, timeout: float = _SETTLE_JOIN_SECONDS) -> None:
         """Join only after the host has released profile guards and contained its worker."""
         self._thread.join(timeout=timeout)
         if self._thread.is_alive() or self._failed.is_set():
@@ -320,19 +358,17 @@ class WorkerAuthorizationServer:
         request: WorkerAuthorityRequest | WorkerAutomationInventoryRequest,
         allowed: AccessAllowed | OperationResponseScopeAllowed | WorkerAutomationInventoryAllowed,
         permit_id: UUID,
-    ) -> tuple[WorkerAuthorizationPermit | WorkerResponseScopePermit | WorkerAutomationInventoryPermit, float]:
+    ) -> WorkerAuthorizationPermit | WorkerResponseScopePermit | WorkerAutomationInventoryPermit:
         """Build a live exact-family permit while the owning profile guard is held."""
         _require_allowed_request_family(request, allowed)
         # A queued callback may acquire the profile guard only after
         # shutdown began. It must not publish a new permit then.
         if self._stop.is_set():
             raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
-        instant = self._wall_clock()
-        expires = min(allowed.expires_at, instant + timedelta(seconds=AUTHORITY_SECTION_MAXIMUM_SECONDS))
-        remaining = (expires - instant).total_seconds()
-        if remaining <= 0:
+        # The permit names when the admitting lease ends; a stage already running is not ended by it.
+        expires = allowed.expires_at
+        if expires <= self._wall_clock():
             raise ProfileAccessRefusedError(AccessDenialCode.SESSION_EXPIRED)
-        deadline = time.monotonic() + remaining
         if isinstance(request, WorkerAutomationInventoryRequest):
             if not isinstance(allowed, WorkerAutomationInventoryAllowed):
                 raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
@@ -360,7 +396,7 @@ class WorkerAuthorizationServer:
                 permit_id=permit_id,
                 expires_at=expires,
             )
-        return permit, deadline
+        return permit
 
     def _runtime_server_start_result(
         self,

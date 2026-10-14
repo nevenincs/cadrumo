@@ -16,9 +16,9 @@ from ....application.operations.frontend_requests import OperationObservationReq
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....application.runtime.deadline_budget import RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS
 from ....application.runtime.profile_worker import ProfileWorkerIdentity, ProfileWorkerRefusal
-from ....application.runtime.worker_authorization import AUTHORITY_SECTION_MAXIMUM_SECONDS
 from ....application.user_profile.access_contracts import AccessDenialCode, ProfileAccessBinding
 from ....application.user_profile.access_errors import ProfileAccessRefusedError
+from .. import profile_worker_transport as transport
 from ..profile_worker import ProfileWorkerProcess
 from ..runtime_frame_io import document_frame
 from ..windows_channel import WindowsRuntimeChannel
@@ -110,8 +110,8 @@ def _observe(worker: _Worker) -> None:
 
 
 def test_operation_reply_inside_the_worker_authority_budget_keeps_the_worker() -> None:
-    """A reply slower than the control budget but inside the worker's own lease wait is still read."""
-    worker = _worker(latency=AUTHORITY_SECTION_MAXIMUM_SECONDS + 5)
+    """A reply queued behind another stage's fence but inside the worker's own lease wait is still read."""
+    worker = _worker(latency=RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS - 5)
 
     with pytest.raises(ProfileAccessRefusedError) as refused:
         _observe(worker)
@@ -122,7 +122,7 @@ def test_operation_reply_inside_the_worker_authority_budget_keeps_the_worker() -
 
 
 def test_operation_reply_beyond_the_worker_authority_budget_still_contains_the_worker() -> None:
-    worker = _worker(latency=AUTHORITY_SECTION_MAXIMUM_SECONDS + 20)
+    worker = _worker(latency=RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS + 5)
 
     with pytest.raises(RuntimeRefusalError) as refused:
         _observe(worker)
@@ -219,3 +219,42 @@ def test_expiry_while_acquiring_exchange_lock_releases_it_without_retiring_worke
         assert not worker.contained
     finally:
         pool.shutdown(wait=True)
+
+
+def test_default_control_budget_also_bounds_queued_callers(monkeypatch: pytest.MonkeyPatch) -> None:
+    worker = _worker(latency=0)
+    monkeypatch.setattr(transport, "_CONTROL_EXCHANGE_SECONDS", 0.03)
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        with worker._lock:
+            queued = pool.submit(worker.status)
+            with pytest.raises(RuntimeRefusalError) as refused:
+                queued.result(timeout=2)
+            assert refused.value.reason is RuntimeRefusalCode.DEADLINE_EXCEEDED
+        assert not worker.contained and not worker.stopping
+        with pytest.raises(ProfileAccessRefusedError):
+            worker.status()
+
+
+def test_stopped_worker_refusal_does_not_repeat_containment() -> None:
+    worker = _worker(latency=0)
+    worker._stopping.set()
+
+    with pytest.raises(RuntimeRefusalError) as refused:
+        worker.status()
+
+    assert refused.value.reason is RuntimeRefusalCode.CONNECTION_CLOSED
+    assert not worker.contained
+
+
+def test_failed_exchange_is_fenced_before_retirement(monkeypatch: pytest.MonkeyPatch) -> None:
+    worker = _worker(latency=11)
+    retiring = transport.ProfileWorkerTransport._retire_failed_exchange
+
+    def retire(self: transport.ProfileWorkerTransport, error: BaseException, deadline: float | None) -> None:
+        assert self.stopping, "a queued request can borrow the failed stream before retirement"
+        retiring(self, error, deadline)
+
+    monkeypatch.setattr(transport.ProfileWorkerTransport, "_retire_failed_exchange", retire)
+    with pytest.raises(RuntimeRefusalError):
+        worker.status()
+    assert worker.contained
