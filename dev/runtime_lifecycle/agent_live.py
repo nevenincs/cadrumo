@@ -13,8 +13,9 @@ holds its bearer. On a fresh, marked storage root it:
   waits for it;
 - approves a Cadrumo attendance ask only from the package's relay running under
   the gateway the runner announced, and denies every other ask;
-- inspects each permission request the runner files and answers it: allow once
-  for a Cadrumo relay tool, reject and fail the run for anything else;
+- answers each permission request the runner files by approving it once, and
+  fails the run when a request offers no single allow-once option; it judges the
+  run by its outcome, not by which tools were asked for;
 - reads the runner's receipt and checks it against what it saw itself: the
   reply names the taxpayer, ``aeat`` lists the scenario's ledger row exactly
   once, and the answers the gateway stored are the answers given here;
@@ -81,26 +82,6 @@ _SCENARIO: Final[dict[str, Any]] = {
     "taxpayer": "Daniel Persona",
     "ledger": {"description": "agent live acceptance", "amount": "12.34", "currency": "EUR", "date": "2026-01-15"},
 }
-#: The relay's entry in cadrumo-agent's tool-server registry, as a permission request's ``tool_server`` names it.
-_RELAY_SERVER: Final = "cadrumo"
-#: The tools that entry declares. A lane stores a relayed call under the bare name or, on the lanes that qualify
-#: tool names, as ``mcp__cadrumo__<name>``.
-_RELAY_TOOLS: Final = frozenset(
-    {
-        "authority",
-        "control",
-        "corpus_search",
-        "describe",
-        "execute",
-        "observe",
-        "respond",
-        "result",
-        "result_page",
-        "review",
-        "search",
-        "status",
-    }
-)
 _REPOSITORY_ROOT: Final = Path(__file__).resolve().parents[2]
 _GATEWAY_SECONDS: Final = 600.0
 _RUN_SECONDS: Final = 1800.0
@@ -127,21 +108,13 @@ def read_document(path: Path) -> dict[str, Any] | None:
 
 
 def answer_for(request: Mapping[str, Any]) -> dict[str, str]:
-    """Inspect one pending permission and return the person's answer to it.
+    """Return the person's answer to one pending permission.
 
-    Only a call the agent attributes to Cadrumo's relay (its trusted
-    ``tool_server``, never a model argument) of one of the relay's declared
-    tools is allowed, and only once: the answer names the ``allow_once`` option
-    the request itself offered. Anything else is rejected, and the caller fails
-    the run on a rejection.
+    The answer names the single ``allow_once`` option the request itself
+    offered. When the request offers no single ``allow_once`` option the answer
+    is a rejection, and the caller fails the run.
     """
-    tool = request.get("tool_call")
     options = request.get("options")
-    allowed = (
-        request.get("tool_server") == _RELAY_SERVER
-        and isinstance(tool, str)
-        and tool.removeprefix(f"mcp__{_RELAY_SERVER}__") in _RELAY_TOOLS
-    )
     once = [
         option["option_id"]
         for option in options or ()
@@ -149,7 +122,7 @@ def answer_for(request: Mapping[str, Any]) -> dict[str, str]:
         and option.get("kind") == "allow_once"
         and isinstance(option.get("option_id"), str)
     ]
-    if allowed and len(once) == 1:
+    if len(once) == 1:
         return {"option_id": once[0]}
     return {"decision": "reject"}
 
@@ -218,7 +191,7 @@ class Exchange:
         )
 
     def answer_pending(self) -> list[str]:
-        """Answer each request the runner filed since the last call; return the rejected ones."""
+        """Answer each request the runner filed since the last call; return those with no single allow-once option."""
         rejected: list[str] = []
         requests = self.directory / "requests"
         for path in sorted(requests.glob("*.json")) if requests.is_dir() else ():
@@ -301,7 +274,7 @@ def _await_runner(exchange: Exchange, gateway: dict[str, int | None]) -> dict[st
             gateway["pid"] = announced["pid"]
             print(json.dumps({"step": "gateway_announced", "gateway_url": announced.get("gateway_url")}), flush=True)
         rejected = exchange.answer_pending()
-        require(not rejected, f"the agent asked for something other than a Cadrumo relay tool: {rejected}")
+        require(not rejected, f"a permission request offered no single allow-once option: {rejected}")
         if receipt is not None:
             return receipt
         elapsed = time.monotonic() - started

@@ -30,8 +30,10 @@ and always ends incomplete. ``--served`` loads the shell from the development
 server (``just dev``) for iterating on it; the host, launcher and agent stay
 real.
 
-The key comes only from this lane's own environment, under the name the
-provider-settings resolver reads in development, ``CADRUMO_LLM_CLAUDE_API_KEY``.
+The provider is named on the command line with ``--provider ID``. The key comes
+only from this lane's own environment, under the name the provider-settings
+resolver reads in development, ``CADRUMO_LLM_<ID>_API_KEY`` with the provider id
+in upper case.
 It is written once to the set command's standard input and never placed on a
 command line, in a file, a log or another process's environment.
 """
@@ -91,11 +93,10 @@ _WATCH_SECONDS: Final = 1.0
 _DESKTOP_UNAVAILABLE: Final = 69
 """The desktop host's exit when the logon has no interactive desktop for its window."""
 
-PROVIDER: Final = "claude_api"
-"""The provider whose key the agent column's model uses."""
 
-KEY_VARIABLE: Final = "CADRUMO_LLM_CLAUDE_API_KEY"
-"""Where this lane reads the developer's key: the provider-settings resolver's development name for it."""
+def key_variable(provider_id: str) -> str:
+    """Name the environment variable this lane reads the developer's key for ``provider_id`` from."""
+    return "CADRUMO_LLM_" + provider_id.upper() + "_API_KEY"
 
 
 class UnavailableError(Exception):
@@ -167,7 +168,7 @@ def is_lane_root(root: Path) -> bool:
     return is_marked_lane_root(root)
 
 
-def provision_provider_key(programs: Programs, environment: Mapping[str, str]) -> None:
+def provision_provider_key(programs: Programs, environment: Mapping[str, str], provider_id: str) -> None:
     """Store the developer's key into the signed-in throwaway profile, then require masked status to report it.
 
     Raises:
@@ -175,15 +176,16 @@ def provision_provider_key(programs: Programs, environment: Mapping[str, str]) -
             package has no provider-settings commands yet.
         AcceptanceError: Setting the key, or reading it back, did not hold.
     """
-    if not os.environ.get(KEY_VARIABLE, "").strip():
-        raise UnavailableError(f"no provider key: set {KEY_VARIABLE} in this lane's own environment")
+    variable = key_variable(provider_id)
+    if not os.environ.get(variable, "").strip():
+        raise UnavailableError(f"no provider key: set {variable} in this lane's own environment")
     code, _envelope = run_cli(programs, environment, "--language", "en", "config", "provider", "--help")
     if code != 0:
         raise UnavailableError("this package has no `aeat config provider` commands yet, so no key can be stored")
-    payload = bytearray(json.dumps({"secret": os.environ[KEY_VARIABLE]}), "utf-8")
+    payload = bytearray(json.dumps({"secret": os.environ[variable]}), "utf-8")
     try:
         result = run_command(
-            [str(programs.aeat), "--format", "json", "config", "provider", "set", PROVIDER, "--secrets-stdin"],
+            [str(programs.aeat), "--format", "json", "config", "provider", "set", provider_id, "--secrets-stdin"],
             cwd=_REPOSITORY,
             environment=environment,
             input_text=payload.decode("utf-8"),
@@ -197,7 +199,7 @@ def provision_provider_key(programs: Programs, environment: Mapping[str, str]) -
     code, envelope = run_cli(programs, environment, "config", "provider", "status")
     require(code == 0, f"provider status: {code} {error_code(envelope)}")
     providers = envelope.get("result", {}).get("providers", [])
-    entry = next((item for item in providers if isinstance(item, dict) and item.get("id") == PROVIDER), {})
+    entry = next((item for item in providers if isinstance(item, dict) and item.get("id") == provider_id), {})
     require(
         entry.get("available") is True and entry.get("source") == "profile",
         f"provider status does not report the stored key: mode={entry.get('mode')} readiness={entry.get('readiness')}",
@@ -365,7 +367,7 @@ def lane_desktop(host: TestHost, environment: Mapping[str, str], directory: Path
         scope.terminate(timeout=30)
 
 
-def run(run_directory: Path, *, served: bool, attach_only: bool, arguments: list[str]) -> list[str]:
+def run(run_directory: Path, *, provider_id: str, served: bool, attach_only: bool, arguments: list[str]) -> list[str]:
     """Run the lane in ``run_directory``; return what it could not prove."""
     if sys.platform != "win32":
         raise UnavailableError("the lane drives the Windows desktop")
@@ -428,7 +430,7 @@ def run(run_directory: Path, *, served: bool, attach_only: bool, arguments: list
                 unproven.append("agent specs: --attach-only ran only the attachment check")
                 arguments = [*arguments, "tests/live/attach.live.ts"]
             else:
-                provision_provider_key(programs, environment)
+                provision_provider_key(programs, environment, provider_id)
             status = playwright(host.entry, endpoint, results, arguments)
             print(json.dumps({"step": "playwright", "exit_code": status}), flush=True)
             if status != 0:
@@ -493,6 +495,9 @@ def _delete_stored_sign_in(root: Path) -> None:
 def main(argv: list[str] | None = None) -> int:
     """Run the lane; exit 0 on pass, 1 on a failure, 3 when a prerequisite is absent."""
     parser = argparse.ArgumentParser(prog="desktop-agent-live", description=(__doc__ or "").splitlines()[0])
+    parser.add_argument(
+        "--provider", required=True, metavar="ID", help="The provider id whose developer key is stored."
+    )
     parser.add_argument("--served", action="store_true", help="Load the shell from the development server.")
     parser.add_argument("--attach-only", action="store_true", help="Run only the attachment check.")
     parser.add_argument("--keep", action="store_true", help="Keep the run directory after a pass.")
@@ -504,7 +509,11 @@ def main(argv: list[str] | None = None) -> int:
     run_directory.mkdir()
     try:
         unproven = run(
-            run_directory, served=options.served, attach_only=options.attach_only, arguments=options.playwright
+            run_directory,
+            provider_id=options.provider,
+            served=options.served,
+            attach_only=options.attach_only,
+            arguments=options.playwright,
         )
     except UnavailableError as absent:
         # Nothing ran that a kept root would explain, so only --keep keeps it.

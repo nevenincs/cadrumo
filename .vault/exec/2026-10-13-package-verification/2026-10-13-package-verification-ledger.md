@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:642127dca79fc57bc7c417baf4e2781f0465ff9184e6b475d202fd53a1a38a56'
+body_hash: 'sha256:72b47c72ecced8f368fb10cfa9ee365c378158dca84c12d804e126c150807f61'
 related:
   - "[[2026-10-13-package-verification-plan]]"
 ---
@@ -75,6 +75,10 @@ related:
 - `S02` `M` `native/cmake/Packaging.cmake`
 - `S02` `A` `native/tests/environment_launch_probe.py`
 - `S03` `verify:` `dev/runtime_lifecycle/tests/test_agent_live.py` -> `pass`
+- `S03` `by:` `vaultspec-standard-executor`
+- `S04` `A` `dev/desktop_agent_live/tests/test_lane.py`
+- `S04` `verify:` `dev/desktop_agent_live/tests` -> `pass`
+- `S04` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -89,3 +93,5 @@ related:
 - `S03` the claude/api-only lane check is withdrawn: the owner rules that every provider lane mounts the relay
 - `S03` relayed calls are recognised by the agent's trusted `tool_server` and the bare registry name, on every provider lane
 - `S03` an offered `allow_session` option never replaces the per-call `allow_once` answer
+- `S03` owner ruling 2026-10-14: no hard-coded agent capability; the tool-name list is removed and each request is approved once, the run judged by outcome
+- `S04` owner ruling 2026-10-14: the lane takes --provider and constructs `CADRUMO_LLM_<ID>_API_KEY;` no provider is named

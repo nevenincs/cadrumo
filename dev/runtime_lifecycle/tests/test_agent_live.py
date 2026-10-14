@@ -1,4 +1,4 @@
-"""The person side of the live agent proof answers only relay tools and believes only what it can check."""
+"""The person side of the live agent proof approves each request once and believes only what it can check."""
 
 from __future__ import annotations
 
@@ -33,32 +33,36 @@ def _request(tool: str | None, *kinds: str, server: str | None = "cadrumo") -> d
     }
 
 
-def test_a_relay_tool_is_allowed_once_with_the_option_the_request_offered() -> None:
-    answer = answer_for(_request("execute", "allow_once", "reject_once"))
-    qualified = answer_for(_request("mcp__cadrumo__execute", "allow_once", "reject_once"))
-
-    assert answer == {"option_id": "allow_once"}
-    assert qualified == {"option_id": "allow_once"}
+def test_the_single_allow_once_option_the_request_offered_is_chosen() -> None:
+    assert answer_for(_request("execute", "allow_once", "reject_once")) == {"option_id": "allow_once"}
     with_session = answer_for(_request("execute", "allow_once", "allow_session", "reject_once"))
     assert with_session == {"option_id": "allow_once"}
+    assert answer_for(_request("execute", "reject_once", "allow_once", "allow_session")) == {"option_id": "allow_once"}
 
 
 @pytest.mark.parametrize(
     "request_",
     [
-        pytest.param(_request("execute", "allow_once", server=None), id="a-relay-name-on-the-lanes-own-tool"),
+        pytest.param(_request("execute", "allow_once", server=None), id="no-tool-server"),
         pytest.param(_request("execute", "allow_once", server="other"), id="another-tool-server"),
-        pytest.param(_request("mcp__other__execute", "allow_once"), id="a-name-qualified-by-another-server"),
-        pytest.param(_request("delete_everything", "allow_once"), id="an-undeclared-relay-tool"),
-        pytest.param(_request("run_program", "allow_once", server=None), id="the-agents-own-program-tool"),
-        pytest.param(_request("write_file", "allow_once", server=None), id="the-agents-own-file-tool"),
+        pytest.param(_request("run_program", "allow_once", server=None), id="an-agents-own-tool"),
         pytest.param(_request(None, "allow_once"), id="no-tool-named"),
+    ],
+)
+def test_any_request_is_approved_once_when_an_allow_once_option_is_offered(request_: dict[str, object]) -> None:
+    assert answer_for(request_) == {"option_id": "allow_once"}
+
+
+@pytest.mark.parametrize(
+    "request_",
+    [
+        pytest.param(_request("execute"), id="no-options"),
         pytest.param(_request("execute", "reject_once"), id="no-allow-once-offered"),
         pytest.param(_request("execute", "allow_session", "reject_once"), id="only-a-session-allow-offered"),
         pytest.param(_request("execute", "allow_once", "allow_once"), id="two-allow-once-options"),
     ],
 )
-def test_anything_but_one_relay_tool_offered_once_is_rejected(request_: dict[str, object]) -> None:
+def test_a_request_without_a_single_allow_once_option_is_rejected(request_: dict[str, object]) -> None:
     assert answer_for(request_) == {"decision": "reject"}
 
 
@@ -112,13 +116,20 @@ def test_each_filed_request_is_answered_once_in_its_own_answer_file(tmp_path: Pa
     write_whole(tmp_path / "requests" / "0001.json", _request("status", "allow_once", "reject_once"))
     own_tool = {**_request("run_program", "allow_once", server=None), "request_id": "req-2"}
     write_whole(tmp_path / "requests" / "0002.json", own_tool)
+    unanswerable = {**_request("write_file", "reject_once"), "request_id": "req-3"}
+    write_whole(tmp_path / "requests" / "0003.json", unanswerable)
 
     rejected = exchange.answer_pending()
 
     assert read_document(tmp_path / "answers" / "0001.json") == {"option_id": "allow_once"}
-    assert read_document(tmp_path / "answers" / "0002.json") == {"decision": "reject"}
-    assert rejected == ["'run_program': 'Run a Cadrumo tool'"]
-    assert exchange.given == {"req-1": {"option_id": "allow_once"}, "req-2": {"decision": "reject"}}
+    assert read_document(tmp_path / "answers" / "0002.json") == {"option_id": "allow_once"}
+    assert read_document(tmp_path / "answers" / "0003.json") == {"decision": "reject"}
+    assert rejected == ["'write_file': 'Run a Cadrumo tool'"]
+    assert exchange.given == {
+        "req-1": {"option_id": "allow_once"},
+        "req-2": {"option_id": "allow_once"},
+        "req-3": {"decision": "reject"},
+    }
     (tmp_path / "answers" / "0001.json").unlink()
     assert exchange.answer_pending() == []
     assert not (tmp_path / "answers" / "0001.json").exists()
