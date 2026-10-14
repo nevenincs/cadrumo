@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#provider-settings'
 date: '2026-10-13'
-modified: '2026-10-13'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:7212713046133d90d4905a1cfe9e916554ee0715ac03593d61cbf54af756264d'
+body_hash: 'sha256:bb3417e438114a852f10428ac037ab49b69e06065c6c590f3dcbe4100baf110f'
 related:
   - "[[2026-10-13-provider-settings-plan]]"
 ---
@@ -30,8 +30,16 @@ related:
 - `S06` `A` `src/cadrumo/application/provider_settings/`
 - `S06` `verify:` `just check-secure-store-write-paths` -> `pass`
 - `S06` `verify:` `just check-persistence-write-paths` -> `pass`
+- `S07` `A` `src/cadrumo/entrypoints/runtime/tests/test_provider_credential_person_acts.py`
+- `S07` `M` `.vault/plan/2026-10-13-provider-settings-plan.md`
+- `S07` `verify:` `pytest src/cadrumo/entrypoints/runtime/tests/test_provider_credential_person_acts.py -n0 -m ''` -> `pass`
+- `S07` `verify:` `ruff check and format` -> `pass`
+- `S07` `verify:` `just check-import-boundaries (15/15 contracts kept, 0 findings; run flagged unavailable: source changed mid-run by other sessions)` -> `pass`
+- `S07` `verify:` `just check-types (1 diagnostic in untracked test_worker_provider_catalog.py owned by another session; none in S07 files)` -> `fail`
+- `S07` `by:` `implementation-high`
 
 ## Notes
 
 - `S03` handover note is a git-ignored .tmp file in the cadrumo-agent checkout
 - `S05` mirror push lists the `LOCAL_ONLY` namespace as blocked-not-skipped by design; profile schema cannot yet express a secret stored elsewhere
+- `S07` enrolment in `person_acts.py` and runtime dispatch already committed in 5f7e7ee16e; S07 adds the per-action test, which fails when an action is removed from `PROVIDER_CREDENTIAL_OPERATIONS`
