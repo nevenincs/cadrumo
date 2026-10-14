@@ -59,7 +59,7 @@ from cadrumo.core.operations import (
 )
 
 from .supervision_support import run_to_settlement
-from .test_supervisor import _close_host_over_live_executor
+from .supervisor_test_support import _close_host_over_live_executor
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

@@ -45,6 +45,18 @@ from cadrumo.core.operations import (
 )
 
 from .supervision_support import run_to_settlement
+from .supervisor_test_support import (
+    _NOW,
+    ResumableReviewExecutor,
+    ReviewExecutor,
+    _capabilities,
+    _pending_interaction,
+    _registry,
+    _repositories,
+    _request,
+    _response,
+    _supervisor,
+)
 from .test_censal_operation_executor import (
     _OPERATOR_SCOPE_PORTS,
     _observation,
@@ -61,18 +73,6 @@ from .test_censal_operation_executor import (
 )
 from .test_censal_operation_executor import (
     subject as _subject,
-)
-from .test_supervisor import (
-    _NOW,
-    ResumableReviewExecutor,
-    ReviewExecutor,
-    _capabilities,
-    _pending_interaction,
-    _registry,
-    _repositories,
-    _request,
-    _response,
-    _supervisor,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]

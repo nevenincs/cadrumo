@@ -31,8 +31,8 @@ from cadrumo.application.operations.persistence.leases import (
 from cadrumo.application.operations.tests.authority_test_support import unread_authority_operation
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 
+from .supervisor_test_support import WaitingExecutor, _registry
 from .test_journal import _STARTED, _snapshot
-from .test_supervisor import WaitingExecutor, _registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

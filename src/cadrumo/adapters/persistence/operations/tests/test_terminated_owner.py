@@ -19,7 +19,7 @@ from cadrumo.application.operations.persistence.leases import OperationOwnerLeas
 from cadrumo.application.operations.terminated_owner import settle_terminated_operation
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 
-from .test_supervisor import _NOW, IdleExecutor, _registry, _repositories, _request, _supervisor
+from .supervisor_test_support import _NOW, IdleExecutor, _registry, _repositories, _request, _supervisor
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 

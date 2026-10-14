@@ -49,7 +49,7 @@ from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 
 from .supervision_support import run_to_settlement
-from .test_supervisor import _repositories, _supervisor
+from .supervisor_test_support import _repositories, _supervisor
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

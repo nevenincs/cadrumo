@@ -32,7 +32,7 @@ from cadrumo.core.operations import (
 )
 
 from .supervision_support import run_to_settlement
-from .test_supervisor import (
+from .supervisor_test_support import (
     _NOW,
     ResumableReviewExecutor,
     _capabilities,

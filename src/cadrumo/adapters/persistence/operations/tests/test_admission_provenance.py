@@ -27,8 +27,8 @@ from cadrumo.application.user_profile.access_contracts import (
 )
 from cadrumo.core.hashing import content_hash_hex
 
+from .supervisor_test_support import _NOW, IdleExecutor, SupervisorRequest, _registry, _repositories, _supervisor
 from .test_journal import _claim_lease, _lease, _snapshot
-from .test_supervisor import _NOW, IdleExecutor, SupervisorRequest, _registry, _repositories, _supervisor
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
