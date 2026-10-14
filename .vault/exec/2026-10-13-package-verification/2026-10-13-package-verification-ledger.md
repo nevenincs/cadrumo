@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:c489df412e665d91e8b4eb780261b488207457e83d06ed20c14763175d67e2f8'
+body_hash: 'sha256:195fb290bfe630cc252dd1f5d41be66c4fb0f5a67878daeb995b45e8a64306a1'
 related:
   - "[[2026-10-13-package-verification-plan]]"
 ---
@@ -87,3 +87,4 @@ related:
 - `S03` each receipt permission's gateway-recorded decision must also equal the answer given
 - `S03` a run is judged only when its receipt lane is claude/api, the one lane that mounts the relay
 - `S03` the claude/api-only lane check is withdrawn: the owner rules that every provider lane mounts the relay
+- `S03` relayed calls are recognised by the agent's trusted `tool_server` and the bare registry name, on every provider lane

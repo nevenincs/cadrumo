@@ -81,8 +81,10 @@ _SCENARIO: Final[dict[str, Any]] = {
     "taxpayer": "Daniel Persona",
     "ledger": {"description": "agent live acceptance", "amount": "12.34", "currency": "EUR", "date": "2026-01-15"},
 }
-#: The tools the relay entry declares (cadrumo-agent's harness MCP registry). The agent stores a relayed
-#: call under its bare registry name, and refuses a turn whose own tools would share one of these names.
+#: The relay's entry in cadrumo-agent's tool-server registry, as a permission request's ``tool_server`` names it.
+_RELAY_SERVER: Final = "cadrumo"
+#: The tools that entry declares. A lane stores a relayed call under the bare name or, on the lanes that qualify
+#: tool names, as ``mcp__cadrumo__<name>``.
 _RELAY_TOOLS: Final = frozenset(
     {
         "authority",
@@ -127,13 +129,19 @@ def read_document(path: Path) -> dict[str, Any] | None:
 def answer_for(request: Mapping[str, Any]) -> dict[str, str]:
     """Inspect one pending permission and return the person's answer to it.
 
-    Only a call of one of the relay's declared tools is allowed, and only once:
-    the answer names the ``allow_once`` option the request itself offered.
-    Anything else is rejected, and the caller fails the run on a rejection.
+    Only a call the agent attributes to Cadrumo's relay (its trusted
+    ``tool_server``, never a model argument) of one of the relay's declared
+    tools is allowed, and only once: the answer names the ``allow_once`` option
+    the request itself offered. Anything else is rejected, and the caller fails
+    the run on a rejection.
     """
     tool = request.get("tool_call")
     options = request.get("options")
-    allowed = isinstance(tool, str) and tool in _RELAY_TOOLS
+    allowed = (
+        request.get("tool_server") == _RELAY_SERVER
+        and isinstance(tool, str)
+        and tool.removeprefix(f"mcp__{_RELAY_SERVER}__") in _RELAY_TOOLS
+    )
     once = [
         option["option_id"]
         for option in options or ()

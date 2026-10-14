@@ -21,12 +21,13 @@ from ..caller_owned_root import AcceptanceError
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
-def _request(tool: str | None, *kinds: str) -> dict[str, object]:
+def _request(tool: str | None, *kinds: str, server: str | None = "cadrumo") -> dict[str, object]:
     return {
         "run_id": "run-1",
         "request_id": "req-1",
         "description": "Run a Cadrumo tool",
         "tool_call": tool,
+        "tool_server": server,
         "tool_kind": "other",
         "options": [{"option_id": kind, "kind": kind} for kind in kinds],
     }
@@ -34,17 +35,21 @@ def _request(tool: str | None, *kinds: str) -> dict[str, object]:
 
 def test_a_relay_tool_is_allowed_once_with_the_option_the_request_offered() -> None:
     answer = answer_for(_request("execute", "allow_once", "reject_once"))
+    qualified = answer_for(_request("mcp__cadrumo__execute", "allow_once", "reject_once"))
 
     assert answer == {"option_id": "allow_once"}
+    assert qualified == {"option_id": "allow_once"}
 
 
 @pytest.mark.parametrize(
     "request_",
     [
-        pytest.param(_request("mcp__cadrumo__execute", "allow_once"), id="a-qualified-name-the-lane-never-stores"),
+        pytest.param(_request("execute", "allow_once", server=None), id="a-relay-name-on-the-lanes-own-tool"),
+        pytest.param(_request("execute", "allow_once", server="other"), id="another-tool-server"),
+        pytest.param(_request("mcp__other__execute", "allow_once"), id="a-name-qualified-by-another-server"),
         pytest.param(_request("delete_everything", "allow_once"), id="an-undeclared-relay-tool"),
-        pytest.param(_request("run_program", "allow_once"), id="the-agents-own-program-tool"),
-        pytest.param(_request("write_file", "allow_once"), id="the-agents-own-file-tool"),
+        pytest.param(_request("run_program", "allow_once", server=None), id="the-agents-own-program-tool"),
+        pytest.param(_request("write_file", "allow_once", server=None), id="the-agents-own-file-tool"),
         pytest.param(_request(None, "allow_once"), id="no-tool-named"),
         pytest.param(_request("execute", "reject_once"), id="no-allow-once-offered"),
         pytest.param(_request("execute", "allow_once", "allow_once"), id="two-allow-once-options"),
@@ -102,7 +107,8 @@ def test_a_document_is_read_whole_absent_or_refused(tmp_path: Path) -> None:
 def test_each_filed_request_is_answered_once_in_its_own_answer_file(tmp_path: Path) -> None:
     exchange = Exchange(tmp_path)
     write_whole(tmp_path / "requests" / "0001.json", _request("status", "allow_once", "reject_once"))
-    write_whole(tmp_path / "requests" / "0002.json", {**_request("run_program", "allow_once"), "request_id": "req-2"})
+    own_tool = {**_request("run_program", "allow_once", server=None), "request_id": "req-2"}
+    write_whole(tmp_path / "requests" / "0002.json", own_tool)
 
     rejected = exchange.answer_pending()
 
