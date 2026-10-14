@@ -245,6 +245,14 @@ if(BUILD_TESTING)
     "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/${CADRUMO_PACKAGE_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/native/tests/package_smoke.py" "${CADRUMO_PATH_STAGE}/$<CONFIG>/app"
     "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/${CADRUMO_PACKAGE_MANIFEST}")
   set_tests_properties(bundle.python PROPERTIES RESOURCE_LOCK package_inventory)
+  # The package declaration is the reference: ask the assembled package's own interpreter what the installed
+  # command line, runtime and bundled agent declare, and fail on any disagreement with it.
+  add_test(NAME bundle.environment-conformance COMMAND "${CMAKE_COMMAND}" -E env
+    "${CADRUMO_STORAGE_ROOT_VARIABLE}=${CADRUMO_PATH_TESTING}/$<CONFIG>/storage"
+    "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.environment_conformance
+    --package "${CADRUMO_PATH_STAGE}/$<CONFIG>/app" --manifest "${CADRUMO_PACKAGE_MANIFEST}")
+  set_tests_properties(bundle.environment-conformance PROPERTIES RESOURCE_LOCK package_inventory
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 600)
   string(JSON entrypoint_directory GET "${package_layout}" paths native)
   foreach(entrypoint IN LISTS CADRUMO_ENTRYPOINTS)
     add_test(NAME bundle.entrypoint.${entrypoint} COMMAND "${CMAKE_COMMAND}" -E env

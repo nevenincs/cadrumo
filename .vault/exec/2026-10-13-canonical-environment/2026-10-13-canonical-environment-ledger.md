@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:7830f2865869fa20105c06416bf07ab92ff0a493b61c1641f39c8a0f7d3042f9'
+body_hash: 'sha256:a4330363e90e197a079350568fc9837e1b589f8050850a761170c492e6e7fa86'
 related:
   - "[[2026-10-13-canonical-environment-plan]]"
 ---
@@ -261,6 +261,19 @@ related:
 - `S07` `verify:` `uv run --no-sync pytest launch vectors, application environment, agent image (61)` -> `pass`
 - `S07` `verify:` `ruff and ty on the touched files` -> `pass`
 - `S07` `verify:` `cargo +1.96.0 clippy --all-targets -D warnings native/platform (win, linux, darwin) and test (45, worker root-slot vectors replayed)` -> `pass`
+- `S13` `A` `dev/packaging/native/environment_facts.py`
+- `S13` `A` `dev/packaging/native/environment_conformance.py`
+- `S13` `A` `dev/packaging/native/tests/test_environment_conformance.py`
+- `S13` `M` `native/cmake/Packaging.cmake`
+- `S13` `M` `dev/quality/metadata/import_load_targets.json`
+- `S13` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S13` `verify:` `uv run --no-sync pytest dev/packaging/native/tests/test_environment_conformance.py (51 planted-drift and conformance cases)` -> `pass`
+- `S13` `verify:` `uv run --no-sync pytest dev/packaging -q (1725 passed; the 2 known test_authority_build_hook failures)` -> `fail`
+- `S13` `verify:` `just check-types` -> `pass`
+- `S13` `verify:` `just check-import-boundaries` -> `pass`
+- `S13` `verify:` `uv run --no-sync ruff check and format --check on the touched files` -> `pass`
+- `S13` `verify:` `uv run --no-sync pytest dev/quality/tests/test_no_git_cli.py` -> `pass`
+- `S13` `by:` `implementation-engineer-standard`
 
 ## Notes
 
@@ -292,3 +305,6 @@ related:
 - `S10` Commits 43962530ae and 64960fec66. Remaining suite failures are unrelated to S10 and predate it: storage liveness `posix_endpoint` claim, sha256 adoption, tty probe, `agent_programs` literal path (S09), `dead_code` population, playwright doctor, keychain receipt recovery, docs build and localization, plus the 2 known `test_authority_build_hook` cases. check-import-boundaries kept all 15 contracts and loaded 4688 modules; its verdict was unavailable only because other sessions changed the tree mid-run. Python child launches no longer clear interpreter or loader classes; the authority root stays relayed as the CLI's own setting; the POSIX worker containment baseline is kept. docs/reference/environment-overrides.md regenerated with `dev.docs.env_reference` after the webview setting was removed.
 - `S06` Follow-up after the CLI taxonomy dropped the desktop webview member: the live webview test reads the location from `desktop_defaults` under the pinned root and checks that relocating the root moves the webview; it needs a real package `(CADRUMO_DESKTOP_PACKAGE_ROOT)` to run and was compiled, not run, here
 - `S07` Correction within the ADR's slot mechanism, on the agent owner's account that the worker starts the relay: the agent worker also takes `CADRUMO_LOCAL_STORAGE_ROOT` as an optional directory slot admitted by kind alone, so the root travels gateway to worker to relay. This supersedes the 8dc4fffcba note that the worker never receives the root name; neither agent profile pins the root
+- `S13` The check was run against the real checkout (command line, runtime, composer) and against the real bundled agent's settings read from the cadrumo-agent checkout (129 settings, 7 worker handover writes): both agree with the declaration, so no drift was found. No CTest run: bundle.environment-conformance is registered but needs a built bundle, which waits on the registry republish and the build owner.
+- `S13` Finding, not changed: the command line's Settings validator anchors a relative `CADRUMO_LOG_DIR` beneath the storage root exactly as the desktop's `member_path` does, but a rooted value without a drive or a drive-relative value is rewritten (C:rooted becomes `<root>/rooted)` by `src/cadrumo/core/_config_validation.py:138` and :146, while `resolve_storage_path` `(storage_environment.py:527)` and the desktop (native/platform/src/storage.rs:554-564) refuse it with `non_absolute_pin.` The desktop half has no shared vector, so the check pins only the agreeing relative case.
+- `S13` Finding, not changed: `dev/packaging/native/application_environment.py` does not keep the declaration's `[agent]` table (prefix, `hosting_contract,` `never_admitted)` on ApplicationEnvironment, so the conformance check reads that table from the TOML text itself.

@@ -4020,6 +4020,8 @@
         "dev.packaging.native.docs_build",
         "dev.packaging.native.docs_input_identity",
         "dev.packaging.native.docs_stage",
+        "dev.packaging.native.environment_conformance",
+        "dev.packaging.native.environment_facts",
         "dev.packaging.native.generate",
         "dev.packaging.native.hashing",
         "dev.packaging.native.identity",
