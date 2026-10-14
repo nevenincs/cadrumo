@@ -22,6 +22,7 @@ from ...core.operator_action_enums import (
     NoRecoveryOutcome,
 )
 from ...domain.user_profile.values import ProfileSetupState
+from ..operations.models import CredentialFreeOperationRequest
 from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 from ..workflow.profile_health import ProfileHealthStatus
 from .overview import ProfileFieldView
@@ -45,7 +46,7 @@ class ProfileViewPageKind(StrEnum):
     STATUS = "status"
 
 
-class ProfileViewOperationRequest(BaseModel):
+class ProfileViewOperationRequest(CredentialFreeOperationRequest):
     """Read one page, optionally pinned to a previously observed revision."""
 
     model_config = STRICT_FROZEN_CONFIG

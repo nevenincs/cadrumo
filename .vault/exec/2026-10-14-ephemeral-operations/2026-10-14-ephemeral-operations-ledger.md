@@ -5,7 +5,7 @@ tags:
 date: '2026-10-14'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:d57d4db9eb425b8e16ea821507dbb5cc101228e59f7682ea04127def0a676204'
+body_hash: 'sha256:9c3e6c697216d14cd22acc841edd5b658b3cccd6e3a24df95b342628eaeba7d2'
 related:
   - "[[2026-10-14-ephemeral-operations-plan]]"
 ---
@@ -63,6 +63,12 @@ related:
 - `S03` `M` `.vault/plan/2026-10-14-ephemeral-operations-plan.md`
 - `S03` `verify:` `pytest src/cadrumo/adapters/persistence/operations/tests/test_durability_router.py` -> `pass`
 - `S03` `by:` `vaultspec-high-executor`
+- `S04` `M` `src/cadrumo/application/user_profile/operations.py`
+- `S04` `M` `src/cadrumo/application/user_profile/view_operation.py`
+- `S04` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S04` `verify:` `just check-operation-contract-manifest` -> `pass`
+- `S04` `verify:` `pytest src/cadrumo/application/user_profile src/cadrumo/application/operations src/cadrumo/entrypoints/tests/test_operation_contract_manifest.py src/cadrumo/entrypoints/tests/test_operation_catalogue.py` -> `pass`
+- `S04` `by:` `vaultspec-high-executor`
 
 ## Notes
 
