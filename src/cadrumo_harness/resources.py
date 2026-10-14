@@ -19,7 +19,6 @@ from ._skill_metadata import parse_skill_metadata as _parse_skill_metadata
 _UTF_8 = "utf-8"
 _AGENT_SUBTREE = "agent"
 _RULES = "rules"
-_PERSONAS = "personas"
 _SKILLS = "skills"
 _REFERENCE = "reference"
 _MARKDOWN_SUFFIX = ".md"
@@ -53,11 +52,6 @@ def iter_operator_rules() -> Iterator[Traversable]:
 def operator_rules_text() -> str:
     """Return the concatenated operator operating-rule documents."""
     return "\n\n".join(rule.read_text(encoding=_UTF_8).rstrip() for rule in iter_operator_rules())
-
-
-def iter_personas() -> Iterator[Traversable]:
-    """Yield each tax-advisor persona document, ordered by file name."""
-    yield from _iter_markdown(_PERSONAS)
 
 
 def iter_reference_documents() -> Iterator[Traversable]:
@@ -104,7 +98,6 @@ def iter_skill_metadata() -> Iterator[SkillMetadata]:
 __all__ = [
     "harness_root",
     "iter_operator_rules",
-    "iter_personas",
     "iter_reference_documents",
     "iter_skill_documents",
     "iter_skill_metadata",

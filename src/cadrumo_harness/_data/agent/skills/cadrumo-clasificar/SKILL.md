@@ -36,5 +36,5 @@ and the law, never to reach a convenient number.
 
 ## Hand off
 
-A classified ledger is ready for the modelo-preparer (see the per-modelo skill,
-e.g. `cadrumo-preparar-modelo-130`).
+A classified ledger is ready for the per-modelo skill, e.g.
+`cadrumo-preparar-modelo-130`.

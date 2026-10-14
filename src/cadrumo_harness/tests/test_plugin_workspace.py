@@ -3,9 +3,8 @@
 Asserts the plugin layout re-materialises the single authored harness source as
 a schema-shaped plugin over a real
 filesystem ``tmp_path``: a ``.claude-plugin/plugin.json`` manifest carrying the
-required publication fields, a top-level ``skills/`` and ``agents/`` tree, and an
-``.mcp.json`` declaring the stdio ``cadrumo-mcp`` server. The agent frontmatter maps
-to plugin-native fields and never carries the harness-authoring ``mode:`` field. Where the
+required publication fields, a top-level ``skills/`` tree, and an
+``.mcp.json`` declaring the stdio ``cadrumo-mcp`` server. Where the
 ``claude`` CLI is on PATH, the emitted tree is additionally asserted to pass
 ``claude plugin validate --strict``; the structural assertions always run so the
 suite never silently degrades to a validator-only skip.
@@ -27,7 +26,7 @@ import yaml
 from cadrumo.core.hashing import sha256_hex
 
 from .._workspace import _PluginPythonCohort, materialise_plugin
-from ..resources import harness_root, iter_personas, iter_reference_documents
+from ..resources import harness_root, iter_reference_documents
 from ._plugin_cohort import PluginTestCohort
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
@@ -40,23 +39,6 @@ def _shipped_skill_names() -> list[str]:
     return sorted(
         child.name for child in skills_root.iterdir() if child.is_dir() and child.joinpath("SKILL.md").is_file()
     )
-
-
-def _persona_slugs() -> list[str]:
-    return sorted(persona.name[:-3] for persona in iter_personas())
-
-
-def _agent_frontmatter(path: Path) -> dict[str, object]:
-    text = path.read_text(encoding=_UTF_8)
-    assert text.startswith("---\n"), f"{path.name} has no leading frontmatter"
-    _, block, _ = text.split("---\n", 2)
-    loaded = yaml.safe_load(block)
-    assert isinstance(loaded, dict), f"{path.name} frontmatter is not a mapping"
-    frontmatter: dict[str, object] = {}
-    for key, value in loaded.items():
-        assert isinstance(key, str), f"{path.name} frontmatter has a non-string key"
-        frontmatter[key] = value
-    return frontmatter
 
 
 def test_plugin_manifest_carries_required_fields(tmp_path: Path, plugin_cohort: _PluginPythonCohort) -> None:
@@ -112,47 +94,7 @@ def test_plugin_skill_document_keeps_the_shipped_frontmatter_and_body(
     assert output.joinpath(*cited).read_text(encoding=_UTF_8) == shipped_material
 
 
-def test_plugin_agents_carry_claude_frontmatter_never_mode(tmp_path: Path, plugin_cohort: _PluginPythonCohort) -> None:
-    output = tmp_path / "plugin"
-    manifest = materialise_plugin(output, cohort=plugin_cohort)
-    slugs = _persona_slugs()
-    assert manifest.agents_written == len(slugs)
-
-    agents_dir = output / "agents"
-    for slug in slugs:
-        frontmatter = _agent_frontmatter(agents_dir / f"{slug}.md")
-        assert frontmatter["name"] == slug
-        assert isinstance(frontmatter["description"], str) and frontmatter["description"].strip()
-        # The harness-authoring mode: field is not a Claude field and must never be emitted.
-        assert "mode" not in frontmatter
-
-
-def test_read_only_persona_maps_to_a_disallowed_tools_denylist(
-    tmp_path: Path, plugin_cohort: _PluginPythonCohort
-) -> None:
-    output = tmp_path / "plugin"
-    materialise_plugin(output, cohort=plugin_cohort)
-    agents_dir = output / "agents"
-    # The coordinator's tool scope declares itself read-only (orchestration only),
-    # so it carries a workspace-mutation denylist; a state-mutating persona does not.
-    coordinator = _agent_frontmatter(agents_dir / "cadrumo-coordinator.md")
-    assert coordinator["disallowedTools"] == ["Edit", "Write", "NotebookEdit"]
-    classifier = _agent_frontmatter(agents_dir / "cadrumo-classifier.md")
-    assert "disallowedTools" not in classifier
-
-
-def test_plugin_agent_body_preserves_the_shipped_persona_prose(
-    tmp_path: Path, plugin_cohort: _PluginPythonCohort
-) -> None:
-    output = tmp_path / "plugin"
-    materialise_plugin(output, cohort=plugin_cohort)
-    written = (output / "agents" / "cadrumo-coordinator.md").read_text(encoding=_UTF_8)
-    shipped = harness_root().joinpath("personas", "cadrumo-coordinator.md").read_text(encoding=_UTF_8)
-    # The persona prose rides verbatim as the agent system prompt after the frontmatter.
-    assert written.endswith(shipped)
-
-
-def test_plugin_ships_every_reference_document_and_points_each_agent_at_it(
+def test_plugin_ships_every_reference_document_and_points_each_skill_at_it(
     tmp_path: Path, plugin_cohort: _PluginPythonCohort
 ) -> None:
     output = tmp_path / "plugin"
@@ -164,19 +106,15 @@ def test_plugin_ships_every_reference_document_and_points_each_agent_at_it(
     for document in shipped:
         written = (output / "reference" / document.name).read_text(encoding=_UTF_8)
         assert written == document.read_text(encoding=_UTF_8)
-    # A plugin carries no operating rules, so each agent is told where the documents are: under the
-    # plugin root Claude resolves when it loads the agent, each named by its own title.
+    # A plugin carries no operating rules, so each skill is told where the documents are: under the
+    # plugin root Claude resolves when it loads the skill, each named by its own title.
     remap = harness_root().joinpath("reference", "command-operations.md").read_text(encoding=_UTF_8)
     title = remap.splitlines()[0].removeprefix("# ")
-    for slug in _persona_slugs():
-        agent = (output / "agents" / f"{slug}.md").read_text(encoding=_UTF_8)
-        _, _frontmatter, body = agent.split("---\n", 2)
-        shipped_prose = harness_root().joinpath("personas", f"{slug}.md").read_text(encoding=_UTF_8)
-        pointer = body.removesuffix(shipped_prose)
-        assert pointer != body
+    for name in _shipped_skill_names():
+        skill = (output / "skills" / name / "SKILL.md").read_text(encoding=_UTF_8)
         for document in shipped:
-            assert f"`${{CLAUDE_PLUGIN_ROOT}}/reference/{document.name}`" in pointer, slug
-        assert f"`${{CLAUDE_PLUGIN_ROOT}}/reference/command-operations.md`: {title}" in pointer, slug
+            assert f"`${{CLAUDE_PLUGIN_ROOT}}/reference/{document.name}`" in skill, name
+        assert f"`${{CLAUDE_PLUGIN_ROOT}}/reference/command-operations.md`: {title}" in skill, name
 
 
 def test_exact_closed_world_cohort_interpolates_into_manifest_and_mcp_launch(
@@ -270,7 +208,6 @@ def test_emitted_plugin_passes_claude_validate_strict_when_cli_present(
     manifest = materialise_plugin(output, cohort=plugin_cohort)
     assert (output / ".claude-plugin" / "plugin.json").is_file()
     assert manifest.skills_written > 0
-    assert manifest.agents_written > 0
 
     claude = shutil.which("claude")
     if claude is not None:

@@ -31,8 +31,7 @@ skill that owns it. It never enumerates a fixed modelo list.
 - The taxpayer is onboarded (`cadrumo-alta-contribuyente` has run;
   `aeat app overview status` reports an active profile).
 - The profile declares the gating facts: actividad económica income category and
-  an estimación directa regime. If either is undeclared, route back to the
-  onboarding persona to complete the profile before continuing.
+  an estimación directa regime.
 
 ## Procedure
 

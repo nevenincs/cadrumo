@@ -43,7 +43,7 @@ from cadrumo.core.operator_action_enums import ActionArgumentStatus, ActionCondi
 from cadrumo.entrypoints.cli.command_schema import command_schema_refs
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from cadrumo.entrypoints.cli.verb_input_schema import build_verb_input_schemas
-from cadrumo_harness.resources import iter_operator_rules, iter_personas, iter_skill_documents
+from cadrumo_harness.resources import iter_operator_rules, iter_skill_documents
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -170,14 +170,12 @@ def _rule_documents() -> list[tuple[str, str]]:
 
 
 def _all_operator_documents() -> list[tuple[str, str]]:
-    """Every operator-facing harness document: rules, personas, and skills.
+    """Every operator-facing harness document: rules and skills.
 
     All of them cite CLI verbs the operator is told to run, so all of them must
     be kept honest by the verb-resolution gate.
     """
     documents: list[tuple[str, str]] = list(_rule_documents())
-    for persona in iter_personas():
-        documents.append((f"personas/{persona.name}", persona.read_text(encoding="utf-8")))
     for skill in iter_skill_documents():
         documents.append((f"skills/{skill.name}", skill.read_text(encoding="utf-8")))
     return documents
@@ -220,7 +218,7 @@ def test_every_cited_verb_resolves() -> None:
 
 
 def test_every_cited_flag_resolves() -> None:
-    # Every flag a rule/persona/skill cites on an `aeat ...` command must be a real
+    # Every flag a rule or skill cites on an `aeat ...` command must be a real
     # option of that command (or a root-global flag). A cited dead flag is the same
     # orphaned-instruction failure as a dead verb.
     global_flags = _global_flags()

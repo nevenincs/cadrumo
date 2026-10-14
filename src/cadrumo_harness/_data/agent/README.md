@@ -14,10 +14,6 @@ Subtrees:
 - `rules/` — the operator operating contract: always-on behavioural boundaries the
   agent loads every session. These are the operator analogues of the engineer-facing
   project rules, re-cast for the agent that *uses* the tool.
-- `personas/` — tax-advisor role definitions (coordinator and task-scoped roles),
-  each given the operating rules; runtime access comes from the connection's session
-  (the person's sign-in or an approved exact-profile grant), independently of the
-  persona name.
 - `skills/` — executable workflow playbooks (preconditions, command sequence, JSON
   success assertions) for the canonical end-to-end tax flows.
 - `reference/`: generated documents a rule sends the agent to. `command-operations.md`
