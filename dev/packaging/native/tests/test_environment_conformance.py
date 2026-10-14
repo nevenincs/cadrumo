@@ -7,6 +7,7 @@ import copy
 import json
 import re
 import sys
+import tomllib
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -34,6 +35,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _SOURCE = (REPO_ROOT / DECLARATION).read_text(encoding="utf-8")
 _TARGET = {"win32": "windows-x86-64", "darwin": "macos-arm64"}.get(sys.platform, "linux-x86-64")
 _LAYOUT = load_layout(_TARGET)
+_NEVER_ADMITTED: str = tomllib.loads(_SOURCE)["agent"]["never_admitted"][0]
+"""A name under the agent's prefix that no profile admits, read from the declaration rather than spelled."""
 _PACKAGE_KINDS = {
     "directory": "path",
     "file": "path",
@@ -226,6 +229,12 @@ _PLANTED_FACTS: list[tuple[str, _Mutation, str, str]] = [
     ("slot-dropped-by-the-runtime", _runtime_drops_a_slot, "runtime-launch", "does not fill"),
     ("slot-added-by-the-runtime", _runtime_adds_a_slot, "runtime-launch", "does not declare"),
     ("composer-writes-a-credential", _composer_writes("ANTHROPIC_API_KEY"), "runtime-launch", "does not admit it"),
+    (
+        "composer-writes-a-never-admitted-agent-name",
+        _composer_writes(_NEVER_ADMITTED),
+        "runtime-launch",
+        "does not admit it",
+    ),
     ("composer-omits-a-slot", _composer_omits_a_slot, "runtime-launch", "composer does not write"),
     (
         "composer-omits-an-advertised-name",

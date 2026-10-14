@@ -299,7 +299,10 @@ def check_runtime_launch(reference: Reference, runtime: Mapping[str, Any]) -> li
         Finding(check, name, "is advertised to the agent and declared as a launch slot")
         for name in sorted(advertised & declared_slots)
     )
-    unadmitted = composed - declared_slots - base - pins - {"PATH"} - admitted_by_prefix
+    # The gateway admits every name under the agent's prefix but the never-admitted ones, so a
+    # setting the composer writes there, advertised or not, reaches the agent without a listing.
+    composed_by_prefix = {name for name in composed if _admits_by_prefix(reference, gateway, name)}
+    unadmitted = composed - declared_slots - base - pins - {"PATH"} - composed_by_prefix
     findings.extend(
         Finding(check, name, "is written by the composer, and the gateway profile does not admit it")
         for name in sorted(unadmitted)

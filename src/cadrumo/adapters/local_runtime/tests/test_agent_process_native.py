@@ -25,6 +25,7 @@ from cadrumo.application.agent_host.credential_frame import AgentCredential, bui
 from cadrumo.application.agent_host.launcher_protocol import AgentLauncherRefusal, launcher_refusal_for
 from cadrumo.application.agent_host.native_refusal import NativeLaunchRefusal, NativeLaunchRefusalCode
 
+from ....application.agent_host.launch_environment import HOSTED_ROOT_VARIABLE
 from ..agent_process import WindowsAgentProcessLauncher
 from . import agent_host_fixture
 from .process_support import fixture_arguments, fixture_environment, native_python
@@ -289,7 +290,7 @@ def test_gateway_and_worker_logs_from_contained_processes_join_application_feed(
     import time
 
     environment = dict(fixture_environment())
-    environment["CADRUMO_AGENT_HOSTED_ROOT"] = str(tmp_path / "agent")
+    environment[HOSTED_ROOT_VARIABLE] = str(tmp_path / "agent")
     caplog.set_level(logging.DEBUG)
     process = WindowsAgentProcessLauncher().launch(
         executable=native_python(),

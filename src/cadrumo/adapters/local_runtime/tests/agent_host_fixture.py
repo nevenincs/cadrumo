@@ -26,6 +26,8 @@ import time
 from pathlib import Path
 from typing import Final
 
+from ....application.agent_host.launch_environment import HOSTED_ROOT_VARIABLE
+
 NATIVE_REFUSAL_SUBJECT: Final = "SLOT_NAME"
 NATIVE_REFUSAL_LINE: Final = (
     b'{"native_refusal": "launch_value_malformed", "subject": "' + NATIVE_REFUSAL_SUBJECT.encode("ascii") + b'"}\n'
@@ -87,7 +89,7 @@ def main() -> None:
         sys.stderr.buffer.write(b"x" * CHATTY_BYTES)
         sys.stderr.buffer.flush()
     if mode == "diagnostics":
-        logs = Path(os.environ["CADRUMO_AGENT_HOSTED_ROOT"]) / "home" / "runtime"
+        logs = Path(os.environ[HOSTED_ROOT_VARIABLE]) / "home" / "runtime"
         logs.mkdir(parents=True, exist_ok=True)
         diagnostic = {
             "schema": "cadrumo-agent.log/1",
