@@ -725,7 +725,7 @@ verify-live-sign-in PACKAGE *ARGS:
 verify-reviewed-operation PACKAGE *ARGS:
     uv run --no-sync python -m dev.runtime_lifecycle.reviewed_operation --package {{quote(PACKAGE)}} {{ARGS}}
 
-[doc('Prove the live agent reads and changes a signed-in profile through Cadrumo tools (--package DIR or --programs DIR); spends model credit.')]
+[doc('Prove the live agent reads and changes a signed-in profile through Cadrumo tools (--package DIR); spends model credit.')]
 [group('test')]
 verify-agent-live *ARGS:
     uv run --no-sync python -m dev.runtime_lifecycle.agent_live {{ARGS}}

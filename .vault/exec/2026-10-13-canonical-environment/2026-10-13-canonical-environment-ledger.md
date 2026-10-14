@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:abe3c65837a416634dedc7bc32e71761ad2169ae85fe089abd0a42e5b54ea136'
+body_hash: 'sha256:8e1d1ec3ad45eee8d00521c2948e950c414c062e9f9b447e15506385f92cd73e'
 related:
   - "[[2026-10-13-canonical-environment-plan]]"
 ---
@@ -226,6 +226,13 @@ related:
 - `S09` `verify:` `just check-import-boundaries` -> `pass`
 - `S09` `verify:` `ruff check and format` -> `pass`
 - `S09` `by:` `vaultspec-high-executor`
+- `S12` `A` `dev/quality/tests/test_agent_prefix_spelling.py`
+- `S12` `M` `justfile`
+- `S12` `verify:` `uv run --no-sync pytest dev/quality/tests/test_agent_prefix_spelling.py dev/quality/tests/test_no_git_cli.py` -> `pass`
+- `S12` `verify:` `uv run --no-sync pytest dev/quality (265 passed; 4 unrelated pre-existing failures noted)` -> `pass`
+- `S12` `verify:` `just check-types` -> `pass`
+- `S12` `verify:` `just check-style and just check-format` -> `pass`
+- `S12` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -251,3 +258,6 @@ related:
 - `S06` Follow-up within this Step's retirement scope, on orchestrator instruction: the desktop no longer queries the command line's Python for package locations; webview, console workspace and manager log come from the compiled components under the pinned root, the command line's log directory follows its declared override, and `CADRUMO_WEBVIEW_DIR` is no longer a declared location
 - `S07` Correction within the ADR's slot mechanism, on orchestrator ruling: the agent gateway takes `CADRUMO_LOCAL_STORAGE_ROOT` as an optional directory slot, admitted by kind alone whoever the caller is (runtime or a development package runner), so its relay resolves the caller's root instead of the installed default; agent profiles pin only the temporary variables and authority, and the worker never receives the root name. Profile pins became a list of root, temporary and authority
 - `S09` `test_the_relay_in_the_agents_tree_acts_as_the_agent_under_the_lease_that_started_it` still fails with MCP `internal_error,` unchanged and pre-existing
+- `S12` S12 The gate also allows the three package-side test spellings in `dev/packaging/native/tests/test_agent_image.py,` `test_launch_profile_vectors.py` and native/platform/src/launch.rs, which are native-lane files left unedited; each entry fails the gate once its file stops spelling the prefix.
+- `S12` S12 .vaultspec/skills/cadrumo-start/references/build-cmake-and-packaging.md:15 still names the retired CMake selector; the gate does not scan .vaultspec and the skill is user-owned, so it is reported, not edited.
+- `S12` S12 dev/quality failures unrelated to this Step: `test_suite_gate_table` (check-provider-catalog has no suite row; check-dependency-declarations arguments differ), `test_doc_privacy` (home paths in .vault audits and research), `test_production_scan_surface_has_no_orphans` `(contract_manifest.py,` `_provider_command_specs.py).` `dev/tests/test_native_build_recipes.py` fails on the windows-installers-x64 preset having no cacheVariables.
