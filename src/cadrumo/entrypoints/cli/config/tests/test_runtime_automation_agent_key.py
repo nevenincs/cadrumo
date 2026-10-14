@@ -44,13 +44,17 @@ from cadrumo.adapters.local_runtime.automation_inventory import read_automation_
 from cadrumo.adapters.local_runtime.automation_requester import AutomationRequesterJourney
 from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import PROFILE_INPUT, owner_id, worker_profiles
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import delete_profile_session
 from cadrumo.adapters.persistence.storage.custody.automation_profile import current_automation_profile_binding
 from cadrumo.adapters.persistence.storage.custody.automation_store import AutomationControlStore
-from cadrumo.adapters.persistence.storage.custody.kdf_supervision import profile_kdf_lease
+from cadrumo.adapters.persistence.storage.custody.kdf_supervision import (
+    PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS,
+    profile_kdf_lease,
+)
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.registry import OperationFrontendProjection
@@ -416,19 +420,19 @@ def test_an_approval_after_the_requester_left_names_the_departed_requester(
         assert record.stage is not EnrollmentStage.COMPLETE
 
 
-_KDF_PERMIT_HELD_SECONDS = 35
-"""Longer than the fifteen seconds a worker's password unwrap once had and the thirty its human proof once had."""
+_KDF_PERMIT_HELD_SECONDS = PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS + 10
+"""Longer than one password derivation may take, permit wait included, so the sign-in cannot derive."""
 
 _STATUS_FENCE_HELD_SECONDS = 8
 """Longer than the five seconds a session status read was once allowed."""
 
 
-def test_a_persons_sign_in_waits_out_another_derivation_holding_the_kdf_permit(
+def test_a_persons_sign_in_is_refused_as_unavailable_while_another_derivation_holds_the_kdf_permit(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """The worker's password unwrap queues for the installation's one KDF permit; the sign-in is late, not refused."""
+    """The permit wait is inside the derivation's one bound; past it the sign-in is refused, typed, and may retry."""
     with _running_runtime(tmp_path, monkeypatch) as runtime:
-        held = Event()
+        held, release = Event(), Event()
 
         def hold_permit() -> None:
             with (
@@ -436,19 +440,23 @@ def test_a_persons_sign_in_waits_out_another_derivation_holding_the_kdf_permit(
                 profile_kdf_lease(deadline=time.monotonic() + 30),
             ):
                 held.set()
-                time.sleep(_KDF_PERMIT_HELD_SECONDS)
+                release.wait(_KDF_PERMIT_HELD_SECONDS)
 
         holding = runtime.pool.submit(copy_context().run, hold_permit)
-        assert held.wait(30)
-        started = time.monotonic()
+        try:
+            assert held.wait(30)
+            with pytest.raises(RuntimeFrontendRefusedError) as refused:
+                _human(runtime.endpoint, runtime.profile_id).close()
+        finally:
+            release.set()
+            holding.result(timeout=30)
+        assert refused.value.reason == "unavailable"
+        # The worker served on, so the same password signs in once the permit is free.
         person = _human(runtime.endpoint, runtime.profile_id)
         try:
-            waited = time.monotonic() - started
             assert person.status().status.connected
         finally:
             person.close()
-        holding.result(timeout=30)
-        assert waited >= _KDF_PERMIT_HELD_SECONDS - 5
 
 
 def _hold_fence(runtime: _Runtime, seconds: float) -> Future[None]:
