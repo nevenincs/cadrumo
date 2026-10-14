@@ -52,7 +52,7 @@ from .financial_journal_purge import FinancialEditJournalPurgeRefusedError, purg
 from .lease import OperationLeaseStorage
 
 
-class _OperationReplayRequest(BaseModel):
+class OperationReplayRequest(BaseModel):
     """Strict adapter-local replay inputs before filesystem access."""
 
     model_config = STRICT_FROZEN_CONFIG
@@ -70,9 +70,9 @@ class _OperationInventoryRequest(BaseModel):
     limit: OperationInventoryLimit
 
 
-def _replay_page_from_record(
+def replay_page_from_record(
     record: OperationJournalRecord,
-    request: _OperationReplayRequest,
+    request: OperationReplayRequest,
 ) -> OperationReplayPage:
     """Build one bounded replay page from the exact record already read."""
     events = tuple(event for event in record.history if event.sequence > request.cursor)[: request.limit]
@@ -91,9 +91,9 @@ def _replay_page_from_record(
     )
 
 
-def _observation_materialization_from_record(
+def observation_materialization_from_record(
     record: OperationJournalRecord,
-    request: _OperationReplayRequest,
+    request: OperationReplayRequest,
 ) -> OperationObservationMaterialization:
     """Derive every observation fact from one immutable journal record."""
     anchor_cursor = record.snapshot.event_cursor
@@ -105,7 +105,7 @@ def _observation_materialization_from_record(
     return OperationObservationMaterialization(
         snapshot=record.snapshot,
         anchor_cursor=anchor_cursor,
-        replay=_replay_page_from_record(record, request),
+        replay=replay_page_from_record(record, request),
         progress_fold=OperationProgressFoldInput(events=record.history),
     )
 
@@ -155,7 +155,7 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
     def read_observation(
         self,
         operation_id: str,
-        request: _OperationReplayRequest,
+        request: OperationReplayRequest,
     ) -> OperationObservationMaterialization | None:
         """Read one complete record and its observation under the journal lock."""
         if not self._validate_existing_root():
@@ -167,7 +167,7 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
                 if self.is_absent(operation_id):
                     return None
                 raise
-        return _observation_materialization_from_record(record, request)
+        return observation_materialization_from_record(record, request)
 
     def is_absent(self, operation_id: str) -> bool:
         """Tell a missing record from a present but unreadable one."""
@@ -430,10 +430,10 @@ class OperationJournalRepository(OperationJournal, OperationEventStream, Operati
         limit: OperationReplayLimit,
     ) -> OperationReplayPage:
         """Return one bounded, exclusive page from retained event history."""
-        request = _OperationReplayRequest(cursor=cursor, limit=limit)
+        request = OperationReplayRequest(cursor=cursor, limit=limit)
         return await asyncio.to_thread(self._read_after_blocking, operation_id, request)
 
-    def _read_after_blocking(self, operation_id: str, request: _OperationReplayRequest) -> OperationReplayPage:
+    def _read_after_blocking(self, operation_id: str, request: OperationReplayRequest) -> OperationReplayPage:
         try:
             record = self._repository.load(operation_id)
         except RepositoryError:
@@ -445,7 +445,7 @@ class OperationJournalRepository(OperationJournal, OperationEventStream, Operati
                     next_cursor=request.cursor,
                 )
             raise
-        return _replay_page_from_record(record, request)
+        return replay_page_from_record(record, request)
 
     @override
     async def read_observation(
@@ -464,7 +464,7 @@ class OperationJournalRepository(OperationJournal, OperationEventStream, Operati
         materialization = await asyncio.to_thread(
             self._repository.read_observation,
             operation_id,
-            _OperationReplayRequest(cursor=after_cursor, limit=limit),
+            OperationReplayRequest(cursor=after_cursor, limit=limit),
         )
         if materialization is None:
             raise OperationObservationUnknownOperationError(operation_id)
@@ -502,4 +502,9 @@ class OperationJournalRepository(OperationJournal, OperationEventStream, Operati
         return self._repository.is_absent(operation_id)
 
 
-__all__ = ["OperationJournalRepository"]
+__all__ = [
+    "OperationJournalRepository",
+    "OperationReplayRequest",
+    "observation_materialization_from_record",
+    "replay_page_from_record",
+]
