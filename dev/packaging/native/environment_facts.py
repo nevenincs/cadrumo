@@ -257,7 +257,9 @@ def collect(request: Mapping[str, Any]) -> dict[str, Any]:
     to place. Directories the components create are made in a scratch tree
     that is removed afterwards.
     """
-    with tempfile.TemporaryDirectory(prefix="cadrumo-conformance-") as directory:
+    from cadrumo.core.storage_environment import prepare_temporary_directory
+
+    with tempfile.TemporaryDirectory(prefix="cadrumo-conformance-", dir=prepare_temporary_directory()) as directory:
         scratch = Path(directory)
         return {
             "cli": collect_cli(request, scratch),
