@@ -8,6 +8,7 @@ import time
 from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
+from threading import Event
 from uuid import UUID, uuid4
 
 import pytest
@@ -25,7 +26,12 @@ from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT, administration_subject
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo.application.runtime.contracts import (
+    RuntimeByteChannel,
+    RuntimeClientHello,
+    RuntimeRefusalCode,
+    RuntimeRefusalError,
+)
 from cadrumo.application.runtime.installation_requests import (
     INSTALLATION_LOG_TAIL_MAX_LINES,
     InstallationAct,
@@ -52,6 +58,7 @@ from cadrumo.application.user_profile.custody_ports import (
 from cadrumo.application.user_profile.recovery_custody import profile_recovery_status
 from cadrumo.core.storage_taxonomy import StorageArea
 
+from .. import installation_door
 from ..profile_connections import RuntimeProfileConnections
 from .installation_runtime import FAULT_TEXT, LOG_LINES, InstallationLogin, serving_installation_runtime
 
@@ -201,9 +208,21 @@ def test_the_client_refuses_to_send_an_act_outside_its_contract(tmp_path: Path) 
 
 
 def test_recovery_enrolment_takes_the_passphrase_in_and_hands_the_code_out_and_back(
-    tmp_path: Path, caplog: pytest.LogCaptureFixture
+    tmp_path: Path, caplog: pytest.LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     held: list[str] = []
+    sampled = Event()
+    write_secret = installation_door.write_secret
+
+    def write_secret_then_wait_for_the_client(
+        channel: RuntimeByteChannel, secret: bytearray, *, deadline: float
+    ) -> None:
+        # The runtime's next step waits until the client has looked at the exclusion, so the
+        # look always comes before anything the runtime does after delivering the secret.
+        write_secret(channel, secret, deadline=deadline)
+        assert sampled.wait(30)
+
+    monkeypatch.setattr(installation_door, "write_secret", write_secret_then_wait_for_the_client)
     exclusion_while_held: list[str | None] = []
     reserved_while_held: list[set[UUID]] = []
     passphrase = bytearray(PROFILE_INPUT, "utf-8")
@@ -213,6 +232,7 @@ def test_recovery_enrolment_takes_the_passphrase_in_and_hands_the_code_out_and_b
         held.append(delivered.decode("utf-8"))
         exclusion_while_held.append(service._drain_guard._owner_role)
         reserved_while_held.append(set(service._custody_mutations))
+        sampled.set()
         return SecretBytes(bytes(delivered))
 
     with (

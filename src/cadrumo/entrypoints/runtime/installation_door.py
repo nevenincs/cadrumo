@@ -298,16 +298,17 @@ class InstallationActExchange:
                 act=self.act,
                 delivery_id=uuid4(),
             )
-            write_document(self._channel, delivery, deadline=time.monotonic() + _WRITE_SECONDS)
-            write_secret(self._channel, secret, deadline=time.monotonic() + _WRITE_SECONDS)
+            # Lent back before the secret leaves: the client starts waiting on its person the moment it has it.
+            with self._lifecycle.suspended():
+                write_document(self._channel, delivery, deadline=time.monotonic() + _WRITE_SECONDS)
+                write_secret(self._channel, secret, deadline=time.monotonic() + _WRITE_SECONDS)
+                receipt = read_document(
+                    self._channel,
+                    RuntimeInstallationSecretReceipt,
+                    deadline=time.monotonic() + INSTALLATION_SECRET_HANDOVER_SECONDS,
+                )
         finally:
             secret[:] = bytes(len(secret))
-        with self._lifecycle.suspended():
-            receipt = read_document(
-                self._channel,
-                RuntimeInstallationSecretReceipt,
-                deadline=time.monotonic() + INSTALLATION_SECRET_HANDOVER_SECONDS,
-            )
         if receipt.delivery_id != delivery.delivery_id:
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         if receipt.code is not None:
