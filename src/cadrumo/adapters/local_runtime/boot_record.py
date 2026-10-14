@@ -25,6 +25,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ...core.exact_integer import EXACT_INTEGER
 from ...core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -69,7 +70,7 @@ class RuntimeBootRecord(BaseModel):
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    schema_version: Literal[1] = 1
+    schema_version: Annotated[Literal[1], EXACT_INTEGER] = 1
     boot_id: UUID
     pid: Annotated[int, Field(gt=0, le=_MAXIMUM_PID)]
     process_created: Annotated[int, Field(gt=0, le=_MAXIMUM_CREATION_STAMP)]

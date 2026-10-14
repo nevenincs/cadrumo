@@ -12,15 +12,16 @@ readiness remains the authenticated transport handshake.
 from __future__ import annotations
 
 import json
-from enum import IntEnum, StrEnum
+from enum import StrEnum
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, BeforeValidator, Field, TypeAdapter, ValidationError
+from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
 from ...adapters.local_runtime.login_policy import RuntimeAdmissionPolicy
 from ...application.runtime.contracts import RuntimeExitReason
 from ...core.errors.hierarchy import CadrumoError
+from ...core.exact_integer import EXACT_INTEGER
 from ...core.hashing import reject_duplicate_json_members, reject_json_constant
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -32,19 +33,6 @@ _MAX_SEQUENCE = 2**53 - 1
 
 type ProtocolSequence = Annotated[int, Field(ge=0, le=_MAX_SEQUENCE)]
 type ProtocolCount = Annotated[int, Field(ge=0, le=_MAX_SEQUENCE)]
-
-
-def _require_exact_integer(value: object) -> object:
-    """Refuse every input that is not an integer or an integer enum member.
-
-    Strict validation of an integer enum from JSON still matches a number with no
-    fractional part, such as ``64.0``, to the member whose value it equals. The
-    wire grammar writes an exit reason as the integer a process exits with, so a
-    float, a boolean or a string is a different message, not a spelling of one.
-    """
-    if type(value) is int or isinstance(value, IntEnum):
-        return value
-    raise ValueError("an exact integer is required")
 
 
 class SupervisorPing(BaseModel):
@@ -117,7 +105,7 @@ class RuntimeStopping(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     type: Literal["stopping"] = "stopping"
-    reason: Annotated[RuntimeExitReason, BeforeValidator(_require_exact_integer)]
+    reason: Annotated[RuntimeExitReason, EXACT_INTEGER]
 
 
 class RuntimeBusy(BaseModel):

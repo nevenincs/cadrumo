@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from uuid import UUID
 
 import pytest
 
@@ -62,3 +63,34 @@ def test_corrupt_identity_is_not_replaced_with_a_new_installation(tmp_path: Path
     with pytest.raises(RuntimeRefusalError):
         runtime_installation(storage_root=tmp_path, os_owner_id="synthetic-owner", storage_identity="a" * 64)
     assert path.read_bytes() == invalid
+
+
+def _installation_record(version: str) -> bytes:
+    identity = f'"installation_id":"{UUID(int=1)}","os_owner_id":"synthetic-owner","storage_identity":"{"a" * 64}"'
+    return f'{{{identity},"version":{version}}}'.encode()
+
+
+def _write_installation(root: Path, version: str) -> Path:
+    directory = root / ".runtime"
+    directory.mkdir()
+    path = directory / "installation.json"
+    path.write_bytes(_installation_record(version))
+    return path
+
+
+def test_an_integer_version_tag_is_read(tmp_path: Path) -> None:
+    _write_installation(tmp_path, "1")
+    identity = read_runtime_installation(
+        storage_root=tmp_path, os_owner_id="synthetic-owner", storage_identity="a" * 64
+    )
+    assert identity.installation_id == UUID(int=1)
+    assert identity.version == 1
+
+
+@pytest.mark.parametrize("version", ["1.0", "1e0", "true"])
+def test_a_version_tag_that_only_equals_one_is_refused(tmp_path: Path, version: str) -> None:
+    path = _write_installation(tmp_path, version)
+    with pytest.raises(RuntimeRefusalError) as refused:
+        read_runtime_installation(storage_root=tmp_path, os_owner_id="synthetic-owner", storage_identity="a" * 64)
+    assert refused.value.reason is RuntimeRefusalCode.ENDPOINT_UNTRUSTED
+    assert path.read_bytes() == _installation_record(version)

@@ -1926,6 +1926,7 @@
         "cadrumo.core.errors.registry.declared_codes",
         "cadrumo.core.errors.severity",
         "cadrumo.core.estado_casilla_oficial",
+        "cadrumo.core.exact_integer",
         "cadrumo.core.export_exemption_reason",
         "cadrumo.core.export_layout_format",
         "cadrumo.core.external_constants",
