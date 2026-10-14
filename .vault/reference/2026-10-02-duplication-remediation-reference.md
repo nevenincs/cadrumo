@@ -858,7 +858,7 @@ Next evidence is narrowly the M303 2022 [27] formula-output/presence contract an
 
 ## Condensed chronology and current execution status
 
-The dated execution diary from 2026-10-03 through 2026-10-04 is condensed here. It contained intermediate operator grants, reservations, run setup incidents and superseded receipts; the exact text and locators remain in the verified original archive at `C:/Users/hello/AppData/Local/CadrumoMaintenance/markdown-originals-2026-10-14.tar.gz`. This section does not treat a grant, partial run or scan total as acceptance.
+The dated execution diary from 2026-10-03 through 2026-10-04 is condensed here. It contained intermediate operator grants, reservations, run setup incidents and superseded receipts; the exact text and locators remain in the verified original archive at `<local-archive>/markdown-originals-2026-10-14.tar.gz`. This section does not treat a grant, partial run or scan total as acceptance.
 
 The complete supplied finding inventory above remains intact: formal finding IDs, lane/source locations, unheaded leads, cross-package pairs, report mappings and hazards are retained. The current sibling execution ledger `[[2026-10-02-duplication-remediation-ledger]]` carries the latest per-Step operation/path-family summaries, historical verification pass/fail totals and unresolved notes. Those summaries are not raw path-per-row history; the archive remains the exact record.
 

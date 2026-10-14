@@ -160,7 +160,7 @@ related:
 
 ## Notes
 
-- Summary semantics: `summary:` labels preserve Step coverage, while the parser reports zero native path-change rows. Original operation and domain counts appear above; exact path-per-row history and verification commands are in `C:/Users/hello/AppData/Local/CadrumoMaintenance/markdown-originals-2026-10-14.tar.gz` (manifest: `C:/Users/hello/AppData/Local/Temp/cadrumo-markdown-condensation-2026-10-14/manifest.json`).
+- Summary semantics: `summary:` labels preserve Step coverage, while the parser reports zero native path-change rows. Original operation and domain counts appear above; exact path-per-row history and verification commands are in `<local-archive>/markdown-originals-2026-10-14.tar.gz` (manifest: `<temp>/cadrumo-markdown-condensation-2026-10-14/manifest.json`).
 
 
 - `S01` Global vault baseline remains 26 errors and 486 warnings; this feature has no findings. No platform/custody runtime acceptance is claimed.
