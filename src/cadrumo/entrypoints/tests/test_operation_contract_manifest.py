@@ -13,18 +13,27 @@ import asyncio
 import json
 import os
 import sys
+from concurrent.futures import ThreadPoolExecutor
+from threading import Barrier
 
 import pytest
 
 from ...application.operations.contract_manifest import (
     OPERATION_CONTRACT_MANIFEST_PARTS,
+    ManifestOperationRegistry,
     OperationContractManifestEntryV1,
     OperationContractManifestV1,
+    OperationGroupBuild,
     load_operation_contract_manifest,
 )
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.resources.bundled_data import packaged_data
-from ..operation_composition import build_manifest_operation_registry, build_production_operation_contract_manifest
+from ..operation_composition import (
+    OperationCompositionInputs,
+    build_manifest_operation_registry,
+    build_production_operation_contract_manifest,
+    compose_operation_group,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -103,6 +112,58 @@ def test_a_manifest_naming_an_unknown_group_refuses_composition() -> None:
     registry = build_manifest_operation_registry(manifest=renamed)
     with pytest.raises(InternalInvariantError, match="no operation composition group"):
         registry.lookup(entry.contract.definition_id)
+
+
+def test_concurrent_first_use_composes_once_and_reuses_the_admitted_group() -> None:
+    manifest = load_operation_contract_manifest()
+    entry = _entry_in(manifest, _GROUP)
+    calls: list[str] = []
+    inputs = OperationCompositionInputs(contracts=lambda: manifest.contract_set)
+
+    def build(group: str) -> OperationGroupBuild:
+        calls.append(group)
+        return compose_operation_group(inputs, group)
+
+    registry = ManifestOperationRegistry.from_manifest(manifest, build)
+    start = Barrier(8)
+
+    def resolve() -> object:
+        start.wait(timeout=30)
+        return registry.lookup(entry.contract.definition_id)
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        futures = [pool.submit(resolve) for _ in range(8)]
+        definitions = [future.result(timeout=30) for future in futures]
+    assert calls == [_GROUP]
+    assert all(definition is definitions[0] for definition in definitions)
+    assert registry.lookup(entry.contract.definition_id) is definitions[0]
+    registration = registry.lookup_public_registration(entry.contract.definition_id)
+    for binding in registration.schema_bindings:
+        assert registry.lookup_public_schema_binding(binding.identity) is binding
+    assert calls == [_GROUP]
+
+
+def test_a_rejected_group_publishes_no_partial_definitions_or_schemas() -> None:
+    manifest = load_operation_contract_manifest()
+    group = "application.auth.certificate_secret_operation"
+    entries = tuple(entry for entry in manifest.operations if entry.group == group)
+    assert len(entries) > 1
+    built = compose_operation_group(OperationCompositionInputs(contracts=lambda: manifest.contract_set), group)
+    entry = manifest.entries[built.definitions[-1].definition_id]
+    stale_contract = entry.contract.model_copy(
+        update={"ephemeral_secret_required": not entry.contract.ephemeral_secret_required}
+    )
+    stale = _with_entry(manifest, entry.model_copy(update={"contract": stale_contract}))
+    registry = build_manifest_operation_registry(manifest=stale)
+    # Even an unchanged member must refuse: no part of a rejected group is admitted.
+    for member in entries:
+        with pytest.raises(InternalInvariantError, match="no longer matches the contract manifest"):
+            registry.lookup(member.contract.definition_id)
+        assert not registry._definitions
+        assert not registry._registrations
+        assert not registry._schema_models
+    unrelated = _entry_in(manifest, _GROUP)
+    assert registry.lookup(unrelated.contract.definition_id).definition_id == unrelated.contract.definition_id
 
 
 _CONTRACT_READ_PROBE = """
