@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:94c1037f90a146fd8ab4a8bbaf3a54cd5cdaf698775e5dfae8b42324f2854458'
+body_hash: 'sha256:8d01957ed7fa4bc4653d5597d8172c2ab82c4a8f7778a021855896648aefe86e'
 related:
   - "[[2026-10-13-canonical-environment-plan]]"
 ---
@@ -348,6 +348,29 @@ related:
 - `S13` `verify:` `pytest dev/packaging/native/tests/test_storage_member_vectors.py dev/packaging/tests/test_native_storage_environment_contract.py` -> `pass`
 - `S13` `verify:` `cargo test --lib (native/platform, scratch contract)` -> `pass`
 - `S13` `by:` `implementation-engineer-high`
+- `S06` `verify:` `ctest -C Debug -R ^manager\.` -> `pass`
+- `S06` `by:` `implementation-engineer`
+- `S07` `A` `dev/packaging/native/tests/test_assembly_import_surface.py`
+- `S07` `verify:` `uv run --no-sync pytest dev/packaging/native/tests/test_assembly_import_surface.py dev/packaging/native/tests/test_assembly_refusals.py` -> `pass`
+- `S07` `by:` `implementation-engineer`
+- `S05` `M` `native/application-environment.toml`
+- `S05` `M` `native/platform/tests/consumer.c`
+- `S05` `verify:` `ctest -C Debug -R ^(platform|interpreter|launch_guard)\.` -> `pass`
+- `S05` `verify:` `uv run --no-sync pytest dev/packaging/native/tests/test_launch_profile_vectors.py dev/packaging/native/tests/test_application_environment.py` -> `pass`
+- `S05` `by:` `implementation-engineer`
+- `S10` `A` `dev/packaging/native/tests/test_package_launch_smoke.py`
+- `S10` `verify:` `python -m dev.packaging.native.package_launch_smoke --health stage/Debug/app/cadrumo.exe` -> `pass`
+- `S10` `by:` `implementation-engineer`
+- `S13` `M` `dev/packaging/native/environment_facts.py`
+- `S13` `verify:` `uv run --no-sync pytest dev/ci/tests/test_storage_write_containment.py -n0 -m ''` -> `pass`
+- `S13` `by:` `implementation-engineer`
+- `S14` `M` `native/tests/environment_launch_probe.py`
+- `S14` `M` `dev/packaging/native/tests/stand_in_launch.py`
+- `S14` `M` `dev/packaging/native/tests/test_environment_launch_probe.py`
+- `S14` `M` `native/CONTRACT.md`
+- `S14` `verify:` `ctest -C Debug -R ^bundle\.environment-launch$ (generic interpreter check)` -> `pass`
+- `S14` `verify:` `uv run --no-sync pytest dev/packaging/native/tests/test_environment_launch_probe.py` -> `pass`
+- `S14` `by:` `implementation-engineer`
 
 ## Notes
 
@@ -398,3 +421,9 @@ related:
 - `S18` Store invocations run before the bearer secret frame is read, under the profile's reservation and a per-profile preparing hold that refuses any other start of the profile until the sequence ends, so no second start can migrate or clear a partial copy concurrently.
 - `S18` Full entrypoints/runtime -m '' run: 20 failed, 4 errors, 1039 passed; a rerun of the failed set gave 16 failed, 9 passed, 4 errors with a shifting set. Failures are `runtime_deadline_exceeded` and `connection_closed` in sign-in, automation, grant, provenance, submission-stream and projection tests that do not reach the agent store code; `test_mcp_sign_in_adapter` fails on `agent_access_remains` (issued-key check) in both runs. Not shown pre-existing: no baseline run was possible without changing the shared checkout.
 - `S13` Correction (commit 29611372c0): the CLI settings validator re-anchored drive-relative and rooted-without-drive member overrides (C:rooted, `\rooted)` that `resolve_storage_path` and the native platform refuse with `non_absolute_pin;` both Python paths now share one refusal, and authored storage member vectors are replayed by the CLI settings, the Python resolver and the native platform member resolver.
+- `S06` Correction ff418542c4: a package-less runtime fixture received package-located fixed values (agent image, relay) resolved against its storage root; manager.supervision `the_runtime_gets_the_supervised_arguments_and_canonical_strict_environment` failed on `CADRUMO_PACKAGE_AGENT_EXECUTABLE.` Fixture now drops package/image-sourced fixed values like the authority pin.
+- `S07` Correction a029ae27a7: ormsgpack's wheel RECORD uses Windows separators, so assembly found no import surface for it; `import_surface` now treats a backslash as a separator.
+- `S05` Correction (landed in 3de38e77d8, committed by another actor from this worker's edits): the custody supervisor starts the KDF worker as python.exe -S -m `..._kdf_worker` `(_kdf_process.py:142);` the Windows kdf-child invocation lacked -S, so the generic python profile applied and the worker's environment attestation failed `(_kdf_worker_identity.py:62).` Invocation now leads with -S; vectors added for the site-flag-less near miss. Packaged end-to-end (bundle.runtime-lifecycle, verify-caller-owned-runtime) pending a re-stage.
+- `S10` Correction 6cbd5360b5: S10 (43962530ae) dropped the health smoke's received filter, so the STRICT child relayed the developer `CADRUMO_AUTHORITY_ROOT` `(dev/_paths.py:62)` into cadrumo.exe and manager.rs:737 refused it as an override `(environment_failed` at stage manager). Health environment now excludes authority-root settings; scratch under the storage root.
+- `S13` Correction 8b57d0a1f6: conformance scratch tree moved under the storage root's temporary directory.
+- `S14` Correction (Windows base part in 3de38e77d8, hosted lane in cfee396b4a): per 2026-10-04-canonical-environment-adr the Windows host takes its base from `FOLDERID_LocalAppData,` not LOCALAPPDATA, so the probe no longer relocates it on Windows. Probe now expects `hosted_lane_unproven` (agent owner). Agent setup still fails: CheckpointSchemaError at checkpoint-identity, caused by native/agent lock bundling langgraph-checkpoint-sqlite 3.1.2 against the agent's 3.1.1 schema pin; reported to orchestrator, provisional.
