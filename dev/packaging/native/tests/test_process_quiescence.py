@@ -8,13 +8,14 @@ import shutil
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import ExitStack
 from pathlib import Path
 
 import psutil
 import pytest
 
 from ...command_execution import run_command
-from ..process_quiescence import product_process, quiesce
+from ..process_quiescence import product_process, quiesce, running
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -53,7 +54,7 @@ def test_shutdown_times_out_then_terminates_real_product_and_preserves_unrelated
     environment = dict(os.environ, PYTHONHOME=sys.base_prefix)
     code = (
         "import pathlib,sys,time,subprocess; p=pathlib.Path(sys.argv[1]); "
-        "child=subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(15)']) "
+        "child=subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)']) "
         "if sys.argv[2]=='child' else None; "
         "p.write_text(str(child.pid) if child else 'ready'); "
         "exec('while not p.with_suffix(\".stop\").exists():\\n time.sleep(0.01)')"
@@ -61,24 +62,53 @@ def test_shutdown_times_out_then_terminates_real_product_and_preserves_unrelated
     unrelated_ready, product_ready = tmp_path / "unrelated.ready", tmp_path / "product.ready"
     with ThreadPoolExecutor(max_workers=2) as executor:
         unrelated = executor.submit(
-            run_command, [sys.executable, "-c", code, str(unrelated_ready), "none"], cwd=tmp_path, timeout_seconds=15
+            run_command, [sys.executable, "-c", code, str(unrelated_ready), "none"], cwd=tmp_path, timeout_seconds=30
         )
         product = executor.submit(
             run_command,
             [str(interpreter), "-c", code, str(product_ready), "child"],
             cwd=tmp_path,
             environment=environment,
-            timeout_seconds=15,
+            timeout_seconds=30,
         )
         try:
             deadline = time.monotonic() + 5
             while not (unrelated_ready.is_file() and product_ready.is_file()):
                 assert time.monotonic() < deadline, "real process failed to become ready"
                 time.sleep(0.01)
-            started = time.monotonic()
-            quiesce(build, "windows-x86-64", graceful_timeout=0.2, terminate_timeout=5)
-            assert product.result(timeout=5).returncode != 0
-            assert not psutil.pid_exists(int(product_ready.read_text()))
+            child = psutil.Process(int(product_ready.read_text()))
+            child.create_time()
+            with ExitStack() as retained:
+                if sys.platform == "win32":
+                    import win32api
+                    import win32con
+                    import win32event
+
+                    from cadrumo.adapters.local_runtime.windows_native_io import (
+                        native_windows_call,
+                        owned_windows_handle,
+                    )
+
+                    # Debuggers and supervisors may retain these handles after
+                    # exit. Quiescence must wait for execution to end, not for
+                    # every other owner to release the process object.
+                    for pid in (child.pid, child.ppid()):
+                        handle = owned_windows_handle(
+                            native_windows_call(
+                                win32api,
+                                "OpenProcess",
+                                win32con.SYNCHRONIZE | win32con.PROCESS_QUERY_LIMITED_INFORMATION,
+                                False,
+                                pid,
+                            )
+                        )
+                        retained.callback(handle.Close)
+                started = time.monotonic()
+                quiesce(build, "windows-x86-64", graceful_timeout=0.2, terminate_timeout=5)
+                assert product.result(timeout=5).returncode != 0
+                assert not running(child)
+                if sys.platform == "win32":
+                    assert win32event.WaitForSingleObject(int(handle), 0) == win32con.WAIT_OBJECT_0
             assert not unrelated.done()
             if sys.platform == "win32":
                 assert time.monotonic() - started >= 0.2

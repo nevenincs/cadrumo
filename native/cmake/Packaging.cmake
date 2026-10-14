@@ -175,6 +175,12 @@ foreach(product_target cadrumo_python cadrumo_python_bridge ${CADRUMO_ENTRYPOINT
     add_dependencies("${product_target}" native-process-quiesce)
   endif()
 endforeach()
+set_property(GLOBAL APPEND PROPERTY CADRUMO_QUIESCENT_CLEAN_TARGETS
+  bundle app-payload python python_d cadrumo_python cadrumo_python_bridge
+  ${CADRUMO_ENTRYPOINT_TARGETS} ${application_image_dependencies} ${development_target})
+if(TARGET agent-rebuild)
+  add_dependencies(agent-rebuild native-process-quiesce)
+endif()
 cadrumo_build_step(step_comment app-payload GROUP assembly
   SUMMARY "assemble the application payload: interpreter, product, native images and documentation"
   OUTPUTS "${CADRUMO_PATH_STAGE}/$<CONFIG>/app")

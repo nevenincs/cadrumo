@@ -46,6 +46,7 @@ function(cadrumo_finalize_clean_targets)
   get_filename_component(repository "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../.." ABSOLUTE)
   _cadrumo_collect_build_targets("${CMAKE_SOURCE_DIR}" targets)
   get_property(registered GLOBAL PROPERTY CADRUMO_CLEAN_REGISTERED_TARGETS)
+  get_property(quiescent_targets GLOBAL PROPERTY CADRUMO_QUIESCENT_CLEAN_TARGETS)
   foreach(target IN LISTS registered)
     if(NOT TARGET "${target}")
       message(FATAL_ERROR "Cleanup enrollment has no build target: ${target}")
@@ -90,6 +91,9 @@ function(cadrumo_finalize_clean_targets)
           "${CMAKE_BINARY_DIR}" "${target}" --target --config "$<CONFIG>"
         WORKING_DIRECTORY "${repository}" VERBATIM)
     endif()
+    if(TARGET native-process-quiesce AND target IN_LIST quiescent_targets)
+      add_dependencies("clean-${target}" native-process-quiesce)
+    endif()
   endforeach()
   # TARGET_OBJECTS expands to a list only during generation. Turn its separators
   # into JSON member separators after string(JSON) has finished quoting values.
@@ -101,6 +105,9 @@ function(cadrumo_finalize_clean_targets)
         COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.cleanup
           "${CMAKE_BINARY_DIR}" "${group}"
         WORKING_DIRECTORY "${repository}" VERBATIM)
+    endif()
+    if(TARGET native-process-quiesce AND group MATCHES "^(all|stage|native|desktop)$")
+      add_dependencies("clean-${group}" native-process-quiesce)
     endif()
   endforeach()
 endfunction()

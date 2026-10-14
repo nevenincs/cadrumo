@@ -95,6 +95,37 @@ def test_object_file_list_is_enrolled_without_generator_metadata(tmp_path: Path)
     assert document["targets"]["one"]["paths"] == [(build / name).as_posix() for name in ("one.obj", "two.obj")]
 
 
+@pytest.mark.parametrize("refuse", [False, True])
+def test_clean_product_waits_for_quiescence_and_preserves_output_on_refusal(tmp_path: Path, refuse: bool) -> None:
+    cmake = shutil.which("cmake")
+    assert cmake is not None
+    build = tmp_path / "build"
+    module = (REPO_ROOT / "native/cmake/Cleanup.cmake").as_posix()
+    gate = 'COMMAND "${CMAKE_COMMAND}" -E false' if refuse else 'COMMAND "${CMAKE_COMMAND}" -E touch quiesced'
+    (tmp_path / "CMakeLists.txt").write_text(
+        "cmake_minimum_required(VERSION 4.4)\nproject(QuiescentCleanup LANGUAGES NONE)\n"
+        f'include("{module}")\nset(CADRUMO_DEV_PYTHON "{Path(sys.executable).as_posix()}")\n'
+        f"add_custom_target(native-process-quiesce {gate})\n"
+        "add_custom_target(product)\n"
+        'cadrumo_register_clean(TARGET product PATHS "${CMAKE_BINARY_DIR}/product.exe")\n'
+        "set_property(GLOBAL PROPERTY CADRUMO_QUIESCENT_CLEAN_TARGETS product)\n"
+        "cadrumo_finalize_clean_targets()\n",
+        encoding="utf-8",
+    )
+    configured = run_command([cmake, "-G", "Ninja", "-S", str(tmp_path), "-B", str(build)], cwd=tmp_path)
+    assert configured.returncode == 0, configured.stderr + configured.stdout
+    image = build / "product.exe"
+    image.write_text("retained product image", encoding="utf-8")
+    cleaned = run_command([cmake, "--build", str(build), "--target", "clean-product"], cwd=tmp_path)
+    if refuse:
+        assert cleaned.returncode != 0
+        assert image.read_text(encoding="utf-8") == "retained product image"
+    else:
+        assert cleaned.returncode == 0, cleaned.stderr + cleaned.stdout
+        assert (build / "quiesced").is_file()
+        assert not image.exists()
+
+
 @pytest.mark.parametrize("generator", ["Ninja", "Ninja Multi-Config"])
 def test_individual_clean_rebuild_preserves_sibling_and_configuration(tmp_path: Path, generator: str) -> None:
     cmake = shutil.which("cmake")
