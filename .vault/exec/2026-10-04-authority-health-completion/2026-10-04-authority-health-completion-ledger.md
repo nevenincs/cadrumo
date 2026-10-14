@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#authority-health-completion'
 date: '2026-10-04'
-modified: '2026-10-05'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:a8c343b728fb4bd082f0f2e5352666fe74464d14e4b4bdc2d029d4dc4dc1087d'
+body_hash: 'sha256:5a524a43c4866d5b4ded64fd59e384aac84a55637dfe0636734f6f4267b3e54b'
 related:
   - "[[2026-10-04-authority-health-completion-plan]]"
 ---
@@ -185,6 +185,133 @@ related:
 - `S09` `M` `.vault/audit/2026-10-04-authority-health-completion-audit.md`
 - `S09` `verify:` `uv run --no-sync python -m dev.registry.conformance closure --check --json` -> `fail`
 - `S09` `by:` `root`
+- `S08` `M` `dev/registry/compiler/authority.py`
+- `S08` `M` `dev/registry/compiler/loader_fingerprints.py`
+- `S08` `M` `dev/registry/compiler/tests/test_registry_identity_covers_every_toml.py`
+- `S08` `M` `dev/registry/pipeline/_tree_clearance_publication.py`
+- `S08` `M` `dev/registry/pipeline/_tree_publication.py`
+- `S08` `M` `dev/registry/pipeline/tests/test_generated_export_inheritance.py`
+- `S08` `M` `dev/registry/pipeline/tests/test_generated_form_bridge.py`
+- `S08` `M` `dev/registry/pipeline/tests/test_generated_tree_cli.py`
+- `S08` `M` `dev/registry/pipeline/tests/test_generated_tree_publication.py`
+- `S08` `M` `dev/registry/pipeline/tests/test_legacy_publication_recovery.py`
+- `S08` `M` `dev/registry/pipeline/tests/test_m232_form_bridge.py`
+- `S08` `M` `dev/registry/pipeline/tree_publication_contracts.py`
+- `S08` `M` `dev/registry/pipeline/tree_publication_journal.py`
+- `S08` `M` `dev/registry/pipeline/tree_publication_supersession.py`
+- `S08` `M` `.gitignore`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2024/form_layouts/0001-form-layout.toml`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2024/identifier_evolutions/0001-declarations.toml`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2025/form_layouts/0001-form-layout.toml`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2026/identifier_evolutions/0001-declarations.toml`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/111/revisions/2019-y-siguientes/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/115/revisions/2019-y-siguientes/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/117/revisions/2019-y-siguientes/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/122/revisions/2017-y-siguientes/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/123/revisions/2019-2023/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/123/revisions/2024-y-siguientes/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2019-2023/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2024/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2025/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026-3t-4t/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/145/revisions/2012-01-31-y-siguientes/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/156/revisions/2003-y-siguientes/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2016-2022/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2023-2025/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2026-y-siguientes/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2019-2022/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2023-y-siguientes/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/181/revisions/2022-y-siguientes/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2025-y-siguientes/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/185/revisions/2025-y-siguientes/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2022/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2023/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2024/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2025/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2022/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2023/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2022/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2023/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2024/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2025-y-siguientes/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/194/revisions/2019/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/194/revisions/2023/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/194/revisions/2024/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2019-2022/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2023-2024/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2023/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2024/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2026-y-siguientes/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2024-y-siguientes/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2022/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2023/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2024/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2025-y-siguientes/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2018-y-siguientes/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/270/revisions/2013-2022/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/270/revisions/2023-y-siguientes/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/280/revisions/2025/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2023/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-2025/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-hasta-08-y-2t/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2026-hasta-01-y-1t/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2026-y-siguientes/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2019-y-siguientes/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2023-y-siguientes/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2008-2022/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2023/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2024-2025/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2026-y-siguientes/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/341/revisions/2005-2015/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/341/revisions/2016-y-siguientes/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/345/revisions/2025/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/349/revisions/2020-y-siguientes/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2026-desde-02/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/360/revisions/2010-y-siguientes/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-exterior/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-importacion/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-union/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2023/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2024/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2025/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2021/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-1t/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/604/revisions/2021-2023/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/604/revisions/2024-y-siguientes/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2021/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2022/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2023/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2024/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2025/export`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/720/revisions/2013-y-siguientes/export`
+- `S08` `verify:` `just check-registry (all lifecycle lanes passed; 103 targets current, 0 stale; authority current)` -> `pass`
+- `S08` `verify:` `just check-registry-gate (validity, runtime-load, integrity)` -> `pass`
+- `S08` `verify:` `semantic diff of 103 republished trees / 927 files vs HEAD: zero meaning changes` -> `pass`
+- `S08` `verify:` `pipeline publication tests 126 passed + quoting-updated inheritance test` -> `pass`
+- `S08` `verify:` `test_pipeline_cli_refuses_a_bootstrap_source_absent_from_the_catalogue (pre-existing: modelo 999 absent at HEAD)` -> `fail`
 
 ## Notes
 
@@ -200,3 +327,4 @@ related:
 - `S11` Partial checkpoint only. All 58 minimal; indexed/facts/cache/equivalence pass; no live mutation. Canonical input diff identifies only `core/external_constants.py` changed during full compaction. Import gate loaded 4411, zero hard findings, 15 contracts kept but source changed. No stability waiver, no live source application, no final active publication. S11 remains open.
 - `S11` Partial verification only; all 30 existing tests pass. Focused ty using the runner's actual interpreter passes for both repaired files. Nine earlier test diagnostic occurrences are repaired without suppressions. Full aggregate is 8/12 at its boundary; receipt verifier symbol/export consumption and two private test imports remain blocked in overlapping rollout paths. Later type gate fails closed on missing pyrefly output during environment work. All five post-constant model minimality receipts are complete/equivalent/minimal/no-op and source-accepted. S11 stays open; no publication or Step completion.
 - `S09` Actual blocking command exits 1: validated registry, 62 satisfied revisions, 77 missing-evidence refusals, no join disagreements, `release_eligible=false.` Existing local data selection is authorized but authenticated secure inventory is unavailable. The proposed native/communication proof extension is not yet accepted; no public proof pin or active authority publication changed.
+- `S08` rtoml 0.14 quoting change republished all 103 generated export targets digest-bound; export trees logged one row per tree directory. Retired 9 orphaned 390 page-5 bindings in 2024 (moved from 2026). Pipeline: root-relative v2 journal entries, no post-cutover re-render, single candidate validation, verdict-scoped final live compile, verdict recording after complete validation, root publication bookkeeping excluded from registry fingerprints. Authority republished to 6c3cc7b8d705e728035eaad7a75172570008b50b03c150d003b1c30858ddeede. No Step closure claimed: S01 remains open and S11-S13 proof channels are outside this run.

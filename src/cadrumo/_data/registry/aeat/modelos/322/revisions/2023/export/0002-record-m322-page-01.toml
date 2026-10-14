@@ -1,190 +1,190 @@
 [[revisions.2023.export_layouts]]
-id = 'generated-modelo-322-2023-fichero'
+id = "generated-modelo-322-2023-fichero"
 
 [[revisions.2023.export_layouts.records]]
-id = 'm322-page-01'
-record_type = 'page-01'
+id = "m322-page-01"
+record_type = "page-01"
 order = 0
-encoding = 'iso-8859-1'
-line_ending = 'crlf'
+encoding = "iso-8859-1"
+line_ending = "crlf"
 required = true
 
 [[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-01.f088'
+id = "m322-2023.page-01.f088"
 offset = 1206
 length = 17
-kind = 'casilla'
-casilla_id = '57'
-data_type = 'money'
+kind = "casilla"
+casilla_id = "57"
+data_type = "money"
 required = false
-padding = 'left_zero'
-justification = 'right'
+padding = "left_zero"
+justification = "right"
 signed = true
-design_type = 'N'
-legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+design_type = "N"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2023"]
 
 [[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-01.f089'
+id = "m322-2023.page-01.f089"
 offset = 1223
 length = 17
-kind = 'casilla'
-casilla_id = '58'
-data_type = 'money'
+kind = "casilla"
+casilla_id = "58"
+data_type = "money"
 required = false
-padding = 'left_zero'
-justification = 'right'
+padding = "left_zero"
+justification = "right"
 signed = true
-design_type = 'N'
-legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+design_type = "N"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2023"]
 
 [[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-01.f090'
+id = "m322-2023.page-01.f090"
 offset = 1240
 length = 17
-kind = 'casilla'
-casilla_id = '59'
-data_type = 'money'
+kind = "casilla"
+casilla_id = "59"
+data_type = "money"
 required = false
-padding = 'left_zero'
-justification = 'right'
+padding = "left_zero"
+justification = "right"
 signed = true
-design_type = 'N'
-legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+design_type = "N"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2023"]
 
 [[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-01.f091'
+id = "m322-2023.page-01.f091"
 offset = 1257
 length = 17
-kind = 'casilla'
-casilla_id = '60'
-data_type = 'money'
+kind = "casilla"
+casilla_id = "60"
+data_type = "money"
 required = false
-padding = 'left_zero'
-justification = 'right'
+padding = "left_zero"
+justification = "right"
 signed = true
-design_type = 'N'
-legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+design_type = "N"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2023"]
 
 [[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-01.f092'
+id = "m322-2023.page-01.f092"
 offset = 1274
 length = 17
-kind = 'casilla'
-casilla_id = '61'
-data_type = 'money'
+kind = "casilla"
+casilla_id = "61"
+data_type = "money"
 required = false
-padding = 'left_zero'
-justification = 'right'
+padding = "left_zero"
+justification = "right"
 signed = true
-design_type = 'N'
-legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+design_type = "N"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2023"]
 
 [[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-01.f093'
+id = "m322-2023.page-01.f093"
 offset = 1291
 length = 17
-kind = 'casilla'
-casilla_id = '62'
-data_type = 'money'
+kind = "casilla"
+casilla_id = "62"
+data_type = "money"
 required = false
-padding = 'left_zero'
-justification = 'right'
+padding = "left_zero"
+justification = "right"
 signed = true
-design_type = 'N'
-legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+design_type = "N"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2023"]
 
 [[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-01.f094'
+id = "m322-2023.page-01.f094"
 offset = 1308
 length = 1
-kind = 'casilla'
-casilla_id = 'decl.volumen-anual-no-cero'
-data_type = 'integer'
+kind = "casilla"
+casilla_id = "decl.volumen-anual-no-cero"
+data_type = "integer"
 required = false
-padding = 'left_zero'
-justification = 'right'
+padding = "left_zero"
+justification = "right"
 signed = false
-design_type = 'Num'
-value_policy = 'enumerated-digits'
+design_type = "Num"
+value_policy = "enumerated-digits"
 allowed_values = [
-    '1',
-    '2',
+    "1",
+    "2",
 ]
-legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2023"]
 
 [[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-01.f095'
+id = "m322-2023.page-01.f095"
 offset = 1309
 length = 1
-kind = 'casilla'
-casilla_id = 'decl.tributacion-exclusivamente-foral'
-data_type = 'text'
+kind = "casilla"
+casilla_id = "decl.tributacion-exclusivamente-foral"
+data_type = "text"
 required = false
-padding = 'right_space'
-justification = 'left'
+padding = "right_space"
+justification = "left"
 signed = false
-legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2023"]
 
 [[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-01.f096'
+id = "m322-2023.page-01.f096"
 offset = 1310
 length = 1
-kind = 'casilla'
-casilla_id = 'decl.exonerado-modelo-390'
-data_type = 'text'
+kind = "casilla"
+casilla_id = "decl.exonerado-modelo-390"
+data_type = "text"
 required = false
-padding = 'right_space'
-justification = 'left'
+padding = "right_space"
+justification = "left"
 signed = false
-legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2023"]
 
 [[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-01.f097'
+id = "m322-2023.page-01.f097"
 offset = 1311
 length = 165
-kind = 'filler'
-data_type = 'text'
+kind = "filler"
+data_type = "text"
 required = false
-padding = 'right_space'
-justification = 'left'
+padding = "right_space"
+justification = "left"
 signed = false
-legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2023"]
 
 [[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-01.f098'
+id = "m322-2023.page-01.f098"
 offset = 1476
 length = 13
-kind = 'filler'
-data_type = 'text'
+kind = "filler"
+data_type = "text"
 required = false
-padding = 'right_space'
-justification = 'left'
+padding = "right_space"
+justification = "left"
 signed = false
-legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2023"]
 
 [[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-01.f099'
+id = "m322-2023.page-01.f099"
 offset = 1489
 length = 12
-kind = 'literal'
-literal = '</T32201000>'
-data_type = 'text'
+kind = "literal"
+literal = "</T32201000>"
+data_type = "text"
 required = true
-padding = 'none'
-justification = 'none'
+padding = "none"
+justification = "none"
 signed = false
-legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2023"]
 
 [revisions.2023.export_layouts.records.row_field_casilla_ids]

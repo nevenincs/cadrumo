@@ -1,90 +1,90 @@
 [[revisions.2025-y-siguientes.export_layouts]]
-id = 'generated-modelo-151-2025-y-siguientes-fichero'
+id = "generated-modelo-151-2025-y-siguientes-fichero"
 
 [[revisions.2025-y-siguientes.export_layouts.records]]
-id = 'm151-page-02'
-record_type = 'page-02'
+id = "m151-page-02"
+record_type = "page-02"
 order = 1
-encoding = 'iso-8859-1'
-line_ending = 'crlf'
+encoding = "iso-8859-1"
+line_ending = "crlf"
 required = true
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm151-2023.pagina02.f072'
+id = "m151-2023.pagina02.f072"
 offset = 968
 length = 1
-kind = 'casilla'
-casilla_id = 'p02.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-13-04'
-data_type = 'integer'
+kind = "casilla"
+casilla_id = "p02.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-13-04"
+data_type = "integer"
 required = false
-padding = 'left_zero'
-justification = 'right'
+padding = "left_zero"
+justification = "right"
 signed = false
-design_type = 'Num'
-value_policy = 'enumerated-digits'
+design_type = "Num"
+value_policy = "enumerated-digits"
 allowed_values = [
-    '1',
-    '2',
-    '3',
+    "1",
+    "2",
+    "3",
 ]
 legal_refs = [
-    'ley-35-2006:art-93',
-    'rd-439-2007:art-113',
-    'orden-hfp-1338-2023:art-1',
+    "ley-35-2006:art-93",
+    "rd-439-2007:art-113",
+    "orden-hfp-1338-2023:art-1",
 ]
-source_refs = ['aeat-dr-151-2023']
+source_refs = ["aeat-dr-151-2023"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm151-2023.pagina02.f073'
+id = "m151-2023.pagina02.f073"
 offset = 969
 length = 20
-kind = 'casilla'
-casilla_id = 'p02.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-14-04'
-data_type = 'text'
+kind = "casilla"
+casilla_id = "p02.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-14-04"
+data_type = "text"
 required = false
-padding = 'right_space'
-justification = 'left'
+padding = "right_space"
+justification = "left"
 signed = false
 legal_refs = [
-    'ley-35-2006:art-93',
-    'rd-439-2007:art-113',
-    'orden-hfp-1338-2023:art-1',
+    "ley-35-2006:art-93",
+    "rd-439-2007:art-113",
+    "orden-hfp-1338-2023:art-1",
 ]
-source_refs = ['aeat-dr-151-2023']
+source_refs = ["aeat-dr-151-2023"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm151-2023.pagina02.f074'
+id = "m151-2023.pagina02.f074"
 offset = 989
 length = 100
-kind = 'filler'
-data_type = 'text'
+kind = "filler"
+data_type = "text"
 required = false
-padding = 'right_space'
-justification = 'left'
+padding = "right_space"
+justification = "left"
 signed = false
 legal_refs = [
-    'ley-35-2006:art-93',
-    'rd-439-2007:art-113',
-    'orden-hfp-1338-2023:art-1',
+    "ley-35-2006:art-93",
+    "rd-439-2007:art-113",
+    "orden-hfp-1338-2023:art-1",
 ]
-source_refs = ['aeat-dr-151-2023']
+source_refs = ["aeat-dr-151-2023"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm151-2023.pagina02.f075'
+id = "m151-2023.pagina02.f075"
 offset = 1089
 length = 12
-kind = 'literal'
-literal = '</T15102000>'
-data_type = 'text'
+kind = "literal"
+literal = "</T15102000>"
+data_type = "text"
 required = true
-padding = 'none'
-justification = 'none'
+padding = "none"
+justification = "none"
 signed = false
 legal_refs = [
-    'ley-35-2006:art-93',
-    'rd-439-2007:art-113',
-    'orden-hfp-1338-2023:art-1',
+    "ley-35-2006:art-93",
+    "rd-439-2007:art-113",
+    "orden-hfp-1338-2023:art-1",
 ]
-source_refs = ['aeat-dr-151-2023']
+source_refs = ["aeat-dr-151-2023"]
 
 [revisions.2025-y-siguientes.export_layouts.records.row_field_casilla_ids]
