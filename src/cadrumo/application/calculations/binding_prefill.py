@@ -627,7 +627,9 @@ def _unsatisfied_previous_filing_bindings(
     invisible for the same reason it failed.
 
     Bindings another authority owns (``excluded_binding_ids``, the IVA wallet's
-    compensación slot being the standing case) are not this resolver's to report.
+    compensación slot being the standing case) are not this resolver's to report,
+    and neither is a binding whose temporal member names no source window for the
+    target period, which is a scope-out rather than a missing filing.
     """
     excluded = excluded_binding_ids or frozenset()
     requirement_index = _requirements_by_binding(snapshot)
@@ -637,6 +639,11 @@ def _unsatisfied_previous_filing_bindings(
         if not isinstance(provider, PreviousFilingProvider):
             continue
         if binding.id in resolved_binding_ids or binding.id in excluded:
+            continue
+        if not provider.required_period_anchors_for_target(snapshot.period):
+            # The temporal member names no source window for this target, as the
+            # expanding span does at a first quarter: nothing is owed, so the box
+            # is absent by design rather than a carry left unsatisfied.
             continue
         source_modelo, source_filing_year, source_periods, _dependency_treatment = requirement_index.get(
             binding.id,
