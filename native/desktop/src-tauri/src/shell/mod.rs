@@ -29,12 +29,14 @@ use tauri::{
 /// What the shell needs from the launch to describe its environment.
 struct Shell {
     output_language: String,
+    log_level: crate::logs::Level,
 }
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct DesktopEnvironment {
     output_language: String,
+    log_level: crate::logs::Level,
     docs: docs::Published,
 }
 
@@ -68,6 +70,7 @@ fn desktop_environment(
 ) -> DesktopEnvironment {
     DesktopEnvironment {
         output_language: shell.output_language.clone(),
+        log_level: shell.log_level,
         docs: docs.inner().clone(),
     }
 }
@@ -147,6 +150,7 @@ fn show<R: Runtime>(
 pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
     let sign_in = Arc::new(sign_in::SignIn::new(launch));
     let output_language = launch.output_language.clone();
+    let log_level = launch.log_level;
     #[cfg(windows)]
     let diagnostics = launch.diagnostics.clone();
     let popups = Arc::new(menu::Popups::default());
@@ -161,7 +165,7 @@ pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
             #[cfg(windows)]
             interrupts::restore(&diagnostics);
             single_instance::verify(app.config())?;
-            app.manage(Shell { output_language });
+            app.manage(Shell { output_language, log_level });
             app.manage(sign_in);
             app.manage(popups);
             app.manage(channel::Deliveries::default());

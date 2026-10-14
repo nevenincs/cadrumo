@@ -345,6 +345,7 @@ export function scenarioHost(
         return Promise.reject(failure("environment_failed", "environment"));
       return Promise.resolve({
         outputLanguage: options.language,
+        logLevel: "INFO",
         docs: { state: "bundled", ...options.docs },
       });
     },

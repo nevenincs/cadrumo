@@ -48,6 +48,12 @@ export const RecordRow = memo(function RecordRow({
     context.phase,
     context.outcome,
     context.reason_code,
+    context.lifecycle_reason,
+    context.service_reason,
+    context.service_cause,
+    context.service_scope,
+    typeof context.total_ms === "number" ? `${context.total_ms} ms` : null,
+    typeof context.restart_delay_ms === "number" ? `retry ${context.restart_delay_ms} ms` : null,
   ]
     .filter((value): value is string => typeof value === "string")
     .join(" · ");

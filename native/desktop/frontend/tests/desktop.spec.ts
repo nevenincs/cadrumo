@@ -102,6 +102,7 @@ async function signInHost(
               case "desktop_environment":
                 return {
                   outputLanguage: "en",
+                  logLevel: "INFO",
                   docs: docs
                     ? {
                         state: "bundled",

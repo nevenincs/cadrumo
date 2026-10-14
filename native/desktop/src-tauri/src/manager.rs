@@ -146,6 +146,11 @@ impl ManagerStart {
             return Err(failure(ErrorCode::SessionUnavailable));
         }
         let owner = self.clone();
+        let diagnostic_scope = match scope {
+            InstallScope::User => cadrumo_application::diagnostics::service::InstallationScope::User,
+            InstallScope::Machine => cadrumo_application::diagnostics::service::InstallationScope::Machine,
+        };
+        self.diagnostics.service(None, cadrumo_application::diagnostics::service::ServiceFact::ManagerInstallationStarted { scope: diagnostic_scope });
         tokio::spawn(async move {
             owner
                 .complete_attempt(previous, false, async {
@@ -159,6 +164,7 @@ impl ManagerStart {
                         }
                     };
                     drop(target);
+                    owner.diagnostics.service(None, cadrumo_application::diagnostics::service::ServiceFact::ManagerInstallationCompleted { scope: diagnostic_scope });
                     owner.dispatch(false, false).await
                 })
                 .await

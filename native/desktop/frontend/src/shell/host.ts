@@ -132,6 +132,7 @@ export function browserHost(location: Location): Host {
       const lang = new URLSearchParams(location.search).get("lang") ?? "en";
       return Promise.resolve({
         outputLanguage: lang,
+        logLevel: "INFO",
         docs: {
           state: "bundled",
           origin: entry.origin,

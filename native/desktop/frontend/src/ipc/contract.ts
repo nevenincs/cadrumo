@@ -167,6 +167,8 @@ export type DocsLanguage = {
 export type DesktopEnvironment = {
   /** The output language Settings resolved for this profile. */
   outputLanguage: string;
+  /** Initial minimum severity selected by the host; defaults to INFO. */
+  logLevel: LogLevel;
   /** The package's statement of whether it carries the documentation. */
   docs: DesktopDocs;
 };
@@ -233,6 +235,7 @@ export type LogSourceState = {
 
 /** Independent file availability; host events are read from memory. */
 export type LogSourceStates = {
+  [source: string]: LogSourceState;
   python: LogSourceState;
   manager: LogSourceState;
 };

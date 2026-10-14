@@ -390,6 +390,7 @@ pub(crate) fn unit_launch() -> crate::environment::Launch {
         manager_log_file: directory.join("cadrumo-manager.log"),
         log_format: String::new(),
         output_language: "en".into(),
+        log_level: crate::logs::Level::Info,
     }
 }
 

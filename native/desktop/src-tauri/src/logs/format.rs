@@ -1,33 +1,9 @@
 //! Matches `cadrumo.log` lines against the Python line format the projection
 //! reports. The host holds no copy of that format: it compiles whatever
 //! `%`-style mapping format Python configured.
-use serde::{Deserialize, Serialize};
+pub use cadrumo_application::diagnostics::service::LogLevel as Level;
 use serde_json::Value;
 use std::collections::BTreeMap;
-
-#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
-#[serde(rename_all = "UPPERCASE")]
-pub enum Level {
-    Debug,
-    #[default]
-    Info,
-    Warning,
-    Error,
-    Critical,
-}
-
-impl Level {
-    pub fn parse(name: &str) -> Option<Self> {
-        Some(match name {
-            "DEBUG" => Self::Debug,
-            "INFO" => Self::Info,
-            "WARNING" => Self::Warning,
-            "ERROR" => Self::Error,
-            "CRITICAL" => Self::Critical,
-            _ => return None,
-        })
-    }
-}
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum Field {

@@ -65,8 +65,9 @@ Push-Location -LiteralPath $repository
 try {
     $rootVariable = & $DevPython -B -c 'from cadrumo.core.storage_environment import STORAGE_ROOT; print(STORAGE_ROOT.variable)'
     if ($LASTEXITCODE -ne 0 -or -not $rootVariable) { throw 'Cannot resolve the canonical storage-root variable.' }
-    $contract = Get-Content -LiteralPath (Join-Path $generated 'contract.json') -Raw | ConvertFrom-Json
-    foreach ($name in $contract.storage_environment_allowlist) { Set-TestEnvironment $name $null }
+    $allowlist = & $DevPython -B -c 'import json, sys; print("\n".join(json.load(open(sys.argv[1], encoding="utf-8"))["storage_environment_allowlist"]))' (Join-Path $generated 'contract.json')
+    if ($LASTEXITCODE -ne 0) { throw 'Cannot read the generated storage environment allow-list.' }
+    foreach ($name in $allowlist) { Set-TestEnvironment $name $null }
     $storage = Join-Path $testing ('backend-runs\' + [Guid]::NewGuid().ToString('N') + '\storage')
     New-Item -ItemType Directory -Path $storage -Force | Out-Null
     Set-TestEnvironment $rootVariable.Trim() $storage

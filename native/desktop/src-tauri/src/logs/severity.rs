@@ -31,6 +31,7 @@ pub fn level(event: &Event) -> Level {
         EventKind::ChildExited
             if event.status.as_ref().is_some_and(|s| s.exit_code != Some(0)) => Level::Error,
         EventKind::ChildTerminated => Level::Warning,
+        EventKind::HelperTiming if event.status.as_ref().is_some_and(|s| s.exit_code.is_some_and(|code| code != 0)) => Level::Error,
         EventKind::HelperTiming => match event.helper_timing.map(|fact| fact.outcome) {
             Some(HelperOutcome::Completed) => Level::Debug,
             _ => Level::Error,

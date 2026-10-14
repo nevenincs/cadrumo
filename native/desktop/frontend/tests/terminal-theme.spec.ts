@@ -78,6 +78,7 @@ async function openHost(page: Page) {
             case "desktop_environment":
               return {
                 outputLanguage: "en",
+                logLevel: "INFO",
                 docs: {
                   state: "bundled",
                   origin: "http://docs.cadrumo.test",

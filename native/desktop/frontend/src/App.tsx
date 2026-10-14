@@ -1,6 +1,6 @@
 import { useDesktopEnvironment } from "./shell/useDesktopEnvironment";
 import { useWindowPresentation } from "./shell/useWindowPresentation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type SetStateAction } from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/components/ui/cn";
 import {
@@ -201,7 +201,15 @@ export function App({ host }: { host: Host }) {
   // The dialog as the form that creates a profile, where one was asked for.
   const [creatingProfile, setCreatingProfile] = useState(false);
   const signInButton = useRef<HTMLButtonElement>(null);
-  const [filters, setFilters] = useState<RecordFilters>(DEFAULT_FILTERS);
+  const defaultFilters = useMemo(() => ({
+    ...DEFAULT_FILTERS,
+    minLevel: levelRank(environment.state === "ready" ? environment.value.logLevel : "INFO"),
+  }), [environment]);
+  const [filterOverride, setFilterOverride] = useState<RecordFilters | null>(null);
+  const filters = filterOverride ?? defaultFilters;
+  const setFilters = useCallback((update: SetStateAction<RecordFilters>) => {
+    setFilterOverride((current) => typeof update === "function" ? update(current ?? defaultFilters) : update);
+  }, [defaultFilters]);
   const docs = useRef<DocsFrameApi>(null);
   const terminals = useRef<Partial<Record<TerminalKind, TerminalApi>>>({});
   const toastTimer = useRef(0);
@@ -1062,7 +1070,7 @@ export function App({ host }: { host: Host }) {
         label: t("desktop.action.logs_reset"),
         group: "logs",
         icon: "logs",
-        run: () => setFilters(DEFAULT_FILTERS),
+        run: () => setFilterOverride(null),
       },
       {
         id: "settings.open",
