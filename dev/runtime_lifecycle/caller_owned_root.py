@@ -50,6 +50,7 @@ from mcp import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 
 from cadrumo.core.storage_environment import host_installed_default_root
+from dev._paths import REPO_ROOT
 
 _PROFILE_NAME = "caller-owned-acceptance"
 _READY_SECONDS = 180
@@ -441,7 +442,12 @@ def main(arguments: list[str] | None = None) -> int:
     )
     parser.add_argument("--keep", action="store_true", help="Keep the disposable root for inspection.")
     options = parser.parse_args(arguments)
-    scratch = Path(tempfile.mkdtemp(prefix="cadrumo-co-"))
+    # The disposable root sits with the other lifecycle proofs' roots in this
+    # checkout: outside host temp, and outside the installed default root
+    # whose changes this proof attributes to the run.
+    base = REPO_ROOT / "build" / "acceptance"
+    base.mkdir(parents=True, exist_ok=True)
+    scratch = Path(tempfile.mkdtemp(prefix="cadrumo-co-", dir=base))
     try:
         receipt = run(options.package.resolve(strict=True), scratch)
     except AcceptanceError as failure:

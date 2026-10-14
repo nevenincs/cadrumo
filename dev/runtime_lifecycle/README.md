@@ -132,7 +132,8 @@ just verify-live-sign-in build/windows-x64/stage/Release/app
 
 `verify-caller-owned-runtime` checks `cadrumo-runtime --configured-root`: its
 readiness line, client discovery, password sign-in, stop when its stdin closes
-(exit 64), and an unchanged installed default root. It reports `incomplete`
+(exit 64), and an unchanged installed default root, from a disposable root
+under `build/acceptance`. It reports `incomplete`
 (exit 3) on a logon whose credential store refuses to keep a sign-in.
 
 `verify-live-sign-in` checks `aeat config sign-in-hold` and attended MCP
