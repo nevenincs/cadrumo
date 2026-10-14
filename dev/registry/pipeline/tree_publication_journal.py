@@ -27,10 +27,8 @@ def _journal_supersession_candidate_revision_path(
     journal: GeneratedExportPublicationJournal,
     transaction_paths: GeneratedExportTransactionPaths,
 ) -> Path:
-    candidate = Path(journal.candidate_export)
-    if candidate.parent != transaction_paths.transaction_root or not candidate.name.startswith(
-        transaction_paths.bundle_staging_prefix,
-    ):
+    candidate = transaction_paths.transaction_root / journal.candidate_export
+    if not candidate.name.startswith(transaction_paths.bundle_staging_prefix):
         raise RegistryValidationError("generated supersession candidate is not a transaction-root staging sibling")
     if is_link_like(candidate):
         raise RegistryValidationError("generated supersession candidate must not be a symbolic link or junction")
@@ -41,10 +39,8 @@ def _journal_supersession_backup_revision_path(
     journal: GeneratedExportPublicationJournal,
     transaction_paths: GeneratedExportTransactionPaths,
 ) -> Path:
-    backup = Path(journal.backup_export)
-    if backup.parent != transaction_paths.transaction_root or not backup.name.startswith(
-        transaction_paths.bundle_backup_prefix,
-    ):
+    backup = transaction_paths.transaction_root / journal.backup_export
+    if not backup.name.startswith(transaction_paths.bundle_backup_prefix):
         raise RegistryValidationError("generated supersession backup is not a transaction-root backup sibling")
     if is_link_like(backup):
         raise RegistryValidationError("generated supersession backup must not be a symbolic link or junction")
@@ -67,9 +63,7 @@ def _journal_backup_path(
     target_export_root: Path,
     target_root: Path,
 ) -> Path:
-    backup = Path(journal.backup_export)
-    if backup.parent != target_root:
-        raise RegistryValidationError("generated publication journal backup escapes the target registry root")
+    backup = target_root / journal.backup_export
     backup_prefix = GeneratedExportTransactionPaths(
         target_root=target_root,
         modelo=journal.modelo,
@@ -98,7 +92,7 @@ def _retire_completed_legacy_orphan_journal(
     different transaction state stays fail-closed for normal recovery.
     """
     expected = context.expected_target_state
-    recorded_candidate = Path(journal.candidate_export)
+    recorded_candidate = context.target_root / journal.candidate_export
     if not (
         journal.state == "intent"
         and expected is not None
@@ -115,13 +109,13 @@ def _retire_completed_legacy_orphan_journal(
 
 
 def _journal_staged_candidate_path(journal: GeneratedExportPublicationJournal, target_root: Path) -> Path:
-    candidate = Path(journal.candidate_export)
+    candidate = target_root / journal.candidate_export
     prefix = GeneratedExportTransactionPaths(
         target_root=target_root,
         modelo=journal.modelo,
         revision_id=journal.revision_id,
     ).staging_prefix
-    if candidate.parent != target_root or not candidate.name.startswith(prefix):
+    if not candidate.name.startswith(prefix):
         raise RegistryValidationError(
             "generated publication journal candidate is not a target-revision staging sibling",
         )

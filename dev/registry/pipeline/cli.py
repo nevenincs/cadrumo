@@ -672,28 +672,17 @@ def publish_prepared_invocation(
 
 
 def _validate_final_live_target(prepared: PreparedGeneratedTreeInvocation) -> None:
-    """Compile the complete live registry and prove the named export is current before commit."""
-    _require_retained_source_after_cutover(prepared)
-    authority = compile_validated_authority(
-        prepared.target_root,
-        bundled_path(),
-        verify_evidence_bytes=True,
-        complete_validation=True,
-    )
-    fact = target_currentness(
-        prepared.invocation.modelo,
-        prepared.invocation.revision,
-        prepared.invocation.source_ref,
-        prepared.invocation.filing_year,
-        prepared.invocation.period,
-        authority=authority,
-    )
-    if fact.state is not TargetCurrentnessState.CURRENT:
-        raise RegistryValidationError(
-            "generated target failed live-root currentness after cutover: "
-            f"state={fact.state.value}; detail={fact.detail}",
-        )
+    """Compile the complete live registry with the installed export before commit.
 
+    The publisher has already proved the live export is byte-identical to the
+    validated candidate, and the retained-source check proves every render
+    input is unchanged, so re-rendering the target here would only repeat the
+    candidate's own render and validation. Content-keyed verdicts let only the
+    changed modelo validate again; this records no compiler closure, so it
+    does not need the complete validation an authority publication does.
+    """
+    _require_retained_source_after_cutover(prepared)
+    compile_validated_authority(prepared.target_root, bundled_path(), verify_evidence_bytes=True)
     _require_retained_source_after_cutover(prepared)
 
 
@@ -829,14 +818,8 @@ def _republish(prepared: PreparedGeneratedTreeInvocation, target_state: Generate
         committed_root=prepared.target_export_root,
         rendered_root=candidate_export_root,
     )
-    validate_generated_export_tree(
-        context=prepared.validation,
-        joined=prepared.inputs.joined,
-        semantic_map=prepared.inputs.semantic_map,
-        rendered=rendered,
-        render_profile=prepared.inputs.render_profile,
-        render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
-    )
+    # The publisher validates this candidate under its transaction lock before
+    # any cutover; the eligibility proof below needs only the byte comparison.
     generated_form_bridge = None
     if prepared.inheritance is not None and comparison.disposition_class == "record_drift":
         _require_storage_equivalent_republication(prepared, rendered, target_state, comparison)
@@ -1014,14 +997,6 @@ def _run(
                     casilla_splits=reconcile_casilla_splits,
                     row_bindings=reconcile_row_bindings,
                     scalar_sources=reconcile_scalar_sources,
-                )
-                validate_generated_export_tree(
-                    context=prepared.validation,
-                    joined=prepared.inputs.joined,
-                    semantic_map=prepared.inputs.semantic_map,
-                    rendered=rendered,
-                    render_profile=prepared.inputs.render_profile,
-                    render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
                 )
                 publish_prepared_invocation(prepared, rendered, target_state, generated_form_bridge=bridge)
                 _finish_form_republication(

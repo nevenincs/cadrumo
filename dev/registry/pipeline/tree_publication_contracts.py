@@ -31,7 +31,7 @@ from .export_fragment_provenance import (
     collect_export_fragment_output_digests,
 )
 
-_JOURNAL_SCHEMA_VERSION: Final[Literal[1]] = 1
+_JOURNAL_SCHEMA_VERSION: Final[Literal[2]] = 2
 
 
 _MODELO_ID_ADAPTER: Final[TypeAdapter[ModeloId]] = TypeAdapter(ModeloId)
@@ -47,7 +47,7 @@ class _StrictModel(BaseModel):
 class GeneratedExportPublicationJournal(_StrictModel):
     """Crash-recovery facts for an export swap or pinned revision-bundle cutover."""
 
-    schema_version: Literal[1]
+    schema_version: Literal[2]
     state: Literal["intent", "backup_staged", "candidate_live", "committed"]
     modelo: ModeloId
     revision_id: RevisionId
@@ -66,6 +66,14 @@ class GeneratedExportPublicationJournal(_StrictModel):
     @classmethod
     def _identities_are_single_path_components(cls, value: str) -> str:
         _require_single_path_component(value, subject="generated publication journal identity")
+        return value
+
+    @field_validator("candidate_export", "backup_export")
+    @classmethod
+    def _entries_are_root_relative_names(cls, value: str) -> str:
+        # Recovery resolves each entry against its own transaction root, so a
+        # moved checkout still recovers and no machine path is ever persisted.
+        _require_single_path_component(value, subject="generated publication journal entry")
         return value
 
     @property

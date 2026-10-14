@@ -19,7 +19,7 @@ from cadrumo.core.link_safety import is_link_like
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema_form_layouts import FormLayoutReviewState
+from cadrumo.domain.calculations.registry.schema_form_layouts import FormLayoutDefinition, FormLayoutReviewState
 
 from ..compiler.authority import compile_validated_authority
 from ..compiler.loader import load_registry_tree
@@ -112,8 +112,8 @@ def _active_verified_backup(
         or journal.candidate_manifest_sha256 != candidate_manifest_sha256
     ):
         raise RegistryValidationError("Generated export cutover has no matching active publication journal")
-    staged = Path(journal.candidate_export)
-    if staged.parent != paths.target_root or not staged.name.startswith(paths.staging_prefix) or staged.exists():
+    staged = paths.target_root / journal.candidate_export
+    if not staged.name.startswith(paths.staging_prefix) or staged.exists():
         raise RegistryValidationError("Generated export cutover journal has no consumed target-scoped candidate")
     backup = _journal_backup_path(
         journal, registry_root / "modelos" / modelo / "revisions" / revision / "export", paths.target_root
@@ -198,7 +198,21 @@ def generated_form_companion_changed(registry_root: Path, candidate_root: Path, 
     publisher's complete final-live validator without historical repair pins.
     """
     old_form = form_layout_fragment_path(registry_root / "modelos" / modelo / "revisions" / revision)
+    # An unchanged staged form needs no bridge, and regenerating it would refuse
+    # a form that was authored after the bridge's historical repair. A detached
+    # candidate stages its form inside a complete edition, so compare meaning.
+    if _loaded_form_layouts(candidate_root, modelo, revision) == _loaded_form_layouts(registry_root, modelo, revision):
+        return False
     return old_form.read_bytes() != _candidate_generated_form_bytes(candidate_root, modelo, revision, bundled_path())
+
+
+def _loaded_form_layouts(root: Path, modelo_id: str, revision_id: str) -> tuple[FormLayoutDefinition, ...]:
+    """Return one revision's loaded form layouts, refusing an absent revision."""
+    modelos, _catalogues = load_registry_tree(root)
+    modelo = next((item for item in modelos if str(item.id) == modelo_id), None)
+    if modelo is None or revision_id not in modelo.revisions:
+        raise RegistryValidationError("Generated bridge candidate revision is absent")
+    return tuple(modelo.revisions[revision_id].form_layouts)
 
 
 @dataclass(frozen=True, slots=True)

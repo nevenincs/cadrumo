@@ -36,12 +36,12 @@ def test_completed_legacy_cleanup_requires_an_exact_finished_transaction(tmp_pat
         backup.mkdir()
         (backup / "preserve.txt").write_text("unfinished recovery", encoding="utf-8")
     journal = GeneratedExportPublicationJournal(
-        schema_version=1,
+        schema_version=2,
         state="intent" if conflict == "intent" else "candidate_live",
         modelo=context.validation.target.modelo,
         revision_id=context.validation.target.revision_id,
-        candidate_export=str(paths.new_staging_sibling()),
-        backup_export=str(backup),
+        candidate_export=paths.new_staging_sibling().name,
+        backup_export=backup.name,
         candidate_manifest_sha256="a" * 64 if conflict == "wrong-digest" else receipt.manifest_sha256,
     )
     write_generated_export_publication_journal(paths.legacy_journal, journal)

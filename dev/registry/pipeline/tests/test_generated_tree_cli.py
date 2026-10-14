@@ -14,7 +14,6 @@ from typer.testing import CliRunner
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import parse_toml
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ...compiler.authority import compiled_bundled_authority
@@ -28,8 +27,6 @@ from ..bootstrap_targets import _bootstrap_target_from_row
 from ..cli import (
     GeneratedTreeInvocation,
     PreparedGeneratedTreeInvocation,
-    TargetCurrentnessFact,
-    TargetCurrentnessState,
     app,
     check_prepared_invocation,
     prepare_generated_tree_invocation,
@@ -526,11 +523,11 @@ def test_absent_tree_is_validated_then_published_through_the_canonical_authoriti
     assert first.target_export_root.is_dir()
 
 
-def test_final_live_validator_does_not_recover_while_it_checks_the_cutover_authority(
+def test_final_live_validator_compiles_the_live_root_without_restaging_the_target(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """The final currency callback's supplied authority takes the read-only prepare path."""
+    """The final callback validates the live registry once and never re-renders the installed target."""
     invocation = GeneratedTreeInvocation(
         ISOLATED_TREE.modelo,
         ISOLATED_TREE.revision,
@@ -539,70 +536,38 @@ def test_final_live_validator_does_not_recover_while_it_checks_the_cutover_autho
         ISOLATED_TREE.period,
     )
     target_root = tmp_path / "live-registry" / "aeat"
-    (target_root / "modelos" / invocation.modelo / "revisions" / invocation.revision / "export").mkdir(
-        parents=True,
-    )
-    authority = compiled_bundled_authority()
-    monkeypatch.setattr(cli_module, "bundled_path", lambda *_parts: target_root)
-    monkeypatch.setattr(cli_module, "compile_validated_authority", lambda *_args, **_kwargs: authority)
+    target_root.mkdir(parents=True)
+    compiles: list[tuple[Path, dict[str, object]]] = []
 
-    def reject_recovery(**_kwargs: object) -> bool:
-        raise AssertionError("final live validation re-entered transaction recovery")
+    def record_compile(registry_root: Path, _source_root: Path, **kwargs: object) -> object:
+        compiles.append((registry_root, kwargs))
+        return object()
 
-    monkeypatch.setattr(cli_module, "recover_interrupted_supersession_bundle", reject_recovery)
-    monkeypatch.setattr(cli_module, "supporting_modelos", lambda _modelo: frozenset())
-    monkeypatch.setattr(
-        cli_module,
-        "revision_render_inputs",
-        lambda *_args, **_kwargs: SimpleNamespace(
-            revision_id=invocation.revision,
-            layout_id="fixture-layout",
-            joined=object(),
-            semantic_map=object(),
-            transport_profile=SimpleNamespace(design_epoch="2025"),
-            render_profile=object(),
-            render_profile_source_evidence=object(),
+    def refuse(*_args: object, **_kwargs: object) -> object:
+        raise AssertionError("final live validation repeated the candidate's own render")
+
+    monkeypatch.setattr(cli_module, "compile_validated_authority", record_compile)
+    for repeated in (
+        "target_currentness",
+        "prepare_generated_tree_invocation",
+        "recover_interrupted_supersession_bundle",
+    ):
+        monkeypatch.setattr(cli_module, repeated, refuse)
+    prepared = cast(
+        PreparedGeneratedTreeInvocation,
+        cast(
+            Any,
+            SimpleNamespace(
+                invocation=invocation,
+                target_root=target_root,
+                validation=SimpleNamespace(source_chain_non_export_sha256=None),
+            ),
         ),
     )
-    monkeypatch.setattr(cli_module, "stage_generated_export_candidate", lambda *_args, **_kwargs: target_root)
-    monkeypatch.setattr(cli_module, "stage_published_modelo", lambda *_args, **_kwargs: None)
-    real_prepare = cli_module.prepare_generated_tree_invocation
-    prepared_authorities: list[object] = []
 
-    def inspect_read_only_prepare(
-        selected: GeneratedTreeInvocation,
-        root: Path,
-        *,
-        authority: object | None = None,
-    ) -> PreparedGeneratedTreeInvocation:
-        assert authority is not None
-        prepared_authorities.append(authority)
-        return real_prepare(selected, root, authority=cast(ValidatedRegistryAuthority, authority))
-
-    def currentness_with_real_prepare(
-        modelo: str,
-        revision: str,
-        source_ref: str,
-        filing_year: int,
-        period: str,
-        *,
-        authority: object,
-    ) -> TargetCurrentnessFact:
-        inspect_read_only_prepare(
-            GeneratedTreeInvocation(modelo, revision, source_ref, filing_year, period),
-            tmp_path / "currentness",
-            authority=authority,
-        )
-        return TargetCurrentnessFact(modelo, revision, TargetCurrentnessState.CURRENT)
-
-    monkeypatch.setattr(cli_module, "target_currentness", currentness_with_real_prepare)
-
-    prepared = cast(
-        PreparedGeneratedTreeInvocation, cast(Any, SimpleNamespace(invocation=invocation, target_root=target_root))
-    )
     cli_module._validate_final_live_target(prepared)
 
-    assert prepared_authorities == [authority]
+    assert compiles == [(target_root, {"verify_evidence_bytes": True})]
 
 
 def test_modelo_200_calculation_grade_does_not_widen_its_runtime_filing_authority() -> None:

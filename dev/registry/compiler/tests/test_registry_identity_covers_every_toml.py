@@ -42,12 +42,50 @@ def test_every_registry_toml_is_a_fingerprinted_input() -> None:
     }
 
     unfingerprinted = sorted(
-        path.relative_to(registry).as_posix() for path in registry.rglob("*.toml") if path.resolve() not in walked
+        path.relative_to(registry).as_posix()
+        for path in registry.rglob("*.toml")
+        if path.resolve() not in walked and not path.relative_to(registry).parts[0].startswith(".")
     )
 
     assert unfingerprinted == [], (
         f"{len(unfingerprinted)} registry TOML(s) outside the identity: {unfingerprinted[:10]}"
     )
+
+
+def test_root_publication_bookkeeping_is_not_a_fingerprinted_input(tmp_path: Path) -> None:
+    """Locks and backup trees beside the content are process state; a dot entry inside a modelo still counts.
+
+    The content-keyed verdict must survive a publication's own bookkeeping, or
+    the clean verdict its final live validation records can never be reused.
+    """
+    registry = (tmp_path / "registry" / "aeat").resolve()
+    shutil.copytree(_bundled_registry_root(), registry, ignore=shutil.ignore_patterns(".*"))
+
+    def rows_and_verdict() -> tuple[set[Path], str]:
+        rows = collect_registry_tree_fingerprints(registry, use_cache=False)
+        scope = validation_verdict_scope(
+            registry_root=registry,
+            fingerprints=rows,
+            source_receipt="fixed-source-receipt",
+            compiler_source_tree_digest="fixed-compiler-source-tree",
+        )
+        return {Path(row[0]) for row in rows}, scope.registry_key
+
+    _clean_rows, clean_verdict = rows_and_verdict()
+    export = next(iter(sorted(registry.glob("modelos/*/revisions/*/export"))))
+    backup = registry / ".generated-export-backup-000-0000-feedface"
+    shutil.copytree(export, backup)
+    (registry / ".generated-export-transaction-000-0000.lock").write_bytes(b"")
+    rows, verdict = rows_and_verdict()
+    assert verdict == clean_verdict
+    assert not any(path.is_relative_to(backup) for path in rows)
+
+    stray = export.parent / ".stray" / "x.toml"
+    stray.parent.mkdir()
+    stray.write_text("a = 1\n", encoding="utf-8")
+    rows, verdict = rows_and_verdict()
+    assert stray.parent in rows or stray in rows
+    assert verdict != clean_verdict
 
 
 def test_an_edit_to_any_non_modelo_directory_changes_the_identity_and_the_verdict_key(tmp_path: Path) -> None:

@@ -316,7 +316,7 @@ def test_publication_journal_rejects_non_registry_path_identities(modelo: str, r
     """A loaded journal cannot smuggle path components into recovery target construction."""
     with pytest.raises(ValidationError):
         GeneratedExportPublicationJournal(
-            schema_version=1,
+            schema_version=2,
             state="intent",
             modelo=modelo,
             revision_id=revision_id,
@@ -324,6 +324,26 @@ def test_publication_journal_rejects_non_registry_path_identities(modelo: str, r
             backup_export="backup",
             candidate_manifest_sha256="a" * 64,
         )
+
+
+@pytest.mark.parametrize("field", ("candidate_export", "backup_export"))
+@pytest.mark.parametrize(
+    "entry", (r"C:\checkout\registry\.generated-export-backup-184-2025-x", "/checkout/registry/x", "nested/x", "..")
+)
+def test_publication_journal_persists_only_root_relative_entry_names(field: str, entry: str) -> None:
+    """Recovery resolves entries against its own root, so no machine path is ever persisted."""
+    payload = {
+        "schema_version": 2,
+        "state": "intent",
+        "modelo": "184",
+        "revision_id": "2025",
+        "candidate_export": "candidate",
+        "backup_export": "backup",
+        "candidate_manifest_sha256": "a" * 64,
+        field: entry,
+    }
+    with pytest.raises(ValidationError, match="generated publication journal entry"):
+        GeneratedExportPublicationJournal.model_validate(payload)
 
 
 def _validate(
@@ -373,12 +393,12 @@ def _stage_interrupted_verified_candidate(
         target_root=context.target_root.resolve(), modelo=ISOLATED_TREE.modelo, revision_id=ISOLATED_TREE.revision
     ).new_backup_sibling()
     journal = GeneratedExportPublicationJournal(
-        schema_version=1,
+        schema_version=2,
         state="backup_staged",
         modelo=ISOLATED_TREE.modelo,
         revision_id=ISOLATED_TREE.revision,
-        candidate_export=str(staged_candidate_export_root),
-        backup_export=str(backup_export_root),
+        candidate_export=staged_candidate_export_root.name,
+        backup_export=backup_export_root.name,
         candidate_manifest_sha256=export_provenance_file_sha256(
             staged_candidate_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME,
         ),
@@ -438,12 +458,12 @@ def _legacy_orphan_journal(
     state: Literal["intent", "backup_staged", "candidate_live", "committed"] = "intent",
 ) -> Path:
     journal = GeneratedExportPublicationJournal(
-        schema_version=1,
+        schema_version=2,
         state=state,
         modelo="200",
         revision_id="2025",
-        candidate_export=str(candidate_export),
-        backup_export=str(backup_export),
+        candidate_export=candidate_export.name,
+        backup_export=backup_export.name,
         candidate_manifest_sha256="a" * 64,
     )
     path = GeneratedExportTransactionPaths.for_context(context).journal
@@ -453,7 +473,7 @@ def _legacy_orphan_journal(
 
 def test_recovery_retires_only_a_provably_completed_legacy_cross_volume_orphan(tmp_path) -> None:
     context = _legacy_orphan_context(tmp_path)
-    candidate_export = tmp_path / "former-system-temporary" / "export"
+    candidate_export = context.target_root / "former-system-temporary"
     backup_export = GeneratedExportTransactionPaths(
         target_root=context.target_root, modelo="200", revision_id="2025"
     ).new_backup_sibling()
@@ -484,14 +504,13 @@ def test_recovery_retires_only_a_provably_completed_legacy_cross_volume_orphan(t
     )
 
 
-#: The refusal each orphan shape must produce. Four share one check because
-#: a legacy candidate outside the staging sibling is refused before the
-#: shape-specific comparisons; only the escaping backup reaches its own.
+#: The refusal each orphan shape must produce: a legacy candidate that is not a
+#: staging sibling is refused before the shape-specific comparisons. A backup
+#: outside the root cannot be written at all; see the journal entry test.
 _ORPHAN_REFUSAL = {
     "candidate-survives": "candidate is not a target-revision staging sibling",
     "backup-survives": "candidate is not a target-revision staging sibling",
     "target-survives": "candidate is not a target-revision staging sibling",
-    "outside-backup": "backup escapes the target registry root",
     "non-intent": "candidate is not a target-revision staging sibling",
 }
 
@@ -505,7 +524,6 @@ _SURVIVOR_BY_CASE = frozenset({"candidate-survives", "backup-survives", "target-
         ("candidate-survives", "intent"),
         ("backup-survives", "intent"),
         ("target-survives", "intent"),
-        ("outside-backup", "intent"),
         ("non-intent", "backup_staged"),
     ),
 )
@@ -515,18 +533,16 @@ def test_recovery_refuses_unsafe_legacy_orphan_shapes(
     state: Literal["intent", "backup_staged", "candidate_live", "committed"],
 ) -> None:
     context = _legacy_orphan_context(tmp_path)
-    candidate_export = tmp_path / "former-system-temporary" / "export"
+    candidate_export = context.target_root / "former-system-temporary"
     backup_export = GeneratedExportTransactionPaths(
         target_root=context.target_root, modelo="200", revision_id="2025"
     ).new_backup_sibling()
     if case == "candidate-survives":
-        candidate_export.mkdir(parents=True)
+        candidate_export.mkdir()
     elif case == "backup-survives":
         backup_export.mkdir()
     elif case == "target-survives":
         context.target_export_root.mkdir()
-    elif case == "outside-backup":
-        backup_export = tmp_path / ".generated-export-backup-200-2025-outside"
     elif case != "non-intent":
         raise AssertionError(f"unexpected legacy orphan case: {case}")
     journal_path = _legacy_orphan_journal(
@@ -536,8 +552,7 @@ def test_recovery_refuses_unsafe_legacy_orphan_shapes(
         state=state,
     )
 
-    # Each case pins its own refusal: four share the check that the legacy
-    # candidate is not a staging sibling, and the fifth reaches a different check.
+    # Each case pins its refusal: the legacy candidate is not a staging sibling.
     with pytest.raises(RegistryValidationError, match=_ORPHAN_REFUSAL[case]):
         recover_interrupted_publication(
             context=context,
@@ -754,7 +769,7 @@ def test_supersession_failure_preserves_candidate_until_recovery_restores_old_re
     journal = load_generated_export_publication_journal(journal_path)
     assert journal.state == "candidate_live"
     assert bootstrap_layout_supersession_fingerprint(target_revision_root) == journal.candidate_revision_sha256
-    assert {path.name for path in _bundle_transaction_siblings(context)} == {Path(journal.backup_export).name}
+    assert {path.name for path in _bundle_transaction_siblings(context)} == {journal.backup_export}
 
     assert not recover_interrupted_supersession_bundle(
         target_root=context.target_root,
@@ -807,7 +822,7 @@ def test_committed_supersession_cleanup_failure_keeps_candidate_and_recovers_par
     journal = load_generated_export_publication_journal(paths.journal)
     assert journal.state == "committed"
     assert journal.cleanup_started is True
-    assert interrupted_backups == [Path(journal.backup_export)]
+    assert interrupted_backups == [paths.transaction_root / journal.backup_export]
     committed_revision = _tree_bytes(target_revision_root)
     assert not (target_revision_root / "export_layouts" / "0001-manual-layout.toml").exists()
 
@@ -976,12 +991,12 @@ def test_publication_discards_only_a_completed_rollback_journal_from_an_abandone
         target_root=context.target_root.resolve(), modelo=ISOLATED_TREE.modelo, revision_id=ISOLATED_TREE.revision
     ).new_backup_sibling()
     journal = GeneratedExportPublicationJournal(
-        schema_version=1,
+        schema_version=2,
         state="backup_staged",
         modelo=ISOLATED_TREE.modelo,
         revision_id=ISOLATED_TREE.revision,
-        candidate_export=str(abandoned_candidate),
-        backup_export=str(backup_export_root),
+        candidate_export=abandoned_candidate.name,
+        backup_export=backup_export_root.name,
         candidate_manifest_sha256="a" * 64,
     )
     journal_path = GeneratedExportTransactionPaths.for_context(context).journal
@@ -1033,7 +1048,7 @@ def _stage_interrupted_live_candidate(
     backup_export_root = _stage_interrupted_verified_candidate(context, candidate_export_root)
     journal_path = GeneratedExportTransactionPaths.for_context(context).journal
     journal = load_generated_export_publication_journal(journal_path)
-    os.replace(journal.candidate_export, context.target_export_root)
+    os.replace(context.target_root.resolve() / journal.candidate_export, context.target_export_root)
     write_generated_export_publication_journal(
         journal_path,
         journal.model_copy(update={"state": "candidate_live"}),

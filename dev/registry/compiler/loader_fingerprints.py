@@ -241,7 +241,10 @@ def _registry_source_fingerprints(resolved: Path) -> RegistryPathFingerprints:
     for path in scan_directory(
         resolved, recursive=True, select=DirectoryEntryKind.FILES, prune_directories=("modelos",)
     ):
-        if path not in covered:
+        # Dot-prefixed root entries are publication bookkeeping (locks,
+        # journals, staged and backup trees) that the loader never reads;
+        # fingerprinting them tied the identity to local process state.
+        if path not in covered and not _is_transient_bookkeeping(path, resolved):
             fingerprints.append(toml_file_fingerprint(path))
     schema_path = resolved / "user_profile" / "schema.toml"
     if schema_path.is_file() and schema_path not in covered:
@@ -278,7 +281,9 @@ def collect_registry_directory_fingerprints(resolved: Path) -> RegistryPathFinge
 
     fingerprints: list[RegistryPathFingerprint] = []
     for dirpath, dirnames, _filenames in os.walk(resolved, onerror=_raise_walk_error):
-        dirnames.sort()
+        # Publication bookkeeping lives directly under the walked root and is
+        # never loaded, so it must not move the identity; deeper entries stay.
+        dirnames[:] = sorted(name for name in dirnames if dirpath != str(resolved) or not name.startswith("."))
         fingerprints.append(_directory_fingerprint(Path(dirpath)))
     return tuple(fingerprints)
 
@@ -293,6 +298,11 @@ def collect_modelo_directory_fingerprints(resolved: Path) -> RegistryPathFingerp
     for path in scan_directory(resolved / "revisions", pattern="*.toml", recursive=True):
         fingerprints.append(toml_file_fingerprint(path))
     return tuple(fingerprints)
+
+
+def _is_transient_bookkeeping(path: Path, resolved: Path) -> bool:
+    """Whether a path sits in a dot-prefixed entry directly under the registry root."""
+    return path.relative_to(resolved).parts[0].startswith(".")
 
 
 def _modelo_directory_fingerprints(entry: Path) -> RegistryPathFingerprints:
