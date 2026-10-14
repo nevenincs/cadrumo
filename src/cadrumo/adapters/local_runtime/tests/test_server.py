@@ -15,6 +15,7 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo.application.runtime.deadline_budget import exchange_deadline
 from cadrumo.application.runtime.profile_access import RuntimeSessionRequest
 
 from ..framing import VerifiedRuntimeConnection
@@ -49,10 +50,11 @@ def server(
 
 
 def connect(endpoint: PosixRuntimeEndpoint | WindowsRuntimeEndpoint, *, version: str = "test-cohort"):
+    # The handshake gets the budget every frontend gives it; none of these tests is about its speed.
     return VerifiedRuntimeConnection(
         endpoint.connect(timeout=2),
         expected=RuntimeClientHello(product_version=version, storage_identity=endpoint.storage_identity),
-        deadline=time.monotonic() + 2,
+        deadline=exchange_deadline(),
     )
 
 
