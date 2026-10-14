@@ -1,11 +1,15 @@
 """Import-light storage root declaration shared by application and development bootstrap.
 
-:data:`STORAGE_ROOT` is the one declaration of the storage root: its variables
-and their precedence, the checkout default, the per-platform installed default,
-the relative-override rule and the refusals. :data:`PROCESS_ENVIRONMENT`
-declares how a child process environment is built from it. Every other module,
-the native contract generator included, reads these values instead of spelling
+:data:`STORAGE_ROOT` is this command line's declaration of its storage root:
+its variables and their precedence, the checkout default, the per-platform
+installed default, the relative-override rule and the refusals.
+:func:`child_environment` builds the environment of a child this command line
+starts itself. Every other Python module reads these values instead of spelling
 a root variable or default.
+
+A packaged image receives its environment from the package that built it, which
+pins the root before Python starts; Python then reads that pin and never
+re-resolves it. Nothing here declares what a package passes to its images.
 
 Mode is decided by where this module lives, never by the working directory,
 ``sys.argv`` or a settings value: beside ``pyproject.toml`` in a source checkout
@@ -80,11 +84,12 @@ STORAGE_PATH_RULES: Final[StoragePathRules] = StoragePathRules(True, True, True,
 
 
 class ChildEnvironmentProfile(StrEnum):
-    """How much of a received environment a child process may keep.
+    """Which of this command line's settings a child it starts takes from its parent.
 
-    ``OPERATOR`` children (CLI passthrough, desktop terminals, profile workers)
-    keep allowlisted operator overrides. ``STRICT`` children (the runtime
-    manager, the KDF worker) keep none and receive only the pinned set.
+    An ``OPERATOR`` child (a profile worker) takes the parent's location
+    settings, so it resolves the same locations. A ``STRICT`` child takes none
+    of them. Both take the parent's registry authority root, so parent and
+    child read one authority generation.
     """
 
     OPERATOR = "operator"
@@ -196,68 +201,8 @@ STORAGE_ROOT: Final[StorageRootDeclaration] = StorageRootDeclaration(
 a native package pins the root for its own channel before Python runs."""
 
 
-class ProcessEnvironmentDeclaration(NamedTuple):
-    """Classes of variables a launcher clears, pins or passes to a child.
-
-    ``cleared_prefixes`` and ``cleared_names`` are removed from every child,
-    as is every ``namespace_prefix`` name and every reserved settings name
-    outside the product allowlist. ``temporary_variables`` are pinned to the
-    child's temporary-files member beside the root variable.
-    ``host_inherited`` names are set by a native host before Python starts and
-    are passed through unchanged in both profiles when the parent received
-    them; ``windows_host_inherited`` adds the names only the Windows host pins.
-    """
-
-    cleared_prefixes: tuple[str, ...]
-    cleared_names: tuple[str, ...]
-    namespace_prefix: str
-    temporary_variables: tuple[str, ...]
-    host_inherited: tuple[str, ...]
-    windows_host_inherited: tuple[str, ...]
-    inherited_fields: tuple[InheritedEnvironmentField, ...]
-
-    def inherited_names(self, platform: StoragePlatform | None) -> tuple[str, ...]:
-        """Host pins a child inherits on ``platform``."""
-        if platform is StoragePlatform.WINDOWS:
-            return (*self.host_inherited, *self.windows_host_inherited)
-        return self.host_inherited
-
-    def inherited_kind(self, name: str) -> InheritedEnvironmentValueKind:
-        """Declared value kind, independent of the variable's spelling."""
-        return next(field.kind for field in self.inherited_fields if field.name == name)
-
-
-class InheritedEnvironmentValueKind(StrEnum):
-    """Path-valued host pins require Unicode/absolute input; opaque values do not."""
-
-    DIRECTORY_PATH = "directory_path"
-    OPAQUE = "opaque"
-
-
-class InheritedEnvironmentField(NamedTuple):
-    """One declared host pin and the eligibility of its value."""
-
-    name: str
-    kind: InheritedEnvironmentValueKind
-
-
-_INHERITED_FIELDS: Final[tuple[InheritedEnvironmentField, ...]] = (
-    InheritedEnvironmentField("CADRUMO_AUTHORITY_ROOT", InheritedEnvironmentValueKind.DIRECTORY_PATH),
-)
-
-
-PROCESS_ENVIRONMENT: Final[ProcessEnvironmentDeclaration] = ProcessEnvironmentDeclaration(
-    cleared_prefixes=("PYTHON", "LD_", "DYLD_"),
-    cleared_names=("VIRTUAL_ENV", "CONDA_PREFIX", "CONDA_DEFAULT_ENV", "__PYVENV_LAUNCHER__"),
-    namespace_prefix=PRODUCT_IDENTITY.environment_prefix,
-    temporary_variables=("TEMP", "TMP", "TMPDIR"),
-    host_inherited=tuple(field.name for field in _INHERITED_FIELDS),
-    # The packaged pywin32 cache resolves from the pinned root through its own
-    # taxonomy member, so the Windows host pins nothing beyond the shared set.
-    windows_host_inherited=(),
-    inherited_fields=_INHERITED_FIELDS,
-)
-"""The one declaration of child-process environment classes."""
+TEMPORARY_VARIABLES: Final[tuple[str, ...]] = ("TEMP", "TMP", "TMPDIR")
+"""The names Python's :mod:`tempfile` reads; a child's scratch is pinned beneath its root through them."""
 
 
 def _refuse(refusal: StorageRootRefusal, message: str) -> NoReturn:
@@ -617,38 +562,24 @@ def prepare_temporary_directory() -> Path:
     return ensure_storage_root(temporary)
 
 
-def product_env_var_names() -> frozenset[str]:
-    """Return the operator overrides a product child may receive.
-
-    The primary root variable plus the settings field of every
-    operator-overridable taxonomy member; ``FIXED`` members carry no variable.
-    The development root variable is honoured only in a checkout and is not a
-    product control.
-    """
-    from .storage_taxonomy import StorageOverridePolicy
-    from .storage_taxonomy_locations import STORAGE_TAXONOMY
-
-    names = {STORAGE_ROOT.variable}
-    names.update(
-        location.settings_field.upper()
-        for location in STORAGE_TAXONOMY.values()
-        if location.override_policy is StorageOverridePolicy.OPERATOR_OVERRIDABLE
-        and (location.settings_field is not None and location.settings_field)
-    )
-    return frozenset(names)
-
-
-def _reserved_setting_names() -> frozenset[str]:
+def _own_setting_names() -> frozenset[str]:
     from .config import Settings
 
     return frozenset(Settings.env_var_names())
 
 
-def _cleared(name: str, *, allowed: frozenset[str], reserved: frozenset[str]) -> bool:
-    declaration = PROCESS_ENVIRONMENT
-    if name.startswith(declaration.cleared_prefixes) or name in declaration.cleared_names:
-        return True
-    return (name.startswith(declaration.namespace_prefix) or name in reserved) and name not in allowed
+def authority_root_setting_names() -> frozenset[str]:
+    """Return the setting that names this command line's registry authority root."""
+    from .config import AuthorityRootSettings
+
+    return frozenset(name.upper() for name in AuthorityRootSettings.model_fields)
+
+
+def relayed_setting_names() -> frozenset[str]:
+    """Return the settings an ``OPERATOR`` child takes from its parent: its locations and its authority root."""
+    from .config import Settings
+
+    return Settings.storage_env_var_names() | authority_root_setting_names()
 
 
 def child_environment(
@@ -659,13 +590,13 @@ def child_environment(
     base: Mapping[str, str] | None = None,
     sys_platform: str | None = None,
 ) -> dict[str, str]:
-    """Build a child environment that inherits ``root`` instead of re-resolving it.
+    """Build the environment of a child this command line starts, inheriting ``root`` instead of re-resolving it.
 
     ``base`` is the ambient set the launcher keeps (by default everything
-    received); the declared classes are cleared from it. An ``OPERATOR`` child
-    also keeps allowlisted overrides from ``received``; a ``STRICT`` child keeps
-    none. Host-inherited pins pass unchanged in both profiles. The root and the
-    temporary variables are then pinned, and the temporary directory created.
+    received). Every setting this command line reads, and every other name
+    under its environment prefix, is removed from it. The child then takes the
+    settings its profile relays from ``received``, the root and the temporary
+    variables are pinned, and the temporary directory is created.
     """
     from .storage_taxonomy import StorageCategory
     from .storage_taxonomy_locations import storage_location
@@ -677,19 +608,18 @@ def child_environment(
     if platform is StoragePlatform.WINDOWS:
         environment_in = {name.upper(): value for name, value in environment_in.items()}
         ambient = {name.upper(): value for name, value in ambient.items()}
-    product = product_env_var_names()
-    allowed = product if profile is ChildEnvironmentProfile.OPERATOR else frozenset[str]()
-    reserved = _reserved_setting_names()
-    environment = {
-        name: value for name, value in ambient.items() if not _cleared(name, allowed=allowed, reserved=reserved)
-    }
-    environment.update({name: value for name, value in environment_in.items() if name in allowed})
-    for name in PROCESS_ENVIRONMENT.inherited_names(platform):
-        if name in environment_in:
-            value = environment_in[name]
-            if PROCESS_ENVIRONMENT.inherited_kind(name) is InheritedEnvironmentValueKind.DIRECTORY_PATH:
-                _normalized_absolute(_host_path_type()(_checked_path_value(value)))
-            environment[name] = value
+    own = _own_setting_names()
+    prefix = PRODUCT_IDENTITY.environment_prefix
+    environment = {name: value for name, value in ambient.items() if not (name.startswith(prefix) or name in own)}
+    authority = authority_root_setting_names()
+    relayed = relayed_setting_names() if profile is ChildEnvironmentProfile.OPERATOR else authority
+    for name in relayed:
+        if name not in environment_in:
+            continue
+        value = environment_in[name]
+        if name in authority:
+            _normalized_absolute(_host_path_type()(_checked_path_value(value)))
+        environment[name] = value
     temporary = storage_location(StorageCategory.TEMPORARY_FILES)
     temporary_value = temporary.relative_path().as_posix()
     if temporary.settings_field is not None and profile is ChildEnvironmentProfile.OPERATOR:
@@ -708,7 +638,7 @@ def child_environment(
     ensure_storage_root(resolved_root)
     ensure_storage_root(temporary_root)
     environment[STORAGE_ROOT.variable] = str(resolved_root)
-    environment.update({name: str(temporary_root) for name in PROCESS_ENVIRONMENT.temporary_variables})
+    environment.update({name: str(temporary_root) for name in TEMPORARY_VARIABLES})
     return environment
 
 

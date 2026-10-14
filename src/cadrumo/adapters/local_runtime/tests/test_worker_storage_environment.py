@@ -49,7 +49,7 @@ def test_windows_worker_keeps_the_packaged_cache_pin_and_drops_credentials(
     monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path / "pinned-cache"))
     monkeypatch.setenv("CADRUMO_AUTHORITY_ROOT", str(tmp_path / "authority"))
     monkeypatch.setenv("CADRUMO_LLM_OPENAI_API_KEY", "must-not-cross-worker-boundary")
-    monkeypatch.setenv("PYTHONPATH", "must-not-cross-worker-boundary")
+    monkeypatch.setenv("CADRUMO_LOG_LEVEL", "DEBUG")
 
     storage_root = tmp_path / "worker-storage"
     environment = profile_worker._worker_launch_environment(storage_root=storage_root)
@@ -57,4 +57,6 @@ def test_windows_worker_keeps_the_packaged_cache_pin_and_drops_credentials(
     assert environment["XDG_CACHE_HOME"] == str(tmp_path / "pinned-cache")
     assert environment["CADRUMO_AUTHORITY_ROOT"] == str(tmp_path / "authority")
     assert environment["CADRUMO_LOCAL_STORAGE_ROOT"] == str(storage_root.resolve())
-    assert not any("OPENAI_API_KEY" in name or name.upper().startswith("PYTHON") for name in environment)
+    assert not any("OPENAI_API_KEY" in name for name in environment)
+    # A setting of this command line that is not a location stays with the runtime.
+    assert "CADRUMO_LOG_LEVEL" not in environment

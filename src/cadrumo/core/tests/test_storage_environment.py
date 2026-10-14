@@ -12,8 +12,8 @@ from ..config import Settings
 from ..config_state_root import default_storage_root, live_state_root_inputs, platform_user_data_root
 from ..errors.hierarchy import CoreValidationError
 from ..storage_environment import (
-    PROCESS_ENVIRONMENT,
     STORAGE_ROOT,
+    TEMPORARY_VARIABLES,
     TOOL_STORAGE_LOCATIONS,
     ChildEnvironmentProfile,
     StorageMode,
@@ -22,7 +22,7 @@ from ..storage_environment import (
     configured_storage_root,
     detect_storage_mode,
     development_tool_env_var_names,
-    product_env_var_names,
+    relayed_setting_names,
     storage_directory,
 )
 from ..storage_taxonomy import (
@@ -130,8 +130,8 @@ def test_checkout_layout_without_marker_is_installed(tmp_path: Path) -> None:
     assert detect_storage_mode(module) == StorageModeEvidence(StorageMode.DEVELOPMENT, tmp_path.resolve())
 
 
-def test_allowlist_split_separates_product_controls_from_development_tools() -> None:
-    product = product_env_var_names()
+def test_location_settings_are_separate_from_development_tools() -> None:
+    product = Settings.storage_env_var_names()
     development = development_tool_env_var_names()
     overridable = {
         location.settings_field.upper()
@@ -146,7 +146,7 @@ def test_allowlist_split_separates_product_controls_from_development_tools() -> 
     assert "CADRUMO_TOOL_CACHE_DIR" in development
     assert not product & development
     assert not {"XDG_CACHE_HOME", "UV_CACHE_DIR"} & (product | development)
-    assert Settings.storage_env_var_names() == product
+    assert relayed_setting_names() == product | {"CADRUMO_AUTHORITY_ROOT"}
 
 
 def test_desktop_webview_member_defaults_beneath_the_root_and_follows_its_setting(tmp_path: Path) -> None:
@@ -184,7 +184,7 @@ def _received(tmp_path: Path) -> dict[str, str]:
     }
 
 
-def test_operator_child_keeps_allowlisted_overrides_and_pins_the_root(tmp_path: Path) -> None:
+def test_operator_child_keeps_its_location_settings_and_pins_the_root(tmp_path: Path) -> None:
     root = tmp_path / "root"
     received = _received(tmp_path)
     environment = child_environment(ChildEnvironmentProfile.OPERATOR, root, received=received, sys_platform="win32")
@@ -197,6 +197,11 @@ def test_operator_child_keeps_allowlisted_overrides_and_pins_the_root(tmp_path: 
         "CADRUMO_LOG_DIR": str(tmp_path / "logs"),
         "CADRUMO_AUTHORITY_ROOT": str(tmp_path / "authority"),
         "XDG_CACHE_HOME": str(tmp_path / "pinned-cache"),
+        # Interpreter and loader names are not settings of this command line;
+        # a packaged image's host defines them, and outside a package they pass.
+        "PYTHONPATH": "must-not-cross",
+        "LD_PRELOAD": "must-not-cross",
+        "VIRTUAL_ENV": "must-not-cross",
         "TEMP": temporary,
         "TMP": temporary,
         "TMPDIR": temporary,
@@ -204,7 +209,7 @@ def test_operator_child_keeps_allowlisted_overrides_and_pins_the_root(tmp_path: 
     assert (root / "worker-temp").is_dir()
 
 
-def test_strict_child_carries_only_pins_and_host_inherited_values(tmp_path: Path) -> None:
+def test_strict_child_carries_only_pins_and_the_authority_root(tmp_path: Path) -> None:
     root = tmp_path / "neutral" / "state"
     received = _received(tmp_path)
     environment = child_environment(
@@ -219,7 +224,15 @@ def test_strict_child_carries_only_pins_and_host_inherited_values(tmp_path: Path
         "TMPDIR": temporary,
     }
     ambient = child_environment(ChildEnvironmentProfile.STRICT, root, received=received, sys_platform="win32")
-    assert set(ambient) == {*environment, "PATH", "SYSTEMROOT", "XDG_CACHE_HOME"}
+    assert set(ambient) == {
+        *environment,
+        "PATH",
+        "SYSTEMROOT",
+        "XDG_CACHE_HOME",
+        "PYTHONPATH",
+        "LD_PRELOAD",
+        "VIRTUAL_ENV",
+    }
     assert ambient["XDG_CACHE_HOME"] == received["XDG_CACHE_HOME"]
 
 
@@ -240,7 +253,7 @@ def test_packaged_pywin32_cache_resolves_beneath_the_root_without_a_host_pin(
 
 
 def test_pinned_names_and_precedence_come_from_the_declaration() -> None:
-    assert (STORAGE_ROOT.variable, *PROCESS_ENVIRONMENT.temporary_variables) == (
+    assert (STORAGE_ROOT.variable, *TEMPORARY_VARIABLES) == (
         "CADRUMO_LOCAL_STORAGE_ROOT",
         "TEMP",
         "TMP",
@@ -275,10 +288,9 @@ def test_child_environment_uses_platform_variable_case_rules(tmp_path: Path, pla
     }
     environment = child_environment(ChildEnvironmentProfile.OPERATOR, root, received=received, sys_platform=platform)
     assert environment[STORAGE_ROOT.variable] == str(root.resolve())
-    assert "DYLD_INSERT_LIBRARIES" not in environment
     if platform == "win32":
-        assert "pythonpath" not in environment and "PYTHONPATH" not in environment
-        assert "DYLD_INSERT_LIBRARIES" not in environment
+        assert "pythonpath" not in environment
+        assert environment["PYTHONPATH"] == "lower-case-value"
         assert environment["PATH"] == "ambient"
         assert environment["CADRUMO_AUTHORITY_ROOT"] == str(tmp_path / "authority-pin")
         assert environment["TEMP"] == str(root / "alternate-temp")
@@ -286,6 +298,7 @@ def test_child_environment_uses_platform_variable_case_rules(tmp_path: Path, pla
     else:
         assert environment["pythonpath"] == "lower-case-value"
         assert environment["dyld_insert_libraries"] == "lower-case-loader"
+        assert environment["DYLD_INSERT_LIBRARIES"] == "blocked-loader"
         assert environment["Path"] == "ambient"
         assert "CADRUMO_AUTHORITY_ROOT" not in environment
         assert environment["TEMP"] == str(root / "tmp")

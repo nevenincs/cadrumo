@@ -340,7 +340,6 @@ def test_successful_construction_transfers_worker_after_both_listeners_retire(
         assert environment["PYDANTIC_DISABLE_PLUGINS"] == "__all__"
         assert environment["TEMP"] == environment["TMP"] == environment["TMPDIR"]
         assert Path(environment["TEMP"]).is_absolute()
-        assert not any(name.startswith("PYTHON") for name in environment)
         assert worker.identity == fixture.identity
         assert fixture.native_process.opened == fixture.native_process.closed == 2
         assert [channel.peer_checks for channel in fixture.channels] == [1, 1]

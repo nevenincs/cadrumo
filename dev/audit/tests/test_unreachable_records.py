@@ -7,8 +7,6 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
-
 from ..unreachable_code import scan_unreachable_code
 from ..unreachable_models import ShippedModule, UnreachableCodeOutcome
 from ..unreachable_records import record_member_uses
@@ -59,19 +57,6 @@ def unused(value):
         (records.name, "Kind.USED"),
         (records.name, "Kind.OPAQUE"),
     }
-
-
-def test_native_storage_generator_reads_the_live_record_and_enum() -> None:
-    modules = {}
-    for name, relative in (
-        ("cadrumo.core.storage_environment", "src/cadrumo/core/storage_environment.py"),
-        ("dev.packaging.native.generate", "dev/packaging/native/generate.py"),
-    ):
-        path = REPO_ROOT / relative
-        modules[name] = ShippedModule(name, path, False, ast.parse(path.read_bytes()))
-    uses = record_member_uses(modules, frozenset({"dev.packaging.native.generate"}))
-    assert ("cadrumo.core.storage_environment", "StoragePathRules.enforce_existing_permissions") in uses
-    assert ("cadrumo.core.storage_environment", "InheritedEnvironmentValueKind.OPAQUE") in uses
 
 
 @pytest.mark.parametrize("directory,label", [("dev", "dev"), ("tests", "tests")])

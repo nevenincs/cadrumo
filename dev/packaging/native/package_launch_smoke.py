@@ -230,13 +230,7 @@ def verify_health(executable: Path, storage_variable: str) -> None:
     temporary = TemporaryDirectory(prefix="cadrumo-package-health-", delete=False)
     with temporary as directory:
         root = Path(directory) / "storage"
-        received = {
-            key: value
-            for key, value in os.environ.items()
-            if key.upper() not in {"CADRUMO_DESKTOP_PACKAGE_ROOT", "CADRUMO_AUTHORITY_ROOT", "CADRUMO_STORAGE_ROOT"}
-            and key.upper() != storage_variable.upper()
-        }
-        environment = child_environment(ChildEnvironmentProfile.STRICT, root, received=received)
+        environment = child_environment(ChildEnvironmentProfile.STRICT, root)
         if environment.get(storage_variable) != str(root):
             raise AssertionError("Package health storage variable does not match the canonical root setting")
         scope = WindowsProcessScope()

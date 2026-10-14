@@ -63,7 +63,6 @@ from .resources.bundled_data import bundled_path
 from .storage_environment import (
     STORAGE_ROOT,
     configured_root_value,
-    product_env_var_names,
     storage_mode,
     storage_root_override,
 )
@@ -989,14 +988,26 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
 
     @classmethod
     def storage_env_var_names(cls) -> frozenset[str]:
-        """Return path controls safe to carry across isolated process launch boundaries.
+        """Return the location settings this command line reads: its root and its relocatable members.
 
-        This is the product allowlist: the primary root variable and the settings field
-        of every operator-overridable taxonomy member. Development tool locations
-        are not product controls; ``dev/`` reads them from
+        These are the primary root variable and the settings field of every
+        operator-overridable taxonomy member; ``FIXED`` members carry no
+        variable, and the development root variable is honoured only in a
+        checkout. Development tool locations are not settings of this command
+        line; ``dev/`` reads them from
         :func:`~cadrumo.core.storage_environment.development_tool_env_var_names`.
         """
-        return product_env_var_names()
+        from .storage_taxonomy import StorageOverridePolicy
+        from .storage_taxonomy_locations import STORAGE_TAXONOMY
+
+        names = {STORAGE_ROOT.variable}
+        names.update(
+            location.settings_field.upper()
+            for location in STORAGE_TAXONOMY.values()
+            if location.override_policy is StorageOverridePolicy.OPERATOR_OVERRIDABLE
+            and (location.settings_field is not None and location.settings_field)
+        )
+        return frozenset(names)
 
     @staticmethod
     def external_constants() -> ExternalConstants:

@@ -17,6 +17,7 @@ from .linux_pidfd import open_linux_pidfd
 from .posix import posix_owner_uid
 from .posix_channel import PosixRuntimeChannel
 from .worker_arguments import validated_worker_arguments
+from .worker_environment import worker_path_environment_names
 
 _PROPERTIES = {
     "ActiveState",
@@ -245,10 +246,8 @@ def _validated_launch_inputs(
     if scope._guardian is not None or not executable.is_absolute() or not directory.is_absolute():
         raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
     selected_arguments = validated_worker_arguments(arguments, worker_script=scope._worker_script)
-    from ...core.config import Settings
-
     baseline = {"PATH": "/usr/bin:/bin", "LANG": "C", "LC_ALL": "C", "PYDANTIC_DISABLE_PLUGINS": "__all__"}
-    allowed_storage = Settings.storage_env_var_names() | {"TEMP", "TMP", "TMPDIR"}
+    allowed_storage = worker_path_environment_names()
     extras = set(environment) - set(baseline)
     if any(environment.get(name) != value for name, value in baseline.items()) or not extras <= allowed_storage:
         raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
