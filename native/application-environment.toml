@@ -361,6 +361,9 @@ refusals = [
 path_rules = { unicode_required = true, normalize_absolute = true, refuse_links = true, enforce_existing_permissions = false }
 channel = { product_directory = "cadrumo", stable = "stable", separator = "-" }
 
+# On Windows the native host asks the shell for the per-user local application data
+# folder (FOLDERID_LocalAppData), which LOCALAPPDATA names for the command line; no
+# variable relocates the host's base there.
 [[root.installed_defaults]]
 platform = "windows"
 candidates = [{ variable = "LOCALAPPDATA", subpath = [] }]
@@ -536,10 +539,13 @@ profile = "agent-worker"
 platform = "all"
 arguments = [{ literal = "-m" }, { literal = "cadrumo_agent.worker" }]
 
+# The Windows supervisor starts the worker without site (-S): that is the exact
+# invocation it sends, so it is the exact invocation declared here.
 [[invocations]]
 profile = "kdf-child"
 platform = "windows"
 arguments = [
+  { literal = "-S" },
   { literal = "-m" },
   { literal = "cadrumo.adapters.persistence.storage.custody._kdf_worker" },
   { literal = "--request-handle" },
@@ -607,7 +613,7 @@ path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Wi
 name = "windows-kdf-child-keeps-its-parent-environment"
 platform = "windows"
 image = "python"
-arguments = ["-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker", "--request-handle", "540", "--result-handle", "548"]
+arguments = ["-S", "-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker", "--request-handle", "540", "--result-handle", "548"]
 ambient = { SYSTEMROOT = "C:\\Windows", NEUTRAL = "kept", CADRUMO_AGENT_PORT = "0", PATH = "C:\\parent" }
 profile = "kdf-child"
 environment = { SYSTEMROOT = "C:\\Windows", NEUTRAL = "kept", CADRUMO_AGENT_PORT = "0", PATH = "C:\\parent" }
@@ -616,7 +622,17 @@ environment = { SYSTEMROOT = "C:\\Windows", NEUTRAL = "kept", CADRUMO_AGENT_PORT
 name = "windows-kdf-near-miss-takes-the-interpreter-profile"
 platform = "windows"
 image = "python"
-arguments = ["-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker", "--request-handle", "540", "--result-handle", "540"]
+arguments = ["-S", "-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker", "--request-handle", "540", "--result-handle", "540"]
+ambient = { SYSTEMROOT = "C:\\Windows", NEUTRAL = "dropped" }
+profile = "python"
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\launch-vector\\state", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "windows-kdf-without-its-site-flag-takes-the-interpreter-profile"
+platform = "windows"
+image = "python"
+arguments = ["-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker", "--request-handle", "540", "--result-handle", "548"]
 ambient = { SYSTEMROOT = "C:\\Windows", NEUTRAL = "dropped" }
 profile = "python"
 environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\launch-vector\\state", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }

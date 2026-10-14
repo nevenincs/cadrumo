@@ -606,14 +606,20 @@ class Probe:
     async def python_image(self) -> Result:
         """The generic interpreter clears agent-only names, composes the declared PATH and pins the default root."""
         contract = self.contract
-        defaults = [rule for rule in contract.document["root"]["installed_defaults"] if rule["platform"] == _platform()]
-        base_variable = defaults[0]["candidates"][0]["variable"]
-        data = self.hosted.parent / "data"
-        data.mkdir()
         root_variable = _folded(contract, contract.document["root"]["variable"])
         environment = {name: value for name, value in os.environ.items() if _folded(contract, name) != root_variable}
         environment.update(dict.fromkeys(contract.agent_only_names, "launch-probe-sentinel"))
-        environment[base_variable] = str(data)
+        if _platform() != "windows":
+            # The POSIX host takes its installed base from the declared variable, so the probe
+            # moves it into its own directory. The Windows host asks the shell for the
+            # per-user local application data folder, which no variable moves; there the
+            # command line's LOCALAPPDATA must name that same folder.
+            defaults = [
+                rule for rule in contract.document["root"]["installed_defaults"] if rule["platform"] == _platform()
+            ]
+            data = self.hosted.parent / "data"
+            data.mkdir()
+            environment[defaults[0]["candidates"][0]["variable"]] = str(data)
         status, standard_output, standard_error = await run_to_end(
             self.launcher.python(["-c", _REPORT_PROGRAM]), environment, cwd=self.hosted, timeout=self.timeout
         )

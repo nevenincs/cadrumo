@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
     assert(error.data != NULL && error.len > 0);
     cadrumo_platform_release(&error);
 #ifdef _WIN32
-    const cadrumo_native_char *kdf[] = {(const cadrumo_native_char *)L"-m",
+    const cadrumo_native_char *kdf[] = {(const cadrumo_native_char *)L"-S", (const cadrumo_native_char *)L"-m",
         (const cadrumo_native_char *)L"cadrumo.adapters.persistence.storage.custody._kdf_worker",
         (const cadrumo_native_char *)L"--request-handle", (const cadrumo_native_char *)L"5",
         (const cadrumo_native_char *)L"--result-handle", (const cadrumo_native_char *)L"6"};
