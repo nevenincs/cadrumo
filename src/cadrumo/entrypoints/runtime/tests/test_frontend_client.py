@@ -30,7 +30,13 @@ from cadrumo.application.user_profile.access_contracts import (
     OsLockState,
     OsLoginContext,
 )
-from cadrumo.application.user_profile.view_operation import ProfileViewOperationRequest, ProfileViewPageKind
+from cadrumo.application.user_profile.view_operation import (
+    PROFILE_VIEW_OPERATION_DEFINITION_ID,
+    ProfileViewOperationRequest,
+    ProfileViewPageKind,
+)
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_location
 
 from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
@@ -125,6 +131,10 @@ def test_verified_frontend_clients_collect_complete_profile_view_streams(tmp_pat
                         if frontend is OperationFrontendProjection.TUI:
                             assert len(collection.items(ProfileViewPageKind.OVERVIEW)) > 0
                         client.lock()
+                # Every page read is ephemeral: none of them left a row in the profile's operation journal.
+                journal = root / storage_location(StorageCategory.OPERATION_JOURNAL).subpath
+                rows = [path for path in journal.glob("*.json")] if journal.is_dir() else []
+                assert not [path for path in rows if PROFILE_VIEW_OPERATION_DEFINITION_ID in path.read_text("utf-8")]
             finally:
                 stop.set()
                 running.result(timeout=15)

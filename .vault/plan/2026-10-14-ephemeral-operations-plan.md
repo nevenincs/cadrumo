@@ -8,7 +8,7 @@ related:
   - '[[2026-08-11-tui-architecture-adr]]'
 modified: '2026-10-14'
 body_schema: body-v2
-body_hash: 'sha256:56d5985d7f02b1ac77569c13cc68cbb889b2ab0b8cf1eee3e1c2c942724eb47d'
+body_hash: 'sha256:22ecb0439cb83cc4faa90d3e0badbfdddee6873acf2b579f908cc959b76df165'
 ---
 
 <!-- LINK RULES:
@@ -127,7 +127,7 @@ Decision coverage: `2026-08-11-tui-architecture-adr` D5 governs. No new costly d
 - [x] `S02` - Route each operation to the in-memory store or the durable journal by its definition's declared durability at create, and by operation id afterwards; keep recovery inventory and idempotency durable-only, and compose the router where the worker builds its supervisor (entrypoints/operation_composition.py:3213-3235, application/operations/composition.py:240); `src/cadrumo/adapters/persistence/operations/durability_router.py, src/cadrumo/entrypoints/operation_composition.py`.
 - [x] `S03` - Serve frontend observe and result-page reads of an ephemeral operation through the composed router, which the observation and result services already read (application/operations/composition.py:297-298), and prove that an operation lost with its process answers both as the typed unknown-operation refusal; `src/cadrumo/adapters/persistence/operations/tests/test_durability_router.py`.
 - [x] `S04` - Declare user-profile.view EPHEMERAL with effect NONE only, no replay and no conflict scope (capabilities.py:98-104; user_profile/operations.py:156), and regenerate the operation contract manifest; `src/cadrumo/application/user_profile/operations.py, src/cadrumo/_data/operations/contract_manifest.json`.
-- [ ] `S05` - Prove it: an ephemeral page read takes zero journal-lock acquisitions and writes no journal file; a durable read is unchanged; a worker ended mid-read leaves no record and no effect and the frontend gets unknown-operation; the docs-sequence profile-view test and the packaged TUI overview read pass under -n 2 with the 60 s view budget unchanged; `src/cadrumo/adapters/persistence/operations/tests, src/cadrumo/entrypoints/runtime/tests, dev/docs/sequences/tests/test_runner.py`.
+- [x] `S05` - Prove it: an ephemeral page read takes zero journal-lock acquisitions and writes no journal file; a durable read is unchanged; a worker ended mid-read leaves no record and no effect and the frontend gets unknown-operation; the docs-sequence profile-view test and the packaged TUI overview read pass under -n 2 with the 60 s view budget unchanged; `src/cadrumo/adapters/persistence/operations/tests, src/cadrumo/entrypoints/runtime/tests, dev/docs/sequences/tests/test_runner.py`.
 
 <!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or
 `L4`) determines the structure under this section:

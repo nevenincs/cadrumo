@@ -5,7 +5,7 @@ tags:
 date: '2026-10-14'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:9c3e6c697216d14cd22acc841edd5b658b3cccd6e3a24df95b342628eaeba7d2'
+body_hash: 'sha256:acc7c7cd4fecf5ec186f5e841161fe006fe7712b256b2203db2e2b6d3658cbc1'
 related:
   - "[[2026-10-14-ephemeral-operations-plan]]"
 ---
@@ -69,8 +69,15 @@ related:
 - `S04` `verify:` `just check-operation-contract-manifest` -> `pass`
 - `S04` `verify:` `pytest src/cadrumo/application/user_profile src/cadrumo/application/operations src/cadrumo/entrypoints/tests/test_operation_contract_manifest.py src/cadrumo/entrypoints/tests/test_operation_catalogue.py` -> `pass`
 - `S04` `by:` `vaultspec-high-executor`
+- `S05` `M` `src/cadrumo/adapters/persistence/operations/tests/test_durability_router.py`
+- `S05` `M` `src/cadrumo/entrypoints/runtime/tests/test_frontend_client.py`
+- `S05` `verify:` `pytest src/cadrumo/adapters/persistence/operations/tests/test_durability_router.py` -> `pass`
+- `S05` `verify:` `pytest src/cadrumo/entrypoints/runtime/tests/test_frontend_client.py` -> `pass`
+- `S05` `verify:` `pytest dev/docs/sequences/tests/test_runner.py -n 2` -> `pass`
+- `S05` `by:` `vaultspec-high-executor`
 
 ## Notes
 
 - `S02` 4 failures in `test_execution_authority.py` and `test_failure_custody_settlement.py` fail identically on HEAD without this Step (caplog record assertions); not caused here
 - `S03` Plan correction: no change to `worker_operation_requests.py` or `_projection_read.py` was needed; both services read through the composed router
+- `S05` Profile-view docs test under -n 2 passed 3 of 3 runs (15.4 s, 13.0 s, 43.6 s; previously failed at the 60 s view budget). check-types reports 1 diagnostic and check-import-boundaries reports stale load targets, both from another session's uncommitted `agent_process.py` / `agent_diagnostics.py;` none in this plan's files. The packaged TUI overview read is not run here: it reads through the same user-profile.view path that `test_frontend_client.py` exercises with the OVERVIEW page.

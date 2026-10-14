@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Generator
+from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -52,6 +54,8 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
 )
 
+from .. import journal as journal_module
+from .. import lease as lease_module
 from ..durability_router import DurabilityRoutedOperationPersistence
 from ..ephemeral_store import EphemeralOperationStore
 from ..journal import OperationJournalRepository
@@ -248,3 +252,51 @@ async def test_frontends_read_an_ephemeral_result_and_after_its_process_ends_lea
     )
     assert isinstance(refused, OperationResultProjectionRefusalV1)
     assert refused.code is OperationResultProjectionRefusalCode.UNKNOWN_OPERATION
+
+
+@pytest.mark.asyncio
+async def test_an_ephemeral_read_takes_the_journal_lock_zero_times_and_a_recorded_one_still_takes_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    storage_root = tmp_path / "synthetic-state"
+    persistence = _router(storage_root)
+    supervisor = OperationSupervisor(
+        registry=_registry(),
+        authority_operation=unread_authority_operation(),
+        journal=persistence,
+        event_stream=persistence,
+        leases=persistence,
+        operands=persistence,
+        owner_id="1" * 64,
+        lease_token_factory=lambda: "2" * 64,
+        clock=lambda: datetime.now(UTC),
+        lease_duration=timedelta(minutes=1),
+        ephemeral=persistence,
+    )
+    acquisitions: list[Path] = []
+    real_lock = journal_module.exclusive_file_lock
+
+    @contextmanager
+    def counted_lock(target: Path) -> Generator[Path]:
+        acquisitions.append(target)
+        with real_lock(target) as held:
+            yield held
+
+    # Both durable adapters take the journal root's one lock through these module references.
+    monkeypatch.setattr(journal_module, "exclusive_file_lock", counted_lock)
+    monkeypatch.setattr(lease_module, "exclusive_file_lock", counted_lock)
+    try:
+        counts = {}
+        for definition_id in (_EPHEMERAL, _RECORDED):
+            before = len(acquisitions)
+            operation_id = await supervisor.submit(
+                OperationRequest[BaseModel](definition_id=definition_id, subject_ref="synthetic", payload=_Request())
+            )
+            await supervisor.start(operation_id)
+            await asyncio.wait_for(supervisor.settled(operation_id), timeout=10)
+            await persistence.read_observation(operation_id, 0, limit=32)
+            counts[definition_id] = len(acquisitions) - before
+    finally:
+        await supervisor.shutdown()
+    assert counts[_EPHEMERAL] == 0, counts
+    assert counts[_RECORDED] > 0, counts
