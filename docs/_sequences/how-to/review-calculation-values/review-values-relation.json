@@ -234,7 +234,7 @@
             "renta-profile-taxpayer-birth-date": "1985-06-15",
             "renta-profile-unidad-familiar-otros-miembros-base": "0"
           },
-          "calculation_revision_id": "aae2986b1dcc64b4c9ec961e437990b19b38367c04cd83c1d1efa66ef1946e2a",
+          "calculation_revision_id": "7fa68f3b23eaf48b12e9e4bb847140f67e472c679527785e6c59e36aa2978404",
           "casilla_values": {
             "0002": "0",
             "0003": "24000",
@@ -4169,7 +4169,7 @@
             {"casilla_id":"0586","label":"Increased net regional tax liability","role":"key_figure","value":"1616.62"}
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision aae2986b1dcc64b4c9ec961e437990b19b38367c04cd83c1d1efa66ef1946e2a (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 7fa68f3b23eaf48b12e9e4bb847140f67e472c679527785e6c59e36aa2978404 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "previous_filing",

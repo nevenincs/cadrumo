@@ -77,6 +77,7 @@
         "notices": [],
         "result": {
           "code": "130",
+          "filing_period": null,
           "filing_year": null,
           "formula_count": 12,
           "operation": "modelo.formulas",
