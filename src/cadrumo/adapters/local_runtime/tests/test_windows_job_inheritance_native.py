@@ -83,12 +83,12 @@ def test_inheritable_sentinel_is_detected_in_control_and_absent_in_job_child(tmp
         assert child.wait(timeout=10) == 0
         absent = WindowsHandleProbe.model_validate_json(child_path.read_bytes())
         assert absent.process.pid == child.pid
-        # A child can reuse the parent's numeric handle slot for a different
-        # object. The event operation and unchanged original event establish
-        # absence of this sentinel even when that slot is valid in the child.
-        assert absent.handle_flags is None or absent.handle_flags & 1 == 0
+        # A child can reuse the parent's numeric handle slot for one of its own
+        # objects: an inheritable handle of its own, or an event that SetEvent
+        # then signals (success) instead of refusing (ERROR_INVALID_HANDLE).
+        # Only the unchanged original event establishes absence of this sentinel.
         assert absent.lookup_error in (0, 6)
-        assert absent.signal_error == 6  # ERROR_INVALID_HANDLE
+        assert absent.signal_error in (0, 6)
         assert win32event.WaitForSingleObject(sentinel, 0) == win32event.WAIT_TIMEOUT
         assert win32api.GetHandleInformation(sentinel) & 1
     finally:
