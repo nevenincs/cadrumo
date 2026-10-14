@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import sys
 from collections.abc import Callable, Generator
 from concurrent.futures import Future
 from contextlib import contextmanager, suppress
@@ -22,6 +21,7 @@ from ...core.async_cleanup import AsyncResourceCleanupError, close_async_resourc
 from ...core.click_context import json_output_requested
 from ...core.errors.hierarchy import CadrumoError
 from ...core.i18n.render import tr
+from ...core.tty import stderr_is_tty, stdin_is_tty
 
 _CONTEXT_KEY = "cadrumo.cli.runtime_profile_client"
 _NOTICE_KEY = "cadrumo.cli.runtime_notice_clients"
@@ -118,7 +118,7 @@ def bind_profile_client(ctx: typer.Context, client: RuntimeFrontendClient, *, pr
 
 def subscribe_profile_notices(ctx: typer.Context, client: RuntimeFrontendClient) -> None:
     """Attach human-only presentation before authentication, once per invocation client."""
-    if not json_output_requested() and sys.stdin.isatty() and sys.stderr.isatty():
+    if not json_output_requested() and stdin_is_tty() and stderr_is_tty():
         subscriptions = ctx.meta.setdefault(_NOTICE_KEY, _NoticeSubscriptions())
         if not isinstance(subscriptions, _NoticeSubscriptions):
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)

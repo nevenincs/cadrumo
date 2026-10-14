@@ -1,5 +1,6 @@
 """Attended lifecycle notices use human stderr without changing machine output."""
 
+import sys
 from collections.abc import Callable
 from typing import override
 from uuid import uuid4
@@ -38,8 +39,8 @@ def test_cli_notice_never_contaminates_json_or_unattended_output(
 ) -> None:
     client = NoticeClient()
     monkeypatch.setattr(binding, "json_output_requested", lambda: machine)
-    monkeypatch.setattr(binding.sys.stdin, "isatty", lambda: terminal)
-    monkeypatch.setattr(binding.sys.stderr, "isatty", lambda: terminal)
+    monkeypatch.setattr(sys.stdin, "isatty", lambda: terminal)
+    monkeypatch.setattr(sys.stderr, "isatty", lambda: terminal)
     monkeypatch.setattr(binding, "_release_profile_client", lambda *_: None)
     context = typer.Context(typer.main.TyperCommand(name="notice"))
     with context:
