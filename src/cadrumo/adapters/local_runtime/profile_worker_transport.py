@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import time
 from threading import RLock
 from uuid import UUID, uuid4
@@ -30,6 +31,8 @@ from ...application.runtime.worker_authorization import AUTHORITY_SECTION_MAXIMU
 from ...application.user_profile.access_contracts import AccessDenialCode, AccessSession
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.automation_custody_port import AutomationCustodyError
+from ...core.diagnostic_log import diagnostic_error_fields, diagnostic_event
+from ...core.logging import get_logger
 from ...domain.provider_settings.catalog import ProviderCatalog
 from .linux_worker_process import LinuxProcessScope
 from .macos_worker_process import MacosProcessScope
@@ -49,6 +52,8 @@ from .worker_transport import WorkerChannel
 _OPERATION_EXCHANGE_SECONDS = AUTHORITY_SECTION_MAXIMUM_SECONDS + 15
 _CONTROL_EXCHANGE_SECONDS = 10
 
+_LOGGER = get_logger(__name__)
+
 
 class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
     """Own the worker capability while retaining native custody and deadlines."""
@@ -64,6 +69,7 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
     ) -> Result:
         lock = self._operation_lock if operation else self._lock
         acquired = False
+        started = time.monotonic()
         try:
             _acquire_exchange_lock(lock, deadline)
             acquired = True
@@ -80,6 +86,20 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
             # No frame was sent when a caller merely timed out waiting for
             # this shared channel. Keep other sessions' worker alive.
             if acquired:
+                # Retiring ends the worker and every session and operation it holds: say which exchange did it.
+                diagnostic_event(
+                    _LOGGER,
+                    "profile_worker_exchange_failed",
+                    fields={
+                        "request": type(request.root).__name__,
+                        "operation_channel": operation,
+                        "elapsed_seconds": round(time.monotonic() - started, 3),
+                        "budget_seconds": None if deadline is None else round(deadline - started, 3),
+                        **diagnostic_error_fields(error),
+                    },
+                    level=logging.WARNING,
+                    primary_error=error,
+                )
                 self._retire_failed_exchange(error, deadline)
             raise
         finally:

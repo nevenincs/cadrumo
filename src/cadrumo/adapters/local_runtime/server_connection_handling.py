@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import time
 from threading import BoundedSemaphore, Event, RLock
 from uuid import uuid4
@@ -173,6 +174,8 @@ class RuntimeConnectionHandling:
                 _LOGGER,
                 "runtime_connection_refused",
                 fields={"reason": error.reason.value, **diagnostic_error_fields(error)},
+                # A peer that closes its connection is the ordinary end of every command.
+                level=logging.DEBUG if error.reason is RuntimeRefusalCode.CONNECTION_CLOSED else logging.INFO,
             )
             return
         except BaseException as error:
