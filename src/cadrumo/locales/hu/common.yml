@@ -2842,6 +2842,9 @@ tui:
         xlsx: Excel-munkafüzet
       provider_label: Kivonat formátuma
       refusal:
+        empty_directory: a mappában nincs importálható kivonatfájl
+        file_limit: az importálás több fájlt tartalmaz, mint amennyit egy importálás
+          elfogad, ezért egyiket sem olvastuk be; importálj egyszerre kevesebbet
         own_account_mismatch: a kivonat más számlát nevez meg, mint amit választottál
         result_limit: az importálás e fájl előtt elérte a sorkorlátot
         source_changed: a fájl az előnézet után megváltozott, ezért semmi sem került

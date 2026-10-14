@@ -154,19 +154,21 @@ def _session_not_persisted_notice(outcome: ProfileLoginOutcome) -> Notice:
     from ....core.profile_session import KeychainUnavailability
 
     keychain = profile_session_keychain_unavailability()
-    message_key = {
-        None: "cli.config.login.notices.session_not_persisted_unconfirmed",
-        KeychainUnavailability.LOGON_WITHOUT_CREDENTIALS: "cli.config.login.notices.session_not_persisted_logon",
-        KeychainUnavailability.NO_BACKEND: "cli.config.login.notices.session_not_persisted_no_backend",
-        KeychainUnavailability.REFUSED: "cli.config.login.notices.session_not_persisted",
-    }[keychain]
+    if keychain is None:
+        message = tr("cli.config.login.notices.session_not_persisted_unconfirmed")
+    elif keychain is KeychainUnavailability.LOGON_WITHOUT_CREDENTIALS:
+        message = tr("cli.config.login.notices.session_not_persisted_logon")
+    elif keychain is KeychainUnavailability.NO_BACKEND:
+        message = tr("cli.config.login.notices.session_not_persisted_no_backend")
+    else:
+        message = tr("cli.config.login.notices.session_not_persisted")
     context: dict[str, str] = {"profile_id": outcome.bucket_id}
     if keychain is not None:
         context["keychain"] = keychain.value
     return Notice(
         severity=NoticeSeverity.WARNING,
         code="config.login.session_not_persisted",
-        message=tr(message_key),
+        message=message,
         context=context,
     )
 

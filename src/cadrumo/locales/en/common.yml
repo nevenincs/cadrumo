@@ -2786,6 +2786,9 @@ tui:
         xlsx: Excel workbook
       provider_label: Statement format
       refusal:
+        empty_directory: the folder holds no statement file that can be imported
+        file_limit: the import names more files than one import takes, so none was
+          read; import fewer at a time
         own_account_mismatch: the statement names a different account than the one
           you chose
         result_limit: the import reached its row limit before this file

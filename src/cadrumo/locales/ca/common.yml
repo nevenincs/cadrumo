@@ -2852,6 +2852,9 @@ tui:
         xlsx: Llibre d'Excel
       provider_label: Format de l'extracte
       refusal:
+        empty_directory: la carpeta no conté cap extracte que es pugui importar
+        file_limit: la importació inclou més fitxers dels que admet una sola importació,
+          així que no se n'ha llegit cap; importa'n menys alhora
         own_account_mismatch: l'extracte indica un compte diferent del que has triat
         result_limit: la importació ha arribat al límit de files abans d'aquest fitxer
         source_changed: el fitxer ha canviat després de la previsualització i no se

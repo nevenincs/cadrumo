@@ -2862,6 +2862,9 @@ tui:
         xlsx: Libro de Excel
       provider_label: Formato del extracto
       refusal:
+        empty_directory: la carpeta no contiene ningún extracto que se pueda importar
+        file_limit: la importación incluye más ficheros de los que admite una sola
+          importación, así que no se leyó ninguno; importa menos a la vez
         own_account_mismatch: el extracto indica otra cuenta distinta de la que elegiste
         result_limit: la importación alcanzó su límite de filas antes de este fichero
         source_changed: el fichero cambió después de la previsualización y no se importó

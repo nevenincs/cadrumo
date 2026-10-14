@@ -126,9 +126,11 @@ def pointer_repair_refusal(
     request confirms it.
     """
     if named is not None and named[1].bucket_id != resolve_active_bucket_id():
-        return ProfileRepairRefusal("cli.config.repair.profile_clear_active_mismatch", context={"profile": named[0]})
+        return ProfileRepairRefusal(
+            message_key="cli.config.repair.profile_clear_active_mismatch", context={"profile": named[0]}
+        )
     if clear_active and not confirmed:
-        return ProfileRepairRefusal("cli.config.repair.profile_requires_yes")
+        return ProfileRepairRefusal(message_key="cli.config.repair.profile_requires_yes")
     return None
 
 
