@@ -140,10 +140,15 @@ def _list_in_words(items: Sequence[str]) -> str:
 
 
 def _argument_text(argument: InvocationArgument) -> str:
-    """Spell one invocation argument: a literal as itself, a typed value as ``<slot:kind>``."""
+    """Spell one invocation argument.
+
+    A literal is itself, a typed value is ``<slot:kind>`` and an option, an optional flag with its typed value,
+    is ``[--flag <slot:kind>]``.
+    """
     if argument.literal is not None:
         return argument.literal
-    return f"<{argument.slot}:{argument.kind}>"
+    value = f"<{argument.slot}:{argument.kind}>"
+    return value if argument.option is None else f"[{argument.option} {value}]"
 
 
 def _invocation_text(invocation: Invocation) -> str:
@@ -306,7 +311,12 @@ def render_installed_package(declaration: ApplicationEnvironment, settings_names
         "Python starts: a `directory` is an existing absolute directory, a `port` is an integer from 0 to 65535, "
         "an `executable` is an existing absolute file that is not a batch file, and a `descriptor` is a positive "
         "integer. Any other kind must be non-empty. In an invocation, `<name:kind>` stands for a value the host "
-        "checks by kind: a `handle` is a Windows handle number and a `descriptor` is a file descriptor number.",
+        "checks by kind: a `handle` is a Windows handle number, a `descriptor` is a file descriptor number and a "
+        "`revision` is opaque text of 1 to 128 ASCII letters, digits, underscores, dots and hyphens that starts "
+        "with a letter, a digit or an underscore. `[--flag <name:kind>]` stands for an option that is either "
+        "present with its value or absent. Options come last, in the order shown, each at most once; an unknown "
+        "flag, a flag without a valid value, a reordered flag or a trailing argument leaves the invocation "
+        "undeclared.",
         "",
     ]
     for name, profile in declaration.profiles.items():

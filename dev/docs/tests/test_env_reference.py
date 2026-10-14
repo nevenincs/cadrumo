@@ -196,6 +196,29 @@ def test_the_installed_package_section_follows_the_declaration() -> None:
     assert planted_name not in render_installed_package(declaration, ())
 
 
+def test_every_declared_invocation_is_spelled_on_its_profiles_section_with_its_options_marked_optional() -> None:
+    """A profile's section lists each invocation that selects it; an option reads ``[--flag <slot:kind>]``."""
+    declaration = _declaration()
+    page = render_environment_reference()
+    for invocation in declaration.invocations:
+        spelled = " ".join(
+            argument.literal
+            if argument.literal is not None
+            else f"<{argument.slot}:{argument.kind}>"
+            if argument.option is None
+            else f"[{argument.option} <{argument.slot}:{argument.kind}>]"
+            for argument in invocation.arguments
+        )
+        assert f"`{spelled}`" in _profile_text(page, invocation.profile), (invocation.profile, spelled)
+    gateway = _profile_text(page, "agent-gateway")
+    assert "`-m cadrumo_agent.cli.main version --json`" in gateway
+    assert (
+        "`-m cadrumo_agent.cli.main migrate [--expect-from <expected_from:revision>] "
+        "[--expect-head <expected_head:revision>]`" in gateway
+    )
+    assert "`[--flag <name:kind>]` stands for an option" in page
+
+
 def test_names_the_settings_table_lists_are_not_repeated_among_package_only_names() -> None:
     """The package-only table holds exactly the declared names the settings model does not read."""
     declaration = _declaration()

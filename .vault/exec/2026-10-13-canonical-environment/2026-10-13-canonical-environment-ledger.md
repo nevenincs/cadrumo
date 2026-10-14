@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:1a0b898b21df11b1e7a8d7f8953533b96a909a3fb703464f24eccc1d5f59da66'
+body_hash: 'sha256:09b2595e55935cf300c35381c7cb7dbe37ace3a0fbf44c1c25431af0f7c47a39'
 related:
   - "[[2026-10-13-canonical-environment-plan]]"
 ---
@@ -293,6 +293,29 @@ related:
 - `S15` `verify:` `uv run --no-sync ruff check dev/docs, ruff format --check and ty check on dev/docs/env_reference.py and its test` -> `pass`
 - `S15` `verify:` `uv run --no-sync pytest dev/docs/tests/test_env_reference.py::test_generated_page_is_fresh against the working tree` -> `fail`
 - `S15` `by:` `implementation-engineer-standard`
+- `S17` `M` `native/application-environment.toml`
+- `S17` `M` `dev/packaging/native/application_environment.py`
+- `S17` `M` `native/platform/src/launch.rs`
+- `S17` `M` `native/platform/src/conformance_tests.rs`
+- `S17` `M` `native/platform/tests/consumer.c`
+- `S17` `M` `dev/packaging/native/tests/test_application_environment.py`
+- `S17` `M` `dev/packaging/native/tests/test_launch_profile_vectors.py`
+- `S17` `M` `dev/packaging/native/tests/test_agent_image.py`
+- `S17` `M` `dev/packaging/native/tests/test_environment_launch_probe.py`
+- `S17` `M` `dev/packaging/native/tests/stand_in_launch.py`
+- `S17` `M` `native/tests/environment_launch_probe.py`
+- `S17` `M` `native/CONTRACT.md`
+- `S17` `M` `dev/docs/env_reference.py`
+- `S17` `M` `dev/docs/tests/test_env_reference.py`
+- `S17` `M` `docs/reference/environment-overrides.md`
+- `S17` `verify:` `uv run --no-sync pytest the touched packaging, docs and guard suites: test_application_environment, test_generator_imports, test_launch_profile_vectors, test_agent_image, test_environment_conformance, test_environment_launch_probe, test_native_storage_environment_contract, test_env_reference, test_agent_prefix_spelling, test_no_git_cli (299 passed)` -> `pass`
+- `S17` `verify:` `cargo test native/platform on windows (50 passed; replays every generated launch vector and the exported ABI refusal)` -> `pass`
+- `S17` `verify:` `cargo clippy --all-targets -D warnings native/platform on windows, x86_64 and aarch64 linux and aarch64 macos, native/manager on windows, and cargo fmt --check` -> `pass`
+- `S17` `verify:` `cl /W4 /WX on native/platform/tests/consumer.c, compiled and linked (the binary runs only in a package layout)` -> `pass`
+- `S17` `verify:` `launch probe against the real cadrumo-agent checkout through the stand-in host: undeclared invocation, agent stores, hosted gateway refusal, worker and generic interpreter all ok` -> `pass`
+- `S17` `verify:` `just check-style, just check-format and just check-import-boundaries` -> `pass`
+- `S17` `verify:` `just check-types (15 diagnostics, all in src/cadrumo/adapters/persistence/operations/tests, other sessions; none in this Step's files)` -> `fail`
+- `S17` `by:` `implementation-engineer-standard`
 
 ## Notes
 
@@ -334,3 +357,7 @@ related:
 - `S14` The PATH check covers the generic interpreter image only: it is the one image that runs caller code to report its environment. The agent images are covered by the launch-profile vectors.
 - `S15` Freshness test fails in the working tree only because of the native lane's uncommitted edits to native/application-environment.toml (six agent invocations, an option argument); the committed page is generated from HEAD's committed declaration and the P05.S17 owner regenerates it, with the option renderer, after its invocation-table commit.
 - `S15` just check-import-boundaries reports unavailable: 15 of 15 contracts kept, 0 hard findings, but the cadrumo load-target inventory is stale and the governed tree changed during the run, both from other sessions' new modules `(store_lifecycle.py` and others). just check-types leaves diagnostics in other sessions' files and `dev/packaging/native/tests/test_agent_image.py;` its one diagnostic in `dev/docs/env_reference.py` is fixed. `dev/quality/tests/test_doc_privacy.py` fails on home paths in .vault records, none in the touched files.
+- `S17` The four store and version invocations select the agent-gateway profile, not a copy: the ADR says they run in the gateway's environment, the runtime composes one environment for them and serve, and the probe and the conformance check already treat every non-gateway profile of the image as the worker.
+- `S17` Pattern language: an option argument, an optional flag followed by one typed value, present whole or absent, read left to right with no backtracking; options trail every other argument, are distinct and ordered, and a flag without a valid value leaves the invocation undeclared. The new revision kind is opaque ASCII, 1 to 128 of letters, digits, underscore, dot and hyphen, not starting with a dot or hyphen. The matcher lives in native/platform (Rust) and the Python reference; the C hosts only forward argv to `cadrumo_platform_define` and needed no change, so native/interpreter is untouched and consumer.c gained an ABI refusal check.
+- `S17` Not run here: the POSIX C host test platform.invocation (no POSIX C toolchain on this host) and the desktop crate (it references none of the changed structs; the manager crate passed clippy). The package CTest bundle.environment-launch still waits on a built bundle.
+- `S17` The coordinator widened this Step to the docs generator: `dev/docs/env_reference.py` spells an option as `[--flag` `<slot:kind>]` and the page was regenerated, not hand-edited. native/CONTRACT.md gained the pattern language and the six invocations.

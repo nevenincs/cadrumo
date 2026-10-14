@@ -119,8 +119,35 @@ fn decimal(text: &str) -> Option<u64> {
     text.parse().ok()
 }
 
-fn argument_value(kind: &str, minimum: u64, text: &OsStr) -> Option<u64> {
-    let value = decimal(text.to_str()?)?;
+/// Whether `text` is an opaque revision: 1 to 128 ASCII letters, digits, underscores, dots
+/// and hyphens that starts with a letter, a digit or an underscore, so it cannot read as a
+/// flag or a path.
+fn revision(text: &str) -> bool {
+    let bytes = text.as_bytes();
+    let Some((first, rest)) = bytes.split_first() else {
+        return false;
+    };
+    bytes.len() <= 128
+        && (first.is_ascii_alphanumeric() || *first == b'_')
+        && rest
+            .iter()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'.' | b'-'))
+}
+
+/// A typed argument that satisfied its declared kind.
+enum Bound {
+    /// A handle or descriptor number, which a declared pair may compare.
+    Number(u64),
+    /// An opaque revision, which is only checked.
+    Revision,
+}
+
+fn bind(kind: &str, minimum: u64, text: &OsStr) -> Option<Bound> {
+    let text = text.to_str()?;
+    if kind == "revision" {
+        return revision(text).then_some(Bound::Revision);
+    }
+    let value = decimal(text)?;
     let maximum = match kind {
         // A Windows HANDLE serialized by its supervisor; the all-ones value is invalid.
         "handle" => usize::MAX as u64 - 1,
@@ -128,36 +155,55 @@ fn argument_value(kind: &str, minimum: u64, text: &OsStr) -> Option<u64> {
         "descriptor" => i32::MAX as u64,
         _ => return None,
     };
-    (value >= minimum.max(1) && value <= maximum).then_some(value)
+    (value >= minimum.max(1) && value <= maximum).then_some(Bound::Number(value))
 }
 
+/// Whether `arguments` is exactly the pattern `invocation` declares.
+///
+/// Arguments are read left to right with no backtracking. A literal and a typed value each
+/// take one argument. An option takes two when its flag is the next argument, and then
+/// needs a valid value; otherwise it is skipped. Every argument must be consumed.
 fn invocation_matches(invocation: &LaunchInvocation, arguments: &[OsString]) -> bool {
-    if invocation.arguments.len() != arguments.len() {
-        return false;
-    }
     let mut values = BTreeMap::new();
-    for (declared, actual) in invocation.arguments.iter().zip(arguments) {
-        match (declared.literal, declared.slot, declared.kind) {
-            (Some(literal), _, _) if actual.as_os_str() == literal => {}
-            (None, Some(slot), Some(kind)) => {
-                match argument_value(kind, declared.minimum, actual) {
-                    Some(value) => {
-                        values.insert(slot, value);
-                    }
-                    None => return false,
-                }
+    let mut cursor = 0;
+    for declared in invocation.arguments {
+        let mut actual = arguments.get(cursor);
+        if let Some(literal) = declared.literal {
+            if actual.is_none_or(|actual| actual.as_os_str() != literal) {
+                return false;
             }
-            _ => return false,
+            cursor += 1;
+            continue;
         }
+        let (Some(slot), Some(kind)) = (declared.slot, declared.kind) else {
+            return false;
+        };
+        if let Some(option) = declared.option {
+            if actual.is_none_or(|actual| actual.as_os_str() != option) {
+                continue;
+            }
+            cursor += 1;
+            actual = arguments.get(cursor);
+        }
+        match actual.and_then(|actual| bind(kind, declared.minimum, actual)) {
+            Some(Bound::Number(value)) => {
+                values.insert(slot, value);
+            }
+            Some(Bound::Revision) => {}
+            None => return false,
+        }
+        cursor += 1;
     }
-    invocation
-        .distinct
-        .iter()
-        .all(|(left, right)| values[left] != values[right])
+    let holds = |(left, right): &(&str, &str), test: fn(u64, u64) -> bool| matches!((values.get(left), values.get(right)), (Some(a), Some(b)) if test(*a, *b));
+    cursor == arguments.len()
+        && invocation
+            .distinct
+            .iter()
+            .all(|names| holds(names, |a, b| a != b))
         && invocation
             .greater
             .iter()
-            .all(|(larger, smaller)| values[larger] > values[smaller])
+            .all(|names| holds(names, |a, b| a > b))
 }
 
 /// Select the profile `image` applies to `arguments` (the arguments after the image's path).
@@ -608,6 +654,170 @@ mod tests {
         padded[slots[0]] = OsString::from(format!("0{}", arguments[slots[0]].to_string_lossy()));
         assert_eq!(select("python", &padded).unwrap().name, "python");
         assert_eq!(select("python", &arguments[1..]).unwrap().name, "python");
+    }
+
+    fn agent_arguments(arguments: &[&str]) -> Vec<OsString> {
+        ["-m", "cadrumo_agent.cli.main"]
+            .iter()
+            .chain(arguments)
+            .map(OsString::from)
+            .collect()
+    }
+
+    fn agent_selects(arguments: &[OsString]) -> Option<&'static str> {
+        select("cadrumo-agent", arguments)
+            .ok()
+            .map(|profile| profile.name)
+    }
+
+    #[test]
+    fn the_agent_store_and_version_invocations_run_in_the_gateways_profile() {
+        let longest = "a".repeat(128);
+        for admitted in [
+            vec!["serve"],
+            vec!["stores-state"],
+            vec!["setup"],
+            vec!["version", "--json"],
+            vec!["migrate"],
+            vec!["migrate", "--expect-from", "0001"],
+            vec!["migrate", "--expect-head", "0002_next.revision-x"],
+            vec!["migrate", "--expect-from", "_0001", "--expect-head", "0002"],
+            vec!["migrate", "--expect-from", longest.as_str()],
+        ] {
+            assert_eq!(
+                agent_selects(&agent_arguments(&admitted)),
+                Some("agent-gateway"),
+                "{admitted:?}"
+            );
+        }
+        let worker = ["-m", "cadrumo_agent.worker"].map(OsString::from);
+        assert_eq!(agent_selects(&worker), Some("agent-worker"));
+    }
+
+    #[test]
+    fn the_agent_image_refuses_every_other_arrangement_of_those_invocations() {
+        let too_long = "a".repeat(129);
+        let mut refused: Vec<Vec<OsString>> = [
+            // An extra, missing, reordered or unknown argument.
+            vec![],
+            vec!["status"],
+            vec!["stores-state", "--json"],
+            vec!["setup", "--app-home", "elsewhere"],
+            vec!["version"],
+            vec!["version", "--text"],
+            vec!["version", "--json", "extra"],
+            vec!["--json", "version"],
+            vec!["serve", "--port", "0"],
+            // A migrate option that is unknown, repeated, reordered, missing its value or malformed.
+            vec!["migrate", "--compact"],
+            vec!["migrate", "--expect-from"],
+            vec!["migrate", "--expect-head"],
+            vec!["migrate", "--expect-from", "--expect-head", "0002"],
+            vec!["migrate", "--expect-from", "0001", "--expect-head"],
+            vec!["migrate", "--expect-head", "0002", "--expect-from", "0001"],
+            vec!["migrate", "--expect-from", "0001", "--expect-from", "0002"],
+            vec!["migrate", "--expect-from=0001"],
+            vec!["migrate", "0001"],
+            vec![
+                "migrate",
+                "--expect-from",
+                "0001",
+                "--expect-head",
+                "0002",
+                "extra",
+            ],
+            vec!["migrate", "--expect-from", ""],
+            vec!["migrate", "--expect-from", "-0001"],
+            vec!["migrate", "--expect-from", ".hidden"],
+            vec!["migrate", "--expect-from", "0001 0002"],
+            vec!["migrate", "--expect-from", "0001;rm"],
+            vec!["migrate", "--expect-from", "a/b"],
+            vec!["migrate", "--expect-from", too_long.as_str()],
+            vec!["migrate", "--expect-from", "r\u{e9}f"],
+        ]
+        .iter()
+        .map(|arguments| agent_arguments(arguments))
+        .collect();
+        refused.push(
+            ["cadrumo_agent.cli.main", "-m", "setup"]
+                .map(OsString::from)
+                .to_vec(),
+        );
+        refused.push(["-c", "print(1)"].map(OsString::from).to_vec());
+        refused.push(
+            ["-m", "cadrumo_agent.worker", "extra"]
+                .map(OsString::from)
+                .to_vec(),
+        );
+        let mut unreadable = agent_arguments(&["migrate", "--expect-from"]);
+        unreadable.push(crate::conformance_tests::invalid_unicode());
+        refused.push(unreadable);
+        for arguments in refused {
+            assert!(
+                matches!(
+                    select("cadrumo-agent", &arguments),
+                    Err(DefineError::Refused(LaunchRefusal::Undeclared(
+                        "cadrumo-agent"
+                    )))
+                ),
+                "{arguments:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_revision_is_bounded_ascii_that_cannot_read_as_a_flag() {
+        for valid in ["0", "a", "_", "0001_initial", "a.b-c_d", &"z".repeat(128)] {
+            assert!(revision(valid), "{valid}");
+        }
+        for invalid in [
+            "",
+            "-a",
+            ".a",
+            "a b",
+            "a/b",
+            "a\\b",
+            "a=b",
+            "a\n",
+            "r\u{e9}f",
+            &"z".repeat(129),
+        ] {
+            assert!(!revision(invalid), "{invalid:?}");
+        }
+        assert!(bind("revision", 0, OsStr::new("0001")).is_some());
+        assert!(bind("revision", 0, &crate::conformance_tests::invalid_unicode()).is_none());
+        assert!(bind("unknown", 0, OsStr::new("0001")).is_none());
+    }
+
+    #[test]
+    fn a_comparison_over_an_absent_option_never_matches_and_never_panics() {
+        // The generator compares only required numbers; a hand-built pair over an option must still not panic.
+        const ARGUMENTS: &[crate::LaunchArgument] = &[
+            crate::LaunchArgument {
+                literal: Some("-m"),
+                option: None,
+                slot: None,
+                kind: None,
+                minimum: 0,
+            },
+            crate::LaunchArgument {
+                literal: None,
+                option: Some("--other"),
+                slot: Some("other"),
+                kind: Some("descriptor"),
+                minimum: 1,
+            },
+        ];
+        let invocation = LaunchInvocation {
+            profile: "kdf-child",
+            image: "python",
+            arguments: ARGUMENTS,
+            distinct: &[("other", "missing")],
+            greater: &[],
+        };
+        assert!(!invocation_matches(&invocation, &[OsString::from("-m")]));
+        let given = ["-m", "--other", "4"].map(OsString::from);
+        assert!(!invocation_matches(&invocation, &given));
     }
 
     #[test]

@@ -183,6 +183,61 @@ fn abi_paths_preserve_utf8_bytes_and_provider_owned_buffer_lifetime() {
     }
 }
 
+/// Native, NUL-terminated spellings of `arguments`, as a C host passes them.
+fn native_arguments(arguments: &[&str]) -> Vec<Vec<NativeChar>> {
+    arguments
+        .iter()
+        .map(|argument| {
+            #[cfg(windows)]
+            {
+                argument.encode_utf16().chain(Some(0)).collect()
+            }
+            #[cfg(unix)]
+            {
+                argument
+                    .bytes()
+                    .map(|byte| byte as std::ffi::c_char)
+                    .chain(Some(0))
+                    .collect()
+            }
+        })
+        .collect()
+}
+
+#[test]
+fn abi_refuses_an_undeclared_agent_arrangement_with_the_one_declared_line_and_defines_nothing() {
+    let mut context = Context {
+        paths: vec![PathBuf::from("package")],
+    };
+    let line = br#"{"native_refusal":"invocation_undeclared","subject":"cadrumo-agent"}"#;
+    let module = ["-m", "cadrumo_agent.cli.main"];
+    for tail in [
+        vec!["migrate", "--expect-from"],
+        vec!["migrate", "--expect-head", "0002", "--expect-from", "0001"],
+        vec!["migrate", "--expect-from", "0001;rm"],
+        vec!["stores-state", "extra"],
+    ] {
+        let arguments: Vec<&str> = module.iter().copied().chain(tail.iter().copied()).collect();
+        let owned = native_arguments(&arguments);
+        let pointers: Vec<*const NativeChar> =
+            owned.iter().map(|argument| argument.as_ptr()).collect();
+        let mut error = empty_buffer();
+        let status = unsafe {
+            cadrumo_platform_define(
+                &mut context,
+                c"cadrumo-agent".as_ptr(),
+                pointers.len() as u32,
+                pointers.as_ptr(),
+                &mut error,
+            )
+        };
+        assert_eq!(status, 4, "{arguments:?}");
+        let written = unsafe { std::slice::from_raw_parts(error.data, error.len as usize) };
+        assert_eq!(written, line, "{arguments:?}");
+        unsafe { cadrumo_platform_release(&mut error) };
+    }
+}
+
 #[test]
 fn abi_bad_path_key_returns_invalid_argument_with_empty_output() {
     let mut context = Context { paths: vec![] };

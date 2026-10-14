@@ -73,11 +73,53 @@ _MALFORMED = {
     "missing-section": _without(_SOURCE, 'external = "CADRUMO_EXTERNAL_BIN_DIRS"\n'),
 }
 
+_FROM = '{ option = "--expect-from", slot = "expected_from", kind = "revision" }'
+_HEAD = '{ option = "--expect-head", slot = "expected_head", kind = "revision" }'
+# Each planted defect in the optional-argument syntax, with the reason the declaration is refused for it.
+_MALFORMED_OPTIONS = {
+    "option-takes-a-number": (
+        _SOURCE.replace(_FROM, _FROM.replace('"revision" }', '"descriptor" }'), 1),
+        "option kind",
+    ),
+    "option-is-not-a-flag": (_SOURCE.replace(_FROM, _FROM.replace("--expect-from", "expect-from"), 1), "double-dash"),
+    "option-with-a-minimum": (_SOURCE.replace(_FROM, _FROM.replace(" }", ", minimum = 1 }"), 1), "unknown"),
+    "option-flag-repeated": (_SOURCE.replace(_HEAD, _HEAD.replace("--expect-head", "--expect-from"), 1), "distinct"),
+    "option-flag-is-a-literal": (
+        _SOURCE.replace('{ literal = "migrate" },', '{ literal = "migrate" },\n  { literal = "--expect-from" },', 1),
+        "distinct",
+    ),
+    "argument-after-the-options": (
+        _SOURCE.replace(_HEAD + ",", _HEAD + ',\n  { literal = "trailing" },', 1),
+        "options must follow",
+    ),
+    "pair-over-an-option-slot": (
+        _SOURCE.replace(_HEAD + ",\n]\n", _HEAD + ',\n]\ndistinct = [["expected_from", "expected_head"]]\n', 1),
+        "declared argument slots",
+    ),
+    "revision-with-a-minimum": (
+        _SOURCE + '\n[[invocations]]\nprofile = "agent-gateway"\nplatform = "all"\n'
+        'arguments = [{ literal = "-m" }, { slot = "revision", kind = "revision", minimum = 2 }]\n',
+        "numeric",
+    ),
+    "identical-pattern-for-another-profile": (
+        _SOURCE + '\n[[invocations]]\nprofile = "agent-worker"\nplatform = "all"\n'
+        'arguments = [{ literal = "-m" }, { literal = "cadrumo_agent.cli.main" }, { literal = "serve" }]\n',
+        "share one image and argument pattern",
+    ),
+}
+
 
 @pytest.mark.parametrize("text", list(_MALFORMED.values()), ids=list(_MALFORMED))
 def test_a_malformed_declaration_is_refused(text: str) -> None:
     assert text != _SOURCE
     with pytest.raises(ApplicationEnvironmentError):
+        parse(text)
+
+
+@pytest.mark.parametrize(("text", "reason"), list(_MALFORMED_OPTIONS.values()), ids=list(_MALFORMED_OPTIONS))
+def test_a_malformed_optional_argument_is_refused_for_its_reason(text: str, reason: str) -> None:
+    assert text != _SOURCE
+    with pytest.raises(ApplicationEnvironmentError, match=reason):
         parse(text)
 
 

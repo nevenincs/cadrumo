@@ -51,7 +51,7 @@ def lookup(name):
     return None
 
 
-if faults.get("refuse") and image != "python":
+if faults.get("refuse") and image != "python" and faults.get("only", "") in ("", *arguments):
     refuse(*faults["refuse"])
 try:
     profile = reference_select(declaration, family, image, arguments)
@@ -131,7 +131,7 @@ def serve():
         raise SystemExit(1)
     if MODE == "hang":
         time.sleep(3600)
-    if not (root / "stores.marker").exists():
+    if MODE == "stores_mismatch" or not (root / "stores.marker").exists():
         _refuse("hosted_stores_mismatch")
     if MODE == "proof_policy":
         _refuse("hosted_proof_policy")
@@ -144,13 +144,26 @@ def serve():
 
 def main(argv=None, standalone_mode=True):
     arguments = list(sys.argv[1:] if argv is None else argv)
-    if arguments == ["setup"]:
+    if arguments == ["stores-state"]:
         root = _root()
         if root is None:
             raise SystemExit(1)
+        state = "current" if (root / "stores.marker").exists() else "absent"
+        if MODE == "garbled_state":
+            state = "weird"
+        _emit({"state": state, "primary": {"state": state}, "checkpoint": {"state": state}})
+        return
+    if arguments == ["setup"]:
+        root = _root()
+        if root is None or MODE == "setup_fails":
+            _emit({"status": "failed"})
+            raise SystemExit(1)
         if MODE != "no_setup":
             (root / "stores.marker").write_text("current", encoding="utf-8")
-        sys.stdout.write(json.dumps({"status": "succeeded"}) + "\\n")
+        _emit({"status": "succeeded"})
+        return
+    if arguments == ["version", "--json"]:
+        _emit({"package_version": "0", "api_version": "v1"})
         return
     if arguments == ["serve"]:
         serve()
@@ -203,7 +216,12 @@ class StandIn:
     agent_names: dict[str, str]
 
     def agent_mode(self, mode: str) -> None:
-        """Make the stand-in agent answer ``mode``: unproven, ready, no_setup, proof_policy, crash or hang."""
+        """Make the stand-in agent answer ``mode``.
+
+        One of unproven, ready, proof_policy, crash, hang, no_setup (setup succeeds and leaves the stores absent),
+        setup_fails (setup exits 1), garbled_state (stores-state names no state) or stores_mismatch (the stores
+        read current and serve refuses them anyway).
+        """
         (self.stub / "mode.txt").write_text(mode, encoding="utf-8")
 
     def host_faults(self, **faults: object) -> None:

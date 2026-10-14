@@ -29,7 +29,9 @@ NAME_KINDS = frozenset(
     }
 )
 NAME_ROLES = frozenset({"location", "operator", "package", "pin", "fixed", "slot", "pass"})
-ARGUMENT_KINDS = frozenset({"handle", "descriptor"})
+NUMERIC_ARGUMENT_KINDS = frozenset({"handle", "descriptor"})
+ARGUMENT_KINDS = NUMERIC_ARGUMENT_KINDS | {"revision"}
+OPTION_KINDS = frozenset({"revision"})
 BASE_GROUPS = ("system", "session", "terminal", "display", "network")
 PLATFORMS = ("windows", "posix")
 PATH_ENTRIES = frozenset({"executable", "external", "native", "system"})
@@ -43,6 +45,9 @@ _PROFILE = re.compile(r"[a-z][a-z0-9]*(-[a-z0-9]+)*")
 _SLOT = re.compile(r"[a-z][a-z0-9_]*")
 # Literal arguments become C and Rust string literals; keep them printable ASCII without quotes.
 _LITERAL = re.compile(r"[A-Za-z0-9_.:/=+-]+")
+_OPTION = re.compile(r"--[a-z][a-z0-9]*(-[a-z0-9]+)*")
+# An opaque revision is bounded printable ASCII that cannot be read as an option or a path.
+_REVISION = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}")
 
 
 class ApplicationEnvironmentError(ValueError):
@@ -86,12 +91,13 @@ class LaunchProfile:
 
 @dataclass(frozen=True)
 class InvocationArgument:
-    """One position of an invocation: an exact literal or a typed value."""
+    """One position of an invocation: an exact literal, a typed value or an optional flag with a typed value."""
 
     literal: str | None
     slot: str | None
     kind: str | None
     minimum: int
+    option: str | None = None
 
 
 @dataclass(frozen=True)
@@ -218,11 +224,27 @@ def _argument(raw: object, where: str) -> InvocationArgument:
         if not isinstance(entry["literal"], str) or not _LITERAL.fullmatch(entry["literal"]):
             raise _fail(f"{where} literal is malformed")
         return InvocationArgument(literal=entry["literal"], slot=None, kind=None, minimum=0)
+    if "option" in entry:
+        # An option is an optional flag followed by one typed value; the pair is present whole or absent.
+        _keys(entry, where, {"option", "slot", "kind"})
+        if not isinstance(entry["option"], str) or not _OPTION.fullmatch(entry["option"]):
+            raise _fail(f"{where} option must be a lower-case double-dash flag")
+        if not isinstance(entry["slot"], str) or not _SLOT.fullmatch(entry["slot"]):
+            raise _fail(f"{where} slot is malformed")
+        if entry["kind"] not in OPTION_KINDS:
+            raise _fail(f"{where} option kind must be one of {sorted(OPTION_KINDS)}")
+        return InvocationArgument(
+            literal=None, slot=entry["slot"], kind=entry["kind"], minimum=0, option=entry["option"]
+        )
     _keys(entry, where, {"slot", "kind"}, {"minimum"})
     if not isinstance(entry["slot"], str) or not _SLOT.fullmatch(entry["slot"]):
         raise _fail(f"{where} slot is malformed")
     if entry["kind"] not in ARGUMENT_KINDS:
         raise _fail(f"{where} has an undeclared argument kind {entry['kind']!r}")
+    if entry["kind"] not in NUMERIC_ARGUMENT_KINDS:
+        if "minimum" in entry:
+            raise _fail(f"{where} minimum applies only to a numeric argument")
+        return InvocationArgument(literal=None, slot=entry["slot"], kind=entry["kind"], minimum=0)
     minimum = entry.get("minimum", 1)
     if not isinstance(minimum, int) or isinstance(minimum, bool) or minimum < 1:
         raise _fail(f"{where} minimum must be a positive integer")
@@ -238,6 +260,17 @@ def _pairs(raw: object, where: str, slots: set[str]) -> tuple[tuple[str, str], .
             raise _fail(f"{where} must pair two distinct declared argument slots: {pair!r}")
         pairs.append((pair[0], pair[1]))
     return tuple(pairs)
+
+
+def _options_trail(arguments: Sequence[InvocationArgument], where: str) -> None:
+    """Hold the options to the end, each flag distinct, so that reading them left to right is unambiguous."""
+    tail = [argument for argument in arguments if argument.option is not None]
+    if arguments[len(arguments) - len(tail) :] != tuple(tail):
+        raise _fail(f"{where} options must follow every other argument")
+    flags = [argument.option for argument in tail if argument.option is not None]
+    literals = {argument.literal for argument in arguments if argument.literal is not None}
+    if len(flags) != len(set(flags)) or literals & set(flags):
+        raise _fail(f"{where} option flags must be distinct from each other and from every literal")
 
 
 def _invocations(raw: object) -> tuple[Invocation, ...]:
@@ -257,16 +290,23 @@ def _invocations(raw: object) -> tuple[Invocation, ...]:
         )
         if arguments[0].literal is None:
             raise _fail(f"{where} must start with a literal argument")
+        _options_trail(arguments, where)
         slots = [argument.slot for argument in arguments if argument.slot is not None]
         if len(slots) != len(set(slots)):
             raise _fail(f"{where} repeats an argument slot")
+        # Only a required numeric value is always present, so only it can be compared with another.
+        comparable = {
+            argument.slot
+            for argument in arguments
+            if argument.slot is not None and argument.option is None and argument.kind in NUMERIC_ARGUMENT_KINDS
+        }
         invocations.append(
             Invocation(
                 profile=str(entry["profile"]),
                 platform=entry["platform"],
                 arguments=arguments,
-                distinct=_pairs(entry.get("distinct", []), f"{where}.distinct", set(slots)),
-                greater=_pairs(entry.get("greater", []), f"{where}.greater", set(slots)),
+                distinct=_pairs(entry.get("distinct", []), f"{where}.distinct", comparable),
+                greater=_pairs(entry.get("greater", []), f"{where}.greater", comparable),
             )
         )
     return tuple(invocations)
@@ -821,6 +861,13 @@ def _package_relative(layout: Mapping[str, Any], key: str) -> str:
     return str(layout["paths"][key])
 
 
+def _compiled_argument(argument: InvocationArgument) -> dict[str, Any]:
+    if argument.literal is not None:
+        return {"literal": argument.literal}
+    typed = {"slot": argument.slot, "kind": argument.kind, "minimum": argument.minimum}
+    return typed if argument.option is None else {"option": argument.option, **typed}
+
+
 def compile_section(declaration: ApplicationEnvironment, layout: Mapping[str, Any]) -> dict[str, Any]:
     """Resolve the declaration for one build target into the contract's JSON section."""
     family = _platform_family(layout)
@@ -861,12 +908,7 @@ def compile_section(declaration: ApplicationEnvironment, layout: Mapping[str, An
         {
             "profile": invocation.profile,
             "image": declaration.profiles[invocation.profile]["image"],
-            "arguments": [
-                {"literal": argument.literal}
-                if argument.literal is not None
-                else {"slot": argument.slot, "kind": argument.kind, "minimum": argument.minimum}
-                for argument in invocation.arguments
-            ],
+            "arguments": [_compiled_argument(argument) for argument in invocation.arguments],
             "distinct": [list(pair) for pair in invocation.distinct],
             "greater": [list(pair) for pair in invocation.greater],
         }
@@ -928,6 +970,19 @@ def _rust_pairs(values: Sequence[Sequence[str]]) -> str:
     return "&[" + ", ".join(f"({_rust_string(a)}, {_rust_string(b)})" for a, b in values) + "]"
 
 
+def _rust_argument(argument: Mapping[str, Any]) -> str:
+    if "literal" in argument:
+        return (
+            f"LaunchArgument {{ literal: Some({_rust_string(argument['literal'])}), option: None, "
+            "slot: None, kind: None, minimum: 0 }"
+        )
+    option = f"Some({_rust_string(argument['option'])})" if "option" in argument else "None"
+    return (
+        f"LaunchArgument {{ literal: None, option: {option}, slot: Some({_rust_string(argument['slot'])}), "
+        f"kind: Some({_rust_string(argument['kind'])}), minimum: {argument['minimum']} }}"
+    )
+
+
 def rust_lines(section: Mapping[str, Any]) -> list[str]:
     """Emit the compiled launch profiles and invocation tables as Rust constants."""
     lines = [
@@ -946,8 +1001,8 @@ def rust_lines(section: Mapping[str, Any]) -> list[str]:
         "    pub slots: &'static [LaunchSlot],",
         "    pub package_path: bool,",
         "}",
-        "pub struct LaunchArgument { pub literal: Option<&'static str>, pub slot: Option<&'static str>, "
-        "pub kind: Option<&'static str>, pub minimum: u64 }",
+        "pub struct LaunchArgument { pub literal: Option<&'static str>, pub option: Option<&'static str>, "
+        "pub slot: Option<&'static str>, pub kind: Option<&'static str>, pub minimum: u64 }",
         "pub struct LaunchInvocation {",
         "    pub profile: &'static str,",
         "    pub image: &'static str,",
@@ -1005,14 +1060,7 @@ def rust_lines(section: Mapping[str, Any]) -> list[str]:
     lines.append("];")
     lines.append("pub const LAUNCH_INVOCATIONS: &[LaunchInvocation] = &[")
     for invocation in section["invocations"]:
-        arguments = ", ".join(
-            f"LaunchArgument {{ literal: Some({_rust_string(argument['literal'])}), "
-            "slot: None, kind: None, minimum: 0 }"
-            if "literal" in argument
-            else f"LaunchArgument {{ literal: None, slot: Some({_rust_string(argument['slot'])}), "
-            f"kind: Some({_rust_string(argument['kind'])}), minimum: {argument['minimum']} }}"
-            for argument in invocation["arguments"]
-        )
+        arguments = ", ".join(_rust_argument(argument) for argument in invocation["arguments"])
         lines.append(
             f"    LaunchInvocation {{ profile: {_rust_string(invocation['profile'])}, "
             f"image: {_rust_string(invocation['image'])}, arguments: &[{arguments}], "
@@ -1065,31 +1113,51 @@ class LaunchRefusedError(Exception):
         self.subject = subject
 
 
-def _argument_value(kind: str, minimum: int, text: str, family: str) -> int | None:
+def _argument_value(kind: str, minimum: int, text: str, family: str) -> int | str | None:
+    """Bind an argument to its kind: a number for a handle or descriptor, the text for a revision, else ``None``."""
+    if kind == "revision":
+        return text if _REVISION.fullmatch(text) else None
     if not text.isascii() or not text.isdigit() or (text.startswith("0") and len(text) > 1):
         return None
     value = int(text)
     maximum = (1 << 64) - 2 if kind == "handle" else (1 << 31) - 1
-    if kind not in ARGUMENT_KINDS or (kind == "handle") != (family == "windows"):
+    if kind not in NUMERIC_ARGUMENT_KINDS or (kind == "handle") != (family == "windows"):
         return None
     return value if max(minimum, 1) <= value <= maximum else None
 
 
 def _invocation_matches(invocation: Invocation, arguments: Sequence[str], family: str) -> bool:
-    if len(invocation.arguments) != len(arguments):
-        return False
+    """Match arguments left to right, with no backtracking.
+
+    A literal and a typed value each take one argument. An option takes two when its flag is the next argument
+    and then needs a valid value; otherwise it is skipped. Every argument must be consumed.
+    """
     values: dict[str, int] = {}
-    for declared, actual in zip(invocation.arguments, arguments, strict=True):
+    cursor = 0
+    for declared in invocation.arguments:
+        actual = arguments[cursor] if cursor < len(arguments) else None
         if declared.literal is not None:
-            if declared.literal != actual:
+            if actual != declared.literal:
                 return False
+            cursor += 1
             continue
-        value = _argument_value(str(declared.kind), declared.minimum, actual, family)
-        if value is None or declared.slot is None:
+        if declared.option is not None:
+            if actual != declared.option:
+                continue
+            actual = arguments[cursor + 1] if cursor + 1 < len(arguments) else None
+            cursor += 1
+        if actual is None or declared.slot is None:
             return False
-        values[declared.slot] = value
-    return all(values[a] != values[b] for a, b in invocation.distinct) and all(
-        values[a] > values[b] for a, b in invocation.greater
+        value = _argument_value(str(declared.kind), declared.minimum, actual, family)
+        if value is None:
+            return False
+        if isinstance(value, int):
+            values[declared.slot] = value
+        cursor += 1
+    return (
+        cursor == len(arguments)
+        and all(values[a] != values[b] for a, b in invocation.distinct)
+        and all(values[a] > values[b] for a, b in invocation.greater)
     )
 
 

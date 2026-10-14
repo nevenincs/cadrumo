@@ -8,8 +8,11 @@ The probe starts programs from the package, never from a checkout:
 
 * The agent image, given an invocation its launch profiles do not declare, exits with the native host's
   launch-profile status after writing the one refusal line the runtime reads.
-* The agent gateway, started through the runtime's own composer with a hosted environment in a root the probe
-  owns and the runtime's own empty credential frame, answers on the hosting protocol. Until the agent records
+* The agent image's own store invocations, run in the environment the runtime composes for the gateway,
+  bring a synthetic hosted root to ``current``: ``stores-state`` answers, ``setup`` succeeds, and
+  ``stores-state`` then reads ``current``.
+* The agent gateway, started through the runtime's own composer with a hosted environment in that root and
+  the runtime's own empty credential frame, answers on the hosting protocol. Until the agent records
   the proofs its hosted tool server needs, the answer is the refusal ``hosted_tool_server_unproven``, which
   also proves the gateway received its hosted root. Once the proofs exist the answer is ``agent_ready``.
 * The agent worker, started through the image's worker invocation, reports the port it bound.
@@ -56,7 +59,7 @@ _STANDARD_ERROR_BYTES: Final = 8192
 _UNPROVEN: Final = "hosted_tool_server_unproven"
 _UNDECLARED_ARGUMENTS: Final = ("-c", "pass")
 _SETUP_ADVICE: Final = {
-    "hosted_stores_mismatch": "the probe's setup step did not leave the hosted root's stores current",
+    "hosted_stores_mismatch": "the image's setup invocation left stores the gateway still refuses",
     "hosted_proof_policy": "the proof policy reaching the gateway is not the one a hosted root takes",
     "hosted_settings_file": "a settings file reached the gateway beside the hosted root",
     "hosted_terminal_program": "a retired program setting reached the gateway",
@@ -66,12 +69,9 @@ _SETUP_ADVICE: Final = {
     "hosted_bind_failed": "the gateway could not bind its listening port",
     "hosted_start_failed": "the gateway stopped before it reported ready",
 }
-_SETUP_PROGRAM: Final = (
-    "import json, os, sys\n"
-    "os.environ.update(json.loads(sys.argv[1]))\n"
-    "from cadrumo_agent.cli.main import main\n"
-    "main(['setup'], standalone_mode=False)\n"
-)
+_STORE_VERBS: Final = ("stores-state", "setup")
+_STORES_STATES: Final = frozenset({"absent", "older", "current", "newer"})
+_SETUP_STATUSES: Final = frozenset({"succeeded", "already-initialized"})
 _REPORT_PROGRAM: Final = (
     "import json, os\n"
     "from cadrumo.core.storage_environment import host_installed_default_root\n"
@@ -91,7 +91,6 @@ class SetupError(ProbeFailedError):
 class AgentNames:
     """The environment names the agent reads for the settings the probe supplies, as the agent spells them."""
 
-    hosted_root: str
     worker_port: str
     gateway_url: str
     worker_host: str
@@ -102,7 +101,6 @@ class AgentNames:
     def from_resolver(cls, resolve: Callable[[str], str]) -> AgentNames:
         """Ask the agent for the name of each setting; it is the only place that spells them."""
         return cls(
-            hosted_root=resolve("hosted_root"),
             worker_port=resolve("worker_port"),
             gateway_url=resolve("gateway_url"),
             worker_host=resolve("worker_host"),
@@ -150,6 +148,8 @@ class Contract:
     gateway: Mapping[str, Any]
     worker: Mapping[str, Any]
     worker_arguments: tuple[str, ...]
+    stores_state_arguments: tuple[str, ...]
+    setup_arguments: tuple[str, ...]
     agent_only_names: frozenset[str]
 
     @property
@@ -170,7 +170,7 @@ def _literals(invocation: Mapping[str, Any]) -> tuple[str | None, ...]:
 
 
 def read_contract(package: Path, document: Mapping[str, Any]) -> Contract:
-    """Resolve the agent image, its two profiles and the runtime's relay from the generated contract."""
+    """Resolve the agent image, its gateway and worker profiles, its store invocations and the runtime's relay."""
     layout, section = document["layout"], document["application_environment"]
     bundled = list(layout["bundled_images"])
     if len(bundled) != 1:
@@ -179,21 +179,34 @@ def read_contract(package: Path, document: Mapping[str, Any]) -> Contract:
     native, suffix = package / layout["paths"]["native"], layout["entrypoint_suffix"]
     profiles = {profile["name"]: profile for profile in section["profiles"]}
     own = [profile for profile in profiles.values() if profile["image"] == name]
-    invocations = {
-        invocation["profile"]: tuple(_literals(invocation))
+    invocations = [
+        (str(invocation["profile"]), _literals(invocation))
         for invocation in section["invocations"]
         if invocation["image"] == name
-    }
-    gateway = [profile for profile in own if invocations.get(profile["name"]) == tuple(GATEWAY_ARGUMENTS)]
-    worker = [profile for profile in own if profile not in gateway]
-    if len(gateway) != 1 or len(worker) != 1:
+    ]
+    gateways = {profile for profile, literals in invocations if literals == tuple(GATEWAY_ARGUMENTS)}
+    workers = {profile["name"] for profile in own} - gateways
+    if len(gateways) != 1 or len(workers) != 1:
+        selected = {
+            profile["name"]: [lit for chosen, lit in invocations if chosen == profile["name"]] for profile in own
+        }
         raise SetupError(
             f"the package's {name} profiles are not one gateway invocation {list(GATEWAY_ARGUMENTS)} and one other: "
-            f"{ {profile['name']: invocations.get(profile['name']) for profile in own} }"
+            f"{selected}"
         )
-    worker_arguments = invocations[worker[0]["name"]]
-    if any(argument is None for argument in worker_arguments):
-        raise SetupError("the worker invocation has a typed argument; the probe cannot spell it")
+    gateway_name, worker_name = next(iter(gateways)), next(iter(workers))
+    worker_arguments = [literals for chosen, literals in invocations if chosen == worker_name]
+    if len(worker_arguments) != 1 or any(argument is None for argument in worker_arguments[0]):
+        raise SetupError(
+            "the worker profile is not selected by one invocation of literal arguments the probe can spell"
+        )
+    # The store invocations run in the gateway's environment, so they must select the gateway's profile.
+    stores = {}
+    for verb in _STORE_VERBS:
+        arguments = (*GATEWAY_ARGUMENTS[:-1], verb)
+        if (gateway_name, arguments) not in invocations:
+            raise SetupError(f"the package's {name} image does not declare {list(arguments)} in the gateway's profile")
+        stores[verb] = arguments
     fixed = {value["name"]: value for profile in profiles.values() for value in profile["fixed"]}
     relay = fixed.get(PACKAGE_RELAY_VARIABLE)
     agent = fixed.get(PACKAGE_AGENT_VARIABLE)
@@ -212,9 +225,11 @@ def read_contract(package: Path, document: Mapping[str, Any]) -> Contract:
         image_name=name,
         image_path=native / f"{name}{suffix}",
         relay_path=native / f"{relay['value']}{suffix}",
-        gateway=gateway[0],
-        worker=worker[0],
-        worker_arguments=tuple(str(argument) for argument in worker_arguments),
+        gateway=profiles[gateway_name],
+        worker=profiles[worker_name],
+        worker_arguments=tuple(str(argument) for argument in worker_arguments[0]),
+        stores_state_arguments=stores["stores-state"],
+        setup_arguments=stores["setup"],
         agent_only_names=frozenset(agent_only),
     )
 
@@ -423,6 +438,7 @@ class Probe:
         self.contract, self.names, self.launcher, self.timeout = contract, names, launcher, timeout
         self.worker_wait = worker_wait
         self.hosted, self.storage = work / "hosted", work / "storage"
+        self._stores: Result | ProbeFailedError | None = None
         self.hosted.mkdir()
         self.storage.mkdir()
 
@@ -452,23 +468,61 @@ class Probe:
             )
         return Result("undeclared invocation", f"exit {status}, {line}")
 
-    async def _set_up_hosted_root(self) -> None:
-        """Make the hosted root's stores current with the agent's own setup step, as a host does for a new root."""
-        program = self.launcher.python(["-c", _SETUP_PROGRAM, json.dumps({self.names.hosted_root: str(self.hosted)})])
+    async def _store_step(self, arguments: Sequence[str]) -> tuple[int, dict[str, Any]]:
+        """Run one of the image's own store invocations in the gateway's environment; return its status and answer."""
         status, standard_output, standard_error = await run_to_end(
-            program, os.environ, cwd=self.hosted, timeout=self.timeout
+            self.launcher.image(self.contract.image_path, arguments),
+            self._composed(),
+            cwd=self.hosted,
+            timeout=self.timeout,
         )
+        refusal = native_launch_refusal_from(standard_error) if status != 0 else None
+        if refusal is not None and refusal.code is not None:
+            raise ProbeFailedError(
+                f"the host refused the {arguments[-1]} launch before Python started: "
+                f"{refusal.code.value} ({refusal.subject})"
+            )
         try:
             answer = json.loads(standard_output)
         except ValueError:
-            answer = {}
-        if status != 0 or answer.get("status") != "succeeded":
-            tail = standard_error.decode("utf-8", "replace").strip().splitlines()[-1:]
-            raise SetupError(f"the agent's setup step did not succeed (exit {status}): {answer or tail}")
+            answer = None
+        return status, answer if isinstance(answer, dict) else {}
+
+    async def _stores_state(self) -> str:
+        """Ask the image for the synthetic hosted root's stores state; it must answer with one of the four states."""
+        status, answer = await self._store_step(self.contract.stores_state_arguments)
+        state = answer.get("state")
+        if status != 0 or state not in _STORES_STATES:
+            raise ProbeFailedError(f"stores-state did not answer with a state (exit {status}): {sorted(answer)}")
+        return str(state)
+
+    async def stores(self) -> Result:
+        """The image's own store invocations bring the synthetic hosted root to current, as a host does."""
+        if self._stores is None:
+            try:
+                self._stores = await self._bring_stores_current()
+            except ProbeFailedError as failure:
+                self._stores = failure
+        if isinstance(self._stores, ProbeFailedError):
+            raise self._stores
+        return self._stores
+
+    async def _bring_stores_current(self) -> Result:
+        before = await self._stores_state()
+        status, answer = await self._store_step(self.contract.setup_arguments)
+        if status != 0 or answer.get("status") not in _SETUP_STATUSES:
+            raise ProbeFailedError(f"setup did not succeed (exit {status}): status {answer.get('status')!r}")
+        after = await self._stores_state()
+        if after != "current":
+            raise ProbeFailedError(f"stores-state reads {after!r} after setup; a hosted serve needs current")
+        return Result("agent stores", f"stores-state answered {before!r}; setup succeeded; stores-state reads current")
 
     async def gateway(self) -> Result:
         """A hosted gateway given the runtime's empty frame refuses as unproven, or reports ready, and is stopped."""
-        await self._set_up_hosted_root()
+        try:
+            await self.stores()
+        except ProbeFailedError as failure:
+            raise SetupError(f"the hosted root's stores could not be made current: {failure}") from failure
         frame = build_credential_frame({})
         running = await Running.start(
             self.launcher.image(self.contract.image_path, GATEWAY_ARGUMENTS),
@@ -608,6 +662,7 @@ async def run_probe(
         results: list[Result] = []
         checks = (
             ("undeclared invocation", probe.undeclared_invocation),
+            ("agent stores", probe.stores),
             ("hosted gateway", probe.gateway),
             ("worker", probe.worker),
             ("generic interpreter", probe.python_image),

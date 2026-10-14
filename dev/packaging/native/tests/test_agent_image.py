@@ -1,4 +1,4 @@
-"""The bundled agent image: declared by the package, built from the interpreter host, admitting two invocations."""
+"""The bundled agent image: declared by the package, built from the interpreter host, admitting six invocations."""
 
 from __future__ import annotations
 
@@ -51,25 +51,61 @@ def test_the_layout_refuses_a_malformed_bundled_image(declared: dict[str, object
         bundled_images(layout)
 
 
+def _literals(*values: str) -> list[dict[str, str]]:
+    return [{"literal": value} for value in values]
+
+
+def _revision_option(flag: str, slot: str) -> dict[str, object]:
+    return {"option": flag, "slot": slot, "kind": "revision", "minimum": 0}
+
+
+_MODULE = ("-m", "cadrumo_agent.cli.main")
+# The six invocations the image admits and the profile each selects, written out independently of the file.
+_INVOCATIONS = [
+    ("agent-gateway", _literals(*_MODULE, "serve")),
+    (
+        "agent-gateway",
+        _literals(*_MODULE, "stores-state"),
+    ),
+    ("agent-gateway", _literals(*_MODULE, "setup")),
+    (
+        "agent-gateway",
+        [
+            *_literals(*_MODULE, "migrate"),
+            _revision_option("--expect-from", "expected_from"),
+            _revision_option("--expect-head", "expected_head"),
+        ],
+    ),
+    ("agent-gateway", _literals(*_MODULE, "version", "--json")),
+    ("agent-worker", _literals("-m", "cadrumo_agent.worker")),
+]
+
+
 @pytest.mark.parametrize("target", ["windows-x86-64", "linux-x86-64"])
-def test_the_contract_compiles_exactly_the_gateway_and_worker_invocations(tmp_path: Path, target: str) -> None:
+def test_the_contract_compiles_exactly_the_six_invocations_of_the_agent_image(tmp_path: Path, target: str) -> None:
     generate(REPO_ROOT, tmp_path, target=target)
     section = json.loads((tmp_path / "contract.json").read_text(encoding="utf-8"))["application_environment"]
     generated = (tmp_path / "contract.rs").read_text(encoding="utf-8")
     layout = load_layout(target)
     assert _AGENT in section["images"]
     assert f'"{_AGENT}{layout["entrypoint_suffix"]}"' in generated.split("pub const ENTRYPOINT_FILES")[1].split("\n")[0]
-    invocations = {
-        invocation["profile"]: [argument.get("literal") for argument in invocation["arguments"]]
+    invocations = [
+        (invocation["profile"], invocation["arguments"])
         for invocation in section["invocations"]
         if invocation["image"] == _AGENT
-    }
-    assert invocations == {
-        "agent-gateway": ["-m", "cadrumo_agent.cli.main", "serve"],
-        "agent-worker": ["-m", "cadrumo_agent.worker"],
-    }
+    ]
+    assert invocations == _INVOCATIONS
     profiles = {profile["name"]: profile for profile in section["profiles"]}
     assert all(profile["invoked"] for profile in profiles.values() if profile["image"] == _AGENT)
+    # The store and version invocations run in the gateway's environment, so they select its profile and
+    # the image has exactly two profiles: no copy of the gateway's environment can drift from it.
+    assert {name for name, profile in profiles.items() if profile["image"] == _AGENT} == {
+        "agent-gateway",
+        "agent-worker",
+    }
+    assert generated.count('LaunchInvocation { profile: "agent-gateway"') == 5
+    assert 'LaunchArgument { literal: None, option: Some("--expect-from"), slot: Some("expected_from"), ' in generated
+    assert 'kind: Some("revision"), minimum: 0 }' in generated
     assert '"cadrumo-agent"' in (tmp_path / "contract.h").read_text(encoding="utf-8")
     for retired in (
         "CADRUMO_AGENT_ENV_FILE",

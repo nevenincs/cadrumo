@@ -314,11 +314,18 @@ names each program passes.
 
 An invocation is the exact argument pattern that selects a profile. The host
 matches the arguments after the image's own path against the compiled table before
-Python starts: a literal matches exactly, and a typed argument (a Windows handle or
-a POSIX descriptor) is validated by its kind and its declared ordering. A match
-selects the invocation's profile. The image's profile without an invocation serves
-every other invocation; an image with no such default refuses any invocation its
-table does not declare.
+Python starts, left to right with no backtracking. A literal matches exactly. A
+typed argument (a Windows handle, a POSIX descriptor or an opaque revision) is
+validated by its kind, and a handle or descriptor also by its declared ordering. An
+option is an optional flag followed by one typed value, present whole or absent.
+Options come after every other argument, each at most once and in the declared
+order. A revision is 1 to 128 ASCII letters, digits, underscores, dots and hyphens
+that starts with a letter, a digit or an underscore, so it cannot read as a flag.
+An unknown flag, a flag without a valid value, a reordered or repeated flag, a
+spelling such as `--flag=value` and a trailing argument each leave the invocation
+undeclared. A match selects the invocation's profile. The image's profile without an
+invocation serves every other invocation; an image with no such default refuses any
+invocation its table does not declare.
 
 - The generic `python` image has a default profile and a `kdf-child` invocation
   for each platform family: the exact supervised key-derivation worker pattern,
@@ -423,10 +430,15 @@ bootstrap finds the package root from the image's place in the native directory.
 
 The image has no default profile. It admits the invocations declared in its
 invocation table in `native/application-environment.toml`, each selecting its own
-profile, and refuses any other module, `-c` or script before Python starts. The
-table includes the gateway, which runs the agent's command-line module, and the
-worker, which runs the agent's worker module. The profiles `agent-gateway` and
-`agent-worker` name what each receives.
+profile, and refuses any other module, verb, `-c` or script before Python starts. The
+table includes the gateway, which runs the agent's command-line module with `serve`,
+the worker, which runs the agent's worker module, and four store and version
+invocations of the command-line module: `stores-state`, `setup`, `migrate` with its
+optional `--expect-from` and `--expect-head` revision assertions, and `version --json`.
+The store and version invocations run in the gateway's environment, take no port and
+no credential and start no gateway, so they select the `agent-gateway` profile
+rather than a copy of it. The profiles `agent-gateway` and `agent-worker` name what
+each receives.
 
 - **The agent's settings.** The agent reads its settings only from its process
   environment. The package admits the names under the agent's environment prefix

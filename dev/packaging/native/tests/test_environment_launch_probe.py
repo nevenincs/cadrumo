@@ -50,6 +50,11 @@ def stand_in(tmp_path: Path, contract_document: dict[str, Any]) -> StandIn:
     return build(tmp_path, _TARGET, copy.deepcopy(contract_document))
 
 
+def _names(stand_in: StandIn) -> Any:
+    fields = {"worker_port", "gateway_url", "worker_host", "gateway_lifetime_id", "worker_generation"}
+    return probe.AgentNames(**{field: name for field, name in stand_in.agent_names.items() if field in fields})
+
+
 def _launcher(stand_in: StandIn, children: Any = None) -> Any:
     return probe.Launcher(
         image=lambda path, arguments: host_command(stand_in, path.stem, list(arguments)),
@@ -62,7 +67,7 @@ def _checks(stand_in: StandIn, tmp_path: Path, *, children: Any = None, timeout:
     work = Path(tempfile.mkdtemp(dir=tmp_path))
     return probe.Probe(
         probe.read_contract(stand_in.package, stand_in.contract),
-        probe.AgentNames(**stand_in.agent_names),
+        _names(stand_in),
         _launcher(stand_in, children),
         work,
         timeout=timeout,
@@ -76,7 +81,7 @@ def _run(stand_in: StandIn, **options: Any) -> list[Any]:
             stand_in.package,
             stand_in.contract,
             launcher=_launcher(stand_in, options.pop("children", None)),
-            names=probe.AgentNames(**stand_in.agent_names),
+            names=_names(stand_in),
             **options,
         )
     )
@@ -98,11 +103,13 @@ def test_every_check_holds_for_a_host_that_defines_each_environment_from_the_dec
     results = _run(stand_in)
     assert [(result.name, result.failure) for result in results] == [
         ("undeclared invocation", None),
+        ("agent stores", None),
         ("hosted gateway", None),
         ("worker", None),
         ("generic interpreter", None),
     ]
-    gateway = results[1]
+    assert "setup succeeded; stores-state reads current" in results[1].detail
+    gateway = results[2]
     assert "refused hosted_tool_server_unproven" in gateway.detail
     assert gateway.pending and "agent_ready" in gateway.pending[0]
     assert all(not result.pending for result in results if result is not gateway)
@@ -131,7 +138,9 @@ def test_a_ready_gateway_whose_worker_is_not_the_agent_image_is_found(stand_in: 
 @pytest.mark.parametrize(
     ("mode", "fragment"),
     [
-        pytest.param("no_setup", "hosted_stores_mismatch", id="stores-not-set-up"),
+        pytest.param("no_setup", "stores-state reads 'absent' after setup", id="stores-not-set-up"),
+        pytest.param("setup_fails", "setup did not succeed", id="setup-fails"),
+        pytest.param("stores_mismatch", "hosted_stores_mismatch", id="stores-the-gateway-refuses"),
         pytest.param("proof_policy", "hosted_proof_policy", id="proof-policy"),
     ],
 )
@@ -148,6 +157,46 @@ def test_a_set_up_error_is_reported_as_one(stand_in: StandIn) -> None:
     stand_in.agent_mode("no_setup")
     gateway = next(result for result in _run(stand_in) if result.name == "hosted gateway")
     assert gateway.failure is not None and gateway.failure.startswith("set-up error: ")
+
+
+def test_the_stores_check_runs_the_images_own_invocations_in_the_gateways_environment(
+    stand_in: StandIn, tmp_path: Path
+) -> None:
+    checks = _checks(stand_in, tmp_path)
+    result = asyncio.run(checks.stores())
+    assert result.failure is None
+    assert "stores-state answered 'absent'; setup succeeded; stores-state reads current" in result.detail
+    # The stand-in agent records the stores only for the hosted root the host gave it.
+    assert (checks.hosted / "stores.marker").read_text(encoding="utf-8") == "current"
+    assert asyncio.run(checks.stores()) is result, "the sequence runs once"
+
+
+def test_a_failing_stores_step_fails_its_own_check_and_is_a_set_up_error_for_the_gateway(stand_in: StandIn) -> None:
+    stand_in.agent_mode("no_setup")
+    results = {result.name: result for result in _run(stand_in)}
+    stores = results["agent stores"].failure
+    assert stores is not None and "stores-state reads 'absent' after setup" in stores
+    assert not stores.startswith("set-up error: ")
+    gateway = results["hosted gateway"].failure
+    assert gateway is not None and gateway.startswith(
+        "set-up error: the hosted root's stores could not be made current"
+    )
+
+
+def test_a_stores_state_that_names_no_state_is_found(stand_in: StandIn, tmp_path: Path) -> None:
+    stand_in.agent_mode("garbled_state")
+    assert "stores-state did not answer with a state" in _failure(stand_in, tmp_path, "stores")
+
+
+def test_a_host_refusal_of_a_store_invocation_names_the_native_code_and_subject(
+    stand_in: StandIn, tmp_path: Path
+) -> None:
+    stand_in.host_faults(refuse=["invocation_undeclared", "cadrumo-agent"])
+    message = _failure(stand_in, tmp_path, "stores")
+    assert (
+        "the host refused the stores-state launch before Python started: invocation_undeclared (cadrumo-agent)"
+        in message
+    )
 
 
 def test_a_gateway_that_dies_without_a_line_is_reported_with_its_status(stand_in: StandIn, tmp_path: Path) -> None:
@@ -172,9 +221,11 @@ def test_a_gateway_that_never_answers_is_stopped_at_the_timeout_and_killed(stand
 def test_a_host_refusal_of_the_gateway_and_the_worker_names_the_native_code_and_subject(
     stand_in: StandIn, tmp_path: Path
 ) -> None:
-    stand_in.host_faults(refuse=["launch_value_malformed", "SOME_VARIABLE"])
+    # Only the gateway's own launch is refused, so its stores step still succeeds.
+    stand_in.host_faults(refuse=["launch_value_malformed", "SOME_VARIABLE"], only="serve")
     expected = "the host refused the {kind} launch before Python started: launch_value_malformed (SOME_VARIABLE)"
     assert expected.format(kind="gateway") in _failure(stand_in, tmp_path, "gateway")
+    stand_in.host_faults(refuse=["launch_value_malformed", "SOME_VARIABLE"])
     assert "launch_value_malformed (SOME_VARIABLE)" in _failure(stand_in, tmp_path, "worker")
 
 
@@ -234,6 +285,8 @@ def test_the_agent_image_and_the_runtime_relay_are_read_from_the_contract(stand_
     assert contract.image_path == stand_in.package / "bin" / f"cadrumo-agent{suffix}"
     assert contract.relay_path == stand_in.package / "bin" / f"cadrumo-mcp{suffix}"
     assert contract.worker_arguments == ("-m", "cadrumo_agent.worker")
+    assert contract.stores_state_arguments == ("-m", "cadrumo_agent.cli.main", "stores-state")
+    assert contract.setup_arguments == ("-m", "cadrumo_agent.cli.main", "setup")
     assert contract.gateway["name"] != contract.worker["name"]
 
 
@@ -250,6 +303,22 @@ def test_a_contract_the_probe_cannot_read_is_a_set_up_error(stand_in: StandIn) -
     invocation["arguments"][2] = {"literal": "elsewhere"}
     with pytest.raises(probe.SetupError, match="not one gateway invocation"):
         probe.read_contract(stand_in.package, other)
+    # A store invocation the package does not declare, or declares outside the gateway's profile, is found.
+    for verb in ("stores-state", "setup"):
+        without = copy.deepcopy(stand_in.contract)
+        invocations = without["application_environment"]["invocations"]
+        invocations[:] = [item for item in invocations if item["arguments"][-1] != {"literal": verb}]
+        with pytest.raises(probe.SetupError, match="does not declare"):
+            probe.read_contract(stand_in.package, without)
+        elsewhere = copy.deepcopy(stand_in.contract)
+        selected = next(
+            item
+            for item in elsewhere["application_environment"]["invocations"]
+            if item["arguments"][-1] == {"literal": verb}
+        )
+        selected["profile"] = "agent-worker"
+        with pytest.raises(probe.SetupError):
+            probe.read_contract(stand_in.package, elsewhere)
 
 
 @pytest.mark.parametrize(
@@ -373,12 +442,13 @@ def test_the_probe_prints_each_check_and_exits_one_when_a_check_fails(
 ) -> None:
     contract_path = tmp_path / "contract.json"
     contract_path.write_text(json.dumps(stand_in.contract), encoding="utf-8")
-    names = probe.AgentNames(**stand_in.agent_names)
+    names = _names(stand_in)
     arguments = [str(stand_in.package), str(contract_path)]
     assert probe.main(arguments, launcher=_launcher(stand_in), names=names) == 0
     printed = capsys.readouterr().out.splitlines()
     assert [line.split(":")[0] for line in printed if not line.startswith(" ")] == [
         "ok   undeclared invocation",
+        "ok   agent stores",
         "ok   hosted gateway",
         "ok   worker",
         "ok   generic interpreter",

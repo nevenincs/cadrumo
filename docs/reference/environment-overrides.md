@@ -218,7 +218,7 @@ A profile starts from the operating-system groups it lists, taken from its calle
 
 ### Programs
 
-Each profile belongs to one program. The host validates a launch parameter against its kind before Python starts: a `directory` is an existing absolute directory, a `port` is an integer from 0 to 65535, an `executable` is an existing absolute file that is not a batch file, and a `descriptor` is a positive integer. Any other kind must be non-empty. In an invocation, `<name:kind>` stands for a value the host checks by kind: a `handle` is a Windows handle number and a `descriptor` is a file descriptor number.
+Each profile belongs to one program. The host validates a launch parameter against its kind before Python starts: a `directory` is an existing absolute directory, a `port` is an integer from 0 to 65535, an `executable` is an existing absolute file that is not a batch file, and a `descriptor` is a positive integer. Any other kind must be non-empty. In an invocation, `<name:kind>` stands for a value the host checks by kind: a `handle` is a Windows handle number, a `descriptor` is a file descriptor number and a `revision` is opaque text of 1 to 128 ASCII letters, digits, underscores, dots and hyphens that starts with a letter, a digit or an underscore. `[--flag <name:kind>]` stands for an option that is either present with its value or absent. Options come last, in the order shown, each at most once; an unknown flag, a flag without a valid value, a reordered flag or a trailing argument leaves the invocation undeclared.
 
 #### `python`
 
@@ -267,7 +267,7 @@ Each profile belongs to one program. The host validates a launch parameter again
 #### `agent-gateway`
 
 - **Program:** `cadrumo-agent`
-- **Started with:** `-m cadrumo_agent.cli.main serve`
+- **Started with:** `-m cadrumo_agent.cli.main serve`; `-m cadrumo_agent.cli.main stores-state`; `-m cadrumo_agent.cli.main setup`; `-m cadrumo_agent.cli.main migrate [--expect-from <expected_from:revision>] [--expect-head <expected_head:revision>]`; `-m cadrumo_agent.cli.main version --json`
 - **Starts from:** only the operating-system group `system`
 - **Passes from its caller:** the names `CADRUMO_AGENT_DEVELOPMENT_TOOL_SERVER` and `CADRUMO_AGENT_PROVIDER_PROOF_POLICY`
 - **Accepts from its parent:** `CADRUMO_LOCAL_STORAGE_ROOT` (directory, optional), `CADRUMO_AGENT_HOSTED_ROOT` (directory, optional), `CADRUMO_AGENT_PORT` (port, optional), `CADRUMO_AGENT_WORKER_PORT` (port, optional) and `CADRUMO_AGENT_HOSTED_RELAY_EXECUTABLE` (executable, optional)

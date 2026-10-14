@@ -100,6 +100,20 @@ int main(int argc, char **argv) {
     assert(cadrumo_platform_define(ctx, CADRUMO_CONSUMER_IMAGE, 0, NULL, &error) == 0);
     assert(error.data == NULL && environment_matches("CADRUMO_CONSUMER_MARKER", NULL));
     assert(!environment_matches("PATH", NULL));
+    /* An agent invocation whose option lacks its value is refused as undeclared, with the one
+     * refusal line, before anything is defined. */
+    static const char refusal[] = "{\"native_refusal\":\"invocation_undeclared\",\"subject\":\"cadrumo-agent\"}";
+#ifdef _WIN32
+    const cadrumo_native_char *migrate[] = {(const cadrumo_native_char *)L"-m",
+        (const cadrumo_native_char *)L"cadrumo_agent.cli.main", (const cadrumo_native_char *)L"migrate",
+        (const cadrumo_native_char *)L"--expect-from"};
+#else
+    const cadrumo_native_char *migrate[] = {"-m", "cadrumo_agent.cli.main", "migrate", "--expect-from"};
+#endif
+    assert(cadrumo_platform_define(ctx, CADRUMO_LAUNCH_IMAGE_CADRUMO_AGENT, sizeof migrate / sizeof migrate[0], migrate, &error) == 4);
+    assert(error.len == sizeof refusal - 1 && memcmp(error.data, refusal, sizeof refusal - 1) == 0);
+    cadrumo_platform_release(&error);
+    assert(environment_matches("CADRUMO_CONSUMER_MARKER", NULL));
     cadrumo_platform_destroy(ctx);
     puts("C consumer ABI 1: statuses, path keys, provider buffers and launch definition pass");
     return 0;
