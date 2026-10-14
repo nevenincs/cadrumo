@@ -110,7 +110,7 @@ def test_every_check_holds_for_a_host_that_defines_each_environment_from_the_dec
     ]
     assert "setup succeeded; stores-state reads current" in results[1].detail
     gateway = results[2]
-    assert "refused hosted_tool_server_unproven" in gateway.detail
+    assert "refused hosted_lane_unproven" in gateway.detail
     assert gateway.pending and "agent_ready" in gateway.pending[0]
     assert all(not result.pending for result in results if result is not gateway)
 
@@ -325,9 +325,7 @@ def test_a_contract_the_probe_cannot_read_is_a_set_up_error(stand_in: StandIn) -
     ("line", "status", "standard_error", "verdict"),
     [
         pytest.param(b'{"event":"agent_ready","gateway_port":1}\n', None, b"", "ready", id="ready"),
-        pytest.param(
-            b'{"event":"refused","code":"hosted_tool_server_unproven"}\n', None, b"", "unproven", id="unproven"
-        ),
+        pytest.param(b'{"event":"refused","code":"hosted_lane_unproven"}\n', None, b"", "unproven", id="unproven"),
     ],
 )
 def test_the_gateway_lines_the_probe_accepts(

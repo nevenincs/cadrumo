@@ -13,8 +13,8 @@ The probe starts programs from the package, never from a checkout:
   ``stores-state`` then reads ``current``.
 * The agent gateway, started through the runtime's own composer with a hosted environment in that root and
   the runtime's own empty credential frame, answers on the hosting protocol. Until the agent records
-  the proofs its hosted tool server needs, the answer is the refusal ``hosted_tool_server_unproven``, which
-  also proves the gateway received its hosted root. Once the proofs exist the answer is ``agent_ready``.
+  a proof of its hosted lane, the answer is the refusal ``hosted_lane_unproven``, which also proves the
+  gateway received its hosted root. Once a lane proof exists the answer is ``agent_ready``.
 * The agent worker, started through the image's worker invocation, reports the port it bound.
 * The generic interpreter image clears every name only the agent image admits, sets the declared ``PATH``
   and pins the storage root to the command line's own built-in default.
@@ -56,7 +56,7 @@ WORKER_WAIT_SECONDS: Final = 15.0
 """How long a ready gateway may take to show its worker running."""
 """How long a program may take to end after its standard input closes, before it is killed."""
 _STANDARD_ERROR_BYTES: Final = 8192
-_UNPROVEN: Final = "hosted_tool_server_unproven"
+_UNPROVEN: Final = "hosted_lane_unproven"
 _UNDECLARED_ARGUMENTS: Final = ("-c", "pass")
 _SETUP_ADVICE: Final = {
     "hosted_stores_mismatch": "the image's setup invocation left stores the gateway still refuses",
@@ -544,7 +544,7 @@ class Probe:
             f"refused {_UNPROVEN}: the gateway received its hosted root, ports and relay",
             pending=(
                 "agent_ready and the worker re-execution (sys.executable is the image, sys.frozen is unset) need the "
-                "agent's recorded tool-server proofs",
+                "agent's recorded hosted-lane proof",
             ),
         )
 

@@ -493,8 +493,8 @@ disagreement. Its comparisons are:
 `bundle.environment-launch` starts the assembled package's agent image the way the
 runtime does, through the runtime's own composer, and checks that a launch the
 profile does not declare is refused with the closed refusal line, that a hosted
-gateway reaches the agent's own refusal `hosted_tool_server_unproven` (or
-`agent_ready` once the agent's proofs exist), that the worker reports the port it
+gateway reaches the agent's own refusal `hosted_lane_unproven` (or
+`agent_ready` once a proof of the agent's hosted lane exists), that the worker reports the port it
 bound, and that the generic `python` image clears every name only the agent image
 admits, sets the declared `PATH` and pins the root to the command line's default.
 The agent's names are read from the contract and from the installed agent, never

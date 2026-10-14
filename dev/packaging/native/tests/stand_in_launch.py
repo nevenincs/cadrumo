@@ -139,7 +139,7 @@ def serve():
         _emit({"event": "agent_ready", "gateway_port": 1, "agent_version": "0", "hosting_contract": 1})
         sys.stdin.read()
         raise SystemExit(0)
-    _refuse("hosted_tool_server_unproven")
+    _refuse("hosted_lane_unproven")
 
 
 def main(argv=None, standalone_mode=True):
