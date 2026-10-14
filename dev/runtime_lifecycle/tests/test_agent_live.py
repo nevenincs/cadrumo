@@ -13,6 +13,7 @@ from ..agent_live import (
     answer_for,
     is_announced_relay,
     read_document,
+    relay_lane,
     stored_answers_disagree,
     write_whole,
 )
@@ -128,3 +129,16 @@ def test_only_the_relay_program_under_the_announced_gateway_is_attended() -> Non
     finally:
         child.kill()
         child.wait(timeout=10)
+
+
+@pytest.mark.parametrize(
+    ("lane", "judged"),
+    [
+        pytest.param({"provider": "claude", "transport": "api", "model": "m"}, True, id="claude-api"),
+        pytest.param({"provider": "claude", "transport": "cli", "model": "m"}, False, id="claude-cli"),
+        pytest.param({"provider": "codex", "transport": "api", "model": "m"}, False, id="another-provider"),
+        pytest.param(None, False, id="no-lane-recorded"),
+    ],
+)
+def test_only_the_direct_claude_api_lane_is_judged(lane: object, *, judged: bool) -> None:
+    assert relay_lane(lane) is judged

@@ -302,8 +302,22 @@ def _await_runner(exchange: Exchange, gateway: dict[str, int | None]) -> dict[st
         time.sleep(_POLL_SECONDS)
 
 
+def relay_lane(lane: object) -> bool:
+    """Whether ``lane`` is one whose relayed calls this driver can recognise.
+
+    Only the direct Claude API lane mounts the relay, and the bare tool names
+    are verified there alone; a relay-shaped question from any other lane is
+    not one this driver can judge.
+    """
+    if not isinstance(lane, Mapping):
+        return False
+    return bool(lane.get("provider") == "claude" and lane.get("transport") == "api")
+
+
 def _judge(receipt: Mapping[str, Any], exchange: Exchange, root: Path, after: str) -> dict[str, Any]:
     """Check the runner's receipt against what this driver saw; return the facts worth keeping."""
+    lane = receipt.get("lane")
+    require(relay_lane(lane), f"the run used a lane whose relay calls are unverified: {lane}")
     require(receipt.get("storage_root_passed") == str(root), f"the runner passed another root: {receipt}")
     replies = " ".join(str(run.get("reply", "")) for run in receipt.get("runs", ()) if isinstance(run, Mapping))
     require(_SCENARIO["taxpayer"].lower() in replies.lower(), "no reply names the profile's taxpayer")
