@@ -10,9 +10,9 @@ related:
   - '[[2026-10-12-live-agent-evaluation-adr]]'
   - '[[2026-10-13-desktop-agent-host-live-lane-adr]]'
   - '[[2026-10-13-canonical-environment-application-internals-adr]]'
-modified: '2026-10-13'
+modified: '2026-10-14'
 body_schema: body-v2
-body_hash: 'sha256:bc125bc108d8d3a58857778cb9d530f45153a8a91c9b02f525ab77db831ff833'
+body_hash: 'sha256:6e752288a0af93c6aa83c13fa050c8d34fb97d21c5411a513bc05759a7fcde33'
 ---
 
 <!-- LINK RULES:
@@ -127,6 +127,13 @@ Step mapping:
 - S03 and S05 implement the ADR's constraint 3 and its `agent_live.py` outline.
 - S04 implements the constraint against parallel paths and the live-lane revision.
 
+S03 and S05 reshaped 2026-10-13 on the owner's first-hand approval ("approved!"). The split was agreed with CADRUMO-AGENT-CODE:
+- cadrumo-agent's package runner is the only starter of the packaged gateway (`bin/cadrumo-agent`).
+- The agent live lane supplies the Cadrumo person side and the independent oracle.
+- The two exchange JSON receipts and command-line arguments, never each other's environment variables, because Cadrumo code defines no `CADRUMO_AGENT_*` value.
+- The caller's storage root reaches the relay through the agent-gateway profile's `CADRUMO_LOCAL_STORAGE_ROOT` slot, which the gateway forwards to the relay only.
+- S02 is covered by the canonical-environment plan's P04.S14 CTest launch probe, and closes when that lands.
+
 Dependencies outside this plan:
 - S02, S04 and S05 need a packaged host that passes the agent its environment. That is `2026-10-13-canonical-environment-application-internals-adr`, which is proposed and owned by tui-ee, with preference B forwarded to it.
 - S05 also needs CADRUMO-AGENT-CODE to commit the untracked agent files, and to record the proof in `providers/lane_admission.py`.
@@ -136,9 +143,9 @@ Dependencies outside this plan:
 
 - [x] `S01` - Remove the dead dev tooling the sweep confirms: the uninvoked pytest shard plugin, per-file ignores for missing modules, references to the absent no-skip gate, and dev/audit screens no recipe runs, updating the recipe and lane policing tests in the same change; `dev/quality/shard.py`.
 - [ ] `S02` - Extend the bundle.agent CTest probe to launch the bundled agent the way the runtime does, wait for its ready line and stop it; `native/tests/agent_smoke.py`.
-- [ ] `S03` - Repoint the agent live lane onto the staged package: drop the checkout option, run the package's bundled agent with the staged cadrumo-mcp relay, and answer each permission request through the production respond route only after asserting its tool or package program and workspace, denying and failing on anything else, with the inspected request and the answer in the receipt; `dev/runtime_lifecycle/agent_live.py`.
+- [ ] `S03` - Reshape the agent live lane as the Cadrumo person side of the packaged proof: drop its checkout option and its own gateway start; on the staged package create the marked root, sign a synthetic profile in through bin/aeat on the secret channel and hold it, write the hand-off receipt for the cadrumo-agent package runner, attend its approvals, then read the runner's receipt and run the independent aeat oracle on the marked root; `dev/runtime_lifecycle/agent_live.py`.
 - [x] `S04` - Remove the desktop direct-start feature and repoint the desktop agent live lane onto the runtime's hosted agent door with the catalog's provider and key names; `native/desktop/src-tauri/src/agent/direct.rs`.
-- [ ] `S05` - Drive the packaged proof runs for the cadrumo-agent owner to record: re-earn the claude/api completed-turn proof and earn the first hosted tool-access proof, with each packaged program start and each relay call approved per start as the person; `dev/runtime_lifecycle/agent_live.py`.
+- [ ] `S05` - Run the packaged proof runs with the cadrumo-agent package runner as the only gateway starter and the agent live lane as the person side: re-earn the claude/api completed-turn proof and earn the first hosted tool-access proof, each request inspected and approved per start, for the cadrumo-agent owner to record; `dev/runtime_lifecycle/agent_live.py`.
 
 <!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or
 `L4`) determines the structure under this section:
