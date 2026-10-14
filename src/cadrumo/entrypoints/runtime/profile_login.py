@@ -11,6 +11,7 @@ from threading import RLock
 from typing import Final
 from uuid import UUID, uuid4
 
+from ...adapters.persistence.storage.custody.errors import ProfileCustodyRefusal, ProfileCustodyRefusedError
 from ...adapters.persistence.storage.custody.kdf_supervision import ProfileKdfPrewarm
 from ...adapters.persistence.storage.custody.sign_in_generation import SignInGeneration
 from ...adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
@@ -41,6 +42,12 @@ _RECEIPT_DENIALS: Final[dict[ProfileSessionRefusalReason, AccessDenialCode]] = {
     ProfileSessionRefusalReason.EXPIRED_ABSOLUTE: AccessDenialCode.SESSION_EXPIRED,
     ProfileSessionRefusalReason.CUSTODY_CHANGED: AccessDenialCode.CUSTODY_CHANGED,
 }
+
+
+_KDF_UNAVAILABLE: Final = frozenset(
+    {ProfileCustodyRefusal.KDF_RESOURCE_LIMIT, ProfileCustodyRefusal.KDF_SUPERVISION_UNAVAILABLE}
+)
+"""Derivation refusals that say nothing about the password: the permit or the child was not available in time."""
 
 
 @dataclass(slots=True)
@@ -104,6 +111,13 @@ class ProfileWorkerHumanLogin:
             except (UnicodeError, ProfileAuthenticationRefusedError):
                 self.cancel()
                 raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED) from None
+            except ProfileCustodyRefusedError as error:
+                self.cancel()
+                if error.refusal not in _KDF_UNAVAILABLE:
+                    raise
+                # The installation's one KDF permit stayed taken, or no derivation child attested: this
+                # sign-in is refused as unavailable for now, and the worker keeps serving its other sessions.
+                raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE) from None
             except BaseException:
                 self.cancel()
                 raise
