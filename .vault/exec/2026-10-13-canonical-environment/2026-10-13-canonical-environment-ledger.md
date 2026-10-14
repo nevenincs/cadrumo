@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:ed5c5c779bc6f4ce5b7be4ce531b377221c9c0803a4a079d66821e229c1bce9e'
+body_hash: 'sha256:811acc22aae1fbce58a4bd2d0352ff81cd0d9811af447e32112383826e235f93'
 related:
   - "[[2026-10-13-canonical-environment-plan]]"
 ---
@@ -415,6 +415,8 @@ related:
 - `S20` `by:` `implementation-engineer-high`
 - `S14` `M` `dev/runtime_lifecycle/tests/test_lifecycle.py`
 - `S14` `verify:` `pytest -m integration dev/runtime_lifecycle/tests/test_lifecycle.py -k profile_switch (staged Debug app)` -> `pass`
+- `S14` `M` `dev/runtime_lifecycle/tests/test_clients.py`
+- `S14` `verify:` `pytest -m integration dev/runtime_lifecycle/tests/test_clients.py (MCP binding steps; test continues to issue_key)` -> `pass`
 
 ## Notes
 
@@ -473,3 +475,4 @@ related:
 - `S14` Correction (Windows base part in 3de38e77d8, hosted lane in cfee396b4a): per 2026-10-04-canonical-environment-adr the Windows host takes its base from `FOLDERID_LocalAppData,` not LOCALAPPDATA, so the probe no longer relocates it on Windows. Probe now expects `hosted_lane_unproven` (agent owner). Agent setup still fails: CheckpointSchemaError at checkpoint-identity, caused by native/agent lock bundling langgraph-checkpoint-sqlite 3.1.2 against the agent's 3.1.1 schema pin; reported to orchestrator, provisional.
 - `S20` S20's source changes landed in commits made by other sessions before this Step's own commit: f55bed830e carried `profile_worker.py,` `worker_environment.py,` `test_worker_storage_environment.py` and `test_worker_provider_catalog.py,` and 3c4ec939fd carried the declaration, generator, `test_agent_image.py,` CONTRACT.md and the environment reference. 11deccf0d7 holds the ledger, the plan check and the type fix to `test_worker_provider_catalog.py.` f55bed830e also carries another session's runtime changes `(profile_host,` `profile_connection_*,` `test_agent_host_runtime),` which are not S20's.
 - `S14` Correction eb7a653215: once the KDF fix let bundle.runtime-lifecycle reach profile switching, `test_login_logout_profile_switch_and_stale_receipt` read through A after signing in to B; per 2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr constraint 6 a sign-in to B signs A out, so the test now expects A refused and measures sign-out on B. Agent results on stage from cadrumo-agent 1315871 are real; agent locks resynced in 0d0beb7cdf.
+- `S14` Correction 3f9c7db2ff: the MCP harness binds at the first resumed sign-in `(runtime_adapter.py` `_hold_session),` as 2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr constraint 5 rules; the client test reused one server for A then B. Now one server per sign-in. The test then stops at `issue_key:` config profile automation create --use agent refused `REFUSED_CLI_BOUNDARY` (credential admission, outside this worker's scope).
