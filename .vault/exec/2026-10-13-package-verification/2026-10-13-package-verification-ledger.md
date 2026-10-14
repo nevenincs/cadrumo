@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:f751cd00b98f6e003e4b857a13a2ae1420dfc7cbb3170d5b09f7700b72464a41'
+body_hash: 'sha256:27fe266d179069fdcef81860c2dad665121f8aeb9f7046330a456c529360f279'
 related:
   - "[[2026-10-13-package-verification-plan]]"
 ---
@@ -74,6 +74,7 @@ related:
 - `S03` `verify:` `ty check` -> `pass`
 - `S02` `M` `native/cmake/Packaging.cmake`
 - `S02` `A` `native/tests/environment_launch_probe.py`
+- `S03` `verify:` `dev/runtime_lifecycle/tests/test_agent_live.py` -> `pass`
 
 ## Notes
 
@@ -82,3 +83,4 @@ related:
 - `S04` built in an isolated scratch build root and cargo target; the live desktop lane itself waits on the hosted proof and a built package with the agent image
 - `S03` person side and file exchange built to the protocol agreed with CADRUMO-AGENT-CODE; step stays open until verify-agent-live passes against a staged package with the agent package runner
 - `S02` covered by the canonical-environment plan's P04.S14 (73f13535cd, authored by tui-ee): CTest bundle.environment-launch starts bin/cadrumo-agent the way the runtime does and requires `hosted_tool_server_unproven` now, `agent_ready` once proofs exist; it has not yet run against a staged package
+- `S03` relay calls are matched by their bare registry names, as CADRUMO-AGENT-CODE verified on the claude/api lane

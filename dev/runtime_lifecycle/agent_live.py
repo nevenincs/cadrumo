@@ -81,9 +81,8 @@ _SCENARIO: Final[dict[str, Any]] = {
     "taxpayer": "Daniel Persona",
     "ledger": {"description": "agent live acceptance", "amount": "12.34", "currency": "EUR", "date": "2026-01-15"},
 }
-#: The relay's registry entry, as the agent qualifies the tools it mounts from it.
-_RELAY_TOOL_PREFIX: Final = "mcp__cadrumo__"
-#: The tools the relay entry declares (cadrumo-agent's harness MCP registry).
+#: The tools the relay entry declares (cadrumo-agent's harness MCP registry). The agent stores a relayed
+#: call under its bare registry name, and refuses a turn whose own tools would share one of these names.
 _RELAY_TOOLS: Final = frozenset(
     {
         "authority",
@@ -134,11 +133,7 @@ def answer_for(request: Mapping[str, Any]) -> dict[str, str]:
     """
     tool = request.get("tool_call")
     options = request.get("options")
-    allowed = (
-        isinstance(tool, str)
-        and tool.startswith(_RELAY_TOOL_PREFIX)
-        and tool.removeprefix(_RELAY_TOOL_PREFIX) in _RELAY_TOOLS
-    )
+    allowed = isinstance(tool, str) and tool in _RELAY_TOOLS
     once = [
         option["option_id"]
         for option in options or ()
