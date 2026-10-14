@@ -299,6 +299,10 @@ names each program passes.
   to 65535, an executable is an existing absolute file that is not a batch file,
   and a descriptor is a positive integer. Any other kind is non-empty. A missing
   required slot or a malformed slot refuses the launch.
+- A profile may take as a slot a package fact that another image fixes and it does
+  not. The generic `python` image takes `CADRUMO_PACKAGE_AGENT_EXECUTABLE` this way:
+  the runtime, whose profile fixes it, relays it to the profile workers it starts
+  on that image, which ask the bundled agent for its provider catalog.
 - A profile that pins the root resolves it by the package's rule and sets
   `CADRUMO_LOCAL_STORAGE_ROOT`, the temporary variables beneath it and the
   authority root. A profile may instead take the root as a launch parameter

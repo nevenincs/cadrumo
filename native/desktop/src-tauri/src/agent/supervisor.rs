@@ -37,38 +37,8 @@ pub const POLL: Duration = Duration::from_secs(2);
 /// How long after a refused or failed start another start is tried.
 pub const RETRY: Duration = Duration::from_secs(30);
 
-/// Why the agent service is not serving, as the column's closed vocabulary
-/// names it.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
-pub enum Refusal {
-    #[serde(rename = "agent_service_absent")]
-    ServiceAbsent,
-    #[serde(rename = "agent_service_incompatible")]
-    ServiceIncompatible,
-    #[serde(rename = "agent_signed_out")]
-    SignedOut,
-    #[serde(rename = "agent_runtime_unavailable")]
-    RuntimeUnavailable,
-    #[serde(rename = "agent_provider_credential_missing")]
-    ProviderCredentialMissing,
-    #[serde(rename = "agent_service_failed")]
-    ServiceFailed,
-}
-
-impl Refusal {
-    /// The column's code for a launcher's. A code the column has no word for,
-    /// such as an unmarked root, is a start that failed.
-    fn from_launcher(code: &str) -> Self {
-        match code {
-            "agent_service_absent" => Self::ServiceAbsent,
-            "agent_service_incompatible" => Self::ServiceIncompatible,
-            "agent_signed_out" => Self::SignedOut,
-            "agent_runtime_unavailable" => Self::RuntimeUnavailable,
-            "agent_provider_credential_missing" => Self::ProviderCredentialMissing,
-            _ => Self::ServiceFailed,
-        }
-    }
-}
+pub use cadrumo_application::diagnostics::service::AgentRefusal as Refusal;
+use cadrumo_application::diagnostics::service::{AgentStopCause, ServiceFact};
 
 /// Where the agent service of the signed-in profile is.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
@@ -312,13 +282,13 @@ impl Supervisor {
         self.shared.closed.store(true, Ordering::Release);
         self.shared.wake.notify_one();
         let worker = lock(&self.shared.worker).take();
-        let stopped = stop_running(&self.shared, None).await;
+        let stopped = stop_running(&self.shared, None, AgentStopCause::WindowClosing).await;
         if let Some(worker) = worker {
             let _ = worker.await;
         }
         // Supervision may have stored a launcher while this closed; it stops
         // any it holds when it sees the close, and this stops what is left.
-        let remaining = stop_running(&self.shared, None).await;
+        let remaining = stop_running(&self.shared, None, AgentStopCause::WindowClosing).await;
         *lock(&self.shared.listener) = None;
         stopped.and(remaining)
     }
@@ -333,6 +303,9 @@ fn publish(shared: &Shared, state: State) {
         current.state = state;
         current.clone()
     };
+    if let State::Refused { code } = status.state {
+        shared.diagnostics.service(None, ServiceFact::AgentRefused { reason: code });
+    }
     let mut listener = lock(&shared.listener);
     if listener
         .as_ref()
@@ -343,7 +316,7 @@ fn publish(shared: &Shared, state: State) {
 }
 
 /// Stops the running launcher, if any. With a generation, only that one.
-async fn stop_running(shared: &Arc<Shared>, generation: Option<u64>) -> Result<()> {
+async fn stop_running(shared: &Arc<Shared>, generation: Option<u64>, cause: AgentStopCause) -> Result<()> {
     let taken = {
         let mut running = lock(&shared.running);
         if generation.is_some_and(|wanted| running.as_ref().map(|r| r.generation) != Some(wanted)) {
@@ -360,6 +333,8 @@ async fn stop_running(shared: &Arc<Shared>, generation: Option<u64>) -> Result<(
             *gateway = None;
         }
     }
+    let process = running.supervised.process_ref();
+    shared.diagnostics.service(Some(process), ServiceFact::AgentStopping { cause });
     let grace = shared.grace;
     let diagnostics = shared.diagnostics.clone();
     let ended = tauri::async_runtime::spawn_blocking(move || running.supervised.stop(grace))
@@ -368,6 +343,9 @@ async fn stop_running(shared: &Arc<Shared>, generation: Option<u64>) -> Result<(
         .and_then(|ended| ended);
     if let Err(error) = &ended {
         diagnostics.failure(error.clone());
+    }
+    if ended.is_ok() {
+        diagnostics.service(Some(process), ServiceFact::AgentStopped { cause });
     }
     ended.map(|_| ())
 }
@@ -381,6 +359,7 @@ async fn start(
     let bearer = Arc::new(mint_bearer()?);
     let Prepared { command } = launch(&bearer, &profile)?;
     let generation = shared.generation.fetch_add(1, Ordering::AcqRel) + 1;
+    shared.diagnostics.service(None, ServiceFact::AgentStarting { generation });
     let sender = signals.clone();
     let diagnostics = shared.diagnostics.clone();
     let secret = bearer.clone();
@@ -433,7 +412,12 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, launch: Launch) {
         match (&current, &allowed) {
             (Some(profile), Allowed::Serve(wanted)) if profile == wanted => {}
             (Some(_), _) => {
-                let _ = stop_running(&shared, None).await;
+                let cause = match &allowed {
+                    Allowed::Serve(_) => AgentStopCause::ProfileChanged,
+                    Allowed::Refuse(Refusal::SignedOut) => AgentStopCause::SignInUnavailable,
+                    Allowed::Refuse(_) => AgentStopCause::RuntimeUnavailable,
+                };
+                let _ = stop_running(&shared, None, cause).await;
                 serving = None;
                 match &allowed {
                     Allowed::Refuse(code) => publish(&shared, State::Refused { code: *code }),
@@ -459,10 +443,8 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, launch: Launch) {
                     serving = Some(profile.clone());
                     retry_after = None;
                     publish(&shared, State::Starting);
-                    if start(&shared, &launch, profile.clone(), &signals)
-                        .await
-                        .is_err()
-                    {
+                    if let Err(error) = start(&shared, &launch, profile.clone(), &signals).await {
+                        shared.diagnostics.host_failure(cadrumo_application::diagnostics::HostStage::Agent, error);
                         publish(
                             &shared,
                             State::Refused {
@@ -470,6 +452,9 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, launch: Launch) {
                             },
                         );
                         retry_after = Some(Instant::now() + shared.retry);
+                        shared.diagnostics.service(None, ServiceFact::AgentRetryScheduled {
+                            delay_ms: shared.retry.as_millis().try_into().unwrap_or(u64::MAX),
+                        });
                     }
                 }
             }
@@ -483,21 +468,24 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, launch: Launch) {
                 Some((generation, signal)) = received.recv() => {
                     if handle(&shared, generation, signal).await {
                         retry_after = Some(Instant::now() + shared.retry);
+                        shared.diagnostics.service(None, ServiceFact::AgentRetryScheduled {
+                            delay_ms: shared.retry.as_millis().try_into().unwrap_or(u64::MAX),
+                        });
                     }
                 }
             }
         }
     }
-    let _ = stop_running(&shared, None).await;
+    let _ = stop_running(&shared, None, AgentStopCause::WindowClosing).await;
 }
 
 /// Acts on one launcher signal. True when the launcher ended unasked, which
 /// delays the next start.
 async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
-    let bearer = {
+    let (bearer, process) = {
         let running = lock(&shared.running);
         match running.as_ref() {
-            Some(running) if running.generation == generation => running.bearer.clone(),
+            Some(running) if running.generation == generation => (running.bearer.clone(), running.supervised.process_ref()),
             _ => return false,
         }
     };
@@ -513,6 +501,7 @@ async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
                 workspace_root,
                 generation,
             });
+            shared.diagnostics.service(Some(process), ServiceFact::AgentReady { generation, gateway_port });
             publish(shared, State::Ready { agent_version });
             false
         }
@@ -523,7 +512,7 @@ async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
                     code: Refusal::from_launcher(&code),
                 },
             );
-            let _ = stop_running(shared, Some(generation)).await;
+            let _ = stop_running(shared, Some(generation), AgentStopCause::LauncherRefused).await;
             true
         }
         Signal::Event(Event::Stopped { reason }) => {
@@ -537,13 +526,14 @@ async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
             false
         }
         Signal::Violation => {
+            shared.diagnostics.service(Some(process), ServiceFact::AgentProtocolRefused {});
             publish(
                 shared,
                 State::Refused {
                     code: Refusal::ServiceFailed,
                 },
             );
-            let _ = stop_running(shared, Some(generation)).await;
+            let _ = stop_running(shared, Some(generation), AgentStopCause::ProtocolRefused).await;
             true
         }
         Signal::Ended => {
@@ -559,7 +549,7 @@ async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
                     },
                 );
             }
-            let _ = stop_running(shared, Some(generation)).await;
+            let _ = stop_running(shared, Some(generation), AgentStopCause::LauncherEnded).await;
             true
         }
     }

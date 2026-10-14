@@ -96,7 +96,7 @@ pub fn start_child(
         ProcessJob::new().map_err(|cause| failure(ErrorCode::SpawnFailed).caused_by(cause))?;
     let mut child = command.spawn().map_err(|cause| {
         let error = failure(ErrorCode::SpawnFailed).caused_by(cause);
-        diagnostics.spawn_failure(ProcessRole::Cli, error.clone());
+        diagnostics.spawn_failure(ProcessRole::AgentLauncher, error.clone());
         error
     })?;
     if let Err(cause) = job.adopt_suspended(&child) {
@@ -104,10 +104,10 @@ pub fn start_child(
         let _ = child.kill();
         let _ = child.wait();
         let error = failure(ErrorCode::SpawnFailed).caused_by(cause);
-        diagnostics.spawn_failure(ProcessRole::Cli, error.clone());
+        diagnostics.spawn_failure(ProcessRole::AgentLauncher, error.clone());
         return Err(error);
     }
-    let process = diagnostics.start(child.id(), ProcessRole::Cli);
+    let process = diagnostics.start(child.id(), ProcessRole::AgentLauncher);
     let stdout = child.stdout.take();
     let stderr = child.stderr.take();
     let mut supervised = Supervised {
@@ -169,6 +169,9 @@ pub fn start_child(
 }
 
 impl Supervised {
+    pub fn process_ref(&self) -> u64 {
+        self.process
+    }
     /// Closes standard input, waits up to `grace` for the launcher to exit,
     /// and ends the job either way, so nothing it started outlives it.
     pub fn stop(mut self, grace: Duration) -> Result<Ending> {

@@ -7,6 +7,7 @@ use cadrumo_application::{
     package::PackageManifest,
     value::RelativePath,
 };
+use crate::logs::Level;
 use serde::Deserialize;
 use std::{
     collections::BTreeMap,
@@ -80,6 +81,8 @@ struct Projection {
     log_backups: u32,
     output_language: String,
     console_workspace: PathBuf,
+    #[serde(default)]
+    log_level: Level,
 }
 
 pub struct Launch {
@@ -102,6 +105,7 @@ pub struct Launch {
     pub log_format: String,
     /// The output language Settings resolved, for the shell chrome.
     pub output_language: String,
+    pub log_level: Level,
 }
 
 /// The package manifest's statement about the optional user documentation.
@@ -181,6 +185,11 @@ pub async fn resolve(
             .collect(),
     )
     .map_err(|e| failure(ErrorCode::EnvironmentFailed).caused_by(e))?;
+    diagnostics.service(None, cadrumo_application::diagnostics::service::ServiceFact::EnvironmentResolved {
+        package_abi: layout.abi,
+        log_level: projection.log_level,
+        log_level_overridden: parent.environment.iter().any(|(key, value)| key.to_string_lossy().eq_ignore_ascii_case("CADRUMO_LOG_LEVEL") && !value.to_string_lossy().trim().is_empty()),
+    });
     Ok(Launch {
         _publication: publication,
         child,
@@ -194,6 +203,7 @@ pub async fn resolve(
         manager_log_file: projection.manager_log_file,
         log_format: projection.log_format,
         output_language: projection.output_language,
+        log_level: projection.log_level,
     })
 }
 
@@ -291,6 +301,15 @@ fn native_projection(
         .map(|value| value.trim().to_ascii_lowercase())
         .filter(|value| !value.is_empty())
         .unwrap_or_else(|| defaults.output_language.clone());
+    let log_level = defined("CADRUMO_LOG_LEVEL")
+        .filter(|value| !value.to_string_lossy().trim().is_empty())
+        .map(|value| {
+            value.into_string().ok()
+                .and_then(|value| Level::parse(&value.trim().to_ascii_uppercase()))
+                .ok_or_else(|| failure(ErrorCode::EnvironmentFailed))
+        })
+        .transpose()?
+        .unwrap_or_default();
     // The shell needs only storage and presentation defaults. Profile/pointer
     // validation remains with the canonical account CLI read, which can report
     // its typed refusal in the visible window instead of delaying its creation.
@@ -311,6 +330,7 @@ fn native_projection(
         log_backups: defaults.log_backups,
         output_language,
         console_workspace,
+        log_level,
     };
     if !admissible(&projection, location_names) {
         return Err(failure(ErrorCode::EnvironmentFailed));

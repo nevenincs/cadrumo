@@ -217,6 +217,7 @@ Each profile belongs to one program. The host validates a launch parameter again
 - **Started with:** any arguments
 - **Starts from:** only the operating-system groups `system`, `session`, `terminal`, `display` and `network`
 - **Passes from its caller:** the name groups `locations`, `presentation`, `remote` and `package`
+- **Accepts from its parent:** `CADRUMO_PACKAGE_AGENT_EXECUTABLE` (executable, optional)
 - **Sets itself:** `CADRUMO_LOCAL_STORAGE_ROOT` to the storage root the package's rule resolves (an absolute value you set wins, otherwise the per-user, per-channel default), `TEMP`, `TMP` and `TMPDIR` to the temporary-files location beneath the storage root and `CADRUMO_AUTHORITY_ROOT` to the package's registry authority
 - **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the existing absolute directories `CADRUMO_EXTERNAL_BIN_DIRS` names; the package's native program directory; the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
 

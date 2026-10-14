@@ -379,9 +379,14 @@ def _profiles(
             slot = _table(value, f"{where}.slots[{index}]")
             _keys(slot, f"{where}.slots[{index}]", {"name", "required"})
             name = slot["name"]
-            # The storage root is a slot where a parent hands its own root to an image that does not pin it.
+            # The storage root is a slot where a parent hands its own root to an image that does not pin it,
+            # and a package fact one image fixes is a slot where that image relays it to a child image.
             role = names.get(name, {}).get("role")
-            admitted = role == "slot" or (name == root_variable and "root" not in pins)
+            admitted = (
+                role == "slot"
+                or (name == root_variable and "root" not in pins)
+                or (role == "fixed" and name not in {value.name for value in fixed})
+            )
             if not admitted or not isinstance(slot["required"], bool):
                 raise _fail(f"{where}.slots[{index}] must name a declared slot and whether it is required")
             slots.append(LaunchSlot(name=name, kind=names[name]["kind"], required=slot["required"]))
@@ -1251,7 +1256,7 @@ def reference_define(
             continue
         if slot.kind == "port" and not (value.isdigit() and value.isascii() and int(value) <= 0xFFFF):
             raise LaunchRefusedError("launch_value_malformed", slot.name)
-        if slot.kind == "directory" and not path_type(value).is_absolute():
+        if slot.kind in {"directory", "executable"} and not path_type(value).is_absolute():
             raise LaunchRefusedError("launch_value_malformed", slot.name)
         parameters.append((slot.name, value))
     base = [name for group in profile["base_groups"] for name in declaration.base[family][group]]

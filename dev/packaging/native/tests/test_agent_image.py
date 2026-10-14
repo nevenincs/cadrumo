@@ -246,6 +246,24 @@ def test_the_declaration_admits_agent_names_by_the_prefix_alone(planted: str, me
         parse(planted)
 
 
+def test_the_generic_interpreter_takes_the_agent_location_only_as_a_relayed_launch_parameter() -> None:
+    section = compile_section(load(REPO_ROOT), load_layout("windows-x86-64"))
+    profiles = {profile["name"]: profile for profile in section["profiles"]}
+    runtime_fixed = {value["name"] for value in profiles["cadrumo-runtime"]["fixed"]}
+    python_slots = {slot["name"]: slot for slot in profiles["python"]["slots"]}
+    agent_location = "CADRUMO_PACKAGE_AGENT_EXECUTABLE"
+    assert agent_location in runtime_fixed
+    assert python_slots[agent_location] == {"name": agent_location, "kind": "executable", "required": False}
+    # The image that fixes a package fact cannot also take it from its parent.
+    relay = '  { name = "CADRUMO_PACKAGE_RELAY_EXECUTABLE", image = "cadrumo-mcp" },\n]\n'
+    planted = _SOURCE.replace(
+        relay, relay + 'slots = [{ name = "CADRUMO_PACKAGE_AGENT_EXECUTABLE", required = false }]\n', 1
+    )
+    assert planted != _SOURCE
+    with pytest.raises(ApplicationEnvironmentError, match="slot"):
+        parse(planted)
+
+
 @pytest.fixture
 def bootstrap() -> Iterator[types.ModuleType]:
     """Load the shipped bootstrap source; only its native import-time module is absent here."""
