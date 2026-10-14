@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import traceback
 from collections.abc import Coroutine
 from datetime import datetime
 from typing import override
@@ -11,6 +10,7 @@ from typing import override
 from pydantic import BaseModel
 
 from ...core.async_cleanup import await_cancellation_complete
+from ...core.diagnostic_log import diagnostic_error_fields
 from ...core.errors.error_codes import ErrorCategory, get_registered_error_code
 from ...core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ...core.hashing import canonical_json_bytes, content_hash_hex, prefixed_digest
@@ -116,16 +116,9 @@ async def _stored_error_detail(
 
 
 def _raising_frame(error: BaseException) -> str:
-    """Name where ``error`` was raised as module, function and line, and nothing it carries.
-
-    The exception's message, arguments and locals may hold private operands, so
-    the log keeps only the code location of the frame that raised it.
-    """
-    frames = list(traceback.walk_tb(error.__traceback__))
-    if not frames:
-        return "-"
-    frame, line = frames[-1]
-    return f"{frame.f_globals.get('__name__', '?')}:{frame.f_code.co_name}:{line}"
+    """Where ``error`` was raised, as the canonical diagnostic origin, and nothing it carries."""
+    origin = diagnostic_error_fields(error).get("error_origin")
+    return "-" if origin is None else str(origin)
 
 
 class SupervisorExecutionMixin(SupervisorHost):
@@ -397,7 +390,11 @@ class SupervisorExecutionMixin(SupervisorHost):
         registered = get_registered_error_code(error) if isinstance(error, CadrumoError) else None
         settled_at = self._clock()
         error_detail_ref = await _stored_error_detail(
-            self.registry, snapshot.identity.definition_id, self._operands, error, written_at=settled_at
+            self.registry,
+            snapshot.identity.definition_id,
+            self._operands_for(snapshot.identity.operation_id),
+            error,
+            written_at=settled_at,
         )
         if registered is not None and registered.category is ErrorCategory.REFUSED:
             # Log only registered lifecycle facts; the exception may carry private operands.

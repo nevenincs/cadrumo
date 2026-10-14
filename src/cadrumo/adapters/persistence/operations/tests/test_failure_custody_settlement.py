@@ -362,4 +362,5 @@ def test_executor_failure_log_record_carries_the_raising_frame(
     # The exception itself may carry private operands, so the record holds no traceback or message of it,
     # only where it was raised: this module's executor.
     assert records[0].exc_info is None
-    assert f"raising_frame={__name__}:execute:" in records[0].getMessage()
+    message = records[0].getMessage()
+    assert f"raising_frame={__file__}:" in message and message.endswith(":execute")
