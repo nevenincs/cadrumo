@@ -99,6 +99,10 @@ _NOT_AGGREGATED: Final[frozenset[str]] = frozenset(
         # aggregate runs no network-fetched tool.
         "check-security-full",
         "check-workflow-security",
+        # Freshness check against a separate cadrumo-agent checkout named by
+        # CADRUMO_DEV_AGENT_CHECKOUT. It refuses with exit 2 where none is
+        # supplied, so the portable aggregate cannot run it on a plain checkout.
+        "check-provider-catalog",
     }
 )
 

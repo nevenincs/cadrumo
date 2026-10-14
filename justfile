@@ -378,10 +378,12 @@ generate-import-load-targets:
 check-import-boundaries:
     @uv run --no-sync python -m dev.test_runs.command --family test-runs --label check-import-boundaries --signal import-boundaries -- uv run --no-sync python -m dev.quality.import_gate
 
+# Each exclude regex is single-quoted so sh and pwsh both pass it byte-for-byte;
+# the dev.quality.suite row carries the same arguments.
 [doc('Verify dependency declarations against the source tree; read-only and blocking.')]
 [group('check')]
 check-dependency-declarations:
-    @uv run --no-sync python -m dev.quality.quiet deptry src/cadrumo src/cadrumo_harness dev/registry --known-first-party cadrumo --known-first-party cadrumo_harness --known-first-party dev --non-dev-dependency-groups registry --extend-exclude ".*test_.*[.]py" --extend-exclude ".*_test_.*[.]py" --extend-exclude ".*[\\/]tests[\\/].*"
+    @uv run --no-sync python -m dev.quality.quiet deptry src/cadrumo src/cadrumo_harness dev/registry --known-first-party cadrumo --known-first-party cadrumo_harness --known-first-party dev --non-dev-dependency-groups registry --extend-exclude '(?:^|[\\/])test_.*[.]py$' --extend-exclude '(?:^|[\\/])_test_.*[.]py$' --extend-exclude '.*[\\/]tests[\\/].*' --extend-exclude '(?:^|[\\/])_data[\\/]' --extend-exclude '(?:^|[\\/])conftest[.]py$'
 
 [doc('Verify product module reachability; read-only and blocking.')]
 [group('check')]
