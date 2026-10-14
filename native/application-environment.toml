@@ -364,9 +364,6 @@ channel = { product_directory = "cadrumo", stable = "stable", separator = "-" }
 # On Windows the native host asks the shell for the per-user local application data
 # folder (FOLDERID_LocalAppData), which LOCALAPPDATA names for the command line; no
 # variable relocates the host's base there.
-# On Windows the native host asks the shell for the per-user local application data
-# folder (FOLDERID_LocalAppData), which LOCALAPPDATA names for the command line; no
-# variable relocates the host's base there.
 [[root.installed_defaults]]
 platform = "windows"
 candidates = [{ variable = "LOCALAPPDATA", subpath = [] }]
