@@ -173,6 +173,7 @@ def test_machine_secret_and_profile_authentication_metadata_matches_live_project
         ("aeat", "app", "ledger", "account", "update"),
         ("aeat", "app", "modelo", "m360", "declare"),
         ("aeat", "config", "login"),
+        ("aeat", "config", "logout"),
         ("aeat", "config", "passphrase", "change"),
         ("aeat", "config", "passphrase", "reset"),
         ("aeat", "config", "profile", "create"),
