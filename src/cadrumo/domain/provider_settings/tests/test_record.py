@@ -30,13 +30,13 @@ _UPDATED_AT = datetime(2026, 10, 13, 9, 0, tzinfo=UTC)
 def _record(*, secret: str = _FAKE_KEY) -> ProviderSettingsRecord:
     return ProviderSettingsRecord(
         schema_version=1,
-        provider="zai",
+        provider="example_cli",
         assistant_auth=AssistantAuth.DIRECT_API,
         credential_state=CredentialState.CONFIGURED,
         credential=ProviderCredential(
             kind=CredentialKind.API_KEY,
             secret=SecretStr(secret),
-            base_url="https://gateway.example.invalid/anthropic",
+            base_url="https://gateway.example.invalid/v1",
         ),
         generation=new_settings_generation(),
         updated_at=_UPDATED_AT,
@@ -91,7 +91,7 @@ def test_credential_presence_must_match_its_state() -> None:
     with pytest.raises(ValidationError):
         ProviderSettingsRecord(
             schema_version=1,
-            provider="anthropic",
+            provider="example_api",
             assistant_auth=AssistantAuth.DIRECT_API,
             credential_state=CredentialState.CONFIGURED,
             generation=new_settings_generation(),

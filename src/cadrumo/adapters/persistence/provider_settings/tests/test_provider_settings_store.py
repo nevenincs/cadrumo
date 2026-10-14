@@ -415,7 +415,7 @@ def test_input_refusals_and_base_urls(tmp_path: Path) -> None:
         plain_http = service.set_credential(
             GATEWAY_LANE, secret=SecretStr(_KEY_A), base_url="http://gateway.example.invalid", expected_revision=absent
         )
-        qwen_without_url = service.set_credential(BARE_GATEWAY_LANE, secret=SecretStr(_KEY_A), expected_revision=absent)
+        bare_without_url = service.set_credential(BARE_GATEWAY_LANE, secret=SecretStr(_KEY_A), expected_revision=absent)
         url_on_plain_key = service.set_credential(
             OTHER_KEY_LANE,
             secret=SecretStr(_KEY_A),
@@ -423,31 +423,33 @@ def test_input_refusals_and_base_urls(tmp_path: Path) -> None:
             expected_revision=absent,
         )
         unknown = service.set_credential(MISSING_LANE, secret=SecretStr(_KEY_A), expected_revision=absent)
-        zai = _accepted(service.set_credential(GATEWAY_LANE, secret=SecretStr(_KEY_A), expected_revision=absent))
-        qwen = _accepted(
+        gateway_entry = _accepted(
+            service.set_credential(GATEWAY_LANE, secret=SecretStr(_KEY_A), expected_revision=absent)
+        )
+        bare = _accepted(
             service.set_credential(
                 BARE_GATEWAY_LANE,
                 secret=SecretStr(_KEY_B),
-                base_url="https://gateway.example.invalid/anthropic",
+                base_url="https://gateway.example.invalid/custom",
                 expected_revision=absent,
             )
         )
-        zai_resolved = _direct(resolver.resolve(GATEWAY_LANE, ProviderConsumer.ASSISTANT))
-        qwen_resolved = _direct(resolver.resolve(BARE_GATEWAY_LANE, ProviderConsumer.ASSISTANT))
-        gemini = resolver.resolve(MISSING_LANE, ProviderConsumer.ASSISTANT)
+        gateway_resolved = _direct(resolver.resolve(GATEWAY_LANE, ProviderConsumer.ASSISTANT))
+        bare_resolved = _direct(resolver.resolve(BARE_GATEWAY_LANE, ProviderConsumer.ASSISTANT))
+        missing = resolver.resolve(MISSING_LANE, ProviderConsumer.ASSISTANT)
 
     assert _refusal_code(masked) is ProviderSettingsRefusalCode.INVALID_KEY_FORMAT
     assert _refusal_code(blank) is ProviderSettingsRefusalCode.INVALID_KEY_FORMAT
     assert _refusal_code(plain_http) is ProviderSettingsRefusalCode.BASE_URL_REJECTED
-    assert _refusal_code(qwen_without_url) is ProviderSettingsRefusalCode.BASE_URL_REJECTED
+    assert _refusal_code(bare_without_url) is ProviderSettingsRefusalCode.BASE_URL_REJECTED
     assert _refusal_code(url_on_plain_key) is ProviderSettingsRefusalCode.BASE_URL_REJECTED
     assert _refusal_code(unknown) is ProviderSettingsRefusalCode.UNKNOWN
-    assert zai.base_url is None
-    assert zai.default_base_url == GATEWAY_DEFAULT_URL
-    assert qwen.base_url == "https://gateway.example.invalid/anthropic"
-    assert zai_resolved.base_url == GATEWAY_DEFAULT_URL
-    assert qwen_resolved.base_url == "https://gateway.example.invalid/anthropic"
-    assert _unavailable_reason(gemini) is ProviderCredentialUnavailableReason.UNKNOWN_PROVIDER
+    assert gateway_entry.base_url is None
+    assert gateway_entry.default_base_url == GATEWAY_DEFAULT_URL
+    assert bare.base_url == "https://gateway.example.invalid/custom"
+    assert gateway_resolved.base_url == GATEWAY_DEFAULT_URL
+    assert bare_resolved.base_url == "https://gateway.example.invalid/custom"
+    assert _unavailable_reason(missing) is ProviderCredentialUnavailableReason.UNKNOWN_PROVIDER
 
 
 def test_status_json_matches_the_desktop_contract(tmp_path: Path) -> None:
@@ -522,7 +524,7 @@ def test_agent_credential_source_hands_fresh_buffers_under_current_generations(t
         current = source.current_generations()
         zai_secret = bytes(resolved.credentials["gateway"].secret)
         zai_url = resolved.credentials["gateway"].base_url
-        anthropic_secret = bytes(resolved.credentials["example"].secret)
+        example_secret = bytes(resolved.credentials["example"].secret)
         providers = set(resolved.credentials)
         rendered = repr(resolved.credentials)
         for credential in resolved.credentials.values():
@@ -539,7 +541,7 @@ def test_agent_credential_source_hands_fresh_buffers_under_current_generations(t
     assert current.sign_in == empty.sign_in
     assert current.provider_settings != empty.provider_settings
     assert providers == {"gateway", "example"}
-    assert anthropic_secret == _KEY_B.encode()
+    assert example_secret == _KEY_B.encode()
     assert zai_secret == _KEY_A.encode()
     assert zai_url == GATEWAY_DEFAULT_URL
     assert _KEY_A not in rendered
@@ -550,7 +552,7 @@ def test_agent_credential_source_hands_fresh_buffers_under_current_generations(t
 def test_base_url_is_stored_kept_or_cleared(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         service = _service(profile)
-        custom = "https://gateway.example.invalid/anthropic"
+        custom = "https://gateway.example.invalid/custom"
         stored = _accepted(
             service.set_credential(
                 GATEWAY_LANE,
@@ -567,7 +569,7 @@ def test_base_url_is_stored_kept_or_cleared(tmp_path: Path) -> None:
                 GATEWAY_LANE, secret=SecretStr(_KEY_B), expected_revision=kept.revision, base_url=BaseUrlChange.CLEAR
             )
         )
-        qwen = _accepted(
+        bare = _accepted(
             service.set_credential(
                 BARE_GATEWAY_LANE,
                 secret=SecretStr(_KEY_A),
@@ -575,13 +577,13 @@ def test_base_url_is_stored_kept_or_cleared(tmp_path: Path) -> None:
                 base_url=custom,
             )
         )
-        qwen_kept = _accepted(
-            service.set_credential(BARE_GATEWAY_LANE, secret=SecretStr(_KEY_B), expected_revision=qwen.revision)
+        bare_kept = _accepted(
+            service.set_credential(BARE_GATEWAY_LANE, secret=SecretStr(_KEY_B), expected_revision=bare.revision)
         )
-        qwen_cleared = service.set_credential(
+        bare_cleared = service.set_credential(
             BARE_GATEWAY_LANE,
             secret=SecretStr(_KEY_B),
-            expected_revision=qwen_kept.revision,
+            expected_revision=bare_kept.revision,
             base_url=BaseUrlChange.CLEAR,
         )
         resolved = _direct(_resolver(profile).resolve(GATEWAY_LANE, ProviderConsumer.ASSISTANT))
@@ -591,8 +593,8 @@ def test_base_url_is_stored_kept_or_cleared(tmp_path: Path) -> None:
     assert kept.base_url == custom
     assert cleared.base_url is None
     assert resolved.base_url == GATEWAY_DEFAULT_URL
-    assert qwen_kept.base_url == custom
-    assert _refusal_code(qwen_cleared) is ProviderSettingsRefusalCode.BASE_URL_REJECTED
+    assert bare_kept.base_url == custom
+    assert _refusal_code(bare_cleared) is ProviderSettingsRefusalCode.BASE_URL_REJECTED
     assert isinstance(installed_status, ProviderSettingsStatus)
     assert installed_status.development is False
 

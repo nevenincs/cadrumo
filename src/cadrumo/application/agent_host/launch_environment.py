@@ -3,7 +3,7 @@
 The agent's credentials travel only on its standard-input frame. Its environment
 is built from an allow-list rather than by clearing names from the runtime's
 own, because a cleared list cannot know every provider's variable: an inherited
-``ANTHROPIC_API_KEY`` or ``AWS_SECRET_ACCESS_KEY`` would otherwise reach the
+a provider key or ``AWS_SECRET_ACCESS_KEY`` would otherwise reach the
 agent and every process it starts.
 
 The runtime fills only the gateway's launch slots: the hosted root, the two

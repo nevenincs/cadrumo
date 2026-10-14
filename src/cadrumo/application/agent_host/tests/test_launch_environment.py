@@ -24,12 +24,12 @@ _RECEIVED = {
     "SystemRoot": "C:\\Windows",
     "PATH": "C:\\Windows\\System32",
     "USERPROFILE": "C:\\Users\\person",
-    "ANTHROPIC_API_KEY": "sk-ant-test-NOT-A-REAL-KEY",
-    "OPENAI_API_KEY": "sk-test-NOT-A-REAL-KEY",
+    "EXAMPLE_PROVIDER_API_KEY": "sk-ant-test-NOT-A-REAL-KEY",
+    "OTHER_PROVIDER_API_KEY": "sk-test-NOT-A-REAL-KEY",
     "AWS_SECRET_ACCESS_KEY": "aws-test-NOT-A-REAL-KEY",
-    "CADRUMO_LLM_ANTHROPIC_API_KEY": "sk-ant-test-NOT-A-REAL-KEY",
-    "CADRUMO_AGENT_ANTHROPIC_API_KEY": "sk-ant-test-NOT-A-REAL-KEY",
-    "CADRUMO_AGENT_CLAUDE_API_KEY": "sk-ant-test-NOT-A-REAL-KEY",
+    "CADRUMO_LLM_EXAMPLE_API_KEY": "sk-ant-test-NOT-A-REAL-KEY",
+    "CADRUMO_AGENT_EXAMPLE_API_KEY": "sk-ant-test-NOT-A-REAL-KEY",
+    "CADRUMO_AGENT_OTHER_API_KEY": "sk-ant-test-NOT-A-REAL-KEY",
     "CADRUMO_AGENT_GATEWAY_TOKEN": "gateway-test-NOT-A-REAL-TOKEN",
     "GITHUB_TOKEN": "ghp-test-NOT-A-REAL-TOKEN",
     "PYTHONPATH": "C:\\elsewhere",
@@ -54,13 +54,19 @@ def test_only_allow_listed_system_values_the_pinned_root_and_the_hosted_root_rea
     assert environment["SYSTEMROOT"] == "C:\\Windows"
     assert environment["USERPROFILE"] == "C:\\Users\\person"
     assert "NOT-A-REAL" not in repr(environment)
-    for name in ("ANTHROPIC_API_KEY", "OPENAI_API_KEY", "AWS_SECRET_ACCESS_KEY", "GITHUB_TOKEN", "PYTHONPATH"):
+    for name in (
+        "EXAMPLE_PROVIDER_API_KEY",
+        "OTHER_PROVIDER_API_KEY",
+        "AWS_SECRET_ACCESS_KEY",
+        "GITHUB_TOKEN",
+        "PYTHONPATH",
+    ):
         assert name not in environment
     assert not any(name.startswith("CADRUMO_LLM_") or name == "CADRUMO_AGENT_GATEWAY_TOKEN" for name in environment)
 
 
 def test_posix_hosts_keep_only_their_own_allow_list(tmp_path: Path) -> None:
-    received = {"HOME": "/home/person", "PATH": "/usr/bin", "ANTHROPIC_API_KEY": "sk-ant-test-NOT-A-REAL-KEY"}
+    received = {"HOME": "/home/person", "PATH": "/usr/bin", "EXAMPLE_PROVIDER_API_KEY": "sk-ant-test-NOT-A-REAL-KEY"}
     environment = agent_launch_environment(
         storage_root=tmp_path / "storage",
         agent_root=tmp_path / "storage" / "agent" / "opaque",
@@ -69,7 +75,7 @@ def test_posix_hosts_keep_only_their_own_allow_list(tmp_path: Path) -> None:
         sys_platform="linux",
     )
     assert environment["HOME"] == "/home/person"
-    assert "ANTHROPIC_API_KEY" not in environment
+    assert "EXAMPLE_PROVIDER_API_KEY" not in environment
     assert "NOT-A-REAL" not in repr(environment)
 
 

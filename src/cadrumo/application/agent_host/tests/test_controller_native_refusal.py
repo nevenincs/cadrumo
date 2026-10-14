@@ -106,7 +106,7 @@ class _Credentials:
     def resolve_for_agent(self) -> ResolvedAgentCredentials:
         return ResolvedAgentCredentials(
             generations=self.generations,
-            credentials={"anthropic": AgentCredential(bytearray(b"sk-test-NOT-A-REAL-KEY"))},
+            credentials={"example": AgentCredential(bytearray(b"sk-test-NOT-A-REAL-KEY"))},
         )
 
     def current_generations(self) -> AgentGenerations | None:
