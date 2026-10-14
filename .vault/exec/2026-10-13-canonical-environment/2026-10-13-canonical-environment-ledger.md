@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:8e1d1ec3ad45eee8d00521c2948e950c414c062e9f9b447e15506385f92cd73e'
+body_hash: 'sha256:32fd1192caaff13b9bc683fe93294d4ed815a569b5373633998160789843502f'
 related:
   - "[[2026-10-13-canonical-environment-plan]]"
 ---
@@ -233,6 +233,29 @@ related:
 - `S12` `verify:` `just check-types` -> `pass`
 - `S12` `verify:` `just check-style and just check-format` -> `pass`
 - `S12` `by:` `vaultspec-standard-executor`
+- `S10` `M` `src/cadrumo/core/storage_environment.py`
+- `S10` `M` `src/cadrumo/core/config.py`
+- `S10` `M` `src/cadrumo/core/storage_taxonomy.py`
+- `S10` `M` `src/cadrumo/core/storage_taxonomy_locations.py`
+- `S10` `M` `src/cadrumo/core/tests/test_storage_environment.py`
+- `S10` `M` `src/cadrumo/core/tests/test_storage_path_contract.py`
+- `S10` `M` `src/cadrumo/core/tests/test_output_dir_state_root.py`
+- `S10` `M` `src/cadrumo/core/tests/test_storage_fingerprint_participation_gate.py`
+- `S10` `M` `src/cadrumo/adapters/local_runtime/worker_environment.py`
+- `S10` `M` `src/cadrumo/adapters/local_runtime/linux_worker_process.py`
+- `S10` `M` `src/cadrumo/adapters/local_runtime/tests/test_profile_worker_cleanup.py`
+- `S10` `M` `src/cadrumo/adapters/local_runtime/tests/test_worker_storage_environment.py`
+- `S10` `M` `src/cadrumo/entrypoints/runtime/linux_worker_guardian.py`
+- `S10` `M` `dev/packaging/native/package_launch_smoke.py`
+- `S10` `M` `dev/audit/tests/test_unreachable_records.py`
+- `S10` `M` `dev/packaging/tests/test_native_manager_session_records.py`
+- `S10` `M` `env/.env.example`
+- `S10` `M` `docs/reference/environment-overrides.md`
+- `S10` `verify:` `uv run --no-sync pytest src/cadrumo/core/tests src/cadrumo/adapters/local_runtime/tests src/cadrumo/entrypoints/runtime/tests src/cadrumo/application/storage_management dev/packaging/tests/test_native_manager_session_records.py dev/docs/tests/test_env_reference.py` -> `fail`
+- `S10` `verify:` `uv run --no-sync pytest dev/packaging -q` -> `fail`
+- `S10` `verify:` `just check-types` -> `pass`
+- `S10` `verify:` `uv run --no-sync ruff check` -> `pass`
+- `S10` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -261,3 +284,4 @@ related:
 - `S12` S12 The gate also allows the three package-side test spellings in `dev/packaging/native/tests/test_agent_image.py,` `test_launch_profile_vectors.py` and native/platform/src/launch.rs, which are native-lane files left unedited; each entry fails the gate once its file stops spelling the prefix.
 - `S12` S12 .vaultspec/skills/cadrumo-start/references/build-cmake-and-packaging.md:15 still names the retired CMake selector; the gate does not scan .vaultspec and the skill is user-owned, so it is reported, not edited.
 - `S12` S12 dev/quality failures unrelated to this Step: `test_suite_gate_table` (check-provider-catalog has no suite row; check-dependency-declarations arguments differ), `test_doc_privacy` (home paths in .vault audits and research), `test_production_scan_surface_has_no_orphans` `(contract_manifest.py,` `_provider_command_specs.py).` `dev/tests/test_native_build_recipes.py` fails on the windows-installers-x64 preset having no cacheVariables.
+- `S10` Commits 43962530ae and 64960fec66. Remaining suite failures are unrelated to S10 and predate it: storage liveness `posix_endpoint` claim, sha256 adoption, tty probe, `agent_programs` literal path (S09), `dead_code` population, playwright doctor, keychain receipt recovery, docs build and localization, plus the 2 known `test_authority_build_hook` cases. check-import-boundaries kept all 15 contracts and loaded 4688 modules; its verdict was unavailable only because other sessions changed the tree mid-run. Python child launches no longer clear interpreter or loader classes; the authority root stays relayed as the CLI's own setting; the POSIX worker containment baseline is kept. docs/reference/environment-overrides.md regenerated with `dev.docs.env_reference` after the webview setting was removed.
