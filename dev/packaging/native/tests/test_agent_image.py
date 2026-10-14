@@ -97,17 +97,42 @@ def test_agent_names_reach_only_the_agent_image_and_the_token_only_its_worker() 
         assert token == (profile["name"] == "agent-worker"), profile["name"]
     gateway = next(profile for profile in section["profiles"] if profile["name"] == "agent-gateway")
     assert {slot["name"]: slot["kind"] for slot in gateway["slots"]} == {
+        "CADRUMO_LOCAL_STORAGE_ROOT": "directory",
         "CADRUMO_AGENT_HOSTED_ROOT": "directory",
         "CADRUMO_AGENT_PORT": "port",
         "CADRUMO_AGENT_WORKER_PORT": "port",
         "CADRUMO_AGENT_HOSTED_RELAY_EXECUTABLE": "executable",
     }
     assert {"CADRUMO_AGENT_DEVELOPMENT_TOOL_SERVER", "CADRUMO_AGENT_PROVIDER_PROOF_POLICY"} <= set(gateway["pass"])
+    # The gateway receives its parent's storage root as an optional slot it does not pin; the
+    # worker neither receives nor pins it. A slot is admitted by its kind alone: whoever the
+    # caller is, the compiled slot names no parent.
+    worker = next(profile for profile in section["profiles"] if profile["name"] == "agent-worker")
+    root_slot = next(slot for slot in gateway["slots"] if slot["name"] == "CADRUMO_LOCAL_STORAGE_ROOT")
+    assert root_slot == {"name": "CADRUMO_LOCAL_STORAGE_ROOT", "kind": "directory", "required": False}
+    assert all(set(slot) == {"name", "kind", "required"} for slot in gateway["slots"] + worker["slots"])
+    assert "root" not in gateway["pins"] and "root" not in worker["pins"]
+    assert "CADRUMO_LOCAL_STORAGE_ROOT" not in [
+        *worker["pass"],
+        *worker["operator"],
+        *(slot["name"] for slot in worker["slots"]),
+    ]
     runtime = next(profile for profile in section["profiles"] if profile["name"] == "cadrumo-runtime")
     assert {(value["name"], value["value"]) for value in runtime["fixed"]} == {
         ("CADRUMO_PACKAGE_AGENT_EXECUTABLE", _AGENT),
         ("CADRUMO_PACKAGE_RELAY_EXECUTABLE", "cadrumo-mcp"),
     }
+
+
+def test_only_an_image_that_does_not_pin_its_root_may_take_it_as_a_slot() -> None:
+    planted = _SOURCE.replace(
+        'pins = ["temporary", "authority"]\npass = ["CADRUMO_AGENT_DEVELOPMENT_TOOL_SERVER"',
+        'pins = true\npass = ["CADRUMO_AGENT_DEVELOPMENT_TOOL_SERVER"',
+        1,
+    )
+    assert planted != _SOURCE
+    with pytest.raises(ApplicationEnvironmentError, match="slot"):
+        parse(planted)
 
 
 def test_the_declaration_refuses_an_agent_name_outside_the_agent_image() -> None:

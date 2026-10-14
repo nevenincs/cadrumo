@@ -321,34 +321,42 @@ pub fn define_environment(
         }
     }
     let mut directories = Vec::new();
-    if profile.pins {
+    let pinned = |kind: &str| profile.pins.contains(&kind);
+    if pinned("root") || pinned("temporary") {
         let full = |name: &str| lookup(ambient, name);
         let root =
             resolve_root(&full).map_err(|refused| DefineError::Failed(refused.to_string()))?;
         let root = crate::normalize_absolute_path(&root)
             .map_err(|error| DefineError::Failed(error.to_string()))?;
-        let member = |name: &str| {
-            if name == TEMPORARY_ENV && !admits(profile, TEMPORARY_ENV) {
-                None
-            } else {
-                lookup(ambient, name)
-            }
-        };
-        let temporary = storage::temporary_path(&root, &member)
-            .map_err(|refused| DefineError::Failed(refused.to_string()))?;
-        let temporary = crate::normalize_absolute_path(&temporary)
-            .map_err(|error| DefineError::Failed(error.to_string()))?;
-        defined.push((ROOT_VARIABLE, root.clone().into_os_string()));
-        for name in LAUNCH_TEMPORARY_PINS {
-            defined.push((name, temporary.clone().into_os_string()));
+        if pinned("root") {
+            defined.push((ROOT_VARIABLE, root.clone().into_os_string()));
+            directories.push(root.clone());
         }
+        if pinned("temporary") {
+            let member = |name: &str| {
+                if name == TEMPORARY_ENV && !admits(profile, TEMPORARY_ENV) {
+                    None
+                } else {
+                    lookup(ambient, name)
+                }
+            };
+            let temporary = storage::temporary_path(&root, &member)
+                .map_err(|refused| DefineError::Failed(refused.to_string()))?;
+            let temporary = crate::normalize_absolute_path(&temporary)
+                .map_err(|error| DefineError::Failed(error.to_string()))?;
+            for name in LAUNCH_TEMPORARY_PINS {
+                defined.push((name, temporary.clone().into_os_string()));
+            }
+            directories.push(temporary);
+        }
+    }
+    if pinned("authority") {
         defined.push((
             LAUNCH_AUTHORITY_PIN,
             package
                 .join(storage::relative_components(LAUNCH_AUTHORITY_PATH))
                 .into_os_string(),
         ));
-        directories.extend([root, temporary]);
     }
     for fixed in profile.fixed {
         let value = match fixed.source {

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:fadb24bca7a40ef7e2f525078cdc9146f62abd98637d617b87529c249b806ed2'
+body_hash: 'sha256:b266c6d7edcc19ee8e6ada52080e29154ae353e85e9cc8493cab06cf718ccc76'
 related:
   - "[[2026-10-13-canonical-environment-plan]]"
 ---
@@ -206,6 +206,12 @@ related:
 - `S06` `verify:` `cargo +1.96.0 test native/platform (45)` -> `pass`
 - `S06` `verify:` `cargo +1.96.0 clippy --all-targets -D warnings native/desktop/src-tauri with and without live-package-tests, and test environment (8, including the relocated-log override case)` -> `pass`
 - `S06` `verify:` `prettier --check and node --check native/desktop/tests/packaged.test.mjs` -> `pass`
+- `S07` `M` `native/platform/src/launch.rs`
+- `S07` `M` `dev/packaging/native/tests/test_agent_image.py`
+- `S07` `verify:` `uv run --no-sync pytest launch vectors, application environment, agent image, storage contract, desktop workspace, generator imports (67)` -> `pass`
+- `S07` `verify:` `ruff and ty dev/packaging` -> `pass`
+- `S07` `verify:` `cargo +1.96.0 clippy --all-targets -D warnings native/platform (win, linux, darwin) and test (45, Windows root-slot vectors replayed)` -> `pass`
+- `S07` `verify:` `cargo +1.96.0 test native/manager --test environment` -> `pass`
 
 ## Notes
 
@@ -229,3 +235,4 @@ related:
 - `S07` The runtime image's profile fixes `CADRUMO_PACKAGE_AGENT_EXECUTABLE` and `CADRUMO_PACKAGE_RELAY_EXECUTABLE` for P03.S09
 - `S07` sys.frozen and sys.executable are held by a static source test and the bootstrap package-root test; a launched-image check belongs to the P04.S14 probe
 - `S06` Follow-up within this Step's retirement scope, on orchestrator instruction: the desktop no longer queries the command line's Python for package locations; webview, console workspace and manager log come from the compiled components under the pinned root, the command line's log directory follows its declared override, and `CADRUMO_WEBVIEW_DIR` is no longer a declared location
+- `S07` Correction within the ADR's slot mechanism, on orchestrator ruling: the agent gateway takes `CADRUMO_LOCAL_STORAGE_ROOT` as an optional directory slot, admitted by kind alone whoever the caller is (runtime or a development package runner), so its relay resolves the caller's root instead of the installed default; agent profiles pin only the temporary variables and authority, and the worker never receives the root name. Profile pins became a list of root, temporary and authority

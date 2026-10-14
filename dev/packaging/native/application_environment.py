@@ -33,6 +33,7 @@ ARGUMENT_KINDS = frozenset({"handle", "descriptor"})
 BASE_GROUPS = ("system", "session", "terminal", "display", "network")
 PLATFORMS = ("windows", "posix")
 PATH_ENTRIES = frozenset({"executable", "external", "native", "system"})
+PIN_KINDS = ("root", "temporary", "authority")
 
 # Declared names reach C and Rust string literals and process environments unescaped.
 _NAME = re.compile(r"[A-Z][A-Z0-9_]*")
@@ -74,7 +75,7 @@ class LaunchProfile:
     image: str
     inherit: bool
     base: tuple[str, ...]
-    pins: bool
+    pins: tuple[str, ...]
     operator: tuple[str, ...]
     passed: tuple[str, ...]
     fixed: tuple[FixedValue, ...]
@@ -286,7 +287,7 @@ def _fixed(raw: object, where: str, names: Mapping[str, Mapping[str, str]], *, r
 
 
 def _profiles(
-    raw: object, names: Mapping[str, Mapping[str, str]], groups: Mapping[str, tuple[str, ...]]
+    raw: object, names: Mapping[str, Mapping[str, str]], groups: Mapping[str, tuple[str, ...]], root_variable: str
 ) -> dict[str, dict[str, Any]]:
     profiles: dict[str, dict[str, Any]] = {}
     for profile, item in _table(raw, "profiles").items():
@@ -299,10 +300,17 @@ def _profiles(
             raise _fail(f"{where} image is malformed")
         if entry["base"] not in {"groups", "inherit"} or entry["path"] not in {"package", "inherit"}:
             raise _fail(f"{where} base must be groups or inherit and path must be package or inherit")
-        if not isinstance(entry["pins"], bool):
-            raise _fail(f"{where} pins must be a boolean")
+        # true pins the root, the temporary variables and the authority; a list pins only those named.
+        pins: tuple[str, ...]
+        if isinstance(entry["pins"], bool):
+            pins = PIN_KINDS if entry["pins"] else ()
+        else:
+            pins = _strings(entry["pins"], f"{where}.pins")
+            if not set(pins) <= set(PIN_KINDS):
+                raise _fail(f"{where}.pins names an undeclared pin; declared: {list(PIN_KINDS)}")
+            pins = tuple(kind for kind in PIN_KINDS if kind in pins)
         inherit = entry["base"] == "inherit"
-        if inherit and (entry["pins"] or entry["path"] != "inherit" or set(entry) - {"image", "base", "pins", "path"}):
+        if inherit and (pins or entry["path"] != "inherit" or set(entry) - {"image", "base", "pins", "path"}):
             raise _fail(f"{where} inherits its caller's environment and may not pin, project or admit names")
         base_groups = _strings(entry.get("base_groups", []), f"{where}.base_groups") if not inherit else ()
         if not inherit and not base_groups:
@@ -326,7 +334,9 @@ def _profiles(
             slot = _table(value, f"{where}.slots[{index}]")
             _keys(slot, f"{where}.slots[{index}]", {"name", "required"})
             name = slot["name"]
-            if names.get(name, {}).get("role") != "slot" or not isinstance(slot["required"], bool):
+            # The storage root is a slot where a parent hands its own root to an image that does not pin it.
+            admitted = names.get(name, {}).get("role") == "slot" or (name == root_variable and "root" not in pins)
+            if not admitted or not isinstance(slot["required"], bool):
                 raise _fail(f"{where}.slots[{index}] must name a declared slot and whether it is required")
             slots.append(LaunchSlot(name=name, kind=names[name]["kind"], required=slot["required"]))
         defined = [*operator, *passed, *(value.name for value in fixed), *(slot.name for slot in slots)]
@@ -336,7 +346,7 @@ def _profiles(
             "image": entry["image"],
             "inherit": inherit,
             "base_groups": base_groups,
-            "pins": entry["pins"],
+            "pins": pins,
             "operator": operator,
             "pass": passed,
             "fixed": fixed,
@@ -736,7 +746,7 @@ def parse(text: str) -> ApplicationEnvironment:
         raise _fail("path.posix_system entries must be absolute")
     root_table = _table(document["root"], "root")
     root = _root(root_table, names)
-    profiles = _profiles(document["profiles"], names, groups)
+    profiles = _profiles(document["profiles"], names, groups, root["variable"])
     if "agent" in document:
         _agent(document["agent"], names, profiles)
     invocations = _invocations(document.get("invocations", []))
@@ -839,7 +849,7 @@ def compile_section(declaration: ApplicationEnvironment, layout: Mapping[str, An
                 "inherit": entry["inherit"],
                 "invoked": entry["invoked"],
                 "base": base,
-                "pins": entry["pins"],
+                "pins": list(entry["pins"]),
                 "operator": list(entry["operator"]),
                 "pass": list(entry["pass"]),
                 "fixed": [fixed(value) for value in entry["fixed"]],
@@ -929,7 +939,7 @@ def rust_lines(section: Mapping[str, Any]) -> list[str]:
         "    pub inherit: bool,",
         "    pub invoked: bool,",
         "    pub base: &'static [&'static str],",
-        "    pub pins: bool,",
+        "    pub pins: &'static [&'static str],",
         "    pub operator: &'static [&'static str],",
         "    pub pass: &'static [&'static str],",
         "    pub fixed: &'static [LaunchFixed],",
@@ -988,7 +998,7 @@ def rust_lines(section: Mapping[str, Any]) -> list[str]:
         lines.append(
             f"    LaunchProfile {{ name: {_rust_string(profile['name'])}, image: {_rust_string(profile['image'])}, "
             f"inherit: {str(profile['inherit']).lower()}, invoked: {str(profile['invoked']).lower()}, "
-            f"base: {_rust_strings(profile['base'])}, pins: {str(profile['pins']).lower()}, "
+            f"base: {_rust_strings(profile['base'])}, pins: {_rust_strings(profile['pins'])}, "
             f"operator: {_rust_strings(profile['operator'])}, pass: {_rust_strings(profile['pass'])}, "
             f"fixed: &[{fixed}], slots: &[{slots}], package_path: {str(profile['package_path']).lower()} }},"
         )
@@ -1142,6 +1152,8 @@ def reference_define(
             continue
         if slot.kind == "port" and not (value.isdigit() and value.isascii() and int(value) <= 0xFFFF):
             raise LaunchRefusedError("launch_value_malformed", slot.name)
+        if slot.kind == "directory" and not path_type(value).is_absolute():
+            raise LaunchRefusedError("launch_value_malformed", slot.name)
         parameters.append((slot.name, value))
     base = [name for group in profile["base_groups"] for name in declaration.base[family][group]]
     for name in (*base, *profile["operator"], *profile["pass"]):
@@ -1149,14 +1161,17 @@ def reference_define(
         if value is not None:
             put(name, value)
     package_path = path_type(package)
-    if profile["pins"]:
+    pins = profile["pins"]
+    if "root" in pins:
+        put(declaration.root["variable"], str(path_type(root)))
+    if "temporary" in pins:
         member = declaration.temporary_member["name"]
         admitted = member in profile["operator"] or member in profile["pass"]
         override = get(member) if admitted else None
         temporary = path_type(root) / (override or declaration.temporary_member["default"])
-        put(declaration.root["variable"], str(path_type(root)))
         for name in declaration.temporary:
             put(name, str(temporary))
+    if "authority" in pins:
         put(declaration.authority.name, str(package_path / layout_paths[declaration.authority.value]))
     for fixed in profile["fixed"]:
         if fixed.source == "value":
