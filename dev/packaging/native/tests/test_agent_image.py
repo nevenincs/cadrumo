@@ -104,19 +104,15 @@ def test_agent_names_reach_only_the_agent_image_and_the_token_only_its_worker() 
         "CADRUMO_AGENT_HOSTED_RELAY_EXECUTABLE": "executable",
     }
     assert {"CADRUMO_AGENT_DEVELOPMENT_TOOL_SERVER", "CADRUMO_AGENT_PROVIDER_PROOF_POLICY"} <= set(gateway["pass"])
-    # The gateway receives its parent's storage root as an optional slot it does not pin; the
-    # worker neither receives nor pins it. A slot is admitted by its kind alone: whoever the
-    # caller is, the compiled slot names no parent.
+    # The gateway and its worker each receive their parent's storage root as an optional slot
+    # they do not pin, which carries it on to the relay the worker starts. A slot is admitted
+    # by its kind alone: whoever the caller is, the compiled slot names no parent.
     worker = next(profile for profile in section["profiles"] if profile["name"] == "agent-worker")
-    root_slot = next(slot for slot in gateway["slots"] if slot["name"] == "CADRUMO_LOCAL_STORAGE_ROOT")
-    assert root_slot == {"name": "CADRUMO_LOCAL_STORAGE_ROOT", "kind": "directory", "required": False}
-    assert all(set(slot) == {"name", "kind", "required"} for slot in gateway["slots"] + worker["slots"])
-    assert "root" not in gateway["pins"] and "root" not in worker["pins"]
-    assert "CADRUMO_LOCAL_STORAGE_ROOT" not in [
-        *worker["pass"],
-        *worker["operator"],
-        *(slot["name"] for slot in worker["slots"]),
-    ]
+    for profile in (gateway, worker):
+        root_slot = next(slot for slot in profile["slots"] if slot["name"] == "CADRUMO_LOCAL_STORAGE_ROOT")
+        assert root_slot == {"name": "CADRUMO_LOCAL_STORAGE_ROOT", "kind": "directory", "required": False}
+        assert all(set(slot) == {"name", "kind", "required"} for slot in profile["slots"])
+        assert "root" not in profile["pins"]
     runtime = next(profile for profile in section["profiles"] if profile["name"] == "cadrumo-runtime")
     assert {(value["name"], value["value"]) for value in runtime["fixed"]} == {
         ("CADRUMO_PACKAGE_AGENT_EXECUTABLE", _AGENT),

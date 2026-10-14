@@ -440,10 +440,10 @@ fixed = [
 path = "package"
 
 # The agent image runs only its gateway and its worker. It keeps itself as the
-# interpreter, so the worker the gateway starts re-executes this image. The
-# gateway receives its parent's storage root as a launch parameter, validated by
-# kind alone, and hands that one name to the relay it starts; the worker never
-# receives it. Neither pins the root.
+# interpreter, so the worker the gateway starts re-executes this image. Each
+# receives its parent's storage root as a launch parameter, validated by kind
+# alone: the gateway from its caller, the worker from the gateway, and the
+# worker hands that one name to the relay it starts. Neither pins the root.
 [profiles.agent-gateway]
 image = "cadrumo-agent"
 base = "groups"
@@ -474,6 +474,7 @@ pass = [
   "CADRUMO_AGENT_INTERNAL_TOKEN",
 ]
 slots = [
+  { name = "CADRUMO_LOCAL_STORAGE_ROOT", required = false },
   { name = "CADRUMO_AGENT_HOSTED_ROOT", required = false },
   { name = "CADRUMO_AGENT_PORT", required = false },
   { name = "CADRUMO_AGENT_WORKER_PORT", required = false },
@@ -638,7 +639,7 @@ image = "cadrumo-agent"
 arguments = ["-m", "cadrumo_agent.worker"]
 ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "49152", CADRUMO_AGENT_WORKER_PORT = "49153", CADRUMO_AGENT_GATEWAY_URL = "http://127.0.0.1:49152", CADRUMO_AGENT_WORKER_HOST = "127.0.0.1", CADRUMO_AGENT_GATEWAY_LIFETIME_ID = "lifetime", CADRUMO_AGENT_WORKER_GENERATION = "1", CADRUMO_AGENT_INTERNAL_TOKEN = "synthetic-token", CADRUMO_AGENT_ENV_FILE = "C:\\agent.env" }
 profile = "agent-worker"
-environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "49152", CADRUMO_AGENT_WORKER_PORT = "49153", CADRUMO_AGENT_GATEWAY_URL = "http://127.0.0.1:49152", CADRUMO_AGENT_WORKER_HOST = "127.0.0.1", CADRUMO_AGENT_GATEWAY_LIFETIME_ID = "lifetime", CADRUMO_AGENT_WORKER_GENERATION = "1", CADRUMO_AGENT_INTERNAL_TOKEN = "synthetic-token", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "49152", CADRUMO_AGENT_WORKER_PORT = "49153", CADRUMO_AGENT_GATEWAY_URL = "http://127.0.0.1:49152", CADRUMO_AGENT_WORKER_HOST = "127.0.0.1", CADRUMO_AGENT_GATEWAY_LIFETIME_ID = "lifetime", CADRUMO_AGENT_WORKER_GENERATION = "1", CADRUMO_AGENT_INTERNAL_TOKEN = "synthetic-token", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
 path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
 
 [[launch_vectors]]
@@ -684,7 +685,7 @@ image = "cadrumo-agent"
 arguments = ["-m", "cadrumo_agent.worker"]
 ambient = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "/", CADRUMO_AGENT_WORKER_PORT = "49153", CADRUMO_AGENT_INTERNAL_TOKEN = "synthetic-token", CADRUMO_AGENT_GATEWAY_LIFETIME_ID = "lifetime" }
 profile = "agent-worker"
-environment = { HOME = "/home/ada", CADRUMO_AGENT_WORKER_PORT = "49153", CADRUMO_AGENT_INTERNAL_TOKEN = "synthetic-token", CADRUMO_AGENT_GATEWAY_LIFETIME_ID = "lifetime", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority" }
+environment = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "/", CADRUMO_AGENT_WORKER_PORT = "49153", CADRUMO_AGENT_INTERNAL_TOKEN = "synthetic-token", CADRUMO_AGENT_GATEWAY_LIFETIME_ID = "lifetime", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority" }
 path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
 
 [[launch_vectors]]
@@ -720,6 +721,42 @@ name = "posix-agent-gateway-refuses-a-relative-storage-root"
 platform = "posix"
 image = "cadrumo-agent"
 arguments = ["-m", "cadrumo_agent.cli.main", "serve"]
+ambient = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "var/storage" }
+refusal = { code = "launch_value_malformed", subject = "CADRUMO_LOCAL_STORAGE_ROOT" }
+
+[[launch_vectors]]
+name = "windows-agent-worker-without-a-root-defines-none"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.worker"]
+ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_AGENT_WORKER_PORT = "49153" }
+profile = "agent-worker"
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_AGENT_WORKER_PORT = "49153", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "windows-agent-worker-refuses-a-relative-storage-root"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.worker"]
+ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "var\\storage" }
+refusal = { code = "launch_value_malformed", subject = "CADRUMO_LOCAL_STORAGE_ROOT" }
+
+[[launch_vectors]]
+name = "posix-agent-worker-without-a-root-defines-none"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.worker"]
+ambient = { HOME = "/home/ada", CADRUMO_AGENT_WORKER_PORT = "49153" }
+profile = "agent-worker"
+environment = { HOME = "/home/ada", CADRUMO_AGENT_WORKER_PORT = "49153", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
+
+[[launch_vectors]]
+name = "posix-agent-worker-refuses-a-relative-storage-root"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.worker"]
 ambient = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "var/storage" }
 refusal = { code = "launch_value_malformed", subject = "CADRUMO_LOCAL_STORAGE_ROOT" }
 
