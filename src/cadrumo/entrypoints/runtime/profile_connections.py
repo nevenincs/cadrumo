@@ -44,7 +44,7 @@ from ...application.user_profile.automation_custody_port import (
 from ...core.diagnostic_log import diagnostic_event
 from ...core.logging import get_logger
 from ...core.time.clock import now
-from ..operation_composition import build_production_operation_registry
+from ..operation_composition import build_manifest_operation_registry
 from .access_management import RuntimeAccessManagement
 from .agent_hosts import RuntimeAgentHosts
 from .bootstrap_delete import RuntimeBootstrapDeleteMixin
@@ -356,9 +356,11 @@ class RuntimeProfileConnections(
             self._idle_fenced = False
 
     def prepare_registry(self) -> OperationRegistry:
-        """Validate the public operation graph before transport readiness.
+        """Bind the public operation contracts before transport readiness.
 
-        This is profile independent and never opens a profile or credential.
+        The contracts come from the shipped manifest; an operation's group is
+        composed and checked against it on first use. This is profile
+        independent and never opens a profile or credential.
         Repeated preparation retains the one graph used by every host in this
         runtime process.
         """
@@ -367,7 +369,7 @@ class RuntimeProfileConnections(
                 raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
             registry = self._registry
             if registry is None:
-                registry = build_production_operation_registry()
+                registry = build_manifest_operation_registry()
                 if not self._admitting():
                     raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
                 self._registry = registry

@@ -43,7 +43,7 @@ def test_prepare_registry_is_idempotent_without_profile_or_secret_access(
         calls += 1
         return graph
 
-    monkeypatch.setattr(profile_connections, "build_production_operation_registry", build)
+    monkeypatch.setattr(profile_connections, "build_manifest_operation_registry", build)
     connections = _connections(tmp_path, Event())
     assert connections.prepare_registry() is graph
     assert connections.prepare_registry() is graph
@@ -63,7 +63,7 @@ def test_failed_or_stopped_preparation_publishes_no_graph(tmp_path: Path, monkey
         calls += 1
         raise ValueError("invalid public graph")
 
-    monkeypatch.setattr(profile_connections, "build_production_operation_registry", fail)
+    monkeypatch.setattr(profile_connections, "build_manifest_operation_registry", fail)
     with pytest.raises(ValueError, match="invalid public graph"):
         connections.prepare_registry()
     assert calls == 1 and connections._registry is None
@@ -75,7 +75,7 @@ def test_failed_or_stopped_preparation_publishes_no_graph(tmp_path: Path, monkey
         stop.set()
         return cast(OperationRegistry, object())
 
-    monkeypatch.setattr(profile_connections, "build_production_operation_registry", stop_during_build)
+    monkeypatch.setattr(profile_connections, "build_manifest_operation_registry", stop_during_build)
     with pytest.raises(RuntimeRefusalError) as refused:
         connections.prepare_registry()
     assert refused.value.reason is RuntimeRefusalCode.DRAINING
