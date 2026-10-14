@@ -12,7 +12,7 @@ related:
   - '[[2026-10-13-canonical-environment-application-internals-adr]]'
 modified: '2026-10-14'
 body_schema: body-v2
-body_hash: 'sha256:6e752288a0af93c6aa83c13fa050c8d34fb97d21c5411a513bc05759a7fcde33'
+body_hash: 'sha256:68e1fd966635da6f121c7c8bf9eee1251162ed2bc97fa27e549a97a97e544c77'
 ---
 
 <!-- LINK RULES:
@@ -142,7 +142,7 @@ Dependencies outside this plan:
 ## Steps
 
 - [x] `S01` - Remove the dead dev tooling the sweep confirms: the uninvoked pytest shard plugin, per-file ignores for missing modules, references to the absent no-skip gate, and dev/audit screens no recipe runs, updating the recipe and lane policing tests in the same change; `dev/quality/shard.py`.
-- [ ] `S02` - Extend the bundle.agent CTest probe to launch the bundled agent the way the runtime does, wait for its ready line and stop it; `native/tests/agent_smoke.py`.
+- [x] `S02` - Extend the bundle.agent CTest probe to launch the bundled agent the way the runtime does, wait for its ready line and stop it; `native/tests/agent_smoke.py`.
 - [ ] `S03` - Reshape the agent live lane as the Cadrumo person side of the packaged proof: drop its checkout option and its own gateway start; on the staged package create the marked root, sign a synthetic profile in through bin/aeat on the secret channel and hold it, write the hand-off receipt for the cadrumo-agent package runner, attend its approvals, then read the runner's receipt and run the independent aeat oracle on the marked root; `dev/runtime_lifecycle/agent_live.py`.
 - [x] `S04` - Remove the desktop direct-start feature and repoint the desktop agent live lane onto the runtime's hosted agent door with the catalog's provider and key names; `native/desktop/src-tauri/src/agent/direct.rs`.
 - [ ] `S05` - Run the packaged proof runs with the cadrumo-agent package runner as the only gateway starter and the agent live lane as the person side: re-earn the claude/api completed-turn proof and earn the first hosted tool-access proof, each request inspected and approved per start, for the cadrumo-agent owner to record; `dev/runtime_lifecycle/agent_live.py`.
