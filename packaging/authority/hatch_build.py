@@ -80,6 +80,12 @@ _SDIST_DESTINATION = "src/cadrumo/_data/registry/authority"
 
 _DESCRIPTOR_NAME = "authority.current.json"
 
+#: Staged publisher-client material is readable by its owner only. Windows
+#: honours just the read-only bit; there the per-user ACL of the configured
+#: temporary-files root is what keeps other accounts out.
+_OWNER_ONLY_DIRECTORY = 0o700
+_OWNER_ONLY_FILE = 0o600
+
 #: A published database is named for the SHA-256 of its own bytes. Admitting
 #: only this shape keeps a hand-placed or partially written file out of the
 #: archive even when a descriptor names it.
@@ -268,18 +274,7 @@ class CustomBuildHook(_CustomBuildHookBase):
             raise TypeError("hatch build_data force_include must map string paths to string destinations")
         for path in (descriptor, database):
             force_include[str(path)] = f"{destination}/{path.name}"
-        original_path = sys.path.copy()
-        try:
-            sys.path[:0] = (str(build_root), str(build_root / "src"))
-            from dev.packaging.google_oauth import build_client_json, stage_build_client
-
-            client = build_client_json(build_root)
-            staging_root = build_root / "build"
-            staging_root.mkdir(parents=True, exist_ok=True)
-            self._oauth_stage = tempfile.TemporaryDirectory(prefix="cadrumo-oauth-build-", dir=staging_root)
-            staged = stage_build_client(Path(self._oauth_stage.name), client)
-        finally:
-            sys.path[:] = original_path
+        staged = self._stage_oauth_client(build_root)
         prefix = "src/" if self.target_name == "sdist" else ""
         resource_destination = f"{prefix}cadrumo/_data/google/oauth_client.json"
         # Internal staging reserves its source path in Hatch, whereas an sdist
@@ -296,8 +291,43 @@ class CustomBuildHook(_CustomBuildHookBase):
             for name in ("dev/__init__.py", "dev/packaging/__init__.py", "dev/packaging/google_oauth.py"):
                 force_include[str(build_root / name)] = name
 
+    def _stage_oauth_client(self, build_root: Path) -> Path:
+        """Write the validated publisher client into a private, transient directory.
+
+        The client is private build input, so it is staged beneath the
+        configured temporary-files root rather than beside the sources, in a
+        uniquely named owner-only directory. :meth:`finalize` removes it once
+        the archive holds its copy; a failure before then removes it here, and
+        the directory object's own finalizer bounds its lifetime otherwise.
+        """
+        original_path = sys.path.copy()
+        stage: tempfile.TemporaryDirectory[str] | None = None
+        try:
+            sys.path[:0] = (str(build_root), str(build_root / "src"))
+            from dev.packaging.google_oauth import build_client_json, stage_build_client
+
+            from cadrumo.core.storage_environment import prepare_temporary_directory
+
+            client = build_client_json(build_root)
+            stage = tempfile.TemporaryDirectory(prefix="cadrumo-oauth-build-", dir=prepare_temporary_directory())
+            stage_root = Path(stage.name)
+            staged = stage_build_client(stage_root, client)
+            for directory in staged.relative_to(stage_root).parents:
+                (stage_root / directory).chmod(_OWNER_ONLY_DIRECTORY)
+            staged.chmod(_OWNER_ONLY_FILE)
+        except BaseException:
+            if stage is not None:
+                stage.cleanup()
+            raise
+        finally:
+            sys.path[:] = original_path
+        self._oauth_stage = stage
+        return staged
+
     @override
     def finalize(self, version: str, build_data: dict[str, Any], artifact_path: str) -> None:
         """Remove transient client staging once the archive owns its copy."""
-        if stage := getattr(self, "_oauth_stage", None):
+        stage = getattr(self, "_oauth_stage", None)
+        self._oauth_stage = None
+        if stage is not None:
             stage.cleanup()
