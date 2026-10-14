@@ -34,6 +34,12 @@ PACKAGE_RELAY_VARIABLE: Final = "CADRUMO_PACKAGE_RELAY_EXECUTABLE"
 
 _ROOT_KEY_NAME: Final = ".agent-root-key"
 _ROOT_KEY_BYTES: Final = 32
+_HOSTED_HOME: Final = "home"
+"""The directory under a hosted agent's root that the agent treats as its home; the agent fixes this layout."""
+_HOSTED_WORKSPACES: Final = "workspaces"
+"""The directory under the hosted home that bounds every workspace a run or catalog request may name."""
+_HOSTED_WORKSPACE: Final = "cadrumo"
+"""The one workspace this runtime creates inside that boundary."""
 GATEWAY_ARGUMENTS: Final = ("-m", "cadrumo_agent.cli.main", "serve")
 """The gateway invocation: the agent's declared command-line module, which has no package-level ``__main__``."""
 
@@ -128,7 +134,7 @@ def profile_agent_workspace(agent_root: Path) -> Path:
     as ``<root>/home/workspaces``; a run or catalog request names a directory
     that exists inside it.
     """
-    workspace = agent_root / "home" / "workspaces" / "cadrumo"
+    workspace = agent_root / _HOSTED_HOME / _HOSTED_WORKSPACES / _HOSTED_WORKSPACE
     workspace.mkdir(parents=True, exist_ok=True)
     return workspace.resolve(strict=True)
 
