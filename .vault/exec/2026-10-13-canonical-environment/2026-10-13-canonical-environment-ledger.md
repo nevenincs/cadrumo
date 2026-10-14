@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:2d1802cc9ee62f680b2c865ee244cdc3060d2bdbec67fe4361db6c08b78ba082'
+body_hash: 'sha256:806c225657783158d87157d6b14742838526b7d232a9fcc52a059ff9f12d642d'
 related:
   - "[[2026-10-13-canonical-environment-plan]]"
 ---
@@ -398,6 +398,21 @@ related:
 - `S19` `verify:` `cargo check desktop and manager (fresh contract)` -> `pass`
 - `S19` `verify:` `just check-types` -> `pass`
 - `S19` `by:` `implementation-engineer-high`
+- `S20` `M` `native/application-environment.toml`
+- `S20` `M` `dev/packaging/native/application_environment.py`
+- `S20` `M` `dev/packaging/native/tests/test_agent_image.py`
+- `S20` `M` `native/CONTRACT.md`
+- `S20` `M` `docs/reference/environment-overrides.md`
+- `S20` `M` `src/cadrumo/adapters/local_runtime/profile_worker.py`
+- `S20` `M` `src/cadrumo/adapters/local_runtime/worker_environment.py`
+- `S20` `M` `src/cadrumo/adapters/local_runtime/tests/test_worker_storage_environment.py`
+- `S20` `A` `src/cadrumo/entrypoints/runtime/tests/test_worker_provider_catalog.py`
+- `S20` `verify:` `uv run pytest -m 'integration and windows_only' src/cadrumo/entrypoints/runtime/tests/test_worker_provider_catalog.py` -> `pass`
+- `S20` `verify:` `uv run pytest dev/packaging/native/tests src/cadrumo/adapters/local_runtime/tests/test_worker_storage_environment.py src/cadrumo/adapters/local_runtime/tests/test_agent_provider_catalog.py dev/docs/tests/test_env_reference.py dev/quality/tests/test_agent_prefix_spelling.py` -> `pass`
+- `S20` `verify:` `cargo test and clippy -D warnings native/platform windows linux macos (fresh contract)` -> `pass`
+- `S20` `verify:` `cargo check desktop (fresh contract)` -> `pass`
+- `S20` `verify:` `just check-types` -> `pass`
+- `S20` `by:` `implementation-engineer-high`
 
 ## Notes
 

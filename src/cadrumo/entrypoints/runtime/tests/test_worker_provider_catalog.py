@@ -90,8 +90,9 @@ async def _run_isolated(environment: dict[str, str], directory: Path) -> tuple[i
 def _asked_in_the_worker_environment(environment: dict[str, str], directory: Path) -> dict[str, object]:
     status, standard_output, standard_error = asyncio.run(_run_isolated(environment, directory))
     assert status == 0, standard_error.decode(errors="replace")[-2000:]
-    answer: dict[str, object] = json.loads(standard_output.decode().splitlines()[-1])
-    return answer
+    answer = json.loads(standard_output.decode().splitlines()[-1])
+    assert isinstance(answer, dict), answer
+    return {str(key): value for key, value in answer.items()}
 
 
 def _status(tmp_path: Path, environment: dict[str, str]) -> ProviderSettingsStatus | ProviderSettingsRefusal:
