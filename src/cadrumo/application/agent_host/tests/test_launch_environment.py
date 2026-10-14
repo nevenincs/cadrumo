@@ -1,4 +1,4 @@
-"""The agent's environment carries no credential the launcher happens to hold."""
+"""The gateway's environment carries no credential the runtime happens to hold, and of the agent's settings only its slots."""
 
 from __future__ import annotations
 
@@ -7,12 +7,15 @@ from pathlib import Path
 
 import pytest
 
+from ....core.storage_environment import STORAGE_ROOT, normalize_storage_path
 from ..launch_environment import (
+    AGENT_SLOTS,
+    GATEWAY_PORT_VARIABLE,
+    GATEWAY_SLOTS,
     HOSTED_RELAY_VARIABLE,
     HOSTED_ROOT_VARIABLE,
-    AgentHostedPrograms,
+    WORKER_PORT_VARIABLE,
     agent_launch_environment,
-    forbidden_program,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -32,13 +35,20 @@ _RECEIVED = {
     "PYTHONPATH": "C:\\elsewhere",
 }
 
+# The hosting contract retired these program paths; the agent refuses a start that carries either.
+_RETIRED_PROGRAM_VARIABLES = ("CADRUMO_AGENT_HOSTED_CLI_EXECUTABLE", "CADRUMO_AGENT_HOSTED_PYTHON_EXECUTABLE")
+
 
 @pytest.mark.skipif(sys.platform != "win32", reason="the Windows allow-list folds names on the host it describes")
 def test_only_allow_listed_system_values_the_pinned_root_and_the_hosted_root_reach_the_agent(tmp_path: Path) -> None:
     storage_root = tmp_path / "storage"
     agent_root = storage_root / "agent" / "opaque"
     environment = agent_launch_environment(
-        storage_root=storage_root, agent_root=agent_root, received=_RECEIVED, sys_platform="win32"
+        storage_root=storage_root,
+        agent_root=agent_root,
+        relay=tmp_path / "cadrumo-mcp.exe",
+        received=_RECEIVED,
+        sys_platform="win32",
     )
     assert environment[HOSTED_ROOT_VARIABLE] == str(agent_root)
     assert environment["SYSTEMROOT"] == "C:\\Windows"
@@ -54,6 +64,7 @@ def test_posix_hosts_keep_only_their_own_allow_list(tmp_path: Path) -> None:
     environment = agent_launch_environment(
         storage_root=tmp_path / "storage",
         agent_root=tmp_path / "storage" / "agent" / "opaque",
+        relay=tmp_path / "cadrumo-mcp",
         received=received,
         sys_platform="linux",
     )
@@ -62,53 +73,52 @@ def test_posix_hosts_keep_only_their_own_allow_list(tmp_path: Path) -> None:
     assert "NOT-A-REAL" not in repr(environment)
 
 
-@pytest.mark.skipif(sys.platform != "win32", reason="the Windows search path is the one this host can lay out")
-def test_the_agent_is_handed_only_the_relay_and_no_command_line_interpreter_or_shell(tmp_path: Path) -> None:
-    clean, cadrumo, interpreter, shell = (tmp_path / name for name in ("tools", "venv", "python", "system"))
-    for directory, program in ((clean, "claude.exe"), (cadrumo, "aeat.exe"), (interpreter, "python3.exe")):
-        directory.mkdir()
-        (directory / program).write_bytes(b"")
-    shell.mkdir()
-    (shell / "cmd.exe").write_bytes(b"")
-    (shell / "powershell.exe").write_bytes(b"")
-    (cadrumo / "cadrumo-mcp.exe").write_bytes(b"")
+@pytest.mark.parametrize("platform", ["win32", "linux"])
+def test_the_runtime_fills_exactly_the_gateway_slots_and_never_a_retired_program_path(
+    tmp_path: Path, platform: str
+) -> None:
+    agent_root = tmp_path / "storage" / "agent" / "opaque"
+    relay = tmp_path / "bin" / "cadrumo-mcp"
+    # Every agent setting the runtime itself received, the retired program paths included, stays behind.
     received = {
         **_RECEIVED,
-        "PATH": ";".join(str(directory) for directory in (clean, cadrumo, interpreter, shell)),
-        "ComSpec": r"C:\Windows\System32\cmd.exe",
+        "HOME": "/home/person",
+        **dict.fromkeys(_RETIRED_PROGRAM_VARIABLES, str(tmp_path / "bin" / "aeat")),
+        HOSTED_ROOT_VARIABLE: str(tmp_path / "elsewhere"),
+        GATEWAY_PORT_VARIABLE: "8080",
+        "CADRUMO_AGENT_DEVELOPMENT_TOOL_SERVER": "true",
+        "CADRUMO_AGENT_ENV_FILE": str(tmp_path / "agent.env"),
+        STORAGE_ROOT.variable: str(tmp_path / "the-developers-own-root"),
     }
+    environment = agent_launch_environment(
+        storage_root=tmp_path / "storage", agent_root=agent_root, relay=relay, received=received, sys_platform=platform
+    )
+    assert {name for name in environment if name.startswith("CADRUMO_AGENT_")} == AGENT_SLOTS
+    assert {HOSTED_ROOT_VARIABLE, GATEWAY_PORT_VARIABLE, WORKER_PORT_VARIABLE, HOSTED_RELAY_VARIABLE} == AGENT_SLOTS
+    assert AGENT_SLOTS | {"CADRUMO_LOCAL_STORAGE_ROOT"} == GATEWAY_SLOTS
+    assert set(environment) >= GATEWAY_SLOTS
+    assert not set(_RETIRED_PROGRAM_VARIABLES) & set(environment)
+    assert not set(_RETIRED_PROGRAM_VARIABLES) & GATEWAY_SLOTS
+    # The gateway forwards the runtime's own root to its relay, never the root the runtime itself received.
+    assert environment["CADRUMO_LOCAL_STORAGE_ROOT"] == str(normalize_storage_path(tmp_path / "storage"))
+    assert environment[HOSTED_ROOT_VARIABLE] == str(agent_root)
+    assert environment[GATEWAY_PORT_VARIABLE] == environment[WORKER_PORT_VARIABLE] == "0"
+    assert environment[HOSTED_RELAY_VARIABLE] == str(relay)
+
+
+@pytest.mark.parametrize(("platform", "separator"), [("win32", ";"), ("linux", ":")])
+def test_the_search_path_reaches_the_agent_as_received(tmp_path: Path, platform: str, separator: str) -> None:
+    # In a package the agent image's host composes the search path; the runtime no longer filters it.
+    programs = tmp_path / "bin"
+    programs.mkdir()
+    for program in ("aeat.exe", "python.exe", "cadrumo-mcp.exe", "cmd.exe"):
+        (programs / program).write_bytes(b"")
+    search_path = separator.join((str(programs), str(tmp_path / "tools")))
     environment = agent_launch_environment(
         storage_root=tmp_path / "storage",
         agent_root=tmp_path / "storage" / "agent" / "opaque",
-        received=received,
-        programs=AgentHostedPrograms(relay=cadrumo / "cadrumo-mcp.exe"),
-        sys_platform="win32",
+        relay=programs / "cadrumo-mcp.exe",
+        received={"PATH": search_path},
+        sys_platform=platform,
     )
-    assert environment["PATH"] == str(clean)
-    assert "COMSPEC" not in environment
-    assert environment[HOSTED_RELAY_VARIABLE] == str(cadrumo / "cadrumo-mcp.exe")
-    hosted = {name for name in environment if name.startswith("CADRUMO_AGENT_")}
-    assert hosted == {HOSTED_ROOT_VARIABLE, HOSTED_RELAY_VARIABLE, "CADRUMO_AGENT_PORT", "CADRUMO_AGENT_WORKER_PORT"}
-    named = [value for name, value in environment.items() if name != HOSTED_RELAY_VARIABLE]
-    assert not any(forbidden_program(Path(value).name) for value in named if value)
-
-
-@pytest.mark.parametrize(
-    ("name", "forbidden"),
-    (
-        ("aeat.exe", True),
-        ("cadrumo-runtime.exe", True),
-        ("cadrumo.exe", True),
-        ("python3.13.exe", True),
-        ("pythonw.exe", True),
-        ("pwsh.exe", True),
-        ("wscript.exe", True),
-        ("cscript.exe", True),
-        ("bash", True),
-        ("claude.exe", False),
-        ("pyright.exe", False),
-        ("shellcheck.exe", False),
-    ),
-)
-def test_forbidden_programs_are_named_by_their_stem(name: str, forbidden: bool) -> None:
-    assert forbidden_program(name) is forbidden
+    assert environment["PATH"] == search_path

@@ -22,7 +22,7 @@ from ...adapters.local_runtime.agent_process import WindowsAgentProcessLauncher
 from ...adapters.local_runtime.agent_programs import (
     AgentProgramRefusalError,
     agent_image,
-    hosted_programs,
+    hosted_relay,
     profile_agent_root,
     profile_agent_workspace,
 )
@@ -227,7 +227,7 @@ class ProfileConnectionAgentMixin:
             agent_root = profile_agent_root(self.root, request.profile_id)
             workspace = profile_agent_workspace(agent_root)
             image = agent_image(request.agent_source, agent_root=agent_root)
-            programs = hosted_programs()
+            relay = hosted_relay()
         except AgentProgramRefusalError as refused:
             return self._agent_refused(context, request, refused.code)
         except OSError:
@@ -261,7 +261,7 @@ class ProfileConnectionAgentMixin:
                 arguments=image.arguments,
                 directory=image.directory,
                 environment=agent_launch_environment(
-                    storage_root=self.root, agent_root=agent_root, received=os.environ, programs=programs
+                    storage_root=self.root, agent_root=agent_root, relay=relay, received=os.environ
                 ),
             ),
         )

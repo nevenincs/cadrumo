@@ -2,8 +2,10 @@
 
 The profile, its encrypted custody, the stored sign-in, the profile worker that
 resolves the provider credential, the native transport and the agent's
-contained process tree are all real. The agent is a stand-in that records what
-it received and starts a grandchild only its tree's containment can end.
+contained process tree are all real. The agent is a stand-in image, planted
+where the runtime's package values name it, that records how it was started
+and what it received and starts a grandchild only its tree's containment can
+end.
 """
 
 from __future__ import annotations
@@ -22,12 +24,13 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import SecretStr
 
+from cadrumo.adapters.local_runtime.agent_programs import PACKAGE_AGENT_VARIABLE, PACKAGE_RELAY_VARIABLE
 from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
 from cadrumo.adapters.local_runtime.tests.agent_host_fixture import NATIVE_REFUSAL_SUBJECT
 from cadrumo.application.agent_host.launch_environment import (
+    AGENT_SLOTS,
     HOSTED_RELAY_VARIABLE,
     HOSTED_ROOT_VARIABLE,
-    forbidden_program,
 )
 from cadrumo.application.agent_host.launcher_protocol import AgentLauncherRefusal
 from cadrumo.application.operations.registry import OperationFrontendProjection
@@ -42,9 +45,11 @@ from .agent_host_support import (
     FAKE_BEARER,
     FAKE_KEY,
     assert_no_secret_exposed,
+    launched,
     mark_lane_root,
     probe_result,
     received,
+    stand_in_agent_image,
     stand_in_agent_source,
     stopped_by_input_end,
     tree_reaped,
@@ -72,8 +77,23 @@ def _session(
     return connection, status.status.session_id
 
 
+_RELAY = Path(sys.executable).parent / "cadrumo-mcp.exe"
+# The hosting contract retired these program paths; the agent refuses a start that carries either.
+_RETIRED_PROGRAM_VARIABLES = ("CADRUMO_AGENT_HOSTED_CLI_EXECUTABLE", "CADRUMO_AGENT_HOSTED_PYTHON_EXECUTABLE")
+
+
+def _packaged_agent(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *, mode: str = "ready", probe: dict[str, object] | None = None
+) -> tuple[Path, Path]:
+    """Plant the stand-in agent image and name it and the relay as the runtime image's package values do."""
+    image, record = stand_in_agent_image(tmp_path, mode=mode, probe=probe)
+    monkeypatch.setenv(PACKAGE_AGENT_VARIABLE, str(image))
+    monkeypatch.setenv(PACKAGE_RELAY_VARIABLE, str(_RELAY))
+    return image, record
+
+
 def _start(
-    runtime: StoredSignInRuntime, connection: VerifiedRuntimeConnection, session_id: UUID, source: Path | None
+    runtime: StoredSignInRuntime, connection: VerifiedRuntimeConnection, session_id: UUID, source: Path | None = None
 ) -> StartReply:
     return connection.agent_start(
         RuntimeAgentStart(
@@ -109,11 +129,11 @@ def development_key(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
 def test_the_agent_starts_with_its_key_only_on_its_frame_and_stops_with_the_persons_sign_out(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    source, record = stand_in_agent_source(tmp_path)
     with stored_sign_in_runtime(tmp_path, monkeypatch) as runtime:
+        image, record = _packaged_agent(tmp_path, monkeypatch)
         mark_lane_root(runtime.root)
         agent, session_id = _session(runtime, OperationFrontendProjection.AGENT_HOST)
-        started = _start(runtime, agent, session_id, source)
+        started = _start(runtime, agent, session_id)
         assert isinstance(started, RuntimeAgentStarted), started
         assert started.gateway_port == 47001
         document = received(record)
@@ -123,23 +143,20 @@ def test_the_agent_starts_with_its_key_only_on_its_frame_and_stops_with_the_pers
         environment = document["environment"]
         assert isinstance(environment, dict)
         assert DEVELOPMENT_KEY_VARIABLE not in environment
+        # The runtime starts the package's agent image, itself the interpreter, with the gateway invocation.
+        launch = launched(record)
+        assert Path(str(launch["executable"])) == image
+        assert launch["arguments"] == ["-m", "cadrumo_agent.cli.main", "serve"]
         # The agent and every process it starts, the relay included, inherit the pinned storage root.
         assert Path(environment[STORAGE_ROOT.variable]).resolve() == runtime.root.resolve()
-        relay = Path(environment[HOSTED_RELAY_VARIABLE])
-        assert relay.is_absolute() and relay.is_file() and relay.name == "cadrumo-mcp.exe"
-        # The relay is the one Cadrumo program named to the agent: no command line, interpreter or shell.
-        assert not any(
-            name.startswith("CADRUMO_AGENT_HOSTED_") and name not in {HOSTED_ROOT_VARIABLE, HOSTED_RELAY_VARIABLE}
-            for name in environment
-        )
-        assert "COMSPEC" not in {name.upper() for name in environment}
-        for directory in environment.get("PATH", "").split(";"):
-            if directory and Path(directory).is_dir():
-                assert not any(forbidden_program(entry.name) for entry in Path(directory).iterdir()), directory
-        for value in environment.values():
-            if value != environment[HOSTED_RELAY_VARIABLE] and Path(value).is_file():
-                assert not forbidden_program(Path(value).name), value
+        # Of the agent's settings the runtime fills only the gateway's slots, never a retired program path.
+        assert {name for name in environment if name.startswith("CADRUMO_AGENT_")} == AGENT_SLOTS
+        assert not set(_RETIRED_PROGRAM_VARIABLES) & set(environment)
+        assert Path(environment[HOSTED_RELAY_VARIABLE]) == _RELAY
+        # The search path is not narrowed: in a package the agent image's host composes it.
+        assert environment["PATH"] == os.environ["PATH"]
         hosted_root = Path(environment[HOSTED_ROOT_VARIABLE])
+        assert Path(str(launch["directory"])).resolve() == hosted_root.resolve()
         assert hosted_root.parent == runtime.root / "agent"
         assert str(runtime.profile_id) not in str(hosted_root)
         assert str(runtime.profile_id).replace("-", "") not in hosted_root.name
@@ -158,11 +175,11 @@ def test_the_agent_starts_with_its_key_only_on_its_frame_and_stops_with_the_pers
 def test_an_os_lock_stops_the_agent_without_any_frontend_traffic(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    source, record = stand_in_agent_source(tmp_path)
+    _, record = _packaged_agent(tmp_path, monkeypatch)
     with stored_sign_in_runtime(tmp_path, monkeypatch) as runtime:
         mark_lane_root(runtime.root)
         agent, session_id = _session(runtime, OperationFrontendProjection.AGENT_HOST)
-        assert isinstance(_start(runtime, agent, session_id, source), RuntimeAgentStarted)
+        assert isinstance(_start(runtime, agent, session_id), RuntimeAgentStarted)
         runtime.native_login.lock_state = OsLockState.LOCKED
         assert tree_reaped(record)
 
@@ -171,22 +188,22 @@ def test_an_os_lock_stops_the_agent_without_any_frontend_traffic(
 def test_the_sessions_expiry_stops_the_agent_without_any_frontend_traffic(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    source, record = stand_in_agent_source(tmp_path)
+    _, record = _packaged_agent(tmp_path, monkeypatch)
     with stored_sign_in_runtime(tmp_path, monkeypatch) as runtime:
         mark_lane_root(runtime.root)
         agent, session_id = _session(runtime, OperationFrontendProjection.AGENT_HOST)
-        assert isinstance(_start(runtime, agent, session_id, source), RuntimeAgentStarted)
+        assert isinstance(_start(runtime, agent, session_id), RuntimeAgentStarted)
         runtime.clock.ahead = timedelta(days=30)
         assert tree_reaped(record)
 
 
 @pytest.mark.usefixtures("development_key")
 def test_the_asking_connection_closing_stops_the_agent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    source, record = stand_in_agent_source(tmp_path)
+    _, record = _packaged_agent(tmp_path, monkeypatch)
     with stored_sign_in_runtime(tmp_path, monkeypatch) as runtime:
         mark_lane_root(runtime.root)
         agent, session_id = _session(runtime, OperationFrontendProjection.AGENT_HOST)
-        assert isinstance(_start(runtime, agent, session_id, source), RuntimeAgentStarted)
+        assert isinstance(_start(runtime, agent, session_id), RuntimeAgentStarted)
         # Another session of the profile ending does not touch this session's agent.
         other, other_session = _session(runtime, OperationFrontendProjection.CLI)
         runtime.session(other, other_session, "session_lock")
@@ -197,11 +214,11 @@ def test_the_asking_connection_closing_stops_the_agent(tmp_path: Path, monkeypat
 
 @pytest.mark.usefixtures("development_key")
 def test_runtime_shutdown_drains_and_reaps_the_agent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    source, record = stand_in_agent_source(tmp_path)
+    _, record = _packaged_agent(tmp_path, monkeypatch)
     with stored_sign_in_runtime(tmp_path, monkeypatch) as runtime:
         mark_lane_root(runtime.root)
         agent, session_id = _session(runtime, OperationFrontendProjection.AGENT_HOST)
-        assert isinstance(_start(runtime, agent, session_id, source), RuntimeAgentStarted)
+        assert isinstance(_start(runtime, agent, session_id), RuntimeAgentStarted)
         runtime.profiles.stop.set()
         assert tree_reaped(record)
 
@@ -210,13 +227,13 @@ def test_runtime_shutdown_drains_and_reaps_the_agent(tmp_path: Path, monkeypatch
 def test_a_second_start_for_the_profile_is_refused_and_starts_nothing(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    source, record = stand_in_agent_source(tmp_path)
+    _, record = _packaged_agent(tmp_path, monkeypatch)
     with stored_sign_in_runtime(tmp_path, monkeypatch) as runtime:
         mark_lane_root(runtime.root)
         agent, session_id = _session(runtime, OperationFrontendProjection.AGENT_HOST)
-        assert isinstance(_start(runtime, agent, session_id, source), RuntimeAgentStarted)
+        assert isinstance(_start(runtime, agent, session_id), RuntimeAgentStarted)
         first = received(record)
-        second = _start(runtime, agent, session_id, source)
+        second = _start(runtime, agent, session_id)
         assert isinstance(second, RuntimeAgentRefused)
         assert second.code is AgentLauncherRefusal.SERVICE_FAILED
         assert received(record) == first
@@ -224,11 +241,11 @@ def test_a_second_start_for_the_profile_is_refused_and_starts_nothing(
 
 @pytest.mark.usefixtures("development_key")
 def test_the_mcp_frontend_is_refused_and_starts_nothing(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    source, record = stand_in_agent_source(tmp_path)
+    _, record = _packaged_agent(tmp_path, monkeypatch)
     with stored_sign_in_runtime(tmp_path, monkeypatch) as runtime:
         mark_lane_root(runtime.root)
         mcp, session_id = _session(runtime, OperationFrontendProjection.MCP)
-        refused = _start(runtime, mcp, session_id, source)
+        refused = _start(runtime, mcp, session_id)
         assert isinstance(refused, RuntimeAccessRefusal)
         assert refused.code is AccessDenialCode.FRONTEND_DENIED
         assert not (record / "received.json").exists()
@@ -237,11 +254,11 @@ def test_the_mcp_frontend_is_refused_and_starts_nothing(tmp_path: Path, monkeypa
 def test_no_usable_credential_is_typed_and_leaves_no_agent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv(DEVELOPMENT_KEY_VARIABLE, raising=False)
     reset_settings_cache()
-    source, record = stand_in_agent_source(tmp_path)
+    _, record = _packaged_agent(tmp_path, monkeypatch)
     with stored_sign_in_runtime(tmp_path, monkeypatch) as runtime:
         mark_lane_root(runtime.root)
         agent, session_id = _session(runtime, OperationFrontendProjection.AGENT_HOST)
-        refused = _start(runtime, agent, session_id, source)
+        refused = _start(runtime, agent, session_id)
         assert isinstance(refused, RuntimeAgentRefused)
         assert refused.code is AgentLauncherRefusal.PROVIDER_CREDENTIAL_MISSING
         assert not (record / "received.json").exists()
@@ -249,6 +266,7 @@ def test_no_usable_credential_is_typed_and_leaves_no_agent(tmp_path: Path, monke
 
 @pytest.mark.usefixtures("development_key")
 def test_an_unmarked_root_and_an_absent_source_are_refused(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv(PACKAGE_AGENT_VARIABLE, raising=False)
     source, record = stand_in_agent_source(tmp_path)
     with stored_sign_in_runtime(tmp_path, monkeypatch) as runtime:
         agent, session_id = _session(runtime, OperationFrontendProjection.AGENT_HOST)
@@ -259,11 +277,32 @@ def test_an_unmarked_root_and_an_absent_source_are_refused(tmp_path: Path, monke
         absent = _start(runtime, agent, session_id, tmp_path / "no-such-source")
         assert isinstance(absent, RuntimeAgentRefused)
         assert absent.code is AgentLauncherRefusal.SERVICE_ABSENT
-        # Without a source tree the runtime starts the agent packaged with it; this checkout has none.
+        # Without a source tree the runtime starts the agent image its package names; a checkout names none.
         unpackaged = _start(runtime, agent, session_id, None)
         assert isinstance(unpackaged, RuntimeAgentRefused)
         assert unpackaged.code is AgentLauncherRefusal.SERVICE_ABSENT
         assert not (record / "received.json").exists()
+
+
+@pytest.mark.usefixtures("development_key")
+def test_a_development_source_tree_runs_the_gateway_invocation_from_its_own_environment(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv(PACKAGE_AGENT_VARIABLE, raising=False)
+    source, record = stand_in_agent_source(tmp_path)
+    with stored_sign_in_runtime(tmp_path, monkeypatch) as runtime:
+        mark_lane_root(runtime.root)
+        agent, session_id = _session(runtime, OperationFrontendProjection.AGENT_HOST)
+        assert isinstance(_start(runtime, agent, session_id, source), RuntimeAgentStarted)
+        environment = received(record)["environment"]
+        assert isinstance(environment, dict)
+        launch = launched(record)
+        assert Path(str(launch["executable"])).is_relative_to(source)
+        assert launch["arguments"] == ["-m", "cadrumo_agent.cli.main", "serve"]
+        assert Path(str(launch["directory"])) == source
+        # The checkout's relay, beside this interpreter, and the same gateway slots.
+        assert Path(environment[HOSTED_RELAY_VARIABLE]) == _RELAY
+        assert {name for name in environment if name.startswith("CADRUMO_AGENT_")} == AGENT_SLOTS
 
 
 _CONTROLLER_LOGGER = "cadrumo.application.agent_host.controller"
@@ -273,13 +312,13 @@ _CONTROLLER_LOGGER = "cadrumo.application.agent_host.controller"
 def test_an_agent_the_native_host_refuses_to_launch_is_a_service_failure_that_records_the_hosts_reason(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
-    source, record = stand_in_agent_source(tmp_path, mode="native_refusal")
+    _, record = _packaged_agent(tmp_path, monkeypatch, mode="native_refusal")
     with stored_sign_in_runtime(tmp_path, monkeypatch) as runtime:
         mark_lane_root(runtime.root)
         agent, session_id = _session(runtime, OperationFrontendProjection.AGENT_HOST)
         with caplog.at_level(logging.WARNING, logger=_CONTROLLER_LOGGER):
-            first = _start(runtime, agent, session_id, source)
-            second = _start(runtime, agent, session_id, source)
+            first = _start(runtime, agent, session_id)
+            second = _start(runtime, agent, session_id)
         for refused in (first, second):
             assert isinstance(refused, RuntimeAgentRefused), refused
             assert refused.code is AgentLauncherRefusal.SERVICE_FAILED
@@ -300,12 +339,12 @@ def test_an_agent_the_native_host_refuses_to_launch_is_a_service_failure_that_re
 def test_an_agent_that_exits_before_its_ready_line_without_the_hosts_status_is_a_service_failure(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
-    source, record = stand_in_agent_source(tmp_path, mode="native_other_exit")
+    _, record = _packaged_agent(tmp_path, monkeypatch, mode="native_other_exit")
     with stored_sign_in_runtime(tmp_path, monkeypatch) as runtime:
         mark_lane_root(runtime.root)
         agent, session_id = _session(runtime, OperationFrontendProjection.AGENT_HOST)
         with caplog.at_level(logging.WARNING, logger=_CONTROLLER_LOGGER):
-            refused = _start(runtime, agent, session_id, source)
+            refused = _start(runtime, agent, session_id)
         assert isinstance(refused, RuntimeAgentRefused), refused
         assert refused.code is AgentLauncherRefusal.SERVICE_FAILED
         assert not (record / "received.json").exists()
@@ -368,9 +407,9 @@ def test_a_program_the_agent_starts_is_refused_the_persons_sign_in_and_acts(
 ) -> None:
     with stored_sign_in_runtime(tmp_path, monkeypatch) as runtime:
         mark_lane_root(runtime.root)
-        source, record = stand_in_agent_source(tmp_path, probe=_person_act_probe(runtime, tmp_path))
+        _, record = _packaged_agent(tmp_path, monkeypatch, probe=_person_act_probe(runtime, tmp_path))
         agent, session_id = _session(runtime, OperationFrontendProjection.AGENT_HOST)
-        assert isinstance(_start(runtime, agent, session_id, source), RuntimeAgentStarted)
+        assert isinstance(_start(runtime, agent, session_id), RuntimeAgentStarted)
         result = probe_result(record)
         # The command line inside the agent's job reached the runtime and was refused both the person's
         # stored sign-in and the password, whatever frontend it named: nothing it holds signs the person out.
@@ -391,9 +430,9 @@ def test_the_relay_in_the_agents_tree_acts_as_the_agent_under_the_lease_that_sta
 ) -> None:
     with stored_sign_in_runtime(tmp_path, monkeypatch) as runtime:
         mark_lane_root(runtime.root)
-        source, record = stand_in_agent_source(tmp_path, probe=_relay_probe(runtime, tmp_path))
+        _, record = _packaged_agent(tmp_path, monkeypatch, probe=_relay_probe(runtime, tmp_path))
         agent, session_id = _session(runtime, OperationFrontendProjection.AGENT_HOST)
-        assert isinstance(_start(runtime, agent, session_id, source), RuntimeAgentStarted)
+        assert isinstance(_start(runtime, agent, session_id), RuntimeAgentStarted)
         result = probe_result(record)
         # With no key, no person's decision and no resumed sign-in, the relay read and edited the profile.
         assert result["returncode"] == 0, result

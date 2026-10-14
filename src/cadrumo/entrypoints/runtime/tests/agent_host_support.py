@@ -1,12 +1,14 @@
-"""A stand-in cadrumo-agent source tree, a marked lane root and the checks on what the agent received.
+"""A stand-in cadrumo-agent image or source tree, a marked lane root and the checks on what the agent received.
 
-The stand-in tree has the layout the runtime launches from: its own
-``.venv`` interpreter (a copy of this checkout's environment launcher, which
-starts the base interpreter with an empty environment of its own) and a
-``cadrumo_agent`` package whose ``cli.main`` module, the agent's declared
-command-line module, runs the shared agent peer fixture for ``serve``.
-So the runtime's real launch path, containment and frame are exercised, and
-nothing of Cadrumo is importable inside the agent.
+The stand-in image has the package's shape: ``bin/cadrumo-agent.exe`` is a copy
+of this checkout's environment launcher, which keeps itself as the interpreter
+and takes the image directory as its environment, with a ``cadrumo_agent``
+package in that environment's site-packages. The stand-in source tree has the
+development lane's shape: its own ``.venv`` interpreter and the same package at
+its top. In both, ``cadrumo_agent.cli.main``, the agent's declared command-line
+module, records how it was started and runs the shared agent peer fixture for
+``serve``. So the runtime's real launch path, containment and frame are
+exercised, and nothing of Cadrumo is importable inside the agent.
 """
 
 from __future__ import annotations
@@ -27,10 +29,14 @@ FAKE_BEARER: Final = "bearer-test-NOT-A-REAL-TOKEN"
 DEVELOPMENT_KEY_VARIABLE: Final = "CADRUMO_LLM_CLAUDE_API_KEY"
 
 _STAND_IN_MAIN: Final = """\
-import json, runpy, subprocess, sys, threading
+import json, os, runpy, subprocess, sys, threading
 from pathlib import Path
 
 config = json.loads((Path(__file__).resolve().parents[2] / "stand_in.json").read_text(encoding="utf-8"))
+(Path(config["record"]) / "launch.json").write_text(
+    json.dumps({"executable": sys.executable, "arguments": sys.orig_argv[1:], "directory": os.getcwd()}),
+    encoding="utf-8",
+)
 
 
 def probe(command):
@@ -53,6 +59,25 @@ runpy.run_path(config["fixture"], run_name="__main__")
 """
 
 
+def stand_in_agent_image(
+    directory: Path, *, mode: str = "ready", probe: dict[str, object] | None = None
+) -> tuple[Path, Path]:
+    """Build a stand-in package agent image and return its ``bin/cadrumo-agent.exe`` and its record directory.
+
+    ``probe`` names a program, its environment and its standard input, which
+    the stand-in starts as soon as it runs: a process inside the agent's tree.
+    """
+    image, record = directory / "agent-image", directory / "agent-record"
+    environment = Path(sys.executable).parent
+    (image / "bin").mkdir(parents=True)
+    record.mkdir()
+    executable = image / "bin" / "cadrumo-agent.exe"
+    shutil.copy2(environment / "python.exe", executable)
+    shutil.copy2(environment.parent / "pyvenv.cfg", image / "pyvenv.cfg")
+    _plant_agent_package(image / "Lib" / "site-packages", mode=mode, record=record, probe=probe)
+    return executable, record
+
+
 def stand_in_agent_source(
     directory: Path, *, mode: str = "ready", probe: dict[str, object] | None = None
 ) -> tuple[Path, Path]:
@@ -67,15 +92,27 @@ def stand_in_agent_source(
     record.mkdir()
     shutil.copy2(environment / "python.exe", source / ".venv" / "Scripts" / "python.exe")
     shutil.copy2(environment.parent / "pyvenv.cfg", source / ".venv" / "pyvenv.cfg")
-    command_line = source / "cadrumo_agent" / "cli"
+    _plant_agent_package(source, mode=mode, record=record, probe=probe)
+    return source, record
+
+
+def _plant_agent_package(root: Path, *, mode: str, record: Path, probe: dict[str, object] | None) -> None:
+    """Write the stand-in ``cadrumo_agent`` package and its configuration under ``root``."""
+    command_line = root / "cadrumo_agent" / "cli"
     command_line.mkdir(parents=True)
     (command_line / "__init__.py").write_text("", encoding="utf-8")
     (command_line / "main.py").write_text(_STAND_IN_MAIN, encoding="utf-8")
-    (source / "stand_in.json").write_text(
+    (root / "stand_in.json").write_text(
         json.dumps({"fixture": agent_host_fixture.__file__, "mode": mode, "record": str(record), "probe": probe}),
         encoding="utf-8",
     )
-    return source, record
+
+
+def launched(record: Path) -> dict[str, object]:
+    """Return how the stand-in agent was started: its interpreter, its arguments and its directory."""
+    document: object = json.loads((record / "launch.json").read_text(encoding="utf-8"))
+    assert isinstance(document, dict)
+    return {str(key): value for key, value in document.items()}
 
 
 def mark_lane_root(root: Path) -> None:

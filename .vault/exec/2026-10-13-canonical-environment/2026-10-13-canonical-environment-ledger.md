@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:b266c6d7edcc19ee8e6ada52080e29154ae353e85e9cc8493cab06cf718ccc76'
+body_hash: 'sha256:abe3c65837a416634dedc7bc32e71761ad2169ae85fe089abd0a42e5b54ea136'
 related:
   - "[[2026-10-13-canonical-environment-plan]]"
 ---
@@ -212,6 +212,20 @@ related:
 - `S07` `verify:` `ruff and ty dev/packaging` -> `pass`
 - `S07` `verify:` `cargo +1.96.0 clippy --all-targets -D warnings native/platform (win, linux, darwin) and test (45, Windows root-slot vectors replayed)` -> `pass`
 - `S07` `verify:` `cargo +1.96.0 test native/manager --test environment` -> `pass`
+- `S09` `M` `src/cadrumo/application/agent_host/launch_environment.py`
+- `S09` `M` `src/cadrumo/application/agent_host/tests/test_launch_environment.py`
+- `S09` `M` `src/cadrumo/adapters/local_runtime/agent_programs.py`
+- `S09` `A` `src/cadrumo/adapters/local_runtime/tests/test_agent_programs.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/profile_connection_agents.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/tests/agent_host_support.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/tests/test_agent_host_runtime.py`
+- `S09` `verify:` `pytest src/cadrumo/application/agent_host/tests src/cadrumo/application/runtime/tests src/cadrumo/entrypoints/runtime/tests test_agent_programs.py test_boot_record.py` -> `pass`
+- `S09` `verify:` `pytest -m integration test_app_agent_serve_native.py test_agent_process_native.py` -> `pass`
+- `S09` `verify:` `pytest -m integration test_agent_host_runtime.py except pre-existing relay internal_error` -> `pass`
+- `S09` `verify:` `just check-types` -> `pass`
+- `S09` `verify:` `just check-import-boundaries` -> `pass`
+- `S09` `verify:` `ruff check and format` -> `pass`
+- `S09` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -236,3 +250,4 @@ related:
 - `S07` sys.frozen and sys.executable are held by a static source test and the bootstrap package-root test; a launched-image check belongs to the P04.S14 probe
 - `S06` Follow-up within this Step's retirement scope, on orchestrator instruction: the desktop no longer queries the command line's Python for package locations; webview, console workspace and manager log come from the compiled components under the pinned root, the command line's log directory follows its declared override, and `CADRUMO_WEBVIEW_DIR` is no longer a declared location
 - `S07` Correction within the ADR's slot mechanism, on orchestrator ruling: the agent gateway takes `CADRUMO_LOCAL_STORAGE_ROOT` as an optional directory slot, admitted by kind alone whoever the caller is (runtime or a development package runner), so its relay resolves the caller's root instead of the installed default; agent profiles pin only the temporary variables and authority, and the worker never receives the root name. Profile pins became a list of root, temporary and authority
+- `S09` `test_the_relay_in_the_agents_tree_acts_as_the_agent_under_the_lease_that_started_it` still fails with MCP `internal_error,` unchanged and pre-existing
