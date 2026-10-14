@@ -132,7 +132,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         StorageCategory.RUNTIME_SOCKETS,
         "runtime",
         default_anchor=StorageDefaultAnchor.DARWIN_TRANSIENT,
-        consumer_module="adapters/local_runtime/posix_endpoint.py",
+        consumer_module="core/runtime_transport.py",
         settings_field="cadrumo_runtime_socket_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
