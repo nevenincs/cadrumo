@@ -70,12 +70,9 @@ def test_login_logout_profile_switch_and_stale_receipt(harness: LifecycleHarness
         b = harness.connect(second.profile_id)
         b.client.resume_receipt()
         _read(b)
+        # One profile is signed in at a time: the person's sign-in to B signed A out everywhere,
+        # its own session, the session resumed from its stored sign-in, and that stored sign-in.
         assert a.client.profile_id == first.profile_id
-        _read(a)
-        started = time.monotonic()
-        logout = a.client.human_sign_out()
-        harness.metrics["logout_seconds"] = time.monotonic() - started
-        assert logout.receipt_removed and logout.keychain_removed
         _refused(_private_request(a, session_id))
         _refused(_private_request(resumed, resumed_id))
         assert observer.client.sign_in_status().status.presence is SignInPresence.ABSENT
@@ -93,13 +90,18 @@ def test_login_logout_profile_switch_and_stale_receipt(harness: LifecycleHarness
         assert isinstance(refusal, RuntimeAccessRefusal)
         assert refusal.code.value in {"authentication_required", "credential_rejected", "custody_changed"}
         _read(b)
+        b_session = b.client.session_id
+        started = time.monotonic()
+        logout = b.client.human_sign_out()
+        harness.metrics["logout_seconds"] = time.monotonic() - started
+        assert logout.receipt_removed and logout.keychain_removed
+        _refused(_private_request(b, b_session))
         harness.cli("login", "Lifecycle A", "--secrets-stdin", secret={"passphrase": first.password})
         assert observe_active_profile_pointer(harness.root).bucket_id == str(first.profile_id)
         renewed = harness.connect(first.profile_id)
         renewed.client.resume_receipt()
         _read(renewed)
         renewed.client.human_sign_out()
-        b.client.human_sign_out()
     finally:
         stale_proof[:] = bytes(len(stale_proof))
 
