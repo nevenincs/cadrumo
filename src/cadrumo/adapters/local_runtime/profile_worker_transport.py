@@ -171,7 +171,9 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
         in that order; the caller owns and wipes the buffer.
         """
         request = ProfileWorkerRequest(
-            ProfileWorkerAgentCredentialsRequest(request_id=uuid4(), session_id=session_id, catalog=catalog)
+            ProfileWorkerAgentCredentialsRequest(
+                request_id=uuid4(), session_id=session_id, catalog=catalog.model_dump(mode="json")
+            )
         )
         deadline = time.monotonic() + _CONTROL_EXCHANGE_SECONDS
         material = bytearray()

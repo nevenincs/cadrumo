@@ -12,7 +12,6 @@ from ...core.hex import Hex64Str
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.request_faults import MAX_REQUEST_FAULTS, RequestFault
-from ...domain.provider_settings.catalog import ProviderCatalog
 from ..operations.frontend_requests import (
     OperationObservationRequestV1,
     OperationObservationResultV1,
@@ -309,8 +308,13 @@ class ProfileWorkerAgentCredentialsRequest(BaseModel):
     action: Literal["agent_credentials"] = "agent_credentials"
     request_id: UUID
     session_id: UUID
-    catalog: ProviderCatalog
-    """The provider catalog the runtime obtained from the agent; the lanes whose credential the frame carries."""
+    catalog: dict[str, JsonValue]
+    """The provider catalog the runtime obtained from the agent, as its JSON document.
+
+    The worker validates it as a provider catalog when it resolves the
+    credentials: a ready worker that never starts an agent does not load the
+    catalog model.
+    """
 
 
 class ProfileWorkerRequest(

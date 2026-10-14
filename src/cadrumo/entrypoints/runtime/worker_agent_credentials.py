@@ -12,19 +12,14 @@ from __future__ import annotations
 
 import os
 import time
+from typing import TYPE_CHECKING
+
+from pydantic import ValidationError
 
 from ...adapters.local_runtime.runtime_frame_io import write_document, write_secret
 from ...adapters.local_runtime.worker_transport import WorkerChannel
-from ...adapters.persistence.provider_settings.store import build_provider_settings_store
 from ...adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
 from ...application.agent_host.credential_frame import wipe
-from ...application.provider_settings.catalog_source import ProvidedProviderCatalogSource
-from ...application.provider_settings.resolution import (
-    ProviderCredentialResolver,
-    ProviderCredentialUnavailable,
-    ProviderCredentialUnavailableReason,
-    ResolvedProviderSignIn,
-)
 from ...application.runtime.profile_worker import (
     ProfileWorkerAgentCredential,
     ProfileWorkerAgentCredentials,
@@ -32,16 +27,14 @@ from ...application.runtime.profile_worker import (
 )
 from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ...core.errors.hierarchy import CadrumoError
-from ...core.hashing import sha256_hex
+from ...core.hashing import canonical_json_bytes, sha256_hex
 from ...core.logging import get_logger
 from ...core.storage_environment import storage_mode
-from ...domain.provider_settings.catalog import ProviderConsumer
+
+if TYPE_CHECKING:
+    from ...domain.provider_settings.catalog import ProviderCatalog
 
 _LOGGER = get_logger(__name__)
-
-_SESSION_REFUSALS = frozenset(
-    {ProviderCredentialUnavailableReason.NOT_SIGNED_IN, ProviderCredentialUnavailableReason.PROFILE_LOCKED}
-)
 
 
 def serve_agent_credentials(
@@ -72,10 +65,26 @@ def serve_agent_credentials(
 def _resolve(
     custody: ProfileWorkerCustody, request: ProfileWorkerAgentCredentialsRequest, material: bytearray
 ) -> tuple[tuple[ProfileWorkerAgentCredential, ...], tuple[str, ...], str]:
+    # Imported here, not at module load: a worker reaches readiness on every sign-in, and only an agent's
+    # start asks for these credentials.
+    from ...adapters.persistence.provider_settings.store import build_provider_settings_store
+    from ...application.provider_settings.catalog_source import ProvidedProviderCatalogSource
+    from ...application.provider_settings.resolution import (
+        ProviderCredentialResolver,
+        ProviderCredentialUnavailable,
+        ProviderCredentialUnavailableReason,
+        ResolvedProviderSignIn,
+    )
+    from ...domain.provider_settings.catalog import ProviderConsumer
+
+    session_refusals = frozenset(
+        {ProviderCredentialUnavailableReason.NOT_SIGNED_IN, ProviderCredentialUnavailableReason.PROFILE_LOCKED}
+    )
+    catalog = request_catalog(request)
     try:
         resolver = ProviderCredentialResolver(
             store=build_provider_settings_store(bucket_id=str(custody.identity.binding.profile_id)),
-            catalog_source=ProvidedProviderCatalogSource(request.catalog),
+            catalog_source=ProvidedProviderCatalogSource(catalog),
             environment=os.environ,
             storage_mode=storage_mode().mode,
         )
@@ -84,10 +93,10 @@ def _resolve(
     credentials: list[ProfileWorkerAgentCredential] = []
     unset: list[str] = []
     states: list[str] = []
-    for provider in request.catalog.credential_lane_ids:
+    for provider in catalog.credential_lane_ids:
         resolved = resolver.resolve(provider, ProviderConsumer.ASSISTANT)
         if isinstance(resolved, ProviderCredentialUnavailable):
-            if resolved.reason in _SESSION_REFUSALS:
+            if resolved.reason in session_refusals:
                 raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
             states.append(f"{provider}:unavailable:{resolved.reason.value}")
             _LOGGER.info("agent credential unavailable provider=%s reason=%s", provider, resolved.reason.value)
@@ -109,3 +118,13 @@ def _resolve(
     # The generation names which settings each provider resolved from; it never sees a key.
     generation = sha256_hex("\n".join(["cadrumo.agent-credentials.v1", *states]).encode())
     return tuple(credentials), tuple(unset), generation
+
+
+def request_catalog(request: ProfileWorkerAgentCredentialsRequest) -> ProviderCatalog:
+    """Read the request's catalog document through the catalog's own parser, refusing it as invalid otherwise."""
+    from ...domain.provider_settings.catalog import parse_provider_catalog
+
+    try:
+        return parse_provider_catalog(canonical_json_bytes(request.catalog).decode("utf-8"))
+    except (ValidationError, CadrumoError):
+        raise AutomationCustodyError(AutomationCustodyCode.INVALID) from None
