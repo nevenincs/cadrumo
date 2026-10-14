@@ -44,7 +44,10 @@ from cadrumo.core.operations import (
 )
 
 from ...storage.errors import RepositoryError
+from ..durability_router import DurabilityRoutedOperationPersistence
 from ..ephemeral_store import EphemeralOperationStore
+from ..journal import OperationJournalRepository
+from ..lease import OperationLeaseFilesystemRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -222,11 +225,62 @@ async def test_an_operations_own_operands_go_with_its_record() -> None:
     supervisor = _supervisor(store, reader)
     try:
         first = await supervisor.submit(_request(1))
-        kept = await store.operands_for(first).put(_Result(page=1), written_at=datetime.now(UTC))
-        assert await store.resolve(kept, _Result) == _Result(page=1)
+        # A page no read returns: this supervisor writes read results unowned, and an unowned put keeps its digest.
+        kept = await store.operands_for(first).put(_Result(page=99), written_at=datetime.now(UTC))
+        assert await store.resolve(kept, _Result) == _Result(page=99)
         for operation_id in (first, await supervisor.submit(_request(2))):
             await supervisor.start(operation_id)
             await asyncio.wait_for(supervisor.settled(operation_id), timeout=10)
         assert not store.holds_operand(kept)
+    finally:
+        await supervisor.shutdown()
+
+
+@pytest.mark.asyncio
+async def test_evicting_the_older_of_two_identical_reads_keeps_the_result_the_newer_shares(tmp_path: Path) -> None:
+    store, reader = EphemeralOperationStore(settled_retention=1), _Reader()
+    reader.release.set()
+    journal = OperationJournalRepository(storage_root=tmp_path)
+    persistence = DurabilityRoutedOperationPersistence(
+        journal=journal,
+        event_stream=journal,
+        reader=journal,
+        leases=OperationLeaseFilesystemRepository(storage_root=tmp_path),
+        operands=EphemeralOperationStore(),
+        ephemeral=store,
+    )
+    supervisor = OperationSupervisor(
+        registry=_registry(reader),
+        authority_operation=unread_authority_operation(),
+        journal=persistence,
+        event_stream=persistence,
+        leases=persistence,
+        operands=persistence,
+        owner_id="1" * 64,
+        lease_token_factory=lambda: "2" * 64,
+        clock=lambda: datetime.now(UTC),
+        lease_duration=timedelta(minutes=1),
+        ephemeral=persistence,
+    )
+    try:
+        settled = []
+        for _ in range(2):
+            operation_id = await supervisor.submit(_request(7))
+            await supervisor.start(operation_id)
+            settled.append(await asyncio.wait_for(supervisor.settled(operation_id), timeout=10))
+        older, newer = settled
+        older_receipt, newer_receipt = older.terminal_receipt, newer.terminal_receipt
+        assert older_receipt is not None and newer_receipt is not None
+        # Identical results are one content-addressed operand.
+        assert older_receipt.result_ref == newer_receipt.result_ref
+        assert newer_receipt.result_ref is not None
+        with pytest.raises(OperationObservationUnknownOperationError):
+            await persistence.read_observation(older.identity.operation_id, 0, limit=8)
+        assert await persistence.resolve(newer_receipt.result_ref, _Result) == _Result(page=7)
+        # Once a different read evicts the newer one too, nothing holds the shared operand.
+        third = await supervisor.submit(_request(8))
+        await supervisor.start(third)
+        await asyncio.wait_for(supervisor.settled(third), timeout=10)
+        assert not store.holds_operand(newer_receipt.result_ref)
     finally:
         await supervisor.shutdown()

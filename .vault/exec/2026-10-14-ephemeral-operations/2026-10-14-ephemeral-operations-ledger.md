@@ -5,7 +5,7 @@ tags:
 date: '2026-10-14'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:18f066db71cdbbc4adaf78dcdf55f5cccf4b05b89d34d477d283be3fa70bf819'
+body_hash: 'sha256:7cc44fe0678182698185a7401b180b743accc97984f44a17aac2e01f62873aa5'
 related:
   - "[[2026-10-14-ephemeral-operations-plan]]"
 ---
@@ -91,6 +91,12 @@ related:
 - `S06` `verify:` `pytest -m '' test_operation_provenance.py test_profile_worker_operations.py` -> `pass`
 - `S06` `verify:` `ruff check, ruff format` -> `pass`
 - `S06` `by:` `vaultspec-high-executor`
+- `S07` `M` `src/cadrumo/adapters/persistence/operations/ephemeral_store.py`
+- `S07` `M` `src/cadrumo/adapters/persistence/operations/tests/test_ephemeral_store.py`
+- `S07` `verify:` `pytest -m '' test_ephemeral_store.py (new test fails with secure reference absent against the prior store)` -> `pass`
+- `S07` `verify:` `pytest -m '' src/cadrumo/adapters/persistence/operations src/cadrumo/application/operations` -> `pass`
+- `S07` `verify:` `ruff check, ruff format` -> `pass`
+- `S07` `by:` `vaultspec-high-executor`
 
 ## Notes
 

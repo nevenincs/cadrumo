@@ -81,6 +81,10 @@ class EphemeralOperationStore(
         self._leases: dict[OperationId, OperationOwnerLease] = {}
         self._operands: dict[ContentDigest, bytes] = {}
         self._operand_owners: dict[OperationId, set[ContentDigest]] = {}
+        # Operands are content-addressed, so identical results of two reads share
+        # one digest: each is kept while any operation, or an unowned put, holds it.
+        self._operand_holders: dict[ContentDigest, int] = {}
+        self._unowned_operands: set[ContentDigest] = set()
 
     def holds(self, operation_id: OperationId) -> bool:
         """Whether this store holds the operation's record or its lease."""
@@ -327,6 +331,9 @@ class EphemeralOperationStore(
         reference = sha256_hex(payload)
         with self._lock:
             self._operands.setdefault(reference, payload)
+            if reference not in self._unowned_operands:
+                self._unowned_operands.add(reference)
+                self._operand_holders[reference] = self._operand_holders.get(reference, 0) + 1
         return reference
 
     def operands_for(self, operation_id: OperationId) -> OperationSecureReferenceStore:
@@ -340,7 +347,10 @@ class EphemeralOperationStore(
         reference = sha256_hex(payload)
         with self._lock:
             self._operands.setdefault(reference, payload)
-            self._operand_owners.setdefault(operation_id, set()).add(reference)
+            owned = self._operand_owners.setdefault(operation_id, set())
+            if reference not in owned:
+                owned.add(reference)
+                self._operand_holders[reference] = self._operand_holders.get(reference, 0) + 1
         return reference
 
     def holds_operand(self, reference: ContentDigest) -> bool:
@@ -369,7 +379,12 @@ class EphemeralOperationStore(
 
     def _forget_operands(self, operation_id: OperationId) -> None:
         for reference in self._operand_owners.pop(operation_id, set()):
-            self._operands.pop(reference, None)
+            holders = self._operand_holders[reference] - 1
+            if holders:
+                self._operand_holders[reference] = holders
+            else:
+                del self._operand_holders[reference]
+                self._operands.pop(reference, None)
 
     def _record(self, operation_id: OperationId) -> OperationJournalRecord:
         record = self._records.get(operation_id)
