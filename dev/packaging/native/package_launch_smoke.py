@@ -4,6 +4,7 @@ import json
 import os
 import sys
 import time
+from collections.abc import Mapping
 from contextlib import closing
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -14,7 +15,12 @@ from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.local_runtime.windows_native_io import owned_windows_handle
 from cadrumo.adapters.local_runtime.windows_process import WindowsOwnedProcess, WindowsProcessScope
 from cadrumo.application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
-from cadrumo.core.storage_environment import ChildEnvironmentProfile, child_environment
+from cadrumo.core.storage_environment import (
+    ChildEnvironmentProfile,
+    authority_root_setting_names,
+    child_environment,
+    prepare_temporary_directory,
+)
 from cadrumo.core.type_guards import is_str_keyed_dict
 from cadrumo.domain.calculations.registry.authority_store import AUTHORITY_DESCRIPTOR_FILENAME, AuthorityDescriptor
 
@@ -224,13 +230,24 @@ def _recover_runtime(
             time.sleep(0.05)
 
 
+def health_environment(root: Path, received: Mapping[str, str]) -> dict[str, str]:
+    """Build the packaged desktop's environment for a health run in disposable storage at ``root``.
+
+    The desktop is a packaged image: its package alone supplies registry authority, and it
+    refuses an inherited authority root, such as the one developer tooling exports.
+    """
+    authority = authority_root_setting_names()
+    kept = {key: value for key, value in received.items() if key.upper() not in authority}
+    return child_environment(ChildEnvironmentProfile.STRICT, root, received=kept)
+
+
 def verify_health(executable: Path, storage_variable: str) -> None:
     """Exercise shipping supervision and verified IPC in disposable native storage."""
     executable = executable.resolve(strict=True)
-    temporary = TemporaryDirectory(prefix="cadrumo-package-health-", delete=False)
+    temporary = TemporaryDirectory(prefix="cadrumo-package-health-", delete=False, dir=prepare_temporary_directory())
     with temporary as directory:
         root = Path(directory) / "storage"
-        environment = child_environment(ChildEnvironmentProfile.STRICT, root)
+        environment = health_environment(root, os.environ)
         if environment.get(storage_variable) != str(root):
             raise AssertionError("Package health storage variable does not match the canonical root setting")
         scope = WindowsProcessScope()
