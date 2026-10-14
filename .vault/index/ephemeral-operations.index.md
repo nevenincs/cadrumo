@@ -6,8 +6,10 @@ tags:
 date: '2026-10-14'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:7c7ec6ff2d29073f755b8392436c69f56a759855ef2f3e1de8d8f85ca25b84a6'
+body_hash: 'sha256:55954aaa96577f4db015db6c9b4c933b72b3c9f5419e18ab03e5edcfc279e8ee'
 related:
+  - '[[2026-10-14-ephemeral-operations-ledger]]'
+  - '[[2026-10-14-ephemeral-operations-plan-close-review-audit]]'
   - '[[2026-10-14-ephemeral-operations-plan]]'
 ---
 
@@ -16,6 +18,14 @@ related:
 Auto-generated index of all documents tagged with `#ephemeral-operations`.
 
 ## Documents
+
+### audit
+
+- `2026-10-14-ephemeral-operations-plan-close-review-audit` - `ephemeral-operations` audit: `plan close review`
+
+### exec
+
+- `2026-10-14-ephemeral-operations-ledger` - `ephemeral-operations` ledger
 
 ### plan
 
