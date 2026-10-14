@@ -18,12 +18,13 @@ from collections.abc import Iterator
 from contextlib import suppress
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Final, cast
+from typing import Final
 from uuid import UUID
 
 import pytest
 import typer
 from click.testing import Result
+from typer.core import TyperCommand
 
 from .....adapters.local_runtime.agent_programs import PACKAGE_AGENT_VARIABLE
 from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
@@ -324,7 +325,7 @@ def _bridge_refusal(monkeypatch: pytest.MonkeyPatch, error: Exception) -> tuple[
     monkeypatch.setattr(bridge, "resolve_active_profile_pointer", lambda: SimpleNamespace(bucket_id=client.profile_id))
     monkeypatch.setattr(bridge, "require_profile_client", lambda _ctx, *, expected_profile_id: client)
     with pytest.raises(CliRefusedBoundaryError) as refused:
-        bridge.read_status(cast(typer.Context, None))
+        bridge.read_status(typer.Context(TyperCommand("status")))
     context = refused.value.context or {}
     return context.get("reason"), context.get("operation_id")
 
