@@ -101,7 +101,8 @@ def test_commit_timing_keeps_nested_durable_effect_and_failure_boundaries(
             finally:
                 await supervisor.shutdown()
 
-        with caplog.at_level(logging.INFO, logger=logger.name):
+        # Commit-phase timings are debug-level diagnostics.
+        with caplog.at_level(logging.DEBUG, logger=logger.name):
             asyncio.run(exercise())
         records = [
             record for record in caplog.records if record.name == logger.name and record.msg == "operation_commit_phase"

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import traceback
 from collections.abc import Coroutine
 from datetime import datetime
 from typing import override
@@ -112,6 +113,19 @@ async def _stored_error_detail(
         return await operands.put(detail, written_at=written_at)
     except Exception:
         return None
+
+
+def _raising_frame(error: BaseException) -> str:
+    """Name where ``error`` was raised as module, function and line, and nothing it carries.
+
+    The exception's message, arguments and locals may hold private operands, so
+    the log keeps only the code location of the frame that raised it.
+    """
+    frames = list(traceback.walk_tb(error.__traceback__))
+    if not frames:
+        return "-"
+    frame, line = frames[-1]
+    return f"{frame.f_globals.get('__name__', '?')}:{frame.f_code.co_name}:{line}"
 
 
 class SupervisorExecutionMixin(SupervisorHost):
@@ -388,10 +402,11 @@ class SupervisorExecutionMixin(SupervisorHost):
         if registered is not None and registered.category is ErrorCategory.REFUSED:
             # Log only registered lifecycle facts; the exception may carry private operands.
             _log.warning(
-                "operation refused definition=%s operation=%s code=%s",
+                "operation refused definition=%s operation=%s code=%s raising_frame=%s",
                 snapshot.identity.definition_id,
                 snapshot.identity.operation_id,
                 registered.code,
+                _raising_frame(error),
             )
             receipt = OperationTerminalReceipt(
                 identity=snapshot.identity,
@@ -406,11 +421,12 @@ class SupervisorExecutionMixin(SupervisorHost):
             diagnostic_ref = self._executor_failure_diagnostic_reference(snapshot, error)
             # The opaque reference correlates with the encrypted error detail.
             _log.error(
-                "operation failed definition=%s operation=%s diagnostic_ref=%s exception_type=%s",
+                "operation failed definition=%s operation=%s diagnostic_ref=%s exception_type=%s raising_frame=%s",
                 snapshot.identity.definition_id,
                 snapshot.identity.operation_id,
                 diagnostic_ref,
                 type(error).__name__,
+                _raising_frame(error),
             )
             receipt = OperationTerminalReceipt(
                 identity=snapshot.identity,

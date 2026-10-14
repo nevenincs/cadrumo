@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import traceback
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -238,13 +237,17 @@ def test_executor_failure_receipt_waits_for_financial_operand_release(tmp_path: 
             )
             executor.requirement = (await supervisor.inspect(operation_id)).financial_requirement
             await supervisor.start(operation_id)
-            await asyncio.wait_for(custody.release_persisted.wait(), timeout=5)
+            # Whichever comes first decides: the custody release, or a settlement that skipped it.
+            released = asyncio.ensure_future(custody.release_persisted.wait())
+            settled = asyncio.ensure_future(supervisor.settled(operation_id))
+            await asyncio.wait({released, settled}, return_when=asyncio.FIRST_COMPLETED)
+            assert released.done() and not settled.done(), "the operation settled before its custody release"
             before_cleanup_returns = await supervisor.inspect(operation_id)
             requirement = executor.requirement
             assert requirement is not None
             checkpoint_during_cleanup = await custody.read(requirement.handoff_id)
             custody.allow_buffer_release.set()
-            terminal = await supervisor.settled(operation_id)
+            terminal = await settled
             return before_cleanup_returns, terminal, checkpoint_during_cleanup
 
         before_cleanup_returns, terminal, checkpoint_during_cleanup = asyncio.run(run())
@@ -356,7 +359,7 @@ def test_executor_failure_log_record_carries_the_raising_frame(
         and correlation in record.getMessage()
     ]
     assert len(records) == 1
-    exc_info = records[0].exc_info
-    assert exc_info is not None
-    frames = [(frame.f_code.co_filename, frame.f_code.co_name) for frame, _ in traceback.walk_tb(exc_info[2])]
-    assert (__file__, "execute") == frames[-1]
+    # The exception itself may carry private operands, so the record holds no traceback or message of it,
+    # only where it was raised: this module's executor.
+    assert records[0].exc_info is None
+    assert f"raising_frame={__name__}:execute:" in records[0].getMessage()
