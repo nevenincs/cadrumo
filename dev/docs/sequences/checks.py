@@ -16,7 +16,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Annotated, Final
+from typing import Annotated, Final, cast
 
 from pydantic import BaseModel, Field, StringConstraints, ValidationError
 
@@ -349,7 +349,7 @@ def refresh_sequences(
                 written.append(write_golden(transcript, page=item.page, goldens_root=goldens_root))
                 advisories.extend(oversized_frame_advisories(item.page, build_golden(transcript)))
         except SequenceEngineError as exc:
-            all_problems.append(f"page {item.page!r}: {exc}")
+            all_problems.append(f"page {item.page!r}: {_with_notes(exc)}")
             continue
     return tuple(written), tuple(all_problems), tuple(advisories)
 
@@ -398,7 +398,7 @@ def check_sequences(
             with _sequence_progress_scope(item.page), _execute_in_fresh_sandbox(item.sequence) as transcript:
                 all_problems.extend(check_transcript(item.sequence, transcript, golden, page=item.page))
         except SequenceEngineError as exc:
-            all_problems.append(f"page {item.page!r}: {exc}")
+            all_problems.append(f"page {item.page!r}: {_with_notes(exc)}")
             continue
     return tuple(all_problems), tuple(advisories)
 
@@ -865,5 +865,14 @@ def _check_page_coherence_items(docname: str, items: list[DiscoveredSequence], a
                 )
     except SequenceEngineError as exc:
         all_problems.append(
-            f"{COHERENCE_TIER_PREFIX}: page {docname!r}: cumulative run aborted — {exc}",
+            f"{COHERENCE_TIER_PREFIX}: page {docname!r}: cumulative run aborted — {_with_notes(exc)}",
         )
+
+
+def _with_notes(error: BaseException) -> str:
+    """Render an execution failure with the notes the runner attached, such as where its logs were kept."""
+    notes: object = getattr(error, "__notes__", ())
+    lines = [str(error)]
+    if isinstance(notes, list):
+        lines.extend(str(note) for note in cast("list[object]", notes))
+    return "\n  ".join(lines)

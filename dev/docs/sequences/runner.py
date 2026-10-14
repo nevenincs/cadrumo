@@ -1408,6 +1408,7 @@ def executed_sequence_sandbox(
             names.
     """
     _refuse_unexecutable(sequence)
+    retained_logs = _retained_logs_root()
     with sequence_sandbox(
         sequence_id=sequence.sequence_id,
         sandbox_root=sandbox_root,
@@ -1416,10 +1417,11 @@ def executed_sequence_sandbox(
         captures: dict[str, CapturedScalar] = {}
         # @static frames are display-only: they never run, so they never enter
         # the transcript (and therefore never the golden).
-        frames = tuple(
-            _execute_frame(sequence, frame, captures, frame_index=frame_index)
-            for frame_index, frame in enumerate(sequence.executed_frames)
-        )
+        with _logs_retained_on_failure(sandbox, retained_logs, sequence.sequence_id):
+            frames = tuple(
+                _execute_frame(sequence, frame, captures, frame_index=frame_index)
+                for frame_index, frame in enumerate(sequence.executed_frames)
+            )
         yield (
             sandbox,
             SequenceTranscript(
@@ -1496,17 +1498,48 @@ def _execute_page_in_root(
     transcripts: list[SequenceTranscript] = []
     page_seeds: dict[str, _PageSeedState] = {}
     page_seed_signatures: dict[tuple[str, ...], tuple[str, _PageSeedState]] = {}
-    with sequence_sandbox(
-        sequence_id=label,
-        sandbox_root=sandbox_root,
-        fixtures_root=fixtures_root,
-        enrolled_sequence_ids=tuple(sequence.sequence_id for sequence in sequences if sequence.executed_frames),
-    ) as sandbox:
+    retained_logs = _retained_logs_root()
+    with (
+        sequence_sandbox(
+            sequence_id=label,
+            sandbox_root=sandbox_root,
+            fixtures_root=fixtures_root,
+            enrolled_sequence_ids=tuple(sequence.sequence_id for sequence in sequences if sequence.executed_frames),
+        ) as sandbox,
+        _logs_retained_on_failure(sandbox, retained_logs, label),
+    ):
         for sequence in sequences:
             transcript = _execute_page_sequence(sequence, label, sandbox, page_seeds, page_seed_signatures)
             if transcript is not None:
                 transcripts.append(transcript)
     return tuple(transcripts)
+
+
+def _retained_logs_root() -> Path:
+    """Return where a failed sandbox's logs are kept, read before the sandbox rebinds the log directory."""
+    configured = load_settings().cadrumo_log_dir
+    return (Path(configured) if configured is not None else Path(prepare_temporary_directory())) / "failed-sandboxes"
+
+
+@contextmanager
+def _logs_retained_on_failure(sandbox: SequenceSandbox, retained_root: Path, label: str) -> Generator[None]:
+    """Copy the sandbox's product logs out before its teardown deletes them, when its frames fail.
+
+    Each sandbox binds the runtime's, the profile worker's and this process's
+    diagnostic log under its own storage root, which the teardown removes. A
+    worker that dies mid-sequence would otherwise leave no record anywhere.
+    """
+    try:
+        yield
+    except BaseException as error:
+        destination = retained_root / f"{re.sub(r'[^A-Za-z0-9._-]+', '_', label)}-{os.getpid()}-{time.time_ns()}"
+        try:
+            shutil.copytree(sandbox.storage_root / "logs", destination, dirs_exist_ok=True)
+        except OSError as copy_error:
+            error.add_note(f"sandbox logs could not be retained: {type(copy_error).__name__}")
+        else:
+            error.add_note(f"sandbox logs retained at {destination}")
+        raise
 
 
 def _execute_page_sequence(
