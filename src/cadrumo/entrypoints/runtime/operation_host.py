@@ -53,7 +53,7 @@ from ...core.async_cleanup import await_cancellation_complete
 from ...core.config import override_settings
 from ...core.errors.hierarchy import CadrumoError
 from ...core.logging import get_logger
-from ...core.operations import OperationLifecycle
+from ...core.operations import OperationDurability, OperationLifecycle
 from ...core.request_faults import registered_error_fault, request_faults
 from ...core.startup_phase_log import startup_phase
 from ...core.time.clock import now
@@ -356,6 +356,17 @@ class ProfileWorkerOperationHost:
             self._unsettled.update(unsettled)
             self._inventory_verified = True
 
+    def _track_unsettled(self, operation_id: OperationId, definition_id: str) -> None:
+        """Note an admission whose owner the lapse sweep may one day have to settle.
+
+        An ephemeral operation is never noted: it ends with this worker, and
+        once memory forgets it the durable journal the sweep would read never
+        held it, so settling it would only take the journal lock and fail.
+        """
+        registry = self._composed().submission.supervisor.registry
+        if registry.lookup_public_contract(definition_id).durability is not OperationDurability.EPHEMERAL:
+            self._unsettled.add(operation_id)
+
     async def _settle_lapsed_operations(self) -> None:
         """Settle every operation whose owner stopped renewing its lease and whose grace has passed.
 
@@ -432,7 +443,7 @@ class ProfileWorkerOperationHost:
                     )
                     if submitted.receipt.operation_id == operation_id:
                         self._submissions[operation_id] = session_id, submitted
-                        self._unsettled.add(operation_id)
+                        self._track_unsettled(operation_id, request.definition_id)
                     else:
                         # Replay does not revive the original response bearer.
                         execution.discard(operation_id)

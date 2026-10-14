@@ -5,7 +5,7 @@ tags:
 date: '2026-10-14'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:7cc44fe0678182698185a7401b180b743accc97984f44a17aac2e01f62873aa5'
+body_hash: 'sha256:cb1a739fe789bee626c4732bf4eec178e47ea11ae04fd75d8a74c1ccf63875bf'
 related:
   - "[[2026-10-14-ephemeral-operations-plan]]"
 ---
@@ -97,6 +97,14 @@ related:
 - `S07` `verify:` `pytest -m '' src/cadrumo/adapters/persistence/operations src/cadrumo/application/operations` -> `pass`
 - `S07` `verify:` `ruff check, ruff format` -> `pass`
 - `S07` `by:` `vaultspec-high-executor`
+- `S08` `M` `src/cadrumo/entrypoints/runtime/operation_host.py`
+- `S08` `A` `src/cadrumo/entrypoints/runtime/tests/test_operation_host_lapse_sweep.py`
+- `S08` `A` `src/cadrumo/adapters/persistence/operations/tests/routed_operation_support.py`
+- `S08` `M` `src/cadrumo/adapters/persistence/operations/tests/test_durability_router.py`
+- `S08` `verify:` `pytest -m '' test_operation_host_lapse_sweep.py (fails with the ephemeral id tracked)` -> `pass`
+- `S08` `verify:` `pytest -m '' src/cadrumo/adapters/persistence/operations plus runtime host, settlement, authority-release and ephemeral-view tests` -> `pass`
+- `S08` `verify:` `ruff check, ruff format` -> `pass`
+- `S08` `by:` `vaultspec-high-executor`
 
 ## Notes
 
