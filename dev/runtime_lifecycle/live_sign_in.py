@@ -64,6 +64,8 @@ from mcp import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 
 from cadrumo.core.storage_environment import host_installed_default_root
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_path
 
 from .caller_owned_root import (
     AcceptanceError,
@@ -335,6 +337,15 @@ def identify_profile(programs: Programs, environment: Mapping[str, str], profile
     finally:
         holder.stop()
     return Profile(profile.name, profile.password, UUID(str(held["profile_id"])))
+
+
+def model_store(chosen: Path | None) -> Path:
+    """Return the Ollama model store to read: the chosen one, else Cadrumo's own.
+
+    Cadrumo's Ollama processes keep their weights in the storage root's
+    model member, so that member is the store this proof reads by default.
+    """
+    return chosen if chosen is not None else storage_path(StorageCategory.OLLAMA_MODELS)
 
 
 @contextlib.contextmanager
@@ -757,8 +768,8 @@ def main(arguments: list[str] | None = None) -> int:
     parser.add_argument(
         "--ollama-models",
         type=Path,
-        default=Path.home() / ".ollama" / "models",
-        help="An existing Ollama model store to read; nothing is pulled or pruned.",
+        default=None,
+        help="An existing Ollama model store to read (default: Cadrumo's own); nothing is pulled or pruned.",
     )
     options = parser.parse_args(arguments)
     programs, package = _programs(options)
@@ -773,7 +784,7 @@ def main(arguments: list[str] | None = None) -> int:
                 scratch,
                 expiry=not options.skip_expiry,
                 review=not options.skip_review,
-                models=Path(options.ollama_models),
+                models=model_store(options.ollama_models),
             )
         )
     except (AcceptanceError, BaseExceptionGroup) as failure:

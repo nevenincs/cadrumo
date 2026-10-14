@@ -22,10 +22,10 @@ per step:
 The attendance approval admits the MCP connection; it is not the review's
 answer, which is given by ``respond`` on the review's own interaction. Run it
 with ``just verify-reviewed-operation PACKAGE``. It needs the local
-``qwen3:1.7b`` model in an existing Ollama store (``--ollama-models``) and
-reports the review unproven without it, or when the package was built without
-the optional ``llm`` extra and so refuses local-model work; nothing is
-downloaded.
+``qwen3:1.7b`` model in an Ollama store (``--ollama-models``, by default
+Cadrumo's own) and reports the review unproven without it, or when the package
+was built without the optional ``llm`` extra and so refuses local-model work;
+nothing is downloaded.
 """
 
 from __future__ import annotations
@@ -60,6 +60,7 @@ from .live_sign_in import (
     identify_profile,
     local_model,
     mcp_session,
+    model_store,
     observe,
     package_identity,
     settled,
@@ -324,8 +325,8 @@ def main(arguments: list[str] | None = None) -> int:
     parser.add_argument(
         "--ollama-models",
         type=Path,
-        default=Path.home() / ".ollama" / "models",
-        help="An existing Ollama model store to read; nothing is pulled or pruned.",
+        default=None,
+        help="An existing Ollama model store to read (default: Cadrumo's own); nothing is pulled or pruned.",
     )
     options = parser.parse_args(arguments)
     package = Path(options.package).resolve(strict=True)
@@ -333,7 +334,7 @@ def main(arguments: list[str] | None = None) -> int:
     base.mkdir(parents=True, exist_ok=True)
     scratch = Path(tempfile.mkdtemp(prefix="reviewed-operation-", dir=base))
     try:
-        receipt = asyncio.run(run(Programs.of(package), package, scratch, models=Path(options.ollama_models)))
+        receipt = asyncio.run(run(Programs.of(package), package, scratch, models=model_store(options.ollama_models)))
     except (AcceptanceError, BaseExceptionGroup) as failure:
         reason = acceptance_failure(failure)
         if reason is None:
