@@ -82,7 +82,10 @@ def _lose_result(root: Path, seed: PhaseSeed) -> None:
 
 
 async def exercise(root: Path, seed: PhaseSeed) -> int:
-    (root / "worker.pid").write_text(str(os.getpid()), encoding="ascii")
+    # Publish the pid whole: the parent reads it as soon as the name exists.
+    pending_pid = root / "worker.pid.pending"
+    pending_pid.write_text(str(os.getpid()), encoding="ascii")
+    pending_pid.replace(root / "worker.pid")
     await _wait_file(root / "listening")
     client = WorkerAuthorizationClient(identity=seed.identity, root=root, parent_pid=seed.parent_pid)
     try:
