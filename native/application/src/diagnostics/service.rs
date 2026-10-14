@@ -1,6 +1,30 @@
 //! Closed operational facts; credentials, paths and protocol text are excluded.
 use serde::{Deserialize, Serialize};
 
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "UPPERCASE")]
+pub enum LogLevel {
+    Debug,
+    #[default]
+    Info,
+    Warning,
+    Error,
+    Critical,
+}
+
+impl LogLevel {
+    pub fn parse(name: &str) -> Option<Self> {
+        Some(match name {
+            "DEBUG" => Self::Debug,
+            "INFO" => Self::Info,
+            "WARNING" => Self::Warning,
+            "ERROR" => Self::Error,
+            "CRITICAL" => Self::Critical,
+            _ => return None,
+        })
+    }
+}
+
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum AgentRefusal {
     #[serde(rename = "agent_service_absent")]
@@ -61,5 +85,5 @@ pub enum ServiceFact {
     AgentProtocolRefused {},
     ManagerInstallationStarted { scope: InstallationScope },
     ManagerInstallationCompleted { scope: InstallationScope },
-    EnvironmentResolved { package_abi: u32, log_level_overridden: bool },
+    EnvironmentResolved { package_abi: u32, log_level: LogLevel, log_level_overridden: bool },
 }

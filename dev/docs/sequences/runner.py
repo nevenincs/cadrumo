@@ -753,9 +753,12 @@ def _isolated_external_tool_env(sandbox_root: Path) -> Generator[None]:
     empty_browsers = sandbox_root / "workdir" / ".playwright-browsers"
     empty_bin.mkdir(parents=True, exist_ok=True)
     empty_browsers.mkdir(parents=True, exist_ok=True)
+    # The product resolves its managed browser root from its own setting rather
+    # than Playwright's variable, so both are pinned to the same empty directory.
     pins = {
         "PATH": str(empty_bin),
         "PLAYWRIGHT_BROWSERS_PATH": str(empty_browsers),
+        "CADRUMO_PLAYWRIGHT_BROWSERS_DIR": str(empty_browsers),
     }
     previous = {key: os.environ.get(key) for key in pins}
     os.environ.update(pins)
