@@ -48,6 +48,10 @@ class LogLevel(StrEnum):
     DEFAULT = "default"
     VERBOSE = "verbose"
     DEBUG = "debug"
+    INFO = "info"
+    WARNING = "warning"
+    ERROR = "error"
+    CRITICAL = "critical"
 
 
 _STDERR_LOG_LEVEL_BY_CLI_LEVEL: dict[LogLevel, int] = {
@@ -55,6 +59,10 @@ _STDERR_LOG_LEVEL_BY_CLI_LEVEL: dict[LogLevel, int] = {
     LogLevel.DEFAULT: logging.ERROR,
     LogLevel.VERBOSE: logging.INFO,
     LogLevel.DEBUG: logging.DEBUG,
+    LogLevel.INFO: logging.INFO,
+    LogLevel.WARNING: logging.WARNING,
+    LogLevel.ERROR: logging.ERROR,
+    LogLevel.CRITICAL: logging.CRITICAL,
 }
 
 

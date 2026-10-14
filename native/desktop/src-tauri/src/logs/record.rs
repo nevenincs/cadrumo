@@ -96,7 +96,9 @@ pub struct LogSourceStates {
 
 impl LogSourceStates {
     fn same(&self, other: &Self) -> bool {
-        self.python.same(&other.python) && self.manager.same(&other.manager) && self.host.same(&other.host)
+        self.python.same(&other.python)
+            && self.manager.same(&other.manager)
+            && self.host.same(&other.host)
     }
 }
 

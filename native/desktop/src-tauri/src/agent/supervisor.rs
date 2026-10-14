@@ -304,7 +304,9 @@ fn publish(shared: &Shared, state: State) {
         current.clone()
     };
     if let State::Refused { code } = status.state {
-        shared.diagnostics.service(None, ServiceFact::AgentRefused { reason: code });
+        shared
+            .diagnostics
+            .service(None, ServiceFact::AgentRefused { reason: code });
     }
     let mut listener = lock(&shared.listener);
     if listener
@@ -316,7 +318,11 @@ fn publish(shared: &Shared, state: State) {
 }
 
 /// Stops the running launcher, if any. With a generation, only that one.
-async fn stop_running(shared: &Arc<Shared>, generation: Option<u64>, cause: AgentStopCause) -> Result<()> {
+async fn stop_running(
+    shared: &Arc<Shared>,
+    generation: Option<u64>,
+    cause: AgentStopCause,
+) -> Result<()> {
     let taken = {
         let mut running = lock(&shared.running);
         if generation.is_some_and(|wanted| running.as_ref().map(|r| r.generation) != Some(wanted)) {
@@ -334,7 +340,9 @@ async fn stop_running(shared: &Arc<Shared>, generation: Option<u64>, cause: Agen
         }
     }
     let process = running.supervised.process_ref();
-    shared.diagnostics.service(Some(process), ServiceFact::AgentStopping { cause });
+    shared
+        .diagnostics
+        .service(Some(process), ServiceFact::AgentStopping { cause });
     let grace = shared.grace;
     let diagnostics = shared.diagnostics.clone();
     let ended = tauri::async_runtime::spawn_blocking(move || running.supervised.stop(grace))
@@ -359,7 +367,9 @@ async fn start(
     let bearer = Arc::new(mint_bearer()?);
     let Prepared { command } = launch(&bearer, &profile)?;
     let generation = shared.generation.fetch_add(1, Ordering::AcqRel) + 1;
-    shared.diagnostics.service(None, ServiceFact::AgentStarting { generation });
+    shared
+        .diagnostics
+        .service(None, ServiceFact::AgentStarting { generation });
     let sender = signals.clone();
     let diagnostics = shared.diagnostics.clone();
     let secret = bearer.clone();
@@ -444,7 +454,10 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, launch: Launch) {
                     retry_after = None;
                     publish(&shared, State::Starting);
                     if let Err(error) = start(&shared, &launch, profile.clone(), &signals).await {
-                        shared.diagnostics.host_failure(cadrumo_application::diagnostics::HostStage::Agent, error);
+                        shared.diagnostics.host_failure(
+                            cadrumo_application::diagnostics::HostStage::Agent,
+                            error,
+                        );
                         publish(
                             &shared,
                             State::Refused {
@@ -452,9 +465,12 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, launch: Launch) {
                             },
                         );
                         retry_after = Some(Instant::now() + shared.retry);
-                        shared.diagnostics.service(None, ServiceFact::AgentRetryScheduled {
-                            delay_ms: shared.retry.as_millis().try_into().unwrap_or(u64::MAX),
-                        });
+                        shared.diagnostics.service(
+                            None,
+                            ServiceFact::AgentRetryScheduled {
+                                delay_ms: shared.retry.as_millis().try_into().unwrap_or(u64::MAX),
+                            },
+                        );
                     }
                 }
             }
@@ -485,7 +501,9 @@ async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
     let (bearer, process) = {
         let running = lock(&shared.running);
         match running.as_ref() {
-            Some(running) if running.generation == generation => (running.bearer.clone(), running.supervised.process_ref()),
+            Some(running) if running.generation == generation => {
+                (running.bearer.clone(), running.supervised.process_ref())
+            }
             _ => return false,
         }
     };
@@ -501,7 +519,13 @@ async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
                 workspace_root,
                 generation,
             });
-            shared.diagnostics.service(Some(process), ServiceFact::AgentReady { generation, gateway_port });
+            shared.diagnostics.service(
+                Some(process),
+                ServiceFact::AgentReady {
+                    generation,
+                    gateway_port,
+                },
+            );
             publish(shared, State::Ready { agent_version });
             false
         }
@@ -526,7 +550,9 @@ async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
             false
         }
         Signal::Violation => {
-            shared.diagnostics.service(Some(process), ServiceFact::AgentProtocolRefused {});
+            shared
+                .diagnostics
+                .service(Some(process), ServiceFact::AgentProtocolRefused {});
             publish(
                 shared,
                 State::Refused {
@@ -673,6 +699,7 @@ mod tests {
             supervisor: Supervisor,
             observation: Arc<Mutex<Result<Observation>>>,
             statuses: Arc<Mutex<Vec<serde_json::Value>>>,
+            diagnostics: Arc<Diagnostics>,
         }
 
         fn rig(ignore_end: bool) -> Rig {
@@ -687,10 +714,11 @@ mod tests {
                     command: powershell(&launcher_script(ignore_end)),
                 })
             });
+            let diagnostics = Arc::new(Diagnostics::default());
             let supervisor = Supervisor::with_timing(
                 observe,
                 Some(launch),
-                Arc::new(Diagnostics::default()),
+                diagnostics.clone(),
                 Duration::from_millis(if ignore_end { 500 } else { 10_000 }),
                 Duration::from_millis(100),
                 Duration::from_secs(60),
@@ -710,6 +738,7 @@ mod tests {
                 supervisor,
                 observation,
                 statuses,
+                diagnostics,
             }
         }
 
@@ -743,6 +772,32 @@ mod tests {
             assert_eq!(length, "64", "the launcher read the minted bearer");
             let gateway = rig.supervisor.gateway().unwrap();
             assert_eq!(gateway.port, 4000);
+            let snapshot = rig.diagnostics.snapshot(u64::MAX);
+            let ready = snapshot
+                .events
+                .iter()
+                .rev()
+                .find(|event| {
+                    matches!(
+                        event.service,
+                        Some(ServiceFact::AgentReady {
+                            gateway_port: 4000,
+                            ..
+                        })
+                    )
+                })
+                .unwrap();
+            let process = ready.status.as_ref().unwrap();
+            assert_eq!(
+                process.role,
+                cadrumo_application::process::status::ProcessRole::AgentLauncher
+            );
+            assert!(process.pid > 0);
+            assert!(
+                !serde_json::to_string(&snapshot.events)
+                    .unwrap()
+                    .contains(gateway.bearer.as_str())
+            );
             assert_eq!(gateway.workspace_root, r"C:\lane\ws");
             assert_eq!(gateway.bearer.len(), 64);
             let launcher = lock(&rig.supervisor.shared.running)

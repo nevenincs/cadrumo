@@ -12,6 +12,14 @@ The fixed listener assignments live in `../development-server.json`: display
 15370, test preview 15371, documentation fixture 15372, and Storybook 6006.
 An occupied port is an error; no server moves to another port.
 
+The packaged app's Logs tab starts at INFO. Set `CADRUMO_LOG_LEVEL` to `DEBUG`,
+`INFO`, `WARNING`, `ERROR`, or `CRITICAL` before launching it to select another
+initial level. The level selector changes the current view; Reset filters restores
+the environment-selected level. Internal stages and successful helper timings are
+DEBUG, operational state changes are INFO, recoverable degradation is WARNING,
+and failed operations are ERROR. Diagnostic files retain DEBUG by default;
+`CADRUMO_LOG_FILE_LEVEL` and `CADRUMO_LOG_ROOT_LEVEL` govern Python capture separately.
+
 ## Prerequisites
 
 - Node.js and npm, with dependencies installed by `npm ci` in this directory.

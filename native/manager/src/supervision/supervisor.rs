@@ -543,11 +543,15 @@ impl Supervisor {
 
     fn emit(&self, event: Event) {
         if self.events.try_send(event).is_err() {
-            let _ =
-                self.dropped_events
-                    .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |count| {
-                        Some(count.saturating_add(1))
-                    });
+            let mut count = self.dropped_events.load(Ordering::Relaxed);
+            while let Err(current) = self.dropped_events.compare_exchange_weak(
+                count,
+                count.saturating_add(1),
+                Ordering::Relaxed,
+                Ordering::Relaxed,
+            ) {
+                count = current;
+            }
         }
     }
 

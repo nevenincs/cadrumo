@@ -26,6 +26,11 @@ def test_resolve_log_level_defaults_to_default_mode() -> None:
     assert resolve_log_level(env={}) is LogLevel.DEFAULT
 
 
+@pytest.mark.parametrize("level", ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"))
+def test_severity_environment_override_is_accepted_by_desktop_cli_children(level: str) -> None:
+    assert resolve_log_level(env={"CADRUMO_LOG_LEVEL": f" {level} "}).value == level.lower()
+
+
 def test_invalid_environment_level_has_the_exact_no_action_terminal_contract() -> None:
     with pytest.raises(LogLevelResolutionError) as raised:
         resolve_log_level(env={"CADRUMO_LOG_LEVEL": "not-a-level"})

@@ -13,6 +13,13 @@ pub enum LogLevel {
 }
 
 impl LogLevel {
+    pub fn operator(value: &str) -> Option<Self> {
+        match value.trim().to_ascii_uppercase().as_str() {
+            "" | "DEFAULT" | "VERBOSE" => Some(Self::Info),
+            "QUIET" => Some(Self::Error),
+            name => Self::parse(name),
+        }
+    }
     pub fn parse(name: &str) -> Option<Self> {
         Some(match name {
             "DEBUG" => Self::Debug,
@@ -74,16 +81,42 @@ pub enum InstallationScope {
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
-#[serde(tag = "event", rename_all = "snake_case", rename_all_fields = "camelCase", deny_unknown_fields)]
+#[serde(
+    tag = "event",
+    rename_all = "snake_case",
+    rename_all_fields = "camelCase",
+    deny_unknown_fields
+)]
 pub enum ServiceFact {
-    AgentStarting { generation: u64 },
-    AgentReady { generation: u64, gateway_port: u16 },
-    AgentRefused { reason: AgentRefusal },
-    AgentStopping { cause: AgentStopCause },
-    AgentStopped { cause: AgentStopCause },
-    AgentRetryScheduled { delay_ms: u64 },
+    AgentStarting {
+        generation: u64,
+    },
+    AgentReady {
+        generation: u64,
+        gateway_port: u16,
+    },
+    AgentRefused {
+        reason: AgentRefusal,
+    },
+    AgentStopping {
+        cause: AgentStopCause,
+    },
+    AgentStopped {
+        cause: AgentStopCause,
+    },
+    AgentRetryScheduled {
+        delay_ms: u64,
+    },
     AgentProtocolRefused {},
-    ManagerInstallationStarted { scope: InstallationScope },
-    ManagerInstallationCompleted { scope: InstallationScope },
-    EnvironmentResolved { package_abi: u32, log_level: LogLevel, log_level_overridden: bool },
+    ManagerInstallationStarted {
+        scope: InstallationScope,
+    },
+    ManagerInstallationCompleted {
+        scope: InstallationScope,
+    },
+    EnvironmentResolved {
+        package_abi: u32,
+        log_level: LogLevel,
+        log_level_overridden: bool,
+    },
 }

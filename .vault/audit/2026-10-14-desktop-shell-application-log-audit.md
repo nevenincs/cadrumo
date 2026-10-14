@@ -5,7 +5,7 @@ tags:
 date: '2026-10-14'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:9ef039df727452ef0731365a50a9da30067379458cfab76d092d3648ffb3b527'
+body_hash: 'sha256:cd71422b6fb2c756b2126a0cfc9370d7648313bff2205c608b480c2b355bb161'
 related:
   - "[[2026-10-04-desktop-shell-adr]]"
 ---
@@ -61,3 +61,14 @@ Diagnostics retains log_failure if appending fails (`native/application/src/diag
 4. For row-presentation, word meaningful state changes as readable messages and show service/PID, relevant endpoint, outcome and duration inline where applicable. Retain expandable bounded structured details, source/text filters, pause/follow and copying.
 5. For native-history-loss and host-sink-health, report source-specific dropped/gap/truncation counters and persistence health. Decide a bounded desktop-history replay strategy with deduplication; preserve separate source/process lifetime identity. Keep existing ring and pacing limits, and make retained-history limits explicit.
 6. Verification must cover the actual packaged Tauri view: cold/warm startup, installed manager versus GUI supervision, user/machine registration on disposable hosts, real agent ready/refused/stopped transitions, port conflict, sign-in/profile changes, runtime crash/retry, graceful/forced close, reload, ring overflow and rotation/write failure. Assert correct INFO versus DEBUG content and actual process/endpoint facts through real host delivery. Scan with credential/private-content canaries. Existing browser fixtures or source inspection do not prove packaged integration.
+
+
+## Remediation 2026-10-14
+
+Authorized by the owner's instruction to implement correct DEBUG/INFO/error levels and an environment override, with INFO as the default. Implemented the native severity classifier, including runtime crashes and failed helper outcomes; successful Python timing events now use DEBUG. The host projects CADRUMO_LOG_LEVEL into the frontend initial/reset filter, with all five standard severities and compatibility for the existing CLI verbosity names. CLI children accept the same standard severities. Diagnostic capture remains available below the selected view filter.
+
+Added typed agent start/ready/refused/retry/stop facts, loopback gateway port and generation, a distinct agent_launcher process role, typed preparation failures, and manager installation scope/outcomes. Expanded row summaries include stop/refusal reasons and helper/retry durations. Native event-ring gaps now produce a WARNING and a dropped count through the real log channel. Host persistence health is a separate source state, recovers after a successful append, and exposes write failures as ERROR records. Updated the backend test runner to read the generated declaration without case-folding its launch vectors. Kept the manager's saturating event-loss counter compatible with the declared Rust floor while avoiding the newer compiler's deprecated fetch_update call.
+
+Verification: native logs suite (49 tests), environment suite (7 tests), real child-process agent-supervisor suite (6 tests), Python diagnostic suite (27 tests), CLI level integration suite (12 tests), browser host-default/reset tests (3 tests), npm check, native Clippy, Python Ruff lint/format, configured Python type checks and import boundaries. The first browser attempt timed out during development-server bootstrap; the retry used the already configured build inputs and passed. Native log tests exercise real Tauri channel delivery, loss accounting and an actual failed/recovered file sink; browser tests exercise the production frontend with a test host. No installed service registration, machine boot/login, or packaged interactive GUI acceptance was performed.
+
+Remaining recommendations from the initial audit: a complete authoritative inventory of all runtime-owned descendant processes, bounded replay of earlier desktop log files, and a broader sanitized binary/configuration catalogue. Those remain distinct from the severity/default override implementation and are not claimed complete. Existing unrelated work and commits by other sessions were preserved.

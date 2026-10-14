@@ -2,8 +2,12 @@
 //!
 //! Only `Diagnostics` events are read. Captured process output, which can hold
 //! terminal bytes, is never requested from the snapshot.
-use super::{format::Level, record::{Entry, ProcessRef, LogSourceState, SourceKind}};
+use super::{
+    format::Level,
+    record::{Entry, LogSourceState, ProcessRef, SourceKind},
+};
 use cadrumo_application::diagnostics::{DiagnosticSource, Diagnostics, Event};
+use cadrumo_application::error::application::{ErrorCode, Operation};
 use serde::Serialize;
 use serde_json::Value;
 use std::collections::BTreeMap;
@@ -19,12 +23,14 @@ const LOGGER: &str = "desktop";
 pub struct HostEvents {
     after: u64,
     pub dropped: u64,
+    write_failure: Option<(ErrorCode, Operation, Option<i32>)>,
 }
 
 impl HostEvents {
     pub fn poll(&mut self, diagnostics: &Diagnostics) -> Vec<Entry> {
         // A cursor past every output chunk keeps captured output out.
-        let events = diagnostics.snapshot(u64::MAX).events;
+        let snapshot = diagnostics.snapshot(u64::MAX);
+        let events = snapshot.events;
         let mut fresh: Vec<Entry> = events
             .iter()
             .filter(|event| event.sequence > self.after)
@@ -37,13 +43,39 @@ impl HostEvents {
                 let mut gap = entry(first);
                 gap.level = Some(Level::Warning);
                 gap.message = format!("host_log_gap: {omitted} records are no longer retained");
-                gap.process = Some(ProcessRef { role: LOGGER.into(), pid: first.host_pid });
+                gap.process = Some(ProcessRef {
+                    role: LOGGER.into(),
+                    pid: first.host_pid,
+                });
                 gap.context = BTreeMap::from([("dropped_records".into(), Value::from(omitted))]);
                 fresh.insert(0, gap);
             }
         }
         if let Some(last) = events.last() {
             self.after = last.sequence;
+        }
+        let failure = snapshot
+            .log_failure
+            .as_ref()
+            .map(|error| (error.code, error.operation, error.os_code));
+        if failure != self.write_failure {
+            if let (Some(error), Some(last)) = (snapshot.log_failure, events.last()) {
+                let mut notice = last.clone();
+                notice.kind = cadrumo_application::diagnostics::EventKind::Failure;
+                notice.failure = Some(error);
+                notice.status = None;
+                notice.role = None;
+                notice.process = None;
+                notice.stage = None;
+                notice.lifecycle = None;
+                notice.service = None;
+                notice.helper_timing = None;
+                notice.webview_failure = None;
+                notice.outcome = None;
+                notice.host_exit_code = None;
+                fresh.push(entry(&notice));
+            }
+            self.write_failure = failure;
         }
         fresh
     }
@@ -52,8 +84,15 @@ impl HostEvents {
 pub fn source(diagnostics: &Diagnostics) -> LogSourceState {
     let snapshot = diagnostics.snapshot(u64::MAX);
     LogSourceState {
-        kind: if snapshot.log_failure.is_some() { SourceKind::Unreadable } else { SourceKind::Available },
-        detail: snapshot.paths.map_or_else(|| "desktop diagnostics (memory)".into(), |paths| paths.current.display().to_string()),
+        kind: if snapshot.log_failure.is_some() {
+            SourceKind::Unreadable
+        } else {
+            SourceKind::Available
+        },
+        detail: snapshot.paths.map_or_else(
+            || "desktop diagnostics (memory)".into(),
+            |paths| paths.current.display().to_string(),
+        ),
         failure: snapshot.log_failure,
         rejected: 0,
     }
@@ -144,9 +183,21 @@ pub(super) fn entry(event: &Event) -> Entry {
     if let Some(fact) = event.service {
         let encoded = serde_json::to_value(fact).expect("closed service fact serializes");
         for (key, value) in encoded.as_object().expect("service fact is an object") {
-            context.insert(format!("service_{key}"), value.clone());
+            let name = match key.as_str() {
+                "gatewayPort" => "gateway_port",
+                "delayMs" => "delay_ms",
+                "packageAbi" => "package_abi",
+                "logLevel" => "log_level",
+                "logLevelOverridden" => "log_level_overridden",
+                name => name,
+            };
+            context.insert(format!("service_{name}"), value.clone());
         }
-        if let cadrumo_application::diagnostics::service::ServiceFact::AgentReady { gateway_port, .. } = fact {
+        if let cadrumo_application::diagnostics::service::ServiceFact::AgentReady {
+            gateway_port,
+            ..
+        } = fact
+        {
             context.insert("endpoint_transport".into(), Value::from("http"));
             context.insert("endpoint_host".into(), Value::from("127.0.0.1"));
             context.insert("endpoint_port".into(), Value::from(gateway_port));
@@ -155,8 +206,15 @@ pub(super) fn entry(event: &Event) -> Entry {
     let mut message = token(event.kind);
     if let Some(fact) = event.service {
         let encoded = serde_json::to_value(fact).expect("closed service fact serializes");
-        message = encoded["event"].as_str().unwrap_or("service_event").to_owned();
-        if let cadrumo_application::diagnostics::service::ServiceFact::AgentReady { gateway_port, .. } = fact {
+        message = encoded["event"]
+            .as_str()
+            .unwrap_or("service_event")
+            .to_owned();
+        if let cadrumo_application::diagnostics::service::ServiceFact::AgentReady {
+            gateway_port,
+            ..
+        } = fact
+        {
             message.push_str(&format!(" at http://127.0.0.1:{gateway_port}"));
         }
     }

@@ -141,7 +141,7 @@ value already present in your shell always wins.
 | `CADRUMO_LOG_FILE_BACKUP_COUNT` | int | `5` | Number of rotated cadrumo.log backups retained by the rotating file handler |
 | `CADRUMO_LOG_FILE_LEVEL` | str | `DEBUG` | Log level for the file handler installed by ``cadrumo.core.logging`` |
 | `CADRUMO_LOG_FILE_MAX_BYTES` | int | `10485760` | Size cap (bytes) for cadrumo.log before the rotating file handler rolls over; default 10 MiB |
-| `CADRUMO_LOG_LEVEL` | str | empty | Optional default CLI log level override: quiet, default, verbose, or debug |
+| `CADRUMO_LOG_LEVEL` | str | empty | Log severity override: DEBUG, INFO, WARNING, ERROR, or CRITICAL. The desktop Logs view defaults to INFO and uses this as its initial minimum level. CLI verbosity names quiet, default, verbose, and debug remain supported. |
 | `CADRUMO_LOG_ROOT_LEVEL` | str | `DEBUG` | Root logger level installed by ``cadrumo.core.logging`` |
 | `CADRUMO_LOG_STDERR_LEVEL` | str | `ERROR` | Log level for the stderr handler installed by ``cadrumo.core.logging`` |
 | `CADRUMO_MANUALS_HTTP_TIMEOUT_S` | float | `60.0` | HTTP timeout (seconds) for AEAT manual PDF downloads |

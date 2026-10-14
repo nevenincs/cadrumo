@@ -42,6 +42,7 @@ export const RecordRow = memo(function RecordRow({
   const context = recordContext(record);
   const hasContext = Object.keys(context).length > 0;
   const hasDetails = !!record.detail || hasContext;
+  const retryDelay = context.delay_ms ?? context.service_delay_ms;
   const summary = [
     context.stage,
     context.startup_phase,
@@ -53,7 +54,7 @@ export const RecordRow = memo(function RecordRow({
     context.service_cause,
     context.service_scope,
     typeof context.total_ms === "number" ? `${context.total_ms} ms` : null,
-    typeof context.restart_delay_ms === "number" ? `retry ${context.restart_delay_ms} ms` : null,
+    typeof retryDelay === "number" ? `retry ${retryDelay} ms` : null,
   ]
     .filter((value): value is string => typeof value === "string")
     .join(" · ");

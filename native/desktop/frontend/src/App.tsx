@@ -1,6 +1,13 @@
 import { useDesktopEnvironment } from "./shell/useDesktopEnvironment";
 import { useWindowPresentation } from "./shell/useWindowPresentation";
-import { useCallback, useEffect, useMemo, useRef, useState, type SetStateAction } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type SetStateAction,
+} from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/components/ui/cn";
 import {
@@ -201,15 +208,29 @@ export function App({ host }: { host: Host }) {
   // The dialog as the form that creates a profile, where one was asked for.
   const [creatingProfile, setCreatingProfile] = useState(false);
   const signInButton = useRef<HTMLButtonElement>(null);
-  const defaultFilters = useMemo(() => ({
-    ...DEFAULT_FILTERS,
-    minLevel: levelRank(environment.state === "ready" ? environment.value.logLevel : "INFO"),
-  }), [environment]);
-  const [filterOverride, setFilterOverride] = useState<RecordFilters | null>(null);
+  const defaultFilters = useMemo(
+    () => ({
+      ...DEFAULT_FILTERS,
+      minLevel: levelRank(
+        environment.state === "ready" ? environment.value.logLevel : "INFO",
+      ),
+    }),
+    [environment],
+  );
+  const [filterOverride, setFilterOverride] = useState<RecordFilters | null>(
+    null,
+  );
   const filters = filterOverride ?? defaultFilters;
-  const setFilters = useCallback((update: SetStateAction<RecordFilters>) => {
-    setFilterOverride((current) => typeof update === "function" ? update(current ?? defaultFilters) : update);
-  }, [defaultFilters]);
+  const setFilters = useCallback(
+    (update: SetStateAction<RecordFilters>) => {
+      setFilterOverride((current) =>
+        typeof update === "function"
+          ? update(current ?? defaultFilters)
+          : update,
+      );
+    },
+    [defaultFilters],
+  );
   const docs = useRef<DocsFrameApi>(null);
   const terminals = useRef<Partial<Record<TerminalKind, TerminalApi>>>({});
   const toastTimer = useRef(0);
@@ -1261,6 +1282,7 @@ export function App({ host }: { host: Host }) {
       openTab,
       copy,
       paste,
+      setFilters,
     ],
   );
   const actionsRef = useRef(actions);
@@ -1522,7 +1544,7 @@ export function App({ host }: { host: Host }) {
         pointer,
       );
     },
-    [openMenu, t, copy],
+    [openMenu, t, copy, setFilters],
   );
 
   const searchDocs: DocsSearch = useMemo(
@@ -2341,6 +2363,7 @@ export function App({ host }: { host: Host }) {
                       host={host}
                       onErrors={setErrorCount}
                       filters={filters}
+                      defaultFilters={defaultFilters}
                       setFilters={setFilters}
                       onMenu={recordMenu}
                       shown={tabOpen("logs")}

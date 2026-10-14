@@ -165,7 +165,10 @@ pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
             #[cfg(windows)]
             interrupts::restore(&diagnostics);
             single_instance::verify(app.config())?;
-            app.manage(Shell { output_language, log_level });
+            app.manage(Shell {
+                output_language,
+                log_level,
+            });
             app.manage(sign_in);
             app.manage(popups);
             app.manage(channel::Deliveries::default());

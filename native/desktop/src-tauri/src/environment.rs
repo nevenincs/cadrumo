@@ -1,3 +1,4 @@
+use crate::logs::Level;
 use cadrumo_application::{
     binary::{self, BinaryExpectation},
     child::ChildConfiguration,
@@ -7,7 +8,6 @@ use cadrumo_application::{
     package::PackageManifest,
     value::RelativePath,
 };
-use crate::logs::Level;
 use serde::Deserialize;
 use std::{
     collections::BTreeMap,
@@ -185,11 +185,18 @@ pub async fn resolve(
             .collect(),
     )
     .map_err(|e| failure(ErrorCode::EnvironmentFailed).caused_by(e))?;
-    diagnostics.service(None, cadrumo_application::diagnostics::service::ServiceFact::EnvironmentResolved {
-        package_abi: layout.abi,
-        log_level: projection.log_level,
-        log_level_overridden: parent.environment.iter().any(|(key, value)| key.to_string_lossy().eq_ignore_ascii_case("CADRUMO_LOG_LEVEL") && !value.to_string_lossy().trim().is_empty()),
-    });
+    diagnostics.service(
+        None,
+        cadrumo_application::diagnostics::service::ServiceFact::EnvironmentResolved {
+            package_abi: layout.abi,
+            log_level: projection.log_level,
+            log_level_overridden: parent.environment.iter().any(|(key, value)| {
+                key.to_string_lossy()
+                    .eq_ignore_ascii_case("CADRUMO_LOG_LEVEL")
+                    && !value.to_string_lossy().trim().is_empty()
+            }),
+        },
+    );
     Ok(Launch {
         _publication: publication,
         child,
@@ -304,8 +311,10 @@ fn native_projection(
     let log_level = defined("CADRUMO_LOG_LEVEL")
         .filter(|value| !value.to_string_lossy().trim().is_empty())
         .map(|value| {
-            value.into_string().ok()
-                .and_then(|value| Level::parse(&value.trim().to_ascii_uppercase()))
+            value
+                .into_string()
+                .ok()
+                .and_then(|value| Level::operator(&value))
                 .ok_or_else(|| failure(ErrorCode::EnvironmentFailed))
         })
         .transpose()?
@@ -426,6 +435,45 @@ mod tests {
             )
         };
         let projection = project().unwrap();
+        assert_eq!(projection.log_level, Level::Info);
+        for (value, expected) in [
+            ("DEBUG", Level::Debug),
+            ("info", Level::Info),
+            (" WARNING ", Level::Warning),
+            ("ERROR", Level::Error),
+            ("CRITICAL", Level::Critical),
+            ("verbose", Level::Info),
+            ("quiet", Level::Error),
+            ("", Level::Info),
+        ] {
+            let mut overridden = parent.clone_for_test();
+            overridden
+                .environment
+                .push(("CADRUMO_LOG_LEVEL".into(), value.into()));
+            let observed = native_projection(
+                &executable,
+                &overridden,
+                &contract.desktop_defaults,
+                &contract.application_environment.location_names,
+            )
+            .unwrap();
+            assert_eq!(observed.log_level, expected);
+        }
+        let mut invalid = parent.clone_for_test();
+        invalid.environment.push((
+            "CADRUMO_LOG_LEVEL".into(),
+            "private-invalid-level-canary".into(),
+        ));
+        let error = native_projection(
+            &executable,
+            &invalid,
+            &contract.desktop_defaults,
+            &contract.application_environment.location_names,
+        )
+        .err()
+        .unwrap();
+        assert_eq!(error.code, ErrorCode::EnvironmentFailed);
+        assert!(!serde_json::to_string(&error).unwrap().contains("canary"));
         assert_eq!(
             projection.webview,
             contract.desktop_defaults.webview.under(&storage)

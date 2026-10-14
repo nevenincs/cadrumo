@@ -19,11 +19,11 @@ mod tests;
 mod timestamp;
 
 use crate::{app::Commands, environment::Launch, shell::channel::Deliveries};
-pub use format::Level;
 use cadrumo_application::{
     diagnostics::Diagnostics,
     error::application::{ApplicationError, ErrorCode, Operation, Result},
 };
+pub use format::Level;
 use record::{Aggregate, LogBatch, LogSourceState, LogSourceStates, Prepared, Sink, SourceKind};
 use serde::Serialize;
 use std::{
@@ -254,7 +254,11 @@ impl Poller {
                 inner.aggregate.push(record);
             }
             inner.aggregate.lost(std::mem::take(&mut self.host.dropped));
-            inner.aggregate.states = LogSourceStates { python, manager, host: host::source(&self.diagnostics) };
+            inner.aggregate.states = LogSourceStates {
+                python,
+                manager,
+                host: host::source(&self.diagnostics),
+            };
             inner.polled = true;
             inner.aggregate.deliver(now)
         };

@@ -405,6 +405,84 @@ fn subscribe(hub: &LogHub) -> (u64, Frames) {
     (subscribed.subscription, frames)
 }
 
+#[test]
+fn native_loss_and_persistence_health_reach_the_real_log_channel() {
+    use cadrumo_application::diagnostics::EventKind;
+    let scratch = Scratch::new("host-health");
+    let blocked = scratch.0.join("blocked");
+    fs::write(&blocked, "not a directory").unwrap();
+    let diagnostics = Arc::new(Diagnostics::default());
+    diagnostics.configure(&blocked, 1024 * 1024, 1).unwrap();
+    for _ in 0..600 {
+        diagnostics.event(EventKind::HostStarted, None, None);
+    }
+    let (hub, mut poller) = hub(scratch.log(), diagnostics.clone());
+    let (_, frames) = subscribe(&hub);
+    let now = Instant::now();
+    poller.tick(now);
+    {
+        let frames = frames.lock().unwrap();
+        let batch = &frames[0].1;
+        assert_eq!(batch["dropped"], 88);
+        assert_eq!(batch["records"][0]["level"], "WARNING");
+        let failure = batch["records"].as_array().unwrap().last().unwrap();
+        assert_eq!(failure["level"], "ERROR");
+        assert_eq!(failure["context"]["reason_code"], "log_unavailable");
+        assert_eq!(batch["states"]["host"]["kind"], "unreadable");
+        assert_eq!(
+            batch["states"]["host"]["failure"]["code"],
+            "log_unavailable"
+        );
+    }
+    fs::remove_file(&blocked).unwrap();
+    diagnostics.event(EventKind::HostStarted, None, None);
+    poller.tick(now + TICK);
+    let frames = frames.lock().unwrap();
+    assert_eq!(
+        frames.last().unwrap().1["states"]["host"]["kind"],
+        "available"
+    );
+    assert_eq!(frames.last().unwrap().1["dropped"], 0);
+}
+
+#[test]
+fn agent_endpoint_and_process_identity_reach_the_log_channel_without_output() {
+    use cadrumo_application::diagnostics::service::ServiceFact;
+    let scratch = Scratch::new("agent-log");
+    let diagnostics = Arc::new(Diagnostics::default());
+    let process = diagnostics.start(4321, ProcessRole::AgentLauncher);
+    diagnostics.capture(process, Stream::Stdout, b"private-protocol-canary");
+    diagnostics.service(
+        Some(process),
+        ServiceFact::AgentReady {
+            generation: 7,
+            gateway_port: 4444,
+        },
+    );
+    let (hub, mut poller) = hub(scratch.log(), diagnostics);
+    let (_, frames) = subscribe(&hub);
+    poller.tick(Instant::now());
+    let frames = frames.lock().unwrap();
+    let records = records_of(&frames);
+    let ready = &records[1];
+    assert_eq!(ready["level"], "INFO");
+    assert_eq!(ready["process"]["role"], "agent_launcher");
+    assert_eq!(ready["process"]["pid"], 4321);
+    assert_eq!(ready["context"]["endpoint_port"], 4444);
+    assert_eq!(ready["context"]["service_generation"], 7);
+    assert!(
+        ready["message"]
+            .as_str()
+            .unwrap()
+            .contains("127.0.0.1:4444")
+    );
+    assert!(
+        !serde_json::to_string(&records)
+            .unwrap()
+            .contains("private-protocol-canary")
+    );
+}
+
 fn records_of(frames: &[(Instant, serde_json::Value)]) -> Vec<serde_json::Value> {
     frames
         .iter()

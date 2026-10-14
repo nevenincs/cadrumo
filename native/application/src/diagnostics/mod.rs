@@ -229,10 +229,8 @@ impl Diagnostics {
             helper_timing: context.helper_timing,
             service: context.service,
         };
-        if let Some(file) = &state.file
-            && let Err(error) = file.append(&event)
-        {
-            state.log_failure = Some(error);
+        if let Some(file) = &state.file {
+            state.log_failure = file.append(&event).err();
         }
         if state.events.len() == 512 {
             state.events.pop_front();
@@ -253,8 +251,13 @@ impl Diagnostics {
     }
     pub fn service(&self, process: Option<u64>, fact: ServiceFact) {
         self.record(
-            EventKind::ServiceEvent, process, None,
-            Context { service: Some(fact), ..Context::default() },
+            EventKind::ServiceEvent,
+            process,
+            None,
+            Context {
+                service: Some(fact),
+                ..Context::default()
+            },
         );
     }
     pub fn failure(&self, error: ApplicationError) {

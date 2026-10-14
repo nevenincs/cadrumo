@@ -16,9 +16,10 @@ async function signInHost(
   deferInitial = false,
   deferInitialList = false,
   bundled = true,
+  logLevel = "INFO",
 ) {
   await target.addInitScript(
-    ({ supported, docs, deferInitial, deferInitialList }) => {
+    ({ supported, docs, deferInitial, deferInitialList, logLevel }) => {
       const state = {
         presence: "absent",
         supported,
@@ -102,7 +103,7 @@ async function signInHost(
               case "desktop_environment":
                 return {
                   outputLanguage: "en",
-                  logLevel: "INFO",
+                  logLevel,
                   docs: docs
                     ? {
                         state: "bundled",
@@ -265,7 +266,13 @@ async function signInHost(
         },
       });
     },
-    { supported, docs: bundled ? DOCS : null, deferInitial, deferInitialList },
+    {
+      supported,
+      docs: bundled ? DOCS : null,
+      deferInitial,
+      deferInitialList,
+      logLevel,
+    },
   );
   await serveDocs(target);
   await target.goto("/");
@@ -277,6 +284,29 @@ const signInState = (target: Page) =>
       (window as unknown as { __signInTest: Record<string, unknown> })
         .__signInTest,
   );
+
+for (const [severity, value] of [
+  ["DEBUG", "0"],
+  ["INFO", "1"],
+  ["ERROR", "3"],
+] as const) {
+  test(`the log view starts and resets at the host's ${severity} level`, async ({
+    page,
+  }) => {
+    await signInHost(page, false, false, false, true, severity);
+    await page.keyboard.press("Control+Shift+KeyL");
+    const selector = page.getByLabel(label("desktop.logs.minimum_level"));
+    await expect(selector).toHaveValue(value);
+    await selector.selectOption("2");
+    await page.keyboard.press("Control+Shift+KeyK");
+    await page.locator("[cmdk-input]").fill(label("desktop.action.logs_reset"));
+    await page
+      .locator("[cmdk-item]")
+      .filter({ hasText: label("desktop.action.logs_reset") })
+      .click();
+    await expect(selector).toHaveValue(value);
+  });
+}
 
 test("public sign-in signals update the gate without focus or another status read", async ({
   page,

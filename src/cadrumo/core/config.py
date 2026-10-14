@@ -260,7 +260,11 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
     )
     cadrumo_log_level: str = Field(
         default="",
-        description="Optional default CLI log level override: quiet, default, verbose, or debug",
+        description=(
+            "Log severity override: DEBUG, INFO, WARNING, ERROR, or CRITICAL. "
+            "The desktop Logs view defaults to INFO and uses this as its initial minimum level. "
+            "CLI verbosity names quiet, default, verbose, and debug remain supported."
+        ),
     )
     cadrumo_tui_appearance: _config_support.TuiAppearance = Field(
         default=_config_support.TuiAppearance.AUTO,

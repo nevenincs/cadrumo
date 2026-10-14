@@ -131,6 +131,7 @@ export const RecordList = memo(function RecordList({
   sourceStates,
   dropped,
   filters,
+  defaultFilters = DEFAULT_FILTERS,
   setFilters,
   onMenu,
   shown,
@@ -140,6 +141,7 @@ export const RecordList = memo(function RecordList({
   sourceStates: LogSourceStates | "unavailable" | null;
   dropped: number;
   filters: RecordFilters;
+  defaultFilters?: RecordFilters;
   setFilters: (filters: RecordFilters) => void;
   onMenu: (request: RecordMenuRequest) => void;
   shown: boolean;
@@ -935,7 +937,7 @@ export const RecordList = memo(function RecordList({
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  setFilters(DEFAULT_FILTERS);
+                  setFilters(defaultFilters);
                   filterInput.current?.focus();
                 }}
               >
