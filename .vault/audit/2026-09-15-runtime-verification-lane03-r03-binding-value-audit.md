@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#runtime-verification'
 date: '2026-09-15'
-modified: '2026-09-15'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:22cafc7d3accd78b372902681296dd64c36292b702663d7a182d782f3b66a07d'
+body_hash: 'sha256:adc20d3741c0c1b43cc95b73e224e3b96ac0e972498f22502a1fae8fdb62b269'
 related:
   - "[[2026-09-15-runtime-verification-lane03-r02-binding-target-audit]]"
 ---
@@ -170,7 +170,7 @@ sys.exit(exit_code)
 Exit code: 2 (BLOCKED). No stderr. Complete emitted output:
 
 ```text
-{"descriptor": "Y:\\code\\cadrumo-worktrees\\main\\src\\cadrumo\\_data\\registry\\authority\\authority.current.json", "descriptor_logical_generation": "2bdbfabc832b91e9ec77345b342abc08a7416e6e84f6ceb4aa85f79af8222c66", "logical_generation": "2bdbfabc832b91e9ec77345b342abc08a7416e6e84f6ceb4aa85f79af8222c66", "reader_incarnation": "db788367a68c5649b8dc478a50c8babaadcab454208e9a641cb93ecfe39c272e", "stage": "operation-pin"}
+{"descriptor": "src/cadrumo/_data/registry/authority/authority.current.json", "descriptor_logical_generation": "2bdbfabc832b91e9ec77345b342abc08a7416e6e84f6ceb4aa85f79af8222c66", "logical_generation": "2bdbfabc832b91e9ec77345b342abc08a7416e6e84f6ceb4aa85f79af8222c66", "reader_incarnation": "db788367a68c5649b8dc478a50c8babaadcab454208e9a641cb93ecfe39c272e", "stage": "operation-pin"}
 {"revision": "2013-y-siguientes", "stage": "selected-revision"}
 {"aggregation": {"op": "copy"}, "binding_id": "modelo-720-prior-year-cuentas-valoracion-baseline", "legal_refs": ["ley-58-2003:da-18", "rd-1065-2007:art-42-bis", "orden-hap-72-2013:art-2"], "provider": {"grouping": null, "kind": "previous_filing", "required_source_casilla_ids": null, "source_casilla_id": "cuentas.valoracion", "source_casilla_ids": [], "source_modelo": "720", "temporal": {"kind": "filing_year_offset", "max_years": null, "source_periods": ["0A"], "years": -1}}, "source_refs": ["aeat-dr-720", "aeat-modelo-720-procedure"], "stage": "published-declaration"}
 {"observation": {"filing_period": {"code": "0A", "filing_year": 2024}, "filing_year": 2024, "modelo": "720", "observations": [{"absent_by_design": false, "casilla_id": "cuentas.valoracion", "formula_id": null, "legal_refs": ["ley-58-2003:da-18", "rd-1065-2007:art-42-bis", "orden-hap-72-2013:art-2"], "op": null, "operand_casilla_refs": [], "operand_refs": [], "operand_values": [], "source_refs": ["aeat-dr-720", "aeat-modelo-720-procedure"], "value": "1234.56"}], "period": "0A"}, "stage": "synthetic-observation", "synthetic": true}

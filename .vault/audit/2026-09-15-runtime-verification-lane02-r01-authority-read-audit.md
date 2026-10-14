@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#runtime-verification'
 date: '2026-09-15'
-modified: '2026-09-15'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:837b3e65279936d7dfdcac0f3a3bf513874e391ce4de2f7fda9a2daf8094a475'
+body_hash: 'sha256:3d2d616e6633817dd1c74817dce2127c1b810ab14827da49f7a852f7a9f79537'
 related:
   - "[[2026-09-15-runtime-verification-lane01-r01-cli-reachability-audit]]"
 ---
@@ -77,7 +77,7 @@ Exit code: 0. No stderr.
 Emitted JSON:
 
 ```json
-{"database": "authority-06f66544cb3f04ed5bbdd2b7ec4d33622b057fab82ee687432786dfc5cbfa2dd.sqlite3", "database_sha256": "06f66544cb3f04ed5bbdd2b7ec4d33622b057fab82ee687432786dfc5cbfa2dd", "decoded_type": "ModeloRevisionDirectory", "descriptor_path": "Y:\\code\\cadrumo-worktrees\\main\\src\\cadrumo\\_data\\registry\\authority\\authority.current.json", "descriptor_sha256": "f7c4e2c26828a9bc6a980713598673cda889cc8e5ccac5db17c2d9e99231d118", "logical_generation": "2bdbfabc832b91e9ec77345b342abc08a7416e6e84f6ceb4aa85f79af8222c66", "reader_incarnation": "17ad67e00860a4f63cd4b58c0de718583349dfc34edfed76f48ddbc0026951d8", "selected_modelo": "036", "selector_stable": true}
+{"database": "authority-06f66544cb3f04ed5bbdd2b7ec4d33622b057fab82ee687432786dfc5cbfa2dd.sqlite3", "database_sha256": "06f66544cb3f04ed5bbdd2b7ec4d33622b057fab82ee687432786dfc5cbfa2dd", "decoded_type": "ModeloRevisionDirectory", "descriptor_path": "src/cadrumo/_data/registry/authority/authority.current.json", "descriptor_sha256": "f7c4e2c26828a9bc6a980713598673cda889cc8e5ccac5db17c2d9e99231d118", "logical_generation": "2bdbfabc832b91e9ec77345b342abc08a7416e6e84f6ceb4aa85f79af8222c66", "reader_incarnation": "17ad67e00860a4f63cd4b58c0de718583349dfc34edfed76f48ddbc0026951d8", "selected_modelo": "036", "selector_stable": true}
 ```
 
 Final signal: PROVEN.

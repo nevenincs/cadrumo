@@ -3,8 +3,8 @@ tags:
   - '#reference'
   - '#post-release-distribution'
 date: '2026-07-19'
-modified: '2026-10-03'
-body_hash: 'sha256:c19ed92e948e8cb8d4b2dcb7b37db67d113d15c1d9468a706a957ef1ff27f52c'
+modified: '2026-10-14'
+body_hash: 'sha256:d2926e061ca9fb4a8ed0d30378b335041d4e05e19cf9ebe5cd8d469556d4794d'
 related: []
 ---
 
@@ -23,7 +23,7 @@ related: []
 # Cadrumo release & orchestration pipeline â€” holistic review
 
 Reviewed 2026-07-19 on branch `chore/eliminate-shims` (== main), repo `nevenincs/cadrumo`,
-worktree `Y:\code\aeat-worktrees\chore-476-restructure-execution`. Read-only review; no
+worktree `<code-root>/aeat-worktrees\chore-476-restructure-execution`. Read-only review; no
 production file was modified. RAG discovery was performed first (`vaultspec-rag` live on
 port 8766; probes: "release cohort build and promotion", "publish artifacts to pypi scoop
 homebrew", "distribution evidence readiness gate release", vault probe "release publishing

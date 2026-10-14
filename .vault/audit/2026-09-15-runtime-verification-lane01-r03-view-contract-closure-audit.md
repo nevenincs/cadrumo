@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#runtime-verification'
 date: '2026-09-15'
-modified: '2026-10-03'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:48a067b0ef5d97921e7c60c5b01392f1f173abcb3bbb5d1b94de798f0335a654'
+body_hash: 'sha256:2c18ac7763dfd39c514e89015ec204c28f89189224d924c5fd430e2b5ba61dc4'
 related:
   - "[[2026-09-15-runtime-verification-lane01-r02-revision-view-repair-audit]]"
 ---
@@ -16,7 +16,7 @@ related:
 
 Session `lane01-r03-view-contract-closure`, a continuation of the linked lane01-r02 revision-view repair audit. It had three authorized tasks. First, correct the `revisions` column of `aeat app modelo list`. Second, settle what C13's indexed-snapshot test actually covers. Third, check that the private view-validation scope holds when a view is nested or revalidated. Commit, push, authority rebuild and publication were not authorized, and none happened.
 
-Checkout: worktree `Y:/code/cadrumo-worktrees/main`, branch `main`, HEAD `eedac16053`. The lane01-r02 production and test changes were already committed at HEAD by the worktree's sync auto-commits, so this session started from them. The two files this session changed are left uncommitted. The tree also carries other contributors' changes, which were not touched.
+Checkout: worktree `<repo-root>`, branch `main`, HEAD `eedac16053`. The lane01-r02 production and test changes were already committed at HEAD by the worktree's sync auto-commits, so this session started from them. The two files this session changed are left uncommitted. The tree also carries other contributors' changes, which were not touched.
 
 Execution: 2026-09-15, 17:51–18:00 +02:00, Windows 11, PowerShell. The coordinator was Opus 5 (1M context) at medium effort. No subagent was dispatched.
 

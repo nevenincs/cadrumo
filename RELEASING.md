@@ -121,7 +121,7 @@ PowerShell terminal. The development recipe sets the path for its own process;
 it cannot set the calling terminal's environment:
 
 ```powershell
-Set-Location Y:\code\cadrumo-worktrees\tui
+Set-Location <repo-root>
 just registry-publish-authority-if-authority-stale
 $env:CADRUMO_AUTHORITY_ROOT = Join-Path (Get-Location) '.authority'
 uv run --no-sync aeat config google status

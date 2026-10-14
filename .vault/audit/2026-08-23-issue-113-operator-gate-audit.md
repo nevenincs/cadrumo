@@ -1,8 +1,8 @@
 ---
 related: []
 date: '2026-08-23'
-modified: '2026-10-03'
-body_hash: 'sha256:01d1fba6a20b27edf42548c185f9392df8d45b61fab8ee5b78ea14d807935c10'
+modified: '2026-10-14'
+body_hash: 'sha256:8dd6d6afe9e09f7ebe6fafa74c3a63696768a0cece9155ac5dae6b73eb7d9a1a'
 tags:
   - '#audit'
   - '#open-decisions-and-operator-gates'
@@ -13,7 +13,7 @@ tags:
 ## Scope and environment
 
 - Commit: `fc8af5b4716ae02166b8835ee4d6bda12ae4bd96` (`origin/main` at the start of the gate).
-- Isolated worktree: `Y:\code\aeat-worktrees\issue-113`.
+- Isolated worktree: `<code-root>/aeat-worktrees\issue-113`.
 - Branch: `audit/issue-113-operator-gate`.
 - Data: bundled synthetic fixture `src/cadrumo/tests/fixtures/financial/synthetic-transactions.csv` and synthetic NIF `Y0000001S` only.
 - Storage and secret directories were isolated under the untracked `.operator-gate/` directory. No live AEAT credentials were present and no AEAT request was made.

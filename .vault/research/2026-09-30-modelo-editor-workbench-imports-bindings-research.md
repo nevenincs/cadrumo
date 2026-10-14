@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#modelo-editor-workbench'
 date: '2026-09-30'
-modified: '2026-10-03'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:ac7f800bf245349bb270e26dae0f3f3fe105ef763d7fc6b08645d5880e15faed'
+body_hash: 'sha256:ed241af1f0a37619b997fea8795e0d5905d1f57bc9d8d005308f43fec227b3b0'
 related:
   - "[[2026-09-30-modelo-editor-workbench-reference]]"
 ---
@@ -18,7 +18,7 @@ Where does each casilla value come from, how does a person bring values in, and 
 
 Design spec for the Cadrumo TUI modelo editor workbench. It covers how a person sees where each
 value comes from, brings values in from sources, and edits or overrides values that were imported.
-Measured on 2026-09-30 against the live tree at `Y:\code\cadrumo-worktrees\tui`, branch
+Measured on 2026-09-30 against the live tree at `<repo-root>`, branch
 `feature/tui`, which had uncommitted edits to `work_review.py`; the tree was read as it stood.
 Every file under `Y:\` was treated as read-only.
 

@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#runtime-verification'
 date: '2026-09-15'
-modified: '2026-10-03'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:11097d9ecd07dd6bf537116362339bd2a57d70434734f063335b1c1fcbe44f61'
+body_hash: 'sha256:e6c627570f4ca39005c949cb785f65fc70c55a153aa2eecc85ae797e8efdc1b1'
 related: []
 ---
 
@@ -13,7 +13,7 @@ related: []
 
 ## Scope
 
-Session `lane01-r01-cli-reachability`, evidence only, no remediation authorized. Worktree `Y:/code/cadrumo-worktrees/main`, branch `main`, dirty tree left untouched; the modelo 038 registry subtree had no uncommitted changes (last commit touching it: `427d431bd7`, 2026-09-15 07:10 +0200). Execution date 2026-09-15, Windows 11, PowerShell. Coordinator ran all probes; no subagent was dispatched.
+Session `lane01-r01-cli-reachability`, evidence only, no remediation authorized. Worktree `<repo-root>`, branch `main`, dirty tree left untouched; the modelo 038 registry subtree had no uncommitted changes (last commit touching it: `427d431bd7`, 2026-09-15 07:10 +0200). Execution date 2026-09-15, Windows 11, PowerShell. Coordinator ran all probes; no subagent was dispatched.
 
 Question: does the CLI launch, is `aeat app modelo bindings` reachable, and does one existing registry-backed listing test pass.
 

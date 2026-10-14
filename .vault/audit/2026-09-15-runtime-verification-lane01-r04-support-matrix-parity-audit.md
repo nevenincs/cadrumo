@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#runtime-verification'
 date: '2026-09-15'
-modified: '2026-10-03'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:6e53fee6eaa8c004957320c677e98faea8cc242e6e8dbaf49e8e4c9b27a801b6'
+body_hash: 'sha256:2c1a9c89a1face06240ea76fffa0f4c91d27665b1aa4b75c89cbc52bcace7360'
 related:
   - "[[2026-09-15-runtime-verification-lane01-r03-view-contract-closure-audit]]"
 ---
@@ -24,7 +24,7 @@ Authorized work:
 
 Not authorized, and not done: commit, push, authority publication, and any TUI, calculation, filing or packaging work.
 
-Checkout: worktree `Y:/code/cadrumo-worktrees/main`, branch `main`. HEAD was `eedac16053` at the start. At that point `queries.py` and the test file carried only the uncommitted r03 diff (79 insertions, 14 deletions). None of those was touched.
+Checkout: worktree `<repo-root>`, branch `main`. HEAD was `eedac16053` at the start. At that point `queries.py` and the test file carried only the uncommitted r03 diff (79 insertions, 14 deletions). None of those was touched.
 
 Commit state, distinguishing what was tested from later HEAD movement:
 

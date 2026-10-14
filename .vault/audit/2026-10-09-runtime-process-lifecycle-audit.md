@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#runtime-process-lifecycle'
 date: '2026-10-09'
-modified: '2026-10-13'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:ceb77c349de0c064bf7cb03a0949842bd87a35bdf58caae30ba9cbd312694c3c'
+body_hash: 'sha256:54232e71a688612bf91b5bf8bc53226c66c7b764e44af62c7fc9ffd71c0fe512'
 related:
   - "[[2026-10-09-runtime-process-lifecycle-plan]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -109,7 +109,7 @@ Final manager.supervision passed in 66.34 seconds after correcting the asynchron
 
 ### 2026-10-11 frozen package and client acceptance | low | Packaged supervision and fresh clients pass; remaining acceptance pending
 
-Independent bounded review: PASS for the immutable snapshot package, actual standalone packaged supervision and verified runtime IPC without installation, and fresh CLI/TUI-adapter/MCP authenticated profile behavior. Snapshot root: Y:/code/cadrumo-worktrees/runtime-health-build-20261011; detached cf02c41d351ea740500521fcaff58750594e7742 plus 201 captured authored paths. Initial canonical producer failed missing WiX discovery; verified installed WiX 5.0.2 supplied on build-process PATH resolved that prerequisite and the canonical bundle retry exited 0. No consistency, kit, authentication or health gate was bypassed. Release bundle.vcxproj runs --kit then --health; build/snapshot-package-build-retry.log confirms packaged supervision and verified IPC. Four scoped MSIs compiled/decompiled; sibling services/kit.json delivered. Shipping exe SHA256: 35d284278ab9c6a76fabf49651b78d37381ec61a09304972b8836ba4aaaf633a.
+Independent bounded review: PASS for the immutable snapshot package, actual standalone packaged supervision and verified runtime IPC without installation, and fresh CLI/TUI-adapter/MCP authenticated profile behavior. Snapshot root: <other-worktree>; detached cf02c41d351ea740500521fcaff58750594e7742 plus 201 captured authored paths. Initial canonical producer failed missing WiX discovery; verified installed WiX 5.0.2 supplied on build-process PATH resolved that prerequisite and the canonical bundle retry exited 0. No consistency, kit, authentication or health gate was bypassed. Release bundle.vcxproj runs --kit then --health; build/snapshot-package-build-retry.log confirms packaged supervision and verified IPC. Four scoped MSIs compiled/decompiled; sibling services/kit.json delivered. Shipping exe SHA256: 35d284278ab9c6a76fabf49651b78d37381ec61a09304972b8836ba4aaaf633a.
 
 Fresh existing client matrix passed using snapshot-only builder/imports/driver/package, a genuine dynamically discovered interactive Windows logon and isolated synthetic profiles. JUnit build/windows-x64/testing/Release/lifecycle-fresh-cohort.xml has 1 test and zero failures/errors/skips; suite270.648s, testcase267.348s, call207.446s, startup58.029s, cleanup0.057s. Actual private reads, profile switching, logout, manager-owned crash recovery and offline refusal verified. TUI evidence covers the production headless overview adapter, not mounted UI interaction. Exact temporary task/scripts/scratch/owned processes cleaned.
 
@@ -235,7 +235,7 @@ Thirteen focused unit policy/API cases passed (zero failures/skips), with final 
 
 Canonical CMake bundle session39890 completed exit0 at 2026-10-11T17:10:56Z, including the matching diagnostic application/runner/MSIs and actual embedded-supervisor verified-IPC exact-runtime-crash recovery. The final log is runtime-health-build-20261011/build/shipping-candidate-diagnostic-bundle.log. After build settlement, the two reviewed test-only precommit owners were guard-overlaid into the snapshot; they are excluded from shipping, documentation, assembly and default health inputs, and existing imports leave the new phase dormant. Exact pre/postimages and this distinction are retained in build/precommit-rollback-owner-overlay.json. Shipping bits were not rebuilt for that test-only overlay.
 
-Sealing completed exit0 at 17:14:05Z. The immutable 0.6.2-candidate-diagnostic archive resides under C:/Users/hello/AppData/Local/cadrumo-runtime-lifecycle/8fdaec56-4e89-4602-9d44-43053b6a7771/cohorts, with SHA256 b28bc487d143f668eb96b82e3513f887908cfe48dcc78c2d67d6713326c4e405 and 1,151,390,973 bytes. Guest transfer verifies version0.6.2 and all11 critical hashes; receipt build/runtime-lifecycle-windows-guest/evidence/coherent-diagnostic-0.6.2-transfer.json. The genuine Hidden Least InteractiveToken task670ec8c4b56a4497abf94d9db4ba8915 started the unchanged shipping native user plan at17:20:11Z and is still running. This is an initial native diagnostic, not installed acceptance. S09/S11/S12/S13 remain open.
+Sealing completed exit0 at 17:14:05Z. The immutable 0.6.2-candidate-diagnostic archive resides under <LOCALAPPDATA>/cadrumo-runtime-lifecycle/8fdaec56-4e89-4602-9d44-43053b6a7771/cohorts, with SHA256 b28bc487d143f668eb96b82e3513f887908cfe48dcc78c2d67d6713326c4e405 and 1,151,390,973 bytes. Guest transfer verifies version0.6.2 and all11 critical hashes; receipt build/runtime-lifecycle-windows-guest/evidence/coherent-diagnostic-0.6.2-transfer.json. The genuine Hidden Least InteractiveToken task670ec8c4b56a4497abf94d9db4ba8915 started the unchanged shipping native user plan at17:20:11Z and is still running. This is an initial native diagnostic, not installed acceptance. S09/S11/S12/S13 remain open.
 
 ### Native diagnostic identifies missing manifest; installation remains failed
 

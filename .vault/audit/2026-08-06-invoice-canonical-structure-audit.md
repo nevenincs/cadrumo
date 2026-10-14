@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#invoice-canonical-structure'
 date: '2026-08-06'
-modified: '2026-10-03'
+modified: '2026-10-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:23d3b02f1938c3662a85a1f8bc104a1d8ba60b97d53f354b4ee25cba32a4e20c'
+body_hash: 'sha256:4806547352b34bee98b6ff552c23937b146891acf082916bef873dbb0de378e7'
 related:
   - "[[2026-08-06-invoice-canonical-structure-adr]]"
 ---
@@ -38,14 +38,14 @@ on it.
 
 Auditor: fresh context, did not author any reviewed document. Mandated by
 `aeat-campaign-close-honesty-review`. Read-only; no file in
-`Y:\code\aeat-worktrees\main` was modified, staged, or committed.
+`<code-root>/aeat-worktrees\main` was modified, staged, or committed.
 
 Documents reviewed:
 - `.vault/research/2026-08-06-invoice-canonical-structure-research.md` (475 lines)
 - `.vault/adr/2026-08-06-invoice-canonical-structure-adr.md` (334 lines)
 - `.vault/plan/2026-08-06-invoice-canonical-structure-plan.md` (90 lines)
 - `.vault/adr/2026-06-10-ledger-invoice-unification-adr.md` (241 lines, read in full)
-- Source findings `Y:\code\llm-invoice-smoke\findings\LANES.md` (692 lines, read in full)
+- Source findings `<code-root>/llm-invoice-smoke\findings\LANES.md` (692 lines, read in full)
 
 Repo HEAD at audit time: `daa9876ed3`. The source findings were verified at
 `0b1e3f040b`; **24 commits have landed since**, two of them on the invoice

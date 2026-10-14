@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#startup-performance'
 date: '2026-10-13'
-modified: '2026-10-13'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:cb27d04e8666e1e067610e897aecae0acc57bebb127361e014afe8ae4e94ce95'
+body_hash: 'sha256:601302d5ab555d6e290e5865f3c9bde4616190b291747d6216d958d6fc97d061'
 related: []
 ---
 
@@ -47,7 +47,7 @@ Fresh-process imports under load (`-X importtime`): `aeat` CLI 388 modules, 9.0 
 
 ### filesystem-latency | high | File metadata calls cost about 300 times their normal latency on this machine
 
-`os.stat` on stdlib files: 5.8 ms each (normal about 0.02 ms); reading a small file 4.6 ms; a bare `python -c pass` 1.4–1.8 s (normal 30–50 ms); a pure CPU loop about 3 times slower than normal. Defender real-time and on-access protection are on and tamper-protected; `Y:\code` and the interpreter's scoop path are excluded yet stats there remain slow, so the exclusion is ineffective for this pattern or another filter or disk-queue saturation is responsible. Installed copies run from a path with no exclusion, so the product must open few files at start: ship compiled bytecode, keep start-up imports small. Owner: BUILD1 (process launch, bytecode, storage, file access).
+`os.stat` on stdlib files: 5.8 ms each (normal about 0.02 ms); reading a small file 4.6 ms; a bare `python -c pass` 1.4–1.8 s (normal 30–50 ms); a pure CPU loop about 3 times slower than normal. Defender real-time and on-access protection are on and tamper-protected; `<code-root>` and the interpreter's scoop path are excluded yet stats there remain slow, so the exclusion is ineffective for this pattern or another filter or disk-queue saturation is responsible. Installed copies run from a path with no exclusion, so the product must open few files at start: ship compiled bytecode, keep start-up imports small. Owner: BUILD1 (process launch, bytecode, storage, file access).
 
 ### host-cpu-outside-cadrumo | high | About 17 of 24 cores were busy before any Cadrumo work
 

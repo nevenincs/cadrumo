@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#application-core-packaging'
 date: '2026-10-03'
-modified: '2026-10-04'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:13333be57ae6125e7264af911ed63e125524dacfe7ffb4f3b5fa35a59b53af1e'
+body_hash: 'sha256:89f2be3ddb70124e378d3fb901353f4282ff2efad28d860462bf3bbb7e2dd02e'
 related:
   - "[[2026-10-03-application-core-packaging-plan]]"
 ---
@@ -34,8 +34,8 @@ related:
 - `S06` `verify:` `cargo clippy --locked --manifest-path native/application/Cargo.toml --target x86_64-pc-windows-msvc --all-targets -- -D warnings` -> `pass`
 - `S06` `verify:` `cargo fmt --manifest-path native/application/Cargo.toml -- --check` -> `pass`
 - `S06` `verify:` `cargo build --locked --release --lib --manifest-path native/application/Cargo.toml --target x86_64-pc-windows-msvc` -> `pass`
-- `S06` `verify:` `wsl -d Ubuntu -- bash /mnt/y/code/cadrumo-worktrees/tui/build/linux-x86-64/application-core/verify.sh` -> `fail`
-- `S06` `verify:` `wsl -d Ubuntu -- bash /mnt/y/code/cadrumo-worktrees/tui/build/linux-x86-64/application-core/verify-native-filesystem.sh` -> `pass`
+- `S06` `verify:` `wsl -d Ubuntu -- bash build/linux-x86-64/application-core/verify.sh` -> `fail`
+- `S06` `verify:` `wsl -d Ubuntu -- bash build/linux-x86-64/application-core/verify-native-filesystem.sh` -> `pass`
 - `S06` `M` `.vault/index/application-core-packaging.index.md`
 - `S06` `verify:` `vaultspec-core check --feature application-core-packaging` -> `pass`
 - `S06` `verify:` `git diff --check -- native/application .vault/plan/2026-10-03-application-core-packaging-plan.md` -> `pass`

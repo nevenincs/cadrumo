@@ -11,7 +11,7 @@ related: []
 
 # `desktop-agent-host` reference: `Hosting cadrumo-agent from the desktop: verified contract`
 
-What the desktop would build on if it hosts the cadrumo-agent service for the agent column, checked against code rather than plan checkmarks or route lists. Three read-only audits ran on 2026-10-12: this repository's desktop shell, sign-in and MCP admission; this repository's document custody; and the cadrumo-agent checkout at `Y:\code\cadrumo-agent-worktrees\main` (package `0.1.0`, no commit pinned). Paths prefixed `agent:` are in that checkout. No test was run in either repository; "tested" below means a test was read and exercises the real component. cadrumo-agent's API route tests cannot pass today: `agent:src/cadrumo_agent/api/tests/conftest.py:40-60` fails `make_app()` unconditionally, and 740 tests carry the `capability_gap` fail-stub marker enforced at `agent:src/cadrumo_agent/conftest.py:700-712`.
+What the desktop would build on if it hosts the cadrumo-agent service for the agent column, checked against code rather than plan checkmarks or route lists. Three read-only audits ran on 2026-10-12: this repository's desktop shell, sign-in and MCP admission; this repository's document custody; and the cadrumo-agent checkout at `<code-root>/cadrumo-agent-worktrees\main` (package `0.1.0`, no commit pinned). Paths prefixed `agent:` are in that checkout. No test was run in either repository; "tested" below means a test was read and exercises the real component. cadrumo-agent's API route tests cannot pass today: `agent:src/cadrumo_agent/api/tests/conftest.py:40-60` fails `make_app()` unconditionally, and 740 tests carry the `capability_gap` fail-stub marker enforced at `agent:src/cadrumo_agent/conftest.py:700-712`.
 
 ## Summary
 

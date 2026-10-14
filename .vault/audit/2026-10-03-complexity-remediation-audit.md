@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#complexity-remediation'
 date: '2026-10-03'
-modified: '2026-10-13'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:c5f412e4db99fc3de854cc836975f2922978bd9a8dc6048e13b3269aa610db5e'
+body_hash: 'sha256:c45b2fb1de7959e589600000e2460e69fbcfc73eefab4705e661c03ac00000f6'
 related:
   - "[[2026-10-02-complexity-remediation-plan]]"
   - "[[2026-07-01-import-centralization-adr]]"
@@ -18,7 +18,7 @@ related:
 
 ## Scope
 
-Review the behavior-preserving production refactors in the approved L1 plan, including the recorded S01-S11 work and their direct consumer migrations. Target is the live, uncommitted filesystem in `Y:/code/cadrumo-worktrees/tui`; concurrent edits continued throughout execution. Exact pre-edit source captures, owning test receipts and the execution ledger establish the available comparison evidence. A Git tracked-file list was not used to enumerate acceptance scope. The configured production roots remain `src/cadrumo`, `src/cadrumo_harness`, `dev` and `packaging`.
+Review the behavior-preserving production refactors in the approved L1 plan, including the recorded S01-S11 work and their direct consumer migrations. Target is the live, uncommitted filesystem in `<repo-root>`; concurrent edits continued throughout execution. Exact pre-edit source captures, owning test receipts and the execution ledger establish the available comparison evidence. A Git tracked-file list was not used to enumerate acceptance scope. The configured production roots remain `src/cadrumo`, `src/cadrumo_harness`, `dev` and `packaging`.
 
 The accepted import-centralization decision requires actual canonical defining owners, direct consumers and no compatibility re-export facades. The accepted justfile decision preserves advisory exit semantics. The TUI decisions govern operation-envelope and authenticated visibility behavior. Integrated review traced schema bindings, request custody, receipt/result projection, writer and cancellation fences, runtime cleanup and registry parser/materialisation handoffs. No commit, staging, financial-authority publication or external deployment was requested or performed.
 

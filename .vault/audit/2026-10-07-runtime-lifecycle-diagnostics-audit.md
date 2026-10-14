@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#runtime-lifecycle-diagnostics'
 date: '2026-10-07'
-modified: '2026-10-08'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:15d31e81f4bfda71e3d7b50c7e4a3b5c5567c3a431815b21052985171149e3b5'
+body_hash: 'sha256:84364ccf413881922ea87646a8437cf03fef974ffccba4c7879ce23f70e8bf07'
 related:
   - "[[2026-10-07-runtime-lifecycle-diagnostics-plan]]"
 ---
@@ -112,7 +112,7 @@ This host is Windows Session 0. No interactive desktop/profile/login acceptance 
 
 ### real-packaged-runtime-follow-up | low | New manager supervision passes against the existing package
 
-Manager commit `5bd0993a42` passed the existing identity and real-runtime fixture against the older 2026-10-06 package at `Y:/code/cadrumo-win-check-20261006-1800/build/windows-x64/stage/Release/app`. Its manifest SHA256 remained `a0e9c7d0babeb905876c26c3e4eee02f31985a672e4c7b95868191bd2892eb9b`. The test asserted stable identity without ownership acquisition, identity timeout cleanup, runtime Ready, SessionEnd, Stopped, thread join and boot-record removal. Test duration was 18.58 seconds; compile plus observed invocation took 22.85 seconds. A read-only 21-sample observer saw peak test-tree RSS 379,559,936 bytes and 435 handles; runtime-only RSS peaked at 362,299,392 bytes and 230 handles. These sampled maxima are lower bounds under concurrent build load, not a steady-state memory budget or leak proof. Observed runtime and console children exited and the isolated test root was removed. Exact command, hashes, observation and reproducer are under `build/windows-x64/cargo/native/package-acceptance-bounded/old-package-runtime/`. This does not validate the pending fresh package.
+Manager commit `5bd0993a42` passed the existing identity and real-runtime fixture against the older 2026-10-06 package at `<other-checkout>/build/windows-x64/stage/Release/app`. Its manifest SHA256 remained `a0e9c7d0babeb905876c26c3e4eee02f31985a672e4c7b95868191bd2892eb9b`. The test asserted stable identity without ownership acquisition, identity timeout cleanup, runtime Ready, SessionEnd, Stopped, thread join and boot-record removal. Test duration was 18.58 seconds; compile plus observed invocation took 22.85 seconds. A read-only 21-sample observer saw peak test-tree RSS 379,559,936 bytes and 435 handles; runtime-only RSS peaked at 362,299,392 bytes and 230 handles. These sampled maxima are lower bounds under concurrent build load, not a steady-state memory budget or leak proof. Observed runtime and console children exited and the isolated test root was removed. Exact command, hashes, observation and reproducer are under `build/windows-x64/cargo/native/package-acceptance-bounded/old-package-runtime/`. This does not validate the pending fresh package.
 
 The operator subsequently authorized this machine's non-disposable, signed-in Session 1 for the isolated desktop harness. A one-shot current-user task proved Session 1 and workspace access, then was removed. Acceptance uses fresh explicit storage and no login registration; a wrapper retains the original text clipboard only in memory and restores it in finally, including harness failure. The product's default-root installed lifecycle remains outside this fixture's evidence.
 

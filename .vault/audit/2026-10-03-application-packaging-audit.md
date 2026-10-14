@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#application-packaging'
 date: '2026-10-03'
-modified: '2026-10-13'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:57d935047435c046a285ab1c644612421c1849c492a61c4bb5549ab3efc2b052'
+body_hash: 'sha256:7e108df0d333ea8f7c00c8dbb9e8b1af0bca48483de2b7b5dbcfe98f81a53cff'
 related:
   - "[[2026-10-03-application-packaging-plan]]"
 ---
@@ -118,7 +118,7 @@ the build tree. CPython 3.13.11, the three CADRUMO 0.5.1 wheels and 77 locked
 third-party distributions assembled successfully. ctest --preset release passed
 all four tests: packaged Python, C static, C DLL and Rust consumers. The package
 test imports all 119 native identities and checks all 80 distributions. Standard
-cmake --install produced Y:/code/cadrumo-native-proof/CADRUMO CMake á 漢字; its
+cmake --install produced <code-root>/cadrumo-native-proof/CADRUMO CMake á 漢字; its
 full --check-package and packaged smoke test passed from an unrelated cwd.
 Both native storage projection tests, Ruff and ty pass. Debug/ZIP acceptance is
 still running. The renewed trace lost events during heavy filesystem activity and
@@ -164,7 +164,7 @@ its manifest SHA256 is
 `ce36b6a5d59f8ab0df72c5be26a41fdc4f0a611f2a8e50222b887e6d1ad63b7d`.
 
 The final outside-checkout installation at
-`Y:/code/cadrumo-native-proof/CADRUMO final á 漢字` has that same manifest and
+`<code-root>/cadrumo-native-proof/CADRUMO final á 漢字` has that same manifest and
 passes full cohesion and the package smoke test from an unrelated cwd. Current
 Release CTest passes all four tests. The smoke checks cover 119 native identities
 and 80 distributions. Three focused regression/storage tests, Ruff lint/format,
@@ -174,7 +174,7 @@ the pinned Rust formatter was invoked directly instead.
 The earlier installed tree differs from the final artifact and its trace was not
 reused. A fresh final-install trace passed with 71,288 scoped events, four writes
 and zero lost events; every observed mutation was inside the supplied storage root.
-Evidence is `Y:/code/cadrumo-native-proof/final-release-trace/summary.json` and its
+Evidence is `<code-root>/cadrumo-native-proof/final-release-trace/summary.json` and its
 scoped event file. The raw capture was removed. This proves the exercised parent
 and child probe, not arbitrary-code containment or all product workflows.
 

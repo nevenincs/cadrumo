@@ -8,9 +8,9 @@ related:
   - '[[2026-07-13-docs-cli-sequences-adr]]'
   - '[[2026-09-29-docs-build-workflow-adr]]'
   - '[[2026-10-04-application-distribution-adr]]'
-modified: '2026-10-09'
+modified: '2026-10-14'
 body_schema: body-v2
-body_hash: 'sha256:adee90f73eb4b50dbab6d748c05f3b09a83e3b77c4679ea81989004a014326bf'
+body_hash: 'sha256:e85451dfad5d838ef6fd5666ae99fee5386c2b82be05337d2d406c8468edf764'
 ---
 
 # `cmake-e2e-build` plan
@@ -54,7 +54,7 @@ One owner executes S01. A single CMake invocation may schedule independent docum
 
 ## Verification
 
-S02 corrective acceptance passed on 2026-10-09: CMake `verify-app-distro` exited 0 with all eight package tests passing (48.89 seconds), including real CMD/default-storage launch and full inventory inspection. All 111 application Rust tests passed. The actual package is now the canonical top-level `build/windows-x64/stage/Release/app`, with bundled documentation and version 0.6.0. Its executable also launched with no arguments through CMD from `C:/Users/hello`, without package-root or storage overrides, and exited 0. No Session 0 production condition was added. Integrated review passes; graphical interaction remains unverified in this headless runner. The earlier nested snapshot path below is historical and no longer the handover location.
+S02 corrective acceptance passed on 2026-10-09: CMake `verify-app-distro` exited 0 with all eight package tests passing (48.89 seconds), including real CMD/default-storage launch and full inventory inspection. All 111 application Rust tests passed. The actual package is now the canonical top-level `build/windows-x64/stage/Release/app`, with bundled documentation and version 0.6.0. Its executable also launched with no arguments through CMD from `<user-home>`, without package-root or storage overrides, and exited 0. No Session 0 production condition was added. Integrated review passes; graphical interaction remains unverified in this headless runner. The earlier nested snapshot path below is historical and no longer the handover location.
 
 Final requested acceptance passed: CMake `app-distro` exited 0 with the desktop EXE, Python runtime, manager and all four documentation languages assembled under `build/windows-x64/product/build/source/build/windows-x64/stage/Release/app`. With the package-root override removed, all six bundle CTest checks passed, and the packaged `cadrumo.exe` launched from `Y:/` with `--version`, `--help`, and no arguments, each exiting 0. Version is CADRUMO 0.5.1. The actual artifact is the complete app directory; no ZIP was built. Interactive GUI acceptance remains unavailable in Session 0. Forty-four documentation-driver/search tests, repository lint, type checks and all import-check components passed. Repository-wide formatting reports unrelated `application/overview/calendar.py` drift; changed files pass formatting. Integrated review passes for this requested distribution scope.
 

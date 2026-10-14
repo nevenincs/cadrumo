@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#cmake-e2e-build'
 date: '2026-10-08'
-modified: '2026-10-13'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:11a98e45a924b650ebfe5c7cb2c7078525ef286765849b7ce2621b2b39d090a9'
+body_hash: 'sha256:de7be156f89e2ea479d76717b3f81565921a7c00efcb1297743db4028309c6bc'
 related:
   - "[[2026-10-08-cmake-e2e-build-plan]]"
 ---
@@ -54,7 +54,7 @@ related:
 - `S02` `M` `native/CONTRACT.md`
 - `S02` `verify:` `ctest release application.rust (111 tests)` -> `pass`
 - `S02` `verify:` `cmake release verify-app-distro (8 tests including full inventory and CMD launch)` -> `pass`
-- `S02` `verify:` `CMake CMD packaged no-argument launch from C:/Users/hello without overrides` -> `pass`
+- `S02` `verify:` `CMake CMD packaged no-argument launch from <user-home> without overrides` -> `pass`
 - `S02` `verify:` `ruff check .` -> `pass`
 - `S02` `verify:` `python -m dev.quality.types` -> `pass`
 - `S02` `verify:` `changed Python and Rust formatting; git diff --check` -> `pass`
