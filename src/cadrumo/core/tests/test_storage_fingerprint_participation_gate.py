@@ -98,10 +98,6 @@ EXPECTED_EXCLUSIONS: Final[tuple[ExclusionExpectation, ...]] = (
         "Browser working profiles change during capture and are cleaned by their session owner.",
     ),
     ExclusionExpectation(
-        "cadrumo_webview_dir",
-        "The desktop renderer's profile and cache change on every window and hold no taxpayer facts.",
-    ),
-    ExclusionExpectation(
         "cadrumo_runs_dir",
         "Self-reference. This is observability's own output, so hashing it makes every run's "
         "digest depend on the traces the immediately preceding run left, and a hermetic replay "
@@ -288,21 +284,3 @@ def test_writing_beneath_an_excluded_category_leaves_the_digest_unchanged(tmp_pa
             "data-root digest. A regenerable cache that churns the digest makes every replay "
             "refusal untrustworthy"
         )
-
-
-def test_fixed_operator_workspace_and_runtime_files_do_not_move_drift_digest(tmp_path: Path) -> None:
-    from ..config import load_settings
-
-    root = tmp_path / "state"
-    root.mkdir()
-    with override_settings(cadrumo_local_storage_root=root):
-        settings = load_settings()
-        before = compute_data_root_sha256(settings)
-        workspace = root / "workspace"
-        workspace.mkdir()
-        (workspace / "operator.txt").write_text("synthetic scratch")
-        (root / "manager-preferences.json").write_text("{}")
-        assert compute_data_root_sha256(settings) == before
-        (root / "buckets").mkdir()
-        (root / "buckets" / "state.dat").write_bytes(b"synthetic ciphertext")
-        assert compute_data_root_sha256(settings) != before

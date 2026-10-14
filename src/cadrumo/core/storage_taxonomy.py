@@ -221,8 +221,6 @@ class StorageCategory(StrEnum):
     OLLAMA_MODELS = "ollama-models"
     OLLAMA_HOME = "ollama-home"
     GNOME_EXTENSIONS = "gnome-extensions"
-    DESKTOP_WEBVIEW = "desktop-webview"
-    CONSOLE_WORKSPACE = "console-workspace"
     SECRETS = "secrets"
     BLOBS = "blobs"
     LIVE_STATE = "live-state"
@@ -288,11 +286,6 @@ class StorageCategory(StrEnum):
     RUNTIME_COORDINATION = "runtime-coordination"
     RUNTIME_INSTALLATION_RECORD = "runtime-installation-record"
     RUNTIME_INSTALLATION_LOCK = "runtime-installation-lock"
-    MANAGER_START_CLAIM = "manager-start-claim"
-    MANAGER_QUIT_RECORD = "manager-quit-record"
-    MANAGER_FAILED_VERSIONS = "manager-failed-versions"
-    MANAGER_PREFERENCES = "manager-preferences"
-    MANAGER_LOG_FILE = "manager-log-file"
 
     # ── Fixed layout: per-bucket ────────────────────────────────────────────
     BUCKET_DATABASE = "bucket.db"

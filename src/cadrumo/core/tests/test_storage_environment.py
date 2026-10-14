@@ -27,13 +27,10 @@ from ..storage_environment import (
 )
 from ..storage_taxonomy import (
     STORAGE_ROOT_SETTINGS_FIELD,
-    FingerprintParticipation,
     StorageCategory,
-    StorageGrouping,
-    StorageLifecycle,
     StorageOverridePolicy,
 )
-from ..storage_taxonomy_locations import STORAGE_TAXONOMY, storage_location, storage_path
+from ..storage_taxonomy_locations import STORAGE_TAXONOMY, storage_location
 from .checkout import project_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -139,7 +136,7 @@ def test_location_settings_are_separate_from_development_tools() -> None:
         if location.override_policy is StorageOverridePolicy.OPERATOR_OVERRIDABLE
         and (location.settings_field is not None and location.settings_field)
     }
-    assert {"CADRUMO_LOCAL_STORAGE_ROOT", "CADRUMO_WEBVIEW_DIR", "CADRUMO_TEMP_DIR"} <= product
+    assert {"CADRUMO_LOCAL_STORAGE_ROOT", "CADRUMO_TEMP_DIR"} <= product
     assert product == overridable | {"CADRUMO_LOCAL_STORAGE_ROOT"}
     assert "CADRUMO_STORAGE_ROOT" not in product
     assert development == {variable for variable, _default in TOOL_STORAGE_LOCATIONS.values()}
@@ -147,21 +144,6 @@ def test_location_settings_are_separate_from_development_tools() -> None:
     assert not product & development
     assert not {"XDG_CACHE_HOME", "UV_CACHE_DIR"} & (product | development)
     assert relayed_setting_names() == product | {"CADRUMO_AUTHORITY_ROOT"}
-
-
-def test_desktop_webview_member_defaults_beneath_the_root_and_follows_its_setting(tmp_path: Path) -> None:
-    location = storage_location(StorageCategory.DESKTOP_WEBVIEW)
-    assert (location.subpath, location.settings_field) == ("webview", "cadrumo_webview_dir")
-    assert location.override_policy is StorageOverridePolicy.OPERATOR_OVERRIDABLE
-    assert location.grouping is StorageGrouping.CACHE
-    assert location.lifecycle is StorageLifecycle.UNBOUNDED_BY_DESIGN
-    assert location.fingerprint_participation is FingerprintParticipation.EXCLUDED
-    root = tmp_path / "root"
-    explicit = tmp_path / "profiles"
-    with isolated_aeat_env(CADRUMO_LOCAL_STORAGE_ROOT=str(root)):
-        assert storage_path(StorageCategory.DESKTOP_WEBVIEW, settings=Settings()) == root / "webview"
-    with isolated_aeat_env(CADRUMO_LOCAL_STORAGE_ROOT=str(root), CADRUMO_WEBVIEW_DIR=str(explicit)):
-        assert storage_path(StorageCategory.DESKTOP_WEBVIEW, settings=Settings()) == explicit
 
 
 def _received(tmp_path: Path) -> dict[str, str]:

@@ -9,6 +9,7 @@ so a change to either side that breaks the shared verdicts fails one of the suit
 from __future__ import annotations
 
 import json
+import tomllib
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -16,15 +17,8 @@ import pytest
 
 from cadrumo.adapters.local_runtime.boot_record import runtime_boot_record_path
 from cadrumo.core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant
-from cadrumo.core.storage_taxonomy import (
-    FingerprintParticipation,
-    StorageCategory,
-    StorageLifecycle,
-    StorageNodeKind,
-    StorageOverridePolicy,
-    StorageScope,
-)
-from cadrumo.core.storage_taxonomy_locations import storage_location
+from cadrumo.core.storage_taxonomy import StorageScope
+from cadrumo.core.storage_taxonomy_locations import STORAGE_TAXONOMY
 from dev._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -34,6 +28,9 @@ _VECTORS: dict[str, Any] = json.loads(
 )
 _MARKERS: dict[str, Any] = _VECTORS["quit_markers"]
 _MAXIMUM_BYTES = int(_VECTORS["quit_marker_maximum_bytes"])
+_COMPONENTS: dict[str, Any] = tomllib.loads(
+    (REPO_ROOT / "native/application-environment.toml").read_text(encoding="utf-8")
+)["components"]
 
 
 def _grammatical(raw: bytes) -> object | None:
@@ -58,27 +55,23 @@ def test_the_records_sit_beside_the_boot_record(tmp_path: Path) -> None:
         assert PurePosixPath(_VECTORS[key]).parent.as_posix() == runtime_directory
 
 
-def test_native_manager_records_are_enrolled_in_the_canonical_storage_taxonomy() -> None:
-    expected = {
-        StorageCategory.RUNTIME_BOOT_RECORD: ".runtime/boot.json",
-        StorageCategory.MANAGER_START_CLAIM: _VECTORS["start_claim_location"],
-        StorageCategory.MANAGER_QUIT_RECORD: _VECTORS["quit_marker_location"],
-        StorageCategory.MANAGER_FAILED_VERSIONS: ".runtime/manager-failed-versions.json",
-        StorageCategory.MANAGER_PREFERENCES: "manager-preferences.json",
-        StorageCategory.MANAGER_LOG_FILE: "logs/cadrumo-manager.log",
+def test_the_package_declares_the_manager_records_beside_the_runtime_records(tmp_path: Path) -> None:
+    runtime_directory = runtime_boot_record_path(tmp_path).parent.relative_to(tmp_path).as_posix()
+    assert PurePosixPath(_COMPONENTS["manager_failed_versions"]).parent.as_posix() == runtime_directory
+    assert PurePosixPath(_COMPONENTS["manager_log_file"]).parent.as_posix() == _COMPONENTS["logs"]
+    assert PurePosixPath(_COMPONENTS["manager_preferences"]).parent.as_posix() == "."
+
+
+def test_the_command_line_declares_none_of_the_manager_records() -> None:
+    manager = {
+        _VECTORS["start_claim_location"],
+        _VECTORS["quit_marker_location"],
+        _COMPONENTS["manager_failed_versions"],
+        _COMPONENTS["manager_preferences"],
+        _COMPONENTS["manager_log_file"],
     }
-    for category, path in expected.items():
-        location = storage_location(category)
-        assert location.subpath == path
-        assert location.scope is StorageScope.ROOT
-        assert location.node_kind is StorageNodeKind.FILE
-        assert location.override_policy is StorageOverridePolicy.FIXED
-        assert location.fingerprint_participation is FingerprintParticipation.EXCLUDED
-        assert location.lifecycle is (
-            StorageLifecycle.ROTATION
-            if category is StorageCategory.MANAGER_LOG_FILE
-            else StorageLifecycle.UNBOUNDED_BY_DESIGN
-        )
+    command_line = {location.subpath for location in STORAGE_TAXONOMY.values() if location.scope is StorageScope.ROOT}
+    assert not manager & command_line
 
 
 def test_canonical_markers_are_what_canonical_json_writes() -> None:

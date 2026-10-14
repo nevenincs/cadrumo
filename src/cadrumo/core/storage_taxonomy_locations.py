@@ -119,31 +119,6 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         fingerprint_participation=FingerprintParticipation.EXCLUDED,
     ),
     _location(
-        StorageCategory.DESKTOP_WEBVIEW,
-        "webview",
-        dormant_reason=(
-            "The native desktop host places its webview profile and window state here through its "
-            "storage projection query; no Python product module reads it."
-        ),
-        settings_field="cadrumo_webview_dir",
-        # The renderer evicts its own cache; generic reclaim must not delete a live profile.
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.CACHE,
-        fingerprint_participation=FingerprintParticipation.EXCLUDED,
-    ),
-    _location(
-        StorageCategory.CONSOLE_WORKSPACE,
-        "workspace",
-        dormant_reason=(
-            "The native desktop host projects this operator workspace as the cwd for its console, "
-            "Python and TUI terminals; no Python product module reads it. It is not encrypted custody."
-        ),
-        override_policy=StorageOverridePolicy.FIXED,
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.EXPORTS,
-        fingerprint_participation=FingerprintParticipation.EXCLUDED,
-    ),
-    _location(
         StorageCategory.TEMPORARY_FILES,
         "tmp",
         create_explicit_directory=True,
@@ -701,34 +676,6 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
             (StorageCategory.RUNTIME_INSTALLATION_RECORD, ".runtime/installation.json", StorageNodeKind.FILE),
             (StorageCategory.RUNTIME_INSTALLATION_LOCK, ".runtime/installation.lock", StorageNodeKind.FILE),
         )
-    ),
-    *(
-        _location(
-            category,
-            subpath,
-            dormant_reason="Native manager consumes the generated location projection; no Python writer.",
-            node_kind=StorageNodeKind.FILE,
-            lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-            grouping=StorageGrouping.STATE,
-            override_policy=StorageOverridePolicy.FIXED,
-            fingerprint_participation=FingerprintParticipation.EXCLUDED,
-        )
-        for category, subpath in (
-            (StorageCategory.MANAGER_START_CLAIM, ".runtime/manager-start.lock"),
-            (StorageCategory.MANAGER_QUIT_RECORD, ".runtime/manager-quit.json"),
-            (StorageCategory.MANAGER_FAILED_VERSIONS, ".runtime/manager-failed-versions.json"),
-            (StorageCategory.MANAGER_PREFERENCES, "manager-preferences.json"),
-        )
-    ),
-    _location(
-        StorageCategory.MANAGER_LOG_FILE,
-        f"logs/{PRODUCT_IDENTITY.python_package}-manager.log",
-        dormant_reason="Native manager consumes the generated location projection; no Python writer.",
-        node_kind=StorageNodeKind.FILE,
-        lifecycle=StorageLifecycle.ROTATION,
-        grouping=StorageGrouping.LOGS,
-        override_policy=StorageOverridePolicy.FIXED,
-        fingerprint_participation=FingerprintParticipation.EXCLUDED,
     ),
 )
 

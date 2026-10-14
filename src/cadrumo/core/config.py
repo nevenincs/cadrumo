@@ -381,10 +381,6 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
     cadrumo_gnome_extensions_dir: Path = Field(
         default=Path("integrations/gnome/extensions"), description="Explicit GNOME extension publication directory."
     )
-    cadrumo_webview_dir: Path = Field(
-        default=Path("webview"),
-        description="Desktop webview profile beneath the storage root; the renderer evicts its own cache.",
-    )
 
     cadrumo_profile_kdf_measure_calibration: bool = Field(
         default=True,
@@ -1032,7 +1028,6 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
         "cadrumo_ollama_models_dir",
         "cadrumo_ollama_home_dir",
         "cadrumo_gnome_extensions_dir",
-        "cadrumo_webview_dir",
         "cadrumo_chromium_data_root",
         "cadrumo_usage_ratios_path",
         "cadrumo_financial_txs_dir",
