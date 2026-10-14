@@ -31,6 +31,7 @@ from ...core.errors.hierarchy import InternalInvariantError, pydantic_validation
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.resources.bundled_data import packaged_data
+from ...core.type_guards import is_object_list, is_object_list_or_tuple, is_str_keyed_dict
 from ..operator_actions.models import ActionReference
 from ._registry_contracts import declared_public_schema_identities
 from .operation_definition import OperationDefinition
@@ -136,7 +137,7 @@ class OperationContractManifestV1(BaseModel):
         """Serialize canonically: one operation per line, so a change reviews as one line."""
         header = {"contract_set_digest": self.contract_set_digest, "manifest_version": self.manifest_version}
         lines = [
-            json.dumps(entry.model_dump(mode="json"), sort_keys=True, separators=(",", ":"))
+            json.dumps(_ordered_sets(entry, entry.model_dump(mode="json")), sort_keys=True, separators=(",", ":"))
             for entry in self.operations
         ]
         head = json.dumps(header, sort_keys=True, separators=(",", ":"))[:-1]
@@ -275,6 +276,24 @@ class ManifestOperationRegistry(OperationRegistry):
     def ephemeral_secret_lifetimes(self) -> tuple[timedelta, ...]:
         """Answer from the manifest entries."""
         return tuple(lifetime for entry in self._manifest.operations if (lifetime := _lifetime(entry)) is not None)
+
+
+def _ordered_sets(value: object, dumped: object) -> object:
+    """Sort every set-valued field of a JSON dump, which otherwise follows the process's hash seed."""
+    if isinstance(value, BaseModel) and is_str_keyed_dict(dumped):
+        fields = type(value).model_fields
+        return {
+            key: _ordered_sets(getattr(value, key), item) if key in fields else item for key, item in dumped.items()
+        }
+    if is_object_list_or_tuple(value) and is_object_list(dumped) and len(value) == len(dumped):
+        return [_ordered_sets(member, item) for member, item in zip(value, dumped, strict=True)]
+    if isinstance(value, frozenset | set) and is_object_list(dumped):
+        return sorted(dumped, key=_canonical_json)
+    return dumped
+
+
+def _canonical_json(value: object) -> str:
+    return json.dumps(value, sort_keys=True, separators=(",", ":"))
 
 
 def _lifetime(entry: OperationContractManifestEntryV1) -> timedelta | None:

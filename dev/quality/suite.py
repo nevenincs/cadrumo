@@ -92,6 +92,10 @@ GATES: tuple[tuple[str, tuple[str, ...]], ...] = (
         (sys.executable, "-m", "dev.quality.write_path_coverage"),
     ),
     ("check-docstring-references", (sys.executable, "-m", "dev.quality.docstring_reference_targets")),
+    (
+        "check-operation-contract-manifest",
+        (sys.executable, "-m", "dev.operation_contract_manifest.generate", "--check"),
+    ),
 )
 
 

@@ -123,6 +123,7 @@ _CODE_GATES: Final[frozenset[str]] = frozenset(
         "check-secure-store-write-paths",
         "check-persistence-write-paths",
         "check-docstring-references",
+        "check-operation-contract-manifest",
     }
 )
 

@@ -534,6 +534,8 @@
         "dev.locales.signal_translation_matrix",
         "dev.locales.wizard_translation_audit",
         "dev.locales.write_guard",
+        "dev.operation_contract_manifest",
+        "dev.operation_contract_manifest.generate",
         "dev.packaging",
         "dev.packaging._base_image",
         "dev.packaging._distribution_limits",
