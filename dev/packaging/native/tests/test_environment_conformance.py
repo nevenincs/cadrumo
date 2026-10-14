@@ -35,7 +35,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _SOURCE = (REPO_ROOT / DECLARATION).read_text(encoding="utf-8")
 _TARGET = {"win32": "windows-x86-64", "darwin": "macos-arm64"}.get(sys.platform, "linux-x86-64")
 _LAYOUT = load_layout(_TARGET)
-_NEVER_ADMITTED: str = tomllib.loads(_SOURCE)["agent"]["never_admitted"][0]
+_NEVER_ADMITTED = str(tomllib.loads(_SOURCE)["agent"]["never_admitted"][0])
 """A name under the agent's prefix that no profile admits, read from the declaration rather than spelled."""
 _PACKAGE_KINDS = {
     "directory": "path",
