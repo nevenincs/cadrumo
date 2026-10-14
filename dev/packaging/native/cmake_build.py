@@ -113,9 +113,12 @@ def run_configured_command(
     desktop = paths.get("desktop_cargo")
     if desktop is not None and (desktop.is_relative_to(native) or native.is_relative_to(desktop)):
         raise ValueError("Native Cargo invalidation requires a directory isolated from desktop Cargo outputs")
-    selected = Path(os.environ.get("CARGO_TARGET_DIR", ""))
-    if not selected.is_absolute() or selected.resolve() != native:
+    exported = Path(os.environ.get("CARGO_TARGET_DIR", ""))
+    if not exported.is_absolute() or exported.resolve() != native:
         raise ValueError("Native Cargo command requires its declared absolute target directory")
+    # The exported directory is only checked against the build's own; every
+    # path written below derives from the build layout.
+    selected = native
     for index, argument in enumerate(command):
         if argument == "--target-dir":
             selected = Path(command[index + 1])

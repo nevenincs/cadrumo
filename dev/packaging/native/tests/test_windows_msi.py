@@ -963,12 +963,16 @@ def test_native_admission_dll_is_embedded_in_all_four_verified_products(
     # Valid plans are installation-capable now. This development-host lane
     # invokes only requests that are refused before any native mutation.
     assert run_plan("remove-version", "--version", "../escape") == "invalid_release"
-    request = json.loads(plan.read_text(encoding="utf-8"))
+    # The plan is rewritten through its place in the build's own layout; the
+    # runner location read from the environment never names a write target.
+    published_plan = build / "installation/metadata/maintenance-user.json"
+    assert published_plan.resolve() == plan.resolve()
+    request = json.loads(published_plan.read_text(encoding="utf-8"))
     request["version_product"], request["registration_product"] = (
         request["registration_product"],
         request["version_product"],
     )
-    plan.write_text(json.dumps(request), encoding="utf-8")
+    published_plan.write_text(json.dumps(request), encoding="utf-8")
     assert run_plan() == "artifact_or_owner_refused"
     assert run_plan("unregister") == "artifact_or_owner_refused"
     assert run_plan("remove-version", "--version", "0.5.1") == "artifact_or_owner_refused"
@@ -977,7 +981,7 @@ def test_native_admission_dll_is_embedded_in_all_four_verified_products(
         request["version_product"],
     )
     request["contract"]["installation_identity"]["channel"] = "another-channel"
-    plan.write_text(json.dumps(request), encoding="utf-8")
+    published_plan.write_text(json.dumps(request), encoding="utf-8")
     assert run_plan() == "artifact_or_owner_refused"
     # Read the actual conditional action row in a deliberately broken MSI;
     # compilation and database inspection create no installation session.

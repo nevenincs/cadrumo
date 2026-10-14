@@ -9,6 +9,8 @@ import shutil
 import tempfile
 from pathlib import Path
 
+from cadrumo.core.storage_environment import prepare_temporary_directory
+
 from ..command_execution import CommandResult, run_command
 
 
@@ -16,7 +18,9 @@ def check(executable: Path, contract_path: Path) -> None:
     """A structural installation must never fall through to portable launch."""
     contract = json.loads(contract_path.read_text(encoding="utf-8"))
     layout = contract["layout"]
-    with tempfile.TemporaryDirectory(prefix="cadrumo-launch-admission-") as temporary:
+    with tempfile.TemporaryDirectory(
+        prefix="cadrumo-launch-admission-", dir=prepare_temporary_directory()
+    ) as temporary:
         prefix = Path(temporary).resolve()
         package = prefix / layout["installation"]["versions"] / "1.0.0"
         package.mkdir(parents=True)
