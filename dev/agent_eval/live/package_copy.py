@@ -22,6 +22,7 @@ from typing import Any, Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from dev.first_party_source import is_test_source
 from dev.packaging.native.hashing import digest
 from dev.packaging.native.package_inventory import package_inventory
 
@@ -173,8 +174,7 @@ def _python_sources(root: Path) -> dict[str, Path]:
 
 def _shipped(relative: str) -> bool:
     """Tests and pytest configuration never ship, so their absence from a package is not staleness."""
-    parts = PurePosixPath(relative).parts
-    return "tests" not in parts and parts[-1] != "conftest.py"
+    return not is_test_source(relative)
 
 
 def compare_with_checkout(package_root: Path, source_root: Path) -> CheckoutComparison:
