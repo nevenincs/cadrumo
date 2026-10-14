@@ -27,6 +27,8 @@ from uuid import UUID
 
 import typer
 
+from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
+
 from ...application.live.notification_document_read_operation import (
     NotificationDocumentSancionPublicV1,
     NotificationDocumentViewPublicResultV1,
@@ -49,14 +51,13 @@ from ._app_live_notifications_payloads import (
     SancionReadingPayload,
 )
 from .common import active_bucket_id_or_refuse, emit_envelope, notice_lines
-from .registered_operation_errors import invalid_completion_error
-from .runtime_notification_document_capture import capture_notification_document_for_cli
-from .runtime_notification_document_read import (
+from .operation_notification_document_capture import capture_notification_document_for_cli
+from .operation_notification_document_read import (
     read_notification_document_history_for_cli,
     read_notification_document_view_for_cli,
 )
-from .runtime_notifications_capture import read_notifications_capture_for_cli
-from .runtime_notifications_read import (
+from .operation_notifications_capture import read_notifications_capture_for_cli
+from .operation_notifications_read import (
     read_notifications_latest_for_cli,
     read_notifications_list_for_cli,
     read_notifications_show_for_cli,

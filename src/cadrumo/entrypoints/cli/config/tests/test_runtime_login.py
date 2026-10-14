@@ -2,16 +2,11 @@
 
 from __future__ import annotations
 
-import asyncio
 import json
 import os
-import sys
-from concurrent.futures import ThreadPoolExecutor
 from contextlib import suppress
 from datetime import UTC, datetime, timedelta
-from importlib.metadata import version
 from pathlib import Path
-from threading import Event
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
@@ -19,58 +14,34 @@ import pytest
 import typer
 from typer.core import TyperCommand
 
-from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
-from cadrumo.adapters.local_runtime.installation import runtime_installation
-from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
-from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
-from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.adapters.persistence.storage.custody import acceleration_receipt as receipt_store
-from cadrumo.adapters.persistence.storage.custody.automation_profile import current_automation_profile_binding
-from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGenerationCustody
-from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from cadrumo.adapters.persistence.storage.custody.tests.receipt_sign_in import RECEIPT_LOGIN_ID, committed_sign_in
-from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from cadrumo.adapters.persistence.storage.profile_custody import build_profile_custody_port
-from cadrumo.adapters.persistence.storage.profile_login_session import build_profile_login_session_port
-from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    dev_test_database_password,
-)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.runtime.profile_access import RuntimeProfileStatus
 from cadrumo.application.user_profile.access_contracts import (
     AccessScope,
     Availability,
     EffectiveScopeSummary,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
     ProfileAccessStatus,
 )
-from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
 from cadrumo.application.user_profile.login_session import (
     ProfileHumanLoginReceipt,
     ProfileReceiptRefusedError,
-    authenticate_profile_candidate,
 )
-from cadrumo.application.user_profile.login_session_port import bind_profile_login_session_port
 from cadrumo.application.user_profile.profile_pointer import (
     ActiveProfilePointerTransactionError,
     active_profile_pointer_transaction,
     observe_active_profile_pointer,
 )
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.entrypoints.cli.config.custody import _login_through_the_prompt
-from cadrumo.entrypoints.cli.config.secure_input import MachineSecretChannel, MachineSecretSelection
-from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError
-from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
-from cadrumo.entrypoints.runtime.profile_connections import RuntimeProfileConnections
-
-from .....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
+from cadrumo_client.commands.custody import _login_through_the_prompt
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.secure_input import MachineSecretChannel, MachineSecretSelection
+from cadrumo_client.contracts.profile_access import ProfileStatus
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -111,8 +82,8 @@ class _RuntimeClient:
         self.closed = 0
         self.refusal_code: str | None = None
 
-    def _reply(self, *, human_login: ProfileHumanLoginReceipt | None) -> RuntimeProfileStatus:
-        return RuntimeProfileStatus(
+    def _reply(self, *, human_login: ProfileHumanLoginReceipt | None) -> ProfileStatus:
+        return ProfileStatus(
             request_id=uuid4(),
             runtime_boot_id=uuid4(),
             connection_id=uuid4(),
@@ -145,22 +116,22 @@ class _RuntimeClient:
             ),
         )
 
-    def resume_receipt(self) -> RuntimeProfileStatus:
+    def resume_receipt(self) -> ProfileStatus:
         self.calls.append("resume")
         if self.resume_refusal:
             raise ProfileReceiptRefusedError(ProfileSessionRefusalReason.ABSENT)
         return self._reply(human_login=self.receipt)
 
-    def login_password(self, proof: bytearray, *, persist_receipt: bool) -> RuntimeProfileStatus:
+    def login_password(self, proof: bytearray, *, persist_receipt: bool) -> ProfileStatus:
         self.calls.append("password")
         self.password_bytes = bytes(proof)
         self.password_buffer = proof
         self.persist_receipt = persist_receipt
         if self.refusal_code is not None:
-            raise RuntimeFrontendRefusedError(self.refusal_code)
+            raise FrontendRefusedError(self.refusal_code)
         return self._reply(human_login=self.receipt)
 
-    def status(self) -> RuntimeProfileStatus:
+    def status(self) -> ProfileStatus:
         self.calls.append("status")
         if self.on_status is not None:
             self.on_status()
@@ -195,24 +166,24 @@ def _install_client(monkeypatch: MonkeyPatch, client: _RuntimeClient) -> None:
         assert frontend is OperationFrontendProjection.CLI
         return client
 
-    monkeypatch.setattr("cadrumo.adapters.local_runtime.runtime_client.open_installed_runtime_client", _open)
+    monkeypatch.setattr("cadrumo_client.commands.custody.open_installed_client", _open)
 
 
 def _ctx() -> typer.Context:
     return typer.Context(TyperCommand("login"))
 
 
-def test_unknown_target_leaves_protected_descriptor_unread(monkeypatch: MonkeyPatch) -> None:
+def test_unknown_target_leaves_protected_descriptor_unread(monkeypatch: MonkeyPatch, run_cadrumo_cli) -> None:
     async def _unexpected_open(*, profile_id: UUID, frontend: OperationFrontendProjection) -> None:
         pytest.fail(f"opened runtime for missing target {profile_id} {frontend}")
 
-    monkeypatch.setattr("cadrumo.adapters.local_runtime.runtime_client.open_installed_runtime_client", _unexpected_open)
+    monkeypatch.setattr("cadrumo_client.commands.custody.open_installed_client", _unexpected_open)
     reader, writer = os.pipe()
     payload = json.dumps({"passphrase": _PASSWORD}).encode()
     try:
         os.write(writer, payload)
         os.close(writer)
-        result = invoke_cached_cli(
+        result = run_cadrumo_cli(
             ("--format", "json", "config", "login", "missing-profile", "--secrets-fd", str(reader))
         )
         assert result.exit_code == 2, result.output
@@ -257,10 +228,8 @@ def test_receipt_resume_avoids_prompt_and_preserves_deadlines(monkeypatch: Monke
     client.resume_refusal = False
     _install_client(monkeypatch, client)
     # A console that could prompt is present; the receipt must still make prompting unnecessary.
-    monkeypatch.setattr("cadrumo.entrypoints.cli.config.secure_input.terminal_can_prompt_for_secrets", lambda: True)
-    monkeypatch.setattr(
-        "cadrumo.entrypoints.cli.config.secure_input.prompt_secret_no_echo", lambda _: pytest.fail("prompted")
-    )
+    monkeypatch.setattr("cadrumo_client.commands.custody.terminal_can_prompt_for_secrets", lambda: True)
+    monkeypatch.setattr("cadrumo_client.commands.custody.prompt_secret_no_echo", lambda _: pytest.fail("prompted"))
 
     outcome = _login_through_the_prompt(_ctx(), name=str(profile_id), machine_secret=None)
 
@@ -276,7 +245,7 @@ def test_receipt_resume_without_a_console_reuses_the_live_sign_in(monkeypatch: M
     client = _RuntimeClient(profile_id, receipt=_receipt(resumed=True))
     client.resume_refusal = False
     _install_client(monkeypatch, client)
-    monkeypatch.setattr("cadrumo.entrypoints.cli.config.secure_input.terminal_can_prompt_for_secrets", lambda: False)
+    monkeypatch.setattr("cadrumo_client.commands.custody.terminal_can_prompt_for_secrets", lambda: False)
 
     outcome = _login_through_the_prompt(_ctx(), name=str(profile_id), machine_secret=None)
 
@@ -290,7 +259,7 @@ def test_absent_receipt_and_no_console_refuse_before_password(monkeypatch: Monke
     original = observe_active_profile_pointer()
     client = _RuntimeClient(profile_id)
     _install_client(monkeypatch, client)
-    monkeypatch.setattr("cadrumo.entrypoints.cli.config.secure_input.terminal_can_prompt_for_secrets", lambda: False)
+    monkeypatch.setattr("cadrumo_client.commands.custody.terminal_can_prompt_for_secrets", lambda: False)
 
     with pytest.raises(CliRefusedBoundaryError):
         _login_through_the_prompt(_ctx(), name=str(profile_id), machine_secret=None)
@@ -308,7 +277,7 @@ def test_candidate_selection_conflict_keeps_other_profile_selected(monkeypatch: 
     client.resume_refusal = False
     client.on_status = lambda: _select(second_id)
     _install_client(monkeypatch, client)
-    monkeypatch.setattr("cadrumo.entrypoints.cli.config.secure_input.terminal_can_prompt_for_secrets", lambda: True)
+    monkeypatch.setattr("cadrumo_client.commands.custody.terminal_can_prompt_for_secrets", lambda: True)
 
     with pytest.raises(ActiveProfilePointerTransactionError):
         _login_through_the_prompt(_ctx(), name=str(first_id), machine_secret=None)
@@ -376,139 +345,3 @@ def test_failed_candidate_keeps_prior_profile_receipt_and_other_client(
 def _select(profile_id: UUID) -> None:
     with active_profile_pointer_transaction() as transaction:
         transaction.select(str(profile_id))
-
-
-class _NativeLoginObservation:
-    login_id = "cli-runtime-receipt-test-login"
-
-    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
-        return OsLoginContext(
-            login_id=self.login_id,
-            os_owner_id=owner_id(),
-            active=True,
-            lock_state=OsLockState.UNLOCKED,
-            unattended=LoginEligibility.ELIGIBLE,
-            credential_facilities=credential_facilities,
-        )
-
-
-@pytest.mark.windows_only
-@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile worker and protected pipes")
-@pytest.mark.usefixtures("authority_operation")
-def test_installed_cli_resumes_other_profile_without_retiring_original(
-    monkeypatch: MonkeyPatch, _isolated_cli_backend: Path
-) -> None:
-    """One process owns the in-memory keyring; runtime, pipes and worker remain real."""
-    # Only a CLI attached to a terminal resumes a saved sign-in; prompting would fail the test.
-    # `config login` reads the names from `secure_input` at call time, while the admission module binds
-    # them at import, so each lookup site is patched where it is used.
-    for owner in ("config.secure_input", "runtime_profile_admission"):
-        monkeypatch.setattr(f"cadrumo.entrypoints.cli.{owner}.terminal_can_prompt_for_secrets", lambda: True)
-        monkeypatch.setattr(f"cadrumo.entrypoints.cli.{owner}.prompt_secret_no_echo", lambda _: pytest.fail("prompted"))
-    keyring = _Keyring()
-    monkeypatch.setattr(receipt_store, "_keyring", lambda: (keyring, _KeyringError, _KeyringError))
-    passphrase = dev_test_database_password()
-    first_id = UUID(register_cli_profile(label="Receipt profile A", log_in=False))
-    close_active_bucket_session()
-    second_id = UUID(register_cli_profile(label="Receipt profile B", log_in=False))
-    close_active_bucket_session()
-    endpoint = WindowsRuntimeEndpoint(storage_root=_isolated_cli_backend)
-    installation = runtime_installation(
-        storage_root=_isolated_cli_backend, os_owner_id=owner_id(), storage_identity=endpoint.storage_identity
-    )
-    with (
-        bundled_indexed_authority().operation() as authority,
-        bind_profile_custody_port(build_profile_custody_port()),
-        bind_profile_login_session_port(build_profile_login_session_port()),
-    ):
-        for profile_id in (first_id, second_id):
-            with authenticate_profile_candidate(
-                bucket_id=profile_id,
-                passphrase_callback=lambda: passphrase,
-                profile_decode_context=authority.profile_decode_context(),
-            ) as candidate:
-                # Bind each receipt to the login and the custody binding the
-                # runtime below observes; a receipt bound elsewhere is refused
-                # and deleted at resume.
-                binding = current_automation_profile_binding(
-                    profile_id=profile_id,
-                    installation_id=installation.installation_id,
-                    os_owner_id=owner_id(),
-                    root=_isolated_cli_backend,
-                )
-                sign_in = SignInGenerationCustody(root=_isolated_cli_backend, binding=binding)
-                assert candidate.persist_acceleration_receipt(
-                    login_id=_NativeLoginObservation.login_id,
-                    binding=binding,
-                    sign_in=sign_in.establish().current,
-                )
-    _select(first_id)
-    first_receipt = receipt_store.profile_session_path(storage_root=_isolated_cli_backend, profile_id=first_id)
-    second_receipt = receipt_store.profile_session_path(storage_root=_isolated_cli_backend, profile_id=second_id)
-    assert first_receipt.is_file() and second_receipt.is_file()
-    before_first, before_second = first_receipt.read_bytes(), second_receipt.read_bytes()
-    before_first_keyring = dict(keyring.entries)
-    second_metadata = json.loads(before_second)
-
-    stop, boot, native = Event(), uuid4(), MemoryNativePort()
-    profiles = RuntimeProfileConnections(
-        storage_root=_isolated_cli_backend,
-        storage_identity=endpoint.storage_identity,
-        runtime_boot_id=boot,
-        stop=stop,
-        capture_login=lambda _channel: _NativeLoginObservation(),
-        secret_store=lambda: native,
-    )
-    profiles.prepare_registry()
-    server = RetainedRuntimeTransportServer(
-        endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
-    )
-    with ThreadPoolExecutor(max_workers=1) as pool:
-        running = pool.submit(server.serve)
-        primary: BaseException | None = None
-        try:
-            assert server.ready.wait(3)
-            first_client = asyncio.run(
-                open_installed_runtime_client(profile_id=first_id, frontend=OperationFrontendProjection.CLI)
-            )
-            try:
-                first_client.login_password(bytearray(passphrase.encode()))
-                first_session = first_client.session_id
-                result = invoke_cached_cli(("--format", "json", "config", "login", str(second_id)))
-                assert result.exit_code == 0, result.output
-                payload = json.loads(result.stdout)["result"]
-                assert payload["active_profile"] == "Receipt profile B"
-                assert payload["already_authenticated"] is True
-                assert payload["session_persisted"] is True
-                for key, source in (
-                    ("authenticated_at", "issued_at"),
-                    ("idle_deadline", "idle_deadline"),
-                    ("absolute_deadline", "absolute_deadline"),
-                ):
-                    assert datetime.fromisoformat(payload[key]) == datetime.fromisoformat(second_metadata[source])
-                assert observe_active_profile_pointer().bucket_id == str(second_id)
-                assert first_client.status().status.session_id == first_session
-                shown = invoke_cached_cli(
-                    ("--format", "json", "--profile", str(second_id), "config", "profile", "view")
-                )
-                assert shown.exit_code == 0, shown.output
-                assert json.loads(shown.stdout)["result"]["display_name"] == "Receipt profile B"
-                assert first_receipt.read_bytes() == before_first
-                assert second_receipt.read_bytes() == before_second
-                assert keyring.entries == before_first_keyring
-                assert _PASSWORD not in result.output + shown.output
-            finally:
-                first_client.close()
-        except BaseException as error:
-            primary = error
-            raise
-        finally:
-            stop.set()
-            try:
-                running.result(timeout=20)
-            except Exception as cleanup:
-                if primary is None:
-                    raise
-                primary.add_note(f"runtime cleanup also failed: {type(cleanup).__name__}")
-            finally:
-                endpoint.close()

@@ -5,14 +5,8 @@ Remote pull, calculate and verify have no enrolled command or compatibility alia
 
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import (
-    CommandNodeKind,
-    CommandWriteRoute,
-)
-
-from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
-from .command_parameter_contracts import OptionSpec
-from .command_shared_contracts import (
+from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.shared_contracts import (
     FLAG_VALUE,
     PATH_VALUE,
     TEXT_VALUE,
@@ -26,7 +20,13 @@ from .command_shared_contracts import (
     TranslationKey,
     ValueContract,
 )
-from .command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import (
+    CommandNodeKind,
+    CommandWriteRoute,
+)
+
+from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 
 _METADATA = ExecutionPolicySpec(frozenset({"state-free"}), frozenset({"none"}), "metadata", CommandWriteRoute.NONE)
 _GOOGLE_CALCULATION_HANDOFF = ExecutionPolicySpec(

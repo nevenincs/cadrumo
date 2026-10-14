@@ -1,0 +1,653 @@
+"""Real-behaviour tests for optional recovery through the CLI.
+
+Recovery is off by default and enrolled after the profile exists: ``cadrumo-runtime
+config profile recovery enable`` proves the passphrase, hands the minted code over
+exactly once through the two-descriptor channel, and installs the wrapper
+only after the exact code comes back. ``cadrumo-runtime config passphrase reset NAME`` is the
+one thing the code is good for. These cases drive the real verbs in process
+against a real storage root, through the real registration and custody
+doors, with the operator's part of the handoff played by a relay thread.
+No mocks, no stubs.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import threading
+from collections.abc import Callable, Generator
+from contextlib import contextmanager, suppress
+from dataclasses import replace
+from pathlib import Path
+from typing import Any, cast
+from uuid import UUID
+
+import pytest
+from click.testing import Result
+
+from cadrumo.adapters.persistence.storage.recovery_key import (
+    RECOVERY_CODE_ALPHABET,
+    RECOVERY_CODE_GROUP_COUNT,
+    RECOVERY_CODE_GROUP_LENGTH,
+    RECOVERY_CODE_SEPARATOR,
+)
+from cadrumo.application.user_profile.custody_ports import (
+    load_profile_custody_password_material,
+    profile_custody_recovery_envelope_path,
+)
+from cadrumo.application.user_profile.recovery_custody import profile_recovery_status
+from cadrumo.core.bucket_pointer import require_active_bucket_id
+from cadrumo.core.i18n.render import tr
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_runtime.commands.command_specs import RUNTIME_COMMAND_GRAPH
+from cadrumo_runtime.commands.tests.config.runtime_cli import invoke_runtime_cli
+from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import (
+    native_cli_profile_scope,
+    native_cli_profile_server,
+)
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_CREDENTIAL_INPUT = "a-sufficiently-long-operator-passphrase"
+_ROTATED_CREDENTIAL_INPUT = "a-replacement-passphrase-after-reset"
+_PROFILE = "Recovery Operator"
+
+
+@contextmanager
+def _runtime_profile_storage(*, tmp_path: Path) -> Generator[Path]:
+    """Isolate storage and serve a native runtime worker so login and custody verbs are admitted."""
+    with native_cli_profile_scope(tmp_path) as fixture:
+        fixture.storage_root.mkdir(parents=True, exist_ok=True)
+        fixture.scope.enter_context(native_cli_profile_server(fixture.storage_root))
+        yield fixture.storage_root
+
+
+def _creation_payload(credential: str = _CREDENTIAL_INPUT) -> str:
+    return json.dumps({"passphrase": credential, "passphrase_confirmation": credential})
+
+
+def _create_profile(run_cadrumo_cli: Callable[..., Result], name: str = _PROFILE) -> Result:
+    """Create a profile the scripted way and open its session, as every profile-read verb requires."""
+    created = run_cadrumo_cli(
+        ("--format", "json", "config", "profile", "create", name, "--quiet", "--secrets-stdin"),
+        input=_creation_payload(),
+    )
+    assert created.exit_code == 0, created.output
+    session = _login(run_cadrumo_cli, name, credential=_CREDENTIAL_INPUT)
+    assert session.exit_code == 0, session.output
+    return created
+
+
+def _close_local_session(run_cadrumo_cli: Callable[..., Result]) -> None:
+    """Use the retained human logout door before proving the next explicit password."""
+    closed = run_cadrumo_cli(("--format", "json", "config", "logout"))
+    assert closed.exit_code == 0, closed.output
+
+
+def _assert_reset_revoked_session(run_cadrumo_cli: Callable[..., Result]) -> None:
+    """A successful reset removes the proof required by the logout door."""
+    selected = require_active_bucket_id()
+    closed = run_cadrumo_cli(("--format", "json", "config", "logout"))
+    assert closed.exit_code != 0, closed.output
+    error = json.loads(closed.stderr)["error"]
+    assert error["message"] == tr("cli.config.errors.profile_session_logout_unproven")
+    assert error["context"]["reason"] == "absent"
+    assert require_active_bucket_id() == selected
+
+
+def _status() -> dict[str, Any]:
+    """Verify custody mutations against the canonical committed wrapper state."""
+    return profile_recovery_status(profile_id=UUID(require_active_bucket_id())).model_dump(mode="json")
+
+
+def _enable(handoff: int, verification: int, *, credential: str = _CREDENTIAL_INPUT) -> Result:
+    return invoke_runtime_cli(
+        (
+            "--format",
+            "json",
+            "config",
+            "profile",
+            "recovery",
+            "enable",
+            "--secrets-stdin",
+            "--recovery-handoff-fd",
+            str(handoff),
+            "--recovery-verification-fd",
+            str(verification),
+        ),
+        input=json.dumps({"passphrase": credential}),
+    )
+
+
+def _disable(*, credential: str = _CREDENTIAL_INPUT) -> Result:
+    return invoke_runtime_cli(
+        ("--format", "json", "config", "profile", "recovery", "disable", "--secrets-stdin"),
+        input=json.dumps({"passphrase": credential}),
+    )
+
+
+def _reset(name: str, *, code: str, replacement: str = _ROTATED_CREDENTIAL_INPUT) -> Result:
+    return invoke_runtime_cli(
+        ("--format", "json", "config", "passphrase", "reset", name, "--secrets-stdin"),
+        input=json.dumps(
+            {
+                "recovery_code": code,
+                "new_passphrase": replacement,
+                "new_passphrase_confirmation": replacement,
+            }
+        ),
+    )
+
+
+def _committed_custody() -> dict[Path, bytes]:
+    """Every byte of the active profile's committed capsule and its recovery wrapper.
+
+    A refused reset is a failed proof and arms the per-profile login backoff,
+    so a login straight after it meets that backoff for as long as it lasts.
+    Whether the refusal left the passphrase in force is a property of what is
+    committed: an unchanged envelope opens under exactly the passphrase it
+    opened under before, whenever the backoff happens to end.
+    """
+    capsule = load_profile_custody_password_material(UUID(require_active_bucket_id())).capsule_path
+    files = sorted(capsule.rglob("*")) if capsule.is_dir() else [capsule]
+    envelope = profile_custody_recovery_envelope_path(capsule)
+    assert envelope.is_file(), "an enrolled profile keeps its recovery wrapper beside the capsule"
+    return {path: path.read_bytes() for path in [*files, envelope] if path.is_file()}
+
+
+def _login(run_cadrumo_cli: Callable[..., Result], name: str, *, credential: str) -> Result:
+    return run_cadrumo_cli(
+        ("--format", "json", "config", "login", name, "--secrets-stdin"),
+        input=json.dumps({"passphrase": credential}),
+    )
+
+
+def _assert_recovery_code_shape(code: str) -> None:
+    groups = code.split(RECOVERY_CODE_SEPARATOR)
+    assert len(groups) == RECOVERY_CODE_GROUP_COUNT
+    assert all(len(group) == RECOVERY_CODE_GROUP_LENGTH for group in groups)
+    assert all(symbol in RECOVERY_CODE_ALPHABET for group in groups for symbol in group)
+
+
+@contextmanager
+def _capturing_descriptors(
+    respond: Callable[[bytes], bytes] = lambda document: document,
+) -> Generator[tuple[int, int, list[str]]]:
+    """Play the operator's part of the handoff while keeping the code for a later reset.
+
+    A reset needs the code itself, so this relay records it before answering.
+    ``respond`` transforms the answer so a wrong proof can be exercised.
+    """
+    handoff_reader, handoff_writer = os.pipe()
+    verification_reader, verification_writer = os.pipe()
+    codes: list[str] = []
+
+    def relay() -> None:
+        document = bytearray()
+        try:
+            while not document.endswith(b"\n"):
+                chunk = os.read(handoff_reader, 8193 - len(document))
+                if not chunk:
+                    break
+                document.extend(chunk)
+            if document:
+                codes.append(json.loads(bytes(document))["recovery_code"])
+                with suppress(OSError):
+                    os.write(verification_writer, respond(bytes(document)))
+        finally:
+            document[:] = b"\x00" * len(document)
+            with suppress(OSError):
+                os.close(verification_writer)
+
+    worker = threading.Thread(target=relay, daemon=True)
+    worker.start()
+    try:
+        yield handoff_writer, verification_reader, codes
+    finally:
+        for descriptor in (handoff_writer, verification_reader):
+            with suppress(OSError):
+                os.close(descriptor)
+        worker.join(timeout=5)
+        with suppress(OSError):
+            os.close(handoff_reader)
+    assert not worker.is_alive()
+
+
+def test_create_never_asks_a_machine_caller_about_recovery(tmp_path: Path, run_cadrumo_cli) -> None:
+    """A scripted create reports the skipped enrolment; the console offer never appears."""
+    with _runtime_profile_storage(tmp_path=tmp_path):
+        created = _create_profile(run_cadrumo_cli)
+        document = json.loads(created.stdout)
+        codes = [notice["code"] for notice in document["notices"]]
+        assert "PROFILE_RECOVERY_NOT_ENROLLED" in codes
+        assert "PROFILE_RECOVERY_ENABLED" not in codes
+        assert tr("cli.config.profile.create_recovery_skipped") in [n["message"] for n in document["notices"]]
+        assert tr("cli.config.profile.create_recovery_offer_prompt") not in created.stdout + created.stderr
+        assert _status()["enrolled"] is False
+
+
+def test_headless_enable_persists_enrolment_after_verified_handoff(tmp_path: Path, run_cadrumo_cli) -> None:
+    with _runtime_profile_storage(tmp_path=tmp_path):
+        _create_profile(run_cadrumo_cli)
+        assert _status()["enrolled"] is False
+
+        with _capturing_descriptors() as (handoff, verification, _codes):
+            enabled = _enable(handoff, verification)
+
+        assert enabled.exit_code == 0, enabled.output
+        document = json.loads(enabled.stdout)
+        assert document["command"] == "config.profile.recovery.enable"
+        assert document["result"]["enrolled"] is True
+        assert document["result"]["changed"] is True
+        assert [notice["code"] for notice in document["notices"]] == ["PROFILE_RECOVERY_ENABLED"]
+        assert "recovery_code" not in enabled.stdout + enabled.stderr
+        assert _status()["enrolled"] is True
+
+
+def test_a_second_enable_refuses_while_recovery_is_enrolled(tmp_path: Path, run_cadrumo_cli) -> None:
+    with _runtime_profile_storage(tmp_path=tmp_path):
+        _create_profile(run_cadrumo_cli)
+        with _capturing_descriptors() as (handoff, verification, _codes):
+            assert _enable(handoff, verification).exit_code == 0
+
+        with _capturing_descriptors() as (handoff, verification, _codes):
+            refused = _enable(handoff, verification)
+
+        assert refused.exit_code != 0
+        assert json.loads(refused.stderr)["error"]["message"] == tr(
+            "application.user_profile.errors.recovery_already_enrolled"
+        )
+        assert _status()["enrolled"] is True
+
+
+def test_enable_hands_over_a_grouped_code_that_never_reaches_the_streams(tmp_path: Path, run_cadrumo_cli) -> None:
+    with _runtime_profile_storage(tmp_path=tmp_path):
+        _create_profile(run_cadrumo_cli)
+        with _capturing_descriptors() as (handoff, verification, codes):
+            enabled = _enable(handoff, verification)
+
+        assert enabled.exit_code == 0, enabled.output
+        assert len(codes) == 1
+        _assert_recovery_code_shape(codes[0])
+        assert codes[0] not in enabled.stdout + enabled.stderr
+        assert _status()["enrolled"] is True
+
+
+def test_enable_refuses_a_wrong_possession_proof_without_enrolling(tmp_path: Path, run_cadrumo_cli) -> None:
+    def swap_first_two_groups(document: bytes) -> bytes:
+        parsed = json.loads(document)
+        groups = str(parsed["recovery_code"]).split(RECOVERY_CODE_SEPARATOR)
+        groups[0], groups[1] = groups[1], groups[0]
+        parsed["recovery_code"] = RECOVERY_CODE_SEPARATOR.join(groups)
+        return json.dumps(parsed).encode() + b"\n"
+
+    with _runtime_profile_storage(tmp_path=tmp_path):
+        _create_profile(run_cadrumo_cli)
+        with _capturing_descriptors(respond=swap_first_two_groups) as (handoff, verification, codes):
+            refused = _enable(handoff, verification)
+
+        assert refused.exit_code != 0
+        assert len(codes) == 1
+        assert json.loads(refused.stderr)["error"]["message"] == tr("cli.config.profile.recovery.verification_mismatch")
+        assert codes[0] not in refused.stdout + refused.stderr
+        assert _status()["enrolled"] is False
+
+
+def test_enable_refuses_a_wrong_passphrase_before_handing_anything_over(tmp_path: Path, run_cadrumo_cli) -> None:
+    with _runtime_profile_storage(tmp_path=tmp_path):
+        _create_profile(run_cadrumo_cli)
+        with _capturing_descriptors() as (handoff, verification, codes):
+            refused = _enable(handoff, verification, credential="not-the-operator-passphrase")
+
+        assert refused.exit_code != 0
+        assert codes == []
+        assert json.loads(refused.stderr)["error"]["message"] == tr(
+            "application.user_profile.errors.passphrase_current_rejected"
+        )
+        assert _status()["enrolled"] is False
+
+
+def test_headless_enable_without_descriptors_refuses_without_enrolling(tmp_path: Path, run_cadrumo_cli) -> None:
+    """With no terminal and no descriptor pair there is nowhere safe to show the code."""
+    with _runtime_profile_storage(tmp_path=tmp_path):
+        _create_profile(run_cadrumo_cli)
+        refused = invoke_runtime_cli(
+            ("--format", "json", "config", "profile", "recovery", "enable", "--secrets-stdin"),
+            input=json.dumps({"passphrase": _CREDENTIAL_INPUT}),
+        )
+        assert refused.exit_code != 0
+        assert json.loads(refused.stderr)["error"]["message"] == tr("cli.config.profile.recovery.channel_absent")
+        assert _status()["enrolled"] is False
+
+
+@pytest.mark.parametrize(
+    ("extra", "message_key"),
+    (
+        (("--recovery-handoff-fd", "9"), "cli.config.profile.recovery.descriptor_pair_required"),
+        (("--recovery-verification-fd", "9"), "cli.config.profile.recovery.descriptor_pair_required"),
+        (
+            ("--recovery-handoff-fd", "-1", "--recovery-verification-fd", "9"),
+            "cli.config.profile.recovery.descriptor_reserved",
+        ),
+        (
+            ("--recovery-handoff-fd", "1", "--recovery-verification-fd", "9"),
+            "cli.config.profile.recovery.descriptor_reserved",
+        ),
+        (
+            ("--recovery-handoff-fd", "9", "--recovery-verification-fd", "9"),
+            "cli.config.profile.recovery.descriptor_collision",
+        ),
+    ),
+)
+def test_descriptor_preflight_refuses_before_any_secret_is_read(
+    tmp_path: Path, extra: tuple[str, ...], message_key: str, run_cadrumo_cli
+) -> None:
+    with _runtime_profile_storage(tmp_path=tmp_path):
+        _create_profile(run_cadrumo_cli)
+        refused = invoke_runtime_cli(
+            ("--format", "json", "config", "profile", "recovery", "enable", "--secrets-stdin", *extra),
+            input=json.dumps({"passphrase": _CREDENTIAL_INPUT}),
+        )
+        assert refused.exit_code != 0
+        assert json.loads(refused.stderr)["error"]["message"] == tr(message_key)
+        assert _status()["enrolled"] is False
+
+
+def test_the_passphrase_descriptor_may_not_double_as_a_recovery_descriptor(tmp_path: Path, run_cadrumo_cli) -> None:
+    reader, writer = os.pipe()
+    os.write(writer, json.dumps({"passphrase": _CREDENTIAL_INPUT}).encode())
+    os.close(writer)
+    try:
+        with _runtime_profile_storage(tmp_path=tmp_path):
+            _create_profile(run_cadrumo_cli)
+            refused = invoke_runtime_cli(
+                (
+                    "--format",
+                    "json",
+                    "config",
+                    "profile",
+                    "recovery",
+                    "enable",
+                    "--secrets-fd",
+                    str(reader),
+                    "--recovery-handoff-fd",
+                    str(reader),
+                    "--recovery-verification-fd",
+                    "9",
+                ),
+            )
+            assert refused.exit_code != 0
+            assert json.loads(refused.stderr)["error"]["message"] == tr(
+                "cli.config.profile.recovery.descriptor_collision"
+            )
+            assert _status()["enrolled"] is False
+    finally:
+        with suppress(OSError):
+            os.close(reader)
+
+
+def test_unwritable_handoff_closes_both_descriptors_without_enrolling(tmp_path: Path, run_cadrumo_cli) -> None:
+    handoff_reader, handoff_writer = os.pipe()
+    verification_reader, verification_writer = os.pipe()
+    os.close(handoff_writer)
+    os.close(verification_writer)
+    with _runtime_profile_storage(tmp_path=tmp_path):
+        _create_profile(run_cadrumo_cli)
+        refused = _enable(handoff_reader, verification_reader)
+        assert refused.exit_code != 0
+        for descriptor in (handoff_reader, verification_reader):
+            with pytest.raises(OSError):
+                os.fstat(descriptor)
+        assert _status()["enrolled"] is False
+
+
+def test_disable_removes_the_enrolment_and_is_idempotent(tmp_path: Path, run_cadrumo_cli) -> None:
+    with _runtime_profile_storage(tmp_path=tmp_path):
+        _create_profile(run_cadrumo_cli)
+        with _capturing_descriptors() as (handoff, verification, _codes):
+            assert _enable(handoff, verification).exit_code == 0
+        assert _status()["enrolled"] is True
+
+        disabled = _disable()
+        assert disabled.exit_code == 0, disabled.output
+        document = json.loads(disabled.stdout)
+        assert document["command"] == "config.profile.recovery.disable"
+        assert set(document["result"]) == {"profile_id", "enrolled", "changed"}
+        assert document["result"]["enrolled"] is False
+        assert document["result"]["changed"] is True
+        assert _status()["enrolled"] is False
+
+        again = _disable()
+        assert again.exit_code == 0, again.output
+        assert json.loads(again.stdout)["result"]["changed"] is False
+
+
+def test_disable_refuses_a_wrong_passphrase_and_keeps_the_enrolment(tmp_path: Path, run_cadrumo_cli) -> None:
+    with _runtime_profile_storage(tmp_path=tmp_path):
+        _create_profile(run_cadrumo_cli)
+        with _capturing_descriptors() as (handoff, verification, _codes):
+            assert _enable(handoff, verification).exit_code == 0
+
+        refused = _disable(credential="not-the-operator-passphrase")
+        assert refused.exit_code != 0
+        assert json.loads(refused.stderr)["error"]["message"] == tr(
+            "application.user_profile.errors.passphrase_current_rejected"
+        )
+        assert _status()["enrolled"] is True
+
+
+def test_reset_replaces_a_forgotten_passphrase_with_the_captured_code(tmp_path: Path, run_cadrumo_cli) -> None:
+    """The whole point of the code: a reset proved by it opens the profile under the new passphrase."""
+    with _runtime_profile_storage(tmp_path=tmp_path):
+        _create_profile(run_cadrumo_cli)
+        with _capturing_descriptors() as (handoff, verification, codes):
+            assert _enable(handoff, verification).exit_code == 0
+        code = codes[0]
+        committed = _committed_custody()
+
+        reset = _reset(_PROFILE, code=code)
+        assert reset.exit_code == 0, reset.output
+        # The refusal tests rest on this comparison, so it must see a reset
+        # that did replace the envelope.
+        assert _committed_custody() != committed
+        document = json.loads(reset.stdout)
+        assert document["command"] == "config.passphrase.reset"
+        assert document["result"]["changed"] is True
+        assert document["result"]["dek_epoch_preserved"] is True
+        assert document["result"]["recovery_enrollment_retained"] is True
+        assert document["result"]["password_generation"] == 2
+        assert document["result"]["human_receipt_revoked"] is True
+        assert document["result"]["receipt_removed"] is True
+        assert isinstance(document["result"]["keychain_removed"], bool)
+        # The reset says what it did not do: the code survives it and older
+        # archives still open under the old passphrase.
+        assert [(notice["code"], notice["message"]) for notice in document["notices"]] == [
+            ("config.passphrase.reset_scope", tr("cli.config.passphrase.reset_scope_notice")),
+        ]
+        combined = reset.stdout + reset.stderr
+        assert code not in combined
+        assert _ROTATED_CREDENTIAL_INPUT not in combined
+
+        # The successful login comes first: a deliberate failed login arms the
+        # login throttle, which would then refuse the new passphrase for a
+        # reason unrelated to the reset.
+        _assert_reset_revoked_session(run_cadrumo_cli)
+        fresh = _login(run_cadrumo_cli, _PROFILE, credential=_ROTATED_CREDENTIAL_INPUT)
+        assert fresh.exit_code == 0, fresh.output
+        assert json.loads(fresh.stdout)["command"] == "config.login"
+        assert _status()["enrolled"] is True
+
+        _close_local_session(run_cadrumo_cli)
+        stale = _login(run_cadrumo_cli, _PROFILE, credential=_CREDENTIAL_INPUT)
+        assert stale.exit_code != 0, stale.output
+
+
+def test_reset_accepts_the_code_with_cosmetic_spacing_and_case_differences(tmp_path: Path, run_cadrumo_cli) -> None:
+    with _runtime_profile_storage(tmp_path=tmp_path):
+        _create_profile(run_cadrumo_cli)
+        with _capturing_descriptors() as (handoff, verification, codes):
+            assert _enable(handoff, verification).exit_code == 0
+        typed = codes[0].replace(RECOVERY_CODE_SEPARATOR, " ").lower()
+
+        reset = _reset(_PROFILE, code=typed)
+        assert reset.exit_code == 0, reset.output
+        _assert_reset_revoked_session(run_cadrumo_cli)
+        assert _login(run_cadrumo_cli, _PROFILE, credential=_ROTATED_CREDENTIAL_INPUT).exit_code == 0
+
+
+def test_reset_refuses_a_wrong_code_and_keeps_the_current_passphrase(tmp_path: Path, run_cadrumo_cli) -> None:
+    with _runtime_profile_storage(tmp_path=tmp_path):
+        _create_profile(run_cadrumo_cli)
+        with _capturing_descriptors() as (handoff, verification, codes):
+            assert _enable(handoff, verification).exit_code == 0
+        committed = _committed_custody()
+        groups = codes[0].split(RECOVERY_CODE_SEPARATOR)
+        groups[0], groups[-1] = groups[-1], groups[0]
+        wrong = RECOVERY_CODE_SEPARATOR.join(groups)
+
+        refused = _reset(_PROFILE, code=wrong)
+        assert refused.exit_code != 0
+        assert json.loads(refused.stderr)["error"]["message"] == tr(
+            "application.user_profile.errors.recovery_code_rejected"
+        )
+        assert wrong not in refused.stdout + refused.stderr
+        assert _committed_custody() == committed
+
+
+def test_reset_refuses_a_malformed_code_without_touching_the_capsule(tmp_path: Path, run_cadrumo_cli) -> None:
+    with _runtime_profile_storage(tmp_path=tmp_path):
+        _create_profile(run_cadrumo_cli)
+        with _capturing_descriptors() as (handoff, verification, _codes):
+            assert _enable(handoff, verification).exit_code == 0
+        committed = _committed_custody()
+
+        refused = _reset(_PROFILE, code="not a recovery code at all")
+        assert refused.exit_code != 0
+        assert "Traceback" not in refused.stdout + refused.stderr
+        assert _committed_custody() == committed
+
+
+def test_reset_refuses_a_profile_without_recovery(tmp_path: Path, run_cadrumo_cli) -> None:
+    with _runtime_profile_storage(tmp_path=tmp_path):
+        _create_profile(run_cadrumo_cli)
+        refused = _reset(_PROFILE, code="AAAAA-AAAAA-AAAAA-AAAAA-AAAAA-AAAAA")
+        assert refused.exit_code != 0
+        assert json.loads(refused.stderr)["error"]["message"] == tr(
+            "application.user_profile.errors.recovery_not_enrolled"
+        )
+        _close_local_session(run_cadrumo_cli)
+        assert _login(run_cadrumo_cli, _PROFILE, credential=_CREDENTIAL_INPUT).exit_code == 0
+
+
+def test_reset_refuses_a_mismatched_confirmation_without_consulting_the_code(tmp_path: Path, run_cadrumo_cli) -> None:
+    with _runtime_profile_storage(tmp_path=tmp_path):
+        _create_profile(run_cadrumo_cli)
+        with _capturing_descriptors() as (handoff, verification, codes):
+            assert _enable(handoff, verification).exit_code == 0
+
+        refused = invoke_runtime_cli(
+            ("--format", "json", "config", "passphrase", "reset", _PROFILE, "--secrets-stdin"),
+            input=json.dumps(
+                {
+                    "recovery_code": codes[0],
+                    "new_passphrase": _ROTATED_CREDENTIAL_INPUT,
+                    "new_passphrase_confirmation": "a-different-confirmation-value",
+                }
+            ),
+        )
+        assert refused.exit_code != 0
+        assert json.loads(refused.stderr)["error"]["message"] == tr(
+            "application.user_profile.errors.passphrase_confirmation_mismatch"
+        )
+        _close_local_session(run_cadrumo_cli)
+        assert _login(run_cadrumo_cli, _PROFILE, credential=_CREDENTIAL_INPUT).exit_code == 0
+
+
+def test_reset_refuses_an_unknown_profile_before_reading_the_payload(tmp_path: Path, run_cadrumo_cli) -> None:
+    with _runtime_profile_storage(tmp_path=tmp_path):
+        _create_profile(run_cadrumo_cli)
+        refused = _reset("No Such Profile", code="AAAAA-AAAAA-AAAAA-AAAAA-AAAAA-AAAAA")
+        assert refused.exit_code != 0
+        assert "Traceback" not in refused.stdout + refused.stderr
+
+
+def test_recovery_verbs_refuse_without_an_active_profile(tmp_path: Path) -> None:
+    with _runtime_profile_storage(tmp_path=tmp_path):
+        status = invoke_runtime_cli(("--format", "json", "config", "profile", "recovery", "status"))
+        assert status.exit_code != 0
+        assert json.loads(status.stderr)["error"]["message"] == tr("cli.config.profile.no_active_profile")
+
+
+# --- command-graph declaration of the handoff protocol --------------------
+
+
+def test_recovery_enable_declares_the_runtime_handoff_contract() -> None:
+    help_result = invoke_runtime_cli(("config", "profile", "recovery", "enable", "--help"))
+    assert help_result.exit_code == 0, help_result.output
+    assert help_result.output.count("--secrets-stdin") == 1
+    assert help_result.output.count("--secrets-fd") == 1
+    assert help_result.output.count("--recovery-handoff-fd") == 1
+    assert help_result.output.count("--recovery-verification-fd") == 1
+
+    enable = RUNTIME_COMMAND_GRAPH.by_key()["config_profile_recovery_enable"]
+    recovery_parameters = {
+        parameter.name: parameter.declarations for parameter in enable.parameters if isinstance(parameter, OptionSpec)
+    }
+    assert recovery_parameters["recovery_handoff_fd"] == ("--recovery-handoff-fd",)
+    assert recovery_parameters["recovery_verification_fd"] == ("--recovery-verification-fd",)
+    contract = enable.recovery_handoff
+    assert contract is not None
+    assert contract.required_together is True
+    assert contract.json_fields == ("recovery_code",)
+    assert contract.maximum_bytes == 8192
+    assert contract.reserved_descriptors == (0, 1, 2)
+    assert contract.descriptors_must_differ is True
+    assert contract.collides_with_parameters == ("secrets_fd",)
+    assert contract.handoff_direction == "write"
+    assert contract.verification_direction == "read"
+    with pytest.raises(LookupError):
+        RUNTIME_COMMAND_GRAPH.node("config_profile_create")
+
+
+def test_recovery_schema_projects_changed_command_graph_metadata() -> None:
+    enable = RUNTIME_COMMAND_GRAPH.by_key()["config_profile_recovery_enable"]
+    assert enable.recovery_handoff is not None
+    changed = replace(enable, recovery_handoff=replace(enable.recovery_handoff, maximum_bytes=4096))
+
+    assert changed.recovery_handoff is not None
+    assert changed.recovery_handoff.maximum_bytes == 4096
+
+
+def test_recovery_descriptor_parameters_refuse_missing_or_stale_declaration() -> None:
+    enable = RUNTIME_COMMAND_GRAPH.by_key()["config_profile_recovery_enable"]
+    assert enable.recovery_handoff is not None
+    with pytest.raises(ValueError, match="require a recovery handoff spec"):
+        replace(enable, recovery_handoff=None)
+    with pytest.raises(ValueError, match="references a missing command parameter"):
+        replace(enable, recovery_handoff=replace(enable.recovery_handoff, handoff_parameter="stale_handoff_fd"))
+
+
+@pytest.mark.parametrize(
+    ("field", "direction"),
+    (("handoff_direction", "read"), ("verification_direction", "write"), ("handoff_direction", "sideways")),
+)
+def test_recovery_handoff_refuses_invalid_runtime_directions(field: str, direction: str) -> None:
+    enable = RUNTIME_COMMAND_GRAPH.by_key()["config_profile_recovery_enable"]
+    assert enable.recovery_handoff is not None
+    with pytest.raises(ValueError, match="directions must be write then read"):
+        replace(enable.recovery_handoff, **{field: cast(Any, direction)})
+
+
+def test_recovery_handoff_refuses_integer_argument_in_place_of_descriptor_option() -> None:
+    enable = RUNTIME_COMMAND_GRAPH.by_key()["config_profile_recovery_enable"]
+    handoff = next(parameter for parameter in enable.parameters if parameter.name == "recovery_handoff_fd")
+    argument = ArgumentSpec(
+        name=handoff.name,
+        value=handoff.value,
+        default=handoff.default,
+        help_key=handoff.help_key,
+    )
+    parameters = tuple(argument if parameter is handoff else parameter for parameter in enable.parameters)
+
+    with pytest.raises(ValueError, match="must be command options"):
+        replace(enable, parameters=parameters)

@@ -14,6 +14,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
 
+from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
@@ -47,7 +49,6 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .evidence import MediaKind, PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceService
@@ -170,8 +171,8 @@ class LedgerEvidenceRecordProjection(BaseModel):
         )
 
 
-class LedgerEvidenceAgentRecordProjection(BaseModel):
-    """One evidence record as an agent receives it: every field but the directory it was added from."""
+class LedgerEvidenceAutomationRecordProjection(BaseModel):
+    """One evidence record as an automation receives it: every field but the directory it was added from."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -198,7 +199,7 @@ class LedgerEvidenceAgentRecordProjection(BaseModel):
         return validate_utc_aware(value)
 
     @classmethod
-    def from_person_projection(cls, record: LedgerEvidenceRecordProjection) -> LedgerEvidenceAgentRecordProjection:
+    def from_person_projection(cls, record: LedgerEvidenceRecordProjection) -> LedgerEvidenceAutomationRecordProjection:
         """Copy the person's bounded record, keeping the file name and dropping where it lay."""
         return cls(
             evidence_id=record.evidence_id,
@@ -220,8 +221,8 @@ class LedgerEvidenceAgentRecordProjection(BaseModel):
 
 
 _EvidenceRows = Annotated[tuple[LedgerEvidenceRecordProjection, ...], Field(max_length=_MAX_EVIDENCE_LIST_ROWS)]
-_EvidenceAgentRows = Annotated[
-    tuple[LedgerEvidenceAgentRecordProjection, ...], Field(max_length=_MAX_EVIDENCE_LIST_ROWS)
+_EvidenceAutomationRows = Annotated[
+    tuple[LedgerEvidenceAutomationRecordProjection, ...], Field(max_length=_MAX_EVIDENCE_LIST_ROWS)
 ]
 
 
@@ -247,7 +248,7 @@ class LedgerEvidenceListProjection(BaseModel):
 
 
 class LedgerEvidenceQueryProjection(BaseModel):
-    """The profile's evidence records for an agent, complete or narrowed to one identity.
+    """The profile's evidence records for an automation, complete or narrowed to one identity.
 
     An identity that names no record leaves ``rows`` empty, so the count says
     whether the record exists.
@@ -258,7 +259,7 @@ class LedgerEvidenceQueryProjection(BaseModel):
     profile_id: UUID
     evidence_id: _EvidenceIdentity | None = None
     count: NonNegativeInt
-    rows: _EvidenceAgentRows
+    rows: _EvidenceAutomationRows
 
     @model_validator(mode="after")
     def _correlate_profile_and_rows(self) -> LedgerEvidenceQueryProjection:
@@ -502,7 +503,7 @@ class LedgerEvidenceReadExecutor:
         request: OperationRequest[LedgerEvidenceQueryRequest],
         context: OperationExecutorContext,
     ) -> str:
-        """Capture the agent's reduced records as an encrypted, no-effect worker result."""
+        """Capture the automation's reduced records as an encrypted, no-effect worker result."""
         payload = request.payload
         bucket_id = str(payload.profile_id)
         _require_worker_identity(
@@ -519,7 +520,7 @@ class LedgerEvidenceReadExecutor:
             # The person's bounded rows are built once and stay in worker
             # memory; only the reduced rows enter the result operand.
             rows = tuple(
-                LedgerEvidenceAgentRecordProjection.from_person_projection(row)
+                LedgerEvidenceAutomationRecordProjection.from_person_projection(row)
                 for row in self._bounded_rows(bucket_id)
                 if payload.evidence_id is None or row.evidence_id == payload.evidence_id
             )
@@ -636,7 +637,7 @@ class LedgerEvidenceViewExecutor:
 
 
 class LedgerEvidenceQueryExecutor:
-    """Bind agent query requests to the shared read executor."""
+    """Bind automation query requests to the shared read executor."""
 
     def __init__(self, ports_factory: LedgerEvidencePortsFactory) -> None:
         """Compose the shared evidence read service."""
@@ -645,7 +646,7 @@ class LedgerEvidenceQueryExecutor:
     async def execute(
         self, request: OperationRequest[LedgerEvidenceQueryRequest], context: OperationExecutorContext
     ) -> str:
-        """Run the exact-profile agent query."""
+        """Run the exact-profile automation query."""
         return await self._reader.execute_query(request, context)
 
 
@@ -783,7 +784,7 @@ def build_ledger_evidence_view_registration(
 def build_ledger_evidence_query_registration(
     definition: OperationDefinition,
 ) -> OperationPublicDefinitionRegistrationV1:
-    """Bind the agent query's request/result contracts and whole-profile disclosure."""
+    """Bind the automation query's request/result contracts and whole-profile disclosure."""
     return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
         public_result_type=LedgerEvidenceQueryProjection,
@@ -797,7 +798,7 @@ __all__ = [
     "LEDGER_EVIDENCE_QUERY_OPERATION_DEFINITION_ID",
     "LEDGER_EVIDENCE_VIEW_NOT_FOUND_REFUSAL_CODE",
     "LEDGER_EVIDENCE_VIEW_OPERATION_DEFINITION_ID",
-    "LedgerEvidenceAgentRecordProjection",
+    "LedgerEvidenceAutomationRecordProjection",
     "LedgerEvidenceListExecutionResult",
     "LedgerEvidenceListExecutor",
     "LedgerEvidenceListProjection",

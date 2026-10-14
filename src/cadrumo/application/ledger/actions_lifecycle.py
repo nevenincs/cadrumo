@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from ...core.decimal.formatting import format_decimal
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.invoices.models import InvoiceCatalogue
@@ -27,7 +28,7 @@ from ...domain.transactions.enums import BusinessClassification, SplitRole, Tran
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.lineage_models import TransactionLifecycleLineageEntry
 from ...domain.transactions.models import Transaction, TransactionCatalogue
-from ..operations.execution_actor import actor_label_is_an_agents
+from ..operations.execution_actor import actor_label_is_automation
 from .action_ports import LedgerActionPorts
 from .actions_common import (
     blocking_modelo_references,
@@ -36,7 +37,6 @@ from .actions_common import (
     catalogue_modelo_source_ids,
     draft_revision_advisories,
     normalise_timestamp,
-    optional_decimal,
     raise_finalized_modelo_blocked,
     remove_transaction,
     replace_transaction,
@@ -280,7 +280,7 @@ def mark_transaction_reviewed_excluded(
             "previous_classification": current.business_classification.value,
             # The exclusion clears the proportion on the row, so this event is
             # the one place a mixed row's replaced share stays stored.
-            "previous_business_pct": optional_decimal(current.business_pct),
+            "previous_business_pct": format_decimal(current.business_pct, none_value=""),
             "business_classification": BusinessClassification.REVIEWED_EXCLUDED.value,
             "reason": reason.strip(),
         },
@@ -298,7 +298,7 @@ def mark_transaction_reviewed_excluded(
         ),
         replaces=current,
         written=written_classification_origin(
-            by_agent=actor_label_is_an_agents(trimmed_actor), classified_by=CLASSIFIED_BY_MANUAL
+            by_automation=actor_label_is_automation(trimmed_actor), classified_by=CLASSIFIED_BY_MANUAL
         ),
         decided=True,
     )

@@ -3,16 +3,16 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 
 import pytest
-
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
+from click.testing import Result
 
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from ._isolated_profile_storage_fixtures import recorded_fx_seeded_backend
-from ._ledger_corpus_support import (
+from ....domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
+from ...tests.ledger_corpus_support import (
     _REVISION_CASILLA,
     _find,
     _import_bbva,
@@ -21,11 +21,12 @@ from ._ledger_corpus_support import (
     load_active_catalogue,
 )
 from .ledger_cli import list_ledger_rows_via_cli as _list_rows
+from .profile_world_fixtures import recorded_fx_seeded_backend
 
 
-def _seed_corpus() -> None:
+def _seed_corpus(invoke_cli: Callable[..., Result]) -> None:
     """Import the whole corpus; the row count the helper returns is not seeding state."""
-    _import_corpus()
+    _import_corpus(invoke_cli=invoke_cli)
 
 
 # The import is the starting state here, never the subject: each world is
@@ -51,7 +52,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 # --- Split, merge, archive, stash, remove, and track ------------------------
 @pytest.mark.usefixtures("corpus_world")
-def test_split_then_merge_roundtrip() -> None:
+def test_split_then_merge_roundtrip(invoke_cli: Callable[..., Result]) -> None:
     from decimal import Decimal
 
     rows = _list_rows()
@@ -78,6 +79,7 @@ def test_split_then_merge_roundtrip() -> None:
             "split for project allocation",
             "--yes",
         ],
+        invoke_cli=invoke_cli,
     )
     assert split.exit_code == 0, split.output
     # Post-split post-state: parent transitions ACTIVE -> SPLIT (retained for
@@ -95,18 +97,18 @@ def test_split_then_merge_roundtrip() -> None:
 
 
 @pytest.mark.usefixtures("corpus_world")
-def test_archive_then_history() -> None:
+def test_archive_then_history(invoke_cli: Callable[..., Result]) -> None:
     rows = _list_rows()
     personal = next(r for r in rows if "Suscripcion Netflix" in r["description"])
     tx = personal["transaction_id"]
-    archived = _invoke(["app", "ledger", "archive", tx, "--reason", "personal", "--yes"])
+    archived = _invoke(["app", "ledger", "archive", tx, "--reason", "personal", "--yes"], invoke_cli=invoke_cli)
     assert archived.exit_code == 0, archived.output
-    history = _invoke(["app", "ledger", "history", tx])
+    history = _invoke(["app", "ledger", "history", tx], invoke_cli=invoke_cli)
     assert history.exit_code == 0, history.output
 
 
 @pytest.mark.usefixtures("bbva_world")
-def test_split_children_then_merge() -> None:
+def test_split_children_then_merge(invoke_cli: Callable[..., Result]) -> None:
     parent = _find(_list_rows(), "Subcontratacion desarrollo freelance Juan")
     amount = abs(float(parent["amount"]))
     half = round(amount / 2, 2)
@@ -129,6 +131,7 @@ def test_split_children_then_merge() -> None:
             "project allocation",
             "--yes",
         ],
+        invoke_cli=invoke_cli,
     )
     assert split.exit_code == 0, split.output
     rows = _list_rows()
@@ -161,6 +164,7 @@ def test_split_children_then_merge() -> None:
             "re-merge after review",
             "--yes",
         ],
+        invoke_cli=invoke_cli,
     )
     assert merged.exit_code == 0, merged.output
 
@@ -194,11 +198,12 @@ def test_split_children_then_merge() -> None:
 
 
 @pytest.mark.usefixtures("bbva_world")
-def test_stash_remove_and_track() -> None:
+def test_stash_remove_and_track(invoke_cli: Callable[..., Result]) -> None:
     rows = _list_rows()
     stash_row = _find(rows, "Material oficina Papeleria Gomez")
     stashed = _invoke(
         ["app", "ledger", "stash", stash_row["transaction_id"], "--reason", "pending review", "--yes"],
+        invoke_cli=invoke_cli,
     )
     assert stashed.exit_code == 0, stashed.output
     # Post-stash post-state: the row remains listed but transitions to STASHED
@@ -214,7 +219,7 @@ def test_stash_remove_and_track() -> None:
     # verb today — stash/archive are "reversible" in the domain enum but no
     # ledger subcommand reverses them per row; surfaced to the coordinator as a
     # follow-up gap.)
-    tracked = _invoke(["app", "ledger", "track", stash_row["transaction_id"]])
+    tracked = _invoke(["app", "ledger", "track", stash_row["transaction_id"]], invoke_cli=invoke_cli)
     assert tracked.exit_code == 0, tracked.output
     assert "STASHED" in tracked.output, "track must report the row's STASHED lifecycle state"
     after_track = next((r for r in _list_rows() if r["transaction_id"] == stash_row["transaction_id"]), None)
@@ -226,6 +231,7 @@ def test_stash_remove_and_track() -> None:
     remove_row = _find(rows, "Comida de trabajo Restaurante El Olivo")
     removed = _invoke(
         ["app", "ledger", "remove", remove_row["transaction_id"], "--reason", "duplicate", "--yes"],
+        invoke_cli=invoke_cli,
     )
     assert removed.exit_code == 0, removed.output
     # Post-remove: the removed row is absent from the default list.
@@ -236,7 +242,7 @@ def test_stash_remove_and_track() -> None:
 
 # --- Modification lifecycle (edit lineage, history, blocking) ----------------------
 @pytest.mark.usefixtures("bbva_world")
-def test_edit_editable_facts_records_edit_lineage_chain() -> None:
+def test_edit_editable_facts_records_edit_lineage_chain(invoke_cli: Callable[..., Result]) -> None:
     """Editing an id-affecting fact rewrites the row id and the new
     record carries an edit_lineage entry pointing back at the prior id.
     """
@@ -245,7 +251,7 @@ def test_edit_editable_facts_records_edit_lineage_chain() -> None:
     old_id = target["transaction_id"]
 
     res = _invoke(
-        ["app", "ledger", "update", old_id, "--description", "Material oficina (corregido)"],
+        ["app", "ledger", "update", old_id, "--description", "Material oficina (corregido)"], invoke_cli=invoke_cli
     )
     assert res.exit_code == 0, res.output
 
@@ -260,7 +266,7 @@ def test_edit_editable_facts_records_edit_lineage_chain() -> None:
 
 
 @pytest.mark.usefixtures("bbva_world")
-def test_reclassify_retains_classification_event_chain() -> None:
+def test_reclassify_retains_classification_event_chain(invoke_cli: Callable[..., Result]) -> None:
     """Reclassifying after review keeps the prior classification in the
     auditable bucket-event chain (the operator-facing classification history).
     """
@@ -270,14 +276,16 @@ def test_reclassify_retains_classification_event_chain() -> None:
 
     first = _invoke(
         ["app", "ledger", "classify", tx, "--classification", "BUSINESS", "--category-id", "material_oficina"],
+        invoke_cli=invoke_cli,
     )
     assert first.exit_code == 0, first.output
     second = _invoke(
         ["app", "ledger", "classify", tx, "--classification", "BUSINESS", "--category-id", "asesoria_fiscal"],
+        invoke_cli=invoke_cli,
     )
     assert second.exit_code == 0, second.output
 
-    history = _invoke(["--format", "json", "app", "ledger", "history", tx])
+    history = _invoke(["--format", "json", "app", "ledger", "history", tx], invoke_cli=invoke_cli)
     assert history.exit_code == 0, history.output
     events = json.loads(history.output)["result"]["events"]
     classified = [e for e in events if e["event_type"] == "ledger.transaction.classified"]
@@ -293,7 +301,9 @@ def test_reclassify_retains_classification_event_chain() -> None:
 
 
 @pytest.mark.usefixtures("bbva_world")
-def test_modification_refused_when_row_feeds_finalized_modelo(*, operation: PinnedAuthorityOperation) -> None:
+def test_modification_refused_when_row_feeds_finalized_modelo(
+    *, operation: PinnedAuthorityOperation, invoke_cli: Callable[..., Result]
+) -> None:
     """Once a verified modelo revision cites a ledger row, the CLI
     refuses to edit that row (finalized-modelo blocking guard).
     """
@@ -392,7 +402,7 @@ def test_modification_refused_when_row_feeds_finalized_modelo(*, operation: Pinn
         ),
     )
 
-    refused = _invoke(["--format", "json", "app", "ledger", "update", tx, "--notes", "tweak"])
+    refused = _invoke(["--format", "json", "app", "ledger", "update", tx, "--notes", "tweak"], invoke_cli=invoke_cli)
     assert refused.exit_code != 0, refused.output
     # The refusal names the exact finalized revision through language-neutral
     # context, so the operator can identify the row that blocks the edit.
@@ -405,7 +415,7 @@ def test_modification_refused_when_row_feeds_finalized_modelo(*, operation: Pinn
 
 # --- Split a mixed invoice into business + personal children -----------------------
 @pytest.mark.usefixtures("bbva_world")
-def test_split_mixed_invoice_into_business_and_personal_children() -> None:
+def test_split_mixed_invoice_into_business_and_personal_children(invoke_cli: Callable[..., Result]) -> None:
     """Split one parent row into a business child (with base/IVA) and a personal
     child, then classify each independently — the mixed-invoice per-child split.
     """
@@ -437,6 +447,7 @@ def test_split_mixed_invoice_into_business_and_personal_children() -> None:
             "uso mixto",
             "--yes",
         ],
+        invoke_cli=invoke_cli,
     )
     assert split.exit_code == 0, split.output
 
@@ -461,10 +472,12 @@ def test_split_mixed_invoice_into_business_and_personal_children() -> None:
             "--category-id",
             "material_oficina",
         ],
+        invoke_cli=invoke_cli,
     )
     assert cls_biz.exit_code == 0, cls_biz.output
     cls_per = _invoke(
         ["app", "ledger", "classify", per_child.transaction_id, "--classification", "PERSONAL"],
+        invoke_cli=invoke_cli,
     )
     assert cls_per.exit_code == 0, cls_per.output
 

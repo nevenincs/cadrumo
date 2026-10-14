@@ -10,17 +10,17 @@ application:
     certificate:
       health:
         file_missing: El fichero de certificado configurado (%{path}) no existe. Recupera
-          el fichero o ejecuta 'aeat config auth configure --provider certificate
+          el fichero o ejecuta 'cadrumo-runtime config auth configure --provider certificate
           --file RUTA' con una ruta válida.
-        path_unset: No se ha seleccionado un fichero de certificado. Ejecuta 'aeat
+        path_unset: No se ha seleccionado un fichero de certificado. Ejecuta 'cadrumo-runtime
           config auth configure --provider certificate --file RUTA' para indicarlo.
         unavailable: El estado del certificado no está disponible; consulta los registros
           de depuración para los detalles de diagnóstico.
       load:
         password_unset: No hay contraseña de certificado configurada. Configura la
           contraseña del certificado antes de continuar.
-        path_unset: No hay fichero de certificado configurado. Ejecuta 'aeat config
-          auth configure --provider certificate --file RUTA' para indicarlo.
+        path_unset: No hay fichero de certificado configurado. Ejecuta 'cadrumo-runtime
+          config auth configure --provider certificate --file RUTA' para indicarlo.
     clave_movil:
       health:
         identity_unset: No se ha configurado un DNI/NIE para Cl@ve Móvil. Configúralo
@@ -48,18 +48,19 @@ application:
           fiscal del perfil con el DNI/NIE usado para Cl@ve.
       errors:
         certificate_file_required: El proveedor de certificado requiere un fichero
-          de certificado. Ejecuta `aeat config auth configure --provider certificate
-          --file RUTA` con la ruta a tu paquete PKCS#12 (.p12/.pfx).
+          de certificado. Ejecuta `cadrumo-runtime config auth configure --provider
+          certificate --file RUTA` con la ruta a tu paquete PKCS#12 (.p12/.pfx).
         certificate_file_unresolved: La ruta del certificado '%{certificate_path}'
-          no resuelve a un fichero existente. Ejecuta `aeat config auth configure
-          --provider certificate --file RUTA` con una ruta a tu paquete PKCS#12 (.p12/.pfx).
+          no resuelve a un fichero existente. Ejecuta `cadrumo-runtime config auth
+          configure --provider certificate --file RUTA` con una ruta a tu paquete
+          PKCS#12 (.p12/.pfx).
         certificate_secret_mutation_in_progress: Aún se está recuperando un cambio
           del secreto de certificado para este perfil. Reintenta el mismo comando
           de secreto antes de cambiar la configuración de autenticación.
         certificate_source_not_found: El origen de certificado '%{name}' no está registrado.
-          Ejecuta `aeat config auth certificate list` para ver los orígenes registrados,
-          o `aeat config auth certificate register --name %{name} --file RUTA` para
-          registrarlo.
+          Ejecuta `cadrumo-runtime config auth certificate list` para ver los orígenes
+          registrados, o `cadrumo-runtime config auth certificate register --name
+          %{name} --file RUTA` para registrarlo.
         cleanup_in_progress: Aún se está recuperando un cierre o reinicio de autenticación
           para este perfil. Reanuda esa operación antes de cambiar la configuración
           de autenticación.
@@ -86,8 +87,8 @@ application:
           de certificado configurado (%{path}) no existe. Recupera el fichero o vuelve
           a configurar la ruta antes de continuar.'
         refused_certificate_path_unset: 'No se puede iniciar sesión: aún no se ha
-          seleccionado un fichero de certificado. Ejecuta ''aeat config auth configure
-          --provider certificate --file RUTA'' antes de continuar.'
+          seleccionado un fichero de certificado. Ejecuta ''cadrumo-runtime config
+          auth configure --provider certificate --file RUTA'' antes de continuar.'
         refused_clave_movil_identity_unset: 'No se puede iniciar sesión con Cl@ve
           Móvil: aún no se ha configurado un DNI/NIE. Configúralo antes de continuar.'
         refused_live_tests_disabled: 'El inicio de sesión en directo está deshabilitado
@@ -115,10 +116,10 @@ application:
         no_provider: No hay ningún proveedor de autenticación configurado; nada que
           comprobar localmente.
         no_session: No hay ningún token de sesión AEAT persistido en disco; ejecuta
-          `aeat config auth login` para obtener uno.
+          `cadrumo-runtime config auth login` para obtener uno.
         session_expired: Hay un token de sesión AEAT persistido en disco pero ha superado
-          su límite de inactividad; ejecuta `aeat config auth login --fresh` para
-          renovarlo.
+          su límite de inactividad; ejecuta `cadrumo-runtime config auth login --fresh`
+          para renovarlo.
         session_live: Hay un token de sesión AEAT persistido en disco y dentro de
           su límite de inactividad.
     provider_impact:
@@ -138,21 +139,22 @@ application:
         clave_contraste_missing: Cl@ve Móvil inicia sesión por defecto con una solicitud
           de aprobación en la app Cl@ve, que necesita el contraste impreso en tu documento.
           Registra %{nie_field} en el perfil activo si es un NIE, o %{dni_field} si
-          es un DNI. Para escanear un código QR en un navegador visible, ejecuta `aeat
+          es un DNI. Para escanear un código QR en un navegador visible, ejecuta `cadrumo-runtime
           config auth configure --provider clave_movil --clave-movil-route qr`.
         clave_identity_malformed: La identidad de Cl@ve no es un NIF, NIE o CIF válido,
           por lo que no se puede confirmar que pertenezca a este perfil.
         clave_identity_missing: La autenticación en directo con Cl@ve exige un DNI/NIE.
           Regístralo en el perfil activo como %{identity_field}, o configúralo para
-          el proveedor con `aeat config auth configure`, antes de usar cualquier sesión
-          con la AEAT.
+          el proveedor con `cadrumo-runtime config auth configure`, antes de usar
+          cualquier sesión con la AEAT.
         clave_identity_profile_mismatch: La identidad de Cl@ve Móvil no coincide con
           la identidad fiscal del perfil activo; cambia al perfil que coincida o actualiza
           el perfil antes de la autenticación AEAT en directo.
         corrupt_session: La sesión de autenticación guardada está dañada y no se puede
-          leer. Ejecuta `aeat config auth logout` y después `aeat config auth test`.
-        no_session: No hay sesión AEAT activa; ejecuta `aeat config auth test` antes
-          de leer datos AEAT.
+          leer. Ejecuta `cadrumo-runtime config auth logout` y después `cadrumo-runtime
+          config auth test`.
+        no_session: No hay sesión AEAT activa; ejecuta `cadrumo-runtime config auth
+          test` antes de leer datos AEAT.
         profile_identity_cleared: La autenticación en directo con la AEAT necesita
           el ID fiscal del perfil activo, y este perfil no lo tiene. Restaura %{requirements}
           en el perfil y vuelve a autenticarte.
@@ -1973,8 +1975,8 @@ application:
             derivadas con fórmulas, ''Procedencia'' audita cada casilla calculada
             y ''Tarifas'' refleja los parámetros vigentes consultados por las fórmulas.'
           period: '%{modelo_title} - período %{period} / %{filing_year}.'
-          pull_command: Para recoger tus ediciones en el almacenamiento local, ejecuta
-            'aeat app modelo spreadsheet pull' desde la CLI.
+          pull_command: Las ediciones de la hoja de cálculo no se importan al perfil
+            de Cadrumo; revisa los cambios e introdúcelos en Cadrumo.
           title: '%{modelo_title} - %{period}/%{filing_year}'
         labels:
           casilla: Casilla

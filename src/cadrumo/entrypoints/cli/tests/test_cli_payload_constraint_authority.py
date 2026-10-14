@@ -96,7 +96,6 @@ RECONCILED_MODULES: frozenset[str] = frozenset(
         "_modelo_iva_wallet_payloads.py",
         "_modelo_payloads_m036.py",
         "_ledger_payloads.py",
-        "config_payloads.py",
         "_config_plantilla_media_payloads.py",
         "_modelo_payloads.py",
         "_ledger_catalogue_invoice_payloads.py",

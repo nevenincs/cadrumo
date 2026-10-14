@@ -19,7 +19,6 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
 from cadrumo.application.auth.read_operation import build_auth_read_definition, build_auth_read_registration
 from cadrumo.application.modelo.operation_definitions import (
@@ -30,25 +29,27 @@ from cadrumo.application.modelo.operation_definitions import (
 from cadrumo.application.operations.frontend_requests import OperationSubmissionReceiptV1
 from cadrumo.application.operations.models import new_operation_id
 from cadrumo.application.operations.registry import OperationPublicDefinitionDescriptionV1, OperationRegistry
-from cadrumo.application.runtime.operation_access import (
-    RuntimeOperationAcknowledged,
-    RuntimeOperationControl,
-    RuntimeOperationFinancialInput,
-    RuntimeOperationReply,
-    RuntimeOperationSubmit,
-    RuntimeOperationSubmitted,
-)
 from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.application.user_profile.operations import (
     USER_PROFILE_OPERATION_DEFINITIONS,
     build_user_profile_operation_registrations,
 )
 from cadrumo.application.user_profile.profile_operation_contracts import PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID
-from cadrumo_harness.mcp.protocol_contract import PERSON_ACT_REMEDY
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
-from cadrumo_harness.mcp.server import build_server
-from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
-from cadrumo_harness.mcp.tests.test_operation_search_tool import _AdmittedClient
+from cadrumo_client.contracts.operation_access import (
+    OperationAcknowledged,
+    OperationControl,
+    OperationFinancialInput,
+    OperationReply,
+    OperationSubmit,
+    OperationSubmitted,
+)
+from cadrumo_client.transport.frontend_client import FrontendClient
+
+from ..protocol_contract import PERSON_ACT_REMEDY
+from ..runtime_adapter import RuntimeMcpAdapter
+from ..server import build_server
+from .session import connected_server_and_client_session
+from .test_operation_search_tool import _AdmittedClient
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -93,10 +94,8 @@ class _AnsweringClient:
         self._boot, self._connection = uuid4(), uuid4()
 
     @property
-    def submissions(self) -> list[RuntimeOperationSubmit | RuntimeOperationFinancialInput]:
-        return [
-            item for item in self.exchanges if isinstance(item, RuntimeOperationSubmit | RuntimeOperationFinancialInput)
-        ]
+    def submissions(self) -> list[OperationSubmit | OperationFinancialInput]:
+        return [item for item in self.exchanges if isinstance(item, OperationSubmit | OperationFinancialInput)]
 
     def status(self) -> SimpleNamespace:
         return self._lease.status()
@@ -107,18 +106,18 @@ class _AnsweringClient:
     def close(self) -> None:
         self._lease.close()
 
-    def operation(self, request: object, *, deadline: float) -> RuntimeOperationReply:
+    def operation(self, request: object, *, deadline: float) -> OperationReply:
         assert deadline > 0
         self.exchanges.append(request)
-        if isinstance(request, RuntimeOperationSubmit | RuntimeOperationFinancialInput):
-            return RuntimeOperationSubmitted(
+        if isinstance(request, OperationSubmit | OperationFinancialInput):
+            return OperationSubmitted(
                 request_id=request.request_id,
                 runtime_boot_id=self._boot,
                 connection_id=self._connection,
                 receipt=OperationSubmissionReceiptV1(operation_id=new_operation_id(), secret_requirement=None),
             )
-        assert isinstance(request, RuntimeOperationControl), request
-        return RuntimeOperationAcknowledged(
+        assert isinstance(request, OperationControl), request
+        return OperationAcknowledged(
             request_id=request.request_id,
             runtime_boot_id=self._boot,
             connection_id=self._connection,
@@ -127,7 +126,7 @@ class _AnsweringClient:
 
 
 async def _call(client: _AnsweringClient, tool: str, arguments: dict[str, Any]) -> dict[str, Any]:
-    adapter = RuntimeMcpAdapter(profile_id=client.profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=client.profile_id, client=cast(FrontendClient, client))
     try:
         return await adapter.call(tool, arguments)
     finally:
@@ -146,7 +145,7 @@ def _export(client: _AnsweringClient, **more: object) -> dict[str, Any]:
 @pytest.mark.anyio
 async def test_an_operation_that_requires_a_secret_is_the_persons_act_and_nothing_is_sent() -> None:
     client = _AnsweringClient(uuid4())
-    adapter = RuntimeMcpAdapter(profile_id=client.profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=client.profile_id, client=cast(FrontendClient, client))
     try:
         async with connected_server_and_client_session(build_server(adapter)) as sdk:
             called = await sdk.call_tool("execute", _export(client))
@@ -184,7 +183,7 @@ async def test_a_call_that_gives_a_secret_or_names_one_is_refused_before_anythin
 @pytest.mark.anyio
 async def test_no_tool_declares_an_argument_that_takes_or_names_a_secret() -> None:
     client = _AnsweringClient(uuid4())
-    adapter = RuntimeMcpAdapter(profile_id=client.profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=client.profile_id, client=cast(FrontendClient, client))
     try:
         async with connected_server_and_client_session(build_server(adapter)) as sdk:
             tools = (await sdk.list_tools()).tools
@@ -228,7 +227,7 @@ async def test_typed_operator_input_travels_on_the_financial_input_exchange_unde
     assert result["outcome"] == "submitted", result
     assert "secret_delivery" not in result
     (submitted,) = client.submissions
-    assert isinstance(submitted, RuntimeOperationFinancialInput)
+    assert isinstance(submitted, OperationFinancialInput)
     assert submitted.subject_ref == _WORK_UNIT_ID
     assert json.loads(submitted.payload_json) == _OPERATOR_INPUT
     assert submitted.idempotency_key is None

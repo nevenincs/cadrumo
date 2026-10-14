@@ -11,7 +11,7 @@ to reimplement the same four decisions.
 The two event-type sets are part of the contract rather than an implementation
 detail. History is a curated subset: a bucket carries events that are not this
 transaction's story, and widening the set silently turns an audit trail into a
-log.
+log. A :class:`TransactionCatalogue` supplies the transaction identities.
 """
 
 from __future__ import annotations
@@ -93,7 +93,7 @@ def ledger_history_object_ids(
     include_split_siblings: bool = False,
     catalogue: TransactionCatalogue | None = None,
 ) -> tuple[str, ...]:
-    """Return every event-anchor id whose events belong to ``transaction_id``.
+    """Return the :class:`TransactionCatalogue` event anchors for ``transaction_id``.
 
     Always the id itself plus every prior id in its edit lineage. An update
     that edits an id-affecting fact anchors the pre-edit events (create,
@@ -136,7 +136,7 @@ def read_ledger_history(
         bucket_id: The owning profile bucket.
         transaction_repository: Explicit bucket-scoped catalogue port.
         bucket_event_repository: Explicit bucket-scoped event-history port.
-        transaction_catalogue: The catalogue already read for prefix resolution, if any.
+        transaction_catalogue: The :class:`TransactionCatalogue` already read for prefix resolution, if any.
 
     Returns:
         The chain, ordered by occurrence, with the anchor ids it came from.

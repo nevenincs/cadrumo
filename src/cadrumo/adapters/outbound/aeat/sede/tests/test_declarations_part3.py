@@ -93,7 +93,7 @@ class TestFiledObservationRelations:
                     f"{max_single} — at least one period did not contribute"
                 )
 
-            # No annual receiver remains: the withholding-agent returns credit the
+            # No annual receiver remains: the withholding-automation returns credit the
             # declarant nothing, and the instalment returns are the only relations.
             assert set(resolved) == set(quarterly_aggregations)
 

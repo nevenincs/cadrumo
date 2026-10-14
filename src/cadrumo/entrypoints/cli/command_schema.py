@@ -13,40 +13,40 @@ from functools import cache
 from types import MappingProxyType
 from typing import TYPE_CHECKING, cast
 
-from cadrumo.application.operator_surface.command_ports import (
-    CommandNodeKind,
-    JsonType,
-)
-
-from ...application.operator_surface.command_ports import (
+from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.shared_contracts import DefaultKind, SchemaState
+from cadrumo_client.commands.target import resolve_deferred_target
+from cadrumo_client.contracts.command_ports import (
     CommandCapabilityClass,
+    CommandNodeKind,
     CommandParameterDefault,
     CommandParameterMetadata,
     CommandPolicyMetadata,
     CommandRegistrationMetadata,
+    JsonType,
     MachineSecretFieldMetadata,
     MachineSecretPayloadMetadata,
     MachineSecretVariantConditionMetadata,
     ProfileAuthenticationContractMetadata,
 )
+
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.i18n.render import output_language, tr
 from ...core.type_guards import is_object_list_or_tuple
-from ._command_target import resolve_deferred_target
-from .command_parameter_contracts import OptionSpec
-from .command_shared_contracts import DefaultKind, SchemaState
 
 if TYPE_CHECKING:
+    from cadrumo_client.commands.graph import CommandSpecGraph
+    from cadrumo_client.commands.parameters import ParameterSpec
+    from cadrumo_client.commands.spec import CommandSpec, CommandSpecNode
+
     from ...application.operator_surface.manifest import CommandSchemaRef
     from ...core.json_contract import RegisteredSchema
     from ._command_policy import CommandExecutionPolicy
-    from .command_parameter_contracts import ParameterSpec
-    from .command_spec import CommandSpec, CommandSpecNode
 
 
 def machine_secret_payload_metadata(spec: CommandSpec) -> tuple[MachineSecretPayloadMetadata, ...]:
     """Project value-free secret shapes directly from their owning command spec."""
-    from .config.secure_input import MACHINE_SECRET_MAX_BYTES
+    from cadrumo_client.commands.secure_input import MACHINE_SECRET_MAX_BYTES
 
     contract = spec.machine_secret
     if contract is None:
@@ -180,13 +180,24 @@ def _parameter_flags(parameter: ParameterSpec) -> tuple[str, str]:
     )
 
 
-def _operator_path(path: tuple[str, ...]) -> tuple[str, ...]:
-    return path[1:] if path and path[0] == "aeat" else path
+def _operator_path(path: tuple[str, ...], *, root_segment: str = "aeat") -> tuple[str, ...]:
+    return path[1:] if path and path[0] == root_segment else path
 
 
-def command_registration_projection() -> CommandRegistrationProjection:
-    """Project graph metadata in the currently selected output language."""
-    return _command_registration_projection(output_language())
+def command_registration_projection(
+    graph: CommandSpecGraph | None = None,
+) -> CommandRegistrationProjection:
+    """Project one command graph in the currently selected output language.
+
+    With no graph, this projects the AEAT command surface. A caller composing
+    another frontend can supply its graph without coupling this projector to
+    that frontend's host or command package.
+    """
+    if graph is None:
+        from .command_specs import COMMAND_GRAPH
+
+        graph = COMMAND_GRAPH
+    return _command_registration_projection(output_language(), graph)
 
 
 def _handler_owner(spec: CommandSpec) -> str | None:
@@ -240,12 +251,17 @@ def _target_command_registration_metadata(
     )
 
 
-def profile_authentication_contract() -> ProfileAuthenticationContractMetadata:
+def profile_authentication_contract(
+    graph: CommandSpecGraph | None = None,
+) -> ProfileAuthenticationContractMetadata:
     """Project the root profile-secret shape without exposing any secret value."""
-    from .command_specs import COMMAND_GRAPH
-    from .config.secure_input import MACHINE_SECRET_MAX_BYTES
+    from cadrumo_client.commands.secure_input import MACHINE_SECRET_MAX_BYTES
 
-    root_profile_secret = COMMAND_GRAPH.root().profile_secret
+    if graph is None:
+        from .command_specs import COMMAND_GRAPH
+
+        graph = COMMAND_GRAPH
+    root_profile_secret = graph.root().profile_secret
     if root_profile_secret is None:
         raise InternalInvariantError("root command spec must declare profile-secret metadata authority")
     return ProfileAuthenticationContractMetadata(
@@ -259,16 +275,25 @@ def profile_authentication_contract() -> ProfileAuthenticationContractMetadata:
     )
 
 
-@cache
-def _command_registration_projection(language: str) -> CommandRegistrationProjection:
-    from .command_specs import COMMAND_GRAPH
+_projection_cache: dict[tuple[str, int], tuple[object, CommandRegistrationProjection]] = {}
 
-    contract = profile_authentication_contract()
+
+def _command_registration_projection(
+    language: str,
+    graph: CommandSpecGraph,
+) -> CommandRegistrationProjection:
+    cache_key = (language, id(graph))
+    cached = _projection_cache.get(cache_key)
+    if cached is not None and cached[0] is graph:
+        return cached[1]
+
+    contract = profile_authentication_contract(graph)
     commands: list[CommandRegistrationMetadata] = []
     nodes: list[LiveNodeRegistrationMetadata] = []
-    for node in COMMAND_GRAPH.nodes():
+    root_segment = graph.root().token
+    for node in graph.nodes():
         spec = node.spec
-        path = _operator_path(node.path)
+        path = _operator_path(node.path, root_segment=root_segment)
         owner = _handler_owner(spec)
         policy = _policy(spec)
         nodes.append(
@@ -288,20 +313,26 @@ def _command_registration_projection(language: str) -> CommandRegistrationProjec
         )
         if command is not None:
             commands.append(command)
-    return CommandRegistrationProjection(
+    projection = CommandRegistrationProjection(
         tuple(sorted(commands, key=lambda row: row.command)),
         tuple(nodes),
         contract,
     )
+    _projection_cache[cache_key] = (graph, projection)
+    return projection
 
 
-def command_registration_for_node(node: CommandSpecNode) -> CommandRegistrationMetadata | None:
+def command_registration_for_node(
+    node: CommandSpecNode,
+    *,
+    graph: CommandSpecGraph | None = None,
+) -> CommandRegistrationMetadata | None:
     """Project one graph node into :class:`CommandRegistrationMetadata` in the output language, if exposed."""
     spec = node.spec
     return _target_command_registration_metadata(
         node,
         language=output_language(),
-        path=_operator_path(node.path),
+        path=_operator_path(node.path, root_segment="aeat" if graph is None else graph.root().token),
         policy=_policy(spec),
         owner=_handler_owner(spec),
     )
@@ -347,7 +378,8 @@ def command_schema_refs() -> tuple[CommandSchemaRef, ...]:
 @cache
 def command_schema_type(command: str) -> RegisteredSchema:
     """Resolve the authored result-schema target for one command identity."""
-    from ._command_target import resolve_deferred_target
+    from cadrumo_client.commands.target import resolve_deferred_target
+
     from .command_specs import COMMAND_GRAPH
 
     spec = COMMAND_GRAPH.by_schema_identity().get(command)

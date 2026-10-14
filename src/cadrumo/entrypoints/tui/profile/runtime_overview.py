@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ....adapters.local_runtime.frontend_client_contracts import ProfileViewCollection
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import ProfileViewCollection
+
 from ....application.user_profile.overview import ProfileFieldView, ProfileOverview, ProfileSectionView
 from ....application.user_profile.view_operation import (
     ProfileViewFieldItem,
@@ -164,7 +165,7 @@ def profile_overview_from_runtime_view(collection: ProfileViewCollection, *, pro
 
 
 def read_runtime_profile_overview(
-    client: RuntimeFrontendClient,
+    client: FrontendClient,
     *,
     profile_label: str,
     output_language: OutputLanguage,

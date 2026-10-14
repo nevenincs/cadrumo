@@ -3,7 +3,7 @@
 The existing evidence service remains the verification and export authority.
 Its current default treats referenced payloads as unreachable; these operations
 do not add a record loader. Human projections preserve notes and finding text.
-Agent projections omit those strings and arbitrary source-record addresses.
+automation projections omit those strings and arbitrary source-record addresses.
 """
 
 from __future__ import annotations
@@ -267,7 +267,7 @@ class ModeloAuditQueryReport(BaseModel):
 
 
 class ModeloAuditQueryProjection(BaseModel):
-    """Separately consented agent integrity query with immutable exact profile identity."""
+    """Separately consented automation integrity query with immutable exact profile identity."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
@@ -303,7 +303,7 @@ class ModeloAuditReadExecutionResult(BaseModel):
 
 
 class ModeloAuditQueryExecutionResult(BaseModel):
-    """Encrypted reviewed agent integrity retention."""
+    """Encrypted reviewed automation integrity retention."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     projection: ModeloAuditQueryProjection

@@ -60,7 +60,7 @@ from ...domain.transactions.models import (
 from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..aggregation.currency_predicates import effective_eur_amount, is_non_eur_without_conversion
 from ..aggregation.ledger_filing_snapshot import row_fingerprint
-from ..operations.execution_actor import actor_label_is_an_agents
+from ..operations.execution_actor import actor_label_is_automation
 from ..review.filter import LedgerReviewStatus
 from .action_ports import LedgerActionPorts
 from .actions_common import (
@@ -845,7 +845,7 @@ def update_manual_transaction(
 
     ``decides_classification`` says the caller set a tax-bearing fact of the
     row, whether or not its value moved. A person who restates what a rule, a
-    model or an agent gave the row has accepted it: the row becomes theirs,
+    model or an automation gave the row has accepted it: the row becomes theirs,
     and that alone is a change this service writes and records.
 
     ``_evidence_authority`` is a private flag threaded only by the evidence
@@ -1316,7 +1316,7 @@ def _fields_set_to_a_value(patch: ManualLedgerTransactionPatch) -> set[str]:
 def _written_origin(command: ManualLedgerTransactionCommand) -> ClassificationOrigin:
     """Return whose decision a classification written by ``command`` is."""
     return written_classification_origin(
-        by_agent=actor_label_is_an_agents(command.actor),
+        by_automation=actor_label_is_automation(command.actor),
         classified_by=command.classified_by_override or CLASSIFIED_BY_MANUAL,
     )
 

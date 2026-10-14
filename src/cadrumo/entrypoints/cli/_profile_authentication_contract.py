@@ -2,80 +2,18 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from enum import StrEnum
-from typing import TYPE_CHECKING, cast
-from uuid import UUID
-
-from pydantic import SecretStr, model_validator
-
-from cadrumo.application.operator_surface.command_ports import Capability, ProfileAuthenticationPosture
+from cadrumo_client.commands.secret_contracts import ProfileSecretSpec
+from cadrumo_client.commands.secure_input import MachineSecretPayload
+from cadrumo_client.commands.spec import CommandSpec, CommandSpecNode
+from cadrumo_client.contracts.command_ports import Capability, ProfileAuthenticationPosture
 
 from ...core.errors.hierarchy import InternalInvariantError
 from ._bootstrap_exempt import is_bootstrap_exempt
-from ._command_secret_contracts import ProfileSecretSpec
-from .command_spec import CommandSpec, CommandSpecNode
-from .config.secure_input import MachineSecretPayload
-
-if TYPE_CHECKING:
-    import typer
-
-
-class ProfileAuthenticationSecrets(MachineSecretPayload):
-    """Strict root payload used to authenticate one exact profile target."""
-
-    profile_passphrase: SecretStr | None = None
-    api_key: SecretStr | None = None
-
-    @model_validator(mode="after")
-    def exactly_one_credential(self) -> ProfileAuthenticationSecrets:
-        if (self.profile_passphrase is None) == (self.api_key is None):
-            raise ValueError("root profile authentication requires exactly one credential field")
-        return self
-
-
-class ProfileAuthenticationMethod(StrEnum):
-    PASSWORD = "password"  # noqa: S105 -- public method token, not a credential.
-    API_KEY = "api-key"
-
-
-@dataclass(frozen=True, slots=True)
-class ProfileSecretSourceOptions:
-    """Parse-only root option values; selection and reading belong to dispatch."""
-
-    stdin: bool = False
-    descriptor: int | None = None
-    method: ProfileAuthenticationMethod = ProfileAuthenticationMethod.PASSWORD
-    credential_reference: UUID | None = None
-
-    def __post_init__(self) -> None:
-        if not isinstance(self.method, ProfileAuthenticationMethod):
-            raise TypeError("root profile authentication requires a known method")
-        if self.credential_reference is not None and not isinstance(self.credential_reference, UUID):
-            raise TypeError("root profile credential reference must be a UUID")
-
-    @property
-    def supplied(self) -> bool:
-        return self.stdin or self.descriptor is not None or self.credential_reference is not None
-
-
-def parsed_root_profile_source(ctx: typer.Context) -> ProfileSecretSourceOptions:
-    """Read the one parsed root authentication selection for this invocation.
-
-    Every parsed leaf asks this, including the leaves that open no runtime
-    connection, so it lives with the option type and loads nothing else.
-    """
-    value = cast("dict[str, object]", ctx.find_root().ensure_object(dict)).get("profile_secret_source")
-    if value is None:
-        return ProfileSecretSourceOptions()
-    if not isinstance(value, ProfileSecretSourceOptions):
-        raise TypeError("root profile-secret source has an invalid type")
-    return value
 
 
 def resolve_profile_secret_model(spec: ProfileSecretSpec) -> type[MachineSecretPayload]:
     """Resolve and prove exact parity between graph metadata and runtime model."""
-    from ._command_target import resolve_deferred_target
+    from cadrumo_client.commands.target import resolve_deferred_target
 
     model = resolve_deferred_target(spec.model)
     if not isinstance(model, type) or not issubclass(model, MachineSecretPayload):
@@ -135,12 +73,8 @@ def command_needs_state_tree(node: CommandSpecNode) -> bool:
 
 __all__ = [
     "PROFILE_FREE_CAPABILITIES",
-    "ProfileAuthenticationMethod",
-    "ProfileAuthenticationSecrets",
-    "ProfileSecretSourceOptions",
     "command_is_profile_free",
     "command_needs_state_tree",
-    "parsed_root_profile_source",
     "profile_authentication_posture",
     "resolve_profile_secret_model",
     "root_profile_secret_model",

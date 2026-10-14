@@ -360,6 +360,19 @@ _CLI_PROFILE_ID_KEYS = frozenset(
     },
 )
 _CLI_PROFILE_REFERENCE_KEYS = frozenset({"active_profile"})
+_CLI_PUBLIC_CONTROL_UUID_KEYS = frozenset(
+    {
+        "request_id",
+        "grant_id",
+        "key_id",
+        "credential_reference",
+        "session_id",
+        "parent_session_id",
+        "target_session_id",
+        "session_ids",
+        "reactivated_grants",
+    },
+)
 _CLI_BUCKET_ID_KEYS = frozenset(
     {
         "active_bucket_id",
@@ -1222,7 +1235,7 @@ def _redact_cli_string_cached(text: str, reveal_identifiers: bool, admission: Ha
     the lifetime of the process: a tax identifier that was redacted on the way
     out stays readable in memory until it is evicted. The bound is 16,384
     entries of at most :data:`_CLI_STRING_CACHE_MAX_LENGTH` characters each. A
-    one-shot CLI process exits moments later; the TUI and MCP hosts are
+    one-shot CLI process exits moments later; the TUI and external client hosts are
     long-lived and keep the entries for as long as they run.
 
     ``admission`` is part of the key only: an answer computed under one
@@ -1351,11 +1364,18 @@ def _redact_structured_for_cli_output(
 
 
 def _is_public_cli_reference(key: object | None, value: object) -> bool:
-    """Keep reviewed public source references intact in CLI payloads."""
+    """Keep reviewed source references and canonical control UUIDs intact in CLI payloads."""
     # The official locator is a reviewed bundled source path, and registry
     # source-reference ids are public authority keys. Their exceptions are
     # key-scoped so operator URLs and identity-like strings remain redacted.
-    return isinstance(value, str) and (key == "official_locator" or key in {"source_refs", "workbook_source"})
+    if not isinstance(value, str):
+        return False
+    if key == "official_locator" or key in {"source_refs", "workbook_source"}:
+        return True
+    # Control references let the operator carry out the next reviewed action.
+    # Their exact field names and canonical UUID shape keep unrelated identity
+    # values, invalid references, and free text in the normal redaction path.
+    return key in _CLI_PUBLIC_CONTROL_UUID_KEYS and _is_cli_profile_reference(value)
 
 
 def _unique_mapping_key(candidate: object, existing: Mapping[object, object]) -> object:

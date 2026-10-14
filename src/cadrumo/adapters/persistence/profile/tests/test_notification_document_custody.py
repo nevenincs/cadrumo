@@ -136,7 +136,7 @@ def test_re_pulling_one_notification_stores_nothing_and_returns_what_is_held(tmp
     """A retried pull is a no-op against real custody, not a rewrite.
 
     Asserted here against the real encrypted adapters because that is where the
-    claim has to hold: the operator of this CLI is an autonomous agent that
+    claim has to hold: the operator of this CLI is an autonomous automation that
     retries, and the AEAT act behind one certificado was served once and cannot
     change. ``fetched_at`` is the field that betrays a rewrite — it is stamped
     from the clock on every genuine store, so an equal value across two calls

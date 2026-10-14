@@ -135,7 +135,7 @@ class ModeloReviewPackageEncryptFeedbackRequest(_Request):
     """Canonical feedback fields, protected as one human request.
 
     ``submitted_by`` is recorded in the feedback as sent for a person's session.
-    An agent's session is recorded under its own session label, whatever the
+    An automation's session is recorded under its own session label, whatever the
     request carries.
     """
 

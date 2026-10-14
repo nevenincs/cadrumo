@@ -16,11 +16,7 @@ import pytest
 from textual.app import App, ComposeResult
 from textual.widgets import OptionList, Static
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.runtime.profile_access import RuntimeProfileStatus
-from cadrumo.application.runtime.session_events import RuntimeLifecycleNotice
 from cadrumo.application.user_profile.access_contracts import (
     AccessScope,
     Availability,
@@ -28,6 +24,10 @@ from cadrumo.application.user_profile.access_contracts import (
     ProfileAccessStatus,
 )
 from cadrumo.application.user_profile.login_interaction import ProfileLoginChoice
+from cadrumo_client.contracts.profile_access import ProfileStatus
+from cadrumo_client.contracts.session_events import LifecycleNotice
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo.entrypoints.tui.runtime_admission import runtime_login_session
 
 from .. import installed_tui_child as installed_child_module
@@ -48,7 +48,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _ADMISSION_SECRET = secrets.token_urlsafe(32)
 
 
-class _AdmissionClient(RuntimeFrontendClient):
+class _AdmissionClient(FrontendClient):
     """Explicit UI transport seam; this does not prove native runtime admission."""
 
     def __init__(self, profile_id: UUID) -> None:
@@ -61,22 +61,20 @@ class _AdmissionClient(RuntimeFrontendClient):
         self.refuse = False
 
     @override
-    def subscribe_lifecycle_notices(self, receive: Callable[[RuntimeLifecycleNotice], None]) -> Callable[[], None]:
+    def subscribe_lifecycle_notices(self, receive: Callable[[LifecycleNotice], None]) -> Callable[[], None]:
         # The screen subscribes before it sends the proof; this port has no runtime to send notices.
         return lambda: None
 
     @override
-    def login_password(
-        self, secret: bytearray, *, timeout: float = 20, persist_receipt: bool = False
-    ) -> RuntimeProfileStatus:
+    def login_password(self, secret: bytearray, *, timeout: float = 20, persist_receipt: bool = False) -> ProfileStatus:
         assert not persist_receipt
         assert secret == _ADMISSION_SECRET.encode()
         self.proof = secret
         self.password_calls += 1
         if self.refuse:
-            raise RuntimeFrontendRefusedError("credential_rejected")
+            raise FrontendRefusedError("credential_rejected")
         self._session_id = uuid4()
-        return RuntimeProfileStatus(
+        return ProfileStatus(
             request_id=uuid4(),
             runtime_boot_id=uuid4(),
             connection_id=uuid4(),
@@ -113,8 +111,8 @@ class _AdmissionClient(RuntimeFrontendClient):
         self.closed = True
 
     @override
-    def resume_receipt(self, *, timeout: float = 20) -> RuntimeProfileStatus:
-        raise RuntimeFrontendRefusedError("profile_session_absent")
+    def resume_receipt(self, *, timeout: float = 20) -> ProfileStatus:
+        raise FrontendRefusedError("profile_session_absent")
 
 
 class _AdmittedRoot(App[None]):
@@ -133,7 +131,7 @@ async def test_admission_autopilot_transfers_exact_login_before_running_separate
     openings = 0
     workflows: list[object] = []
 
-    async def open_client(profile_id: UUID) -> RuntimeFrontendClient:
+    async def open_client(profile_id: UUID) -> FrontendClient:
         nonlocal openings
         assert profile_id == selected
         openings += 1
@@ -175,7 +173,7 @@ async def test_admission_autopilot_refusal_never_runs_workflow_and_closes_login_
     client = _AdmissionClient(selected)
     client.refuse = True
 
-    async def open_client(profile_id: UUID) -> RuntimeFrontendClient:
+    async def open_client(profile_id: UUID) -> FrontendClient:
         assert profile_id == selected
         return client
 

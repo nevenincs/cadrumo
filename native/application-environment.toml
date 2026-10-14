@@ -401,17 +401,14 @@ posix_system = ["/usr/bin", "/bin"]
 # "inherit" leaves the caller's.
 # ---------------------------------------------------------------------------
 
-# The runtime starts its profile workers on this image. A worker asks the bundled
-# agent for its provider catalog, so the runtime relays the agent image's location,
-# which the runtime's own profile fixes, as an optional launch parameter checked as
-# an existing program.
+# Generic profile workers run on the Python image. Agent program paths belong
+# exclusively to the separate service profile.
 [profiles.python]
 image = "python"
 base = "groups"
 base_groups = ["system", "session", "terminal", "display", "network"]
 pins = true
 operator = ["locations", "presentation", "remote", "package"]
-slots = [{ name = "CADRUMO_PACKAGE_AGENT_EXECUTABLE", required = false }]
 path = "package"
 
 [profiles.kdf-child]
@@ -441,6 +438,14 @@ image = "cadrumo-runtime"
 base = "groups"
 base_groups = ["system", "session", "display", "network"]
 pins = true
+path = "package"
+
+[profiles.cadrumo-agent-service]
+image = "cadrumo-agent-service"
+base = "groups"
+base_groups = ["system", "session", "display", "network"]
+pins = true
+operator = ["locations", "presentation", "package"]
 fixed = [
   { name = "CADRUMO_PACKAGE_AGENT_EXECUTABLE", image = "cadrumo-agent" },
   { name = "CADRUMO_PACKAGE_RELAY_EXECUTABLE", image = "cadrumo-mcp" },
@@ -625,7 +630,7 @@ image = "cadrumo-runtime"
 arguments = []
 ambient = { SYSTEMROOT = "C:\\Windows", TERM = "xterm", CADRUMO_LOG_LEVEL = "DEBUG", CADRUMO_TEMP_DIR = "scratch", CADRUMO_CLI_REVEAL_IDENTIFIERS = "1", CADRUMO_AGENT_PORT = "0" }
 profile = "cadrumo-runtime"
-environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\launch-vector\\state", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority", CADRUMO_PACKAGE_AGENT_EXECUTABLE = "C:\\launch-vector\\package\\bin\\cadrumo-agent.exe", CADRUMO_PACKAGE_RELAY_EXECUTABLE = "C:\\launch-vector\\package\\bin\\cadrumo-mcp.exe", CADRUMO_PACKAGE_AEAT_EXECUTABLE = "C:\\launch-vector\\package\\bin\\aeat.exe", CADRUMO_PACKAGE_PYTHON_EXECUTABLE = "C:\\launch-vector\\package\\python.exe" }
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\launch-vector\\state", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
 path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
 
 [[launch_vectors]]
@@ -733,12 +738,12 @@ ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "65536" }
 refusal = { code = "launch_value_malformed", subject = "CADRUMO_AGENT_PORT" }
 
 [[launch_vectors]]
-name = "windows-runtime-names-the-agent-and-relay-images"
+name = "windows-service-pins-the-agent-and-relay-images"
 platform = "windows"
-image = "cadrumo-runtime"
+image = "cadrumo-agent-service"
 arguments = []
 ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_PACKAGE_AGENT_EXECUTABLE = "C:\\elsewhere.exe" }
-profile = "cadrumo-runtime"
+profile = "cadrumo-agent-service"
 environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\launch-vector\\state", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority", CADRUMO_PACKAGE_AGENT_EXECUTABLE = "C:\\launch-vector\\package\\bin\\cadrumo-agent.exe", CADRUMO_PACKAGE_RELAY_EXECUTABLE = "C:\\launch-vector\\package\\bin\\cadrumo-mcp.exe", CADRUMO_PACKAGE_AEAT_EXECUTABLE = "C:\\launch-vector\\package\\bin\\aeat.exe", CADRUMO_PACKAGE_PYTHON_EXECUTABLE = "C:\\launch-vector\\package\\python.exe" }
 path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
 
@@ -1171,12 +1176,12 @@ ambient = { HOME = "/home/ada" }
 refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
 
 [[launch_vectors]]
-name = "posix-runtime-names-the-agent-and-relay-images"
+name = "posix-service-pins-the-agent-and-relay-images"
 platform = "posix"
-image = "cadrumo-runtime"
+image = "cadrumo-agent-service"
 arguments = []
-ambient = { HOME = "/home/ada" }
-profile = "cadrumo-runtime"
+ambient = { HOME = "/home/ada", CADRUMO_PACKAGE_AGENT_EXECUTABLE = "bin/cadrumo-agent" }
+profile = "cadrumo-agent-service"
 environment = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "/launch-vector/state", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority", CADRUMO_PACKAGE_AGENT_EXECUTABLE = "/launch-vector/package/bin/cadrumo-agent", CADRUMO_PACKAGE_RELAY_EXECUTABLE = "/launch-vector/package/bin/cadrumo-mcp", CADRUMO_PACKAGE_AEAT_EXECUTABLE = "/launch-vector/package/bin/aeat", CADRUMO_PACKAGE_PYTHON_EXECUTABLE = "/launch-vector/package/python" }
 path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
 
@@ -1271,40 +1276,44 @@ refusal = { code = "launch_value_malformed", subject = "CADRUMO_AGENT_PORT" }
 # The generic interpreter takes the agent image's location from the runtime that
 # starts a worker on it, as a launch parameter checked as an existing program.
 [[launch_vectors]]
-name = "windows-python-takes-the-agent-location-a-runtime-relays"
+name = "windows-python-clears-an-absolute-agent-location"
 platform = "windows"
 image = "python"
-arguments = ["-I", "-B", "-m", "cadrumo.entrypoints.runtime.worker"]
+arguments = ["-I", "-B", "-m", "cadrumo_runtime.host.worker"]
 ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_PACKAGE_AGENT_EXECUTABLE = "C:\\Windows\\System32\\cmd.exe" }
 profile = "python"
-environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_PACKAGE_AGENT_EXECUTABLE = "C:\\Windows\\System32\\cmd.exe", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\launch-vector\\state", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\launch-vector\\state", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
 path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
 
 [[launch_vectors]]
-name = "windows-python-refuses-a-relative-agent-location"
+name = "windows-python-clears-a-relative-agent-location"
 platform = "windows"
 image = "python"
 arguments = []
 ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_PACKAGE_AGENT_EXECUTABLE = "bin\\cadrumo-agent.exe" }
-refusal = { code = "launch_value_malformed", subject = "CADRUMO_PACKAGE_AGENT_EXECUTABLE" }
+profile = "python"
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\launch-vector\\state", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
 
 [[launch_vectors]]
-name = "posix-python-takes-the-agent-location-a-runtime-relays"
+name = "posix-python-clears-an-absolute-agent-location"
 platform = "posix"
 image = "python"
-arguments = ["-I", "-B", "-m", "cadrumo.entrypoints.runtime.worker"]
+arguments = ["-I", "-B", "-m", "cadrumo_runtime.host.worker"]
 ambient = { HOME = "/home/ada", CADRUMO_PACKAGE_AGENT_EXECUTABLE = "/bin/sh" }
 profile = "python"
-environment = { HOME = "/home/ada", CADRUMO_PACKAGE_AGENT_EXECUTABLE = "/bin/sh", CADRUMO_LOCAL_STORAGE_ROOT = "/launch-vector/state", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority" }
+environment = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "/launch-vector/state", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority" }
 path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
 
 [[launch_vectors]]
-name = "posix-python-refuses-a-relative-agent-location"
+name = "posix-python-clears-a-relative-agent-location"
 platform = "posix"
 image = "python"
 arguments = []
 ambient = { HOME = "/home/ada", CADRUMO_PACKAGE_AGENT_EXECUTABLE = "bin/cadrumo-agent" }
-refusal = { code = "launch_value_malformed", subject = "CADRUMO_PACKAGE_AGENT_EXECUTABLE" }
+profile = "python"
+environment = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "/launch-vector/state", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
 
 # ---------------------------------------------------------------------------
 # Storage-root conformance vectors. Expected roots and refusals are authored by

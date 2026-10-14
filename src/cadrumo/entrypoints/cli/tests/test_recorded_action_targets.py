@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo_client.contracts.command_program import CommandProgram
+
 from ....application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogueEntry
 from ....application.operator_actions.models import (
     ActionArgumentBinding,
@@ -35,6 +37,10 @@ _CONDITION = "synthetic.condition.holds"
 
 def _targets() -> tuple[str, ...]:
     return tuple(sorted({entry.target_command_key for entry in OPERATOR_ACTION_CATALOGUE.entries}))
+
+
+def _tax_targets() -> tuple[str, ...]:
+    return tuple(target.command_key for target in ACTION_TARGETS if target.program is CommandProgram.AEAT)
 
 
 def _graph_leaf(command_key: str) -> ReconciledOperatorLeaf:
@@ -77,21 +83,39 @@ def _verdict(entry: ActionCatalogueEntry) -> PreconditionVerdict:
     )
 
 
-def test_the_record_is_exactly_what_the_command_graph_declares_for_every_catalogue_target() -> None:
-    derived = tuple(ActionTarget.of_leaf(_graph_leaf(command_key)) for command_key in _targets())
+def test_the_record_is_exactly_what_the_command_graph_declares_for_each_tax_owned_target() -> None:
+    derived = tuple(ActionTarget.of_leaf(_graph_leaf(command_key)) for command_key in _tax_targets())
 
     assert derived
-    assert derived == ACTION_TARGETS, (
+    assert derived == tuple(target for target in ACTION_TARGETS if target.program is CommandProgram.AEAT), (
         "the recorded action targets no longer match the command graph; record these instead:\n"
         + "\n".join(repr(target) for target in derived)
     )
 
 
 def test_a_recorded_leaf_reconciles_to_the_leaf_the_command_graph_reconciles() -> None:
-    for command_key in _targets():
+    for command_key in _tax_targets():
         (recorded,) = recorded_action_target_reconciliation(command_key).leaves
 
         assert _facts(recorded) == _facts(_graph_leaf(command_key)), command_key
+
+
+def test_runtime_owned_records_keep_their_program_root_outside_reconciliation_paths() -> None:
+    runtime_targets = tuple(target for target in ACTION_TARGETS if target.program is CommandProgram.AUTHENTICATION)
+    assert runtime_targets
+
+    for target in runtime_targets:
+        (recorded,) = recorded_action_target_reconciliation(
+            target.command_key,
+            canonical_cli_path=(target.program.executable_name, *target.cli_path),
+        ).leaves
+
+        assert recorded.live_leaf.canonical_cli_path == target.cli_path
+        assert recorded.live_leaf.program is target.program
+        assert ActionTarget.of_leaf(recorded).program is target.program
+
+        with pytest.raises(ValueError, match="command graph executable contradicts recorded action target"):
+            recorded_action_target_reconciliation(target.command_key, canonical_cli_path=("aeat", *target.cli_path))
 
 
 def test_the_recorded_resolver_prints_the_action_the_command_line_prints_for_every_catalogue_action() -> None:

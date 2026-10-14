@@ -62,6 +62,36 @@ export function tauriHost(): Host {
       : Promise.reject(new Error("Missing desktop launch token."));
 
   return {
+    attendance: {
+      async inventory() {
+        const reply = (await call("runtime_attendance_inventory", {})) as {
+          kind: string;
+          candidates?: unknown;
+        };
+        if (
+          reply.kind !== "attendance_inventory" ||
+          !Array.isArray(reply.candidates) ||
+          reply.candidates.length > 8
+        )
+          throw new Error("Attendance unavailable");
+        return {
+          candidates:
+            reply.candidates as import("./host").AttendanceCandidate[],
+        };
+      },
+      async decide(attendanceId, approve) {
+        const reply = (await call("runtime_attendance_decide", {
+          attendanceId,
+          approve,
+        })) as { kind: string; attendance_id: string; approved: boolean };
+        if (
+          reply.kind !== "attendance_decided" ||
+          reply.attendance_id !== attendanceId ||
+          reply.approved !== approve
+        )
+          throw new Error("Attendance decision unavailable");
+      },
+    },
     available: true,
     nativeMenus: true,
     window: {

@@ -10,7 +10,7 @@ one question, and one function here decides it for every writer.
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, Self, override
 
 from ...core.external_constants import CLASSIFIED_BY_AUTO
 from .enums import BusinessClassification
@@ -66,10 +66,21 @@ class ClassificationOrigin(StrEnum):
 
     PERSON = "person"
     """The person set it, or accepted a proposal or ran a derivation on their own frontend."""
-    AGENT = "agent"
-    """An agent's execution set it, or accepted the proposal that set it."""
+    AUTOMATION = "automation"
+    """An authenticated delegated execution set or accepted the classification."""
     AUTOMATIC = "automatic"
     """A stored rule or the pipeline set it, with nobody deciding the row."""
+
+    @classmethod
+    @override
+    def _missing_(cls, value: object) -> Self | None:
+        """Preserve historical provenance tags without deriving authority from them."""
+        if not isinstance(value, str) or not value or len(value) > 64:
+            return None
+        historical = str.__new__(cls, value)
+        historical._name_ = "HISTORICAL"
+        historical._value_ = value
+        return historical
 
 
 def classification_facts(transaction: Transaction) -> tuple[object, ...]:
@@ -80,7 +91,7 @@ def classification_facts(transaction: Transaction) -> tuple[object, ...]:
     )
 
 
-def written_classification_origin(*, by_agent: bool, classified_by: str) -> ClassificationOrigin:
+def written_classification_origin(*, by_automation: bool, classified_by: str) -> ClassificationOrigin:
     """Return the origin of a classification that a write carrying this stamp decides.
 
     A rule's output is automatic whoever ran the rules. Anything else is the
@@ -90,7 +101,7 @@ def written_classification_origin(*, by_agent: bool, classified_by: str) -> Clas
     stamp = classified_by.strip()
     if stamp == CLASSIFIED_BY_AUTO or stamp.startswith(_RULE_STAMP_PREFIX):
         return ClassificationOrigin.AUTOMATIC
-    return ClassificationOrigin.AGENT if by_agent else ClassificationOrigin.PERSON
+    return ClassificationOrigin.AUTOMATION if by_automation else ClassificationOrigin.PERSON
 
 
 def resolved_classification_origin(transaction: Transaction) -> ClassificationOrigin | None:
@@ -98,13 +109,13 @@ def resolved_classification_origin(transaction: Transaction) -> ClassificationOr
 
     A row stored before the origin was recorded is read from its stamp: a
     rule's or the pipeline's stamp is automatic, and every other classified row
-    is the person's, because no agent could classify a row then.
+    is the person's, when no recorded decision provenance exists.
     """
     if transaction.business_classification is BusinessClassification.NOT_YET_PROCESSED:
         return None
     if transaction.classification_origin is not None:
         return transaction.classification_origin
-    return written_classification_origin(by_agent=False, classified_by=transaction.classified_by)
+    return written_classification_origin(by_automation=False, classified_by=transaction.classified_by)
 
 
 def with_classification_origin(
@@ -119,8 +130,8 @@ def with_classification_origin(
     A write that changes a tax-bearing fact of the row it replaces records
     ``written``. ``decided`` says the write set such a fact, whether or not the
     value moved: a person who submits the classification a rule, a model or an
-    agent already gave the row has accepted it, so the row becomes theirs. No
-    other party takes a row by restating it, so a rule's or an agent's
+    automation already gave the row has accepted it, so the row becomes theirs. No
+    other party takes a row by restating it, so a rule's or an automation's
     unchanged write leaves the recorded origin standing, as does any write that
     set no such fact. An unprocessed row records none.
     """

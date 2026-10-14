@@ -16,7 +16,6 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
 from cadrumo.application.auth.read_operation import build_auth_read_definition, build_auth_read_registration
 from cadrumo.application.ledger.attachment_mutation_operation import (
@@ -27,13 +26,11 @@ from cadrumo.application.ledger.attachment_mutation_operation import (
     build_ledger_detach_definition,
     build_ledger_detach_registration,
 )
-from cadrumo.application.operations.mcp_surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES, McpSurface, McpSurfaceName
 from cadrumo.application.operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionDescriptionV1,
     OperationRegistry,
 )
-from cadrumo.application.runtime.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
 from cadrumo.application.user_profile.access_contracts import (
     AccessScope,
     AuthorityState,
@@ -43,13 +40,18 @@ from cadrumo.application.user_profile.access_contracts import (
 )
 from cadrumo.core import logging as cadrumo_logging
 from cadrumo.core.time.clock import now
-from cadrumo_harness.mcp import main as mcp_main
-from cadrumo_harness.mcp import runtime_adapter as mcp_runtime
-from cadrumo_harness.mcp import server as mcp_server
-from cadrumo_harness.mcp.protocol_contract import MCP_TOOL_CATALOGUE
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
-from cadrumo_harness.mcp.server import build_server
-from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
+from cadrumo_client.contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_harness.mcp.access_scope import surface_scope
+
+from .. import main as mcp_main
+from .. import runtime_adapter as mcp_runtime
+from .. import server as mcp_server
+from ..protocol_contract import MCP_TOOL_CATALOGUE
+from ..runtime_adapter import RuntimeMcpAdapter
+from ..server import build_server
+from ..surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES, McpSurface, McpSurfaceName
+from .session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -83,7 +85,7 @@ class _AdmittedClient:
 
     def __init__(self, profile_id: UUID, registry: OperationRegistry) -> None:
         self.profile_id = profile_id
-        self.frontend = OperationFrontendProjection.MCP
+        self.frontend = OperationFrontendProjection.EXTERNAL_CLIENT
         self.session_id = uuid4()
         self.registry = registry
         self.described: list[str] = []
@@ -135,7 +137,7 @@ class _AdmittedClient:
 def _adapter(surface: McpSurface, client: _AdmittedClient | None = None) -> RuntimeMcpAdapter:
     profile_id = uuid4() if client is None else client.profile_id
     return RuntimeMcpAdapter(
-        profile_id=profile_id, client=None if client is None else cast(RuntimeFrontendClient, client), surface=surface
+        profile_id=profile_id, client=None if client is None else cast(FrontendClient, client), surface=surface
     )
 
 
@@ -238,16 +240,16 @@ async def test_describe_reveals_only_operations_on_the_surface() -> None:
 
 @pytest.mark.anyio
 @pytest.mark.parametrize("surface", list(MCP_SURFACES.values()), ids=lambda surface: surface.name.value)
-async def test_an_admission_names_the_surface_to_the_runtime_only_when_it_narrows(
+async def test_an_admission_names_the_finite_scope_ceiling_for_every_surface(
     monkeypatch: pytest.MonkeyPatch, surface: McpSurface
 ) -> None:
     profile_id, reference = uuid4(), uuid4()
     admitted = _AdmittedClient(profile_id, _registry())
     opened: list[dict[str, object]] = []
 
-    async def admit(**options: object) -> RuntimeFrontendClient:
+    async def admit(**options: object) -> FrontendClient:
         opened.append(options)
-        return cast(RuntimeFrontendClient, admitted)
+        return cast(FrontendClient, admitted)
 
     monkeypatch.setattr(mcp_runtime, "open_installed_credential_client", admit)
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=None, surface=surface)
@@ -257,13 +259,14 @@ async def test_an_admission_names_the_surface_to_the_runtime_only_when_it_narrow
     finally:
         await adapter.close()
 
-    unnamed: dict[str, object] = {
+    expected: dict[str, object] = {
         "profile_id": profile_id,
         "credential_reference": reference,
-        "frontend": OperationFrontendProjection.MCP,
+        "frontend": OperationFrontendProjection.EXTERNAL_CLIENT,
+        "timeout": PROFILE_ADMISSION_TIMEOUT_SECONDS,
+        "scope": surface_scope(surface),
     }
-    named = unnamed | {"timeout": PROFILE_ADMISSION_TIMEOUT_SECONDS, "surface": surface.name}
-    assert opened == [named if surface.narrows else unnamed]
+    assert opened == [expected]
 
 
 def _run_entry_point(monkeypatch: pytest.MonkeyPatch, arguments: list[str]) -> list[dict[str, object]]:

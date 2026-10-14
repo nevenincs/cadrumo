@@ -10,7 +10,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.frontend_client import FrontendClient
+
 from ...application.ledger.actions_import import plan_ledger_import_sources
 from ...application.ledger.import_operation import (
     LEDGER_IMPORT_OPERATION_DEFINITION_ID,
@@ -18,7 +20,6 @@ from ...application.ledger.import_operation import (
     LedgerImportResultProjection,
 )
 from ...application.operations.frontend_projection import OperationPublicProjectionV1
-from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.i18n.render import tr
 from ...core.operations import OperationEffect, OperationTerminalCondition
 from ...domain.transactions.errors import TransactionValidationError
@@ -82,7 +83,7 @@ def _outcome(result: LedgerImportResultProjection, files: tuple[Path, ...]) -> L
 class RuntimeLedgerImportTuiDoorV1:
     """Preview and apply bank statement imports for the exact TUI profile and session."""
 
-    def __init__(self, client: RuntimeFrontendClient, *, profile_label: str) -> None:
+    def __init__(self, client: FrontendClient, *, profile_label: str) -> None:
         """Pin the admitted profile and session for every import."""
         self._session = RuntimeProfileSession(client, profile_label=profile_label)
 
@@ -97,7 +98,7 @@ class RuntimeLedgerImportTuiDoorV1:
         _require_bank_statement(request)
         sources = request.previewed_sources
         if sources is None:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         if not sources:
             raise TransactionValidationError(translated_message="tui.ledger.import.nothing_previewed")
         files = tuple(item.path for item in sources)
@@ -127,7 +128,7 @@ class RuntimeLedgerImportTuiDoorV1:
             _operation_id: str,
         ) -> None:
             if not _result_matches(result, submitted, condition, terminal):
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                raise RefusalError(RefusalCode.INVALID_FRAME)
 
         result = await self._session.run_operation(
             submitted,
@@ -145,7 +146,7 @@ def _require_bank_statement(request: LedgerImportRequestV1) -> None:
         raise TransactionValidationError(translated_message="tui.ledger.import.invoice_book_unavailable")
 
 
-def compose_runtime_ledger_import_door(*, client: RuntimeFrontendClient, profile_label: str) -> LedgerImportDoorV1:
+def compose_runtime_ledger_import_door(*, client: FrontendClient, profile_label: str) -> LedgerImportDoorV1:
     """Bind the import screen to the runtime client retained by its workbench."""
     return RuntimeLedgerImportTuiDoorV1(client, profile_label=profile_label)
 

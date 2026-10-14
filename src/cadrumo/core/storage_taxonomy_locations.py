@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING, Final
 from .errors.hierarchy import CoreValidationError
 from .product_identity import PRODUCT_IDENTITY
 from .storage_taxonomy import (
+    CONNECTION_SOCKET_DIRECTORY_ENVIRONMENT_VARIABLE,
     FingerprintParticipation,
     StorageCategory,
     StorageDefaultAnchor,
@@ -40,6 +41,7 @@ def _location(
     consumer_module: str | None = None,
     dormant_reason: str | None = None,
     settings_field: str | None = None,
+    environment_variable: str | None = None,
     node_kind: StorageNodeKind = StorageNodeKind.DIRECTORY,
     scope: StorageScope = StorageScope.ROOT,
     default_anchor: StorageDefaultAnchor = StorageDefaultAnchor.SCOPE,
@@ -63,6 +65,7 @@ def _location(
         consumer_module=consumer_module,
         dormant_reason=dormant_reason,
         settings_field=settings_field,
+        environment_variable=environment_variable,
         derives_settings_default=derives_settings_default and settings_field is not None,
     )
 
@@ -112,7 +115,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.GNOME_EXTENSIONS,
         "integrations/gnome/extensions",
-        consumer_module="adapters/local_runtime/linux_gnome_lock.py",
+        consumer_module="cadrumo_runtime/adapters/linux_gnome_lock.py",
         settings_field="cadrumo_gnome_extensions_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
@@ -129,11 +132,12 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         fingerprint_participation=FingerprintParticipation.EXCLUDED,
     ),
     _location(
-        StorageCategory.RUNTIME_SOCKETS,
+        StorageCategory.CONNECTION_SOCKETS,
         "runtime",
         default_anchor=StorageDefaultAnchor.DARWIN_TRANSIENT,
-        consumer_module="core/runtime_transport.py",
-        settings_field="cadrumo_runtime_socket_dir",
+        consumer_module="core/connection_transport.py",
+        settings_field="cadrumo_connection_socket_dir",
+        environment_variable=CONNECTION_SOCKET_DIRECTORY_ENVIRONMENT_VARIABLE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
         fingerprint_participation=FingerprintParticipation.EXCLUDED,
@@ -653,7 +657,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         # replay's digest.
         StorageCategory.RUNTIME_BOOT_RECORD,
         ".runtime/boot.json",
-        consumer_module="adapters/local_runtime/boot_record.py",
+        consumer_module="cadrumo_runtime/adapters/boot_record.py",
         node_kind=StorageNodeKind.FILE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
@@ -664,7 +668,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         _location(
             category,
             subpath,
-            consumer_module="adapters/local_runtime/installation.py",
+            consumer_module="cadrumo_client/transport/installation.py",
             node_kind=node_kind,
             lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
             grouping=StorageGrouping.STATE,
@@ -931,7 +935,7 @@ def storage_path(category: StorageCategory, *, settings: Settings | None = None)
 
 def uses_external_transport(location: StorageLocation, settings: Settings) -> bool:
     """Identify the shared namespace that root materialisation/reclaim must not own."""
-    from .runtime_transport import uses_darwin_transport
+    from .connection_transport import uses_darwin_transport
 
     return location.default_anchor is StorageDefaultAnchor.DARWIN_TRANSIENT and uses_darwin_transport(
         explicit=location.settings_field in settings.model_fields_set

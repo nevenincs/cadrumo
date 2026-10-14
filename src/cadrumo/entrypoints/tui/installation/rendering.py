@@ -10,19 +10,20 @@ from __future__ import annotations
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 
-from ....application.operator_output.runtime_remedies import runtime_unavailable_remedy
-from ....application.runtime.installation_requests import (
+from cadrumo_client.contracts.installation_requests import (
     InstallationAct,
     InstallationActContract,
-    RuntimeInstallationCompleted,
-    RuntimeInstallationRefused,
-    RuntimeProfileListReply,
-    RuntimeReportVerifyDocumentReply,
-    RuntimeReviewPackageVerifyReceiptReply,
-    RuntimeReviewPackageVerifyReply,
-    RuntimeReviewPackageVerifySignatureReply,
-    RuntimeStorageInventoryReply,
+    InstallationCompleted,
+    InstallationRefused,
+    ProfileListReply,
+    ReportVerifyDocumentReply,
+    ReviewPackageVerifyReceiptReply,
+    ReviewPackageVerifyReply,
+    ReviewPackageVerifySignatureReply,
+    StorageInventoryReply,
 )
+
+from ....application.operator_output.connection_remedies import connection_unavailable_remedy
 from ....core.i18n.render import tr
 from ..components.status import StatusTone
 from ..operations.refusal_explanation import operation_error_explanation, recorded_remedy_line
@@ -91,23 +92,23 @@ def _mapping_lines(document: Mapping[str, object], pad: str) -> Iterator[str]:
             yield f"{pad}{key:<{width}}  {_scalar_text(value)}"
 
 
-def reply_lines(reply: RuntimeInstallationCompleted) -> tuple[str, ...]:
+def reply_lines(reply: InstallationCompleted) -> tuple[str, ...]:
     """Render every member of a reply as labelled lines, nested members indented."""
     document = reply.model_dump(mode="json", exclude=set(_COORDINATES))
     return tuple(_mapping_lines(document, ""))
 
 
-def _verdict(reply: RuntimeInstallationCompleted) -> bool | None:
+def _verdict(reply: InstallationCompleted) -> bool | None:
     """Read the yes-or-no answer a verification reply gives, when it gives one."""
-    if isinstance(reply, RuntimeReviewPackageVerifySignatureReply | RuntimeReviewPackageVerifyReceiptReply):
+    if isinstance(reply, ReviewPackageVerifySignatureReply | ReviewPackageVerifyReceiptReply):
         return reply.is_valid
-    if isinstance(reply, RuntimeReviewPackageVerifyReply):
+    if isinstance(reply, ReviewPackageVerifyReply):
         return reply.is_clean
     return None
 
 
-def _table(reply: RuntimeInstallationCompleted) -> ResultTable | None:
-    if isinstance(reply, RuntimeStorageInventoryReply):
+def _table(reply: InstallationCompleted) -> ResultTable | None:
+    if isinstance(reply, StorageInventoryReply):
         return ResultTable(
             columns=(
                 tr("cli.config.storage.labels.area"),
@@ -129,7 +130,7 @@ def _table(reply: RuntimeInstallationCompleted) -> ResultTable | None:
                 for row in ([reply.area] if reply.area is not None else reply.areas or [])
             ),
         )
-    if isinstance(reply, RuntimeProfileListReply):
+    if isinstance(reply, ProfileListReply):
         return ResultTable(
             columns=(
                 tr("tui.installation.profiles.column.label"),
@@ -150,12 +151,12 @@ def _completed(outcome: ActCompleted, *, preview: bool) -> ActPresentation:
     if verdict is not None:
         status = tr("tui.installation.verdict.valid") if verdict else tr("tui.installation.verdict.invalid")
         tone = "success" if verdict else "error"
-    elif isinstance(reply, RuntimeReportVerifyDocumentReply):
+    elif isinstance(reply, ReportVerifyDocumentReply):
         status = tr("tui.installation.verdict.outcome", outcome=reply.outcome)
     return ActPresentation(tone=tone, status=status, lines=tuple(lines), table=_table(reply))
 
 
-def _refused(reply: RuntimeInstallationRefused, *, preview: bool) -> ActPresentation:
+def _refused(reply: InstallationRefused, *, preview: bool) -> ActPresentation:
     detail = reply.detail
     code = detail.error_code or detail.kind.value
     lines: list[str] = []
@@ -196,7 +197,7 @@ def _unreachable(outcome: ActUnreachable, contract: InstallationActContract) -> 
         if outcome.effect_unknown
         else tr("tui.installation.status.unreachable", code=outcome.code)
     )
-    remedy = runtime_unavailable_remedy(outcome.code)
+    remedy = connection_unavailable_remedy(outcome.code)
     return ActPresentation(
         # An act that may have run has not failed: its outcome is unknown, and is shown as that.
         tone="warning" if outcome.effect_unknown else "error",

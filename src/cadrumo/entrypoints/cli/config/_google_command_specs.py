@@ -4,11 +4,8 @@ from __future__ import annotations
 
 from typing import Final
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
-
-from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
-from ..command_parameter_contracts import ArgumentSpec, OptionSpec
-from ..command_shared_contracts import (
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.shared_contracts import (
     FLAG_VALUE,
     DeferredTarget,
     LazyBinding,
@@ -19,10 +16,12 @@ from ..command_shared_contracts import (
     SchemaState,
     ValueContract,
 )
-from ..command_shared_contracts import translation_key as _key
-from ..command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.commands.shared_contracts import translation_key as _key
+from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
+
+from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ._spec_policies import (
-    GOOGLE_DESTRUCTIVE,
     GOOGLE_READ,
     GOOGLE_WRITE,
     state_free_group_spec,
@@ -37,7 +36,7 @@ _HANDLER_MODULES: Final[dict[str, str]] = {
     "_google": ".google",
     "_google_folder": "._google_folder",
     "_google_folder_payloads": "._google_folder_payloads",
-    "_google_payloads": "._google_payloads",
+    "_google_payloads": "cadrumo_client.commands.google_payloads",
 }
 
 
@@ -116,39 +115,6 @@ def _leaf(
 
 GOOGLE_COMMAND_SPECS = (
     state_free_group_spec("config_google", "config", "google", "cli.config.google.help"),
-    _leaf(
-        "config_google_login",
-        "config_google",
-        "login",
-        "cli.config.google.login_help",
-        "_google",
-        "google_login",
-        "_google_payloads",
-        "GoogleLoginResult",
-        GOOGLE_WRITE,
-    ),
-    _leaf(
-        "config_google_status",
-        "config_google",
-        "status",
-        "cli.config.google.status_help",
-        "_google",
-        "google_status",
-        "_google_payloads",
-        "GoogleStatusResult",
-        GOOGLE_READ,
-    ),
-    _leaf(
-        "config_google_logout",
-        "config_google",
-        "logout",
-        "cli.config.google.logout_help",
-        "_google",
-        "google_logout",
-        "_google_payloads",
-        "GoogleLogoutResult",
-        GOOGLE_DESTRUCTIVE,
-    ),
     state_free_group_spec("config_google_folder", "config_google", "folder", "cli.config.google.folder.help"),
     _leaf(
         "config_google_folder_view",

@@ -19,10 +19,12 @@ from logging import DEBUG, ERROR
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ...adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
-from ...adapters.local_runtime.runtime_client import open_installed_runtime_client
-from ...adapters.local_runtime.runtime_credentials import open_installed_credential_client
+from cadrumo_client.contracts.contracts import RefusalError
+from cadrumo_client.transport.credentials import open_installed_credential_client
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_client.transport.installed_client import open_installed_client
+
 from ...adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
 from ...adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ...application.operations.registry import (
@@ -30,8 +32,7 @@ from ...application.operations.registry import (
     OperationPublicContractSetV1,
     OperationRegistry,
 )
-from ...application.operator_output.runtime_remedies import runtime_unavailable_remedy
-from ...application.runtime.contracts import RuntimeRefusalError
+from ...application.operator_output.connection_remedies import connection_unavailable_remedy
 from ...application.user_profile.login_interaction import (
     ProfileLoginInventoryState,
     ProfileLoginInventoryV1,
@@ -148,15 +149,15 @@ def _run_registration_screen() -> bool:
         _release_bootstrap_custody()
 
 
-async def _open_client(profile_id: UUID) -> RuntimeFrontendClient:
-    return await open_installed_runtime_client(profile_id=profile_id, frontend=OperationFrontendProjection.TUI)
+async def _open_client(profile_id: UUID) -> FrontendClient:
+    return await open_installed_client(profile_id=profile_id, frontend=OperationFrontendProjection.TUI)
 
 
 async def _open_credential_client(
     profile_id: UUID,
     credential_reference: UUID,
-    on_connected: Callable[[RuntimeFrontendClient], None],
-) -> RuntimeFrontendClient:
+    on_connected: Callable[[FrontendClient], None],
+) -> FrontendClient:
     return await open_installed_credential_client(
         profile_id=profile_id,
         credential_reference=credential_reference,
@@ -204,12 +205,12 @@ async def _run_runtime_session(
         if handoff.method in {RuntimeLoginMethod.API_KEY, RuntimeLoginMethod.API_REFERENCE}:
             from .runtime_session import RuntimeRestrictedSessionApp
 
-            def requester_for_api(client: RuntimeFrontendClient) -> RuntimeAutomationRequesterScreen:
+            def requester_for_api(client: FrontendClient) -> RuntimeAutomationRequesterScreen:
                 store = installed_automation_secret_store()
 
                 def fresh_credential_client(
                     profile_id: UUID, credential_reference: UUID, timeout: float
-                ) -> RuntimeFrontendClient:
+                ) -> FrontendClient:
                     return asyncio.run(
                         open_installed_credential_client(
                             profile_id=profile_id,
@@ -236,10 +237,10 @@ async def _run_runtime_session(
             )
             return await app.run_async(headless=headless, auto_pilot=auto_pilot)
 
-        async def open_recovery_client() -> RuntimeFrontendClient:
+        async def open_recovery_client() -> FrontendClient:
             return await _open_client(handoff.profile_id)
 
-        def requester_for_human(client: RuntimeFrontendClient) -> RuntimeAutomationRequesterScreen:
+        def requester_for_human(client: FrontendClient) -> RuntimeAutomationRequesterScreen:
             if client is not handoff.client:
                 raise ValueError("requester requires the original human client")
             return RuntimeAutomationRequesterScreen(
@@ -278,14 +279,14 @@ def _registration_completed(headless: bool) -> bool:
     return False if headless else _run_registration_screen()
 
 
-def _runtime_session_refusal(error: RuntimeFrontendRefusedError | RuntimeRefusalError) -> int:
+def _runtime_session_refusal(error: FrontendRefusedError | RefusalError) -> int:
     if any(
         isinstance(error.__dict__.get(name), AsyncResourceCleanupError)
         for name in ("async_cleanup_error", "cleanup_error")
     ):
         # A numeric refusal cannot retain an unsettled native owner.
         raise error
-    reason = error.reason if isinstance(error, RuntimeFrontendRefusedError) else error.reason.value
+    reason = error.reason if isinstance(error, FrontendRefusedError) else error.reason.value
     diagnostic_event(
         _LOGGER,
         "tui_runtime_session_refused",
@@ -294,7 +295,7 @@ def _runtime_session_refusal(error: RuntimeFrontendRefusedError | RuntimeRefusal
         primary_error=error,
     )
     sys.stderr.write(f"{reason}\n")
-    if (remedy := runtime_unavailable_remedy(reason)) is not None and remedy:
+    if (remedy := connection_unavailable_remedy(reason)) is not None and remedy:
         sys.stderr.write(f"{remedy}\n")
     return SESSION_INVENTORY_UNAVAILABLE
 
@@ -316,7 +317,7 @@ def _attempt_runtime_session(
                 auto_pilot=auto_pilot,
             )
         )
-    except (RuntimeFrontendRefusedError, RuntimeRefusalError) as error:
+    except (FrontendRefusedError, RefusalError) as error:
         return _runtime_session_refusal(error)
 
 

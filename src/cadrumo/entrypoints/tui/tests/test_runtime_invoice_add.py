@@ -11,8 +11,9 @@ import pytest
 from pydantic import BaseModel
 from textual.widgets import Button, Input, Static
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.application.invoices.catalogue_add_contracts import (
+from cadrumo_client.transport.frontend_client import FrontendClient
+
+from ....application.invoices.catalogue_add_contracts import (
     INVOICE_ADD_OPERATION_DEFINITION_ID,
     INVOICE_ADD_VALIDATION_REFUSAL_CODE,
     InvoiceAddBusinessPremisesLease,
@@ -20,39 +21,40 @@ from cadrumo.application.invoices.catalogue_add_contracts import (
     InvoiceAddRequest,
     InvoiceAddResult,
 )
-from cadrumo.application.invoices.catalogue_add_operation import (
+from ....application.invoices.catalogue_add_operation import (
     build_invoice_add_definition,
     build_invoice_add_registration,
 )
-from cadrumo.application.invoices.catalogue_creation_ports import CatalogueCreationPortsFactory
-from cadrumo.application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot, InvoiceLineSnapshot
-from cadrumo.application.operations.frontend_projection import (
+from ....application.invoices.catalogue_creation_ports import CatalogueCreationPortsFactory
+from ....application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot, InvoiceLineSnapshot
+from ....application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
     OperationPublicProjectionV1,
 )
-from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1, OperationPublicEventPageV1
-from cadrumo.application.operations.persistence.replay import OperationReplayStatus
-from cadrumo.application.operations.public_scalar import PublicDecimal
-from cadrumo.application.operations.registry import (
+from ....application.operations.frontend_requests import OperationObservationSuccessV1, OperationPublicEventPageV1
+from ....application.operations.persistence.replay import OperationReplayStatus
+from ....application.operations.public_scalar import PublicDecimal
+from ....application.operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionContractV1,
     OperationRegistry,
 )
-from cadrumo.core.aggregation import IntracomOperationType
-from cadrumo.core.operations import (
+from ....core.aggregation import IntracomOperationType
+from ....core.operations import (
     OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from cadrumo.domain.invoices.enums import PaymentStatus
-from cadrumo.domain.iva.classification import InvoiceKind
-from cadrumo.domain.iva.schema import IvaCategory
-from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
-from cadrumo.entrypoints.tui.components.host import ScreenHostApp
-from cadrumo.entrypoints.tui.ledger.controller import LedgerWorkspaceController
-from cadrumo.entrypoints.tui.ledger.invoice_entry import LedgerInvoiceEntryScreen
-from cadrumo.entrypoints.tui.ledger.models import (
+from ....domain.invoices.business_premises import BusinessPremisesLease, SituacionInmueble
+from ....domain.invoices.enums import PaymentStatus
+from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import IvaCategory
+from ..account import AccountSessionExpiredError
+from ..components.host import ScreenHostApp
+from ..ledger.controller import LedgerWorkspaceController
+from ..ledger.invoice_entry import LedgerInvoiceEntryScreen
+from ..ledger.models import (
     LedgerFlowState,
     LedgerInvoiceAddDoorV1,
     LedgerInvoiceAddResultV1,
@@ -60,16 +62,14 @@ from cadrumo.entrypoints.tui.ledger.models import (
     LedgerInvoiceEntryV1,
     LedgerInvoiceLineEntryV1,
 )
-from cadrumo.entrypoints.tui.ledger.tests.workspace_fixtures import (
+from ..ledger.tests.workspace_fixtures import (
     ledger_context,
     ledger_projection,
     ledger_review_action,
 )
-from cadrumo.entrypoints.tui.ledger.workspace_injection import LedgerWorkspaceInjection
-from cadrumo.entrypoints.tui.operations.runtime_controller import RuntimeOperationController
-from cadrumo.entrypoints.tui.runtime_invoice_add import RuntimeInvoiceAddTuiDoorV1, _request_from_entry
-
-from ....domain.invoices.business_premises import BusinessPremisesLease, SituacionInmueble
+from ..ledger.workspace_injection import LedgerWorkspaceInjection
+from ..operations.runtime_controller import RuntimeOperationController
+from ..runtime_invoice_add import RuntimeInvoiceAddTuiDoorV1, _request_from_entry
 
 pytestmark = pytest.mark.hex_entrypoint
 
@@ -290,12 +290,12 @@ def _install_runtime(
     refused: bool = False,
     expire_after_result: bool = False,
 ) -> tuple[list[dict[str, object]], _Controller, list[tuple[UUID, UUID]]]:
-    from cadrumo.entrypoints.tui.operations import runtime_profile_session as bridge
+    from ..operations import runtime_profile_session as bridge
 
     status_checks: list[tuple[UUID, UUID]] = []
 
     def read_session(
-        _client: RuntimeFrontendClient,
+        _client: FrontendClient,
         *,
         profile_id: UUID,
         session_id: UUID,
@@ -318,7 +318,7 @@ def _install_runtime(
 
     async def submit(
         _controller_type: type[RuntimeOperationController],
-        received_client: RuntimeFrontendClient,
+        received_client: FrontendClient,
         **kwargs: object,
     ) -> _Controller:
         assert received_client is client
@@ -341,7 +341,7 @@ async def test_invoice_add_tui_door_preserves_the_complete_entry_and_worker_tota
         client=client,
         result=_created_result(),
     )
-    door = RuntimeInvoiceAddTuiDoorV1(cast(RuntimeFrontendClient, client), profile_label="Fixture profile")
+    door = RuntimeInvoiceAddTuiDoorV1(cast(FrontendClient, client), profile_label="Fixture profile")
 
     result = await door(entry)
 
@@ -402,7 +402,7 @@ async def test_invoice_add_tui_door_preserves_the_complete_entry_and_worker_tota
 async def test_invoice_add_tui_door_preserves_receipt_for_a_duplicate_refusal(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from cadrumo.domain.invoices.errors import InvoiceValidationError
+    from ....domain.invoices.errors import InvoiceValidationError
 
     client = _Client()
     refusal = InvoiceAddResult.validation_refusal(
@@ -416,7 +416,7 @@ async def test_invoice_add_tui_door_preserves_receipt_for_a_duplicate_refusal(
         result=refusal,
         refused=True,
     )
-    door = RuntimeInvoiceAddTuiDoorV1(cast(RuntimeFrontendClient, client), profile_label="Fixture profile")
+    door = RuntimeInvoiceAddTuiDoorV1(cast(FrontendClient, client), profile_label="Fixture profile")
 
     with pytest.raises(InvoiceValidationError) as raised:
         await door(_entry())
@@ -444,7 +444,7 @@ async def test_invoice_add_tui_door_clears_disclosure_if_session_expires_after_s
         result=_created_result(),
         expire_after_result=True,
     )
-    door = RuntimeInvoiceAddTuiDoorV1(cast(RuntimeFrontendClient, client), profile_label="Fixture profile")
+    door = RuntimeInvoiceAddTuiDoorV1(cast(FrontendClient, client), profile_label="Fixture profile")
 
     with pytest.raises(AccountSessionExpiredError) as raised:
         await door(_entry())
@@ -469,7 +469,7 @@ async def test_invoice_add_tui_door_refuses_a_replaced_session_before_submit(
         client=client,
         result=_created_result(),
     )
-    door = RuntimeInvoiceAddTuiDoorV1(cast(RuntimeFrontendClient, client), profile_label="Fixture profile")
+    door = RuntimeInvoiceAddTuiDoorV1(cast(FrontendClient, client), profile_label="Fixture profile")
     client.session_id = UUID("7cc00000-0000-4000-8000-0000000000cc")
 
     with pytest.raises(AccountSessionExpiredError):

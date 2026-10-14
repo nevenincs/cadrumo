@@ -184,6 +184,12 @@ class LocaleManager:
         keys.update(wizard_descriptor_keys())
         keys.update(DESKTOP_CHROME_KEYS)
         keys.update(MANAGER_CHROME_KEYS)
+        from ._paths import LOCALES_DIR
+        from .service_catalogues import SERVICE_FAMILIES, SERVICE_KEYS
+
+        if self.locales_dir == LOCALES_DIR:
+            prefixes = tuple(f"{namespace}.{family}." for namespace, family in SERVICE_FAMILIES)
+            keys = {key for key in keys if not key.startswith(prefixes) and key not in SERVICE_KEYS}
         report_unread(
             "locale key scan",
             "any key they use is absent from this set and would look unused",

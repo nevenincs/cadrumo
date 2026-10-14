@@ -280,7 +280,7 @@ def _resolve_extract_access(
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     if request.payload.off_host_provider is not None and not is_persons_frontend(context.frontend):
-        # The acknowledgement is the person's consent to send the document off this machine; no agent gives it.
+        # The acknowledgement is the person's consent to send the document off this machine; no automation gives it.
         raise ProfileAccessRefusedError(AccessDenialCode.PERSON_ACT_REQUIRED)
     resolve = resolve_ledger_read_access if request.payload.off_host_provider is None else resolve_ledger_commit_access
     return resolve(request, context, profile_id=request.payload.profile_id, periods=frozenset())

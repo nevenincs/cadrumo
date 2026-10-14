@@ -28,7 +28,7 @@ import re
 import shutil
 import zipfile
 from collections.abc import Mapping, Sequence
-from importlib.resources.abc import Traversable  # nosem
+from importlib.resources.abc import Traversable
 from pathlib import Path, PurePosixPath
 from typing import Protocol, cast
 

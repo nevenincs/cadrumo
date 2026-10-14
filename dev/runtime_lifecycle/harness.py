@@ -13,19 +13,19 @@ from pathlib import Path
 from typing import Any, Literal
 from uuid import UUID
 
-from cadrumo.adapters.local_runtime.boot_record import RuntimeBootRecord, read_runtime_boot_record
-from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
-from cadrumo.adapters.local_runtime.windows_channel import WindowsRuntimeChannel
-from cadrumo.adapters.local_runtime.windows_native_io import owned_windows_handle
-from cadrumo.adapters.local_runtime.windows_process import WindowsOwnedProcess, WindowsProcessScope
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import delete_profile_session
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.user_profile.profile_pointer import observe_active_profile_pointer
 from cadrumo.core.storage_environment import ChildEnvironmentProfile, child_environment
 from cadrumo.domain.calculations.registry.authority_location import published_authority_generation
+from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError
+from cadrumo_client.transport.framing import VerifiedConnection
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.windows import WindowsEndpoint
+from cadrumo_client.transport.windows_channel import WindowsChannel
+from cadrumo_client.transport.windows_native_io import owned_windows_handle
+from cadrumo_runtime.adapters.boot_record import RuntimeBootRecord, read_runtime_boot_record
+from cadrumo_runtime.adapters.windows_process import WindowsOwnedProcess, WindowsProcessScope
 from dev.packaging.command_execution import run_command
 
 _REVEAL_IDENTIFIERS = "CADRUMO_CLI_REVEAL_IDENTIFIERS"
@@ -44,9 +44,9 @@ class Profile:
 class Connection:
     """Retain the frontend, wire and kernel-verified peer together."""
 
-    client: RuntimeFrontendClient
-    wire: VerifiedRuntimeConnection
-    native: WindowsRuntimeChannel
+    client: FrontendClient
+    wire: VerifiedConnection
+    native: WindowsChannel
 
 
 class LifecycleHarness:
@@ -62,7 +62,7 @@ class LifecycleHarness:
         self.started = 0.0
         self._manager_crashed = False
         self.retain_profile_receipts = False
-        self.endpoint: WindowsRuntimeEndpoint
+        self.endpoint: WindowsEndpoint
         self.process: WindowsOwnedProcess
         self.scope: WindowsProcessScope
 
@@ -76,7 +76,7 @@ class LifecycleHarness:
         self.root.mkdir()
         (self.root / "lifecycle-owned-root").write_bytes(b"cadrumo-process-lifecycle-v1\n")
         try:
-            self.endpoint = WindowsRuntimeEndpoint(storage_root=self.root)
+            self.endpoint = WindowsEndpoint(storage_root=self.root)
             self.resources.callback(self.endpoint.close)
             scope = WindowsProcessScope()
             self.scope = scope
@@ -157,9 +157,9 @@ class LifecycleHarness:
                 native = self.endpoint.connect(
                     timeout=min(0.2, max(0.001, deadline - time.monotonic())), expected_image=self.runtime_image
                 )
-                wire = VerifiedRuntimeConnection(
+                wire = VerifiedConnection(
                     native,
-                    expected=RuntimeClientHello(
+                    expected=ClientHello(
                         product_version=version("cadrumo"),
                         storage_identity=self.endpoint.storage_identity,
                         authority_generation=published_authority_generation(),
@@ -168,19 +168,17 @@ class LifecycleHarness:
                     deadline=deadline,
                 )
                 if after_boot is None or wire.hello.boot_id != after_boot:
-                    client = RuntimeFrontendClient(
-                        wire, profile_id=profile_id, frontend=OperationFrontendProjection.CLI
-                    )
+                    client = FrontendClient(wire, profile_id=profile_id, frontend=OperationFrontendProjection.CLI)
                     self.resources.callback(client.close)
                     return Connection(client, wire, native)
                 wire.close()
-            except RuntimeRefusalError as error:
-                if error.reason not in {RuntimeRefusalCode.ENDPOINT_NOT_READY, RuntimeRefusalCode.CONNECTION_CLOSED}:
+            except RefusalError as error:
+                if error.reason not in {RefusalCode.ENDPOINT_NOT_READY, RefusalCode.CONNECTION_CLOSED}:
                     raise
             try:
                 code = self.process.wait(timeout=0)
-            except RuntimeRefusalError as error:
-                if error.reason is not RuntimeRefusalCode.DEADLINE_EXCEEDED:
+            except RefusalError as error:
+                if error.reason is not RefusalCode.DEADLINE_EXCEEDED:
                     raise
             else:
                 raise RuntimeError(f"Manager exited before verified readiness: {code}")
@@ -196,7 +194,7 @@ class LifecycleHarness:
         expect_success: bool = True,
         reveal_identifiers: bool = False,
     ) -> dict[str, Any]:
-        """Invoke the package CLI with secrets on stdin and bounded process wait.
+        """Invoke the owning package config image with protected stdin and bounded wait.
 
         Command output hides identifiers. ``reveal_identifiers`` sets the operator's
         opt-in the package admits for the command line, for a result whose identifier
@@ -211,9 +209,14 @@ class LifecycleHarness:
         if reveal_identifiers:
             environment[_REVEAL_IDENTIFIERS] = "1"
         payload = None if secret is None else bytearray(json.dumps(secret), "utf-8")
+        direct_tax_auth = arguments[:1] in {("login",), ("logout",)} or arguments[:2] in {
+            ("profile", "create"),
+            ("profile", "list"),
+        }
+        image = self.cli_image if direct_tax_auth else self.runtime_image
         try:
             result = run_command(
-                [str(self.cli_image), "--format", "json", *profile_arguments, "config", *arguments],
+                [str(image), "--format", "json", *profile_arguments, "config", *arguments],
                 environment=environment,
                 cwd=self.root,
                 input_text=None if payload is None else payload.decode("utf-8"),

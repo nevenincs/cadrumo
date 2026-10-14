@@ -7,7 +7,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo_client.transport.frontend_client import FrontendClient
+
 from ....application.user_profile.access_contracts import (
     AccessAction,
     AccessScope,
@@ -17,8 +18,8 @@ from ....application.user_profile.access_contracts import (
 from ....application.user_profile.automation_enrollment import EnrollmentKind, EnrollmentProposal, EnrollmentStage
 from ....core.period import Period
 
-type RequesterClientOpener = Callable[[UUID], Awaitable[RuntimeFrontendClient]]
-type FreshCredentialClientOpener = Callable[[UUID, UUID, float], RuntimeFrontendClient]
+type RequesterClientOpener = Callable[[UUID], Awaitable[FrontendClient]]
+type FreshCredentialClientOpener = Callable[[UUID, UUID, float], FrontendClient]
 
 
 @dataclass(frozen=True, slots=True)

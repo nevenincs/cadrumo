@@ -101,8 +101,13 @@ def collect_cli(request: Mapping[str, Any], scratch: Path) -> dict[str, Any]:
     from cadrumo.core.storage_taxonomy_locations import storage_location, storage_path
 
     fields = Settings.model_fields
+    environment_fields = {
+        environment_name: field
+        for field_name, field in fields.items()
+        for environment_name in Settings._environment_names_for_field(field_name)
+    }
     settings = {
-        name: kind_label(fields[name.lower()].annotation) if name.lower() in fields else None
+        name: kind_label(environment_fields[name].annotation) if name in environment_fields else None
         for name in sorted(Settings.env_var_names())
     }
     root = {
@@ -161,22 +166,22 @@ def collect_cli(request: Mapping[str, Any], scratch: Path) -> dict[str, Any]:
 
 def collect_runtime(request: Mapping[str, Any], scratch: Path) -> dict[str, Any]:
     """Collect the runtime's agent launch: its package variables, gateway invocation, slots and reserved exits."""
-    from cadrumo.adapters.local_runtime.agent_programs import (
+    from cadrumo_agent_service.adapters.agent_programs import (
         GATEWAY_ARGUMENTS,
         PACKAGE_AEAT_VARIABLE,
         PACKAGE_AGENT_VARIABLE,
         PACKAGE_PYTHON_VARIABLE,
         PACKAGE_RELAY_VARIABLE,
     )
-    from cadrumo.application.agent_host.launch_environment import (
+    from cadrumo_agent_service.host.launch_environment import (
         ADVERTISED_VARIABLES,
         GATEWAY_SLOTS,
         agent_launch_environment,
     )
-    from cadrumo.application.agent_host.native_refusal import NativeLaunchRefusalCode
-    from cadrumo.application.runtime.contracts import (
+    from cadrumo_agent_service.host.native_refusal import NativeLaunchRefusalCode
+    from cadrumo_client.contracts.contracts import (
         NATIVE_HOST_LAUNCH_PROFILE_REFUSED_EXIT_CODE,
-        RESERVED_RUNTIME_EXIT_CODES,
+        RESERVED_HOST_EXIT_CODES,
     )
 
     programs = {name: scratch / name for name in ("relay", "aeat", "python")}
@@ -200,7 +205,7 @@ def collect_runtime(request: Mapping[str, Any], scratch: Path) -> dict[str, Any]
         "composed": sorted(composed),
         "reserved_exit_codes": [
             {"owner": reserved.owner, "first": reserved.first, "last": reserved.last}
-            for reserved in RESERVED_RUNTIME_EXIT_CODES
+            for reserved in RESERVED_HOST_EXIT_CODES
         ],
         "launch_profile_refused": NATIVE_HOST_LAUNCH_PROFILE_REFUSED_EXIT_CODE,
         "native_refusals": [refusal.value for refusal in NativeLaunchRefusalCode],

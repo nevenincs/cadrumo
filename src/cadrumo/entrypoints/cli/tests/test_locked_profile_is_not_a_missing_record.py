@@ -30,6 +30,7 @@ from textwrap import dedent
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.tests.subprocess_cli import run_subprocess_cli_harness
 
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....adapters.persistence.storage.master_key.bucket_session import BucketSession
@@ -44,7 +45,6 @@ from ....application.user_profile.profile_record_repository import close_active_
 from ....application.workflow.profile_health import assess_active_profile_health
 from ....core.bucket_pointer import BucketPointer, write_pointer
 from ....core.config import override_settings
-from .subprocess_cli import run_subprocess_cli_harness
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

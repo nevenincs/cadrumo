@@ -4,12 +4,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ...application.operator_surface.command_ports import (
+from cadrumo_client.contracts.command_ports import (
     CommandRegistrationMetadata,
     JsonType,
     ParameterKind,
     ProfileAuthenticationContractMetadata,
 )
+
 from ...application.operator_surface.verb_input_contracts import (
     RecoveryHandoffContract,
     ResolvedVerbLeaf,
@@ -29,7 +30,7 @@ from .command_schema import (
 )
 
 if TYPE_CHECKING:
-    from .command_spec import CommandSpec
+    from cadrumo_client.commands.spec import CommandSpec
 
 
 def _rows() -> dict[str, CommandRegistrationMetadata]:
@@ -46,7 +47,7 @@ def is_exposable_command(command_key: str) -> bool:
 
 def is_exposable_command_spec(spec: CommandSpec) -> bool:
     """Return whether one command declaration is exposed as an operator verb."""
-    from .command_shared_contracts import BindingState
+    from cadrumo_client.commands.shared_contracts import BindingState
 
     return (
         spec.parent_key not in {None, "root"}
@@ -58,7 +59,7 @@ def is_exposable_command_spec(spec: CommandSpec) -> bool:
 
 def project_recovery_handoff_contract(spec: CommandSpec) -> RecoveryHandoffContract | None:
     """Project one command's validated recovery protocol into discovery metadata."""
-    from .command_parameter_contracts import OptionSpec
+    from cadrumo_client.commands.parameters import OptionSpec
 
     recovery = spec.recovery_handoff
     if recovery is None:

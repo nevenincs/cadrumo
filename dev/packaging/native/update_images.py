@@ -11,15 +11,17 @@ import tempfile
 from pathlib import Path
 
 from packaging.utils import canonicalize_name
+from pydantic import JsonValue, TypeAdapter
 
 from .assemble import image_artifact, named_application_images
 from .build_paths import build_paths
 from .hashing import digest
 from .layout import bundled_image_files, entrypoint_files, load_layout
 from .process_quiescence import quiesce
+from .service_descriptors import refresh_service_image_digests, stage_service_descriptors
 
 
-def publish(path: Path, document: dict) -> None:
+def publish(path: Path, document: dict[str, JsonValue]) -> None:
     """Publish complete metadata; retain the previous manifest on write failure."""
     content = json.dumps(document, indent=2).encode("utf-8")
     if path.is_file() and path.read_bytes() == content:
@@ -33,18 +35,24 @@ def publish(path: Path, document: dict) -> None:
         Path(temporary).unlink(missing_ok=True)
 
 
-def recover(root: Path, contract: dict, artifacts: dict[str, Path]) -> dict:
+def recover(root: Path, contract: dict[str, JsonValue], artifacts: dict[str, Path]) -> dict[str, JsonValue]:
     """Inventory a locally interrupted stage, explicitly retaining recovery provenance.
 
     This does not recreate release provenance or rebuild/copy Python. Full release
     assembly remains responsible for its wheel and relocation receipts.
     """
-    files, layout = contract["files"], contract["paths"]
-    build = json.loads((root / files["build_metadata"]).read_text(encoding="utf-8"))
-    native = json.loads((root / files["native_manifest"]).read_text(encoding="utf-8"))
+    strings = TypeAdapter(dict[str, str])
+    files = strings.validate_python(contract["files"], strict=True)
+    layout = strings.validate_python(contract["paths"], strict=True)
+    user_docs = TypeAdapter(dict[str, JsonValue]).validate_python(contract["user_docs"], strict=True)
+    docs_directory = TypeAdapter(str).validate_python(user_docs["directory"], strict=True)
+    build = TypeAdapter(dict[str, JsonValue]).validate_json((root / files["build_metadata"]).read_bytes(), strict=True)
+    native = TypeAdapter(dict[str, JsonValue]).validate_json(
+        (root / files["native_manifest"]).read_bytes(), strict=True
+    )
     if build["layout_abi"] != contract["abi"]:
         raise ValueError("Staged layout ABI differs from the configured contract")
-    for member in native["modules"].values():
+    for member in strings.validate_python(native["modules"], strict=True).values():
         path = root / member
         if not path.resolve(strict=True).is_relative_to(root) or not path.is_file():
             raise ValueError(f"Staged native module is unavailable: {member}")
@@ -66,6 +74,7 @@ def recover(root: Path, contract: dict, artifacts: dict[str, Path]) -> dict:
         f"{layout['native']}/{files['bridge']}",
         f"{layout['native']}/{files['runtime']}",
     ]
+    startup.append(stage_service_descriptors(root, contract, named_application_images(contract, artifacts)))
     for member in startup:
         if not (root / member).is_file():
             raise ValueError(f"Staged startup file is missing: {member}")
@@ -78,21 +87,24 @@ def recover(root: Path, contract: dict, artifacts: dict[str, Path]) -> dict:
             relative = path.relative_to(root).as_posix()
             if relative != manifest_name:
                 inventory[relative] = digest(path)
-    docs = f"{layout['docs']}/{contract['user_docs']['directory']}"
+    docs = f"{layout['docs']}/{docs_directory}"
     if (root / docs).exists():
         raise ValueError("Interrupted documentation inventory requires normal release assembly")
-    return {
-        "kind": "application",
-        "build": build,
-        "layout": contract,
-        "python": build["python"],
-        "distributions": distributions,
-        "startup_files": startup,
-        "files": inventory,
-        "delegated_inventories": {},
-        "user_docs": {"directory": docs, "bundled": False},
-        "recovery": {"source": "existing-staged-payload", "release_provenance_available": False},
-    }
+    return TypeAdapter(dict[str, JsonValue]).validate_python(
+        {
+            "kind": "application",
+            "build": build,
+            "layout": contract,
+            "python": build["python"],
+            "distributions": distributions,
+            "startup_files": startup,
+            "files": inventory,
+            "delegated_inventories": {},
+            "user_docs": {"directory": docs, "bundled": False},
+            "recovery": {"source": "existing-staged-payload", "release_provenance_available": False},
+        },
+        strict=True,
+    )
 
 
 def update(build: Path, config: str, artifacts: dict[str, Path], *, recovery: bool = False) -> None:
@@ -133,6 +145,11 @@ def update(build: Path, config: str, artifacts: dict[str, Path], *, recovery: bo
         manifest = recover(root, contract, artifacts)
     else:
         raise ValueError("Package manifest missing; explicitly recover the interrupted stage first")
+    inventory = TypeAdapter(dict[str, JsonValue]).validate_python(manifest["files"], strict=True)
+    manifest["files"] = inventory
+    descriptor_member = contract["files"]["service_descriptors"]
+    if inventory.get(descriptor_member) != digest(root / descriptor_member):
+        raise ValueError("Staged service descriptors differ from the package manifest")
     changed = {
         member: (source, digest(source))
         for member, source in replacements.items()
@@ -142,9 +159,12 @@ def update(build: Path, config: str, artifacts: dict[str, Path], *, recovery: bo
         quiesce(build, target)
         for member, (source, expected) in changed.items():
             shutil.copy2(source, root / member)
-            manifest["files"][member] = expected
+            inventory[member] = expected
     for member, source in replacements.items():
-        manifest["files"][member] = digest(source)
+        inventory[member] = digest(source)
+    if changed:
+        refresh_service_image_digests(root, descriptor_member)
+        inventory[descriptor_member] = digest(root / descriptor_member)
     publish(manifest_path, manifest)
     print(f"Native images updated: {len(changed)}; Python payload preserved", flush=True)
 

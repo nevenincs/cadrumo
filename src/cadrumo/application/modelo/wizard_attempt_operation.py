@@ -61,7 +61,7 @@ _BINDING_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(BindingId)
 class ModeloWorkWizardAttemptRequest(BaseModel):
     """Bind one exact profile and language to the canonical calculate request.
 
-    ``calculation.actor`` is recorded as sent for a person's session. An agent's
+    ``calculation.actor`` is recorded as sent for a person's session. An automation's
     session is recorded under its own session label, whatever the request carries.
     """
 

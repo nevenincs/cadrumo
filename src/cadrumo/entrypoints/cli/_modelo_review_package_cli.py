@@ -45,6 +45,8 @@ from pathlib import Path
 
 import typer
 
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+
 from ...application.modelo.operator_inputs import ModeloReviewPackageBuildOperatorInput
 from ...application.modelo.review_package import (
     ReviewPackageIntegrityError,
@@ -60,7 +62,6 @@ from ...application.modelo.review_package_verification_files import (
     verify_review_package_receipt_file,
     verify_review_package_signature_file,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.i18n.render import tr
 from ._modelo_cli_support import (
     parse_revision_selector,
@@ -80,8 +81,8 @@ from ._modelo_review_package_rendering import (
     review_package_verify_signature_result,
 )
 from .common import emit_envelope
-from .runtime_modelo_review_package import run_modelo_review_package_build
-from .runtime_modelo_review_package_exchange import (
+from .operation_modelo_review_package import run_modelo_review_package_build
+from .operation_modelo_review_package_exchange import (
     run_review_package_counter_sign,
     run_review_package_decrypt,
     run_review_package_encrypt_feedback,
@@ -89,7 +90,7 @@ from .runtime_modelo_review_package_exchange import (
     run_review_package_import_feedback,
     run_review_package_sign,
 )
-from .runtime_modelo_verification import select_modelo_work_revision_for_cli
+from .operation_modelo_verification import select_modelo_work_revision_for_cli
 from .state_projection_support import authority_operation
 
 
@@ -137,7 +138,7 @@ def review_package_build(
     )
     result = completed.projection
     if not isinstance(result, ModeloReviewPackageBuildPublicResultV1):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     build_result = result.to_result()
     emit_envelope(
         ctx,

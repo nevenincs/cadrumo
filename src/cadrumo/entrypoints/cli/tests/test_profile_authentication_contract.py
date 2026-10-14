@@ -2,30 +2,42 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import replace
 from typing import cast
 from uuid import uuid4
 
 import pytest
+from click.testing import Result
 from pydantic import ValidationError
 
-from cadrumo.application.operator_surface.command_ports import ProfileAuthenticationPosture
-
-from .._command_secret_contracts import MachineSecretChannelKind, MachineSecretFieldSpec, ProfileSecretChannelKind
-from .._profile_authentication_contract import (
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.profile_authentication import (
     ProfileAuthenticationMethod,
     ProfileAuthenticationSecrets,
     ProfileSecretSourceOptions,
+)
+from cadrumo_client.commands.secret_contracts import (
+    MachineSecretChannelKind,
+    MachineSecretFieldSpec,
+    ProfileSecretChannelKind,
+)
+from cadrumo_client.commands.secure_input import (
+    MACHINE_SECRET_MAX_BYTES,
+    ProfileSecretChannel,
+    select_profile_secret_channel,
+)
+from cadrumo_client.contracts.command_ports import ProfileAuthenticationPosture
+
+from .._profile_authentication_contract import (
     profile_authentication_posture,
     resolve_profile_secret_model,
     root_profile_secret_model,
 )
-from ..command_parameter_contracts import OptionSpec
 from ..command_schema import command_registration_metadata, command_registration_projection
 from ..command_specs import COMMAND_GRAPH
-from ..config.secure_input import MACHINE_SECRET_MAX_BYTES, ProfileSecretChannel, select_profile_secret_channel
-from ..errors import CliRefusedBoundaryError
-from .cli_runner import cadrumo_click_command, invoke_cached_cli
+from .cli_runner import cadrumo_click_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
@@ -200,8 +212,10 @@ def test_root_source_options_are_parse_only_authority() -> None:
         ("--profile-secrets-fd", "not-an-integer", "app"),
     ),
 )
-def test_introspection_bare_unknown_and_parse_surfaces_do_not_read_profile_source(arguments: tuple[str, ...]) -> None:
-    result = invoke_cached_cli(list(arguments), input="this-is-deliberately-not-json")
+def test_introspection_bare_unknown_and_parse_surfaces_do_not_read_profile_source(
+    arguments: tuple[str, ...], run_cadrumo_cli: Callable[..., Result]
+) -> None:
+    result = run_cadrumo_cli(list(arguments), input="this-is-deliberately-not-json")
     assert "profile_secrets_stdin_invalid_json" not in result.output
     assert "profile_secrets_stdin_missing_fields" not in result.output
 

@@ -81,7 +81,7 @@ _UPDATE_FIELDS = frozenset(
 )
 _DECIMAL_FIELDS = frozenset({"taxable_base", "iva_rate", "iva_amount"})
 _PERSON_FRONTEND_ACTOR = "cli"
-"""The audit label of a change a person's frontend submits; an agent's is derived from its session."""
+"""The audit label of a change a person's frontend submits; an automation's is derived from its session."""
 
 
 class LedgerEvidenceUpdatePatch(BaseModel):
@@ -580,7 +580,7 @@ def build_ledger_evidence_update_definition(
     """Declare exact-profile evidence update with bounded result projection.
 
     ``execution_caller_reader`` names the frontend and session that admitted an
-    execution, so an agent's update is recorded under its session's label.
+    execution, so an automation's update is recorded under its session's label.
     """
     return build_single_phase_definition(
         definition_id=LEDGER_EVIDENCE_UPDATE_OPERATION_DEFINITION_ID,

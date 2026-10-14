@@ -1,10 +1,10 @@
-"""An agent's execution records its session's label, and a person's execution records the label it sent.
+"""An automation's execution records its session's label, and a person's execution records the label it sent.
 
 The production registry and the real executors run over a stored profile with
 a session host that answers for the frontend that admitted the invocation.
 Each operation below stores who acted from a label the request carries, or
 from a fixed runtime label where the request carries none, and for an
-execution admitted on the MCP frontend that label is the session's.
+execution admitted on the external client frontend that label is the session's.
 """
 
 from __future__ import annotations
@@ -60,18 +60,18 @@ from .ledger_frontend_parity_test_support import seed_row_a_rule_classified
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_MCP = OperationFrontendProjection.MCP
+_EXTERNAL_CLIENT = OperationFrontendProjection.EXTERNAL_CLIENT
 _CLI = OperationFrontendProjection.CLI
 _SESSION_CLIENT = UUID("5aa00000-0000-4000-8000-0000000000dd")
 _TYPED_ACTOR = "typed by the caller"
-_AGENT_LABEL = f"agent:mcp.attended.{_SESSION_CLIENT}"
+_AUTOMATION_LABEL = f"automation:external-client.attended.{_SESSION_CLIENT}"
 _JUSTIFICANTE_FIXTURE = (
     Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "justificantes" / "130" / "2024-1T.pdf"
 )
 _FRONTENDS = pytest.mark.parametrize(
     ("frontend", "recorded"),
-    [(_MCP, _AGENT_LABEL), (_CLI, _TYPED_ACTOR)],
-    ids=["mcp", "cli"],
+    [(_EXTERNAL_CLIENT, _AUTOMATION_LABEL), (_CLI, _TYPED_ACTOR)],
+    ids=["external_client", "cli"],
 )
 
 
@@ -92,7 +92,7 @@ def _event_actors(profile_id: UUID, event_ids: tuple[str, ...]) -> set[str]:
 
 
 @_FRONTENDS
-def test_operator_iva_derivation_records_the_session_label_for_an_agent(
+def test_operator_iva_derivation_records_the_session_label_for_an_automation(
     tmp_path: Path,
     operation: PinnedAuthorityOperation,
     frontend: OperationFrontendProjection,
@@ -133,7 +133,7 @@ def test_operator_iva_derivation_records_the_session_label_for_an_agent(
 
 
 @_FRONTENDS
-def test_ledger_link_records_the_session_label_for_an_agent(
+def test_ledger_link_records_the_session_label_for_an_automation(
     tmp_path: Path,
     operation: PinnedAuthorityOperation,
     frontend: OperationFrontendProjection,
@@ -173,7 +173,7 @@ def test_ledger_link_records_the_session_label_for_an_agent(
 
 
 @_FRONTENDS
-def test_counterparty_confirmation_records_the_session_label_for_an_agent(
+def test_counterparty_confirmation_records_the_session_label_for_an_automation(
     tmp_path: Path,
     frontend: OperationFrontendProjection,
     recorded: str,
@@ -221,7 +221,7 @@ def test_counterparty_confirmation_records_the_session_label_for_an_agent(
 
 
 @_FRONTENDS
-def test_inventory_closing_authority_records_the_session_label_for_an_agent(
+def test_inventory_closing_authority_records_the_session_label_for_an_automation(
     tmp_path: Path,
     frontend: OperationFrontendProjection,
     recorded: str,
@@ -260,7 +260,7 @@ def test_inventory_closing_authority_records_the_session_label_for_an_agent(
 
 
 @_FRONTENDS
-def test_reconciliation_import_records_the_session_label_for_an_agent(
+def test_reconciliation_import_records_the_session_label_for_an_automation(
     tmp_path: Path,
     operation: PinnedAuthorityOperation,
     frontend: OperationFrontendProjection,
@@ -300,7 +300,7 @@ def test_reconciliation_import_records_the_session_label_for_an_agent(
 
 
 @_FRONTENDS
-def test_reconciliation_pull_records_the_session_label_for_an_agent(
+def test_reconciliation_pull_records_the_session_label_for_an_automation(
     tmp_path: Path,
     operation: PinnedAuthorityOperation,
     frontend: OperationFrontendProjection,
@@ -352,13 +352,13 @@ def test_reconciliation_pull_records_the_session_label_for_an_agent(
 _PERSON_INVOICE_ACTOR = "runtime"
 _INVOICE_FRONTENDS = pytest.mark.parametrize(
     ("frontend", "recorded"),
-    [(_MCP, _AGENT_LABEL), (_CLI, _PERSON_INVOICE_ACTOR)],
-    ids=["mcp", "cli"],
+    [(_EXTERNAL_CLIENT, _AUTOMATION_LABEL), (_CLI, _PERSON_INVOICE_ACTOR)],
+    ids=["external_client", "cli"],
 )
 
 
 @_INVOICE_FRONTENDS
-def test_invoice_add_records_the_session_label_for_an_agent(
+def test_invoice_add_records_the_session_label_for_an_automation(
     tmp_path: Path,
     operation: PinnedAuthorityOperation,
     frontend: OperationFrontendProjection,
@@ -394,7 +394,7 @@ def test_invoice_add_records_the_session_label_for_an_agent(
 
 
 @_INVOICE_FRONTENDS
-def test_invoice_update_records_the_session_label_for_an_agent(
+def test_invoice_update_records_the_session_label_for_an_automation(
     tmp_path: Path,
     operation: PinnedAuthorityOperation,
     frontend: OperationFrontendProjection,
@@ -439,10 +439,10 @@ def test_invoice_update_records_the_session_label_for_an_agent(
 )
 @pytest.mark.parametrize(
     ("frontend", "recorded"),
-    [(_MCP, _AGENT_LABEL), (_CLI, "runtime")],
-    ids=["mcp", "cli"],
+    [(_EXTERNAL_CLIENT, _AUTOMATION_LABEL), (_CLI, "runtime")],
+    ids=["external_client", "cli"],
 )
-def test_inventory_writes_without_a_typed_label_record_the_session_for_an_agent_and_the_runtime_otherwise(
+def test_inventory_writes_without_a_typed_label_record_the_session_for_an_automation_and_the_runtime_otherwise(
     tmp_path: Path,
     definition_id: str,
     frontend: OperationFrontendProjection,

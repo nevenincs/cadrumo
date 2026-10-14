@@ -8,24 +8,25 @@ from uuid import UUID
 
 import pytest
 
-from cadrumo.adapters.local_runtime.frontend_client_contracts import ProfileViewCollection
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
-from cadrumo.application.user_profile.overview import build_profile_overview
-from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
-from cadrumo.application.user_profile.registration import register_profile_with_credentials
-from cadrumo.application.user_profile.section_rows import add_profile_repeatable_section_row
-from cadrumo.application.user_profile.view_operation import (
+from cadrumo_client.transport.frontend_client_contracts import ProfileViewCollection
+
+from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from .....application.user_profile.login_session import authenticate_profile_for_invocation
+from .....application.user_profile.overview import build_profile_overview
+from .....application.user_profile.profile_record_repository import ProfileRecordRepository
+from .....application.user_profile.registration import register_profile_with_credentials
+from .....application.user_profile.section_rows import add_profile_repeatable_section_row
+from .....application.user_profile.view_operation import (
     ProfileViewFieldItem,
     ProfileViewOperationProjection,
     ProfileViewOperationRequest,
     ProfileViewPageKind,
 )
-from cadrumo.application.user_profile.view_reader import read_profile_view_page
-from cadrumo.core.config import override_settings
-from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.entrypoints.tui.profile.runtime_overview import profile_overview_from_runtime_view
+from .....application.user_profile.view_reader import read_profile_view_page
+from .....core.config import override_settings
+from .....core.external_constants import OutputLanguage
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ..runtime_overview import profile_overview_from_runtime_view
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _PASSWORD = "runtime-overview-test-passphrase"  # noqa: S105 - isolated test credential

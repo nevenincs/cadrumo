@@ -127,7 +127,7 @@ def _prepare_query(context: ConformanceFamilyContext) -> ConformancePreparation:
                     ),
                 ),
                 created_at=bundle.created_at,
-                # The agent query discloses only whether notes exist, never their text.
+                # The automation query discloses only whether notes exist, never their text.
                 notes_present=True,
             ),
         ),

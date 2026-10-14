@@ -51,7 +51,7 @@ Two boundaries remain worth checking across callers. First, the party co-locatio
 
 - models.py (1,103 lines) (`src/cadrumo/application/ledger/models.py`) — all lines read.
 - notices.py (90 lines) (`src/cadrumo/application/ledger/notices.py`) — all lines read.
-- operator_input_contracts.py (61 lines) (`src/cadrumo/application/ledger/operator_input_contracts.py`) — all lines read.
+- operator_input_command_ports.py (61 lines) (`src/cadrumo/application/ledger/operator_input_command_ports.py`) — all lines read.
 - participation_operation.py (140 lines) (`src/cadrumo/application/ledger/participation_operation.py`) — all lines read.
 - participation_read.py (95 lines) (`src/cadrumo/application/ledger/participation_read.py`) — all lines read.
 - participation_rebuild_operation.py (184 lines) (`src/cadrumo/application/ledger/participation_rebuild_operation.py`) — all lines read.

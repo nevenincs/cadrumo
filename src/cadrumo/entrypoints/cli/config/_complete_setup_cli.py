@@ -6,6 +6,8 @@ from uuid import UUID
 
 import typer
 
+from cadrumo_client.commands.profile_binding import require_profile_client
+
 from ....application.user_profile.profile_operation_contracts import (
     ProfileCompleteSetupOperationProjection,
     ProfileCompleteSetupOperationRequest,
@@ -15,9 +17,8 @@ from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.i18n.render import tr
 from ....domain.user_profile.values import ProfileSetupState
 from ..common import bad, emit_envelope, no_active_profile_refusal
-from ..runtime_profile_binding import require_profile_client
 from ._complete_setup_payloads import ProfileCompleteSetupResult
-from ._runtime_profile_mutation import execute_profile_mutation, mutation_deadline, read_mutation_baseline
+from ._profile_mutation import execute_profile_mutation, mutation_deadline, read_mutation_baseline
 
 
 def profile_complete_setup(ctx: typer.Context) -> None:

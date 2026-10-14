@@ -38,7 +38,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.local_runtime.automation_requester.AutomationRequesterUncertainError",
+        "cadrumo_client.transport.automation_requester.AutomationRequesterUncertainError",
         ErrorCode(
             code="ERROR_AUTOMATION_REQUESTER_UNCERTAIN",
             category=ErrorCategory.ERROR,
@@ -48,7 +48,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.local_runtime.automation_decision.AutomationDecisionRunError",
+        "cadrumo_client.transport.automation_decision.AutomationDecisionRunError",
         ErrorCode(
             code="ERROR_AUTOMATION_DECISION_RUN",
             category=ErrorCategory.ERROR,
@@ -58,7 +58,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.local_runtime.automation_inventory.AutomationInventoryReadError",
+        "cadrumo_client.transport.automation_inventory.AutomationInventoryReadError",
         ErrorCode(
             code="ERROR_AUTOMATION_INVENTORY_READ",
             category=ErrorCategory.ERROR,
@@ -68,7 +68,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.local_runtime.frontend_client_contracts.RuntimeFrontendRefusedError",
+        "cadrumo_client.transport.frontend_client_contracts.FrontendRefusedError",
         ErrorCode(
             code="REFUSED_RUNTIME_FRONTEND",
             category=ErrorCategory.REFUSED,
@@ -78,7 +78,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.local_runtime.modelo_metadata.ModeloMetadataRunError",
+        "cadrumo_client.transport.modelo_metadata.ModeloMetadataRunError",
         ErrorCode(
             code="ERROR_MODELO_METADATA_RUN",
             category=ErrorCategory.ERROR,
@@ -88,7 +88,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.local_runtime.profile_mutations.ProfileMutationRunError",
+        "cadrumo_client.transport.profile_mutations.ProfileMutationRunError",
         ErrorCode(
             code="ERROR_PROFILE_MUTATION_RUN",
             category=ErrorCategory.ERROR,

@@ -21,8 +21,8 @@ from ....domain.buckets.event import (
     BucketEventType,
     derive_bucket_event_id,
 )
-from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
-from .cli_runner import invoke_cached_cli
+from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
+from .profile_world_fixtures import active_profile_isolated_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["active_profile_isolated_backend"]

@@ -19,13 +19,14 @@ from decimal import Decimal
 import pytest
 import typer
 
+from cadrumo.tests.english_locale_fixture import english_locale_fixture
+
 from .._decimal_parsing import (
     parse_decimal_amount,
     parse_fraction,
     parse_optional_decimal_amount,
     parse_optional_fraction,
 )
-from ._english_locale_fixture import english_locale_fixture
 
 __all__ = ["english_locale_fixture"]
 

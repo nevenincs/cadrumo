@@ -41,7 +41,7 @@ shape here keeps a field that carries one from silently admitting a value no
 producer emits, including an untruncated digest.
 
 Deliberately narrower than
-:data:`cadrumo.application.operations.OperationDiagnosticReference`, which
+:data:`cadrumo.application.operations.models.OperationDiagnosticReference`, which
 admits the twelve- and sixty-four-character forms because the operations
 supervisor emits both. Nothing on this axis emits the long form.
 """

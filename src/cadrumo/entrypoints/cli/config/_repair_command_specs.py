@@ -4,10 +4,8 @@ from __future__ import annotations
 
 from typing import Final
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
-
-from ..command_parameter_contracts import OptionSpec
-from ..command_shared_contracts import (
+from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.shared_contracts import (
     FLAG_VALUE,
     TEXT_VALUE,
     DeferredTarget,
@@ -19,8 +17,10 @@ from ..command_shared_contracts import (
     TranslationKey,
     ValueContract,
 )
-from ..command_spec import CommandSpec, InvocationSpec
-from ._command_spec_schema import config_payload_schema as _schema
+from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
+from cadrumo_client.commands.spec_schema import config_payload_schema as _schema
+from cadrumo_client.contracts.command_ports import CommandNodeKind
+
 from ._spec_policies import (
     BOOTSTRAP_DESTRUCTIVE,
     BOOTSTRAP_WRITE,

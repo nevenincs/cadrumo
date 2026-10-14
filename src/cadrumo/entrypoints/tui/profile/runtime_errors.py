@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from ....adapters.local_runtime.profile_mutations import ProfileMutationCompletion
+from cadrumo_client.transport.profile_mutations import ProfileMutationCompletion
+
 from ....core.errors.hierarchy import CadrumoError
 
 

@@ -5,6 +5,7 @@ repairs a degraded active-profile pointer. The pointer repair itself is
 :func:`~cadrumo.application.workflow.profile_health.repair_active_profile_pointer`.
 This module holds the rest of the work that is neither parsing nor rendering,
 so the command line and the runtime's repair act reach the same verdicts.
+The inspected :class:`UserProfileRecord` supplies the profile identity and state.
 """
 
 from __future__ import annotations

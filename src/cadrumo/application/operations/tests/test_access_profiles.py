@@ -328,7 +328,7 @@ def test_a_replay_from_a_fresh_session_keeps_the_admitted_scope_whatever_its_ori
     """A later session has a new destination and may use another frontend; observation stays available."""
     submitted = _context(AccessAction.SUBMIT, result_schema_id="any.registered.result")
     later = replace(
-        _context(action, result_schema_id="any.registered.result"), frontend=OperationFrontendProjection.MCP
+        _context(action, result_schema_id="any.registered.result"), frontend=OperationFrontendProjection.EXTERNAL_CLIENT
     )
     assert later.destination_id != submitted.destination_id
 
@@ -348,5 +348,5 @@ def test_a_replay_from_a_fresh_session_keeps_the_admitted_scope_whatever_its_ori
     assert independent.request.period_independent
     for resolved in (single, independent):
         assert resolved.request.destination_id == later.destination_id
-        assert resolved.request.frontend is OperationFrontendProjection.MCP
+        assert resolved.request.frontend is OperationFrontendProjection.EXTERNAL_CLIENT
         assert all(item.destination_id == later.destination_id for item in resolved.policy.disclosures)

@@ -378,7 +378,7 @@ def test_supervisor_settles_capture_with_fresh_commit_and_dedup_receipts(
             profile_id=profile_id,
             destination_id=uuid4(),
             action=AccessAction.SUBMIT,
-            frontend=OperationFrontendProjection.MCP,
+            frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
             contract=registration.contract,
             published_authority=Availability.AVAILABLE,
         )

@@ -8,14 +8,15 @@ from uuid import uuid4
 import pytest
 import typer
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo_client.commands import profile_admission as admission
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.profile_authentication import ProfileAuthenticationMethod
+from cadrumo_client.commands.secure_input import ProfileSecretChannel, ProfileSecretSelection
+from cadrumo_client.transport.frontend_client import FrontendClient
+
 from ....application.user_profile.login_session import ProfileReceiptRefusedError
 from ....core.profile_session import ProfileSessionRefusalReason
-from .. import runtime_profile_admission as admission
-from .._profile_authentication_contract import ProfileAuthenticationMethod
 from .._profile_session_gate import session_refusal_translation_key
-from ..config.secure_input import ProfileSecretChannel, ProfileSecretSelection
-from ..errors import CliRefusedBoundaryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -35,7 +36,7 @@ class _ReceiptClient:
 def _authenticate(client: _ReceiptClient) -> None:
     admission._authenticate(
         typer.Context(typer.main.TyperCommand("test")),
-        cast(RuntimeFrontendClient, client),
+        cast(FrontendClient, client),
         root_selection=None,
         profile_label=None,
         method=ProfileAuthenticationMethod.PASSWORD,
@@ -71,7 +72,7 @@ def test_a_keychainless_logon_asks_for_the_password_only_at_a_terminal(
     client = _ReceiptClient(ProfileSessionRefusalReason.KEYRING_UNAVAILABLE)
     prompted: list[ProfileSecretSelection | None] = []
 
-    def password(_client: RuntimeFrontendClient, *, selection: ProfileSecretSelection | None) -> None:
+    def password(_client: FrontendClient, *, selection: ProfileSecretSelection | None) -> None:
         prompted.append(selection)
 
     monkeypatch.setattr(admission, "_password", password)
@@ -91,14 +92,14 @@ def test_explicit_password_never_borrows_a_receipt(monkeypatch: pytest.MonkeyPat
     selected = ProfileSecretSelection(ProfileSecretChannel.STDIN)
     channels: list[ProfileSecretSelection | None] = []
 
-    def password(_client: RuntimeFrontendClient, *, selection: ProfileSecretSelection | None) -> None:
+    def password(_client: FrontendClient, *, selection: ProfileSecretSelection | None) -> None:
         channels.append(selection)
 
     monkeypatch.setattr(admission, "_password", password)
     monkeypatch.setattr(admission, "terminal_can_prompt_for_secrets", lambda: False)
     admission._authenticate(
         typer.Context(typer.main.TyperCommand("test")),
-        cast(RuntimeFrontendClient, client),
+        cast(FrontendClient, client),
         root_selection=selected,
         profile_label=None,
         method=ProfileAuthenticationMethod.PASSWORD,

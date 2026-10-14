@@ -11,9 +11,11 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.application.ledger.actions_import import LedgerProviderID
-from cadrumo.application.ledger.import_operation import (
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.frontend_client import FrontendClient
+
+from ....application.ledger.actions_import import LedgerProviderID
+from ....application.ledger.import_operation import (
     LEDGER_IMPORT_OPERATION_DEFINITION_ID,
     LedgerImportFileRefusal,
     LedgerImportOperationPortsFactory,
@@ -24,30 +26,29 @@ from cadrumo.application.ledger.import_operation import (
     build_ledger_import_definition,
     build_ledger_import_registration,
 )
-from cadrumo.application.operations.frontend_projection import (
+from ....application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
     OperationPublicProjectionV1,
 )
-from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1, OperationPublicEventPageV1
-from cadrumo.application.operations.persistence.replay import OperationReplayStatus
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from cadrumo.core.i18n.render import tr
-from cadrumo.core.operations import (
+from ....application.operations.frontend_requests import OperationObservationSuccessV1, OperationPublicEventPageV1
+from ....application.operations.persistence.replay import OperationReplayStatus
+from ....application.operations.registry import OperationFrontendProjection, OperationRegistry
+from ....core.i18n.render import tr
+from ....core.operations import (
     OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from cadrumo.domain.transactions.errors import TransactionValidationError
-from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
-from cadrumo.entrypoints.tui.ledger.models import (
+from ....domain.transactions.errors import TransactionValidationError
+from ..account import AccountSessionExpiredError
+from ..ledger.models import (
     LedgerImportRequestV1,
     LedgerImportSourceBindingV1,
     LedgerImportSourceKind,
 )
-from cadrumo.entrypoints.tui.operations.runtime_controller import RuntimeOperationController
-from cadrumo.entrypoints.tui.runtime_ledger_import import RuntimeLedgerImportTuiDoorV1
+from ..operations.runtime_controller import RuntimeOperationController
+from ..runtime_ledger_import import RuntimeLedgerImportTuiDoorV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -172,9 +173,9 @@ def _install(
     client: _Client,
     answers: list[tuple[OperationEffect, LedgerImportResultProjection]],
 ) -> list[dict[str, object]]:
-    from cadrumo.entrypoints.tui.operations import runtime_profile_session as bridge
+    from ..operations import runtime_profile_session as bridge
 
-    def read_session(_client: RuntimeFrontendClient, *, profile_id: UUID, session_id: UUID, profile_label: str):
+    def read_session(_client: FrontendClient, *, profile_id: UUID, session_id: UUID, profile_label: str):
         assert profile_label == "Fixture profile"
         if client.profile_id != profile_id or client.session_id != session_id:
             raise AccountSessionExpiredError()
@@ -185,7 +186,7 @@ def _install(
 
     async def submit(
         _controller_type: type[RuntimeOperationController],
-        received_client: RuntimeFrontendClient,
+        received_client: FrontendClient,
         **kwargs: object,
     ) -> _Controller:
         assert received_client is client
@@ -198,7 +199,7 @@ def _install(
 
 
 def _door(client: _Client) -> RuntimeLedgerImportTuiDoorV1:
-    return RuntimeLedgerImportTuiDoorV1(cast(RuntimeFrontendClient, client), profile_label="Fixture profile")
+    return RuntimeLedgerImportTuiDoorV1(cast(FrontendClient, client), profile_label="Fixture profile")
 
 
 def _folder(tmp_path: Path) -> tuple[Path, Path, Path]:
@@ -305,10 +306,10 @@ def test_a_result_whose_effect_disagrees_with_its_import_is_refused(
         previewed_sources=(LedgerImportSourceBindingV1(path=first, sha256="b" * 64),),
     )
 
-    with pytest.raises(RuntimeRefusalError) as raised:
+    with pytest.raises(RefusalError) as raised:
         asyncio.run(_door(client).apply(request))
 
-    assert raised.value.reason is RuntimeRefusalCode.INVALID_FRAME
+    assert raised.value.reason is RefusalCode.INVALID_FRAME
 
 
 def test_invoice_books_and_unpreviewed_applies_are_refused_before_anything_is_submitted(
@@ -333,6 +334,6 @@ def test_invoice_books_and_unpreviewed_applies_are_refused_before_anything_is_su
                 )
             )
         )
-    with pytest.raises(RuntimeRefusalError):
+    with pytest.raises(RefusalError):
         asyncio.run(door.apply(LedgerImportRequestV1(path=first, source_kind=LedgerImportSourceKind.BANK_STATEMENT)))
     assert submissions == []

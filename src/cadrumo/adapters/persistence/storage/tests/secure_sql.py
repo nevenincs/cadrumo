@@ -326,7 +326,7 @@ def isolated_profile_storage_root(*, tmp_path: Path) -> Generator[Path]:
     secret_overrides = storage_overrides(tmp_path, StorageCategory.SECRETS)
     for dependency in secret_overrides.values():
         dependency.mkdir(parents=True, exist_ok=True)
-    socket_overrides = storage_overrides(storage_root, StorageCategory.RUNTIME_SOCKETS)
+    socket_overrides = storage_overrides(storage_root, StorageCategory.CONNECTION_SOCKETS)
     socket_field, socket_path = next(iter(socket_overrides.items()))
     socket_path.mkdir(parents=True, exist_ok=True, mode=0o700)
     with (

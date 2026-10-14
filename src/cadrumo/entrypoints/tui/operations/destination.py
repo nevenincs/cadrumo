@@ -11,7 +11,8 @@ from textual.screen import Screen
 from textual.widgets import Input, OptionList, Static
 from textual.widgets.option_list import Option
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo_client.transport.frontend_client import FrontendClient
+
 from ....core.async_cleanup import await_cancellation_complete
 from ....core.i18n.render import tr
 from ..components.account_chrome import AccountChromeScreen
@@ -39,7 +40,7 @@ class OperationsCatalogueScreen(AccountChromeScreen):
 
     def __init__(
         self,
-        client: RuntimeFrontendClient,
+        client: FrontendClient,
         source: OperationCatalogueSourceV1,
         *,
         focus_token: str | None = None,
@@ -119,7 +120,7 @@ class OperationsCatalogueScreen(AccountChromeScreen):
 class OperationsDestinationV1:
     """Open the Operations destination for one admitted session."""
 
-    def __init__(self, client: RuntimeFrontendClient, source: OperationCatalogueSourceV1) -> None:
+    def __init__(self, client: FrontendClient, source: OperationCatalogueSourceV1) -> None:
         """Retain the admitted client and the lazily composed catalogue."""
         self._client = client
         self._source = source

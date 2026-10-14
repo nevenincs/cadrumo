@@ -33,8 +33,8 @@ from ._modelo_rendering import (
 from ._modelo_work_revision_payloads import WorkObservationsResult, WorkRevisionResult
 from .common import activate_subcommand_output_language, emit_envelope
 from .modelo_revision_rendering import calculation_observation_payload_lines
-from .runtime_modelo_calculation import calculation_snapshot_lines, calculation_snapshot_payload
-from .runtime_modelo_revision import read_modelo_revision_inventory_for_cli, read_modelo_revision_snapshot_for_cli
+from .operation_modelo_calculation import calculation_snapshot_lines, calculation_snapshot_payload
+from .operation_modelo_revision import read_modelo_revision_inventory_for_cli, read_modelo_revision_snapshot_for_cli
 
 
 def _revision_summary_payloads(

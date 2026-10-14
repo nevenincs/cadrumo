@@ -4,14 +4,15 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.frontend_client import FrontendClient
+
 from ...application.ledger.own_account_operation import (
     LEDGER_OWN_ACCOUNT_OPERATION_DEFINITION_ID,
     LedgerOwnAccountRequest,
     LedgerOwnAccountResult,
 )
 from ...application.operations.frontend_projection import OperationPublicProjectionV1
-from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.operations import OperationEffect, OperationTerminalCondition
 from .ledger.own_accounts import LedgerOwnAccountDoorV1
 from .operations.runtime_profile_session import RuntimeProfileSession
@@ -43,7 +44,7 @@ def _result_matches(
 class RuntimeOwnAccountTuiDoorV1:
     """Submit own-account requests for the exact TUI profile and session this door was built for."""
 
-    def __init__(self, client: RuntimeFrontendClient, *, profile_label: str) -> None:
+    def __init__(self, client: FrontendClient, *, profile_label: str) -> None:
         """Pin the admitted profile and session for every request."""
         self._session = RuntimeProfileSession(client, profile_label=profile_label)
 
@@ -62,7 +63,7 @@ class RuntimeOwnAccountTuiDoorV1:
             _operation_id: str,
         ) -> None:
             if not _result_matches(result, request, condition, terminal):
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                raise RefusalError(RefusalCode.INVALID_FRAME)
 
         return await self._session.run_operation(
             request,
@@ -73,7 +74,7 @@ class RuntimeOwnAccountTuiDoorV1:
         )
 
 
-def compose_runtime_own_account_door(*, client: RuntimeFrontendClient, profile_label: str) -> LedgerOwnAccountDoorV1:
+def compose_runtime_own_account_door(*, client: FrontendClient, profile_label: str) -> LedgerOwnAccountDoorV1:
     """Bind the own-account screen to the runtime client retained by its workbench."""
     return RuntimeOwnAccountTuiDoorV1(client, profile_label=profile_label)
 

@@ -236,7 +236,7 @@ def test_access_resolves_whole_profile_disclosure_and_requires_all_periods() -> 
     resolved = resolve_operation_access(
         registry=registry,
         request=_access_request(request),
-        context=_context(registration, frontend=OperationFrontendProjection.MCP),
+        context=_context(registration, frontend=OperationFrontendProjection.EXTERNAL_CLIENT),
     )
     assert resolved.request.profile_id == _PROFILE
     assert resolved.request.period_independent and not resolved.request.periods

@@ -571,7 +571,7 @@ def assert_notification_content_readable(row: RemoteNotification) -> None:
     payment periods, and AEAT requires the taxpayer's own signature to complete
     it.
 
-    That signature is the taxpayer's to give. An agent must never stand in for
+    That signature is the taxpayer's to give. An automation must never stand in for
     it, must never provoke the flow that asks for it, and must never cause a
     notification to be served as a side effect of reading a mailbox. So the
     predicate is not "is this fetchable" but "has AEAT already recorded that the
@@ -707,7 +707,7 @@ async def _fetch_and_parse(
     storage_state = storage_state_for_session(session)
     if session.storage_state_path is None:
         raise SedeNavigationError(
-            "AeatSession has no persisted auth session; run `aeat config auth status` first",
+            "AeatSession has no persisted auth session; run `cadrumo-runtime config auth status` first",
             translated_message=tr("adapters.sede.errors.no_auth_session"),
         )
     return await _navigate_and_parse(

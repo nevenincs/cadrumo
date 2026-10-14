@@ -1,7 +1,7 @@
 """The reachability gate that walks the real shipped tree.
 
 Reads the real ``pyproject.toml`` console scripts and parses every shipped
-module under ``src/cadrumo``, so this is ``integration``: it proves the
+tax module and its workspace consumers, so this is ``integration``: it proves the
 scanner against the live tree rather than a synthetic one. The
 classification and rendering checks live in ``test_unreachable_code``.
 """
@@ -49,7 +49,8 @@ def test_real_scan_over_the_tree_returns_a_typed_outcome_with_real_findings(
     assert result.outcome in {UnreachableCodeOutcome.CLEAN, UnreachableCodeOutcome.FINDINGS}, result.reason
     assert result.headline()
     assert "cadrumo.entrypoints.cli.bootstrap:main" in set(result.roots)
-    assert "cadrumo.entrypoints.tui.__main__ (python -m)" in set(result.roots)
+    assert "cadrumo.entrypoints.cli._windows_profile_secret_bootstrap (python -m)" in set(result.roots)
+    assert "cadrumo_runtime.host.bootstrap:main (workspace sibling)" in set(result.roots)
     assert 0 < result.reachable_modules <= result.shipped_modules
 
     reported_modules = {finding.module for finding in result.modules}

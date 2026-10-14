@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+
 from ...core.hashing import canonical_json_bytes
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ..operations.models import (
@@ -14,7 +16,6 @@ from ..operations.models import (
 )
 from ..operations.operation_definition import OperationDefinition
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
-from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from .modelo_spreadsheet_access import resolve_modelo_spreadsheet_access
 from .modelo_spreadsheet_operation_contracts import (
     MODELO_SPREADSHEET_OPERATION_CONTRACTS,

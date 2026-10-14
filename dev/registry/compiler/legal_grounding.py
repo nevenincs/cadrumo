@@ -28,6 +28,7 @@ from cadrumo.domain.calculations.registry.schema_references import LegalReferenc
 from dev.corpus.text import corpus_redaction_marks, extracted_unit_count, resolve_anchored_extracted_unit
 
 from .corpus_provenance import classify_normative_corpus_provenance
+from .source_evidence_fingerprint import is_source_evidence_path
 
 if TYPE_CHECKING:
     from dev.docs.preprocess.schema import PreprocessUnit
@@ -110,6 +111,10 @@ _REVIEWED_PRESUMPTIVE_NORMATIVE_CORPUS: Final = {
 
 def verify_legal_reference_grounding(reference: LegalReference, *, source_root: Path) -> None:
     """Prove one authored legal reference against its source corpus."""
+    if not is_source_evidence_path(Path(reference.corpus_ref.partition("#")[0])):
+        raise RegistryValidationError(
+            f"legal reference {reference.id!r} declares Python control code as corpus evidence"
+        )
     if reference.kind == "manual":
         _validate_manual_legal_reference(reference, source_root)
     _validate_legal_corpus_provenance(reference, source_root)

@@ -9,7 +9,6 @@ import pytest
 import typer
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode
 from cadrumo.application.user_profile.censal_operation import (
     CensalFieldIntent,
     CensalOperationRequest,
@@ -24,9 +23,10 @@ from cadrumo.application.user_profile.censal_prepare_operation import (
 )
 from cadrumo.application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from cadrumo.entrypoints.cli.config import runtime_censal_prepare
+from cadrumo.entrypoints.cli.config import operation_censal_prepare
 from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError
-from cadrumo.entrypoints.cli.registered_operation_contracts import RegisteredOperationCompletion
+from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
+from cadrumo_client.contracts.contracts import RefusalCode
 
 _PROFILE_ID = UUID("aa000000-0000-4000-8000-0000000000aa")
 _FOREIGN_PROFILE_ID = UUID("bb000000-0000-4000-8000-0000000000bb")
@@ -61,7 +61,7 @@ def _projection(profile_id: UUID = _PROFILE_ID) -> CensalPrepareOperationProject
 def _install_bridge(monkeypatch: pytest.MonkeyPatch, projection: CensalPrepareOperationProjection):
     client = _BoundClient()
     captured: dict[str, Any] = {}
-    monkeypatch.setattr(runtime_censal_prepare, "bound_profile_client", lambda _ctx: client)
+    monkeypatch.setattr(operation_censal_prepare, "bound_profile_client", lambda _ctx: client)
 
     def run_registered_operation(received_client: object, payload: object, **options: object):
         captured.update(client=received_client, payload=payload, options=options)
@@ -72,7 +72,7 @@ def _install_bridge(monkeypatch: pytest.MonkeyPatch, projection: CensalPrepareOp
             terminal_condition=OperationTerminalCondition.SUCCEEDED,
         )
 
-    monkeypatch.setattr(runtime_censal_prepare, "run_registered_operation", run_registered_operation)
+    monkeypatch.setattr(operation_censal_prepare, "run_registered_operation", run_registered_operation)
     return client, captured
 
 
@@ -82,7 +82,7 @@ def test_prepare_bridge_submits_uuid_profile_and_returns_its_canonical_request(
     projection = _projection()
     client, captured = _install_bridge(monkeypatch, projection)
 
-    prepared = runtime_censal_prepare.prepare_censal_review(cast(typer.Context, object()))
+    prepared = operation_censal_prepare.prepare_censal_review(cast(typer.Context, object()))
 
     assert prepared is projection
     assert captured["client"] is client
@@ -108,11 +108,11 @@ def test_prepare_refusal_retains_operation_identity_and_observed_effect(
     _client, _captured = _install_bridge(monkeypatch, mismatched)
 
     with pytest.raises(CliRefusedBoundaryError) as refused:
-        runtime_censal_prepare.prepare_censal_review(cast(typer.Context, object()))
+        operation_censal_prepare.prepare_censal_review(cast(typer.Context, object()))
 
     assert refused.value.context == {
         "operation_id": _OPERATION_ID,
-        "reason": RuntimeRefusalCode.INVALID_FRAME.value,
+        "reason": RefusalCode.INVALID_FRAME.value,
         "effect": OperationEffect.NONE.value,
         "terminal_condition": OperationTerminalCondition.SUCCEEDED.value,
     }

@@ -220,7 +220,7 @@ async def _run_to_terminal(supervisor: OperationSupervisor, operation_id: str) -
     return await supervisor.settled(operation_id)
 
 
-def _assert_exact_mcp_access[RequestPayloadT: BaseModel](
+def _assert_exact_external_client_access[RequestPayloadT: BaseModel](
     *,
     registry: OperationRegistry,
     request: OperationRequest[RequestPayloadT],
@@ -232,7 +232,7 @@ def _assert_exact_mcp_access[RequestPayloadT: BaseModel](
         profile_id=profile_id,
         destination_id=uuid4(),
         action=AccessAction.SUBMIT,
-        frontend=OperationFrontendProjection.MCP,
+        frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
         contract=registration.contract,
         published_authority=Availability.AVAILABLE,
         authority_operation=authority,
@@ -266,7 +266,7 @@ def _assert_exact_mcp_access[RequestPayloadT: BaseModel](
     assert refusal.value.reason is AccessDenialCode.PROFILE_MISMATCH
 
 
-def test_supervisor_records_filed_list_and_discover_for_exact_mcp_profile(tmp_path: Path) -> None:
+def test_supervisor_records_filed_list_and_discover_for_exact_external_client_profile(tmp_path: Path) -> None:
     """Record register listing and option discovery without contacting AEAT."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile, bundled_indexed_authority().operation() as authority:
         profile_id = UUID(profile.bucket_id)
@@ -338,14 +338,14 @@ def test_supervisor_records_filed_list_and_discover_for_exact_mcp_profile(tmp_pa
             subject_ref=profile_operation_subject(profile.bucket_id),
             payload=FiledDiscoverRequest(profile_id=profile_id),
         )
-        _assert_exact_mcp_access(
+        _assert_exact_external_client_access(
             registry=registry,
             request=list_request,
             registration=list_registration,
             profile_id=profile_id,
             authority=authority,
         )
-        _assert_exact_mcp_access(
+        _assert_exact_external_client_access(
             registry=registry,
             request=discover_request,
             registration=discover_registration,

@@ -257,7 +257,7 @@ def test_filing_reader_scopes_submission_to_exact_profile_record_and_period(
     assert result_binding.model_type is ModeloWorkFilingRecordProjection
 
 
-def test_filing_reader_is_admitted_on_the_mcp_frontend_without_a_commit_door(
+def test_filing_reader_is_admitted_on_the_external_client_frontend_without_a_commit_door(
     *, operation: PinnedAuthorityOperation
 ) -> None:
     unit, record = _source()
@@ -266,9 +266,11 @@ def test_filing_reader_is_admitted_on_the_mcp_frontend_without_a_commit_door(
     resolved = resolve_operation_access(
         registry=registry,
         request=_request(record),
-        context=_access_context(registration, operation=operation, frontend=OperationFrontendProjection.MCP),
+        context=_access_context(
+            registration, operation=operation, frontend=OperationFrontendProjection.EXTERNAL_CLIENT
+        ),
     )
-    assert resolved.request.frontend is OperationFrontendProjection.MCP
+    assert resolved.request.frontend is OperationFrontendProjection.EXTERNAL_CLIENT
     assert resolved.request.periods == frozenset({unit.period})
     assert AccessAction.COMMIT not in resolved.policy.actions
 

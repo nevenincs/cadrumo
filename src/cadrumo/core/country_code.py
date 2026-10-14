@@ -40,7 +40,7 @@ invoice counterparty boundary had one apiece.
 
 The shape is all they share. Whether a lowercase token is FOLDED to this shape
 or REFUSED against it is a policy the two disagree on, deliberately at one of
-them: :func:`~cadrumo.core.parsing.normalise_iso_3166_alpha2_jurisdiction`
+them: :func:`~cadrumo.core.parsing.codes.normalise_iso_3166_alpha2_jurisdiction`
 refuses ``"es"`` because the jurisdiction axis selects a row's regulatory
 treatment and it will not guess one, while the invoice validator folds. That
 question is open and is not settled by sharing a pattern; each caller states its

@@ -58,13 +58,13 @@ def test_modelo_listing_is_the_registry_listing_with_local_work_posture(operatio
 
 def test_modelo_listing_narrows_by_tax_domain_and_by_year(operation: PinnedAuthorityOperation) -> None:
     everything = catalogue.list_modelos(operation=operation)
-    vat = catalogue.list_modelos(domain=TaxDomain("iva"), operation=operation)
+    iva = catalogue.list_modelos(domain=TaxDomain("iva"), operation=operation)
     in_year = catalogue.list_modelos(year=2025, domain=TaxDomain("irpf"), operation=operation)
 
-    assert vat.domain_filter == "iva"
-    assert {row.tax_domain for row in vat.modelos} == {"iva"}
-    assert "303" in {row.code for row in vat.modelos}
-    assert {row.code for row in vat.modelos} < {row.code for row in everything.modelos}
+    assert iva.domain_filter == "iva"
+    assert {row.tax_domain for row in iva.modelos} == {"iva"}
+    assert "303" in {row.code for row in iva.modelos}
+    assert {row.code for row in iva.modelos} < {row.code for row in everything.modelos}
     assert in_year.year_filter == 2025 and in_year.domain_filter == "irpf"
     assert {row.tax_domain for row in in_year.modelos} == {"irpf"}
 

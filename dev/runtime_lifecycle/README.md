@@ -103,14 +103,14 @@ The scenarios check:
 - Packaged CLI profile reads, the packaged TUI overview adapter without mounting
   Textual, and packaged MCP stdio reads of a settled `auth.local-read` result.
   Each refuses protected access without authentication and after the manager/runtime
-  stops. Ordinary MCP follows the current human profile and its real shared sign-in
-  receipt; A-to-B switching changes its next protected request. A cross-profile
-  request is refused. Acting as the person, the harness requests and approves an
+  stops. Ordinary MCP uses the person's held session and exact native attendance
+  review for its configured profile. Closing A's holder retires its lease; B needs
+  its own holder and reviewed relay. A cross-profile request is refused. Acting as the person, the harness requests and approves an
   API key for A with native credential delivery; the agent never takes part. A
   second MCP server is launched with that key by `--credential-reference`. Its grant
   stays bound to A while the human selects B or signs out. After a runtime crash,
-  genuine shared receipts can resume, and the key server authenticates again with
-  its launch reference. The harness deletes delivered native credentials in teardown.
+  genuine person receipts can resume; ordinary MCP needs a renewed held session
+  and attendance review, and the key server authenticates again with its launch reference. The harness deletes delivered native credentials in teardown.
 
 
 The Spanish tax agency (AEAT) status operation checks local provider readiness
@@ -127,7 +127,6 @@ store:
 
 ```powershell
 just verify-caller-owned-runtime build/windows-x64/stage/Release/app
-just verify-live-sign-in build/windows-x64/stage/Release/app
 ```
 
 `verify-caller-owned-runtime` checks `cadrumo-runtime --configured-root`: its
@@ -136,30 +135,24 @@ readiness line, client discovery, password sign-in, stop when its stdin closes
 under `build/acceptance`. It reports `incomplete`
 (exit 3) on a logon whose credential store refuses to keep a sign-in.
 
-`verify-live-sign-in` checks `aeat config sign-in-hold` and attended MCP
-admission, under `build/acceptance`:
-- the command is registered, and MCP is refused before any sign-in;
-- a declined ask and a connection naming another profile are refused;
-- an approved ask is admitted, after checking that the asking process descends
-  from the harness, and reads the profile's own data as `attended`;
-- access ends after the holder signs out, the holder's stdin closes, a
-  password-proven `config logout`, a profile-wide lock, the sign-in deadline, and
-  runtime stop;
-- no stored sign-in is left, the default root is unchanged, and no started process
-  survives.
+The generic held-session helper uses
+`cadrumo-runtime session hold --profile-id UUID --password-stdin` for attended
+MCP admission under `build/acceptance`. `session_holder.py` owns this real child
+and its correlated status, attendance inventory and exact allow/reject decisions.
+Password admission requires the runtime-owned marker binding the disposable
+canonical root and its native identity. It creates no persisted sign-in receipt
+and extends neither idle nor absolute deadlines.
 
-It also runs one reviewed operation. A ledger row is classified by the local
-`qwen3:1.7b` text model on this machine. The pending review is read, inspected
-and applied through MCP, and the classification is read back through the
-command line. The harness serves the model itself: it runs `ollama serve` on
-the loopback port, reading an existing model store (`--ollama-models`, default
-`~/.ollama/models`) with pruning switched off, and stops it afterwards. It
-refuses to share a server it did not start. Without the model the step is
-unproven.
+An approval admits only the reviewed exact asking peer and profile, after the
+person-side driver checks its native ancestry; a declared PID grants nothing.
+Declined, wrong-profile or expired asks are refused. Logout, lock, expiry,
+runtime loss and holder EOF retire access. The helper owns bounded process
+cleanup and never touches the installed default root. It replaces the retired
+AEAT held-session command; no replacement AEAT attendance verb exists.
 
-It waits out the sign-in deadline (about 15 minutes); `--skip-expiry` and
-`--skip-review` leave those steps out and report `incomplete`. A step it cannot
-prove is reported `incomplete`, never passed.
+The reviewed-operation driver below separately owns the local-model run,
+operation decision and independent result reads. A missing capability or a step
+the driver cannot prove is incomplete, never passed.
 
 ## Prove a reviewed operation is rejected without changing the row and applied once
 
@@ -182,9 +175,10 @@ standard input:
 1. `aeat config profile create NAME --quiet --secrets-stdin`, then
    `aeat --profile-secrets-stdin config profile edit ...` with synthetic
    taxpayer facts and `config profile complete-setup`.
-2. `cadrumo-runtime --configured-root`, then `aeat config sign-in-hold NAME`
-   with the password on its first input line; its `held` event names the
-   profile id.
+2. `cadrumo-runtime --configured-root`, then `cadrumo-runtime session hold
+   --profile-id UUID --password-stdin` on the runtime-owned marked disposable
+   root. Its bounded u32BE-length password frame creates non-persisted held
+   authority; `session_held` names the exact profile/session/connection/boot.
 3. `ollama serve` with `OLLAMA_MODELS` set to the store and pruning off.
 4. `cadrumo-mcp` over stdio. Its first profile call raises an
    `attendance_request` on the holder, which approves that exact ask after
@@ -204,7 +198,7 @@ standard input:
    history gains exactly one `ledger.transaction.classified` event.
 9. A second `apply` to the same interaction is refused, and the row and its
    history are unchanged.
-10. Close the holder's input (`input_closed`, exit 0), stop the model server
+10. Close the holder's input and settle its exact process, stop the model server
     with its runners, and stop the runtime (exit 64). No started process may
     survive.
 
@@ -244,3 +238,36 @@ bounded refusal code. Include those, the build command, and package version in a
 [reproducible issue](https://github.com/nevenincs/cadrumo/issues). Do not attach
 credentials or profile storage contents. Authentication failures and incomplete runs
 are not passing acceptance evidence; these scenarios do not skip them.
+
+
+## Built-package proof drivers
+
+`agent_live.py` and `reviewed_operation.py` create disposable synthetic profiles
+through the package's `aeat` image and identify the active profile with
+`aeat --format json config profile list`. They hold the person's exact runtime
+session through `cadrumo-runtime session hold --profile-id UUID`, using a bounded
+password frame on stdin and correlated attendance inventory/decision commands.
+The runtime-owned development-root marker binds the temporary root before that
+password admission.
+
+`proof_support.py` owns profile setup and package/process observations.
+`mcp_proof_support.py` owns the MCP client, attendance decision
+flow and local-model lifetime. The reviewed-operation driver reports a missing
+local model or optional inference capability as an incomplete proof. These
+drivers consume the built package's images and published authority.
+
+## Integration ownership
+
+`tests/` also owns generic cross-product admission, grant review/rotation,
+lock, retirement, reconnect and runtime-command language parity. Those source
+integration suites retain their real native transports and explicitly declared
+synthetic fixture ports; their results do not establish packaged desktop or
+live-agent acceptance. They run no evaluation model.
+
+Installed CLI/MCP/runtime acceptance, native credential admission, modelo
+projection journeys and revocation fences also live in `tests/`: their real
+frontend fixtures make them cross-product consumers. Inward-only MCP authority
+queries live in `src/cadrumo_harness/mcp/tests/integration`. Evaluation scenarios, conduct scoring,
+trajectories, reports, golden expectations and their tax-value oracles remain in
+`dev/agent_eval/tests`. A suite is owned by the behavior it measures, rather than
+by whether an MCP client or runtime participates in its setup.

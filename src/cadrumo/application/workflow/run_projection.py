@@ -65,7 +65,7 @@ RELEASED_DETAIL_FIELDS: Final[Mapping[str, frozenset[str]]] = MappingProxyType(
 )
 """The fields of each detail variant a run read releases, by the variant's ``kind``.
 
-A run read reaches an MCP client, so a field a variant gains is not released
+A run read reaches an external client client, so a field a variant gains is not released
 until it is listed here after reading what it can hold. A variant with no entry
 is not released at all.
 """

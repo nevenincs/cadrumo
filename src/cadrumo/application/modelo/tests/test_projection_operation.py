@@ -116,7 +116,7 @@ def test_closed_public_contracts_and_all_period_commit_access(authority_operatio
         assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
 
 
-def test_mcp_result_access_requires_exact_destination_and_tax_values(
+def test_external_client_result_access_requires_exact_destination_and_tax_values(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     registry = _public_registry()
@@ -135,7 +135,7 @@ def test_mcp_result_access_requires_exact_destination_and_tax_values(
                 profile_id=_PROFILE,
                 destination_id=destination,
                 action=AccessAction.RESULT,
-                frontend=OperationFrontendProjection.MCP,
+                frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
                 contract=contract,
                 published_authority=Availability.AVAILABLE,
                 authority_operation=authority_operation,

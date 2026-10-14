@@ -162,7 +162,9 @@ def test_agent_names_reach_the_gateway_and_worker_by_prefix_and_no_other_profile
         assert all(set(slot) == {"name", "kind", "required"} for slot in profile["slots"])
         assert "root" not in profile["pins"]
     runtime = next(profile for profile in section["profiles"] if profile["name"] == "cadrumo-runtime")
-    assert {(value["name"], value["value"]) for value in runtime["fixed"]} == {
+    assert runtime["fixed"] == []
+    service = next(profile for profile in section["profiles"] if profile["name"] == "cadrumo-agent-service")
+    assert {(value["name"], value["value"]) for value in service["fixed"]} == {
         ("CADRUMO_PACKAGE_AGENT_EXECUTABLE", _AGENT),
         ("CADRUMO_PACKAGE_RELAY_EXECUTABLE", "cadrumo-mcp"),
         ("CADRUMO_PACKAGE_AEAT_EXECUTABLE", "aeat"),
@@ -247,14 +249,15 @@ def test_the_declaration_admits_agent_names_by_the_prefix_alone(planted: str, me
         parse(planted)
 
 
-def test_the_generic_interpreter_takes_the_agent_location_only_as_a_relayed_launch_parameter() -> None:
+def test_only_the_service_pins_the_agent_location_and_generic_hosts_take_no_agent_slot() -> None:
     section = compile_section(load(REPO_ROOT), load_layout("windows-x86-64"))
     profiles = {profile["name"]: profile for profile in section["profiles"]}
-    runtime_fixed = {value["name"] for value in profiles["cadrumo-runtime"]["fixed"]}
-    python_slots = {slot["name"]: slot for slot in profiles["python"]["slots"]}
+    service_fixed = {value["name"] for value in profiles["cadrumo-agent-service"]["fixed"]}
     agent_location = "CADRUMO_PACKAGE_AGENT_EXECUTABLE"
-    assert agent_location in runtime_fixed
-    assert python_slots[agent_location] == {"name": agent_location, "kind": "executable", "required": False}
+    assert agent_location in service_fixed
+    for profile_name in ("cadrumo-runtime", "python"):
+        assert profiles[profile_name]["fixed"] == []
+        assert profiles[profile_name]["slots"] == []
     # The image that fixes a package fact cannot also take it from its parent.
     relay = '  { name = "CADRUMO_PACKAGE_PYTHON_EXECUTABLE", image = "python" },\n]\n'
     planted = _SOURCE.replace(

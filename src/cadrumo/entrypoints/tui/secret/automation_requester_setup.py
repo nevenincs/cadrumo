@@ -5,7 +5,8 @@ from __future__ import annotations
 import math
 from uuid import UUID
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo_client.transport.frontend_client import FrontendClient
+
 from ....application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ....application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
 from ....application.user_profile.access_contracts import DisclosureCategory
@@ -14,9 +15,9 @@ from . import automation_requester_contracts as _contracts
 
 def validate_client_admission(
     profile_id: UUID,
-    client: RuntimeFrontendClient | None,
+    client: FrontendClient | None,
     open_client: _contracts.RequesterClientOpener | None,
-    reviewer_client: RuntimeFrontendClient | None,
+    reviewer_client: FrontendClient | None,
     journey_timeout: float,
 ) -> None:
     """Enforce exact profile/frontend bindings and the bounded journey timeout."""

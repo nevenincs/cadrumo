@@ -95,7 +95,7 @@ class InventoryOperationExecutor:
         self._execution_caller_reader = execution_caller_reader
 
     def _recorded_actor(self, context: OperationExecutorContext) -> str:
-        """Name the session of an agent, and the runtime for the person's frontends."""
+        """Name the session of an automation, and the runtime for the person's frontends."""
         return execution_actor_label(self._execution_caller_reader, context, supplied=_RUNTIME_ACTOR)
 
     def _service(self, profile_id: UUID) -> InventoryService:

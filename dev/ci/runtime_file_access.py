@@ -184,7 +184,7 @@ def _scenario(name: str, arguments: list[str]) -> dict[str, object]:
         reader = SQLiteAuthorityReader(descriptor_path)
         reader.close()
     elif name == "runtime":
-        from cadrumo.entrypoints.runtime.bootstrap import main
+        from cadrumo_runtime.host.bootstrap import main
 
         sys.argv = ["cadrumo-runtime", *arguments]
         main()

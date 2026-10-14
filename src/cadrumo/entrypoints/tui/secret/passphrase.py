@@ -3,7 +3,7 @@
 This screen collects the current passphrase (proof), the replacement, and
 its confirmation, then hands all three to the injected rotation door. The
 installed account composition submits the registered rotation through
-:func:`~cadrumo.adapters.local_runtime.profile_password_rotation.run_profile_password_rotation`.
+:func:`~cadrumo_client.transport.profile_password_rotation.run_profile_password_rotation`.
 Password acceptability and confirmation are re-checked by the canonical
 application service regardless of the screen's local validation.
 

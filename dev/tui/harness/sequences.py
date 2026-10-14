@@ -39,8 +39,6 @@ from textual.pilot import Pilot
 from textual.widgets import Button, DataTable, Input
 from textual.worker import WorkerCancelled
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
 from cadrumo.application.modelo.work_form_models import ModeloFormOrigin, ModeloWorkForm, confirmable
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.config import load_settings
@@ -50,6 +48,8 @@ from cadrumo.core.i18n.render import output_language
 from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.installed_client import open_installed_client
 from cadrumo.entrypoints.tui.app import RootBindingV1
 from cadrumo.entrypoints.tui.components.dialogs import ConfirmScreen
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
@@ -587,9 +587,7 @@ async def _capture_all(
     # The sandbox already runs the profile worker for its storage root; the
     # frames are taken through the same authenticated runtime root the
     # installed TUI composes, never through an in-process service graph.
-    client = await open_installed_runtime_client(
-        profile_id=UUID(sandbox.profile_id), frontend=OperationFrontendProjection.TUI
-    )
+    client = await open_installed_client(profile_id=UUID(sandbox.profile_id), frontend=OperationFrontendProjection.TUI)
     try:
         secret = bytearray(load_settings().cadrumo_dev_test_database_password.get_secret_value().encode())
         await asyncio.to_thread(client.login_password, secret)
@@ -617,7 +615,7 @@ async def _capture_all(
         await asyncio.to_thread(client.close)
 
 
-async def _no_recovery() -> RuntimeFrontendClient:
+async def _no_recovery() -> FrontendClient:
     """A review capture never opens profile recovery."""
     raise ScenarioError("a scenario capture must not open profile recovery")
 

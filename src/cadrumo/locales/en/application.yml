@@ -9,17 +9,17 @@ application:
     certificate:
       health:
         file_missing: The configured certificate file (%{path}) does not exist. Restore
-          the file or run 'aeat config auth configure --provider certificate --file
-          PATH' with a valid path.
-        path_unset: No certificate file has been selected. Run 'aeat config auth configure
-          --provider certificate --file PATH' to set one.
+          the file or run 'cadrumo-runtime config auth configure --provider certificate
+          --file PATH' with a valid path.
+        path_unset: No certificate file has been selected. Run 'cadrumo-runtime config
+          auth configure --provider certificate --file PATH' to set one.
         unavailable: Certificate health is unavailable; see debug logs for diagnostic
           details.
       load:
         password_unset: No certificate password is configured. Set the certificate
           password before continuing.
-        path_unset: No certificate file is configured. Run 'aeat config auth configure
-          --provider certificate --file PATH' to set one.
+        path_unset: No certificate file is configured. Run 'cadrumo-runtime config
+          auth configure --provider certificate --file PATH' to set one.
     clave_movil:
       health:
         identity_unset: No DNI/NIE has been configured for Cl@ve Móvil. Configure
@@ -45,18 +45,19 @@ application:
           used for Cl@ve.
       errors:
         certificate_file_required: The certificate provider requires a certificate
-          file. Run `aeat config auth configure --provider certificate --file PATH`
-          with the path to your PKCS#12 (.p12/.pfx) bundle.
+          file. Run `cadrumo-runtime config auth configure --provider certificate
+          --file PATH` with the path to your PKCS#12 (.p12/.pfx) bundle.
         certificate_file_unresolved: The certificate path '%{certificate_path}' does
-          not resolve to an existing file. Run `aeat config auth configure --provider
-          certificate --file PATH` with a path to your PKCS#12 (.p12/.pfx) bundle.
+          not resolve to an existing file. Run `cadrumo-runtime config auth configure
+          --provider certificate --file PATH` with a path to your PKCS#12 (.p12/.pfx)
+          bundle.
         certificate_secret_mutation_in_progress: A certificate secret change is still
           being recovered for this profile. Retry that same secret command before
           changing authentication configuration.
         certificate_source_not_found: Certificate source '%{name}' is not registered.
-          Run `aeat config auth certificate list` to see registered sources, or `aeat
-          config auth certificate register --name %{name} --file PATH` to register
-          it.
+          Run `cadrumo-runtime config auth certificate list` to see registered sources,
+          or `cadrumo-runtime config auth certificate register --name %{name} --file
+          PATH` to register it.
         cleanup_in_progress: An authentication logout or reset is still being recovered
           for this profile. Resume that operation before changing authentication configuration.
         dangling_active_profile: Active profile pointer '%{active_profile}' does not
@@ -82,8 +83,8 @@ application:
           file (%{path}) does not exist. Restore the file or reconfigure the path
           before continuing.'
         refused_certificate_path_unset: 'Cannot log in: no certificate file has been
-          selected yet. Run ''aeat config auth configure --provider certificate --file
-          PATH'' before continuing.'
+          selected yet. Run ''cadrumo-runtime config auth configure --provider certificate
+          --file PATH'' before continuing.'
         refused_clave_movil_identity_unset: 'Cannot log in with Cl@ve Móvil: no DNI/NIE
           has been configured yet. Configure one before continuing.'
         refused_live_tests_disabled: 'Live login is disabled by the safety gate: the
@@ -107,8 +108,8 @@ application:
           shape.
         clave_movil_identity_unset: No DNI/NIE has been configured for Cl@ve Móvil.
         no_provider: No auth provider is configured; nothing to probe locally.
-        no_session: No persisted AEAT session token on disk; run `aeat config auth
-          login` to acquire one.
+        no_session: No persisted AEAT session token on disk; run `cadrumo-runtime
+          config auth login` to acquire one.
         session_expired: Session expired
         session_live: Session active
     provider_impact:
@@ -126,20 +127,22 @@ application:
         clave_contraste_missing: Cl@ve Móvil signs in by default with an approval
           request to the Cl@ve app, which needs the contraste printed on your document.
           Record %{nie_field} on the active profile for a NIE, or %{dni_field} for
-          a DNI. To scan a QR code in a visible browser instead, run `aeat config
-          auth configure --provider clave_movil --clave-movil-route qr`.
+          a DNI. To scan a QR code in a visible browser instead, run `cadrumo-runtime
+          config auth configure --provider clave_movil --clave-movil-route qr`.
         clave_identity_malformed: The Cl@ve identity is not a valid Spanish tax identifier,
           so it cannot be confirmed to belong to this profile.
         clave_identity_missing: Cl@ve live auth requires a DNI/NIE. Record it on the
           active profile as %{identity_field}, or configure it for the provider with
-          `aeat config auth configure`, before any AEAT session can be used.
+          `cadrumo-runtime config auth configure`, before any AEAT session can be
+          used.
         clave_identity_profile_mismatch: Cl@ve Móvil identity does not match the active
           profile tax identity; switch to the matching profile or update the profile
           before live AEAT auth.
         corrupt_session: Your saved authentication session is damaged and cannot be
-          read. Run `aeat config auth logout` and then `aeat config auth test`.
-        no_session: No active AEAT session; run `aeat config auth test` before reading
-          AEAT data.
+          read. Run `cadrumo-runtime config auth logout` and then `cadrumo-runtime
+          config auth test`.
+        no_session: No active AEAT session; run `cadrumo-runtime config auth test`
+          before reading AEAT data.
         profile_identity_cleared: Live AEAT authentication needs the active profile's
           fiscal ID, and this profile has none. Restore %{requirements} on the profile,
           then authenticate again.
@@ -1853,8 +1856,8 @@ application:
             audits each calculated casilla, and ''Tarifas'' mirrors the active parameters
             used by formulas.'
           period: '%{modelo_title} - period %{period} / %{filing_year}.'
-          pull_command: To pull your edits into local storage, run 'aeat app modelo
-            spreadsheet pull' from the CLI.
+          pull_command: Spreadsheet edits are not imported into the Cadrumo profile;
+            review the changes and enter them in Cadrumo.
           title: '%{modelo_title} - %{period}/%{filing_year}'
         labels:
           casilla: Casilla

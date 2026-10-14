@@ -39,7 +39,7 @@ def test_recovery_status_requires_exact_profile_and_independent_result_disclosur
         profile_id=profile_id,
         destination_id=uuid4(),
         action=AccessAction.RESULT,
-        frontend=OperationFrontendProjection.MCP,
+        frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
         contract=registry.lookup_public_contract(definition.definition_id),
         published_authority=Availability.AVAILABLE,
     )

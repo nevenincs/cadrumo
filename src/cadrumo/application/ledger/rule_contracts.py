@@ -61,7 +61,7 @@ class LedgerRuleRowProjection(BaseModel):
 class LedgerRuleAddRequest(BaseModel):
     """Private secure-reference input for ``ledger.rule.add``.
 
-    ``actor`` is recorded as sent for a person's session. An agent's session is
+    ``actor`` is recorded as sent for a person's session. An automation's session is
     recorded under its own session label, whatever the request carries.
     """
 
@@ -141,7 +141,7 @@ class LedgerRuleApplyRequest(BaseModel):
 
     ``reaffirm`` widens the run to rows already classified by hand, replacing
     what they carry. ``actor`` is recorded as sent for a person's session. An
-    agent's session is recorded under its own session label, whatever the
+    automation's session is recorded under its own session label, whatever the
     request carries.
     """
 

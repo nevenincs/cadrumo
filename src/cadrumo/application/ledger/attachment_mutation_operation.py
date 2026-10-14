@@ -8,6 +8,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.errors.hierarchy import CadrumoError
 from ...core.filing_year import FilingYear
@@ -55,7 +57,6 @@ from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..review.filter import LedgerReviewStatus
-from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -104,7 +105,7 @@ class LedgerAttachRequest(BaseModel):
     """Private exact-profile request matching ``ledger attach``.
 
     Every evidence member is the identifier of evidence already stored in the
-    profile. ``actor`` is recorded as sent for a person's session. An agent's
+    profile. ``actor`` is recorded as sent for a person's session. An automation's
     session is recorded under its own session label, whatever the request carries.
     """
 
@@ -128,7 +129,7 @@ class LedgerAttachRequest(BaseModel):
 class LedgerDetachRequest(BaseModel):
     """Private exact-profile request matching ``ledger detach``.
 
-    ``actor`` is recorded as sent for a person's session. An agent's session is
+    ``actor`` is recorded as sent for a person's session. An automation's session is
     recorded under its own session label, whatever the request carries.
     """
 

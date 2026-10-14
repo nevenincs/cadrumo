@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
 from ....application.user_profile.automation_custody_port import AutomationCustodyCode
 from ....core.config import override_settings
 from ....core.i18n.render import tr
@@ -21,7 +22,7 @@ _FAULTS = (
 
 
 def test_each_fault_the_runtime_returned_is_shown_under_the_refusal_as_the_form_spells_its_own() -> None:
-    refused = RuntimeFrontendRefusedError(AutomationCustodyCode.INVALID.value, request_faults=_FAULTS)
+    refused = FrontendRefusedError(AutomationCustodyCode.INVALID.value, request_faults=_FAULTS)
 
     assert OperationRunScreen._failure_text(refused).splitlines() == [
         "invalid",
@@ -32,12 +33,12 @@ def test_each_fault_the_runtime_returned_is_shown_under_the_refusal_as_the_form_
 
 
 def test_a_refusal_without_faults_is_shown_as_it_was() -> None:
-    assert OperationRunScreen._failure_text(RuntimeFrontendRefusedError("operation_denied")) == "operation_denied"
+    assert OperationRunScreen._failure_text(FrontendRefusedError("operation_denied")) == "operation_denied"
 
 
 def test_a_busy_refusal_names_the_operation_holding_the_subject() -> None:
     holder = "ef" * 32
-    refused = RuntimeFrontendRefusedError("subject_busy", holder_operation_id=holder)
+    refused = FrontendRefusedError("subject_busy", holder_operation_id=holder)
 
     with override_settings(cadrumo_output_language="en"):
         lines = OperationRunScreen._failure_text(refused).splitlines()

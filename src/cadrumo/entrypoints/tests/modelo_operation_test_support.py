@@ -26,13 +26,14 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.tests.cross_period_seeding import resolved_revision
 from cadrumo.domain.modelos.verification_report import VerificationCompletenessStatus
 from cadrumo.domain.modelos.work_unit import WorkUnit
-
-from ..adapter_composition import (
+from cadrumo.entrypoints.adapter_composition import (
     build_calculation_action_ports,
     build_verification_repository_bundle,
     build_work_lifecycle_ports,
 )
-from .profile_persistence.verification_repository_support import build_test_certificate_secret_backend_factory
+from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+)
 
 MODELO_OPERATION_TEST_ACTOR: Final = "operator:s45"
 MODELO: Final = "130"

@@ -14,6 +14,9 @@ import pytest
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
+from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+)
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
@@ -97,9 +100,6 @@ from ...adapter_composition import (
     build_filing_action_ports,
     build_ledger_evidence_ports,
     build_verification_repository_bundle,
-)
-from .verification_repository_support import (
-    build_test_certificate_secret_backend_factory,
 )
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()

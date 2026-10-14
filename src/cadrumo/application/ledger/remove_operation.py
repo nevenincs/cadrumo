@@ -16,6 +16,7 @@ from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect
 from ...core.time.clock import now
+from ...domain.buckets.event import BUCKET_ACTOR_LABEL_MAX_LENGTH
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
@@ -70,7 +71,7 @@ class LedgerRemoveReportProjection(BaseModel):
     transaction_id: TransactionId
     removed: bool = False
     dry_run: bool = False
-    actor: str = Field(min_length=1, max_length=64)
+    actor: str = Field(min_length=1, max_length=BUCKET_ACTOR_LABEL_MAX_LENGTH)
     reason: str = Field(max_length=_MAX_RECEIPT_REASON_LENGTH)
     cascaded_purchase_invoice_evidence_ids: _ReceiptIdentities = ()
     cascaded_attachment_ids: _ReceiptIdentities = ()

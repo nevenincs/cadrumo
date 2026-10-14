@@ -137,7 +137,7 @@ def _validate_wallet_fetch_request(
 ) -> None:
     if session.storage_state_path is None:
         raise SedeNavigationError(
-            "AeatSession has no persisted auth session; run `aeat config auth status` first",
+            "AeatSession has no persisted auth session; run `cadrumo-runtime config auth status` first",
             translated_message=tr("adapters.sede.errors.no_auth_session"),
         )
     if target_period.filing_year != target_year:

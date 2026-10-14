@@ -17,7 +17,9 @@ from textual.app import App
 from textual.pilot import Pilot
 from textual.widgets import Button, Link, Static
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo_client.contracts.contracts import RefusalError
+from cadrumo_client.transport.frontend_client import FrontendClient
+
 from ....application.export.google_review_operation_contracts import (
     GOOGLE_REVIEW_OPERATION_DEFINITION_ID,
     GoogleReviewProjection,
@@ -43,7 +45,6 @@ from ....application.operations.frontend_requests import (
 from ....application.operations.models import OperationIdentity
 from ....application.operations.persistence.replay import OperationReplayStatus
 from ....application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
-from ....application.runtime.contracts import RuntimeRefusalError
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import output_language
 from ....core.operations import (
@@ -269,7 +270,7 @@ async def test_installed_screen_requires_exact_human_review_before_showing_regis
         return cast(RuntimeOperationController, controller)
 
     monkeypatch.setattr(RuntimeOperationController, "submit", submit)
-    screen = GoogleSavedReviewScreen(cast(RuntimeFrontendClient, client), "c" * 64, filing_record_id="6" * 64)
+    screen = GoogleSavedReviewScreen(cast(FrontendClient, client), "c" * 64, filing_record_id="6" * 64)
     app: App[None] = App()
     async with app.run_test(size=(120, 45)) as pilot:
         app.push_screen(screen)
@@ -335,7 +336,7 @@ def test_native_disclosure_refuses_selection_or_payload_expansion(defect: str) -
             "payload_categories": (ReadablePayloadCategory.CALCULATION, ReadablePayloadCategory.ORIGINAL_ATTACHMENT)
         },
     }
-    with pytest.raises(RuntimeRefusalError):
+    with pytest.raises(RefusalError):
         validate_saved_google_review(request, review.model_copy(update=updates[defect]), operation_id=_OPERATION)
 
 
@@ -388,7 +389,7 @@ async def test_prepublication_cleanup_rejects_only_original_untouched_review(
         return cast(RuntimeOperationController, controller)
 
     monkeypatch.setattr(RuntimeOperationController, "submit", submit)
-    screen = GoogleSavedReviewScreen(cast(RuntimeFrontendClient, client), "c" * 64)
+    screen = GoogleSavedReviewScreen(cast(FrontendClient, client), "c" * 64)
     app: App[None] = App()
     async with app.run_test() as pilot:
         app.push_screen(screen)
@@ -404,7 +405,7 @@ async def test_prepublication_cleanup_rejects_only_original_untouched_review(
             assert await screen.reject_pending_prepublication()
             assert not await screen.reject_pending_prepublication()
         else:
-            with pytest.raises(RuntimeRefusalError):
+            with pytest.raises(RefusalError):
                 await screen.reject_pending_prepublication()
         assert controller.applies == controller.reads == 0
         assert controller.rejects == (1 if defect == "none" else 0)

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import typer
 
+from cadrumo_client.commands.profile_binding import require_profile_client
+
 from ....application.user_profile.profile_operation_contracts import (
     ProfileRepeatableRowChangeOperationProjection,
     ProfileRepeatableRowMutationOperationProjection,
@@ -16,9 +18,8 @@ from ....application.user_profile.section_rows import validate_profile_repeatabl
 from ....core.external_constants import OutputLanguage
 from ..common import activate_subcommand_output_language, emit_envelope
 from ..errors import CliRefusedBoundaryError
-from ..runtime_profile_binding import require_profile_client
 from ..state_projection_support import authority_operation
-from ._runtime_profile_mutation import execute_profile_mutation, mutation_deadline, read_mutation_baseline
+from ._profile_mutation import execute_profile_mutation, mutation_deadline, read_mutation_baseline
 
 
 def _parse_values(tokens: list[str]) -> dict[str, str]:
@@ -87,7 +88,8 @@ def profile_add_row(
     activate_subcommand_output_language(ctx, output_language)
     from uuid import UUID
 
-    from ..config_payloads import ConfigProfileAddRowResult
+    from cadrumo_client.commands.payloads import ConfigProfileAddRowResult
+
     from ._profile_support import resolve_active_profile_pointer
 
     pointer = resolve_active_profile_pointer()
@@ -147,7 +149,8 @@ def profile_edit_row(
     activate_subcommand_output_language(ctx, output_language)
     from uuid import UUID
 
-    from ..config_payloads import ConfigProfileRowChangeResult
+    from cadrumo_client.commands.payloads import ConfigProfileRowChangeResult
+
     from ._profile_support import resolve_active_profile_pointer
 
     pointer = resolve_active_profile_pointer()
@@ -214,7 +217,8 @@ def profile_remove_row(
     activate_subcommand_output_language(ctx, output_language)
     from uuid import UUID
 
-    from ..config_payloads import ConfigProfileRowChangeResult
+    from cadrumo_client.commands.payloads import ConfigProfileRowChangeResult
+
     from ._profile_support import resolve_active_profile_pointer
 
     pointer = resolve_active_profile_pointer()

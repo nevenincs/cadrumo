@@ -12,9 +12,8 @@ programs, and the desktop window through its WebView2 DevTools endpoint:
    and requires the DevTools endpoint to listen on loopback only;
 4. signs the profile in through the command line, the password on its standard
    input only, and requires the sign-in to be stored so the desktop resumes it;
-5. stores the developer's provider key into the throwaway profile through
-   ``aeat config provider set --secrets-stdin`` and reads it back as masked
-   status;
+5. stores the developer's provider key through the desktop's service
+   administration channel and reads back its masked committed status;
 6. runs the live Playwright project, which attaches to the window;
 7. signs out, closes the window and requires every process the run started to
    have ended;
@@ -24,7 +23,7 @@ programs, and the desktop window through its WebView2 DevTools endpoint:
 Exit 0 means every step held and every spec passed. Exit 1 names what failed.
 Exit 3 means a prerequisite is absent: the test host, the package, an
 interactive desktop, a credential store that keeps the sign-in, the
-provider-settings commands in the package, or the developer's key in this
+admitted desktop service channel, or the developer's key in this
 lane's own environment. ``--attach-only`` runs only the attachment check
 and always ends incomplete. ``--served`` loads the shell from the development
 server (``just dev``) for iterating on it; the host, launcher and agent stay
@@ -34,8 +33,8 @@ The provider is named on the command line with ``--provider ID``. The key comes
 only from this lane's own environment, under the name the provider-settings
 resolver reads in development, ``CADRUMO_LLM_<ID>_API_KEY`` with the provider id
 in upper case.
-It is written once to the set command's standard input and never placed on a
-command line, in a file, a log or another process's environment.
+It crosses the desktop's raw credential channel once and never enters a command
+line, file, log or child environment.
 """
 
 from __future__ import annotations
@@ -153,7 +152,7 @@ class Watch:
 
 def mark_lane_root(root: Path) -> None:
     """Mark the freshly created, empty storage root with the agent lane's own mark."""
-    from cadrumo.application.agent_host.lane_root import write_lane_mark
+    from cadrumo_agent_service.host.lane_root import write_lane_mark
 
     try:
         write_lane_mark(root)
@@ -163,48 +162,56 @@ def mark_lane_root(root: Path) -> None:
 
 def is_lane_root(root: Path) -> bool:
     """Whether ``root`` carries the agent lane's mark for exactly that root."""
-    from cadrumo.application.agent_host.lane_root import is_marked_lane_root
+    from cadrumo_agent_service.host.lane_root import is_marked_lane_root
 
     return is_marked_lane_root(root)
 
 
-def provision_provider_key(programs: Programs, environment: Mapping[str, str], provider_id: str) -> None:
-    """Store the developer's key into the signed-in throwaway profile, then require masked status to report it.
+def provision_provider_key(endpoint: str, provider_id: str) -> None:
+    """Store a developer credential through the live desktop's service channel."""
+    from playwright.sync_api import sync_playwright
 
-    Raises:
-        UnavailableError: The key is not in this lane's environment, or the
-            package has no provider-settings commands yet.
-        AcceptanceError: Setting the key, or reading it back, did not hold.
-    """
     variable = key_variable(provider_id)
-    if not os.environ.get(variable, "").strip():
+    secret = bytearray(os.environ.get(variable, ""), "utf-8")
+    if not secret:
         raise UnavailableError(f"no provider key: set {variable} in this lane's own environment")
-    code, _envelope = run_cli(programs, environment, "--language", "en", "config", "provider", "--help")
-    if code != 0:
-        raise UnavailableError("this package has no `aeat config provider` commands yet, so no key can be stored")
-    payload = bytearray(json.dumps({"secret": os.environ[variable]}), "utf-8")
     try:
-        result = run_command(
-            [str(programs.aeat), "--format", "json", "config", "provider", "set", provider_id, "--secrets-stdin"],
-            cwd=_REPOSITORY,
-            environment=environment,
-            input_text=payload.decode("utf-8"),
-            timeout_seconds=180,
-            errors="replace",
-        )
+        with sync_playwright() as driver:
+            browser = driver.chromium.connect_over_cdp(endpoint)
+            pages = [page for context in browser.contexts for page in context.pages]
+            require(len(pages) == 1, "the live desktop must expose one shell page")
+            page = pages[0]
+            status = page.evaluate("""async () => {
+                const token = window.__CADRUMO_SHELL__?.token;
+                if (!token) throw new Error('desktop token unavailable');
+                return await window.__TAURI_INTERNALS__.invoke('provider_settings_status', {token});
+            }""")
+            entries = status.get("providers", []) if isinstance(status, dict) else []
+            entry = next((item for item in entries if item.get("id") == provider_id), None)
+            require(isinstance(entry, dict), "the service catalogue does not declare the selected provider")
+            if not isinstance(entry, dict):
+                raise AcceptanceError("provider catalogue entry unavailable")
+            changed = page.evaluate(
+                """async ({provider, revision, secret}) => {
+                const token = window.__CADRUMO_SHELL__?.token;
+                if (!token) throw new Error('desktop token unavailable');
+                const bytes = new TextEncoder().encode(secret);
+                try {
+                    return await window.__TAURI_INTERNALS__.invoke('provider_settings_set', bytes, {
+                        headers: {'x-cadrumo-token': token, 'x-cadrumo-provider': provider,
+                            'x-cadrumo-revision': revision}
+                    });
+                } finally { bytes.fill(0); }
+            }""",
+                {"provider": provider_id, "revision": entry["revision"], "secret": secret.decode("utf-8")},
+            )
+            require(
+                isinstance(changed, dict) and changed.get("available") is True and changed.get("source") == "profile",
+                "service did not verify its committed provider record",
+            )
+            print(json.dumps({"step": "provider_key_stored", "readiness": changed.get("readiness")}), flush=True)
     finally:
-        # The decoded text handed to the child cannot be wiped; this buffer can.
-        payload[:] = bytes(len(payload))
-    require(result.returncode == 0, f"provider set: exit {result.returncode}")
-    code, envelope = run_cli(programs, environment, "config", "provider", "status")
-    require(code == 0, f"provider status: {code} {error_code(envelope)}")
-    providers = envelope.get("result", {}).get("providers", [])
-    entry = next((item for item in providers if isinstance(item, dict) and item.get("id") == provider_id), {})
-    require(
-        entry.get("available") is True and entry.get("source") == "profile",
-        f"provider status does not report the stored key: mode={entry.get('mode')} readiness={entry.get('readiness')}",
-    )
-    print(json.dumps({"step": "provider_key_stored", "readiness": entry.get("readiness")}), flush=True)
+        secret[:] = bytes(len(secret))
 
 
 def test_host(served: bool) -> TestHost:
@@ -261,12 +268,12 @@ def free_port() -> int:
 
 def _exit_code(process: Any) -> int | None:
     """The desktop's exit code, or ``None`` while it runs."""
-    from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+    from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
     try:
         return int(process.wait(timeout=0))
-    except RuntimeRefusalError as error:
-        if error.reason is RuntimeRefusalCode.DEADLINE_EXCEEDED:
+    except RefusalError as error:
+        if error.reason is RefusalCode.DEADLINE_EXCEEDED:
             return None
         raise
 
@@ -352,7 +359,7 @@ def playwright(entry: str, endpoint: str, results: Path, arguments: list[str]) -
 @contextmanager
 def lane_desktop(host: TestHost, environment: Mapping[str, str], directory: Path, port: int) -> Generator[Any]:
     """Run the desktop in a kill-on-close Job for the block; the Job is reaped however the block ends."""
-    from cadrumo.adapters.local_runtime.windows_process import WindowsProcessScope
+    from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
 
     scope = WindowsProcessScope()
     try:
@@ -430,7 +437,7 @@ def run(run_directory: Path, *, provider_id: str, served: bool, attach_only: boo
                 unproven.append("agent specs: --attach-only ran only the attachment check")
                 arguments = [*arguments, "tests/live/attach.live.ts"]
             else:
-                provision_provider_key(programs, environment, provider_id)
+                provision_provider_key(endpoint, provider_id)
             status = playwright(host.entry, endpoint, results, arguments)
             print(json.dumps({"step": "playwright", "exit_code": status}), flush=True)
             if status != 0:

@@ -22,7 +22,7 @@ import typer
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from .common import emit_envelope
-from .runtime_ledger_evidence_followup import run_ledger_evidence_consent_list
+from .operation_ledger_evidence_followup import run_ledger_evidence_consent_list
 
 _UNRECALLABLE_LOCALE_KEY = "cli.app.ledger.evidence.consent.bytes_unrecallable"
 _NO_HISTORY_LOCALE_KEY = "cli.app.ledger.evidence.consent.no_history"

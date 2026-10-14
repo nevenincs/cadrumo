@@ -16,6 +16,9 @@ from uuid import UUID
 
 import typer
 
+from cadrumo_client.commands.profile_binding import require_profile_client
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+
 from ...application.modelo.amendment_projection import ModeloWorkAmendPublicResultV2
 from ...application.modelo.edit_apply_row_contracts import ModeloDetailRowWireV1
 from ...application.modelo.filing_selection_operation import (
@@ -28,7 +31,6 @@ from ...application.modelo.work_amend_contracts import (
     ModeloWorkAmendRequest,
 )
 from ...application.modelo.work_lifecycle import lifecycle_continuation_for_work_history
-from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.decimal.grammar import try_parse_canonical_decimal
@@ -59,11 +61,10 @@ from ._modelo_rendering import (
     verification_report_payload as _verification_report_payload,
 )
 from .common import activate_subcommand_output_language, no_active_profile_refusal
-from .runtime_modelo_amendment import read_modelo_work_filing_record, run_modelo_work_amendment
-from .runtime_modelo_metadata import read_modelo_work_unit
-from .runtime_modelo_taxation_comparison import compare_modelo_taxation
-from .runtime_modelo_work_history import read_modelo_work_history
-from .runtime_profile_binding import require_profile_client
+from .operation_modelo_amendment import read_modelo_work_filing_record, run_modelo_work_amendment
+from .operation_modelo_metadata import read_modelo_work_unit
+from .operation_modelo_taxation_comparison import compare_modelo_taxation
+from .operation_modelo_work_history import read_modelo_work_history
 
 
 def work_compare_taxation(
@@ -378,7 +379,7 @@ def work_amend(
         ModeloWorkFilingRecordRequest(profile_id=client.profile_id, filing_record_id=from_filing_record_id),
     ).projection
     if not isinstance(selected, ModeloWorkFilingRecordProjection):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     request = ModeloWorkAmendRequest(
         baseline=ModeloWorkAmendBaseline(from_filing_record_id=from_filing_record_id),
         amendment_kind=kind,
@@ -393,7 +394,7 @@ def work_amend(
     )
     amended = run_modelo_work_amendment(client, request, work_unit_id=selected.unit.work_unit_id).projection
     if not isinstance(amended, ModeloWorkAmendPublicResultV2):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     record = amended.record.to_record()
 
     from ._modelo_payloads import WorkAmendResult
@@ -433,7 +434,7 @@ def modelo_history(
     """Stream the bucket-event history for one modelo across all lifecycle stages."""
     from ._modelo_payloads import ModeloHistoryResult, ModeloLifecycleEventPayload
     from .common import emit_envelope
-    from .runtime_modelo_history import read_modelo_history
+    from .operation_modelo_history import read_modelo_history
 
     matches = tuple(row.to_event() for row in read_modelo_history(ctx, modelo=modelo, year=year, period=period).events)
 

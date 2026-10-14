@@ -48,11 +48,11 @@ import gc
 import os
 import sys
 import tempfile
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Sequence
 from importlib import import_module
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pytest
 from _pytest.unraisableexception import gc_collect_iterations_key
@@ -200,18 +200,285 @@ temporary_env = import_module("cadrumo.tests.env").temporary_env
 if TYPE_CHECKING:
     from _pytest.terminal import TerminalReporter
 
+    from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
     from cadrumo.domain.calculations.registry.authority_artifact import AuthorityArtifact
     from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor
+    from cadrumo.entrypoints.cli.tests.cli_fixture_worlds import CliWorldProvider
+    from cadrumo.tests.cli_fixture_ports import CliInvocation
 
 # Loaded as a plugin, not inlined here: this module's own `pytest_configure` is
 # `trylast`, and the JUnit option has to be set before the junitxml plugin reads
 # it. Unset `VAULTSPEC_CI_REPORTS` - every local run - and it does nothing,
 # which is what keeps this repository's zero-artifact posture intact.
-pytest_plugins = ("dev.ci_reports",)
+pytest_plugins = ("dev.ci_reports", "cadrumo.tests.pytest_plugin")
 
-# Runtime composition fixtures belong to the repository host. Harness tests
-# consume pytest injection without importing entrypoint composition outward.
-compose_runtime_ports = import_module("cadrumo.conftest").compose_runtime_ports
+
+@pytest.fixture(scope="session")
+def run_cadrumo_cli() -> Callable[..., Any]:
+    """Invoke the public AEAT app through a session-owned Typer runner."""
+    from typer.testing import CliRunner
+
+    from cadrumo.entrypoints.cli.main import cli_app
+
+    runner = CliRunner()
+    app = cli_app()
+
+    def invoke(args: Sequence[str], **kwargs: Any) -> Any:
+        return runner.invoke(app, list(args), **kwargs)
+
+    return invoke
+
+
+@pytest.fixture(scope="session")
+def cli_world_provider() -> Iterator[CliWorldProvider]:
+    """Enroll runtime-owned setup for tax-owned assertion fixtures."""
+    from cadrumo.adapters.persistence.profile.tests.published_authority_support import (
+        release_published_authority_operation,
+    )
+    from cadrumo_runtime.host.tests.frontend.cli.world_provider import RuntimeCliWorldProvider
+
+    try:
+        yield RuntimeCliWorldProvider()
+    finally:
+        release_published_authority_operation()
+
+
+@pytest.fixture(scope="session")
+def invoke_cli(run_cadrumo_cli: CliInvocation) -> CliInvocation:
+    """Inject joined operator invocation into tax CLI assertions."""
+    from cadrumo_runtime.host.tests.frontend.cli.cli_runner import bind_public_cli_runner, invoke_cached_cli
+
+    def invoke(args: Sequence[str], **kwargs: Any) -> Any:
+        with bind_public_cli_runner(run_cadrumo_cli):
+            return invoke_cached_cli(args, **kwargs)
+
+    return invoke
+
+
+@pytest.fixture
+def cli_runtime_lifetime(run_cadrumo_cli: CliInvocation) -> Iterator[None]:
+    """Own implicit runtime joins until requesting fixture teardown."""
+    from cadrumo_runtime.host.tests.frontend.cli.cli_runner import bind_public_cli_runner, operator_runtime_scope
+
+    with operator_runtime_scope(), bind_public_cli_runner(run_cadrumo_cli):
+        yield
+
+
+@pytest.fixture(scope="package", autouse=True)
+def _skip_profile_kdf_grid_measurement() -> Iterator[None]:
+    """Keep package test registration on the production-accepted fixed KDF floor."""
+    from cadrumo.core.config import override_settings
+
+    with override_settings(cadrumo_profile_kdf_measure_calibration=False):
+        yield
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _release_settings_storage_directories() -> Iterator[None]:
+    """Drop temporary storage roots created by isolated settings at session end."""
+    yield
+    from cadrumo.tests.env_scope import release_settings_storage_directories
+
+    release_settings_storage_directories()
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _keep_the_installation_google_client_out_of_tests(tmp_path_factory: pytest.TempPathFactory) -> Iterator[None]:
+    """Keep tests from inheriting the publisher's installed Google OAuth client."""
+    from cadrumo.core import config_google
+    from cadrumo.core.config import reset_settings_cache
+
+    absent = tmp_path_factory.mktemp("installation-google-client") / "oauth_client.json"
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(config_google, "installation_client_source", lambda: absent)
+        patch.delenv("CADRUMO_GOOGLE_OAUTH_CLIENT_JSON", raising=False)
+        reset_settings_cache()
+        yield
+        reset_settings_cache()
+
+
+# These product-backed fixtures live at the repository test-host boundary.
+# ``cadrumo.tests.pytest_plugin`` remains core-only shared support, so the
+# package does not acquire an application dependency through its test helpers.
+
+
+@pytest.fixture(scope="session")
+def operation() -> Iterator[PinnedAuthorityOperation]:
+    """Lease the published authority generation for the session, as runtime reads it.
+
+    The lease is entered in a private context. Entered in the session's own
+    context, it would leave the governed-fact scope set for every later test
+    in the worker, so a test that forgot its lease passed or failed by the
+    order it ran in. Tests that request this fixture get the scope from
+    ``_scope_tests_that_request_the_operation``; a wider-scoped fixture that
+    computes under it enters ``validating_governed_facts`` itself.
+    """
+    from cadrumo.domain.calculations.registry.tests.authority_lease_support import private_authority_lease
+
+    with private_authority_lease() as pinned:
+        yield pinned
+
+
+@pytest.fixture(autouse=True)
+def _scope_tests_that_request_the_operation(request: pytest.FixtureRequest) -> Iterator[None]:
+    """Scope governed facts to the session lease for exactly the tests that ask for it."""
+    if "operation" not in request.fixturenames:
+        yield
+        return
+    from cadrumo.domain.calculations.registry.tests.authority_lease_support import scoped_when_requested
+
+    with scoped_when_requested(request, "operation"):
+        yield
+
+
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Lease one published authority generation, scoping governed facts for the whole test.
+
+    Deliberately not autouse: a module opts in with
+    ``pytestmark = pytest.mark.usefixtures("authority_operation")``, so a command
+    that forgets to take its own lease is still caught everywhere else.
+    """
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
+
+
+@pytest.fixture(scope="session", autouse=True)
+def compose_runtime_ports() -> Iterator[None]:
+    """Compose real persistence and authentication adapters for tests."""
+    from cadrumo.adapters.inbound.reconciliation_parser import InboundReconciliationEvidenceParser
+    from cadrumo.adapters.outbound.aeat.auth.provider_selection import select_provider as select_outbound_auth_provider
+    from cadrumo.adapters.outbound.aeat.auth.session_store import build_session_store
+    from cadrumo.adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
+    from cadrumo.adapters.persistence.profile.buckets import build_bucket_event_history_repository
+    from cadrumo.adapters.persistence.profile.confirmation_records import ConfirmationRecordRepository
+    from cadrumo.adapters.persistence.profile.extraction_drafts import ExtractionDraftRepository
+    from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
+    from cadrumo.adapters.persistence.profile.ledger_classification_rules import LedgerClassificationRuleRepository
+    from cadrumo.adapters.persistence.profile.modelo_reconciliation import build_modelo_reconciliation_persistence
+    from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+    from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from cadrumo.adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
+    from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
+    from cadrumo.adapters.persistence.profile.usage_ratios import (
+        load_usage_ratios,
+        load_usage_ratios_with_censo_guard,
+        save_usage_ratios,
+    )
+    from cadrumo.adapters.persistence.storage.profile_persistence_composition import (
+        composed_profile_persistence_ports,
+    )
+    from cadrumo.application.auth.protocols import bind_session_store
+    from cadrumo.application.auth.providers import bind_auth_provider_selector
+    from cadrumo.application.bucket_event_repository import bind_bucket_event_history_repository_factory
+    from cadrumo.application.exchange_rate_provider import bind_exchange_rate_provider_factory
+    from cadrumo.application.ledger.confirmation_record_repository import bind_confirmation_record_repository_factory
+    from cadrumo.application.ledger.extraction_draft_repository import bind_extraction_draft_repository_factory
+    from cadrumo.application.ledger.participation_read import bind_transaction_participation_index_repository_factory
+    from cadrumo.application.ledger.rule_repository import bind_ledger_classification_rule_repository_factory
+    from cadrumo.application.ledger.transaction_repository import bind_transaction_catalogue_repository_factory
+    from cadrumo.application.ledger.usage_ratio_repository import (
+        bind_usage_ratio_censo_guard_loader,
+        bind_usage_ratio_profile_persistence,
+    )
+    from cadrumo.application.modelo.calculation_repository import bind_calculation_revision_catalogue_repository_factory
+    from cadrumo.application.modelo.filing_repository import bind_modelo_record_catalogue_repository_factory
+    from cadrumo.application.modelo.justificante_repository import bind_justificante_repository_factory
+    from cadrumo.application.modelo.reconciliation_parsing import bind_reconciliation_evidence_parser
+    from cadrumo.application.modelo.reconciliation_records import bind_modelo_reconciliation_persistence_factory
+    from cadrumo.application.modelo.work_unit_repository import bind_work_unit_catalogue_repository_factory
+    from cadrumo.core.redaction.tax_identity_admission import bind_tax_identity_admission
+    from cadrumo.domain.calculations.registry.tax_identity_admission import RegistryTaxIdentityAdmission
+    from cadrumo.entrypoints.adapter_composition import calculation_revision_catalogue_repository
+
+    with (
+        bind_tax_identity_admission(RegistryTaxIdentityAdmission()),
+        composed_profile_persistence_ports(),
+        bind_bucket_event_history_repository_factory(build_bucket_event_history_repository),
+        bind_confirmation_record_repository_factory(ConfirmationRecordRepository),
+        bind_extraction_draft_repository_factory(ExtractionDraftRepository),
+        bind_transaction_participation_index_repository_factory(TransactionParticipationIndexRepository),
+        bind_ledger_classification_rule_repository_factory(LedgerClassificationRuleRepository),
+        bind_transaction_catalogue_repository_factory(TransactionCatalogueRepository),
+        bind_usage_ratio_profile_persistence(loader=load_usage_ratios, saver=save_usage_ratios),
+        bind_usage_ratio_censo_guard_loader(load_usage_ratios_with_censo_guard),
+        bind_calculation_revision_catalogue_repository_factory(calculation_revision_catalogue_repository),
+        bind_modelo_record_catalogue_repository_factory(ModeloRecordCatalogueRepository),
+        bind_justificante_repository_factory(JustificanteRepository),
+        bind_work_unit_catalogue_repository_factory(WorkUnitCatalogueRepository),
+        bind_reconciliation_evidence_parser(InboundReconciliationEvidenceParser()),
+        bind_modelo_reconciliation_persistence_factory(build_modelo_reconciliation_persistence),
+        bind_auth_provider_selector(select_outbound_auth_provider),
+        bind_session_store(build_session_store()),
+        bind_exchange_rate_provider_factory(recorded_ecb_rate_provider),
+    ):
+        yield
+
+
+@pytest.fixture
+def overview_cli_backend(tmp_path: Path) -> Iterator[None]:
+    """Provide the profile-backed storage lifecycle required by overview CLI tests."""
+    from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+    from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+    from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+
+    profile_id = "11111111-1111-4111-8111-111111111111"
+    with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(profile_id):
+        register_minimal_profile(profile_id=profile_id)
+        yield
+
+
+@pytest.fixture(autouse=True)
+def _evict_test_bound_bucket_session() -> Iterator[None]:
+    """Evict a bucket session a test bound itself, preserving inherited sessions."""
+    from cadrumo.adapters.persistence.storage.master_key.tests.bucket_session_isolation import (
+        evict_bucket_sessions_bound_since,
+        observe_bucket_session_binding,
+    )
+
+    inherited = observe_bucket_session_binding()
+    yield
+    evict_bucket_sessions_bound_since(inherited)
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _refuse_a_bucket_session_leaked_past_its_module() -> Iterator[None]:
+    """Refuse and evict a bucket session that escaped its owning test module."""
+    from cadrumo.adapters.persistence.storage.master_key.tests.bucket_session_isolation import (
+        evict_bucket_sessions_bound_since,
+        observe_bucket_session_binding,
+    )
+
+    before = observe_bucket_session_binding()
+    yield
+    leaked = evict_bucket_sessions_bound_since(before)
+    if leaked:
+        pytest.fail(
+            f"{len(leaked)} bucket session(s) bound during this module outlived it; the module- or "
+            "class-scoped fixture that opened them must close them in its teardown",
+            pytrace=False,
+        )
+
+
+@pytest.fixture(autouse=True)
+def _evict_test_bound_profile_record_session() -> Iterator[None]:
+    """Close a profile record authority a test introduced, leaving inherited state intact."""
+    if "cadrumo.application.user_profile.profile_record_repository" not in sys.modules:
+        yield
+        return
+    from cadrumo.application.user_profile.profile_record_repository import (
+        active_profile_record_session,
+        close_active_profile_record_session,
+    )
+
+    inherited = active_profile_record_session()
+    yield
+    bound = active_profile_record_session()
+    if bound is not None and bound is not inherited:
+        close_active_profile_record_session()
+
 
 register_collection_storage_root_cleanup(collection_storage_root())
 

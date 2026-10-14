@@ -66,7 +66,7 @@ def root_command(
         else:
             normalize_root_active_profile(ctx)
         emit_bare_invocation_and_exit(ctx)
-    from ._profile_authentication_contract import ProfileAuthenticationMethod, ProfileSecretSourceOptions
+    from cadrumo_client.commands.profile_authentication import ProfileAuthenticationMethod, ProfileSecretSourceOptions
 
     state["profile_secret_source"] = ProfileSecretSourceOptions(
         stdin=profile_secrets_stdin,
@@ -126,7 +126,7 @@ def _enter_root_adapter_composition(
         ctx.with_resource(profile_free_adapter_composition())
     else:
         from ...application.user_profile.profile_record_repository import invocation_profile_record_handoff
-        from ..adapter_composition import profile_adapter_composition, runtime_read_adapter_composition
+        from ..adapter_composition import connection_read_adapter_composition, profile_adapter_composition
 
         # Enter before adapter composition snapshots the profile language.
         # The scope is owned by this Click invocation and is reset when its
@@ -138,9 +138,9 @@ def _enter_root_adapter_composition(
             # Composition resolves the active profile's language, so a leaf that
             # writes nothing opens its one profile listing before that read.
             ctx.with_resource(summary_inventory_snapshot())
-        runtime_read = requested is not None and requested.canonical_cli_path in {
+        connection_read = requested is not None and requested.canonical_cli_path in {
             ("app", "ledger", "list"),
             ("app", "ledger", "history"),
         }
-        composition = runtime_read_adapter_composition() if runtime_read else profile_adapter_composition()
+        composition = connection_read_adapter_composition() if connection_read else profile_adapter_composition()
         state["adapter_composition"] = ctx.with_resource(composition)

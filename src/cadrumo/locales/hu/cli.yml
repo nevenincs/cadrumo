@@ -1376,7 +1376,7 @@ cli:
             megfigyelési tárból exportálás előtt (éves összesítések, előző negyedévre
             átvitt értékek stb.).
           root_folder_required: 'Ehhez a profilhoz még nem jött létre Drive-mappa;
-            futtasd először: `aeat config google login`.'
+            futtasd először: `cadrumo-runtime config google login`.'
           snapshot_failure: A Modelo {modelo} nyomtatvány ({period}, {year}) nyomtatványdefiníciós
             pillanatképe nem készíthető el.
         push_help: Egy nyomtatvány és időszak számításának exportálása a nyomtatványdefiníciók
@@ -1927,8 +1927,8 @@ cli:
         clear_help: Az apoderado-konfiguráció megszüntetése.
         configure:
           no_console_hint: 'Az apoderamiento interaktív beállításához konzol szükséges.
-            Állítsd be nem interaktív módon: aeat config auth apoderado configure
-            --represented-nif NIF --scope SCOPE.'
+            Állítsd be nem interaktív módon: cadrumo-runtime config auth apoderado
+            configure --represented-nif NIF --scope SCOPE.'
           represented_nif_help: A képviselt fél NIF-je.
           scope_help: Hatóköri tokenek (ismételhető).
           scope_required: 'Nincs megadva hatókör. Add meg a --scope kapcsolót az alábbiak
@@ -2021,7 +2021,7 @@ cli:
       status_summary_unconfigured: A hitelesítés még nincs beállítva.
       test_help: Helyi hitelesítési készség ellenőrzése.
       unknown_provider: 'Ismeretlen hitelesítési szolgáltató: %{provider}. Futtasd:
-        `aeat config auth --help` az érvényes azonosítókhoz.'
+        `cadrumo-runtime config auth --help` az érvényes azonosítókhoz.'
     check:
       available: elérhető
       capability_label: Képesség
@@ -2184,7 +2184,7 @@ cli:
         profile_unbound: Nincs aktív profil. Futtasd az aeat config login NÉV parancsot,
           vagy add meg a --profile kapcsolót.
         scope_insufficient: 'A Google-hozzáféréshez megadott engedélyek nem elegendők.
-          Futtasd: `aeat config google login` és fogadj el minden engedélyt.'
+          Futtasd: `cadrumo-runtime config google login` és fogadj el minden engedélyt.'
         storage: 'Nem sikerült elérni a Google Drive tárolót: {detail}'
         unsecured_mode: A Google-hozzáférés le van tiltva, amíg a titkos tár nem biztonságos
           módban fut valódi NIF-el rendelkező profil esetén.
@@ -2203,6 +2203,7 @@ cli:
       probe_read_only_help: Google Drive vizsgálata csak olvasási módban (nincs írási
         kísérlet).
       status_help: Az aktív profil aktuális Google OAuth-munkamenet állapotának megjelenítése.
+    help: Kezeld a bejelentkezést, a profilhozzáférést és a helyi hitelesítési beállításokat.
     list:
       help: Minden regisztrált profil listázása és az aktív megjelölése.
     login:
@@ -2430,7 +2431,7 @@ cli:
         szóló értesítéseket nem sikerült előállítani. A 'config profile status' megmutatja,
         mi van még hátra.
       create_help: Jelszóval védett profilt hoz létre. Terminálon ezután opcionális
-        helyreállítási kódot ajánl fel; kihagyható, vagy később hozzáadható az 'aeat
+        helyreállítási kódot ajánl fel; kihagyható, vagy később hozzáadható az 'cadrumo-runtime
         config profile recovery enable' paranccsal.
       create_login_required: A(z) '{profile}' profil elkészült, de még nincs megnyitott
         munkamenet hozzá. A folytatás előtt lépj be a 'config login {profile}' paranccsal

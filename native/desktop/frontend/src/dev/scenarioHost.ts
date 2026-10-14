@@ -431,7 +431,9 @@ export function scenarioHost(
       return {
         remainingAccess: {
           automationEnabled: access ? access.automationEnabled : true,
-          agentAccessRemains: access ? access.agentAccessRemains : false,
+          automationAccessRemains: access
+            ? access.automationAccessRemains
+            : false,
           automationRevoked: false,
         },
       };

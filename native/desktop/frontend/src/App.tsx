@@ -39,6 +39,7 @@ import type {
 import { PaneHeader, type PaneControl } from "./components/PaneHeader";
 import { Rail, type RailItem } from "./components/Rail";
 import { AgentColumn } from "./components/AgentColumn";
+import { AttendanceRequests } from "./components/AttendanceRequests";
 import { HostRecordList } from "./components/HostRecordList";
 import type { RecordMenuRequest } from "./components/RecordList";
 import {
@@ -2483,6 +2484,10 @@ export function App({ host }: { host: Host }) {
             />
           </div>
         </div>
+        <AttendanceRequests
+          attendance={host.attendance}
+          profile={signedIn ? (account.status?.active_profile ?? null) : null}
+        />
       </TooltipProvider>
     </StringsContext.Provider>
   );

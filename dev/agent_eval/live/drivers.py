@@ -33,9 +33,9 @@ from typing import Any, Final
 
 import anyio
 from mcp import ClientSession
-from mcp.client.stdio import StdioServerParameters, stdio_client
 
 from dev.packaging.command_execution import run_command
+from dev.runtime_lifecycle.mcp_proof_support import owned_stdio
 
 from .outcome import UnavailableError
 from .recorder import TrajectoryRecorder
@@ -99,6 +99,7 @@ class McpLaunch:
     arguments: tuple[str, ...]
     environment: Mapping[str, str]
     cwd: Path
+    on_spawn: Callable[[int], None] | None = field(default=None, repr=False, compare=False)
 
 
 BetweenPhases = Callable[[int], Awaitable[None]]
@@ -155,12 +156,16 @@ async def mcp_session(launch: McpLaunch, stderr_path: Path) -> AsyncGenerator[Cl
     The server's standard error goes to a file inside the run directory, which
     teardown removes; it is never part of a capture.
     """
-    parameters = StdioServerParameters(
-        command=launch.command, args=list(launch.arguments), env=dict(launch.environment), cwd=launch.cwd
-    )
     with stderr_path.open("w", encoding="utf-8") as errors:
         async with (
-            stdio_client(parameters, errlog=errors) as (reader, writer),
+            owned_stdio(
+                launch.command,
+                launch.arguments,
+                environment=launch.environment,
+                cwd=launch.cwd,
+                errors=errors,
+                on_spawn=launch.on_spawn,
+            ) as (reader, writer),
             ClientSession(reader, writer, read_timeout_seconds=_SETTLE_SECONDS) as session,
         ):
             await session.initialize()
@@ -227,9 +232,9 @@ async def _settle(tools: RecordedTools, definition_id: str, arguments: dict[str,
 async def wait_for_admission(tools: RecordedTools) -> Mapping[str, Any]:
     """Read ``status`` until the server reports a session, or the cold-start bound passes.
 
-    A server that has not yet resumed the sign-in answers ``session: none``
-    with a denial, exactly as one that never will; only the bound tells them
-    apart, as it does for a client.
+    The person's held-session observer decides pending attendance. A server
+    awaiting that exact approval reports ``session: none`` with a denial;
+    the bound distinguishes pending admission from a refused connection.
     """
     deadline = time.monotonic() + _COLD_START_SECONDS
     while True:
@@ -454,6 +459,7 @@ def run_agent_command(
     work_directory: Path,
     ambient: Mapping[str, str],
     between: Callable[[int], None] | None = None,
+    on_spawn: Callable[[int], None] | None = None,
 ) -> DriverReport:
     """Run the operator's agent command, one process per phase, and record what it streams.
 
@@ -512,6 +518,7 @@ def run_agent_command(
                 timeout_seconds=max(1.0, limits.max_seconds - (time.monotonic() - started)),
                 errors="replace",
                 input_text=prompt,
+                on_spawn=on_spawn,
             )
             translate_agent_stream(completed.stdout.splitlines(), recorder, report)
             if completed.returncode != 0 and not report.stop_reasons:

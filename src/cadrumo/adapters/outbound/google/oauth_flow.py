@@ -73,7 +73,7 @@ def require_interactive_terminal() -> None:
     The Desktop OAuth flow opens the consent screen in the operator's
     browser and then blocks a loopback HTTP receiver until consent
     completes. In a non-interactive invocation (piped, redirected, cron,
-    or another agent) ``stdin`` is not a TTY, no operator can complete the
+    or another automation) ``stdin`` is not a TTY, no operator can complete the
     flow, and the receiver would block forever. This guard eliminates that
     silent-hang failure mode before
     :func:`adapters.outbound.google.oauth_flow.run_login_flow` calls the local receiver.

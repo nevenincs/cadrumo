@@ -5,10 +5,10 @@ stored profile, under a session host that answers for the frontend each
 invocation was admitted on. A row the person classified by hand, attached a
 document to or linked an invoice to is excluded, derived on, split, archived,
 stashed, restored, detached from, linked and reviewed by the same request on
-the command line, the terminal interface and MCP, with the same stored effect.
+the command line, the terminal interface and external client, with the same stored effect.
 
 What differs by frontend is what the product records about who acted, and
-nothing else: an agent's execution stores its session's label and is recorded
+nothing else: an automation's execution stores its session's label and is recorded
 as the one who decided a classification it changed, and a person's stores the
 label the request carried and is recorded as the person's.
 
@@ -55,7 +55,7 @@ from ...domain.transactions.enums import BusinessClassification, TransactionLife
 from ...domain.transactions.models import Transaction
 from . import registered_executor_case_support as conformance
 from .ledger_frontend_parity_test_support import (
-    AGENT_LABEL,
+    AUTOMATION_LABEL,
     SwitchableSessionHost,
     attach_as_the_person,
     classify_as_the_person,
@@ -76,9 +76,9 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _CLI = OperationFrontendProjection.CLI
 _TUI = OperationFrontendProjection.TUI
-_MCP = OperationFrontendProjection.MCP
+_EXTERNAL_CLIENT = OperationFrontendProjection.EXTERNAL_CLIENT
 _PERSON = ClassificationOrigin.PERSON
-_AGENT = ClassificationOrigin.AGENT
+_AUTOMATION = ClassificationOrigin.AUTOMATION
 _AUTOMATIC = ClassificationOrigin.AUTOMATIC
 _BUSINESS = BusinessClassification.BUSINESS
 _PROPOSED_BY = "llm:local-text:synthetic"
@@ -89,8 +89,8 @@ _Act = tuple[str, BaseModel]
 
 _FRONTENDS = pytest.mark.parametrize(
     ("frontend", "recorded", "origin"),
-    [(_CLI, _TYPED, _PERSON), (_TUI, _TYPED, _PERSON), (_MCP, AGENT_LABEL, _AGENT)],
-    ids=["cli", "tui", "mcp"],
+    [(_CLI, _TYPED, _PERSON), (_TUI, _TYPED, _PERSON), (_EXTERNAL_CLIENT, AUTOMATION_LABEL, _AUTOMATION)],
+    ids=["cli", "tui", "external_client"],
 )
 """Each frontend with the actor label its execution stores and the origin a classification it changes records."""
 
@@ -339,7 +339,7 @@ def test_a_row_set_aside_on_one_frontend_is_archived_and_restored_on_any_other(
     """The row records who ran each archive, stash and restore, and none of them is refused for that record."""
     with _runtime(tmp_path) as runtime:
         _driver, _registry, profile_id, _host = runtime
-        for index, (first, second) in enumerate(permutations((_CLI, _TUI, _MCP), 2)):
+        for index, (first, second) in enumerate(permutations((_CLI, _TUI, _EXTERNAL_CLIENT), 2)):
             for set_aside in (_archive, _stash):
                 row = seed_row(
                     profile_id,
@@ -368,7 +368,7 @@ _REVIEWS: tuple[tuple[str, Callable[[UUID, str], _Act]], ...] = (
 @pytest.mark.parametrize(("definition_id", "review"), _REVIEWS, ids=[definition_id for definition_id, _ in _REVIEWS])
 @pytest.mark.parametrize("seeded", ["unprocessed", "classified-by-the-person"])
 @_FRONTENDS
-def test_a_review_run_to_its_commit_stores_the_session_label_for_an_agent_and_the_typed_label_for_a_person(
+def test_a_review_run_to_its_commit_stores_the_session_label_for_an_automation_and_the_typed_label_for_a_person(
     tmp_path: Path,
     operation: PinnedAuthorityOperation,
     monkeypatch: pytest.MonkeyPatch,
@@ -426,7 +426,7 @@ def test_a_review_whose_row_was_classified_while_its_proposal_waited_settles_ali
     with _runtime(tmp_path) as runtime:
         driver, _registry, profile_id, host = runtime
         outcomes: dict[OperationFrontendProjection, tuple[OperationTerminalCondition | None, OperationEffect]] = {}
-        for frontend in (_CLI, _TUI, _MCP):
+        for frontend in (_CLI, _TUI, _EXTERNAL_CLIENT):
             row = seed_row(profile_id, operation, description=f"synthetic row reviewed on {frontend.value}")
             after_the_person: list[tuple[dict[str, Transaction], dict[str, BucketEvent]]] = []
 
@@ -458,23 +458,23 @@ def test_a_review_whose_row_was_classified_while_its_proposal_waited_settles_ali
         assert len(set(outcomes.values())) == 1, outcomes
 
 
-_BY_ANOTHER_PARTY = pytest.mark.parametrize("party", ["rule", "agent-review", "agent-derivation"])
+_BY_ANOTHER_PARTY = pytest.mark.parametrize("party", ["rule", "automation-review", "automation-derivation"])
 
 
 def _row_another_party_classified(
     runtime: _Runtime, operation: PinnedAuthorityOperation, party: str
 ) -> tuple[str, ClassificationOrigin]:
-    """Store a business row a rule classified, or one an agent then decided through a review or a derivation."""
+    """Store a business row a rule classified, or one an automation then decided through a review or a derivation."""
     _driver, _registry, profile_id, _host = runtime
-    if party == "agent-review":
+    if party == "automation-review":
         row = seed_row(profile_id, operation, description="synthetic unprocessed row")
-        assert _review(runtime, _MCP, _classify_review(profile_id, row))
-        return row, _AGENT
+        assert _review(runtime, _EXTERNAL_CLIENT, _classify_review(profile_id, row))
+        return row, _AUTOMATION
     row = seed_row_a_rule_classified(profile_id, operation, description="synthetic row for a rule")
     if party == "rule":
         return row, _AUTOMATIC
-    _take_effect(runtime, _MCP, _derive(profile_id, row))
-    return row, _AGENT
+    _take_effect(runtime, _EXTERNAL_CLIENT, _derive(profile_id, row))
+    return row, _AUTOMATION
 
 
 @_BY_ANOTHER_PARTY
@@ -488,7 +488,7 @@ def test_a_person_confirming_a_classification_with_the_same_value_is_recorded_as
 ) -> None:
     """Submitting what the row already says is the person accepting it, and the store records that it was.
 
-    The record closes the row to nobody: an agent then derives on it, and is recorded for what it changed.
+    The record closes the row to nobody: an automation then derives on it, and is recorded for what it changed.
     """
     _the_model(monkeypatch)
     with _runtime(tmp_path) as runtime:
@@ -505,8 +505,8 @@ def test_a_person_confirming_a_classification_with_the_same_value_is_recorded_as
         assert {event.actor for event in recorded} == {_TYPED}
         assert BucketEventType.LEDGER_TRANSACTION_CLASSIFIED in {event.event_type for event in recorded}
 
-        _take_effect(runtime, _MCP, _derive(profile_id, row, "domestic_reduced"))
-        assert stored_row(profile_id, row, operation).classification_origin is _AGENT
+        _take_effect(runtime, _EXTERNAL_CLIENT, _derive(profile_id, row, "domestic_reduced"))
+        assert stored_row(profile_id, row, operation).classification_origin is _AUTOMATION
 
 
 @pytest.mark.parametrize(
@@ -518,14 +518,14 @@ def test_a_person_confirming_a_classification_with_the_same_value_is_recorded_as
         ("investment_asset_id", "bi-0001"),
     ],
 )
-def test_a_person_completing_an_agents_classification_with_one_further_fact_is_recorded_as_having_decided_it(
+def test_a_person_completing_an_automations_classification_with_one_further_fact_is_recorded_as_having_decided_it(
     tmp_path: Path, operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch, field: str, value: str
 ) -> None:
     """The class is restated and one fact that bears on the tax is added: the row records the person."""
     _the_model(monkeypatch)
     with _runtime(tmp_path) as runtime:
         _driver, _registry, profile_id, _host = runtime
-        row, _decided_by = _row_another_party_classified(runtime, operation, "agent-review")
+        row, _decided_by = _row_another_party_classified(runtime, operation, "automation-review")
 
         _take_effect(runtime, _CLI, _classify(profile_id, row, **{field: value}))
 
@@ -543,7 +543,7 @@ def test_an_attachment_changes_the_last_writers_stamp_and_not_whose_classificati
         by_rule = seed_row_a_rule_classified(profile_id, operation, description="synthetic row for a rule")
         by_hand = seed_row(profile_id, operation, description="synthetic hand row", classification=_BUSINESS)
 
-        for frontend in (_CLI, _TUI, _MCP):
+        for frontend in (_CLI, _TUI, _EXTERNAL_CLIENT):
             for row in (by_rule, by_hand):
                 attachment = seed_stored_attachment(profile_id, operation, reference=f"{frontend.value}-{row[:8]}")
                 _take_effect(runtime, frontend, _attach(profile_id, row, attachment))
@@ -561,7 +561,7 @@ def test_an_exclusion_and_a_split_of_the_persons_row_return_the_same_result_on_e
         driver, registry, profile_id, host = runtime
         exclusions: dict[OperationFrontendProjection, object] = {}
         splits: dict[OperationFrontendProjection, object] = {}
-        for frontend in (_CLI, _TUI, _MCP):
+        for frontend in (_CLI, _TUI, _EXTERNAL_CLIENT):
             host.frontend = frontend
             for purpose, act in (("exclude", _exclude), ("split", _split)):
                 row = seed_row(
@@ -598,5 +598,5 @@ def test_an_exclusion_and_a_split_of_the_persons_row_return_the_same_result_on_e
                         len(split.child_transaction_ids),
                     )
 
-        assert exclusions[_CLI] == exclusions[_TUI] == exclusions[_MCP]
-        assert splits[_CLI] == splits[_TUI] == splits[_MCP]
+        assert exclusions[_CLI] == exclusions[_TUI] == exclusions[_EXTERNAL_CLIENT]
+        assert splits[_CLI] == splits[_TUI] == splits[_EXTERNAL_CLIENT]

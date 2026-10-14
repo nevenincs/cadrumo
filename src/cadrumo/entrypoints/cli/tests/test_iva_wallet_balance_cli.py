@@ -8,11 +8,12 @@ from uuid import UUID
 import pytest
 import typer
 
+from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
+
 from ....core.operations import OperationEffect, OperationTerminalCondition
 from .. import _modelo_iva_wallet_cli as handler
-from .. import runtime_modelo_iva_wallet_balance as bridge
+from .. import operation_modelo_iva_wallet_balance as bridge
 from .._modelo_iva_wallet_payloads import IvaWalletBalanceResult
-from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

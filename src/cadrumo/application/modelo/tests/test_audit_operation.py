@@ -91,7 +91,7 @@ def _export_request(
     )
 
 
-def test_real_registry_compiles_all_purpose_schemas_without_agent_source_prose(subject: Subject) -> None:
+def test_real_registry_compiles_all_purpose_schemas_without_automation_source_prose(subject: Subject) -> None:
     registry = _registry(subject)
     for definition in module.build_modelo_audit_operation_definitions(subject.compose_audit):
         contract = registry.lookup_public_contract(definition.definition_id)
@@ -112,14 +112,14 @@ async def test_full_view_preserves_canonical_manifest_and_query_removes_raw_addr
             request, subject.context(request.definition_id)
         )
     human = cast(module.ModeloAuditReadExecutionResult, subject.operands.values[-2]).projection
-    agent = cast(module.ModeloAuditQueryExecutionResult, subject.operands.values[-1]).projection
+    automation = cast(module.ModeloAuditQueryExecutionResult, subject.operands.values[-1]).projection
     assert human.bundle is not None and human.bundle.to_bundle() == subject.bundle
     assert human.bundle.to_bundle().model_dump(mode="json") == subject.bundle.model_dump(mode="json")
-    assert agent.bundle is not None and agent.bundle.bucket_id == str(PROFILE_ID)
-    assert agent.bundle.bundle_id == subject.bundle.bundle_id and agent.bundle.notes_present
-    assert agent.bundle.records[0].content_sha256 == subject.bundle.records[0].content_sha256
-    assert agent.bundle.records[0].payload_size_bytes == subject.bundle.records[0].payload_size_bytes
-    assert NOTE not in agent.model_dump_json() and SOURCE_ADDRESS not in agent.model_dump_json()
+    assert automation.bundle is not None and automation.bundle.bucket_id == str(PROFILE_ID)
+    assert automation.bundle.bundle_id == subject.bundle.bundle_id and automation.bundle.notes_present
+    assert automation.bundle.records[0].content_sha256 == subject.bundle.records[0].content_sha256
+    assert automation.bundle.records[0].payload_size_bytes == subject.bundle.records[0].payload_size_bytes
+    assert NOTE not in automation.model_dump_json() and SOURCE_ADDRESS not in automation.model_dump_json()
     assert subject.events.effects[-1] is OperationEffect.NONE
     assert subject.evidence_repository.writes == subject.fence.entries == 0
 
@@ -133,15 +133,15 @@ async def test_check_reuses_default_unreachable_semantics_and_complete_ordered_f
             request, subject.context(request.definition_id)
         )
     human = cast(module.ModeloAuditReadExecutionResult, subject.operands.values[-2]).projection
-    agent = cast(module.ModeloAuditQueryExecutionResult, subject.operands.values[-1]).projection
+    automation = cast(module.ModeloAuditQueryExecutionResult, subject.operands.values[-1]).projection
     assert human.report is not None and human.report.to_report() == expected
     assert human.report.to_report().model_dump(mode="json") == expected.model_dump(mode="json")
     assert expected.verification_state is BundleVerificationState.INCOMPLETE and expected.completeness_ratio == 0.0
-    assert agent.report is not None and agent.report.verification_state == expected.verification_state
-    assert tuple((row.check, row.passed) for row in agent.report.findings) == tuple(
+    assert automation.report is not None and automation.report.verification_state == expected.verification_state
+    assert tuple((row.check, row.passed) for row in automation.report.findings) == tuple(
         (row.check, row.passed) for row in expected.findings
     )
-    reachability = next(row for row in agent.report.findings if row.check is VerificationCheck.OBJECT_REACHABILITY)
+    reachability = next(row for row in automation.report.findings if row.check is VerificationCheck.OBJECT_REACHABILITY)
     assert not reachability.passed and subject.evidence_repository.writes == 0
 
 
@@ -276,7 +276,7 @@ def test_query_actual_policy_requires_complete_destination_consent_and_all_perio
         profile_id=PROFILE_ID,
         destination_id=uuid4(),
         action=AccessAction.RESULT,
-        frontend=OperationFrontendProjection.MCP,
+        frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
         contract=registry.lookup_public_contract(request.definition_id),
         published_authority=Availability.AVAILABLE,
         authority_operation=subject.operation,

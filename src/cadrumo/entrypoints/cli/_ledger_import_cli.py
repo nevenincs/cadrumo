@@ -21,8 +21,8 @@ from ...domain.transactions.errors import TransactionValidationError
 from ._ledger_payloads import LedgerImportPayload
 from ._ledger_support import ledger_transaction_validation_no_recovery
 from .common import bad, emit_envelope
+from .operation_ledger_import import import_ledger_sources_for_cli
 from .period_parsing import _optional_canonical_period
-from .runtime_ledger_import import import_ledger_sources_for_cli
 
 
 def _known_import_providers() -> tuple[str, ...]:

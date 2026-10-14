@@ -13,11 +13,13 @@ import pytest
 from textual.pilot import Pilot
 from textual.widgets import Button, Input, Static
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from cadrumo_client.contracts.automation_lifecycle import AutomationResumeReceipt
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.profile_access import ProfileStatus, SessionsLocked
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
 from ....application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
-from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from ....application.runtime.profile_access import RuntimeProfileStatus, RuntimeSessionsLocked
 from ....application.user_profile.access_contracts import (
     AccessAction,
     AccessScope,
@@ -31,7 +33,6 @@ from ....application.user_profile.access_contracts import (
 from ....application.user_profile.access_projections import PublicAccessSession
 from ....application.user_profile.automation_custody_port import AutomationSecretStore
 from ....application.user_profile.automation_lifecycle import AutomationDenialKind, AutomationDenialReceipt
-from ....application.user_profile.automation_lifecycle_service import AutomationResumeReceipt
 from ....application.user_profile.operations import (
     build_user_profile_operation_definitions,
     build_user_profile_operation_registrations,
@@ -45,7 +46,7 @@ from ..secret.automation_requester import RuntimeAutomationRequesterScreen
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-class _RuntimeClient(RuntimeFrontendClient):
+class _RuntimeClient(FrontendClient):
     """Explicit UI fault port; no native acceptance is claimed here."""
 
     def __init__(self, profile_id: UUID, *, admitted: bool) -> None:
@@ -82,9 +83,9 @@ class _RuntimeClient(RuntimeFrontendClient):
         return self.inventory
 
     @override
-    def status(self, *, timeout: float = 5) -> RuntimeProfileStatus:
+    def status(self, *, timeout: float = 5) -> ProfileStatus:
         session_id = self.session_id
-        return RuntimeProfileStatus(
+        return ProfileStatus(
             request_id=uuid4(),
             runtime_boot_id=uuid4(),
             connection_id=uuid4(),
@@ -126,20 +127,20 @@ class _RuntimeClient(RuntimeFrontendClient):
         )
 
     @override
-    def lock(self, *, timeout: float = 5) -> RuntimeSessionsLocked:
+    def lock(self, *, timeout: float = 5) -> SessionsLocked:
         session_id = self.session_id
         self.locked = True
         self._session_id = None
-        return RuntimeSessionsLocked(
+        return SessionsLocked(
             request_id=uuid4(), runtime_boot_id=uuid4(), connection_id=uuid4(), session_ids=(session_id,)
         )
 
     @override
-    def revoke_session(self, target_session_id: UUID, *, timeout: float = 5) -> RuntimeSessionsLocked:
+    def revoke_session(self, target_session_id: UUID, *, timeout: float = 5) -> SessionsLocked:
         self.selected_targets.append(target_session_id)
         if self._session_id in self.selected_cascade:
             self._session_id = None
-        return RuntimeSessionsLocked(
+        return SessionsLocked(
             request_id=uuid4(),
             runtime_boot_id=uuid4(),
             connection_id=uuid4(),
@@ -186,7 +187,7 @@ class _RuntimeClient(RuntimeFrontendClient):
 class _RefusingInventoryClient(_RuntimeClient):
     @override
     def sessions(self, *, timeout: float = 5) -> tuple[PublicAccessSession, ...]:
-        raise RuntimeFrontendRefusedError("profile_session_expired")
+        raise FrontendRefusedError("profile_session_expired")
 
 
 class _ApiInventoryClient(_RuntimeClient):
@@ -196,7 +197,7 @@ class _ApiInventoryClient(_RuntimeClient):
 
     @override
     def sessions(self, *, timeout: float = 5) -> tuple[PublicAccessSession, ...]:
-        raise RuntimeFrontendRefusedError("human_authority_required")
+        raise FrontendRefusedError("human_authority_required")
 
 
 class _ExpiringInventoryClient(_RuntimeClient):
@@ -262,7 +263,7 @@ async def _assert_resume_replay_fenced(screen: RuntimeAccessManagementScreen, re
 
 
 class _UnmountNotifiedScreen(RuntimeAccessManagementScreen):
-    def __init__(self, client: RuntimeFrontendClient, *, open_recovery_client: RecoveryClientOpener) -> None:
+    def __init__(self, client: FrontendClient, *, open_recovery_client: RecoveryClientOpener) -> None:
         super().__init__(client, open_recovery_client=open_recovery_client)
         self.unmounting = asyncio.Event()
 
@@ -277,7 +278,7 @@ async def test_inventory_denial_and_current_lock_keep_distinct_runtime_actions()
     profile_id = uuid4()
     client = _RuntimeClient(profile_id, admitted=True)
 
-    async def open_recovery() -> RuntimeFrontendClient:
+    async def open_recovery() -> FrontendClient:
         raise AssertionError("recovery was not requested")
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
@@ -309,13 +310,13 @@ async def test_human_create_journey_borrows_exact_reviewer_and_refreshes_after_c
     client = _RuntimeClient(uuid4(), admitted=True)
     created: list[RuntimeAutomationRequesterScreen] = []
 
-    async def open_recovery() -> RuntimeFrontendClient:
+    async def open_recovery() -> FrontendClient:
         raise AssertionError("recovery was not requested")
 
-    async def open_requester(_profile_id: UUID) -> RuntimeFrontendClient:
+    async def open_requester(_profile_id: UUID) -> FrontendClient:
         raise AssertionError("unsubmitted requester must not open a native client")
 
-    def factory(reviewer: RuntimeFrontendClient) -> RuntimeAutomationRequesterScreen:
+    def factory(reviewer: FrontendClient) -> RuntimeAutomationRequesterScreen:
         assert reviewer is client
         definitions = build_user_profile_operation_definitions()
         registration = next(
@@ -354,10 +355,10 @@ async def test_human_create_journey_borrows_exact_reviewer_and_refreshes_after_c
 async def test_api_human_refusal_fences_create_even_for_programmatic_button_event() -> None:
     client = _ApiInventoryClient(uuid4())
 
-    async def open_recovery() -> RuntimeFrontendClient:
+    async def open_recovery() -> FrontendClient:
         raise AssertionError("recovery was not requested")
 
-    def factory(_reviewer: RuntimeFrontendClient) -> RuntimeAutomationRequesterScreen:
+    def factory(_reviewer: FrontendClient) -> RuntimeAutomationRequesterScreen:
         raise AssertionError("API authority must not open human enrollment")
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery, requester_factory=factory)
@@ -387,7 +388,7 @@ async def test_session_detail_keeps_parent_grant_key_and_action_scope_visible() 
     )
     client.inventory = (session,)
 
-    async def open_recovery() -> RuntimeFrontendClient:
+    async def open_recovery() -> FrontendClient:
         raise AssertionError("recovery was not requested")
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
@@ -421,7 +422,7 @@ async def test_denial_receipt_distinguishes_denied_access_from_pending_native_cl
 
     client = PendingCleanupClient(uuid4(), admitted=True)
 
-    async def open_recovery() -> RuntimeFrontendClient:
+    async def open_recovery() -> FrontendClient:
         raise AssertionError("recovery was not requested")
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
@@ -447,7 +448,7 @@ async def test_profile_lock_uses_distinct_durable_denial_door() -> None:
     profile_id = uuid4()
     client = _RuntimeClient(profile_id, admitted=True)
 
-    async def open_recovery() -> RuntimeFrontendClient:
+    async def open_recovery() -> FrontendClient:
         raise AssertionError("recovery was not requested")
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
@@ -468,7 +469,7 @@ async def test_recovery_owns_fresh_client_and_waits_for_native_proof_to_settle()
     recovery.release_proof.clear()
     opened = 0
 
-    async def open_recovery() -> RuntimeFrontendClient:
+    async def open_recovery() -> FrontendClient:
         nonlocal opened
         opened += 1
         return recovery
@@ -504,7 +505,7 @@ async def test_invalid_grant_selection_wipes_password_before_opening_connection(
     client = _RuntimeClient(profile_id, admitted=True)
     opened = False
 
-    async def open_recovery() -> RuntimeFrontendClient:
+    async def open_recovery() -> FrontendClient:
         nonlocal opened
         opened = True
         raise AssertionError("invalid selection cannot open recovery")
@@ -528,7 +529,7 @@ async def test_cancelled_recovery_retains_proof_and_connection_until_native_call
     recovery = _RuntimeClient(profile_id, admitted=False)
     recovery.release_proof.clear()
 
-    async def open_recovery() -> RuntimeFrontendClient:
+    async def open_recovery() -> FrontendClient:
         return recovery
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
@@ -557,7 +558,7 @@ async def test_authority_loss_clears_inventory_and_disables_admitted_actions() -
     profile_id = uuid4()
     client = _RefusingInventoryClient(profile_id, admitted=True)
 
-    async def open_recovery() -> RuntimeFrontendClient:
+    async def open_recovery() -> FrontendClient:
         raise AssertionError("recovery was not requested")
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
@@ -574,7 +575,7 @@ async def test_authority_loss_clears_inventory_and_disables_admitted_actions() -
 async def test_api_inventory_human_refusal_keeps_only_authorized_current_lock() -> None:
     client = _ApiInventoryClient(uuid4())
 
-    async def open_recovery() -> RuntimeFrontendClient:
+    async def open_recovery() -> FrontendClient:
         raise AssertionError("recovery was not requested")
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
@@ -602,13 +603,13 @@ async def test_api_inventory_human_refusal_keeps_only_authorized_current_lock() 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "failure",
-    [RuntimeFrontendRefusedError("session_expired"), OSError("private-transport-error-canary")],
+    [FrontendRefusedError("session_expired"), OSError("private-transport-error-canary")],
     ids=["expiry", "transport-loss"],
 )
 async def test_later_authority_or_transport_loss_clears_previously_rendered_private_rows(failure: Exception) -> None:
     client = _ExpiringInventoryClient(uuid4(), failure=failure)
 
-    async def open_recovery() -> RuntimeFrontendClient:
+    async def open_recovery() -> FrontendClient:
         raise AssertionError("recovery was not requested")
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
@@ -629,7 +630,7 @@ async def test_foreign_recovery_client_is_closed_without_receiving_proof() -> No
     client = _RuntimeClient(uuid4(), admitted=True)
     foreign = _RuntimeClient(uuid4(), admitted=False)
 
-    async def open_recovery() -> RuntimeFrontendClient:
+    async def open_recovery() -> FrontendClient:
         return foreign
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
@@ -653,7 +654,7 @@ async def test_selected_session_revoke_preserves_current_access_unless_cascade_r
     child_id = uuid4()
     client.selected_cascade = (selected_id, child_id)
 
-    async def open_recovery() -> RuntimeFrontendClient:
+    async def open_recovery() -> FrontendClient:
         raise AssertionError("recovery was not requested")
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
@@ -683,7 +684,7 @@ async def test_real_unmount_drains_recovery_and_wipes_proof_without_closing_borr
     recovery.release_proof.clear()
     recovery.wipe_in_port = False
 
-    async def open_recovery() -> RuntimeFrontendClient:
+    async def open_recovery() -> FrontendClient:
         return recovery
 
     screen = _UnmountNotifiedScreen(client, open_recovery_client=open_recovery)
@@ -715,7 +716,7 @@ async def test_unmount_during_recovery_open_closes_late_client_without_deliverin
     opening = asyncio.Event()
     release = asyncio.Event()
 
-    async def open_recovery() -> RuntimeFrontendClient:
+    async def open_recovery() -> FrontendClient:
         opening.set()
         await release.wait()
         return recovery
@@ -747,19 +748,19 @@ async def test_unmount_during_recovery_open_closes_late_client_without_deliverin
 async def test_recovery_refusal_keeps_primary_and_retryable_close_owner() -> None:
     client = _RuntimeClient(uuid4(), admitted=True)
     recovery = _RuntimeClient(client.profile_id, admitted=False)
-    refusal = RuntimeFrontendRefusedError("profile_session_expired")
+    refusal = FrontendRefusedError("profile_session_expired")
     recovery.proof_failure = refusal
     recovery.close_failures_remaining = 1
     recovery.wipe_in_port = False
 
-    async def open_recovery() -> RuntimeFrontendClient:
+    async def open_recovery() -> FrontendClient:
         return recovery
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
     async with ScreenHostApp(screen).run_test(size=(120, 40)) as pilot:
         await _until(pilot, lambda: not screen._busy)
         password = bytearray(b"private-refused-proof")
-        with pytest.raises(RuntimeFrontendRefusedError) as caught:
+        with pytest.raises(FrontendRefusedError) as caught:
             await screen._recover_owned(password, frozenset())
         assert caught.value is refusal
         assert not any(password)
@@ -780,7 +781,7 @@ async def test_successful_recovery_failed_close_is_retried_on_unmount() -> None:
     recovery.close_failures_remaining = 1
     recovery.wipe_in_port = False
 
-    async def open_recovery() -> RuntimeFrontendClient:
+    async def open_recovery() -> FrontendClient:
         return recovery
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
@@ -795,12 +796,12 @@ async def test_successful_recovery_failed_close_is_retried_on_unmount() -> None:
         presentation = str(screen.query_one("#runtime-access-status", Static).content)
         assert tr("tui.runtime_access.completed") in presentation
         assert tr("tui.runtime_access.refused") not in presentation
-        assert RuntimeRefusalCode.UNAVAILABLE.value in presentation
+        assert RefusalCode.UNAVAILABLE.value in presentation
         assert screen._resume_receipt is not None and screen._resume_receipt.profile_id == client.profile_id
         assert screen._recovery_clients
         await _assert_resume_replay_fenced(screen, recovery)
         assert recovery.close_calls == 1
-        with pytest.raises(RuntimeFrontendRefusedError):
+        with pytest.raises(FrontendRefusedError):
             _ = recovery.session_id
         assert "private-close-error-canary" not in presentation
         assert "private-successful-proof" not in presentation
@@ -829,7 +830,7 @@ async def test_recovery_mismatched_receipt_is_unknown_and_cannot_replay(receipt_
         else frozenset(),
     )
 
-    async def open_recovery() -> RuntimeFrontendClient:
+    async def open_recovery() -> FrontendClient:
         return recovery
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
@@ -840,7 +841,7 @@ async def test_recovery_mismatched_receipt_is_unknown_and_cannot_replay(receipt_
         await screen._perform("resume")
         presentation = str(screen.query_one("#runtime-access-status", Static).content)
         assert tr("tui.runtime_access.unknown") in presentation
-        assert RuntimeRefusalCode.INVALID_FRAME.value in presentation
+        assert RefusalCode.INVALID_FRAME.value in presentation
         assert tr("tui.runtime_access.completed") not in presentation
         assert "private-receipt-proof" not in presentation
         assert recovery.closed and recovery.proof_calls == 1
@@ -848,7 +849,7 @@ async def test_recovery_mismatched_receipt_is_unknown_and_cannot_replay(receipt_
         assert screen._resume_receipt is None
         await _assert_resume_replay_fenced(screen, recovery)
         assert client.session_id == original_session and not client.closed
-        with pytest.raises(RuntimeFrontendRefusedError):
+        with pytest.raises(FrontendRefusedError):
             _ = recovery.session_id
 
 
@@ -856,8 +857,8 @@ async def test_recovery_mismatched_receipt_is_unknown_and_cannot_replay(receipt_
 @pytest.mark.parametrize(
     "failure",
     [
-        RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED),
-        RuntimeFrontendRefusedError(RuntimeRefusalCode.CONNECTION_CLOSED.value),
+        RefusalError(RefusalCode.DEADLINE_EXCEEDED),
+        FrontendRefusedError(RefusalCode.CONNECTION_CLOSED.value),
         OSError("private-dispatch-error-canary"),
     ],
 )
@@ -867,7 +868,7 @@ async def test_dispatched_recovery_transport_failure_is_unknown_and_fences_repla
     recovery.proof_failure = failure
     recovery.wipe_in_port = False
 
-    async def open_recovery() -> RuntimeFrontendClient:
+    async def open_recovery() -> FrontendClient:
         return recovery
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
@@ -888,15 +889,15 @@ async def test_recovery_pre_dispatch_failure_and_domain_refusal_allow_fresh_proo
     client = _RuntimeClient(uuid4(), admitted=True)
     original_session = client.session_id
     refused = _RuntimeClient(client.profile_id, admitted=False)
-    refused.proof_failure = RuntimeFrontendRefusedError("profile_session_expired")
+    refused.proof_failure = FrontendRefusedError("profile_session_expired")
     recovered = _RuntimeClient(client.profile_id, admitted=False)
     openings = 0
 
-    async def open_recovery() -> RuntimeFrontendClient:
+    async def open_recovery() -> FrontendClient:
         nonlocal openings
         openings += 1
         if openings == 1:
-            raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
         return refused if openings == 2 else recovered
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
@@ -929,7 +930,7 @@ async def test_recovery_settled_proof_is_wiped_before_blocked_close_and_cancel_k
     recovery.wipe_in_port = False
     recovery.release_close.clear()
 
-    async def open_recovery() -> RuntimeFrontendClient:
+    async def open_recovery() -> FrontendClient:
         return recovery
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
@@ -955,7 +956,7 @@ async def test_recovery_settled_proof_is_wiped_before_blocked_close_and_cancel_k
         assert recovery.closed and screen._resume_receipt is not None
         await _assert_resume_replay_fenced(screen, recovery)
         assert client.session_id == original_session and not client.closed
-        with pytest.raises(RuntimeFrontendRefusedError):
+        with pytest.raises(FrontendRefusedError):
             _ = recovery.session_id
 
 
@@ -963,13 +964,13 @@ async def test_recovery_settled_proof_is_wiped_before_blocked_close_and_cancel_k
 async def test_cancelled_failed_recovery_preserves_body_and_retries_close_on_unmount() -> None:
     client = _RuntimeClient(uuid4(), admitted=True)
     recovery = _RuntimeClient(client.profile_id, admitted=False)
-    refusal = RuntimeFrontendRefusedError("profile_session_expired")
+    refusal = FrontendRefusedError("profile_session_expired")
     recovery.proof_failure = refusal
     recovery.close_failures_remaining = 1
     recovery.wipe_in_port = False
     recovery.release_proof.clear()
 
-    async def open_recovery() -> RuntimeFrontendClient:
+    async def open_recovery() -> FrontendClient:
         return recovery
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
@@ -1002,12 +1003,12 @@ async def test_cancelled_failed_recovery_preserves_body_and_retries_close_on_unm
 async def test_unmount_drains_failed_recovery_then_retries_owned_close() -> None:
     client = _RuntimeClient(uuid4(), admitted=True)
     recovery = _RuntimeClient(client.profile_id, admitted=False)
-    recovery.proof_failure = RuntimeFrontendRefusedError("profile_session_expired")
+    recovery.proof_failure = FrontendRefusedError("profile_session_expired")
     recovery.close_failures_remaining = 1
     recovery.wipe_in_port = False
     recovery.release_proof.clear()
 
-    async def open_recovery() -> RuntimeFrontendClient:
+    async def open_recovery() -> FrontendClient:
         return recovery
 
     screen = _UnmountNotifiedScreen(client, open_recovery_client=open_recovery)

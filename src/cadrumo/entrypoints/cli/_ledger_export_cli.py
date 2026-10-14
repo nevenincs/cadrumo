@@ -22,7 +22,7 @@ def ledger_export(
     actor: str | None = None,
 ) -> None:
     """Export canonical exact-profile ledger rows through the authenticated worker."""
-    from .runtime_ledger_export_link import export_ledger_for_cli
+    from .operation_ledger_export_link import export_ledger_for_cli
 
     projection = export_ledger_for_cli(
         ctx,

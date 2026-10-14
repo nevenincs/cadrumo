@@ -1,4 +1,4 @@
-"""Launch the bundled agent image as the runtime does and prove the package defined each image's environment.
+"""Launch the bundled agent image through the service's declared environment contract.
 
 Run by the assembled package's own interpreter::
 
@@ -8,11 +8,11 @@ The probe starts programs from the package, never from a checkout:
 
 * The agent image, given an invocation its launch profiles do not declare, exits with the native host's
   launch-profile status after writing the one refusal line the runtime reads.
-* The agent image's own store invocations, run in the environment the runtime composes for the gateway,
+* The agent image's own store invocations, run in the environment the service composes for the gateway,
   bring a synthetic hosted root to ``current``: ``stores-state`` answers, ``setup`` succeeds, and
   ``stores-state`` then reads ``current``.
-* The agent gateway, started through the runtime's own composer with a hosted environment in that root and
-  the runtime's own empty credential frame, answers on the hosting protocol. Until the agent records
+* The agent gateway, started through the service's composer with a hosted environment in that root and
+  the service's empty credential frame, answers on the hosting protocol. Until the agent records
   a proof of its hosted lane, the answer is the refusal ``hosted_lane_unproven``, which also proves the
   gateway received its hosted root. Once a lane proof exists the answer is ``agent_ready``.
 * The agent worker, started through the image's worker invocation, reports the port it bound.
@@ -40,16 +40,17 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Final
 
-from cadrumo.adapters.local_runtime.agent_programs import (
+from cadrumo_agent_service.adapters.agent_programs import (
     GATEWAY_ARGUMENTS,
     PACKAGE_AEAT_VARIABLE,
     PACKAGE_AGENT_VARIABLE,
     PACKAGE_PYTHON_VARIABLE,
     PACKAGE_RELAY_VARIABLE,
 )
-from cadrumo.application.agent_host.credential_frame import build_credential_frame
-from cadrumo.application.agent_host.launch_environment import agent_launch_environment
-from cadrumo.application.agent_host.native_refusal import NativeLaunchRefusalCode, native_launch_refusal_from
+from cadrumo_agent_service.host.credential_frame import build_credential_frame
+from cadrumo_agent_service.host.launch_environment import agent_launch_environment
+from cadrumo_agent_service.host.native_refusal import NativeLaunchRefusalCode, native_launch_refusal_from
+from cadrumo_agent_service.installed_client import SERVICE_ID
 
 FIRST_LINE_SECONDS: Final = 180.0
 """How long a started program may take to write its first protocol line."""
@@ -174,7 +175,7 @@ def _literals(invocation: Mapping[str, Any]) -> tuple[str | None, ...]:
 
 
 def read_contract(package: Path, document: Mapping[str, Any]) -> Contract:
-    """Resolve the agent image, its profiles and store invocations, and the programs the runtime fixes."""
+    """Resolve the agent image and the containing service's fixed package programs."""
     layout, section = document["layout"], document["application_environment"]
     bundled = list(layout["bundled_images"])
     if len(bundled) != 1:
@@ -212,7 +213,10 @@ def read_contract(package: Path, document: Mapping[str, Any]) -> Contract:
         if (gateway_name, arguments) not in invocations:
             raise SetupError(f"the package's {name} image does not declare {list(arguments)} in the gateway's profile")
         stores[verb] = arguments
-    fixed = {value["name"]: value for profile in profiles.values() for value in profile["fixed"]}
+    service_profiles = [profile for profile in profiles.values() if profile["image"] == SERVICE_ID]
+    if len(service_profiles) != 1:
+        raise SetupError("the package must declare exactly one agent service launch profile")
+    fixed = {value["name"]: value for value in service_profiles[0]["fixed"]}
     relay = fixed.get(PACKAGE_RELAY_VARIABLE)
     aeat = fixed.get(PACKAGE_AEAT_VARIABLE)
     interpreter = fixed.get(PACKAGE_PYTHON_VARIABLE)
@@ -227,7 +231,7 @@ def read_contract(package: Path, document: Mapping[str, Any]) -> Contract:
         or agent is None
         or agent["value"] != name
     ):
-        raise SetupError("the runtime's profile does not fix the agent image, the relay, the command line and python")
+        raise SetupError("the service's profile does not fix the agent image, the relay, the command line and python")
 
     def admitted(profile: Mapping[str, Any]) -> set[str]:
         return {*profile["operator"], *profile["pass"], *(slot["name"] for slot in profile["slots"])}
@@ -463,7 +467,7 @@ class Probe:
         self.storage.mkdir()
 
     def _composed(self) -> dict[str, str]:
-        """The gateway's environment as the runtime composes it for this root."""
+        """The gateway's environment as the service composes it for this root."""
         return agent_launch_environment(
             storage_root=self.storage,
             agent_root=self.hosted,
@@ -543,7 +547,7 @@ class Probe:
         return Result("agent stores", f"stores-state answered {before!r}; setup succeeded; stores-state reads current")
 
     async def gateway(self) -> Result:
-        """A hosted gateway given the runtime's empty frame refuses as unproven, or reports ready, and is stopped."""
+        """A hosted gateway given the service's empty frame refuses as unproven, or reports ready, and is stopped."""
         try:
             await self.stores()
         except ProbeFailedError as failure:

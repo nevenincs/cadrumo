@@ -243,7 +243,7 @@ def test_history_entry_actions_resolve_under_held_authority_not_the_admission(ac
         profile_id=_OTHER,
         definition_id="user-profile.other",
         action=AccessAction.SUBMIT,
-        frontend=OperationFrontendProjection.MCP,
+        frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
         periods=frozenset({Period.from_year_and_code(2026, "1T")}),
         period_independent=False,
         destination_id=uuid4(),

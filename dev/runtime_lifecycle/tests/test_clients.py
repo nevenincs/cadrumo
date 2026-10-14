@@ -11,8 +11,11 @@ from mcp.client.stdio import StdioServerParameters, stdio_client
 
 from cadrumo.core.storage_environment import ChildEnvironmentProfile, child_environment
 
-from ..client_probes import _call, _mcp_read, _mcp_refuse_profile, _tui, issue_key, mcp_edit_profile
+from ..client_probes import _call, _mcp_read, _mcp_refuse_profile, _tui, attend_mcp, issue_key, mcp_edit_profile
 from ..harness import LifecycleHarness, Profile
+from ..mcp_proof_support import owned_stdio
+from ..proof_support import ProcessIdentity
+from ..session_holder import RuntimeSessionHolder
 
 pytestmark = [
     pytest.mark.integration,
@@ -40,41 +43,71 @@ async def test_packaged_client_authentication_and_profile_scope(harness: Lifecyc
     environment = child_environment(ChildEnvironmentProfile.STRICT, harness.root)
     parameters = StdioServerParameters(
         command=str(harness.package / "bin/cadrumo-mcp.exe"),
-        args=[],
+        args=["--profile-id", str(first.profile_id)],
         cwd=harness.root,
         env=environment,
     )
+    invocations: list[ProcessIdentity] = []
+    b_invocations: list[ProcessIdentity] = []
     with (
         (harness.root / "mcp.stderr").open("w", encoding="utf-8") as errors,
         (harness.root / "mcp-b.stderr").open("w", encoding="utf-8") as b_errors,
         (harness.root / "mcp-key.stderr").open("w", encoding="utf-8") as key_errors,
     ):
         async with (
-            stdio_client(parameters, errlog=errors) as (reader, writer),
+            owned_stdio(
+                parameters.command,
+                parameters.args,
+                environment=environment,
+                cwd=harness.root,
+                errors=errors,
+                on_spawn=lambda pid: invocations.append(ProcessIdentity.capture(pid)),
+            ) as (reader, writer),
             ClientSession(reader, writer, read_timeout_seconds=90) as mcp,
             AsyncExitStack() as b_stack,
             AsyncExitStack() as key_stack,
+            AsyncExitStack() as holders,
         ):
             await mcp.initialize()
             await _call(mcp, "describe", {"definition_id": "auth.local-read"}, admitted=False)
-            # A server without a key is bound to the profile of the first sign-in it resumes,
-            # with no enrollment or password, and keeps that profile for its whole life.
+            # The person reviews this exact relay through a held session for A.
+            # MCP receives neither the password nor the person's receipt.
             await asyncio.to_thread(
                 harness.cli, "login", "Client A", "--secrets-stdin", secret={"passphrase": first.password}
             )
             await _signed_in_reads(harness, first, "Client A")
+            first_holder = await asyncio.to_thread(
+                RuntimeSessionHolder, harness.runtime_image, profile_id=first.profile_id, environment=environment
+            )
+            holders.push_async_callback(asyncio.to_thread, first_holder.close)
+            await attend_mcp(first_holder, mcp, harness=harness, invocation=invocations[0])
             await _mcp_read(mcp, first)
             await _mcp_refuse_profile(mcp, second)
             await asyncio.to_thread(
                 harness.cli, "login", "Client B", "--secrets-stdin", secret={"passphrase": second.password}
             )
             await _signed_in_reads(harness, second, "Client B")
-            # Once another profile is signed in the server bound to A refuses every call;
-            # the person starts a new agent session, which binds to B.
+            # Closing A's held session retires its attended lease. B requires a
+            # separate held session and exact review of the new relay.
+            await asyncio.to_thread(first_holder.close)
             await _call(mcp, "describe", {"definition_id": "auth.local-read"}, admitted=False)
-            b_reader, b_writer = await b_stack.enter_async_context(stdio_client(parameters, errlog=b_errors))
+            b_reader, b_writer = await b_stack.enter_async_context(
+                owned_stdio(
+                    parameters.command,
+                    ["--profile-id", str(second.profile_id)],
+                    environment=environment,
+                    cwd=harness.root,
+                    errors=b_errors,
+                    on_spawn=lambda pid: b_invocations.append(ProcessIdentity.capture(pid)),
+                )
+            )
             mcp = await b_stack.enter_async_context(ClientSession(b_reader, b_writer, read_timeout_seconds=90))
             await mcp.initialize()
+            second_holder = await asyncio.to_thread(
+                RuntimeSessionHolder, harness.runtime_image, profile_id=second.profile_id, environment=environment
+            )
+            holders.push_async_callback(asyncio.to_thread, second_holder.close)
+            await attend_mcp(second_holder, mcp, harness=harness, invocation=b_invocations[0])
             await _mcp_read(mcp, second)
             await _mcp_refuse_profile(mcp, first)
             # The person issues a key for A on the command line; the agent only receives its
@@ -88,7 +121,7 @@ async def test_packaged_client_authentication_and_profile_scope(harness: Lifecyc
             await asyncio.to_thread(key_profile_human.client.resume_receipt)
             signed_out_of_a = await asyncio.to_thread(key_profile_human.client.human_sign_out)
             # The key the person issued for A is not tied to the sign-in, and the report says so.
-            assert signed_out_of_a.agent_access_remains is True
+            assert signed_out_of_a.automation_access_remains is True
             await asyncio.to_thread(
                 harness.cli, "login", "Client B", "--secrets-stdin", secret={"passphrase": second.password}
             )
@@ -116,6 +149,12 @@ async def test_packaged_client_authentication_and_profile_scope(harness: Lifecyc
             view = (await asyncio.to_thread(harness.cli, "profile", "view", profile_secret=second.password))["result"]
             assert view["display_name"] == "Client B"
             await asyncio.to_thread(_tui, harness, second, admitted=True)
+            await asyncio.to_thread(second_holder.close)
+            second_holder = await asyncio.to_thread(
+                RuntimeSessionHolder, harness.runtime_image, profile_id=second.profile_id, environment=environment
+            )
+            holders.push_async_callback(asyncio.to_thread, second_holder.close)
+            await attend_mcp(second_holder, mcp, harness=harness, invocation=b_invocations[0])
             await _mcp_read(mcp, second)
             # The key session was lost with the runtime; the launch reference admits it again.
             await _mcp_read(key_mcp, first)
@@ -126,7 +165,7 @@ async def test_packaged_client_authentication_and_profile_scope(harness: Lifecyc
             signed_out = await asyncio.to_thread(harness.cli, "logout")
             assert signed_out["result"]["human_receipt_revoked"] is True
             # No key was issued for B, so signing B out leaves no agent access to it.
-            assert signed_out["result"]["agent_access_remains"] is False
+            assert signed_out["result"]["automation_access_remains"] is False
             await asyncio.to_thread(harness.cli, "profile", "view", expect_success=False)
             await asyncio.to_thread(_tui, harness, second, admitted=False)
             await _call(mcp, "describe", {"definition_id": "auth.local-read"}, admitted=False)

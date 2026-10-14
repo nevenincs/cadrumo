@@ -49,7 +49,7 @@ EVENTS_FILENAME = "events.jsonl"
 ENVELOPE_FILENAME = "envelope.json"
 """Per-run artifact leaf names, owned by this module (see the ``run_trace`` /
 ``run_events`` / ``run_envelope`` entries in
-:data:`~cadrumo.adapters.persistence.storage.STORAGE_PATH_DEFINITIONS`, each
+:data:`~cadrumo.adapters.persistence.storage.storage_path_definitions.STORAGE_PATH_DEFINITIONS`, each
 declared ``owner="cadrumo.core.observability"`` and interpolating these
 constants into their grammar rather than re-typing the names)."""
 

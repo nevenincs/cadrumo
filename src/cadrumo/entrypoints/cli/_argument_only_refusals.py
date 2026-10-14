@@ -29,7 +29,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from .command_spec import CommandSpec
+    from cadrumo_client.commands.spec import CommandSpec
 
 #: Schema identity of the verb whose modelo argument is decidable on its own.
 _WORK_CREATE_IDENTITY = "modelo.work.create"

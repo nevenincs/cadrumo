@@ -120,7 +120,7 @@ def test_mutating_the_persisted_stamp_moves_every_loaded_field(tmp_path: Path) -
     assert after.review_status is not before.review_status
     assert after.reviewed_by != before.reviewed_by
     assert after.reviewed_at != before.reviewed_at
-    assert after.review_status is RevisionReviewStatus.AGENT_REVIEWED
+    assert after.review_status is RevisionReviewStatus.AUTOMATION_REVIEWED
     assert after.reviewed_at == date(2019, 1, 31)
 
 
@@ -284,7 +284,7 @@ def test_the_fragment_refusal_is_about_placement_not_content(tmp_path: Path) -> 
     stamp_body = 'review_status = "agent_reviewed"\nreviewed_by = "agent-review"\nreviewed_at = 2026-07-27\n'
 
     accepted = _load_revision(_write_modelo(tmp_path / "manifest-home", manifest_extra=stamp_body))
-    assert accepted.review_status is RevisionReviewStatus.AGENT_REVIEWED
+    assert accepted.review_status is RevisionReviewStatus.AUTOMATION_REVIEWED
 
     with pytest.raises(RegistryLoadError, match=re.escape("must be declared in the revision's revision.toml")):
         load_modelo_directory(

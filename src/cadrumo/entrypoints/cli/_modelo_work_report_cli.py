@@ -21,6 +21,8 @@ from typing import Final
 
 import typer
 
+from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
+
 from ...application.modelo.calculation_report_document import require_calculation_summary_pdf_available
 from ...application.modelo.calculation_report_export import (
     ModeloCalculationReportResult,
@@ -40,7 +42,6 @@ from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
 from ._modelo_cli_support import validate_trusted_public_key
 from ._modelo_payloads import WorkReportResult, WorkReportVerifyResult
 from .common import activate_subcommand_output_language, emit_envelope
-from .registered_operation_errors import invalid_completion_error
 
 __all__ = ["work_report", "work_report_verify"]
 
@@ -124,8 +125,8 @@ def work_report(
     from ...application.modelo.work_export_contracts import ModeloExportRequest
     from ...core.modelo_export_artefact import ModeloExportArtefact
     from ._modelo_cli_support import resolve_default_actor
-    from .runtime_modelo_export import run_modelo_export
-    from .runtime_modelo_verification import select_modelo_work_revision_for_cli
+    from .operation_modelo_export import run_modelo_export
+    from .operation_modelo_verification import select_modelo_work_revision_for_cli
 
     client, selection = select_modelo_work_revision_for_cli(
         ctx,
@@ -246,11 +247,12 @@ def work_report_verify(
             trusted_public_key_hex=trusted_public_key_hex,
         )
     else:
+        from cadrumo_client.commands.profile_binding import bound_profile_client
+
         from ...application.modelo.calculation_report_verification_operation import (
             ModeloCalculationReportVerificationRequest,
         )
-        from .runtime_modelo_calculation_report_verify import run_modelo_calculation_report_verify
-        from .runtime_profile_binding import bound_profile_client
+        from .operation_modelo_calculation_report_verify import run_modelo_calculation_report_verify
 
         client = bound_profile_client(ctx)
         source_path = path.resolve()

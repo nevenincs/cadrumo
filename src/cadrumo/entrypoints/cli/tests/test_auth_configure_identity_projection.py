@@ -6,12 +6,13 @@ from uuid import UUID
 
 import pytest
 
+from cadrumo_client.commands.payloads import AuthConfigurePayload
+
 from ....application.auth.provider_configure_operation_access import AuthConfigurePublicResultV2
 from ....application.operator_actions.models import ConditionEvidence, PreconditionVerdict
 from ....core.auth_provider import AuthProviderKind
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ..common import resolve_cli_precondition_action
-from ..config_payloads import AuthConfigurePayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

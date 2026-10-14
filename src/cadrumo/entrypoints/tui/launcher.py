@@ -61,10 +61,14 @@ def main(
     Once the session ends in order, the process-shared registry authority is
     released, closing its database before the process exits.
     """
-    from ...core.logging import configure_logging
+    from cadrumo_client.logging import register_client_logging_namespace
+
+    from ...core.logging import configure_logging, register_first_party_logger
     from ...domain.calculations.registry.authority import release_bundled_indexed_authority
 
     with diagnostic_process("tui"), diagnostic_scope():
+        register_first_party_logger("cadrumo")
+        register_client_logging_namespace()
         configure_logging()
         diagnostic_event(_LOGGER, "tui_process_started", fields={"headless": headless}, level=DEBUG)
         try:

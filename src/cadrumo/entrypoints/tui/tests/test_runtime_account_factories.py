@@ -9,12 +9,13 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ....adapters.local_runtime.profile_password_rotation import ProfileRotationCompletion
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.profile_access import SessionsLocked
+from cadrumo_client.contracts.sign_in import HumanSignedOut
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.profile_password_rotation import ProfileRotationCompletion
+
 from ....application.operations.registry import OperationFrontendProjection
-from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from ....application.runtime.profile_access import RuntimeSessionsLocked
-from ....application.runtime.sign_in import RuntimeHumanSignedOut
 from ....application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
 from .. import runtime_account
 from ..account import (
@@ -30,7 +31,7 @@ from ..secret.passphrase import PassphraseScreen
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
-class _StrictClient(RuntimeFrontendClient):
+class _StrictClient(FrontendClient):
     """A lease-aware fault port, without claiming native security acceptance."""
 
     def __init__(self) -> None:
@@ -66,7 +67,7 @@ class _StrictClient(RuntimeFrontendClient):
         return self._frontend
 
     @override
-    def lock(self, *, timeout: float = 5) -> RuntimeSessionsLocked:
+    def lock(self, *, timeout: float = 5) -> SessionsLocked:
         """Record the owning thread and return an exact or faulted receipt."""
         self.lock_calls += 1
         self.lock_thread = threading.get_ident()
@@ -75,7 +76,7 @@ class _StrictClient(RuntimeFrontendClient):
         if not self.release_lock.wait(5):
             raise TimeoutError("test lock was not released")
         self.lock_finished.set()
-        return RuntimeSessionsLocked(
+        return SessionsLocked(
             request_id=uuid4(),
             runtime_boot_id=uuid4(),
             connection_id=uuid4(),
@@ -83,11 +84,11 @@ class _StrictClient(RuntimeFrontendClient):
         )
 
     @override
-    def human_sign_out(self, *, timeout: float = 10) -> RuntimeHumanSignedOut:
+    def human_sign_out(self, *, timeout: float = 10) -> HumanSignedOut:
         """Use the same controllable acknowledgement with an explicit global call."""
         self.sign_out_calls += 1
         acknowledgement = self.lock(timeout=timeout)
-        return RuntimeHumanSignedOut(
+        return HumanSignedOut(
             request_id=acknowledgement.request_id,
             runtime_boot_id=acknowledgement.runtime_boot_id,
             connection_id=acknowledgement.connection_id,
@@ -96,7 +97,7 @@ class _StrictClient(RuntimeFrontendClient):
             receipt_removed=True,
             keychain_removed=True,
             automation_enabled=True,
-            agent_access_remains=False,
+            automation_access_remains=False,
         )
 
     @override
@@ -105,7 +106,7 @@ class _StrictClient(RuntimeFrontendClient):
 
 
 def _factories(client: _StrictClient) -> AccountFactoriesV1:
-    async def open_recovery_client() -> RuntimeFrontendClient:
+    async def open_recovery_client() -> FrontendClient:
         return client
 
     def unavailable_profile(_context: object) -> object:
@@ -151,29 +152,29 @@ async def test_rebound_lease_or_frontend_cannot_close_or_borrow_access() -> None
     assert isinstance(action, AccountDirectSessionActionV1)
 
     client._test_session_id = uuid4()
-    with pytest.raises(RuntimeRefusalError) as refusal:
+    with pytest.raises(RefusalError) as refusal:
         await action.complete()
-    assert refusal.value.reason is RuntimeRefusalCode.CONNECTION_CLOSED
+    assert refusal.value.reason is RefusalCode.CONNECTION_CLOSED
     assert client.lock_calls == 0
     access = factories.access
     assert access is not None
-    with pytest.raises(RuntimeRefusalError):
+    with pytest.raises(RefusalError):
         access()
 
     client = _StrictClient()
     factories = _factories(client)
     client._frontend = OperationFrontendProjection.CLI
-    with pytest.raises(RuntimeRefusalError) as refusal:
+    with pytest.raises(RefusalError) as refusal:
         await factories.change_user().complete()
-    assert refusal.value.reason is RuntimeRefusalCode.CONNECTION_CLOSED
+    assert refusal.value.reason is RefusalCode.CONNECTION_CLOSED
     assert client.lock_calls == 0
     access = factories.access
     assert access is not None
-    with pytest.raises(RuntimeRefusalError):
+    with pytest.raises(RefusalError):
         access()
-    with pytest.raises(RuntimeRefusalError) as refusal:
+    with pytest.raises(RefusalError) as refusal:
         _factories(client)
-    assert refusal.value.reason is RuntimeRefusalCode.INVALID_FRAME
+    assert refusal.value.reason is RefusalCode.INVALID_FRAME
 
 
 @pytest.mark.asyncio
@@ -183,10 +184,10 @@ async def test_missing_original_session_acknowledgement_refuses_recomposition() 
     action = _factories(client).sign_out()
     assert isinstance(action, AccountDirectSessionActionV1)
 
-    with pytest.raises(RuntimeRefusalError) as refusal:
+    with pytest.raises(RefusalError) as refusal:
         await action.complete()
 
-    assert refusal.value.reason is RuntimeRefusalCode.INVALID_FRAME
+    assert refusal.value.reason is RefusalCode.INVALID_FRAME
     assert client.lock_calls == 1
 
 
@@ -227,16 +228,16 @@ def test_password_and_access_screens_bind_exact_borrowed_client() -> None:
     assert screen._session_id == client.session_id
 
     client._test_session_id = uuid4()
-    with pytest.raises(RuntimeRefusalError) as refusal:
+    with pytest.raises(RefusalError) as refusal:
         password()
-    assert refusal.value.reason is RuntimeRefusalCode.CONNECTION_CLOSED
+    assert refusal.value.reason is RefusalCode.CONNECTION_CLOSED
 
 
 def test_password_factory_borrows_original_and_supplies_distinct_fresh_reader(monkeypatch: pytest.MonkeyPatch) -> None:
     client, fresh = _StrictClient(), _StrictClient()
     fresh._profile_id = client.profile_id
 
-    async def open_fresh() -> RuntimeFrontendClient:
+    async def open_fresh() -> FrontendClient:
         return fresh
 
     def unavailable_profile(_context: object) -> object:
@@ -250,7 +251,7 @@ def test_password_factory_borrows_original_and_supplies_distinct_fresh_reader(mo
     )
 
     def rotation(
-        borrowed: RuntimeFrontendClient,
+        borrowed: FrontendClient,
         *,
         current_passphrase: bytearray,
         new_passphrase: bytearray,

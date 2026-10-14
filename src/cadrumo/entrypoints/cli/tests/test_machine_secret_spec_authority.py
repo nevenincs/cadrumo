@@ -6,17 +6,18 @@ from dataclasses import asdict, replace
 
 import pytest
 
-from .._command_secret_contracts import (
+from cadrumo_client.commands.secret_contracts import (
     MachineSecretChannelKind,
     MachineSecretFieldSpec,
     MachineSecretSpec,
     MachineSecretVariantSpec,
 )
-from .._command_target import resolve_deferred_target
+from cadrumo_client.commands.secure_input import MachineSecretPayload
+from cadrumo_client.commands.shared_contracts import DeferredTarget
+from cadrumo_client.commands.target import resolve_deferred_target
+
 from ..command_schema import command_registration_metadata
-from ..command_shared_contracts import DeferredTarget
 from ..command_specs import COMMAND_GRAPH
-from ..config.secure_input import MachineSecretPayload
 from ..verb_input_schema import build_verb_input_schemas
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -97,7 +98,7 @@ def test_duplicate_machine_secret_contract_is_refused() -> None:
     variant = MachineSecretVariantSpec(
         "passphrase",
         (MachineSecretFieldSpec("passphrase"),),
-        DeferredTarget("..config.custody", "LoginSecrets", __package__),
+        DeferredTarget("cadrumo_client.commands.custody", "LoginSecrets"),
     )
     with pytest.raises(ValueError, match="variant keys must be unique"):
         MachineSecretSpec((variant, variant))

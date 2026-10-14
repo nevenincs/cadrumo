@@ -15,9 +15,9 @@ from importlib.metadata import version
 from pathlib import Path
 from typing import Any
 
-from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
-from cadrumo.adapters.local_runtime.posix_endpoint import PosixRuntimeEndpoint
-from cadrumo.application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError
+from cadrumo_client.transport.framing import VerifiedConnection
+from cadrumo_client.transport.posix_endpoint import PosixEndpoint
 from dev.acceptance.installed_cli import build_installed_cli_environment
 
 from .cli_contracts import RetencionesInstalledCliError
@@ -57,8 +57,8 @@ def installed_foreground_runtime(
     if not executable.is_file():
         raise RetencionesInstalledCliError(stage="runtime_fixture", diagnostic_code="installed_runtime_missing")
     try:
-        endpoint = PosixRuntimeEndpoint(storage_root=storage_root, namespace=runtime_socket_dir)
-    except RuntimeRefusalError as error:
+        endpoint = PosixEndpoint(storage_root=storage_root, namespace=runtime_socket_dir)
+    except RefusalError as error:
         raise RetencionesInstalledCliError(stage="runtime_endpoint", diagnostic_code=error.reason.value) from error
     with asyncio.Runner() as runner:
         process = None
@@ -93,16 +93,16 @@ def installed_foreground_runtime(
                     raise RetencionesInstalledCliError(stage="runtime_startup", diagnostic_code="runtime_exited")
                 try:
                     channel = endpoint.connect(timeout=0.2)
-                    connection = VerifiedRuntimeConnection(
+                    connection = VerifiedConnection(
                         channel,
-                        expected=RuntimeClientHello(product_version=cohort, storage_identity=endpoint.storage_identity),
+                        expected=ClientHello(product_version=cohort, storage_identity=endpoint.storage_identity),
                         deadline=deadline,
                     )
                     boot_id = str(connection.hello.boot_id)
                     connection.close()
                     break
-                except RuntimeRefusalError as error:
-                    if error.reason is not RuntimeRefusalCode.ENDPOINT_NOT_READY or time.monotonic() >= deadline:
+                except RefusalError as error:
+                    if error.reason is not RefusalCode.ENDPOINT_NOT_READY or time.monotonic() >= deadline:
                         raise RetencionesInstalledCliError(
                             stage="runtime_readiness", diagnostic_code=error.reason.value
                         ) from error

@@ -19,6 +19,8 @@ from uuid import UUID
 import pytest
 import typer
 
+from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
+
 from ....application.modelo.reconciliation import ModeloReconciliationReport
 from ....application.modelo.reconciliation_import_operation import (
     MODELO_RECONCILIATION_IMPORT_OPERATION_DEFINITION_ID,
@@ -35,9 +37,8 @@ from ....application.modelo.reconciliation_records import (
 from ....core.json_contract import Notice, NoticeSeverity
 from ....core.operations import OperationEffect, profile_operation_subject
 from .. import _modelo_reconcile_cli as handler
-from .. import runtime_modelo_reconciliation_import as bridge
+from .. import operation_modelo_reconciliation_import as bridge
 from .._payloads_modelo_reconcile import ModeloReconcileResult
-from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

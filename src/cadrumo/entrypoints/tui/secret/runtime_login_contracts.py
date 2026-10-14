@@ -7,8 +7,8 @@ from dataclasses import dataclass, field
 from enum import StrEnum, auto
 from uuid import UUID
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ....application.runtime.profile_access import RuntimeProfileStatus
+from cadrumo_client.contracts.profile_access import ProfileStatus
+from cadrumo_client.transport.frontend_client import FrontendClient
 
 
 class RuntimeLoginMethod(StrEnum):
@@ -27,12 +27,10 @@ class RuntimeLoginHandoff:
     profile_id: UUID
     profile_label: str
     method: RuntimeLoginMethod
-    status: RuntimeProfileStatus
-    client: RuntimeFrontendClient = field(repr=False)
+    status: ProfileStatus
+    client: FrontendClient = field(repr=False)
 
 
-type RuntimeClientOpener = Callable[[UUID], Awaitable[RuntimeFrontendClient]]
-type RuntimeCredentialClientOpener = Callable[
-    [UUID, UUID, Callable[[RuntimeFrontendClient], None]], Awaitable[RuntimeFrontendClient]
-]
+type RuntimeClientOpener = Callable[[UUID], Awaitable[FrontendClient]]
+type RuntimeCredentialClientOpener = Callable[[UUID, UUID, Callable[[FrontendClient], None]], Awaitable[FrontendClient]]
 type RuntimeLoginAcceptor = Callable[[RuntimeLoginHandoff], bool]

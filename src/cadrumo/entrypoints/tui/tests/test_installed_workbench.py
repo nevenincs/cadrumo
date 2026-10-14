@@ -10,9 +10,10 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
-from ....adapters.local_runtime.runtime_transport_cleanup import RuntimeTransportCleanup
-from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_client.transport.transport_cleanup import TransportCleanup
+
 from ....core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from ....tests.audited_process import run_audited_process
 from .. import launcher
@@ -63,7 +64,10 @@ def test_the_installed_session_never_pulls_the_cli_into_the_child_process() -> N
     still caught, and it checks them in a fresh interpreter running the
     child's own entry modules, so test order cannot change the verdict.
     """
-    child_modules = ("cadrumo.entrypoints.tui.launcher", "cadrumo.entrypoints.tui.installed_session")
+    child_modules = (
+        "cadrumo.entrypoints.tui.launcher",
+        "cadrumo.entrypoints.tui.installed_session",
+    )
 
     assert _cli_modules_a_fresh_process_loads(*child_modules) == []
 
@@ -106,7 +110,7 @@ def test_module_cleanup_refusal_exits_without_disclosing_native_failure(
         def close(self) -> None:
             raise OSError(sentinel)
 
-    owner = RuntimeTransportCleanup(NativeRelease())
+    owner = TransportCleanup(NativeRelease())
 
     async def fail_cleanup() -> None:
         await close_async_resources(owner, task_name="tui-module-fault", primary_error=None)
@@ -114,9 +118,9 @@ def test_module_cleanup_refusal_exits_without_disclosing_native_failure(
     with pytest.raises(AsyncResourceCleanupError) as retained:
         asyncio.run(fail_cleanup())
     primary = (
-        RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+        RefusalError(RefusalCode.UNAVAILABLE)
         if kind == "runtime"
-        else RuntimeFrontendRefusedError("authentication_required")
+        else FrontendRefusedError("authentication_required")
         if kind == "frontend"
         else retained.value
     )
@@ -126,11 +130,24 @@ def test_module_cleanup_refusal_exits_without_disclosing_native_failure(
     def refuse_module(_arguments: list[str]) -> int:
         raise primary
 
-    monkeypatch.setattr(launcher, "run_module", refuse_module)
-    monkeypatch.setattr(sys, "argv", ["cadrumo-tui"])
-    monkeypatch.setenv("PYDANTIC_DISABLE_PLUGINS", "__all__")
-    with pytest.raises(SystemExit) as exited:
-        runpy.run_module("cadrumo.entrypoints.tui", run_name="__main__", alter_sys=False)
+    interpreter_flags = sys.flags
+
+    class IsolatedFlags:
+        isolated = 1
+
+        def __getattr__(self, name: str) -> object:
+            return getattr(interpreter_flags, name)
+
+    # Imports and exception reporting still consume the other interpreter
+    # flags. Restore the real object before pytest handles any failed probe.
+    with monkeypatch.context() as module_patch:
+        module_patch.setattr(sys, "flags", IsolatedFlags())
+        module_patch.setattr(launcher, "run_module", refuse_module)
+        module_patch.setattr(sys, "argv", ["cadrumo-tui"])
+        module_patch.setenv("PYDANTIC_DISABLE_PLUGINS", "__all__")
+        with pytest.raises(SystemExit) as exited:
+            runpy.run_module("cadrumo.entrypoints.tui", run_name="__main__", alter_sys=False)
+    assert sys.flags is interpreter_flags
     assert exited.value.code == 1
     output = capsys.readouterr()
     assert output.out == "" and output.err.strip() == "runtime_cleanup_incomplete"

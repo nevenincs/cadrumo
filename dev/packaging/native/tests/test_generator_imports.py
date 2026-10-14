@@ -17,8 +17,8 @@ _PACKAGE_NAME = "dev.packaging.native"
 _NON_ENVIRONMENT_INPUTS = frozenset(
     {
         "cadrumo.core.product_identity",
-        "cadrumo.core.runtime_transport",
-        "cadrumo.application.runtime.contracts",
+        "cadrumo.core.connection_transport",
+        "cadrumo_client.contracts.contracts",
         "dev._paths",
         "dev.locales.manager_chrome",
         "dev.packaging.runtime_wheelhouse_contract",
@@ -72,7 +72,9 @@ def _outside_imports(closure: dict[str, set[str]]) -> set[str]:
         name
         for imported in closure.values()
         for name in imported
-        if name.split(".")[0] in {"cadrumo", "dev"} and not name.startswith(_PACKAGE_NAME + ".")
+        if name.split(".")[0]
+        in {"cadrumo", "cadrumo_client", "cadrumo_runtime", "cadrumo_harness", "cadrumo_agent_service", "dev"}
+        and not name.startswith(_PACKAGE_NAME + ".")
     }
 
 

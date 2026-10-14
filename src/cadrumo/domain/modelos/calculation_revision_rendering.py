@@ -29,7 +29,7 @@ from ...core.hex import Hex64Str
 from ...core.i18n.render import lookup_translation
 from ...core.identity.documents import TAX_ID_FORMAT_CONTEXT
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.type_guards import is_object_dict, is_object_list_or_tuple, is_object_mapping
+from ...core.type_guards import is_object_dict, is_object_list_or_tuple, is_object_mapping, is_object_set_or_frozenset
 from ..calculations.registry.facts.atoms import TAGGED_FACT_ATOM_CONTEXT
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.ids import RevisionId
@@ -171,7 +171,7 @@ class _VerifiedRegistryMemo:
     def validated(
         self, payload: bytes, *, context: Mapping[object, object], validate: Callable[[], RegistrySnapshot]
     ) -> RegistrySnapshot:
-        """Return the snapshot validated from ``payload``, validating it only on a miss."""
+        """Return the :class:`RegistrySnapshot` validated from ``payload`` on a cache miss."""
         owner = governed_facts_in_scope()
         revision_ids = context.get(MODELO_REVISION_IDS_CONTEXT)
         if (
@@ -201,7 +201,7 @@ class _VerifiedRegistryMemo:
         return snapshot
 
     def registry_digest(self, snapshot: RegistrySnapshot, compute: Callable[[], str]) -> str:
-        """Return the content digest of ``snapshot``, computing it once per memoized snapshot."""
+        """Return the content digest of a :class:`RegistrySnapshot`, computing it once."""
         entry = self._entry(snapshot)
         if entry is None:
             return compute()
@@ -216,7 +216,7 @@ class _VerifiedRegistryMemo:
         directory_ids: tuple[RevisionId, ...] | None,
         compute: Callable[[], str],
     ) -> str:
-        """Return the rendering digest for these labels and directory identities over ``snapshot``."""
+        """Return the labels and directory digest pinned to a :class:`RegistrySnapshot`."""
         entry = self._entry(snapshot)
         if entry is None:
             return compute()
@@ -241,7 +241,11 @@ class _VerifiedRegistryMemo:
 
 
 def _is_revision_id_set(value: object) -> TypeGuard[frozenset[str]]:
-    return isinstance(value, frozenset) and all(isinstance(item, str) for item in value)
+    return (
+        is_object_set_or_frozenset(value)
+        and isinstance(value, frozenset)
+        and all(isinstance(item, str) for item in value)
+    )
 
 
 #: About 175 MiB resident: a validated snapshot occupies roughly 5.5 times its
@@ -306,7 +310,7 @@ class CalculationRenderingSnapshot(BaseModel):
         directory_ids = info.data.get("revision_directory_ids")
         if isinstance(value, RegistrySnapshot):
             return value
-        context = dict(info.context) if is_object_mapping(info.context) else {}
+        context: dict[object, object] = dict(info.context) if is_object_mapping(info.context) else {}
         if directory_ids is not None:
             identifiers = TypeAdapter(tuple[RevisionId, ...]).validate_python(directory_ids)
             context[MODELO_REVISION_IDS_CONTEXT] = frozenset(identifiers)

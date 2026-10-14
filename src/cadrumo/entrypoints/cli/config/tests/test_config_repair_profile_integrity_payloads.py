@@ -16,7 +16,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
-from ...config_payloads import (
+from cadrumo_client.commands.payloads import (
     RepairIntegrityObjectsResult,
     RepairProfileResult,
     WorkflowFingerprintPayload,

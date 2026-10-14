@@ -15,8 +15,9 @@ from textual.timer import Timer
 from textual.widgets import Button, DataTable, Static
 from textual.worker import Worker, WorkerCancelled, WorkerError, WorkerFailed
 
-from ....adapters.local_runtime.automation_inventory import read_automation_inventory
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo_client.transport.automation_inventory import read_automation_inventory
+from cadrumo_client.transport.frontend_client import FrontendClient
+
 from ....application.operations.registry import OperationFrontendProjection
 from ....application.user_profile.automation_enrollment import (
     AutomationInventoryProjection,
@@ -36,7 +37,7 @@ _STATUS_TASK_NAME = "tui-automation-inventory-status"
 
 async def _read_inventory(
     binding: BoundSession,
-    client: RuntimeFrontendClient,
+    client: FrontendClient,
 ) -> AutomationInventoryProjection | None:
     if not await binding.confirm_with_runtime(task_name=_STATUS_TASK_NAME):
         return None
@@ -74,7 +75,7 @@ class RuntimeAutomationInventoryScreen(
     #automation-inventory-details { height: 1fr; }
     """)
 
-    def __init__(self, client: RuntimeFrontendClient) -> None:
+    def __init__(self, client: FrontendClient) -> None:
         """Pin one admitted TUI connection without assuming inventory privilege."""
         super().__init__()
         if client.frontend is not OperationFrontendProjection.TUI:

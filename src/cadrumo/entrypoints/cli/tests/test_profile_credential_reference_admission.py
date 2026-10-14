@@ -8,16 +8,16 @@ from uuid import UUID, uuid4
 
 import pytest
 import typer
+from click.testing import Result
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo_client.commands import profile_admission as admission
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.profile_authentication import ProfileAuthenticationMethod, ProfileSecretSourceOptions
+from cadrumo_client.transport.frontend_client import FrontendClient
 
 from .. import _profile_authentication_gate as gate
-from .. import runtime_profile_admission
-from .._profile_authentication_contract import ProfileAuthenticationMethod, ProfileSecretSourceOptions
 from ..command_specs import COMMAND_GRAPH
-from ..errors import CliRefusedBoundaryError
-from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -88,8 +88,8 @@ def test_reference_refuses_invalid_routes_before_storage_or_secret_reads(
     )
     monkeypatch.setattr(gate, "_read_and_stage_leaf", lambda **_kwargs: pytest.fail("refusal read a leaf secret"))
     monkeypatch.setattr(
-        runtime_profile_admission,
-        "activate_runtime_profile",
+        admission,
+        "activate_profile",
         lambda *_args, **_kwargs: pytest.fail("refusal opened a runtime client"),
     )
     with pytest.raises(CliRefusedBoundaryError) as caught:
@@ -109,8 +109,8 @@ def test_reference_routes_only_one_exact_migrated_profile_without_root_secret(
     monkeypatch.setattr(gate, "_resolve_profile_targets", lambda *_args, **_kwargs: (str(profile_id), "exact"))
     monkeypatch.setattr(gate, "_diagnose_unregistered_profile", lambda **_kwargs: False)
     monkeypatch.setattr(
-        runtime_profile_admission,
-        "activate_runtime_profile",
+        admission,
+        "activate_profile",
         lambda _ctx, **kwargs: observed.append(kwargs),
     )
     source = ProfileSecretSourceOptions(method=ProfileAuthenticationMethod.API_KEY, credential_reference=reference)
@@ -156,27 +156,27 @@ def test_reference_uses_installed_credential_door_and_binds_exact_profile(
         profile_id: UUID,
         credential_reference: UUID,
         frontend: OperationFrontendProjection,
-        on_connected: Callable[[RuntimeFrontendClient], None],
-    ) -> RuntimeFrontendClient:
+        on_connected: Callable[[FrontendClient], None],
+    ) -> FrontendClient:
         opened.append((profile_id, credential_reference, frontend))
-        on_connected(cast(RuntimeFrontendClient, client))
-        return cast(RuntimeFrontendClient, client)
+        on_connected(cast(FrontendClient, client))
+        return cast(FrontendClient, client)
 
-    monkeypatch.setattr(runtime_profile_admission, "open_installed_credential_client", open_credential)
+    monkeypatch.setattr(admission, "open_installed_credential_client", open_credential)
     monkeypatch.setattr(
-        runtime_profile_admission,
-        "open_installed_runtime_client",
+        admission,
+        "open_installed_client",
         lambda **_kwargs: pytest.fail("reference route opened the unadmitted password door"),
     )
     monkeypatch.setattr(
-        runtime_profile_admission, "bind_profile_target", lambda _ctx, *, bucket_id: bound.append(("target", bucket_id))
+        admission, "bind_profile_target", lambda _ctx, *, bucket_id: bound.append(("target", bucket_id))
     )
     monkeypatch.setattr(
-        runtime_profile_admission,
+        admission,
         "bind_profile_client",
         lambda _ctx, bound_client, *, profile_id: bound.append(("client", (bound_client, profile_id))),
     )
-    runtime_profile_admission.activate_runtime_profile(
+    admission.activate_profile(
         _context(
             ProfileSecretSourceOptions(method=ProfileAuthenticationMethod.API_KEY, credential_reference=reference)
         ),
@@ -194,19 +194,19 @@ def test_reference_uses_installed_credential_door_and_binds_exact_profile(
 def test_bad_reference_is_a_refusal_without_password_or_receipt_fallback(monkeypatch: pytest.MonkeyPatch) -> None:
     profile_id, reference = uuid4(), uuid4()
 
-    async def refuse(**_kwargs: object) -> RuntimeFrontendClient:
+    async def refuse(**_kwargs: object) -> FrontendClient:
         raise CliRefusedBoundaryError(
             translated_message="cli.config.custody.errors.profile_credential_ref_inapplicable"
         )
 
-    monkeypatch.setattr(runtime_profile_admission, "open_installed_credential_client", refuse)
+    monkeypatch.setattr(admission, "open_installed_credential_client", refuse)
     monkeypatch.setattr(
-        runtime_profile_admission,
-        "open_installed_runtime_client",
+        admission,
+        "open_installed_client",
         lambda **_kwargs: pytest.fail("reference refusal attempted a password or receipt fallback"),
     )
     with pytest.raises(CliRefusedBoundaryError):
-        runtime_profile_admission.activate_runtime_profile(
+        admission.activate_profile(
             _context(
                 ProfileSecretSourceOptions(method=ProfileAuthenticationMethod.API_KEY, credential_reference=reference)
             ),
@@ -218,8 +218,10 @@ def test_bad_reference_is_a_refusal_without_password_or_receipt_fallback(monkeyp
         )
 
 
-def test_root_parser_rejects_malformed_reference_without_reading_a_secret() -> None:
-    result = invoke_cached_cli(
+def test_root_parser_rejects_malformed_reference_without_reading_a_secret(
+    run_cadrumo_cli: Callable[..., Result],
+) -> None:
+    result = run_cadrumo_cli(
         ("--profile-auth-method", "api-key", "--profile-credential-ref", "not-a-uuid", "config", "profile", "view"),
         input="not-secret-json",
     )

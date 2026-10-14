@@ -15,13 +15,24 @@ from uuid import UUID
 import typer
 from pydantic import SecretStr
 
+from cadrumo_client.commands.profile_binding import require_profile_client
+from cadrumo_client.commands.registered_operation import run_registered_operation
+from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
+from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
+from cadrumo_client.commands.secure_input import (
+    MachineSecretPayload,
+    prompt_secret_no_echo,
+    read_machine_secret_payload,
+    select_machine_secret_channel,
+)
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+
 from ...application.ledger.own_account_operation import (
     LEDGER_OWN_ACCOUNT_OPERATION_DEFINITION_ID,
     LedgerOwnAccountRequest,
     LedgerOwnAccountResult,
     OwnAccountProjection,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.i18n.render import tr
 from ...core.iban import normalise_iban
@@ -36,16 +47,6 @@ from ._ledger_account_payloads import (
     OwnAccountShowResult,
 )
 from .common import active_bucket_id_or_refuse, bad, emit_envelope
-from .config.secure_input import (
-    MachineSecretPayload,
-    prompt_secret_no_echo,
-    read_machine_secret_payload,
-    select_machine_secret_channel,
-)
-from .registered_operation_contracts import RegisteredOperationCompletion
-from .registered_operation_errors import invalid_completion_error
-from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import run_registered_operation
 
 
 class OwnAccountAddSecrets(MachineSecretPayload):
@@ -78,7 +79,7 @@ def _run(ctx: typer.Context, request: LedgerOwnAccountRequest) -> LedgerOwnAccou
     """Run one exact-profile request and correlate its receipt with what was asked."""
     client = require_profile_client(ctx, expected_profile_id=UUID(require_active_bucket_id()))
     if request.profile_id != client.profile_id:
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     completed: RegisteredOperationCompletion[LedgerOwnAccountResult] = run_registered_operation(
         client,
         request,

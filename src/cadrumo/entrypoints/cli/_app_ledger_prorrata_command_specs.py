@@ -2,14 +2,8 @@ from __future__ import annotations
 
 from typing import Final
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
-
-from ._app_ledger_command_spec_policies import (
-    _POLICY_4,
-    _POLICY_5,
-)
-from .command_parameter_contracts import OptionSpec
-from .command_shared_contracts import (
+from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.shared_contracts import (
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
     DeferredTarget,
@@ -21,7 +15,13 @@ from .command_shared_contracts import (
     TranslationKey,
     ValueContract,
 )
-from .command_spec import CommandSpec, InvocationSpec
+from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
+
+from ._app_ledger_command_spec_policies import (
+    _POLICY_4,
+    _POLICY_5,
+)
 
 _PRORRATA_REGISTER_MODULE: Final[str] = "...core.prorrata_register"
 _PRORRATA_CLI_MODULE: Final[str] = "._prorrata_register_cli"

@@ -14,13 +14,14 @@ from textual.content import Content
 from textual.pilot import Pilot
 from textual.widgets import Button, DataTable, Input, Static
 
-from cadrumo.adapters.local_runtime.automation_decision import AutomationDecisionCompletion, AutomationDecisionRunError
-from cadrumo.adapters.local_runtime.automation_inventory import AutomationInventoryCompletion
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode
-from cadrumo.application.runtime.profile_access import RuntimeProfileStatus
-from cadrumo.application.user_profile.access_contracts import (
+from cadrumo_client.contracts.contracts import RefusalCode
+from cadrumo_client.contracts.profile_access import ProfileStatus
+from cadrumo_client.transport.automation_decision import AutomationDecisionCompletion, AutomationDecisionRunError
+from cadrumo_client.transport.automation_inventory import AutomationInventoryCompletion
+from cadrumo_client.transport.frontend_client import FrontendClient
+
+from .....application.operations.registry import OperationFrontendProjection
+from .....application.user_profile.access_contracts import (
     AccessScope,
     AuthorityState,
     Availability,
@@ -28,8 +29,8 @@ from cadrumo.application.user_profile.access_contracts import (
     ProfileAccessStatus,
     disclosure_digest,
 )
-from cadrumo.application.user_profile.access_projections import PublicAccessSession
-from cadrumo.application.user_profile.automation_enrollment import (
+from .....application.user_profile.access_projections import PublicAccessSession
+from .....application.user_profile.automation_enrollment import (
     AutomationGrantProjection,
     AutomationInventoryProjection,
     AutomationKeyProjection,
@@ -41,18 +42,18 @@ from cadrumo.application.user_profile.automation_enrollment import (
     EnrollmentKind,
     EnrollmentStage,
 )
-from cadrumo.core.i18n.render import tr
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
-from cadrumo.entrypoints.tui.components.host import ScreenHostApp
-from cadrumo.entrypoints.tui.profile import automation_inventory as subject
-from cadrumo.entrypoints.tui.profile import automation_inventory_details as detail_subject
-from cadrumo.entrypoints.tui.runtime_access_management import RuntimeAccessManagementScreen
-from cadrumo.entrypoints.tui.secret import automation_decision as decision_subject
+from .....core.i18n.render import tr
+from .....core.operations import OperationEffect, OperationTerminalCondition
+from ...components.host import ScreenHostApp
+from ...runtime_access_management import RuntimeAccessManagementScreen
+from ...secret import automation_decision as decision_subject
+from .. import automation_inventory as subject
+from .. import automation_inventory_details as detail_subject
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-class _Client(RuntimeFrontendClient):
+class _Client(FrontendClient):
     """Explicit screen fault port; registered reader acceptance is tested elsewhere."""
 
     def __init__(self) -> None:
@@ -64,9 +65,9 @@ class _Client(RuntimeFrontendClient):
         self.expires_at = datetime.now(UTC) + timedelta(minutes=5)
 
     @override
-    def status(self, *, timeout: float = 5) -> RuntimeProfileStatus:
+    def status(self, *, timeout: float = 5) -> ProfileStatus:
         self.status_calls += 1
-        return RuntimeProfileStatus(
+        return ProfileStatus(
             request_id=uuid4(),
             runtime_boot_id=uuid4(),
             connection_id=uuid4(),
@@ -189,7 +190,7 @@ async def test_inventory_tables_show_public_details_and_refresh_only_on_action(
     projection = _inventory(client.profile_id)
     calls = 0
 
-    def read(bound: RuntimeFrontendClient) -> AutomationInventoryCompletion:
+    def read(bound: FrontendClient) -> AutomationInventoryCompletion:
         nonlocal calls
         assert bound is client
         calls += 1
@@ -264,7 +265,7 @@ async def test_known_session_expiry_clears_display_without_a_second_inventory_re
     client = _Client()
     reads = 0
 
-    def read(_bound: RuntimeFrontendClient) -> AutomationInventoryCompletion:
+    def read(_bound: FrontendClient) -> AutomationInventoryCompletion:
         nonlocal reads
         reads += 1
         return AutomationInventoryCompletion(operation_id="e" * 64, projection=_inventory(client.profile_id))
@@ -287,10 +288,10 @@ async def test_known_session_expiry_clears_display_without_a_second_inventory_re
 async def test_parent_opens_human_inventory_without_rebinding_client(monkeypatch: pytest.MonkeyPatch) -> None:
     client = _Client()
 
-    async def open_recovery() -> RuntimeFrontendClient:
+    async def open_recovery() -> FrontendClient:
         raise AssertionError("inventory cannot open a recovery connection")
 
-    def read(bound: RuntimeFrontendClient) -> AutomationInventoryCompletion:
+    def read(bound: FrontendClient) -> AutomationInventoryCompletion:
         assert bound is client
         return AutomationInventoryCompletion(operation_id="d" * 64, projection=_inventory(client.profile_id))
 
@@ -317,7 +318,7 @@ async def test_unmount_clears_rows_and_drains_inflight_read_without_late_publish
     client = _Client()
     started, release, finished = Event(), Event(), Event()
 
-    def read(_bound: RuntimeFrontendClient) -> AutomationInventoryCompletion:
+    def read(_bound: FrontendClient) -> AutomationInventoryCompletion:
         started.set()
         if not release.wait(5):
             raise TimeoutError("test inventory read was not released")
@@ -352,12 +353,12 @@ async def test_selected_review_approval_repeats_consent_and_wipes_one_fresh_proo
     started, release = Event(), Event()
     captured: list[bytearray] = []
 
-    def read(bound: RuntimeFrontendClient) -> AutomationInventoryCompletion:
+    def read(bound: FrontendClient) -> AutomationInventoryCompletion:
         assert bound is client
         return AutomationInventoryCompletion(operation_id="a" * 64, projection=projection)
 
     def decide(
-        bound: RuntimeFrontendClient,
+        bound: FrontendClient,
         selected: AutomationReviewProjection,
         *,
         decision: str,
@@ -420,18 +421,18 @@ async def test_decline_has_no_password_and_preserves_unknown_post_submit_effect(
     projection = _inventory(client.profile_id)
     review = projection.requests[0]
 
-    def read(_bound: RuntimeFrontendClient) -> AutomationInventoryCompletion:
+    def read(_bound: FrontendClient) -> AutomationInventoryCompletion:
         return AutomationInventoryCompletion(operation_id="a" * 64, projection=projection)
 
     def refuse(
-        bound: RuntimeFrontendClient,
+        bound: FrontendClient,
         selected: AutomationReviewProjection,
         *,
         decision: str,
         password: bytearray | None,
     ) -> AutomationDecisionCompletion:
         assert bound is client and selected is review and decision == "decline" and password is None
-        raise AutomationDecisionRunError(operation_id="d" * 64, code=RuntimeRefusalCode.CONNECTION_CLOSED.value)
+        raise AutomationDecisionRunError(operation_id="d" * 64, code=RefusalCode.CONNECTION_CLOSED.value)
 
     monkeypatch.setattr(subject, "read_automation_inventory", read)
     monkeypatch.setattr(decision_subject, "run_automation_decision", refuse)
@@ -472,11 +473,11 @@ async def test_expiry_during_submitted_decision_clears_consent_and_waits_for_set
     projection = _inventory(client.profile_id)
     started, release, finished = Event(), Event(), Event()
 
-    def read(_bound: RuntimeFrontendClient) -> AutomationInventoryCompletion:
+    def read(_bound: FrontendClient) -> AutomationInventoryCompletion:
         return AutomationInventoryCompletion(operation_id="a" * 64, projection=projection)
 
     def decide(
-        _bound: RuntimeFrontendClient,
+        _bound: FrontendClient,
         _selected: AutomationReviewProjection,
         *,
         decision: str,
@@ -490,7 +491,7 @@ async def test_expiry_during_submitted_decision_clears_consent_and_waits_for_set
         if failed:
             raise AutomationDecisionRunError(
                 operation_id="e" * 64,
-                code=RuntimeRefusalCode.CONNECTION_CLOSED.value,
+                code=RefusalCode.CONNECTION_CLOSED.value,
                 terminal_condition=OperationTerminalCondition.FAILED,
                 effect=OperationEffect.UPDATED,
             )

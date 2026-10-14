@@ -302,7 +302,7 @@ def _render_click_exception_text(exc: BaseException) -> None:
 
     Reads ``typer.core.HAS_RICH`` live rather than assuming Rich is available:
     the CLI package globally disables Rich rendering at import
-    (:func:`cadrumo.entrypoints.cli._stdio.disable_rich_cli_rendering`), and
+    (:func:`cadrumo_client.commands.stdio.disable_rich_cli_rendering`), and
     this funnel must honour that the same way Typer's own standalone ``main``
     does, instead of unconditionally preferring Rich.
     """
@@ -367,7 +367,7 @@ def _resolved_command_identifier(exc: BaseException) -> str | None:
 def _emit_click_exception(exc: BaseException) -> NoReturn:
     """Emit a Click/usage failure honouring the JSON error contract."""
     exit_code = int(getattr(exc, "exit_code", _ABORTED_EXIT_CODE))
-    from ._profile_authentication_notice import drain_profile_authentication_notices
+    from cadrumo_client.commands.profile_authentication_notice import drain_profile_authentication_notices
 
     authentication_notices = drain_profile_authentication_notices()
     if _json_requested_for(exc):

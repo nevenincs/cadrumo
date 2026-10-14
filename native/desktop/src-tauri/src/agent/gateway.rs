@@ -189,19 +189,6 @@ impl Client {
         self.get(&format!("/runs/{run}/history"))
     }
 
-    /// `GET /v1/provider-catalog?workspace_root=`: cadrumo-agent's catalog,
-    /// as it serves it.
-    pub fn provider_catalog(&self, workspace_root: &str) -> Result<Value, Refused> {
-        let response = self
-            .calls
-            .get(format!("{}/provider-catalog", self.base))
-            .query("workspace_root", workspace_root)
-            .header("Authorization", &self.authorization)
-            .call()
-            .map_err(|_| unreachable())?;
-        Self::answer(response)
-    }
-
     /// `GET /v1/runs/{id}/stream`, resumed after `cursor`, or from the start
     /// of what the run retains.
     pub fn stream(&self, run: &str, cursor: Option<&str>) -> Result<impl Read + use<>, Refused> {

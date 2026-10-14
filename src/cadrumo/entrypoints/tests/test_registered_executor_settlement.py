@@ -11,6 +11,9 @@ from typing import cast
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+)
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -40,7 +43,6 @@ from ...domain.transactions.enums import BusinessClassification, TransactionDire
 from ..adapter_composition import build_amendment_action_ports, build_filing_action_ports
 from ..ledger_action_composition import compose_ledger_action_ports
 from . import modelo_operation_test_support
-from .profile_persistence.verification_repository_support import build_test_certificate_secret_backend_factory
 from .registered_executor_case_support import _CloseWitness, _HeldClock, _resolve_result_projection, _runtime
 from .registered_executor_payload_support import _payload
 from .registered_executor_scenario_constants import _OPERATOR_SCOPE_PORTS

@@ -51,7 +51,7 @@ from cadrumo.domain.transactions.models import Transaction
 
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from .classification_origin_support import (
-    AGENT,
+    AUTOMATION,
     BUCKET_ID,
     PERSON,
     Ledger,
@@ -105,26 +105,26 @@ def _stored_apart_from_the_restatement(row: Transaction) -> object:
     return json.loads(row.model_dump_json(exclude=_RECORDED_BY_A_RESTATEMENT))
 
 
-def _sealed_row_an_agent_classified(ledger: Ledger) -> tuple[str, LedgerFilingSnapshot]:
-    """Store an agent's business row whose figures carry trailing zeros, and seal a revision over it."""
+def _sealed_row_automation_classified(ledger: Ledger) -> tuple[str, LedgerFilingSnapshot]:
+    """Store an automation's business row whose figures carry trailing zeros, and seal a revision over it."""
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id=BUCKET_ID,
             booked_date=date(2025, 1, 21),
             amount=Decimal(_STORED_TEXT["amount"]),
             direction=TransactionDirection.OUTGOING,
-            description="classified by an agent and cited by a finalized revision",
+            description="classified by an automation and cited by a finalized revision",
             business_classification=BusinessClassification.BUSINESS,
             taxable_base=Decimal(_STORED_TEXT["taxable_base"]),
             iva_rate=Decimal(_STORED_TEXT["iva_rate"]),
             iva_amount=Decimal(_STORED_TEXT["iva_amount"]),
-            actor=AGENT,
+            actor=AUTOMATION,
         ),
         ports=ledger.ports,
     )
     row = created.ref.transaction_id
     assert _written_forms(ledger.row(row)) == _STORED_TEXT
-    assert ledger.row(row).classification_origin is ClassificationOrigin.AGENT
+    assert ledger.row(row).classification_origin is ClassificationOrigin.AUTOMATION
     persist_verified_revision_citing_transaction(
         ledger.objects, transaction_id=row, bucket_id=BUCKET_ID, operation=ledger.ports.operation
     )
@@ -175,7 +175,7 @@ def _bulk(
 def test_a_person_confirming_a_sealed_row_in_canonical_text_takes_it_and_moves_nothing_the_revision_sealed(
     ledger: Ledger, restated: dict[str, object]
 ) -> None:
-    row, snapshot = _sealed_row_an_agent_classified(ledger)
+    row, snapshot = _sealed_row_automation_classified(ledger)
     before = ledger.row(row)
     events_before = set(ledger.events.load().events)
 
@@ -194,7 +194,7 @@ def test_a_person_confirming_a_sealed_row_in_canonical_text_takes_it_and_moves_n
 
 
 def test_a_bulk_confirmation_of_a_sealed_row_is_admitted_as_a_single_one_is(ledger: Ledger) -> None:
-    row, snapshot = _sealed_row_an_agent_classified(ledger)
+    row, snapshot = _sealed_row_automation_classified(ledger)
     before = ledger.row(row)
 
     result = _bulk(
@@ -222,7 +222,7 @@ def test_a_bulk_confirmation_of_a_sealed_row_is_admitted_as_a_single_one_is(ledg
 def test_a_write_that_changes_a_value_of_a_sealed_row_is_refused_and_stores_nothing(
     ledger: Ledger, change: dict[str, object]
 ) -> None:
-    row, snapshot = _sealed_row_an_agent_classified(ledger)
+    row, snapshot = _sealed_row_automation_classified(ledger)
     before = ledger.stored()
 
     with pytest.raises(TransactionValidationError) as refused:
@@ -235,7 +235,7 @@ def test_a_write_that_changes_a_value_of_a_sealed_row_is_refused_and_stores_noth
 
 
 def test_a_bulk_row_that_changes_a_value_of_a_sealed_row_is_refused_as_a_single_write_is(ledger: Ledger) -> None:
-    row, _snapshot = _sealed_row_an_agent_classified(ledger)
+    row, _snapshot = _sealed_row_automation_classified(ledger)
     before = ledger.stored()
 
     result = _bulk(ledger, row, BusinessClassification.PERSONAL)
@@ -247,7 +247,7 @@ def test_a_bulk_row_that_changes_a_value_of_a_sealed_row_is_refused_as_a_single_
 
 def test_a_person_restating_their_own_sealed_row_in_canonical_text_writes_nothing(ledger: Ledger) -> None:
     """Nothing is theirs to take, so the stored forms are not touched and no event is recorded."""
-    row, snapshot = _sealed_row_an_agent_classified(ledger)
+    row, snapshot = _sealed_row_automation_classified(ledger)
     _confirm(ledger, row, {})
     before = ledger.stored()
 
@@ -279,7 +279,7 @@ def _link_purchase_evidence(ledger: Ledger, row: str, evidence_id: str, *, actor
 
 
 @pytest.mark.parametrize("direction", [TransactionDirection.INCOMING, TransactionDirection.OUTGOING])
-def test_an_agents_label_links_purchase_evidence_to_a_row_the_person_classified_and_is_recorded_for_it(
+def test_an_automation_label_links_purchase_evidence_to_a_row_the_person_classified_and_is_recorded_for_it(
     ledger: Ledger, direction: TransactionDirection
 ) -> None:
     """A calculation then takes the row's figures from the invoice, so the row names who linked it."""
@@ -299,34 +299,37 @@ def test_an_agents_label_links_purchase_evidence_to_a_row_the_person_classified_
     )
     row = created.ref.transaction_id
 
-    attach_attachment(ledger, row, store_attachment(ledger, b"supplementary"), actor=AGENT)
+    attach_attachment(ledger, row, store_attachment(ledger, b"supplementary"), actor=AUTOMATION)
     assert ledger.row(row).classification_origin is ClassificationOrigin.PERSON
 
-    _link_purchase_evidence(ledger, row, invoice.invoice_id, actor=AGENT)
+    _link_purchase_evidence(ledger, row, invoice.invoice_id, actor=AUTOMATION)
 
     assert ledger.row(row).purchase_invoice_evidence_id == invoice.invoice_id
-    assert ledger.row(row).classification_origin is ClassificationOrigin.AGENT
+    assert ledger.row(row).classification_origin is ClassificationOrigin.AUTOMATION
 
 
 def test_linking_purchase_evidence_decides_the_rows_figures_for_whoever_links_it(ledger: Ledger) -> None:
-    """The person's link to an agent's row makes it theirs; an agent's link to a rule's row makes it the agent's."""
+    """The person's link to an automation's row makes it theirs; an automation's link to a rule's row makes it the automation's."""
     first, second, third = (
         synthetic_invoice("SYNTHETIC-1"),
         synthetic_invoice("SYNTHETIC-2"),
         synthetic_invoice("SYNTHETIC-3"),
     )
     ledger.invoices.save(build_invoice_catalogue([first, second, third]))
-    by_an_agent = add_row(
-        ledger, description="classified by an agent", actor=AGENT, classification=BusinessClassification.BUSINESS
+    by_automation = add_row(
+        ledger,
+        description="classified by an automation",
+        actor=AUTOMATION,
+        classification=BusinessClassification.BUSINESS,
     )
     by_rule = add_row_classified_by_a_rule(ledger, description="classified by a rule")
     unprocessed = add_row(ledger, description="unprocessed")
 
-    _link_purchase_evidence(ledger, by_an_agent, first.invoice_id, actor=PERSON)
-    _link_purchase_evidence(ledger, by_rule, second.invoice_id, actor=AGENT)
-    _link_purchase_evidence(ledger, unprocessed, third.invoice_id, actor=AGENT)
+    _link_purchase_evidence(ledger, by_automation, first.invoice_id, actor=PERSON)
+    _link_purchase_evidence(ledger, by_rule, second.invoice_id, actor=AUTOMATION)
+    _link_purchase_evidence(ledger, unprocessed, third.invoice_id, actor=AUTOMATION)
 
-    assert ledger.row(by_an_agent).classification_origin is ClassificationOrigin.PERSON
-    assert ledger.row(by_rule).classification_origin is ClassificationOrigin.AGENT
+    assert ledger.row(by_automation).classification_origin is ClassificationOrigin.PERSON
+    assert ledger.row(by_rule).classification_origin is ClassificationOrigin.AUTOMATION
     assert ledger.row(unprocessed).classification_origin is None
     assert ledger.row(unprocessed).purchase_invoice_evidence_id == third.invoice_id

@@ -52,7 +52,7 @@ is :func:`~cadrumo.core.decimal.printed_money.is_aeat_printed_money`, enforced b
 :func:`_parse_spanish_decimal` on every caller.
 
 The separator class is built from
-:data:`~cadrumo.core.decimal.AEAT_THOUSANDS_SEPARATORS` rather than spelled
+:data:`~cadrumo.core.decimal.printed_money.AEAT_THOUSANDS_SEPARATORS` rather than spelled
 here. It was once ``(?:\\.\\d{3})*`` -- a dot and nothing else -- so an
 aggregate AEAT rendered with its other two thousands separators lost its
 leading group to the unanchored scan: ``1\\xa0234,56`` yielded ``234,56``, and

@@ -52,5 +52,6 @@ def test_installed_session_uses_public_contracts_and_runtime_client() -> None:
     launcher = (_TUI_ROOT / "launcher.py").read_text(encoding="utf-8")
 
     assert "build_manifest_operation_registry" in installed
-    assert "open_installed_runtime_client" in installed
+    assert "runtime_login_session" in installed
+    assert "open_installed_client" in installed
     assert "run_installed_workbench_session" in launcher

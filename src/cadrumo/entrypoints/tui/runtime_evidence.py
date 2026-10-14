@@ -11,7 +11,9 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.frontend_client import FrontendClient
+
 from ...application.ledger.evidence import MediaKind
 from ...application.ledger.evidence_add_operation import (
     LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
@@ -41,7 +43,6 @@ from ...application.ledger.invoice_evidence_readiness_operation import (
 )
 from ...application.operations.frontend_projection import OperationPublicProjectionV1
 from ...application.operations.public_scalar import PublicDecimal
-from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.hex import is_hex16, is_hex64
 from ...core.operations import (
     OperationEffect,
@@ -85,7 +86,7 @@ def _require_review(
         or reviewed.session_id != session_id
         or reviewed.evidence_id != evidence_id
     ):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     return reviewed
 
 
@@ -102,7 +103,7 @@ def _validate_confirmation_projection(
         or projection.source_sha256 != reviewed.source_sha256
         or projection.reviewed_draft_sha256 != reviewed.draft_review_sha256
     ):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
 
 
 def _validate_confirmed_invoice(
@@ -119,7 +120,7 @@ def _validate_confirmed_invoice(
         or invoice.counterparty_country != confirmation.country_code
         or invoice.source_sha256 != reviewed.source_sha256
     ):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
 
 
 def _confirmed_result(projection: LedgerEvidenceConfirmProjection) -> LedgerEvidenceConfirmedV1:
@@ -138,7 +139,7 @@ def _confirmed_result(projection: LedgerEvidenceConfirmProjection) -> LedgerEvid
 class RuntimeEvidenceTuiDoorV1:
     """Submit registered evidence operations under the original TUI profile lease."""
 
-    def __init__(self, client: RuntimeFrontendClient, *, profile_label: str) -> None:
+    def __init__(self, client: FrontendClient, *, profile_label: str) -> None:
         """Pin the exact authenticated client and start with no reviewed draft."""
         self._review: _ReviewedEvidence | None = None
         self._session = RuntimeProfileSession(client, profile_label=profile_label, on_expired=self._drop_review)
@@ -156,7 +157,7 @@ class RuntimeEvidenceTuiDoorV1:
             success_effect=OperationEffect.NONE,
         )
         if projection.count != len(projection.rows):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         return tuple(self._record_row(row) for row in projection.rows)
 
     async def add(self, source_path: str) -> LedgerEvidenceRecordRowV1:
@@ -183,7 +184,7 @@ class RuntimeEvidenceTuiDoorV1:
             or record.attachment_id != record.source_sha256
             or not is_hex16(record.evidence_id)
         ):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         return self._record_row(record)
 
     def reader_readiness(self) -> LedgerReaderReadinessV1:
@@ -222,7 +223,7 @@ class RuntimeEvidenceTuiDoorV1:
             or projection.attachment_id is not None
             or projection.consent_audit_effect is not OperationEffect.NONE
         ):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         self._review = _ReviewedEvidence(
             profile_id=self._profile_id,
             session_id=self._session.session_id,
@@ -300,7 +301,7 @@ class RuntimeEvidenceTuiDoorV1:
                 or terminal.diagnostic_ref is not None
                 or terminal.result_ref is None
             ):
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                raise RefusalError(RefusalCode.INVALID_FRAME)
 
         def settle(
             result: ResultT,
@@ -309,7 +310,7 @@ class RuntimeEvidenceTuiDoorV1:
             _operation_id: str,
         ) -> None:
             if getattr(result, "profile_id", None) != self._profile_id:
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                raise RefusalError(RefusalCode.INVALID_FRAME)
 
         return await self._session.run_operation(
             request,

@@ -33,7 +33,11 @@ from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_p
 from ....application.modelo.casilla_help import ModeloCasillaHelpCardV1
 from ....application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from ....application.modelo.edit_admission import ModeloEditRenewalResultV1, renew_modelo_edit_baseline
-from ....application.modelo.edit_models import ModeloEditBaselineV1, ModeloEditPreflightResultV1, ModeloEditSubmissionV1
+from ....application.modelo.edit_models import (
+    ModeloEditBaselineV1,
+    ModeloEditPreflightResultV1,
+    ModeloEditSubmissionV1,
+)
 from ....application.modelo.edit_preflight import preflight_modelo_edit
 from ....application.modelo.edit_refusal_projection import ModeloEditRefusalProjectionStore
 from ....application.modelo.work_lifecycle import create_work_unit

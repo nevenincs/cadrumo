@@ -57,8 +57,8 @@ def verify(root: Path) -> None:
     main(["version", "--json"], standalone_mode=False)
     # The host and the bundled agent must speak one hosting contract and one credential frame.
     hosted = importlib.import_module("cadrumo_agent.control.hosting_contract")
-    host = importlib.import_module("cadrumo.application.agent_host.controller")
-    frame = importlib.import_module("cadrumo.application.agent_host.credential_frame")
+    host = importlib.import_module("cadrumo_agent_service.host.controller")
+    frame = importlib.import_module("cadrumo_agent_service.host.credential_frame")
     require(hosted.HOSTING_CONTRACT == host.HOSTING_CONTRACT, "Bundled agent speaks another hosting contract")
     require(
         hosted.CREDENTIAL_FRAME_VERSION == frame.CREDENTIAL_FRAME_VERSION,

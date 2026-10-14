@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#live-agent-evaluation'
 date: '2026-10-12'
-modified: '2026-10-12'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:14e8572ba706733ff1b273bc276bc2f7a82c7ef4d8c2c620a027c7b95d2afaf3'
+body_hash: 'sha256:163e2f956d3fc2f22f426ac1a449cbea658064e6d24427f00aab77a48d27dd21'
 related:
   - "[[2026-10-12-live-agent-evaluation-reference]]"
   - "[[2026-07-02-agent-harness-refoundation-adr]]"
@@ -52,8 +52,8 @@ The owner, 2026-10-12: "I'm concerned that you set up a non-reproducible adhoc t
 
   This record does not restate or amend those rulings. It holds its own lane to them.
 - Yes, the runtime manages API access. `2026-09-26-mcp-purpose-authentication-profile-access-adr` binds each key to a durable grant. The grant is bound to profile, installation, OS owner, client, scopes, data projections, validity and custody generations. The server retains only a verifier and protected grant state. A key admits a fresh, bounded session of at most five minutes, and revocation fences admission, data release and commit. The same record excludes runtime start and stop management from that scope. In code:
-  - The runtime's profile host resolves a presented key to its grant and scope before the access authority admits a lease (`src/cadrumo/entrypoints/runtime/profile_connection_sessions.py:128-147`).
-  - The runtime serves the grant inventory (`src/cadrumo/entrypoints/runtime/operation_authority.py:235`).
+  - The runtime's profile host resolves a presented key to its grant and scope before the access authority admits a lease (`src/cadrumo_runtime/host/profile_connection_sessions.py:128-147`).
+  - The runtime serves the grant inventory (`src/cadrumo_runtime/host/operation_authority.py:235`).
   - The person issues, approves, denies, locks and resumes keys through `config automation` (`src/cadrumo/entrypoints/cli/config/runtime_access_management_specs.py:52-317`).
   - `cadrumo-mcp` takes `--profile-id` and `--credential-reference` to run on an enrolled key (`src/cadrumo_harness/mcp/main.py:43-52`).
   - Enrollment, revocation and lock are already proved with scripted clients (`dev/agent_eval/tests/test_installed_mcp_first_enrollment.py`, `test_mcp_revocation_runtime.py`, `test_runtime_automation_grant_lock_parity.py`). None of them is proved with a live agent.
@@ -78,8 +78,8 @@ Where the agent's Cadrumo comes from:
 - **Running inside the staged directory itself.** Rejected. A run writes into the interpreter tree, and the owner ruled that build artefacts are not modified.
 - **Supervision by the packaged `cadrumo-manager.exe`.** Rejected for the default run. The shipping manager owns only the canonical root and would contend with an installed manager on a developer host. The debug lifecycle driver (`dev/runtime_lifecycle/harness.py:49-116`, `fixture-test-mode`) runs the same supervision core on a test root. A supervised variant may use it when that driver is built. It is not part of the package, so its verdict is reported separately.
 
-Where the harness lives:
-- **A `live` subpackage of `dev/agent_eval`, run by recipes and never collected by pytest.** Chosen. The R7 models, scorer, flywheel and report are already there.
+Where the harness lives (agent-product development ownership):
+- **A `live` subpackage of `dev/agent_eval`, run by recipes and never collected by pytest.** Chosen as agent-product tooling, not tax/runtime authority. The R7 models, scorer, flywheel and report are already there.
 - **A new top-level `dev` package.** Rejected. It splits R7 across two homes, and every `dev` package must be enrolled in `closed-dev-classification`.
 - **A product-owned test-support module under `src`.** Rejected. The harness is development tooling, spends money, and drives a built package. `src` never imports `dev`, and nothing in `src` needs this harness.
 
@@ -132,20 +132,20 @@ Binding:
 
 ## Implementation
 
-We will add `dev/agent_eval/live/`, run by two recipes:
+Agent-product evaluation tooling lives in `dev/agent_eval/live/`; it is independent of tax/runtime implementation and runs by two opt-in recipes:
 - `just eval-agent-floor` runs the scenario with a scripted MCP client and no model.
 - `just eval-agent-live SCENARIO RUNS` runs it with the live agent.
 
 Each run carries the 2026-10-12 test into the project as follows:
 - **Package copy.** Verify the staged `bundle` against its manifest. Copy it to the development build root. Verify the copy, and re-verify it after each run.
 - **Isolated root.** Create a fresh root per run. Steps that touch storage run as the package's own code, through the copy's interpreter or command line: installation record, profile creation, sign-in, oracle reads and export parsing. The dev environment only orchestrates processes and reads JSON.
-- **Profile and sign-in.** Create a synthetic profile with a random password through `bin/aeat.exe` on `--secrets-stdin`. Sign in with `config login` on the same channel, which leaves the shared receipt (`src/cadrumo/entrypoints/cli/config/custody.py:203-262`). Remove the profile's credential-store receipt at teardown, as `dev/runtime_lifecycle/harness.py:229-249` does.
+- **Profile and sign-in.** The deterministic person-side driver uses generic runtime admission/held session through the packaged runtime, with direct AEAT login/logout/profile-create retained only as explicitly authorized auth exceptions. Create a synthetic profile with a random password through `bin/aeat.exe` on `--secrets-stdin`. Sign in with `config login` on the same channel, which leaves the shared receipt (auth command/payload ownership now belongs to `src/cadrumo_runtime/commands` with the explicit direct AEAT exceptions). Remove the profile's credential-store receipt at teardown, as `dev/runtime_lifecycle/harness.py:229-249` does.
 - **Scenario.** The prompt, profile facts, seeded or agent-entered ledger rows, required end state and oracle figures are declared in a live scenario file beside the golden scenarios. The prompt carries no secret.
 - **Agent run.** The driver spawns `bin/cadrumo-mcp.exe` over stdio with an allow-list environment, offers only its tools to the model, with no other tools, no session persistence, no user settings and a spend limit, and records every call as a `LiveToolCallRecord`. Any temporary client configuration is private and deleted after the run. Every driver yields the same `LiveTrajectory`.
 - **Oracle.** Read the ledger, work list and work history with `bin/aeat.exe --format json` on the protected channel. Parse the export with the product parser under the copy's authority. Compare all of them with the scenario's figures and with each other.
 - **Capture.** Scrub in the stream before anything is written. Exact values are replaced: the run's password, the provider credential, the profile's Cadrumo API key, and every host variable value outside the allow-list. A fail-closed residual scan follows, modelled on `dev/packaging/evidence_scrub.py:194`. Write the scrubbed trajectory, the receipt and the score to `.logs/agent-eval/`. Raw streams are never kept.
 - **Scoring.** Use `score_live_trajectory`, with the live-write leaves derived from the registered operations' effect declarations rather than a hand list.
-- **Access scenarios.** Drive the person's side through the packaged command line:
+- **Access scenarios.** Drive the person's side through `cadrumo-runtime config` using the existing auth suffixes, not tax agent/provider/attendance commands:
   - `config automation create` and `approve`, with the password on the protected channel
   - `deny` for revocation
   - `lock` for a locked profile
@@ -165,6 +165,8 @@ Hypotheses, free to change within the constraints:
 - **Model.** Declared by configuration and recorded per run.
 
 The `dev/agent_eval/__init__.py` docstring is corrected to state what the package imports. Pure parts are unit-tested in `dev/agent_eval/tests`, where they join the existing portable lanes. Those parts are the scrubber, the two stream-to-trajectory translators, the manifest-copy check against a synthetic manifest, and the verdict rules. Positive controls show that the scrubber fails on a planted secret, that the copy check fails on a changed byte, and that the oracle fails on a planted disagreement.
+
+LLM execution drivers and conduct scoring are agent-product responsibilities; deterministic runtime/MCP acceptance and oracle/person-side helpers remain local development tools. `src/cadrumo` and `src/cadrumo_runtime` host no LLM agent execution/evaluation policy. Separate MCP implementation is `src/cadrumo_harness`, shared clients `src/cadrumo_client`, and desktop-hosted process ownership `src/cadrumo_agent_service`. The existing local driver/oracle source is migration implementation, not a live proof or agent-repository decision.
 
 The scratch folder's role ends here. Its runtime host, `env.json`, password file and `grep` parsing are not carried forward. Every capability they gave is listed above.
 
@@ -189,7 +191,7 @@ Where it stops:
 - It does not show that another model, another MCP client or a different prompt behaves the same way.
 - It does not show that the figures are right in law beyond the published example the scenario uses.
 - It does not show anything about the MSI installation, the installed manager, login startup, the desktop shell or the TUI.
-- It does not exercise cadrumo-agent. The agent integration is proved by `dev/runtime_lifecycle/agent_live.py` against the same package, under `2026-10-13-package-verification-adr` (amended 2026-10-13).
+- It does not exercise cadrumo-agent. The agent integration is proved by the agent-product package runner and deterministic `dev/runtime_lifecycle/agent_live.py` person-side driver against the same package, under `2026-10-13-package-verification-adr` (amended 2026-10-13).
 - It does not show that a run against a package other than the one recorded behaves the same. A stale package is refused for that reason.
 - A pass is a rate over nondeterministic runs, not a proof.
 - It cannot run where the credential store refuses the logon. Resume and an enrolled key are the only ways in for the agent, and both need that store. Such hosts report unavailable. The platform matrix is out of scope by the owner's ruling.
@@ -199,3 +201,48 @@ Other consequences:
 - The lane may at first fail runs on today's MCP surface, because that surface still offers the agent a password `sign_in`. That failure is intended. It turns into a pass when the governing record's code changes land.
 - Every live failure ends in one of two places. A product defect becomes an ordinary regression test in the owning tests directory. An agent-conduct failure becomes a golden scenario through the existing flywheel.
 - Accepted 2026-10-12 on the owner's first-hand approval of this text ("lgtm"), which also accepts the stated default pass rule of three runs with at least two reaching the end state. Who schedules the nightly run, and on which interactive host, stays open; until it is named the lane runs on demand. Acceptance records the decision; it is not evidence that any of it is built.
+
+## Boundary amendment 2026-10-14
+
+Authorized by the user's explicit service/harness/native migration instruction. Original acceptance/proposal status, dated rulings and quotations remain unchanged. This amendment sets ownership obligations; it is not evidence of packaged or live acceptance. The current migration runs no tests and only the coordinated import-linter gate.
+
+### Former implementation and ownership (historical)
+
+> ## Implementation
+> 
+> We will add `dev/agent_eval/live/`, run by two recipes:
+> - `just eval-agent-floor` runs the scenario with a scripted MCP client and no model.
+> - `just eval-agent-live SCENARIO RUNS` runs it with the live agent.
+> 
+> Each run carries the 2026-10-12 test into the project as follows:
+> - **Package copy.** Verify the staged `bundle` against its manifest. Copy it to the development build root. Verify the copy, and re-verify it after each run.
+> - **Isolated root.** Create a fresh root per run. Steps that touch storage run as the package's own code, through the copy's interpreter or command line: installation record, profile creation, sign-in, oracle reads and export parsing. The dev environment only orchestrates processes and reads JSON.
+> - **Profile and sign-in.** Create a synthetic profile with a random password through `bin/aeat.exe` on `--secrets-stdin`. Sign in with `config login` on the same channel, which leaves the shared receipt (`src/cadrumo/entrypoints/cli/config/custody.py:203-262`). Remove the profile's credential-store receipt at teardown, as `dev/runtime_lifecycle/harness.py:229-249` does.
+> - **Scenario.** The prompt, profile facts, seeded or agent-entered ledger rows, required end state and oracle figures are declared in a live scenario file beside the golden scenarios. The prompt carries no secret.
+> - **Agent run.** The driver spawns `bin/cadrumo-mcp.exe` over stdio with an allow-list environment, offers only its tools to the model, with no other tools, no session persistence, no user settings and a spend limit, and records every call as a `LiveToolCallRecord`. Any temporary client configuration is private and deleted after the run. Every driver yields the same `LiveTrajectory`.
+> - **Oracle.** Read the ledger, work list and work history with `bin/aeat.exe --format json` on the protected channel. Parse the export with the product parser under the copy's authority. Compare all of them with the scenario's figures and with each other.
+> - **Capture.** Scrub in the stream before anything is written. Exact values are replaced: the run's password, the provider credential, the profile's Cadrumo API key, and every host variable value outside the allow-list. A fail-closed residual scan follows, modelled on `dev/packaging/evidence_scrub.py:194`. Write the scrubbed trajectory, the receipt and the score to `.logs/agent-eval/`. Raw streams are never kept.
+> - **Scoring.** Use `score_live_trajectory`, with the live-write leaves derived from the registered operations' effect declarations rather than a hand list.
+> - **Access scenarios.** Drive the person's side through the packaged command line:
+>   - `config automation create` and `approve`, with the password on the protected channel
+>   - `deny` for revocation
+>   - `lock` for a locked profile
+>   - `config logout` for no sign-in
+>   - a lease left to lapse for an expired session
+> 
+>   The key scenarios start the packaged MCP server with `--profile-id` and `--credential-reference`. Revocation is triggered by the harness between two agent turns, at a point the scenario declares. The existing scripted tests of enrollment, revocation and lock remain the deterministic floor beneath these.
+> 
+> Hypotheses, free to change within the constraints:
+> - **The first scenario.** Modelo 130 for one quarter, with profile facts and rows chosen so that the published AEAT DR 130 worked example applies. That gives casilla 04 and 07 of 1.600 with casilla 13 zero, the same figure `dev/agent_eval/tests/test_modelo_130_value_oracle.py` uses. The required subsequence is `ledger.add`, `modelo.work.create`, `.calculate`, `.verify`, `modelo.export`.
+> - **The second scenario.** Modelo 303 for the same quarter. Its oracle is cross-artefact agreement on IVA between the ledger rows, verify and the parsed export. The annual flow comes later.
+> - **The pass rule.** By default a lane run is three runs. It passes when every run holds every hard invariant and at least two reach the required end state with the oracle in agreement. A product disagreement fails the lane whatever the agent did, and is reported as a product finding.
+> - **The outcome classes.** Product finding, agent failure, and unavailable for missing credentials or package, each with its own exit code.
+> - **Cadence.** On demand. Nightly on an operator's interactive logon after `just build-native Release bundle`, scheduled outside this repository.
+> - **Rebuild trigger.** A failed staleness comparison.
+> - **Copy reuse.** One verified copy per manifest digest, re-verified before each run.
+> - **Model.** Declared by configuration and recorded per run.
+> 
+> The `dev/agent_eval/__init__.py` docstring is corrected to state what the package imports. Pure parts are unit-tested in `dev/agent_eval/tests`, where they join the existing portable lanes. Those parts are the scrubber, the two stream-to-trajectory translators, the manifest-copy check against a synthetic manifest, and the verdict rules. Positive controls show that the scrubber fails on a planted secret, that the copy check fails on a changed byte, and that the oracle fails on a planted disagreement.
+> 
+> The scratch folder's role ends here. Its runtime host, `env.json`, password file and `grep` parsing are not carried forward. Every capability they gave is listed above.
+> 

@@ -15,10 +15,10 @@ from typing import Any
 
 import pytest
 
-from cadrumo.adapters.local_runtime.boot_record import runtime_boot_record_path
 from cadrumo.core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant
 from cadrumo.core.storage_taxonomy import StorageScope
 from cadrumo.core.storage_taxonomy_locations import STORAGE_TAXONOMY
+from cadrumo_runtime.adapters.boot_record import runtime_boot_record_path
 from dev._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

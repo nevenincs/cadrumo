@@ -34,7 +34,7 @@ Content-addressed from the full event body, so structurally identical
 emissions collapse to one id. Public because every CLI history transport
 projects this identity and must not re-declare its shape.
 """
-BUCKET_ACTOR_LABEL_MAX_LENGTH: Final[int] = 64
+BUCKET_ACTOR_LABEL_MAX_LENGTH: Final[int] = 128
 """Maximum length of a bucket-event actor label.
 
 Named rather than inlined because a CLI surface accepting an operator-supplied
@@ -42,6 +42,9 @@ actor has to refuse an over-long value at the boundary, quoting the accepted
 bound. Reaching the bound only when the event is constructed makes the refusal
 arrive after the work it records has already been done, and leaves the operator
 with no accepted-value set to correct against.
+
+Admitted automation labels include the frontend, session kind and full client
+UUID. The bound accommodates the same identities as operation actor references.
 """
 
 BucketActorLabel = Annotated[
@@ -53,7 +56,7 @@ BucketActorLabel = Annotated[
 A non-empty string of at most
 :data:`BUCKET_ACTOR_LABEL_MAX_LENGTH` characters; trailing and leading
 whitespace is stripped at validation time. Typical values are the CLI
-command path (``"cadrumo.app.modelo.calculate"``) or an automated-agent
+command path (``"cadrumo.app.modelo.calculate"``) or an automation
 slug (``"censo.sync"``).
 """
 BucketObjectId = Annotated[
@@ -381,7 +384,7 @@ class BucketEvent(BaseModel):
         bucket_id: Owning bucket identifier.
         event_type: One of :class:`BucketEventType`.
         occurred_at: UTC timestamp when the event was emitted.
-        actor: Actor label (free text up to 64 chars).
+        actor: Actor label bounded by :data:`BUCKET_ACTOR_LABEL_MAX_LENGTH`.
         object_type: Type of the affected domain object.
         object_id: Stable identifier of the affected object (e.g.
             a 64-char SHA-256 work-unit / revision / filing-record id).

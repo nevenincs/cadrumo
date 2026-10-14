@@ -5,7 +5,7 @@ as injected :class:`~application.provisioning.SystemMemoryReading` /
 :class:`~application.provisioning.AcceleratorReading` **measurements** through
 the probe's own arguments, so every branch runs the production model
 construction and the production comparison logic -- nothing about this host's
-actual GPU state (which changes minute to minute under an agent fleet) can reach
+actual GPU state (which changes minute to minute under an automation fleet) can reach
 the assertions. Runtime interaction runs against a real
 :class:`~http.server.ThreadingHTTPServer` speaking the runtime's wire shape, so
 the ``/api/ps`` read and the unload request exercise real HTTP through real

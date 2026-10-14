@@ -9,7 +9,7 @@ from uuid import uuid4
 
 import pytest
 
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
 from .. import installed_tui_runtime as runtime
 from ..cli_contracts import RetencionesInstalledCliError
@@ -42,7 +42,7 @@ def test_fixture_verifies_readiness_and_joins_owner_even_when_continuation_fails
         def connect(self, **kwargs):
             self.attempts += 1
             if self.attempts == 1:
-                raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_NOT_READY)
+                raise RefusalError(RefusalCode.ENDPOINT_NOT_READY)
             return "verified-native-channel"
 
         def close(self):
@@ -75,8 +75,8 @@ def test_fixture_verifies_readiness_and_joins_owner_even_when_continuation_fails
         return SimpleNamespace(hello=SimpleNamespace(boot_id=boot), close=lambda: None)
 
     monkeypatch.setattr(runtime.sys, "platform", "darwin")
-    monkeypatch.setattr(runtime, "PosixRuntimeEndpoint", Endpoint)
-    monkeypatch.setattr(runtime, "VerifiedRuntimeConnection", handshake)
+    monkeypatch.setattr(runtime, "PosixEndpoint", Endpoint)
+    monkeypatch.setattr(runtime, "VerifiedConnection", handshake)
     monkeypatch.setattr(runtime.asyncio, "create_subprocess_exec", launch)
     monkeypatch.setattr(runtime, "version", lambda name: "installed-cohort")
     monkeypatch.setenv("CADRUMO_UNRELATED", "ambient-value")
@@ -127,10 +127,10 @@ def test_unsafe_namespace_is_refused_before_launch_without_permission_repair(tmp
     (tmp_path / "cadrumo-runtime").touch()
 
     def unsafe_endpoint(**kwargs):
-        raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED)
+        raise RefusalError(RefusalCode.ENDPOINT_UNTRUSTED)
 
     monkeypatch.setattr(runtime.sys, "platform", "darwin")
-    monkeypatch.setattr(runtime, "PosixRuntimeEndpoint", unsafe_endpoint)
+    monkeypatch.setattr(runtime, "PosixEndpoint", unsafe_endpoint)
     with (
         pytest.raises(RetencionesInstalledCliError) as refusal,
         runtime.installed_foreground_runtime(

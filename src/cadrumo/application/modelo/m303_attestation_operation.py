@@ -67,7 +67,7 @@ MODELO_WORK_M303_ATTESTATION_OPERATION_DEFINITION_ID = "modelo.work.m303_attesta
 class ModeloWorkM303AttestationRequest(CredentialFreeOperationRequest):
     """Exact profile and one explicit work-unit or period target.
 
-    ``actor`` is recorded as sent for a person's session. An agent's session is
+    ``actor`` is recorded as sent for a person's session. An automation's session is
     recorded under its own session label, whatever the request carries.
     """
 

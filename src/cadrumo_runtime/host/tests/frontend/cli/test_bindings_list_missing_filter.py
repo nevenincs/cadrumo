@@ -1,0 +1,189 @@
+"""Strict-subset behaviour proof for ``aeat app modelo bindings list --missing``.
+
+``bindings list --missing`` narrows the binding list to the bindings the
+operator still owes: it drops any binding the active profile already resolves
+(``source = "profile"``). The pre-existing surface test only asserted the
+``missing_filter\tTrue`` echo line — it never proved the filter actually
+removed rows, so a no-op could not be told from a working filter.
+
+This module pins the load-bearing contract with a real-behaviour
+strict-subset test: against an active bucket whose profile satisfies a
+PROPER subset of Modelo 100's formula-consumed ``source = "profile"``
+bindings, ``--missing`` must return STRICTLY FEWER rows than the
+unfiltered listing, and the rows it removes must be EXACTLY the
+profile-resolved binding ids — no more, no fewer. No mocks: a real
+:class:`~cadrumo.domain.user_profile.values.UserProfileRecord` is persisted to a
+real bucket and the real registry authority resolves the bindings.
+"""
+
+from __future__ import annotations
+
+import json
+import sys
+from collections.abc import Callable, Iterator
+from pathlib import Path
+
+import pytest
+from click.testing import Result
+
+from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import native_cli_profile_scope
+from cadrumo_runtime.host.tests.frontend.cli.cli_runner import invoke_cached_cli
+
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.windows_only,
+    pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
+    pytest.mark.usefixtures("authority_operation"),
+]
+
+# Modelo 100 (IRPF) 2025 declares formula-consumed ``source = "profile"``
+# bindings. The partial profile below satisfies the explicit facts for
+# tax-residence CCAA, declaration type, taxpayer birth date, and
+# minor-children-in-unit count. The real profile resolver also derives neutral
+# defaults for the anualidades eligibility and Madrid nacimiento/adopción
+# operands. The remaining profile bindings (spouse, descendants, marriage
+# deltas, ...) and every non-profile binding (ledger aggregations,
+# prior-filing pulls) stay unresolved, i.e. still "missing". New registry
+# declarations may add further profile-derived defaults, so the assertions
+# below pin the seeded facts without freezing the complete authority set.
+_MODELO = "100"
+_YEAR = 2025
+_PERIOD = "0A"
+_KNOWN_RESOLVED_BINDING_IDS = frozenset(
+    {
+        "renta-profile-tax-residence-ccaa",
+        "renta-profile-declaration-type",
+        "renta-profile-taxpayer-birth-date",
+        "renta-profile-family-minor-children-in-unit",
+        "renta-profile-has-economic-activity",
+        "renta-profile-anualidades-sin-minimo-descendientes",
+        "renta-profile-madrid-nacimiento-adopcion-eligible-count",
+        "renta-profile-unidad-familiar-otros-miembros-base",
+        "renta-profile-minimo-descendientes-estatal",
+        "renta-profile-minimo-descendientes-autonomico",
+    },
+)
+
+
+@pytest.fixture
+def invoke_modelo_query(tmp_path: Path) -> Iterator[Callable[[list[str]], Result]]:
+    """Run both views through one native profile worker with the four facts."""
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(
+            label="bindings-missing-native",
+            facts={
+                "taxpayer_type.entity_type": "natural_person",
+                "identity.tax_id": "12345678Z",
+                "identity.name": "Operator",
+                "identity.surnames": "Example",
+                "activities.description": "design",
+                "censo.activity_start_date": "2024-01-01",
+                "contact.postcode": "28013",
+                "tax_residence.jurisdiction_scope": "common_regime",
+                "tax_residence.ccaa": "cataluna",
+                "renta_filing.declaration_type": "1",
+                "renta_taxpayer.birth_date": "1980-03-15",
+                "renta_family.minor_children_in_unit": "false",
+                "iva.regime": "GENERAL",
+                "iva.m303_regime_composition": "general",
+                "iva.redeme_enrolled": "false",
+                "iva.cash_accounting_regime_enrolled": "false",
+                "iva.voluntary_sii_enrolled": "false",
+                "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+            },
+        )
+
+        def invoke(args: list[str]) -> Result:
+            assert profile.label is not None
+            close_active_bucket_session()
+            return invoke_cached_cli(
+                ("--language", "en", "--profile", profile.label, "--profile-secrets-stdin", *args),
+                input=json.dumps({"profile_passphrase": profile.passphrase}),
+            )
+
+        yield invoke
+
+
+def _binding_rows_in_listing(output: str) -> dict[str, tuple[str, ...]]:
+    """Extract binding rows from a ``bindings list`` text envelope.
+
+    Each binding row is tab-separated as
+    ``modelo<TAB>revision<TAB>period<TAB>binding_id<TAB>source<TAB>...``;
+    the binding id is the fourth column. Header / metadata lines (which
+    have a different leading token) carry no registry binding id, so a row
+    qualifies only when its fourth column looks like a binding id.
+    """
+    rows: dict[str, tuple[str, ...]] = {}
+    for line in output.splitlines():
+        columns = line.split("\t")
+        if len(columns) < 5:
+            continue
+        if columns[0] == _MODELO:
+            rows[columns[3]] = tuple(columns)
+    return rows
+
+
+def _binding_ids_in_listing(output: str) -> set[str]:
+    """Extract binding ids from a ``bindings list`` text envelope."""
+    return set(_binding_rows_in_listing(output))
+
+
+def test_bindings_list_missing_returns_strict_subset_of_unfiltered(
+    invoke_modelo_query: Callable[[list[str]], Result],
+) -> None:
+    """``--missing`` removes the profile-resolved bindings.
+
+    With an active profile that satisfies a proper subset of Modelo 100's
+    ``source = "profile"`` bindings, the ``--missing`` listing must be a
+    strict subset of the unfiltered listing and remove every binding backed
+    by the seeded facts. The authority may add further derived profile
+    bindings, so the test does not freeze that complete set.
+    """
+    scope = ["app", "modelo", "bindings", "list", "--modelo", _MODELO, "--year", str(_YEAR), "--period", _PERIOD]
+
+    unfiltered = invoke_modelo_query(scope)
+    assert unfiltered.exit_code == 0, unfiltered.output
+    filtered = invoke_modelo_query([*scope, "--missing"])
+    assert filtered.exit_code == 0, filtered.output
+
+    all_rows = _binding_rows_in_listing(unfiltered.output)
+    missing_rows = _binding_rows_in_listing(filtered.output)
+    all_ids = set(all_rows)
+    missing_ids = set(missing_rows)
+    removed_ids = all_ids - missing_ids
+
+    # The unfiltered listing must contain every binding the profile resolves
+    # (otherwise the fixture is not exercising the filter at all).
+    assert all_ids >= _KNOWN_RESOLVED_BINDING_IDS, sorted(_KNOWN_RESOLVED_BINDING_IDS - all_ids)
+    # --missing is a STRICT subset: strictly fewer rows.
+    assert missing_ids < all_ids
+    # Every binding backed by the seeded facts is removed, while additional
+    # authority-derived profile defaults may also be removed as they resolve.
+    assert removed_ids >= _KNOWN_RESOLVED_BINDING_IDS
+    assert all(all_rows[binding_id][4] == "profile" for binding_id in removed_ids)
+    assert missing_ids.isdisjoint(_KNOWN_RESOLVED_BINDING_IDS)
+    # The filter echo line still reflects the flag.
+    assert "missing_filter\tTrue" in filtered.output
+
+
+def test_bindings_list_without_missing_retains_profile_resolved_rows(
+    invoke_modelo_query: Callable[[list[str]], Result],
+) -> None:
+    """Without ``--missing`` the profile-resolved bindings are still listed.
+
+    The unfiltered listing is the full configured-binding set: a binding
+    the profile already satisfies is reported (it IS a declared binding),
+    and only ``--missing`` drops it. This is the anti-tautology companion
+    to the strict-subset test — it confirms the dropped rows genuinely
+    exist in the unfiltered view, so the subset difference is real.
+    """
+    scope = ["app", "modelo", "bindings", "list", "--modelo", _MODELO, "--year", str(_YEAR), "--period", _PERIOD]
+
+    unfiltered = invoke_modelo_query(scope)
+    assert unfiltered.exit_code == 0, unfiltered.output
+
+    all_ids = _binding_ids_in_listing(unfiltered.output)
+    assert all_ids >= _KNOWN_RESOLVED_BINDING_IDS, sorted(_KNOWN_RESOLVED_BINDING_IDS - all_ids)
+    assert "missing_filter\tFalse" in unfiltered.output

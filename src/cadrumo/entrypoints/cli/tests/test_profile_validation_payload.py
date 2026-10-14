@@ -5,10 +5,11 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from cadrumo_client.commands.payloads import ProfileIssuePayload
+
 from ....application.user_profile.commands import ProfileValidationIssue
 from ....core.errors.severity import BaseSeverity
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
-from ..config_payloads import ProfileIssuePayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

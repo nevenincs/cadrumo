@@ -36,8 +36,8 @@ from ._modelo_payloads import (
 )
 from .common import emit_envelope
 from .modelo_aux_payloads import WithholdingClaveBreakdownPayload
-from .runtime_modelo_aggregate import run_modelo_aggregate
-from .runtime_modelo_invoice_withholding import aggregate_modelo_with_received_invoice_retencion
+from .operation_modelo_aggregate import run_modelo_aggregate
+from .operation_modelo_invoice_withholding import aggregate_modelo_with_received_invoice_retencion
 
 # Modelo 123 is absent on purpose: its capital withholding is evidenced by the
 # paying ledger transaction, and invoice evidence for it is refused outright.

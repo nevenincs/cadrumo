@@ -19,7 +19,7 @@ from ._modelo_payloads_m036 import (
 )
 from .common import active_bucket_id_or_refuse, emit_envelope
 from .errors import CliRefusedBoundaryError
-from .runtime_modelo_m036 import read_modelo_m036, record_modelo_m036
+from .operation_modelo_m036 import read_modelo_m036, record_modelo_m036
 
 
 def _declaration_row(declaration: M036DeclarationSnapshot) -> M036DeclarationRowPayload:

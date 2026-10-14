@@ -1,7 +1,7 @@
 """The actor label an executing operation records for what it writes.
 
 An operation stores who acted in its reports and events. Nothing authenticates
-a label a request carries, so the label of an agent's execution is taken from
+a label a request carries, so the label of an automation's execution is taken from
 the session that admitted it, and a person's execution keeps the label the
 person's frontend supplied.
 """
@@ -21,8 +21,8 @@ from .registry import OperationFrontendProjection
 if TYPE_CHECKING:
     from .owner import OperationExecutorContext
 
-_AGENT_LABEL_PREFIXES: Final = tuple(
-    f"agent:{frontend.value}." for frontend in OperationFrontendProjection if not is_persons_frontend(frontend)
+_AUTOMATION_LABEL_PREFIXES: Final = tuple(
+    f"automation:{frontend.value}." for frontend in OperationFrontendProjection if not is_persons_frontend(frontend)
 )
 
 
@@ -45,7 +45,7 @@ def execution_actor_label(
 ) -> str:
     """Return the label to record as the actor of the execution ``context`` belongs to.
 
-    An execution admitted on an agent's frontend is an agent's. Its label
+    An execution admitted on an automation's frontend is an automation's. Its label
     names the frontend, the session's kind and client, and the label the
     request supplied is not recorded. The person's frontends record the
     supplied label unchanged.
@@ -58,24 +58,24 @@ def execution_actor_label(
     caller = reader(context.identity)
     if is_persons_frontend(caller.frontend):
         return supplied
-    return f"agent:{caller.frontend.value}.{caller.session_kind.value}.{caller.client_id}"
+    return f"automation:{caller.frontend.value}.{caller.session_kind.value}.{caller.client_id}"
 
 
-def actor_label_is_an_agents(label: str) -> bool:
-    """Return whether a recorded actor label is the one an agent's execution records.
+def actor_label_is_automation(label: str) -> bool:
+    """Return whether a recorded actor label is the one an automation's execution records.
 
     A stored record keeps the label and not the frontend, so what a later
-    decision knows of who acted is this label. An agent's execution cannot
+    decision knows of who acted is this label. An automation's execution cannot
     record another: its label comes from its session. A person's frontend
     records the label it supplies, so a person who types this form records
-    their own act as an agent's.
+    their own act as an automation's.
     """
-    return label.startswith(_AGENT_LABEL_PREFIXES)
+    return label.startswith(_AUTOMATION_LABEL_PREFIXES)
 
 
 __all__ = [
     "OperationExecutionCaller",
     "OperationExecutionCallerReader",
-    "actor_label_is_an_agents",
+    "actor_label_is_automation",
     "execution_actor_label",
 ]

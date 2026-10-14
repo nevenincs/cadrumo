@@ -1,7 +1,7 @@
 """A person who confirms or completes a classification is recorded as the one who decided it.
 
 The ledger actions run over real secure storage. A person who submits the
-classification a rule, a model or an agent already gave a row has accepted it:
+classification a rule, a model or an automation already gave a row has accepted it:
 the row records them as the one who decided although no value moves, and the
 history records the classification they confirmed. A person who sets any
 tax-bearing fact of such a row is recorded the same way; one who edits only a
@@ -43,7 +43,7 @@ from cadrumo.domain.transactions.m210_income_classification import (
 )
 
 from .classification_origin_support import (
-    AGENT,
+    AUTOMATION,
     BUCKET_ID,
     PERSON,
     Ledger,
@@ -58,7 +58,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CLASSIFY = "aeat app ledger classify"
 _ADD = "aeat app ledger add"
-_PARTIES = pytest.mark.parametrize("party", ["agent", "rule", "model"])
+_PARTIES = pytest.mark.parametrize("party", ["automation", "rule", "model"])
 
 
 @pytest.fixture
@@ -69,14 +69,17 @@ def ledger(tmp_path: Path) -> Generator[Ledger]:
 
 def _row_decided_by(ledger: Ledger, party: str) -> str:
     """Store a business row whose classification ``party`` decided, with the stamp that party's write leaves."""
-    if party == "agent":
+    if party == "automation":
         return add_row(
-            ledger, description="classified by an agent", actor=AGENT, classification=BusinessClassification.BUSINESS
+            ledger,
+            description="classified by an automation",
+            actor=AUTOMATION,
+            classification=BusinessClassification.BUSINESS,
         )
     if party == "rule":
         return add_row_classified_by_a_rule(ledger, description="classified by a rule")
     row = add_row(ledger, description="classified from a model's proposal")
-    classify_row(ledger, row, actor=AGENT, stamp=_PROPOSED_BY)
+    classify_row(ledger, row, actor=AUTOMATION, stamp=_PROPOSED_BY)
     return row
 
 
@@ -146,32 +149,32 @@ def test_a_person_restating_their_own_classification_writes_nothing(ledger: Ledg
     assert ledger.stored() == before
 
 
-def test_an_agents_label_restating_the_persons_classification_takes_nothing(ledger: Ledger) -> None:
+def test_an_automation_label_restating_the_persons_classification_takes_nothing(ledger: Ledger) -> None:
     """Otherwise submitting the value a row already has would be a way to take it."""
     row = add_row(ledger, description="the person's row", classification=BusinessClassification.BUSINESS)
     before = ledger.stored()
 
     restated = _write(
-        ledger, row, {"business_classification": BusinessClassification.BUSINESS}, actor=AGENT, source_command=_ADD
+        ledger, row, {"business_classification": BusinessClassification.BUSINESS}, actor=AUTOMATION, source_command=_ADD
     )
 
     assert restated.bucket_event_ids == ()
     assert ledger.stored() == before
     personal = add_row(ledger, description="the person's personal row", classification=BusinessClassification.PERSONAL)
-    _accept_proposal(ledger, personal, actor=AGENT)
+    _accept_proposal(ledger, personal, actor=AUTOMATION)
     assert ledger.row(personal).classification_origin is ClassificationOrigin.PERSON
 
 
-def test_a_person_running_the_derivation_an_agent_ran_or_accepting_the_proposal_an_agent_accepted_takes_the_row(
+def test_a_person_running_the_derivation_automation_ran_or_accepting_the_proposal_automation_accepted_takes_the_row(
     ledger: Ledger,
 ) -> None:
     derived = add_row_classified_by_a_rule(ledger, description="classified by a rule")
-    _derive(ledger, derived, actor=AGENT)
+    _derive(ledger, derived, actor=AUTOMATION)
     figures = classification_facts(ledger.row(derived))
-    assert ledger.row(derived).classification_origin is ClassificationOrigin.AGENT
+    assert ledger.row(derived).classification_origin is ClassificationOrigin.AUTOMATION
     accepted = add_row(ledger, description="accepted from a model")
-    _accept_proposal(ledger, accepted, actor=AGENT)
-    assert ledger.row(accepted).classification_origin is ClassificationOrigin.AGENT
+    _accept_proposal(ledger, accepted, actor=AUTOMATION)
+    assert ledger.row(accepted).classification_origin is ClassificationOrigin.AUTOMATION
 
     _derive(ledger, derived, actor=PERSON)
     _accept_proposal(ledger, accepted, actor=PERSON)
@@ -208,12 +211,15 @@ _FIELDS = pytest.mark.parametrize("field", list(_FIELD_VALUES))
 
 @_FIELDS
 @pytest.mark.parametrize("with_classification", [True, False], ids=["classification", "update"])
-def test_a_person_setting_one_further_tax_bearing_fact_on_an_agents_row_takes_the_row(
+def test_a_person_setting_one_further_tax_bearing_fact_on_an_automation_row_takes_the_row(
     ledger: Ledger, field: str, with_classification: bool
 ) -> None:
     """Through a classification that restates the class, and through an update that sets the fact alone."""
     row = add_row(
-        ledger, description="classified by an agent", actor=AGENT, classification=BusinessClassification.BUSINESS
+        ledger,
+        description="classified by an automation",
+        actor=AUTOMATION,
+        classification=BusinessClassification.BUSINESS,
     )
     values: dict[str, object] = {field: _FIELD_VALUES[field](ledger)}
     if with_classification:
@@ -239,8 +245,8 @@ _CHANGES: dict[str, Callable[[Ledger], object]] = {
 @pytest.mark.parametrize("field", list(_CHANGES))
 @pytest.mark.parametrize(
     ("decided_by", "actor", "origin"),
-    [(PERSON, AGENT, ClassificationOrigin.AGENT), (AGENT, PERSON, ClassificationOrigin.PERSON)],
-    ids=["agent-on-the-persons-row", "person-on-an-agents-row"],
+    [(PERSON, AUTOMATION, ClassificationOrigin.AUTOMATION), (AUTOMATION, PERSON, ClassificationOrigin.PERSON)],
+    ids=["automation-on-the-persons-row", "person-on-an-delegated clients-row"],
 )
 def test_a_write_that_changes_a_tax_bearing_fact_is_stored_under_either_label_and_records_who_ran_it(
     ledger: Ledger, field: str, decided_by: str, actor: str, origin: ClassificationOrigin
@@ -263,16 +269,19 @@ def test_an_edit_that_sets_no_tax_bearing_fact_neither_takes_a_row_nor_is_refuse
     ledger: Ledger, values: dict[str, object]
 ) -> None:
     """A note or a label decides nothing about how the row is taxed, whoever writes it."""
-    by_an_agent = add_row(
-        ledger, description="classified by an agent", actor=AGENT, classification=BusinessClassification.BUSINESS
+    by_automation = add_row(
+        ledger,
+        description="classified by an automation",
+        actor=AUTOMATION,
+        classification=BusinessClassification.BUSINESS,
     )
     by_the_person = add_row(ledger, description="the person's row", classification=BusinessClassification.BUSINESS)
 
-    _write(ledger, by_an_agent, values, actor=PERSON, source_command="aeat app ledger update")
-    _write(ledger, by_the_person, values, actor=AGENT, source_command="aeat app ledger update")
+    _write(ledger, by_automation, values, actor=PERSON, source_command="aeat app ledger update")
+    _write(ledger, by_the_person, values, actor=AUTOMATION, source_command="aeat app ledger update")
 
     assert not set(values) & CLASSIFICATION_DECISION_FIELDS
-    assert ledger.row(by_an_agent).classification_origin is ClassificationOrigin.AGENT
+    assert ledger.row(by_automation).classification_origin is ClassificationOrigin.AUTOMATION
     assert ledger.row(by_the_person).classification_origin is ClassificationOrigin.PERSON
 
 
@@ -291,8 +300,8 @@ def _lifecycle(act: _SetAside, ledger: Ledger, row: str, *, actor: str) -> None:
     act(bucket_id=BUCKET_ID, transaction_id=row, actor=actor, reason="synthetic", ports=ledger.ports)
 
 
-_LABELS = [PERSON, AGENT]
-_LABEL_IDS = ["person", "agent"]
+_LABELS = [PERSON, AUTOMATION]
+_LABEL_IDS = ["person", "automation"]
 
 
 @_SET_ASIDES
@@ -306,7 +315,10 @@ def test_a_row_is_set_aside_and_restored_under_either_label_whoever_decided_it_a
         add_row(ledger, description="unprocessed"),
         add_row_classified_by_a_rule(ledger, description="classified by a rule"),
         add_row(
-            ledger, description="classified by an agent", actor=AGENT, classification=BusinessClassification.BUSINESS
+            ledger,
+            description="classified by an automation",
+            actor=AUTOMATION,
+            classification=BusinessClassification.BUSINESS,
         ),
         add_row(ledger, description="the person's row", classification=BusinessClassification.BUSINESS),
     ):

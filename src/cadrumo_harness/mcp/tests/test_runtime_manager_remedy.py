@@ -4,8 +4,8 @@ from uuid import uuid4
 
 import pytest
 
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode
 from cadrumo.core.config import override_settings
+from cadrumo_client.contracts.contracts import RefusalCode
 
 from ..runtime_adapter import RuntimeMcpAdapter
 from ..runtime_admission import AdmissionDenial
@@ -16,7 +16,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 @pytest.mark.asyncio
 async def test_unavailable_adapter_returns_remedy_without_automatic_request() -> None:
     adapter = RuntimeMcpAdapter(profile_id=uuid4(), client=None)
-    adapter._admission_denial = AdmissionDenial(RuntimeRefusalCode.UNAVAILABLE.value)
+    adapter._admission_denial = AdmissionDenial(RefusalCode.UNAVAILABLE.value)
     with override_settings(cadrumo_output_language="en"):
         status = await adapter.call("status", {})
         reply = await adapter.call("observe", {"observation": {}})

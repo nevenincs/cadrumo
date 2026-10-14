@@ -1,4 +1,4 @@
-"""Agent-safe Modelo lifecycle timeline over the canonical encrypted history."""
+"""automation-safe Modelo lifecycle timeline over the canonical encrypted history."""
 
 from __future__ import annotations
 
@@ -72,7 +72,7 @@ class ModeloTimelineEvent(BaseModel):
 
 
 class ModeloHistoryTimelineProjection(BaseModel):
-    """Closed agent result preserving full event count and canonical order."""
+    """Closed automation result preserving full event count and canonical order."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -137,7 +137,7 @@ class ModeloHistoryTimelineExecutor:
 
 
 def build_modelo_history_timeline_definition(factory: ModeloHistoryPortsFactory) -> OperationDefinition:
-    """Declare a metadata-only agent timeline with no domain write capability."""
+    """Declare a metadata-only automation timeline with no domain write capability."""
     return build_single_phase_definition(
         definition_id=MODELO_HISTORY_TIMELINE_OPERATION_DEFINITION_ID,
         request_type=ModeloHistoryTimelineRequest,

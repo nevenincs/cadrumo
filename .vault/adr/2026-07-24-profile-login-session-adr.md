@@ -8,10 +8,18 @@ related:
   - "[[2026-06-10-cli-operator-surface-adr]]"
   - "[[2026-07-24-profile-login-session-research]]"
 superseded_by: '2026-08-13-profile-session-lifecycle-successor-adr'
-modified: '2026-08-15'
-body_hash: 'sha256:df885f5ad1e1ad16a96658ad88274364af9400cedb2f595ce828faae84062c1c'
+modified: '2026-10-14'
+body_hash: 'sha256:ee42c500c79dcfae98713a8bb8abb2e9ef290cbfa552353dae3b06f6320e42b6'
 ---
 # `profile-login-session` adr: `canonical profile login/logout with persisted session custody` | (**status:** `superseded`)
+
+## Current ownership note (2026-10-14)
+
+This superseded record preserves its accepted historical profile-session decisions. The current human profile doors remain `aeat config login`, `aeat config logout`, and `aeat config profile create`.
+
+Provider authentication, sign-in status, passphrase and recovery administration, Google authentication, automation credentials, and profile session administration are now owned by `cadrumo-runtime`. Current examples include `cadrumo-runtime config sign-in-status`, `cadrumo-runtime config auth login`, `cadrumo-runtime config passphrase change`, and `cadrumo-runtime config profile recovery status`.
+
+The persisted OS-keychain session-key design described below is historical and superseded; it does not describe the current session storage architecture.
 
 ## Problem Statement
 

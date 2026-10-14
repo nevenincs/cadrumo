@@ -154,16 +154,16 @@ def test_profile_wide_access_requires_unrestricted_period_ceiling() -> None:
         assert denied is not None and denied.code is AccessDenialCode.PERIOD_DENIED
 
 
-def test_work_list_is_admitted_on_the_mcp_frontend_without_a_commit_door() -> None:
+def test_work_list_is_admitted_on_the_external_client_frontend_without_a_commit_door() -> None:
     registry, registration = _registration()
 
     resolved = resolve_operation_access(
         registry=registry,
         request=cast(OperationRequest[BaseModel], cast(object, _request())),
-        context=_context(registration, frontend=OperationFrontendProjection.MCP),
+        context=_context(registration, frontend=OperationFrontendProjection.EXTERNAL_CLIENT),
     )
 
-    assert resolved.request.frontend is OperationFrontendProjection.MCP
+    assert resolved.request.frontend is OperationFrontendProjection.EXTERNAL_CLIENT
     assert resolved.request.profile_id == _PROFILE
     assert AccessAction.COMMIT not in resolved.policy.actions
 

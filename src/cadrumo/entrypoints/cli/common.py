@@ -28,6 +28,10 @@ import typer
 import typer._click.types as typer_click_types
 from pydantic import BaseModel, Field, field_validator
 
+from cadrumo_client.commands.suggestions import INVOCATION_REMAINDER_META_KEY
+from cadrumo_client.contracts.command_program import CommandProgram
+
+from ...application.operator_surface.action_targets import ACTION_TARGETS, recorded_action_target_reconciliation
 from ...core.cli_metadata import is_metadata_invocation
 from ...core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
 from ...core.external_constants import OutputLanguage
@@ -36,7 +40,6 @@ from ...core.json_contract import Notice, NoticeSeverity, ResolvedActionArgument
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.output_rendering import OutputFormat, render_command_output
 from ...core.text_bounds import NonEmptyStr
-from .command_suggestions import INVOCATION_REMAINDER_META_KEY
 from .operator_surface_reconciliation import operator_surface_target_reconciliation
 
 
@@ -474,7 +477,32 @@ def resolve_cli_precondition_action(verdict: PreconditionVerdict) -> ResolvedPre
     """
     from ...application.operator_surface.precondition_action import resolve_precondition_action
 
-    return resolve_precondition_action(verdict, target_reconciliation=operator_surface_target_reconciliation)
+    def target_reconciliation(command_key: str, /):
+        target = next((row for row in ACTION_TARGETS if row.command_key == command_key), None)
+        if target is None:
+            raise LookupError(f"unknown command schema identity: {command_key}")
+        if target.program is CommandProgram.AEAT:
+            return operator_surface_target_reconciliation(command_key)
+        return recorded_action_target_reconciliation(
+            command_key,
+            canonical_cli_path=(target.program.executable_name, *target.cli_path),
+        )
+
+    resolved = resolve_precondition_action(verdict, target_reconciliation=target_reconciliation)
+    if resolved.action is None:
+        return resolved
+    target = next(row for row in ACTION_TARGETS if row.command_key == resolved.action.target_command_key)
+    if target.program is CommandProgram.AEAT:
+        from .command_specs import COMMAND_GRAPH
+
+        executable = COMMAND_GRAPH.root().token
+    else:
+        executable = target.program.executable_name
+    cli_path = resolved.action.cli_path
+    if cli_path is None:
+        raise LookupError(f"resolved CLI action has no command path: {resolved.action.target_command_key}")
+    action = resolved.action.model_copy(update={"cli_path": (executable, *cli_path)})
+    return resolved.model_copy(update={"action": action})
 
 
 def attach_cli_policy_verdict[ExceptionT: Exception](
@@ -742,8 +770,9 @@ def emit_envelope(
     if metadata_invocation:
         resolved_notices = supplied_notices
     else:
+        from cadrumo_client.commands.profile_authentication_notice import drain_profile_authentication_notices
+
         from ..payer_fact_migration_notices import drain_payer_fact_migration_notices
-        from ._profile_authentication_notice import drain_profile_authentication_notices
 
         supplied_notices = (
             *supplied_notices,

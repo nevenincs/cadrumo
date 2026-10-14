@@ -4,6 +4,10 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo_client.commands.graph import CommandSpecGraph
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
+
 from .._app_ledger_command_specs import LEDGER_COMMAND_SPECS
 from .._app_ledger_ratios_command_specs import LEDGER_RATIOS_COMMAND_SPECS
 from .._app_ledger_rule_command_specs import LEDGER_RULE_COMMAND_SPECS
@@ -14,9 +18,6 @@ from .._app_ledger_rule_ratio_command_spec_support import (
     _RULE_ACTOR_OPTION,
 )
 from .._root_command_specs import ROOT_COMMAND_SPECS
-from ..command_graph import CommandSpecGraph
-from ..command_parameter_contracts import ArgumentSpec, OptionSpec
-from ..command_spec import CommandSpec, InvocationSpec
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

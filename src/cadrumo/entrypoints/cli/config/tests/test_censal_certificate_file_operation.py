@@ -9,12 +9,19 @@ what it holds decides the result. The refusals are those of the shipped parser.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 from uuid import uuid4
 
 import pytest
+from click.testing import Result
 
 from cadrumo.adapters.inbound.censo.parser import parse_certificado_censal_bytes
+from cadrumo.adapters.persistence.operations.tests.profile_operation_supervisor import (
+    SettledOperation,
+    SupervisedProfile,
+    supervised_profile,
+)
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
@@ -40,17 +47,12 @@ from cadrumo.domain.censo.certificado import (
 )
 from cadrumo.domain.user_profile.values import UserProfileRecord
 from cadrumo.entrypoints.cli.config._censo_payloads import CensoFactPayload, CensoFileIngestResult
-from cadrumo.entrypoints.cli.tests.command_line_rendering import (
+from cadrumo.tests.command_line_rendering import (
     Printed,
     as_the_command_line_renders,
     command_error,
     json_document,
     redacted_as_printed,
-)
-from cadrumo.entrypoints.tests.profile_operation_supervisor import (
-    SettledOperation,
-    SupervisedProfile,
-    supervised_profile,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
@@ -181,7 +183,7 @@ def test_a_named_certificate_file_is_previewed_without_a_write_and_then_enrolled
     ],
 )
 def test_the_shipped_parser_refuses_the_file_for_a_direct_client_as_it_does_for_the_command(
-    tmp_path: Path, content: bytes, message_key: str
+    tmp_path: Path, content: bytes, message_key: str, run_cadrumo_cli: Callable[..., Result]
 ) -> None:
     certificate = tmp_path / "certificado.pdf"
     certificate.write_bytes(content)
@@ -191,7 +193,9 @@ def test_the_shipped_parser_refuses_the_file_for_a_direct_client_as_it_does_for_
         override_settings(cadrumo_active_profile=str(profile.profile_id), cadrumo_output_language="en"),
     ):
         before = _record(profile)
-        printed = command_error("config", "profile", "censo", "import", "--file", str(certificate))
+        printed = command_error(
+            "config", "profile", "censo", "import", "--file", str(certificate), invoke_cli=run_cadrumo_cli
+        )
         outcomes = [_submit(profile, certificate, preview=preview) for preview in (True, False)]
         details = [profile.error_detail(outcome) for outcome in outcomes]
         after = _record(profile)

@@ -32,8 +32,9 @@ from .command_specs import COMMAND_GRAPH as _COMMAND_GRAPH
 if TYPE_CHECKING:
     import typer
 
+    from cadrumo_client.commands.spec import CommandSpec
+
     from ._command_policy import CommandExecutionPolicy
-    from .command_spec import CommandSpec
 
 # Importing this module costs the declarative command graph and nothing else.
 # Typer, the error boundary, the locale catalogues and every command module are
@@ -47,17 +48,24 @@ if TYPE_CHECKING:
 @cache
 def cli_app() -> typer.Typer:
     """Build the root Typer app from the command graph, once per process."""
-    from ._command_runtime import build_command_app
-    from ._stdio import configure_stdio_for_utf8, disable_rich_cli_rendering
+    from cadrumo_client.commands.compiler import build_command_app
+    from cadrumo_client.commands.stdio import configure_stdio_for_utf8, disable_rich_cli_rendering
+
+    from ._terminal_errors import run_standalone_with_error_contract
+    from .command_lifecycle import dispatch_cli_behavior
     from .errors import decorate_typer_app
 
     # UTF-8 streams before any echo: default Windows consoles expose cp1252,
     # on which the review queue's arrow and IVA citations' section sign crash
-    # typer.echo (see :mod:`._stdio`). Plain-text help keeps option tables
+    # typer.echo (see :mod:`cadrumo_client.commands.stdio`). Plain-text help keeps option tables
     # readable whatever the terminal's real width.
     configure_stdio_for_utf8()
     disable_rich_cli_rendering()
-    app = build_command_app(_COMMAND_GRAPH)
+    app = build_command_app(
+        _COMMAND_GRAPH,
+        dispatcher=dispatch_cli_behavior,
+        standalone_error_runner=run_standalone_with_error_contract,
+    )
     decorate_typer_app(app)
     return app
 
@@ -70,7 +78,8 @@ def _declared_execution_policy_for_cli_path(
 
 
 def _execution_policy_from_spec(spec: CommandSpec) -> CommandExecutionPolicy:
-    from ...application.operator_surface.command_ports import CommandCapabilityClass
+    from cadrumo_client.contracts.command_ports import CommandCapabilityClass
+
     from ._command_policy import CommandExecutionPolicy
 
     declared = spec.policy
@@ -116,10 +125,13 @@ def main() -> None:
 
     import typer
 
+    from cadrumo_client.commands.stdio import configure_stdio_for_utf8
+    from cadrumo_client.logging import register_client_logging_namespace
+
     from ._framework_localisation import localise_help_section_headers, localise_typer_parse_error_messages
-    from ._stdio import configure_stdio_for_utf8
     from .language_argv import apply_language_argv_to_environment
 
+    register_client_logging_namespace()
     configure_stdio_for_utf8()
     arguments = sys.argv[1:]
     if arguments == ["--cadrumo-command-surface"]:
@@ -273,7 +285,7 @@ async def _emit_operator_progress(progress: object) -> None:
 def _jsonable_command_surface_value(value: object) -> object:
     """Project command-surface records onto a process-safe JSON value.
 
-    The MCP distribution is a separately shipped outer composition root.  It
+    The external client distribution is a separately shipped outer composition root.  It
     receives this projection by launching the CLI process; it must not import
     this entrypoint package merely to inspect the command graph.  The helper is
     intentionally local to the CLI transport: the application port owns the

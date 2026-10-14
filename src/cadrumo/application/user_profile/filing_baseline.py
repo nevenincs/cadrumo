@@ -69,7 +69,7 @@ def _profile_path_flag(path: str, *, profile_path_flags: Mapping[str, str]) -> s
 
     The refusal that carries this names flags the operator retypes verbatim, so
     a dotted path must never reach it: this CLI's operator is an autonomous
-    agent that follows the instruction literally and cannot recover from a flag
+    automation that follows the instruction literally and cannot recover from a flag
     that does not parse. An unregistered path falls back to a dash form, which
     may be the wrong flag but is at least a well-formed one.
     """

@@ -86,7 +86,7 @@ if TYPE_CHECKING:
 # (``source_jurisdiction == "ES"``) income into
 # ``impatriado.base-liquidable-general``; a foreign-source or
 # jurisdiction-unresolved row is segregated by the application-layer classifier
-# (:mod:`cadrumo.application.aggregation._impatriado_income_ledger`) as a typed
+# (:mod:`cadrumo.application.aggregation.impatriado_income_ledger`) as a typed
 # BECKHAM_FOREIGN_SOURCE_SEGREGATED issue, never silently admitted. This
 # registry family only needs the ES-scoped observation totals; the source-scope
 # gate is owned by the classifier, so the resolver here simply sums the matched

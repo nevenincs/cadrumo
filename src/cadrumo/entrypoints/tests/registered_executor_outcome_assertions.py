@@ -151,10 +151,6 @@ from ...application.modelo.m303_attestation_operation import (
     ModeloWorkM303AttestationPublicResultV2,
     ModeloWorkM303AttestationRequest,
 )
-from ...application.modelo.mcp_query_contracts import (
-    ModeloBindingsResolveTypedProjection,
-    ModeloReadinessSummaryProjection,
-)
 from ...application.modelo.query_read_contracts import (
     ModeloBindingsListProjection,
     ModeloBindingsResolveProjection,
@@ -171,6 +167,10 @@ from ...application.modelo.revision_snapshot_operation import ModeloWorkRevision
 from ...application.modelo.taxation_comparison_operation import (
     MODELO_TAXATION_COMPARISON_OPERATION_DEFINITION_ID,
     ModeloTaxationComparisonRequest,
+)
+from ...application.modelo.typed_query_contracts import (
+    ModeloBindingsResolveTypedProjection,
+    ModeloReadinessSummaryProjection,
 )
 from ...application.modelo.wizard_attempt_operation import (
     ModeloWorkWizardAttemptCalculated,

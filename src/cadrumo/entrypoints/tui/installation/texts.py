@@ -9,7 +9,8 @@ from __future__ import annotations
 
 from contextlib import AbstractContextManager, nullcontext
 
-from ....application.runtime.installation_requests import InstallationAct
+from cadrumo_client.contracts.installation_requests import InstallationAct
+
 from ....core.config import override_settings
 from ....core.i18n.render import tr
 from .acts import InstallationFamily

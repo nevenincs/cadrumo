@@ -10,7 +10,15 @@ from uuid import uuid4
 
 import pytest
 
-from .....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.operation_access import (
+    OperationAcknowledged,
+    OperationControl,
+    OperationSubmit,
+    OperationSubmitted,
+)
+from cadrumo_client.transport.frontend_client import FrontendClient
+
 from .....application.invoices.catalogue_add_contracts import INVOICE_ADD_OPERATION_DEFINITION_ID, InvoiceAddRequest
 from .....application.invoices.catalogue_add_operation import (
     build_invoice_add_definition,
@@ -23,13 +31,6 @@ from .....application.operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionContractV1,
     OperationRegistry,
-)
-from .....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from .....application.runtime.operation_access import (
-    RuntimeOperationAcknowledged,
-    RuntimeOperationControl,
-    RuntimeOperationSubmit,
-    RuntimeOperationSubmitted,
 )
 from .....core.operations import profile_operation_subject
 from .....domain.iva.classification import InvoiceKind
@@ -46,13 +47,13 @@ class _SessionChangingClient:
     def __init__(self) -> None:
         self.session_id = uuid4()
         self.replacement_session_id = uuid4()
-        self.reply: RuntimeOperationAcknowledged | None = None
+        self.reply: OperationAcknowledged | None = None
 
-    def operation(self, request: RuntimeOperationControl, *, deadline: float) -> RuntimeOperationAcknowledged:
+    def operation(self, request: OperationControl, *, deadline: float) -> OperationAcknowledged:
         del deadline
         assert request.session_id == self.session_id
         self.session_id = self.replacement_session_id
-        self.reply = RuntimeOperationAcknowledged(
+        self.reply = OperationAcknowledged(
             request_id=request.request_id,
             runtime_boot_id=uuid4(),
             connection_id=uuid4(),
@@ -65,11 +66,11 @@ def test_exchange_discards_old_reply_when_session_changes_while_awaiting() -> No
     client = _SessionChangingClient()
     original_session_id = client.session_id
     controller = RuntimeOperationController(
-        client=cast(RuntimeFrontendClient, client),
+        client=cast(FrontendClient, client),
         operation_id=_OPERATION_ID,
         session_id=original_session_id,
     )
-    request = RuntimeOperationControl(
+    request = OperationControl(
         request_id=uuid4(),
         profile_id=uuid4(),
         session_id=original_session_id,
@@ -77,12 +78,12 @@ def test_exchange_discards_old_reply_when_session_changes_while_awaiting() -> No
         operation_id=_OPERATION_ID,
     )
 
-    with pytest.raises(RuntimeRefusalError) as raised:
+    with pytest.raises(RefusalError) as raised:
         asyncio.run(controller._exchange(request))
 
     assert client.reply is not None
     assert client.session_id == client.replacement_session_id
-    assert raised.value.reason is RuntimeRefusalCode.CONNECTION_CLOSED
+    assert raised.value.reason is RefusalCode.CONNECTION_CLOSED
 
 
 class _RecordingClient:
@@ -104,23 +105,23 @@ class _RecordingClient:
         return self.registry.lookup_public_contract(definition_id)
 
     def operation(
-        self, request: RuntimeOperationSubmit | RuntimeOperationControl, *, deadline: float
-    ) -> RuntimeOperationSubmitted | RuntimeOperationAcknowledged:
+        self, request: OperationSubmit | OperationControl, *, deadline: float
+    ) -> OperationSubmitted | OperationAcknowledged:
         self.operation_deadlines.append(deadline)
         assert request.session_id == self.session_id
         assert request.profile_id == self.profile_id
-        if isinstance(request, RuntimeOperationSubmit):
+        if isinstance(request, OperationSubmit):
             self.registry.lookup_public_contract(request.definition_id)
             payload = InvoiceAddRequest.model_validate_json(request.payload_json)
             assert payload.profile_id == self.profile_id
             assert request.subject_ref == profile_operation_subject(str(self.profile_id))
-            return RuntimeOperationSubmitted(
+            return OperationSubmitted(
                 request_id=request.request_id,
                 runtime_boot_id=uuid4(),
                 connection_id=uuid4(),
                 receipt=OperationSubmissionReceiptV1(operation_id=_OPERATION_ID, secret_requirement=None),
             )
-        return RuntimeOperationAcknowledged(
+        return OperationAcknowledged(
             request_id=request.request_id,
             runtime_boot_id=uuid4(),
             connection_id=uuid4(),
@@ -141,7 +142,7 @@ def _submit(client: _RecordingClient, deadline: float | None) -> RuntimeOperatio
     )
     return asyncio.run(
         RuntimeOperationController.submit(
-            cast(RuntimeFrontendClient, client),
+            cast(FrontendClient, client),
             definition_id=INVOICE_ADD_OPERATION_DEFINITION_ID,
             subject_ref=profile_operation_subject(str(client.profile_id)),
             payload=payload,
@@ -157,10 +158,10 @@ def test_submit_refuses_invalid_deadline_before_contract_or_operation_io(
     monkeypatch.setattr(time, "monotonic", lambda: 100.0)
     client = _RecordingClient()
 
-    with pytest.raises(RuntimeRefusalError) as raised:
+    with pytest.raises(RefusalError) as raised:
         _submit(client, deadline)
 
-    assert raised.value.reason is RuntimeRefusalCode.DEADLINE_EXCEEDED
+    assert raised.value.reason is RefusalCode.DEADLINE_EXCEEDED
     assert client.contract_deadlines == []
     assert client.operation_deadlines == []
 
@@ -172,16 +173,16 @@ def test_retained_exchange_refuses_invalid_deadline_before_operation_io(
     monkeypatch.setattr(time, "monotonic", lambda: 100.0)
     client = _RecordingClient()
     controller = RuntimeOperationController(
-        client=cast(RuntimeFrontendClient, client),
+        client=cast(FrontendClient, client),
         operation_id=_OPERATION_ID,
         session_id=client.session_id,
         deadline=deadline,
     )
 
-    with pytest.raises(RuntimeRefusalError) as raised:
+    with pytest.raises(RefusalError) as raised:
         asyncio.run(controller.start())
 
-    assert raised.value.reason is RuntimeRefusalCode.DEADLINE_EXCEEDED
+    assert raised.value.reason is RefusalCode.DEADLINE_EXCEEDED
     assert client.contract_deadlines == []
     assert client.operation_deadlines == []
 
@@ -209,7 +210,7 @@ def test_retained_exchange_bounds_call_budget_without_replacing_original_deadlin
     monkeypatch.setattr(time, "monotonic", lambda: 100.0)
     client = _RecordingClient()
     controller = RuntimeOperationController(
-        client=cast(RuntimeFrontendClient, client),
+        client=cast(FrontendClient, client),
         operation_id=_OPERATION_ID,
         session_id=client.session_id,
         deadline=deadline,

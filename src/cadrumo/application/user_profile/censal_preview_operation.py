@@ -13,6 +13,8 @@ from uuid import UUID
 
 from pydantic import AnyHttpUrl, BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.hashing import canonical_json_bytes
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -54,7 +56,6 @@ from ..operations.registry import (
     OperationReconciliationPolicy,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from .access_contracts import AccessDenialCode, Availability
 from .access_errors import ProfileAccessRefusedError
 from .capsule_record import ProfileRecordConflictError

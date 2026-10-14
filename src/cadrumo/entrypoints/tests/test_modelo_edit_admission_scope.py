@@ -15,6 +15,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.entrypoints.tests.modelo_operator_work_storage import SEEDED_AT, seeded_operator_work
+
 from ...application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ...application.modelo.action_errors import ModeloEditBaselineStaleError
 from ...application.modelo.calculation_actions import (
@@ -43,7 +45,6 @@ from ...core.casilla_id import validated_casilla_id
 from ...domain.calculations.registry.casilla_membership import row_field_template_records_by_casilla
 from ...domain.calculations.registry.schema_base import CasillaDataType
 from ...domain.calculations.registry.schema_input_kind import InputKind
-from .modelo_operator_work_storage import SEEDED_AT, seeded_operator_work
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

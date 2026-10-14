@@ -44,7 +44,7 @@ def ledger_llm_diagnostics(
     from ...core.i18n.render import tr
     from ...core.unit_proportion import is_unit_proportion
     from .common import bad, emit_envelope
-    from .runtime_ledger_llm_diagnostics import read_ledger_llm_diagnostics_for_cli
+    from .operation_ledger_llm_diagnostics import read_ledger_llm_diagnostics_for_cli
 
     since_date = _parse_iso_date(since, "--since")
     until_date = _parse_iso_date(until, "--until")
@@ -282,8 +282,8 @@ def ledger_check(
     """Surface ledger anomalies and broken invoice links without mutating state."""
     from ._ledger_payloads import LedgerCheckResult, LedgerLinkInconsistencyPayload
     from .common import emit_envelope
+    from .operation_ledger_check import read_ledger_check_for_cli
     from .period_parsing import _optional_canonical_period
-    from .runtime_ledger_check import read_ledger_check_for_cli
 
     check = read_ledger_check_for_cli(
         ctx,
@@ -336,8 +336,8 @@ def ledger_preflight(ctx: typer.Context, period: str, year: int) -> None:
     from ...core.i18n.render import tr
     from ...core.json_contract import Notice, NoticeSeverity
     from .common import emit_envelope
+    from .operation_ledger_preflight import read_ledger_preflight_for_cli
     from .period_parsing import _canonical_period
-    from .runtime_ledger_preflight import read_ledger_preflight_for_cli
 
     canonical = _canonical_period(period, year=year)
     report = read_ledger_preflight_for_cli(ctx, period=canonical).to_report()
@@ -378,7 +378,7 @@ def ledger_history(ctx: typer.Context, transaction_id: str, include_split_siblin
     """Emit the chronological event chain for one ledger transaction id."""
     from ...core.i18n.render import tr
     from .common import emit_envelope
-    from .runtime_ledger_history import read_ledger_history_for_cli
+    from .operation_ledger_history import read_ledger_history_for_cli
 
     history = read_ledger_history_for_cli(
         ctx, transaction_id=transaction_id, include_split_siblings=include_split_siblings
@@ -428,7 +428,7 @@ def ledger_list(
     from ._ledger_list import project_ledger_list
     from ._ledger_support import ledger_cli_no_recovery
     from .common import emit_envelope
-    from .runtime_ledger_list import read_ledger_list_for_cli
+    from .operation_ledger_list import read_ledger_list_for_cli
 
     resolved_filters = list(filters)
     if period is not None:
@@ -486,7 +486,7 @@ def ledger_view(ctx: typer.Context, transaction_id: str) -> None:
     """
     from ...core.i18n.render import tr
     from .common import emit_envelope
-    from .runtime_ledger_view import read_ledger_view_for_cli
+    from .operation_ledger_view import read_ledger_view_for_cli
 
     projection = read_ledger_view_for_cli(ctx, transaction_id=transaction_id)
     transaction_payload = projection.transaction
@@ -555,8 +555,8 @@ def ledger_status(ctx: typer.Context, period: str | None = None, year: int | Non
     from ...core.i18n.render import tr
     from ...core.json_contract import strict_round_trip
     from .common import active_profile_label, emit_envelope
+    from .operation_ledger_status import read_ledger_status_for_cli
     from .period_parsing import _optional_canonical_period
-    from .runtime_ledger_status import read_ledger_status_for_cli
 
     projection = read_ledger_status_for_cli(ctx, period=_optional_canonical_period(period, year=year))
     report = projection.to_report()
@@ -624,7 +624,7 @@ def ledger_track(ctx: typer.Context, transaction_id: str) -> None:
     """Render admitted audit lineage without opening frontend profile custody."""
     from ._ledger_payloads import LedgerTrackResult
     from .common import emit_envelope
-    from .runtime_ledger_track import read_ledger_track_for_cli
+    from .operation_ledger_track import read_ledger_track_for_cli
 
     projection = read_ledger_track_for_cli(ctx, transaction_id=transaction_id)
     provenance = projection.imported_provenance

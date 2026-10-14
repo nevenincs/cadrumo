@@ -6,7 +6,9 @@ from decimal import Decimal
 from typing import NoReturn
 from uuid import UUID
 
-from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.frontend_client import FrontendClient
+
 from ...application.invoices.catalogue_add_contracts import (
     INVOICE_ADD_OPERATION_DEFINITION_ID,
     INVOICE_ADD_VALIDATION_REFUSAL_CODE,
@@ -17,7 +19,6 @@ from ...application.invoices.catalogue_add_contracts import (
 )
 from ...application.operations.frontend_projection import OperationPublicProjectionV1
 from ...application.operations.public_scalar import PublicDecimal
-from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.operations import (
     OperationEffect,
     OperationTerminalCondition,
@@ -76,7 +77,7 @@ def _validation_refusal_matches(result: InvoiceAddResult, terminal_projection: O
 class RuntimeInvoiceAddTuiDoorV1:
     """Submit the full invoice form to the one registered catalogue writer."""
 
-    def __init__(self, client: RuntimeFrontendClient, *, profile_label: str) -> None:
+    def __init__(self, client: FrontendClient, *, profile_label: str) -> None:
         """Retain the exact TUI profile and session for this installed door."""
         self._session = RuntimeProfileSession(client, profile_label=profile_label)
         self._profile_id = self._session.profile_id
@@ -87,7 +88,7 @@ class RuntimeInvoiceAddTuiDoorV1:
         result = await self._execute(request, entry=entry)
         invoice = result.invoice
         if result.outcome != "created" or invoice is None:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         return LedgerInvoiceAddResultV1(
             invoice_id=invoice.invoice_id,
             invoice_number=invoice.invoice_number,
@@ -138,15 +139,15 @@ class RuntimeInvoiceAddTuiDoorV1:
             or terminal_projection.failure_error_code is not None
             or terminal_projection.diagnostic_ref is not None
         ):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         if result.outcome == "created":
             if not _created_receipt_matches(terminal_projection) or not _invoice_matches_request(
                 result, request, entry
             ):
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                raise RefusalError(RefusalCode.INVALID_FRAME)
             return
         if not _validation_refusal_matches(result, terminal_projection):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
 
     @staticmethod
     def _raise_validation_refusal(
@@ -158,7 +159,7 @@ class RuntimeInvoiceAddTuiDoorV1:
     ) -> NoReturn:
         """Rebuild the established invoice validation refusal with its operation receipt."""
         if result.validation_code is None:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         context: dict[str, object] = {
             "operation_id": operation_id,
             "terminal_condition": terminal_condition.value,
@@ -228,9 +229,7 @@ def _public_decimal(value: Decimal | None) -> PublicDecimal | None:
     return None if value is None else PublicDecimal(decimal=str(value))
 
 
-def compose_runtime_invoice_add_door(
-    *, client: RuntimeFrontendClient, profile_label: str
-) -> RuntimeInvoiceAddTuiDoorV1:
+def compose_runtime_invoice_add_door(*, client: FrontendClient, profile_label: str) -> RuntimeInvoiceAddTuiDoorV1:
     """Bind the invoice form to the runtime client retained by its workbench."""
     return RuntimeInvoiceAddTuiDoorV1(client, profile_label=profile_label)
 

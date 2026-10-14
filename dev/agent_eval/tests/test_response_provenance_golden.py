@@ -20,13 +20,19 @@ envelope serializer produced.
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
 import pytest
+from click.testing import Result
+from cadrumo_runtime.host.tests.frontend.cli.cli_runner import (
+    bind_public_cli_runner,
+    invoke_cached_cli,
+    operator_runtime_scope,
+)
 
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
@@ -41,7 +47,6 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.cli_envelope import require_schema_envelope
 
 from .._models import GoldenScenario
@@ -57,14 +62,15 @@ _REVISION = "2019-y-siguientes"
 
 
 @pytest.fixture
-def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
+def runtime_profile(tmp_path: Path, run_cadrumo_cli: Callable[..., Result]) -> Iterator[TestRuntimeProfile]:
     """Real-session backend (real KEK/DEK, real SQLite per active bucket)."""
-    with isolated_cli_runtime_profile(
+    with bind_public_cli_runner(run_cadrumo_cli), isolated_cli_runtime_profile(
         tmp_path=tmp_path,
         bucket_id=_PROFILE_ID,
         label="Response-provenance golden-eval test profile",
     ) as profile:
-        yield profile
+        with operator_runtime_scope():
+            yield profile
 
 
 def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:

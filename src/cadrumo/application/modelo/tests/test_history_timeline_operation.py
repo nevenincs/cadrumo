@@ -1,4 +1,4 @@
-"""Agent timeline exposes only vetted event metadata under exact authority."""
+"""automation timeline exposes only vetted event metadata under exact authority."""
 
 from __future__ import annotations
 
@@ -64,7 +64,9 @@ def _request(*, year: int | None = None, period: str | None = None) -> Operation
     )
 
 
-def test_timeline_mcp_result_disclosure_and_full_period_scope(authority_operation: PinnedAuthorityOperation) -> None:
+def test_timeline_external_client_result_disclosure_and_full_period_scope(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     registry = _registry()
     contract = registry.lookup_public_contract(MODELO_HISTORY_TIMELINE_OPERATION_DEFINITION_ID)
     assert contract.result_schema is not None
@@ -73,7 +75,7 @@ def test_timeline_mcp_result_disclosure_and_full_period_scope(authority_operatio
         profile_id=_PROFILE,
         destination_id=destination,
         action=AccessAction.RESULT,
-        frontend=OperationFrontendProjection.MCP,
+        frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
         contract=contract,
         published_authority=Availability.AVAILABLE,
         authority_operation=authority_operation,

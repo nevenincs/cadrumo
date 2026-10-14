@@ -4,15 +4,15 @@ from __future__ import annotations
 
 from typing import Final
 
-from .command_parameter_contracts import OptionSpec
-from .command_shared_contracts import (
+from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.shared_contracts import (
     DeferredTarget,
     ParameterConstraint,
     ParameterDefault,
     TranslationKey,
     ValueContract,
 )
-from .command_spec import InvocationSpec
+from cadrumo_client.commands.spec import InvocationSpec
 
 _LEDGER_RULE_RATIO_LEAF_INVOCATION: Final[InvocationSpec] = InvocationSpec(
     invoke_without_command=False,

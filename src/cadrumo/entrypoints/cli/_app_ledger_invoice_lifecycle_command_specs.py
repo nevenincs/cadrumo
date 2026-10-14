@@ -2,7 +2,19 @@ from __future__ import annotations
 
 from typing import Final
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.shared_contracts import (
+    DeferredTarget,
+    LazyBinding,
+    ParameterConstraint,
+    ParameterDefault,
+    ResultSchemaSpec,
+    SchemaState,
+    TranslationKey,
+    ValueContract,
+)
+from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
 
 from ...application.ledger.operator_input_contracts import NOTES_INPUT
 from ._app_ledger_command_spec_policies import (
@@ -18,18 +30,6 @@ from .app_ledger_invoice_common_command_parameters import (
     INVOICE_LIFECYCLE_METADATA_OPTIONS,
     OPTIONAL_IVA_CATEGORY_OPTION,
 )
-from .command_parameter_contracts import ArgumentSpec, OptionSpec
-from .command_shared_contracts import (
-    DeferredTarget,
-    LazyBinding,
-    ParameterConstraint,
-    ParameterDefault,
-    ResultSchemaSpec,
-    SchemaState,
-    TranslationKey,
-    ValueContract,
-)
-from .command_spec import CommandSpec, InvocationSpec
 
 _REQUIRED_INVOICE_ID_ARGUMENT: Final[ArgumentSpec] = ArgumentSpec(
     name="invoice_id",

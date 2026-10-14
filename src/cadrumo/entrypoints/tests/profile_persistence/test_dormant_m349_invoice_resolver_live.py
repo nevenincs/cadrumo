@@ -25,15 +25,15 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
-from cadrumo.domain.modelos.calculation_revision import CalculationRevision
-from cadrumo.domain.modelos.work_unit import WorkUnit
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
-from cadrumo.entrypoints.tests.modelo_349_invoice_facts import (
+from cadrumo.domain.invoices.tests.modelo_349_invoice_facts import (
     M349_EXPECTED_IMPORTE,
     M349_EXPECTED_OPERADORES,
     M349_INVOICES,
     intra_community_invoice,
 )
+from cadrumo.domain.modelos.calculation_revision import CalculationRevision
+from cadrumo.domain.modelos.work_unit import WorkUnit
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
 from cadrumo.entrypoints.tests.profile_persistence._dormant_resolver_live_support import (
     _T0,
     _T1,

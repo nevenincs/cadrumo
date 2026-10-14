@@ -7,36 +7,38 @@ from uuid import uuid4
 
 import pytest
 
-from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
-from ....adapters.local_runtime.frontend_operation_client import RuntimeOperationFrontend
-from ....application.runtime.profile_access import RuntimeAccessRefusal, RuntimeReply
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.contracts.profile_access import AccessRefusal, Reply
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_client.transport.frontend_operation_client import OperationFrontend
+
 from ....application.user_profile.access_contracts import AccessDenialCode
 from ....application.user_profile.sign_in_refusals import SignInRefusal
 from ....core.config import override_settings
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....core.profile_session import ProfileSessionRefusalReason, ReceiptBindingRefusal
-from .._profile_session_gate import raise_runtime_refusal, session_refusal_translation_key
-from ..errors import CliRefusedBoundaryError, render_error_payload
+from .._profile_session_gate import raise_connection_refusal, session_refusal_translation_key
+from ..errors import render_error_payload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
-def _wire_refusal(code: AccessDenialCode, sign_in: SignInRefusal | None) -> RuntimeFrontendRefusedError:
+def _wire_refusal(code: AccessDenialCode, sign_in: SignInRefusal | None) -> FrontendRefusedError:
     """Decode a runtime refusal from its wire bytes, as a client receives it."""
-    reply = RuntimeAccessRefusal(
+    reply = AccessRefusal(
         request_id=uuid4(), runtime_boot_id=uuid4(), connection_id=uuid4(), code=code, sign_in=sign_in
     )
-    decoded = RuntimeReply.model_validate_json(reply.model_dump_json()).root
-    assert isinstance(decoded, RuntimeAccessRefusal)
-    with pytest.raises(RuntimeFrontendRefusedError) as raised:
-        RuntimeOperationFrontend._raise_wire_refusal(decoded)
+    decoded = Reply.model_validate_json(reply.model_dump_json()).root
+    assert isinstance(decoded, AccessRefusal)
+    with pytest.raises(FrontendRefusedError) as raised:
+        OperationFrontend._raise_wire_refusal(decoded)
     return raised.value
 
 
-def _rendered(error: RuntimeFrontendRefusedError) -> dict[str, object]:
+def _rendered(error: FrontendRefusedError) -> dict[str, object]:
     with pytest.raises(CliRefusedBoundaryError) as refused:
-        raise_runtime_refusal(error)
+        raise_connection_refusal(error)
     payload = json.loads(render_error_payload(refused.value, as_json=True))
     error_payload = payload["error"]
     assert isinstance(error_payload, dict)

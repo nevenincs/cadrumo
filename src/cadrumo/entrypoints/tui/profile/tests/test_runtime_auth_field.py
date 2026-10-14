@@ -6,9 +6,10 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from .....adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from .....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
-from .....adapters.local_runtime.profile_mutations import ProfileMutationCompletion, ProfileMutationRequest
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_client.transport.profile_mutations import ProfileMutationCompletion, ProfileMutationRequest
+
 from .....application.auth.operation_definitions import AuthConfigureOperationRequest
 from .....application.auth.provider_configure_operation_access import AuthConfigurePublicResultV2
 from .....application.operations.registry import OperationFrontendProjection
@@ -29,7 +30,7 @@ _DIGEST = "a" * 64
 _NEXT_DIGEST = "c" * 64
 
 
-class _Client(RuntimeFrontendClient):
+class _Client(FrontendClient):
     """An exact-profile wire boundary with no local custody or operation behaviour."""
 
     def __init__(self, profile_id: UUID) -> None:
@@ -71,12 +72,10 @@ class _Recorder:
         self.configured: list[AuthConfigureOperationRequest] = []
         self.mutated: list[ProfileMutationRequest] = []
 
-    def read(self, _client: RuntimeFrontendClient, _label: str, _language: OutputLanguage) -> ProfileOverview:
+    def read(self, _client: FrontendClient, _label: str, _language: OutputLanguage) -> ProfileOverview:
         return _overview(self.profile_id, self.revision, provider=self.provider)
 
-    def configure(
-        self, client: RuntimeFrontendClient, request: AuthConfigureOperationRequest
-    ) -> AuthConfigurePublicResultV2:
+    def configure(self, client: FrontendClient, request: AuthConfigureOperationRequest) -> AuthConfigurePublicResultV2:
         assert client.profile_id == self.profile_id
         self.configured.append(request)
         self.provider, self.revision = request.provider.value, self.revision + 1
@@ -91,7 +90,7 @@ class _Recorder:
             identity_alignment="not_applicable",
         )
 
-    def mutate(self, client: RuntimeFrontendClient, request: ProfileMutationRequest) -> ProfileMutationCompletion:
+    def mutate(self, client: FrontendClient, request: ProfileMutationRequest) -> ProfileMutationCompletion:
         assert client.profile_id == self.profile_id
         self.mutated.append(request)
         self.revision += 1
@@ -179,7 +178,7 @@ def test_a_replaced_session_refuses_before_any_configuration() -> None:
     screen = manager.compose()
     client._session_id = uuid4()
 
-    with pytest.raises(RuntimeFrontendRefusedError):
+    with pytest.raises(FrontendRefusedError):
         screen._persist_field("auth.provider", "certificate", 4, _DIGEST)
 
     assert recorder.configured == []

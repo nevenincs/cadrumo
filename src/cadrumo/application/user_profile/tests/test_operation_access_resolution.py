@@ -37,7 +37,7 @@ def test_profile_owner_resolves_only_exact_registered_work(wrong_coordinate: str
         profile_id=profile,
         destination_id=uuid4(),
         action=AccessAction.COMMIT,
-        frontend=OperationFrontendProjection.MCP,
+        frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
         contract=registry.lookup_public_contract(PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID),
         published_authority=Availability.AVAILABLE,
     )

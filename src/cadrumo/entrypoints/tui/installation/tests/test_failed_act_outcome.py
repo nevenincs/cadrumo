@@ -6,11 +6,12 @@ from uuid import uuid4
 
 import pytest
 
-from .....application.runtime.installation_requests import (
+from cadrumo_client.contracts.installation_requests import (
     INSTALLATION_ACT_CONTRACTS,
     InstallationAct,
-    RuntimeInstallationFailed,
+    InstallationFailed,
 )
+
 from .....core.i18n.render import tr
 from ..door import ActFailed
 from ..rendering import ActPresentation, present_outcome
@@ -19,7 +20,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def _failed(act: InstallationAct, *, may_have_changed_records: bool) -> ActPresentation:
-    reply = RuntimeInstallationFailed(request_id=uuid4(), runtime_boot_id=uuid4(), connection_id=uuid4(), act=act)
+    reply = InstallationFailed(request_id=uuid4(), runtime_boot_id=uuid4(), connection_id=uuid4(), act=act)
     return present_outcome(
         ActFailed(reply, may_have_changed_records=may_have_changed_records), INSTALLATION_ACT_CONTRACTS[act]
     )

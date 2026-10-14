@@ -10,40 +10,41 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.application.actividad_asset.activity_asset_contracts import (
+from cadrumo_client.transport.frontend_client import FrontendClient
+
+from ....application.actividad_asset.activity_asset_contracts import (
     ACTIVITY_ASSET_INSPECT_OPERATION_DEFINITION_ID,
     ActivityAssetAuthorityProvenance,
     ActivityAssetInspectRequest,
     ActivityAssetOperationPortsFactory,
 )
-from cadrumo.application.actividad_asset.activity_asset_projections import ActivityAssetInspectProjection
-from cadrumo.application.actividad_asset.activity_asset_results import ActivityAssetInspectionRevision
-from cadrumo.application.actividad_asset.operation_dtos import ActivityAssetRevisionSnapshot
-from cadrumo.application.actividad_asset.registered_operations import (
+from ....application.actividad_asset.activity_asset_projections import ActivityAssetInspectProjection
+from ....application.actividad_asset.activity_asset_results import ActivityAssetInspectionRevision
+from ....application.actividad_asset.operation_dtos import ActivityAssetRevisionSnapshot
+from ....application.actividad_asset.registered_operations import (
     build_activity_asset_inspect_definition,
     build_activity_asset_inspect_registration,
 )
-from cadrumo.application.operations.frontend_projection import (
+from ....application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
     OperationPublicProjectionV1,
 )
-from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1, OperationPublicEventPageV1
-from cadrumo.application.operations.persistence.replay import OperationReplayStatus
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.core.operations import (
+from ....application.operations.frontend_requests import OperationObservationSuccessV1, OperationPublicEventPageV1
+from ....application.operations.persistence.replay import OperationReplayStatus
+from ....application.operations.registry import OperationFrontendProjection, OperationRegistry
+from ....core.operations import (
     OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from cadrumo.domain.renta.actividad_asset.election import (
+from ....domain.renta.actividad_asset.election import (
     AcquiredCondition,
     ActivityAssetAmortizationElection,
     AmortizationMethod,
     DirectEstimationRegime,
 )
-from cadrumo.domain.renta.actividad_asset.lifecycle import (
+from ....domain.renta.actividad_asset.lifecycle import (
     AcquisitionLineageReference,
     AcquisitionShape,
     ActivityAssetBasis,
@@ -53,9 +54,9 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
     OpeningAmortizationHistory,
     OpeningHistoryStatus,
 )
-from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
-from cadrumo.entrypoints.tui.operations.runtime_controller import RuntimeOperationController
-from cadrumo.entrypoints.tui.runtime_actividad_asset import RuntimeActivityAssetTuiActionsV1
+from ..account import AccountSessionExpiredError
+from ..operations.runtime_controller import RuntimeOperationController
+from ..runtime_actividad_asset import RuntimeActivityAssetTuiActionsV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -221,12 +222,12 @@ def _install_runtime(
     expire_after_result: bool = False,
     effect: OperationEffect = OperationEffect.NONE,
 ) -> tuple[list[dict[str, object]], _Controller]:
-    from cadrumo.entrypoints.tui.operations import runtime_profile_session as bridge
+    from ..operations import runtime_profile_session as bridge
 
     status_checks: list[tuple[UUID, UUID]] = []
 
     def read_session(
-        _client: RuntimeFrontendClient,
+        _client: FrontendClient,
         *,
         profile_id: UUID,
         session_id: UUID,
@@ -249,7 +250,7 @@ def _install_runtime(
 
     async def submit(
         _controller_type: type[RuntimeOperationController],
-        received_client: RuntimeFrontendClient,
+        received_client: FrontendClient,
         **kwargs: object,
     ) -> _Controller:
         assert received_client is client
@@ -267,7 +268,7 @@ def test_activity_asset_tui_door_submits_exact_profile_and_reads_complete_inspec
     revision = _revision()
     result = _projection(revision)
     submissions, controller = _install_runtime(monkeypatch, client=client, result=result)
-    actions = RuntimeActivityAssetTuiActionsV1(cast(RuntimeFrontendClient, client), profile_label="Fixture profile")
+    actions = RuntimeActivityAssetTuiActionsV1(cast(FrontendClient, client), profile_label="Fixture profile")
 
     inspection = actions.inspect(revision.asset_id)
 
@@ -292,7 +293,7 @@ def test_activity_asset_tui_door_retains_terminal_receipt_if_access_expires_afte
         result=_projection(revision),
         expire_after_result=True,
     )
-    actions = RuntimeActivityAssetTuiActionsV1(cast(RuntimeFrontendClient, client), profile_label="Fixture profile")
+    actions = RuntimeActivityAssetTuiActionsV1(cast(FrontendClient, client), profile_label="Fixture profile")
 
     with pytest.raises(AccountSessionExpiredError) as raised:
         actions.inspect(revision.asset_id)
@@ -312,7 +313,7 @@ def test_activity_asset_tui_door_fails_closed_when_its_retained_session_changes(
     client = _Client()
     revision = _revision()
     submissions, _controller = _install_runtime(monkeypatch, client=client, result=_projection(revision))
-    actions = RuntimeActivityAssetTuiActionsV1(cast(RuntimeFrontendClient, client), profile_label="Fixture profile")
+    actions = RuntimeActivityAssetTuiActionsV1(cast(FrontendClient, client), profile_label="Fixture profile")
     client.session_id = UUID("7cc00000-0000-4000-8000-0000000000cc")
 
     with pytest.raises(AccountSessionExpiredError):

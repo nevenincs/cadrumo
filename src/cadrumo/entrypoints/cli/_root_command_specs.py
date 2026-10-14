@@ -2,14 +2,9 @@
 
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import (
-    CommandNodeKind,
-    CommandWriteRoute,
-)
-
-from ._command_secret_contracts import MachineSecretFieldSpec, ProfileSecretChannelKind, ProfileSecretSpec
-from .command_parameter_contracts import OptionSpec
-from .command_shared_contracts import (
+from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.secret_contracts import MachineSecretFieldSpec, ProfileSecretChannelKind, ProfileSecretSpec
+from cadrumo_client.commands.shared_contracts import (
     FLAG_VALUE,
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
@@ -21,7 +16,11 @@ from .command_shared_contracts import (
     TranslationKey,
     ValueContract,
 )
-from .command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import (
+    CommandNodeKind,
+    CommandWriteRoute,
+)
 
 _OUTPUT_LANGUAGE = ValueContract(DeferredTarget("...core.external_constants", "OutputLanguage", __package__))
 _OUTPUT_FORMAT = ValueContract(DeferredTarget("...core.output_rendering", "OutputFormat", __package__))
@@ -170,9 +169,8 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         profile_secret=ProfileSecretSpec(
             fields=(MachineSecretFieldSpec("profile_passphrase"), MachineSecretFieldSpec("api_key")),
             model=DeferredTarget(
-                "._profile_authentication_contract",
+                "cadrumo_client.commands.profile_authentication",
                 "ProfileAuthenticationSecrets",
-                __package__,
             ),
         ),
     ),

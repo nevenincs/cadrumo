@@ -15,7 +15,8 @@ from pathlib import Path
 import pytest
 import yaml
 
-from ....application.runtime.installation_requests import INSTALLATION_ACT_CONTRACTS, InstallationAct
+from cadrumo_client.contracts.installation_requests import INSTALLATION_ACT_CONTRACTS, InstallationAct
+
 from ....core.config import override_settings
 from ....core.directory_scan import scan_directory
 from ..installation.acts import InstallationFamily, offered_acts

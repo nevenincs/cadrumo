@@ -9,8 +9,6 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionDescriptionV1
 from cadrumo.application.user_profile.access_contracts import (
     AccessDenialCode,
@@ -21,11 +19,17 @@ from cadrumo.application.user_profile.access_contracts import (
     ProfileAccessStatus,
 )
 from cadrumo.core.time.clock import now
-from cadrumo_harness.mcp import runtime_adapter as mcp_runtime
-from cadrumo_harness.mcp import runtime_admission as mcp_admission
-from cadrumo_harness.mcp.operation_discovery import operation_summary
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
-from cadrumo_harness.mcp.tests.admitted_lease import public_descriptions
+from cadrumo_client.contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_harness.mcp.access_scope import surface_scope
+from cadrumo_harness.mcp.surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES
+
+from .. import runtime_adapter as mcp_runtime
+from .. import runtime_admission as mcp_admission
+from ..operation_discovery import operation_summary
+from ..runtime_adapter import RuntimeMcpAdapter
+from .admitted_lease import public_descriptions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -61,7 +65,7 @@ class _Client:
         self, profile_id: UUID, *, fail_status: bool = False, status_flaw: str | None = None, at: datetime | None = None
     ) -> None:
         self.profile_id = profile_id
-        self.frontend = OperationFrontendProjection.MCP
+        self.frontend = OperationFrontendProjection.EXTERNAL_CLIENT
         self.session_id = uuid4()
         self.at = now() if at is None else at
         self.session_expires_at = self.at + timedelta(minutes=5)
@@ -79,7 +83,7 @@ class _Client:
         assert not self.closed
         self.status_calls += 1
         if self.fail_status:
-            raise RuntimeFrontendRefusedError("session_expired")
+            raise FrontendRefusedError("session_expired")
         status = ProfileAccessStatus(
             connected=True,
             credential_authenticated=True,
@@ -175,18 +179,25 @@ async def test_reauthentication_retires_existing_session_only_after_candidate_st
     )
 
     async def admit(
-        *, profile_id: UUID, credential_reference: UUID, frontend: OperationFrontendProjection
-    ) -> RuntimeFrontendClient:
+        *,
+        profile_id: UUID,
+        credential_reference: UUID,
+        frontend: OperationFrontendProjection,
+        timeout: float,
+        scope: AccessScope,
+    ) -> FrontendClient:
+        assert timeout == PROFILE_ADMISSION_TIMEOUT_SECONDS
+        assert scope == surface_scope(MCP_SURFACES[DEFAULT_MCP_SURFACE])
         assert profile_id == original.profile_id
         assert credential_reference == reference
-        assert frontend is OperationFrontendProjection.MCP
+        assert frontend is OperationFrontendProjection.EXTERNAL_CLIENT
         assert not original.closed
         if failure == "admission":
-            raise RuntimeFrontendRefusedError("credential_rejected")
-        return cast(RuntimeFrontendClient, candidate)
+            raise FrontendRefusedError("credential_rejected")
+        return cast(FrontendClient, candidate)
 
     monkeypatch.setattr(mcp_runtime, "open_installed_credential_client", admit)
-    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, original))
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, original))
     try:
         await adapter.bootstrap_reference(reference)
         if failure is None:
@@ -227,7 +238,7 @@ async def test_search_requires_exact_live_admission_before_listing_private_opera
         return _AT
 
     monkeypatch.setattr(mcp_admission, "now", sample_after_status)
-    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
         result = await adapter.call("search", {})
         if expected_code is None:

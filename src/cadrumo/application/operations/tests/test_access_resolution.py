@@ -303,7 +303,7 @@ def _replay_or_authority(context: OperationAccessContext) -> None:
 @pytest.mark.parametrize("action", sorted(ADMISSION_REPLAY_ACTIONS | {AccessAction.COMMIT}))
 def test_later_actions_replay_the_period_independent_admission_from_a_fresh_session(action: AccessAction) -> None:
     """A later session has a new destination and may use another frontend; the admission still binds."""
-    context = replace(_context(action), frontend=OperationFrontendProjection.MCP)
+    context = replace(_context(action), frontend=OperationFrontendProjection.EXTERNAL_CLIENT)
     submitted = _admitted(frontend=OperationFrontendProjection.TUI)
     assert submitted.destination_id != context.destination_id
     _replay_or_authority(replace(context, admitted_request=submitted))

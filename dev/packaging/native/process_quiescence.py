@@ -28,7 +28,7 @@ def running(process: psutil.Process) -> bool:
     import win32con
     import win32event
 
-    from cadrumo.adapters.local_runtime.windows_native_io import native_windows_call, owned_windows_handle
+    from cadrumo_client.transport.windows_native_io import native_windows_call, owned_windows_handle
 
     try:
         handle = owned_windows_handle(
@@ -127,7 +127,7 @@ def terminate(process: psutil.Process) -> None:
     import win32event
     import win32process
 
-    from cadrumo.adapters.local_runtime.windows_native_io import native_windows_call, owned_windows_handle
+    from cadrumo_client.transport.windows_native_io import native_windows_call, owned_windows_handle
 
     try:
         handle = owned_windows_handle(

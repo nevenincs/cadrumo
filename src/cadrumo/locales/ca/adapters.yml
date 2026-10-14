@@ -40,7 +40,7 @@ adapters:
           dins del temps configurat.
         metadata_invalid: Les metadades de sessió de Cl@ve Móvil no són vàlides o
           no es poden analitzar.
-        no_persisted_session: No s'ha trobat cap sessió de Cl@ve Móvil; executa `aeat
+        no_persisted_session: No s'ha trobat cap sessió de Cl@ve Móvil; executa `cadrumo-runtime
           config auth status` primer.
         session_expired: La sessió de Cl@ve Móvil ha superat el seu termini d'inactivitat.
         storage_state_hash_mismatch: El hash de l'estat d'emmagatzematge de Cl@ve
@@ -69,8 +69,8 @@ adapters:
           OAuth al navegador.
         client_config_refused: La configuració del client Google OAuth ha estat rebutjada.
         consent_declined: S'ha rebutjat el consentiment de Google, de manera que no
-          s'ha iniciat la sessió ni s'ha desat res. Torna a executar `aeat config
-          google login` i aprova la sol·licitud.
+          s'ha iniciat la sessió ni s'ha desat res. Torna a executar `cadrumo-runtime
+          config google login` i aprova la sol·licitud.
         endpoint_unreachable: L'endpoint OAuth de Google no és accessible.
         id_token_missing: Google no ha retornat un id_token; el consentiment OAuth
           no incloïa els àmbits openid+email.
@@ -88,7 +88,7 @@ adapters:
           Cadrumo seleccionat.
         refresh_token_missing: Google ha completat l'inici de sessió sense emetre
           una credencial duradora, de manera que no s'ha desat res. Torna a executar
-          `aeat config google login`.
+          `cadrumo-runtime config google login`.
         scope_missing: La pantalla de consentiment de Google s'ha tancat sense concedir
           tots els àmbits requerits.
     profile_binding:
@@ -146,11 +146,11 @@ adapters:
       _factory:
         errors:
           drive_root_missing: No s'ha creat cap carpeta de Google Drive per al perfil
-            actiu. Executa `aeat config google login` primer.
+            actiu. Executa `cadrumo-runtime config google login` primer.
           google_auth_import_failed: La dependència google-auth no es pot importar;
             executa `uv sync` i torna-ho a provar.
           google_token_missing: No hi ha cap token OAuth de Google persistit per al
-            perfil actiu. Executa `aeat config google login` primer.
+            perfil actiu. Executa `cadrumo-runtime config google login` primer.
           kind_empty: CADRUMO_STORAGE_PROVIDER_KIND està buit.
           kind_unhandled: El tipus de proveïdor d'emmagatzematge {kind} no està gestionat
             per la factoria.
@@ -298,15 +298,15 @@ adapters:
       modelo_unavailable: El registre de declaracions de l'AEAT no ofereix el model
         sol·licitat.
       no_auth_session: La sessió d'autenticació d'AEAT no existeix o no està persistida;
-        executa primer `aeat config auth status`.
+        executa primer `cadrumo-runtime config auth status`.
       notification_content_requires_operator: 'No es pot obrir el contingut d''una
         notificació no llegida: aquest mateix pas és la compareixença, que la dóna
         per notificada i n''inicia els terminis, i requereix la teva signatura. Obre-la
         tu mateix a la Seu.'
       notifications_bad_landing: La pàgina de notificacions de l'AEAT no s'ha carregat
         correctament; la teva sessió pot haver caducat o l'AEAT està en manteniment.
-        Executa 'aeat config auth status' i torna-ho a provar. No ho interpretis com
-        una safata buida.
+        Executa 'cadrumo-runtime config auth status' i torna-ho a provar. No ho interpretis
+        com una safata buida.
       parse_failed: No s'ha pogut analitzar la resposta de declaracions d'AEAT; l'estructura
         de la pàgina pot haver canviat.
       playwright_alert_modal_failed: Error en continuar el modal d'alerta de l'AEAT.
@@ -316,8 +316,8 @@ adapters:
       playwright_combobox_select_failed: Error en seleccionar una opció del quadre
         combinat de la Seu electrònica.
       session_expired_nav_failed: El registre de declaracions d'AEAT no s'ha carregat;
-        la sessió probablement ha caducat. Executa 'aeat config auth test' i torna-ho
-        a intentar.
+        la sessió probablement ha caducat. Executa 'cadrumo-runtime config auth test'
+        i torna-ho a intentar.
       submitted_file_layout_parse_failed: No s'ha pogut llegir el fitxer presentat
         amb el disseny de registre oficial del model, de manera que no s'ha recuperat
         cap valor de casella. El disseny i el fitxer presentat no coincideixen en

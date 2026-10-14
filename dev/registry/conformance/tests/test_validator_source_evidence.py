@@ -2,15 +2,31 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ...compiler.authority import compiled_bundled_authority
+from ...compiler.legal_grounding import verify_legal_reference_grounding
 from ...tests.profile_schema_support import committed_registry_validator
 from ..coverage import build_construct_evidence_ledger
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.mark.parametrize("corpus_ref", ["corpus/control.py", "corpus/control.pyi#provision"])
+def test_legal_enrollment_refuses_python_controls(tmp_path: Path, corpus_ref: str) -> None:
+    authority = compiled_bundled_authority()
+    reference = next(iter(authority.catalogues.legal.values()))
+    control = tmp_path / corpus_ref.partition("#")[0]
+    control.parent.mkdir(parents=True)
+    control.write_text("not a legal evidence document", encoding="utf-8")
+    mutated = reference.model_copy(update={"corpus_ref": corpus_ref})
+
+    with pytest.raises(RegistryValidationError, match="declares Python control code as corpus evidence"):
+        verify_legal_reference_grounding(mutated, source_root=tmp_path)
 
 
 def test_compiler_validation_rejects_invalid_source_ref_on_model_copy() -> None:

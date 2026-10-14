@@ -6,19 +6,20 @@ import asyncio
 from collections.abc import Callable, Mapping, Sequence
 from decimal import Decimal
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
-from ....adapters.local_runtime.profile_mutations import (
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_client.transport.profile_mutations import (
     ProfileMutationCompletion,
     ProfileMutationRequest,
     run_profile_mutation,
 )
+
 from ....application.auth.operation_definitions import AuthConfigureOperationRequest
 from ....application.auth.provider_configure_operation_access import AuthConfigurePublicResultV2
 from ....application.live.filed_history_operation import FILED_HISTORY_OPERATION_DEFINITION_ID
 from ....application.operations.registry import OperationFrontendProjection
 from ....application.operator_actions.models import ActionReference
-from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....application.user_profile.access_contracts import AccessDenialCode
 from ....application.user_profile.acquisition_sources import ProfileAcquisitionSourceKey, ProfileAcquisitionSourceV1
 from ....application.user_profile.censal_operation import CENSAL_OPERATION_DEFINITION_ID
@@ -56,12 +57,12 @@ from .runtime_auth_configuration import configure_runtime_auth
 from .runtime_errors import ProfileManagerCompletedViewUnavailableError
 from .runtime_overview import read_runtime_profile_overview
 
-type _MutationRunner = Callable[[RuntimeFrontendClient, ProfileMutationRequest], ProfileMutationCompletion]
-type _OverviewReader = Callable[[RuntimeFrontendClient, str, OutputLanguage], ProfileOverview]
-type _AuthConfigurer = Callable[[RuntimeFrontendClient, AuthConfigureOperationRequest], AuthConfigurePublicResultV2]
+type _MutationRunner = Callable[[FrontendClient, ProfileMutationRequest], ProfileMutationCompletion]
+type _OverviewReader = Callable[[FrontendClient, str, OutputLanguage], ProfileOverview]
+type _AuthConfigurer = Callable[[FrontendClient, AuthConfigureOperationRequest], AuthConfigurePublicResultV2]
 
 
-def _read_overview(client: RuntimeFrontendClient, label: str, language: OutputLanguage) -> ProfileOverview:
+def _read_overview(client: FrontendClient, label: str, language: OutputLanguage) -> ProfileOverview:
     return read_runtime_profile_overview(client, profile_label=label, output_language=language)
 
 
@@ -76,7 +77,7 @@ def _require_projection_identity(
         or projection.profile_id != profile_id
         or projection.record_revision < request.expected_revision
     ):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
 
 
 def _require_section_key(
@@ -87,7 +88,7 @@ def _require_section_key(
     if section_key is not None and (
         not isinstance(projection, row_projections) or projection.section_key != section_key
     ):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
 
 
 def _require_row_key(
@@ -97,7 +98,7 @@ def _require_row_key(
     if row_key is not None and (
         not isinstance(projection, ProfileRepeatableRowChangeOperationProjection) or projection.row_key != row_key
     ):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
 
 
 def _require_media_year(
@@ -107,7 +108,7 @@ def _require_media_year(
     if year is not None and (
         not isinstance(projection, ProfilePlantillaMediaOperationProjection) or projection.year != year
     ):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
 
 
 class RuntimeProfileManagerComposition:
@@ -115,7 +116,7 @@ class RuntimeProfileManagerComposition:
 
     def __init__(
         self,
-        client: RuntimeFrontendClient,
+        client: FrontendClient,
         *,
         profile_label: str,
         output_language: OutputLanguage,
@@ -125,7 +126,7 @@ class RuntimeProfileManagerComposition:
     ) -> None:
         """Bind exact client coordinates and the supplied runtime doors."""
         if client.frontend is not OperationFrontendProjection.TUI:
-            raise RuntimeFrontendRefusedError(AccessDenialCode.FRONTEND_DENIED.value)
+            raise FrontendRefusedError(AccessDenialCode.FRONTEND_DENIED.value)
         self.client = client
         self.profile_id = client.profile_id
         self.session_id = client.session_id
@@ -138,22 +139,22 @@ class RuntimeProfileManagerComposition:
 
     def _pin(self) -> None:
         if self.client.profile_id != self.profile_id or self.client.frontend is not OperationFrontendProjection.TUI:
-            raise RuntimeFrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
+            raise FrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
         if self.client.session_id != self.session_id:
-            raise RuntimeFrontendRefusedError(AccessDenialCode.SESSION_INACTIVE.value)
+            raise FrontendRefusedError(AccessDenialCode.SESSION_INACTIVE.value)
 
     def _overview(self) -> ProfileOverview:
         self._pin()
         overview = self._overview_reader(self.client, self.profile_label, self.output_language)
         self._pin()
         if overview.profile_id != str(self.profile_id):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         return overview
 
     def _current(self) -> ProfileOverview:
         screen = self.screen
         if screen is None:
-            raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+            raise RefusalError(RefusalCode.UNAVAILABLE)
         return screen.overview
 
     def _mutate(
@@ -167,7 +168,7 @@ class RuntimeProfileManagerComposition:
     ) -> ProfileOverview:
         self._pin()
         if request.profile_id != self.profile_id:
-            raise RuntimeFrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
+            raise FrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
         completed = self._mutation_runner(self.client, request)
         try:
             projection = completed.projection
@@ -177,7 +178,7 @@ class RuntimeProfileManagerComposition:
             _require_media_year(projection, year)
             current = self._overview()
             if current.record_revision < projection.record_revision:
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                raise RefusalError(RefusalCode.INVALID_FRAME)
             return current
         except Exception as error:
             raise ProfileManagerCompletedViewUnavailableError(completed) from error
@@ -300,17 +301,17 @@ class RuntimeProfileManagerComposition:
         collection = self.client.read_profile_view((ProfileViewPageKind.FACTS,), output_language=self.output_language)
         self._pin()
         if collection.profile_id != self.profile_id or collection.page_kinds != (ProfileViewPageKind.FACTS,):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         items = collection.items(ProfileViewPageKind.FACTS)
         if not all(isinstance(item, ProfileViewFactItem) for item in items):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         values = {item.path: item.value for item in items if isinstance(item, ProfileViewFactItem)}
         if len(values) != len(items):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         try:
             return plantilla_media_years(values)
         except UserProfileValidationError:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME) from None
+            raise RefusalError(RefusalCode.INVALID_FRAME) from None
 
     def _set_plantilla_media(self, year: int, amount: Decimal, state: PlantillaMediaState) -> ProfileOverview:
         baseline = self._current()
@@ -349,7 +350,7 @@ class RuntimeProfileManagerComposition:
         self._pin()
         screen = self.screen
         if screen is None:
-            raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+            raise RefusalError(RefusalCode.UNAVAILABLE)
         if source.key is ProfileAcquisitionSourceKey.CENSAL_REVIEW:
             request = AeatSyncOperationRequestV1(
                 action=ActionReference(action_id="operator.profile.edit"),
@@ -369,7 +370,7 @@ class RuntimeProfileManagerComposition:
             )
             self._pin()
             if handoff is None:
-                raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+                raise RefusalError(RefusalCode.UNAVAILABLE)
             controller = await handoff(request)
             screen.app.push_screen(OperationModal(controller), self._source_settled)
         except Exception:
@@ -399,7 +400,7 @@ class RuntimeProfileManagerComposition:
         """Bind an already read exact-profile overview without blocking the UI."""
         self._pin()
         if overview.profile_id != str(self.profile_id):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         screen = ProfileManagerScreen(
             overview,
             persist=self._field,

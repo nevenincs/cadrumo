@@ -56,7 +56,7 @@ class ModeloWorkCalculateRequest(BaseModel):
     carries inputs or detail rows must say it is explicit; mixing the two is
     refused rather than silently resolved.
 
-    ``actor`` is recorded as sent for a person's session. An agent's session is
+    ``actor`` is recorded as sent for a person's session. An automation's session is
     recorded under its own session label, whatever the request carries.
     """
 

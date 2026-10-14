@@ -103,7 +103,7 @@ def reconcile_pull_verb(
     source: ModeloReconciliationEvidenceKind = ModeloReconciliationEvidenceKind.JUSTIFICANTE,
 ) -> None:
     """Pull the AEAT justificante for a work unit and reconcile against it."""
-    from .runtime_modelo_reconciliation_pull import pull_modelo_reconciliation
+    from .operation_modelo_reconciliation_pull import pull_modelo_reconciliation
 
     resolved_actor = actor.strip() if (actor is not None and actor) else _resolve_default_actor_value()
     report = pull_modelo_reconciliation(
@@ -135,7 +135,7 @@ def reconcile_file_verb(
     kind: ModeloReconciliationEvidenceKind | None = None,
 ) -> None:
     """Reconcile a work unit against a local justificante or declaración PDF file."""
-    from .runtime_modelo_reconciliation_import import import_modelo_reconciliation
+    from .operation_modelo_reconciliation_import import import_modelo_reconciliation
 
     resolved_actor = actor.strip() if (actor is not None and actor) else "operator"
     resolved_kind = kind if kind is not None else ModeloReconciliationEvidenceKind.JUSTIFICANTE
@@ -159,7 +159,7 @@ def reconcile_list_verb(ctx: typer.Context, work_unit_id: str | None = None) -> 
     """List past reconciliations recorded in the active profile."""
     from ...application.modelo.reconciliation_records import ModeloReconciliationAdvisory
     from ._modelo_payloads_m036 import ModeloReconciliationHistoryResult, ModeloReconciliationHistoryRowPayload
-    from .runtime_modelo_reconciliation_list import read_modelo_reconciliation_list
+    from .operation_modelo_reconciliation_list import read_modelo_reconciliation_list
 
     work_unit_token = work_unit_id.strip() if (work_unit_id is not None and work_unit_id) else None
     projection = read_modelo_reconciliation_list(ctx, work_unit_id=work_unit_token)

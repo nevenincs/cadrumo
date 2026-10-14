@@ -307,7 +307,7 @@ async def test_import_settles_actual_writer_failure_without_claiming_rollback(
 
 
 @pytest.mark.parametrize("missing", [DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES, None])
-def test_agent_query_requires_both_exact_destination_disclosures(
+def test_external_client_query_requires_both_exact_destination_disclosures(
     authority_operation: PinnedAuthorityOperation,
     missing: DisclosureCategory | None,
 ) -> None:
@@ -322,7 +322,7 @@ def test_agent_query_requires_both_exact_destination_disclosures(
             profile_id=PROFILE_ID,
             destination_id=uuid4(),
             action=AccessAction.RESULT,
-            frontend=OperationFrontendProjection.MCP,
+            frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
             contract=registry.lookup_public_contract(request.definition_id),
             published_authority=Availability.AVAILABLE,
             authority_operation=authority_operation,

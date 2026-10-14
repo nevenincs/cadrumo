@@ -9,9 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from cadrumo.application.operator_surface.command_ports import CommandWriteRouteValue
-
-from ...application.operator_surface.command_ports import CommandCapabilityClass
+from cadrumo_client.contracts.command_ports import CommandCapabilityClass, CommandWriteRouteValue
 
 """Storage route a state-mutating callback is permitted to use."""
 

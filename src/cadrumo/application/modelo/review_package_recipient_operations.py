@@ -10,6 +10,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
 
+from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
@@ -53,7 +55,6 @@ from ..operations.registry import (
     OperationResultProjector,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import (
     AccessAction,
     AccessDenialCode,

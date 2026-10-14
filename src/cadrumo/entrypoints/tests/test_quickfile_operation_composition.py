@@ -1,6 +1,6 @@
 """Quickfile retained-pin composition and actual encrypted canonical create/refuse chain.
 
-Disposable profile data proves local persistence behavior, not installed MCP or
+Disposable profile data proves local persistence behavior, not installed external client or
 live filing acceptance. No provider or credential request is sent.
 """
 

@@ -79,8 +79,10 @@ command is not legal authority.
 - "Inspect the taxpayer profile" -> `aeat config profile view` and
   `aeat config profile status`. Creating a profile or anything that takes a password
   is the person's act.
-- "Configure AEAT read access" -> `aeat config auth status`, then
-  `aeat config auth configure`: say what you would change and wait for the go-ahead.
+- "Configure AEAT read access" -> ask the person to inspect
+  `cadrumo-runtime config auth status`, then use
+  `cadrumo-runtime config auth configure` themselves if needed. Explain the
+  missing access and wait for the person's result.
   Secrets are entered by the person in Cadrumo, never through the conversation.
 
 ## Work that is the person's

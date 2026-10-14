@@ -17,7 +17,7 @@ from ....application.workflow.profile_bucket_scan import read_profile_bucket
 from .cli_runner import invoke_cached_cli
 
 __all__ = ["isolated_profile_storage"]
-from ._profile_lifecycle_support import create_profile_via_cli
+from .profile_lifecycle_support import create_profile_via_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

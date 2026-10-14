@@ -1,4 +1,4 @@
-"""A withholding agent's own returns credit nothing in Modelo 100 (LIVE path).
+"""A withholding automation's own returns credit nothing in Modelo 100 (LIVE path).
 
 The annual IRPF declaration credits the withholding and the payments on account
 the taxpayer BORE. Modelos 111, 115, 123, 180, 190 and 193 report withholding
@@ -8,8 +8,8 @@ evidenced by the certificate the payer issues, and never the payer's own
 
 This module proves the invariant end to end on the LIVE operator calculate path
 (:func:`calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`) for
-a taxpayer who is simultaneously a withholding agent and an autonomo: filing all
-six withholding-agent returns leaves every credit casilla of the annual
+a taxpayer who is simultaneously a withholding automation and an autonomo: filing all
+six withholding-automation returns leaves every credit casilla of the annual
 declaration exactly where it stands without them.
 
 The credit set is not hand-listed. It is the operand set of the registry formula
@@ -137,7 +137,7 @@ _EXPECTED_PAGOS_FRACCIONADOS = Decimal("845.50")
 # Hand-derived: the keyed certificate plus the pagos fraccionados.
 _EXPECTED_TOTAL_PAGOS_A_CUENTA = Decimal("2080.06")
 
-# The six withholding-agent returns this taxpayer files, with the source casilla
+# The six withholding-automation returns this taxpayer files, with the source casilla
 # each one's retenciones total occupies. None of them may reach a credit casilla.
 _M111_RETENCIONES_OUTPUT: CasillaId = validated_casilla_id("28", surface="_M111_RETENCIONES_OUTPUT")
 _M115_RETENCIONES_OUTPUT: CasillaId = validated_casilla_id("03", surface="_M115_RETENCIONES_OUTPUT")
@@ -246,7 +246,7 @@ def _seed_pagos_quarters(*, obs_repo: CalculationObservationRepository) -> None:
 
 
 def _seed_payer_side_returns(*, obs_repo: CalculationObservationRepository) -> None:
-    """File all six withholding-agent returns for the exercise.
+    """File all six withholding-automation returns for the exercise.
 
     Quarterly: 111 (rendimientos del trabajo), 115 (arrendamientos), 123
     (capital mobiliario). Annual summaries: 180 (over 115), 190 (over 111), 193
@@ -455,7 +455,7 @@ def test_filed_payer_side_returns_leave_every_credit_casilla_unchanged(
     """Filing 111, 115, 123, 180, 190 and 193 moves no credit casilla.
 
     The same persona as the baseline test, now also filing all six
-    withholding-agent returns for the exercise. Every credit casilla must hold
+    withholding-automation returns for the exercise. Every credit casilla must hold
     the identical oracle value, and no credit casilla may carry any figure those
     six returns report, whether a quarter or an annual summary total.
 

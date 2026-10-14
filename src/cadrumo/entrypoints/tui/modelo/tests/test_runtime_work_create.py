@@ -12,14 +12,16 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.application.modelo.declarations_calendar import DeclarationsCalendarEntryRefV1
-from cadrumo.application.modelo.declarations_workspace_contracts import (
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.frontend_client import FrontendClient
+
+from .....application.modelo.declarations_calendar import DeclarationsCalendarEntryRefV1
+from .....application.modelo.declarations_workspace_contracts import (
     DeclarationsWorkspaceDeclarationRefV1,
     DeclarationsWorkspaceProjectionV1,
 )
-from cadrumo.application.modelo.metadata_projection import ModeloWorkMetadataSnapshot
-from cadrumo.application.modelo.work_create_operation import (
+from .....application.modelo.metadata_projection import ModeloWorkMetadataSnapshot
+from .....application.modelo.work_create_operation import (
     MODELO_WORK_CREATE_APPLICABILITY_REFUSAL_CODE,
     MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
     ModeloWorkCreateProjection,
@@ -29,41 +31,40 @@ from cadrumo.application.modelo.work_create_operation import (
     build_modelo_work_create_definition,
     build_modelo_work_create_registration,
 )
-from cadrumo.application.modelo.work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
-from cadrumo.application.operations.frontend_projection import (
+from .....application.modelo.work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
+from .....application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
     OperationPublicProjectionV1,
 )
-from cadrumo.application.operations.frontend_requests import (
+from .....application.operations.frontend_requests import (
     OperationObservationSuccessV1,
     OperationPublicEventPageV1,
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
-from cadrumo.application.operations.persistence.replay import OperationReplayStatus
-from cadrumo.application.operations.public_period import PublicPeriod
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.overview.calendar_models import OverviewPeriodState
-from cadrumo.application.overview.next_actions import declare_next_action
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from cadrumo.application.workbench_generation_contracts import (
+from .....application.operations.persistence.replay import OperationReplayStatus
+from .....application.operations.public_period import PublicPeriod
+from .....application.operations.registry import OperationFrontendProjection, OperationRegistry
+from .....application.overview.calendar_models import OverviewPeriodState
+from .....application.overview.next_actions import declare_next_action
+from .....application.workbench_generation_contracts import (
     WorkbenchGenerationProjectionResultV1,
     WorkbenchGenerationV1,
 )
-from cadrumo.core.operations import (
+from .....core.operations import (
     OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from cadrumo.core.period import Period
-from cadrumo.domain.deadlines.models import ObligationStatus
-from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
-from cadrumo.entrypoints.tui.declarations.models import ModeloWorkCreateHandoffV1, ModeloWorkCreateResultV1
-from cadrumo.entrypoints.tui.declarations.tests.calendar_fixtures import calendar_row
-from cadrumo.entrypoints.tui.modelo import runtime_work_create
-from cadrumo.entrypoints.tui.modelo.lifecycle import ModeloLifecycleActionUnavailableError
-from cadrumo.entrypoints.tui.operations.runtime_controller import RuntimeOperationController
+from .....core.period import Period
+from .....domain.deadlines.models import ObligationStatus
+from .....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
+from ...declarations.models import ModeloWorkCreateHandoffV1, ModeloWorkCreateResultV1
+from ...declarations.tests.calendar_fixtures import calendar_row
+from ...operations.runtime_controller import RuntimeOperationController
+from .. import runtime_work_create
+from ..lifecycle import ModeloLifecycleActionUnavailableError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -247,7 +248,7 @@ def _bind_submit(
 ) -> list[dict[str, object]]:
     calls: list[dict[str, object]] = []
 
-    async def submit(actual_client: RuntimeFrontendClient, **kwargs: object) -> _Controller:
+    async def submit(actual_client: FrontendClient, **kwargs: object) -> _Controller:
         assert actual_client is client
         calls.append(kwargs)
         return controller
@@ -266,7 +267,7 @@ def test_runtime_create_submits_exact_profile_period_and_refreshes_after_success
     submissions = _bind_submit(monkeypatch, client, controller)
     refreshes: list[str] = []
     handoff = runtime_work_create.compose_runtime_work_create_handoff(
-        cast(RuntimeFrontendClient, client), refresh_after_success=lambda: refreshes.append("refreshed")
+        cast(FrontendClient, client), refresh_after_success=lambda: refreshes.append("refreshed")
     )
 
     returned = handoff(" 303 ", 2026, _PERIOD)
@@ -316,7 +317,7 @@ def test_runtime_create_returns_the_declaration_the_refreshed_generation_admits(
         )
     )
     handoff = runtime_work_create.compose_runtime_work_create_handoff(
-        cast(RuntimeFrontendClient, client), refresh_after_success=lambda: refreshed
+        cast(FrontendClient, client), refresh_after_success=lambda: refreshed
     )
 
     returned = handoff("303", 2026, _PERIOD)
@@ -337,7 +338,7 @@ def test_runtime_create_registered_applicability_refusal_preserves_terminal_rece
     controller = _Controller(observation, _refusal_result())
     submissions = _bind_submit(monkeypatch, client, controller)
     handoff = runtime_work_create.compose_runtime_work_create_handoff(
-        cast(RuntimeFrontendClient, client), refresh_after_success=lambda: pytest.fail("refusal cannot refresh")
+        cast(FrontendClient, client), refresh_after_success=lambda: pytest.fail("refusal cannot refresh")
     )
 
     with pytest.raises(ModeloLifecycleActionUnavailableError) as raised:
@@ -360,7 +361,7 @@ def test_runtime_create_rejects_ceded_model_before_runtime_submission(monkeypatc
     controller = _Controller(_observation(), _success_result(reused=False))
     submissions = _bind_submit(monkeypatch, client, controller)
     handoff = runtime_work_create.compose_runtime_work_create_handoff(
-        cast(RuntimeFrontendClient, client), refresh_after_success=lambda: pytest.fail("ceded model cannot refresh")
+        cast(FrontendClient, client), refresh_after_success=lambda: pytest.fail("ceded model cannot refresh")
     )
 
     with pytest.raises(ModeloLifecycleActionUnavailableError) as raised:
@@ -382,7 +383,7 @@ def test_runtime_create_rejects_observation_not_correlated_to_request(
     controller = _Controller(observation, _success_result(reused=False))
     _bind_submit(monkeypatch, client, controller)
     handoff = runtime_work_create.compose_runtime_work_create_handoff(
-        cast(RuntimeFrontendClient, client), refresh_after_success=lambda: pytest.fail("mismatch cannot refresh")
+        cast(FrontendClient, client), refresh_after_success=lambda: pytest.fail("mismatch cannot refresh")
     )
 
     with pytest.raises(ModeloLifecycleActionUnavailableError) as raised:
@@ -403,15 +404,15 @@ def test_runtime_create_rejects_session_replacement_before_submission(monkeypatc
     controller = _Controller(_observation(), _success_result(reused=False))
     submissions = _bind_submit(monkeypatch, client, controller)
     handoff = runtime_work_create.compose_runtime_work_create_handoff(
-        cast(RuntimeFrontendClient, client),
+        cast(FrontendClient, client),
         refresh_after_success=lambda: pytest.fail("replaced session cannot refresh"),
     )
     client.session_id = uuid4()
 
-    with pytest.raises(RuntimeRefusalError) as raised:
+    with pytest.raises(RefusalError) as raised:
         handoff("303", 2026, _PERIOD)
 
-    assert raised.value.reason is RuntimeRefusalCode.CONNECTION_CLOSED
+    assert raised.value.reason is RefusalCode.CONNECTION_CLOSED
     assert submissions == []
 
 
@@ -424,7 +425,7 @@ def test_runtime_create_rejects_session_change_after_terminal_result_read(monkey
     )
     _bind_submit(monkeypatch, client, controller)
     handoff = runtime_work_create.compose_runtime_work_create_handoff(
-        cast(RuntimeFrontendClient, client), refresh_after_success=lambda: pytest.fail("changed session cannot refresh")
+        cast(FrontendClient, client), refresh_after_success=lambda: pytest.fail("changed session cannot refresh")
     )
 
     with pytest.raises(ModeloLifecycleActionUnavailableError) as raised:
@@ -450,7 +451,7 @@ def test_runtime_create_refresh_failure_keeps_the_known_success_receipt(monkeypa
         )
 
     handoff = runtime_work_create.compose_runtime_work_create_handoff(
-        cast(RuntimeFrontendClient, client), refresh_after_success=fail_refresh
+        cast(FrontendClient, client), refresh_after_success=fail_refresh
     )
 
     with pytest.raises(ModeloLifecycleActionUnavailableError) as raised:
@@ -504,18 +505,18 @@ def test_runtime_controller_requires_explicit_refusal_detail_optin() -> None:
     client = _Client()
     client.result_document = success_document.model_dump(mode="json")
     controller = RuntimeOperationController(
-        client=cast(RuntimeFrontendClient, client),
+        client=cast(FrontendClient, client),
         operation_id=_OPERATION_ID,
         session_id=_SESSION,
         deadline=time.monotonic() + 30,
     )
 
-    with pytest.raises(RuntimeRefusalError) as raised:
+    with pytest.raises(RefusalError) as raised:
         asyncio.run(
             controller.read_settled_result(observation.projection, ModeloWorkCreateProjection, result_version=1)
         )
 
-    assert raised.value.reason is RuntimeRefusalCode.INVALID_FRAME
+    assert raised.value.reason is RefusalCode.INVALID_FRAME
     assert client.result_requests == []
     allowed = asyncio.run(
         controller.read_settled_result(

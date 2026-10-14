@@ -1,0 +1,240 @@
+"""Credential-free local runtime identity, readiness and refusal contracts."""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from dataclasses import dataclass
+from enum import IntEnum, StrEnum
+from types import MappingProxyType
+from typing import Annotated, ClassVar, Final, Literal, Protocol, override
+from uuid import UUID
+
+from pydantic import BaseModel, Field
+
+from cadrumo.core.errors.hierarchy import CadrumoError
+from cadrumo.core.identity.digest import ContentDigest
+from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+
+class RefusalCode(StrEnum):
+    """Stable transport refusals without peer-controlled diagnostics."""
+
+    UNAVAILABLE = "runtime_unavailable"
+    ENDPOINT_NOT_READY = "runtime_endpoint_not_ready"
+    OWNER_BUSY = "runtime_owner_busy"
+    ENDPOINT_UNTRUSTED = "runtime_endpoint_untrusted"
+    PEER_UNTRUSTED = "runtime_peer_untrusted"
+    VERSION_MISMATCH = "runtime_version_mismatch"
+    ROOT_MISMATCH = "runtime_root_mismatch"
+    INVALID_FRAME = "runtime_invalid_frame"
+    CONNECTION_CLOSED = "runtime_connection_closed"
+    DEADLINE_EXCEEDED = "runtime_deadline_exceeded"
+    DRAINING = "runtime_draining"
+    CONTAINMENT_UNAVAILABLE = "runtime_containment_unavailable"
+
+
+class RefusalError(CadrumoError):
+    """Carry only an allowlisted transport outcome across public boundaries."""
+
+    def __init__(self, code: RefusalCode) -> None:
+        """Retain only the allowlisted code in the exception's public message."""
+        self.reason = code
+        super().__init__(code.value)
+
+
+class EndpointPresence(StrEnum):
+    """What one native observation of a storage root's endpoint says about its owner.
+
+    A refused connection names one code for several states. This observation
+    keeps them apart, so that only proof of absence is read as absence.
+    """
+
+    ABSENT = "absent"
+    """No endpoint exists for the root, so no runtime owns it."""
+    HELD = "held"
+    """An owner holds the endpoint, whether or not it can take a connection now."""
+    INDETERMINATE = "indeterminate"
+    """The observation failed or was ambiguous, so it proves nothing either way."""
+
+
+class ShutdownIncompleteError(RefusalError):
+    """The runtime still owns work; its native listener must remain claimed."""
+
+    def __init__(self) -> None:
+        """Expose a fixed containment refusal without carrying private diagnostics."""
+        super().__init__(RefusalCode.CONTAINMENT_UNAVAILABLE)
+
+
+class ExitReason(IntEnum):
+    """Process exit codes by which a runtime names why it ended.
+
+    The reasons occupy 64-73. Every code in ``RESERVED_RUNTIME_EXIT_CODES``
+    already belongs to another owner and never names a runtime reason. A
+    runtime never exits ``0`` for its own stop. CPython can exit ``1`` or ``2``
+    before runtime code runs, so a supervisor reads those as launch failures.
+    The range lies inside BSD ``sysexits.h``, which neither CPython nor the
+    runtime emits.
+
+    ``SESSION_END_SETTLE`` and ``ELEVATED_TOKEN_REFUSED`` occur only in
+    supervised mode. ``DRAIN_WATCHDOG`` is a forced exit after the drain did not
+    settle within its bound.
+    """
+
+    SUPERVISOR_STOP = 64
+    SIGNAL_STOP = 65
+    SESSION_END_SETTLE = 66
+    OWNER_BUSY = 67
+    ROOT_MISMATCH = 68
+    VERSION_MISMATCH = 69
+    LOGIN_WITNESS_LOSS = 70
+    DRAIN_WATCHDOG = 71
+    ELEVATED_TOKEN_REFUSED = 72
+    UNEXPECTED_FAILURE = 73
+
+
+@dataclass(frozen=True, slots=True)
+class ReservedExitCodes:
+    """An inclusive range of unsigned exit codes owned outside the runtime."""
+
+    owner: str
+    first: int
+    last: int
+
+    def __contains__(self, code: int) -> bool:
+        """Report whether ``code`` lies in this inclusive range."""
+        return self.first <= code <= self.last
+
+
+NATIVE_HOST_LAUNCH_PROFILE_REFUSED_EXIT_CODE: Final = 125
+"""The native interpreter host's exit status when an image's launch profile refuses a launch.
+
+The host refuses before Python starts, so this is a launch failure of the
+image and never a runtime exit reason.
+"""
+
+RESERVED_HOST_EXIT_CODES: tuple[ReservedExitCodes, ...] = (
+    # Uncaught Python exceptions, CPython configuration errors and forced job termination.
+    ReservedExitCodes("python_failure", 1, 1),
+    # argparse and CPython command-line usage errors.
+    ReservedExitCodes("usage", 2, 2),
+    # The Windows C runtime's abort().
+    ReservedExitCodes("c_runtime_abort", 3, 3),
+    # CPython's finalization failure (120) and the native interpreter host's startup refusals,
+    # the last of which is a launch-profile refusal.
+    ReservedExitCodes("native_host", 120, NATIVE_HOST_LAUNCH_PROFILE_REFUSED_EXIT_CODE),
+    # POSIX signal exits reported as 128 + N, and negative codes wrapped to a byte.
+    ReservedExitCodes("posix_signal", 128, 255),
+    # NTSTATUS warning and error codes, including STATUS_CONTROL_C_EXIT (0xC000013A).
+    ReservedExitCodes("ntstatus", 0x8000_0000, 0xFFFF_FFFF),
+)
+
+_REFUSAL_EXIT_REASONS: Mapping[RefusalCode, ExitReason] = MappingProxyType(
+    {
+        RefusalCode.OWNER_BUSY: ExitReason.OWNER_BUSY,
+        RefusalCode.ROOT_MISMATCH: ExitReason.ROOT_MISMATCH,
+        RefusalCode.VERSION_MISMATCH: ExitReason.VERSION_MISMATCH,
+    }
+)
+
+
+def refusal_exit_reason(code: RefusalCode) -> ExitReason:
+    """Name the exit reason for a refusal that ended the runtime.
+
+    Only configuration refusals have their own reason. Any other refusal that
+    escapes the runtime is an unexpected failure.
+    """
+    return _REFUSAL_EXIT_REASONS.get(code, ExitReason.UNEXPECTED_FAILURE)
+
+
+# The published registry authority's logical generation. An editable install
+# keeps its product version while source and authority move, so a runtime and
+# its frontends also compare this whenever both name one; channels that carry
+# no authority cohort (worker control) leave it unset.
+type AuthorityGeneration = Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
+
+
+def authority_generation_differs(observed: str | None, expected: str | None) -> bool:
+    """Compare published authority generations without asserting either side has one."""
+    return observed is not None and expected is not None and observed != expected
+
+
+class ClientHello(BaseModel):
+    """Nonsecret expected installation cohort and canonical storage identity."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["client_hello"] = "client_hello"
+    protocol_version: Annotated[int, Field(strict=True, ge=3, le=3)] = 3
+    product_version: Annotated[str, Field(min_length=1, max_length=64)]
+    storage_identity: ContentDigest
+    authority_generation: AuthorityGeneration | None = None
+    lifecycle_notices: Literal["v1"] | None = None
+
+    #: Members left out of the frame while unset: a peer built before they
+    #: existed refuses a document that carries them.
+    frame_omits_when_unset: ClassVar[frozenset[str]] = frozenset({"lifecycle_notices"})
+
+
+class ServerHello(BaseModel):
+    """Readiness of an OS-authenticated runtime; the boot ID is not a bearer."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["server_hello"] = "server_hello"
+    protocol_version: Annotated[int, Field(strict=True, ge=3, le=3)] = 3
+    product_version: Annotated[str, Field(min_length=1, max_length=64)]
+    storage_identity: ContentDigest
+    boot_id: UUID
+    authority_generation: AuthorityGeneration | None = None
+
+
+class Peer(BaseModel):
+    """Native peer evidence, produced by the transport rather than wire input."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    os_owner_id: Annotated[str, Field(min_length=1, max_length=256)]
+    process_id: Annotated[int, Field(gt=0)] | None
+    image_path: Annotated[str, Field(min_length=1, max_length=32767)] | None = None
+    """The peer's program, read from the process the transport retains; ``None`` where none is read."""
+
+    @override
+    def __eq__(self, other: object) -> bool:
+        """Compare identity only: the owner and process, never the program path shown to a person.
+
+        Two reads of one process's path can differ when a link in it is
+        replaced between them, and that must not make the process another peer.
+        """
+        if not isinstance(other, Peer):
+            return NotImplemented
+        return (self.os_owner_id, self.process_id) == (other.os_owner_id, other.process_id)
+
+    @override
+    def __hash__(self) -> int:
+        """Hash the identity that equality compares."""
+        return hash((self.os_owner_id, self.process_id))
+
+
+class ByteChannel(Protocol):
+    """An already peer-verified stream with absolute monotonic I/O deadlines."""
+
+    @property
+    def peer(self) -> Peer:
+        """Return kernel-derived identity held for this connection."""
+        ...
+
+    def read_exact(self, count: int, *, deadline: float) -> bytes:
+        """Read a bounded byte count or refuse without exposing partial data."""
+        ...
+
+    def read_ready(self) -> bool:
+        """Observe available input or EOF without consuming bytes or blocking an idle peer."""
+        ...
+
+    def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
+        """Send only to this verified peer before the absolute deadline."""
+        ...
+
+    def close(self) -> None:
+        """Release connection resources, never the shared runtime owner."""
+        ...

@@ -238,10 +238,13 @@ def _module_file_for(parts: tuple[str, ...]) -> Path | None:
     own prefixes, and the same prefixes recur across the whole corpus. Uncached
     this was 46,733 filesystem stats for 2,158 distinct targets.
     """
-    package_init = SRC_CADRUMO.joinpath(*parts, "__init__.py")
+    root = SRC_CADRUMO
+    if parts and (SRC_CADRUMO.parent / parts[0] / "__init__.py").is_file():
+        root = SRC_CADRUMO.parent
+    package_init = root.joinpath(*parts, "__init__.py")
     if package_init.is_file():
         return package_init
-    module_file = SRC_CADRUMO.joinpath(*parts[:-1], f"{parts[-1]}.py") if parts else None
+    module_file = root.joinpath(*parts[:-1], f"{parts[-1]}.py") if parts else None
     return module_file if module_file is not None and module_file.is_file() else None
 
 
@@ -282,8 +285,6 @@ def _owning_module(target: str) -> tuple[Path, str] | None:
     checking those would flag every module reference in the tree.
     """
     parts = tuple(target.split("."))
-    if parts and parts[0] == "cadrumo":
-        parts = parts[1:]
     if len(parts) < 2 or _module_file_for(parts) is not None:
         return None
     for split in range(len(parts) - 1, 0, -1):
@@ -322,7 +323,7 @@ def _scan_dotted_references(path: Path, tree: ast.AST) -> tuple[list[str], int]:
             missing = _unresolved_reference(target)
             if missing is None:
                 continue
-            owner = missing[0].relative_to(SRC_CADRUMO).as_posix()
+            owner = missing[0].relative_to(SRC_CADRUMO.parent).as_posix()
             reports.append(f"{origin}: `{target}` -> {owner} does not define {missing[1]!r}")
     return reports, examined
 
@@ -378,3 +379,30 @@ def test_dotted_cross_references_resolve_to_a_defining_module() -> None:
         "define. Repoint the reference at the module that owns the symbol; do not create a "
         "forwarding export to make the stale path resolve.\n" + "\n".join(sorted(unresolved)[:40])
     )
+
+
+@pytest.mark.parametrize(
+    "target",
+    [
+        "cadrumo_client.commands.errors.CliRefusedBoundaryError",
+        "cadrumo_runtime.commands._apoderado.apoderado_scopes_list",
+    ],
+)
+def test_qualified_sibling_definitions_are_scanned(target: str) -> None:
+    """Sibling references are counted, with missing definitions rejected."""
+    tree = ast.parse(f'""":obj:`{target}`"""')
+    reports, examined = _scan_dotted_references(SRC_CADRUMO / "probe.py", tree)
+    assert examined == 1
+    assert not reports
+    fabricated = target.rpartition(".")[0] + ".NoSuchDefinition"
+    missing_tree = ast.parse(f'""":obj:`{fabricated}`"""')
+    missing_reports, missing_examined = _scan_dotted_references(SRC_CADRUMO / "probe.py", missing_tree)
+    assert missing_examined == 1
+    assert len(missing_reports) == 1
+    assert "NoSuchDefinition" in missing_reports[0]
+
+
+def test_sibling_imports_do_not_define_the_referenced_symbol() -> None:
+    """A forwarding import remains a defect in a sibling's source file."""
+    assert _unresolved_reference("cadrumo_client.commands.google_errors.CliRefusedBoundaryError") is not None
+    assert _unresolved_reference("cadrumo_runtime.commands.NoSuchModule") is not None

@@ -16,6 +16,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.tests.english_locale_fixture import english_locale_fixture
 
 from ....application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
 from ....application.ledger.grounded_reading import verified_provenance
@@ -36,7 +37,6 @@ from .._evidence_field_notices import (
     field_degradation_notices,
     label_reading_fallback_notices,
 )
-from ._english_locale_fixture import english_locale_fixture
 
 __all__ = ["english_locale_fixture"]
 

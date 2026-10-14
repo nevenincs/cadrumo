@@ -175,7 +175,7 @@ def build_m145_communication_operation_definitions(
     """Build all five command identities over the canonical record service.
 
     ``execution_caller_reader`` names the frontend that admitted an execution,
-    so an agent's draft is recorded under its session's label.
+    so an automation's draft is recorded under its session's label.
     """
     return tuple(
         sorted(

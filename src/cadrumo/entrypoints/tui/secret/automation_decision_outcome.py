@@ -5,7 +5,8 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 
-from ....adapters.local_runtime.automation_decision import AutomationDecisionCompletion, AutomationDecisionRunError
+from cadrumo_client.transport.automation_decision import AutomationDecisionCompletion, AutomationDecisionRunError
+
 from ....application.operations.models import OperationId
 from ....core.operations import OperationEffect, OperationTerminalCondition
 

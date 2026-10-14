@@ -222,7 +222,7 @@ def test_groi_response_samples_carry_provenance_entries() -> None:
     A sample added without a provenance row loses its capture date, source
     endpoint, and hash -- the audit trail that makes it evidence rather than
     an anonymous fixture. Mirrors the corpus-wide provenance gate at
-    ``src/cadrumo/_data/corpus/tests/test_corpus_provenance.py``, which is
+    ``dev/quality/tests/test_corpus_provenance.py``, which is
     scoped to the instructions corpus and does not reach this directory.
     """
 

@@ -232,7 +232,7 @@ def test_rebuild_access_preserves_full_profile_commit_and_typed_disclosures(
 def test_rebuild_is_open_to_every_frontend_under_the_same_policy(
     frontend: OperationFrontendProjection, action: AccessAction
 ) -> None:
-    """The index is derived from stored revisions, so an agent may regenerate it as a person may."""
+    """The index is derived from stored revisions, so an automation may regenerate it as a person may."""
     registry, registration = _registry()
     request = _access_request()
     resolved = resolve_operation_access(

@@ -6,6 +6,11 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
+from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+    build_test_verification_repository_bundle,
+)
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.calculation_observations import (
     CalculationObservationRepository,
@@ -66,10 +71,6 @@ from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.verification_report import VerificationReport
 from ....tests.env_scope import ready_clave_settings
 from .file_flow_test_support import calculation_ports_for_test
-from .verification_repository_support import (
-    build_test_certificate_secret_backend_factory,
-    build_test_verification_repository_bundle,
-)
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 

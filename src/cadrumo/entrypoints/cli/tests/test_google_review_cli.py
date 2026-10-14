@@ -8,7 +8,13 @@ import pytest
 import typer
 from typer.main import get_command
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo_client.commands.registered_operation_contracts import (
+    RegisteredOperationCompletion,
+    RegisteredOperationReviewHandler,
+)
+from cadrumo_client.contracts.contracts import RefusalError
+from cadrumo_client.transport.frontend_client import FrontendClient
+
 from ....application.export.google_review_operation_contracts import (
     GOOGLE_REVIEW_OPERATION_DEFINITION_ID,
     GOOGLE_REVIEW_RESPONSE_SCHEMA_BINDING,
@@ -20,13 +26,11 @@ from ....application.export.google_review_operation_contracts import (
 from ....application.export.publication_receipt import ReadablePayloadCategory
 from ....application.operations.frontend_projection import OperationReviewProjectionReferenceV1
 from ....application.operations.models import OperationIdentity
-from ....application.runtime.contracts import RuntimeRefusalError
 from ....core.operations import OperationEffect, profile_operation_subject
 from .. import google_review_cli
 from .._modelo_spreadsheet_command_specs import MODELO_SPREADSHEET_COMMAND_SPECS
-from .._profile_authentication_gate import _uses_runtime_profile_client
+from .._profile_authentication_gate import _uses_profile_connection
 from ..google_review_cli import accept_google_review, publish_google_review_cli
-from ..registered_operation_contracts import RegisteredOperationCompletion, RegisteredOperationReviewHandler
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -70,7 +74,7 @@ def test_publish_help_exposes_saved_revision_and_readable_disclosure() -> None:
 
 def test_publish_routes_through_native_runtime_profile_admission() -> None:
     spec = next(item for item in MODELO_SPREADSHEET_COMMAND_SPECS if item.key == "app_modelo_spreadsheet_publish")
-    assert _uses_runtime_profile_client(spec, {"calculation_revision_id": "a" * 64, "accept_readable_export": True})
+    assert _uses_profile_connection(spec, {"calculation_revision_id": "a" * 64, "accept_readable_export": True})
 
 
 def test_missing_disclosure_flag_refuses_before_profile_or_runtime_access() -> None:
@@ -135,14 +139,14 @@ def test_cli_publication_binds_disclosure_and_receipt_before_emitting_link(
     monkeypatch: pytest.MonkeyPatch, defect: str
 ) -> None:
     request = _request().model_copy(update={"filing_record_id": "f" * 64})
-    client = cast(RuntimeFrontendClient, SimpleNamespace(profile_id=request.profile_id))
+    client = cast(FrontendClient, SimpleNamespace(profile_id=request.profile_id))
     calls: list[str] = []
     emitted: list[dict[str, Any]] = []
     monkeypatch.setattr(google_review_cli, "bound_profile_client", lambda _: client)
     monkeypatch.setattr(google_review_cli, "emit_envelope", lambda _, **kwargs: emitted.append(kwargs))
 
     def run(
-        actual_client: RuntimeFrontendClient, payload: GoogleReviewRequest, **kwargs: Any
+        actual_client: FrontendClient, payload: GoogleReviewRequest, **kwargs: Any
     ) -> RegisteredOperationCompletion[GoogleReviewResult]:
         assert actual_client is client and payload == request
         assert kwargs["definition_id"] == GOOGLE_REVIEW_OPERATION_DEFINITION_ID
@@ -198,7 +202,7 @@ def test_cli_publication_binds_disclosure_and_receipt_before_emitting_link(
         )
 
     if defect.startswith("review-"):
-        with pytest.raises(RuntimeRefusalError):
+        with pytest.raises(RefusalError):
             publish()
         assert calls == ["validate"] and not emitted
     elif defect != "none":

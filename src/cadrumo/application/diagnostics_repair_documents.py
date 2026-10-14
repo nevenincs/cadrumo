@@ -3,7 +3,7 @@
 Each model here is the JSON data of one ``config repair`` command, member for
 member. The command line prints it inside its envelope. The runtime's repair
 acts reply with it and the registered diagnostics operations return it, so
-the terminal interface and MCP show the document the command prints and
+the terminal interface and external client show the document the command prints and
 render nothing of their own.
 
 A builder projects the application's own result onto its document, with the

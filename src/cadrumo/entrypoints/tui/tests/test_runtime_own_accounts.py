@@ -10,9 +10,11 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
-from cadrumo.application.ledger.own_account_operation import (
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
+from ....application.ledger.own_account_operation import (
     LEDGER_OWN_ACCOUNT_OPERATION_DEFINITION_ID,
     LedgerOwnAccountRequest,
     LedgerOwnAccountResult,
@@ -20,27 +22,26 @@ from cadrumo.application.ledger.own_account_operation import (
     build_ledger_own_account_definition,
     build_ledger_own_account_registration,
 )
-from cadrumo.application.ledger.own_account_ports import OwnAccountRepositoryFactory
-from cadrumo.application.operations.error_detail import OperationErrorDetailKind, OperationErrorDetailV1
-from cadrumo.application.operations.frontend_projection import (
+from ....application.ledger.own_account_ports import OwnAccountRepositoryFactory
+from ....application.operations.error_detail import OperationErrorDetailKind, OperationErrorDetailV1
+from ....application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
     OperationPublicProjectionV1,
 )
-from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1, OperationPublicEventPageV1
-from cadrumo.application.operations.persistence.replay import OperationReplayStatus
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from cadrumo.core.errors.hierarchy import RecordedRegisteredError
-from cadrumo.core.operations import (
+from ....application.operations.frontend_requests import OperationObservationSuccessV1, OperationPublicEventPageV1
+from ....application.operations.persistence.replay import OperationReplayStatus
+from ....application.operations.registry import OperationFrontendProjection, OperationRegistry
+from ....core.errors.hierarchy import RecordedRegisteredError
+from ....core.operations import (
     OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from cadrumo.domain.transactions.own_accounts import OwnAccountHolding
-from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
-from cadrumo.entrypoints.tui.operations.runtime_controller import RuntimeOperationController
-from cadrumo.entrypoints.tui.runtime_own_accounts import RuntimeOwnAccountTuiDoorV1
+from ....domain.transactions.own_accounts import OwnAccountHolding
+from ..account import AccountSessionExpiredError
+from ..operations.runtime_controller import RuntimeOperationController
+from ..runtime_own_accounts import RuntimeOwnAccountTuiDoorV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -174,10 +175,10 @@ def _account() -> OwnAccountProjection:
 
 
 def _install(monkeypatch: pytest.MonkeyPatch, client: _Client, controller: _Controller) -> list[dict[str, object]]:
-    from cadrumo.entrypoints.tui.operations import runtime_profile_session as bridge
+    from ..operations import runtime_profile_session as bridge
 
     def read_session(
-        _client: RuntimeFrontendClient,
+        _client: FrontendClient,
         *,
         profile_id: UUID,
         session_id: UUID,
@@ -193,7 +194,7 @@ def _install(monkeypatch: pytest.MonkeyPatch, client: _Client, controller: _Cont
 
     async def submit(
         _controller_type: type[RuntimeOperationController],
-        received_client: RuntimeFrontendClient,
+        received_client: FrontendClient,
         **kwargs: object,
     ) -> _Controller:
         assert received_client is client
@@ -205,7 +206,7 @@ def _install(monkeypatch: pytest.MonkeyPatch, client: _Client, controller: _Cont
 
 
 def _door(client: _Client) -> RuntimeOwnAccountTuiDoorV1:
-    return RuntimeOwnAccountTuiDoorV1(cast(RuntimeFrontendClient, client), profile_label="Fixture profile")
+    return RuntimeOwnAccountTuiDoorV1(cast(FrontendClient, client), profile_label="Fixture profile")
 
 
 def _add_request() -> LedgerOwnAccountRequest:
@@ -269,10 +270,10 @@ def test_own_account_door_refuses_a_result_its_receipt_does_not_support(
     client = _Client()
     _install(monkeypatch, client, _Controller(observation=_observation(effect=effect), result=result))
 
-    with pytest.raises(RuntimeRefusalError) as raised:
+    with pytest.raises(RefusalError) as raised:
         asyncio.run(_door(client)(_add_request()))
 
-    assert raised.value.reason is RuntimeRefusalCode.INVALID_FRAME
+    assert raised.value.reason is RefusalCode.INVALID_FRAME
 
 
 def test_own_account_door_raises_the_recorded_refusal_of_a_refused_removal(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -305,7 +306,7 @@ def test_own_account_door_keeps_the_bare_code_when_no_detail_was_recorded(monkey
     _install(monkeypatch, client, controller)
     request = LedgerOwnAccountRequest(profile_id=_PROFILE_ID, action="remove", own_account_id="acc-01")
 
-    with pytest.raises(RuntimeFrontendRefusedError) as raised:
+    with pytest.raises(FrontendRefusedError) as raised:
         asyncio.run(_door(client)(request))
 
     assert raised.value.reason == _REFUSAL_CODE

@@ -64,22 +64,22 @@ def _runtime_image(package: Path) -> Path:
 
 
 def _wait_ready(endpoint: Any, process: Any, expected: Any) -> None:
-    from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
-    from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+    from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+    from cadrumo_client.transport.framing import VerifiedConnection
 
     deadline = time.monotonic() + _READY_SECONDS
     while True:
         try:
             channel = endpoint.connect(timeout=0.2)
-            VerifiedRuntimeConnection(channel, expected=expected, deadline=deadline).close()
+            VerifiedConnection(channel, expected=expected, deadline=deadline).close()
             return
-        except RuntimeRefusalError as error:
-            if error.reason is not RuntimeRefusalCode.ENDPOINT_NOT_READY or time.monotonic() >= deadline:
+        except RefusalError as error:
+            if error.reason is not RefusalCode.ENDPOINT_NOT_READY or time.monotonic() >= deadline:
                 raise
             try:
                 code = process.wait(timeout=0)
-            except RuntimeRefusalError as waiting:
-                if waiting.reason is not RuntimeRefusalCode.DEADLINE_EXCEEDED:
+            except RefusalError as waiting:
+                if waiting.reason is not RefusalCode.DEADLINE_EXCEEDED:
                     raise
             else:
                 raise RuntimeError(f"the packaged runtime exited before it was ready: {code}") from None
@@ -91,23 +91,21 @@ def serve(root: Path, package: Path, control: Path) -> int:
     if sys.platform != "win32":
         _publish(control / STOPPED_FILE, {"event": "error", "code": "unsupported_platform", "detail": sys.platform})
         return 2
-    from cadrumo.adapters.local_runtime.installation import runtime_installation
-    from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
-    from cadrumo.adapters.local_runtime.windows_process import WindowsProcessScope
-    from cadrumo.application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
     from cadrumo.core.storage_environment import ChildEnvironmentProfile, child_environment
     from cadrumo.domain.calculations.registry.authority_location import published_authority_generation
+    from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError
+    from cadrumo_client.transport.installation import installation
+    from cadrumo_client.transport.windows import WindowsEndpoint
+    from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
 
     product_version = version("cadrumo")
     environment = child_environment(ChildEnvironmentProfile.STRICT, root)
     with ExitStack() as resources:
-        endpoint = WindowsRuntimeEndpoint(storage_root=root)
+        endpoint = WindowsEndpoint(storage_root=root)
         resources.callback(endpoint.close)
         scope = WindowsProcessScope()
         resources.callback(scope.terminate, timeout=15)
-        runtime_installation(
-            storage_root=root, os_owner_id=endpoint.os_owner_id, storage_identity=endpoint.storage_identity
-        )
+        installation(storage_root=root, os_owner_id=endpoint.os_owner_id, storage_identity=endpoint.storage_identity)
         image = _runtime_image(package)
         # The launcher hands its child no standard streams, so the runtime runs under a relay in the same job
         # that points them at files in the control area; the relay's exit status is the runtime's.
@@ -130,7 +128,7 @@ def serve(root: Path, package: Path, control: Path) -> int:
             directory=image.parent,
             environment=environment,
         )
-        expected = RuntimeClientHello(
+        expected = ClientHello(
             product_version=product_version,
             storage_identity=endpoint.storage_identity,
             authority_generation=published_authority_generation(),
@@ -149,8 +147,8 @@ def serve(root: Path, package: Path, control: Path) -> int:
         while not stop.exists():
             try:
                 code = process.wait(timeout=_POLL_SECONDS)
-            except RuntimeRefusalError as waiting:
-                if waiting.reason is not RuntimeRefusalCode.DEADLINE_EXCEEDED:
+            except RefusalError as waiting:
+                if waiting.reason is not RefusalCode.DEADLINE_EXCEEDED:
                     raise
             else:
                 _publish(control / STOPPED_FILE, {"event": "runtime_exited", "code": code})
@@ -173,12 +171,14 @@ def run_runtime(stdout: Path, stderr: Path, command: list[str]) -> int:
 def surface() -> int:
     """Report the leaf tokens of commands whose policy reaches the tax agency, or hands a filing off."""
     from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
+    from cadrumo_runtime.commands.command_specs import RUNTIME_COMMAND_GRAPH
 
+    specs = (*COMMAND_GRAPH.specs, *RUNTIME_COMMAND_GRAPH.specs)
     _emit(
         {
             "event": "surface",
-            "live_write": sorted({spec.token for spec in COMMAND_GRAPH.specs if spec.policy.live_write}),
-            "handoff": sorted({spec.token for spec in COMMAND_GRAPH.specs if spec.policy.handoff}),
+            "live_write": sorted({spec.token for spec in specs if spec.policy.live_write}),
+            "handoff": sorted({spec.token for spec in specs if spec.policy.handoff}),
         }
     )
     return 0
@@ -237,6 +237,46 @@ def delete_session(root: Path, profile_id: UUID) -> int:
     return 0
 
 
+def request_key(profile_id: UUID, categories: list[str], request_out: Path) -> int:
+    """Request and receive a reviewed key through the packaged SDK's protected custody path."""
+    from cadrumo.adapters.persistence.storage.custody.automation_store_composition import (
+        installed_automation_secret_store,
+    )
+    from cadrumo.application.operations.registry import OperationFrontendProjection
+    from cadrumo.application.user_profile.access_contracts import DisclosureCategory
+    from cadrumo.application.user_profile.automation_enrollment import EnrollmentStage
+    from cadrumo.core.time.clock import now
+    from cadrumo.entrypoints.operation_composition import build_manifest_operation_registry
+    from cadrumo_client.transport.automation_requester import AutomationRequesterJourney
+    from cadrumo_client.transport.installed_client import open_installed_client
+    from cadrumo_harness.access.automation_key import agent_key_proposal, agent_key_scope
+
+    async def enroll() -> dict[str, Any]:
+        client = await open_installed_client(profile_id=profile_id, frontend=OperationFrontendProjection.CLI)
+        try:
+            enrollment = client.prepare_enrollment(installed_automation_secret_store())
+            contracts = build_manifest_operation_registry().public_contract_set
+            scope = agent_key_scope(contracts, tuple(DisclosureCategory(item) for item in categories))
+            proposal = agent_key_proposal(scope, destination_id=enrollment.prepared.destination_id, now=now())
+            journey = AutomationRequesterJourney(enrollment, timeout=300)
+            submitted = journey.submit(proposal)
+            _publish(request_out, {"profile_id": str(profile_id), "receipt": submitted.model_dump(mode="json")})
+            completed = journey.wait_for_terminal()
+            if completed.terminal.stage is not EnrollmentStage.COMPLETE or completed.credential is None:
+                raise RuntimeError("the reviewed key has no verified protected delivery")
+            return {
+                "profile_id": str(profile_id),
+                "submitted": submitted.model_dump(mode="json"),
+                "terminal": completed.terminal.model_dump(mode="json"),
+                "credential_reference": str(completed.credential.credential_reference),
+            }
+        finally:
+            client.close()
+
+    _emit({"event": "key_delivered", "result": asyncio.run(enroll())})
+    return 0
+
+
 def main() -> int:
     """Dispatch one subcommand; report an unexpected failure as one error line."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -260,6 +300,10 @@ def main() -> int:
     deleting = commands.add_parser("delete-session")
     deleting.add_argument("--root", type=Path, required=True)
     deleting.add_argument("--profile-id", type=UUID, required=True)
+    requesting = commands.add_parser("request-key")
+    requesting.add_argument("--profile-id", type=UUID, required=True)
+    requesting.add_argument("--category", action="append", default=[])
+    requesting.add_argument("--request-out", type=Path, required=True)
     args = parser.parse_args()
     try:
         if args.command == "serve":
@@ -274,6 +318,8 @@ def main() -> int:
             return parse_export(args.file, args.modelo, args.year, args.period)
         if args.command == "active-profile":
             return active_profile(args.root.resolve(strict=True))
+        if args.command == "request-key":
+            return request_key(args.profile_id, args.category, args.request_out)
         return delete_session(args.root.resolve(strict=True), args.profile_id)
     except Exception as error:  # the orchestrator reads this line instead of a traceback
         _emit({"event": "error", "code": type(error).__name__, "detail": str(error)[:500]})

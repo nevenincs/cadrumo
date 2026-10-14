@@ -8,7 +8,8 @@ from textual.app import ComposeResult
 from textual.containers import Vertical, VerticalScroll
 from textual.widgets import Button, Input, Static
 
-from ....adapters.local_runtime.automation_decision import AutomationDecision
+from cadrumo_client.transport.automation_decision import AutomationDecision
+
 from ....core.i18n.render import tr
 from .automation_decision_outcome import AutomationDecisionUiOutcome
 

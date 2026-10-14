@@ -13,7 +13,7 @@ related:
   - '[[2026-10-13-agent-attachments-adr]]'
 modified: '2026-10-14'
 body_schema: body-v2
-body_hash: 'sha256:d8b710b25ffee234ee5dd8284ce5cdb007ef2f2a4dcffdb4b4bbfe3165ee02f9'
+body_hash: 'sha256:2a6a697440c2921f2f30abd26e0174073e1558b35cc078212dcc36f1804ce0ea'
 ---
 
 <!-- LINK RULES:
@@ -118,13 +118,13 @@ body_hash: 'sha256:d8b710b25ffee234ee5dd8284ce5cdb007ef2f2a4dcffdb4b4bbfe3165ee0
 
 ## Description
 
-<!-- First line after approval: `Approved yyyy-mm-dd`, written by the
-orchestrator after establishing scoped authorization, including an explicit
-advance authorization. Record its basis; ask only when it is absent. Then briefly describe the proposed work.
-Reference `{adr}`s, `{research}`, `{reference}`. Supporting documentation
-must be read when relevant. State the decision coverage assessment; when no
-costly decision is involved and no ADR governs, say so. With several ADRs,
-map their scope to Steps at L1 or the relevant containers at higher tiers. -->
+Approved 2026-10-14
+
+User explicitly authorized the agent boundary deletion/migration, after Luna audits and Sol digests, medium-reasoning delegation, existing ADR amendments and no tests. No new ADR is authorized. Existing accepted records are amended to govern this refinement; history and proposed statuses remain intact.
+
+S01 reconciles the finite decision set in `.tmp/agent-boundary-audit/adr-digest.md`. Provider-settings and attachments govern S02-S03; canonical environment governs S03-S05; application sign-in and MCP authentication govern generic runtime admission in S02 and desktop attendance in S04; harness refoundation governs separate MCP ownership in S03. Code evidence is `.tmp/agent-boundary-audit/code-digest.md`, `python.md` and `native.md`.
+
+The tax root `src/cadrumo` has zero LLM-agent or harness awareness. The sibling service `src/cadrumo_agent_service` manages agents/providers/stores; `src/cadrumo_harness` owns MCP. Runtime retains generic login, encrypted custody and authorization. Preserve existing ciphertext through descriptor-allowlisted opaque custody, no DEK export, exact verified native service/session/tree proofs. Tax-domain model extraction remains.
 
 ## Steps
 
@@ -193,23 +193,8 @@ templates. -->
 
 ## Parallelization
 
-<!-- State which Steps, Phases, or Waves can be executed in parallel and
-which carry hard ordering. At `L1` and `L2`, parallelism is decided
-per-Step or per-Phase. At `L3` and `L4`, Waves are sequenced by
-default (one Wave must land before the next can begin); Phases
-within a single Wave may be parallelized when they share no hard
-interdependency. -->
+S01 prepares governance. Runtime worker owns S02 (`src/cadrumo` and neutral runtime/client contracts). Service worker owns S03 (sibling service, transferred agent files, harness protocol, agent locales/tests). Their files are disjoint by explicit transfer coordination; S02 freezes generic APIs before dependent S03 implementation, while preparations proceed concurrently. S04 follows published service interfaces; S05 follows file moves. Governance owns `.vault` and `.vaultspec`; root owns shared verification, ledgers, Step closure and commits. Final source locators are reconciled after actual migrations. Workers preserve all concurrent edits.
 
 ## Verification
 
-<!-- State the mission success criteria for this plan. Each criterion
-should be a verifiable check (test passes, surface conforms,
-reviewer signs off) rather than a free-form assertion.
-
-The plan is complete when every Step is closed (`- [x]`) and the final
-cohesive review passes. At `L4`, the Epic-completion check additionally requires
-the declared project-management association to report the Epic
-complete.
-
-Review follows the vaultspec system section. L1 has no Phase close;
-coincident plan-close and handoff gates share one integrated review. -->
+User override: no tests. Verify static syntax/imports/boundaries, exact native verified peer/session/tree proofs, allowlisted opaque custody and preserved ciphertext, service/agent hosting frames, separate MCP ownership and actual package inclusion. Run configured non-test lint/format/type/import checks and necessary builds where applicable. Report failures/unavailable checks without claiming passes. Root performs integrated final review and owns all Step ledgers and closures; no Step closes before actual verification.

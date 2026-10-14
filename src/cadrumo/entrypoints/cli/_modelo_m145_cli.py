@@ -5,7 +5,7 @@ records. It parses Typer arguments, forwards authenticated requests to the
 retained profile worker, and emits typed envelopes through sibling renderers.
 
 See Also:
-    :mod:`~entrypoints.cli.runtime_modelo_m145_communication`
+    :mod:`~cadrumo.entrypoints.cli.operation_modelo_m145_communication`
         Authenticated registered-operation bridge for all five commands.
     :mod:`~entrypoints.cli._modelo_m145_parsing`
         CLI-only parsing helpers for casilla assignments and actor labels.
@@ -21,7 +21,7 @@ import typer
 
 from ...application.modelo.m145_communication_period import M145CommunicationPeriod
 from ._modelo_m145_rendering import emit_m145_export_result, emit_m145_record_result, emit_m145_validation_result
-from .runtime_modelo_m145_communication import (
+from .operation_modelo_m145_communication import (
     create_m145_record,
     export_m145_record,
     mark_m145_record_delivered,

@@ -1,0 +1,437 @@
+"""End-to-end verification for the accepted CLI roots."""
+
+from __future__ import annotations
+
+import json
+import sys
+from collections.abc import Generator, Iterator, Mapping
+from contextlib import contextmanager
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+import pytest
+import typer
+from typer.core import TyperGroup
+
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from cadrumo.application.operator_surface.contract import get_operator_surface_contract
+from cadrumo.application.user_profile.profile_record_repository import close_active_profile_record_session
+from cadrumo.core.config import override_settings
+from cadrumo.core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
+from cadrumo.tests.cli_envelope import unwrap_cli_result as _json
+from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import native_cli_profile_scope
+from cadrumo_runtime.host.tests.frontend.cli.cli_runner import cadrumo_click_command, invoke_cached_cli
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+def _assert_is_command_group(value: object) -> None:
+    """isinstance check that recognises typer's vendored Click hierarchy.
+
+    ``cadrumo_click_command()`` and ``get_command`` return ``typer.core.TyperGroup``
+    instances whose MRO is ``TyperGroup -> typer._click.core.Command -> ABC``
+    and never descends from the upstream ``click.Group``, so a bare
+    ``isinstance(value, click.Group)`` is False. Derive the vendored
+    ``Command`` base from the value's MRO and assert against it (mirrors the
+    production fix in ``cli/errors.py`` and the test-side fix in
+    ``test_backend_boundary.py``).
+    """
+    vendored_command = next(
+        (base for base in type(value).__mro__ if base.__name__ == "Command"),
+        None,
+    )
+    assert vendored_command is not None, f"{type(value).__name__} has no Command in MRO"
+    assert isinstance(value, vendored_command)
+
+
+def _as_group(command: object) -> TyperGroup:
+    """Narrow a resolved command to the vendored ``TyperGroup``.
+
+    The Cadrumo tree is the vendored Typer hierarchy
+    (``CadrumoTyperGroup -> typer.core.TyperGroup``), which does not descend from
+    upstream ``click.Group``; ``TyperGroup`` is the correct narrow target and
+    carries the typed ``get_command`` / ``list_commands`` surface.
+    """
+    assert isinstance(command, TyperGroup)
+    return command
+
+
+@contextmanager
+def _certificate_bearing_backend(backend: Path) -> Generator[Path]:
+    # The round-trip helper writes its synthetic certificate to
+    # ``<backend>/certificate.p12``. The certificate auth backend
+    # probes the path from ``Settings.cadrumo_certificate_path``, so the
+    # override must name the same file the operator configures —
+    # otherwise ``configured`` (operational readiness) and the backend
+    # health summary would describe two different paths. The other
+    # auth-related fields are pinned to ``None`` so the test always
+    # starts from a clean slate regardless of ambient operator env.
+    with (
+        override_settings(
+            cadrumo_auth_provider=None,
+            cadrumo_certificate_path=backend / "certificate.p12",
+            cadrumo_certificate_password_secret=None,
+            cadrumo_clave_movil_dni_nie=None,
+            cadrumo_clave_movil_dni_fecha=None,
+            cadrumo_clave_movil_nie_soporte=None,
+        ),
+        isolated_profile_storage_root(tmp_path=backend),
+    ):
+        yield backend
+
+
+@pytest.fixture(autouse=True)
+def _certificate_bearing_cli_backend(request: pytest.FixtureRequest, tmp_path: Path) -> Iterator[Path | None]:
+    """Isolate each test that does not read the shared round-trip world.
+
+    A round-trip test runs inside the module's world instead; layering a fresh
+    per-test root over it would hide the state its assertions read.
+    """
+    if "workflow_round_trip" in request.fixturenames:
+        yield None
+        return
+    with _certificate_bearing_backend(tmp_path) as backend:
+        yield backend
+
+
+def _invoke(args: list[str]):
+    return invoke_cached_cli(args)
+
+
+def _mounted_child_names(root_name: str) -> set[str]:
+    """Return the subcommand names mounted under a top-level root.
+
+    The command tree registers heavy subcommand modules lazily, so the
+    Typer ``registered_groups`` list no longer carries them. The
+    materialized Click group's ``list_commands`` is the canonical
+    mount-point introspection surface and reports eager and lazy
+    subcommands alike.
+    """
+
+    root_group = _as_group(cadrumo_click_command())
+    group = _as_group(root_group.get_command(typer.Context(root_group), root_name))
+    return set(group.list_commands(typer.Context(group)))
+
+
+def test_backend_declared_command_families_are_mounted_in_cli() -> None:
+    """The backend contract must not drift into a detached interface."""
+
+    mounted = {
+        "config": _mounted_child_names("config"),
+        "app": _mounted_child_names("app"),
+    }
+
+    for family in get_operator_surface_contract().command_families:
+        assert family.child in mounted[family.root.value]
+
+    config_children = mounted["config"]
+    app_children = mounted["app"]
+    assert {"profile", "auth", "repair"}.issubset(config_children)
+    assert "init" not in config_children
+    assert {"overview", "ledger", "modelo", "review"}.issubset(app_children)
+
+
+def test_rejected_aliases_do_not_reach_workflow_services() -> None:
+    for command in (
+        ["setup", "--help"],
+        ["auth", "--help"],
+        ["financial", "--help"],
+        ["filing", "--help"],
+        ["app", "invoice", "--help"],
+        ["app", "declaration", "--help"],
+        ["app", "archive", "--help"],
+        ["config", "init", "--help"],
+        ["config", "set", "--help"],
+        ["config", "status", "--help"],
+    ):
+        result = _invoke(command)
+        assert result.exit_code != 0, command
+
+
+@dataclass(frozen=True, slots=True)
+class _WorkflowRoundTripOutcome:
+    """Bundle returned by _drive_workflow_round_trip.
+
+    Captures every payload the focused tests inspect: the
+    post-init profile status, the certificate-auth configure result,
+    and the imported / overview / review
+    payloads emitted by the canonical operator round-trip.
+    """
+
+    status_payload: dict[str, object]
+    configured_payload: dict[str, object]
+    imported_payload: dict[str, object]
+    overview_payload: dict[str, object]
+    review_payload: dict[str, object]
+
+
+def _review_rows(outcome: _WorkflowRoundTripOutcome) -> list[Mapping[str, object]]:
+    """Return the typed review-queue rows from the JSON ``review_payload``."""
+    rows = outcome.review_payload["rows"]
+    assert isinstance(rows, list)
+    typed_rows: list[Mapping[str, object]] = []
+    for row in rows:
+        assert isinstance(row, Mapping)
+        # Review-queue rows decode from JSON as string-keyed objects.
+        typed_rows.append({str(key): value for key, value in row.items()})
+    return typed_rows
+
+
+def _drive_workflow_round_trip(backend: Path) -> _WorkflowRoundTripOutcome:
+    """Drive the canonical operator round-trip through the CLI.
+
+    Five logical stages:
+
+    1. `config profile create` — register operator profile with the required
+       filing identity flags and --accept-defaults.
+    2. `config profile status` — verify the wizard persisted every
+       required profile fact.
+    3. `config auth configure --provider certificate` —
+       register a synthetic certificate file.
+    4. `app ledger import <csv>` — ingest one synthetic bank row.
+    5. `app overview status` + `app review queue` — verify the
+       imported row surfaces in the operator overview and review
+       queue with the expected metadata.
+
+    Every CLI invocation is asserted to exit 0 here; downstream
+    tests assert against the JSON payloads only.
+    """
+    register_cli_profile(
+        label="operator",
+        facts={
+            "identity.tax_id": "12345678Z",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Operator",
+            "identity.surnames": "Workflow",
+            "activities.description": "design",
+            "iva.regime": "GENERAL",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+        },
+    )
+    status = _invoke(["--format", "json", "config", "profile", "status"])
+    assert status.exit_code == 0, status.output
+
+    certificate = backend / "certificate.p12"
+    certificate.write_bytes(b"not-a-real-certificate")
+    configured = _invoke(
+        ["--format", "json", "config", "auth", "configure", "--provider", "certificate", "--file", str(certificate)],
+    )
+    assert configured.exit_code == 0, configured.output
+
+    statement = backend / "bank.csv"
+    statement.write_text(
+        "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
+        "2026-04-15,Client SL,Payment F-001,121.00,EUR,bank-001\n",
+        encoding="utf-8",
+    )
+    imported = _invoke(["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
+    overview = _invoke(["--format", "json", "app", "overview", "status"])
+    review = _invoke(["--format", "json", "app", "review", "queue", "--source-kind", "ledger_transaction"])
+    assert imported.exit_code == 0, imported.output
+    assert overview.exit_code == 0, overview.output
+    assert review.exit_code == 0, review.output
+
+    return _WorkflowRoundTripOutcome(
+        status_payload=_json(status),
+        configured_payload=_json(configured),
+        imported_payload=_json(imported),
+        overview_payload=_json(overview),
+        review_payload=_json(review),
+    )
+
+
+@pytest.fixture(scope="module")
+def workflow_round_trip(tmp_path_factory: pytest.TempPathFactory) -> Iterator[_WorkflowRoundTripOutcome]:
+    """Drive the round-trip once for the module and keep its world open.
+
+    Every consumer only reads the outcome, or reads the same world through a
+    further read-only invocation, so repeating the identical flow per test --
+    including a credential registration with two supervised key derivations --
+    re-established a state no test changes.
+    """
+    with _certificate_bearing_backend(tmp_path_factory.mktemp("workflow-round-trip")) as backend:
+        try:
+            yield _drive_workflow_round_trip(backend)
+        finally:
+            # The round-trip's login is this module's; the per-test boundary
+            # reads it as inherited, so only this teardown can close it.
+            close_active_profile_record_session()
+            close_active_bucket_session()
+
+
+_PROFILE_STATUS_EXPECTATIONS = (
+    ("active_profile", "operator"),
+    ("tax_id_present", True),
+    ("activity_present", True),
+    ("iva_regime", "GENERAL"),
+)
+
+
+@pytest.mark.parametrize(("key", "expected"), _PROFILE_STATUS_EXPECTATIONS)
+def test_config_app_round_trip_profile_status_records_field(
+    workflow_round_trip: _WorkflowRoundTripOutcome,
+    key: str,
+    expected: object,
+) -> None:
+    assert workflow_round_trip.status_payload[key] == expected
+
+
+def test_config_app_round_trip_certificate_configure_records_provider(
+    workflow_round_trip: _WorkflowRoundTripOutcome,
+) -> None:
+    assert workflow_round_trip.configured_payload["provider"] == "certificate"
+
+
+@pytest.fixture(scope="module")
+def native_certificate_auth_reads(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> Iterator[tuple[dict[str, Any], dict[str, Any]]]:
+    """Read configured certificate state through a protected native worker."""
+    if sys.platform != "win32":
+        pytest.skip("requires native Windows profile workers")
+    with native_cli_profile_scope(tmp_path_factory.mktemp("auth-read-round-trip")) as fixture:
+        fixture.register(label="auth-reader", facts={"identity.name": "Auth", "identity.surnames": "Reader"})
+        certificate = fixture.storage_root / "certificate.p12"
+        certificate.write_bytes(b"not-a-real-certificate")
+        with override_settings(cadrumo_certificate_path=certificate):
+            configured = _invoke(
+                [
+                    "--format",
+                    "json",
+                    "config",
+                    "auth",
+                    "configure",
+                    "--provider",
+                    "certificate",
+                    "--file",
+                    str(certificate),
+                ]
+            )
+            assert configured.exit_code == 0, configured.output
+
+            def invoke_read(verb: str):
+                return invoke_cached_cli(
+                    [
+                        "--format",
+                        "json",
+                        "--profile",
+                        "auth-reader",
+                        "--profile-secrets-stdin",
+                        "config",
+                        "auth",
+                        verb,
+                        "--provider",
+                        "certificate",
+                    ],
+                    input=json.dumps({"profile_passphrase": fixture.passphrase}),
+                )
+
+            status = invoke_read("status")
+            tested = invoke_read("test")
+            assert status.exit_code == 0, status.output
+            assert tested.exit_code == 0, tested.output
+            yield _json(status), _json(tested)
+
+
+def test_config_app_round_trip_certificate_auth_status_reports_configured(
+    native_certificate_auth_reads: tuple[dict[str, Any], dict[str, Any]],
+) -> None:
+    assert native_certificate_auth_reads[0]["configured"] is True
+
+
+def test_config_app_round_trip_certificate_auth_test_records_provider(
+    native_certificate_auth_reads: tuple[dict[str, Any], dict[str, Any]],
+) -> None:
+    assert native_certificate_auth_reads[1]["provider"] == "certificate"
+
+
+def test_config_app_round_trip_ledger_import_records_one_row(workflow_round_trip: _WorkflowRoundTripOutcome) -> None:
+    assert workflow_round_trip.imported_payload["imported"] == 1
+
+
+def test_config_app_round_trip_overview_reports_one_transaction(workflow_round_trip: _WorkflowRoundTripOutcome) -> None:
+    assert workflow_round_trip.overview_payload["transactions"] == 1
+
+
+def test_config_app_round_trip_review_queue_lists_imported_row(workflow_round_trip: _WorkflowRoundTripOutcome) -> None:
+    assert len(_review_rows(workflow_round_trip)) == 1
+
+
+_REVIEW_ROW_EXPECTATIONS = (
+    ("source_kind", "ledger_transaction"),
+    ("period", "2026-04"),
+)
+
+
+@pytest.mark.parametrize(("key", "expected"), _REVIEW_ROW_EXPECTATIONS)
+def test_config_app_round_trip_review_row_records_field(
+    workflow_round_trip: _WorkflowRoundTripOutcome, key: str, expected: str
+) -> None:
+    assert _review_rows(workflow_round_trip)[0][key] == expected
+
+
+def test_config_app_round_trip_review_row_records_bucket_id(workflow_round_trip: _WorkflowRoundTripOutcome) -> None:
+    """The review row carries a redacted profile bucket id.
+
+    Profile identity is the decoupled ``profile_id`` UUID, not the
+    operator-facing label. Public JSON output must expose the label as
+    ``active_profile`` while redacting the machine identifiers.
+    """
+
+    assert workflow_round_trip.status_payload["active_profile"] == "operator"
+    assert _review_rows(workflow_round_trip)[0]["bucket_id"] == CLI_BUCKET_ID_PLACEHOLDER
+    assert workflow_round_trip.status_payload["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
+
+
+def test_config_app_round_trip_review_row_has_affected_object(workflow_round_trip: _WorkflowRoundTripOutcome) -> None:
+    assert _review_rows(workflow_round_trip)[0]["affected_object_id"]
+
+
+def test_config_app_round_trip_review_row_canonical_next_command_is_review_verb(
+    workflow_round_trip: _WorkflowRoundTripOutcome,
+) -> None:
+    canonical_next_command = _review_rows(workflow_round_trip)[0]["canonical_next_command"]
+    assert isinstance(canonical_next_command, str)
+    assert canonical_next_command.startswith("aeat app ledger review ")
+    assert " edit " not in canonical_next_command
+    assert "--set" not in canonical_next_command
+
+
+def test_config_app_round_trip_review_row_carries_legal_refs_field(
+    workflow_round_trip: _WorkflowRoundTripOutcome,
+) -> None:
+    """Every JSON review row exposes a ``legal_refs`` field.
+
+    The how-to guide promises the JSON output always carries ``legal_refs``;
+    a ledger-transaction row grounds its obligation in the operator's own
+    records, so the field is present and empty rather than absent.
+    """
+    row = _review_rows(workflow_round_trip)[0]
+    assert "legal_refs" in row
+    assert row["legal_refs"] == []
+
+
+def test_config_app_round_trip_review_queue_text_omits_bucket_placeholder(
+    workflow_round_trip: _WorkflowRoundTripOutcome,
+) -> None:
+    """The text queue table does not render the redacted bucket placeholder.
+
+    The profile-wide queue always scopes to the active bucket, so a per-row
+    Bucket column adds no operator value and only ever printed the paste-safe
+    ``<profile-id>`` placeholder (the m17 leak). The column is removed; the
+    JSON ``bucket_id`` (redacted) remains for tooling.
+    """
+    text_queue = _invoke(["app", "review", "queue"])
+    assert text_queue.exit_code == 0, text_queue.output
+    assert CLI_PROFILE_ID_PLACEHOLDER not in text_queue.output
+    assert CLI_BUCKET_ID_PLACEHOLDER not in text_queue.output
+    # The row itself still surfaces (the column removal must not drop data).
+    assert "ledger_transaction" in text_queue.output

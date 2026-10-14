@@ -15,6 +15,14 @@ from types import SimpleNamespace
 
 import pytest
 
+from cadrumo.application.operations.registry import OperationPublicContractSetV1
+from cadrumo.application.user_profile.access_contracts import DisclosureCategory
+from cadrumo.application.user_profile.operations import (
+    build_user_profile_operation_definitions,
+    build_user_profile_operation_registrations,
+)
+from cadrumo_harness.access.automation_key import agent_key_scope
+
 from .._models import LiveNarrationRecord, LiveToolCallRecord
 from ..live.access import (
     ACCESS_SCENARIOS,
@@ -27,7 +35,6 @@ from ..live.access import (
     ProfileValue,
     Tell,
     judge_phase,
-    key_arguments,
     lapse_wait,
     read_profile_facts,
 )
@@ -130,10 +137,23 @@ def test_the_key_scenario_reads_writes_is_withheld_and_is_revoked() -> None:
 
 
 def test_the_key_is_issued_for_an_agent_without_tax_values() -> None:
-    arguments = key_arguments(ACCESS_SCENARIOS["access-api-key"])
-    assert arguments == ("config", "profile", "automation", "create", "--use", "agent")
+    definitions = build_user_profile_operation_definitions()
+    contracts = OperationPublicContractSetV1.build(
+        tuple(
+            item.contract
+            for item in build_user_profile_operation_registrations(definitions)
+            if item.contract.definition_id == "user-profile.view"
+        )
+    )
+    scope = agent_key_scope(
+        contracts, tuple(DisclosureCategory(item) for item in ACCESS_SCENARIOS["access-api-key"].key_categories)
+    )
+    assert scope.categories == frozenset({DisclosureCategory.PROFILE_VALUES, DisclosureCategory.OPERATION_METADATA})
     with_tax = AccessScenario("x", uses_key=True, phases=(), key_categories=("tax_values",))
-    assert key_arguments(with_tax)[-2:] == ("--category", "tax_values")
+    tax_scope = agent_key_scope(contracts, tuple(DisclosureCategory(item) for item in with_tax.key_categories))
+    assert tax_scope.categories == frozenset(
+        {DisclosureCategory.PROFILE_VALUES, DisclosureCategory.OPERATION_METADATA, DisclosureCategory.TAX_VALUES}
+    )
 
 
 def test_the_agent_is_launched_with_the_profile_and_the_key_reference_only() -> None:

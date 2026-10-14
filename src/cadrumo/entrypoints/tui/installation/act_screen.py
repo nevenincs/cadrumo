@@ -19,14 +19,15 @@ from textual.containers import Horizontal
 from textual.widgets import Button, Checkbox, DataTable, Input, Label, Select, Static, TextArea
 from textual.worker import Worker, WorkerCancelled, WorkerError, WorkerFailed
 
-from ....adapters.local_runtime.installation_client import InstallationSecretHolder
-from ....application.runtime.installation_requests import (
+from cadrumo_client.contracts.installation_requests import (
     INSTALLATION_ACT_CONTRACTS,
     InstallationAct,
     InstallationActContract,
-    RuntimeInstallationActRequest,
+    InstallationActRequest,
     installation_request_facts,
 )
+from cadrumo_client.transport.installation_client import InstallationSecretHolder
+
 from ....core.async_cleanup import await_cancellation_complete
 from ....core.i18n.render import tr
 from ..components.account_chrome import AccountChromeScreen
@@ -335,7 +336,7 @@ class InstallationActScreen(AccountChromeScreen):
 
     async def _send(
         self,
-        request: RuntimeInstallationActRequest,
+        request: InstallationActRequest,
         contract: InstallationActContract,
         passphrase: bytearray | None,
     ) -> ActOutcome:

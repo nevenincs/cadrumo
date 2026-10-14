@@ -9,19 +9,20 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel
 
-from .....application.operations.registry import OperationFrontendProjection
-from .....application.runtime.installation_requests import (
+from cadrumo_client.contracts.installation_requests import (
     INSTALLATION_ACT_CONTRACTS,
+    ArchiveImportRequest,
     InstallationAct,
     InstallationActContract,
     InstallationActFacts,
+    InstallationCompleted,
     InstallationHostPath,
-    RuntimeArchiveImportRequest,
-    RuntimeInstallationCompleted,
-    RuntimeRepairLogsRequest,
-    RuntimeRepairProfileRequest,
-    RuntimeStorageReclaimRequest,
+    RepairLogsRequest,
+    RepairProfileRequest,
+    StorageReclaimRequest,
 )
+
+from .....application.operations.registry import OperationFrontendProjection
 from .....core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from .....core.storage_taxonomy import StorageArea
 from ..acts import (
@@ -95,7 +96,7 @@ def test_an_act_added_to_the_table_is_offered_with_a_working_form_and_a_family()
         InstallationActContract(
             InstallationAct.STORAGE_CHECK,
             _LaterRequest,
-            RuntimeInstallationCompleted,
+            InstallationCompleted,
             InstallationActFacts(changes_records=True, reaches_network=False),
         )
     )
@@ -121,7 +122,7 @@ def test_a_request_is_built_as_the_wire_would_carry_it_and_names_this_frontend()
     unconfirmed = reclaim.request({"area": "cache"})
     confirmed = reclaim.request({"area": "cache"}, confirmed=True)
 
-    assert isinstance(unconfirmed, RuntimeStorageReclaimRequest) and isinstance(confirmed, RuntimeStorageReclaimRequest)
+    assert isinstance(unconfirmed, StorageReclaimRequest) and isinstance(confirmed, StorageReclaimRequest)
     assert unconfirmed.area is StorageArea.CACHE and unconfirmed.frontend is OperationFrontendProjection.TUI
     assert (unconfirmed.confirmed, confirmed.confirmed) == (False, True)
     assert unconfirmed.request_id != confirmed.request_id
@@ -134,7 +135,7 @@ def test_a_confirmed_request_that_still_changes_nothing_is_not_a_change() -> Non
     inspecting = repair.request({"profile": "Synthetic", "clear_active": False}, confirmed=True)
     clearing = repair.request({"clear_active": True}, confirmed=True)
 
-    assert isinstance(inspecting, RuntimeRepairProfileRequest) and inspecting.profile == "Synthetic"
+    assert isinstance(inspecting, RepairProfileRequest) and inspecting.profile == "Synthetic"
     assert not repair.changes_records(inspecting)
     assert repair.changes_records(clearing)
 
@@ -171,8 +172,8 @@ def test_optional_members_left_empty_are_left_out_and_defaults_stand() -> None:
     logs = offered_act(InstallationAct.REPAIR_LOGS).request({"lines": ""})
     counted = offered_act(InstallationAct.REPAIR_LOGS).request({"lines": " 7 "})
 
-    assert isinstance(logs, RuntimeRepairLogsRequest) and logs.lines == 20
-    assert isinstance(counted, RuntimeRepairLogsRequest) and counted.lines == 7
+    assert isinstance(logs, RepairLogsRequest) and logs.lines == 20
+    assert isinstance(counted, RepairLogsRequest) and counted.lines == 7
 
 
 def test_the_digest_of_an_archive_import_is_supplied_by_the_read_that_prepares_it() -> None:
@@ -192,5 +193,5 @@ def test_the_digest_of_an_archive_import_is_supplied_by_the_read_that_prepares_i
     request = importing.request(
         {"label": "Restored", "path": str(Path.cwd() / "archive.tar.gz"), "source_digest": digest}
     )
-    assert isinstance(request, RuntimeArchiveImportRequest) and str(request.source_digest) == digest
+    assert isinstance(request, ArchiveImportRequest) and str(request.source_digest) == digest
     assert request.request_id != uuid4()

@@ -15,7 +15,7 @@ from ._actividad_asset_payloads import (
 from ._date_parsing import _parse_iso_date
 from .actividad_asset_receipts import claim_receipt, inspection_receipt
 from .common import emit_envelope
-from .runtime_ledger_actividad_asset import (
+from .operation_ledger_actividad_asset import (
     claim_activity_asset,
     correct_activity_asset,
     create_activity_asset,

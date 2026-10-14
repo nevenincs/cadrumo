@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
-
-from ..command_parameter_contracts import OptionSpec
-from ..command_shared_contracts import (
+from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.shared_contracts import (
     DeferredTarget,
     LazyBinding,
     ParameterDefault,
@@ -14,7 +12,9 @@ from ..command_shared_contracts import (
     TranslationKey,
     ValueContract,
 )
-from ..command_spec import CommandSpec, InvocationSpec
+from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
+
 from ._spec_policies import NETWORK_DESTRUCTIVE, NETWORK_READ, NETWORK_REMOTE_EFFECT, NETWORK_WRITE, STATE_FREE
 
 _MODEL = OptionSpec(

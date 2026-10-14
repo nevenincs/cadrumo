@@ -311,7 +311,7 @@ def test_simple_grant_change_requires_original_live_requester(
     assert subject.approve(request.request_id).stage is EnrollmentStage.COMPLETE
 
 
-def test_agent_claims_are_not_authority_and_inventory_requires_human(subject: AdministrationSubject) -> None:
+def test_client_claims_are_not_authority_and_inventory_requires_human(subject: AdministrationSubject) -> None:
     fields = subject.proposal.model_dump(mode="json")
     fields["client_id"] = str(uuid4())
     with pytest.raises(ValidationError):

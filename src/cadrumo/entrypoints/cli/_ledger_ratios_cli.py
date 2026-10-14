@@ -14,7 +14,7 @@ from ._decimal_parsing import parse_decimal_amount
 from ._ledger_support import ledger_cli_no_recovery
 from .common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .common import bad, emit_envelope
-from .runtime_ledger_ratios import list_eligible_ratios, list_ratios, set_ratio, unset_ratio, validate_ratios
+from .operation_ledger_ratios import list_eligible_ratios, list_ratios, set_ratio, unset_ratio, validate_ratios
 
 
 def _resolved_ratio_year(year: int | None) -> int:

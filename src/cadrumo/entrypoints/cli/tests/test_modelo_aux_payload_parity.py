@@ -190,7 +190,11 @@ class TestWorkUnitHistoryEvent:
         with pytest.raises(ValidationError):
             _event(object_id="")
 
-    @pytest.mark.parametrize("actor", ["", "x" * 65])
+    def test_actor_at_persisted_boundary_is_preserved(self) -> None:
+        actor = "x" * 128
+        assert _event(actor=actor).model_dump(mode="json")["actor"] == actor
+
+    @pytest.mark.parametrize("actor", ["", "x" * 129])
     def test_out_of_bounds_actor_is_refused(self, actor: str) -> None:
         with pytest.raises(ValidationError):
             _event(actor=actor)

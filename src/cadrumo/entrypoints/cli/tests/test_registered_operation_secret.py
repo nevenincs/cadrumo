@@ -10,18 +10,18 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ConfigDict
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.application.operations.frontend_requests import OperationSubmissionReceiptV1
 from cadrumo.application.operations.models import OperationIdentity
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.operations.secret_submission import OperationSecretRequirement
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from cadrumo.application.runtime.operation_access import RuntimeOperationRequest, RuntimeOperationSubmitted
 from cadrumo.core.operations import profile_operation_subject
+from cadrumo_client.commands.registered_operation import run_registered_operation
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.operation_access import OperationRequest, OperationSubmitted
+from cadrumo_client.transport.frontend_client import FrontendClient
 
 from ....application.operations.schema_identity import OperationSchemaIdentityV1
 from ..errors import CliRefusedBoundaryError
-from ..runtime_registered_operation import run_registered_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _PROFILE_ID = UUID("11111111-1111-4111-8111-111111111111")
@@ -68,7 +68,7 @@ class _Client:
             ephemeral_secret_required=self.secret_required,
         )
 
-    def operation(self, request: RuntimeOperationRequest, *, deadline: float) -> RuntimeOperationSubmitted:
+    def operation(self, request: OperationRequest, *, deadline: float) -> OperationSubmitted:
         del deadline
         self.submissions += 1
         requirement = OperationSecretRequirement(
@@ -80,7 +80,7 @@ class _Client:
             secret_kind=_CREDENTIAL_KIND,
             expires_at=datetime.now(UTC) + timedelta(minutes=1),
         )
-        return RuntimeOperationSubmitted(
+        return OperationSubmitted(
             request_id=request.request_id,
             runtime_boot_id=uuid4(),
             connection_id=uuid4(),
@@ -91,12 +91,12 @@ class _Client:
         del requirement, timeout
         self.secret_submissions += 1
         self.observed_secret = bytes(secret)
-        raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+        raise RefusalError(RefusalCode.CONNECTION_CLOSED)
 
 
 def _run(client: _Client, secret: bytearray) -> None:
     run_registered_operation(
-        cast(RuntimeFrontendClient, client),
+        cast(FrontendClient, client),
         SecretRequest(name="personal"),
         definition_id=_DEFINITION_ID,
         subject_ref=_SUBJECT,
@@ -131,7 +131,7 @@ def test_mismatched_requirement_refuses_before_secret_transfer_and_clears_buffer
 def test_contract_refusal_clears_secret_before_any_submission() -> None:
     client = _Client(secret_required=False)
     secret = bytearray(b"synthetic-passphrase")
-    with pytest.raises(RuntimeRefusalError):
+    with pytest.raises(RefusalError):
         _run(client, secret)
     assert client.submissions == client.secret_submissions == 0
     assert secret == bytes(len(secret))

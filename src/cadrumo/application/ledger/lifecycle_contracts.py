@@ -59,7 +59,7 @@ _RecoveryTransactionIds = Annotated[
 class LedgerLifecycleMutationRequest(BaseModel):
     """Private exact-profile request shared by the four lifecycle operations.
 
-    ``actor`` is recorded as sent for a person's session. An agent's session is
+    ``actor`` is recorded as sent for a person's session. An automation's session is
     recorded under its own session label, whatever the request carries.
     """
 

@@ -141,7 +141,7 @@ def delete_session(profile: str) -> tuple[bool, bool]:
     Removes only the
     :data:`adapters.persistence.storage.secure_object_namespaces.GOOGLE_OAUTH_TOKEN_NAMESPACE` and
     :data:`adapters.persistence.storage.secure_object_namespaces.GOOGLE_OAUTH_METADATA_NAMESPACE`
-    records, matching ``aeat config google logout``. The
+    records, matching ``cadrumo-runtime config google logout``. The
     :class:`adapters.outbound.google.records.DriveConfig` remains available so a
     later login reuses the same Drive root folder.
 

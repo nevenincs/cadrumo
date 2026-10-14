@@ -6,8 +6,11 @@ from uuid import UUID
 
 import typer
 
-from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
-from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo_client.commands.payloads import ConfigStatusResult
+from cadrumo_client.commands.profile_binding import require_profile_client
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
 from ....application.user_profile.view_operation import ProfileViewPageKind, ProfileViewStatusItem
 from ....application.workflow.profile_bucket_scan import read_profile_bucket_by_id
 from ....application.workflow.profile_health import ProfileHealthStatus, assess_active_profile_health
@@ -17,10 +20,8 @@ from ....core.i18n.render import tr
 from ....core.json_contract import ResolvedPreconditionAction
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ..common import activate_subcommand_output_language, emit_envelope, resolve_cli_precondition_action
-from ..config_payloads import ConfigStatusResult
 from ..errors import CliRefusedBoundaryError
-from ..runtime_profile_binding import require_profile_client
-from .runtime_profile_view import resolve_runtime_profile_output_language
+from .operation_profile_view import resolve_profile_output_language
 from .status_rendering import blocked_readiness_status, precondition_action_lines
 
 
@@ -31,7 +32,7 @@ def _unregistered_status(ctx: typer.Context) -> None:
     # Dispatch permits this route only when public discovery found no live
     # capsule. A concurrent registration must not turn it into a private read.
     if health.status not in {ProfileHealthStatus.NONE, ProfileHealthStatus.DANGLING_POINTER}:
-        raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+        raise RefusalError(RefusalCode.UNAVAILABLE)
     action = (
         resolve_cli_precondition_action(health.precondition_verdict)
         if health.precondition_verdict is not None
@@ -62,7 +63,7 @@ def _emit_runtime_status(ctx: typer.Context, status: ProfileViewStatusItem, *, p
         ProfileHealthStatus.INCOMPLETE,
         ProfileHealthStatus.READY,
     }:
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     values = {fact.path: fact.value for fact in status.facts}
     if len(values) != len(status.facts) or set(values) - {
         "identity.tax_id",
@@ -70,7 +71,7 @@ def _emit_runtime_status(ctx: typer.Context, status: ProfileViewStatusItem, *, p
         "iva.regime",
         "tax_residence.ccaa",
     }:
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     action = (
         resolve_cli_precondition_action(health.precondition_verdict.to_verdict())
         if health.precondition_verdict is not None
@@ -118,15 +119,15 @@ def config_status(ctx: typer.Context, output_language: OutputLanguage | None = N
         return
     profile_id = UUID(active)
     client = require_profile_client(ctx, expected_profile_id=profile_id)
-    language = resolve_runtime_profile_output_language(client, requested=output_language)
+    language = resolve_profile_output_language(client, requested=output_language)
     activate_subcommand_output_language(ctx, language)
     try:
         collection = client.read_profile_view((ProfileViewPageKind.STATUS,), output_language=language)
-    except RuntimeFrontendRefusedError as error:
+    except FrontendRefusedError as error:
         raise CliRefusedBoundaryError(error.reason, context=error.context) from error
     items = collection.items(ProfileViewPageKind.STATUS)
     if len(items) != 1 or not isinstance(items[0], ProfileViewStatusItem):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     _emit_runtime_status(ctx, items[0], profile_id=profile_id)
 
 

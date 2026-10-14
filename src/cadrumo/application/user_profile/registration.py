@@ -284,7 +284,7 @@ def register_profile_with_credentials(
         except ProfileCustodyTransactionConflictError as exc:
             # Caught AFTER its duplicate-label subclass: this is the
             # stale-witness conflict, which a repeat of the identical call
-            # can win. Reporting it as "that label is taken" tells an agent
+            # can win. Reporting it as "that label is taken" tells an automation
             # operator to pick a different name for a profile that does not
             # exist.
             raise ProfileRegistrationConflictError(

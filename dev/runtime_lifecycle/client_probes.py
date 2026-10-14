@@ -6,14 +6,12 @@ import asyncio
 import json
 import time
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import suppress
 from typing import Any
 from uuid import UUID, uuid4
 
 from mcp import ClientSession
 
-from cadrumo.adapters.local_runtime.automation_decision import AutomationDecisionRunError, run_automation_decision
-from cadrumo.adapters.local_runtime.automation_inventory import read_automation_inventory
-from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError, frontend_failure_code
 from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CLIENT_NAMESPACE
 from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
 from cadrumo.application.auth.auth_read_contracts import AuthReadProjection, AuthReadRequest
@@ -26,19 +24,6 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
 from cadrumo.application.operations.models import OperationId
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode
-from cadrumo.application.runtime.operation_access import (
-    RuntimeOperationAcknowledged,
-    RuntimeOperationContract,
-    RuntimeOperationControl,
-    RuntimeOperationObserve,
-    RuntimeOperationObserved,
-    RuntimeOperationProjected,
-    RuntimeOperationResult,
-    RuntimeOperationSubmit,
-    RuntimeOperationSubmitted,
-)
-from cadrumo.application.runtime.profile_access import RuntimeAccessRefusal
 from cadrumo.application.user_profile.access_contracts import (
     AccessDenialCode,
     DisclosureCategory,
@@ -57,27 +42,45 @@ from cadrumo.application.user_profile.view_operation import (
 )
 from cadrumo.core.operations import OperationLifecycle, OperationTerminalCondition, profile_operation_subject
 from cadrumo.core.storage_environment import ChildEnvironmentProfile, child_environment
+from cadrumo_client.contracts.contracts import RefusalCode
+from cadrumo_client.contracts.operation_access import (
+    OperationAcknowledged,
+    OperationContract,
+    OperationControl,
+    OperationObserve,
+    OperationObserved,
+    OperationProjected,
+    OperationResult,
+    OperationSubmit,
+    OperationSubmitted,
+)
+from cadrumo_client.contracts.profile_access import AccessRefusal
+from cadrumo_client.transport.automation_decision import AutomationDecisionRunError, run_automation_decision
+from cadrumo_client.transport.automation_inventory import read_automation_inventory
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError, frontend_failure_code
 from dev.packaging.command_execution import run_command
 
 from .harness import Connection, LifecycleHarness, Profile
+from .proof_support import ProcessIdentity, verified_relay
+from .session_holder import RuntimeSessionHolder
 
 # The package interpreter imports the production TUI adapter without mounting Textual.
 _TUI_READ = """
 import asyncio, json, sys
 from uuid import UUID
-from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
+from cadrumo_client.transport.installed_client import open_installed_client
 from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
 from cadrumo.adapters.persistence.storage.errors import KeyringUnavailableError
 from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.entrypoints.tui.profile.runtime_overview import read_runtime_profile_overview
-from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo.application.operations.models import OperationId
-from cadrumo.application.runtime.contracts import RuntimeRefusalError
+from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo.application.user_profile.login_session import ProfileReceiptRefusedError
 async def read():
-    client = await open_installed_runtime_client(profile_id=UUID(sys.argv[1]), frontend=OperationFrontendProjection.TUI)
+    client = await open_installed_client(profile_id=UUID(sys.argv[1]), frontend=OperationFrontendProjection.TUI)
     try:
         await asyncio.to_thread(client.resume_receipt)
         view = await asyncio.to_thread(
@@ -89,13 +92,59 @@ async def read():
 try:
     with composed_profile_persistence_ports():
         asyncio.run(read())
-except (RuntimeFrontendRefusedError, RuntimeRefusalError, ProfileReceiptRefusedError) as error:
+except (FrontendRefusedError, RefusalError, ProfileReceiptRefusedError) as error:
     reason = error.reason
     print(json.dumps({'refused': getattr(reason, 'value', reason)}))
     sys.exit(2)
 except KeyringUnavailableError as error:
     print(json.dumps({'refused': get_registered_error_code(error).code}))
     sys.exit(2)
+"""
+
+_KEY_REQUEST = """
+import asyncio, json, sys
+from pathlib import Path
+from uuid import UUID
+from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
+from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.application.user_profile.automation_enrollment import EnrollmentProposal, EnrollmentStage
+from cadrumo.core.time.clock import now
+from cadrumo.entrypoints.operation_composition import build_manifest_operation_registry
+from cadrumo_client.transport.automation_requester import AutomationRequesterJourney
+from cadrumo_client.transport.installed_client import open_installed_client
+from cadrumo_harness.access.automation_key import agent_key_proposal, agent_key_scope
+async def request():
+    client = await open_installed_client(profile_id=UUID(sys.argv[1]), frontend=OperationFrontendProjection.CLI)
+    try:
+        enrollment = client.prepare_enrollment(installed_automation_secret_store())
+        contracts = build_manifest_operation_registry().public_contract_set
+        proposal: EnrollmentProposal = agent_key_proposal(
+            agent_key_scope(contracts), destination_id=enrollment.prepared.destination_id, now=now()
+        )
+        journey = AutomationRequesterJourney(enrollment, timeout=120)
+        submitted = journey.submit(proposal)
+        control = Path(sys.argv[2])
+        partial = control.with_suffix('.partial')
+        partial.write_text(
+            json.dumps({'profile_id': str(client.profile_id), 'receipt': submitted.model_dump(mode='json')}),
+            encoding='utf-8',
+        )
+        partial.replace(control)
+        completion = journey.wait_for_terminal()
+        if completion.terminal.stage is not EnrollmentStage.COMPLETE or completion.credential is None:
+            raise RuntimeError('protected enrollment did not complete')
+        print(
+            json.dumps(
+                {
+                    'credential_reference': str(completion.credential.credential_reference),
+                    'submitted': submitted.model_dump(mode='json'),
+                    'terminal': completion.terminal.model_dump(mode='json'),
+                }
+            )
+        )
+    finally:
+        client.close()
+asyncio.run(request())
 """
 
 
@@ -208,6 +257,50 @@ async def _mcp_settle(
     return result["document"]["projection"]
 
 
+async def attend_mcp(
+    holder: RuntimeSessionHolder, client: ClientSession, *, harness: LifecycleHarness, invocation: ProcessIdentity
+) -> None:
+    """Review only this retained packaged relay's ask through the held person session."""
+    asking = asyncio.create_task(_call(client, "describe", {"definition_id": "auth.local-read"}))
+    deadline = time.monotonic() + 90
+    try:
+        while True:
+            inventory = await asyncio.to_thread(holder.command, "attendance_inventory")
+            candidates = inventory.get("candidates")
+            if not isinstance(candidates, list):
+                raise AssertionError("Held runtime returned no attendance inventory")
+            matching = [
+                item
+                for item in candidates
+                if isinstance(item, dict)
+                and verified_relay(item.get("process_id"), harness.package / "bin/cadrumo-mcp.exe", invocation)
+            ]
+            if len(matching) > 1:
+                raise AssertionError("Multiple asks came from the owned relay")
+            if matching:
+                attendance_id = matching[0].get("attendance_id")
+                if not isinstance(attendance_id, str):
+                    raise AssertionError("Owned relay ask has no identity")
+                decided = await asyncio.to_thread(
+                    holder.command, "attendance_decision", attendance_id=attendance_id, approve=True
+                )
+                if decided.get("kind") != "attendance_decided" or decided.get("approved") is not True:
+                    raise AssertionError("Runtime did not approve the reviewed relay")
+                await asking
+                return
+            if asking.done():
+                await asking
+                raise AssertionError("Relay answered without the person's attendance review")
+            if time.monotonic() >= deadline:
+                raise AssertionError("Runtime recorded no ask from the owned relay")
+            await asyncio.sleep(0.05)
+    finally:
+        if not asking.done():
+            asking.cancel()
+            with suppress(asyncio.CancelledError):
+                await asking
+
+
 async def _mcp_read(client: ClientSession, profile: Profile) -> None:
     document = await _mcp_settle(
         client, profile, "auth.local-read", {"profile_id": str(profile.profile_id), "kind": "status"}
@@ -291,7 +384,7 @@ def _observe_read(
     connection: Connection, operation_id: OperationId, definition_id: str = "auth.local-read"
 ) -> OperationObservationSuccessV1:
     reply = connection.client.operation(
-        RuntimeOperationObserve(
+        OperationObserve(
             request_id=uuid4(),
             profile_id=connection.client.profile_id,
             session_id=connection.client.session_id,
@@ -299,7 +392,7 @@ def _observe_read(
         ),
         deadline=time.monotonic() + 10,
     )
-    if not (isinstance(reply, RuntimeOperationObserved)):
+    if not (isinstance(reply, OperationObserved)):
         raise AssertionError("Protected durable-operation probe failed")
     if not (isinstance(reply.observation, OperationObservationSuccessV1)):
         raise AssertionError("Protected durable-operation probe failed")
@@ -314,7 +407,7 @@ def _submit_read(connection: Connection, *, diagnostics: bool = False) -> Operat
     deadline = time.monotonic() + 60
     client = connection.client
     submitted = client.operation(
-        RuntimeOperationSubmit(
+        OperationSubmit(
             request_id=uuid4(),
             profile_id=client.profile_id,
             session_id=client.session_id,
@@ -328,7 +421,7 @@ def _submit_read(connection: Connection, *, diagnostics: bool = False) -> Operat
         ),
         deadline=deadline,
     )
-    if not (isinstance(submitted, RuntimeOperationSubmitted)):
+    if not (isinstance(submitted, OperationSubmitted)):
         raise AssertionError("Protected durable-operation probe failed")
     return submitted.receipt.operation_id
 
@@ -348,7 +441,7 @@ def _execute_read(connection: Connection, operation_id: OperationId | None = Non
     while True:
         try:
             started = client.operation(
-                RuntimeOperationControl(
+                OperationControl(
                     action="operation_resume" if continuing else "operation_start",
                     request_id=uuid4(),
                     profile_id=client.profile_id,
@@ -358,7 +451,7 @@ def _execute_read(connection: Connection, operation_id: OperationId | None = Non
                 deadline=deadline,
             )
             break
-        except RuntimeFrontendRefusedError as refusal:
+        except FrontendRefusedError as refusal:
             if not continuing or refusal.reason != "operation_unavailable" or time.monotonic() >= deadline:
                 raise
             if (
@@ -367,7 +460,7 @@ def _execute_read(connection: Connection, operation_id: OperationId | None = Non
             ):
                 raise AssertionError("Protected durable-operation probe failed") from None
             time.sleep(2)
-    if not (isinstance(started, RuntimeOperationAcknowledged)):
+    if not (isinstance(started, OperationAcknowledged)):
         raise AssertionError("Protected durable-operation probe failed")
     while True:
         projection = _observe_read(connection, operation_id, definition_id).projection
@@ -379,7 +472,7 @@ def _execute_read(connection: Connection, operation_id: OperationId | None = Non
     if projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED:
         raise AssertionError("Protected durable-operation probe failed")
     reply = client.operation(
-        RuntimeOperationResult(
+        OperationResult(
             request_id=uuid4(),
             profile_id=client.profile_id,
             session_id=client.session_id,
@@ -392,7 +485,7 @@ def _execute_read(connection: Connection, operation_id: OperationId | None = Non
         ),
         deadline=deadline,
     )
-    if not (isinstance(reply, RuntimeOperationProjected)):
+    if not (isinstance(reply, OperationProjected)):
         raise AssertionError("Protected durable-operation probe failed")
     if not (reply.operation_id == operation_id and reply.projection_kind == "result"):
         raise AssertionError("Protected durable-operation probe failed")
@@ -434,7 +527,7 @@ def _read(connection: Connection) -> None:
 
 def _private_request(connection: Connection, session_id: UUID, *, profile_id: UUID | None = None) -> object:
     return connection.wire.operation(
-        RuntimeOperationContract(
+        OperationContract(
             request_id=uuid4(),
             profile_id=profile_id or connection.client.profile_id,
             session_id=session_id,
@@ -446,7 +539,7 @@ def _private_request(connection: Connection, session_id: UUID, *, profile_id: UU
 
 def _refused(reply: object) -> None:
     # A denial must originate at the server, not a cleared frontend attribute.
-    if not (isinstance(reply, RuntimeAccessRefusal)):
+    if not (isinstance(reply, AccessRefusal)):
         raise AssertionError("Protected application probe failed")
     if reply.code.value not in {
         "authentication_required",
@@ -464,27 +557,63 @@ def _refused(reply: object) -> None:
 def issue_key(harness: LifecycleHarness, profile: Profile) -> UUID:
     """Issue one profile's key as the person does, returning the reference an agent is launched with.
 
-    The person, signed in to the selected profile, runs ``config profile
-    automation create --use agent`` under that sign-in and approves the request
-    from a signed-in connection. The command reads no profile secret, since the
-    sign-in already serves it. The agent never takes part: it is started with
-    the reference.
+    The package SDK submits a finite contract-derived proposal with its
+    runtime-minted destination. A separate signed-in person connection approves
+    that exact request with protected password proof. Only the verified native
+    credential reference is returned to the agent's launch configuration.
     """
     deadline = time.monotonic() + 120
-    with ThreadPoolExecutor(max_workers=1) as pool:
-        creating = pool.submit(
-            harness.cli, "profile", "automation", "create", "--use", "agent", reveal_identifiers=True
+    request_control = harness.root / f"key-request-{uuid4()}.json"
+    harness.resources.callback(request_control.unlink, missing_ok=True)
+    harness.resources.callback(request_control.with_suffix(".partial").unlink, missing_ok=True)
+
+    def request() -> dict[str, Any]:
+        result = run_command(
+            [
+                str(harness.package / "python.exe"),
+                "-I",
+                "-c",
+                _KEY_REQUEST,
+                str(profile.profile_id),
+                str(request_control),
+            ],
+            cwd=harness.root,
+            environment=child_environment(ChildEnvironmentProfile.STRICT, harness.root),
+            timeout_seconds=125,
         )
+        if result.returncode != 0:
+            raise AssertionError("Packaged protected enrollment requester failed")
+        return json.loads(result.stdout)
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        creating = pool.submit(request)
         human = harness.connect(profile.profile_id)
         human.client.resume_receipt()
-        while not (requests := read_automation_inventory(human.client).projection.requests):
+        while not request_control.is_file():
             if creating.done():
                 creating.result()
-                raise AssertionError("The key request ended before it reached the person")
+                raise AssertionError("The key request ended before publishing its review identity")
             if time.monotonic() >= deadline:
-                raise AssertionError("The key request never reached the person")
+                raise AssertionError("The key requester never published its review identity")
             time.sleep(0.5)
-        (review,) = requests
+        selected = json.loads(request_control.read_text(encoding="utf-8"))
+        if selected["profile_id"] != str(profile.profile_id):
+            raise AssertionError("The key requester selected another profile")
+        receipt = selected["receipt"]
+        while True:
+            requests = read_automation_inventory(human.client).projection.requests
+            matching = [
+                item
+                for item in requests
+                if str(item.receipt.request_id) == receipt["request_id"]
+                and str(item.receipt.review_digest) == receipt["review_digest"]
+            ]
+            if len(matching) == 1:
+                review = matching[0]
+                break
+            if matching or creating.done() or time.monotonic() >= deadline:
+                raise AssertionError("The exact SDK key request was not available for review")
+            time.sleep(0.5)
         # An agent key always grants the profile's values and its own operations' metadata.
         if {item.category for item in review.proposal.scope.disclosure_categories} != {
             DisclosureCategory.PROFILE_VALUES,
@@ -499,7 +628,15 @@ def issue_key(harness: LifecycleHarness, profile: Profile) -> UUID:
             error.add_note("approval_failure " + json.dumps(_approval_facts(human, error, deadline)))
             raise
         created = creating.result(timeout=120)
-    reference = UUID(created["result"]["credential_reference"])
+    if created["submitted"] != receipt or any(
+        created["terminal"][member] != receipt[member]
+        for member in ("profile_id", "request_id", "review_digest", "grant_id")
+    ):
+        raise AssertionError("Protected delivery differs from the reviewed SDK request")
+    request_control.unlink(missing_ok=True)
+    reference = UUID(created["credential_reference"])
+    if str(reference) != created["terminal"]["credential_reference"]:
+        raise AssertionError("Credential reference differs from protected terminal delivery")
     harness.resources.callback(installed_automation_secret_store().delete, CLIENT_NAMESPACE, str(reference))
     if decided.effect.value != "updated":
         raise AssertionError("Enrollment approval did not update native custody")
@@ -532,7 +669,7 @@ def _approval_facts(human: Connection, error: AutomationDecisionRunError, deadli
         "unreported",
         "decision_unsettled",
         "REFUSED_AUTOMATION_ADMINISTRATION",
-        *(code.value for code in RuntimeRefusalCode),
+        *(code.value for code in RefusalCode),
         *(code.value for code in AccessDenialCode),
         *(code.value for code in AutomationCustodyCode),
     }

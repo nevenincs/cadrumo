@@ -62,26 +62,26 @@ const BADGE_LOOK: Record<
 function standingWords(t: Translate, standing: AgentCredentialStanding) {
   switch (standing) {
     case "active":
-      return t("desktop.agent_keys.standing_active");
+      return t("desktop.automation_access.standing_active");
     case "pending":
-      return t("desktop.agent_keys.standing_pending");
+      return t("desktop.automation_access.standing_pending");
     case "suspended":
-      return t("desktop.agent_keys.standing_suspended");
+      return t("desktop.automation_access.standing_suspended");
     case "revoked":
-      return t("desktop.agent_keys.standing_revoked");
+      return t("desktop.automation_access.standing_revoked");
     case "expired":
-      return t("desktop.agent_keys.standing_expired");
+      return t("desktop.automation_access.standing_expired");
   }
 }
 
 function categoryWords(t: Translate, category: AgentCredentialCategory) {
   switch (category) {
     case "profile_values":
-      return t("desktop.agent_keys.scope_profile_values");
+      return t("desktop.automation_access.scope_profile_values");
     case "operation_metadata":
-      return t("desktop.agent_keys.scope_operations_seen");
+      return t("desktop.automation_access.scope_operations_seen");
     case "tax_values":
-      return t("desktop.agent_keys.scope_tax_values");
+      return t("desktop.automation_access.scope_tax_values");
   }
 }
 
@@ -89,15 +89,15 @@ function categoryWords(t: Translate, category: AgentCredentialCategory) {
 function refusalWords(t: Translate, code: string): string {
   switch (code) {
     case "not_signed_in":
-      return t("desktop.agent_keys.refused_not_signed_in");
+      return t("desktop.automation_access.refused_not_signed_in");
     case "profile_locked":
-      return t("desktop.agent_keys.refused_profile_locked");
+      return t("desktop.automation_access.refused_profile_locked");
     case "not_found":
-      return t("desktop.agent_keys.refused_not_found");
+      return t("desktop.automation_access.refused_not_found");
     case "outcome_unknown":
-      return t("desktop.agent_keys.refused_outcome_unknown");
+      return t("desktop.automation_access.refused_outcome_unknown");
     case "person_act_required":
-      return t("desktop.agent_keys.refused_person_act_required");
+      return t("desktop.automation_access.refused_person_act_required");
     case "issue_unavailable":
       return t("desktop.agent.unavailable");
     default:
@@ -159,7 +159,9 @@ function CredentialRow({
     >
       <div className="flex min-w-0 items-start justify-between gap-2">
         <h4 id={nameId} className="font-medium text-foreground">
-          {t("desktop.agent_keys.key_title", { id: shortId(credential.id) })}
+          {t("desktop.automation_access.key_title", {
+            id: shortId(credential.id),
+          })}
         </h4>
         <Badge variant={BADGE_LOOK[credential.standing]}>
           {standingWords(t, credential.standing)}
@@ -170,29 +172,29 @@ function CredentialRow({
           <li key={category}>{categoryWords(t, category)}</li>
         ))}
         {!credential.categories.includes("tax_values") && (
-          <li>{t("desktop.agent_keys.scope_no_tax_values")}</li>
+          <li>{t("desktop.automation_access.scope_no_tax_values")}</li>
         )}
         <li>
           {credential.allOperations
-            ? t("desktop.agent_keys.scope_all_operations")
-            : t("desktop.agent_keys.scope_some_operations")}
+            ? t("desktop.automation_access.scope_all_operations")
+            : t("desktop.automation_access.scope_some_operations")}
         </li>
       </ul>
       <p className="text-sm text-muted-foreground">
         {[
-          issued && t("desktop.agent_keys.issued_on", { date: issued }),
+          issued && t("desktop.automation_access.issued_on", { date: issued }),
           // A revoked key's own end is no longer what matters.
           expires &&
             credential.standing !== "revoked" &&
             t(
               credential.standing === "expired"
-                ? "desktop.agent_keys.expired_on"
-                : "desktop.agent_keys.expires_on",
+                ? "desktop.automation_access.expired_on"
+                : "desktop.automation_access.expires_on",
               { date: expires },
             ),
           used
-            ? t("desktop.agent_keys.last_used", { date: used })
-            : t("desktop.agent_keys.never_used"),
+            ? t("desktop.automation_access.last_used", { date: used })
+            : t("desktop.automation_access.never_used"),
         ]
           .filter(Boolean)
           .join(" · ")}
@@ -204,10 +206,10 @@ function CredentialRow({
         >
           <Icon name="info" className="text-muted-foreground" />
           <span className="flex-1">
-            {t("desktop.agent_keys.cleanup_pending")}
+            {t("desktop.automation_access.cleanup_pending")}
           </span>
           <Button variant="outline" size="xs" onClick={onRefresh}>
-            {t("desktop.agent_keys.refresh")}
+            {t("desktop.automation_access.refresh")}
           </Button>
         </p>
       )}
@@ -217,7 +219,7 @@ function CredentialRow({
       {credential.standing === "revoked" ? null : confirming ? (
         <div className="grid gap-2">
           <p className="text-sm text-foreground">
-            {t("desktop.agent_keys.revoke_confirm")}
+            {t("desktop.automation_access.revoke_confirm")}
           </p>
           <div className="flex flex-wrap gap-2">
             <Button
@@ -225,7 +227,7 @@ function CredentialRow({
               size="sm"
               onClick={() => setConfirming(false)}
             >
-              {t("desktop.agent_keys.cancel")}
+              {t("desktop.automation_access.cancel")}
             </Button>
             <Button
               variant="destructive"
@@ -235,7 +237,7 @@ function CredentialRow({
                 onRevoke();
               }}
             >
-              {t("desktop.agent_keys.revoke_confirm_action")}
+              {t("desktop.automation_access.revoke_confirm_action")}
             </Button>
           </div>
         </div>
@@ -248,8 +250,8 @@ function CredentialRow({
             onClick={() => setConfirming(true)}
           >
             {busy
-              ? t("desktop.agent_keys.revoking")
-              : t("desktop.agent_keys.revoke")}
+              ? t("desktop.automation_access.revoking")
+              : t("desktop.automation_access.revoke")}
           </Button>
         </div>
       )}
@@ -285,12 +287,12 @@ function IssueForm({
 
   return (
     <form
-      aria-label={t("desktop.agent_keys.issue")}
+      aria-label={t("desktop.automation_access.issue")}
       className="grid gap-3"
       onSubmit={send}
     >
       <p className="text-sm text-muted-foreground">
-        {t("desktop.agent_keys.issue_lead")}
+        {t("desktop.automation_access.issue_lead")}
       </p>
       <div className="flex items-start gap-2">
         <input
@@ -303,10 +305,10 @@ function IssueForm({
         />
         <div className="grid gap-0.5">
           <FieldLabel htmlFor={taxId}>
-            {t("desktop.agent_keys.tax_values")}
+            {t("desktop.automation_access.tax_values")}
           </FieldLabel>
           <FieldDescription>
-            {t("desktop.agent_keys.tax_values_note")}
+            {t("desktop.automation_access.tax_values_note")}
           </FieldDescription>
         </div>
       </div>
@@ -332,7 +334,7 @@ function IssueForm({
                 size="xs"
                 onClick={onRefresh}
               >
-                {t("desktop.agent_keys.refresh")}
+                {t("desktop.automation_access.refresh")}
               </Button>
             </div>
           )}
@@ -341,8 +343,8 @@ function IssueForm({
       <div className="flex flex-wrap justify-end gap-2">
         <Button type="submit" variant="primary" size="sm" pending={issuing}>
           {issuing
-            ? t("desktop.agent_keys.issuing")
-            : t("desktop.agent_keys.issue_submit")}
+            ? t("desktop.automation_access.issuing")
+            : t("desktop.automation_access.issue_submit")}
         </Button>
       </div>
     </form>
@@ -370,14 +372,14 @@ function IssuedPanel({
   return (
     <div className="grid gap-3">
       <Alert tone="success" icon={<Icon name="check" />}>
-        <AlertTitle>{t("desktop.agent_keys.issued_title")}</AlertTitle>
+        <AlertTitle>{t("desktop.automation_access.issued_title")}</AlertTitle>
         <AlertDescription>
-          {t("desktop.agent_keys.issued_lead")}
+          {t("desktop.automation_access.issued_lead")}
         </AlertDescription>
       </Alert>
       <Field>
         <FieldLabel htmlFor={referenceId}>
-          {t("desktop.agent_keys.reference_label")}
+          {t("desktop.automation_access.reference_label")}
         </FieldLabel>
         <Input
           id={referenceId}
@@ -388,11 +390,11 @@ function IssuedPanel({
           onFocus={(event) => event.currentTarget.select()}
         />
         <FieldDescription>
-          {t("desktop.agent_keys.issued_once")}
+          {t("desktop.automation_access.issued_once")}
         </FieldDescription>
       </Field>
       {copy === "failed" && (
-        <Refusal>{t("desktop.agent_keys.copy_failed")}</Refusal>
+        <Refusal>{t("desktop.automation_access.copy_failed")}</Refusal>
       )}
       <div className="flex flex-wrap justify-end gap-2">
         {onCopy && (
@@ -407,12 +409,12 @@ function IssuedPanel({
             }
           >
             {copy === "copied"
-              ? t("desktop.agent_keys.copied")
-              : t("desktop.agent_keys.copy")}
+              ? t("desktop.automation_access.copied")
+              : t("desktop.automation_access.copy")}
           </Button>
         )}
         <Button variant="primary" size="sm" onClick={onDone}>
-          {t("desktop.agent_keys.done")}
+          {t("desktop.automation_access.done")}
         </Button>
       </div>
     </div>
@@ -467,10 +469,10 @@ export function AgentAccess({
     <section aria-labelledby={titleId} className="agent-access grid gap-2">
       <div className="grid gap-1">
         <h3 id={titleId} className="font-medium text-foreground">
-          {t("desktop.agent_keys.title")}
+          {t("desktop.automation_access.title")}
         </h3>
         <p className="text-sm text-muted-foreground">
-          {t("desktop.agent_keys.lead")}
+          {t("desktop.automation_access.lead")}
         </p>
       </div>
       {issued ? (
@@ -485,7 +487,7 @@ export function AgentAccess({
       )}
       {credentials.length === 0 ? (
         <p className="py-2 text-sm text-muted-foreground">
-          {t("desktop.agent_keys.empty")}
+          {t("desktop.automation_access.empty")}
         </p>
       ) : (
         <ul className="grid">

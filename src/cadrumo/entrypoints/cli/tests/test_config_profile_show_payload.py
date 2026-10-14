@@ -15,8 +15,9 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from cadrumo_client.commands.payloads import ConfigProfileViewResult
+
 from ....domain.user_profile.values import ProfileSetupState
-from ..config_payloads import ConfigProfileViewResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

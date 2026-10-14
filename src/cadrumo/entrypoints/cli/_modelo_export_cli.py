@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import typer
 
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+
 from ...application.modelo.export import ModeloExportResult
 from ...application.modelo.export_projection import ModeloExportPublicResultV3
 from ...application.modelo.operator_inputs import ModeloExportOperatorInput
 from ...application.modelo.work_export_contracts import ModeloExportRequest
-from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
@@ -18,8 +19,8 @@ from ._modelo_cli_support import (
 )
 from ._modelo_payloads import ModeloExportPayload
 from .common import emit_envelope
-from .runtime_modelo_export import run_modelo_export
-from .runtime_modelo_verification import select_modelo_work_revision_for_cli
+from .operation_modelo_export import run_modelo_export
+from .operation_modelo_verification import select_modelo_work_revision_for_cli
 
 
 def _local_export_evidence_notice(result: ModeloExportResult) -> Notice:
@@ -139,10 +140,10 @@ def modelo_export_verb(
         work_unit_id=selected_revision.unit.work_unit_id,
     )
     if not isinstance(completed.projection, ModeloExportPublicResultV3):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     receipt = completed.projection.fichero_boe
     if receipt is None:
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     result = receipt.to_result()
     export_result = ModeloExportPayload.from_result(result)
     emit_envelope(

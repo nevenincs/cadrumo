@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ...config_payloads import ConfigRepairResult
+from cadrumo_client.commands.payloads import ConfigRepairResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -79,7 +79,7 @@ def test_config_repair_setup_payload_refuses_wizard_next_action_transport() -> N
         "profile_total_keys": 10,
         "auth_provider": "certificate",
         "login_ready": False,
-        "next_action": "aeat config auth login",
+        "next_action": "legacy transport",
     }
 
     with pytest.raises(ValidationError, match="Extra inputs are not permitted"):

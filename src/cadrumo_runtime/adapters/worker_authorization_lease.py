@@ -1,0 +1,325 @@
+"""One native channel and exact held worker authority permit with explicit release."""
+
+from __future__ import annotations
+
+import asyncio
+import sys
+from importlib.metadata import version
+from pathlib import Path
+from uuid import uuid4
+
+from cadrumo.application.user_profile.access_contracts import AccessAction
+from cadrumo.application.user_profile.automation_enrollment import AutomationInventory, EnrollmentTransition
+from cadrumo.application.user_profile.automation_operations import (
+    AUTOMATION_APPROVE_OPERATION_DEFINITION_ID,
+    AUTOMATION_DECLINE_OPERATION_DEFINITION_ID,
+)
+from cadrumo.core.diagnostic_log import diagnostic_timing_event
+from cadrumo.core.logging import get_logger
+from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError
+from cadrumo_client.contracts.deadline_budget import exchange_deadline
+from cadrumo_client.contracts.profile_access import AccessRefusal
+from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
+from cadrumo_client.transport.frame_io import read_document, write_document
+from cadrumo_client.transport.framing import VerifiedConnection
+from cadrumo_client.transport.posix_channel import PosixChannel
+from cadrumo_runtime.contracts.worker_authorization import (
+    WorkerAuthorityRequest,
+    WorkerAuthorizationAcknowledgement,
+    WorkerAuthorizationPermit,
+    WorkerAuthorizationRelease,
+    WorkerAuthorizationReleased,
+    WorkerAuthorizationReply,
+    WorkerAuthorizationRequest,
+    WorkerAutomationInventoryPermit,
+    WorkerAutomationInventoryRequest,
+    WorkerResponseScopePermit,
+    WorkerResponseScopeRequest,
+    WorkerServerStart,
+    WorkerServerStarted,
+)
+from cadrumo_runtime.contracts.worker_enrollment import (
+    WorkerApprovalPhaseResult,
+    WorkerApprovalPublication,
+    WorkerApprovalPublicationPhase,
+    WorkerApprovalPublished,
+    WorkerApprovalReady,
+)
+
+from ..application.approval_binding import RuntimeApprovalBinding
+from .native_peer import require_live_native_peer
+from .worker_authorization import worker_authorization_namespace
+from .worker_authorization_refusals import raise_worker_access_refusal
+from .worker_transport import WorkerChannel, worker_endpoint
+
+_LOGGER = get_logger(__name__)
+
+
+class WorkerAuthorizationLease:
+    """One native connection with explicit acquisition/release, never an ordinary result."""
+
+    def __init__(
+        self,
+        *,
+        identity: ProfileWorkerIdentity,
+        root: Path,
+        parent_pid: int,
+        request: WorkerAuthorityRequest | WorkerAutomationInventoryRequest,
+    ) -> None:
+        """Capture only trusted worker routing and registered operation coordinates."""
+        self.identity, self.root, self.parent_pid, self.request = identity, root, parent_pid, request
+        self._channel: WorkerChannel | None = None
+        self._permit: WorkerAuthorizationPermit | WorkerResponseScopePermit | WorkerAutomationInventoryPermit | None = (
+            None
+        )
+        self._publication_sent = False
+        self._runtime_server_start_sent = False
+
+    def _commit_phase(self, stage: str) -> None:
+        if isinstance(self.request, WorkerAuthorizationRequest) and self.request.request.action is AccessAction.COMMIT:
+            diagnostic_timing_event(
+                _LOGGER,
+                "worker_commit_phase",
+                fields={"stage": stage, "transition": AccessAction.COMMIT.value},
+                primary_error=sys.exception(),
+            )
+
+    def acquire(self) -> None:
+        """Authenticate the retained native parent before requesting a held fence."""
+        endpoint = worker_endpoint(
+            storage_root=self.root, worker_namespace=worker_authorization_namespace(self.identity.worker_id)
+        )
+        channel: WorkerChannel | None = None
+        try:
+            channel = endpoint.connect(timeout=5)
+            if (
+                channel.peer.process_id != self.parent_pid
+                or channel.peer.os_owner_id != self.identity.binding.os_owner_id
+            ):
+                raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+            if isinstance(channel, PosixChannel):
+                require_live_native_peer(channel)
+            # The runtime may queue this admission behind a running COMMIT's fence.
+            deadline = exchange_deadline()
+            verified = VerifiedConnection(
+                channel,
+                expected=ClientHello(product_version=version("cadrumo"), storage_identity=endpoint.storage_identity),
+                deadline=deadline,
+            )
+            if verified.hello.boot_id != self.identity.runtime_boot_id:
+                raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+            write_document(channel, self.request, deadline=deadline)
+            reply = read_document(channel, WorkerAuthorizationReply, deadline=deadline).root
+            if reply.request_id != self.request.request_id:
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+            if isinstance(reply, AccessRefusal):
+                if (
+                    reply.runtime_boot_id != self.identity.runtime_boot_id
+                    or reply.connection_id != self.request.connection_id
+                ):
+                    raise RefusalError(RefusalCode.INVALID_FRAME)
+                write_document(
+                    channel, WorkerAuthorizationAcknowledgement(request_id=self.request.request_id), deadline=deadline
+                )
+                raise_worker_access_refusal(reply)
+            reply = _validated_authority_permit(reply, self.request, self.identity)
+            self._permit, self._channel = reply, channel
+            channel = None
+            self._commit_phase("permit_validated")
+        finally:
+            if channel is not None:
+                channel.close()
+            endpoint.close()
+
+    def inventory(self) -> AutomationInventory:
+        """Return only an exact inventory permit, never an ordinary guard reply."""
+        if not isinstance(self.request, WorkerAutomationInventoryRequest) or not isinstance(
+            self._permit, WorkerAutomationInventoryPermit
+        ):
+            raise RefusalError(RefusalCode.INVALID_FRAME)
+        return self._permit.inventory
+
+    def publish_approval(
+        self, binding: RuntimeApprovalBinding, phase: WorkerApprovalPublicationPhase
+    ) -> EnrollmentTransition | None:
+        """Send one publication over this exact held COMMIT channel, without reacquiring it."""
+        channel, permit, request = self._publication_channel(binding, phase)
+        command = WorkerApprovalPublication(
+            request_id=request.request_id,
+            permit_id=permit.permit_id,
+            command_id=uuid4(),
+            binding=binding,
+            phase=phase,
+        )
+        self._publication_sent = True
+        write_document(channel, command, deadline=exchange_deadline())
+        reply = self._publication_reply(channel, request, permit, command)
+        if reply.receipt is None:
+            if phase != "commit_review":
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+            return None
+        if (
+            reply.receipt.profile_id != binding.profile_binding.profile_id
+            or reply.receipt.request_id != binding.enrollment_request_id
+            or reply.receipt.review_digest != binding.review_digest
+        ):
+            raise RefusalError(RefusalCode.INVALID_FRAME)
+        return EnrollmentTransition(receipt=reply.receipt, published=reply.published)
+
+    def start_runtime_server(self) -> int | None:
+        """Ask the runtime to start the model runtime's server over this exact held COMMIT channel.
+
+        Returns the server's process id, or ``None`` when the runtime started
+        nothing. Nothing this process located is sent: the runtime resolves the
+        program and its environment itself.
+        """
+        # The provisioning contracts reach the model installer; only this
+        # operation's own request loads them, never a worker's start.
+        from cadrumo.application.local_reader_contracts import LOCAL_READER_OPERATION_DEFINITION_ID
+
+        channel, permit, request = self._channel, self._permit, self.request
+        if (
+            channel is None
+            or not isinstance(permit, WorkerAuthorizationPermit)
+            or not isinstance(request, WorkerAuthorizationRequest)
+            or request.request.action is not AccessAction.COMMIT
+            or request.request.definition_id != LOCAL_READER_OPERATION_DEFINITION_ID
+            or self._runtime_server_start_sent
+        ):
+            raise RefusalError(RefusalCode.INVALID_FRAME)
+        command = WorkerServerStart(request_id=request.request_id, permit_id=permit.permit_id, command_id=uuid4())
+        self._runtime_server_start_sent = True
+        write_document(channel, command, deadline=exchange_deadline())
+        reply = read_document(channel, WorkerServerStarted, deadline=exchange_deadline())
+        if (
+            reply.request_id != request.request_id
+            or reply.permit_id != permit.permit_id
+            or reply.command_id != command.command_id
+            or reply.runtime_boot_id != self.identity.runtime_boot_id
+        ):
+            raise RefusalError(RefusalCode.INVALID_FRAME)
+        return reply.process_id
+
+    def release(self) -> None:
+        """Acknowledge body completion on the exact channel, preserving uncertain failure."""
+        channel, permit = self._channel, self._permit
+        self._channel, self._permit = None, None
+        if channel is None:
+            return
+        try:
+            self._commit_phase("release_executor_start")
+            if permit is None:
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+            self._commit_phase("release_write_begin")
+            write_document(
+                channel,
+                WorkerAuthorizationRelease(request_id=self.request.request_id, permit_id=permit.permit_id),
+                deadline=exchange_deadline(),
+            )
+            self._commit_phase("release_write_end")
+            reply = read_document(channel, WorkerAuthorizationReply, deadline=exchange_deadline()).root
+            if (
+                not isinstance(reply, WorkerAuthorizationReleased)
+                or reply.request_id != self.request.request_id
+                or reply.permit_id != permit.permit_id
+            ):
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+            write_document(
+                channel,
+                WorkerAuthorizationAcknowledgement(request_id=self.request.request_id),
+                deadline=exchange_deadline(),
+            )
+        finally:
+            channel.close()
+
+    async def close(self) -> None:
+        """Complete blocking native release through the existing cleanup owner."""
+        try:
+            self._commit_phase("release_scheduled")
+        finally:
+            await asyncio.to_thread(self.release)
+
+    def _publication_channel(
+        self, binding: RuntimeApprovalBinding, phase: WorkerApprovalPublicationPhase
+    ) -> tuple[WorkerChannel, WorkerAuthorizationPermit, WorkerAuthorizationRequest]:
+        """Admit one addressed publication on the retained, unused COMMIT permit."""
+        channel, permit, request = self._channel, self._permit, self.request
+        expected = _publication_definition(phase)
+        if (
+            channel is None
+            or not isinstance(permit, WorkerAuthorizationPermit)
+            or not isinstance(request, WorkerAuthorizationRequest)
+            or request.request.action is not AccessAction.COMMIT
+            or request.request.definition_id != expected
+            or self._publication_sent
+            or binding.operation_id != request.operation_id
+            or binding.session_id != request.session_id
+            or binding.connection_id != request.connection_id
+        ):
+            raise RefusalError(RefusalCode.INVALID_FRAME)
+        return channel, permit, request
+
+    def _publication_reply(
+        self,
+        channel: WorkerChannel,
+        request: WorkerAuthorizationRequest,
+        permit: WorkerAuthorizationPermit,
+        command: WorkerApprovalPublication,
+    ) -> WorkerApprovalPublished:
+        """Read the exact publication response and preserve its refusal category."""
+        reply = read_document(channel, WorkerAuthorizationReply, deadline=exchange_deadline()).root
+        if (
+            not isinstance(reply, AccessRefusal | WorkerApprovalPublished)
+            or reply.request_id != request.request_id
+            or reply.runtime_boot_id != self.identity.runtime_boot_id
+        ):
+            raise RefusalError(RefusalCode.INVALID_FRAME)
+        if isinstance(reply, AccessRefusal):
+            if reply.connection_id != request.connection_id:
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+            raise_worker_access_refusal(reply)
+        if (
+            not isinstance(reply, WorkerApprovalPublished)
+            or reply.permit_id != permit.permit_id
+            or reply.command_id != command.command_id
+        ):
+            raise RefusalError(RefusalCode.INVALID_FRAME)
+        return reply
+
+
+def _publication_definition(phase: WorkerApprovalPublicationPhase) -> str:
+    """Address the registered decline or approval definition for this phase."""
+    return (
+        AUTOMATION_DECLINE_OPERATION_DEFINITION_ID if phase == "decline" else AUTOMATION_APPROVE_OPERATION_DEFINITION_ID
+    )
+
+
+def _validated_authority_permit(
+    reply: AccessRefusal
+    | WorkerAuthorizationPermit
+    | WorkerResponseScopePermit
+    | WorkerAutomationInventoryPermit
+    | WorkerAuthorizationReleased
+    | WorkerApprovalReady
+    | WorkerApprovalPhaseResult
+    | WorkerApprovalPublished,
+    request: WorkerAuthorityRequest | WorkerAutomationInventoryRequest,
+    identity: ProfileWorkerIdentity,
+) -> WorkerAuthorizationPermit | WorkerResponseScopePermit | WorkerAutomationInventoryPermit:
+    """Require an exact request-family, runtime boot, and live held authority permit."""
+    if (
+        not isinstance(reply, WorkerAuthorizationPermit | WorkerResponseScopePermit | WorkerAutomationInventoryPermit)
+        or reply.runtime_boot_id != identity.runtime_boot_id
+    ):
+        raise RefusalError(RefusalCode.INVALID_FRAME)
+    if (
+        isinstance(request, WorkerResponseScopeRequest) != isinstance(reply, WorkerResponseScopePermit)
+        or isinstance(request, WorkerAutomationInventoryRequest) != isinstance(reply, WorkerAutomationInventoryPermit)
+        or isinstance(request, WorkerAuthorizationRequest) != isinstance(reply, WorkerAuthorizationPermit)
+    ):
+        raise RefusalError(RefusalCode.INVALID_FRAME)
+    # Admission is checked as the stage starts; a lease already ended admits nothing.
+    if reply.expires_at <= now():
+        raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+    return reply

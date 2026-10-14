@@ -9,17 +9,17 @@ application:
     certificate:
       health:
         file_missing: A konfigurált tanúsítványfájl (%{path}) nem létezik. Állítsd
-          vissza a fájlt, vagy futtasd a `aeat config auth configure --provider certificate
-          --file ÚTVONAL` parancsot.
-        path_unset: Nem lett kiválasztva tanúsítványfájl. Futtasd a `aeat config auth
-          configure --provider certificate --file ÚTVONAL` parancsot.
+          vissza a fájlt, vagy futtasd a `cadrumo-runtime config auth configure --provider
+          certificate --file ÚTVONAL` parancsot.
+        path_unset: Nem lett kiválasztva tanúsítványfájl. Futtasd a `cadrumo-runtime
+          config auth configure --provider certificate --file ÚTVONAL` parancsot.
         unavailable: A tanúsítvány állapota nem érhető el; a diagnosztikai részletekért
           nézd meg a hibakeresési naplókat.
       load:
         password_unset: Nincs konfigurálva tanúsítványjelszó. A folytatás előtt állítsd
           be a tanúsítványjelszót.
-        path_unset: Nincs konfigurálva tanúsítványfájl. Futtasd a `aeat config auth
-          configure --provider certificate --file ÚTVONAL` parancsot.
+        path_unset: Nincs konfigurálva tanúsítványfájl. Futtasd a `cadrumo-runtime
+          config auth configure --provider certificate --file ÚTVONAL` parancsot.
     clave_movil:
       health:
         identity_unset: Nincs konfigurálva DNI/NIE a Cl@ve Móvilhoz. A folytatás előtt
@@ -43,18 +43,18 @@ application:
           nem hasonlítható össze a Cl@ve azonosítóval. Állítsd be a profil adóazonosítóját.
       errors:
         certificate_file_required: A tanúsítvány-szolgáltató tanúsítványfájlt igényel.
-          Futtasd a `aeat config auth configure --provider certificate --file ÚTVONAL`
-          parancsot.
+          Futtasd a `cadrumo-runtime config auth configure --provider certificate
+          --file ÚTVONAL` parancsot.
         certificate_file_unresolved: A(z) %{certificate_path} tanúsítványútvonal nem
-          oldódik fel létező fájlra. Futtasd a `aeat config auth configure --provider
-          certificate --file ÚTVONAL` parancsot.
+          oldódik fel létező fájlra. Futtasd a `cadrumo-runtime config auth configure
+          --provider certificate --file ÚTVONAL` parancsot.
         certificate_secret_mutation_in_progress: Ennél a profilnál még folyamatban
           van egy tanúsítványtitok-módosítás helyreállítása. A hitelesítési beállítások
           módosítása előtt próbáld újra ugyanazt a titokparancsot.
         certificate_source_not_found: A(z) '%{name}' tanúsítványforrás nincs regisztrálva.
-          Futtasd a `aeat config auth certificate list` parancsot a regisztrált források
-          megtekintéséhez, vagy a `aeat config auth certificate register --name %{name}
-          --file ÚTVONAL` parancsot a regisztrálásához.
+          Futtasd a `cadrumo-runtime config auth certificate list` parancsot a regisztrált
+          források megtekintéséhez, vagy a `cadrumo-runtime config auth certificate
+          register --name %{name} --file ÚTVONAL` parancsot a regisztrálásához.
         cleanup_in_progress: Ennél a profilnál még folyamatban van egy hitelesítési
           kijelentkezés vagy visszaállítás helyreállítása. A hitelesítési beállítások
           módosítása előtt folytasd azt a műveletet.
@@ -83,8 +83,8 @@ application:
           tanúsítványfájl (%{path}) nem létezik. Állítsd vissza a fájlt, vagy konfiguráld
           újra az útvonalat a bejelentkezés előtt.'
         refused_certificate_path_unset: 'Nem lehet bejelentkezni: még nem lett kiválasztva
-          tanúsítványfájl. Futtasd a `aeat config auth configure --provider certificate
-          --file ÚTVONAL` parancsot.'
+          tanúsítványfájl. Futtasd a `cadrumo-runtime config auth configure --provider
+          certificate --file ÚTVONAL` parancsot.'
         refused_clave_movil_identity_unset: 'Nem lehet bejelentkezni Cl@ve Móvillel:
           még nincs konfigurálva DNI/NIE. A folytatás előtt konfigurálj egyet.'
         refused_live_tests_disabled: 'Az élő bejelentkezést a biztonsági kapu letiltja:
@@ -109,7 +109,7 @@ application:
         clave_movil_identity_unset: Nincs konfigurálva DNI/NIE a Cl@ve Móvilhoz.
         no_provider: Nincs konfigurálva hitelesítési szolgáltató; helyi vizsgálat
           nem lehetséges.
-        no_session: Nincs tárolt AEAT munkamenet-token a lemezen; futtasd a `aeat
+        no_session: Nincs tárolt AEAT munkamenet-token a lemezen; futtasd a `cadrumo-runtime
           config auth login` parancsot egy megszerzéséhez.
         session_expired: Munkamenet lejárt
         session_live: Munkamenet aktív
@@ -131,21 +131,22 @@ application:
           kérést küld a Cl@ve alkalmazásba, ehhez a dokumentumodon szereplő contraste
           szükséges. NIE esetén rögzítsd az aktív profilon a következőt: %{nie_field},
           DNI esetén pedig ezt: %{dni_field}. Ha inkább QR-kódot olvasnál be egy látható
-          böngészőben, futtasd az `aeat config auth configure --provider clave_movil
-          --clave-movil-route qr` parancsot.'
+          böngészőben, futtasd az `cadrumo-runtime config auth configure --provider
+          clave_movil --clave-movil-route qr` parancsot.'
         clave_identity_malformed: A Cl@ve azonosító nem érvényes spanyol NIF, NIE
           vagy CIF, ezért nem igazolható, hogy ehhez a profilhoz tartozik.
         clave_identity_missing: 'A Cl@ve élő hitelesítéshez DNI/NIE szükséges. Rögzítsd
           az aktív profilon a következőként: %{identity_field}, vagy állítsd be a
-          szolgáltatóhoz az `aeat config auth configure` paranccsal, mielőtt bármilyen
-          AEAT-munkamenetet használnál.'
+          szolgáltatóhoz az `cadrumo-runtime config auth configure` paranccsal, mielőtt
+          bármilyen AEAT-munkamenetet használnál.'
         clave_identity_profile_mismatch: A Cl@ve Móvil azonossága nem egyezik az aktív
           profil adóazonosítójával; válts az egyező profilra, vagy frissítsd a profil
           adóazonosítóját.
         corrupt_session: A mentett hitelesítési munkamenet sérült és nem olvasható.
-          Futtasd az `aeat config auth logout`, majd az `aeat config auth test` parancsot.
-        no_session: Nincs aktív AEAT munkamenet; futtasd a `aeat config auth test`
-          parancsot az AEAT adatok olvasása előtt.
+          Futtasd az `cadrumo-runtime config auth logout`, majd az `cadrumo-runtime
+          config auth test` parancsot.
+        no_session: Nincs aktív AEAT munkamenet; futtasd a `cadrumo-runtime config
+          auth test` parancsot az AEAT adatok olvasása előtt.
         profile_identity_cleared: 'Az élő AEAT-hitelesítéshez az aktív profil adószáma
           szükséges, de ez a profil nem tartalmazza. Állítsd vissza a profilon a következőt:
           %{requirements}, majd hitelesíts újra.'
@@ -1938,8 +1939,8 @@ application:
             az egyes számított mezők auditját, a ''Tarifas'' pedig a képletek által
             használt érvényes paramétereket tartalmazza.'
           period: '%{modelo_title} - időszak %{period} / %{filing_year}.'
-          pull_command: A módosítások helyi tárba húzásához futtasd az 'aeat app modelo
-            spreadsheet pull' parancsot a CLI-ből.
+          pull_command: A táblázat módosításai nem kerülnek be a Cadrumo-profilba;
+            ellenőrizd őket, és rögzítsd a változásokat a Cadrumo alkalmazásban.
           title: '%{modelo_title} - %{period}/%{filing_year}'
         labels:
           casilla: Rovat

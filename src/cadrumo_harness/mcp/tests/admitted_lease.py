@@ -15,9 +15,7 @@ from types import MappingProxyType, SimpleNamespace
 from typing import NoReturn, cast
 from uuid import UUID, uuid4
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.application.auth.read_operation import build_auth_read_definition, build_auth_read_registration
-from cadrumo.application.operations.mcp_surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES, McpSurface
 from cadrumo.application.operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionDescriptionV1,
@@ -35,7 +33,10 @@ from cadrumo.application.user_profile.operations import (
     build_user_profile_operation_registrations,
 )
 from cadrumo.core.time.clock import now
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
+from cadrumo_client.transport.frontend_client import FrontendClient
+
+from ..runtime_adapter import RuntimeMcpAdapter
+from ..surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES, McpSurface
 
 
 class AdmittedLease:
@@ -43,7 +44,7 @@ class AdmittedLease:
 
     def __init__(self, profile_id: UUID) -> None:
         self.profile_id = profile_id
-        self.frontend = OperationFrontendProjection.MCP
+        self.frontend = OperationFrontendProjection.EXTERNAL_CLIENT
         self.session_id = uuid4()
         self.closed = False
         self._status = ProfileAccessStatus(
@@ -92,7 +93,7 @@ def admitted_adapter(
 ) -> RuntimeMcpAdapter:
     """An adapter holding a live lease for one profile, as one admitted by a configured key holds it."""
     lease = AdmittedLease(profile_id or uuid4())
-    return RuntimeMcpAdapter(profile_id=lease.profile_id, client=cast(RuntimeFrontendClient, lease), surface=surface)
+    return RuntimeMcpAdapter(profile_id=lease.profile_id, client=cast(FrontendClient, lease), surface=surface)
 
 
 def _unused_ports(*_args: object, **_kwargs: object) -> NoReturn:

@@ -6,11 +6,12 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+
 from ...core.hashing import canonical_json_bytes
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ..operations.models import OperationTerminalReceipt, require_terminal_receipt_match
 from ..operations.public_period import PublicPeriod
-from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from .filing_record_view_operation import ModeloFilingObservationLayersProjection
 from .local_observation_actions import (
     ModeloLocalObservationClearResult,

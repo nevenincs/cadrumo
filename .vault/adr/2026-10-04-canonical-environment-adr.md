@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#canonical-environment'
 date: '2026-10-04'
-modified: '2026-10-13'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:49508e2ec27e5ffe6624603b51efe5f10b8ab2975ff5527527e6626035d57b70'
+body_hash: 'sha256:63f99da32a17e8c7d0ae588737782243513b283d91c64a623c3bbcf64e10166d'
 related:
   - "[[2026-10-04-canonical-environment-reference]]"
   - "[[2026-08-03-canonical-storage-management-adr]]"
@@ -20,7 +20,6 @@ related:
   - '[[2026-10-08-canonical-environment-darwin-transport-adr]]'
   - '[[2026-10-13-canonical-environment-application-internals-adr]]'
 ---
-
 # `canonical-environment` adr: `Canonical location and environment contract` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -60,7 +59,7 @@ Binding commitments.
 - **Per-channel roots.** Each release channel has its own default root. The channel comes from the identity projection (`dev/packaging/native/identity.py`, `CADRUMO_ID_*`, `data/build.json`) and nowhere else. Python never derives a channel; a native package pins the root before Python runs.
 - **No migration, no compatibility reader.** Existing `var/storage` trees created by installed builds under a launch directory are not discovered, read or moved. Relocation remains refuse-and-instruct (`2026-08-03-canonical-storage-management-adr` R7). The pre-release regime applies.
 - **Prior rulings reused, subject to the 2026-10-08 Darwin transport exception below.** `2026-09-20-lud-authority-adr`: the configured root is application-owned and created idempotently even when selected explicitly; explicit member overrides must pre-exist. `2026-08-03-canonical-storage-management-adr` R1, R3, R5, R10: members are typed, member paths are preserved except the separately accepted relocations, and `FIXED` members carry no variable. `2026-07-13-data-output-standardization-adr` R1 and `2026-07-03-claude-ecosystem-packaging-adr`: installed runs use a platform user-data root, checkouts use `var/storage`.
-- **Scope exclusion.** No operator configuration file is introduced. The package-owned `native/application-environment.toml` (`2026-10-13-canonical-environment-application-internals-adr`) declares image environments. (Amended 2026-10-13 under `2026-10-13-canonical-environment-application-internals-adr`; before that this read: "No configuration file is introduced.") The product reads the process environment only (`src/cadrumo/core/config.py:199-214`); the proposed `U/config/application.env` in `2026-10-03-application-packaging-adr` stays proposed and is a separate decision. The credentials of cadrumo-agent's provider lanes come from the authenticated profile's encrypted provider settings. Installed and release builds read none of those from the environment and load no `.env` file. In development storage mode, a provider whose profile record is unset takes its key from the named Cadrumo environment value after profile authentication, and a persisted `disabled` record blocks that fallback. (Amended 2026-10-13 under `2026-10-13-provider-settings-adr`; before that this exclusion also covered the provider keys that `src/cadrumo/core/config_llm_fields.py:52-63` reads from the environment in every mode. Narrowed the same day under that record's constraint 11: Cadrumo's own document reading keeps reading its keys from the environment until the owner rules on it.)
+- **Scope exclusion.** No operator configuration file is introduced. The package-owned `native/application-environment.toml` (`2026-10-13-canonical-environment-application-internals-adr`) declares image environments. (Amended 2026-10-13 under `2026-10-13-canonical-environment-application-internals-adr`; before that this read: "No configuration file is introduced.") The product reads the process environment only (`src/cadrumo/core/config.py:199-214`); the proposed `U/config/application.env` in `2026-10-03-application-packaging-adr` stays proposed and is a separate decision. The separate `cadrumo_agent_service` resolves cadrumo-agent provider-lane credentials from existing authenticated-profile ciphertext through descriptor-allowlisted opaque runtime custody; tax/runtime code contains no provider schema or resolver. Installed and release builds read none of those from the environment and load no `.env` file. Only the admitted development agent service may resolve an unset provider record from its declared development environment after profile authorization; persisted `disabled` blocks that fallback. Installed service execution has no environment fallback. Tax-domain document extraction retains its existing consent/credential policy. (Amended 2026-10-13 under `2026-10-13-provider-settings-adr`; before that this exclusion also covered the provider keys that `src/cadrumo/core/config_llm_fields.py:52-63` reads from the environment in every mode. Narrowed the same day under that record's constraint 11: Cadrumo's own document reading keeps reading its keys from the environment until the owner rules on it.)
 
 ## Implementation
 
@@ -158,3 +157,5 @@ An independent review found the Implementation contradicting itself: one passage
 Each process queries the native transport base once and retains validated namespace identity; this is distinct from, and does not re-resolve or replace, the inherited storage-root pin. No new environment pin is added. Selection depends on installed mode and no explicit runtime-socket member/namespace override, regardless of an inherited storage-root pin; it never infers mode or channel from the root path or pin presence. The manager's default-storage-only admission is unchanged. Development roots remain root-relative, and explicit synthetic/operator socket namespaces retain isolation. Custom installed data roots remain separated by root-derived endpoint identities. Stable and preview may share the transient family directory while endpoint identities remain channel/root separated. Ordinary materialisation, reclaim and uninstall never delete that directory or its lock inodes; socket cleanup is incarnation-checked. The successor governs exact selection, naming, custody and refusal requirements. Historical amendment proposals above remain the record of the 2026-10-04 decision, subject to this dated exception.
 
 Accepted 2026-10-08 under the user's advance authorization to fix the identified defects and code/build all installer and manager work except signing. This scoped default-path correction is required for installed Darwin launch and does not claim implementation or native lifecycle acceptance.
+
+Service-only boundary clarification 2026-10-14 under the user's explicit migration authorization: provider interpretation/fallback belongs to the separate service, with preserved opaque encrypted custody at runtime and no DEK export. Runtime source-locator and root-policy amendments from the other owning session are preserved.

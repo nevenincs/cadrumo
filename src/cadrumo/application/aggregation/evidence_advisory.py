@@ -171,7 +171,7 @@ def calculation_revision_claims_ledger_iva(
     *,
     operation: PinnedAuthorityOperation,
 ) -> bool:
-    """Return whether ``revision``'s registry revision declares IVA ledger bindings.
+    """Return whether the :class:`CalculationRevision` declares IVA ledger bindings.
 
     This is the typed fact that says whether a calculation claims IVA at all:
     the registry revision the calculation is stamped with either declares
@@ -188,9 +188,10 @@ def calculation_revision_claims_ledger_iva(
             ref.modelo,
             filing_year=ref.modelo_year,
             period=ref.period,
-            revision_id=ref.revision_id,
         )
     except (FileNotFoundError, RegistrySnapshotError, RegistryValidationError):
+        return True
+    if snapshot.revision.id != ref.revision_id:
         return True
     return any(binding.source == BindingSourceKind.LEDGER_IVA_AGGREGATION for binding in snapshot.revision.bindings)
 

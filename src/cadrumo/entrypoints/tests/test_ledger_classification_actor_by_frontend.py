@@ -1,9 +1,9 @@
-"""An agent's classification, rule and ratio writes record its session's label.
+"""An automation's classification, rule and ratio writes record its session's label.
 
 The production registry and the real executors run over a stored profile with
 a session host that answers for the frontend that admitted the invocation.
 Each operation below runs on the three frontends and records who acted: for an
-execution admitted on the MCP frontend that label is the session's, whatever
+execution admitted on the external client frontend that label is the session's, whatever
 the request carries. The ratio verbs carry no label of their own, so the
 person's frontends record the operator label there. Nothing else an operation
 stores differs by frontend.
@@ -34,14 +34,14 @@ from . import registered_executor_case_support as conformance
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_MCP = OperationFrontendProjection.MCP
+_EXTERNAL_CLIENT = OperationFrontendProjection.EXTERNAL_CLIENT
 _CLI = OperationFrontendProjection.CLI
 _TUI = OperationFrontendProjection.TUI
 _SESSION_CLIENT = UUID("5aa00000-0000-4000-8000-0000000000dd")
 _TYPED_ACTOR = "typed by the caller"
-_AGENT_LABEL = f"agent:mcp.attended.{_SESSION_CLIENT}"
+_AUTOMATION_LABEL = f"automation:external-client.attended.{_SESSION_CLIENT}"
 _PERSON_LABEL = "operator"
-_FRONTENDS = pytest.mark.parametrize("frontend", [_MCP, _CLI, _TUI], ids=["mcp", "cli", "tui"])
+_FRONTENDS = pytest.mark.parametrize("frontend", [_EXTERNAL_CLIENT, _CLI, _TUI], ids=["external_client", "cli", "tui"])
 
 
 def _session_host(definition_id: str, frontend: OperationFrontendProjection) -> OperationExecutionCallerReader:
@@ -107,7 +107,7 @@ def _typed(request: BaseModel) -> BaseModel:
 
 
 @_FRONTENDS
-def test_bulk_classification_records_the_session_label_for_an_agent(
+def test_bulk_classification_records_the_session_label_for_an_automation(
     tmp_path: Path, operation: PinnedAuthorityOperation, frontend: OperationFrontendProjection
 ) -> None:
     """Every classification event of the batch names the derived label, not the typed one."""
@@ -123,7 +123,7 @@ def test_bulk_classification_records_the_session_label_for_an_agent(
     assert projection.result is not None
     assert projection.result.bucket_event_ids
     by_id = {event.event_id: event for event in events}
-    recorded = _AGENT_LABEL if frontend is _MCP else _TYPED_ACTOR
+    recorded = _AUTOMATION_LABEL if frontend is _EXTERNAL_CLIENT else _TYPED_ACTOR
     assert {by_id[event_id].actor for event_id in projection.result.bucket_event_ids} == {recorded}
 
 
@@ -149,7 +149,7 @@ def test_bulk_classification_records_the_same_source_command_on_every_frontend(
 
 
 @_FRONTENDS
-def test_rule_add_records_the_session_label_for_an_agent(
+def test_rule_add_records_the_session_label_for_an_automation(
     tmp_path: Path, operation: PinnedAuthorityOperation, frontend: OperationFrontendProjection
 ) -> None:
     """The stored rule names the derived label as its author, not the typed one."""
@@ -163,11 +163,11 @@ def test_rule_add_records_the_session_label_for_an_agent(
     )
 
     assert projection.rule is not None
-    assert projection.rule.actor == (_AGENT_LABEL if frontend is _MCP else _TYPED_ACTOR)
+    assert projection.rule.actor == (_AUTOMATION_LABEL if frontend is _EXTERNAL_CLIENT else _TYPED_ACTOR)
 
 
 @_FRONTENDS
-def test_rule_apply_records_the_session_label_for_an_agent(
+def test_rule_apply_records_the_session_label_for_an_automation(
     tmp_path: Path, operation: PinnedAuthorityOperation, frontend: OperationFrontendProjection
 ) -> None:
     """Each classification the run writes is attributed to the derived label, not the typed one."""
@@ -182,15 +182,15 @@ def test_rule_apply_records_the_session_label_for_an_agent(
 
     assert projection.outcome == "applied"
     assert projection.bucket_event_count
-    recorded = _AGENT_LABEL if frontend is _MCP else _TYPED_ACTOR
+    recorded = _AUTOMATION_LABEL if frontend is _EXTERNAL_CLIENT else _TYPED_ACTOR
     assert _actors(events, BucketEventType.LEDGER_TRANSACTION_CLASSIFIED) == {recorded}
 
 
 @_FRONTENDS
-def test_ratio_set_records_the_session_label_for_an_agent(
+def test_ratio_set_records_the_session_label_for_an_automation(
     tmp_path: Path, operation: PinnedAuthorityOperation, frontend: OperationFrontendProjection
 ) -> None:
-    """The override's audit event names an agent's session, and the operator label stays the person's."""
+    """The override's audit event names an automation's session, and the operator label stays the person's."""
     projection, events = _run(
         tmp_path,
         operation,
@@ -200,14 +200,16 @@ def test_ratio_set_records_the_session_label_for_an_agent(
     )
 
     assert projection.ratio
-    assert _actors(events, BucketEventType.LEDGER_RATIOS_SET) == {_AGENT_LABEL if frontend is _MCP else _PERSON_LABEL}
+    assert _actors(events, BucketEventType.LEDGER_RATIOS_SET) == {
+        _AUTOMATION_LABEL if frontend is _EXTERNAL_CLIENT else _PERSON_LABEL
+    }
 
 
 @_FRONTENDS
-def test_ratio_unset_records_the_session_label_for_an_agent(
+def test_ratio_unset_records_the_session_label_for_an_automation(
     tmp_path: Path, operation: PinnedAuthorityOperation, frontend: OperationFrontendProjection
 ) -> None:
-    """The clearance's audit event names an agent's session, and the operator label stays the person's."""
+    """The clearance's audit event names an automation's session, and the operator label stays the person's."""
     projection, events = _run(
         tmp_path,
         operation,
@@ -217,4 +219,6 @@ def test_ratio_unset_records_the_session_label_for_an_agent(
     )
 
     assert projection.outcome == "cleared"
-    assert _actors(events, BucketEventType.LEDGER_RATIOS_UNSET) == {_AGENT_LABEL if frontend is _MCP else _PERSON_LABEL}
+    assert _actors(events, BucketEventType.LEDGER_RATIOS_UNSET) == {
+        _AUTOMATION_LABEL if frontend is _EXTERNAL_CLIENT else _PERSON_LABEL
+    }

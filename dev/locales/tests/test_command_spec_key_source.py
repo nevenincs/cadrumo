@@ -17,7 +17,7 @@ from __future__ import annotations
 import pytest
 
 from .._command_spec_scanner import scan_command_spec_keys
-from .._paths import DOCS_SRC_DIR, HARNESS_SRC_DIR, LOCALES_DIR, SRC_DIR
+from .._paths import LOCALE_SOURCE_EXTRA_DIRS, LOCALES_DIR, SRC_DIR
 from ..manager import LocaleManager
 from .test_parity import _committed_catalogues
 
@@ -25,7 +25,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def _manager() -> LocaleManager:
-    return LocaleManager(SRC_DIR, LOCALES_DIR, extra_src_dirs=(DOCS_SRC_DIR, HARNESS_SRC_DIR))
+    return LocaleManager(SRC_DIR, LOCALES_DIR, extra_src_dirs=LOCALE_SOURCE_EXTRA_DIRS)
 
 
 def test_the_registry_declares_keys_and_names_no_command_paths() -> None:

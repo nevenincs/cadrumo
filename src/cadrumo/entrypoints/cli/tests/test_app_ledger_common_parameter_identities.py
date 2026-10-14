@@ -6,6 +6,16 @@ from typing import Final
 
 import pytest
 
+from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.shared_contracts import (
+    DeferredTarget,
+    LiteralValue,
+    ParameterConstraint,
+    ParameterDefault,
+    TranslationKey,
+    ValueContract,
+)
+
 from .._app_ledger_command_spec_support import (
     _ARCHIVE_REASON_OPTION,
     _LEDGER_ACTOR_OPTION,
@@ -18,15 +28,6 @@ from .._app_ledger_foundation_command_specs import LEDGER_FOUNDATION_COMMAND_SPE
 from .._app_ledger_inventory_analysis_command_specs import LEDGER_INVENTORY_ANALYSIS_COMMAND_SPECS
 from .._app_ledger_lifecycle_command_specs import LEDGER_LIFECYCLE_COMMAND_SPECS
 from .._app_ledger_rule_command_specs import LEDGER_RULE_COMMAND_SPECS
-from ..command_parameter_contracts import OptionSpec
-from ..command_shared_contracts import (
-    DeferredTarget,
-    LiteralValue,
-    ParameterConstraint,
-    ParameterDefault,
-    TranslationKey,
-    ValueContract,
-)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

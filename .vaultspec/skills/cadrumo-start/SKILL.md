@@ -19,7 +19,12 @@ All rules must be respected when working. Selective reading limits session conte
 flowchart TD
   H[Human operator] --> CLI[Typer CLI]
   H --> TUI[Textual workbench]
-  A[Scoped agent client] --> MCP[MCP harness]
+  H --> DESK[Native desktop: verified person frontend]
+  DESK --> AS[Separate agent service]
+  AS --> AG[cadrumo-agent]
+  AS --> IPC
+  DESK --> IPC
+  A[Scoped agent client] --> MCP[Separate MCP harness]
   CLI --> IPC[Native local IPC]
   TUI --> IPC
   MCP --> IPC
@@ -37,7 +42,7 @@ flowchart TD
 
 The [architecture rule](references/00-architecture.md) uses:
 
-- Import linting: `just check-import-boundaries`.
+- Import linting: `uv run --no-sync lint-imports --config .importlinter --no-cache`.
 - Ruff lint and formatting checks: `just check-style` and `just check-format`.
 - Type checking: `ty` across `src`, through `just check-types`.
 - Strict type checking: `pyrefly` and `basedpyright` over the configured production subset, through the same type runner.
@@ -89,10 +94,10 @@ Minimum tool versions are declared in [native/toolchain.json](../../../native/to
 | Tauri desktop host: build scripts, configuration, commands, docs scheme, logs, terminal, packaged tests | [build-tauri-desktop-shell](references/build-tauri-desktop-shell.md) |
 | Desktop web frontend: stack, npm scripts, Host port and IPC contract, design system, scenarios and Playwright | [build-desktop-frontend](references/build-desktop-frontend.md) |
 | `pyproject.toml`, `justfile`, wheel and wheelhouse packaging, Python build actions, docs build, CI and release | [build-python-packaging-and-release](references/build-python-packaging-and-release.md) |
-| Packaging, launching and supervising cadrumo-agent: `aeat app agent serve`, hosting frame, provider catalog, credentials, desktop agent host, agent acceptance lanes | [agent-integration](references/agent-integration.md) |
+| Packaging the separate agent service and cadrumo-agent; verified desktop/service admission, hosting frame, provider credentials, encrypted stores and separate MCP adapter | [agent-integration](references/agent-integration.md) |
 | Process environment: `native/application-environment.toml`, launch profiles and invocations, storage-root precedence, build and development variables | [environment-contract](references/environment-contract.md) |
 
-Cadrumo implements no agent capability. cadrumo-agent is a separate project that alone decides which agents, providers, lanes and models it supports; Cadrumo packages it, launches and supervises it, hands it profile credentials and serves its tools through Cadrumo's MCP relay. Cadrumo records and code make no ruling on agent providers and name none.
+`src/cadrumo` implements the deterministic tax/profile product; `src/cadrumo_runtime` owns generic login/custody/session authority and `src/cadrumo_client` owns neutral client contracts and transport. The sibling `src/cadrumo_agent_service` owns provider catalog consumption, credential interpretation, agent process/store lifecycle and conversation policy, supervises the separately implemented cadrumo-agent, and receives exact-profile opaque custody through verified runtime admission. Native desktop supervises this service. `src/cadrumo_harness` owns `cadrumo-mcp`, its protocol and packaged personas/rules/skills. Runtime exports no DEK, contains no agent orchestration and grants no authority from declared IDs or JSON PIDs. Tax-domain model extraction remains under its existing consent policy.
 
 The build references are orientation written from static reading of the build sources. They mirror no numbered rule and add no rule authority; where one disagrees with the contract, a CMake refusal or a test, the repository is right. When a build file moves or changes shape, refresh the matching reference and its line anchors.
 

@@ -9,7 +9,9 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.frontend_client import FrontendClient
+
 from ...application.actividad_asset.activity_asset_contracts import (
     ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_CORRECT_OPERATION_DEFINITION_ID,
@@ -42,7 +44,6 @@ from ...application.actividad_asset.operation_dtos import (
 from ...application.actividad_asset.operations import ActivityAssetFilingHandoff
 from ...application.operations.frontend_projection import OperationPublicProjectionV1
 from ...application.operations.public_scalar import PublicDecimal
-from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.operations import (
     OperationEffect,
     OperationTerminalCondition,
@@ -101,7 +102,7 @@ def _activity_asset_refusal_matches(
 class RuntimeActivityAssetTuiActionsV1:
     """Submit exact-profile activity-asset requests to the installed runtime."""
 
-    def __init__(self, client: RuntimeFrontendClient, *, profile_label: str) -> None:
+    def __init__(self, client: FrontendClient, *, profile_label: str) -> None:
         """Retain the originating TUI client, profile and session for every call."""
         self._session = RuntimeProfileSession(client, profile_label=profile_label)
         self._profile_id = self._session.profile_id
@@ -162,7 +163,7 @@ class RuntimeActivityAssetTuiActionsV1:
         if projection.profile_id != profile_id or not isinstance(
             projection.authority, ActivityAssetAuthorityProvenance
         ):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         refused = projection.outcome == "refused"
         expected_condition = OperationTerminalCondition.REFUSED if refused else OperationTerminalCondition.SUCCEEDED
         expected_effect = _activity_asset_success_effect(projection, success_effect)
@@ -171,7 +172,7 @@ class RuntimeActivityAssetTuiActionsV1:
             or effect is not expected_effect
             or not _activity_asset_refusal_matches(projection, refused=refused, refusal_code=refusal_code)
         ):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
 
     @staticmethod
     def _raise_refusal(
@@ -184,7 +185,7 @@ class RuntimeActivityAssetTuiActionsV1:
         """Rebuild the established domain refusal with the settled receipt."""
         refusal = projection.refusal
         if refusal is None:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         context: dict[str, object] = {
             "operation_id": operation_id,
             "terminal_condition": terminal_condition.value,
@@ -205,7 +206,7 @@ class RuntimeActivityAssetTuiActionsV1:
             success_effect=OperationEffect.UPDATED,
         )
         if projection.history is None:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         return self._inspection_from_history(projection.history, request.revision.asset_id)
 
     def inspect(self, asset_id: str) -> ActivityAssetInspectionV1:
@@ -217,7 +218,7 @@ class RuntimeActivityAssetTuiActionsV1:
             success_effect=OperationEffect.NONE,
         )
         if projection.asset_id != asset_id or projection.revisions is None:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         return ActivityAssetInspectionV1(
             asset_id=asset_id,
             revisions=tuple(item.revision.to_domain() for item in projection.revisions),
@@ -235,7 +236,7 @@ class RuntimeActivityAssetTuiActionsV1:
             success_effect=OperationEffect.UPDATED,
         )
         if projection.history is None:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         return self._inspection_from_history(projection.history, request.revision.asset_id)
 
     def forecast(self, request: ActivityAssetForecastRequestV1) -> ScheduledAmortizationCharge:
@@ -258,7 +259,7 @@ class RuntimeActivityAssetTuiActionsV1:
             success_effect=OperationEffect.NONE,
         )
         if projection.forecast is None:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         forecast = projection.forecast.to_domain()
         # The charge covers the part of the requested interval the asset was in
         # service, so it lies inside the request rather than equal to it.
@@ -268,7 +269,7 @@ class RuntimeActivityAssetTuiActionsV1:
             or forecast.covered_until > request.covered_until
             or forecast.covered_from > forecast.covered_until
         ):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         return forecast
 
     def record_claim(self, request: ActivityAssetClaimRequestV1) -> ActivityAssetHistoryClaimResult:
@@ -285,14 +286,14 @@ class RuntimeActivityAssetTuiActionsV1:
             success_effect=OperationEffect.UPDATED,
         )
         if projection.claim_result is None or projection.claim_id is None:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         claim_result = projection.claim_result.to_domain()
         revision = next(
             (item for item in claim_result.history.revisions if item.revision_id == request.forecast.asset_revision_id),
             None,
         )
         if revision is None:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         expected_claim = AmortizationClaim.from_schedule(
             request.forecast,
             asset_kind=revision.asset_kind,
@@ -300,7 +301,7 @@ class RuntimeActivityAssetTuiActionsV1:
             supersedes_claim_id=request.supersedes_claim_id,
         )
         if projection.claim_id != expected_claim.claim_id or claim_result.claim != expected_claim:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         return claim_result
 
     def filing_handoff(self, request: ActivityAssetFilingRequestV1) -> ActivityAssetFilingHandoff:
@@ -320,7 +321,7 @@ class RuntimeActivityAssetTuiActionsV1:
             or projection.tax_year != request.tax_year
             or projection.m130_period != str(request.m130_period.code)
         ):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         return projection.filing_handoff.to_domain()
 
     @staticmethod
@@ -329,7 +330,7 @@ class RuntimeActivityAssetTuiActionsV1:
         history = snapshot.to_domain()
         revisions = tuple(item for item in history.revisions if item.asset_id == asset_id)
         if not revisions:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         return ActivityAssetInspectionV1(asset_id=asset_id, revisions=revisions)
 
     @staticmethod
@@ -338,9 +339,7 @@ class RuntimeActivityAssetTuiActionsV1:
         return PublicDecimal(decimal=str(value))
 
 
-def compose_runtime_activity_asset_actions(
-    client: RuntimeFrontendClient, *, profile_label: str
-) -> ActivityAssetTuiActionsV1:
+def compose_runtime_activity_asset_actions(client: FrontendClient, *, profile_label: str) -> ActivityAssetTuiActionsV1:
     """Bind the current Ledger screen to one admitted profile/session runtime."""
     return RuntimeActivityAssetTuiActionsV1(client, profile_label=profile_label)
 

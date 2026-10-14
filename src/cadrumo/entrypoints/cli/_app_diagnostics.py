@@ -182,9 +182,10 @@ def diagnostics_run_health(
     provider: str | None = None,
 ) -> None:
     """Report recent local LLM run timing and persisted AEAT session staleness."""
-    from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+    from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+
     from ...core.json_contract import Notice, NoticeSeverity
-    from .runtime_diagnostics import read_diagnostics
+    from .operation_diagnostics import read_diagnostics
 
     since_date = _parse_iso_date(since, "--since")
     until_date = _parse_iso_date(until, "--until")
@@ -198,7 +199,7 @@ def diagnostics_run_health(
     )
     snapshot = projection.run_health
     if snapshot is None:
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     report = snapshot.to_report()
 
     result = _run_health_result(report=report, since=since_date, until=until_date)
@@ -246,8 +247,9 @@ def diagnostics_runs(
     limit: int | None = None,
 ) -> None:
     """List recent local LLM run-timing records, most-recent-first."""
-    from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-    from .runtime_diagnostics import read_diagnostics
+    from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+
+    from .operation_diagnostics import read_diagnostics
 
     since_date = _parse_iso_date(since, "--since")
     until_date = _parse_iso_date(until, "--until")
@@ -262,7 +264,7 @@ def diagnostics_runs(
     )
     rows = projection.runs
     if rows is None:
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
 
     result = RunsListResult(
         since=since_date.isoformat() if since_date is not None else None,
@@ -315,8 +317,9 @@ def diagnostics_latency(
     provider: str | None = None,
 ) -> None:
     """Report P50/P95/P99 duration percentiles over recent local LLM runs."""
-    from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-    from .runtime_diagnostics import read_diagnostics
+    from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+
+    from .operation_diagnostics import read_diagnostics
 
     since_date = _parse_iso_date(since, "--since")
     until_date = _parse_iso_date(until, "--until")
@@ -330,7 +333,7 @@ def diagnostics_latency(
     )
     snapshot = projection.latency
     if snapshot is None:
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     report = snapshot.to_report()
 
     result = LatencyResult(
@@ -400,9 +403,10 @@ def diagnostics_errors(
     provider: str | None = None,
 ) -> None:
     """Break down recent failed local LLM runs by provider and error kind."""
-    from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+    from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+
     from ...core.json_contract import Notice, NoticeSeverity
-    from .runtime_diagnostics import read_diagnostics
+    from .operation_diagnostics import read_diagnostics
 
     since_date = _parse_iso_date(since, "--since")
     until_date = _parse_iso_date(until, "--until")
@@ -416,7 +420,7 @@ def diagnostics_errors(
     )
     snapshot = projection.errors
     if snapshot is None:
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     report = snapshot.to_report()
 
     result = ErrorsBreakdownResult(
@@ -458,8 +462,9 @@ def diagnostics_llm_usage(
     provider: str | None = None,
 ) -> None:
     """Report LLM run-usage totals (counts, durations, success rate) by provider and model."""
-    from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-    from .runtime_diagnostics import read_diagnostics
+    from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+
+    from .operation_diagnostics import read_diagnostics
 
     since_date = _parse_iso_date(since, "--since")
     until_date = _parse_iso_date(until, "--until")
@@ -473,7 +478,7 @@ def diagnostics_llm_usage(
     )
     snapshot = projection.llm_usage
     if snapshot is None:
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     report = snapshot.to_report()
 
     result = LlmUsageResult(

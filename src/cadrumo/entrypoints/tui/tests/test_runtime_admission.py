@@ -14,13 +14,14 @@ import pytest
 from textual.pilot import Pilot
 from textual.widgets import Input, Select
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
-from ....adapters.local_runtime.runtime_transport_cleanup import RuntimeTransportCleanup
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.profile_access import ProfileStatus
+from cadrumo_client.contracts.session_events import LifecycleNotice
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_client.transport.transport_cleanup import TransportCleanup
+
 from ....application.operations.registry import OperationFrontendProjection, OperationRegistry
-from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from ....application.runtime.profile_access import RuntimeProfileStatus
-from ....application.runtime.session_events import RuntimeLifecycleNotice
 from ....application.user_profile.access_contracts import (
     AccessScope,
     AuthorityState,
@@ -59,7 +60,7 @@ class _RootFailureError(Exception):
     pass
 
 
-class _OwnedClient(RuntimeFrontendClient):
+class _OwnedClient(FrontendClient):
     """Synthetic transport outcome; only frontend resource ownership is tested."""
 
     def __init__(self, profile_id: UUID) -> None:
@@ -69,19 +70,17 @@ class _OwnedClient(RuntimeFrontendClient):
         self.closed = 0
 
     @override
-    def subscribe_lifecycle_notices(self, receive: Callable[[RuntimeLifecycleNotice], None]) -> Callable[[], None]:
+    def subscribe_lifecycle_notices(self, receive: Callable[[LifecycleNotice], None]) -> Callable[[], None]:
         """Expose the no-event subscription port of this synthetic transport."""
         return lambda: None
 
     @override
-    def login_password(
-        self, secret: bytearray, *, timeout: float = 20, persist_receipt: bool = False
-    ) -> RuntimeProfileStatus:
+    def login_password(self, secret: bytearray, *, timeout: float = 20, persist_receipt: bool = False) -> ProfileStatus:
         assert not persist_receipt
         assert secret == b"synthetic-proof"
         secret[:] = bytes(len(secret))
         self._session_id = uuid4()
-        return RuntimeProfileStatus(
+        return ProfileStatus(
             request_id=uuid4(),
             runtime_boot_id=uuid4(),
             connection_id=uuid4(),
@@ -119,9 +118,9 @@ class _OwnedClient(RuntimeFrontendClient):
         self._session_id = None
 
     @override
-    def status(self, *, timeout: float = 5) -> RuntimeProfileStatus:
+    def status(self, *, timeout: float = 5) -> ProfileStatus:
         """Return an admitted restricted session from the explicit reference opener."""
-        return RuntimeProfileStatus(
+        return ProfileStatus(
             request_id=uuid4(),
             runtime_boot_id=uuid4(),
             connection_id=uuid4(),
@@ -160,7 +159,7 @@ async def test_login_scope_keeps_one_exact_client_until_frontend_finishes(root_f
     profile_id = uuid4()
     client = _OwnedClient(profile_id)
 
-    async def open_client(selected: UUID) -> RuntimeFrontendClient:
+    async def open_client(selected: UUID) -> FrontendClient:
         assert selected == profile_id
         return client
 
@@ -198,12 +197,12 @@ async def test_explicit_preselected_profile_resumes_before_password_prompt() -> 
 
     class ResumeClient(_OwnedClient):
         @override
-        def resume_receipt(self, *, timeout: float = 20) -> RuntimeProfileStatus:
+        def resume_receipt(self, *, timeout: float = 20) -> ProfileStatus:
             return super().login_password(bytearray(b"synthetic-proof"))
 
     client = ResumeClient(profile_id)
 
-    async def open_client(selected: UUID) -> RuntimeFrontendClient:
+    async def open_client(selected: UUID) -> FrontendClient:
         assert selected == profile_id
         return client
 
@@ -228,7 +227,7 @@ class _RefusedResumeClient(_OwnedClient):
         self.resumes = 0
 
     @override
-    def resume_receipt(self, *, timeout: float = 20) -> RuntimeProfileStatus:
+    def resume_receipt(self, *, timeout: float = 20) -> ProfileStatus:
         self.resumes += 1
         raise self.refusal
 
@@ -254,7 +253,7 @@ async def test_no_saved_sign_in_falls_back_to_the_password_without_a_refusal(
     clients = iter((resumed, password))
     seen: list[tuple[str, bool]] = []
 
-    async def open_client(selected: UUID) -> RuntimeFrontendClient:
+    async def open_client(selected: UUID) -> FrontendClient:
         assert selected == profile_id
         return next(clients)
 
@@ -310,7 +309,7 @@ async def test_a_refused_saved_sign_in_says_why_before_the_password(
     resumed = _RefusedResumeClient(profile_id, refusal)
     seen: list[str] = []
 
-    async def open_client(selected: UUID) -> RuntimeFrontendClient:
+    async def open_client(selected: UUID) -> FrontendClient:
         assert selected == profile_id
         return resumed
 
@@ -337,7 +336,7 @@ async def test_a_refused_saved_sign_in_says_why_before_the_password(
 async def test_cancelled_login_does_not_create_or_transfer_a_client() -> None:
     profile_id = uuid4()
 
-    async def open_client(selected: UUID) -> RuntimeFrontendClient:
+    async def open_client(selected: UUID) -> FrontendClient:
         raise AssertionError("abandoning the form must not open a connection")
 
     async def abandon(pilot: Pilot[object]) -> None:
@@ -359,12 +358,12 @@ async def test_stored_reference_handoff_stays_owned_through_restricted_session_s
     client = _OwnedClient(profile_id)
     calls: list[tuple[UUID, UUID]] = []
 
-    async def open_client(_selected: UUID) -> RuntimeFrontendClient:
+    async def open_client(_selected: UUID) -> FrontendClient:
         raise AssertionError("reference mode must not open the password connection")
 
     async def open_reference(
-        selected: UUID, credential_reference: UUID, on_connected: Callable[[RuntimeFrontendClient], None]
-    ) -> RuntimeFrontendClient:
+        selected: UUID, credential_reference: UUID, on_connected: Callable[[FrontendClient], None]
+    ) -> FrontendClient:
         calls.append((selected, credential_reference))
         on_connected(client)
         client._session_id = uuid4()
@@ -420,7 +419,7 @@ async def test_accepted_handoff_failed_close_retains_owner_and_exact_body(body: 
         else None
     )
 
-    async def open_client(selected: UUID) -> RuntimeFrontendClient:
+    async def open_client(selected: UUID) -> FrontendClient:
         assert selected == profile_id
         return client
 
@@ -469,9 +468,7 @@ def test_installed_exit_mapping_preserves_cleanup_bearing_refusal(
 ) -> None:
     profile_id = uuid4()
     primary = (
-        RuntimeFrontendRefusedError("authentication_required")
-        if frontend_refusal
-        else RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+        FrontendRefusedError("authentication_required") if frontend_refusal else RefusalError(RefusalCode.UNAVAILABLE)
     )
 
     class NativeRelease:
@@ -485,7 +482,7 @@ def test_installed_exit_mapping_preserves_cleanup_bearing_refusal(
                 raise OSError("synthetic retained native owner")
 
     native = NativeRelease()
-    owner = RuntimeTransportCleanup(native)
+    owner = TransportCleanup(native)
     if attachment is not None:
 
         async def attach_cleanup() -> None:
@@ -548,9 +545,7 @@ def test_installed_exit_mapping_preserves_cleanup_bearing_refusal(
     if attachment is None:
         assert installed_session.run_installed_workbench_session() == installed_session.SESSION_INVENTORY_UNAVAILABLE
         output = capsys.readouterr().err.splitlines()
-        assert output[0] == (
-            primary.reason if isinstance(primary, RuntimeFrontendRefusedError) else primary.reason.value
-        )
+        assert output[0] == (primary.reason if isinstance(primary, FrontendRefusedError) else primary.reason.value)
         assert output[1:] == (
             []
             if frontend_refusal

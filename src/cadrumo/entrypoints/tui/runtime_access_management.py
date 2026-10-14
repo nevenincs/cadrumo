@@ -15,12 +15,13 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Static
 from textual.worker import Worker, WorkerCancelled, WorkerError, WorkerFailed
 
-from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo_client.contracts.automation_lifecycle import AutomationResumeReceipt
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.profile_access import status_admits_session
+from cadrumo_client.transport.frontend_client import FrontendClient
+
 from ...application.operations.registry import OperationFrontendProjection
-from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from ...application.runtime.profile_access import status_admits_session
 from ...application.user_profile.access_projections import PublicAccessSession
-from ...application.user_profile.automation_lifecycle_service import AutomationResumeReceipt
 from ...core.async_cleanup import await_cancellation_complete, close_async_resources
 from ...core.i18n.render import tr
 from ...core.time.clock import now
@@ -32,13 +33,13 @@ from .runtime_access_projection import session_rows
 if TYPE_CHECKING:
     from .secret.automation_requester import HumanAutomationRequesterFactory
 
-type RecoveryClientOpener = Callable[[], Awaitable[RuntimeFrontendClient]]
+type RecoveryClientOpener = Callable[[], Awaitable[FrontendClient]]
 
 
 class _RecoveryClientCleanup:
     """Retain one blocking connection until its native close succeeds."""
 
-    def __init__(self, client: RuntimeFrontendClient, *, released: Callable[[], None]) -> None:
+    def __init__(self, client: FrontendClient, *, released: Callable[[], None]) -> None:
         self._client = client
         self._released = released
 
@@ -72,7 +73,7 @@ class RuntimeAccessManagementScreen(_RuntimeAccessActionsMixin, ModalScreen[None
 
     def __init__(
         self,
-        client: RuntimeFrontendClient,
+        client: FrontendClient,
         *,
         open_recovery_client: RecoveryClientOpener,
         requester_factory: HumanAutomationRequesterFactory | None = None,
@@ -210,10 +211,10 @@ class RuntimeAccessManagementScreen(_RuntimeAccessActionsMixin, ModalScreen[None
         if self._resume_receipt is not None:
             self._status(
                 "tui.runtime_access.completed",
-                code=RuntimeRefusalCode.UNAVAILABLE.value if self._recovery_clients else None,
+                code=RefusalCode.UNAVAILABLE.value if self._recovery_clients else None,
             )
         else:
-            self._resume_unknown(self._resume_uncertain_code or RuntimeRefusalCode.UNAVAILABLE.value)
+            self._resume_unknown(self._resume_uncertain_code or RefusalCode.UNAVAILABLE.value)
         return True
 
     def _resume_failed(self, *, code: str, uncertain: bool) -> None:
@@ -237,7 +238,7 @@ class RuntimeAccessManagementScreen(_RuntimeAccessActionsMixin, ModalScreen[None
         if not self._active() or self._access_lost:
             return
         if not self._binding_is_current() or any(item.profile_id != self._profile_id for item in sessions):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         self._admin_available = True
         rows = session_rows(sessions)
         self.query_one("#runtime-access-sessions", Static).update(rows or tr("tui.runtime_access.sessions_empty"))
@@ -284,7 +285,7 @@ class RuntimeAccessManagementScreen(_RuntimeAccessActionsMixin, ModalScreen[None
                     recovery_client.profile_id != self._profile_id
                     or recovery_client.frontend is not OperationFrontendProjection.TUI
                 ):
-                    raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                    raise RefusalError(RefusalCode.INVALID_FRAME)
                 self._resume_dispatched = True
                 try:
                     observed = await await_cancellation_complete(
@@ -296,7 +297,7 @@ class RuntimeAccessManagementScreen(_RuntimeAccessActionsMixin, ModalScreen[None
                     password[:] = bytes(len(password))
                 receipt = AutomationResumeReceipt.model_validate(observed.model_dump(mode="python"), strict=True)
                 if receipt.profile_id != self._profile_id or receipt.reactivated_grants != grants:
-                    raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                    raise RefusalError(RefusalCode.INVALID_FRAME)
                 self._resume_receipt = receipt
             finally:
                 password[:] = bytes(len(password))

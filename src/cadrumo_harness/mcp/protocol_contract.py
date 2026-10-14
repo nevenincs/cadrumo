@@ -10,11 +10,8 @@ from typing import Any, Final, NotRequired, TypedDict, cast
 
 from pydantic import BaseModel, ValidationError
 
-from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.application.corpus_search.errors import CorpusSearchError
 from cadrumo.application.operations.frontend_requests import OperationResultProjectionRefusalV1
-from cadrumo.application.runtime.contracts import RuntimeRefusalError
-from cadrumo.application.runtime.projection_pages import ProjectionPage
 from cadrumo.application.user_profile.access_contracts import DISCLOSURE_PAGE_ENTRIES, AccessDenialCode
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.sign_in_refusals import SignInRefusal
@@ -29,6 +26,9 @@ from cadrumo.domain.calculations.registry.errors import (
 )
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.portals.categories import PortalCategory
+from cadrumo_client.contracts.contracts import RefusalError
+from cadrumo_client.contracts.projection_pages import ProjectionPage
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
 
 class _FieldSchema(TypedDict):
@@ -431,7 +431,7 @@ def parse_model[M: BaseModel](model: type[M], value: object) -> M:
 
 def refusal_code(error: Exception) -> str:
     """Map a typed runtime failure to the stable non-secret MCP refusal code."""
-    if isinstance(error, (RuntimeFrontendRefusedError, RuntimeRefusalError, AutomationCustodyError)):
+    if isinstance(error, (FrontendRefusedError, RefusalError, AutomationCustodyError)):
         reason = error.reason
         return str(reason.value) if isinstance(reason, Enum) else str(reason)
     if isinstance(error, CorpusSearchError):
@@ -474,7 +474,7 @@ def refusal_facts(error: Exception) -> dict[str, Any]:
 
     A busy subject also names the unsettled operation that holds it, for the person to follow.
     """
-    if isinstance(error, RuntimeFrontendRefusedError):
+    if isinstance(error, FrontendRefusedError):
         facts = sign_in_refusal_facts(error.sign_in)
         if error.holder_operation_id is not None:
             facts["holder_operation_id"] = error.holder_operation_id

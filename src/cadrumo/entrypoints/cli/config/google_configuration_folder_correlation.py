@@ -4,14 +4,15 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
+from cadrumo_client.commands.google_configuration_refusals import google_invalid_frame
+from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
+
 from ....application.user_profile.google_configuration_operation_contracts import (
     GoogleConfigurationOutcome,
     GoogleFolderOrganizeRequest,
     GoogleFolderViewProjection,
     GoogleFolderViewRequest,
 )
-from ..registered_operation_contracts import RegisteredOperationCompletion
-from .google_configuration_refusals import google_invalid_frame
 
 
 def correlate_folder_view(

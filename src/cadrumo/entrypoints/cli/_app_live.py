@@ -20,6 +20,8 @@ from typing import Any, Final
 
 import typer
 
+from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
+
 from ...application.live.capture_mode import LiveCaptureMode
 from ...application.live.errors import LiveIvaAcquisitionFailureMode
 from ...application.live.filed_data import FiledDataListingRow
@@ -58,7 +60,6 @@ from .common import (
     resolve_optional_root,
     resolve_pull_year_range,
 )
-from .registered_operation_errors import invalid_completion_error
 
 
 def _live_period_option(period: str | None, *, year: int) -> Period | None:
@@ -113,7 +114,7 @@ def iva_wallet_pull_cmd(
     remote action is the guarded wallet read query; reconciliation and blocking
     decisions are profile-local evidence.
     """
-    from .runtime_iva_wallet_capture import read_iva_wallet_capture_for_cli
+    from .operation_iva_wallet_capture import read_iva_wallet_capture_for_cli
 
     emit_live_auth_preflight(ctx)
     target_period = _required_live_period_option(period, year=year)
@@ -196,7 +197,7 @@ def iva_wallet_history_cmd(
     history, carry-forward lots, and wallet authority decisions from secure
     profile storage without contacting AEAT.
     """
-    from .runtime_iva_wallet_history import read_iva_wallet_history_for_cli
+    from .operation_iva_wallet_history import read_iva_wallet_history_for_cli
 
     read = read_iva_wallet_history_for_cli(ctx, as_of_year=as_of_year)
     try:
@@ -429,7 +430,7 @@ def iva_wallet_pull_history_cmd(
     submit AEAT form choices.
     """
     from ...core.config import load_settings
-    from .runtime_iva_history_capture import read_iva_wallet_history_capture_for_cli
+    from .operation_iva_history_capture import read_iva_wallet_history_capture_for_cli
 
     emit_live_auth_preflight(ctx)
     resolved_root = resolve_optional_root(
@@ -496,7 +497,7 @@ def iva_wallet_pull_evidence_cmd(
     never performs AEAT filing, payment, or representative submission actions.
     """
     from ...core.config import load_settings
-    from .runtime_iva_remote_state_capture import read_iva_remote_state_capture_for_cli
+    from .operation_iva_remote_state_capture import read_iva_remote_state_capture_for_cli
 
     resolved_target_period = _required_live_period_option(target_period, year=target_year)
     emit_live_auth_preflight(ctx)
@@ -642,7 +643,7 @@ def filed_list_cmd(
     calendar year.
     """
     from ...core.time.clock import today_madrid
-    from .runtime_filed_read import read_filed_list_for_cli
+    from .operation_filed_read import read_filed_list_for_cli
 
     resolved_from = year_from if year_from is not None else today_madrid().year
     resolved_to = year_to if year_to is not None else today_madrid().year
@@ -764,7 +765,7 @@ def filed_discover_cmd(ctx: typer.Context) -> None:
     the accompanying caveat notice says so rather than leaving the operator to
     read one number as though both signals meant the same thing.
     """
-    from .runtime_filed_read import read_filed_discover_for_cli
+    from .operation_filed_read import read_filed_discover_for_cli
 
     read = read_filed_discover_for_cli(ctx)
     try:
@@ -879,7 +880,7 @@ def filed_pull_all_cmd(
     """
     from ...core.config import load_settings
     from ...core.time.clock import today_madrid
-    from .runtime_filed_history import read_filed_history_for_cli
+    from .operation_filed_history import read_filed_history_for_cli
 
     resolved_root = resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir)
     read = read_filed_history_for_cli(ctx, output_root=resolved_root, limit=limit, today=today_madrid())
@@ -1083,7 +1084,7 @@ def _emit_single_filed_pull(
     """Capture and emit one modelo/year filed-declaration report."""
     from ...core.config import load_settings
     from ._app_live_filed_payloads import FiledCaptureResult
-    from .runtime_filed_single import read_filed_single_capture_for_cli
+    from .operation_filed_single import read_filed_single_capture_for_cli
 
     resolved_period = _live_period_option(period, year=year)
     resolved_root = resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir)
@@ -1148,7 +1149,7 @@ def _emit_bulk_filed_pull(
     """Capture and emit a bulk filed-declaration report."""
     from ...core.config import load_settings
     from ._app_live_filed_payloads import FiledCaptureFailurePayload, FiledCaptureResult
-    from .runtime_filed_bulk import read_filed_bulk_capture_for_cli
+    from .operation_filed_bulk import read_filed_bulk_capture_for_cli
 
     resolved_from, resolved_to = resolve_pull_year_range(year=year, year_from=year_from, year_to=year_to)
     resolved_root = resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir)
@@ -1338,7 +1339,7 @@ def filed_pull_sources_cmd(
     """
     from ...core.config import load_settings
     from ._app_live_filed_payloads import FiledCaptureSourcesResult
-    from .runtime_filed_source import read_filed_source_capture_for_cli
+    from .operation_filed_source import read_filed_source_capture_for_cli
 
     resolved_root = resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir)
     read = read_filed_source_capture_for_cli(

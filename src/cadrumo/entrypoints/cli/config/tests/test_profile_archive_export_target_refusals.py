@@ -6,6 +6,11 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.operations.tests.profile_operation_supervisor import (
+    SettledOperation,
+    SupervisedProfile,
+    supervised_profile,
+)
 from cadrumo.application.operations.operation_definition import OperationDefinition
 from cadrumo.application.operations.registry import OperationPublicDefinitionRegistrationV1
 from cadrumo.application.user_profile.archive_operation import (
@@ -26,11 +31,6 @@ from cadrumo.core.operations import OperationEffect, OperationTerminalCondition,
 from cadrumo.entrypoints.cli.config._archive_cli import _refuse_an_archive_target_the_writer_would_reject
 from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError
 from cadrumo.entrypoints.profile_archive_operation_composition import build_profile_archive_operation_ports
-from cadrumo.entrypoints.tests.profile_operation_supervisor import (
-    SettledOperation,
-    SupervisedProfile,
-    supervised_profile,
-)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 

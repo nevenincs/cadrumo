@@ -36,6 +36,8 @@ from textwrap import dedent
 
 import pytest
 
+from cadrumo.tests.subprocess_cli import run_subprocess_cli_harness
+
 from ....adapters.persistence.storage.crypto.encrypted_columns import secure_object_key_digest
 from ....adapters.persistence.storage.custody.tests.profile_record_boundary_support import (
     PROFILE_ID,
@@ -54,7 +56,6 @@ from ....application.user_profile.capsule_record import (
 )
 from ....application.user_profile.custody_ports import profile_custody_secure_object_repository
 from ....domain.user_profile.values import UserProfileRecord
-from .subprocess_cli import run_subprocess_cli_harness
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

@@ -15,7 +15,7 @@ from ....application.ledger.attachment_review import AttachmentReviewItem
 from ....application.ledger.confirmation_gate import confirmation_blockers
 from ....application.ledger.consent_withdrawal import ConsentedDispatch
 from ....application.ledger.evidence_followup_contracts import (
-    DRAFT_TEXT_FIELDS_WITHHELD_FROM_AGENTS,
+    DRAFT_TEXT_FIELDS_WITHHELD_FROM_AUTOMATION,
     LEDGER_EVIDENCE_ATTACHMENT_QUEUE_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_ATTACHMENT_VIEW_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_CONSENT_LIST_OPERATION_DEFINITION_ID,
@@ -428,7 +428,7 @@ def test_each_projector_requires_its_successful_none_effect_receipt(definition_i
         projector(result, wrong_effect)
 
 
-_MCP_DEFINITION_IDS = (
+_EXTERNAL_DEFINITION_IDS = (
     LEDGER_EVIDENCE_ATTACHMENT_QUEUE_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_ATTACHMENT_VIEW_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_CONSENT_LIST_OPERATION_DEFINITION_ID,
@@ -451,8 +451,8 @@ _ATTACHMENT_ITEM_FIELDS = frozenset(
 
 # Every model a result reaches and the fields it declares. A new field on any of
 # them changes a set and fails the test below, so it is read for document
-# content and host paths before an agent can receive it.
-_MCP_RESULT_FIELDS: dict[str, dict[str, frozenset[str]]] = {
+# content and host paths before an automation can receive it.
+_EXTERNAL_RESULT_FIELDS: dict[str, dict[str, frozenset[str]]] = {
     LEDGER_EVIDENCE_ATTACHMENT_QUEUE_OPERATION_DEFINITION_ID: {
         "LedgerEvidenceAttachmentQueueProjection": frozenset({"profile_id", "count", "rows"}),
         "AttachmentReviewItem": _ATTACHMENT_ITEM_FIELDS,
@@ -517,8 +517,8 @@ def _registered_result_model(registry: OperationRegistry, definition_id: str) ->
     return next(binding.model_type for binding in registration.schema_bindings if binding.identity == result_schema)
 
 
-@pytest.mark.parametrize("definition_id", _MCP_DEFINITION_IDS)
-def test_each_evidence_metadata_read_is_admitted_on_the_mcp_frontend_without_a_commit_door(
+@pytest.mark.parametrize("definition_id", _EXTERNAL_DEFINITION_IDS)
+def test_each_evidence_metadata_read_is_admitted_on_the_external_client_frontend_without_a_commit_door(
     definition_id: str,
 ) -> None:
     registry = _registry()
@@ -527,23 +527,25 @@ def test_each_evidence_metadata_read_is_admitted_on_the_mcp_frontend_without_a_c
     resolved = resolve_operation_access(
         registry=registry,
         request=_request(definition_id),
-        context=_access_context(contract, action=AccessAction.SUBMIT, frontend=OperationFrontendProjection.MCP),
+        context=_access_context(
+            contract, action=AccessAction.SUBMIT, frontend=OperationFrontendProjection.EXTERNAL_CLIENT
+        ),
     )
-    assert resolved.request.frontend is OperationFrontendProjection.MCP
+    assert resolved.request.frontend is OperationFrontendProjection.EXTERNAL_CLIENT
     assert resolved.request.profile_id == _PROFILE
     assert resolved.request.period_independent is True
     assert AccessAction.COMMIT not in resolved.policy.actions
 
 
-@pytest.mark.parametrize("definition_id", _MCP_DEFINITION_IDS)
-def test_each_mcp_admitted_evidence_read_declares_only_metadata_fields(definition_id: str) -> None:
+@pytest.mark.parametrize("definition_id", _EXTERNAL_DEFINITION_IDS)
+def test_each_external_client_admitted_evidence_read_declares_only_metadata_fields(definition_id: str) -> None:
     result_model = _registered_result_model(_registry(), definition_id)
 
-    assert _result_fields(result_model) == _MCP_RESULT_FIELDS[definition_id]
+    assert _result_fields(result_model) == _EXTERNAL_RESULT_FIELDS[definition_id]
 
 
 # ---------------------------------------------------------------------------
-# The agent-facing review summary
+# The automation-facing review summary
 # ---------------------------------------------------------------------------
 
 _SUPPLIER_NAME = "SUMINISTROS SINTETICOS DEL NORTE SL"
@@ -761,7 +763,7 @@ def test_the_summary_projector_releases_the_summary_and_the_view_projector_still
 
 # What the summary does with each field of the person's draft projection. A
 # field the draft gains is in none of these sets and fails the test below, so
-# it is read for document text before an agent can receive anything of it.
+# it is read for document text before an automation can receive anything of it.
 _DRAFT_FIELDS_RELEASED_AS_TYPED_VALUES = frozenset(
     {
         "proposed_supply_nature",
@@ -784,9 +786,9 @@ _DRAFT_FIELDS_REDUCED_BY_THE_SUMMARY = frozenset({"lines", "provenance", "discre
 
 def test_every_field_of_the_person_draft_is_released_typed_reduced_or_withheld_as_text() -> None:
     declared = frozenset(InvoiceDraftProjectionV1.model_fields)
-    withheld = frozenset(DRAFT_TEXT_FIELDS_WITHHELD_FROM_AGENTS)
+    withheld = frozenset(DRAFT_TEXT_FIELDS_WITHHELD_FROM_AUTOMATION)
 
-    assert len(withheld) == len(DRAFT_TEXT_FIELDS_WITHHELD_FROM_AGENTS)
+    assert len(withheld) == len(DRAFT_TEXT_FIELDS_WITHHELD_FROM_AUTOMATION)
     assert withheld.isdisjoint(_DRAFT_FIELDS_RELEASED_AS_TYPED_VALUES | _DRAFT_FIELDS_REDUCED_BY_THE_SUMMARY)
     assert withheld | _DRAFT_FIELDS_RELEASED_AS_TYPED_VALUES | _DRAFT_FIELDS_REDUCED_BY_THE_SUMMARY == declared
     assert withheld.isdisjoint(LedgerEvidenceReviewSummaryProjection.model_fields)

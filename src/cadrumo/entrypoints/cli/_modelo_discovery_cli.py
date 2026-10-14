@@ -49,7 +49,7 @@ from ._modelo_payloads import ModeloRequiresResult
 from ._modelo_rendering import binding_encoded_option_lines
 from .common import active_bucket_id_or_refuse, emit_envelope
 from .errors import CliRefusedBoundaryError
-from .runtime_modelo_query_read import (
+from .operation_modelo_query_read import (
     read_modelo_bindings_list,
     read_modelo_bindings_resolve,
     read_modelo_requires,

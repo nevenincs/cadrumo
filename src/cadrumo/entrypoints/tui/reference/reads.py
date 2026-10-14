@@ -2,7 +2,8 @@
 
 Each read takes the same coordinates its command takes and returns the same
 typed result, under one pinned generation of the published authority. Nothing
-here reads a profile, holds a session or contacts a network.
+here reads a profile, holds a session or contacts a network. Portal reads interpret
+the category coordinate as a :class:`PortalCategory` filter.
 """
 
 from __future__ import annotations

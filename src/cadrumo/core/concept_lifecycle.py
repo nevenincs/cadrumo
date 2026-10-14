@@ -50,7 +50,7 @@ class ConceptLifecycle(StrEnum):
             vocabulary. The only lifecycle that publishes and the only one the
             shipped search surfaces by default.
         DEPRECATED: Discouraged but still resolvable — the home of internal
-            machinery concepts that stay available to the developer/agent
+            machinery concepts that stay available to the developer/automation
             corpus while excluded from the taxpayer glossary.
         RETIRED: Tombstoned, carrying a ``replaced_by`` successor.
     """

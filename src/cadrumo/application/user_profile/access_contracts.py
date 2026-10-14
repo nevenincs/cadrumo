@@ -22,7 +22,6 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
 from ...core.profile_session import ProfileSessionRefusalReason
 from ...core.time.utc import UtcInstant
-from ..operations.mcp_surfaces import McpSurfaceName
 from ..operations.models import OperationDefinitionId
 from ..operations.registry import OperationFrontendProjection
 from ..operations.schema_identity import OperationPublicSchemaId
@@ -105,10 +104,6 @@ class AccessScope(BaseModel):
     cannot turn a period-restricted grant into unrestricted access.
     ``disclosure_categories`` consents to whole categories for one destination;
     it is absent from every scope that predates it, which consented to none.
-    ``all_agent_operations`` consents to every registered operation an agent
-    may run, the person's own acts excluded; it is false in every scope that
-    predates it, which named its operations one by one. Admission resolves
-    both against the live operation registry, so a lease never carries either.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -120,15 +115,12 @@ class AccessScope(BaseModel):
     allow_period_independent: bool
     allow_delegation: bool
     disclosure_categories: frozenset[DisclosureCategoryGrant] = frozenset[DisclosureCategoryGrant]()
-    all_agent_operations: bool = False
+    allow_changes_records: bool = True
+    allow_network: bool = True
 
     def permits(self, operation: str) -> bool:
-        """Whether this scope consents to one operation, listed or as one an agent may run.
-
-        Which operations an agent may run is the registry's to say; a scope
-        granting them all is resolved into a list at admission.
-        """
-        return operation in self.operations or self.all_agent_operations
+        """Whether this exact operation is explicitly permitted."""
+        return operation in self.operations
 
     def discloses(self, permission: DisclosurePermission) -> bool:
         """Whether this scope consents to one explicit permission, listed or by its category."""
@@ -413,8 +405,6 @@ class AccessSession(BaseModel):
     issued_at: UtcInstant
     expires_at: UtcInstant
     issued_monotonic: Annotated[float, Field(ge=0, allow_inf_nan=False)]
-    surface: McpSurfaceName | None = None
-    """The MCP surface the connection named at login; ``None`` narrows nothing."""
 
     @model_validator(mode="after")
     def _validate_origin_and_lease(self) -> AccessSession:
@@ -495,11 +485,11 @@ class OsLoginContext(BaseModel):
 
 
 class AccessEvaluationContext(BaseModel):
-    """Trusted connection and clock observations, not fields accepted from agents.
+    """Trusted connection and clock observations, not fields accepted from delegated clients.
 
     ``clock_rollback_detected`` remains latched by the lifecycle owner until fresh
     admission. ``private_work_available`` is the suspend/shutdown admission fence.
-    Login observations never derive from agent-supplied claims or manager state.
+    Login observations never derive from automation-supplied claims or manager state.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG

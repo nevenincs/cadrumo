@@ -33,8 +33,13 @@ static wchar_t *path(cadrumo_context *ctx, uint32_t key) {
  * interpreter. sys.executable remains that interpreter: runtime workers and the
  * supervised KDF child relaunch sys.executable with interpreter arguments. */
 static int run_entrypoint(bridge_main run, int argc, wchar_t **argv, wchar_t **paths) {
+#ifdef CADRUMO_FIXED_MODULE
+    static const wchar_t command[] = L"import " WIDE_LITERAL(CADRUMO_FIXED_MODULE)
+        L" as fixed; raise SystemExit(fixed.main())";
+#else
     static const wchar_t command[] = L"import _cadrumo_bootstrap; _cadrumo_bootstrap.run_entrypoint('"
         WIDE_LITERAL(CADRUMO_ENTRYPOINT) L"')";
+#endif
     size_t size = wcslen(paths[0]) + wcslen(WIDE_LITERAL(CADRUMO_EXECUTABLE)) + 2;
     wchar_t *interpreter = calloc(size, sizeof(wchar_t));
     wchar_t **forwarded = calloc((size_t)argc + 2, sizeof(wchar_t *));

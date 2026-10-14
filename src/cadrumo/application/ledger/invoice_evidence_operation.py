@@ -9,6 +9,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.config import Settings
 from ...core.config_support import LLMProvider
@@ -34,7 +36,6 @@ from ..operations.capabilities import (
 )
 from ..operations.models import OperationTerminalReceipt, require_succeeded_receipt_references
 from ..operations.owner import OperationExecutorContext
-from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )

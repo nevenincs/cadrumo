@@ -542,13 +542,12 @@ desktop:
       title: Profil létrehozása
       unknown: Nem tudni, hogy a profil létrejött-e ({code}). Mielőtt újra próbálod,
         keresd meg a profilok között.
-      wait: 'Ez körülbelül fél percig tart: a profil kulcsa most készül a jelszavából.'
     first_run_lead: A kezdéshez hozz létre egy profilt.
     new_profile: Új profil
     no_profile: Nincs aktív profil
     no_profile_lead: Ezen a számítógépen még nincs profil.
-    remaining_access: Az általad kiadott, külső ügynököknek szóló kulcsok aktívak
-      maradnak.
+    remaining_access: Kijelentkezés után az általad külső alkalmazásoknak kiadott
+      kulcsok közül legalább egy még hozzáférést adhat ehhez a profilhoz.
     services_down: A háttérszolgáltatások nem futnak
     sign_out: Kijelentkezés
     sign_out_failed: A kijelentkezés nem sikerült ({code}).
@@ -569,205 +568,41 @@ desktop:
     zoom_in: Dokumentáció nagyítása
     zoom_out: Dokumentáció kicsinyítése
     zoom_reset: Dokumentáció nagyításának visszaállítása
-  agent:
-    add_files: Fájlok hozzáadása
-    agent_replied: Az ügynök válasza
-    approval_allow_always: Engedélyezem
-    approval_allow_once: Egyszer engedélyezem
-    approval_reject_always: Nem engedélyezem
-    approval_reject_once: Nem engedélyezem
-    approval_review_title: Nézd át, mielőtt a Cadrumo elvégzi
-    approval_tool_title: Az ügynök egy eszközt szeretne használni
-    archive: Archiválás
-    archived_empty: Nincs archivált beszélgetés
-    archived_toggle: Archivált ({count})
-    attachments: Fájlok a következő üzenethez
-    attachments_refused: 'Elutasítva: {count}'
-    attachments_uploading: 'Feltöltés alatt: {count}'
-    can_read_images: képeket olvasni
-    can_read_pdfs: PDF-eket olvasni
-    can_search_web: a weben keresni
-    can_use_tools: eszközöket használni
-    can_write: fájlokat írni
-    cancel: Mégse
-    capabilities: 'Képes: {list}'
-    choose_model: Válassz modellt
-    choose_provider: Válassz szolgáltatót
-    close_documents: Dokumentumok bezárása
-    collapse_members: 'Fájlok elrejtése: {name}'
-    condition_budget_exhausted: A költségkeret elfogyott
-    condition_credits_exhausted: Elfogytak a kreditek
-    condition_invalid_request: A szolgáltató elutasította a kérést
-    condition_network_unreachable: A szolgáltató nem érhető el
-    condition_provider_overloaded: A szolgáltató túlterhelt
-    condition_throttled: A szolgáltató korlátozza a kéréseket
-    condition_unauthenticated: Nincs hitelesítve a szolgáltatónál
-    condition_unknown: Ismeretlen ok
-    condition_usage_exhausted: Használati korlát elérve
-    consent_allow: 'Küldés ide: {provider}'
-    consent_decline: Ne küldd el
-    consent_items: Ezt küldenénk el
-    consent_lead: 'A válaszhoz a modellnek ({model}) szüksége van az alábbi tartalomra.
-      Ha elküldöd, elhagyja ezt a számítógépet, és ide kerül: {provider}.'
-    consent_note: Semmi sem megy el, amíg nem döntesz. Ha nem küldöd el, ezen a számítógépen
-      marad.
-    consent_title: 'Elküldöd ezt ide: {provider}?'
-    delete: Törlés
-    delete_confirm: 'Törlöd ezt: „{title}”, a dokumentumaival együtt ({count})? Ez
-      nem vonható vissza.'
-    delete_confirm_bare: 'Törlöd ezt: „{title}”? Ez nem vonható vissza.'
-    documents: Dokumentumok
-    documents_attached: 'Ebben a beszélgetésben: {count}'
-    documents_empty: Ebben a beszélgetésben még nincs dokumentum
-    documents_failed: 'Hibás: {count}'
-    documents_review: 'Ellenőrzésre vár: {count}'
-    drop_accepts: 'Elfogadott típusok: {types}'
-    drop_hint: 'Elengedéskor tartsd lenyomva: {key}'
-    drop_release: Engedd el a fájlok hozzáadásához
-    drop_release_multiple: Engedd el {count} fájl hozzáadásához
-    drop_release_single: Engedd el 1 fájl hozzáadásához
-    drop_title: Hozzáadás ehhez a beszélgetéshez
-    effort: Ráfordítás
-    effort_default: Alapértelmezett
-    effort_high: Magas
-    effort_low: Alacsony
-    effort_max: Maximális
-    effort_medium: Közepes
-    effort_ultra: Ultra
-    effort_xhigh: Nagyon magas
-    expand_members: 'Fájlok megjelenítése: {name}'
-    files_summary: 'Fájlok: {count} · {size}'
-    hide: Ügynök elrejtése
-    history: Előzmények
-    history_empty: Még nincs beszélgetés
-    history_no_match: 'Egy beszélgetés sem felel meg ennek: „{query}”.'
-    lane_no_catalog: A modelleket nem sikerült lekérni
-    lane_not_admitted: Itt nem engedélyezett
-    lane_not_configured: Nincs beállítva
-    lane_notice: 'Fejlesztői környezet: a beszélgetések titkosítás nélkül maradnak
-      ezen a teszttárhelyen. Csak kitalált adatokat használj.'
-    lane_signed_out: Nincs bejelentkezve
-    lane_unreachable: Nem érhető el
-    members_multiple: '{count} fájl'
-    members_single: 1 fájl
-    message_label: Üzenet
-    message_placeholder: Kérdezz egy Modelóról, egy határidőről vagy a nyilvántartásaidról
-    model: Modell
-    model_written: Ez a szolgáltató nem sorolja fel a modelljeit. Írd be a modell
-      azonosítóját úgy, ahogy a szolgáltató nevezi.
-    more_files: +{count} további
-    new_conversation: Új beszélgetés
-    no_models: Nincs választható modell
-    no_provider: Az ügynöknek még nincs használható szolgáltatója.
-    provider: Szolgáltató
-    questions_answer: Válaszolok
-    questions_clear: Válasz törlése
-    questions_control: 'A válasz egy sor: nem tartalmazhat sortörést, tabulátort vagy
-      más vezérlőkaraktert'
-    questions_decline: Nem válaszolok
-    questions_invalid: Előbb javítsd a megjelölt válaszokat
-    questions_lead: Válaszolj lent, vagy írj inkább üzenetet, hogy a saját szavaiddal
-      válaszolj.
-    questions_missing: Előbb válaszolj minden kötelező kérdésre
-    questions_optional: (nem kötelező)
-    questions_title: Az ügynöknek néhány válaszra van szüksége
-    questions_too_long: Ez a válasz {count} karakter hosszú; legfeljebb {max} lehet
-    queued: Feltöltésre vár
-    ran_with: 'Ezzel futott: {selection}'
-    ready: Kész
-    refused: Elutasítva
-    remove_all: Az összes eltávolítása
-    remove_document: 'Eltávolítás: {name}'
-    remove_file: 'Eltávolítás: {name}'
-    reply_deleting: Törlés folyamatban
-    reply_failed: Ez a válasz nem készült el.
-    reply_in_progress: Még folyamatban van egy válasz.
-    reply_queued: 'Várakozó üzenetek: {count}'
-    reply_reconciling: Egyeztetés…
-    reply_repair_needed: Javításra szorul
-    reply_stopping: Leállítás…
-    resize: Ügynök átméretezése
-    restore: Visszaállítás
-    retry: Próbáld újra
-    role_context: Kontextus
-    role_information: Információ
-    role_label: Felhasználás
-    role_ledger: Főkönyvi adatok
-    row_documents: 'Dokumentumok: {count}'
-    search_history: Keresés a beszélgetésekben
-    send: Küldés
-    send_nothing: Előbb írj üzenetet, vagy adj hozzá fájlt
-    send_too_long: Ez az üzenet {count} karakter hosszú; legfeljebb {max} lehet
-    send_waiting: Várd meg, amíg minden fájl feltöltődik
-    sent_files: Az üzenettel küldött fájlok
-    service_absent: Az ügynök nincs telepítve.
-    service_credential_missing: Ehhez a szolgáltatóhoz nincs beállítva kulcs.
-    service_failed: Az ügynök leállt.
-    service_incompatible: Az ügynök ezen verziója nem működik ezzel a Cadrumóval.
-    service_root_unmarked: Ez a teszttárhely nincs megjelölve az ügynök fejlesztői
-      környezeteként.
-    service_runtime_unavailable: A Cadrumo háttérszolgáltatása nem fut.
-    service_signed_out: Jelentkezz be, hogy beszélhess az ügynökkel.
-    service_starting: Az ügynök indul…
-    service_stopped: Az ügynök nem fut.
-    set_up_providers: MI-szolgáltatók beállítása
-    settings: Ügynök beállításai
-    settings_label: 'Modell és ráfordítás: {current}'
-    settings_title: Modellbeállítások
-    show: Ügynök megjelenítése
-    show_active: Aktívak megjelenítése
-    sign_in_first: Jelentkezz be az ügynök használatához
-    status_extracting: Olvasás
-    status_failed: Hibás
-    status_needs_review: Ellenőrzésre vár
-    status_ready: Kész
-    status_skipped: Kihagyva
-    status_uploading: Feltöltés
-    stop: Leállítás
-    stopped: Leállítva
-    tool_done: Kész
-    tool_failed: Sikertelen
-    tool_kind_delete: Töröl
-    tool_kind_edit: Szerkeszt
-    tool_kind_execute: Futtat
-    tool_kind_fetch: Lekér
-    tool_kind_move: Mozgat
-    tool_kind_other: Egyéb
-    tool_kind_read: Olvas
-    tool_kind_search: Keres
-    tool_kind_switch_mode: Módot vált
-    tool_kind_think: Gondolkodik
-    tool_pending: Függőben
-    tool_running: Fut
-    transcript: Beszélgetés
-    transcript_empty: Még nincsenek üzenetek
-    unavailable: Még nem érhető el
-    uploading: Feltöltés
-    uploading_name: 'Feltöltés: {name}'
-    usage: 'Tokenek: {input} bemenet, {output} kimenet'
-    waiting_on_you: Rád vár
-    welcome_lead: Adózási kérdésed van? Kérdezz egy Modelóról vagy egy határidőről,
-      vagy adj hozzá nyugtákat, számlákat és banki kivonatokat a + gombbal.
-    welcome_title: Min dolgozunk ma?
-    working: Dolgozik…
-    you_said: Ezt írtad
-  agent_keys:
+  attendance:
+    actions: Tevékenységek
+    all_periods: Minden időszak
+    changes: Rekordok módosítása
+    delegation: Delegálás
+    disclosures: Adatközlések
+    executable: Futtatható fájl
+    expires: Lejárat
+    failed: 'A hozzáférési döntés nem érhető el: {code}'
+    network: Hálózati hozzáférés
+    'no': Nem
+    none: Nincs
+    operations: Műveletek
+    period_independent: Időszak nélküli munka
+    periods: Időszakok
+    process: Folyamat
+    title: Egy külső folyamat hozzáférést kér
+    'yes': Igen
+  automation_access:
     cancel: Mégse
     cleanup_pending: Visszavonva. A tárolt kulcsot még törlik erről a számítógépről.
     copied: Másolva
     copy: Hivatkozás másolása
     copy_failed: Nem sikerült a másolás. Jelöld ki a hivatkozást, és másold ki magad.
     done: Kész
-    empty: Még nincs kulcs. A Cadrumón kívüli ügynök nem érheti el ezt a profilt,
-      amíg nem adsz ki egyet.
+    empty: Ehhez a profilhoz még nem adtál ki hozzáférési kulcsot.
     expired_on: 'Lejárt: {date}'
     expires_on: 'Lejár: {date}'
     issue: Kulcs kiadása
-    issue_lead: Az ilyen kulccsal rendelkező ügynök mindig olvashatja és módosíthatja
-      a profil értékeit, és láthatja az általa futtatott műveleteket.
+    issue_lead: Ezzel a kulccsal egy külső alkalmazás elolvashatja a profil adatait
+      és a műveletek részleteit, valamint futtathatja a külső alkalmazások számára
+      elérhető összes műveletet. Az adóadatok olvasását külön engedélyezheted alább.
     issue_submit: Kulcs kiadása
-    issued_lead: Add meg ezt a hivatkozást az MCP-kliensednek hitelesítőadat-hivatkozásként.
-      Maga a kulcs a számítógép biztonságos tárolójában marad, és soha nem jelenik
+    issued_lead: Ezt a hivatkozást add meg a külső alkalmazás beállításakor. Maga
+      a kulcs ezen a számítógépen, biztonságos tárhelyen marad, és soha nem jelenik
       meg.
     issued_on: 'Kiadva: {date}'
     issued_once: Csak egyszer jelenik meg. Ha bezárod, nem lehet újra megjeleníteni.
@@ -775,9 +610,8 @@ desktop:
     issuing: Kiadás…
     key_title: '{id} kulcs'
     last_used: 'Utoljára használva: {date}'
-    lead: A kulcs lehetővé teszi, hogy egy Cadrumón kívüli MI-ügynök, amely az MCP-szerverén
-      keresztül éri el, ebben a profilban dolgozzon. Kulcsot csak te adhatsz ki vagy
-      vonhatsz vissza.
+    lead: A hozzáférési kulcsok külső alkalmazásoknak adnak hozzáférést ehhez a profilhoz.
+      Kulcsot csak te adhatsz ki vagy vonhatsz vissza.
     never_used: Még nem használták
     reference_label: Hitelesítőadat-hivatkozás
     refresh: Frissítés
@@ -788,14 +622,14 @@ desktop:
     refused_person_act_required: A kulcsokat csak te kezelheted, itt.
     refused_profile_locked: Ez a profil zárolva van.
     revoke: Visszavonás
-    revoke_confirm: Visszavonod ezt a kulcsot? Az ezt használó ügynököt ettől kezdve
-      elutasítjuk. Ez nem vonható vissza.
+    revoke_confirm: Visszavonod ezt a kulcsot? Az ezt használó alkalmazások azonnal
+      elveszítik a hozzáférést. A művelet nem vonható vissza.
     revoke_confirm_action: Kulcs visszavonása
     revoking: Visszavonás…
-    scope_all_operations: Minden, ügynök számára engedélyezett műveletet futtathat
+    scope_all_operations: Minden, külső alkalmazások számára elérhető műveletet végrehajthat
     scope_no_tax_values: Nem olvassa az adóértékeket
     scope_operations_seen: Látja az általa futtatott műveleteket
-    scope_profile_values: Olvassa és módosítja a profil értékeit
+    scope_profile_values: Olvassa a profil értékeit
     scope_some_operations: Csak néhány műveletet futtathat
     scope_tax_values: Olvassa az adóértékeket
     standing_active: Aktív
@@ -804,9 +638,9 @@ desktop:
     standing_revoked: Visszavonva
     standing_suspended: Szüneteltetve
     tax_values: Adóértékek olvasásának engedélyezése is
-    tax_values_note: Kiszámított összegek és bevallások. Ha kikapcsolva hagyod, az
-      ügynök nem látja őket.
-    title: API-kulcsok MCP-ügynököknek
+    tax_values_note: A kiszámított adóösszegekre és a bevallások adataira is kiterjed.
+      Hagyd kikapcsolva, ha nem szeretnéd, hogy az alkalmazás elolvassa ezeket.
+    title: Hozzáférési kulcsok külső alkalmazásoknak
   calendar:
     aeat:
       accepted: Elfogadva
@@ -852,8 +686,8 @@ desktop:
     warnings: Hiányoznak profiladatok, ezért ezek a dátumok alapértékeket használnak.
     window_unknown: A kezdő dátum nincs megadva
   canvas:
-    lead: Nyisd meg az ügynököt, a TUI-t vagy a dokumentációt az oldalsávról vagy
-      innen.
+    lead: Válassz munkaterületet alább, vagy nyisd meg az oldalsávból. A dokumentációt
+      mindkét helyről megnyithatod.
     title: Nincs semmi megnyitva
   docs:
     frame_title: Cadrumo-dokumentáció
@@ -921,9 +755,7 @@ desktop:
     type_to_search: Írj a kereséshez.
     unavailable: A dokumentáció keresése nem érhető el.
   pane:
-    agent: Ügynök
     docs: Dokumentáció
-    maximize_agent: Ügynök teljes méretben
     maximize_docs: Dokumentáció teljes méretben
     maximize_focused: Aktív terület teljes méretben
     maximize_panel: Alsó panel teljes méretben
@@ -935,70 +767,8 @@ desktop:
     label: Alsó panel
     resize: Alsó panel átméretezése
     show: Alsó panel megjelenítése
-  providers:
-    add_key: Kulcs hozzáadása
-    base_url_default: 'Hagyd üresen, és ezt használjuk: {url}.'
-    base_url_label: Alap-URL
-    base_url_required: 'Kötelező: ennek a szolgáltatónak nincs alapértelmezett címe.'
-    cancel: Mégse
-    cli_installed_signed_in: Telepítve, bejelentkezve
-    cli_installed_signed_out: Telepítve, nincs bejelentkezve
-    cli_not_installed: Nincs telepítve
-    cli_unknown: Még nincs ellenőrizve
-    development_note: Ebben a fejlesztői változatban a saját kulcs nélküli szolgáltató
-      a fejlesztői környezet kulcsát használja.
-    disable: Letiltás
-    disable_note: A letiltás megakadályozza, hogy a Cadrumo használja a szolgáltatót,
-      máshol talált kulccsal sem.
-    disabled: 'Letiltva: a Cadrumo nem használja, amíg nem adsz hozzá kulcsot, vagy
-      vissza nem állítod.'
-    key_label: API-kulcs ({provider})
-    key_note: Illeszd be ide. Titkosítva mentjük, és soha többé nem jelenik meg.
-    lead: A kulcsok titkosítva maradnak ebben a profilban, és soha többé nem jelennek
-      meg. Csak te adhatod hozzá, cserélheted le vagy távolíthatod el őket.
-    mode_provider_sign_in: 'Bejelentkezve ezen keresztül: {provider}'
-    mode_token: OAuth-token mentve ebben a profilban
-    readiness_disabled: Letiltva
-    readiness_missing: Nincs kulcs
-    readiness_not_verified: Mentve, még nincs használva
-    readiness_ready: Kész
-    readiness_sign_in_required: Bejelentkezés szükséges
-    readiness_unusable: Nem használható
-    reason_not_configured: Még nincs beállítva.
-    reason_record_unreadable: A mentett beállításai nem olvashatók. Add hozzá újra
-      a kulcsot.
-    reason_sign_in_with_provider_tool: Előbb jelentkezz be a szolgáltató ({provider})
-      saját alkalmazásával.
-    refresh: Frissítés
-    refused_base_url_rejected: Ez az alap-URL nem használható.
-    refused_catalog_unavailable: A Cadrumo nem tudta beolvasni az ügynök szolgáltatóit.
-    refused_invalid_key_format: Ez nem tűnik ennek a szolgáltatónak a kulcsának.
-    refused_not_signed_in: Jelentkezz be a kulcsok módosításához.
-    refused_person_act_required: A kulcsokat csak te módosíthatod, itt.
-    refused_profile_locked: Ez a profil zárolva van.
-    refused_revision_conflict: Ez máshol megváltozott. A legfrissebb látható; próbáld
-      újra.
-    refused_runtime_unavailable: A háttérszolgáltatás nem fut, így semmit sem olvastunk
-      be, és semmi sem változott. Ellenőrizd a háttérszolgáltatás-kezelőt, majd próbáld
-      újra.
-    replace_key: Kulcs cseréje
-    reset: Visszaállítás
-    reset_note: A visszaállítás elfelejti, amit beállítottál, mintha soha nem lett
-      volna beállítva.
-    reset_note_development: A visszaállítás elfelejti, amit beállítottál; ebben a
-      fejlesztői változatban újra a fejlesztői környezet kulcsa lesz használva.
-    save: Mentés
-    saved_unread: Mentve, de az állapotát nem sikerült beolvasni.
-    saving: Mentés…
-    sign_in_only: A szolgáltató ({provider}) saját bejelentkezését használja. A Cadrumo
-      csak azt mutatja, hogy elérhető-e.
-    source_environment: A fejlesztői környezet kulcsát használja
-    source_profile: A kulcs ebben a profilban van mentve
-    through: 'Ezen keresztül: {url}'
-    title: MI-szolgáltatók
   rail:
     aeat: Az AEAT honlapja
-    agent: Ügynök
     console: Konzol
     docs: Dokumentáció
     docs_home: Dokumentáció kezdőlapja
@@ -1746,8 +1516,8 @@ topic:
   authentication:
     body: 'Az AEAT-hitelesítés Cl@ve Móvil (push a regisztrált telefonra) vagy digitális
       tanúsítvány (FNMT / azzal egyenértékű) segítségével működik. Konfigurálj egy
-      szolgáltatót: `aeat config auth configure --provider certificate`, majd ellenőrizd:
-      `aeat config auth test`.'
+      szolgáltatót: `cadrumo-runtime config auth configure --provider certificate`,
+      majd ellenőrizd: `cadrumo-runtime config auth test`.'
     title: Hitelesítés az AEAT-nál
   calendar:
     body: A naptár adott időtartományon belül mutatja a benyújtási kötelezettségeket
@@ -1791,8 +1561,8 @@ topic:
     title: Adóalany profilja
   providers:
     body: Támogatott hitelesítési szolgáltatók; mindegyiknek eltérő előfeltételei
-      vannak. A `aeat config auth providers` parancs felsorolja azokat a követelményekkel
-      együtt.
+      vannak. A `cadrumo-runtime config auth providers` parancs felsorolja azokat
+      a követelményekkel együtt.
     title: Hitelesítési szolgáltatók
   recargo-extemporaneo:
     body: 'A határidő utáni benyújtás – előzetes AEAT-értesítés nélkül – az első évben

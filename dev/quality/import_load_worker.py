@@ -25,6 +25,9 @@ _SCHEMA_VERSION: Final[int] = 1
 _ENCODING: Final[str] = "utf-8"
 _CORE_TARGET_METADATA: Final[str] = "dev/quality/metadata/import_load_targets.cadrumo.json"
 _HARNESS_TARGET_METADATA: Final[str] = "dev/quality/metadata/import_load_targets.cadrumo_harness.json"
+_SERVICE_TARGET_METADATA: Final[str] = "dev/quality/metadata/import_load_targets.cadrumo_agent_service.json"
+_CLIENT_TARGET_METADATA: Final[str] = "dev/quality/metadata/import_load_targets.cadrumo_client.json"
+_RUNTIME_TARGET_METADATA: Final[str] = "dev/quality/metadata/import_load_targets.cadrumo_runtime.json"
 _DEV_TARGET_METADATA: Final[str] = "dev/quality/metadata/import_load_targets.dev.json"
 _DOCS_TARGET_METADATA: Final[str] = "dev/quality/metadata/import_load_targets.docs.json"
 
@@ -36,6 +39,9 @@ def load_declared_targets(repository: Path) -> dict[str, object]:
     # private modules, without making an open or silently truncated import set.
     core_targets = load_all_target_sets(_CORE_TARGET_METADATA, repository=repository)
     harness_targets = load_all_target_sets(_HARNESS_TARGET_METADATA, repository=repository)
+    service_targets = load_all_target_sets(_SERVICE_TARGET_METADATA, repository=repository)
+    client_targets = load_all_target_sets(_CLIENT_TARGET_METADATA, repository=repository)
+    runtime_targets = load_all_target_sets(_RUNTIME_TARGET_METADATA, repository=repository)
     dev_targets = load_all_target_sets(_DEV_TARGET_METADATA, repository=repository)
     docs_targets = load_all_target_sets(_DOCS_TARGET_METADATA, repository=repository)
     failures: list[dict[str, object]] = []
@@ -59,7 +65,34 @@ def load_declared_targets(repository: Path) -> dict[str, object]:
             importlib.import_module(docs_target)
         except BaseException as exc:
             failures.append(_failure(docs_target, exc))
-    targets = tuple(sorted({*core_targets, *harness_targets, *dev_targets, *docs_targets}))
+    for service_target in service_targets:
+        try:
+            importlib.import_module(service_target)
+        except BaseException as exc:
+            failures.append(_failure(service_target, exc))
+    for client_target in client_targets:
+        try:
+            importlib.import_module(client_target)
+        except BaseException as exc:
+            failures.append(_failure(client_target, exc))
+    for runtime_target in runtime_targets:
+        try:
+            importlib.import_module(runtime_target)
+        except BaseException as exc:
+            failures.append(_failure(runtime_target, exc))
+    targets = tuple(
+        sorted(
+            {
+                *core_targets,
+                *harness_targets,
+                *service_targets,
+                *client_targets,
+                *runtime_targets,
+                *dev_targets,
+                *docs_targets,
+            }
+        )
+    )
     return {
         "attempted": len(targets),
         "failures": failures,

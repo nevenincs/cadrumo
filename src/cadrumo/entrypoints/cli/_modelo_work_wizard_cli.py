@@ -7,6 +7,8 @@ from uuid import UUID
 import typer
 from pydantic import ValidationError
 
+from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
+
 from ...application.flows.errors import FlowError
 from ...application.flows.line_frontend import LineFlowFrontend
 from ...application.modelo.action_errors import modelo_work_wizard_retry_exhausted_precondition
@@ -36,10 +38,9 @@ from ._modelo_rendering import source_diagnostic_notice, source_diagnostic_notic
 from ._modelo_work_wizard_payloads import WizardPromptedCasillaPayload, WorkWizardResult
 from .common import activate_subcommand_output_language, attach_cli_policy_verdict, emit_envelope
 from .errors import CliRefusedBoundaryError
-from .registered_operation_errors import invalid_completion_error
-from .runtime_modelo_calculation import calculation_snapshot_lines, calculation_snapshot_payload
-from .runtime_modelo_metadata import read_modelo_work_unit
-from .runtime_modelo_work_wizard import read_modelo_work_wizard_context, run_modelo_work_wizard_attempt
+from .operation_modelo_calculation import calculation_snapshot_lines, calculation_snapshot_payload
+from .operation_modelo_metadata import read_modelo_work_unit
+from .operation_modelo_work_wizard import read_modelo_work_wizard_context, run_modelo_work_wizard_attempt
 
 _MAX_MISSING_INPUT_RETRIES = 12
 

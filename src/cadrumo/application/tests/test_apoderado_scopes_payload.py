@@ -44,7 +44,7 @@ def test_apoderado_scopes_list_result_refuses_empty_catalogue_version() -> None:
     (
         {"code": "bogus"},
         {"oops": 1},
-        {"code": "iva", "name_es": "IVA", "name_en": "VAT"},
+        {"code": "iva", "name_es": "IVA", "name_en": "IVA"},
     ),
 )
 def test_apoderado_scopes_list_result_refuses_malformed_scope_row(scope_row: dict[str, object]) -> None:
@@ -59,7 +59,7 @@ def test_apoderado_scopes_list_result_refuses_unknown_top_level_field() -> None:
 
 
 def test_apoderado_scope_result_retains_the_domain_row_type() -> None:
-    row = ApoderadoScope(code="IVA", name_es="IVA", name_en="VAT", modelo_codes=("303", "390"))
+    row = ApoderadoScope(code="IVA", name_es="IVA", name_en="IVA", modelo_codes=("303", "390"))
 
     assert row.code == "IVA"
     assert row.modelo_codes == ("303", "390")

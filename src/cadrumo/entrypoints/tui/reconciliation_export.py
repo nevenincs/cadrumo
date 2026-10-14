@@ -9,7 +9,8 @@ from textual.app import ComposeResult
 from textual.screen import ModalScreen, Screen
 from textual.widgets import Button, Checkbox, Input, Static
 
-from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo_client.transport.frontend_client import FrontendClient
+
 from ...application.modelo.reconciliation_export_operation import (
     RECONCILIATION_EXPORT_XLSX_OPERATION_DEFINITION_ID,
     ReconciliationExportXlsxProjection,
@@ -72,7 +73,7 @@ class ReconciliationDestinationScreen(ModalScreen[WorkbenchExportRequest | None]
 class ReconciliationExportScreen(Screen[None]):
     """Publish stored differences for an exact work unit through its profile worker."""
 
-    def __init__(self, client: RuntimeFrontendClient, work_unit_id: str) -> None:
+    def __init__(self, client: FrontendClient, work_unit_id: str) -> None:
         """Retain the authenticated profile and explicit saved-review work selector."""
         super().__init__()
         self._client = client

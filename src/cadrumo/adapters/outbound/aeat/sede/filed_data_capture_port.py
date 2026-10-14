@@ -10,6 +10,8 @@ from contextlib import asynccontextmanager, nullcontext
 from dataclasses import dataclass, field
 from typing import cast, override
 
+from cadrumo_client.contracts.contracts import RefusalError
+
 from .....application.auth.certificate_secret_backend import CertificateSecretBackendFactory
 from .....application.auth.operator_scope_ports import OperatorScopePorts
 from .....application.auth.protocols import BrowserSessionFactoryPort
@@ -25,7 +27,6 @@ from .....application.live.filed_data_ports import (
 )
 from .....application.live.filed_observation_ports import FiledObservationProtocol
 from .....application.live.session import SessionWriteReporter, active_verified_session
-from .....application.runtime.contracts import RuntimeRefusalError
 from .....application.user_profile.access_errors import ProfileAccessRefusedError
 from .....application.user_profile.automation_custody_port import AutomationCustodyError
 from .....core.errors.hierarchy import AuthError
@@ -63,7 +64,7 @@ async def _call_adapter[T](operation: str, callback: Callable[[], Awaitable[T]])
         return await callback()
     # An authentication failure is the operator's login, not this read; it keeps
     # its own registered code so the operator sees, for example, an approval timeout.
-    except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError, AuthError):
+    except (ProfileAccessRefusedError, AutomationCustodyError, RefusalError, AuthError):
         raise
     except LiveApplicationError:
         raise
@@ -270,7 +271,7 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
             LiveApplicationError,
             ProfileAccessRefusedError,
             AutomationCustodyError,
-            RuntimeRefusalError,
+            RefusalError,
             AuthError,
         ):
             raise
@@ -311,7 +312,7 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
             LiveApplicationError,
             ProfileAccessRefusedError,
             AutomationCustodyError,
-            RuntimeRefusalError,
+            RefusalError,
             AuthError,
         ):
             raise

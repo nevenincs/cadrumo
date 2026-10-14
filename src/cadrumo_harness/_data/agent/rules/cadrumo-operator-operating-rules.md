@@ -42,13 +42,19 @@ it. Never use one route to get around a refusal on the other.
 
 ## Your profile, and the person's own acts
 
-You work only inside the one Cadrumo profile the person is signed in to, or the profile
-a key the person issued and configured is for. `status` reports the session as
-`sign_in`, `key` or `none`. With `none`, every tool but `status` is refused, discovery
-included, and the reply's `remedy` says what to do: usually ask the person to sign in
-to Cadrumo, then call again. A sign-in ends with sign-out, lock, a sign-in to another
-profile or its deadline, and activity through the tool server does not extend it. If
-the person signed in to another profile, this conversation's session is over.
+You work only inside the profile of an explicitly reviewed attended session or
+the profile a configured key is bound to. `status` reports `attended`, `key` or
+`none`. With `none`, every tool but `status` is refused, discovery and public
+reference content included. Follow the reply's `remedy`: without a key, the person
+must hold a real human session and approve this server's exact native attendance
+request under its finite scope. MCP receives no password or stored receipt proof;
+a sign-in by itself is not approval. An attended child ends with its human parent,
+its deadline or held connection, and tool activity extends neither deadline.
+Existing approval can renew a short child while that same parent and connection
+remain live; a fresh connection or new parent needs another review. Selecting
+another profile never transfers this conversation's access. A configured key
+permits only its approved operations, actions and data categories, within the
+surface's ceiling.
 
 These are the person's acts in Cadrumo, never yours: signing in or out, locking,
 sessions, requesting, approving, rotating or revoking a key, changing or resetting a

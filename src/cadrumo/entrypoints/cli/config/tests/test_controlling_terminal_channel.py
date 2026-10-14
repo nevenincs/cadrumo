@@ -17,16 +17,16 @@ from typing import IO
 
 import pytest
 
-from ...errors import CliRefusedBoundaryError
-from ..secure_input import write_to_controlling_terminal
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.secure_input import write_to_controlling_terminal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _MNEMONIC_INPUT = "abandon ability able about above absent absorb abstract absurd abuse access accident"
 
 _REFUSAL_PROBE = (
-    "from cadrumo.entrypoints.cli.config.secure_input import write_to_controlling_terminal\n"
-    "from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError\n"
+    "from cadrumo_client.commands.secure_input import write_to_controlling_terminal\n"
+    "from cadrumo_client.commands.errors import CliRefusedBoundaryError\n"
     f"try:\n    write_to_controlling_terminal({_MNEMONIC_INPUT!r})\n"
     "    outcome = 'wrote'\n"
     "except CliRefusedBoundaryError:\n    outcome = 'refused'\n"
@@ -111,8 +111,8 @@ def test_a_redirected_child_leaves_no_secret_in_the_captured_file(tmp_path: Path
     """
     transcript = tmp_path / "transcript.txt"
     script = (
-        "from cadrumo.entrypoints.cli.config.secure_input import write_to_controlling_terminal\n"
-        "from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError\n"
+        "from cadrumo_client.commands.secure_input import write_to_controlling_terminal\n"
+        "from cadrumo_client.commands.errors import CliRefusedBoundaryError\n"
         f"try:\n    write_to_controlling_terminal({_MNEMONIC_INPUT!r})\n"
         "except CliRefusedBoundaryError:\n    pass\n"
     )

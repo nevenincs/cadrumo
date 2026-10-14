@@ -6,9 +6,10 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from .._command_target import resolve_deferred_target
+from cadrumo_client.commands.graph import CommandSpecGraph
+from cadrumo_client.commands.target import resolve_deferred_target
+
 from .._root_command_specs import ROOT_COMMAND_SPECS
-from ..command_graph import CommandSpecGraph
 from ..main import cli_app
 
 app = cli_app()

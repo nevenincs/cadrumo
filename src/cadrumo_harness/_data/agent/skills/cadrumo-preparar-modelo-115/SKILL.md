@@ -39,8 +39,10 @@ Modelo 180, not Modelo 190.
 Confirm these before you start. If one is missing, say what is missing and stop
 that step.
 
-- `status` shows a session (`sign_in` or `key`). With `none`, ask the person to
-  sign in to Cadrumo.
+- `status` shows an admitted session (`attended` or `key`). With `none`, ask
+  the person to hold a live Cadrumo session and review this server's exact
+  attendance request, or configure a separately reviewed key. A sign-in alone
+  does not grant this server access.
 - A profile is active (`overview.status`, `aeat app overview status`).
 - The ledger for the quarter records every rent payment the taxpayer made on a
   leased urban premises, with its withholding scheme and rate (`ledger.check`,

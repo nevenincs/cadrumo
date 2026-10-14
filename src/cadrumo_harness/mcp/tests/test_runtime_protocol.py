@@ -17,11 +17,15 @@ from cadrumo.application.user_profile.access_contracts import (
     ProfileAccessStatus,
 )
 from cadrumo.core.time.clock import now
-from cadrumo_harness.mcp import runtime_adapter as mcp_runtime
-from cadrumo_harness.mcp.protocol_contract import SIGN_IN_REMEDY
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
-from cadrumo_harness.mcp.server import build_server
-from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
+from cadrumo_client.contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
+from cadrumo_harness.mcp.access_scope import surface_scope
+from cadrumo_harness.mcp.surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES
+
+from .. import runtime_adapter as mcp_runtime
+from ..protocol_contract import SIGN_IN_REMEDY
+from ..runtime_adapter import RuntimeMcpAdapter
+from ..server import build_server
+from .session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -76,7 +80,7 @@ class _RuntimeClientStub:
 
     def __init__(self, profile_id: UUID) -> None:
         self.profile_id = profile_id
-        self.frontend = OperationFrontendProjection.MCP
+        self.frontend = OperationFrontendProjection.EXTERNAL_CLIENT
         self.session_id = uuid4()
         self.session_expires_at = now() + timedelta(minutes=5)
         self.close_count = 0
@@ -131,8 +135,15 @@ async def test_the_configured_key_admits_exact_profile_for_mcp_and_close_release
     opened: list[tuple[UUID, UUID, OperationFrontendProjection]] = []
 
     async def open_credential_client(
-        *, profile_id: UUID, credential_reference: UUID, frontend: OperationFrontendProjection
+        *,
+        profile_id: UUID,
+        credential_reference: UUID,
+        frontend: OperationFrontendProjection,
+        timeout: float,
+        scope: AccessScope,
     ) -> _RuntimeClientStub:
+        assert timeout == PROFILE_ADMISSION_TIMEOUT_SECONDS
+        assert scope == surface_scope(MCP_SURFACES[DEFAULT_MCP_SURFACE])
         opened.append((profile_id, credential_reference, frontend))
         return admitted
 
@@ -151,7 +162,7 @@ async def test_the_configured_key_admits_exact_profile_for_mcp_and_close_release
             }
             assert adapter.client is admitted
 
-        assert opened == [(profile_id, credential_reference, OperationFrontendProjection.MCP)]
+        assert opened == [(profile_id, credential_reference, OperationFrontendProjection.EXTERNAL_CLIENT)]
     finally:
         await adapter.close()
     assert admitted.close_count == 1

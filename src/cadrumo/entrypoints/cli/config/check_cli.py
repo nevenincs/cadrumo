@@ -7,10 +7,11 @@ from collections.abc import Mapping
 
 import typer
 
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+
 from ....application.operator_actions.models import PreconditionVerdict
 from ....application.preflight import PreflightCheck
 from ....application.provisioning import DependencyStatus
-from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....application.workstation_check_operation import WorkstationCheckProjection
 from ....core.i18n.render import tr
 from ....core.json_contract import ResolvedPreconditionAction
@@ -21,7 +22,7 @@ from .check_payloads import (
     CheckPreflightPayload,
     ConfigCheckResult,
 )
-from .runtime_workstation_check import read_workstation_check_for_cli
+from .operation_workstation_check import read_workstation_check_for_cli
 from .status_rendering import precondition_action_lines
 
 
@@ -30,7 +31,7 @@ def _restore_facts(values: Mapping[str, object]) -> dict[str, str | int | bool]:
     facts: dict[str, str | int | bool] = {}
     for key, value in values.items():
         if not isinstance(value, (str, int, bool)):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         facts[key] = value
     return facts
 
@@ -107,7 +108,7 @@ def _check_text_lines(
 def _present_report(projection: WorkstationCheckProjection) -> tuple[ConfigCheckResult, tuple[str, ...]]:
     report = projection.to_report()
     if len({row.capability for row in report.capabilities}) != len(report.capabilities):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     capabilities = [
         CheckCapabilityPayload(
             capability=row.capability.value,

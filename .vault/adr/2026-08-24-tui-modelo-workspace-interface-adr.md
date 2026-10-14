@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-modelo-workspace-interface'
 date: '2026-08-24'
-modified: '2026-10-03'
+modified: '2026-10-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:32e9ac926cf9ad4a9911eff0f66a92656f64df5d031439f50750ee77d062d23c'
+body_hash: 'sha256:6edbd62419b7ac6b7b19064dcb0b9d19a69dbb13a1ec4c031a102a792df5645a'
 related:
   - "[[2026-08-24-tui-modelo-workspace-interface-research]]"
   - "[[2026-08-11-tui-interface-adr]]"
@@ -772,3 +772,7 @@ development table mirrors CLI command reachability as TUI state.
 ## Amendment 2026-09-30: one workbench destination and user-confirmed re-basing
 
 `2026-09-30-modelo-editor-workbench-adr` (D4 and D5) amends D1 and D6 of this record. The read destinations of D1 are retired atomically into one workbench destination per declaration; results, verification, provenance and filing become regions of that workbench, with no alias to the retired destination ids. D6 gains user-confirmed re-basing: a stale session keeps its staged changes and re-opens its review against the new head, with every changed previous value marked for the operator to acknowledge before apply. Abandon and reload remains available. D2, D3, D5, D7 and D8 stand.
+
+### Amendment 2026-10-14: runtime-host Modelo presentation
+
+The installed Modelo TUI presentation now belongs under `src/cadrumo_runtime/host/frontend/tui/` (`cadrumo_runtime.host.frontend.tui`) and launches through `cadrumo-runtime tui`. The prior `cadrumo.entrypoints.tui.modelo.view` placement records the earlier sibling-entrypoint decision and is superseded for physical ownership and launch; the workspace selection, review, and edit contracts are unchanged. The `cadrumo` tax application never imports `cadrumo_runtime`.

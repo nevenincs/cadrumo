@@ -66,23 +66,9 @@ from typing import Final
 import pytest
 
 import cadrumo
-from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
-from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import changed
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind, CommandWriteRoute
-from cadrumo.application.user_profile import automation_administration_service
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessScope
-from cadrumo.application.user_profile.automation_enrollment import EnrollmentKind, EnrollmentProposal
-
-from ....domain.calculations.registry.governed_fact_scope import (
-    governed_facts_in_scope,
-    require_governed_fact_authority,
-)
-from ....domain.calculations.registry.tests.fact_scope import outside_governed_fact_validation
-from ....domain.calculations.registry.tests.m347_fixture import resolve_m347_counterparty_annual_threshold
-from ....tests.offline_seal import OfflineGuard, offline_guard_fixture
-from .._command_runtime import build_command_app, runs_in_governed_fact_scope
-from ..command_graph import CommandSpecGraph
-from ..command_shared_contracts import (
+from cadrumo_client.commands.compiler import build_command_app, runs_in_governed_fact_scope
+from cadrumo_client.commands.graph import CommandSpecGraph
+from cadrumo_client.commands.shared_contracts import (
     BindingState,
     DeferredTarget,
     LazyBinding,
@@ -90,17 +76,30 @@ from ..command_shared_contracts import (
     SchemaState,
     TranslationKey,
 )
-from ..command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
-from ..command_specs import COMMAND_GRAPH
-from ._command_drive_support import (
+from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.commands.tests.command_drive_support import (
     free_monitoring_tool,
     handler_code,
     is_runnable,
-    seeded_probe_runtime,
     synthetic_argv,
 )
+from cadrumo_client.contracts.command_ports import CommandNodeKind, CommandWriteRoute
+
+from ....adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
+from ....adapters.persistence.storage.custody.tests.enrollment_support import changed
+from ....application.user_profile import automation_administration_service
+from ....application.user_profile.access_contracts import AccessAction, AccessScope
+from ....application.user_profile.automation_enrollment import EnrollmentKind, EnrollmentProposal
+from ....domain.calculations.registry.governed_fact_scope import (
+    governed_facts_in_scope,
+    require_governed_fact_authority,
+)
+from ....domain.calculations.registry.tests.fact_scope import outside_governed_fact_validation
+from ....domain.calculations.registry.tests.m347_fixture import resolve_m347_counterparty_annual_threshold
+from ....tests.offline_seal import OfflineGuard, offline_guard_fixture
+from ..command_specs import COMMAND_GRAPH
+from .cli_fixture_worlds import CliWorldProvider
 from .cli_runner import invoke_uncached_typer_app
-from .portable_api_cli_runtime import portable_api_cli_runtime
 
 __all__ = ["offline_guard_fixture"]
 
@@ -400,6 +399,7 @@ def test_the_offline_seal_refuses_every_boundary(offline_guard: OfflineGuard) ->
 @pytest.mark.parametrize("key", _DRIVEN)
 def test_a_non_declaring_command_never_reaches_a_missing_scope_refusal(
     key: str,
+    cli_world_provider: CliWorldProvider,
     tmp_path: Path,
     offline_guard: OfflineGuard,
     request: pytest.FixtureRequest,
@@ -412,7 +412,7 @@ def test_a_non_declaring_command_never_reaches_a_missing_scope_refusal(
     argv = synthetic_argv(COMMAND_GRAPH, spec, workdir, also=_HANDLER_REQUIRED_OPTIONS.get(key, ()))
 
     if key == "config_profile_automation_change":
-        with portable_api_cli_runtime(tmp_path) as api_runtime:
+        with cli_world_provider.api_probe(tmp_path) as api_runtime:
             # A valid own-key ROTATE operand with expired key validity is refused
             # by the actual administration owner after genuine API admission.
             proposal = changed(
@@ -434,7 +434,7 @@ def test_a_non_declaring_command_never_reaches_a_missing_scope_refusal(
     else:
         client_native = MemoryNativePort() if key == "config_profile_automation_create" else None
         with (
-            seeded_probe_runtime(tmp_path, client_native_store=client_native) as runtime,
+            cli_world_provider.human_probe(tmp_path, client_native_store=client_native) as runtime,
             outside_governed_fact_validation(),
             observe_invocation(handler_code(handler.target)) as observed,
         ):

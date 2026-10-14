@@ -7,12 +7,13 @@ import json
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.commands.payloads import AuthLoginPayload, AuthStatusPayload, AuthTestPayload
+
 from ....application.auth.operator_results import AuthLoginResult, AuthStatusResult, AuthTestResult
 from ....application.auth.probes import ProviderProbeResult
 from ....application.operator_actions.models import ConditionEvidence, PreconditionVerdict
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ..common import resolve_cli_precondition_action
-from ..config_payloads import AuthLoginPayload, AuthStatusPayload, AuthTestPayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

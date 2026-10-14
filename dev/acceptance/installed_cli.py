@@ -16,12 +16,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode
 from cadrumo.domain.calculations.registry.authority_store import (
     AUTHORITY_DESCRIPTOR_FILENAME,
     AuthorityDescriptor,
     AuthorityStoreError,
 )
+from cadrumo_client.contracts.contracts import RefusalCode
 from dev.product_environment import clean_product_env
 
 
@@ -357,7 +357,7 @@ def typed_refusal(document: dict[str, Any]) -> str | None:
         and error.get("code") == "REFUSED_LOCAL_RUNTIME"
         and isinstance(context, dict)
         and isinstance(context.get("reason"), str)
-        and context.get("reason") in {code.value for code in RuntimeRefusalCode}
+        and context.get("reason") in {code.value for code in RefusalCode}
     ):
         return f"REFUSED/{context['reason']}"
     if not isinstance(reason, str) or not _ENUM_TOKEN.fullmatch(reason):

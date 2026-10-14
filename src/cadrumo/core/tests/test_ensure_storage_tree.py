@@ -147,7 +147,7 @@ def test_missing_explicit_runtime_namespace_is_not_provisioned(tmp_path: Path) -
     root = tmp_path / "state"
     namespace = tmp_path / "operator-runtime"
     with (
-        override_settings(cadrumo_local_storage_root=root, cadrumo_runtime_socket_dir=namespace),
+        override_settings(cadrumo_local_storage_root=root, cadrumo_connection_socket_dir=namespace),
         pytest.raises(CoreValidationError) as refusal,
     ):
         ensure_storage_tree()

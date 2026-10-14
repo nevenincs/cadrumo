@@ -1,7 +1,7 @@
 """Dispatch refuses every command whose policy declares a live AEAT write.
 
 Live AEAT submission is permanently forbidden. A ``live_write`` declaration is
-therefore a description the MCP surface can classify, never a permission: the
+therefore a description the external client surface can classify, never a permission: the
 runtime compiler's dispatch seam raises the access gate's typed refusal before
 preflight or the handler runs, and the process boundary renders it as that
 registered error.
@@ -18,14 +18,20 @@ from typing import Final
 import pytest
 from typer.testing import CliRunner
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind, CommandWriteRoute
+from cadrumo_client.commands.compiler import build_command_app
+from cadrumo_client.commands.graph import CommandSpecGraph
+from cadrumo_client.commands.shared_contracts import (
+    DeferredTarget,
+    LazyBinding,
+    ResultSchemaSpec,
+    SchemaState,
+    TranslationKey,
+)
+from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind, CommandWriteRoute
 
 from ....core.access_gate.errors import LiveSubmitForbiddenError
 from ....core.errors.error_codes import get_error_exit_code, get_registered_error_code, resolve_error_message
-from .._command_runtime import build_command_app
-from ..command_graph import CommandSpecGraph
-from ..command_shared_contracts import DeferredTarget, LazyBinding, ResultSchemaSpec, SchemaState, TranslationKey
-from ..command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

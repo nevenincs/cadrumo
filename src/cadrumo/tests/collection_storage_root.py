@@ -467,7 +467,7 @@ def collection_storage_root() -> Path:
 
     ``<CADRUMO_TEMP_DIR>/cadrumo-pytest-<pid>`` and process-private by construction
     (keyed on the current PID), so concurrent pytest invocations, including
-    parallel agents sharing this worktree, never collide.
+    parallel delegated clients sharing this worktree, never collide.
     """
     return prepare_temporary_directory() / f"{_STEM}{os.getpid()}"
 

@@ -1,11 +1,11 @@
-"""Each ledger write that records who acted records the session for an agent, on every frontend alike otherwise.
+"""Each ledger write that records who acted records the session for an automation, on every frontend alike otherwise.
 
 The production registry and the real executors run over a stored profile with
 a session host that answers for the frontend that admitted the invocation.
 Each operation below runs its seeded scenario on every frontend: the command
-line, the terminal interface, MCP and the agent host. It settles the same on
+line, the terminal interface, external client and the automation host. It settles the same on
 each, and every event it stores names the party who acted: the session's label
-for an execution admitted on an agent's frontend, whatever the request typed,
+for an execution admitted on an automation's frontend, whatever the request typed,
 and for a person's frontend the label the request typed or, where the request
 carries none, the operation's own label for a person.
 """
@@ -31,11 +31,11 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _SESSION_CLIENT = UUID("5aa00000-0000-4000-8000-0000000000dd")
 _TYPED_ACTOR = "typed by the caller"
-_AGENT_LABELS = {
-    OperationFrontendProjection.MCP: f"agent:mcp.attended.{_SESSION_CLIENT}",
-    OperationFrontendProjection.AGENT_HOST: f"agent:agent-host.attended.{_SESSION_CLIENT}",
+_AUTOMATION_LABELS = {
+    OperationFrontendProjection.EXTERNAL_CLIENT: f"automation:external-client.attended.{_SESSION_CLIENT}",
+    OperationFrontendProjection.INSTALLED_SERVICE: f"automation:automation-host.attended.{_SESSION_CLIENT}",
 }
-"""The label each agent's frontend records, written out rather than derived."""
+"""The label each automation's frontend records, written out rather than derived."""
 _FRONTENDS = pytest.mark.parametrize("frontend", sorted(OperationFrontendProjection))
 
 _TYPED = "the label the request typed"
@@ -66,7 +66,7 @@ def _session_host(definition_id: str, frontend: OperationFrontendProjection) -> 
 
 @pytest.mark.parametrize(("definition_id", "a_person_records"), _WRITES, ids=[name for name, _ in _WRITES])
 @_FRONTENDS
-def test_a_ledger_write_records_the_session_label_for_an_agent_and_the_persons_label_otherwise(
+def test_a_ledger_write_records_the_session_label_for_an_automation_and_the_persons_label_otherwise(
     tmp_path: Path,
     operation: PinnedAuthorityOperation,
     definition_id: str,
@@ -103,8 +103,8 @@ def test_a_ledger_write_records_the_session_label_for_an_agent_and_the_persons_l
         assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
         stored = [event for event_id, event in history.load().events.items() if event_id not in before]
         assert stored
-        if frontend in _AGENT_LABELS:
-            recorded = _AGENT_LABELS[frontend]
+        if frontend in _AUTOMATION_LABELS:
+            recorded = _AUTOMATION_LABELS[frontend]
         elif a_person_records == _TYPED:
             recorded = _TYPED_ACTOR
         else:

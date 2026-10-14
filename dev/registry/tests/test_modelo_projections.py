@@ -220,7 +220,7 @@ def _revision(revision_id: str, parameters: tuple[ParameterDefinition, ...]) -> 
     return SimpleNamespace(
         id=revision_id,
         parameters=parameters,
-        review_status=RevisionReviewStatus.AGENT_REVIEWED,
+        review_status=RevisionReviewStatus.AUTOMATION_REVIEWED,
         valid_from=valid_from,
         valid_to=valid_to,
     )

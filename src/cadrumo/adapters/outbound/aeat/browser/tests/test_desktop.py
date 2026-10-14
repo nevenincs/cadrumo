@@ -5,7 +5,7 @@ from types import SimpleNamespace
 import pytest
 
 from cadrumo.adapters.outbound.aeat.browser import desktop
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -20,12 +20,12 @@ def test_linux_display_requirement(monkeypatch: pytest.MonkeyPatch, display: str
 
 
 def test_windows_background_session_is_unavailable(monkeypatch: pytest.MonkeyPatch) -> None:
-    from cadrumo.adapters.local_runtime import windows_desktop_logon
+    from cadrumo_client.transport import windows_desktop_logon
 
     monkeypatch.setattr(desktop, "sys", SimpleNamespace(platform="win32"))
 
     def unavailable():
-        raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+        raise RefusalError(RefusalCode.UNAVAILABLE)
 
     monkeypatch.setattr(windows_desktop_logon, "current_windows_desktop_logon", unavailable)
     assert not desktop.interactive_desktop_available()

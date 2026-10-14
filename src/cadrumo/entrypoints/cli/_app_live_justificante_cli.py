@@ -9,11 +9,12 @@ from __future__ import annotations
 
 import typer
 
+from cadrumo_client.commands.profile_binding import bound_profile_client
+
 from ...core.modelo import Modelo
 from ...core.period import Period, PeriodError
 from .common import emit_envelope
-from .runtime_justificante_capture import capture_justificante_for_cli
-from .runtime_profile_binding import bound_profile_client
+from .operation_justificante_capture import capture_justificante_for_cli
 
 
 def _period_option(period: str, *, year: int) -> Period:
@@ -92,7 +93,7 @@ def justificante_list(ctx: typer.Context) -> None:
     """
     from ...application.live.snapshot_base import SnapshotLifecycleState
     from ._app_live_justificante_payloads import JustificanteListResult, JustificanteSnapshotSummaryPayload
-    from .runtime_justificante_read import read_justificante_list_for_cli
+    from .operation_justificante_read import read_justificante_list_for_cli
 
     projection = read_justificante_list_for_cli(ctx).projection
     bucket_id = projection.bucket_id
@@ -129,7 +130,7 @@ def justificante_view(
     from ...application.calculations.observations_repository import ObservationSourceKind
     from ...application.live.snapshot_base import SnapshotLifecycleState
     from ._app_live_justificante_payloads import JustificanteViewResult
-    from .runtime_justificante_read import read_justificante_show_for_cli
+    from .operation_justificante_read import read_justificante_show_for_cli
 
     record = read_justificante_show_for_cli(ctx, snapshot_id=snapshot_id).projection
     bucket_id = record.bucket_id

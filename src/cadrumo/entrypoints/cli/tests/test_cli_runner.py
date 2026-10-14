@@ -13,9 +13,10 @@ import sys
 import pytest
 
 from cadrumo.tests.audited_process import run_audited_process
+from cadrumo.tests.cli_fixture_ports import ClickInvokeKwargs
+from cadrumo.tests.subprocess_cli import as_text_completed_process
 
-from .cli_runner import ClickInvokeKwargs, invoke_cached_cli, semantic_cli_text
-from .subprocess_cli import as_text_completed_process
+from .cli_runner import invoke_cached_cli, semantic_cli_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -55,7 +56,7 @@ def test_semantic_output_stays_plain_text_under_github_actions() -> None:
     Typer's ``rich_utils`` module forces Rich terminal styling when it
     detects ``GITHUB_ACTIONS`` at import time (checked in a fresh
     subprocess so that detection genuinely runs under the simulated
-    environment). But ``cadrumo.entrypoints.cli._stdio.disable_rich_cli_rendering``
+    environment). But ``cadrumo_client.commands.stdio.disable_rich_cli_rendering``
     sets ``typer.core.HAS_RICH = False`` for the whole command tree at
     import time, precisely so option/argument tables wrap to the real
     terminal width instead of Rich's box-drawing border — which garbles

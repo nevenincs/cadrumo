@@ -1,0 +1,163 @@
+"""Real-behaviour CLI tests for ``aeat config profile capabilities`` show/set.
+
+Exercises the operator surface end to end against the real Typer app and real
+persistence in an isolated storage root: setting a capability writes a profile
+fact, and ``show`` resolves it back with its source. No mocks.
+"""
+
+from __future__ import annotations
+
+import json
+import sys
+from collections.abc import Iterator
+from pathlib import Path
+from typing import Any
+
+import pytest
+from click.testing import Result
+from pydantic import ValidationError
+
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from cadrumo.application.user_profile.capabilities import CapabilitySource
+from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
+from cadrumo.application.user_profile.registration import register_profile_with_credentials
+from cadrumo.core.capabilities import ServiceCapability
+from cadrumo.core.config import override_settings
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixture import native_profile_view_server
+
+from .cli_runner import invoke_cached_cli
+
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.windows_only,
+    pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile runtime"),
+]
+
+_LABEL = "Capability test profile"
+_CREDENTIAL_INPUT = "capability-test-passphrase"
+
+
+@pytest.fixture(autouse=True)
+def _isolated_backend(tmp_path: Path) -> Iterator[None]:
+    with (
+        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
+        isolated_profile_storage_root(tmp_path=tmp_path),
+    ):
+        # Setup takes its own lease, as a command does, and releases it before the
+        # test body so each CLI invocation below still has to take its own.
+        with bundled_indexed_authority().operation() as operation:
+            register_profile_with_credentials(
+                label=_LABEL,
+                passphrase=_CREDENTIAL_INPUT,
+                profile_create_context=operation.profile_create_context(),
+                profile_decode_context=operation.profile_decode_context(),
+            )
+            # Registration closes its own session, so the profile is LOCKED and every
+            # verb below refuses with "you are not logged in". Logging in derives the
+            # DEK the capsule was sealed under.
+            authenticate_profile_for_invocation(
+                name=_LABEL,
+                passphrase_callback=lambda: _CREDENTIAL_INPUT,
+                profile_decode_context=operation.profile_decode_context(),
+            )
+        with native_profile_view_server(tmp_path / "cadrumo-storage"):
+            yield
+
+
+def _invoke(argv: list[str]) -> Result:
+    if "capabilities" not in argv:
+        return invoke_cached_cli(argv)
+    return _invoke_as_operator(argv)
+
+
+def _invoke_as_operator(argv: list[str]) -> Result:
+    """Run one profile-bound command with the profile password on the protected frame."""
+    family_index = next(index for index, token in enumerate(argv) if token in {"app", "config"})
+    return invoke_cached_cli(
+        [*argv[:family_index], "--profile", _LABEL, "--profile-secrets-stdin", *argv[family_index:]],
+        input=json.dumps({"profile_passphrase": _CREDENTIAL_INPUT}),
+    )
+
+
+def _show() -> dict[str, Any]:
+    result = _invoke(["--format", "json", "config", "profile", "capabilities", "view"])
+    assert result.exit_code == 0, result.output
+    rows = json.loads(result.output)["result"]["capabilities"]
+    return {row["capability"]: row for row in rows}
+
+
+def test_show_reports_every_capability_with_default_posture() -> None:
+    rows = _show()
+    # Every declared capability, not a subset: the set is asserted whole so a new
+    # one cannot be added without a decision about its default posture here.
+    assert set(rows) == {"llm_vision", "google_export", "cloud_evidence_upload"}
+    # Defaults: cloud off (global), vision/google on (default).
+    assert rows["llm_vision"]["enabled"] is True
+    assert rows["google_export"]["enabled"] is True
+    assert rows["cloud_evidence_upload"]["enabled"] is False
+
+
+@pytest.mark.parametrize(
+    ("capability", "source"),
+    [("", CapabilitySource.DEFAULT), ("bogus", CapabilitySource.DEFAULT), (ServiceCapability.LLM_VISION, "bogus")],
+)
+def test_capability_payload_refuses_unknown_capability_or_source(
+    capability: ServiceCapability | str,
+    source: CapabilitySource | str,
+) -> None:
+    """The capability result uses the resolver's closed identifiers unchanged."""
+
+    from cadrumo.entrypoints.cli.config.capabilities_payloads import CapabilityRowPayload
+
+    with pytest.raises(ValidationError):
+        CapabilityRowPayload(capability=capability, enabled=True, source=source, reason="resolver result")
+
+
+def test_set_disables_a_capability_and_show_reflects_it() -> None:
+    setres = _invoke(
+        ["--format", "json", "config", "profile", "capabilities", "set", "llm_vision", "off"],
+    )
+    assert setres.exit_code == 0, setres.output
+    payload = json.loads(setres.output)["result"]
+    assert payload["capability"] == "llm_vision" and payload["enabled"] is False
+
+    rows = _show()
+    assert rows["llm_vision"]["enabled"] is False
+    assert rows["llm_vision"]["source"] == "profile"
+
+
+@pytest.mark.parametrize(
+    "argv",
+    [
+        ["app", "modelo", "spreadsheet", "push", "--modelo", "303", "--period", "1T", "--year", "2025"],
+        ["app", "modelo", "spreadsheet", "publish", "--calculation-revision-id", "0" * 64, "--accept-readable-export"],
+        ["config", "profile", "archive", "push"],
+        ["config", "google", "probe", "--no-read-only"],
+    ],
+    ids=["spreadsheet-push", "spreadsheet-publish", "archive-push", "probe-write"],
+)
+def test_every_google_write_verb_refuses_when_google_export_disabled(argv: list[str]) -> None:
+    """Every Google-write CLI leaf is gated on google_export, not just `export`.
+
+    With the capability off, each Drive/Sheets
+    write verb refuses with the capability message *before* any Google call.
+    """
+    off = _invoke(["config", "profile", "capabilities", "set", "google_export", "off"])
+    assert off.exit_code == 0, off.output
+
+    result = _invoke_as_operator(argv)
+    assert result.exit_code != 0, result.output
+    combined = result.output + str(result.exception or "")
+    assert "Google export is disabled" in combined, combined
+
+
+def test_set_enables_cloud_upload_via_profile_opt_in() -> None:
+    setres = _invoke(
+        ["config", "profile", "capabilities", "set", "google_export", "off"],
+    )
+    assert setres.exit_code == 0, setres.output
+    rows = _show()
+    assert rows["google_export"]["enabled"] is False
+    assert rows["google_export"]["source"] == "profile"

@@ -2,7 +2,7 @@
 
 Describing the commands reads the published registry -- a modelo parameter's
 choice set is the authority's own modelo list -- and no taxpayer storage, so it
-must not stop at the storage root's refusal. The MCP server builds its tools
+must not stop at the storage root's refusal. The external client server builds its tools
 from exactly this manifest, which is why a refusal here kept it from starting.
 A command that touches storage or profile state still refuses on the same
 machine, and the retired state is never touched.
@@ -20,9 +20,10 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.tests.subprocess_cli import run_subprocess_cli_harness
+
 from ....core.config_state_root import StateRootInputs, platform_user_data_root
 from ....domain.calculations.registry.authority import bundled_indexed_authority
-from .subprocess_cli import run_subprocess_cli_harness
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

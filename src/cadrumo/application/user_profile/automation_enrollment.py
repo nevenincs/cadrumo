@@ -2,7 +2,7 @@
 
 None of the private state or connection facts is a frontend request schema.
 The runtime supplies connection provenance and the recipient capability. A name
-or UUID supplied by an agent cannot construct either authority.
+or UUID supplied by an automation cannot construct either authority.
 """
 
 from __future__ import annotations
@@ -242,7 +242,6 @@ class AutomationScopeProjection(BaseModel):
     allow_period_independent: bool
     allow_delegation: bool
     disclosure_categories: tuple[DisclosureCategoryGrant, ...] = ()
-    all_agent_operations: bool = False
 
     @classmethod
     def from_scope(cls, scope: AccessScope) -> Self:
@@ -265,7 +264,6 @@ class AutomationScopeProjection(BaseModel):
             disclosure_categories=tuple(
                 sorted(scope.disclosure_categories, key=lambda item: (item.category.value, str(item.destination_id)))
             ),
-            all_agent_operations=scope.all_agent_operations,
         )
 
 

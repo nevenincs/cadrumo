@@ -1,7 +1,7 @@
 """Validated verb-input records an outer command adapter supplies to the application.
 
 The command graph projects each executable leaf onto a :class:`VerbInputSchema`;
-the surface manifest, the reconciliation projection and agent harnesses consume
+the surface manifest, the reconciliation projection and automation harnesses consume
 it. The plain declaration vocabulary these records reuse lives in
 :mod:`.command_ports`, which the command graph imports at startup and which
 therefore carries no pydantic model.
@@ -15,15 +15,16 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...core.errors.hierarchy import CadrumoError
-from ...core.type_guards import is_object_list_or_tuple
-from .command_ports import (
+from cadrumo_client.contracts.command_ports import (
     JsonType,
     MachineSecretPayloadMetadata,
     ParameterKind,
     ProfileAuthenticationContractMetadata,
     ProfileAuthenticationPostureValue,
 )
+
+from ...core.errors.hierarchy import CadrumoError
+from ...core.type_guards import is_object_list_or_tuple
 
 #: ``defer_build`` keeps these records out of the import cost of their first
 #: importer: pydantic builds each on its first use.

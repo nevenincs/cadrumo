@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.tests.audited_process import run_audited_process
+from ....tests.audited_process import run_audited_process
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -68,6 +68,7 @@ def test_the_tui_module_refuses_retired_destination_session_arguments(tmp_path: 
     completed = run_audited_process(
         [
             sys.executable,
+            "-I",
             "-m",
             _SESSION_MODULE,
             "--destination",

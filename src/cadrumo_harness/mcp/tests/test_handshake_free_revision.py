@@ -16,14 +16,15 @@ from uuid import UUID, uuid4
 import pytest
 from mcp.types import LATEST_PROTOCOL_VERSION, CallToolResult, Tool
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
-from cadrumo.application.runtime.operation_access import RuntimeOperationControl, RuntimeOperationSubmit
-from cadrumo_harness.mcp.protocol_contract import MCP_TOOL_CATALOGUE, SIGN_IN_REMEDY
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
-from cadrumo_harness.mcp.server import build_server
-from cadrumo_harness.mcp.tests.session import connected_handshake_free_client, connected_server_and_client_session
-from cadrumo_harness.mcp.tests.test_execute_typed_input_tool import _AnsweringClient
+from cadrumo_client.contracts.operation_access import OperationControl, OperationSubmit
+from cadrumo_client.transport.frontend_client import FrontendClient
+
+from ..protocol_contract import MCP_TOOL_CATALOGUE, SIGN_IN_REMEDY
+from ..runtime_adapter import RuntimeMcpAdapter
+from ..server import build_server
+from .session import connected_handshake_free_client, connected_server_and_client_session
+from .test_execute_typed_input_tool import _AnsweringClient
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -149,12 +150,8 @@ async def test_execute_on_a_read_operation_is_submitted_and_started_for_a_handsh
     negotiation: _Negotiation,
 ) -> None:
     modern_lease, legacy_lease = _AnsweringClient(uuid4()), _AnsweringClient(uuid4())
-    modern_adapter = RuntimeMcpAdapter(
-        profile_id=modern_lease.profile_id, client=cast(RuntimeFrontendClient, modern_lease)
-    )
-    legacy_adapter = RuntimeMcpAdapter(
-        profile_id=legacy_lease.profile_id, client=cast(RuntimeFrontendClient, legacy_lease)
-    )
+    modern_adapter = RuntimeMcpAdapter(profile_id=modern_lease.profile_id, client=cast(FrontendClient, modern_lease))
+    legacy_adapter = RuntimeMcpAdapter(profile_id=legacy_lease.profile_id, client=cast(FrontendClient, legacy_lease))
     try:
         async with connected_handshake_free_client(build_server(modern_adapter), negotiation=negotiation) as modern:
             executed = await modern.call_tool("execute", dict(_READ))
@@ -171,10 +168,10 @@ async def test_execute_on_a_read_operation_is_submitted_and_started_for_a_handsh
     assert document["outcome"] == "submitted" and document["start"]["kind"] == "operation_acknowledged"
     # The runtime was sent the same two exchanges it is sent for a client that shook hands.
     submitted, started = modern_lease.exchanges
-    assert isinstance(submitted, RuntimeOperationSubmit) and isinstance(started, RuntimeOperationControl)
+    assert isinstance(submitted, OperationSubmit) and isinstance(started, OperationControl)
     assert submitted.definition_id == AUTH_READ_OPERATION_DEFINITION_ID
     assert submitted.subject_ref == f"profile:{modern_lease.profile_id}"
-    assert [type(item) for item in legacy_lease.exchanges] == [RuntimeOperationSubmit, RuntimeOperationControl]
+    assert [type(item) for item in legacy_lease.exchanges] == [OperationSubmit, OperationControl]
     assert _without_identities(document) == _without_identities(executed_after_handshake.structured_content)
     assert unfit.is_error is True
     # No tool takes a secret, so a call that gives one is refused at the wire, before anything is sent.

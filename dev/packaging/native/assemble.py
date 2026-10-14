@@ -36,6 +36,7 @@ from .layout import (
 from .linux_desktop_runtime import stage as stage_linux_desktop_runtime
 from .package_inventory import DELEGATED_INVENTORIES, USER_DOCS, package_inventory
 from .product import BUNDLED_EXTRAS
+from .service_descriptors import stage_service_descriptors
 from .stdlib import bundle as bundle_stdlib
 from .stdlib import compile_packages_bytecode
 
@@ -316,6 +317,7 @@ def assemble(
             python, packages, native, root, native_assembly_layout(contract, provenance or {})
         )
     modules = native_manifest["modules"]
+    service_descriptors = None if interpreter else stage_service_descriptors(root, contract, staged_images)
     paths = native_manifest["python_paths"]
     relocation = native_manifest.pop("relocation")
     patches = native_manifest.pop("patches")
@@ -359,6 +361,8 @@ def assemble(
     ]
     if development:
         startup_files.append(files["development_executable"])
+    if service_descriptors is not None:
+        startup_files.append(service_descriptors)
     if any(name.startswith(f"{docs_prefix}/") for name in startup_files):
         raise ValueError("Startup files must not belong to a delegated inventory")
     with timings.phase("package-inventory") if timings is not None else nullcontext():

@@ -43,9 +43,8 @@ import typer
 import typer.core
 
 from cadrumo.tests.audited_process import run_audited_process
-
-from .._stdio import configure_stdio_for_utf8, disable_rich_cli_rendering
-from .subprocess_cli import as_text_completed_process
+from cadrumo.tests.subprocess_cli import as_text_completed_process
+from cadrumo_client.commands.stdio import configure_stdio_for_utf8, disable_rich_cli_rendering
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -261,7 +260,7 @@ def test_stdio_logger_records_are_scrubbed_after_configure_logging() -> None:
     root_logger.setLevel(logging.DEBUG)
     try:
         # Emit through the same logger the _stdio module uses.
-        stdio_logger = logging.getLogger("cadrumo.entrypoints.cli._stdio")
+        stdio_logger = logging.getLogger("cadrumo_client.commands.stdio")
         nif_canary = "12345678Z"
         stdio_logger.debug("stream reconfigure skipped for nif=%s", nif_canary)
     finally:

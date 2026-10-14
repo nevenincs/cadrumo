@@ -23,7 +23,7 @@ from ._modelo_payloads import (
     ModeloReadinessResult,
 )
 from .common import active_bucket_id_or_refuse, emit_envelope, resolve_cli_precondition_action
-from .runtime_modelo_query_read import read_modelo_readiness, to_modelo_readiness_report
+from .operation_modelo_query_read import read_modelo_readiness, to_modelo_readiness_report
 from .state_projection_support import authority_operation
 
 

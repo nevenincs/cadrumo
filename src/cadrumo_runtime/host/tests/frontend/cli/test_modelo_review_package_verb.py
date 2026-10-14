@@ -1,0 +1,416 @@
+"""CLI surface tests for ``aeat app modelo review-package build/verify``."""
+
+from __future__ import annotations
+
+import zipfile
+from collections.abc import Sequence
+from datetime import UTC, datetime
+from pathlib import Path
+
+import pytest
+from click.testing import Result
+
+from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
+from cadrumo.application.modelo.tests.registry_revision import active_registry_revision_id
+from cadrumo.application.workflow.persistence import workflow_state_repository
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
+from cadrumo.domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
+)
+from cadrumo.domain.modelos.codes import ModeloCode
+from cadrumo.domain.modelos.repository import upsert_work_unit
+from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from cadrumo.domain.user_profile.values import UserProfileFact
+from cadrumo.entrypoints.cli.tests.modelo_review_package_support import (
+    build_review_package_via_cli,
+    seed_exportable_modelo_revision,
+)
+from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+
+from ._strict_cli_fixture_support import seeded_runtime_backend
+from .cli_runner import invoke_cached_cli
+from .modelo_profile_seed import seed_profile
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+__all__ = ["seed_profile", "seeded_runtime_backend"]
+
+
+def _invoke(args: Sequence[str]) -> Result:
+    return invoke_cached_cli(args)
+
+
+def _set_export_profile_name() -> None:
+    set_active_test_profile_facts(
+        (
+            UserProfileFact(path="identity.name", value="Ana"),
+            UserProfileFact(path="identity.surnames", value="Review Package Test"),
+            UserProfileFact(path="activities.description", value="Consulting"),
+            # Modelo 111 declares whether the withholder is a colegio
+            # concertado in its own header field, and the producer refuses an
+            # undeclared value rather than assume one.
+            UserProfileFact(path="withholding.colegio_concertado", value=False),
+        ),
+    )
+
+
+_M111_CASILLA_03: CasillaId = validated_casilla_id("03", surface="modelo 111 review-package test casilla")
+_M111_CASILLA_06: CasillaId = validated_casilla_id("06", surface="modelo 111 review-package test casilla")
+_M111_CASILLA_09: CasillaId = validated_casilla_id("09", surface="modelo 111 review-package test casilla")
+_M111_CASILLA_12: CasillaId = validated_casilla_id("12", surface="modelo 111 review-package test casilla")
+_M111_CASILLA_15: CasillaId = validated_casilla_id("15", surface="modelo 111 review-package test casilla")
+_M111_CASILLA_18: CasillaId = validated_casilla_id("18", surface="modelo 111 review-package test casilla")
+_M111_CASILLA_21: CasillaId = validated_casilla_id("21", surface="modelo 111 review-package test casilla")
+_M111_CASILLA_24: CasillaId = validated_casilla_id("24", surface="modelo 111 review-package test casilla")
+_M111_CASILLA_27: CasillaId = validated_casilla_id("27", surface="modelo 111 review-package test casilla")
+_M111_CASILLA_29: CasillaId = validated_casilla_id("29", surface="modelo 111 review-package test casilla")
+
+_MODELO_111_INPUTS: dict[CasillaId, str] = {
+    _M111_CASILLA_03: "180.25",
+    _M111_CASILLA_06: "12.10",
+    _M111_CASILLA_09: "300.00",
+    _M111_CASILLA_12: "14.40",
+    _M111_CASILLA_15: "25.00",
+    _M111_CASILLA_18: "0.50",
+    _M111_CASILLA_21: "7.00",
+    _M111_CASILLA_24: "8.00",
+    _M111_CASILLA_27: "9.00",
+    _M111_CASILLA_29: "40.00",
+}
+
+
+def test_review_package_build_then_verify_end_to_end(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> None:
+    _set_export_profile_name()
+    work_unit_id, calculation_revision_id = seed_exportable_modelo_revision(
+        input_values_by_casilla_id=_MODELO_111_INPUTS,
+        operation=operation,
+    )
+    package_path = tmp_path / "review-package.zip"
+
+    build_result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "review-package",
+            "build",
+            work_unit_id,
+            "--output",
+            str(package_path),
+            "--by",
+            "Ana",
+            "--notes",
+            "for accountant review",
+        ],
+    )
+
+    assert build_result.exit_code == 0, build_result.output
+    build_payload = _payload(build_result.output)
+    assert build_payload["calculation_revision_id"] == calculation_revision_id
+    assert build_payload["modelo"] == "111"
+    assert build_payload["filing_year"] == 2026
+    assert build_payload["member_count"] == 4
+    assert build_payload["has_ledger_evidence"] is False
+    assert build_payload["built_by"] == "Ana"
+    assert package_path.exists()
+
+    with zipfile.ZipFile(package_path, "r") as archive:
+        names = set(archive.namelist())
+    assert names == {
+        "corpus.manifest.json",
+        "draft.fichero-boe",
+        "revision.json",
+        "evidence.json",
+        "package-info.json",
+    }
+
+    verify_result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "review-package",
+            "verify",
+            str(package_path),
+        ],
+    )
+
+    assert verify_result.exit_code == 0, verify_result.output
+    verify_payload = _payload(verify_result.output)
+    assert verify_payload["is_clean"] is True
+    assert verify_payload["missing"] == []
+    assert verify_payload["unexpected"] == []
+    assert verify_payload["mismatched"] == []
+    assert verify_payload["calculation_revision_id"] == calculation_revision_id
+    assert verify_payload["modelo"] == "111"
+    assert verify_payload["built_by"] == "Ana"
+
+
+def test_review_package_verify_detects_tampered_member(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> None:
+    _set_export_profile_name()
+    work_unit_id, _ = seed_exportable_modelo_revision(
+        input_values_by_casilla_id=_MODELO_111_INPUTS, operation=operation
+    )
+    package_path = tmp_path / "review-package.zip"
+
+    build_result = _invoke(
+        ["app", "modelo", "review-package", "build", work_unit_id, "--output", str(package_path)],
+    )
+    assert build_result.exit_code == 0, build_result.output
+
+    rewritten = package_path.with_suffix(".rewritten")
+    with zipfile.ZipFile(package_path, "r") as src, zipfile.ZipFile(rewritten, "w") as dst:
+        for item in src.infolist():
+            data = b"TAMPERED" if item.filename == "draft.fichero-boe" else src.read(item.filename)
+            dst.writestr(item, data)
+    rewritten.replace(package_path)
+
+    verify_result = _invoke(
+        ["--format", "json", "app", "modelo", "review-package", "verify", str(package_path)],
+    )
+
+    assert verify_result.exit_code == 0, verify_result.output
+    verify_payload = _payload(verify_result.output)
+    assert verify_payload["is_clean"] is False
+    assert verify_payload["mismatched"] == ["draft.fichero-boe"]
+
+
+def test_review_package_verify_refuses_missing_package(tmp_path: Path) -> None:
+    result = _invoke(
+        ["app", "modelo", "review-package", "verify", str(tmp_path / "does-not-exist.zip")],
+    )
+    assert result.exit_code != 0, result.output
+
+
+def test_review_package_build_requires_output_flag(*, operation: PinnedAuthorityOperation) -> None:
+    _set_export_profile_name()
+    work_unit_id, _ = seed_exportable_modelo_revision(
+        input_values_by_casilla_id=_MODELO_111_INPUTS, operation=operation
+    )
+
+    result = _invoke(["app", "modelo", "review-package", "build", work_unit_id])
+    assert result.exit_code != 0, result.output
+
+
+def test_review_package_keeps_raw_revision_and_selector_refusals_distinct(tmp_path: Path) -> None:
+    """The review builder preserves the shared resolver's address-versus-selector errors."""
+    _set_export_profile_name()
+    raw_revision = _invoke(
+        [
+            "app",
+            "modelo",
+            "review-package",
+            "build",
+            "--output",
+            str(tmp_path / "raw.zip"),
+            "--revision",
+            "not-a-revision-id",
+        ]
+    )
+    selector = _invoke(
+        [
+            "app",
+            "modelo",
+            "review-package",
+            "build",
+            "--output",
+            str(tmp_path / "selector.zip"),
+            "--select",
+            "not-a-selector",
+        ]
+    )
+
+    assert raw_revision.exit_code != 0, raw_revision.output
+    assert selector.exit_code != 0, selector.output
+    assert "not-a-revision-id" in raw_revision.output
+    assert "not-a-selector" in selector.output
+
+
+def test_review_package_invalid_period_names_the_selected_modelo_tokens(tmp_path: Path) -> None:
+    """An annual modelo rejects a quarterly token with its declared annual token."""
+    _set_export_profile_name()
+
+    result = _invoke(
+        [
+            "app",
+            "modelo",
+            "review-package",
+            "build",
+            "--modelo",
+            "100",
+            "--year",
+            "2024",
+            "--period",
+            "1T",
+            "--output",
+            str(tmp_path / "invalid-period.zip"),
+        ]
+    )
+
+    assert result.exit_code != 0, result.output
+    assert "0A" in result.output
+
+
+def test_review_package_help_advertises_local_only() -> None:
+    result = _invoke(["app", "modelo", "review-package", "build", "--help"])
+    assert result.exit_code == 0, result.output
+    assert any(token in result.output.lower() for token in ("local-only", "local;", "local.", "nunca")), result.output
+    assert "--refund-election" in result.output
+    assert "--payment-election" in result.output
+    assert "--disposition" not in result.output
+
+
+def test_review_package_build_refuses_draft_revision(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> None:
+    """A BORRADOR-state (never verified) revision cannot be packaged for review."""
+    state = workflow_state_repository().load()
+    bucket_id = state.active_profile_bucket_id()
+    assert bucket_id is not None
+    revision_id = active_registry_revision_id(modelo="111", filing_year=2026, period="1T", operation=operation)
+    filing_period = Period.from_year_and_code(2026, "1T")
+    work_unit_id = derive_work_unit_id(
+        bucket_id=bucket_id,
+        modelo="111",
+        filing_year=2026,
+        period=filing_period,
+        revision_id=revision_id,
+    )
+    now = datetime.now(UTC)
+    work_unit = WorkUnit(
+        work_unit_id=work_unit_id,
+        bucket_id=bucket_id,
+        modelo=ModeloCode("111"),
+        filing_year=2026,
+        period=filing_period,
+        revision_id=revision_id,
+        name="111-2026-1T",
+        created_at=now,
+        updated_at=now,
+    )
+    WorkUnitCatalogueRepository().save(upsert_work_unit(WorkUnitCatalogueRepository().load(), work_unit))
+    calculation_revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit_id,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        casilla_values={},
+        filing_instance_evidence=None,
+        source_provenance=(),
+    )
+    revision = CalculationRevision(
+        calculation_revision_id=calculation_revision_id,
+        work_unit_id=work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo="111",
+            revision_id=revision_id,
+            modelo_year=2026,
+            period="1T",
+        ),
+        state=CalculationRevisionState.BORRADOR,
+        created_at=now,
+        updated_at=now,
+        filing_instance_evidence=None,
+        source_provenance=(),
+    )
+    cr_repo = CalculationRevisionCatalogueRepository()
+    cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
+
+    package_path = tmp_path / "should-not-exist.zip"
+    result = _invoke(
+        [
+            "app",
+            "modelo",
+            "review-package",
+            "build",
+            work_unit_id,
+            "--output",
+            str(package_path),
+        ],
+    )
+    assert result.exit_code != 0, result.output
+    assert not package_path.exists()
+
+
+def _build_package(tmp_path: Path, *, name: str = "review-package.zip", operation: PinnedAuthorityOperation) -> Path:
+    _set_export_profile_name()
+    package_path, _, _ = build_review_package_via_cli(
+        tmp_path,
+        invoke=_invoke,
+        input_values_by_casilla_id=_MODELO_111_INPUTS,
+        name=name,
+        operation=operation,
+    )
+    return package_path
+
+
+def test_review_package_verify_signature_refuses_missing_signature_file(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    package_path = _build_package(tmp_path, operation=operation)
+    result = _invoke(
+        [
+            "app",
+            "modelo",
+            "review-package",
+            "verify-signature",
+            str(package_path),
+            str(tmp_path / "does-not-exist-signature.json"),
+            "--public-key",
+            "0" * 64,
+        ],
+    )
+    assert result.exit_code != 0, result.output
+
+
+def test_review_package_verify_signature_refuses_malformed_signature_file(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    package_path = _build_package(tmp_path, operation=operation)
+    signature_path = tmp_path / "signature.json"
+    signature_path.write_text("not valid json at all", encoding="utf-8")
+
+    result = _invoke(
+        [
+            "app",
+            "modelo",
+            "review-package",
+            "verify-signature",
+            str(package_path),
+            str(signature_path),
+            "--public-key",
+            "0" * 64,
+        ],
+    )
+    assert result.exit_code != 0, result.output
+
+
+def test_review_package_verify_receipt_refuses_missing_receipt_file(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    package_path = _build_package(tmp_path, operation=operation)
+    result = _invoke(
+        [
+            "app",
+            "modelo",
+            "review-package",
+            "verify-receipt",
+            str(package_path),
+            str(tmp_path / "does-not-exist-receipt.json"),
+            "--operator-public-key",
+            "0" * 64,
+            "--counter-signer-public-key",
+            "1" * 64,
+        ],
+    )
+    assert result.exit_code != 0, result.output
+
+
+__all__: list[str] = []

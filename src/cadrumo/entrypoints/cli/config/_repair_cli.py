@@ -50,7 +50,8 @@ def repair(ctx: typer.Context) -> None:
     """Diagnose and repair local configuration, profile, auth, and log state."""
     if ctx.invoked_subcommand is not None:
         return
-    from ..config_payloads import ConfigRepairResult
+    from cadrumo_client.commands.payloads import ConfigRepairResult
+
     from ..state_projection_support import diagnostics_ports
 
     report = _build_config_repair_report(ports=diagnostics_ports(ctx))
@@ -69,7 +70,7 @@ def repair_logs(
     lines: int = 20,
 ) -> None:
     """Show the configured log file path and recent lines."""
-    from ..config_payloads import RepairLogsResult
+    from cadrumo_client.commands.payloads import RepairLogsResult
 
     tail = _read_log_tail(lines)
     result = RepairLogsResult(path=tail.path, lines=list(tail.lines))
@@ -95,7 +96,7 @@ def _quarantine_lines(report: SecureObjectIntegrityReport, *, dry_run: bool) -> 
 
 def _emit_no_active_quarantine(ctx: typer.Context, *, dry_run: bool) -> None:
     """Emit the non-mutating no-active-profile quarantine outcome."""
-    from ..config_payloads import RepairQuarantineResult
+    from cadrumo_client.commands.payloads import RepairQuarantineResult
 
     result = RepairQuarantineResult(dry_run=dry_run, quarantined=0, retained=0, reason="no-active-profile")
     emit_envelope(
@@ -124,7 +125,8 @@ def repair_quarantine(
     if _resolve_active_bucket_id() is None:
         _emit_no_active_quarantine(ctx, dry_run=dry_run)
         return
-    from ..config_payloads import RepairQuarantineResult
+    from cadrumo_client.commands.payloads import RepairQuarantineResult
+
     from ..state_projection_support import diagnostics_ports
 
     report = _run_secure_object_quarantine(ports=diagnostics_ports(ctx), dry_run=dry_run)
@@ -161,7 +163,7 @@ def _reset_progress_lines(fingerprint: WorkflowStateResetFingerprint, *, dry_run
 
 def _emit_no_active_reset_progress(ctx: typer.Context) -> None:
     """Emit the no-op reset outcome when no active profile exists."""
-    from ..config_payloads import RepairResetProgressResult
+    from cadrumo_client.commands.payloads import RepairResetProgressResult
 
     result = RepairResetProgressResult(reset=False, reason="nothing to reset")
     emit_envelope(
@@ -183,7 +185,7 @@ def repair_reset_progress(
     if _resolve_active_bucket_id() is None:
         _emit_no_active_reset_progress(ctx)
         return
-    from ..config_payloads import RepairResetProgressResult
+    from cadrumo_client.commands.payloads import RepairResetProgressResult
 
     fingerprint = _run_workflow_progress_reset(dry_run=dry_run)
     emit_envelope(
@@ -199,7 +201,8 @@ def repair_integrity_objects(
     namespace: str | None = None,
 ) -> None:
     """Report duplicate secure-object keys and unreadable encrypted rows."""
-    from ..config_payloads import RepairIntegrityObjectsResult
+    from cadrumo_client.commands.payloads import RepairIntegrityObjectsResult
+
     from ..state_projection_support import diagnostics_ports
 
     check = _check_secure_object_integrity(ports=diagnostics_ports(ctx), namespace=namespace)
@@ -222,7 +225,7 @@ def repair_integrity_objects(
 
 def repair_connectivity(ctx: typer.Context, headless: bool = True) -> None:
     """Probe browser connectivity to the AEAT Sede landing page."""
-    from ..config_payloads import RepairConnectivityResult
+    from cadrumo_client.commands.payloads import RepairConnectivityResult
 
     _ = headless
     report = _probe_connectivity(_probe_browser_connectivity)

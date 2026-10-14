@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -17,6 +19,7 @@ from ..agent_live import (
     write_whole,
 )
 from ..caller_owned_root import AcceptanceError
+from ..proof_support import ProcessIdentity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -139,11 +142,12 @@ def test_only_the_relay_program_under_the_announced_gateway_is_attended() -> Non
     child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])
     try:
         relay = Path(sys.executable).resolve()
-        here = __import__("os").getpid()
+        here = ProcessIdentity.capture(os.getpid())
+        stale_child = replace(ProcessIdentity.capture(child.pid), birth=0.0)
 
         assert is_announced_relay(child.pid, relay, here)
         assert not is_announced_relay(child.pid, relay, None)
-        assert not is_announced_relay(child.pid, relay, child.pid)
+        assert not is_announced_relay(child.pid, relay, stale_child)
         assert not is_announced_relay(child.pid, relay.with_name("cadrumo-mcp.exe"), here)
     finally:
         child.kill()

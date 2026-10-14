@@ -22,14 +22,14 @@ import pytest
 from ....core.config import override_settings
 from ....core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_envelope import unwrap_cli_result as _json
-from ._cli_json_support import _json_object
-from ._cli_surface_support import (
+from ....tests.cli_json_support import _json_object
+from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
+from .profile_world_fixtures import cli_surface_isolated_backend
+from .scenario_support import (
     _active_bucket_id,
     _invoke,
     create_cli_surface_profile,
 )
-from ._strict_cli_fixture_support import cli_surface_isolated_backend
-from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

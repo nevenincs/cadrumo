@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .subprocess_cli import subprocess_cli_env
+from cadrumo.tests.subprocess_cli import subprocess_cli_env
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

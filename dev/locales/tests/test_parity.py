@@ -12,7 +12,7 @@ from cadrumo.entrypoints.cli.tests.cli_runner import invoke_typer_app
 
 from .._ast_scanner import scan_namespace_markers, scan_source_tree
 from .._casilla_keys import is_delta_keyed_leaf
-from .._paths import DOCS_SRC_DIR, HARNESS_SRC_DIR, LOCALES_DIR, SRC_DIR
+from .._paths import LOCALE_SOURCE_EXTRA_DIRS, LOCALES_DIR, SRC_DIR
 from .._registry_scanner import scan_form_layout_heading_keys
 from ..cli import app
 from ..errors import LocaleError
@@ -169,7 +169,7 @@ def manager():
     # Documentation generators live outside the package but render
     # operator-facing prose from this same catalogue, so the gate must see
     # their keys or it reports every one as an extra key with no codebase site.
-    return LocaleManager(SRC_DIR, LOCALES_DIR, extra_src_dirs=(DOCS_SRC_DIR, HARNESS_SRC_DIR))
+    return LocaleManager(SRC_DIR, LOCALES_DIR, extra_src_dirs=LOCALE_SOURCE_EXTRA_DIRS)
 
 
 def _committed_catalogues(manager) -> dict[str, Path]:

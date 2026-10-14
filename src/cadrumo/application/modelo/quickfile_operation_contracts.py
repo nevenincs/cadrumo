@@ -12,6 +12,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+
 from ...core.errors.error_codes import get_registered_error_code_by_code
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -21,7 +23,6 @@ from ...core.refund_election import RefundElection
 from ...domain.transactions.own_accounts import OwnAccountId
 from ..operations.public_period import PublicPeriod
 from ..operator_actions.projection import PreconditionVerdictSnapshot
-from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from .calculation_request_fields import ModeloCalculationInputFieldsV1, ModeloCalculationOverride
 from .edit_apply_row_contracts import ModeloDetailRowWireV1
 from .quickfile import QuickfileStage, QuickfileStageStatus
@@ -56,7 +57,7 @@ class QuickfileCalculationInputs(BaseModel):
 class QuickfileRequest(BaseModel):
     """One exact profile and natural filing target, retained in encrypted custody.
 
-    ``actor`` is recorded as sent for a person's session. An agent's session is
+    ``actor`` is recorded as sent for a person's session. An automation's session is
     recorded under its own session label, whatever the request carries.
     """
 

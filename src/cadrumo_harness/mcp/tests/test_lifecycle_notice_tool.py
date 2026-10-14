@@ -15,21 +15,26 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.runtime.session_events import RuntimeLifecycleNotice
-from cadrumo_harness.mcp import runtime_adapter as mcp_runtime
-from cadrumo_harness.mcp.lifecycle_notices import LifecycleNoticeBoard
-from cadrumo_harness.mcp.protocol_contract import sign_in_remedy
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
-from cadrumo_harness.mcp.tests.test_authentication_handover import _Client
+from cadrumo.application.user_profile.access_contracts import AccessScope
+from cadrumo_client.contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
+from cadrumo_client.contracts.session_events import LifecycleNotice
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_harness.mcp.access_scope import surface_scope
+from cadrumo_harness.mcp.surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES
+
+from .. import runtime_adapter as mcp_runtime
+from ..lifecycle_notices import LifecycleNoticeBoard
+from ..protocol_contract import sign_in_remedy
+from ..runtime_adapter import RuntimeMcpAdapter
+from .test_authentication_handover import _Client
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def _notice() -> RuntimeLifecycleNotice:
-    return RuntimeLifecycleNotice(runtime_boot_id=uuid4(), connection_id=uuid4(), notice_id=uuid4())
+def _notice() -> LifecycleNotice:
+    return LifecycleNotice(runtime_boot_id=uuid4(), connection_id=uuid4(), notice_id=uuid4())
 
 
 def _told(board: LifecycleNoticeBoard, tool: str) -> dict[str, str] | None:
@@ -71,7 +76,7 @@ class _WatchedClient(_Client):
     def __init__(self, profile_id: UUID) -> None:
         super().__init__(profile_id)
         self.retire: Callable[[], None] | None = None
-        self.notify: Callable[[RuntimeLifecycleNotice], None] | None = None
+        self.notify: Callable[[LifecycleNotice], None] | None = None
 
     @override
     def subscribe_session_retirement(self, receive: object) -> None:
@@ -79,7 +84,7 @@ class _WatchedClient(_Client):
 
     @override
     def subscribe_lifecycle_notices(self, receive: object) -> None:
-        self.notify = cast("Callable[[RuntimeLifecycleNotice], None]", receive)
+        self.notify = cast("Callable[[LifecycleNotice], None]", receive)
 
 
 async def _authenticated(
@@ -91,14 +96,21 @@ async def _authenticated(
     asked: list[UUID] = []
 
     async def admit(
-        *, profile_id: UUID, credential_reference: UUID, frontend: OperationFrontendProjection
-    ) -> RuntimeFrontendClient:
-        assert frontend is OperationFrontendProjection.MCP
+        *,
+        profile_id: UUID,
+        credential_reference: UUID,
+        frontend: OperationFrontendProjection,
+        timeout: float,
+        scope: AccessScope,
+    ) -> FrontendClient:
+        assert timeout == PROFILE_ADMISSION_TIMEOUT_SECONDS
+        assert scope == surface_scope(MCP_SURFACES[DEFAULT_MCP_SURFACE])
+        assert frontend is OperationFrontendProjection.EXTERNAL_CLIENT
         asked.append(credential_reference)
         if opened and refusal is not None:
-            raise RuntimeFrontendRefusedError(refusal)
+            raise FrontendRefusedError(refusal)
         opened.append(_WatchedClient(profile_id))
-        return cast(RuntimeFrontendClient, opened[-1])
+        return cast(FrontendClient, opened[-1])
 
     monkeypatch.setattr(mcp_runtime, "open_installed_credential_client", admit)
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=None)

@@ -52,7 +52,7 @@ class ReviewQueueRowPayload(OutputSchema):
 
     Declared as a bare ``str`` this edge accepted any text -- ``not-date``, or
     a naive ISO instant the canonical review queue refuses -- and emitted it as
-    the row's timestamp. Typed as :data:`~cadrumo.core.time.UtcInstant` it is
+    the row's timestamp. Typed as :data:`~cadrumo.core.time.utc.UtcInstant` it is
     the same contract the application row and the review item carry, and the
     envelope's ``model_dump(mode="json")`` still renders it as the ISO-8601
     string the wire contract documents.

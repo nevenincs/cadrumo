@@ -8,6 +8,9 @@ from uuid import UUID
 import typer
 from pydantic import ValidationError
 
+from cadrumo_client.commands.profile_binding import require_profile_client
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+
 from ...application.modelo.action_errors import M303FilingEvidenceError
 from ...application.modelo.calculate_input import Modelo202ModalitySummary
 from ...application.modelo.calculation_request_fields import ModeloCalculationInputFieldsV1
@@ -18,7 +21,6 @@ from ...application.modelo.work_calculation_contracts import (
     ModeloWorkCalculatePublicResultV2,
     ModeloWorkCalculateRequest,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.external_constants import OutputLanguage
 from ...core.hashing import canonical_json_bytes
@@ -44,13 +46,12 @@ from ._modelo_rendering import (
 from .common import activate_subcommand_output_language, emit_envelope, no_active_profile_refusal
 from .errors import CliOutboundPayloadBoundaryError
 from .modelo_revision_rendering import calculation_revision_state_label
-from .runtime_modelo_calculation import (
+from .operation_modelo_calculation import (
     calculation_snapshot_lines,
     calculation_snapshot_payload,
     run_modelo_work_calculation,
 )
-from .runtime_modelo_metadata import read_modelo_work_unit
-from .runtime_profile_binding import require_profile_client
+from .operation_modelo_metadata import read_modelo_work_unit
 
 if TYPE_CHECKING:
     from ...application.aggregation.source_mesh import CalculationSourceDiagnostic
@@ -197,7 +198,7 @@ def _run_work_calculate(
     completed = run_modelo_work_calculation(client, request)
     projection = completed.projection
     if not isinstance(projection, ModeloWorkCalculatePublicResultV2):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     snapshot = projection.calculation
     advisories = projection.advisories
     language = OutputLanguage(current_output_language())

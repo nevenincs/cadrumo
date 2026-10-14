@@ -8,7 +8,7 @@ from textwrap import dedent
 
 import pytest
 
-from .cli_performance import (
+from cadrumo.entrypoints.tests.cli_performance import (
     CliPerformanceObservation,
     CliPerformanceProfile,
     profile_cli_path,

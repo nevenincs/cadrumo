@@ -5,9 +5,9 @@
 //! the runtime available and a profile selected. It stops, by closing its
 //! standard input, when any of that changes: sign-out, a lock, idle or
 //! absolute expiry, an unknown or unreadable status, another active profile,
-//! the runtime becoming unavailable, or the window closing. This host keeps no
-//! runtime connection, session, password or provider key: the bearer it mints
-//! for the gateway is its only secret, held in memory.
+//! the runtime becoming unavailable, or the window closing. A verified installed
+//! runtime child holds the exact person session; this host retains its pipe and
+//! nonsecret identity. Provider keys cross only a bounded service exchange.
 
 use super::launcher::Event;
 use super::runner::{self, Signal, Supervised};
@@ -39,6 +39,16 @@ pub const RETRY: Duration = Duration::from_secs(30);
 
 pub use cadrumo_application::diagnostics::service::AgentRefusal as Refusal;
 use cadrumo_application::diagnostics::service::{AgentStopCause, ServiceFact};
+
+fn service_refusal(code: &str) -> Refusal {
+    match code {
+        "signed_out" => Refusal::SignedOut,
+        "credentials_unavailable" | "credentials_invalid" => Refusal::ProviderCredentialMissing,
+        "agent_incompatible" | "stores_newer" => Refusal::ServiceIncompatible,
+        "root_unmarked" => Refusal::RootUnmarked,
+        _ => Refusal::from_launcher(code),
+    }
+}
 
 /// Where the agent service of the signed-in profile is.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
@@ -103,6 +113,7 @@ pub type Launch = Arc<dyn Fn(&str, &str) -> Result<Prepared> + Send + Sync>;
 /// What one start runs.
 pub struct Prepared {
     pub command: Command,
+    pub person: Option<super::person::HeldPerson>,
 }
 
 /// How the gateway of the running launcher is reached. The bearer goes
@@ -122,6 +133,9 @@ struct Running {
     profile: String,
     generation: u64,
     bearer: Arc<Zeroizing<String>>,
+    gateway_bearer: Arc<Zeroizing<String>>,
+    person: Option<super::person::HeldPerson>,
+    started: Instant,
 }
 
 struct Listener {
@@ -132,6 +146,7 @@ struct Shared {
     status: Mutex<Status>,
     listener: Mutex<Option<Listener>>,
     gateway: Mutex<Option<Gateway>>,
+    admin: Mutex<Option<super::admin::Endpoint>>,
     running: Mutex<Option<Running>>,
     closed: AtomicBool,
     started: AtomicBool,
@@ -197,7 +212,7 @@ impl Supervisor {
         let status = if launch.is_some() {
             Status {
                 state: State::Stopped,
-                lane: Some("development"),
+                lane: None,
             }
         } else {
             Status {
@@ -212,6 +227,7 @@ impl Supervisor {
                 status: Mutex::new(status),
                 listener: Mutex::new(None),
                 gateway: Mutex::new(None),
+                admin: Mutex::new(None),
                 running: Mutex::new(None),
                 closed: AtomicBool::new(false),
                 started: AtomicBool::new(false),
@@ -243,9 +259,49 @@ impl Supervisor {
         self.begin();
     }
 
+    pub fn restart_agent(&self) -> Result<()> {
+        if lock(&self.shared.admin).is_some() {
+            self.person_request(serde_json::json!({"action":"status"}))?;
+            let reply = self.administer(serde_json::json!({"action":"start"}), None)?;
+            if reply["event"] == "refused" {
+                publish(
+                    &self.shared,
+                    State::Refused {
+                        code: service_refusal(reply["code"].as_str().unwrap_or("service_failed")),
+                    },
+                );
+            } else if reply["event"] != "agent_ready" {
+                return Err(ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli));
+            }
+        } else {
+            self.retry();
+        }
+        Ok(())
+    }
+
     /// The gateway of the launcher that reported ready, while it serves.
     pub fn gateway(&self) -> Option<Gateway> {
         lock(&self.shared.gateway).clone()
+    }
+
+    pub fn administer(
+        &self,
+        request: serde_json::Value,
+        secret: Option<Zeroizing<Vec<u8>>>,
+    ) -> Result<serde_json::Value> {
+        self.begin();
+        let endpoint = lock(&self.shared.admin)
+            .clone()
+            .ok_or_else(|| ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli))?;
+        endpoint.exchange(request, secret)
+    }
+
+    pub fn person_request(&self, request: serde_json::Value) -> Result<serde_json::Value> {
+        let person = lock(&self.shared.running)
+            .as_ref()
+            .and_then(|running| running.person.clone())
+            .ok_or_else(|| ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli))?;
+        lock(&person).exchange(request)
     }
 
     /// Sends every later status change to `channel`, replacing any earlier
@@ -344,6 +400,15 @@ async fn stop_running(
         return Ok(());
     };
     {
+        let mut admin = lock(&shared.admin);
+        if admin
+            .as_ref()
+            .is_some_and(|endpoint| endpoint.generation == running.generation)
+        {
+            *admin = None;
+        }
+    }
+    {
         let mut gateway = lock(&shared.gateway);
         if gateway.as_ref().map(|g| g.generation) == Some(running.generation) {
             *gateway = None;
@@ -375,7 +440,14 @@ async fn start(
     signals: &mpsc::UnboundedSender<(u64, Signal)>,
 ) -> Result<()> {
     let bearer = Arc::new(mint_bearer()?);
-    let Prepared { command } = launch(&bearer, &profile)?;
+    let gateway_bearer = Arc::new(mint_bearer()?);
+    let launch = launch.clone();
+    let prepare_bearer = bearer.clone();
+    let prepare_profile = profile.clone();
+    let Prepared { command, person } =
+        tauri::async_runtime::spawn_blocking(move || launch(&prepare_bearer, &prepare_profile))
+            .await
+            .map_err(|_| ApplicationError::new(ErrorCode::Panic, Operation::Cli))??;
     let generation = shared.generation.fetch_add(1, Ordering::AcqRel) + 1;
     shared
         .diagnostics
@@ -383,10 +455,11 @@ async fn start(
     let sender = signals.clone();
     let diagnostics = shared.diagnostics.clone();
     let secret = bearer.clone();
+    let gateway_secret = gateway_bearer.clone();
     let supervised = tauri::async_runtime::spawn_blocking(move || {
         runner::start_child(
             command,
-            Some(secret.as_str()),
+            Some((secret.as_str(), gateway_secret.as_str())),
             move |signal| {
                 let _ = sender.send((generation, signal));
             },
@@ -405,6 +478,9 @@ async fn start(
                 profile,
                 generation,
                 bearer,
+                gateway_bearer,
+                person,
+                started: Instant::now(),
             });
             None
         }
@@ -492,6 +568,19 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, launch: Launch) {
         if shared.closed.load(Ordering::Acquire) {
             break;
         }
+        let starting_expired = lock(&shared.running).as_ref().is_some_and(|running| {
+            lock(&shared.admin).is_none() && running.started.elapsed() > Duration::from_secs(30)
+        });
+        if starting_expired {
+            publish(
+                &shared,
+                State::Refused {
+                    code: Refusal::ServiceFailed,
+                },
+            );
+            let _ = stop_running(&shared, None, AgentStopCause::ProtocolRefused).await;
+            retries.failed(&shared);
+        }
         let current = lock(&shared.running).as_ref().map(|r| r.profile.clone());
         match (&current, &allowed) {
             (Some(profile), Allowed::Serve(wanted)) if profile == wanted => {}
@@ -576,24 +665,80 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, launch: Launch) {
 /// Acts on one launcher signal. True when the launcher ended unasked, which
 /// delays the next start.
 async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
-    let (bearer, process) = {
+    let (bearer, gateway_bearer, process) = {
         let running = lock(&shared.running);
         match running.as_ref() {
-            Some(running) if running.generation == generation => {
-                (running.bearer.clone(), running.supervised.process_ref())
-            }
+            Some(running) if running.generation == generation => (
+                running.bearer.clone(),
+                running.gateway_bearer.clone(),
+                running.supervised.process_ref(),
+            ),
             _ => return false,
         }
     };
     match signal {
+        Signal::Event(Event::ServiceReady {
+            admin_port,
+            runtime_boot_id,
+            connection_id,
+            profile_id,
+            service_id,
+        }) => {
+            if lock(&shared.admin).is_some() {
+                let _ =
+                    stop_running(shared, Some(generation), AgentStopCause::ProtocolRefused).await;
+                return true;
+            }
+            let person = lock(&shared.running)
+                .as_ref()
+                .and_then(|running| running.person.clone());
+            let Some(person) = person else {
+                let _ =
+                    stop_running(shared, Some(generation), AgentStopCause::ProtocolRefused).await;
+                return true;
+            };
+            let admitted = tauri::async_runtime::spawn_blocking(move || {
+                let mut person = lock(&person);
+                if person.identity["runtime_boot_id"] != runtime_boot_id || person.identity["profile_id"] != profile_id {
+                    return false;
+                }
+                person.exchange(serde_json::json!({"action":"service_admission", "recipient_connection_id":connection_id, "service_id":service_id}))
+                    .is_ok_and(|reply| reply["kind"] == "service_connected")
+            }).await.unwrap_or(false);
+            if !admitted {
+                let _ =
+                    stop_running(shared, Some(generation), AgentStopCause::ProtocolRefused).await;
+                publish(
+                    shared,
+                    State::Refused {
+                        code: Refusal::ServiceFailed,
+                    },
+                );
+                return true;
+            }
+            *lock(&shared.admin) = Some(super::admin::Endpoint {
+                port: admin_port,
+                bearer,
+                generation,
+            });
+            false
+        }
         Signal::Event(Event::Ready {
             gateway_port,
             agent_version,
             workspace_root,
         }) => {
+            if !lock(&shared.admin)
+                .as_ref()
+                .is_some_and(|endpoint| endpoint.generation == generation)
+            {
+                let _ =
+                    stop_running(shared, Some(generation), AgentStopCause::ProtocolRefused).await;
+                return true;
+            }
             *lock(&shared.gateway) = Some(Gateway {
                 port: gateway_port,
-                bearer,
+                bearer: gateway_bearer,
                 workspace_root,
                 generation,
             });
@@ -611,18 +756,18 @@ async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
             publish(
                 shared,
                 State::Refused {
-                    code: Refusal::from_launcher(&code),
+                    code: service_refusal(&code),
                 },
             );
-            let _ = stop_running(shared, Some(generation), AgentStopCause::LauncherRefused).await;
-            true
+            *lock(&shared.gateway) = None;
+            false
         }
         Signal::Event(Event::Stopped { reason }) => {
             *lock(&shared.gateway) = None;
             publish(
                 shared,
                 State::Refused {
-                    code: Refusal::from_launcher(&reason),
+                    code: service_refusal(&reason),
                 },
             );
             false
@@ -973,6 +1118,7 @@ mod tests {
             });
             let launch: Launch = Arc::new(|_, _| {
                 Ok(Prepared {
+                    person: None,
                     command: powershell(
                         "$null = [Console]::In.ReadLine(); Start-Sleep -Milliseconds 500; [Console]::Out.WriteLine('{\"event\":\"agent_refused\",\"code\":\"agent_root_unmarked\"}'); exit 3",
                     ),
@@ -1015,6 +1161,99 @@ mod tests {
             observation: Arc<Mutex<Result<Observation>>>,
             statuses: Arc<Mutex<Vec<serde_json::Value>>>,
             diagnostics: Arc<Diagnostics>,
+            holders: Arc<Mutex<Vec<HolderFixture>>>,
+        }
+
+        struct HolderFixture {
+            pid: u32,
+            identity: serde_json::Value,
+        }
+
+        /// Controlled holder-protocol evidence over real child pipes, not an
+        /// installed runtime or a proof of native person authentication.
+        fn held_protocol_fixture(
+            profile: &str,
+            ignore_end: bool,
+        ) -> (Prepared, HolderFixture) {
+            let profile_id = match profile {
+                "A" => "11111111-1111-4111-8111-111111111111",
+                "B" => "22222222-2222-4222-8222-222222222222",
+                _ => panic!("unexpected fixture profile"),
+            };
+            let identity = serde_json::json!({
+                "kind": "session_held",
+                "profile_id": profile_id,
+                "session_id": super::super::super::person::request_id().unwrap(),
+                "runtime_boot_id": super::super::super::person::request_id().unwrap(),
+                "connection_id": super::super::super::person::request_id().unwrap(),
+            });
+            let recipient = super::super::super::person::request_id().unwrap();
+            let reply = serde_json::json!({
+                "kind": "service_connected",
+                "request_id": super::super::super::person::request_id().unwrap(),
+                "runtime_boot_id": identity["runtime_boot_id"],
+                "connection_id": identity["connection_id"],
+                "profile_id": profile_id,
+                "service_id": "cadrumo-agent-service",
+                "lease": {
+                    "lease_id": super::super::super::person::request_id().unwrap(),
+                    "session_id": super::super::super::person::request_id().unwrap(),
+                    "parent_session_id": identity["session_id"],
+                    "profile_id": profile_id,
+                    "runtime_boot_id": identity["runtime_boot_id"],
+                    "connection_id": recipient,
+                    "service_id": "cadrumo-agent-service",
+                    "descriptor_digest": "a".repeat(64),
+                },
+            });
+            let holder_script = format!(
+                "& {{ [Console]::Out.WriteLine('{identity}'); [Console]::Out.Flush(); \
+                 while (($line = [Console]::In.ReadLine()) -ne $null) {{ \
+                     $request = $line | ConvertFrom-Json; \
+                     if ($request.action -ne 'service_admission' -or \
+                         $request.recipient_connection_id -ne '{recipient}' -or \
+                         $request.service_id -ne 'cadrumo-agent-service' -or \
+                         $request.psobject.Properties.Name.Count -ne 4) {{ exit 7 }}; \
+                     $reply = '{reply}' | ConvertFrom-Json; \
+                     $reply.request_id = $request.request_id; \
+                     [Console]::Out.WriteLine(($reply | ConvertTo-Json -Compress -Depth 8)); \
+                     [Console]::Out.Flush(); \
+                 }} }}"
+            );
+            let person = crate::agent::person::Person::hold(powershell(&holder_script), profile_id)
+                .unwrap();
+            assert_eq!(person.identity, identity);
+            let witness = HolderFixture {
+                pid: person.child_id(),
+                identity,
+            };
+            let ready = serde_json::json!({
+                "event": "service_ready",
+                "protocol": 1,
+                "admin_port": 4001,
+                "runtime_boot_id": witness.identity["runtime_boot_id"],
+                "connection_id": recipient,
+                "profile_id": profile_id,
+                "service_id": "cadrumo-agent-service",
+            });
+            // The existing launcher first reads and checks both independently
+            // minted startup credentials. Add only the service readiness frame
+            // before its existing agent-ready frame and child-tree behavior.
+            let script = launcher_script(ignore_end);
+            let marker = "$grandchild = ";
+            assert_eq!(script.matches(marker).count(), 1);
+            let script = script.replacen(
+                marker,
+                &format!("[Console]::Out.WriteLine('{ready}'); [Console]::Out.Flush(); {marker}"),
+                1,
+            );
+            (
+                Prepared {
+                    person: Some(Arc::new(Mutex::new(person))),
+                    command: powershell(&script),
+                },
+                witness,
+            )
         }
 
         fn rig(ignore_end: bool) -> Rig {
@@ -1024,10 +1263,12 @@ mod tests {
                 let current = lock(&source).clone();
                 Box::pin(async move { current })
             });
-            let launch: Launch = Arc::new(move |_, _| {
-                Ok(Prepared {
-                    command: powershell(&launcher_script(ignore_end)),
-                })
+            let holders = Arc::new(Mutex::new(Vec::new()));
+            let witnesses = holders.clone();
+            let launch: Launch = Arc::new(move |_, profile| {
+                let (prepared, witness) = held_protocol_fixture(profile, ignore_end);
+                lock(&witnesses).push(witness);
+                Ok(prepared)
             });
             let diagnostics = Arc::new(Diagnostics::default());
             let supervisor = Supervisor::with_timing(
@@ -1054,6 +1295,7 @@ mod tests {
                 observation,
                 statuses,
                 diagnostics,
+                holders,
             }
         }
 
@@ -1080,13 +1322,22 @@ mod tests {
             }
         }
 
-        /// The grandchild the running launcher reported, and its launcher.
-        async fn serving(rig: &Rig, from: usize) -> (u32, u32) {
+        /// The launcher, its reported grandchild, and its real held-protocol child.
+        async fn serving(rig: &Rig, from: usize) -> (u32, u32, u32) {
             let ready = until(rig, from, "ready").await;
             let (grandchild, length) = reported(ready["agent_version"].as_str().unwrap());
             assert_eq!(length, "64", "the launcher read the minted bearer");
             let gateway = rig.supervisor.gateway().unwrap();
             assert_eq!(gateway.port, 4000);
+            let admin_bearer = {
+                let admin = lock(&rig.supervisor.shared.admin);
+                let endpoint = admin.as_ref().expect("service admitted before agent readiness");
+                assert_eq!(endpoint.port, 4001);
+                assert_eq!(endpoint.generation, gateway.generation);
+                assert_eq!(endpoint.bearer.len(), 64);
+                assert_ne!(endpoint.bearer.as_str(), gateway.bearer.as_str());
+                endpoint.bearer.clone()
+            };
             let snapshot = rig.diagnostics.snapshot(u64::MAX);
             let ready = snapshot
                 .events
@@ -1113,19 +1364,29 @@ mod tests {
                     .unwrap()
                     .contains(gateway.bearer.as_str())
             );
+            assert!(
+                !serde_json::to_string(&snapshot.events)
+                    .unwrap()
+                    .contains(admin_bearer.as_str())
+            );
             assert_eq!(gateway.workspace_root, r"C:\lane\ws");
             assert_eq!(gateway.bearer.len(), 64);
-            let launcher = lock(&rig.supervisor.shared.running)
-                .as_ref()
-                .unwrap()
-                .supervised
-                .id();
-            (launcher, grandchild)
+            let (launcher, person) = {
+                let running = lock(&rig.supervisor.shared.running);
+                let running = running.as_ref().unwrap();
+                (running.supervised.id(), running.person.clone().unwrap())
+            };
+            let person = lock(&person);
+            let holders = lock(&rig.holders);
+            let witness = holders.iter().find(|holder| holder.pid == person.child_id()).unwrap();
+            assert_eq!(person.identity, witness.identity);
+            assert!(alive(witness.pid), "the original held-protocol child is retained");
+            (launcher, grandchild, witness.pid)
         }
 
-        async fn gone(pids: (u32, u32)) {
+        async fn gone(pids: (u32, u32, u32)) {
             let deadline = Instant::now() + Duration::from_secs(20);
-            while alive(pids.0) || alive(pids.1) {
+            while alive(pids.0) || alive(pids.1) || alive(pids.2) {
                 assert!(Instant::now() < deadline, "a started process survived");
                 tokio::time::sleep(Duration::from_millis(50)).await;
             }
@@ -1152,7 +1413,7 @@ mod tests {
                 ("another profile", observed(true, true, Some("B")), "ready"),
             ] {
                 let rig = rig(false);
-                assert_eq!(rig.supervisor.status().lane, Some("development"));
+                assert_eq!(rig.supervisor.status().lane, None, "the service reports no invented lane");
                 let first = serving(&rig, 0).await;
                 let changed = rig.statuses.lock().unwrap().len();
                 *rig.observation.lock().unwrap() = observation;
@@ -1224,6 +1485,7 @@ mod tests {
             let launch: Launch = Arc::new(move |_, _| {
                 counted.fetch_add(1, Ordering::AcqRel);
                 Ok(Prepared {
+                    person: None,
                     command: powershell(
                         "$null = [Console]::In.ReadLine(); [Console]::Out.WriteLine('{\"event\":\"agent_refused\",\"code\":\"agent_root_unmarked\"}'); exit 3",
                     ),

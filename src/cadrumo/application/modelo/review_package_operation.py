@@ -76,7 +76,7 @@ MODELO_REVIEW_PACKAGE_BUILD_OPERATION_DEFINITION_ID = "modelo.review_package.bui
 class ModeloReviewPackageBuildRequest(BaseModel):
     """Exact revision and operator output, stored by secure reference.
 
-    ``actor`` is recorded as sent for a person's session. An agent's session is
+    ``actor`` is recorded as sent for a person's session. An automation's session is
     recorded under its own session label, whatever the request carries.
     """
 

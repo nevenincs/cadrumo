@@ -10,6 +10,8 @@ These are persistence-layer observations. A caller's journal, lock, signature ve
 
 ## Private-data invariants
 
+External service records use package-allowlisted opaque custody descriptors and generic authenticated CRUD/CAS. Preserve each descriptor's persisted namespace/key/schema/AAD identities, including legacy ciphertext. Runtime must not interpret provider/conversation schemas; client JSON cannot select arbitrary namespaces, policies or SECRET access. Bind descriptor access and bounded one-shot secret exchange to the exact native verified service/session authority. Never export the profile DEK or replace existing records with reset/new-key-store migration. Service owns agent conversation grants; typed tax evidence, legal holds and tax extraction consent remain at their deterministic owners.
+
 Persist private taxpayer, banking, credential, invoice, filing and evidence payloads only through approved encrypted custody. Public official publications, registry definitions and synthetic fixtures may use canonical repository storage; inspect them for embedded private data. A path or URL is not persisted evidence. Use synthetic or irreversibly anonymized test data.
 
 Do not leak private payloads through logs, exceptions, command arguments, caches, scratch files, documentation or agent transcripts. Redact before serialization or transport and use approved secret channels. Explicit operator exports and consented integrations must follow their declared authorization, destination and data-lifetime contracts; ordinary development access grants neither. Bound decrypted material's lifetime and cleanup, and refuse workflows that cannot meet their custody contract. Observed plaintext gaps require remediation, not a new storage exception.

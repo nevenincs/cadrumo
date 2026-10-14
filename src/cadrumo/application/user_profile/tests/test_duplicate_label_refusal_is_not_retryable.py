@@ -1,7 +1,7 @@
 """A label already bound to a capsule refuses permanently, not retryably.
 
 ``retryable`` is not decoration on this CLI. Its stated operator is an
-autonomous agent, and the field is the instruction it acts on: a refusal marked
+autonomous automation, and the field is the instruction it acts on: a refusal marked
 retryable invites the identical command again.
 
 Two conditions in the same custody function shared one error class and
@@ -9,7 +9,7 @@ therefore one answer. "The captured witness no longer matches live state" is a
 compare-and-swap conflict that a re-read genuinely fixes, so its code is
 published retryable and should stay that way. "This label already names a
 committed capsule" is permanent -- the name is taken, and the identical restore
-can never succeed -- yet it inherited the retryable answer and told the agent
+can never succeed -- yet it inherited the retryable answer and told the automation
 to loop.
 
 The split is a SUBCLASS, so every existing handler that catches a custody
@@ -29,7 +29,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_a_taken_label_is_published_as_not_retryable() -> None:
-    """DISCRIMINATING: the answer an agent operator acts on.
+    """DISCRIMINATING: the answer an automation operator acts on.
 
     Retrying a restore under a label bound to a committed capsule cannot
     succeed at any point in the future, so advertising it as retryable is an

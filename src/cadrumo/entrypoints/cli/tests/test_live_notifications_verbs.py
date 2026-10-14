@@ -12,6 +12,9 @@ import typer
 from click.testing import Result
 from pydantic import ValidationError
 
+from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
+from cadrumo_client.commands.registered_operation_errors import submitted_operation_error
+
 from ....application.live.notification_document_capture_operation import NotificationDocumentCapturePublicResultV1
 from ....application.live.notification_document_read_operation import (
     NotificationDocumentHistoryEntryPublicV1,
@@ -23,16 +26,14 @@ from ....core.json_contract import Notice, NoticeSeverity
 from ....core.operations import OperationEffect, OperationTerminalCondition
 from ....tests.aeat_literal_fixtures import NOTIFICATION_DETALLE_SEDE_URL_FIXTURE
 from .. import _app_live_notifications_cli as handler
-from .. import runtime_notification_document_capture as capture_bridge
-from .. import runtime_notification_document_read as bridge
+from .. import operation_notification_document_capture as capture_bridge
+from .. import operation_notification_document_read as bridge
 from .._app_live_notifications_payloads import (
     NotificationDocumentHistoryResult,
     NotificationDocumentPullResult,
     NotificationDocumentViewResult,
 )
 from ..errors import CliRefusedBoundaryError
-from ..registered_operation_contracts import RegisteredOperationCompletion
-from ..registered_operation_errors import submitted_operation_error
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

@@ -44,6 +44,7 @@ from ...core.parsing.dates import parse_iso8601_date
 from ...core.period import Period
 from ...core.prorrata_exclusions import Art104TresExclusion
 from ...core.text_bounds import NonEmptyStr
+from ...domain.buckets.event import BUCKET_ACTOR_LABEL_MAX_LENGTH
 from ...domain.calculations.registry.iva_deduction_catalogue import require_iva_deduction_fact_kind
 from ...domain.calculations.registry.prorrata_exclusions import require_art104_tres_exclusion
 from ...domain.calculations.registry.prorrata_vocabulary import require_input_classification
@@ -612,7 +613,7 @@ class LedgerSourceImportCommand(BaseModel):
     source: Path | None = None
     period: Period | None = None
     own_account_id: OwnAccountId | None = None
-    actor: str = Field(default="operator", min_length=1, max_length=64)
+    actor: str = Field(default="operator", min_length=1, max_length=BUCKET_ACTOR_LABEL_MAX_LENGTH)
     source_command: str = Field(default="aeat app ledger import", min_length=1, max_length=128)
 
     @field_validator("bucket_id", "provider", "actor", "source_command")
@@ -777,7 +778,7 @@ class LedgerTransactionRemovalReport(BaseModel):
     transaction_id: TransactionId
     removed: bool = False
     dry_run: bool = False
-    actor: str = Field(min_length=1, max_length=64)
+    actor: str = Field(min_length=1, max_length=BUCKET_ACTOR_LABEL_MAX_LENGTH)
     reason: str = ""
     cascaded_purchase_invoice_evidence_ids: tuple[str, ...] = ()
     cascaded_attachment_ids: tuple[str, ...] = ()
@@ -799,7 +800,7 @@ class LedgerCatalogueResetReport(BaseModel):
     removed_transaction_ids: tuple[str, ...] = ()
     reset: bool = False
     dry_run: bool = False
-    actor: str = Field(min_length=1, max_length=64)
+    actor: str = Field(min_length=1, max_length=BUCKET_ACTOR_LABEL_MAX_LENGTH)
     reason: str = ""
     cascaded_purchase_invoice_evidence_ids: tuple[str, ...] = ()
     cascaded_attachment_ids: tuple[str, ...] = ()
@@ -826,7 +827,7 @@ class LedgerExportCommand(BaseModel):
     # effective date falls in the period, so an operator can hand a gestor just
     # the quarter/year. None exports the whole bucket.
     period: Period | None = None
-    actor: str = Field(default="operator", min_length=1, max_length=64)
+    actor: str = Field(default="operator", min_length=1, max_length=BUCKET_ACTOR_LABEL_MAX_LENGTH)
     source_command: str = Field(default="aeat app ledger export", min_length=1, max_length=128)
 
     @field_validator("bucket_id", "actor", "source_command")

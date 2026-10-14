@@ -45,7 +45,7 @@ The shared journal base validates 64-character lowercase hexadecimal IDs, keeps 
 - profile_preconditions.py (341 lines) (`src/cadrumo/application/profile_preconditions.py`)
 - provisioning.py (1,212 lines) (`src/cadrumo/application/provisioning.py`)
 - provisioning_browser.py (291 lines) (`src/cadrumo/application/provisioning_browser.py`)
-- provisioning_contracts.py (144 lines) (`src/cadrumo/application/provisioning_contracts.py`)
+- provisioning_command_ports.py (144 lines) (`src/cadrumo/application/provisioning_command_ports.py`)
 - provisioning_fitness.py (143 lines) (`src/cadrumo/application/provisioning_fitness.py`)
 - provisioning_host.py (450 lines) (`src/cadrumo/application/provisioning_host.py`)
 <!-- /preserved:article -->

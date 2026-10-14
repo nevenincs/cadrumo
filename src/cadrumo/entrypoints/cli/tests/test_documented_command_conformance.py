@@ -388,7 +388,7 @@ def _page_is_enrolled(text: str) -> bool:
 # The gate ships with a checked-in per-page baseline of the current violations
 # and only ratchets DOWN: a page may never exceed its baseline count (a new plain
 # ``aeat`` fence reds the gate), and a page absent from the baseline may carry
-# none. Converter agents burn the baseline down page by page; an empty baseline
+# none. Converter delegated clients burn the baseline down page by page; an empty baseline
 # means the doctrine is fully applied. It does not red the tree on partial
 # progress (a page below its baseline passes), so the conversion can proceed in
 # parallel.
@@ -874,7 +874,7 @@ def test_no_new_aeat_plain_fences_in_user_docs() -> None:
     committed per-page baseline: a page may never EXCEED its baseline count (a new
     plain ``aeat`` fence reds the gate, naming the page and remediation), and a
     page absent from the baseline may carry none. A page below its baseline passes
-    (so the parallel conversion never reds the tree); converter agents tighten the
+    (so the parallel conversion never reds the tree); converter delegated clients tighten the
     baseline down as they land, and an empty baseline means the doctrine is fully
     applied.
     """
@@ -1009,7 +1009,7 @@ def test_aeat_fence_baseline_is_well_formed_and_the_gate_scans_the_live_surface(
     user-docs surface (not an empty set), and the baseline must be a well-formed
     page→positive-count map. The baseline is deliberately NOT asserted equal to
     the live counts: a page below its baseline is legitimate mid-conversion
-    progress, so requiring equality would red the tree while the converter agents
+    progress, so requiring equality would red the tree while the converter delegated clients
     work. The one-directional guarantee (no page exceeds its baseline) lives in
     :func:`test_no_new_aeat_plain_fences_in_user_docs`; tightening the baseline
     toward empty is the converters' committed step.

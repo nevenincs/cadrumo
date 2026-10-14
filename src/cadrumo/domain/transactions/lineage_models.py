@@ -23,6 +23,7 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.utc import UtcInstant, parse_iso_datetime
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STRICT_STR_KEYED_MAPPING_ADAPTER
 from ...core.type_guards import is_object_mapping
+from ..buckets.event import BUCKET_ACTOR_LABEL_MAX_LENGTH
 from ..identifiers import canonical_decimal_string
 from .enums import BusinessClassification, SplitRole, TransactionLifecycleState
 from .errors import TransactionValidationError
@@ -200,7 +201,7 @@ class TransactionEvidenceProvenanceEntry(BaseModel):
 
     evidence_id: str = Field(min_length=1, max_length=128)
     evidence_kind: Literal["purchase_invoice_evidence", "attachment"]
-    actor: str = Field(min_length=1, max_length=64)
+    actor: str = Field(min_length=1, max_length=BUCKET_ACTOR_LABEL_MAX_LENGTH)
     source_command: str = Field(min_length=1, max_length=128)
     linked_at: UtcInstant
     bucket_event_id: Hex64Str | None = None
@@ -224,7 +225,7 @@ class TransactionEditLineageEntry(BaseModel):
     model_config = _STRICT_FROZEN
 
     previous_transaction_id: TransactionId
-    actor: str = Field(min_length=1, max_length=64)
+    actor: str = Field(min_length=1, max_length=BUCKET_ACTOR_LABEL_MAX_LENGTH)
     source_command: str = Field(min_length=1, max_length=128)
     edited_at: UtcInstant
     bucket_event_id: Hex64Str | None = None
@@ -249,7 +250,7 @@ class TransactionLifecycleLineageEntry(BaseModel):
 
     previous_state: TransactionLifecycleState
     state: TransactionLifecycleState
-    actor: str = Field(min_length=1, max_length=64)
+    actor: str = Field(min_length=1, max_length=BUCKET_ACTOR_LABEL_MAX_LENGTH)
     source_command: str = Field(min_length=1, max_length=128)
     changed_at: UtcInstant
     reason: str = ""

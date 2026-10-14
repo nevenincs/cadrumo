@@ -28,6 +28,29 @@ import type { ProfileViews } from "./views";
 
 export type TerminalKind = "console" | "python" | "tui";
 
+export type AttendanceCandidate = {
+  attendance_id: string;
+  process_id: number | null;
+  image_path: string | null;
+  frontend: string;
+  expires_at: string;
+  scope: {
+    operations: string[];
+    actions: string[];
+    periods: unknown[] | null;
+    disclosures: unknown[];
+    disclosure_categories: unknown[];
+    allow_network: boolean;
+    allow_changes_records: boolean;
+    allow_delegation: boolean;
+    allow_period_independent: boolean;
+  };
+};
+export type Attendance = {
+  inventory(): Promise<{ candidates: AttendanceCandidate[] }>;
+  decide(id: string, approve: boolean): Promise<void>;
+};
+
 export type TerminalEvent =
   /** `drawn` reports that the terminal has rendered these bytes; the host
    * withholds further output until rendered bytes are reported. */
@@ -44,6 +67,7 @@ export type TerminalSession = {
 };
 
 export interface Host {
+  readonly attendance?: Attendance;
   /** Absent in a browser: native window behavior is never simulated as real. */
   readonly window?: {
     action(action: WindowAction): Promise<void>;

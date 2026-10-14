@@ -8,10 +8,10 @@ import pytest
 from textual.pilot import Pilot
 from textual.widgets import Button, DataTable, Input, Static
 
+from .....tests.async_condition import until
 from ...components.host import ScreenHostApp
 from ...components.status import PinnedStatusBar
 from ...components.widgets import DisclosureGroup
-from ...installation.tests.runtime_support import until
 from ...tests.frame import screen_text
 from ..destination import ReferenceScreen
 from ..read_screen import ReferenceReadScreen

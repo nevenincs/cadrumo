@@ -7,24 +7,25 @@ from uuid import uuid4
 
 import pytest
 
-from .....adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from .....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
-from .....adapters.local_runtime.profile_mutations import ProfileMutationCompletion, ProfileMutationRunError
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_client.transport.profile_mutations import ProfileMutationCompletion, ProfileMutationRunError
+
 from .....application.user_profile.profile_operation_contracts import (
     ProfileCompleteSetupOperationRequest,
     ProfileMutationOperationProjection,
 )
 from .....core.operations import OperationEffect, OperationTerminalCondition
 from ...errors import CliRefusedBoundaryError
+from .._profile_mutation import execute_profile_mutation
 from .._profile_repeatable_row import _parse_row_key, _parse_values
-from .._runtime_profile_mutation import execute_profile_mutation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 class _RefusedReadClient:
     def read_profile_view(self, *_args: object, **_kwargs: object) -> object:
-        raise RuntimeFrontendRefusedError("profile.view.stale_revision")
+        raise FrontendRefusedError("profile.view.stale_revision")
 
 
 def test_post_commit_view_refusal_keeps_known_success_and_operation_identity(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -42,9 +43,9 @@ def test_post_commit_view_refusal_keeps_known_success_and_operation_identity(mon
             effect=OperationEffect.UPDATED,
         )
 
-    monkeypatch.setattr("cadrumo.entrypoints.cli.config._runtime_profile_mutation.run_profile_mutation", complete)
+    monkeypatch.setattr("cadrumo.entrypoints.cli.config._profile_mutation.run_profile_mutation", complete)
     with pytest.raises(CliRefusedBoundaryError) as caught:
-        execute_profile_mutation(cast(RuntimeFrontendClient, _RefusedReadClient()), request, deadline=10**12)
+        execute_profile_mutation(cast(FrontendClient, _RefusedReadClient()), request, deadline=10**12)
 
     error = caught.value
     assert error.translated_message == "cli.config.profile.mutation.committed_view_unavailable"
@@ -72,9 +73,9 @@ def test_terminal_operation_refusal_keeps_reason_and_settlement_context(monkeypa
             effect=OperationEffect.NONE,
         )
 
-    monkeypatch.setattr("cadrumo.entrypoints.cli.config._runtime_profile_mutation.run_profile_mutation", refuse)
+    monkeypatch.setattr("cadrumo.entrypoints.cli.config._profile_mutation.run_profile_mutation", refuse)
     with pytest.raises(CliRefusedBoundaryError) as caught:
-        execute_profile_mutation(cast(RuntimeFrontendClient, _RefusedReadClient()), request, deadline=10**12)
+        execute_profile_mutation(cast(FrontendClient, _RefusedReadClient()), request, deadline=10**12)
 
     assert caught.value.context == {
         "reason": reason,

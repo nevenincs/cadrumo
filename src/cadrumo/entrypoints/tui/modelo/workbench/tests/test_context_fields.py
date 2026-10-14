@@ -2,10 +2,9 @@
 
 import pytest
 
-from cadrumo.application.modelo.work_form_models import ModeloFormContextFieldBlock, section_fields
-from cadrumo.application.modelo.workbench_projection import PublicModeloFormContextFieldBlock
-from cadrumo.application.operations.public_mirror import project_public_mirror, restore_public_mirror
-
+from ......application.modelo.work_form_models import ModeloFormContextFieldBlock, section_fields
+from ......application.modelo.workbench_projection import PublicModeloFormContextFieldBlock
+from ......application.operations.public_mirror import project_public_mirror, restore_public_mirror
 from ..casilla_list_models import CasillaListEntry, CasillaListNote
 from ..page_items import WorkbenchFilter, page_items, workbench_pages
 from .workbench_fixture import synthetic_form

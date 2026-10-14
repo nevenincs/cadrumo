@@ -27,16 +27,8 @@ import keyring.core
 import pytest
 from pydantic import BaseModel, Field, field_validator
 
-from cadrumo.adapters.local_runtime.posix_endpoint import PosixRuntimeEndpoint
-from cadrumo.adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
-from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from cadrumo.application.exchange_rate_provider import bind_exchange_rate_provider_factory
-from cadrumo.application.runtime.contracts import (
-    RuntimeByteChannel,
-    RuntimeRefusalCode,
-    RuntimeRefusalError,
-)
 from cadrumo.application.user_profile.access_contracts import (
     Availability,
     LoginEligibility,
@@ -54,9 +46,17 @@ from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 from cadrumo.domain.filing import software_identity
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
-from cadrumo.entrypoints.runtime.profile_connections import RuntimeProfileConnections
-from cadrumo.entrypoints.runtime.worker import run
 from cadrumo.tests.authority_run_snapshot import freeze_authority_root
+from cadrumo_client.contracts.contracts import (
+    ByteChannel,
+    RefusalCode,
+    RefusalError,
+)
+from cadrumo_client.transport.posix_endpoint import PosixEndpoint
+from cadrumo_client.transport.windows import WindowsEndpoint
+from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
+from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
+from cadrumo_runtime.host.worker import run
 
 # The native worker runs this trusted fixture as a bare script with ``-I``.
 # Isolated mode omits the checkout root, so its dev-only sibling needs the
@@ -74,7 +74,7 @@ class _SequenceRuntimeTransportServer(RetainedRuntimeTransportServer):
     """Pin the fixture clock in the host's separate connection threads too."""
 
     @override
-    def _connection(self, channel: RuntimeByteChannel) -> None:
+    def _connection(self, channel: ByteChannel) -> None:
         with frozen_clock(SANDBOX_INSTANT):
             super()._connection(channel)
 
@@ -193,7 +193,7 @@ def _worker_composition() -> Generator[None]:
 @contextmanager
 def sequence_runtime(root: Path, *, signed_in_profile: UUID | None = None) -> Generator[RetainedRuntimeTransportServer]:
     """Serve the sandbox's exact endpoint before any installed frontend connects."""
-    from cadrumo.adapters.local_runtime.tests.profile_worker_support import NativeRuntimeFixtureOwner
+    from cadrumo_runtime.adapters.tests.profile_worker_support import NativeRuntimeFixtureOwner
 
     # The parent carries a published authority in its Python settings context.
     # A fresh isolated child cannot inherit that context. Give the trusted
@@ -204,20 +204,16 @@ def sequence_runtime(root: Path, *, signed_in_profile: UUID | None = None) -> Ge
     selected = bundled_authority_descriptor_path().resolve(strict=True)
     staged = freeze_authority_root(selected.parent, root.parent / "docs-publication-stage")
     if staged is None:
-        raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+        raise RefusalError(RefusalCode.UNAVAILABLE)
     authority_root = root.parent / "docs-authority"
     sandbox_root = root.resolve(strict=True).parent
     if not staged.resolve(strict=True).is_relative_to(sandbox_root) or not authority_root.resolve().is_relative_to(
         sandbox_root
     ):
-        raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+        raise RefusalError(RefusalCode.PEER_UNTRUSTED)
     staged.rename(authority_root)
     _publish_export_version(sandbox_root)
-    endpoint = (
-        WindowsRuntimeEndpoint(storage_root=root)
-        if sys.platform == "win32"
-        else PosixRuntimeEndpoint(storage_root=root)
-    )
+    endpoint = WindowsEndpoint(storage_root=root) if sys.platform == "win32" else PosixEndpoint(storage_root=root)
     stop, boot = Event(), uuid4()
     owner = NativeRuntimeFixtureOwner(endpoint, stop, timeout=25)
     pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="docs-runtime")
@@ -256,7 +252,7 @@ def sequence_runtime(root: Path, *, signed_in_profile: UUID | None = None) -> Ge
         while not server.ready.wait(0.1):
             if running.done():
                 running.result()
-                raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_NOT_READY)
+                raise RefusalError(RefusalCode.ENDPOINT_NOT_READY)
         if signed_in_profile is not None:
             _establish_synthetic_sign_in(signed_in_profile)
         yield server
@@ -269,15 +265,15 @@ def sequence_runtime(root: Path, *, signed_in_profile: UUID | None = None) -> Ge
 
 def _establish_synthetic_sign_in(profile_id: UUID) -> None:
     """Mint real runtime-owned proof for the fixture's explicit sign-out scenario."""
-    from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
     from cadrumo.application.operations.registry import OperationFrontendProjection
+    from cadrumo_client.transport.installed_client import open_installed_client
 
-    client = asyncio.run(open_installed_runtime_client(profile_id=profile_id, frontend=OperationFrontendProjection.CLI))
+    client = asyncio.run(open_installed_client(profile_id=profile_id, frontend=OperationFrontendProjection.CLI))
     proof = bytearray(load_settings().cadrumo_dev_test_database_password.get_secret_value(), "utf-8")
     try:
         admitted = client.login_password(proof, persist_receipt=True)
         if admitted.human_login is None or not admitted.human_login.session_persisted:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
     finally:
         proof[:] = bytes(len(proof))
         client.close()

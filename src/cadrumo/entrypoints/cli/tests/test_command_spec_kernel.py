@@ -4,14 +4,9 @@ import dataclasses
 
 import pytest
 
-from cadrumo.application.operator_surface.command_ports import (
-    CommandNodeKind,
-    CommandWriteRoute,
-)
-
-from ..command_graph import CommandSpecFamily, CommandSpecGraph
-from ..command_parameter_contracts import ArgumentSpec, OptionSpec
-from ..command_shared_contracts import (
+from cadrumo_client.commands.graph import CommandSpecFamily, CommandSpecGraph
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.shared_contracts import (
     DeferredTarget,
     LazyBinding,
     ParameterDefault,
@@ -20,7 +15,8 @@ from ..command_shared_contracts import (
     TranslationKey,
     ValueContract,
 )
-from ..command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind, CommandWriteRoute
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -96,7 +92,9 @@ def _leaf() -> CommandSpec:
         handler=LazyBinding.available(DeferredTarget("..config.profile_list_cli", "profile_list", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("..config_payloads", "ProfileListPayload", __package__),
+            target=DeferredTarget(
+                "cadrumo.entrypoints.cli.config.profile_list_payloads", "ConfigListResult", __package__
+            ),
             identity="config.profile.list",
         ),
     )
@@ -172,7 +170,7 @@ def test_target_and_schema_identities_are_production_authored() -> None:
     assert leaf.handler.target is not None
     assert leaf.handler.target.identity.endswith(":profile_list")
     assert leaf.result_schema.target is not None
-    assert leaf.result_schema.target.identity.endswith(":ProfileListPayload")
+    assert leaf.result_schema.target.identity.endswith(":ConfigListResult")
     assert leaf.result_schema.identity == "config.profile.list"
 
 

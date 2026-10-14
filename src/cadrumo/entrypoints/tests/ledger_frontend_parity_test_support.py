@@ -45,7 +45,7 @@ from ..ledger_action_composition import compose_ledger_action_ports
 from . import registered_executor_case_support as conformance
 
 SESSION_CLIENT = UUID("5aa00000-0000-4000-8000-0000000000dd")
-AGENT_LABEL = f"agent:mcp.attended.{SESSION_CLIENT}"
+AUTOMATION_LABEL = f"automation:external-client.attended.{SESSION_CLIENT}"
 PERSON_LABEL = "synthetic-person"
 ROW_AMOUNT = Decimal("121.00")
 

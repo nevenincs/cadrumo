@@ -16,9 +16,9 @@ related:
 supersedes:
   - '2026-05-14-secure-backend-passkey-custody-adr'
   - '2026-08-02-adjacent-domain-deduplication-store-scoped-login-throttle-adr'
-modified: '2026-10-13'
+modified: '2026-10-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:9354be77071414e5dff703f5d91ad067a12f06008b302c6cd580e39a35c4db78'
+body_hash: 'sha256:ba0190d29a5ba9bebde49140185341532cf6ee09df408fa77796e82a5d7a137b'
 ---
 
 # `profile-password-custody` adr: `per-profile password custody authority` | (**status:** `accepted`)
@@ -91,7 +91,7 @@ This protocol is enforced at the application enrollment boundary, not only by op
 Password login must not stat, open, parse, digest, or validate the recovery record. Missing, inaccessible, malformed, corrupt, or removed recovery cannot affect password login, activation, password rotation, normal backup, or normal restore. Recovery rotation applies only to already-enrolled recovery and verifies the candidate before atomic replacement. Recovery removal requires current-password authentication; only a fresh enrollment restores recovery. Recovery-based password reset, once deferred by `2026-08-22-profile-registration-password-policy-canonical-credential-capability-adr`, is decided by `2026-09-23-profile-password-custody-passphrase-reset-adr` (proposed); it increments the password-envelope generation and preserves the epoch through the canonical rotation primitive.
 
 A portable `profile-recovery-artifact/v1` is a restore proof only. It contains UUID, `dek_epoch`, recovery generation and bounded KDF, recovery wrap, AAD descriptor, and canonical self-digest, but no mnemonic, password envelope, data, session, or keyring state. Export requires current-password authentication and exclusive creation. An artifact cannot import, replace, or create enrolled recovery. Explicit recovery restore requires a named capsule source, a named artifact, UUID and epoch agreement, mnemonic unwrap, and sentinel proof. Warnings identify offline-guessing exposure, separate-storage requirements, retained exported copies, and the fact that recovery loss does not harm password login.
-Amended 2026-09-23. Recovery is optional and independent, as `2026-08-13-recovery-mnemonic-presentation-successor-adr` records and as the product implements: creation publishes the profile before recovery is offered (`src/cadrumo/entrypoints/cli/config/scripted_registration.py:26`), and `config profile recovery enable`, `disable` and `status` enroll and remove it afterwards under current-password proof (`src/cadrumo/entrypoints/cli/config/recovery.py:1`). The earlier text made verified recovery mandatory at creation and denied any post-creation enrollment writer; that text contradicted both the successor decision and the code and is replaced above. Accepted 2026-09-23 under the user's standing pre-approval of modifications.
+Amended 2026-09-23. Recovery is optional and independent, as `2026-08-13-recovery-mnemonic-presentation-successor-adr` records and as the product implements: creation publishes the profile before recovery is offered (`src/cadrumo/entrypoints/cli/config/scripted_registration.py:26`), and `cadrumo-runtime config profile recovery enable`, `cadrumo-runtime config profile recovery disable` and `cadrumo-runtime config profile recovery status` enroll and remove it afterwards under current-password proof (`src/cadrumo_runtime/commands/recovery.py:1`). The earlier text made verified recovery mandatory at creation and denied any post-creation enrollment writer; that text contradicted both the successor decision and the code and is replaced above. Accepted 2026-09-23 under the user's standing pre-approval of modifications.
 
 ### Transactions and immutable capsule publication
 
@@ -148,3 +148,7 @@ Profile handover is scoped to one frontend context and its candidate session. Ot
 Portable backups exclude all automation records and protected secrets, in addition to existing session exclusions; restore never restores delegation. Existing password/recovery formats, KDF/sentinel rules, transactional publication, local deletion scope and the limit on detecting coherent full-state rollback remain unchanged. The new decision owns the delegated contract and its CLI/TUI controls.
 
 Amendment accepted 2026-10-04 under the operator's acceptance of `2026-10-04-application-sign-in-adr`. The human acceleration receipt also binds the originating login and the profile's durable sign-in generation. It is minted only after its session is published, stamped with the generation captured at publication. Only the runtime profile host mints, extends or deletes it. Frontends present the proof and never unwrap the DEK. The throttle rule, where missing or corrupt state means clear, is unchanged.
+
+### Amendment 2026-10-14: runtime-owned recovery commands
+
+Recovery-code administration is now served by `cadrumo-runtime config profile recovery enable|disable|status`, defined in `cadrumo_runtime.commands.recovery`. Direct `aeat config login`, `aeat config logout`, and `aeat config profile create` remain AEAT commands. This changes the current command owner and source locator only; the recovery proof, storage, and custody rules in this record remain unchanged.

@@ -10,13 +10,18 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.application.user_profile.access_contracts import AccessScope
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
-from cadrumo_harness.mcp import runtime_adapter as mcp_runtime
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
-from cadrumo_harness.mcp.tests.test_authentication_handover import _Client
+from cadrumo_client.contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_harness.mcp.access_scope import surface_scope
+from cadrumo_harness.mcp.surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES
+
+from .. import runtime_adapter as mcp_runtime
+from ..runtime_adapter import RuntimeMcpAdapter
+from .test_authentication_handover import _Client
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -36,17 +41,24 @@ class _CloseClient(_Client):
 
 
 def _adapter(client: _CloseClient) -> RuntimeMcpAdapter:
-    return RuntimeMcpAdapter(profile_id=client.profile_id, client=cast(RuntimeFrontendClient, client))
+    return RuntimeMcpAdapter(profile_id=client.profile_id, client=cast(FrontendClient, client))
 
 
 def _admit(monkeypatch: pytest.MonkeyPatch, candidate: _CloseClient) -> None:
     async def admit(
-        *, profile_id: UUID, credential_reference: UUID, frontend: OperationFrontendProjection
-    ) -> RuntimeFrontendClient:
+        *,
+        profile_id: UUID,
+        credential_reference: UUID,
+        frontend: OperationFrontendProjection,
+        timeout: float,
+        scope: AccessScope,
+    ) -> FrontendClient:
+        assert timeout == PROFILE_ADMISSION_TIMEOUT_SECONDS
+        assert scope == surface_scope(MCP_SURFACES[DEFAULT_MCP_SURFACE])
         assert profile_id == candidate.profile_id
-        assert frontend is OperationFrontendProjection.MCP
+        assert frontend is OperationFrontendProjection.EXTERNAL_CLIENT
         assert isinstance(credential_reference, UUID)
-        return cast(RuntimeFrontendClient, candidate)
+        return cast(FrontendClient, candidate)
 
     monkeypatch.setattr(mcp_runtime, "open_installed_credential_client", admit)
 
@@ -100,11 +112,18 @@ async def test_opener_failure_transfers_retained_cleanup_to_adapter(
     )
 
     async def refuse_admission(
-        *, profile_id: UUID, frontend: OperationFrontendProjection, credential_reference: UUID
-    ) -> RuntimeFrontendClient:
+        *,
+        profile_id: UUID,
+        frontend: OperationFrontendProjection,
+        credential_reference: UUID,
+        timeout: float,
+        scope: AccessScope,
+    ) -> FrontendClient:
+        assert timeout == PROFILE_ADMISSION_TIMEOUT_SECONDS
+        assert scope == surface_scope(MCP_SURFACES[DEFAULT_MCP_SURFACE])
         assert profile_id == original.profile_id
         assert credential_reference == reference
-        assert frontend is OperationFrontendProjection.MCP
+        assert frontend is OperationFrontendProjection.EXTERNAL_CLIENT
         try:
             await close_async_resources(failed_owner, task_name="test-helper-admission-close", primary_error=refusal)
         finally:

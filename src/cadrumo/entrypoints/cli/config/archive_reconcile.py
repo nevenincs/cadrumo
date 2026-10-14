@@ -43,9 +43,10 @@ def profile_archive_reconcile(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Resolve crash-interrupted portable profile-bundle publications."""
+    from cadrumo_client.commands.profile_binding import bound_profile_client
+
     from ....application.user_profile.archive_operation import ProfileArchiveReconcileRequest
-    from ..runtime_profile_archive import run_profile_archive_reconcile
-    from ..runtime_profile_binding import bound_profile_client
+    from ..operation_profile_archive import run_profile_archive_reconcile
 
     _activate_subcommand_output_language(ctx, output_language)
     client = bound_profile_client(ctx)

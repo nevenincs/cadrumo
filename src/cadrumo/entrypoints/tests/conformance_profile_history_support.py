@@ -1,4 +1,4 @@
-"""Registered-executor conformance scenarios for the profile history read and its agent timeline."""
+"""Registered-executor conformance scenarios for the profile history read and its automation timeline."""
 
 from __future__ import annotations
 

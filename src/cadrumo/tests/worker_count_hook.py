@@ -30,7 +30,7 @@ The variable overrides a project DEFAULT rather than enabling an otherwise
 absent cap. An opt-in cap was the original design and it did not hold: the
 variable has to be remembered on every pytest invocation by every author, so
 in practice it was almost never set and ``-n auto`` resolved to the machine's
-full physical-core width. On a shared box running many concurrent agents that
+full physical-core width. On a shared box running many concurrent delegated clients that
 width is multiplied by the number of simultaneous invocations, and the
 observed consequence was not merely slow tests -- it was git processes killed
 mid-write leaving stale zero-byte index locks that blocked commits for
@@ -61,7 +61,7 @@ _WORKER_ID_PATTERN = re.compile(r"\Agw(\d+)\Z")
 #: Worker count ``-n auto`` resolves to when ``CADRUMO_PYTEST_WORKERS`` is
 #: absent or unparseable. Half the 12-wide physical-core default measured on
 #: the shared development box, chosen to keep per-invocation parallelism
-#: meaningful while leaving headroom for concurrent agents -- and for the
+#: meaningful while leaving headroom for concurrent delegated clients -- and for the
 #: subprocess CLI invocations integration tests spawn, which are not xdist
 #: workers and are governed by nothing.
 DEFAULT_WORKER_COUNT = 6

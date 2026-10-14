@@ -9,28 +9,24 @@ from time import monotonic, sleep
 from typing import Any, Final
 from uuid import UUID
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
-from cadrumo.application.operations.mcp_surfaces import McpSurface
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.runtime.attendance import RuntimeAttendancePending
-from cadrumo.application.runtime.profile_access import status_admits_session
 from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode, ProfileAccessStatus
-from cadrumo.application.user_profile.login_session import ProfileReceiptRefusedError
 from cadrumo.application.user_profile.sign_in_refusals import SignInRefusal
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.errors.hierarchy import ActiveProfilePointerError
-from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.attendance import AttendancePending
+from cadrumo_client.contracts.profile_access import status_admits_session
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
 from .protocol_contract import refusal_code, sign_in_refusal_facts
+from .surfaces import McpSurface
 
 
 class McpAdmission(StrEnum):
     """How the session one MCP connection holds was admitted."""
 
-    SIGN_IN = "sign_in"
-    """Resumed from the person's sign-in; it ends when that sign-in ends."""
     KEY = "key"
     """Authenticated by an enrolled key the person configured at launch, under the grant approved for it."""
     ATTENDED = "attended"
@@ -55,23 +51,16 @@ class AdmissionDenial:
     @classmethod
     def of(cls, error: Exception) -> AdmissionDenial:
         """Keep the public code and sign-in facts of one refused admission."""
-        sign_in = error.sign_in if isinstance(error, RuntimeFrontendRefusedError) else None
+        sign_in = error.sign_in if isinstance(error, FrontendRefusedError) else None
         return cls(refusal_code(error), sign_in)
 
     def facts(self) -> dict[str, Any]:
         """Return the sign-in facts a reply carries beside the code."""
         return sign_in_refusal_facts(self.sign_in)
 
-    def refusal(self) -> RuntimeFrontendRefusedError:
+    def refusal(self) -> FrontendRefusedError:
         """Return a fresh refusal with the code and facts the runtime gave."""
-        return RuntimeFrontendRefusedError(self.code, sign_in=self.sign_in)
-
-
-_UNPRESENTED_SIGN_IN_REFUSALS: Final[dict[ProfileSessionRefusalReason, AccessDenialCode]] = {
-    # The proof is held by the OS keychain; without it nothing says whether a sign-in is stored.
-    ProfileSessionRefusalReason.KEYRING_UNAVAILABLE: AccessDenialCode.CUSTODY_UNAVAILABLE,
-}
-"""Refusals met before the runtime is asked, as the denial a client is told; any other is an absent sign-in."""
+        return FrontendRefusedError(self.code, sign_in=self.sign_in)
 
 
 def selected_profile_id(*, expected: UUID | None) -> UUID:
@@ -84,30 +73,30 @@ def selected_profile_id(*, expected: UUID | None) -> UUID:
     try:
         selected = resolve_active_bucket_id()
     except ActiveProfilePointerError:
-        raise RuntimeFrontendRefusedError(AccessDenialCode.STORAGE_UNAVAILABLE.value) from None
+        raise FrontendRefusedError(AccessDenialCode.STORAGE_UNAVAILABLE.value) from None
     if selected is None:
-        # No profile is selected, so no sign-in exists that this connection could resume.
-        raise RuntimeFrontendRefusedError(AccessDenialCode.AUTHENTICATION_REQUIRED.value)
+        # No selected profile can have an attendance request from this connection.
+        raise FrontendRefusedError(AccessDenialCode.AUTHENTICATION_REQUIRED.value)
     try:
         profile_id = UUID(selected)
     except ValueError:
-        raise RuntimeFrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value) from None
+        raise FrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value) from None
     if expected is not None and profile_id != expected:
-        raise RuntimeFrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
+        raise FrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
     return profile_id
 
 
-def _require_client_binding(client: RuntimeFrontendClient, profile_id: UUID) -> UUID:
-    if client.profile_id != profile_id or client.frontend is not OperationFrontendProjection.MCP:
-        raise RuntimeFrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
+def _require_client_binding(client: FrontendClient, profile_id: UUID) -> UUID:
+    if client.profile_id != profile_id or client.frontend is not OperationFrontendProjection.EXTERNAL_CLIENT:
+        raise FrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
     return client.session_id
 
 
 def _require_live_session(status: ProfileAccessStatus, *, at: datetime) -> None:
     if status.denial is not None:
-        raise RuntimeFrontendRefusedError(status.denial.value)
+        raise FrontendRefusedError(status.denial.value)
     if status.session_expires_at is None or status.session_expires_at <= at:
-        raise RuntimeFrontendRefusedError(AccessDenialCode.SESSION_EXPIRED.value)
+        raise FrontendRefusedError(AccessDenialCode.SESSION_EXPIRED.value)
 
 
 def _require_status_binding(status: ProfileAccessStatus, profile_id: UUID, session_id: UUID) -> None:
@@ -118,17 +107,16 @@ def _require_status_binding(status: ProfileAccessStatus, profile_id: UUID, sessi
         or status.profile_id != profile_id
         or status.session_id != session_id
     ):
-        raise RuntimeFrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
+        raise FrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
 
 
 def require_exact_admitted_status(
-    client: RuntimeFrontendClient, *, profile_id: UUID, admission: McpAdmission = McpAdmission.KEY
+    client: FrontendClient, *, profile_id: UUID, admission: McpAdmission = McpAdmission.KEY
 ) -> ProfileAccessStatus:
     """Treat a live, exact MCP lease as the only successful admission witness.
 
-    A key lease must also show its automation grant live. A lease resumed from
-    the person's sign-in has no grant, and the runtime bounds it by the
-    sign-in's own deadlines.
+    A key lease must also show its automation grant live. An attended lease
+    has no grant, and the runtime bounds it by the held human parent's deadlines.
     """
     session_id = _require_client_binding(client, profile_id)
     status = client.status().status
@@ -136,40 +124,16 @@ def require_exact_admitted_status(
     _require_live_session(status, at=at)
     keyed = admission is McpAdmission.KEY
     if keyed and not status.grant_valid:
-        raise RuntimeFrontendRefusedError(AccessDenialCode.GRANT_INACTIVE.value)
+        raise FrontendRefusedError(AccessDenialCode.GRANT_INACTIVE.value)
     _require_status_binding(status, profile_id, session_id)
     if not status_admits_session(
         status, profile_id=profile_id, session_id=session_id, at=at, requires_automation_grant=keyed
     ):
         refusal = AccessDenialCode.GRANT_INACTIVE if keyed else AccessDenialCode.SESSION_INACTIVE
-        raise RuntimeFrontendRefusedError(refusal.value)
+        raise FrontendRefusedError(refusal.value)
     if _require_client_binding(client, profile_id) != session_id:
-        raise RuntimeFrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
+        raise FrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
     return status
-
-
-def resume_shared_sign_in(client: RuntimeFrontendClient, *, profile_id: UUID) -> ProfileAccessStatus:
-    """Ask the runtime, once, to resume the person's sign-in on this connection.
-
-    The client presents the stored proof and the runtime alone decides; its
-    refusal is raised with the code it gave. Where there is no proof to
-    present the runtime is not asked, and the refusal carries the code the
-    runtime gives a sign-in that is absent, with the reason and binding the
-    stored sign-in was refused for. No password travels here.
-    """
-    try:
-        client.resume_receipt()
-    except ProfileReceiptRefusedError as refused:
-        answered = refused.__cause__
-        if isinstance(answered, RuntimeFrontendRefusedError):
-            raise answered from None
-        denial = _UNPRESENTED_SIGN_IN_REFUSALS.get(refused.reason, AccessDenialCode.AUTHENTICATION_REQUIRED)
-        # The reason the proof was not presented is told as the command line tells it.
-        raise RuntimeFrontendRefusedError(
-            denial.value,
-            sign_in=SignInRefusal(reason=refused.reason, binding=refused.binding, keychain=refused.keychain),
-        ) from None
-    return require_exact_admitted_status(client, profile_id=profile_id, admission=McpAdmission.SIGN_IN)
 
 
 ATTENDANCE_WAIT_SECONDS: Final = 90.0
@@ -177,13 +141,8 @@ ATTENDANCE_WAIT_SECONDS: Final = 90.0
 
 _ATTENDANCE_POLL_SECONDS: Final = 0.25
 
-ATTENDABLE_REFUSALS: Final = frozenset(
-    {AccessDenialCode.AUTHENTICATION_REQUIRED.value, AccessDenialCode.CUSTODY_UNAVAILABLE.value}
-)
-"""Refusals of a resume that leave the person's held sign-in as the remaining way in."""
 
-
-def attend_held_sign_in(client: RuntimeFrontendClient, *, profile_id: UUID) -> ProfileAccessStatus:
+def attend_held_sign_in(client: FrontendClient, *, profile_id: UUID) -> ProfileAccessStatus:
     """Ask the person holding the sign-in to admit this connection, and wait for their decision.
 
     The ask carries no secret and the agent names no credential: the runtime
@@ -193,9 +152,9 @@ def attend_held_sign_in(client: RuntimeFrontendClient, *, profile_id: UUID) -> P
     """
     deadline = monotonic() + ATTENDANCE_WAIT_SECONDS
     reply = client.request_attendance()
-    while isinstance(reply, RuntimeAttendancePending):
+    while isinstance(reply, AttendancePending):
         if monotonic() >= deadline:
-            raise RuntimeFrontendRefusedError(AccessDenialCode.AUTHENTICATION_REQUIRED.value)
+            raise FrontendRefusedError(AccessDenialCode.AUTHENTICATION_REQUIRED.value)
         sleep(_ATTENDANCE_POLL_SECONDS)
         reply = client.attendance_status(reply.attendance_id)
     return require_exact_admitted_status(client, profile_id=profile_id, admission=McpAdmission.ATTENDED)

@@ -187,7 +187,7 @@ def test_exact_expected_period_is_finite_without_claiming_a_natural_target() -> 
     assert broad.policy.requires_all_periods
 
 
-def test_resume_context_is_admitted_on_the_mcp_frontend_without_a_commit_door() -> None:
+def test_resume_context_is_admitted_on_the_external_client_frontend_without_a_commit_door() -> None:
     registry, registration = _registration()
     visible = _request(
         WorkflowResumeRequest(profile_id=_PROFILE, modelo="303", period=PublicPeriod.from_period(_PERIOD))
@@ -196,10 +196,10 @@ def test_resume_context_is_admitted_on_the_mcp_frontend_without_a_commit_door() 
     resolved = resolve_operation_access(
         registry=registry,
         request=visible,
-        context=_context(registration, frontend=OperationFrontendProjection.MCP),
+        context=_context(registration, frontend=OperationFrontendProjection.EXTERNAL_CLIENT),
     )
 
-    assert resolved.request.frontend is OperationFrontendProjection.MCP
+    assert resolved.request.frontend is OperationFrontendProjection.EXTERNAL_CLIENT
     assert resolved.request.periods == frozenset({_PERIOD})
     assert AccessAction.COMMIT not in resolved.policy.actions
 

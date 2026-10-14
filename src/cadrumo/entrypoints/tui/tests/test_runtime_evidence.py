@@ -12,30 +12,32 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
-from cadrumo.application.ledger.evidence import MediaKind
-from cadrumo.application.ledger.evidence_add_operation import (
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.frontend_client import FrontendClient
+
+from ....application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
+from ....application.ledger.evidence import MediaKind
+from ....application.ledger.evidence_add_operation import (
     LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
     LedgerEvidenceAddProjection,
     LedgerEvidenceAddRequest,
 )
-from cadrumo.application.ledger.evidence_read_operation import (
+from ....application.ledger.evidence_read_operation import (
     LEDGER_EVIDENCE_LIST_OPERATION_DEFINITION_ID,
     LedgerEvidenceListProjection,
     LedgerEvidenceRecordProjection,
 )
-from cadrumo.application.ledger.invoice_evidence_confirm_operation import (
+from ....application.ledger.invoice_evidence_confirm_operation import (
     LEDGER_EVIDENCE_CONFIRM_OPERATION_DEFINITION_ID,
     LedgerEvidenceConfirmProjection,
     LedgerEvidenceConfirmRequest,
 )
-from cadrumo.application.ledger.invoice_evidence_extract_operation import (
+from ....application.ledger.invoice_evidence_extract_operation import (
     LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID,
     LedgerEvidenceExtractProjection,
     LedgerEvidenceExtractRequest,
 )
-from cadrumo.application.ledger.invoice_evidence_operation_dtos import (
+from ....application.ledger.invoice_evidence_operation_dtos import (
     DraftDiscrepancyProjectionV1,
     FieldAmbiguityCandidateProjectionV1,
     FieldProvenanceProjectionV1,
@@ -45,30 +47,28 @@ from cadrumo.application.ledger.invoice_evidence_operation_dtos import (
     InvoiceDraftRateBreakdownProjectionV1,
     StructuredInvoiceClassProjectionV1,
 )
-from cadrumo.application.ledger.structured_invoice_ports import StructuredInvoiceClassificationKind
-from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1
-from cadrumo.application.operations.public_scalar import PublicDecimal
-from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from cadrumo.core.config import override_settings
-from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
-from cadrumo.core.field_grounding import FieldGroundingOutcome
-from cadrumo.core.field_origin import FieldOrigin
-from cadrumo.core.operations import (
+from ....application.ledger.structured_invoice_ports import StructuredInvoiceClassificationKind
+from ....application.operations.frontend_requests import OperationObservationSuccessV1
+from ....application.operations.public_scalar import PublicDecimal
+from ....application.operations.registry import OperationFrontendProjection
+from ....application.operations.schema_identity import OperationSchemaIdentityV1
+from ....core.config import override_settings
+from ....core.draft_discrepancy import DraftDiscrepancyKind
+from ....core.field_grounding import FieldGroundingOutcome
+from ....core.field_origin import FieldOrigin
+from ....core.operations import (
     OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from cadrumo.domain.iva.classification import InvoiceKind
-from cadrumo.domain.iva.supply_nature import SupplyNature
-from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
-from cadrumo.entrypoints.tui.ledger.evidence_draft import draft_lines
-from cadrumo.entrypoints.tui.ledger.models import LedgerEvidenceConfirmationV1, LedgerEvidenceRecordStatus
-from cadrumo.entrypoints.tui.operations.runtime_controller import RuntimeOperationController
-from cadrumo.entrypoints.tui.runtime_evidence import RuntimeEvidenceTuiDoorV1
-
-from ....application.operations.schema_identity import OperationSchemaIdentityV1
+from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.supply_nature import SupplyNature
+from ..account import AccountSessionExpiredError
+from ..ledger.evidence_draft import draft_lines
+from ..ledger.models import LedgerEvidenceConfirmationV1, LedgerEvidenceRecordStatus
+from ..operations.runtime_controller import RuntimeOperationController
+from ..runtime_evidence import RuntimeEvidenceTuiDoorV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -272,13 +272,13 @@ def _install_runtime(
     client: _Client,
     results: list[tuple[str, BaseModel, OperationEffect]],
 ) -> tuple[list[dict[str, object]], list[_Controller]]:
-    from cadrumo.entrypoints.tui.operations import runtime_profile_session as bridge
+    from ..operations import runtime_profile_session as bridge
 
     submissions: list[dict[str, object]] = []
     controllers: list[_Controller] = []
 
     def read_session(
-        _client: RuntimeFrontendClient,
+        _client: FrontendClient,
         *,
         profile_id: UUID,
         session_id: UUID,
@@ -291,7 +291,7 @@ def _install_runtime(
 
     async def submit(
         _controller_type: type[RuntimeOperationController],
-        received_client: RuntimeFrontendClient,
+        received_client: FrontendClient,
         **kwargs: object,
     ) -> _Controller:
         assert received_client is client
@@ -338,11 +338,11 @@ async def test_runtime_evidence_add_preserves_caller_directory_and_source_proven
         client=client,
         results=[(LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID, result, OperationEffect.UPDATED)],
     )
-    door = RuntimeEvidenceTuiDoorV1(cast(RuntimeFrontendClient, client), profile_label="Fixture profile")
+    door = RuntimeEvidenceTuiDoorV1(cast(FrontendClient, client), profile_label="Fixture profile")
     if substituted_source:
-        with pytest.raises(RuntimeRefusalError) as refused:
+        with pytest.raises(RefusalError) as refused:
             await door.add(source_path)
-        assert refused.value.reason is RuntimeRefusalCode.INVALID_FRAME
+        assert refused.value.reason is RefusalCode.INVALID_FRAME
     else:
         row = await door.add(source_path)
         assert row.file_name == "record.pdf"
@@ -369,7 +369,7 @@ async def test_runtime_evidence_extract_and_confirm_bind_the_exact_reviewed_dige
             (LEDGER_EVIDENCE_CONFIRM_OPERATION_DEFINITION_ID, _confirm_projection(), OperationEffect.UPDATED),
         ],
     )
-    door = RuntimeEvidenceTuiDoorV1(cast(RuntimeFrontendClient, client), profile_label="Fixture profile")
+    door = RuntimeEvidenceTuiDoorV1(cast(FrontendClient, client), profile_label="Fixture profile")
 
     draft = await door.extract("f" * 16)
 
@@ -420,7 +420,7 @@ async def test_runtime_evidence_extract_and_confirm_bind_the_exact_reviewed_dige
     assert submissions[1]["definition_id"] == LEDGER_EVIDENCE_CONFIRM_OPERATION_DEFINITION_ID
     assert controllers[1].started
 
-    with pytest.raises(RuntimeRefusalError) as refused:
+    with pytest.raises(RefusalError) as refused:
         await door.confirm(
             LedgerEvidenceConfirmationV1(
                 evidence_id="f" * 16,
@@ -428,7 +428,7 @@ async def test_runtime_evidence_extract_and_confirm_bind_the_exact_reviewed_dige
                 country_code="ES",
             )
         )
-    assert refused.value.reason is RuntimeRefusalCode.INVALID_FRAME
+    assert refused.value.reason is RefusalCode.INVALID_FRAME
     assert len(submissions) == 2
 
 
@@ -442,7 +442,7 @@ async def test_runtime_evidence_clears_a_review_when_its_session_is_replaced(
         client=client,
         results=[(LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID, _extract_projection(), OperationEffect.NONE)],
     )
-    door = RuntimeEvidenceTuiDoorV1(cast(RuntimeFrontendClient, client), profile_label="Fixture profile")
+    door = RuntimeEvidenceTuiDoorV1(cast(FrontendClient, client), profile_label="Fixture profile")
     await door.extract("f" * 16)
     client.session_id = UUID("7cc00000-0000-4000-8000-0000000000cc")
 
@@ -483,7 +483,7 @@ def test_runtime_evidence_maps_complete_list_to_unmeasured_safe_rows(monkeypatch
         client=client,
         results=[(LEDGER_EVIDENCE_LIST_OPERATION_DEFINITION_ID, result, OperationEffect.NONE)],
     )
-    door = RuntimeEvidenceTuiDoorV1(cast(RuntimeFrontendClient, client), profile_label="Fixture profile")
+    door = RuntimeEvidenceTuiDoorV1(cast(FrontendClient, client), profile_label="Fixture profile")
 
     rows = door.list_records()
 

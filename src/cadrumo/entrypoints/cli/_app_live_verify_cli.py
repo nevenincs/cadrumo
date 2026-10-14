@@ -22,8 +22,8 @@ from ...application.live.verify_read_contracts import VerifyObservationSummaryPu
 from ...core.i18n.render import tr
 from ...core.identity_check_verdict import IdentityCheckVerdict, IdentityCheckVerdictValue
 from .common import emit_envelope
-from .runtime_verify_capture import read_verify_capture_for_cli
-from .runtime_verify_read import read_verify_latest_for_cli, read_verify_list_for_cli, read_verify_view_for_cli
+from .operation_verify_capture import read_verify_capture_for_cli
+from .operation_verify_read import read_verify_latest_for_cli, read_verify_list_for_cli, read_verify_view_for_cli
 
 
 class _VerifyRow(TypedDict):

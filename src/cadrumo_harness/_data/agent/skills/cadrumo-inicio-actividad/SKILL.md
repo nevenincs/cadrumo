@@ -48,7 +48,8 @@ gestor, and you say so plainly.
 3. After the person has filed the alta, bring the censo into the profile. Each
    source covers only part of it, and the person chooses which to use.
    - AEAT's own censal data: tell the person you will contact AEAT (it needs the
-     AEAT read access they configured; `aeat config auth status` shows it), run
+     AEAT read access they configured; ask them to inspect
+     `cadrumo-runtime config auth status` if needed), run
      `aeat config profile censo pull` to preview, and apply the exact proposal with
      `aeat config profile censo pull --apply` only after they have seen it. It reads
      identity and domicile, and needs the tax ID already on the profile.

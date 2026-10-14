@@ -895,20 +895,16 @@ GOOGLE_DRIVE_CONFIG_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
 )
-PROVIDER_SETTINGS_NAMESPACE = SecureObjectNamespaceDefinition(
+EXTENSION_SETTINGS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="provider_settings",
     namespace="cadrumo.provider_settings",
-    owner="cadrumo.adapters.persistence.provider_settings",
+    owner="cadrumo.adapters.persistence.storage.secure_object_namespaces",
     sensitivity=SensitivityClass.SECRET,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
-    object_key_grammar="{provider_id}",
+    object_key_grammar="{extension_record_key}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
-    # Model-provider credentials are durable on this machine only: no custody
-    # carry (PROCESS_LOCAL keeps them out of portable export and restorative
-    # backup) and no remote mirror, unlike the Google token above, whose
-    # default mirror policy ships ciphertext. After a restore the person
-    # enters them again.
+    # Opaque extension secrets remain process-local and never mirror remotely.
     remote_mirror_policy=StorageRemoteMirrorPolicy.LOCAL_ONLY,
     remote_mirror_requires_revision=False,
     remote_mirror_requires_integrity_manifest=False,

@@ -11,59 +11,60 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
-from cadrumo.application.live.filed_history_operation import (
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
+from .....application.live.filed_history_operation import (
     FILED_HISTORY_OPERATION_DEFINITION_ID,
     FiledHistoryOperationRequest,
 )
-from cadrumo.application.live.notifications_read_operation import (
+from .....application.live.notifications_read_operation import (
     NOTIFICATIONS_LIST_DEFINITION_ID,
     NotificationsListRequest,
 )
-from cadrumo.application.operations.frontend_projection import (
+from .....application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
     OperationPublicProjectionV1,
 )
-from cadrumo.application.operations.frontend_requests import (
+from .....application.operations.frontend_requests import (
     OperationObservationSuccessV1,
     OperationPublicEventPageV1,
     OperationPublicPhaseEventV1,
     OperationPublicTerminalEventV1,
 )
-from cadrumo.application.operations.persistence.replay import OperationReplayStatus
-from cadrumo.application.operations.registry import (
+from .....application.operations.persistence.replay import OperationReplayStatus
+from .....application.operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionContractV1,
 )
-from cadrumo.application.operator_actions.models import ActionReference
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from cadrumo.application.user_profile.censal_operation import (
+from .....application.operator_actions.models import ActionReference
+from .....application.user_profile.censal_operation import (
     CENSAL_OPERATION_DEFINITION_ID,
     CensalFieldIntent,
     CensalOperationRequest,
     CensalProfileBaseline,
     CensalReviewedFieldIntent,
 )
-from cadrumo.application.user_profile.censal_prepare_operation import (
+from .....application.user_profile.censal_prepare_operation import (
     CENSAL_PREPARE_OPERATION_DEFINITION_ID,
     CensalPrepareFieldProjection,
     CensalPrepareFieldState,
     CensalPrepareOperationProjection,
     CensalPrepareOperationRequest,
 )
-from cadrumo.application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
-from cadrumo.core.hashing import content_hash_hex
-from cadrumo.core.operations import (
+from .....application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
+from .....core.hashing import content_hash_hex
+from .....core.operations import (
     OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from cadrumo.entrypoints.operation_composition import build_production_operation_registry
-from cadrumo.entrypoints.tui.aeat_sync.models import AeatSyncOperationRequestV1
-from cadrumo.entrypoints.tui.aeat_sync.runtime_handoff import compose_runtime_aeat_sync_handoff
-from cadrumo.entrypoints.tui.operations.runtime_controller import RuntimeOperationController
+from ....operation_composition import build_production_operation_registry
+from ...operations.runtime_controller import RuntimeOperationController
+from ..models import AeatSyncOperationRequestV1
+from ..runtime_handoff import compose_runtime_aeat_sync_handoff
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -90,7 +91,7 @@ class _RuntimeClient:
         try:
             return self._contracts[definition_id]
         except KeyError:
-            raise RuntimeFrontendRefusedError("operation unavailable") from None
+            raise FrontendRefusedError("operation unavailable") from None
 
 
 class _StartedController:
@@ -111,7 +112,7 @@ class _PreparedController:
     def __init__(
         self,
         *,
-        client: RuntimeFrontendClient,
+        client: FrontendClient,
         contract: OperationPublicDefinitionContractV1,
         profile_id: UUID,
         prepared: CensalPrepareOperationProjection,
@@ -234,15 +235,15 @@ def _install_censal_bridge(
     monkeypatch: pytest.MonkeyPatch,
     client: _RuntimeClient,
     prepared: CensalPrepareOperationProjection,
-) -> tuple[list[str], list[tuple[RuntimeFrontendClient, dict[str, object]]], _StartedController]:
+) -> tuple[list[str], list[tuple[FrontendClient, dict[str, object]]], _StartedController]:
     events: list[str] = []
-    submitted: list[tuple[RuntimeFrontendClient, dict[str, object]]] = []
+    submitted: list[tuple[FrontendClient, dict[str, object]]] = []
     started = _StartedController(events)
     prepare_contract = client._contracts[CENSAL_PREPARE_OPERATION_DEFINITION_ID]
 
     async def submit(
         _controller_type: type[RuntimeOperationController],
-        received_client: RuntimeFrontendClient,
+        received_client: FrontendClient,
         **kwargs: object,
     ) -> object:
         definition_id = str(kwargs["definition_id"])
@@ -283,7 +284,7 @@ def test_runtime_handoff_submits_exact_profile_and_starts_before_return(
 
     async def submit(
         _controller_type: type[RuntimeOperationController],
-        received_client: RuntimeFrontendClient,
+        received_client: FrontendClient,
         **kwargs: object,
     ) -> _StartedController:
         submitted.append((received_client, kwargs))
@@ -292,7 +293,7 @@ def test_runtime_handoff_submits_exact_profile_and_starts_before_return(
     monkeypatch.setattr(RuntimeOperationController, "submit", classmethod(submit))
     monkeypatch.setattr("cadrumo.entrypoints.tui.aeat_sync.runtime_handoff.today_madrid", lambda: _TODAY)
 
-    handoff, contracts = compose_runtime_aeat_sync_handoff(cast(RuntimeFrontendClient, client), output_root=output_root)
+    handoff, contracts = compose_runtime_aeat_sync_handoff(cast(FrontendClient, client), output_root=output_root)
     assert handoff is not None
     assert contracts is not None
     assert tuple(contract.definition_id for contract in contracts.definitions) == (
@@ -335,7 +336,7 @@ def test_notifications_list_handoff_submits_the_bound_profile_and_starts_its_res
 
     async def submit(
         _controller_type: type[RuntimeOperationController],
-        received_client: RuntimeFrontendClient,
+        received_client: FrontendClient,
         **kwargs: object,
     ) -> RuntimeOperationController:
         submitted.append((received_client, kwargs))
@@ -353,7 +354,7 @@ def test_notifications_list_handoff_submits_the_bound_profile_and_starts_its_res
     monkeypatch.setattr(RuntimeOperationController, "start", start)
 
     handoff, contracts = compose_runtime_aeat_sync_handoff(
-        cast(RuntimeFrontendClient, client), output_root=tmp_path / "filed-declarations"
+        cast(FrontendClient, client), output_root=tmp_path / "filed-declarations"
     )
     assert handoff is not None
     assert contracts is not None
@@ -408,14 +409,14 @@ def test_runtime_handoff_refuses_other_action_operation_pairs_before_submission(
 ) -> None:
     client = _RuntimeClient(_contract(FILED_HISTORY_OPERATION_DEFINITION_ID))
     handoff, _contracts = compose_runtime_aeat_sync_handoff(
-        cast(RuntimeFrontendClient, client), output_root=tmp_path / "filed-declarations"
+        cast(FrontendClient, client), output_root=tmp_path / "filed-declarations"
     )
     assert handoff is not None
     submitted: list[object] = []
 
     async def submit(
         _controller_type: type[RuntimeOperationController],
-        received_client: RuntimeFrontendClient,
+        received_client: FrontendClient,
         **kwargs: object,
     ) -> _StartedController:
         submitted.append((received_client, kwargs))
@@ -423,10 +424,10 @@ def test_runtime_handoff_refuses_other_action_operation_pairs_before_submission(
 
     monkeypatch.setattr(RuntimeOperationController, "submit", classmethod(submit))
 
-    with pytest.raises(RuntimeRefusalError) as refusal:
+    with pytest.raises(RefusalError) as refusal:
         asyncio.run(handoff(operation_request))
 
-    assert refusal.value.reason is RuntimeRefusalCode.INVALID_FRAME
+    assert refusal.value.reason is RefusalCode.INVALID_FRAME
     assert submitted == []
 
 
@@ -437,7 +438,7 @@ def test_runtime_handoff_leaves_action_unavailable_for_wrong_installed_contract(
     client = _RuntimeClient(forged_contract)
 
     handoff, contracts = compose_runtime_aeat_sync_handoff(
-        cast(RuntimeFrontendClient, client), output_root=Path("filed-declarations")
+        cast(FrontendClient, client), output_root=Path("filed-declarations")
     )
 
     assert handoff is None
@@ -451,7 +452,7 @@ def test_notifications_list_action_stays_unavailable_for_wrong_contract() -> Non
     client = _RuntimeClient(forged_contract)
 
     handoff, contracts = compose_runtime_aeat_sync_handoff(
-        cast(RuntimeFrontendClient, client), output_root=Path("filed-declarations")
+        cast(FrontendClient, client), output_root=Path("filed-declarations")
     )
 
     assert handoff is None
@@ -469,7 +470,7 @@ def test_censal_handoff_prepares_worker_baseline_before_review_submission(
     prepared = _prepared_projection(_PROFILE_ID)
     events, submitted, started = _install_censal_bridge(monkeypatch, client, prepared)
     handoff, contracts = compose_runtime_aeat_sync_handoff(
-        cast(RuntimeFrontendClient, client), output_root=tmp_path / "filed-declarations"
+        cast(FrontendClient, client), output_root=tmp_path / "filed-declarations"
     )
 
     assert handoff is not None
@@ -533,11 +534,11 @@ def test_censal_handoff_refuses_a_foreign_worker_prepared_profile_before_review_
         _prepared_projection(foreign_profile),
     )
     handoff, _contracts = compose_runtime_aeat_sync_handoff(
-        cast(RuntimeFrontendClient, client), output_root=tmp_path / "filed-declarations"
+        cast(FrontendClient, client), output_root=tmp_path / "filed-declarations"
     )
     assert handoff is not None
 
-    with pytest.raises(RuntimeRefusalError) as refusal:
+    with pytest.raises(RefusalError) as refusal:
         asyncio.run(
             handoff(
                 AeatSyncOperationRequestV1(
@@ -547,7 +548,7 @@ def test_censal_handoff_refuses_a_foreign_worker_prepared_profile_before_review_
             )
         )
 
-    assert refusal.value.reason is RuntimeRefusalCode.INVALID_FRAME
+    assert refusal.value.reason is RefusalCode.INVALID_FRAME
     assert [options["definition_id"] for _received_client, options in submitted] == [
         CENSAL_PREPARE_OPERATION_DEFINITION_ID
     ]

@@ -14,8 +14,8 @@ from pathlib import Path
 import pytest
 
 from ....core.directory_scan import scan_directory
-from ._isolated_profile_storage_fixtures import _isolated_state
-from .cli_runner import invoke_cached_cli
+from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
+from .profile_world_fixtures import _isolated_state
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["_isolated_state"]

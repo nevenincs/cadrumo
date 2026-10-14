@@ -5,6 +5,9 @@ from __future__ import annotations
 from decimal import Decimal
 from uuid import UUID
 
+from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
+from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
+
 from ...application.ledger.actions_common import display_decimal
 from ...application.ledger.allocate_operation import (
     LedgerAllocateOperationResult,
@@ -12,8 +15,6 @@ from ...application.ledger.allocate_operation import (
 from ...core.operations import OperationEffect, OperationTerminalCondition
 from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.model_validation import classification_for_business_share
-from .registered_operation_contracts import RegisteredOperationCompletion
-from .registered_operation_errors import invalid_completion_error
 
 
 def allocation_fields_mismatch(

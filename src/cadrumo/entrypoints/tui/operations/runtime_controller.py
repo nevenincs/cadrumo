@@ -10,8 +10,27 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, JsonValue, RootModel, TypeAdapter, ValidationError
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.deadline_budget import exchange_timeout, remaining_budget
+from cadrumo_client.contracts.operation_access import (
+    OperationAcknowledged,
+    OperationControl,
+    OperationFinancialInput,
+    OperationManage,
+    OperationManaged,
+    OperationManagementRequest,
+    OperationObserve,
+    OperationObserved,
+    OperationProjected,
+    OperationReply,
+    OperationRequest,
+    OperationReview,
+    OperationSubmit,
+    OperationSubmitted,
+)
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
 from ....application.operations.error_detail import OperationErrorDetailV1, operation_error_detail_schema
 from ....application.operations.event_replay import OperationEventCursor
 from ....application.operations.frontend_contracts import (
@@ -46,24 +65,6 @@ from ....application.operations.models import OperationId, OperationRevision
 from ....application.operations.persistence.replay import OperationReplayLimit
 from ....application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
 from ....application.operations.schema_identity import OperationSchemaIdentityV1
-from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from ....application.runtime.deadline_budget import exchange_timeout, remaining_budget
-from ....application.runtime.operation_access import (
-    OperationManagementRequest,
-    RuntimeOperationAcknowledged,
-    RuntimeOperationControl,
-    RuntimeOperationFinancialInput,
-    RuntimeOperationManage,
-    RuntimeOperationManaged,
-    RuntimeOperationObserve,
-    RuntimeOperationObserved,
-    RuntimeOperationProjected,
-    RuntimeOperationReply,
-    RuntimeOperationRequest,
-    RuntimeOperationReview,
-    RuntimeOperationSubmit,
-    RuntimeOperationSubmitted,
-)
 from ....core.async_cleanup import await_cancellation_complete
 from ....core.hashing import canonical_json_bytes
 from ....core.operations import OperationLifecycle, OperationTerminalCondition
@@ -118,7 +119,7 @@ def _parse_settled_result[ResultT: BaseModel](
         encoded = canonical_json_bytes(document)
         if document.get("outcome") == "refused":
             refusal = OperationResultProjectionRefusalV1.model_validate_json(encoded)
-            raise RuntimeFrontendRefusedError(refusal.code.value)
+            raise FrontendRefusedError(refusal.code.value)
         # CAST-RATIONALE-TUI-SETTLED-RESULT-GENERIC: Pydantic's runtime
         # specialization binds the success envelope's projection field to
         # this exact result_type; __class_getitem__ has an overly broad
@@ -129,7 +130,7 @@ def _parse_settled_result[ResultT: BaseModel](
         )
         result = success_type.model_validate_json(encoded)
     except ValidationError:
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME) from None
+        raise RefusalError(RefusalCode.INVALID_FRAME) from None
     return result
 
 
@@ -148,12 +149,12 @@ def _settled_result_matches_binding[ResultT: BaseModel](
     )
 
 
-def _submission_session(client: RuntimeFrontendClient, expected_session_id: UUID | None) -> UUID:
+def _submission_session(client: FrontendClient, expected_session_id: UUID | None) -> UUID:
     if client.frontend is not OperationFrontendProjection.TUI:
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     session_id = client.session_id
     if expected_session_id is not None and session_id != expected_session_id:
-        raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+        raise RefusalError(RefusalCode.CONNECTION_CLOSED)
     return session_id
 
 
@@ -168,26 +169,26 @@ def _exchange_deadline(deadline: float | None) -> float:
 
 
 async def _admit_submission_contract(
-    client: RuntimeFrontendClient, definition_id: str, deadline: float, session_id: UUID
+    client: FrontendClient, definition_id: str, deadline: float, session_id: UUID
 ) -> OperationPublicDefinitionContractV1:
     contract = await await_cancellation_complete(
         asyncio.to_thread(client.contract, definition_id, deadline=deadline),
         task_name="tui-runtime-definition",
     )
     if client.session_id != session_id:
-        raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+        raise RefusalError(RefusalCode.CONNECTION_CLOSED)
     return contract
 
 
-def _submitted_receipt(reply: RuntimeOperationReply) -> RuntimeOperationSubmitted:
-    if not isinstance(reply, RuntimeOperationSubmitted):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+def _submitted_receipt(reply: OperationReply) -> OperationSubmitted:
+    if not isinstance(reply, OperationSubmitted):
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     return reply
 
 
 async def _deliver_submission_secret(
-    client: RuntimeFrontendClient,
-    submitted: RuntimeOperationSubmitted,
+    client: FrontendClient,
+    submitted: OperationSubmitted,
     *,
     definition_id: str,
     subject_ref: str,
@@ -202,7 +203,7 @@ async def _deliver_submission_secret(
     """
     requirement = submitted.receipt.secret_requirement
     if (requirement is None) is not (secret is None):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     if requirement is None or secret is None:
         return
     operation_id = submitted.receipt.operation_id
@@ -211,7 +212,7 @@ async def _deliver_submission_secret(
         or requirement.identity.definition_id != definition_id
         or requirement.identity.subject_ref != subject_ref
     ):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     acknowledged = await await_cancellation_complete(
         asyncio.to_thread(
             client.submit_secret,
@@ -222,7 +223,7 @@ async def _deliver_submission_secret(
         task_name="tui-runtime-secret",
     )
     if acknowledged.operation_id != operation_id:
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
 
 
 class RuntimeReviewDocument(RootModel[dict[str, JsonValue]]):
@@ -238,7 +239,7 @@ class RuntimeReviewDocument(RootModel[dict[str, JsonValue]]):
 class RuntimeOperationController:
     """Retain one submitted operation's original connection and actor binding."""
 
-    client: RuntimeFrontendClient = field(repr=False)
+    client: FrontendClient = field(repr=False)
     operation_id: OperationId
     session_id: UUID
     deadline: float | None = None
@@ -246,16 +247,16 @@ class RuntimeOperationController:
     def __post_init__(self) -> None:
         """Refuse another frontend or an already replaced application session."""
         if self.client.frontend is not OperationFrontendProjection.TUI or self.client.session_id != self.session_id:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
 
     @property
     def actor_ref(self) -> str:
         """Name the runtime-assigned submission actor; this is not response proof."""
         return f"session:{self.session_id}"
 
-    async def _exchange(self, request: RuntimeOperationRequest) -> RuntimeOperationReply:
+    async def _exchange(self, request: OperationRequest) -> OperationReply:
         if self.client.session_id != self.session_id:
-            raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+            raise RefusalError(RefusalCode.CONNECTION_CLOSED)
         # Cancellation cannot leave an unowned native exchange running while
         # the modal tears down its connection. It never implies rollback.
         reply = await await_cancellation_complete(
@@ -263,7 +264,7 @@ class RuntimeOperationController:
             task_name="tui-runtime-operation",
         )
         if self.client.session_id != self.session_id:
-            raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+            raise RefusalError(RefusalCode.CONNECTION_CLOSED)
         return reply
 
     def _call_deadline(self) -> float:
@@ -272,7 +273,7 @@ class RuntimeOperationController:
     @classmethod
     async def submit(
         cls,
-        client: RuntimeFrontendClient,
+        client: FrontendClient,
         *,
         definition_id: str,
         subject_ref: str,
@@ -308,7 +309,7 @@ class RuntimeOperationController:
     @classmethod
     async def _submit(
         cls,
-        client: RuntimeFrontendClient,
+        client: FrontendClient,
         *,
         definition_id: str,
         subject_ref: str,
@@ -323,14 +324,14 @@ class RuntimeOperationController:
         exchange_deadline = _exchange_deadline(deadline)
         contract = await _admit_submission_contract(client, definition_id, exchange_deadline, session_id)
         if financial_input != (contract.transient_financial_operand is not None):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         if contract.ephemeral_secret_required is not (secret is not None):
             # Refused before anything is persisted: the contract and the caller disagree about a secret.
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         if financial_input:
             if idempotency_key is not None:
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-            request = RuntimeOperationFinancialInput(
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+            request = OperationFinancialInput(
                 request_id=uuid4(),
                 profile_id=client.profile_id,
                 session_id=session_id,
@@ -339,7 +340,7 @@ class RuntimeOperationController:
                 payload_json=payload.model_dump_json(),
             )
         else:
-            request = RuntimeOperationSubmit(
+            request = OperationSubmit(
                 request_id=uuid4(),
                 profile_id=client.profile_id,
                 session_id=session_id,
@@ -362,7 +363,7 @@ class RuntimeOperationController:
             deadline=exchange_deadline,
         )
         if client.session_id != session_id:
-            raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+            raise RefusalError(RefusalCode.CONNECTION_CLOSED)
         return cls(client=client, operation_id=receipt.receipt.operation_id, session_id=session_id, deadline=deadline)
 
     async def read_settled_result[ResultT: BaseModel](
@@ -391,7 +392,7 @@ class RuntimeOperationController:
         """
         registered = projection.definition_contract.result_schema
         if registered is None:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         expected = OperationSchemaIdentityV1.from_model(
             schema_id=registered.schema_id, schema_version=registered.schema_version, model_type=result_type
         )
@@ -407,7 +408,7 @@ class RuntimeOperationController:
     ) -> ResultT:
         contract = projection.definition_contract
         if not _settled_result_is_readable(self, projection, expected, allow_refusal_detail=allow_refusal_detail):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         request = OperationResultProjectionRequestV1(
             operation_id=self.operation_id,
             terminal_revision=projection.revision,
@@ -430,7 +431,7 @@ class RuntimeOperationController:
             current_session_id=self.client.session_id,
             session_id=self.session_id,
         ):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         return result.projection
 
     async def settled_error_detail(self, projection: OperationPublicProjectionV1) -> OperationErrorDetailV1 | None:
@@ -466,7 +467,7 @@ class RuntimeOperationController:
             result = OperationResultProjectionSuccessV1[OperationErrorDetailV1].model_validate_json(
                 canonical_json_bytes(document)
             )
-        except (RuntimeRefusalError, RuntimeFrontendRefusedError, ValidationError):
+        except (RefusalError, FrontendRefusedError, ValidationError):
             return None
         if (
             result.result_schema != schema
@@ -479,7 +480,7 @@ class RuntimeOperationController:
     async def start(self) -> OperationId:
         """Request canonical execution admission for the bound operation."""
         reply = await self._exchange(
-            RuntimeOperationControl(
+            OperationControl(
                 action="operation_start",
                 request_id=uuid4(),
                 profile_id=self.client.profile_id,
@@ -487,8 +488,8 @@ class RuntimeOperationController:
                 operation_id=self.operation_id,
             )
         )
-        if not isinstance(reply, RuntimeOperationAcknowledged) or reply.operation_id != self.operation_id:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        if not isinstance(reply, OperationAcknowledged) or reply.operation_id != self.operation_id:
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         return self.operation_id
 
     async def observe(
@@ -496,7 +497,7 @@ class RuntimeOperationController:
     ) -> OperationObservationResultV1:
         """Read the canonical projection and its event cursor through fresh scope."""
         reply = await self._exchange(
-            RuntimeOperationObserve(
+            OperationObserve(
                 request_id=uuid4(),
                 profile_id=self.client.profile_id,
                 session_id=self.session_id,
@@ -507,10 +508,10 @@ class RuntimeOperationController:
                 ),
             )
         )
-        if not isinstance(reply, RuntimeOperationObserved):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        if not isinstance(reply, OperationObserved):
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         if reply.observation.outcome == "success" and reply.observation.projection.operation_id != self.operation_id:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         return reply.observation
 
     async def resolve_review[ReviewT: BaseModel](
@@ -518,9 +519,9 @@ class RuntimeOperationController:
     ) -> OperationReviewProjectionResultV1[ReviewT]:
         """Resolve only the original reference's registered schema and contract."""
         if reference.operation_id != self.operation_id:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         reply = await self._exchange(
-            RuntimeOperationReview(
+            OperationReview(
                 request_id=uuid4(),
                 profile_id=self.client.profile_id,
                 session_id=self.session_id,
@@ -528,11 +529,11 @@ class RuntimeOperationController:
             )
         )
         if (
-            not isinstance(reply, RuntimeOperationProjected)
+            not isinstance(reply, OperationProjected)
             or reply.operation_id != self.operation_id
             or reply.projection_kind != "review"
         ):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         raw = canonical_json_bytes(reply.document)
         try:
             if reply.document.get("outcome") == "refused":
@@ -540,12 +541,12 @@ class RuntimeOperationController:
             model = RuntimeReviewDocument if projection_type is BaseModel else projection_type
             resolved = OperationReviewProjectionSuccessV1[model].model_validate_json(raw)
         except ValidationError:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME) from None
+            raise RefusalError(RefusalCode.INVALID_FRAME) from None
         if (
             resolved.projection_schema != reference.review_projection_schema
             or resolved.definition_contract_digest != reference.definition_contract_digest
         ):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         # When the caller explicitly asks for BaseModel, retain all registered
         # JSON fields in its transport RootModel rather than discard them.
         return cast("OperationReviewProjectionResultV1[ReviewT]", resolved)
@@ -553,17 +554,17 @@ class RuntimeOperationController:
     async def manage(self, request: OperationManagementRequest) -> dict[str, JsonValue]:
         """Use canonical controls under this operation's original session binding."""
         if request.operation_id != self.operation_id:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         reply = await self._exchange(
-            RuntimeOperationManage(
+            OperationManage(
                 request_id=uuid4(),
                 profile_id=self.client.profile_id,
                 session_id=self.session_id,
                 management=request,
             )
         )
-        if not isinstance(reply, RuntimeOperationManaged) or reply.operation_id != self.operation_id:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        if not isinstance(reply, OperationManaged) or reply.operation_id != self.operation_id:
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         return reply.document
 
     async def response_control(self, *, interaction_id: str, revision: OperationRevision) -> RuntimeResponseControl:
@@ -612,9 +613,9 @@ async def await_terminal_projection(
         remaining_budget(deadline)
         observed = await controller.observe(0, page_limit=1)
         if isinstance(observed, OperationObservationRefusalV1):
-            raise RuntimeFrontendRefusedError(observed.code.value)
+            raise FrontendRefusedError(observed.code.value)
         if not isinstance(observed, OperationObservationSuccessV1):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         state = observed.projection
         if (
             state.operation_id != controller.operation_id
@@ -622,7 +623,7 @@ async def await_terminal_projection(
             or state.subject_ref != subject_ref
             or state.definition_contract.request_schema != request_schema
         ):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         if state.lifecycle is OperationLifecycle.TERMINAL:
             return state
         await asyncio.sleep(min(poll_seconds, remaining_budget(deadline)))
@@ -632,7 +633,7 @@ def _decode[T](adapter: TypeAdapter[T], document: dict[str, JsonValue]) -> T:
     try:
         return adapter.validate_json(canonical_json_bytes(document))
     except ValidationError:
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME) from None
+        raise RefusalError(RefusalCode.INVALID_FRAME) from None
 
 
 @dataclass(frozen=True, slots=True)
@@ -655,7 +656,7 @@ class RuntimeResponseControl:
             self.request.revision,
             self.request.actor_ref,
         ):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         return _decode(_RESPONSE_MUTATION, await self.controller.manage(request))
 
     async def apply(self, request: OperationResponseApplyRequestV1) -> OperationResponseMutationResultV1:

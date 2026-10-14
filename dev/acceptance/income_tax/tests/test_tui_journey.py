@@ -355,7 +355,11 @@ def test_nothing_is_confirmed_when_the_workbench_offers_another_step() -> None:
     from cadrumo.core.config import override_settings
     from cadrumo.entrypoints.tui.components.host import ScreenHostApp
     from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
-    from cadrumo.entrypoints.tui.modelo.workbench.tests.workbench_fixture import FakeActions, FakeReader, synthetic_form
+    from cadrumo.entrypoints.tui.modelo.workbench.tests.workbench_fixture import (
+        FakeActions,
+        FakeReader,
+        synthetic_form,
+    )
 
     from ..tui_navigation import wait_for_workbench, workbench_offers
     from ..tui_operation_controls import confirm_assumed_values
@@ -392,7 +396,11 @@ def test_a_verified_declaration_with_a_current_file_records_the_filing_with_f8()
     from cadrumo.core.config import override_settings
     from cadrumo.entrypoints.tui.components.host import ScreenHostApp
     from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
-    from cadrumo.entrypoints.tui.modelo.workbench.tests.workbench_fixture import FakeActions, FakeReader, synthetic_form
+    from cadrumo.entrypoints.tui.modelo.workbench.tests.workbench_fixture import (
+        FakeActions,
+        FakeReader,
+        synthetic_form,
+    )
 
     from ..tui_navigation import wait_for_workbench, workbench_offers
 

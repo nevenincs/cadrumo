@@ -7,7 +7,6 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
 from cadrumo.application.auth.read_operation import build_auth_read_definition, build_auth_read_registration
 from cadrumo.application.modelo.revision_operation_access import compose_modelo_revision_access
@@ -17,16 +16,18 @@ from cadrumo.application.modelo.revision_snapshot_operation import (
     build_modelo_work_revision_snapshot_registration,
 )
 from cadrumo.application.operations.registry import OperationRegistry
-from cadrumo.application.runtime.operation_access import RuntimeOperationSubmit
 from cadrumo.application.workflow.run_read_operation import (
     WORKFLOW_RUN_READ_OPERATION_DEFINITION_ID,
     build_workflow_run_read_definition,
     build_workflow_run_read_registration,
 )
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
-from cadrumo_harness.mcp.server import build_server
-from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
-from cadrumo_harness.mcp.tests.test_operation_search_tool import _AdmittedClient
+from cadrumo_client.contracts.operation_access import OperationSubmit
+from cadrumo_client.transport.frontend_client import FrontendClient
+
+from ..runtime_adapter import RuntimeMcpAdapter
+from ..server import build_server
+from .session import connected_server_and_client_session
+from .test_operation_search_tool import _AdmittedClient
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -70,17 +71,17 @@ class _RecordingClient(_AdmittedClient):
 
     def __init__(self, profile_id: UUID) -> None:
         super().__init__(profile_id, _registry())
-        self.submitted: list[RuntimeOperationSubmit] = []
+        self.submitted: list[OperationSubmit] = []
 
     @override
     def operation(self, request: object, *, deadline: float) -> NoReturn:
-        if isinstance(request, RuntimeOperationSubmit):
+        if isinstance(request, OperationSubmit):
             self.submitted.append(request)
         super().operation(request, deadline=deadline)
 
 
 async def _execute(client: _RecordingClient, arguments: dict[str, Any]) -> dict[str, Any]:
-    adapter = RuntimeMcpAdapter(profile_id=client.profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=client.profile_id, client=cast(FrontendClient, client))
     try:
         return await adapter.call("execute", arguments)
     finally:
@@ -98,7 +99,7 @@ def _snapshot_payload(profile_id: UUID) -> dict[str, object]:
 @pytest.mark.anyio
 async def test_describe_and_search_state_the_subject_form_of_every_operation() -> None:
     client = _RecordingClient(uuid4())
-    adapter = RuntimeMcpAdapter(profile_id=client.profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=client.profile_id, client=cast(FrontendClient, client))
     try:
         found = await adapter.call("search", {})
         described = {
@@ -234,7 +235,7 @@ async def test_execute_refuses_a_stored_work_unit_operation_without_a_subject_an
         "definition_id": MODELO_WORK_REVISION_SNAPSHOT_OPERATION_DEFINITION_ID,
         "payload": _snapshot_payload(client.profile_id),
     }
-    adapter = RuntimeMcpAdapter(profile_id=client.profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=client.profile_id, client=cast(FrontendClient, client))
     try:
         async with connected_server_and_client_session(build_server(adapter)) as sdk:
             refused = await sdk.call_tool("execute", arguments)

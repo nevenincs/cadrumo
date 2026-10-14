@@ -16,6 +16,13 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from cadrumo.entrypoints.tests.cli_performance import (
+    CliPerformanceObservation,
+    CliPerformanceProfile,
+    is_non_authoritative_artifact,
+    profile_cli_path,
+)
+
 from .....adapters.persistence.storage.custody.capsule import publish_profile_custody_capsule
 from .....adapters.persistence.storage.custody.capsule_records import ProfileCustodyCapsuleLabel
 from .....adapters.persistence.storage.custody.records import (
@@ -26,12 +33,6 @@ from .....adapters.persistence.storage.custody.records import (
 from .....adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
 from .....core.config import Settings
 from .....core.profile_publication import ProfilePublicationKind
-from ...tests.cli_performance import (
-    CliPerformanceObservation,
-    CliPerformanceProfile,
-    is_non_authoritative_artifact,
-    profile_cli_path,
-)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

@@ -24,7 +24,9 @@ from typing import NamedTuple
 
 import typer
 
-from ...application.runtime.contracts import RuntimeRefusalCode
+from cadrumo_client.commands.registered_operation_errors import submitted_operation_error
+from cadrumo_client.contracts.contracts import RefusalCode
+
 from ...application.workflow.errors import WorkflowError
 from ...application.workflow.resume import (
     WorkflowResumeContext,
@@ -57,9 +59,8 @@ from .modelo_aux_payloads import (
     WorkRunResult,
     WorkRunsResult,
 )
-from .registered_operation_errors import submitted_operation_error
-from .runtime_workflow_resume import read_workflow_resume_context
-from .runtime_workflow_runs import read_workflow_run, read_workflow_runs
+from .operation_workflow_resume import read_workflow_resume_context
+from .operation_workflow_runs import read_workflow_run, read_workflow_runs
 
 
 def _render_workflow_step_summary(summary_locale_key: str, details: WorkflowStepDetails | None) -> str:
@@ -232,7 +233,7 @@ def work_run_details(
         receipt = completion.completion
         raise submitted_operation_error(
             receipt.operation_id,
-            RuntimeRefusalCode.UNAVAILABLE.value,
+            RefusalCode.UNAVAILABLE.value,
             terminal_condition=receipt.terminal_condition,
             effect=receipt.effect,
             refusal_code=receipt.refusal_code,
@@ -325,7 +326,7 @@ def work_run(
         receipt = completion.completion
         raise submitted_operation_error(
             receipt.operation_id,
-            RuntimeRefusalCode.UNAVAILABLE.value,
+            RefusalCode.UNAVAILABLE.value,
             terminal_condition=receipt.terminal_condition,
             effect=receipt.effect,
             refusal_code=receipt.refusal_code,
@@ -352,7 +353,7 @@ def work_runs(ctx: typer.Context, output_language: OutputLanguage | None = None)
         receipt = completion.completion
         raise submitted_operation_error(
             receipt.operation_id,
-            RuntimeRefusalCode.UNAVAILABLE.value,
+            RefusalCode.UNAVAILABLE.value,
             terminal_condition=receipt.terminal_condition,
             effect=receipt.effect,
             refusal_code=receipt.refusal_code,
@@ -403,7 +404,7 @@ def work_resume(
         receipt = completion.completion
         raise submitted_operation_error(
             receipt.operation_id,
-            RuntimeRefusalCode.UNAVAILABLE.value,
+            RefusalCode.UNAVAILABLE.value,
             terminal_condition=receipt.terminal_condition,
             effect=receipt.effect,
             refusal_code=receipt.refusal_code,

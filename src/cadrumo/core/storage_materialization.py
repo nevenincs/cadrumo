@@ -41,8 +41,8 @@ def ensure_storage_tree(
     derived_targets = storage_tree_targets(resolved, include_explicit=False, derived_groupings=derived_groupings)
     runtime_namespace = (
         None
-        if uses_external_transport(storage_location(StorageCategory.RUNTIME_SOCKETS), resolved)
-        else storage_path(StorageCategory.RUNTIME_SOCKETS, settings=resolved)
+        if uses_external_transport(storage_location(StorageCategory.CONNECTION_SOCKETS), resolved)
+        else storage_path(StorageCategory.CONNECTION_SOCKETS, settings=resolved)
     )
     # Create an owned namespace before another derived target can create it
     # incidentally as a parent. Existing and operator-selected namespaces are

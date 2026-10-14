@@ -1,24 +1,16 @@
-"""The join between executable commands and what they send to the runtime.
+"""The join between executable commands, registered operations, and connection actions.
 
-A command reaches the runtime by submitting registered operations, and nothing
-in a command's declaration says which. This record carries that relation in
-both directions for a consumer in another composition root: for each command,
-the operations its handler can submit, and for each registered operation, the
-commands that submit it. Both directions keep their empty cases. A command that
-submits nothing and an operation no command submits are recorded facts, not
-absences.
+A command may submit registered operations, but its declaration does not name
+which ones. The join records that relation in both directions, preserving the
+empty case for commands that submit nothing and operations no command submits.
 
-A command can also reach the runtime without an operation, by sending a
-request of the runtime's own door: a login, a profile deletion, an
-installation act. The join names those by the request's action, in both
-directions too, so a command that sends such a request is not read as one that
-sends nothing.
+A command may also send a connection request or installation act without an
+operation. Those actions are recorded by command and in reverse, so a command
+that sends none is not confused with one whose behavior is unknown.
 
-The relation is an upper bound on one handler's own code. It lists every
-operation and request any mode of the command can reach, and a group's row
-describes the group's own callback, not the commands below it. Whether an
-operation or a request is then admitted is the runtime's decision, and this
-record says nothing about it.
+The relation is an upper bound on one handler’s reachable code. It lists every
+operation and connection action any mode can send; a group row describes its
+own callback. Admission remains the connected service’s decision.
 """
 
 from __future__ import annotations
@@ -47,8 +39,8 @@ class CommandOperations(BaseModel):
 
     cli_path: tuple[str, ...]
     operation_ids: tuple[str, ...] = ()
-    runtime_requests: tuple[str, ...] = ()
-    """The actions of the runtime requests and installation acts the command can send."""
+    connection_requests: tuple[str, ...] = ()
+    """The actions of the connection requests and installation acts the command can send."""
 
 
 class OperationCommands(BaseModel):
@@ -60,8 +52,8 @@ class OperationCommands(BaseModel):
     cli_paths: tuple[tuple[str, ...], ...] = ()
 
 
-class RuntimeRequestCommands(BaseModel):
-    """The executable commands that can send one runtime request or installation act."""
+class ConnectionRequestCommands(BaseModel):
+    """The executable commands that can send one connection request or installation act."""
 
     model_config = _FROZEN
 
@@ -76,14 +68,14 @@ class CommandOperationJoin(BaseModel):
 
     commands: tuple[CommandOperations, ...]
     operations: tuple[OperationCommands, ...]
-    runtime_requests: tuple[RuntimeRequestCommands, ...] = ()
+    connection_requests: tuple[ConnectionRequestCommands, ...] = ()
 
 
 def join_command_operations(
     rows: Iterable[tuple[tuple[str, ...], str | None]],
     *,
     operations_without_command: Iterable[str],
-    runtime_request_rows: Iterable[tuple[tuple[str, ...], str]] = (),
+    connection_request_rows: Iterable[tuple[tuple[str, ...], str]] = (),
 ) -> CommandOperationJoin:
     """Build both directions of the join from its recorded rows.
 
@@ -93,19 +85,19 @@ def join_command_operations(
             ``None``.
         operations_without_command: Every registered operation no command
             submits.
-        runtime_request_rows: One row for each command and runtime request or
+        connection_request_rows: One row for each command and connection request or
             installation act it can send, named by the request's action. A
             command that sends none has no row here.
 
     Returns:
-        The join, with commands ordered by path, operations by id and runtime
-        requests by action.
+        The join, with commands ordered by path, operations by id and connection
+        connection requests by action.
 
     Raises:
         OperatorSurfaceContractError: A row repeats, a path, an id or an action
             is blank, a command is recorded both as submitting nothing and as
             submitting an operation, an operation is recorded both ways, or a
-            runtime request names a command ``rows`` does not.
+            connection request names a command ``rows`` does not.
     """
     diagnostics: list[str] = []
     by_command: dict[tuple[str, ...], set[str]] = {}
@@ -147,24 +139,24 @@ def join_command_operations(
         else:
             by_operation[operation_id] = []
 
-    requests_by_command: dict[tuple[str, ...], set[str]] = {}
-    seen_requests: set[tuple[tuple[str, ...], str]] = set()
-    for request_row in runtime_request_rows:
-        cli_path, action = request_row
+    connection_requests_by_command: dict[tuple[str, ...], set[str]] = {}
+    seen_connection_requests: set[tuple[tuple[str, ...], str]] = set()
+    for connection_request_row in connection_request_rows:
+        cli_path, action = connection_request_row
         spelled = " ".join(cli_path)
-        if request_row in seen_requests:
-            diagnostics.append(f"runtime request row repeats: {spelled!r} -> {action!r}")
-        seen_requests.add(request_row)
+        if connection_request_row in seen_connection_requests:
+            diagnostics.append(f"connection request row repeats: {spelled!r} -> {action!r}")
+        seen_connection_requests.add(connection_request_row)
         if not action.strip():
-            diagnostics.append(f"command names a blank runtime request: {spelled!r}")
+            diagnostics.append(f"command names a blank connection request: {spelled!r}")
         elif cli_path not in by_command:
-            diagnostics.append(f"runtime request names a command with no operation row: {spelled!r} -> {action!r}")
+            diagnostics.append(f"connection request names a command with no operation row: {spelled!r} -> {action!r}")
         else:
-            requests_by_command.setdefault(cli_path, set()).add(action)
-    by_request: dict[str, list[tuple[str, ...]]] = {}
-    for cli_path in sorted(requests_by_command):
-        for action in requests_by_command[cli_path]:
-            by_request.setdefault(action, []).append(cli_path)
+            connection_requests_by_command.setdefault(cli_path, set()).add(action)
+    by_connection_request: dict[str, list[tuple[str, ...]]] = {}
+    for cli_path in sorted(connection_requests_by_command):
+        for action in connection_requests_by_command[cli_path]:
+            by_connection_request.setdefault(action, []).append(cli_path)
 
     if diagnostics:
         raise OperatorSurfaceContractError(_SURFACE, reason="; ".join(diagnostics))
@@ -173,7 +165,7 @@ def join_command_operations(
             CommandOperations(
                 cli_path=cli_path,
                 operation_ids=tuple(sorted(by_command[cli_path])),
-                runtime_requests=tuple(sorted(requests_by_command.get(cli_path, ()))),
+                connection_requests=tuple(sorted(connection_requests_by_command.get(cli_path, ()))),
             )
             for cli_path in sorted(by_command)
         ),
@@ -181,8 +173,9 @@ def join_command_operations(
             OperationCommands(operation_id=operation_id, cli_paths=tuple(by_operation[operation_id]))
             for operation_id in sorted(by_operation)
         ),
-        runtime_requests=tuple(
-            RuntimeRequestCommands(action=action, cli_paths=tuple(by_request[action])) for action in sorted(by_request)
+        connection_requests=tuple(
+            ConnectionRequestCommands(action=action, cli_paths=tuple(by_connection_request[action]))
+            for action in sorted(by_connection_request)
         ),
     )
 
@@ -190,7 +183,7 @@ def join_command_operations(
 __all__ = [
     "CommandOperationJoin",
     "CommandOperations",
+    "ConnectionRequestCommands",
     "OperationCommands",
-    "RuntimeRequestCommands",
     "join_command_operations",
 ]

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-shell'
 date: '2026-10-04'
-modified: '2026-10-12'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:2fb6a24bedf54f53423448636e42628dc6baf6f3f7ba66eb2db5cca3754e5b32'
+body_hash: 'sha256:8f35265246828676b54af4c6976c6508ea5b3a62cb1d25200369ed41d98f4ae7'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -17,6 +17,7 @@ related:
   - '[[2026-10-04-runtime-manager-architecture-adr]]'
   - '[[2026-10-04-application-sign-in-adr]]'
 ---
+
 # `desktop-shell` adr: `Desktop shell` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -80,7 +81,7 @@ Evidence is in `2026-10-04-desktop-shell-reference`.
 - `source` on a log record is an open enumeration. A later runtime-manager source must not break the shell.
 - Terminal output is never dropped. Backpressure pauses the PTY reader instead.
 - The shell holds no runtime connection and no runtime authority. It never opens the runtime endpoint, and it shows no runtime availability, authentication request, timeout or control, with these exceptions from `2026-10-04-application-sign-in-adr`:
-  - the sign-in view's signed-in state, as `aeat config sign-in-status` reports it
+  - the sign-in view's signed-in state, as `cadrumo-runtime config sign-in-status` reports it
   - that view's typed refusals
   - the manager-start path offered when the runtime is unavailable
   - by that record's amendment of 2026-10-06, the profiles of the sign-in view: their labels and which is selected, as `aeat config profile list` reports them, the profile a sign-in names, and the creation of a profile through the canonical CLI
@@ -265,7 +266,7 @@ shell to documentation:
 
 ### Embedded terminal appearance amendment (2026-10-07)
 
-Authorized by the user's request that desktop theme switching restyle the TUI and shells. Source inspection found the TUI pane pinned to DARK_TERMINAL and Textual themes emitting fixed RGB colors (`native/desktop/frontend/src/App.tsx`, `src/cadrumo/entrypoints/tui/components/theme.py`). Changing xterm's background cannot recolor those cells.
+Authorized by the user's request that desktop theme switching restyle the TUI and shells. Source inspection found the TUI pane pinned to DARK_TERMINAL and Textual themes emitting fixed RGB colors (`native/desktop/frontend/src/App.tsx`, `src/cadrumo_runtime/host/frontend/tui/components/theme.py`). Changing xterm's background cannot recolor those cells.
 
 The dedicated desktop TUI uses native ANSI color roles backed by desktop-owned light/dark Cadrumo palettes. Its launch identifies the terminal through TERM_PROGRAM=cadrumo; this is terminal capability metadata, alongside TERM and COLORTERM, not a product Settings variable. Standalone TUI appearances are unchanged. Desktop preference changes recolor existing terminal cells without input, restart, polling, or runtime IPC. The TUI pane follows desktop appearance; the console and Python panes retain their explicit always-dark override. The TUI's own appearance action emits only OSC 777;cadrumo;appearance;toggle, which the dedicated TUI pane may interpret as a frontend preference toggle; console/Python panes cannot invoke it. The payload carries no application state, and goes through ordinary PTY output, never diagnostics. No arbitrary commands or values are admitted by this presentation request.
 
@@ -289,7 +290,7 @@ The user's layout puts the two most useful surfaces, the documentation and the T
 - The documentation is the window's primary surface, with offline search in four languages, reachable from one palette.
 - The documentation and the TUI can be read and used at the same time.
 - Terminals no longer poll.
-- Logs from every Python process on the storage root that logs through `configure_logging` show in one place. That includes the runtime (`src/cadrumo/entrypoints/runtime/main.py:53`).
+- Logs from every Python process on the storage root that logs through `configure_logging` show in one place. That includes the runtime (`src/cadrumo_runtime/host/main.py:53`).
 
 **Accepted costs.**
 - An installed package grows by about 450 MB and 63,000 files across four languages, measured at packaging.

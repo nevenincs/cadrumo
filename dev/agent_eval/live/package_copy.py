@@ -22,7 +22,7 @@ from typing import Any, Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from dev.first_party_source import is_test_source
+from dev.first_party_source import HARNESS_PACKAGE, PRODUCT_SOURCE_ROOTS, SERVICE_PACKAGE, is_test_source
 from dev.packaging.native.hashing import digest
 from dev.packaging.native.package_inventory import package_inventory
 
@@ -31,7 +31,9 @@ from .outcome import UnavailableError
 _FROZEN = ConfigDict(frozen=True, strict=True, extra="forbid")
 MANIFEST: Final = "data/package-manifest.json"
 BUILD_METADATA: Final = "data/build.json"
-FIRST_PARTY_PACKAGES: Final = ("cadrumo", "cadrumo_harness")
+FIRST_PARTY_PACKAGES: Final = tuple(
+    PurePosixPath(root).name for root in (*PRODUCT_SOURCE_ROOTS, HARNESS_PACKAGE, SERVICE_PACKAGE)
+)
 _PACKAGES_DIRECTORY: Final = "cadrumo/site-packages"
 _SAMPLE: Final = 12
 

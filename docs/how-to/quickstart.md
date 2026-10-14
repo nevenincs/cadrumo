@@ -35,7 +35,7 @@ setup, including the package download and optional integrations.
 profile's passphrase.
 After the profile exists, creation at a terminal offers an optional recovery
 code that can reset a forgotten passphrase; you can skip it and enable it later
-with `aeat config profile recovery enable`. The first command that touches the store asks for
+with `cadrumo-runtime config profile recovery enable`. The first command that touches the store asks for
 the passphrase and the tool reuses it for the rest of the session. For
 unattended runs after creation, see
 [Run without a passphrase prompt](protect-data-access.md#run-without-a-passphrase-prompt).

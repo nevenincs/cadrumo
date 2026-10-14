@@ -16,7 +16,6 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
 from cadrumo.application.auth.read_operation import build_auth_read_definition, build_auth_read_registration
 from cadrumo.application.operations.registry import (
@@ -40,10 +39,12 @@ from cadrumo.application.workflow.errors import WorkflowInputMismatchError
 from cadrumo.core.config import override_settings
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryError
-from cadrumo_harness.mcp import payload_vocabulary as vocabulary_module
-from cadrumo_harness.mcp.payload_vocabulary import payload_vocabulary
-from cadrumo_harness.mcp.protocol_contract import MCP_TOOL_CATALOGUE
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
+from cadrumo_client.transport.frontend_client import FrontendClient
+
+from .. import payload_vocabulary as vocabulary_module
+from ..payload_vocabulary import payload_vocabulary
+from ..protocol_contract import MCP_TOOL_CATALOGUE
+from ..runtime_adapter import RuntimeMcpAdapter
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -65,7 +66,7 @@ class _DescribingClient:
             ),
         )
         self.profile_id = profile_id
-        self.frontend = OperationFrontendProjection.MCP
+        self.frontend = OperationFrontendProjection.EXTERNAL_CLIENT
         self.session_id = uuid4()
 
     def describe(self, definition_id: str, *, deadline: float) -> OperationPublicDefinitionDescriptionV1:
@@ -78,7 +79,7 @@ class _DescribingClient:
 
 async def _describe(definition_id: str) -> dict[str, Any]:
     client = _DescribingClient(uuid4())
-    adapter = RuntimeMcpAdapter(profile_id=client.profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=client.profile_id, client=cast(FrontendClient, client))
     try:
         with override_settings(cadrumo_output_language="en"):
             return await adapter.call("describe", {"definition_id": definition_id})

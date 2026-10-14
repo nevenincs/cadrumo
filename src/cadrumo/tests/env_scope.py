@@ -18,7 +18,7 @@ A small set of tests legitimately need to manipulate *real*
 * CLI runtime infrastructure that AEAT does not own (the pytest
   runner's ``PYTEST_CURRENT_TEST`` flag, Rich's ``COLUMNS`` width
   read, ``sys.argv``) is read directly by tightly scoped helpers in
-  :mod:`cadrumo.entrypoints.cli._stdio` and
+  :mod:`cadrumo_client.commands.stdio` and
   :mod:`cadrumo.core.access_gate`. Those production helpers accept
   explicit overrides as kwargs; this module is for the os.environ
   side only.
@@ -222,7 +222,7 @@ def derived_storage_settings(root: Path) -> Generator[None]:
 def scoped_sys_argv(argv: list[str]) -> Generator[None]:
     """Pin ``sys.argv`` for the with-block.
 
-    The CLI startup helpers in :mod:`cadrumo.entrypoints.cli._stdio` (and
+    The CLI startup helpers in :mod:`cadrumo_client.commands.stdio` (and
     a small set of sibling utilities) inspect ``sys.argv`` to decide
     whether the invocation is a ``--help`` surface. Tests exercising
     those branches need argv pinned to a known value.

@@ -451,7 +451,7 @@ async def fetch_censal_datos(
     """
     if session.storage_state_path is None:
         raise SedeNavigationError(
-            "AeatSession has no persisted auth session; run `aeat config auth status` first",
+            "AeatSession has no persisted auth session; run `cadrumo-runtime config auth status` first",
             translated_message=tr("adapters.sede.errors.no_auth_session"),
         )
     settings = settings or Settings()

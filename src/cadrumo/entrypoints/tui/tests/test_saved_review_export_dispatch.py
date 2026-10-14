@@ -8,14 +8,15 @@ from uuid import UUID
 import pytest
 from textual.screen import Screen
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from cadrumo_client.contracts.contracts import RefusalError
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
 from ....application.modelo.filing_record_view_operation import (
     ModeloFilingRecordViewProjection,
     ModeloFilingRecordViewRequest,
 )
 from ....application.operations.schema_identity import OperationSchemaIdentityV1
-from ....application.runtime.contracts import RuntimeRefusalError
 from ....core.modelo_export_artefact import ModeloExportArtefact
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.payment_election import PaymentElection
@@ -57,7 +58,7 @@ async def test_selected_history_export_submits_exact_saved_identity(
     monkeypatch.setattr(screen_type, "on_mount", lambda _self: None)
     monkeypatch.setattr(module, "RuntimeOperationController", Controller)
     monkeypatch.setattr(module, "OperationModal", lambda _controller: Screen())
-    screen = screen_type(cast(RuntimeFrontendClient, client), "a" * 64)
+    screen = screen_type(cast(FrontendClient, client), "a" * 64)
     if isinstance(screen, historical_export.HistoricalFilingExportScreen):
         screen._revision_id = "b" * 64
     request = WorkbenchExportRequest(
@@ -111,7 +112,7 @@ async def test_historical_tui_resolves_saved_filing_before_offering_export(monke
         )
 
     monkeypatch.setattr(historical_export, "read_filing_view", read)
-    screen = historical_export.HistoricalFilingExportScreen(cast(RuntimeFrontendClient, client), "a" * 64)
+    screen = historical_export.HistoricalFilingExportScreen(cast(FrontendClient, client), "a" * 64)
     async with ScreenHostApp[None](screen).run_test() as pilot:
         await pilot.pause()
         assert reads == ["a" * 64]
@@ -168,7 +169,7 @@ async def test_historical_tui_reads_the_filing_view_at_its_current_result_versio
     state = _filing_view_state()
     waited = _bind_filing_view_read(monkeypatch, state)
 
-    result = await historical_export.read_filing_view(cast(RuntimeFrontendClient, client), "a" * 64)
+    result = await historical_export.read_filing_view(cast(FrontendClient, client), "a" * 64)
 
     assert result is _FilingViewController.released
     (call,) = _FilingViewController.submitted
@@ -195,11 +196,11 @@ async def test_historical_tui_reads_no_result_from_a_filing_view_that_was_refuse
     )
 
     _bind_filing_view_read(monkeypatch, _filing_view_state(condition=OperationTerminalCondition.REFUSED))
-    with pytest.raises(RuntimeFrontendRefusedError):
-        await historical_export.read_filing_view(cast(RuntimeFrontendClient, client), "a" * 64)
+    with pytest.raises(FrontendRefusedError):
+        await historical_export.read_filing_view(cast(FrontendClient, client), "a" * 64)
     assert _FilingViewController.settled_reads == []
 
     _bind_filing_view_read(monkeypatch, _filing_view_state(effect=OperationEffect.UPDATED))
-    with pytest.raises(RuntimeRefusalError):
-        await historical_export.read_filing_view(cast(RuntimeFrontendClient, client), "a" * 64)
+    with pytest.raises(RefusalError):
+        await historical_export.read_filing_view(cast(FrontendClient, client), "a" * 64)
     assert _FilingViewController.settled_reads == []

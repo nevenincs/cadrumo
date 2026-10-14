@@ -19,7 +19,11 @@
         "cadrumo_harness._resources",
         "cadrumo_harness._skill_metadata",
         "cadrumo_harness._workspace",
+        "cadrumo_harness.access",
+        "cadrumo_harness.access.automation_key",
+        "cadrumo_harness.access.legacy_provenance",
         "cadrumo_harness.mcp",
+        "cadrumo_harness.mcp.access_scope",
         "cadrumo_harness.mcp.admitted_operations",
         "cadrumo_harness.mcp.authority_query",
         "cadrumo_harness.mcp.corpus_query",
@@ -35,6 +39,8 @@
         "cadrumo_harness.mcp.runtime_admission",
         "cadrumo_harness.mcp.runtime_cleanup",
         "cadrumo_harness.mcp.server",
+        "cadrumo_harness.mcp.surface_facts",
+        "cadrumo_harness.mcp.surfaces",
         "cadrumo_harness.resources"
       ]
     }

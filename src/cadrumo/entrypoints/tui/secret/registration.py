@@ -939,7 +939,10 @@ def build_profile_registration_attempt(
     the localized message key and its context forward as data. No passphrase
     is retained beyond the call.
     """
-    from ....application.user_profile.registration import ProfileRegistrationError, register_profile_with_credentials
+    from ....application.user_profile.registration import (
+        ProfileRegistrationError,
+        register_profile_with_credentials,
+    )
     from ....domain.calculations.registry.authority import bundled_indexed_authority
     from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
     from ....domain.user_profile.values import UserProfileFact

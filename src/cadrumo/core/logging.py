@@ -88,7 +88,7 @@ SCRUB_FIELD_PATTERNS: tuple[str, ...] = (
 )
 """Log-message KEY-NAME redaction vocabulary: :data:`ALWAYS_REDACT_KEY_TERMS`
 (the tree-wide shared base) plus this module's own generic logging-domain
-additions. See :data:`cadrumo.core.redaction.ALWAYS_REDACT_KEY_TERMS` for why
+additions. See :data:`cadrumo.core.redaction.rules.ALWAYS_REDACT_KEY_TERMS` for why
 the base is never redeclared independently."""
 
 
@@ -626,9 +626,16 @@ class DropRunEventFilter(logging.Filter):
         return getattr(record, "run_event", None) is None
 
 
-#: First-party namespaces for Cadrumo and its hosted agent diagnostics. SDK
-#: request-body DEBUG remains excluded even when it originates inside the agent.
-_FIRST_PARTY_LOGGER_ROOTS = ("cadrumo", "cadrumo_agent")
+#: First-party namespaces for Cadrumo and its hosted automation diagnostics. SDK
+#: request-body DEBUG remains excluded even when it originates inside the automation.
+_FIRST_PARTY_LOGGER_ROOTS = {"cadrumo"}
+
+
+def register_first_party_logger(namespace: str) -> None:
+    """Enroll this process's owning application namespace for scrubbed diagnostics."""
+    if not namespace.isidentifier():
+        raise ValueError("a logger namespace must be one application identifier")
+    _FIRST_PARTY_LOGGER_ROOTS.add(namespace)
 
 
 class _ThirdPartyDebugFilter(logging.Filter):
@@ -661,7 +668,7 @@ class _ThirdPartyDebugFilter(logging.Filter):
 
         Returns:
             ``True`` for any record at INFO or above, and for DEBUG records
-            emitted by a first-party ``cadrumo`` or ``cadrumo_agent`` logger.
+            emitted by a first-party registered application logger.
         """
         if record.levelno >= logging.INFO:
             return True
@@ -682,7 +689,7 @@ class DropOperatorDocumentEchoFilter(logging.Filter):
     """Suppress records already rendered as an operator document, on stderr only.
 
     stderr is the machine-readable error channel: the CLI's terminal boundary
-    writes the JSON error document there, and an agent or script parses that
+    writes the JSON error document there, and an automation or script parses that
     stream. A diagnostic log record about the same failure is therefore a
     *duplicate* on stderr, and a harmful one — the record carries the raw
     exception and its traceback, so echoing it prepends internal frames and the

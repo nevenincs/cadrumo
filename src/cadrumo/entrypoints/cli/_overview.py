@@ -7,6 +7,9 @@ from uuid import UUID
 
 import typer
 
+from cadrumo_client.commands.registered_operation_errors import submitted_operation_error
+from cadrumo_client.contracts.contracts import RefusalCode
+
 from ...application.cli_exception_preconditions import (
     CliExceptionPrecondition,
     cli_exception_no_recovery_verdict,
@@ -23,7 +26,6 @@ from ...application.overview.read_payload import (
 )
 from ...application.overview.read_projection import OverviewNoticeSnapshot
 from ...application.overview.read_request import OverviewReadKind, OverviewReadRequest
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language as current_output_language
@@ -52,10 +54,9 @@ from .common import (
     resolve_notice_action,
 )
 from .errors import CliRefusedBoundaryError
+from .operation_overview import OverviewReadCompletion, read_overview
+from .operation_overview_pipeline import read_overview_pipeline
 from .period_parsing import _canonical_period
-from .registered_operation_errors import submitted_operation_error
-from .runtime_overview import OverviewReadCompletion, read_overview
-from .runtime_overview_pipeline import read_overview_pipeline
 
 
 def _request(kind: OverviewReadKind, **fields: object) -> OverviewReadRequest:
@@ -97,7 +98,7 @@ def _emit_read[T](completed: OverviewReadCompletion, render: Callable[[], T]) ->
         receipt = completed.completion
         raise submitted_operation_error(
             receipt.operation_id,
-            RuntimeRefusalCode.UNAVAILABLE.value,
+            RefusalCode.UNAVAILABLE.value,
             terminal_condition=receipt.terminal_condition,
             effect=receipt.effect,
             refusal_code=receipt.refusal_code,
@@ -370,7 +371,7 @@ def overview_pipeline(ctx: typer.Context, year: int, period: str) -> None:
         receipt = completed.completion
         raise submitted_operation_error(
             receipt.operation_id,
-            RuntimeRefusalCode.UNAVAILABLE.value,
+            RefusalCode.UNAVAILABLE.value,
             terminal_condition=receipt.terminal_condition,
             effect=receipt.effect,
             refusal_code=receipt.refusal_code,

@@ -271,7 +271,7 @@ def test_a_resolution_naming_no_finding_refuses_rather_than_passing_silently() -
             ),
         )
 
-    # The mistyped id is named as a fact, so an operator (or an agent) can see
+    # The mistyped id is named as a fact, so an operator (or an automation) can see
     # WHICH id was rejected without parsing a localised sentence.
     assert (raised.value.context or {}).get("blocker_id") == "0123456789abcdef"
 

@@ -549,13 +549,6 @@ impl Session {
         }
     }
 
-    pub fn provider_catalog(&self, supervisor: &Supervisor) -> Result<Value, Refused> {
-        let gateway = Self::gateway(supervisor)?;
-        // Relayed as served, for the workspace every run starts in: every
-        // lane, runnable or not.
-        Client::new(&gateway).provider_catalog(&gateway.workspace_root)
-    }
-
     /// Reserves the id the conversation's first run will have.
     pub fn start_conversation(&self, supervisor: &Supervisor) -> Result<Value, Refused> {
         Self::gateway(supervisor)?;

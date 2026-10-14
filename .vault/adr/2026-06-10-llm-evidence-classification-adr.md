@@ -3,13 +3,12 @@ tags:
   - '#adr'
   - '#llm-evidence-classification'
 date: '2026-06-10'
-modified: '2026-10-13'
-body_hash: 'sha256:ba623cd4227486b25bfae1446c1ec6803739e515de8ccb37fb5e1bd0982aafa5'
+modified: '2026-10-14'
+body_hash: 'sha256:a515fe0e8d549efa4cdbf9f041732e5a6fac0d4e52a439173bd3ab488372e545'
 related:
   - "[[2026-06-10-llm-evidence-classification-research]]"
   - "[[2026-06-04-llm-ledger-classification-adr]]"
 ---
-
 # `llm-evidence-classification` adr: `Evidence-aware LLM ledger classification (Stage-3): on-host/local-first reading; cloud only behind a consent gate; splitting in scope` | (**status:** `accepted`)
 
 > **DECISION 2026-06-10 (operator ruling, binding).** The first draft treated taking
@@ -426,11 +425,11 @@ approving an off-host read:
 
 **What stays the same.**
 
-- **Who grants.** Every grant is the person's act, taken only on a person frontend and held
-  in encrypted custody. An agent never grants, asserts or revokes one.
+- **Who grants.** Every grant is the person's act, taken through verified desktop/service person IPC and held
+  in encrypted service-owned custody; generic runtime stores enforce admitted opaque policy. An agent never grants, asserts or revokes one.
 - **Binding.** Every grant is bound to the action kind, the provider and the model, and to
   the document for a document read.
-- **Ledger.** Every release is appended to the consent ledger before content leaves the
+- **Ledger.** Every release is recorded by the service's encrypted disclosure ledger before content leaves the
   machine, whatever the grant's scope.
 - **Revocation.** It takes effect from the next read.
 - **Bars and exclusions.** The gestor bar, the deployment opt-in and per-profile
@@ -441,10 +440,9 @@ approving an off-host read:
 each invocation" read, after 2026-10-13, as "never granted without the person's explicit
 choice of scope".
 
-**Still to change in code.** `cloud_evidence_read_permitted` still says "never sticky"
-(`src/cadrumo/adapters/outbound/llm/consent.py:155-157`). That wording, and the token's
-missing provider, model and action-kind fields, change with the implementation under
-`2026-10-13-agent-attachments-adr`.
+**Implementation ownership, amended 2026-10-14.** Agent reference/provider/model/session/remembered grant fields belong to the separate agent service, not tax `EvidenceConsentToken` or tax consent records. Generic document custody/projection and legal holds remain runtime-owned; `cadrumo_harness` adapts MCP. The attachment capability is an obligation until actual encrypted agent retention, grants and projections exist; current provider/admin migration does not implement it.
 
 **Unchanged.** The ledger extraction operation keeps its per-invocation acknowledgement.
 This amendment offers the wider scopes only on the agent's approval card.
+
+Boundary amendment 2026-10-14 under the user's explicit service separation authorization: the agent-only scope above is service-owned; legitimate tax extraction acknowledgement, provider/model transport provenance and deterministic evidence authority remain unchanged.

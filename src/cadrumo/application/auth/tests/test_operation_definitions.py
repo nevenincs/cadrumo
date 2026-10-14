@@ -151,7 +151,7 @@ def test_teardown_refuses_a_request_resolved_under_the_other_definitions_contrac
         profile_id=_PROFILE,
         destination_id=_DESTINATION,
         action=AccessAction.SUBMIT,
-        frontend=OperationFrontendProjection.MCP,
+        frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
         contract=registry.lookup_public_contract(AUTH_LOGOUT_OPERATION_DEFINITION_ID),
         published_authority=Availability.AVAILABLE,
     )

@@ -46,7 +46,7 @@ from .ledger_business_payloads import (
     EvidenceReviewRowPayload,
     EvidenceReviewViewResult,
 )
-from .runtime_ledger_evidence_followup import (
+from .operation_ledger_evidence_followup import (
     run_ledger_evidence_review_list,
     run_ledger_evidence_review_view,
 )

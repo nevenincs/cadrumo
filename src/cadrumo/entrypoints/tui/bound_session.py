@@ -5,7 +5,8 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime
 
-from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo_client.transport.frontend_client import FrontendClient
+
 from ...application.operations.registry import OperationFrontendProjection
 from ...application.user_profile.access_contracts import ProfileAccessStatus
 from ...core.async_cleanup import await_cancellation_complete
@@ -28,7 +29,7 @@ def _status_confirms_session(status: ProfileAccessStatus, profile_id: object, se
 class BoundSession:
     """One admitted TUI connection and the profile session it was admitted for."""
 
-    def __init__(self, client: RuntimeFrontendClient, *, known_expires_at: datetime | None = None) -> None:
+    def __init__(self, client: FrontendClient, *, known_expires_at: datetime | None = None) -> None:
         """Pin the client's profile and session as they stand at admission."""
         self._client = client
         self._profile_id = client.profile_id

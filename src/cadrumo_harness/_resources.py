@@ -9,8 +9,8 @@ Python data accessor; MCP exposure is defined by the current server tools.
 from __future__ import annotations
 
 # nosemgrep: python.lang.compatibility.python37.python37-compatibility-importlib2
-from importlib.resources import files  # nosemgrep
-from importlib.resources.abc import Traversable  # nosemgrep
+from importlib.resources import files
+from importlib.resources.abc import Traversable
 
 _PACKAGE_DATA: Traversable = files(__package__).joinpath("_data")
 

@@ -106,7 +106,7 @@ def _result_access(subject: Subject, registry: OperationRegistry, *, definition_
             profile_id=PROFILE_ID,
             destination_id=uuid4(),
             action=AccessAction.RESULT,
-            frontend=OperationFrontendProjection.MCP
+            frontend=OperationFrontendProjection.EXTERNAL_CLIENT
             if definition_id == module.M036_QUERY_OPERATION_DEFINITION_ID
             else OperationFrontendProjection.CLI,
             contract=registry.lookup_public_contract(definition_id),
@@ -219,7 +219,7 @@ async def test_atomic_writer_authority_and_uncertain_failure_settle_truthfully(
 
 
 @pytest.mark.asyncio
-async def test_shared_read_preserves_full_human_rows_and_only_reviewed_agent_facts(subject: Subject) -> None:
+async def test_shared_read_preserves_full_human_rows_and_only_reviewed_automation_facts(subject: Subject) -> None:
     request = _record_request()
     await module.M036RecordExecutor(subject.compose).execute(request, subject.context(request.definition_id))
     record = cast(module.M036RecordExecutionResult, subject.operands.values[-1]).projection.declaration
@@ -229,9 +229,9 @@ async def test_shared_read_preserves_full_human_rows_and_only_reviewed_agent_fac
             request, subject.context(request.definition_id)
         )
     human = cast(module.M036ReadExecutionResult, subject.operands.values[-2]).projection
-    agent = cast(module.M036QueryExecutionResult, subject.operands.values[-1]).projection
+    automation = cast(module.M036QueryExecutionResult, subject.operands.values[-1]).projection
     assert human.declarations[0].model_dump() == record.model_dump()
-    row = agent.declarations[0]
+    row = automation.declarations[0]
     assert row.profile_id == PROFILE_ID and row.declaration_id == record.declaration_id
     assert (
         row.event_kind == record.event_kind
@@ -239,7 +239,7 @@ async def test_shared_read_preserves_full_human_rows_and_only_reviewed_agent_fac
         and row.recorded_at == record.recorded_at
     )
     assert row.note_present and row.justificante_present
-    assert _NOTE not in agent.model_dump_json() and _RECEIPT not in agent.model_dump_json()
+    assert _NOTE not in automation.model_dump_json() and _RECEIPT not in automation.model_dump_json()
     assert subject.repository.writes == subject.fence.entries == 1
     assert subject.events.effects[-1] is OperationEffect.NONE
 

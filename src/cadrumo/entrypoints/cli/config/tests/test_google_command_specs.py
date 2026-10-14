@@ -7,8 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from ...command_parameter_contracts import OptionSpec
-from ...command_shared_contracts import BindingState, SchemaState
+from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.shared_contracts import BindingState, SchemaState
+
 from .._google_command_specs import GOOGLE_COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -19,9 +20,6 @@ def test_google_specs_declare_the_complete_operator_subtree() -> None:
 
     assert set(by_key) == {
         "config_google",
-        "config_google_login",
-        "config_google_status",
-        "config_google_logout",
         "config_google_folder",
         "config_google_folder_view",
         "config_google_folder_organize",
@@ -67,8 +65,8 @@ def test_google_handler_modules_hold_no_typer_structural_authority() -> None:
 
 def test_google_parameters_retain_aliases_flags_multiplicity_and_bounds() -> None:
     by_key = {spec.key: spec for spec in GOOGLE_COMMAND_SPECS}
-    # Sign-in takes no option: there is one way to sign in.
-    assert by_key["config_google_login"].parameters == ()
+    # Folder view is an observation and accepts no operator-supplied identity.
+    assert by_key["config_google_folder_view"].parameters == ()
 
     probe = {
         parameter.name: parameter

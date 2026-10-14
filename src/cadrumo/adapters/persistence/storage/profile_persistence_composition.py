@@ -7,14 +7,14 @@ than assuming: an unbound port raises ``InternalInvariantError`` instead of
 reporting an absent profile. Discharging that obligation is the host's job, and
 this module is where every host discharges it.
 
-Four hosts enter this scope -- the shipped frontend composition root, the MCP
+Four hosts enter this scope -- the shipped frontend composition root, the external client
 server's own root, the pytest session fixture, and the docs-sequence runner --
 and each used to restate the wiring. The copies had already drifted over which
 ports belong to the set, which is the failure mode this module removes: a port
 added here reaches all of them in the same change.
 
 It lives beside the adapters it builds rather than in either process root
-because the MCP distribution is an outer root in its own right and does not
+because the external client distribution is an outer root in its own right and does not
 import the CLI entrypoint, and because a test host must not have to reach into
 a ``tests`` package for shipped wiring. Importing this module pulls only the
 persistence tree, which is what entering the scope pulls in anyway.

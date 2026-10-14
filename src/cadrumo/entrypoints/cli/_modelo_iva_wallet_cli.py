@@ -12,10 +12,10 @@ from ...core.period import Period
 from ._modelo_iva_wallet_payloads import IvaWalletBalanceResult, IvaWalletOverrideResult, IvaWalletSeedResult
 from ._modelo_payloads_m036 import IvaWalletCorrectResult
 from .common import emit_envelope
-from .runtime_modelo_iva_wallet_balance import read_modelo_iva_wallet_balance_for_cli
-from .runtime_modelo_iva_wallet_correction import read_modelo_iva_wallet_correction_for_cli
-from .runtime_modelo_iva_wallet_override import read_modelo_iva_wallet_override_for_cli
-from .runtime_modelo_iva_wallet_seed import read_modelo_iva_wallet_seed_for_cli
+from .operation_modelo_iva_wallet_balance import read_modelo_iva_wallet_balance_for_cli
+from .operation_modelo_iva_wallet_correction import read_modelo_iva_wallet_correction_for_cli
+from .operation_modelo_iva_wallet_override import read_modelo_iva_wallet_override_for_cli
+from .operation_modelo_iva_wallet_seed import read_modelo_iva_wallet_seed_for_cli
 
 
 def _wallet_amount(amount: str) -> Decimal:

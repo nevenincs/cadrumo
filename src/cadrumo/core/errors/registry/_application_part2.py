@@ -99,7 +99,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.runtime.contracts.RuntimeRefusalError",
+        "cadrumo_client.contracts.contracts.RefusalError",
         ErrorCode(
             code="REFUSED_LOCAL_RUNTIME",
             category=ErrorCategory.REFUSED,
@@ -109,7 +109,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.runtime.contracts.RuntimeShutdownIncompleteError",
+        "cadrumo_client.contracts.contracts.ShutdownIncompleteError",
         ErrorCode(
             code="REFUSED_LOCAL_RUNTIME_SHUTDOWN",
             category=ErrorCategory.REFUSED,

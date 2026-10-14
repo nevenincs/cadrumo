@@ -1,4 +1,4 @@
-"""Typed catalogue for ``aeat config auth providers``.
+"""Typed catalogue for ``cadrumo-runtime config auth providers``.
 
 :class:`AuthProviderListing` records feed :data:`AUTH_PROVIDER_CATALOGUE`; the
 catalogue is derived from the executable :class:`AuthProviderKind` authority.
@@ -29,7 +29,7 @@ accepted a blank or capitalised id that the catalogue rejects.
 
 
 class AuthProviderListing(BaseModel):
-    """One row in the ``aeat config auth providers`` catalogue.
+    """One row in the ``cadrumo-runtime config auth providers`` catalogue.
 
     Attributes:
         id: Stable lowercase identifier (``"certificate"``,

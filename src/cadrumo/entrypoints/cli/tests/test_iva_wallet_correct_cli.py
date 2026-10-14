@@ -12,11 +12,11 @@ from cadrumo.application.operations.public_period import PublicPeriod
 from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvenance
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.core.period import Period
+from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 
 from .. import _modelo_iva_wallet_cli as handler
-from .. import runtime_modelo_iva_wallet_correction as bridge
+from .. import operation_modelo_iva_wallet_correction as bridge
 from .._modelo_payloads_m036 import IvaWalletCorrectResult
-from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

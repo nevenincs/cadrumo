@@ -57,7 +57,7 @@ LEDGER_EVIDENCE_ADD_PHASE = LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID
 
 _MAX_RESULT_BYTES = 60 * 1024
 _PERSON_FRONTEND_ACTOR = "cli"
-"""The audit label of evidence a person's frontend adds; an agent's is derived from its session."""
+"""The audit label of evidence a person's frontend adds; an automation's is derived from its session."""
 _EvidenceText = Annotated[str, Field(max_length=16_384)]
 _EvidencePath = Annotated[str, Field(min_length=1, max_length=4_096)]
 _EvidenceLabel = Annotated[str, Field(max_length=1_024)]

@@ -13,12 +13,13 @@ import pytest
 from textual.app import App
 from textual.widgets import Button, Input
 
-from .....adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from .....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.profile_access import ProfileStatus
+from cadrumo_client.contracts.session_events import LifecycleNotice
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
 from .....application.operations.registry import OperationFrontendProjection
-from .....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from .....application.runtime.profile_access import RuntimeProfileStatus
-from .....application.runtime.session_events import RuntimeLifecycleNotice
 from .....application.user_profile.login_interaction import ProfileLoginChoice
 from .....core.diagnostic_log import DiagnosticFormatter
 from .....core.logging import LOG_FILE_FORMAT, get_logger
@@ -30,7 +31,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _PRIVATE_CANARY = "private-login-input-and-error-canary"
 
 
-class _Client(RuntimeFrontendClient):
+class _Client(FrontendClient):
     """A credential-exchange fault port for presentation and logging tests."""
 
     def __init__(self, profile_id: UUID, error: BaseException) -> None:
@@ -42,14 +43,12 @@ class _Client(RuntimeFrontendClient):
         self.proof: bytearray | None = None
 
     @override
-    def login_password(
-        self, secret: bytearray, *, timeout: float = 20, persist_receipt: bool = False
-    ) -> RuntimeProfileStatus:
+    def login_password(self, secret: bytearray, *, timeout: float = 20, persist_receipt: bool = False) -> ProfileStatus:
         self.proof = secret
         raise self.error
 
     @override
-    def subscribe_lifecycle_notices(self, receive: Callable[[RuntimeLifecycleNotice], None]) -> Callable[[], None]:
+    def subscribe_lifecycle_notices(self, receive: Callable[[LifecycleNotice], None]) -> Callable[[], None]:
         # The screen subscribes before it sends the proof; this port has no runtime to send notices.
         return lambda: None
 
@@ -104,15 +103,15 @@ def capture() -> Iterator[_Capture]:
 async def test_login_failure_is_correlated_and_keeps_private_text_out_of_logs(capture: _Capture, failure: str) -> None:
     profile_id = uuid4()
     error = (
-        RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+        RefusalError(RefusalCode.UNAVAILABLE)
         if failure == "unavailable"
-        else RuntimeFrontendRefusedError("credential_rejected")
+        else FrontendRefusedError("credential_rejected")
         if failure == "credential"
         else ValueError(_PRIVATE_CANARY)
     )
     client = _Client(profile_id, error)
 
-    async def open_client(selected: UUID) -> RuntimeFrontendClient:
+    async def open_client(selected: UUID) -> FrontendClient:
         assert selected == profile_id
         if failure == "unavailable":
             raise error
@@ -160,7 +159,7 @@ async def test_cleanup_diagnostic_interrupt_cannot_skip_close_or_replace_a_prima
     profile_id = uuid4()
     client = _Client(profile_id, ValueError("unused exchange failure"))
     primary = (
-        RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+        RefusalError(RefusalCode.UNAVAILABLE)
         if primary_kind == "refusal"
         else asyncio.CancelledError("synthetic pending cancellation")
         if primary_kind == "cancellation"
@@ -168,7 +167,7 @@ async def test_cleanup_diagnostic_interrupt_cannot_skip_close_or_replace_a_prima
     )
     interruption = KeyboardInterrupt("synthetic diagnostic interruption")
 
-    async def open_client(selected: UUID) -> RuntimeFrontendClient:
+    async def open_client(selected: UUID) -> FrontendClient:
         assert selected == profile_id
         return client
 
@@ -209,7 +208,7 @@ async def test_diagnostic_interrupt_at_attempt_boundary_still_erases_proof_and_r
     proof = bytearray(_PRIVATE_CANARY, "utf-8")
     interruption = KeyboardInterrupt("synthetic diagnostic interruption")
 
-    async def open_client(selected: UUID) -> RuntimeFrontendClient:
+    async def open_client(selected: UUID) -> FrontendClient:
         assert selected == profile_id
         return client
 

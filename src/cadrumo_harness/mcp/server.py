@@ -3,14 +3,12 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Callable, Generator
-from contextlib import contextmanager
+from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID
 
 import anyio
 
-from cadrumo.application.operations.mcp_surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES, McpSurface
 from cadrumo.domain.calculations.registry.authority import release_bundled_indexed_authority
 
 from .protocol_contract import (
@@ -20,6 +18,7 @@ from .protocol_contract import (
     has_refusal,
     unknown_outcome_instruction,
 )
+from .surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES, McpSurface
 
 if TYPE_CHECKING:
     from mcp.server import Server
@@ -30,14 +29,7 @@ if TYPE_CHECKING:
 def build_server(adapter: RuntimeMcpAdapter) -> Server:
     """Register the tools of the adapter's surface around one connection-owned adapter."""
     from mcp.server import Server
-    from mcp.types import (
-        CallToolRequestParams,
-        CallToolResult,
-        ListToolsResult,
-        TextContent,
-        Tool,
-        ToolAnnotations,
-    )
+    from mcp.types import CallToolRequestParams, CallToolResult, ListToolsResult, TextContent, Tool, ToolAnnotations
 
     def annotations(name: str) -> ToolAnnotations:
         hints = MCP_TOOL_HINTS[name]
@@ -88,9 +80,9 @@ def serve(
 
     With a credential reference, which only the person's launch configuration
     gives, the adapter authenticates by that enrolled key for the named
-    profile and never resumes a sign-in. Without one it starts with no
-    session, and asks the runtime to resume the person's sign-in when a call
-    first needs the profile.
+    profile. Without one it starts with no session and requests scoped
+    attendance from the person holding the selected profile. No human receipt
+    is read or presented by this external connection.
     """
     from mcp.server.lowlevel import NotificationOptions
     from mcp.server.stdio import stdio_server
@@ -99,7 +91,7 @@ def serve(
         from .runtime_adapter import RuntimeMcpAdapter
 
         adapter = RuntimeMcpAdapter(
-            profile_id=profile_id, client=None, surface=surface, resumes_sign_in=credential_reference is None
+            profile_id=profile_id, client=None, surface=surface, requests_attendance=credential_reference is None
         )
         try:
             if credential_reference is not None:
@@ -114,27 +106,7 @@ def serve(
         finally:
             await adapter.close()
 
-    with _resume_composition(resumes_sign_in=credential_reference is None):
-        _serve_until_orderly_shutdown(lambda: anyio.run(run))
-
-
-@contextmanager
-def _resume_composition(*, resumes_sign_in: bool) -> Generator[None]:
-    """Bind, for the life of the process, the ports a resumed sign-in reads its receipt through.
-
-    The proof a resume presents is read through the login-session port, which
-    the command line and the terminal interface bind before they present it.
-    This process is a root of its own and binds the same composition, so the
-    resume reaches the runtime instead of failing here. A connection that
-    serves an enrolled key presents no receipt and binds nothing.
-    """
-    if not resumes_sign_in:
-        yield
-        return
-    from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
-
-    with composed_profile_persistence_ports():
-        yield
+    _serve_until_orderly_shutdown(lambda: anyio.run(run))
 
 
 def _serve_until_orderly_shutdown(serve_transport: Callable[[], object]) -> None:

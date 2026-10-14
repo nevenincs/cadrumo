@@ -13,10 +13,12 @@ from uuid import UUID
 
 import typer
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ....adapters.local_runtime.frontend_client_contracts import ProfileViewCollection
-from ....adapters.local_runtime.profile_mutations import ProfileMutationCompletion
-from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo_client.commands.profile_binding import require_profile_client
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import ProfileViewCollection
+from cadrumo_client.transport.profile_mutations import ProfileMutationCompletion
+
 from ....application.user_profile.profile_operation_contracts import (
     ProfilePlantillaMediaOperationProjection,
     ProfilePlantillaMediaOperationRequest,
@@ -32,10 +34,9 @@ from .._config_plantilla_media_payloads import ConfigProfilePlantillaMediaResult
 from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ..common import emit_envelope
 from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
-from ..runtime_profile_binding import require_profile_client
+from ._profile_mutation import execute_profile_mutation, mutation_deadline, read_mutation_baseline
 from ._profile_support import require_active_profile_pointer as _active_profile_pointer
-from ._runtime_profile_mutation import execute_profile_mutation, mutation_deadline, read_mutation_baseline
-from .runtime_profile_view import resolve_runtime_profile_output_language
+from .operation_profile_view import resolve_profile_output_language
 
 
 def _average_workforce(raw: str) -> Decimal:
@@ -70,21 +71,21 @@ def _years_from_facts(collection: ProfileViewCollection) -> tuple[PlantillaMedia
     """Restore only typed complete facts from one authorized revision."""
     items = collection.items(ProfileViewPageKind.FACTS)
     if not all(isinstance(item, ProfileViewFactItem) for item in items):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     facts = tuple(item for item in items if isinstance(item, ProfileViewFactItem))
     values = {item.path: item.value for item in facts}
     if len(values) != len(facts):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     try:
         return plantilla_media_years(values)
     except UserProfileValidationError:
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME) from None
+        raise RefusalError(RefusalCode.INVALID_FRAME) from None
 
 
-def _client(ctx: typer.Context, *, requested_language: OutputLanguage | None) -> RuntimeFrontendClient:
+def _client(ctx: typer.Context, *, requested_language: OutputLanguage | None) -> FrontendClient:
     pointer = _active_profile_pointer()
     client = require_profile_client(ctx, expected_profile_id=UUID(str(pointer.bucket_id)))
-    language = resolve_runtime_profile_output_language(client, requested=requested_language)
+    language = resolve_profile_output_language(client, requested=requested_language)
     _activate_subcommand_output_language(ctx, language)
     return client
 
@@ -98,9 +99,9 @@ def _committed_years(
             not isinstance(completed.projection, ProfilePlantillaMediaOperationProjection)
             or completed.projection.year != requested_year
         ):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         return _years_from_facts(current)
-    except RuntimeRefusalError as error:
+    except RefusalError as error:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.profile.mutation.committed_view_unavailable",
             context={

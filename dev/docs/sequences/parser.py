@@ -49,6 +49,7 @@ from .schema import (
     BlockedDetail,
     BlockedReason,
     CaptureBinding,
+    CommandProgram,
     ExpectAssertion,
     ExpectLiteral,
     FrameKind,
@@ -70,8 +71,9 @@ __all__ = [
     "result_frame_asserts_result_payload",
 ]
 
-#: The sole human CLI executable; every frame command leads with this token.
-_EXECUTABLE: str = "aeat"
+#: The installed human command programs; every frame leads with one token.
+_EXECUTABLES = frozenset(program.value for program in CommandProgram)
+_EXECUTABLE_DESCRIPTION = "'aeat' or 'cadrumo-runtime'"
 #: The ``@expect`` pseudo-path asserting a frame's process exit code; its
 #: literal MUST be an integer.
 _EXIT_CODE_PATH: str = "exit_code"
@@ -197,10 +199,10 @@ def _placeholder_names(command_line: str, source: str, line_number: int, problem
 
 
 def _decompose_argv(command_line: str, source: str, line_number: int, problems: list[str]) -> tuple[str, ...] | None:
-    """Shell-decompose a command line into argv, leading with ``aeat``.
+    """Shell-decompose a command line into argv, retaining its command program.
 
     Returns ``None`` (and records a problem) when the line does not tokenise or
-    does not invoke the ``aeat`` executable.
+    does not invoke a declared command executable.
     """
     try:
         tokens = shlex.split(command_line, posix=True)
@@ -210,9 +212,9 @@ def _decompose_argv(command_line: str, source: str, line_number: int, problems: 
     if not tokens:
         problems.append(f"{_at(source, line_number)}: empty command line")
         return None
-    if tokens[0] != _EXECUTABLE:
+    if tokens[0] not in _EXECUTABLES:
         problems.append(
-            f"{_at(source, line_number)}: a command frame must invoke {_EXECUTABLE!r}, "
+            f"{_at(source, line_number)}: a command frame must invoke {_EXECUTABLE_DESCRIPTION}, "
             f"got {tokens[0]!r}: {command_line!r}",
         )
         return None
@@ -646,7 +648,7 @@ def _parse_frame_line(raw_line: str, offset: int, source: str, state: _FrameLine
     head, _, remainder = line.partition(" ")
     remainder = remainder.strip()
 
-    if head == _EXECUTABLE or head in _FRAME_SIGILS:
+    if head in _EXECUTABLES or head in _FRAME_SIGILS:
         _append_command_frame(head, line, remainder, source, offset, state)
         return
 
@@ -678,7 +680,7 @@ def _parse_frame_line(raw_line: str, offset: int, source: str, state: _FrameLine
 
     state.problems.append(
         f"{_at(source, offset)}: unrecognised line {line!r}; expected an "
-        f"'{_EXECUTABLE} ...' command, @setup, @result, @static, @capture, @expect, @blocked, or @step",
+        f"{_EXECUTABLE_DESCRIPTION} command, @setup, @result, @static, @capture, @expect, @blocked, or @step",
     )
     state.current = None
 
@@ -696,9 +698,9 @@ def _append_command_frame(
 ) -> None:
     """Append command frame."""
     kind = _FRAME_SIGILS.get(head, FrameKind.COMMAND)
-    command_line = line if head == _EXECUTABLE else remainder
+    command_line = line if head in _EXECUTABLES else remainder
     if not command_line:
-        state.problems.append(f"{_at(source, offset)}: {head} requires an '{_EXECUTABLE} ...' command")
+        state.problems.append(f"{_at(source, offset)}: {head} requires an {_EXECUTABLE_DESCRIPTION} command")
         state.current = None
         return
     argv = _decompose_argv(command_line, source, offset, state.problems)

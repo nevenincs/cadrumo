@@ -115,7 +115,7 @@ behavior. Native code owns bootstrap before Python exists.
 | Build-time contract projection | `dev/packaging/native/` | C header, Rust constants, JSON contract |
 | Build graph and packaging targets | `CMakeLists.txt`, `CMakePresets.json`, `native/cmake/` | Selected CMake binary directory |
 | Package assembly operations | `dev/packaging/native/` | `<binary-dir>/stage/<Config>/app/` |
-| Product identity, runtime transport and runtime exit reasons | `src/cadrumo/core/product_identity.py`, `runtime_transport.py`, `src/cadrumo/application/runtime/contracts.py` | Native identity, transport names and exit-reason table (never an environment input) |
+| Product identity, runtime transport and runtime exit reasons | `src/cadrumo/core/product_identity.py`, `connection_transport.py`, `src/cadrumo_client/contracts/contracts.py` | Native identity, transport names and exit-reason table (never an environment input) |
 | The command line's settings, built-in default root and member locations | `src/cadrumo/core/config.py`, `storage_environment.py`, `storage_taxonomy_locations.py` | None. They serve runs outside a package; the package-side conformance check holds them to the package declaration |
 | Exact Python version | `dev/packaging/release-python-version` | Build input |
 | Third-party dependency closure | `pyproject.toml`, `uv.lock`, existing constraint exporter | Installed locked dependencies |
@@ -432,7 +432,26 @@ entrypoint host hands `sys.executable` back to `python.exe`. A bundled image sta
 `sys.executable` re-enters the same image and its launch profiles. The package
 bootstrap finds the package root from the image's place in the native directory.
 
-The image has no default profile. It admits the invocations declared in its
+The separate `bin/cadrumo-agent-service` image (with the platform executable
+suffix) is a C interpreter host compiled to invoke only
+`cadrumo_agent_service.main`. Its console script is included in the Python
+distribution, but the native host does not resolve that module through mutable
+console-script metadata. Native desktop launches `serve --profile-id UUID` and
+holds the generic runtime person channel on `cadrumo-runtime session hold
+--profile-id UUID`. The service profile alone fixes the packaged agent, MCP relay,
+AEAT and Python executable locations; runtime and ordinary profile workers carry
+no agent launch parameter.
+
+Assembly emits `data/service-descriptors.json` after native executable relocation.
+Each descriptor pins the staged image SHA256, fixed module, explicit registered
+operation ceiling and record capabilities. Its own digest covers canonical JSON
+excluding `descriptor_digest`. The descriptor file is itself a hashed package
+manifest member and a startup member. The `desktop-session` descriptor admits
+only the staged native desktop parent image and grants no secret-record
+capabilities. The service's provider-settings capability retains the original
+encrypted namespace and schema; no encryption key leaves runtime custody.
+
+The agent image has no default profile. It admits the invocations declared in its
 invocation table in `native/application-environment.toml`, each selecting its own
 profile, and refuses any other module, verb, `-c` or script before Python starts. The
 table includes the gateway, which runs the agent's command-line module with `serve`,
@@ -470,7 +489,7 @@ name under the agent's prefix, no launch parameter and no pin. The profiles
   pins the storage root, so the root a parent hands the gateway reaches the worker,
   and the agent forwards it to the programs and tool servers it starts. Both pin the
   temporary variables and the authority root.
-- **What Cadrumo advertises.** The runtime tells the agent what Cadrumo supplies as
+- **What Cadrumo advertises.** The separate service tells the agent what Cadrumo supplies as
   plain variables under the agent's prefix, which the prefix admits and the file
   does not list: the absolute paths of the programs the agent may run
   (`PROGRAM_<NAME>`: `aeat` and the package's `python`), the tool server it may
@@ -1293,7 +1312,7 @@ payloads and terminal kinds cannot invoke it; it carries no runtime state.
 | --- | --- | --- | --- |
 | `console` | Windows: `PowerShell\7\pwsh.exe` under `ProgramW6432` or `ProgramFiles`, else `System32\WindowsPowerShell\v1.0\powershell.exe` under `SystemRoot`, with `-NoLogo`; Linux: the account's login shell from `/etc/passwd` | Console workspace | `console` |
 | `python` | `P/python.exe` with no arguments | Console workspace | `repl` |
-| `tui` | `P/python.exe -m cadrumo.entrypoints.tui` | Console workspace | `tui` |
+| `tui` | `P/python.exe -I -m cadrumo.entrypoints.tui` | Console workspace | `tui` |
 
 Every kind receives the same child environment, the one the `python` launch
 profile defines for the host, with the package's native entrypoint directory and
@@ -1465,7 +1484,7 @@ signed in.
 
 From the console, `aeat config sign-in-status` observes availability and sign-in,
 `python` opens the bundled interpreter, and
-`python -m cadrumo.entrypoints.tui` opens the runtime-backed workbench. Standalone
+`python -I -m cadrumo.entrypoints.tui` opens the runtime-backed workbench. Standalone
 CLI and interpreter invocations retain the caller's cwd so relative file arguments
 keep their meaning; their storage root remains pinned independently of cwd.
 The optional `python_d` is the instrumented packaged interpreter, not a source

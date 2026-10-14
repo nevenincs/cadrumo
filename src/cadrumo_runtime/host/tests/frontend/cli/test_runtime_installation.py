@@ -1,0 +1,140 @@
+"""The command line sends an installation act to the running runtime and raises what its handler raised."""
+
+from __future__ import annotations
+
+import logging
+import sys
+from collections.abc import Generator
+from contextlib import contextmanager
+from importlib.metadata import version
+from pathlib import Path
+from uuid import uuid4
+
+import pytest
+
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.application.storage_management.errors import StorageReclaimUnconfirmedError
+from cadrumo.application.user_profile.access_contracts import OsLockState
+from cadrumo.core.errors.error_codes import get_registered_error_code
+from cadrumo.core.storage_taxonomy import StorageArea
+from cadrumo.entrypoints.cli.errors import (
+    CliRecordedOperationError,
+    CliRefusedBoundaryError,
+    CliUnexpectedBoundaryError,
+)
+from cadrumo.entrypoints.cli.operation_installation import run_installation_act_if_runtime
+from cadrumo_client.contracts.installation_requests import (
+    StorageCheckReply,
+    StorageCheckRequest,
+    StorageInitReply,
+    StorageInitRequest,
+    StorageInventoryReply,
+    StorageInventoryRequest,
+    StorageReclaimReply,
+    StorageReclaimRequest,
+)
+from cadrumo_client.transport.windows import WindowsEndpoint
+from cadrumo_runtime.adapters.tests.profile_worker_support import owner_id
+from cadrumo_runtime.host.tests.installation_runtime import (
+    FAULT_TEXT,
+    InstallationLogin,
+    serving_installation_runtime,
+)
+
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.windows_only,
+    pytest.mark.skipif(sys.platform != "win32", reason="requires real Windows protected pipes"),
+]
+
+_CLI = OperationFrontendProjection.CLI
+
+
+@contextmanager
+def _installed_runtime(tmp_path: Path, login: InstallationLogin) -> Generator[Path]:
+    """Serve the effective storage root as the installed cohort, so the command line finds it."""
+    with isolated_profile_storage_root(tmp_path=tmp_path) as root:
+        endpoint = WindowsEndpoint(storage_root=root)
+        with serving_installation_runtime(endpoint, root, login, product_version=version("cadrumo")):
+            yield root
+
+
+def test_a_command_gets_the_acts_reply_from_the_running_runtime(tmp_path: Path) -> None:
+    with _installed_runtime(tmp_path, InstallationLogin(owner=owner_id())) as root:
+        reply = run_installation_act_if_runtime(
+            StorageCheckRequest(request_id=uuid4(), frontend=_CLI), StorageCheckReply
+        )
+
+    assert isinstance(reply, StorageCheckReply)
+    assert reply.storage_root == str(root)
+    assert reply.healthy
+
+
+def test_a_refused_act_raises_the_error_its_handler_raised(tmp_path: Path) -> None:
+    with (
+        _installed_runtime(tmp_path, InstallationLogin(owner=owner_id())),
+        pytest.raises(CliRecordedOperationError) as refused,
+    ):
+        run_installation_act_if_runtime(
+            StorageReclaimRequest(request_id=uuid4(), frontend=_CLI, area=StorageArea.LOGS),
+            StorageReclaimReply,
+        )
+
+    assert refused.value.recorded_code == get_registered_error_code(StorageReclaimUnconfirmedError).code
+    context = refused.value.context or {}
+    assert context["area"] == "logs"
+    assert context["entry_count"] == "3"
+
+
+def test_a_failed_act_is_reported_as_unexpected_with_an_unknown_effect_and_without_the_fault(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.DEBUG)
+
+    with (
+        _installed_runtime(tmp_path, InstallationLogin(owner=owner_id())),
+        pytest.raises(CliRecordedOperationError) as failed,
+    ):
+        run_installation_act_if_runtime(StorageInitRequest(request_id=uuid4(), frontend=_CLI), StorageInitReply)
+
+    assert failed.value.recorded_code == get_registered_error_code(CliUnexpectedBoundaryError).code
+    assert failed.value.context == {"installation_act": "storage_init", "effect": "unknown"}
+    assert FAULT_TEXT not in str(failed.value)
+    assert FAULT_TEXT not in caplog.text
+
+
+@pytest.mark.parametrize("fault", ["another-account", "locked"])
+def test_an_admission_refusal_is_raised_with_its_code(tmp_path: Path, fault: str) -> None:
+    login = (
+        InstallationLogin(owner="another-account")
+        if fault == "another-account"
+        else InstallationLogin(owner=owner_id(), lock_state=OsLockState.LOCKED)
+    )
+
+    with _installed_runtime(tmp_path, login), pytest.raises(CliRefusedBoundaryError) as refused:
+        run_installation_act_if_runtime(StorageCheckRequest(request_id=uuid4(), frontend=_CLI), StorageCheckReply)
+
+    assert (refused.value.context or {})["reason"] == "needs_user"
+
+
+def test_an_act_the_runtime_does_not_serve_is_refused_as_unavailable(tmp_path: Path) -> None:
+    with (
+        _installed_runtime(tmp_path, InstallationLogin(owner=owner_id())),
+        pytest.raises(CliRefusedBoundaryError) as refused,
+    ):
+        run_installation_act_if_runtime(
+            StorageInventoryRequest(request_id=uuid4(), frontend=_CLI), StorageInventoryReply
+        )
+
+    assert (refused.value.context or {})["reason"] == "operation_unavailable"
+
+
+def test_a_command_never_starts_the_runtime_it_cannot_reach(tmp_path: Path) -> None:
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        reply = run_installation_act_if_runtime(
+            StorageCheckRequest(request_id=uuid4(), frontend=_CLI), StorageCheckReply
+        )
+
+    assert reply is None

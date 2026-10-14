@@ -7,6 +7,8 @@ from decimal import Decimal
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.hashing import canonical_json_bytes
@@ -24,7 +26,6 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -203,7 +204,7 @@ def build_modelo_local_observation_definition(
     """Declare one durable mutation with encrypted request and result custody.
 
     ``execution_caller_reader`` names the frontend that admitted an execution,
-    so an agent's figure is recorded under its session's label.
+    so an automation's figure is recorded under its session's label.
     """
     return build_single_phase_definition(
         definition_id=MODELO_LOCAL_OBSERVATION_OPERATION_DEFINITION_ID,

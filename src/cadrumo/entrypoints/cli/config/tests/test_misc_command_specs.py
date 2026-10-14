@@ -7,7 +7,8 @@ import inspect
 
 import pytest
 
-from ...command_shared_contracts import DefaultKind, SchemaState
+from cadrumo_client.commands.shared_contracts import DefaultKind, SchemaState
+
 from .._check_command_specs import CONFIG_CHECK_COMMAND_SPECS
 from .._collab_command_specs import CONFIG_COLLAB_COMMAND_SPECS
 from .._custody_command_specs import CONFIG_CUSTODY_COMMAND_SPECS

@@ -846,7 +846,7 @@ def _absent_bound_carry_diagnostics(
     always do. It deliberately does not tell them to capture or file the source
     period, because whether that is possible depends on the source modelo: the
     declarations register does not serve every modelo, and Sociedades in
-    particular. An instruction an agent-operator will follow and cannot satisfy is
+    particular. An instruction an automation-operator will follow and cannot satisfy is
     worse than no instruction, so the capture route is omitted here rather than
     asserted, and stating what AEAT does or does not offer is left to whoever
     measures it rather than inferred from this registry's own silence.

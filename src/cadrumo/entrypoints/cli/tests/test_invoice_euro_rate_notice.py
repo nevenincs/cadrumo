@@ -10,6 +10,8 @@ from uuid import UUID
 import pytest
 import typer
 
+from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
+
 from ....adapters.outbound.fx.ecb_provider import EcbReferenceRateProvider
 from ....adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from ....application.invoices.catalogue_add_contracts import (
@@ -24,7 +26,6 @@ from ....domain.invoices.models import Invoice
 from ....domain.iva.classification import InvoiceKind
 from ....tests.ecb_stub import ecb_csv_fetch
 from .. import _ledger_business_invoice_cli as handler
-from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 

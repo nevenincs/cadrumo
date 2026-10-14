@@ -5,7 +5,7 @@ tags:
 date: '2026-10-14'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:b943c092c69d9eea7996c19bf8f5248df0df16a33811a80c03773e2312c44e50'
+body_hash: 'sha256:13b33a04210747f857cb847f976ff6562b1432e8a56500efe1a61670c7d3dc32'
 related:
   - "[[2026-10-04-desktop-shell-adr]]"
 ---
@@ -90,3 +90,18 @@ Read the real desktop native JSONL and shared Python log under the user's instal
 Successful native child/host lifecycle, startup stages and helper timings now resolve to DEBUG for every role. Child failure carries a typed ChildFailed catalogue error. Manager asynchronous failures emit one ERROR per transition. Runtime, TUI, profile-worker and KDF producers distinguish completed diagnostics from failed operation outcomes; diagnostic_event defaults technical observations to DEBUG and promotes declared failed/error/unconfirmed outcomes even when callers requested INFO or WARNING. Known retained Python failures and routine lifecycle rows are corrected by the desktop reader. Async/task and thread records retain producer identity and reach the shared file.
 
 Verification so far: 53 native log tests, native Clippy, real helper-churn test with 24 processes, 34 diagnostic/privacy tests, five default/severity regressions, 28 real-process KDF diagnostics/exit tests, scoped Ruff lint and format. Initial external test-host GUI attempt exited before WebView startup; its real native log showed manager_unavailable as a failure. The newly changed startup gate requires the host executable's own installed package evidence, so acceptance proceeds through an isolated assembled test package. Full staged rebuild and final interactive Logs acceptance remain pending at this checkpoint. Concurrent same-tree builds interrupted earlier assembly attempts; passing source tests do not establish that the staged app contains the fixes.
+
+
+## Session wind-down checkpoint 2026-10-14
+
+The owner requested winding down while the source package is being refactored. Normal runtime startup phase timings now emit DEBUG, failures ERROR, and cancelled connection traces DEBUG. The desktop reader also demotes known retained runtime_startup timings. First-party DEBUG capture includes cadrumo_agent_service and cadrumo_harness alongside cadrumo and cadrumo_agent, preserving the existing third-party payload exclusion. The optional diagnostic mapping uses an explicit None guard for the current type-check rules.
+
+Updated verification: all 53 native log tests, six focused severity regressions, seven environment/WebView tests, native Clippy, eight Python startup-phase tests, ten real-file capture/privacy tests and scoped Python Ruff/type checks passed. The ordinary native test wrapper remains blocked by an unrelated stale CLI logout fixture supplying agent_access_remains, which its current canonical schema rejects; focused native checks ran through the existing direct test entrypoint.
+
+Real GUI acceptance through the isolated assembled test host passed at logging-audit-1792002471077: 18 actual sign-in helper records were DEBUG, all seven retained failed KDF operations displayed ERROR, clean runtime shutdown records were DEBUG, and a real refused terminal-open request produced ERROR. INFO hid helper churn and runtime_startup phase timings; selecting DEBUG exposed helper records. Its screenshot was read visually.
+
+The production desktop host was rebuilt, and cached bundle assembly completed successfully with a ready marker at local 20:33:37. Nine corrected Python modules matched that payload before the final equivalent None-guard correction. The final Python rebuild includes that correction; no subsequent staging is claimed at this wind-down. Other checkout changes were preserved. No complete reference inventory or universal standardization of every external binary is claimed.
+
+### runtime-startup-stderr | high | Fresh refactored payload fails before GUI startup and loses its Python cause
+
+Acceptance against a new copy of the freshly assembled Python payload failed before WebView startup. Read its actual native file at logging-audit-1792002941176: six runtime launches exited with launch_failure code 1, followed by effects_unknown, failed, supervisor_ended failed, manager_unavailable and host exit 1. These typed lifecycle failures are classified ERROR by the tested desktop reader, but that app cannot open its Logs view. The shared Python file contained no new runtime startup cause. Static follow-up found native/manager/src/supervision/launch.rs discards runtime stderr with Stdio::null() at line 164. The next session must retain a sanitized, bounded early-runtime error cause through the diagnostic channel and rerun fresh packaged GUI acceptance after the source refactor settles. A direct runtime --help probe exited zero and did not establish why supervised startup fails. This remaining gap is reported rather than treated as fixed.

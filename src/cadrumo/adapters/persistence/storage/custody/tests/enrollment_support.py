@@ -81,7 +81,7 @@ class DeliveryFaults:
 
 
 class TestAdministrationOwner:
-    """Test-owned provenance; agent proposal fields cannot modify these observations."""
+    """Test-owned provenance; automation proposal fields cannot modify these observations."""
 
     __test__ = False
 

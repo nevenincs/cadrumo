@@ -83,7 +83,7 @@ class InvoiceDecompositionDefect(StrEnum):
     """
 
     IVA_TREATMENT_UNDECLARED = "iva_treatment_undeclared"
-    """No usable :class:`~cadrumo.domain.iva.IvaCategory` is declared.
+    """No usable :class:`~cadrumo.domain.iva.schema.IvaCategory` is declared.
 
     Either the field is absent, or the declared category is one whose Axis-A
     row states its own components are unknown. Without it an exempt supply and

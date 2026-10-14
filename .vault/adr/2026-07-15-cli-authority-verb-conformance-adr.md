@@ -9,10 +9,23 @@ related:
   - "[[2026-06-10-cli-operator-surface-adr]]"
   - "[[2026-07-24-profile-login-session-adr]]"
 superseded_by: '2026-08-13-cli-action-envelope-successor-adr'
-modified: '2026-10-05'
-body_hash: 'sha256:8343842e33f87954b60ad42cba62e7a20c38392220e3fd53a50dafcaae90dc29'
+modified: '2026-10-14'
+body_hash: 'sha256:08cc0de613b2a54502cc37ddbf54137df2bf5ca17b501358798586a043ab0e6a'
 ---
 # `cli-authority-verb-conformance` adr: `Single backend authorities and cost-aware CLI verbs` | (**status:** `superseded`)
+
+## Current ownership note (2026-10-14)
+
+This superseded record preserves its earlier command grammar as historical decision evidence. The current human profile doors remain `aeat config login`, `aeat config logout`, and `aeat config profile create`.
+
+Authentication administration now belongs to `cadrumo-runtime`. Current examples include:
+
+- `cadrumo-runtime config auth login/logout/reset` and the related provider credential commands
+- `cadrumo-runtime config sign-in-status`
+- `cadrumo-runtime config passphrase change/reset`
+- `cadrumo-runtime config profile recovery enable/disable/status`
+
+The earlier aeat-prefixed administrative examples below describe the proposal at the time of this superseded record; they do not identify the current command owner.
 
 ## Amendment note (2026-07-24)
 

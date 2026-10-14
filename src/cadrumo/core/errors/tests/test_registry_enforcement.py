@@ -33,8 +33,11 @@ from pathlib import Path
 import pytest
 
 from ....tests.inventory import (
+    SRC_CADRUMO,
+    ast_for_path,
     import_binding_map,
     production_ast_items,
+    python_files_under,
     qualified_name,
     resolve_dotted_origin,
 )
@@ -103,7 +106,12 @@ def _class_qualnames(tree: ast.AST) -> dict[int, str]:
 @cache
 def _source_error_classes() -> tuple[_SourceErrorClass, ...]:
     declarations: list[tuple[str, str, tuple[str, ...]]] = []
-    for path, tree in production_ast_items():
+    client_sources = (
+        (path, tree)
+        for path in python_files_under(SRC_CADRUMO.parent / "cadrumo_client")
+        if "tests" not in path.parts and path.name != "conftest.py" and (tree := ast_for_path(path)) is not None
+    )
+    for path, tree in (*production_ast_items(), *client_sources):
         module = inventory_module_name(path)
         bindings = _source_import_bindings(tree, module, is_package=path.name == "__init__.py")
         qualnames = _class_qualnames(tree)

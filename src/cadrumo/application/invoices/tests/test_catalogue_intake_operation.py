@@ -199,10 +199,12 @@ def test_both_public_contracts_compile_without_constructing_storage(
         )
         access = resolve_operation_access(registry=registry, request=request, context=context)
         assert access.policy.requires_all_periods and AccessAction.COMMIT in access.policy.actions
-        on_mcp = resolve_operation_access(
-            registry=registry, request=request, context=replace(context, frontend=OperationFrontendProjection.MCP)
+        on_external_client = resolve_operation_access(
+            registry=registry,
+            request=request,
+            context=replace(context, frontend=OperationFrontendProjection.EXTERNAL_CLIENT),
         )
-        assert on_mcp.policy == access.policy and on_mcp.policy.requires_human is False
+        assert on_external_client.policy == access.policy and on_external_client.policy.requires_human is False
         assert definition.refusal_detail_codes == (
             frozenset({INVOICE_WIZARD_VALIDATION_REFUSAL_CODE})
             if isinstance(payload, intake_contracts.InvoiceWizardRequest)
@@ -272,12 +274,12 @@ def _session_host(frontend: OperationFrontendProjection) -> OperationExecutionCa
 @pytest.mark.parametrize(
     ("frontend", "recorded"),
     [
-        (OperationFrontendProjection.MCP, f"agent:mcp.attended.{_SESSION_CLIENT}"),
+        (OperationFrontendProjection.EXTERNAL_CLIENT, f"automation:external-client.attended.{_SESSION_CLIENT}"),
         (OperationFrontendProjection.CLI, "cli"),
     ],
-    ids=["mcp", "cli"],
+    ids=["external_client", "cli"],
 )
-def test_wizard_creation_event_names_the_session_for_an_agent_and_the_frontend_for_a_person(
+def test_wizard_creation_event_names_the_session_for_automation_and_the_frontend_for_a_person(
     authority_operation: PinnedAuthorityOperation,
     monkeypatch: pytest.MonkeyPatch,
     frontend: OperationFrontendProjection,

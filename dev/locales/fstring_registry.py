@@ -481,7 +481,10 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
     from cadrumo.entrypoints.tui.modelo.workbench.result import ResultGroup
     from cadrumo.entrypoints.tui.modelo.workbench.review import REVIEW_EFFECTS
     from cadrumo.entrypoints.tui.modelo.workbench.session import StageRefusal
-    from cadrumo.entrypoints.tui.modelo.workbench.vocabulary import NOT_WRITABLE_REASONS, SOURCE_WORDED_ORIGINS
+    from cadrumo.entrypoints.tui.modelo.workbench.vocabulary import (
+        NOT_WRITABLE_REASONS,
+        SOURCE_WORDED_ORIGINS,
+    )
     from cadrumo.entrypoints.tui.modelo.workbench.wording import PERIOD_WORD_NAMES
 
     root = "tui.modelo.workbench"

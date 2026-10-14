@@ -198,7 +198,7 @@ def scenario() -> Scenario:
         profile_id=binding.profile_id,
         definition_id=PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
         action=AccessAction.SUBMIT,
-        frontend=OperationFrontendProjection.MCP,
+        frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
         periods=frozenset({PERIOD}),
         period_independent=False,
         destination_id=uuid4(),
@@ -659,10 +659,10 @@ def test_attended_expiry_and_independent_password_access(scenario: Scenario) -> 
     )
 
 
-def test_contracts_are_strict_frozen_and_do_not_accept_agent_identity(scenario: Scenario) -> None:
+def test_contracts_are_strict_frozen_and_reject_untrusted_identity_claims(scenario: Scenario) -> None:
     for model in (scenario.session, scenario.grant, scenario.key, scenario.profile):
         with pytest.raises(ValidationError):
-            changed(model, agent_name="owner", api_secret=uuid4().hex)
+            changed(model, untrusted_identity_claim="owner", api_secret=uuid4().hex)
         with pytest.raises(ValidationError):
             model.__setattr__(next(iter(type(model).model_fields)), "replacement")
     for invalid in (datetime(2026, 9, 26), NOW.astimezone(timezone(timedelta(hours=2)))):

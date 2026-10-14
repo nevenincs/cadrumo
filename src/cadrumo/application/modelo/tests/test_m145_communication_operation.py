@@ -374,7 +374,7 @@ async def test_export_cancellation_waits_for_started_guarded_append_and_keeps_up
     assert operands.values[0].result.effect is OperationEffect.UPDATED
 
 
-def test_five_registrations_are_secure_and_require_all_periods_and_two_are_open_to_mcp() -> None:
+def test_five_registrations_are_secure_and_require_all_periods_and_two_are_open_to_external_client() -> None:
     definitions, registrations = _definition_set()
     registry = OperationRegistry(definitions=definitions, public_registrations=registrations)
     assert len(registry.public_registrations) == 5

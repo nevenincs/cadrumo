@@ -6,9 +6,11 @@ from uuid import UUID
 
 import typer
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ....adapters.local_runtime.frontend_client_contracts import ProfileViewCollection
-from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo_client.commands.profile_binding import require_profile_client
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import ProfileViewCollection
+
 from ....application.user_profile.capabilities import resolve_capability_from_values
 from ....application.user_profile.profile_operation_contracts import ProfileFieldMutationOperationRequest
 from ....application.user_profile.view_operation import ProfileViewFactItem, ProfileViewPageKind
@@ -17,13 +19,12 @@ from ....core.config import load_settings
 from ....core.i18n.render import tr
 from ..common import emit_envelope
 from ..errors import CliRefusedBoundaryError
-from ..runtime_profile_binding import require_profile_client
+from ._profile_mutation import execute_profile_mutation, mutation_deadline, read_mutation_baseline
 from ._profile_support import resolve_active_profile_pointer
-from ._runtime_profile_mutation import execute_profile_mutation, mutation_deadline, read_mutation_baseline
 from .capabilities_payloads import CapabilitiesViewResult, CapabilitySetResult
 
 
-def _target(ctx: typer.Context) -> tuple[UUID, RuntimeFrontendClient]:
+def _target(ctx: typer.Context) -> tuple[UUID, FrontendClient]:
     pointer = resolve_active_profile_pointer()
     if pointer is None:
         raise CliRefusedBoundaryError(translated_message="cli.config.profile.capabilities.no_active_profile")
@@ -34,17 +35,17 @@ def _target(ctx: typer.Context) -> tuple[UUID, RuntimeFrontendClient]:
 def _facts(collection: ProfileViewCollection) -> dict[str, str]:
     items = collection.items(ProfileViewPageKind.FACTS)
     if not all(isinstance(item, ProfileViewFactItem) for item in items):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     values = {item.path: item.value for item in items if isinstance(item, ProfileViewFactItem)}
     if len(values) != len(items):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     return values
 
 
-def _read_facts(client: RuntimeFrontendClient, *, deadline: float) -> dict[str, str]:
+def _read_facts(client: FrontendClient, *, deadline: float) -> dict[str, str]:
     baseline = read_mutation_baseline(client, deadline=deadline)
     if baseline.profile_id != client.profile_id:
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     return _facts(baseline)
 
 
@@ -82,7 +83,7 @@ def capabilities_set(ctx: typer.Context, capability: ServiceCapability, state: s
     deadline = mutation_deadline()
     baseline = read_mutation_baseline(client, deadline=deadline)
     if baseline.profile_id != profile_id:
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     completed, current = execute_profile_mutation(
         client,
         ProfileFieldMutationOperationRequest(
@@ -96,8 +97,8 @@ def capabilities_set(ctx: typer.Context, capability: ServiceCapability, state: s
     )
     try:
         if current.profile_id != profile_id or _facts(current).get(capability.schema_path) != str(enabled).lower():
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-    except RuntimeRefusalError as error:
+            raise RefusalError(RefusalCode.INVALID_FRAME)
+    except RefusalError as error:
         raise CliRefusedBoundaryError(
             translated_message="cli.config.profile.mutation.committed_view_unavailable",
             context={

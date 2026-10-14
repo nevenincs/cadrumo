@@ -106,7 +106,7 @@ def censo_import(
     reading = read_censal_certificate(file.read_bytes(), parse=parse_certificado_censal_bytes)
 
     if apply:
-        from .runtime_censal_file_import import import_censal_file_facts
+        from .operation_censal_file_import import import_censal_file_facts
 
         receipt = import_censal_file_facts(ctx, reading.profile_facts)
         apply = receipt.applied
@@ -139,15 +139,16 @@ def censo_pull(
     apply: bool = False,
 ) -> None:
     """Preview the censal consulta or complete its registered reviewed apply."""
-    from ..runtime_profile_binding import bound_profile_client
+    from cadrumo_client.commands.profile_binding import bound_profile_client
+
     from ._censo_review_cli import confirm_censal_review
-    from .runtime_censal_prepare import prepare_censal_review
-    from .runtime_censal_preview import preview_censal_with_runtime
-    from .runtime_censal_review import review_censal_with_runtime
+    from .operation_censal_prepare import prepare_censal_review
+    from .operation_censal_preview import preview_censal_operation
+    from .operation_censal_review import review_censal_operation
 
     if apply:
         prepared = prepare_censal_review(ctx)
-        reviewed = review_censal_with_runtime(
+        reviewed = review_censal_operation(
             bound_profile_client(ctx),
             prepared.operation_request,
             decide=confirm_censal_review,
@@ -166,7 +167,7 @@ def censo_pull(
         # capture read could race another pull and misattribute its evidence.
         observation = None
     else:
-        preview = preview_censal_with_runtime(ctx)
+        preview = preview_censal_operation(ctx)
         adopted, unchanged, divergences, source_url = _projected_preview_outcomes(preview)
         observation = preview.observation
 
@@ -204,7 +205,7 @@ def censo_pull(
 
 def censo_show(ctx: typer.Context) -> None:
     """Read the latest saved census through the existing exact-profile runtime door."""
-    from .runtime_censal_prepare import prepare_censal_review
+    from .operation_censal_prepare import prepare_censal_review
 
     observation = prepare_censal_review(ctx).observation
     result = CensoStoredResult(observation=observation)

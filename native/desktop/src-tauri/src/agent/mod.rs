@@ -1,13 +1,15 @@
-//! The desktop's agent host on the development live lane.
+//! The desktop's verified agent service host.
 //!
-//! It runs `aeat app agent serve` from the installed application while the
+//! It runs the dedicated installed service image while the
 //! person's sign-in allows it, supervised in a kill-on-close job, and serves
 //! the agent column a closed list of token-checked commands over the
 //! launcher's loopback gateway, with each run's stream on a Tauri channel.
 //! The launcher admits the agent bundled by CMake or returns a typed refusal.
 
+mod admin;
 mod gateway;
 mod launcher;
+mod person;
 mod runner;
 mod session;
 mod sse;
@@ -61,10 +63,18 @@ impl AgentHost {
                 })
             }) as std::pin::Pin<Box<dyn Future<Output = Result<Observation>> + Send>>
         });
-        let launch: supervisor::Launch = Arc::new(move |_bearer: &str, _profile: &str| {
-            let mut command = sign_in.cli()?.command();
-            command.args(["app", "agent", "serve"]);
-            Ok(supervisor::Prepared { command })
+        let launch: supervisor::Launch = Arc::new(move |_bearer: &str, profile: &str| {
+            let profile_id = sign_in.profile_id(profile)?;
+            let person = Arc::new(std::sync::Mutex::new(person::Person::hold(
+                sign_in.runtime()?.command(),
+                &profile_id,
+            )?));
+            let mut command = sign_in.service()?.command();
+            command.args(["serve", "--profile-id", &profile_id]);
+            Ok(supervisor::Prepared {
+                command,
+                person: Some(person),
+            })
         });
         Self {
             supervisor: Supervisor::new(observe, Some(launch), diagnostics),
@@ -76,6 +86,36 @@ impl AgentHost {
     pub async fn close(&self) -> Result<()> {
         self.session.close();
         self.supervisor.close().await
+    }
+
+    pub(crate) fn administer(
+        &self,
+        request: Value,
+        secret: Option<zeroize::Zeroizing<Vec<u8>>>,
+    ) -> Result<Value> {
+        if !matches!(request["action"].as_str(), Some("catalog" | "status")) {
+            self.require_person()?;
+        }
+        self.supervisor.administer(request, secret)
+    }
+
+    fn require_person(&self) -> Result<()> {
+        let reply = self
+            .supervisor
+            .person_request(serde_json::json!({"action":"status"}))?;
+        if reply["kind"] != "profile_status"
+            || reply["status"]["credential_authenticated"] != true
+            || reply["status"]["session_id"].is_null()
+            || !reply["status"]["denial"].is_null()
+        {
+            return Err(
+                cadrumo_application::error::application::ApplicationError::new(
+                    cadrumo_application::error::application::ErrorCode::ReadFailed,
+                    cadrumo_application::error::application::Operation::Cli,
+                ),
+            );
+        }
+        Ok(())
     }
 }
 
@@ -108,8 +148,45 @@ pub fn commands<R: Runtime>() -> Commands<R> {
         agent_unobserve,
         agent_conversations,
         agent_history,
-        agent_documents
+        agent_documents,
+        runtime_attendance_inventory,
+        runtime_attendance_decide
     ]
+}
+
+#[tauri::command]
+async fn runtime_attendance_inventory(host: State<'_, Arc<AgentHost>>) -> Result<Value> {
+    let host = host.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        host.supervisor
+            .person_request(serde_json::json!({"action":"attendance_inventory"}))
+    })
+    .await
+    .map_err(|_| {
+        cadrumo_application::error::application::ApplicationError::new(
+            cadrumo_application::error::application::ErrorCode::Panic,
+            cadrumo_application::error::application::Operation::Cli,
+        )
+    })?
+}
+
+#[tauri::command]
+async fn runtime_attendance_decide(
+    host: State<'_, Arc<AgentHost>>,
+    attendance_id: String,
+    approve: bool,
+) -> Result<Value> {
+    if !crate::shell::agent_access::wire::is_uuid(&attendance_id) {
+        return Err(
+            cadrumo_application::error::application::ApplicationError::new(
+                cadrumo_application::error::application::ErrorCode::InvalidArguments,
+                cadrumo_application::error::application::Operation::Cli,
+            ),
+        );
+    }
+    let host = host.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || host.supervisor.person_request(serde_json::json!({"action":"attendance_decision", "attendance_id":attendance_id,"approve":approve})))
+        .await.map_err(|_| cadrumo_application::error::application::ApplicationError::new(cadrumo_application::error::application::ErrorCode::Panic, cadrumo_application::error::application::Operation::Cli))?
 }
 
 /// Runs a gateway call off the async workers.
@@ -118,9 +195,13 @@ async fn blocking<T: Send + 'static>(
     work: impl FnOnce(&AgentHost) -> std::result::Result<T, Refused> + Send + 'static,
 ) -> std::result::Result<T, Refused> {
     let host = host.inner().clone();
-    tauri::async_runtime::spawn_blocking(move || work(&host))
-        .await
-        .map_err(|_| Refused::new("agent_host_failed".to_owned()))?
+    tauri::async_runtime::spawn_blocking(move || {
+        host.require_person()
+            .map_err(|_| Refused::new("agent_signed_out".to_owned()))?;
+        work(&host)
+    })
+    .await
+    .map_err(|_| Refused::new("agent_host_failed".to_owned()))?
 }
 
 fn refused<T>(code: &str) -> std::result::Result<T, Refused> {
@@ -134,8 +215,15 @@ async fn agent_status(host: State<'_, Arc<AgentHost>>) -> Result<Status> {
 
 #[tauri::command]
 async fn agent_retry(host: State<'_, Arc<AgentHost>>) -> Result<()> {
-    host.supervisor.retry();
-    Ok(())
+    let host = host.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || host.supervisor.restart_agent())
+        .await
+        .map_err(|_| {
+            cadrumo_application::error::application::ApplicationError::new(
+                cadrumo_application::error::application::ErrorCode::Panic,
+                cadrumo_application::error::application::Operation::Cli,
+            )
+        })?
 }
 
 #[tauri::command]
@@ -161,7 +249,8 @@ async fn agent_provider_catalog(
     host: State<'_, Arc<AgentHost>>,
 ) -> std::result::Result<Value, Refused> {
     blocking(&host, |host| {
-        host.session.provider_catalog(&host.supervisor)
+        host.administer(serde_json::json!({"action":"catalog"}), None)
+            .map_err(|_| Refused::new("agent_service_failed".to_owned()))
     })
     .await
 }

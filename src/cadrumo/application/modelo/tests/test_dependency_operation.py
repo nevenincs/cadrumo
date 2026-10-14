@@ -119,7 +119,7 @@ def test_period_request_covers_published_source_union_and_target_only_scope_deni
     assert denied is not None and denied.code is AccessDenialCode.PERIOD_DENIED
 
 
-def test_dependency_read_is_admitted_on_the_mcp_frontend_without_a_commit_door(
+def test_dependency_read_is_admitted_on_the_external_client_frontend_without_a_commit_door(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     registry, registration = _registry()
@@ -127,10 +127,10 @@ def test_dependency_read_is_admitted_on_the_mcp_frontend_without_a_commit_door(
     resolved = resolve_operation_access(
         registry=registry,
         request=_request(),
-        context=_context(registration, authority_operation, frontend=OperationFrontendProjection.MCP),
+        context=_context(registration, authority_operation, frontend=OperationFrontendProjection.EXTERNAL_CLIENT),
     )
 
-    assert resolved.request.frontend is OperationFrontendProjection.MCP
+    assert resolved.request.frontend is OperationFrontendProjection.EXTERNAL_CLIENT
     assert resolved.request.profile_id == _PROFILE
     assert AccessAction.COMMIT not in resolved.policy.actions
 

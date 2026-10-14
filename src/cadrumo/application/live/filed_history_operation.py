@@ -663,7 +663,7 @@ def resolve_filed_history_access(
     """Require exact-profile, all-period discovery and a fresh local commit fence.
 
     Provider readiness is checked by the bound worker before browser I/O; the
-    runtime's access policy cannot infer it from an agent request.
+    runtime's access policy cannot infer it from an automation request.
     """
     return resolve_whole_profile_capture_access(
         request,

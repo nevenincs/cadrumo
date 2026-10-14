@@ -28,6 +28,8 @@ from typing import cast
 import pytest
 from pydantic import BaseModel
 
+from cadrumo.entrypoints.tests.modelo_operator_work_storage import SeededOperatorWork, seeded_operator_work
+
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from ...adapters.persistence.storage.operator_scope import build_operator_scope_ports
@@ -73,7 +75,6 @@ from ...domain.deadlines.festivos import DeadlineHolidayCoverage
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos.verification_report import ModeloVerificationFindingKind
 from ..adapter_composition import build_verification_repository_bundle
-from .modelo_operator_work_storage import SeededOperatorWork, seeded_operator_work
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

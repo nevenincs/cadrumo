@@ -82,12 +82,13 @@ def with_profile_cli_projection(
 
 def profile_wizard_behavior(mode: WizardPersistMode) -> Callable[..., None]:
     """Run one wizard behavior while its indexed authority operation is leased."""
+    from cadrumo_client.commands.profile_authentication_notice import drain_profile_authentication_notices
+
     from ....application.wizard.catalogue import build_setup_flow
     from ....application.wizard.commands import build_wizard_command
     from ....core.json_contract import Notice
     from ....domain.calculations.registry.authority import bundled_indexed_authority
     from ...payer_fact_migration_notices import drain_payer_fact_migration_notices
-    from .._profile_authentication_notice import drain_profile_authentication_notices
 
     def _drain_invocation_notices() -> tuple[Notice, ...]:
         from ..common import resolve_notice_actions
@@ -102,12 +103,12 @@ def profile_wizard_behavior(mode: WizardPersistMode) -> Callable[..., None]:
             flow = build_setup_flow(operation)
             patch_persister = None
             if mode == "edit":
-                from .runtime_profile_patch import runtime_patch_persister
+                from .operation_profile_patch import profile_patch_persister
 
                 context = kwargs.get("ctx")
                 if not isinstance(context, _TyperClickContext):
                     raise TypeError("profile patch requires a parsed CLI context")
-                patch_persister = runtime_patch_persister(cast(typer.Context, context), flow=flow, operation=operation)
+                patch_persister = profile_patch_persister(cast(typer.Context, context), flow=flow, operation=operation)
             # The wizard emits its own envelope, below this package's funnel,
             # so it is handed the drain for the notices root authentication
             # staged for this invocation.

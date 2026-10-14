@@ -4,7 +4,10 @@
 # generated companion namespace are all part of the closed classification.
 root_packages =
     cadrumo
+    cadrumo_client
+    cadrumo_runtime
     cadrumo_harness
+    cadrumo_agent_service
     dev
     docs
 include_external_packages = False
@@ -29,7 +32,31 @@ type = layers
 name = Every harness source package has a declared lane
 containers = cadrumo_harness
 layers =
-    _resources : _skill_metadata : _workspace : mcp : resources : tests : (_data)
+    _resources : _skill_metadata : _workspace : access : mcp : resources : tests : (_data)
+exhaustive = True
+
+[importlinter:contract:closed-client-classification]
+type = layers
+name = Every shared client source package has a declared lane
+containers = cadrumo_client
+layers =
+    contracts : commands : transport : logging
+exhaustive = True
+
+[importlinter:contract:closed-runtime-classification]
+type = layers
+name = Every installed runtime source package has a declared lane
+containers = cadrumo_runtime
+layers =
+    (_data) : contracts : application : adapters : host : commands
+exhaustive = True
+
+[importlinter:contract:closed-service-classification]
+type = layers
+name = Every agent service source package has a declared lane
+containers = cadrumo_agent_service
+layers =
+    adapters : host : installed_client : main : providers : service : admin : contracts : (locales)
 exhaustive = True
 
 [importlinter:contract:closed-dev-classification]
@@ -48,10 +75,6 @@ layers =
     conf
 exhaustive = True
 
-# ``cadrumo_data`` is an installed namespace rather than a local Python
-# directory in this checkout.  Its resource lane is therefore represented by
-# the static census gate, which also rejects undeclared generated-root imports.
-
 # ---------------------------------------------------------------------------
 # Repository-only and separately shipped-root boundaries
 # ---------------------------------------------------------------------------
@@ -61,7 +84,19 @@ type = forbidden
 name = Shipped code never reaches repository-only roots
 source_modules =
     cadrumo
+    cadrumo_client
+    cadrumo_runtime
     cadrumo_harness
+forbidden_modules =
+    dev
+    docs
+allow_indirect_imports = False
+
+[importlinter:contract:service-never-reaches-repository-only]
+type = forbidden
+name = Agent service never reaches repository-only roots
+source_modules =
+    cadrumo_agent_service
 forbidden_modules =
     dev
     docs
@@ -70,6 +105,17 @@ allow_indirect_imports = False
 # ---------------------------------------------------------------------------
 # Inward dependency direction
 # ---------------------------------------------------------------------------
+
+[importlinter:contract:tax-has-no-agent-or-harness-dependency]
+type = forbidden
+name = Tax and runtime source do not know the agent products
+source_modules =
+    cadrumo
+    cadrumo_runtime
+forbidden_modules =
+    cadrumo_agent_service
+    cadrumo_harness
+allow_indirect_imports = False
 
 [importlinter:contract:core-is-innermost]
 type = forbidden
@@ -81,6 +127,9 @@ forbidden_modules =
     cadrumo.application
     cadrumo.adapters
     cadrumo.entrypoints
+    cadrumo_client
+    cadrumo_runtime
+    cadrumo_agent_service
     cadrumo_harness
     dev
     docs
@@ -95,6 +144,9 @@ forbidden_modules =
     cadrumo.application
     cadrumo.adapters
     cadrumo.entrypoints
+    cadrumo_client
+    cadrumo_runtime
+    cadrumo_agent_service
     cadrumo_harness
     dev
     docs
@@ -108,6 +160,10 @@ source_modules =
 forbidden_modules =
     cadrumo.adapters
     cadrumo.entrypoints
+    cadrumo_client.commands
+    cadrumo_client.transport
+    cadrumo_runtime
+    cadrumo_agent_service
     cadrumo_harness
     dev
     docs
@@ -123,6 +179,9 @@ forbidden_modules =
     cadrumo.application
     cadrumo.adapters
     cadrumo.entrypoints
+    cadrumo_client
+    cadrumo_runtime
+    cadrumo_agent_service
     cadrumo_harness
     dev
     docs
@@ -139,6 +198,9 @@ forbidden_modules =
     cadrumo.application
     cadrumo.adapters
     cadrumo.entrypoints
+    cadrumo_client
+    cadrumo_runtime
+    cadrumo_agent_service
     cadrumo_harness
     dev
     docs
@@ -153,6 +215,45 @@ forbidden_modules =
     cadrumo.entrypoints
     dev
     docs
+allow_indirect_imports = False
+
+[importlinter:contract:tax-application-never-reaches-runtime-host]
+type = forbidden
+name = The tax application cannot import the runtime host
+source_modules =
+    cadrumo
+forbidden_modules =
+    cadrumo_runtime
+allow_indirect_imports = False
+
+[importlinter:contract:shared-client-never-reaches-runtime-host]
+type = forbidden
+name = Shared client contracts and transports cannot import the runtime host
+source_modules =
+    cadrumo_client
+forbidden_modules =
+    cadrumo_runtime
+allow_indirect_imports = False
+
+[importlinter:contract:shared-client-never-reaches-tax-frontends]
+type = forbidden
+name = Shared client code does not depend on tax frontends
+source_modules =
+    cadrumo_client
+forbidden_modules =
+    cadrumo.entrypoints
+allow_indirect_imports = False
+
+[importlinter:contract:client-contracts-are-innermost]
+type = forbidden
+name = Client contracts do not depend on transport or host composition
+source_modules =
+    cadrumo_client.contracts
+forbidden_modules =
+    cadrumo_client.commands
+    cadrumo_client.transport
+    cadrumo_client.logging
+    cadrumo_runtime
 allow_indirect_imports = False
 
 # ---------------------------------------------------------------------------
@@ -173,7 +274,7 @@ allow_indirect_imports = False
 
 [importlinter:contract:cli-does-not-reach-tui]
 type = forbidden
-name = CLI and TUI are independent entrypoint siblings
+name = Tax CLI and TUI are independent frontends
 source_modules =
     cadrumo.entrypoints.cli
 forbidden_modules =
@@ -182,16 +283,16 @@ allow_indirect_imports = False
 
 [importlinter:contract:tui-does-not-reach-cli]
 type = forbidden
-name = TUI and CLI are independent entrypoint siblings
+name = Tax TUI does not depend on the tax CLI
 source_modules =
     cadrumo.entrypoints.tui
 forbidden_modules =
     cadrumo.entrypoints.cli
 allow_indirect_imports = False
 
-[importlinter:contract:entrypoint-shared-code-does-not-reach-siblings]
+[importlinter:contract:tax-shared-entrypoint-code-does-not-reach-tui]
 type = forbidden
-name = Shared entrypoint composition does not reach CLI or TUI
+name = Tax entrypoints do not cross frontend boundaries
 source_modules =
     cadrumo.entrypoints
 forbidden_modules =
@@ -199,7 +300,3 @@ forbidden_modules =
     cadrumo.entrypoints.tui
 allow_indirect_imports = False
 
-# The canonical public defining modules remain the only legal domain-to-domain
-# surface.  Package-initializer and private-module enforcement is completed by
-# the source census gate because Import Linter cannot distinguish an exported
-# symbol from a module-level import after name resolution.

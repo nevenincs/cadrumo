@@ -15,26 +15,27 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.frontend_projection import OperationReviewProjectionReferenceV1
 from cadrumo.application.operations.frontend_requests import (
     OperationObservationRequestV1,
     OperationReviewProjectionRequestV1,
 )
-from cadrumo.application.operations.mcp_surfaces import MCP_SURFACES, McpSurface
 from cadrumo.application.operations.registry import OperationPublicDefinitionDescriptionV1
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
-from cadrumo.application.runtime.operation_access import RuntimeOperationObserve, RuntimeOperationReview
-from cadrumo.application.runtime.projection_pages import ProjectionPageRequest
 from cadrumo.core.hashing import sha256_hex
-from cadrumo_harness.mcp.protocol_contract import MCP_TOOL_CATALOGUE, MCP_TOOL_HINTS, MCP_TOOL_NAMES, ToolHints
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
-from cadrumo_harness.mcp.server import build_server
-from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
-from cadrumo_harness.mcp.tests.test_operation_search_tool import _AdmittedClient, _registry
-from cadrumo_harness.mcp.tests.test_result_page_tool import _observed_operation_id, _ObservedClient
+from cadrumo_client.contracts.operation_access import OperationObserve, OperationReview
+from cadrumo_client.contracts.projection_pages import ProjectionPageRequest
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
+from ..protocol_contract import MCP_TOOL_CATALOGUE, MCP_TOOL_HINTS, MCP_TOOL_NAMES, ToolHints
+from ..runtime_adapter import RuntimeMcpAdapter
+from ..server import build_server
+from ..surfaces import MCP_SURFACES, McpSurface
+from .session import connected_server_and_client_session
+from .test_operation_search_tool import _AdmittedClient, _registry
+from .test_result_page_tool import _observed_operation_id, _ObservedClient
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -51,7 +52,7 @@ _READ_ONLY = {
 }
 """The tools that cannot change a record or reach the network, written here apart from the catalogue."""
 
-_READING_EXCHANGES = (RuntimeOperationObserve, RuntimeOperationReview)
+_READING_EXCHANGES = (OperationObserve, OperationReview)
 """The operation requests that only read; every other one submits, starts, resumes or manages."""
 
 _READING_METHODS = {"status", "describe", "operation", "read_result_document", "read_result_page", "close"}
@@ -81,9 +82,9 @@ class _WatchedLease:
 
     def operation(self, request: object, *, deadline: float) -> object:
         self.sent.append(type(request))
-        if not isinstance(request, RuntimeOperationObserve):
+        if not isinstance(request, OperationObserve):
             # The reply's shape is not what is under test: the exchange was recorded.
-            raise RuntimeFrontendRefusedError("operation_denied")
+            raise FrontendRefusedError("operation_denied")
         return self._observed.operation(request, deadline=deadline)
 
     def read_result_document(self, result: Any, *, deadline: float) -> object:
@@ -180,7 +181,7 @@ async def test_a_tool_marked_read_only_sends_the_runtime_nothing_but_reads() -> 
     # The two reference tools are served with no session at all, so they have nothing to send.
     assert set(calls) == _READ_ONLY - {"authority", "corpus_search"}
     lease = _WatchedLease(uuid4())
-    adapter = RuntimeMcpAdapter(profile_id=lease.profile_id, client=cast(RuntimeFrontendClient, lease))
+    adapter = RuntimeMcpAdapter(profile_id=lease.profile_id, client=cast(FrontendClient, lease))
     sent_by: dict[str, list[type]] = {}
     try:
         for name, arguments in calls.items():
@@ -193,7 +194,7 @@ async def test_a_tool_marked_read_only_sends_the_runtime_nothing_but_reads() -> 
 
     assert lease.unexpected == []
     assert all(issubclass(kind, _READING_EXCHANGES) for kinds in sent_by.values() for kind in kinds), sent_by
-    assert sent_by["observe"] == [RuntimeOperationObserve] and sent_by["review"] == [RuntimeOperationReview]
+    assert sent_by["observe"] == [OperationObserve] and sent_by["review"] == [OperationReview]
     # The lease itself serves nothing but reads, so a tool that asked for more would have been recorded above.
     assert {name for name in vars(_WatchedLease) if not name.startswith("_")} <= _READING_METHODS
 

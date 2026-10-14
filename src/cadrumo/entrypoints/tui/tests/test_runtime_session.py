@@ -13,12 +13,13 @@ import pytest
 from textual.pilot import Pilot
 from textual.widgets import Button, DataTable, OptionList, Static
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from cadrumo_client.contracts.installation_requests import InstallationAct
+from cadrumo_client.contracts.profile_access import ProfileStatus, SessionsLocked
+from cadrumo_client.contracts.session_events import LifecycleNotice
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
 from ....application.operations.registry import OperationFrontendProjection, OperationRegistry
-from ....application.runtime.installation_requests import InstallationAct
-from ....application.runtime.profile_access import RuntimeProfileStatus, RuntimeSessionsLocked
-from ....application.runtime.session_events import RuntimeLifecycleNotice
 from ....application.user_profile.access_contracts import (
     DISCLOSURE_PAGE_ENTRIES,
     AccessAction,
@@ -63,9 +64,7 @@ async def test_upgrade_notice_renders_without_retiring_the_restricted_session(mo
     async with app.run_test() as pilot:
         await _shown(app, pilot)
         assert client.notice_callback is not None
-        client.notice_callback(
-            RuntimeLifecycleNotice(runtime_boot_id=uuid4(), connection_id=uuid4(), notice_id=uuid4())
-        )
+        client.notice_callback(LifecycleNotice(runtime_boot_id=uuid4(), connection_id=uuid4(), notice_id=uuid4()))
         await pilot.pause()
         assert notices == [tr("common.manager.update_pending")]
         assert not app._cleared
@@ -89,13 +88,13 @@ async def test_pushed_retirement_clears_private_view_without_waiting_for_status_
     assert client.retirement_callback is None
 
 
-class _Client(RuntimeFrontendClient):
+class _Client(FrontendClient):
     def __init__(self) -> None:
         self._profile_id = uuid4()
         self._session_id = uuid4()
         self._frontend = OperationFrontendProjection.TUI
         self.retirement_callback: Callable[[], None] | None = None
-        self.notice_callback: Callable[[RuntimeLifecycleNotice], None] | None = None
+        self.notice_callback: Callable[[LifecycleNotice], None] | None = None
         self.status_calls = 0
         self.lock_calls = 0
         self.close_calls = 0
@@ -127,7 +126,7 @@ class _Client(RuntimeFrontendClient):
         return unsubscribe
 
     @override
-    def subscribe_lifecycle_notices(self, receive: Callable[[RuntimeLifecycleNotice], None]) -> Callable[[], None]:
+    def subscribe_lifecycle_notices(self, receive: Callable[[LifecycleNotice], None]) -> Callable[[], None]:
         self.notice_callback = receive
 
         def unsubscribe() -> None:
@@ -136,9 +135,9 @@ class _Client(RuntimeFrontendClient):
         return unsubscribe
 
     @override
-    def status(self, *, timeout: float = 5) -> RuntimeProfileStatus:
+    def status(self, *, timeout: float = 5) -> ProfileStatus:
         self.status_calls += 1
-        return RuntimeProfileStatus(
+        return ProfileStatus(
             request_id=uuid4(),
             runtime_boot_id=uuid4(),
             connection_id=uuid4(),
@@ -175,14 +174,14 @@ class _Client(RuntimeFrontendClient):
         )
 
     @override
-    def lock(self, *, timeout: float = 5) -> RuntimeSessionsLocked:
+    def lock(self, *, timeout: float = 5) -> SessionsLocked:
         self.lock_calls += 1
         self.lock_started.set()
         if not self.lock_release.wait(5):
             raise TimeoutError("test lock was not released")
         if self.lock_refusal:
-            raise RuntimeFrontendRefusedError("SESSION_LOCKED")
-        return RuntimeSessionsLocked(
+            raise FrontendRefusedError("SESSION_LOCKED")
+        return SessionsLocked(
             request_id=uuid4(),
             runtime_boot_id=uuid4(),
             connection_id=uuid4(),
@@ -206,7 +205,7 @@ class _Client(RuntimeFrontendClient):
         raise AssertionError("restricted shell must not request administrator controls")
 
     @override
-    def refresh_api_key(self, *, timeout: float = 5) -> RuntimeProfileStatus:
+    def refresh_api_key(self, *, timeout: float = 5) -> ProfileStatus:
         self.human_calls += 1
         raise AssertionError("status polling must not renew a lease")
 

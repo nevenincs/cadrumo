@@ -42,7 +42,7 @@ def portals_list(
     category: PortalCategory | None = None,
     modelo: Modelo | None = None,
 ) -> None:
-    """List local AEAT portal registry entries, optionally filtered by category or modelo."""
+    """List local AEAT portals, optionally filtered by :class:`PortalCategory` or modelo."""
     try:
         result = list_portals(category=category, modelo=modelo)
     except PortalFilterConflictError as exc:

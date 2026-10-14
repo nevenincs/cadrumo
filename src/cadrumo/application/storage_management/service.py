@@ -76,7 +76,7 @@ RECLAIMABLE_LIFECYCLES: Final[frozenset[StorageLifecycle]] = frozenset(
 )
 """Declared lifecycle classes whose contents ``reclaim`` may delete.
 
-The complement is :attr:`~cadrumo.core.StorageLifecycle.UNBOUNDED_BY_DESIGN`,
+The complement is :attr:`~cadrumo.core.storage_taxonomy.StorageLifecycle.UNBOUNDED_BY_DESIGN`,
 which is the encrypted substrate, the key material, the audit trail, and the
 durable filing outputs. Those are not caches that grew too large; their growth
 is the record. Deriving the permitted set from the declared axis rather than

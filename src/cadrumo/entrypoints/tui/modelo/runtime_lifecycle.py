@@ -11,8 +11,10 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
 from ....application.export.calculation_review_xlsx_operation import (
     CALCULATION_REVIEW_XLSX_OPERATION_DEFINITION_ID,
     CalculationReviewXlsxRequest,
@@ -22,7 +24,11 @@ from ....application.modelo.declarations_workspace_contracts import Declarations
 from ....application.modelo.edit_admission import ModeloEditRenewalResultV1, ModeloEditRenewedV1
 from ....application.modelo.edit_apply_contracts import ModeloEditApplySubmissionV1
 from ....application.modelo.edit_baseline_projection import ModeloEditApplyBaselineV1
-from ....application.modelo.edit_models import ModeloEditBaselineV1, ModeloEditPreflightResultV1, ModeloEditSubmissionV1
+from ....application.modelo.edit_models import (
+    ModeloEditBaselineV1,
+    ModeloEditPreflightResultV1,
+    ModeloEditSubmissionV1,
+)
 from ....application.modelo.edit_operation_requests import ModeloEditPreflightRequestV2
 from ....application.modelo.edit_operator_input import ModeloEditOperatorInputV2
 from ....application.modelo.export_projection import ModeloExportPublicResultV3
@@ -49,7 +55,6 @@ from ....application.operations.frontend_projection import OperationPublicProjec
 from ....application.operations.models import OperationRequest
 from ....application.operations.registry import OperationFrontendProjection
 from ....application.operations.schema_identity import OperationSchemaIdentityV1
-from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ..operations.controller_port import OperationControllerPort
 from ..operations.runtime_controller import RuntimeOperationController, await_terminal_projection
@@ -82,7 +87,7 @@ def _require_attestation_update(state: OperationPublicProjectionV1, operation_id
 
 def _attestation_admission(
     receipt: ModeloWorkM303AttestationPublicResultV2,
-    client: RuntimeFrontendClient,
+    client: FrontendClient,
     declaration: DeclarationsWorkspaceDeclarationRefV1,
     work_unit_id: str,
     expected_session_id: UUID,
@@ -94,19 +99,19 @@ def _attestation_admission(
         or receipt.period.to_period() != declaration.period
         or client.session_id != expected_session_id
     ):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     return receipt.to_admission()
 
 
 async def _admit_attestation(
-    client: RuntimeFrontendClient,
+    client: FrontendClient,
     declaration: DeclarationsWorkspaceDeclarationRefV1,
     observed_at: datetime,
     expected_session_id: UUID,
 ) -> M303Exonerado390ApplicabilityAttestationAdmission:
     work_unit_id = str(declaration.work_unit_id)
     if client.session_id != expected_session_id:
-        raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+        raise RefusalError(RefusalCode.CONNECTION_CLOSED)
     deadline = time.monotonic() + _ATTESTATION_TIMEOUT_SECONDS
     payload = ModeloWorkM303AttestationRequest(
         profile_id=client.profile_id,
@@ -144,9 +149,9 @@ async def _admit_attestation(
             result_version=2,
         )
         return _attestation_admission(receipt, client, declaration, work_unit_id, expected_session_id)
-    except (RuntimeRefusalError, RuntimeFrontendRefusedError) as error:
+    except (RefusalError, FrontendRefusedError) as error:
         raise ModeloLifecycleActionUnavailableError(
-            error.reason.value if isinstance(error, RuntimeRefusalError) else error.reason,
+            error.reason.value if isinstance(error, RefusalError) else error.reason,
             context={
                 "operation_id": str(controller.operation_id),
                 "effect": (terminal_effect or OperationEffect.UNKNOWN).value,
@@ -156,7 +161,7 @@ async def _admit_attestation(
 
 @dataclass(frozen=True, slots=True)
 class _RuntimeModeloLifecycleBindings:
-    client: RuntimeFrontendClient
+    client: FrontendClient
     declaration: DeclarationsWorkspaceDeclarationRefV1
     work_unit_id: str
     profile_id: UUID
@@ -164,7 +169,7 @@ class _RuntimeModeloLifecycleBindings:
 
     def require_session(self) -> None:
         if self.client.session_id != self.session_id or self.client.profile_id != self.profile_id:
-            raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+            raise RefusalError(RefusalCode.CONNECTION_CLOSED)
 
     def read[ResultT: BaseModel](self, definition_id: str, payload: BaseModel, result_type: type[ResultT]) -> ResultT:
         self.require_session()
@@ -193,7 +198,7 @@ class _RuntimeModeloLifecycleBindings:
             else self.work_unit_id
         )
         if self.client.session_id != self.session_id or request.subject_ref != expected_subject:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         return await RuntimeOperationController.submit(
             self.client,
             definition_id=request.definition_id,
@@ -206,7 +211,7 @@ class _RuntimeModeloLifecycleBindings:
 
     async def read_export_result(self, projection: OperationPublicProjectionV1) -> ModeloExportPublicResultV3:
         if self.client.session_id != self.session_id or projection.subject_ref != self.work_unit_id:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         controller = RuntimeOperationController(
             client=self.client,
             operation_id=projection.operation_id,
@@ -220,13 +225,13 @@ class _RuntimeModeloLifecycleBindings:
             or projection.definition_id != CALCULATION_REVIEW_XLSX_OPERATION_DEFINITION_ID
             or projection.subject_ref != profile_operation_subject(str(self.profile_id))
         ):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         controller = RuntimeOperationController(
             client=self.client, operation_id=projection.operation_id, session_id=self.session_id
         )
         result = await controller.read_settled_result(projection, CalculationReviewXlsxResult, result_version=1)
         if result.profile_id != self.profile_id or result.work_unit_id != self.work_unit_id:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         return result
 
     def admit(self, observed_at: datetime) -> M303Exonerado390ApplicabilityAttestationAdmission:
@@ -243,12 +248,12 @@ class _RuntimeModeloLifecycleBindings:
             ModeloEditRenewalProjectionV1,
         )
         if projection.profile_id != self.profile_id or projection.work_unit_id != self.work_unit_id:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         renewed = projection.renewed_baseline
         if renewed is not None:
             return ModeloEditRenewedV1(baseline=renewed.to_baseline())
         if projection.refusal is None:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         return projection.refusal
 
     def preflight(self, submission: ModeloEditSubmissionV1) -> ModeloEditPreflightResultV1:
@@ -258,7 +263,7 @@ class _RuntimeModeloLifecycleBindings:
             ModeloEditPreflightProjectionV1,
         )
         if projection.profile_id != self.profile_id or projection.work_unit_id != self.work_unit_id:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         return projection.outcome
 
     def prerequisite(
@@ -280,12 +285,12 @@ class _RuntimeModeloLifecycleBindings:
             ModeloEditApplyPrerequisiteProjectionV1,
         )
         if projection.profile_id != self.profile_id or projection.work_unit_id != self.work_unit_id:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         return projection.prerequisite
 
 
 def compose_runtime_modelo_lifecycle_door(
-    client: RuntimeFrontendClient,
+    client: FrontendClient,
     declaration: DeclarationsWorkspaceDeclarationRefV1,
     *,
     calculation_revision_id: str | None,
@@ -300,7 +305,7 @@ def compose_runtime_modelo_lifecycle_door(
     found, so every action acts on the revision the filer is looking at.
     """
     if client.frontend is not OperationFrontendProjection.TUI:
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     work_unit_id = str(declaration.work_unit_id)
     bindings = _RuntimeModeloLifecycleBindings(
         client=client,

@@ -50,7 +50,7 @@ def test_family_replacement_requires_profile_wide_authority(action: AccessAction
         profile_id=profile_id,
         destination_id=destination,
         action=action,
-        frontend=OperationFrontendProjection.MCP,
+        frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
         contract=registry.lookup_public_contract(PROFILE_DESCENDANTS_OPERATION_DEFINITION_ID),
         published_authority=Availability.AVAILABLE,
     )

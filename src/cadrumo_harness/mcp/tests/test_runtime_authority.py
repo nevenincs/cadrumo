@@ -32,11 +32,12 @@ from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import 
     minimal_revision,
     synthetic_legal_identity,
 )
-from cadrumo_harness.mcp.protocol_contract import SIGN_IN_REMEDY
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
-from cadrumo_harness.mcp.server import build_server
-from cadrumo_harness.mcp.tests.admitted_lease import admitted_adapter
-from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
+
+from ..protocol_contract import SIGN_IN_REMEDY
+from ..runtime_adapter import RuntimeMcpAdapter
+from ..server import build_server
+from .admitted_lease import admitted_adapter
+from .session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -84,7 +85,7 @@ async def test_public_authority_queries_preserve_coordinates_and_support_project
             },
         )
 
-        assert described["outcome"] == "published"
+        assert described["outcome"] == "published", described
         assert described["report"]["code"] == "100"
         assert described["report"]["filing_year"] == 2024
         assert described["report"]["period"] == "0A"
@@ -112,7 +113,7 @@ async def test_public_authority_queries_preserve_coordinates_and_support_project
 async def test_authority_is_refused_to_a_connection_with_no_key_and_nobody_signed_in(tmp_path: Path) -> None:
     """Reference data is read inside the person's profile like everything else; with no session nothing answers."""
     with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
-        adapter = RuntimeMcpAdapter(profile_id=None, client=None, resumes_sign_in=True)
+        adapter = RuntimeMcpAdapter(profile_id=None, client=None, requests_attendance=True)
         try:
             async with connected_server_and_client_session(build_server(adapter)) as client:
                 names = {tool.name for tool in (await client.list_tools()).tools}

@@ -1,7 +1,7 @@
 """The session's disclosures in the terminal interface: counted by category, read a page at a time.
 
 The status reply counts the disclosures and the runtime serves the full list by
-page, as it does for the command line and MCP. The walk over those pages is the
+page, as it does for the command line and external client. The walk over those pages is the
 application's pager; this module only words what it reads.
 """
 

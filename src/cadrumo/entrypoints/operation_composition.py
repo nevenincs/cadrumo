@@ -12,7 +12,6 @@ Core types: :class:`~cadrumo.adapters.persistence.profile.transactions.Transacti
 
 from __future__ import annotations
 
-import os
 import secrets
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, replace
@@ -83,7 +82,6 @@ if TYPE_CHECKING:
     from ..application.operations.registry import OperationPublicDefinitionRegistrationV1
     from ..application.overview.pipeline_read_ports import PipelineReadPortsFactory
     from ..application.overview.read_ports import OverviewReadPortsFactory
-    from ..application.provider_settings.service import ProviderSettingsService
     from ..application.user_profile.automation_operations import (
         AutomationAdministrationFactory,
         AutomationInventoryReader,
@@ -192,22 +190,6 @@ def _build_modelo_aggregate_operation_ports(*, profile_id: str) -> ModeloAggrega
         retencion_observation_repository=build_retencion_observation_ports(bucket_id=profile_id).repository,
         percepcion_observation_repository=build_percepcion_observation_ports(bucket_id=profile_id).repository,
         withholding_observation_service=build_withholding_observation_service(bucket_id=profile_id),
-    )
-
-
-def _provider_settings_service(profile_id: UUID) -> ProviderSettingsService:
-    """Bind the provider-settings service to the worker's exact profile and this package's storage mode."""
-    from ..adapters.local_runtime.agent_provider_catalog import process_provider_catalog_source
-    from ..adapters.persistence.provider_settings.store import build_provider_settings_store
-    from ..application.provider_settings.service import ProviderSettingsService
-    from ..core.storage_environment import storage_mode
-
-    settings = load_settings()
-    return ProviderSettingsService(
-        store=build_provider_settings_store(bucket_id=str(profile_id), settings=settings),
-        catalog_source=process_provider_catalog_source(),
-        environment=os.environ,
-        storage_mode=storage_mode().mode,
     )
 
 
@@ -660,28 +642,6 @@ def _workbench_generation_operation(inputs: OperationCompositionInputs) -> Opera
 
     definition = build_workbench_generation_operation_definition(inputs.workbench_generation_reader)
     return _built((definition,), (build_workbench_generation_operation_registration(definition),))
-
-
-def _provider_settings_registered_operations(inputs: OperationCompositionInputs) -> OperationGroupBuild:
-    from ..application.provider_settings.registered_operations import (
-        ProviderSettingsOperationPorts,
-        build_provider_settings_change_definitions,
-        build_provider_settings_change_registrations,
-        build_provider_settings_status_definition,
-        build_provider_settings_status_registration,
-    )
-
-    del inputs
-    ports = ProviderSettingsOperationPorts(service=_provider_settings_service)
-    status = build_provider_settings_status_definition(ports)
-    changes = build_provider_settings_change_definitions(ports)
-    return _built(
-        (status, *changes),
-        (build_provider_settings_status_registration(status), *build_provider_settings_change_registrations(changes)),
-    )
-
-
-# -- assets, inventory and registers -----------------------------------------------------------------------------------
 
 
 def _actividad_asset_registered_operations(inputs: OperationCompositionInputs) -> OperationGroupBuild:
@@ -1524,8 +1484,8 @@ def _modelo_query_read_operation(inputs: OperationCompositionInputs) -> Operatio
     )
 
 
-def _modelo_mcp_query_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
-    from ..application.modelo.mcp_query_operation import (
+def _modelo_typed_query_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    from ..application.modelo.typed_query_operation import (
         build_modelo_bindings_resolve_typed_definition,
         build_modelo_bindings_resolve_typed_registration,
         build_modelo_readiness_summary_definition,
@@ -2899,7 +2859,7 @@ _OPERATION_COMPOSITION_GROUPS: Mapping[str, _GroupComposer] = {
     "application.modelo.m303_attestation_operation": _modelo_m303_attestation_operation,
     "application.modelo.m360_solicitud_operation": _modelo_m360_solicitud_operation,
     "application.modelo.maritime_preview_operation": _modelo_maritime_preview_operation,
-    "application.modelo.mcp_query_operation": _modelo_mcp_query_operation,
+    "application.modelo.typed_query_operation": _modelo_typed_query_operation,
     "application.modelo.metadata_read_operation": _modelo_metadata_read_operation,
     "application.modelo.modelo_spreadsheet_operation": _modelo_spreadsheet_operation,
     "application.modelo.operation_definitions": _modelo_operation_definitions,
@@ -2927,7 +2887,6 @@ _OPERATION_COMPOSITION_GROUPS: Mapping[str, _GroupComposer] = {
     "application.overview.pipeline_operation": _overview_pipeline_operation,
     "application.overview.read_operation": _overview_read_operation,
     "application.prorrata_register.registered_operations": _prorrata_register_registered_operations,
-    "application.provider_settings.registered_operations": _provider_settings_registered_operations,
     "application.review.read_registration": _review_read_registration,
     "application.user_profile.archive_operation": _user_profile_archive_operation,
     "application.user_profile.automation_operations": _user_profile_automation_operations,

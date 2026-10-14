@@ -6,13 +6,14 @@ import pytest
 import typer.core
 from typer.testing import CliRunner
 
+from cadrumo_client.commands.graph import CommandSpecGraph
+from cadrumo_client.commands.shared_contracts import SchemaState
+from cadrumo_client.commands.stdio import disable_rich_cli_rendering
+from cadrumo_client.commands.target import resolve_deferred_target
+
 from ....core.config import override_settings
 from .._app_diagnostics_command_specs import DIAGNOSTICS_COMMAND_SPECS
-from .._command_target import resolve_deferred_target
 from .._root_command_specs import ROOT_COMMAND_SPECS
-from .._stdio import disable_rich_cli_rendering
-from ..command_graph import CommandSpecGraph
-from ..command_shared_contracts import SchemaState
 from .command_runtime_support import build_command_subtree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

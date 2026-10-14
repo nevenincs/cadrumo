@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#runtime-manager-architecture'
 date: '2026-10-04'
-modified: '2026-10-13'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:5300a6b372f7e3100635ecb5f2e9a1f9da84ab0f27bf817cf4588253096dd984'
+body_hash: 'sha256:f162063af82d60144a28bc2173bf05b98c95c47629cd3ca688c00156978ba5d6'
 related:
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
   - "[[2026-10-04-runtime-manager-architecture-requirements-research]]"
@@ -96,7 +96,7 @@ The supervisor must not widen authority. The MCP adapter "must not stop a shared
 Unconfirmed work keeps its lease until normal expiry. The settle must fit inside the platform's session-end budget (*hypothesis*: 3 s).
 
 **Exit reasons.**
-- The table is owned by `src/cadrumo/application/runtime/contracts.py` and projected to Rust through the contract generator.
+- The table is owned by `src/cadrumo_client/contracts/contracts.py` and projected to Rust through the contract generator.
 - It reserves Python's `1`, argparse's `2`, CPython's `120`, the native host's `120`-`124`, `STATUS_CONTROL_C_EXIT` and other NTSTATUS crash codes, and POSIX signal exits.
 - CPython's own configuration and argv paths can exit with `1` or `2` before the runtime runs. The supervisor reads those as launch failures, never as runtime-defined reasons.
 

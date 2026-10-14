@@ -21,13 +21,13 @@ class ManagerEvidence(TypedDict):
 def runtime_faults(path: Path) -> list[dict[str, str | int]]:
     """Retain bounded public fault types and only recognized source coordinates."""
     origins = {
-        "cadrumo/adapters/local_runtime/windows_native_io.py": (
+        "cadrumo_client/transport/windows_native_io.py": (
             "windows_native_io",
             {"windows_deadline_milliseconds", "finish_windows_io"},
         ),
-        "cadrumo/adapters/local_runtime/windows_channel.py": ("windows_channel", {"read_exact", "write_all"}),
+        "cadrumo_client/transport/windows_channel.py": ("windows_channel", {"read_exact", "write_all"}),
         "filelock/_api.py": ("filelock_api", {"acquire"}),
-        "cadrumo/application/runtime/deadline_budget.py": ("deadline_budget", {"remaining_budget"}),
+        "cadrumo_client/contracts/deadline_budget.py": ("deadline_budget", {"remaining_budget"}),
     }
     faults: list[dict[str, str | int]] = []
     if not path.is_file():

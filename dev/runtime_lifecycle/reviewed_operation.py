@@ -49,24 +49,26 @@ from .caller_owned_root import (
     require,
     run_cli,
 )
-from .live_sign_in import (
-    Holder,
+from .mcp_proof_support import (
     McpSession,
-    Profile,
-    acceptance_failure,
     ask_and_decide,
-    create_profile,
     execute,
-    identify_profile,
     local_model,
     mcp_session,
     model_store,
     observe,
-    package_identity,
     settled,
+)
+from .proof_support import (
+    Profile,
+    acceptance_failure,
+    create_profile,
+    identify_profile,
+    package_identity,
     started_processes,
     state_taxpayer,
 )
+from .session_holder import RuntimeSessionHolder
 
 _PROFILE = "reviewed-operation-acceptance"
 _REJECTED = "ledger.transaction.llm_suggestion.rejected"
@@ -276,22 +278,27 @@ async def run(programs: Programs, package: Path | None, scratch: Path, *, models
     root, secret_store = scratch / "storage", scratch / "secrets"
     secret_store.mkdir(parents=True)
     environment = consumer_environment(root, secret_store)
-    log = scratch / "processes.log"
-    profile = create_profile(programs, environment, _PROFILE, log)
+    profile = create_profile(programs, environment, _PROFILE)
 
     with caller_owned_runtime(programs, environment, scratch / "runtime-stderr.log") as runtime:
         ready = runtime.ready()
         receipt.record("runtime_ready", product_version=ready.get("product_version"))
-        profile = identify_profile(programs, environment, profile, log)
+        profile = identify_profile(programs, environment, profile)
         state_taxpayer(programs, environment, profile)
         receipt.record("profile_ready")
         with local_model(scratch, models) as available:
             if not available:
                 receipt.unproven.append("reviewed operation: no local qwen3:1.7b model in the given store")
             else:
-                holder = Holder(programs, environment, profile, log)
+                if profile.profile_id is None:
+                    raise AcceptanceError("created profile has no verified identity")
+                holder = RuntimeSessionHolder(
+                    programs.runtime,
+                    profile_id=profile.profile_id,
+                    environment=environment,
+                    password=bytearray(profile.password, "utf-8"),
+                )
                 try:
-                    holder.event("held")
                     async with mcp_session(programs, environment, scratch) as agent:
                         is_error, content = await ask_and_decide(
                             holder, agent, approve=True, receipt=receipt, step="attended"
@@ -303,11 +310,10 @@ async def run(programs: Programs, package: Path | None, scratch: Path, *, models
                             receipt.unproven.append(
                                 "reviewed operation: the package was built without the optional llm extra"
                             )
-                    holder.close_input()
-                    reason, exit_code = holder.finish()
-                    require(reason == "input_closed" and exit_code == 0, f"holder: {reason} {exit_code}")
+                    closed = holder.command("close")
+                    require(closed.get("kind") == "session_closed", "runtime did not acknowledge held-session closure")
                 finally:
-                    holder.stop()
+                    holder.close()
         stopped = runtime.stop()
         require(stopped == 64, f"runtime exit: {stopped}")
         receipt.record("runtime_stopped", exit_code=stopped)

@@ -1,7 +1,7 @@
 """The filing-baseline refusal must name flags the CLI actually accepts.
 
 The refusal it feeds tells an operator to add the named flags and re-run. This
-CLI's operator is an autonomous agent that follows that instruction literally,
+CLI's operator is an autonomous automation that follows that instruction literally,
 so a dotted profile path reaching the message is unrecoverable: it does not
 parse as an option. These gates tie the refusal's vocabulary to the real
 :mod:`cadrumo.application.wizard` option surface.

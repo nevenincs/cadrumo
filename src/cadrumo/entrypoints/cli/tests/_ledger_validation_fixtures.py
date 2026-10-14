@@ -1,16 +1,16 @@
-"""Canonical active-bucket fixture for ledger validation CLI tests."""
+"""Tax ledger validation fixture declarations through an injected world port."""
 
 from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
-from ._ledger_validation_support import open_bucket_session
+from .cli_fixture_worlds import CliWorldProvider
 
 
 @pytest.fixture
-def bucket(tmp_path: Path) -> Iterator[None]:
-    with open_bucket_session(tmp_path):
+def bucket(tmp_path: Path, cli_world_provider: CliWorldProvider) -> Iterator[None]:
+    with cli_world_provider.backend("validation", tmp_path):
         yield
 
 

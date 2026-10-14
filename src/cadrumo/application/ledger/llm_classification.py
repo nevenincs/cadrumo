@@ -75,7 +75,7 @@ from ...domain.transactions.llm import (
 )
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.service import set_classification
-from ..operations.execution_actor import actor_label_is_an_agents
+from ..operations.execution_actor import actor_label_is_automation
 from .action_ports import LedgerActionPorts
 from .actions_common import (
     build_ledger_bucket_event,
@@ -659,7 +659,7 @@ def apply_llm_classification(
         classified_by=suggestion.provenance,
         # Accepting a proposal is the decision of whoever accepted it.
         origin=written_classification_origin(
-            by_agent=actor_label_is_an_agents(actor), classified_by=suggestion.provenance
+            by_automation=actor_label_is_automation(actor), classified_by=suggestion.provenance
         ),
         reason=suggestion.reason,
         confidence=suggestion.confidence,

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.application.operations.registry import OperationPublicDefinitionDescriptionV1
+from cadrumo_client.transport.frontend_client import FrontendClient
 
 
 class OperationContractCache:
@@ -29,7 +29,7 @@ class OperationContractCache:
 
     def description(
         self,
-        client: RuntimeFrontendClient,
+        client: FrontendClient,
         definition_id: str,
         *,
         deadline: float,
@@ -55,7 +55,7 @@ class OperationContractCache:
         self._entries[definition_id] = description
         return description
 
-    def _bind(self, client: RuntimeFrontendClient) -> None:
+    def _bind(self, client: FrontendClient) -> None:
         owner = (client.profile_id, client.session_id)
         if owner != self._owner:
             self._entries.clear()

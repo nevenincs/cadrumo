@@ -189,21 +189,13 @@ class OperationReconciliationPolicy(StrEnum):
 
 
 class OperationFrontendProjection(StrEnum):
-    """Product-owned identities of the frontends an operation is submitted from.
+    """Authenticated human and delegated frontend identities."""
 
-    Every registered operation is open to every frontend, so a definition
-    declares none. The identity names where one submission came from.
-
-    The command line and the terminal interface are the person's frontends.
-    MCP and the agent host are an agent's: the agent host is the launcher that
-    serves the desktop's agent, and it is admitted only by resuming the
-    person's stored sign-in.
-    """
-
-    AGENT_HOST = "agent-host"
     CLI = "cli"
-    MCP = "mcp"
     TUI = "tui"
+    DESKTOP = "desktop"
+    EXTERNAL_CLIENT = "external-client"
+    INSTALLED_SERVICE = "installed-service"
 
 
 from . import operation_definition as _operation_definition  # noqa: E402 — the enum must exist before model binding

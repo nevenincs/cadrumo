@@ -5,7 +5,7 @@ through :func:`~application.provisioning.probe_hardware_profile`'s own
 injection arguments, so the production model construction, the production
 binding-arena rule and the production comparison all run -- while nothing about
 this host's actual memory or device state (which changes minute to minute under
-an agent fleet) can reach a result. No model is loaded, pulled or invoked.
+an automation fleet) can reach a result. No model is loaded, pulled or invoked.
 
 The matrix covers four axes and their interactions: the measured tier
 (unmeasured, constrained, modest, capable), the licence posture (commercial and

@@ -39,6 +39,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict
 
+from cadrumo_client.contracts.contracts import RefusalError
+
 from ...core.async_cleanup import has_async_cleanup_failure
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.errors.hierarchy import InternalInvariantError
@@ -53,7 +55,6 @@ from ...domain.calculations.registry.schema import (
     ModeloRevision,
 )
 from ..modelo.filing_chain_reconciliation import FilingReconciliationResult
-from ..runtime.contracts import RuntimeRefusalError
 from ..storage.sync_runs.persist import record_sync_run
 from ..storage.sync_runs.records import (
     SyncRunRecordRepositoryProtocol,
@@ -309,7 +310,7 @@ async def _walk_or_failure_row(
             year=year,
             timeout_ms=timeout_ms,
         )
-    except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
+    except (ProfileAccessRefusedError, AutomationCustodyError, RefusalError):
         raise
     except Exception as exc:
         if has_async_cleanup_failure(exc):
@@ -844,7 +845,7 @@ async def _capture_filed_declaration(
                 declaration,
                 artefact_sink=None if dry_run else ports.observation_persistence.persist_artefact,
             )
-    except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
+    except (ProfileAccessRefusedError, AutomationCustodyError, RefusalError):
         raise
     except Exception as exc:
         await _record_filed_declaration_capture_failure(

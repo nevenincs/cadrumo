@@ -157,7 +157,7 @@ def test_every_ratio_operation_is_period_independent_and_mutations_require_commi
         contracts.LEDGER_RATIOS_VALIDATE_OPERATION_DEFINITION_ID,
     ],
 )
-def test_every_ratio_read_is_admitted_on_the_mcp_frontend_without_a_commit_door(definition_id: str) -> None:
+def test_every_ratio_read_is_admitted_on_the_external_client_frontend_without_a_commit_door(definition_id: str) -> None:
     registry, registrations = _registry()
     registration = registrations[definition_id]
 
@@ -168,12 +168,12 @@ def test_every_ratio_read_is_admitted_on_the_mcp_frontend_without_a_commit_door(
             profile_id=_PROFILE,
             destination_id=uuid4(),
             action=AccessAction.SUBMIT,
-            frontend=OperationFrontendProjection.MCP,
+            frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
             contract=registration.contract,
             published_authority=Availability.AVAILABLE,
         ),
     )
-    assert resolved.request.frontend is OperationFrontendProjection.MCP
+    assert resolved.request.frontend is OperationFrontendProjection.EXTERNAL_CLIENT
     assert resolved.request.profile_id == _PROFILE
     assert resolved.request.period_independent is True
     assert AccessAction.COMMIT not in resolved.policy.actions
@@ -186,8 +186,8 @@ def test_every_ratio_read_is_admitted_on_the_mcp_frontend_without_a_commit_door(
         contracts.LEDGER_RATIOS_UNSET_OPERATION_DEFINITION_ID,
     ],
 )
-@pytest.mark.parametrize("frontend", [OperationFrontendProjection.MCP, OperationFrontendProjection.CLI])
-def test_ratio_writes_are_admitted_on_the_mcp_and_cli_frontends_with_a_commit_door(
+@pytest.mark.parametrize("frontend", [OperationFrontendProjection.EXTERNAL_CLIENT, OperationFrontendProjection.CLI])
+def test_ratio_writes_are_admitted_on_the_external_client_and_cli_frontends_with_a_commit_door(
     definition_id: str, frontend: OperationFrontendProjection
 ) -> None:
     registry, registrations = _registry()

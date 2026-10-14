@@ -25,7 +25,9 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Static
 from textual.worker import Worker, WorkerCancelled, WorkerFailed
 
-from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from cadrumo_client.contracts.contracts import RefusalError
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
 from ....application.operations.frontend_projection import OperationPublicProjectionV1
 from ....application.operations.frontend_requests import (
     OperationCancellationRefusalCode,
@@ -43,12 +45,11 @@ from ....application.operations.interactions import (
     OperationResponseIntentValue,
 )
 from ....application.operations.models import OperationId, OperationRevision
-from ....application.runtime.contracts import RuntimeRefusalError
 from ....core.i18n.render import tr
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import OperationLifecycle
+from ....core.operator_notice_messages import operation_notice_message
 from ....core.time.clock import now
-from ...operation_notice_messages import operation_notice_message
 from ..components.theme import tokenised
 from .controller_port import OperationControllerPort, OperationErrorDetailPort
 from .interactions import (
@@ -181,7 +182,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
     async def _poll_loop(self) -> None:
         try:
             await self._observe_until_stopped()
-        except (RuntimeFrontendRefusedError, RuntimeRefusalError) as error:
+        except (FrontendRefusedError, RefusalError) as error:
             self._runtime_access_lost(error)
 
     async def _observe_until_stopped(self) -> None:
@@ -228,9 +229,9 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
             return None
         return operation_error_explanation(await controller.settled_error_detail(projection))
 
-    def _runtime_access_lost(self, error: RuntimeFrontendRefusedError | RuntimeRefusalError) -> None:
+    def _runtime_access_lost(self, error: FrontendRefusedError | RefusalError) -> None:
         self._observation_stopped = True
-        code = error.reason if isinstance(error, RuntimeFrontendRefusedError) else error.reason.value
+        code = error.reason if isinstance(error, FrontendRefusedError) else error.reason.value
         self._clear_private_view(code)
 
     def _clear_private_view(self, code: str) -> None:
@@ -374,7 +375,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
             return
         try:
             result = await self._controller.cancel(expected_revision=view_model.projection.revision)
-        except (RuntimeFrontendRefusedError, RuntimeRefusalError) as error:
+        except (FrontendRefusedError, RefusalError) as error:
             self._runtime_access_lost(error)
             return
         if isinstance(result, OperationCancellationSuccessV1):
@@ -393,7 +394,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
             return
         try:
             result = await self._controller.detach(expected_revision=view_model.projection.revision)
-        except (RuntimeFrontendRefusedError, RuntimeRefusalError) as error:
+        except (FrontendRefusedError, RefusalError) as error:
             self._runtime_access_lost(error)
             return
         if isinstance(result, OperationDetachSuccessV1):
@@ -410,7 +411,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
     async def _respond(self, *, intent: OperationResponseIntentValue) -> None:
         try:
             await self._send_response(intent=intent)
-        except (RuntimeFrontendRefusedError, RuntimeRefusalError) as error:
+        except (FrontendRefusedError, RefusalError) as error:
             self._runtime_access_lost(error)
 
     async def _send_response(self, *, intent: OperationResponseIntentValue) -> None:

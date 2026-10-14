@@ -9,6 +9,9 @@ from typing import cast
 from uuid import UUID
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+)
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -74,7 +77,6 @@ from .ledger_lifecycle_operation_test_support import (
     LedgerLifecycleOperationConformanceCase,
     prepare_ledger_lifecycle_operation_conformance_case,
 )
-from .profile_persistence.verification_repository_support import build_test_certificate_secret_backend_factory
 from .prorrata_operation_test_support import (
     ProrrataOperationConformanceCase,
     prepare_prorrata_operation_conformance_case,

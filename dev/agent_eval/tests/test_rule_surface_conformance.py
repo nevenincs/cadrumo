@@ -4,9 +4,9 @@ The operator operating rules name concrete CLI verbs and JSON-envelope fields.
 If a verb is renamed or an envelope field moves and the rule is not updated in the
 same change, the operator inherits a dead instruction - the exact failure mode the
 ``cadrumo-pull-and-file-standard`` rule exists to prevent, here on the operator
-side. This gate parses every shipped operator rule, extracts each ``aeat ...``
-command path and each named envelope-spine field, and asserts they all resolve
-against the live CLI surface and the real envelope models. A rule that cites a
+side. This gate parses every shipped operator rule, extracts each declared
+program's command path and each named envelope-spine field, and asserts they all
+resolve against that program's live CLI surface and the real envelope models. A rule that cites a
 non-existent verb or field fails the gate.
 
 A second, negative gate closes the complementary black-box hole: nothing forbade
@@ -31,7 +31,8 @@ from typing import Any
 import pytest
 
 from cadrumo.application.operator_surface.contract import get_operator_surface_contract
-from cadrumo.application.operator_surface.manifest import CommandSchemaRef
+from cadrumo_client.contracts.command_ports import CommandRegistrationMetadata
+from cadrumo_client.contracts.command_program import CommandProgram
 from cadrumo.core.errors.error_codes import ErrorEnvelope
 from cadrumo.core.json_contract import (
     Notice,
@@ -40,9 +41,9 @@ from cadrumo.core.json_contract import (
     SchemaEnvelope,
 )
 from cadrumo.core.operator_action_enums import ActionArgumentStatus, ActionConditionality, NoRecoveryOutcome
-from cadrumo.entrypoints.cli.command_schema import command_schema_refs
-from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
-from cadrumo.entrypoints.cli.verb_input_schema import build_verb_input_schemas
+from cadrumo.entrypoints.cli.command_schema import command_registration_projection
+
+from ._real_cli_support import command_graph, command_program_path
 from cadrumo_harness.resources import iter_operator_rules, iter_skill_documents
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -69,59 +70,62 @@ _TEST_NAME_TOKEN = re.compile(r"^test_[A-Za-z0-9_]*$")
 
 
 def _valid_command_paths() -> frozenset[str]:
-    """Every resolvable command path, in both flattened and ``app.``-prefixed form.
-
-    Built from the live operator-surface manifest's registered command keys plus
-    every dotted prefix (each group is itself a reachable path), in both the
-    registry-key form (``modelo.work.calculate``) and the operator-facing
-    ``app.``-prefixed form (``app.modelo.work.calculate``), so a rule that writes
-    either form resolves and only a genuinely wrong verb fails.
-    """
-    schemas = command_schema_refs_via_cli()
-    valid: set[str] = {"", "aeat", "app", "config"}
-    for ref in schemas:
-        parts = ref.command.split(".")
-        for index in range(1, len(parts) + 1):
-            prefix = ".".join(parts[:index])
-            valid.add(prefix)
-            valid.add(f"app.{prefix}")
+    """Resolvable paths remain scoped to the executable whose graph declares them."""
+    valid: set[str] = set()
+    for program in CommandProgram:
+        paths: set[str] = {""}
+        for ref in command_schema_refs_via_cli(program):
+            if ref.cli_path is not None:
+                for index in range(1, len(ref.cli_path) + 1):
+                    paths.add(".".join(ref.cli_path[:index]))
+            if program is CommandProgram.AEAT:
+                # Preserve the tax registry's flattened command-key citations.
+                parts = ref.command.split(".")
+                for index in range(1, len(parts) + 1):
+                    prefix = ".".join(parts[:index])
+                    paths.add(prefix)
+                    paths.add(f"app.{prefix}")
+        valid.update(f"{program.value} {path}".rstrip() for path in paths)
     return frozenset(valid)
 
 
-def command_schema_refs_via_cli() -> tuple[CommandSchemaRef, ...]:
-    """Read registered command identities from the current CLI command graph."""
-    return command_schema_refs()
+def command_schema_refs_via_cli(
+    program: CommandProgram = CommandProgram.AEAT,
+) -> tuple[CommandRegistrationMetadata, ...]:
+    """Read registered command identities from their existing public graph projector."""
+    return command_registration_projection(command_graph(program)).commands
 
 
 @cache
-def _command_input_schemas() -> dict[str, Any]:
-    """Build inputs from the same CLI graph that owns executable command specs."""
-    return build_verb_input_schemas(tuple(reference.command for reference in command_schema_refs_via_cli()))
+def _command_input_schemas(program: CommandProgram = CommandProgram.AEAT) -> dict[str, CommandRegistrationMetadata]:
+    """Use the same typed declaration parameters that the canonical input builder consumes."""
+    return {reference.command: reference for reference in command_schema_refs_via_cli(program)}
 
 
 def _command_path_from_invocation(invocation: str) -> str | None:
-    """Project an ``aeat ...`` backtick span onto a dotted command path.
+    """Project a declared executable's backtick span onto a dotted command path.
 
-    Returns ``None`` for spans that are not an ``aeat`` command invocation. Command
-    tokens are the leading subcommand-shaped tokens after ``aeat``; collection stops
+    Returns ``None`` for spans that do not name a declared executable. Command
+    tokens are the leading subcommand-shaped tokens after the program; collection stops
     at the first flag (``--x``), placeholder (``<id>``), or argument value (``130``,
     ``1T``), which are not subcommand-shaped.
     """
     tokens = invocation.split()
-    if not tokens or tokens[0] != "aeat":
+    if not tokens or tokens[0] not in {program.value for program in CommandProgram}:
         return None
     command_tokens: list[str] = []
     for token in tokens[1:]:
         if not _SUBCOMMAND.match(token):
             break
         command_tokens.append(token)
-    return ".".join(command_tokens)
+    return f"{tokens[0]} {'.'.join(command_tokens)}".rstrip()
 
 
 def _flags_of(schema: Any) -> frozenset[str]:
     """Return every option string declared by one application input schema."""
     flags: set[str] = set()
-    for parameter in schema.parameters:
+    parameters = next((values for _, values in schema.parameters_by_language if values is not None), ())
+    for parameter in parameters:
         for option in (parameter.cli_flag, parameter.off_flag):
             if option.startswith("-"):
                 flags.add(option)
@@ -130,27 +134,27 @@ def _flags_of(schema: Any) -> frozenset[str]:
 
 def _resolve_command(tokens: Sequence[str]) -> Any | None:
     """Resolve one documented command path against the process projection."""
-    target = tuple(tokens)
+    program, target = command_program_path(tuple(tokens))
     return next(
-        (schema for schema in _command_input_schemas().values() if schema.cli_path == target),
+        (schema for schema in _command_input_schemas(program).values() if schema.cli_path == target),
         None,
     )
 
 
-def _global_flags() -> frozenset[str]:
+def _global_flags(program: CommandProgram = CommandProgram.AEAT) -> frozenset[str]:
     """Return root-level options valid on any command."""
     return frozenset(
         option
-        for parameter in COMMAND_GRAPH.root().parameters
+        for parameter in command_graph(program).root().parameters
         for option in getattr(parameter, "declarations", ())
         if isinstance(option, str) and option.startswith("-")
     ) | {"--help", "-h"}
 
 
 def _invocation_tokens(invocation: str) -> tuple[list[str], list[str]] | None:
-    """Split an ``aeat ...`` span into (command tokens, cited flag tokens)."""
+    """Split a declared executable's span into command tokens and cited flag tokens."""
     tokens = invocation.split()
-    if not tokens or tokens[0] != "aeat":
+    if not tokens or tokens[0] not in {program.value for program in CommandProgram}:
         return None
     command_tokens: list[str] = []
     consuming_path = True
@@ -162,7 +166,7 @@ def _invocation_tokens(invocation: str) -> tuple[list[str], list[str]] | None:
         consuming_path = False
         if _FLAG.match(token):
             flags.append(token)
-    return command_tokens, flags
+    return [tokens[0], *command_tokens], flags
 
 
 def _rule_documents() -> list[tuple[str, str]]:
@@ -221,7 +225,6 @@ def test_every_cited_flag_resolves() -> None:
     # Every flag a rule or skill cites on an `aeat ...` command must be a real
     # option of that command (or a root-global flag). A cited dead flag is the same
     # orphaned-instruction failure as a dead verb.
-    global_flags = _global_flags()
     failures: list[str] = []
     for name, text in _all_operator_documents():
         for span in _BACKTICK.findall(text):
@@ -236,10 +239,10 @@ def test_every_cited_flag_resolves() -> None:
                 # The verb gate already reports an unresolved command path; skip
                 # flag-checking a command that does not resolve.
                 continue
-            allowed = _flags_of(command) | global_flags
+            allowed = _flags_of(command) | _global_flags(command_program_path(tuple(command_tokens))[0])
             for flag in flags:
                 if flag not in allowed:
-                    failures.append(f"{name}: `{span}` -> unknown flag '{flag}' for `aeat {' '.join(command_tokens)}`")
+                    failures.append(f"{name}: `{span}` -> unknown flag '{flag}' for `{' '.join(command_tokens)}`")
     assert not failures, "operator docs cite non-existent CLI flags:\n" + "\n".join(failures)
 
 

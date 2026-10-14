@@ -137,40 +137,40 @@ import json, os, sys, time
 from contextlib import ExitStack
 from importlib.metadata import version
 from pathlib import Path
-from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
-from cadrumo.adapters.local_runtime.installation import runtime_installation
-from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
-from cadrumo.adapters.local_runtime.windows_process import WindowsProcessScope
-from cadrumo.application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo_client.transport.framing import VerifiedConnection
+from cadrumo_client.transport.installation import installation
+from cadrumo_client.transport.windows import WindowsEndpoint
+from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
+from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError
 
 runtime = Path(sys.argv[1]).resolve(strict=True)
 storage_root = Path(os.environ['CADRUMO_LOCAL_STORAGE_ROOT']).resolve(strict=True)
 product = version('cadrumo')
 with ExitStack() as cleanup:
-    endpoint = WindowsRuntimeEndpoint(storage_root=storage_root)
+    endpoint = WindowsEndpoint(storage_root=storage_root)
     cleanup.callback(endpoint.close)
     scope = WindowsProcessScope()
     cleanup.callback(scope.terminate, timeout=5)
-    runtime_installation(storage_root=storage_root, os_owner_id=endpoint.os_owner_id,
+    installation(storage_root=storage_root, os_owner_id=endpoint.os_owner_id,
                          storage_identity=endpoint.storage_identity)
     # Hostile interpreter variables must not reach the runtime's own isolated host.
     environment = dict(os.environ, PYTHONPATH=os.getcwd(), PYTHONHOME=os.getcwd())
     process = scope.launch(executable=runtime, directory=storage_root, environment=environment, arguments=(
         '--storage-root', str(storage_root), '--storage-identity', endpoint.storage_identity,
         '--expected-version', product))
-    expected = RuntimeClientHello(product_version=product, storage_identity=endpoint.storage_identity)
+    expected = ClientHello(product_version=product, storage_identity=endpoint.storage_identity)
     deadline = time.monotonic() + 60
     while True:
         try:
             channel = endpoint.connect(timeout=0.2, expected_image=runtime)
-            connection = VerifiedRuntimeConnection(channel, expected=expected, deadline=deadline)
+            connection = VerifiedConnection(channel, expected=expected, deadline=deadline)
             break
-        except RuntimeRefusalError as error:
-            if error.reason is not RuntimeRefusalCode.ENDPOINT_NOT_READY or time.monotonic() >= deadline:
+        except RefusalError as error:
+            if error.reason is not RefusalCode.ENDPOINT_NOT_READY or time.monotonic() >= deadline:
                 raise
             try:
                 code = process.wait(timeout=0)
-            except RuntimeRefusalError:
+            except RefusalError:
                 time.sleep(0.05)
             else:
                 raise AssertionError(f'runtime exited before serving its endpoint: {code}') from error

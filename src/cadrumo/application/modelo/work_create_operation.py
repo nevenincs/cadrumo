@@ -70,7 +70,7 @@ MODELO_WORK_CREATE_APPLICABILITY_REFUSAL_CODE = "REFUSED_MODELO_WORK_CREATE_APPL
 class ModeloWorkCreateRequest(BaseModel):
     """Private, bounded work target and operator intent for one profile.
 
-    ``actor`` is recorded as sent for a person's session. An agent's session is
+    ``actor`` is recorded as sent for a person's session. An automation's session is
     recorded under its own session label, whatever the request carries.
 
     ``allow_not_applicable`` creates the work although the profile's facts say

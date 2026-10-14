@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#mcp-purpose-authentication'
 date: '2026-09-26'
-modified: '2026-10-12'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:374ea531caeacc1672344720cc7f8305394d4766c85829f02875adfb2989e5b8'
+body_hash: 'sha256:1428fbf5de05423a5a20c17217bf9e666c36c1ffd0edd524ddd11094d2fdc213'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-reference]]"
   - "[[2026-09-26-mcp-purpose-authentication-research]]"
@@ -69,7 +69,7 @@ The user's explicit continuation accepts the revised topology in 2026-10-04-runt
 
 The MCP lets an agent discover supported operations, query the published authority, inspect authorized persisted work, perform authorized application operations, and obtain results with their provenance. Agents provide reasoning and orchestration. Cadrumo owns deterministic behavior, admission, persistence, domain policy and evidence.
 
-A local runtime is the authority for profile-session admission, grant invalidation, isolated execution and process ownership. It composes the existing application operation services for submission, observation, responses, cancellation, detach and reconciliation. CLI, TUI and MCP use that shared boundary; JSON command envelopes remain frontend projections rather than the internal dispatcher.
+The host in `src/cadrumo_runtime` is the authority for profile-session admission, grant invalidation, isolated execution and process ownership. `src/cadrumo` remains the tax application and AEAT command surface; neither it nor `src/cadrumo_client` imports the runtime host. Frontends use the shared client API in `src/cadrumo_client`, and the host composes the tax application. The `cadrumo-runtime` console binary remains the runtime entrypoint. This ownership refinement is authorized by the operator on 2026-10-14; it preserves the existing admission, custody and effect contracts. It composes the existing application operation services for submission, observation, responses, cancellation, detach and reconciliation. CLI, TUI and MCP use that shared boundary; JSON command envelopes remain frontend projections rather than the internal dispatcher.
 
 ```mermaid
 flowchart LR

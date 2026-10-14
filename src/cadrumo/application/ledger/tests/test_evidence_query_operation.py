@@ -241,7 +241,9 @@ def test_the_query_refuses_a_request_addressed_to_another_profile() -> None:
 
     with pytest.raises(ProfileAccessRefusedError) as refused:
         resolve_operation_access(
-            registry=registry, request=foreign, context=_access_context(registry, OperationFrontendProjection.MCP)
+            registry=registry,
+            request=foreign,
+            context=_access_context(registry, OperationFrontendProjection.EXTERNAL_CLIENT),
         )
 
     assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
@@ -305,7 +307,7 @@ async def test_the_person_list_still_releases_the_path_the_operator_typed(
 
 def test_the_query_result_declares_a_file_name_and_no_path_field() -> None:
     schema = LedgerEvidenceQueryProjection.model_json_schema()
-    row = schema["$defs"]["LedgerEvidenceAgentRecordProjection"]["properties"]
+    row = schema["$defs"]["LedgerEvidenceAutomationRecordProjection"]["properties"]
 
     assert set(schema["properties"]) == {"profile_id", "evidence_id", "count", "rows"}
     assert set(row) == {

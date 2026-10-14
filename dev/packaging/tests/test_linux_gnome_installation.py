@@ -11,10 +11,10 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.local_runtime.linux_gnome_lock import GNOME_LOGIN_EXTENSION_UUID
-from cadrumo.adapters.local_runtime.posix import posix_owner_uid
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.core.config import override_settings
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.posix import posix_owner_uid
+from cadrumo_runtime.adapters.linux_gnome_lock import GNOME_LOGIN_EXTENSION_UUID
 
 from .. import linux_gnome_installation
 from ..linux_gnome_installation import inspect_gnome_login_producer, install_gnome_login_producer
@@ -43,7 +43,7 @@ def _target(home: Path) -> Path:
 
 def _resources() -> dict[str, bytes]:
     return {
-        name: files("cadrumo").joinpath("_data/local_runtime/gnome_login", name).read_bytes()
+        name: files("cadrumo_runtime").joinpath("_data/gnome_login", name).read_bytes()
         for name in ("extension.js", "metadata.json")
     }
 
@@ -103,12 +103,12 @@ def test_partial_unsafe_or_conflicting_installation_is_never_replaced(isolated_h
             (target / "extension.js").symlink_to(actual)
     before = {path.name: path.read_bytes() for path in target.iterdir()}
     for operation in (inspect_gnome_login_producer, install_gnome_login_producer):
-        with pytest.raises(RuntimeRefusalError) as caught:
+        with pytest.raises(RefusalError) as caught:
             operation()
         assert caught.value.reason in {
-            RuntimeRefusalCode.UNAVAILABLE,
-            RuntimeRefusalCode.VERSION_MISMATCH,
-            RuntimeRefusalCode.PEER_UNTRUSTED,
+            RefusalCode.UNAVAILABLE,
+            RefusalCode.VERSION_MISMATCH,
+            RefusalCode.PEER_UNTRUSTED,
         }
         assert {path.name: path.read_bytes() for path in target.iterdir()} == before
     assert not any(path.name.startswith("." + GNOME_LOGIN_EXTENSION_UUID) for path in target.parent.iterdir())
@@ -131,7 +131,7 @@ def test_symlinked_component_refuses_without_touching_foreign_directory(isolated
     sentinel.write_bytes(b"unrelated owned data")
     (parent / component).symlink_to(foreign, target_is_directory=True)
     for operation in (inspect_gnome_login_producer, install_gnome_login_producer):
-        with pytest.raises(RuntimeRefusalError):
+        with pytest.raises(RefusalError):
             operation()
     assert sentinel.read_bytes() == b"unrelated owned data" and list(foreign.iterdir()) == [sentinel]
     if component != GNOME_LOGIN_EXTENSION_UUID:
@@ -144,9 +144,9 @@ def test_writable_configured_storage_root_refuses_without_publishing(isolated_ho
     storage_root.chmod(0o777)
     try:
         for operation in (inspect_gnome_login_producer, install_gnome_login_producer):
-            with pytest.raises(RuntimeRefusalError) as caught:
+            with pytest.raises(RefusalError) as caught:
                 operation()
-            assert caught.value.reason is RuntimeRefusalCode.PEER_UNTRUSTED
+            assert caught.value.reason is RefusalCode.PEER_UNTRUSTED
         assert not (storage_root / "integrations").exists()
     finally:
         storage_root.chmod(0o700)
@@ -160,9 +160,9 @@ def test_abandoned_stage_is_preserved_and_never_treated_as_success(isolated_home
     partial = stage / "extension.js"
     partial.write_bytes(b"unfinished public producer resource")
     for operation in (inspect_gnome_login_producer, install_gnome_login_producer):
-        with pytest.raises(RuntimeRefusalError) as caught:
+        with pytest.raises(RefusalError) as caught:
             operation()
-        assert caught.value.reason is RuntimeRefusalCode.UNAVAILABLE
+        assert caught.value.reason is RefusalCode.UNAVAILABLE
     assert partial.read_bytes() == b"unfinished public producer resource"
     assert not _target(isolated_home).exists()
 
@@ -171,7 +171,7 @@ def test_real_directory_publication_cannot_clobber_a_concurrent_target(isolated_
     expected = _resources()
     with linux_gnome_installation._extensions_directory(create=True) as parent:
         with (
-            pytest.raises(RuntimeRefusalError) as caught,
+            pytest.raises(RefusalError) as caught,
             linux_gnome_installation._StagedProducer(parent) as staged,
         ):
             for name, payload in expected.items():
@@ -181,7 +181,7 @@ def test_real_directory_publication_cannot_clobber_a_concurrent_target(isolated_
             sentinel = collision / "unrelated.txt"
             sentinel.write_bytes(b"concurrent owned directory")
             staged.publish(expected)
-        assert caught.value.reason is RuntimeRefusalCode.VERSION_MISMATCH
+        assert caught.value.reason is RefusalCode.VERSION_MISMATCH
     target = _target(isolated_home)
     assert list(target.iterdir()) == [target / "unrelated.txt"]
     assert (target / "unrelated.txt").read_bytes() == b"concurrent owned directory"

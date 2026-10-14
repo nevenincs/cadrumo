@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#mcp-parity'
 date: '2026-10-12'
-modified: '2026-10-13'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:23c536bafb6f2c5794b3e4c4f6bc7308a902d6ef3a6589bf1339de41c4d544fb'
+body_hash: 'sha256:e5ee415a3c47ad14df9dccf81d70bad820f5d2263624c560ddf4638ab148cfc5'
 related:
   - "[[2026-10-11-mcp-parity-full-parity-adr]]"
   - "[[2026-10-10-mcp-parity-shared-sign-in-door-adr]]"
@@ -32,18 +32,18 @@ Under the parity ruling of 2026-10-11, the records were amended so that MCP carr
 - Point 6, which that message refers to, given earlier the same day: "we should not let passwrods and screts travel in the trascscirpt or leave the local machine. There's a design concnern if the user is required to enter the password to the agents. this should nevr happen. In the cadrumo tui app th user shoul d manually login and authenbticate dand the agent should awlays operate against an iuncloed authed profile aqnd ask the user to authenticate if the profile locked or does not exist."
 - The owner on API keys, the same day: "Do not retire API keys. API keys are outside of what I just descripbed. API keys give access to the agetns cli tui, etc access to a spcific user profile. For testing, you should explciitly exercie acpi keys to verify we can access and manage access = I'm assuming the runitme manages the api access also?"
 - The runtime does manage API access. `2026-09-26-mcp-purpose-authentication-profile-access-adr` binds each key to a durable grant. In code:
-  - Issuance: `src/cadrumo/application/user_profile/automation_approval_session.py:68-81` and `:119-125`, and `src/cadrumo/entrypoints/runtime/automation_execution.py:113`.
+  - Issuance: `src/cadrumo/application/user_profile/automation_approval_session.py:68-81` and `:119-125`, and `src/cadrumo_runtime/host/automation_execution.py:113`.
   - Scope: `src/cadrumo/application/user_profile/automation_enrollment.py:56-63` and `automation_administration_service.py:64-72`.
   - Expiry: `src/cadrumo/application/user_profile/access_contracts.py:132-147`, enforced at `session_authority_policy.py:180`.
-  - Revocation: `automation_lifecycle.py:24-35` and `automation_lifecycle_service.py:362`, with the runtime wire type at `src/cadrumo/entrypoints/runtime/access_management.py:18-23`.
+  - Revocation: `automation_lifecycle.py:24-35` and `automation_lifecycle_service.py:362`, with the runtime wire type at `src/cadrumo_runtime/host/access_management.py:18-23`.
   - The person's commands: `config automation` (`src/cadrumo/entrypoints/cli/config/runtime_access_management_specs.py:52-317`).
   - Launch by reference: `cadrumo-mcp` takes `--profile-id` and `--credential-reference` (`src/cadrumo_harness/mcp/main.py:43-52`).
 - In code the MCP server today does the following:
   - It takes a typed secret or a secret reference on `session`, `execute` and `installation` (`src/cadrumo_harness/mcp/protocol_contract.py:426-427`, `:491-550`, `:229-260`).
   - It signs in by password or key (`src/cadrumo_harness/mcp/runtime_adapter.py:679-700`).
   - It runs an enrollment flow in which the agent proposes its own scope, and the key is delivered into the installed automation store for the agent to name in `authenticate` (`runtime_adapter.py:747-890`).
-  - It serves installation acts across profiles (`src/cadrumo/application/runtime/installation_requests.py:89-110`).
-- The runtime keeps a host per profile (`src/cadrumo/entrypoints/runtime/profile_connections.py:116`, `profile_connection_admission.py:112`). A sign-in to one profile leaves another profile's sign-in in place (`src/cadrumo/application/user_profile/login_session.py:128-130`; `2026-10-04-application-sign-in-adr`, the 2026-10-06 profiles amendment). Several profiles can therefore be signed in at once today.
+  - It serves installation acts across profiles (`src/cadrumo_client/contracts/installation_requests.py:89-110`).
+- The runtime keeps a host per profile (`src/cadrumo_runtime/host/profile_connections.py:116`, `profile_connection_admission.py:112`). A sign-in to one profile leaves another profile's sign-in in place (`src/cadrumo/application/user_profile/login_session.py:128-130`; `2026-10-04-application-sign-in-adr`, the 2026-10-06 profiles amendment). Several profiles can therefore be signed in at once today.
 - The desktop shell polls `config sign-in-status` (`native/desktop/src-tauri/src/shell/sign_in/mod.rs:618`, `observation.rs:14-30`). It withholds the TUI and shows its sign-in view when the person is signed out, when the state is unknown, or when no profile exists (`native/desktop/frontend/src/shell/signIn.ts:63-95`, `native/desktop/frontend/src/App.tsx:187-188`). It hands `PROFILE_LOCKED` to the TUI (`signIn.ts:97-101`). It has no event of its own for an expired or inactive sign-in, so it learns of one only when the poll reports the sign-in absent.
 
 ## Considered options
@@ -129,7 +129,7 @@ The owner ruled it first-hand and in terms that leave no exception. The data sit
 
 Accepted 2026-10-12 on the owner's first-hand instruction of that day, "Please, on 6, revise all adrs and do not allow this to happen".
 
-Amended 2026-10-12 under `2026-10-12-mcp-parity-attended-live-sign-in-adr`: constraint 2 gains a third way to admit an MCP connection. A person holding a live, unpersisted password sign-in with `aeat config sign-in-hold` approves that exact connection, identified by the process the kernel names, and it receives an attended child of the person's session. The agent still never authenticates, names a credential or sees a secret. The child ends when the person's session ends.
+Amended 2026-10-12 under `2026-10-12-mcp-parity-attended-live-sign-in-adr`: constraint 2 gains a third way to admit an MCP connection. A person holding a live, unpersisted password sign-in with `cadrumo-runtime session hold --profile-id UUID --password-stdin` approves that exact connection, identified by the process the kernel names, and it receives an attended child of the person's session. The agent still never authenticates, names a credential or sees a secret. The child ends when the person's session ends.
 
 Amended 2026-10-12 on the owner's first-hand ruling "i followw your recommedation", which accepted the orchestrator's recommendations. The four defaults applied while the owner was away are confirmed and no longer provisional: (a) the MCP key-request flow is removed; (b) signing in to profile B signs A out, now in constraint 6, where it replaces the hypothesis that a second sign-in might be refused; (c) with no live sign-in and no valid key MCP answers only the handshake, the tool list and `status`, as constraint 3 says, the public reference and corpus queries included among what is refused; (d) an agent session timing out ends only that agent session, as constraint 4 and the consequences say. Constraint 7 gains the key issued for an agent and its release to the client presenting it, and constraint 9 the summarised disclosures with a paged full read. The off-host consent record keeps its schema: since commit `3f15f3bdcc` MCP cannot give off-host consent, so every recorded off-host consent is the person's. The attended route of `2026-10-12-mcp-parity-attended-live-sign-in-adr` stays as accepted.
 

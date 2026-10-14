@@ -29,7 +29,7 @@ You need:
   ```
 
 - the passphrase that protects your local store; the tool prompts for it.
-- the `browser` extra, because `aeat config auth login` and every live read
+- the `browser` extra, because `cadrumo-runtime config auth login` and every live read
   drive a browser. Install it with `pip install "cadrumo[browser]"`, or follow
   [Install Cadrumo](../workstation-setup.md).
 
@@ -68,7 +68,7 @@ The command stores the provider choice and the certificate path, never a
 secret. Supply the secrets separately:
 
 - `certificate`: bind the passphrase to a registered certificate source with
-  `aeat config auth certificate secret set`, or set the
+  `cadrumo-runtime config auth certificate secret set`, or set the
   `CADRUMO_CERTIFICATE_PASSWORD_SECRET` environment variable.
 - `clave_permanente`: set `CADRUMO_CLAVE_PERMANENTE_DNI_NIE` and
   `CADRUMO_CLAVE_PERMANENTE_PASSWORD`.
@@ -142,7 +142,7 @@ The report now shows the renewed certificate's later expiry date.
 ## Manage several certificates
 
 If you act for several entities, register one certificate per entity. Do not
-reconfigure `aeat config auth configure --file` every time you switch.
+reconfigure `cadrumo-runtime config auth configure --file` every time you switch.
 
 Register each certificate under a name:
 
@@ -190,7 +190,7 @@ re-register it under its existing name:
 ```{cli-sequence} authenticate-certificate-reregister
 ```
 
-Re-run `aeat config auth certificate check` to confirm the new expiry date.
+Re-run `cadrumo-runtime config auth certificate check` to confirm the new expiry date.
 
 (acquire-or-verify-a-live-session)=
 ## Start or check a live session
@@ -285,7 +285,7 @@ Show what is recorded for the active profile:
 :verify: Confirm the tool shows the apoderado configuration recorded locally.
 ```
 
-`aeat config auth apoderado check` is the command for the live check, but the live check is not available. It refuses with `The live check of representatives is unavailable, or contact with the AEAT failed.` Use `aeat config auth apoderado status` for the offline configuration read.
+`cadrumo-runtime config auth apoderado check` is the command for the live check, but the live check is not available. It refuses with `The live check of representatives is unavailable, or contact with the AEAT failed.` Use `cadrumo-runtime config auth apoderado status` for the offline configuration read.
 
 Remove the configuration when the representation ends:
 
@@ -302,6 +302,6 @@ unaffected. Revoke it through AEAT's own procedures.
 - [Set up your taxpayer profile](profile-setup.md)
 - [Diagnose and repair your local setup](troubleshooting.md)
 
-Run `aeat config auth test` before each live-read task. Follow [Renew your
+Run `cadrumo-runtime config auth test` before each live-read task. Follow [Renew your
 certificate before it expires](#renew-your-certificate-before-it-expires) when
 the command reports an expiry warning.

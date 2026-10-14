@@ -179,7 +179,7 @@ class _FoldRequirementBucket:
 #: and :attr:`RegistryFoldRequirement.dependency_treatment` -- the grouping key
 #: below carries the exact values those fields are ultimately built from
 #: (:attr:`RelationPrefillProvider.dependency_role`,
-#: :attr:`~cadrumo.domain.calculations.registry.DependencyClassificationDefinition.treatment`),
+#: :attr:`~cadrumo.domain.calculations.registry.schema_revision_members.DependencyClassificationDefinition.treatment`),
 #: so it is typed to match rather than widened to a bare ``str``.
 type _FoldRequirementKey = tuple[
     str,

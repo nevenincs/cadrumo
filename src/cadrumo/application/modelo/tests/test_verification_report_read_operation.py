@@ -418,7 +418,7 @@ def test_access_scopes_filtered_reads_and_tax_value_disclosure_to_exact_profile_
         assert mismatch.value.reason is AccessDenialCode.PROFILE_MISMATCH
 
 
-def test_report_reads_are_admitted_on_the_mcp_frontend_without_a_commit_door() -> None:
+def test_report_reads_are_admitted_on_the_external_client_frontend_without_a_commit_door() -> None:
     with bundled_indexed_authority().operation() as operation:
         revision, unit = _revision_and_unit(operation, "1T")
         report = _report(revision, ordinal=5, run_at=_NOW, blocking=True)
@@ -443,9 +443,11 @@ def test_report_reads_are_admitted_on_the_mcp_frontend_without_a_commit_door() -
             resolved = resolve_operation_access(
                 registry=registry,
                 request=_request(definition_id=definition.definition_id, payload=payload),
-                context=_context(registration, operation=operation, frontend=OperationFrontendProjection.MCP),
+                context=_context(
+                    registration, operation=operation, frontend=OperationFrontendProjection.EXTERNAL_CLIENT
+                ),
             )
-            assert resolved.request.frontend is OperationFrontendProjection.MCP
+            assert resolved.request.frontend is OperationFrontendProjection.EXTERNAL_CLIENT
             assert resolved.request.profile_id == _PROFILE
             assert AccessAction.COMMIT not in resolved.policy.actions
 

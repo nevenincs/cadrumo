@@ -7,8 +7,10 @@ import time
 from collections.abc import Callable
 from uuid import UUID
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
 from ....application.modelo.declarations_calendar import DeclarationsCalendarEntryRefV1
 from ....application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from ....application.modelo.work_create_operation import (
@@ -25,7 +27,6 @@ from ....application.operations.public_period import PublicPeriod
 from ....application.operations.registry import OperationFrontendProjection
 from ....application.operations.schema_identity import OperationSchemaIdentityV1
 from ....application.operator_actions.models import DeclaredNextAction
-from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....application.workbench_generation_contracts import WorkbenchGenerationV1
 from ....core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
 from ....core.operations import (
@@ -69,7 +70,7 @@ def _admitted_terminal_details(
         and refusal_code == MODELO_WORK_CREATE_APPLICABILITY_REFUSAL_CODE
     ):
         return condition, state.effect, refusal_code
-    raise RuntimeFrontendRefusedError(refusal_code or state.failure_error_code or "operation_not_successful")
+    raise FrontendRefusedError(refusal_code or state.failure_error_code or "operation_not_successful")
 
 
 async def _read_create_projection(
@@ -83,7 +84,7 @@ async def _read_create_projection(
 def _result_matches_request(
     result: ModeloWorkCreateProjection,
     payload: ModeloWorkCreateRequest,
-    client: RuntimeFrontendClient,
+    client: FrontendClient,
     session_id: UUID,
 ) -> bool:
     return not (
@@ -138,7 +139,7 @@ def _validate_create_outcome(
     outcome = result.outcome
     if isinstance(outcome, ModeloWorkCreateRefusal):
         if not _is_admitted_applicability_refusal(outcome, payload, condition, effect, refusal_code):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         raise ModeloLifecycleActionUnavailableError(
             translated_message="tui.declarations.work_create.refusal.not_applicable",
             context={
@@ -151,7 +152,7 @@ def _validate_create_outcome(
             },
         )
     if not _is_valid_create_success(outcome, payload, condition, effect, refusal_code):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     return outcome
 
 
@@ -165,7 +166,7 @@ def _refreshed_declaration(refreshed: object, work_unit_id: str) -> Declarations
 
 
 async def _create(
-    client: RuntimeFrontendClient,
+    client: FrontendClient,
     payload: ModeloWorkCreateRequest,
     session_id: UUID,
     refresh_after_success: Callable[[], object],
@@ -188,7 +189,7 @@ async def _create(
         condition, effect, refusal_code = _admitted_terminal_details(state)
         result = await _read_create_projection(controller, state)
         if not _result_matches_request(result, payload, client, session_id):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         outcome = _validate_create_outcome(result, payload, controller, condition, effect, refusal_code)
         refreshed = await asyncio.to_thread(refresh_after_success)
         # The declaration just created or reopened, as the refreshed generation
@@ -206,10 +207,10 @@ async def _create(
             raise
         code = (
             error.reason.value
-            if isinstance(error, RuntimeRefusalError)
+            if isinstance(error, RefusalError)
             else error.reason
-            if isinstance(error, RuntimeFrontendRefusedError)
-            else RuntimeRefusalCode.UNAVAILABLE.value
+            if isinstance(error, FrontendRefusedError)
+            else RefusalCode.UNAVAILABLE.value
         )
         raise ModeloLifecycleActionUnavailableError(
             code,
@@ -223,18 +224,18 @@ async def _create(
 
 
 def compose_runtime_work_create_handoff(
-    client: RuntimeFrontendClient,
+    client: FrontendClient,
     *,
     refresh_after_success: Callable[[], object],
 ) -> ModeloWorkCreateHandoffV1:
     """Retain the originating profile and session for the declarations form."""
     if client.frontend is not OperationFrontendProjection.TUI:
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     profile_id, session_id = client.profile_id, client.session_id
 
     def create(modelo: str, filing_year: int, period: Period, /) -> ModeloWorkCreateResultV1:
         if client.profile_id != profile_id or client.session_id != session_id:
-            raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+            raise RefusalError(RefusalCode.CONNECTION_CLOSED)
         if not FILING_YEAR_MIN <= filing_year <= FILING_YEAR_MAX:
             raise ModeloLifecycleActionUnavailableError(translated_message="tui.declarations.work_create.refusal.year")
         if period.filing_year != filing_year:
@@ -261,7 +262,7 @@ def compose_runtime_calendar_create_handoff(create: ModeloWorkCreateHandoffV1) -
 
     def recover(action: DeclaredNextAction, entry: DeclarationsCalendarEntryRefV1, /) -> None:
         if action.action.action_id != "operator.modelo.work.create":
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         create(str(entry.modelo), entry.filing_year, entry.period)
 
     return recover

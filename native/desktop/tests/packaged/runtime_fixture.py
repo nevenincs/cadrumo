@@ -17,19 +17,19 @@ from importlib.metadata import version
 from pathlib import Path
 from uuid import UUID
 
-from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
-from cadrumo.adapters.local_runtime.installation import runtime_installation
-from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
-from cadrumo.adapters.local_runtime.windows_process import WindowsProcessScope
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import (
     delete_profile_session,
     profile_session_path,
 )
-from cadrumo.application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.user_profile.profile_pointer import observe_active_profile_pointer
 from cadrumo.core.paths import effective_storage_root
 from cadrumo.domain.calculations.registry.authority_location import published_authority_generation
 from cadrumo.entrypoints.adapter_composition import profile_free_adapter_composition
+from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError
+from cadrumo_client.transport.framing import VerifiedConnection
+from cadrumo_client.transport.installation import installation
+from cadrumo_client.transport.windows import WindowsEndpoint
+from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
 
 
 def emit(record: dict[str, str | int]) -> None:
@@ -55,11 +55,11 @@ def main() -> None:
         runtime = Path(sys.argv[1]).resolve(strict=True)
         product = version("cadrumo")
         with ExitStack() as cleanup:
-            endpoint = WindowsRuntimeEndpoint(storage_root=root)
+            endpoint = WindowsEndpoint(storage_root=root)
             cleanup.callback(endpoint.close)
             scope = WindowsProcessScope()
             cleanup.callback(scope.terminate, timeout=10)
-            runtime_installation(
+            installation(
                 storage_root=root, os_owner_id=endpoint.os_owner_id, storage_identity=endpoint.storage_identity
             )
             process = scope.launch(
@@ -75,7 +75,7 @@ def main() -> None:
                     product,
                 ),
             )
-            expected = RuntimeClientHello(
+            expected = ClientHello(
                 product_version=product,
                 storage_identity=endpoint.storage_identity,
                 authority_generation=published_authority_generation(),
@@ -84,16 +84,16 @@ def main() -> None:
             while True:
                 try:
                     channel = endpoint.connect(timeout=0.2, expected_image=runtime)
-                    connection = VerifiedRuntimeConnection(channel, expected=expected, deadline=deadline)
+                    connection = VerifiedConnection(channel, expected=expected, deadline=deadline)
                     connection.close()
                     break
-                except RuntimeRefusalError as error:
-                    if error.reason is not RuntimeRefusalCode.ENDPOINT_NOT_READY or time.monotonic() >= deadline:
+                except RefusalError as error:
+                    if error.reason is not RefusalCode.ENDPOINT_NOT_READY or time.monotonic() >= deadline:
                         raise
                     try:
                         code = process.wait(timeout=0)
-                    except RuntimeRefusalError as waiting:
-                        if waiting.reason is not RuntimeRefusalCode.DEADLINE_EXCEEDED:
+                    except RefusalError as waiting:
+                        if waiting.reason is not RefusalCode.DEADLINE_EXCEEDED:
                             raise
                         time.sleep(0.05)
                     else:
@@ -115,8 +115,8 @@ def main() -> None:
                 emit({"kind": "profile-ready", "profileId": str(profile_id)})
             try:
                 exit_code = process.wait(timeout=0)
-            except RuntimeRefusalError as waiting:
-                if waiting.reason is not RuntimeRefusalCode.DEADLINE_EXCEEDED:
+            except RefusalError as waiting:
+                if waiting.reason is not RefusalCode.DEADLINE_EXCEEDED:
                     raise
                 emit({"kind": "runtime-alive-before-cleanup", "pid": process.pid})
             else:

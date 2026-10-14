@@ -18,10 +18,11 @@ from cadrumo.core.config import override_settings
 from cadrumo.domain.calculations.registry import authority as authority_module
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.authority_artifact import AuthorityGenerationPin
-from cadrumo_harness.mcp import corpus_query as mcp_corpus
-from cadrumo_harness.mcp.server import build_server
-from cadrumo_harness.mcp.tests.admitted_lease import admitted_adapter
-from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
+
+from .. import corpus_query as mcp_corpus
+from ..server import build_server
+from .admitted_lease import admitted_adapter
+from .session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 

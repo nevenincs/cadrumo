@@ -21,6 +21,10 @@ from uuid import UUID
 import typer
 from pydantic import ValidationError
 
+from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
+from cadrumo_client.commands.registered_operation_errors import submitted_operation_error
+from cadrumo_client.contracts.contracts import RefusalCode
+
 from ...application.cli_exception_preconditions import CliExceptionPrecondition
 from ...application.invoices.catalogue_add_contracts import (
     InvoiceAddBusinessPremisesLease,
@@ -41,7 +45,6 @@ from ...application.invoices.simplificada_advisory import (
 )
 from ...application.invoices.source_resolver import iva_category_for_operation_type
 from ...application.operations.public_scalar import PublicDecimal
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.aggregation import IntracomOperationType
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n.render import tr
@@ -77,16 +80,14 @@ from .common import (
 )
 from .common import bad, emit_envelope
 from .errors import CliRefusedBoundaryError
-from .registered_operation_contracts import RegisteredOperationCompletion
-from .registered_operation_errors import submitted_operation_error
-from .runtime_invoice_catalogue import (
+from .operation_invoice_catalogue import (
     add_invoice_catalogue,
     read_invoice_catalogue,
     remove_invoice_catalogue,
     update_invoice_catalogue,
     view_invoice_catalogue,
 )
-from .runtime_invoice_intake import submit_invoice_import, submit_invoice_wizard
+from .operation_invoice_intake import submit_invoice_import, submit_invoice_wizard
 
 
 def _snapshot_invoice_payload(snapshot: CatalogueInvoiceSnapshot) -> CatalogueInvoiceRecordPayload:
@@ -396,7 +397,7 @@ def invoice_add(
     except Exception:
         raise submitted_operation_error(
             completed.operation_id,
-            RuntimeRefusalCode.UNAVAILABLE.value,
+            RefusalCode.UNAVAILABLE.value,
             terminal_condition=completed.terminal_condition,
             effect=completed.effect,
             refusal_code=completed.refusal_code,
@@ -664,7 +665,7 @@ def invoice_list(
         receipt = read.completion
         raise submitted_operation_error(
             receipt.operation_id,
-            RuntimeRefusalCode.UNAVAILABLE.value,
+            RefusalCode.UNAVAILABLE.value,
             terminal_condition=receipt.terminal_condition,
             effect=receipt.effect,
             refusal_code=receipt.refusal_code,
@@ -698,7 +699,7 @@ def invoice_view(
         receipt = read.completion
         raise submitted_operation_error(
             receipt.operation_id,
-            RuntimeRefusalCode.UNAVAILABLE.value,
+            RefusalCode.UNAVAILABLE.value,
             terminal_condition=receipt.terminal_condition,
             effect=receipt.effect,
             refusal_code=receipt.refusal_code,
@@ -735,7 +736,7 @@ def invoice_remove(
     except Exception:
         raise submitted_operation_error(
             completed.operation_id,
-            RuntimeRefusalCode.UNAVAILABLE.value,
+            RefusalCode.UNAVAILABLE.value,
             terminal_condition=completed.terminal_condition,
             effect=completed.effect,
             refusal_code=completed.refusal_code,
@@ -813,7 +814,7 @@ def invoice_update(
     except Exception:
         raise submitted_operation_error(
             completed.operation_id,
-            RuntimeRefusalCode.UNAVAILABLE.value,
+            RefusalCode.UNAVAILABLE.value,
             terminal_condition=completed.terminal_condition,
             effect=completed.effect,
             refusal_code=completed.refusal_code,

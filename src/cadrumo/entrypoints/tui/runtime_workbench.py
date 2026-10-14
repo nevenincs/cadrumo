@@ -9,10 +9,15 @@ from typing import TYPE_CHECKING
 
 from textual.screen import Screen
 
-from ...adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
-from ...adapters.local_runtime.workbench_generation import read_workbench_generation
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_client.transport.workbench_generation import read_workbench_generation
+
 from ...application.modelo.declaration_summary import DeclarationSummaryState
-from ...application.modelo.declarations_calendar import DeclarationsCalendarEntryRefV1, DeclarationsCalendarProjectionV1
+from ...application.modelo.declarations_calendar import (
+    DeclarationsCalendarEntryRefV1,
+    DeclarationsCalendarProjectionV1,
+)
 from ...application.modelo.declarations_workspace_contracts import (
     DeclarationsWorkspaceDeclarationRefV1,
     DeclarationsWorkspaceProjectionV1,
@@ -21,7 +26,6 @@ from ...application.modelo.workbench_read import ModeloWorkbenchFormReadV1
 from ...application.operations.registry import OperationFrontendProjection
 from ...application.operator_actions.catalogue import lookup_action
 from ...application.operator_actions.models import ActionReference
-from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.search.workbench import WorkbenchDestinationAdmission, WorkbenchDestinationAdmissionState
 from ...core.config import load_settings
 from ...core.external_constants import OutputLanguage
@@ -58,7 +62,8 @@ from .runtime_ledger_import import compose_runtime_ledger_import_door
 from .runtime_own_accounts import compose_runtime_own_account_door
 
 if TYPE_CHECKING:
-    from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
+    from cadrumo_client.transport.frontend_client import FrontendClient
+
     from ...application.aeat_sync.workspace import AeatSyncWorkspaceProjectionV1
     from ...application.operations.registry import OperationRegistry
     from ...application.user_profile.overview import ProfileOverview
@@ -109,7 +114,7 @@ class _DeclarationDestination:
             captured.declarations_admission.state is not WorkbenchDestinationAdmissionState.AVAILABLE
             or declarations is None
         ):
-            raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+            raise RefusalError(RefusalCode.UNAVAILABLE)
         return declarations, captured.declarations_calendar.projection
 
     def lifecycle_door(
@@ -192,7 +197,7 @@ class RuntimeWorkbenchRoot:
 
     def __init__(
         self,
-        client: RuntimeFrontendClient,
+        client: FrontendClient,
         *,
         profile_label: str,
         output_language: OutputLanguage,
@@ -207,7 +212,7 @@ class RuntimeWorkbenchRoot:
         composes it once, however many generations this root captures.
         """
         if client.frontend is not OperationFrontendProjection.TUI:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         self._client = client
         self._operations = OperationsDestinationV1(client, OperationCatalogueSourceV1(operation_registry))
         self._profile_id, self._session_id = client.profile_id, client.session_id
@@ -223,7 +228,7 @@ class RuntimeWorkbenchRoot:
                 or self._client.frontend is not OperationFrontendProjection.TUI
             ):
                 raise AccountSessionExpiredError()
-        except (RuntimeFrontendRefusedError, RuntimeRefusalError):
+        except (FrontendRefusedError, RefusalError):
             raise AccountSessionExpiredError() from None
 
     def _read(self) -> _Capture:
@@ -233,7 +238,7 @@ class RuntimeWorkbenchRoot:
             profile = read_runtime_profile_overview(
                 self._client, profile_label=self._label, output_language=self._language
             )
-        except (RuntimeFrontendRefusedError, RuntimeRefusalError):
+        except (FrontendRefusedError, RefusalError):
             # A permission/readiness refusal does not imply expiry. A fresh
             # status check distinguishes it from a lost originating session.
             read_runtime_account_session(
@@ -244,7 +249,7 @@ class RuntimeWorkbenchRoot:
             self._client, profile_id=self._profile_id, session_id=self._session_id, profile_label=self._label
         )
         if generation.home.projection is None or profile.profile_id != str(self._profile_id):
-            raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+            raise RefusalError(RefusalCode.UNAVAILABLE)
         return _Capture(generation, profile)
 
     def _destinations(
@@ -286,7 +291,7 @@ class RuntimeWorkbenchRoot:
     ) -> dict[str, TuiScreenFactoryV1]:
         def home(context: TuiScreenContextV1) -> Screen[None]:
             if context.destination != "workbench.home" or generation.home.projection is None:
-                raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+                raise RefusalError(RefusalCode.UNAVAILABLE)
             return HomeScreen(generation.home.projection)
 
         return {"workbench.home": home, "workbench.profile": profile_factory}
@@ -295,7 +300,7 @@ class RuntimeWorkbenchRoot:
         if generation.ledger_admission.state is not WorkbenchDestinationAdmissionState.AVAILABLE:
             return None
         if generation.ledger.projection is None:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         return ledger_screen_factory(
             generation.ledger.projection,
             review_action=_action("operator.ledger.review"),
@@ -314,7 +319,7 @@ class RuntimeWorkbenchRoot:
         if generation.aeat_sync_admission.state is not WorkbenchDestinationAdmissionState.AVAILABLE:
             return None
         if generation.aeat_sync.projection is None:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         operation_handoff, operation_contracts = compose_runtime_aeat_sync_handoff(
             self._client,
             output_root=load_settings().cadrumo_filed_declarations_dir,
@@ -328,7 +333,7 @@ class RuntimeWorkbenchRoot:
                 captured.aeat_sync_admission.state is not WorkbenchDestinationAdmissionState.AVAILABLE
                 or projection is None
             ):
-                raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+                raise RefusalError(RefusalCode.UNAVAILABLE)
             return projection
 
         return aeat_sync_screen_factory(
@@ -342,7 +347,7 @@ class RuntimeWorkbenchRoot:
         generation = capture.generation
         home = generation.home.projection
         if home is None:
-            raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+            raise RefusalError(RefusalCode.UNAVAILABLE)
 
         def profile(context: TuiScreenContextV1) -> ProfileManagerScreen:
             if context.destination != "workbench.profile":

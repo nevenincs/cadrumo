@@ -22,6 +22,8 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo.entrypoints.tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
+
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -81,7 +83,6 @@ from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ..adapter_composition import build_calculation_action_ports
 from ..operation_composition import build_production_operation_registry
-from .modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

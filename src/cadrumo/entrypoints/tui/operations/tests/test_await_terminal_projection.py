@@ -9,42 +9,42 @@ from uuid import UUID
 
 import pytest
 
-from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
-from cadrumo.application.invoices.catalogue_add_contracts import (
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
+from .....application.invoices.catalogue_add_contracts import (
     INVOICE_ADD_OPERATION_DEFINITION_ID,
     InvoiceAddRequest,
 )
-from cadrumo.application.invoices.catalogue_add_operation import (
+from .....application.invoices.catalogue_add_operation import (
     build_invoice_add_definition,
     build_invoice_add_registration,
 )
-from cadrumo.application.invoices.catalogue_creation_ports import CatalogueCreationPortsFactory
-from cadrumo.application.operations.frontend_projection import (
+from .....application.invoices.catalogue_creation_ports import CatalogueCreationPortsFactory
+from .....application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
     OperationPublicProjectionV1,
 )
-from cadrumo.application.operations.frontend_requests import (
+from .....application.operations.frontend_requests import (
     OperationObservationRefusalCode,
     OperationObservationRefusalV1,
     OperationObservationResultV1,
     OperationObservationSuccessV1,
     OperationPublicEventPageV1,
 )
-from cadrumo.application.operations.persistence.replay import OperationReplayStatus
-from cadrumo.application.operations.registry import OperationRegistry
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from cadrumo.core.operations import (
+from .....application.operations.persistence.replay import OperationReplayStatus
+from .....application.operations.registry import OperationRegistry
+from .....application.operations.schema_identity import OperationSchemaIdentityV1
+from .....core.operations import (
     OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from cadrumo.entrypoints.tui.operations.runtime_controller import (
+from ..runtime_controller import (
     RuntimeOperationController,
     await_terminal_projection,
 )
-
-from .....application.operations.schema_identity import OperationSchemaIdentityV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -147,9 +147,9 @@ async def test_a_projection_for_another_request_schema_is_an_invalid_frame() -> 
         update={"definition_contract": contract.model_copy(update={"request_schema": foreign_schema})}
     )
 
-    with pytest.raises(RuntimeRefusalError) as refused:
+    with pytest.raises(RefusalError) as refused:
         await _await(_Controller(_observed(foreign)))
-    assert refused.value.reason is RuntimeRefusalCode.INVALID_FRAME
+    assert refused.value.reason is RefusalCode.INVALID_FRAME
 
 
 @pytest.mark.asyncio
@@ -158,7 +158,7 @@ async def test_an_observation_refusal_keeps_its_code() -> None:
         code=OperationObservationRefusalCode.UNKNOWN_OPERATION, requested_version=None, diagnostic_ref=None
     )
 
-    with pytest.raises(RuntimeFrontendRefusedError) as refused:
+    with pytest.raises(FrontendRefusedError) as refused:
         await _await(_Controller(refusal))
     assert refused.value.reason == OperationObservationRefusalCode.UNKNOWN_OPERATION.value
 
@@ -167,7 +167,7 @@ async def test_an_observation_refusal_keeps_its_code() -> None:
 async def test_an_expired_deadline_refuses_before_observing() -> None:
     controller = _Controller(_observed(_projection(terminal=True)))
 
-    with pytest.raises(RuntimeRefusalError) as refused:
+    with pytest.raises(RefusalError) as refused:
         await _await(controller, deadline=time.monotonic() - 1)
-    assert refused.value.reason is RuntimeRefusalCode.DEADLINE_EXCEEDED
+    assert refused.value.reason is RefusalCode.DEADLINE_EXCEEDED
     assert controller.requests == []

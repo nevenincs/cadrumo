@@ -16,10 +16,8 @@ from textual.containers import VerticalScroll
 from textual.screen import Screen
 from textual.widgets import Button, DataTable, Static
 
-from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-from cadrumo.entrypoints.adapter_composition import build_censal_fetch_port
-
+from .....adapters.outbound.aeat.browser.factory import default_browser_session_factory
+from .....adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from .....application.aeat_sync.workspace import (
     AeatSyncAeatObservationState,
     AeatSyncCensusCategory,
@@ -60,7 +58,11 @@ from .....application.live.notifications_read_operation import (
 )
 from .....application.operations.models import OperationDefinitionId
 from .....application.operations.registry import OperationPublicContractSetV1
-from .....application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogue, ActionCatalogueEntry
+from .....application.operator_actions.catalogue import (
+    OPERATOR_ACTION_CATALOGUE,
+    ActionCatalogue,
+    ActionCatalogueEntry,
+)
 from .....application.operator_actions.models import ActionReference
 from .....application.user_profile.censal_operation import (
     build_censal_operation_definition,
@@ -76,6 +78,7 @@ from .....tests.aeat_literal_fixtures import (
     CENSO_SOURCE_URL_FIXTURE,
     OBLIGACIONES_SOURCE_URL_FIXTURE,
 )
+from ....adapter_composition import build_censal_fetch_port
 from ...components.host import ScreenHostApp
 from ...destination_alias import closed_destination_ids
 from ...navigation import TuiScreenContextV1

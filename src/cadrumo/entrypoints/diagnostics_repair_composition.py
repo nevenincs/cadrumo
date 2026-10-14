@@ -5,7 +5,7 @@ module binds each one's port to its outbound or persistence adapter: the
 profile's own secure-object store, the browser that probes connectivity, and
 the session host's caller reader. The profile-record reader the command line
 and the runtime's repair act both use is bound here too, so the two read a
-record through the same door.
+record through the same door, returning a :class:`UserProfileRecord`.
 """
 
 from __future__ import annotations
@@ -93,7 +93,7 @@ def build_diagnostics_repair_operations(
     """Bind the adapters to the four repair operations that run in a profile's worker.
 
     ``execution_caller_reader`` is the session host's, so a progress reset an
-    agent submits records the agent's session as its actor.
+    automation submits records the automation's session as its actor.
     ``connectivity_probe`` browses to the probed site; a host that must not
     start a browser binds its own.
     """

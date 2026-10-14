@@ -334,6 +334,28 @@ def test_source_evidence_line_endings_are_byte_exact(tmp_path: Path) -> None:
     assert publication.currency().status is AuthorityDatabaseCurrencyStatus.STALE
 
 
+def test_corpus_control_code_does_not_change_currency_but_evidence_bytes_do(tmp_path: Path) -> None:
+    publication = _fresh_publication(tmp_path)
+    corpus = publication.source_root / "corpus"
+    controls = corpus / "tests"
+    controls.mkdir()
+    paths = (corpus / "__init__.py", controls / "__init__.py", controls / "test_provenance.py", controls / "types.pyi")
+    for path in paths:
+        path.write_bytes(b"before")
+    assert publication.currency().status is AuthorityDatabaseCurrencyStatus.CURRENT
+
+    for path in paths:
+        path.write_bytes(b"changed control behavior")
+    assert publication.currency().status is AuthorityDatabaseCurrencyStatus.CURRENT
+
+    evidence = corpus / "test" / "ley.html"
+    before = evidence.stat()
+    evidence.write_bytes(evidence.read_bytes().replace(b"provision", b"amendment"))
+    os.utime(evidence, ns=(before.st_atime_ns, before.st_mtime_ns))
+    assert evidence.stat().st_size == before.st_size
+    assert publication.currency().status is AuthorityDatabaseCurrencyStatus.STALE
+
+
 def test_a_missing_or_malformed_artifact_is_unreadable_rather_than_current(tmp_path: Path) -> None:
     publication = _fresh_publication(tmp_path)
     missing = publication.currency(tmp_path / "authority.current.json")

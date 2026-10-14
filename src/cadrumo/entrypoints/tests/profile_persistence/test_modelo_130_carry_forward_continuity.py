@@ -38,6 +38,11 @@ from typing import Any
 
 import pytest
 
+from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+    build_test_verification_repository_bundle,
+)
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from ....adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
@@ -80,10 +85,6 @@ from ....domain.modelos.verification_report import ModeloVerificationFindingKind
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ....tests.env_scope import ready_clave_settings
 from ...adapter_composition import build_calculation_action_ports
-from .verification_repository_support import (
-    build_test_certificate_secret_backend_factory,
-    build_test_verification_repository_bundle,
-)
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 

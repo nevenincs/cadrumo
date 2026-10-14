@@ -8,17 +8,18 @@ from uuid import UUID
 import pytest
 import typer
 
+from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
+from cadrumo_client.contracts.contracts import RefusalCode
+
 from ....application.overview.read_payload import OverviewStatusRead
 from ....application.overview.read_projection import OverviewStatusSnapshot
 from ....application.overview.read_request import OverviewReadKind, OverviewReadRequest
 from ....application.overview.read_result import OverviewReadProjection
-from ....application.runtime.contracts import RuntimeRefusalCode
 from ....core.external_constants import OutputLanguage
 from ....core.operations import OperationEffect, OperationTerminalCondition
 from .. import _overview
 from ..errors import CliRefusedBoundaryError
-from ..registered_operation_contracts import RegisteredOperationCompletion
-from ..runtime_overview import OverviewReadCompletion
+from ..operation_overview import OverviewReadCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -77,7 +78,7 @@ def test_overview_render_failure_keeps_receipt_and_hides_private_exception(
 
     assert refusal.value.context == {
         "operation_id": _OPERATION_ID,
-        "reason": RuntimeRefusalCode.UNAVAILABLE.value,
+        "reason": RefusalCode.UNAVAILABLE.value,
         "terminal_condition": OperationTerminalCondition.SUCCEEDED.value,
         "effect": OperationEffect.NONE.value,
     }

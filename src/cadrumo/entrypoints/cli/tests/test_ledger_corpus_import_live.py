@@ -8,15 +8,17 @@ real transport and the published series stay exercised end to end.
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 
 import pytest
+from click.testing import Result
 
 from ....adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
 from ....application.exchange_rate_provider import bind_exchange_rate_provider_factory
 from ....tests.live_gate import requires_live_enabled
-from ._isolated_profile_storage_fixtures import recorded_fx_isolated_backend
-from ._ledger_corpus_support import _CORPUS, _invoke
+from ...tests.ledger_corpus_support import _CORPUS, _invoke
 from .ledger_cli import list_ledger_rows_via_cli as _list_rows
+from .profile_world_fixtures import recorded_fx_isolated_backend
 
 __all__ = ["recorded_fx_isolated_backend"]
 
@@ -25,7 +27,7 @@ pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_entrypoint]
 _MULTI_CURRENCY_STATEMENT = "revolut-multi.csv"
 
 
-def test_a_multi_currency_statement_converts_against_the_live_series() -> None:
+def test_a_multi_currency_statement_converts_against_the_live_series(invoke_cli: Callable[..., Result]) -> None:
     requires_live_enabled()
 
     with bind_exchange_rate_provider_factory(default_ecb_rate_provider):
@@ -41,6 +43,7 @@ def test_a_multi_currency_statement_converts_against_the_live_series() -> None:
                 "--provider",
                 "csv",
             ],
+            invoke_cli=invoke_cli,
         )
         rows = _list_rows()
 

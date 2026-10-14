@@ -8,13 +8,14 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
 from ....application.operations.error_detail import OperationErrorDetailKind
 from ....application.operations.frontend_projection import OperationPublicProjectionV1
 from ....application.operations.registry import OperationFrontendProjection
 from ....application.operations.schema_identity import OperationSchemaIdentityV1
-from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....core.errors.hierarchy import RecordedRegisteredError
 from ....core.operations import OperationTerminalCondition, profile_operation_subject
 from ..account import AccountSessionExpiredError
@@ -29,7 +30,7 @@ class RuntimeProfileSession:
 
     def __init__(
         self,
-        client: RuntimeFrontendClient,
+        client: FrontendClient,
         *,
         profile_label: str,
         on_expired: Callable[[], None] = lambda: None,
@@ -40,7 +41,7 @@ class RuntimeProfileSession:
         drop state it retained only for that session.
         """
         if client.frontend is not OperationFrontendProjection.TUI or not profile_label:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         self._client = client
         self._profile_id = client.profile_id
         self._session_id = client.session_id
@@ -102,7 +103,7 @@ class RuntimeProfileSession:
         """
         self.require_binding()
         if getattr(request, "profile_id", None) != self._profile_id:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         subject_ref = profile_operation_subject(str(self._profile_id))
         request_schema = OperationSchemaIdentityV1.from_model(
             schema_id=f"{definition_id}.request",
@@ -141,7 +142,7 @@ class RuntimeProfileSession:
             )
         except AccountSessionExpiredError as error:
             raise session_expired_with_receipt(controller, terminal_projection) from error
-        except (RuntimeFrontendRefusedError, RuntimeRefusalError):
+        except (FrontendRefusedError, RefusalError):
             try:
                 self.require_binding()
             except AccountSessionExpiredError as error:
@@ -162,13 +163,13 @@ class RuntimeProfileSession:
     ) -> ResultT:
         condition = terminal.terminal_condition
         if condition is None:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         if condition is not OperationTerminalCondition.SUCCEEDED and not _refusal_detail_is_allowed(
             condition, terminal, allow_refusal_detail
         ):
             if explain_failure:
                 await self._raise_recorded_error(controller, terminal)
-            raise RuntimeFrontendRefusedError(
+            raise FrontendRefusedError(
                 terminal.refusal_ref or terminal.failure_error_code or "operation_not_successful"
             )
         admit(terminal)

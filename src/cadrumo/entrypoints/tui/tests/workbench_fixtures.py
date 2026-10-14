@@ -19,9 +19,6 @@ from typing import Any, Final, cast
 from textual.app import App
 from textual.screen import Screen
 
-from cadrumo.domain.deadlines.festivos import DeadlineHolidayCoverage
-from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
-
 from ....application.aeat_sync.workspace import (
     AeatSyncAeatObservationState,
     AeatSyncCensusCategory,
@@ -105,6 +102,7 @@ from ....core.casilla_id import validated_casilla_id
 from ....core.operations import OperationEffect, OperationLifecycle
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -121,6 +119,7 @@ from ....domain.modelos.filing_record import (
     ModeloRecordCatalogue,
     derive_filing_record_id,
 )
+from ....domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ..aeat_sync.controller import AeatSyncWorkspaceController
 from ..aeat_sync.models import AeatSyncOperationRequestV1

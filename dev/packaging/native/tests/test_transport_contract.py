@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.core.runtime_transport import manager_socket_name
+from cadrumo.core.connection_transport import manager_socket_name
 
 from ..transport_contract import rust_transport, transport_section
 

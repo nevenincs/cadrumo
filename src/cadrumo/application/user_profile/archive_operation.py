@@ -514,7 +514,7 @@ def _capabilities(effects: frozenset[OperationEffect]) -> OperationCapabilities:
 def build_profile_archive_operation_definitions(
     factory: ProfileArchiveOperationPortsFactory,
 ) -> tuple[OperationDefinition, ...]:
-    """Register the complete existing human archive family without agent escalation."""
+    """Register the complete existing human archive family without automation escalation."""
     return (
         build_single_phase_definition(
             definition_id=PROFILE_ARCHIVE_EXPORT_OPERATION_DEFINITION_ID,

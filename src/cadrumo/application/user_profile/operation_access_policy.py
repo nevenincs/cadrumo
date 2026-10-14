@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from cadrumo_client.contracts.session_policy import evaluate_session_authority
+
 from ...core.operations import OperationInteractionKind
+from ..operations.access_facts import operation_access_facts
 from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
-from ..operations.mcp_surfaces import MCP_SURFACES, McpSurface
 from ..operations.person_acts import is_persons_frontend, operation_is_persons_act
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1, OperationRegistry
+from ..operations.registry import OperationPublicDefinitionContractV1, OperationRegistry
 from .access_contracts import (
     AccessAction,
     AccessDecision,
@@ -26,7 +28,6 @@ from .access_contracts import (
     SessionKind,
 )
 from .access_policy import intersect_scopes
-from .session_authority_policy import evaluate_session_authority
 
 
 def operation_scope_refusal(
@@ -145,10 +146,10 @@ def _evaluate_operation_scope(
     contract = _registered_contract_or_refusal(request, policy, registry, session)
     if isinstance(contract, AccessDenied):
         return contract
-    refusal = _surface_refusal(request, policy, (session, *ancestors))
+    scope = _effective_operation_scope(session, ancestors, grant, profile)
+    refusal = _scope_effect_refusal(request, policy, scope)
     if refusal is not None:
         return refusal
-    scope = _effective_operation_scope(session, ancestors, grant, profile)
     refusal = operation_scope_refusal(request=request, policy=policy, scope=scope)
     if refusal is not None:
         return refusal
@@ -209,7 +210,7 @@ def _registered_contract_or_refusal(
 def _persons_act_refusal(
     request: OperationAccessRequest, contract: OperationPublicDefinitionContractV1
 ) -> AccessDenied | None:
-    """Refuse to an agent an operation that is the person's own act: one that needs a secret, or administers keys."""
+    """Refuse automation access to a person's own act: one needing a secret or administering keys."""
     if not operation_is_persons_act(
         contract.definition_id, ephemeral_secret_required=contract.ephemeral_secret_required
     ):
@@ -219,30 +220,21 @@ def _persons_act_refusal(
     return AccessDenied(code=AccessDenialCode.PERSON_ACT_REQUIRED)
 
 
-def _surface_refusal(
+def _scope_effect_refusal(
     request: OperationAccessRequest,
     policy: OperationAccessPolicy,
-    leases: tuple[AccessSession, ...],
+    scope: AccessScope,
 ) -> AccessDenied | None:
-    """Apply the MCP surface each lease was admitted under.
-
-    A surface is what the person chose to serve one MCP connection, and the
-    registry opens every operation to every frontend. A lease that names none
-    is not narrowed, and a child is held to every surface its ancestors named.
-    """
-    for lease in leases:
-        if lease.surface is not None and _surface_refuses(MCP_SURFACES[lease.surface], request, policy):
-            return AccessDenied(code=AccessDenialCode.FRONTEND_DENIED)
+    """Apply the intersected access scope's mutation and network ceilings."""
+    try:
+        facts = operation_access_facts(request.definition_id)
+    except KeyError:
+        return AccessDenied(code=AccessDenialCode.OPERATION_DENIED)
+    if (not scope.allow_network and facts.reaches_network) or (
+        not scope.allow_changes_records and (facts.changes_records or _reaches_commit(request, policy))
+    ):
+        return AccessDenied(code=AccessDenialCode.OPERATION_DENIED)
     return None
-
-
-def _surface_refuses(surface: McpSurface, request: OperationAccessRequest, policy: OperationAccessPolicy) -> bool:
-    if request.frontend is not OperationFrontendProjection.MCP:
-        # Only an MCP connection is admitted under a surface.
-        return True
-    if not surface.admits(request.definition_id):
-        return True
-    return not surface.changes_records and _reaches_commit(request, policy)
 
 
 def _reaches_commit(request: OperationAccessRequest, policy: OperationAccessPolicy) -> bool:

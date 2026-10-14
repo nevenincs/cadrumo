@@ -1,7 +1,7 @@
 """A registration that lost a race is not reported as a name already taken.
 
 ``retryable`` is the instruction this CLI's operator acts on, and that operator
-is an autonomous agent. Two custody refusals reach the registration boundary as
+is an autonomous automation. Two custody refusals reach the registration boundary as
 one exception family, because the permanent case is a SUBCLASS of the transient
 one:
 
@@ -10,7 +10,7 @@ one:
 - the duplicate label, which no retry can change, published as permanent.
 
 The boundary caught only the parent and translated both into one non-retryable
-"profile already exists". A transient loss therefore told the agent that the
+"profile already exists". A transient loss therefore told the automation that the
 name it had just chosen was taken -- so it would not retry, and would instead
 pick a different name for a profile that does not exist.
 
@@ -34,7 +34,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_a_lost_race_is_published_as_retryable() -> None:
-    """DISCRIMINATING: the answer an agent operator acts on.
+    """DISCRIMINATING: the answer an automation operator acts on.
 
     The identical registration can succeed once the witness is re-read, so
     reporting it as permanent strands a caller that only needed to try again.
@@ -50,7 +50,7 @@ def test_an_ordinary_registration_refusal_stays_permanent() -> None:
     """ANTI-TAUTOLOGY: the parent's answer must survive the split.
 
     Without this, marking the whole family retryable would satisfy the
-    assertion above while telling an agent to loop on a label that is
+    assertion above while telling an automation to loop on a label that is
     genuinely taken.
     """
     code = get_registered_error_code(ProfileRegistrationError)

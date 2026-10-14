@@ -34,7 +34,7 @@ from ._modelo_payloads import (
 )
 from .common import active_bucket_id_or_refuse, emit_envelope
 from .errors import CliRefusedBoundaryError
-from .runtime_modelo_projection import run_modelo_compare, run_modelo_project
+from .operation_modelo_projection import run_modelo_compare, run_modelo_project
 
 _PROJECT_RECOVERY_LOCALE_KEYS = {
     "ERROR_MODELO_PROJECT_NO_M130_UNITS": "cli.app.modelo.project.no_m130_units",

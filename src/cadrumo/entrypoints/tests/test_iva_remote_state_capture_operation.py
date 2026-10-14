@@ -323,7 +323,7 @@ async def _run_to_terminal(supervisor: OperationSupervisor, operation_id: str) -
     return await supervisor.settled(operation_id)
 
 
-def test_supervisor_captures_iva_remote_state_for_exact_mcp_profile(tmp_path: Path) -> None:
+def test_supervisor_captures_iva_remote_state_for_exact_external_client_profile(tmp_path: Path) -> None:
     """Record both IVA evidence surfaces through pinned, guarded synthetic ports."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile, bundled_indexed_authority().operation() as authority:
         profile_id = UUID(profile.bucket_id)
@@ -383,7 +383,7 @@ def test_supervisor_captures_iva_remote_state_for_exact_mcp_profile(tmp_path: Pa
             profile_id=profile_id,
             destination_id=uuid4(),
             action=AccessAction.SUBMIT,
-            frontend=OperationFrontendProjection.MCP,
+            frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
             contract=registration.contract,
             published_authority=Availability.AVAILABLE,
             authority_operation=authority,

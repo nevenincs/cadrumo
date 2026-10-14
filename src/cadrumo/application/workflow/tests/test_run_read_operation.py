@@ -245,7 +245,7 @@ def test_inventory_is_complete_profile_scope_and_rejects_duplicate_runs() -> Non
         WorkflowRunListProjection(profile_id=_PROFILE, runs=(snapshot, snapshot))
 
 
-def test_workflow_reads_are_admitted_on_the_mcp_frontend_without_a_commit_door() -> None:
+def test_workflow_reads_are_admitted_on_the_external_client_frontend_without_a_commit_door() -> None:
     reader = _Reader(_run())
     factory = _factory(reader)
     read_definition = build_workflow_run_read_definition(factory)
@@ -269,9 +269,9 @@ def test_workflow_reads_are_admitted_on_the_mcp_frontend_without_a_commit_door()
             resolved = resolve_operation_access(
                 registry=registry,
                 request=request,
-                context=_context(registration, frontend=OperationFrontendProjection.MCP),
+                context=_context(registration, frontend=OperationFrontendProjection.EXTERNAL_CLIENT),
             )
 
-            assert resolved.request.frontend is OperationFrontendProjection.MCP
+            assert resolved.request.frontend is OperationFrontendProjection.EXTERNAL_CLIENT
             assert resolved.request.profile_id == _PROFILE
             assert AccessAction.COMMIT not in resolved.policy.actions

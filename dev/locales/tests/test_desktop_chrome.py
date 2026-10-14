@@ -30,6 +30,7 @@ from ..desktop_chrome import (
 )
 from ..errors import LocaleError
 from ..manager import LocaleManager
+from ..service_catalogues import SERVICE_FAMILIES, SERVICE_KEYS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -266,7 +267,10 @@ def test_the_awaiting_check_sees_a_named_key(tmp_path: Path) -> None:
 
 
 def test_the_locale_key_scan_reads_the_declaration(tmp_path: Path) -> None:
-    # An empty source tree isolates this key source from every call-site scan.
+    # The tax key source excludes independently owned service chrome; generation merges both catalogues.
     keys = LocaleManager(tmp_path, LOCALES_DIR).get_codebase_keys()
 
-    assert keys >= DESKTOP_CHROME_KEYS
+    service_prefixes = tuple(f"{namespace}.{family}." for namespace, family in SERVICE_FAMILIES)
+    service_keys = {key for key in DESKTOP_CHROME_KEYS if key.startswith(service_prefixes) or key in SERVICE_KEYS}
+    assert keys >= DESKTOP_CHROME_KEYS - service_keys
+    assert keys.isdisjoint(service_keys)

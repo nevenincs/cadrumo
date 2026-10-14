@@ -9,6 +9,8 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
+from cadrumo_client.contracts.contracts import RefusalError
+
 from ...core.access_gate.gate import AeatAccessGate as _AeatAccessGate
 from ...core.async_cleanup import has_async_cleanup_failure
 from ...core.config import Settings as _Settings
@@ -22,7 +24,6 @@ from ...core.storage_taxonomy_locations import storage_location as _storage_loca
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..auth.sessions import AuthenticatedAeatSessionResult as _AuthenticatedAeatSessionResult
-from ..runtime.contracts import RuntimeRefusalError
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from ..user_profile.automation_custody_port import AutomationCustodyError
 from .errors import LiveApplicationInputError, LiveIvaSurfaceTimeoutError
@@ -232,7 +233,7 @@ async def _authenticate_remote_state(
                 effect_guard=effect_guard,
                 on_session_write=on_session_write,
             )
-    except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
+    except (ProfileAccessRefusedError, AutomationCustodyError, RefusalError):
         raise
     except (TimeoutError, _CadrumoError, OSError) as error:
         if has_async_cleanup_failure(error):
@@ -291,7 +292,7 @@ async def _capture_filed_history_surface(
             timeout_ms=filed_history_surface_timeout_ms(settings, year_from=year_from, year_to=year_to),
             progress_context=progress,
         )
-    except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
+    except (ProfileAccessRefusedError, AutomationCustodyError, RefusalError):
         raise
     except (TimeoutError, _CadrumoError, OSError) as error:
         _raise_unsettled_surface_cleanup(error, tracker)
@@ -346,7 +347,7 @@ async def _capture_wallet_surface(
             timeout_ms=settings.cadrumo_live_iva_surface_timeout_ms,
             progress_context=progress,
         )
-    except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
+    except (ProfileAccessRefusedError, AutomationCustodyError, RefusalError):
         raise
     except (TimeoutError, _CadrumoError, OSError) as error:
         _raise_unsettled_surface_cleanup(error, tracker)

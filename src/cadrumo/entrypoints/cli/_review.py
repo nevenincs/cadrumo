@@ -21,7 +21,7 @@ from ...core.i18n.render import tr
 from ...core.unit_proportion import is_unit_proportion
 from ._review_payloads import ReviewQueueResult, ReviewQueueRowPayload, ReviewViewResult
 from .common import activate_subcommand_output_language, active_bucket_id_or_refuse, bad, emit_envelope
-from .runtime_review import run_review_queue, run_review_view
+from .operation_review import run_review_queue, run_review_view
 
 
 def _row_to_payload(row: ReviewQueueRowProjection) -> ReviewQueueRowPayload:

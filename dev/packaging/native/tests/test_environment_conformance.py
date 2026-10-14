@@ -522,7 +522,13 @@ def test_the_facts_module_runs_by_path_so_it_imports_no_packaging_tool() -> None
             imported.add(str(node.module).split(".")[0])
         elif isinstance(node, ast.Import):
             imported.update(alias.name.split(".")[0] for alias in node.names)
-    assert imported <= set(sys.stdlib_module_names) | {"pydantic", "cadrumo", "cadrumo_agent"}, imported
+    assert imported <= set(sys.stdlib_module_names) | {
+        "pydantic",
+        "cadrumo",
+        "cadrumo_client",
+        "cadrumo_agent_service",
+        "cadrumo_agent",
+    }, imported
 
 
 def _package(tmp_path: Path) -> Path:

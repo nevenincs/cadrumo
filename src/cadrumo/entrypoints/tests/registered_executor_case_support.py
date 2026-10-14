@@ -14,6 +14,10 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from cadrumo.adapters.outbound.aeat.browser.factory import BrowserRuntimeResourceScope, default_browser_session_factory
+from cadrumo.adapters.persistence.profile.tests.review_read_operation_test_support import (
+    ReviewReadConformanceCase,
+    prepare_review_read_conformance_case,
+)
 from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
@@ -123,7 +127,6 @@ from .recipient_operation_test_support import RecipientOperationConformanceCase,
 from .registered_executor_payload_support import _payload
 from .registered_executor_scenario_constants import _CREDENTIAL_INPUT, _OPERATOR_SCOPE_PORTS
 from .registered_executor_seeding_support import _ledger_lifecycle_case, _prorrata_case
-from .review_read_operation_test_support import ReviewReadConformanceCase, prepare_review_read_conformance_case
 
 
 @dataclass(slots=True)

@@ -45,41 +45,47 @@ const LABEL_LIMIT: usize = 160;
 pub(crate) const REWRITTEN: [char; 5] = ['*', '?', '[', '%', '$'];
 
 /// One command under `config`: its words, the name its answer must carry,
-/// whether it only reads, and whether it uses the enrollment deadline.
+/// whether it only reads, its owning image, and its enrollment deadline.
 struct Call {
     words: &'static [&'static str],
     leaf: &'static str,
     reads: bool,
+    runtime: bool,
     slow: bool,
 }
 const STATUS: Call = Call {
     words: &["sign-in-status"],
     leaf: "sign-in-status",
     reads: true,
+    runtime: true,
     slow: false,
 };
 const LOGIN: Call = Call {
     words: &["login"],
     leaf: "login",
     reads: false,
+    runtime: false,
     slow: false,
 };
 const LOGOUT: Call = Call {
     words: &["logout"],
     leaf: "logout",
     reads: false,
+    runtime: false,
     slow: false,
 };
 const LIST: Call = Call {
     words: &["profile", "list"],
     leaf: "profile.list",
     reads: true,
+    runtime: false,
     slow: false,
 };
 const CREATE: Call = Call {
     words: &["profile", "create", "--quiet"],
     leaf: "profile.create",
     reads: false,
+    runtime: false,
     slow: true,
 };
 
@@ -109,6 +115,8 @@ struct Files {
 
 pub struct SignIn {
     child: Result<ChildConfiguration>,
+    runtime: Result<ChildConfiguration>,
+    service: Result<ChildConfiguration>,
     pub children: Children,
     observation: observation::Observer,
     reads: Arc<reads::Reads>,
@@ -118,16 +126,38 @@ impl SignIn {
     pub fn new(launch: &Launch) -> Self {
         Self {
             child: resolve_cli(launch),
+            runtime: resolve_image(launch, "cadrumo-runtime"),
+            service: resolve_image(launch, "cadrumo-agent-service"),
             children: Children::new(launch.diagnostics.clone()),
             observation: observation::Observer::default(),
             reads: Arc::new(reads::Reads::default()),
         }
     }
 
-    /// The digest-verified canonical CLI, for a caller that supervises its
-    /// own long-lived child.
-    pub(crate) fn cli(&self) -> Result<ChildConfiguration> {
-        self.child.clone()
+    pub(crate) fn runtime(&self) -> Result<ChildConfiguration> {
+        self.runtime.clone()
+    }
+    pub(crate) fn service(&self) -> Result<ChildConfiguration> {
+        self.service.clone()
+    }
+
+    pub(crate) fn profile_id(&self, label: &str) -> Result<String> {
+        let wire::Outcome::Success {
+            result,
+            active_profile,
+        } = self.run(&STATUS, None, None)?
+        else {
+            return Err(failure(ErrorCode::ReadFailed));
+        };
+        if active_profile.as_deref() != Some(label) {
+            return Err(failure(ErrorCode::ReadFailed));
+        }
+        let id = result
+            .get("profile_id")
+            .and_then(serde_json::Value::as_str)
+            .filter(|id| super::agent_access::wire::is_uuid(id))
+            .ok_or_else(|| failure(ErrorCode::ReadFailed))?;
+        Ok(id.to_owned())
     }
 
     pub(crate) async fn read_status(self: &Arc<Self>) -> Result<SignInStatus> {
@@ -166,7 +196,12 @@ impl SignIn {
         secret: Option<Zeroizing<Vec<u8>>>,
     ) -> Result<process::Output> {
         let _mutation = (!call.reads).then(|| self.reads.mutation());
-        let mut command = self.child.as_ref().map_err(Clone::clone)?.command();
+        let image = if call.runtime {
+            &self.runtime
+        } else {
+            &self.child
+        };
+        let mut command = image.as_ref().map_err(Clone::clone)?.command();
         command.args(arguments(call, label, secret.is_some()));
         if call.reads {
             self.children.read(command)
@@ -198,16 +233,21 @@ fn arguments(call: &Call, label: Option<&str>, secret: bool) -> Vec<String> {
 }
 
 fn resolve_cli(launch: &Launch) -> Result<ChildConfiguration> {
+    resolve_image(launch, "aeat")
+}
+
+fn resolve_image(launch: &Launch, entrypoint: &str) -> Result<ChildConfiguration> {
     let contract: Contract =
         serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json")))
             .map_err(|_| failure(ErrorCode::PackageUnavailable))?;
     let layout = contract.layout;
-    if !layout.entrypoints.contains_key("aeat") {
+    if !layout.entrypoints.contains_key(entrypoint) {
         return Err(failure(ErrorCode::PackageUnavailable));
     }
     let relative = RelativePath::new(format!(
-        "{}/aeat{}",
+        "{}/{}{}",
         layout.paths.native.as_str(),
+        entrypoint,
         layout.entrypoint_suffix
     ))
     .map_err(|_| failure(ErrorCode::PackageUnavailable))?;

@@ -16,6 +16,17 @@ import pydantic
 import typer
 from pydantic import BaseModel, SecretStr
 
+from cadrumo_client.commands.profile_binding import require_profile_client
+from cadrumo_client.commands.registered_operation import run_registered_operation
+from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
+from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
+from cadrumo_client.commands.secure_input import (
+    MachineSecretPayload,
+    read_machine_secret_payload,
+    select_machine_secret_channel,
+)
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+
 from ...application.filing.producer_snapshot_m360 import Modelo360ProfileFacts
 from ...application.modelo.m360_solicitud_operation import (
     MODELO_360_SOLICITUD_OPERATION_DEFINITION_ID,
@@ -24,7 +35,6 @@ from ...application.modelo.m360_solicitud_operation import (
     Modelo360SolicitudRequest,
     Modelo360SolicitudResult,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.i18n.render import tr
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -36,11 +46,6 @@ from ._modelo_m360_payloads import (
     Modelo360SolicitudPayload,
 )
 from .common import active_bucket_id_or_refuse, bad, emit_envelope
-from .config.secure_input import MachineSecretPayload, read_machine_secret_payload, select_machine_secret_channel
-from .registered_operation_contracts import RegisteredOperationCompletion
-from .registered_operation_errors import invalid_completion_error
-from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import run_registered_operation
 
 
 class Modelo360SolicitudSecrets(MachineSecretPayload):
@@ -63,7 +68,7 @@ def _run(ctx: typer.Context, request: Modelo360SolicitudRequest) -> Modelo360Sol
     """Run one exact-profile request and correlate its receipt with what was asked."""
     client = require_profile_client(ctx, expected_profile_id=UUID(require_active_bucket_id()))
     if request.profile_id != client.profile_id:
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     completed: RegisteredOperationCompletion[Modelo360SolicitudResult] = run_registered_operation(
         client,
         request,

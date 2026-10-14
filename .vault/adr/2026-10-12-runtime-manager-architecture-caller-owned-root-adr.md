@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#runtime-manager-architecture'
 date: '2026-10-12'
-modified: '2026-10-13'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:e089245be78293c2bb553d802716fd3b74bec1655d7860f51e1f5825bb2ca484'
+body_hash: 'sha256:4eac6f4fe42cd997ef7d307640e5bd970a9416d51c78f33f9b5e91a4a52aabf4'
 related:
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
   - "[[2026-10-04-runtime-manager-architecture-supervisor-contract-adr]]"
@@ -18,17 +18,17 @@ related:
 
 ## Problem Statement
 
-A process outside Cadrumo that selects its own storage root with `CADRUMO_LOCAL_STORAGE_ROOT` cannot get a runtime for that root. The packaged CLI on that root creates a profile, but `config login` is refused with `REFUSED_LOCAL_RUNTIME` because no runtime serves the root. The installed manager supervises only the installed default root and refuses an override (`native/manager/src/supervision/environment.rs:63`, `2026-10-04-runtime-manager-architecture-adr`). The packaged `cadrumo-runtime` can serve any absolute root, but only when the launcher passes `--storage-identity` and `--expected-version` (`src/cadrumo/entrypoints/runtime/arguments.py`). Those values come from Cadrumo internals: an owner/physical-root digest (`src/cadrumo/adapters/local_runtime/windows.py:53`) and the installed distribution version. The cadrumo-agent testbed stopped at exactly this point. It recorded that it must not emulate the runtime protocol, clear the override or import Cadrumo internals to get around it. The runtime also has no public readiness signal and no portable stop for an unsupervised launch.
+A process outside Cadrumo that selects its own storage root with `CADRUMO_LOCAL_STORAGE_ROOT` cannot get a runtime for that root. The packaged CLI on that root creates a profile, but `config login` is refused with `REFUSED_LOCAL_RUNTIME` because no runtime serves the root. The installed manager supervises only the installed default root and refuses an override (`native/manager/src/supervision/environment.rs:63`, `2026-10-04-runtime-manager-architecture-adr`). The packaged `cadrumo-runtime` can serve any absolute root, but only when the launcher passes `--storage-identity` and `--expected-version` (`src/cadrumo_runtime/host/arguments.py`). Those values come from Cadrumo internals: an owner/physical-root digest (`src/cadrumo_client/transport/windows.py:53`) and the installed distribution version. The cadrumo-agent testbed stopped at exactly this point. It recorded that it must not emulate the runtime protocol, clear the override or import Cadrumo internals to get around it. The runtime also has no public readiness signal and no portable stop for an unsupervised launch.
 
 The operator, 2026-10-12: "Please make the real Cadrumo runtime support the existing CADRUMO_LOCAL_STORAGE_ROOT environment override, alongside CADRUMO_SECRET_STORE_DIR. [...] Provide a supported launch path for an explicitly configured root, with runtime discovery, authentication, data access and MCP all using that root. Preserve isolation from the default installation and allow the caller to manage startup, readiness and shutdown. Do not bypass runtime checks or introduce mocks. [...] Document the launch command for external consumers such as cadrumo-agent."
 
 ## Considerations
 
 - Override roots "stay developer-owned and unmanaged" and the manager manages only the canonical default (`2026-10-04-runtime-manager-architecture-adr`). Development and tests may explicitly own runtime lifetimes (`2026-10-03-runtime-without-service-manager-adr`). Unsupervised launches are outside the supervisor contract (`2026-10-04-runtime-manager-architecture-supervisor-contract-adr`).
-- Every client resolves its endpoint from `effective_storage_root()` (`src/cadrumo/adapters/local_runtime/runtime_client.py:70`). A runtime that resolves its root the same way serves exactly the endpoint those clients derive.
+- Every client resolves its endpoint from `effective_storage_root()` (`src/cadrumo_client/transport/installed_client.py:70`). A runtime that resolves its root the same way serves exactly the endpoint those clients derive.
 - The runtime's identity and version arguments guard a supervisor's pinned expectations. A caller that resolved nothing has no pin to compare against. Native peer identity, profile credentials, grants, session binding, custody and worker containment do not depend on those arguments.
 - On Windows a caller cannot reliably deliver Ctrl+C to a child it does not share a console with. Closing a pipe works the same way on every platform, and the pipe also closes when the caller dies.
-- `CADRUMO_SECRET_STORE_DIR` and the other storage settings already reach workers through `worker_path_environment_names()` (`src/cadrumo/adapters/local_runtime/worker_environment.py`).
+- `CADRUMO_SECRET_STORE_DIR` and the other storage settings already reach workers through `worker_path_environment_names()` (`src/cadrumo_runtime/adapters/worker_environment.py`).
 
 ## Considered options
 
@@ -50,7 +50,7 @@ The operator, 2026-10-12: "Please make the real Cadrumo runtime support the exis
 
 ## Implementation
 
-We will add the `--configured-root` form to the runtime entry point: `src/cadrumo/entrypoints/runtime/arguments.py` parses it, `src/cadrumo/entrypoints/runtime/caller_owned.py` resolves and checks the root and owns the readiness line and the standard-input lifetime, and `src/cadrumo/entrypoints/runtime/main.py` passes the derived values through the existing owner path. Integration tests drive the installed launcher over real IPC, including the refusals (`src/cadrumo/entrypoints/runtime/tests/test_caller_owned_runtime.py`). The launch command is documented for external consumers in `docs/how-to/connect-an-agent.md`.
+We will add the `--configured-root` form to the runtime entry point: `src/cadrumo_runtime/host/arguments.py` parses it, `src/cadrumo_runtime/host/caller_owned.py` resolves and checks the root and owns the readiness line and the standard-input lifetime, and `src/cadrumo_runtime/host/main.py` passes the derived values through the existing owner path. Integration tests drive the installed launcher over real IPC, including the refusals (`src/cadrumo_runtime/host/tests/test_caller_owned_runtime.py`). The launch command is documented for external consumers in `docs/how-to/connect-an-agent.md`.
 
 Hypotheses that may change within the constraints: the flag's name, and the readiness line's field set beyond the four named fields.
 

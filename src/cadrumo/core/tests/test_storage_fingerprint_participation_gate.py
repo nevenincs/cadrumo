@@ -82,7 +82,7 @@ EXPECTED_EXCLUSIONS: Final[tuple[ExclusionExpectation, ...]] = (
         "Published integration code is an executable resource, independent of profile facts.",
     ),
     ExclusionExpectation(
-        "cadrumo_runtime_socket_dir",
+        "cadrumo_connection_socket_dir",
         "Runtime endpoints and locks represent process ownership rather than taxpayer facts.",
     ),
     ExclusionExpectation(

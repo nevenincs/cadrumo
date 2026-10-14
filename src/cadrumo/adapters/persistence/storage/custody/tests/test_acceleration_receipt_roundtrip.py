@@ -883,7 +883,7 @@ def test_revocation_refuses_when_the_receipt_survives_the_clear(tmp_path: Path) 
     That matters for reachability: the row assumed the bytes had to change
     under the held per-profile lock, which is a narrow race, but an open
     handle reproduces the refusal deterministically on Windows and is the
-    ordinary case -- another process reading the file, or a backup agent.
+    ordinary case -- another process reading the file, or a backup automation.
     """
     require_os_credential_store()
     profile_id = _profile_id()

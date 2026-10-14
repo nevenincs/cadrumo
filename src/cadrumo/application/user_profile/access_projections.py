@@ -11,6 +11,8 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.session_policy import evaluate_session_authority
+
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.time.utc import UtcInstant
 from .access_contracts import (
@@ -39,7 +41,6 @@ from .access_contracts import (
 )
 from .access_errors import ProfileAccessRefusedError
 from .access_policy import intersect_scopes
-from .session_authority_policy import evaluate_session_authority
 
 
 class PublicAutomationGrant(BaseModel):

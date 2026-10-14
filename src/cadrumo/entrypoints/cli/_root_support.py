@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING
 import typer
 
 if TYPE_CHECKING:
-    from .command_parameter_contracts import OptionSpec
-    from .command_spec import CommandSpec
+    from cadrumo_client.commands.parameters import OptionSpec
+    from cadrumo_client.commands.spec import CommandSpec
 
 from ...core.cli_metadata import is_metadata_invocation as _is_metadata_invocation
 from ...core.errors.hierarchy import InternalInvariantError
@@ -25,7 +25,7 @@ from .common import (
 
 def _root_profile_secret_options(root: CommandSpec) -> tuple[OptionSpec, ...]:
     """Root profile secret options."""
-    from .command_parameter_contracts import OptionSpec
+    from cadrumo_client.commands.parameters import OptionSpec
 
     channels = tuple(
         parameter
@@ -42,7 +42,7 @@ def _root_profile_secret_options(root: CommandSpec) -> tuple[OptionSpec, ...]:
 
 def _root_named_options(root: CommandSpec, name: str) -> tuple[OptionSpec, ...]:
     """Keep the declared order of root options matching one exact parameter name."""
-    from .command_parameter_contracts import OptionSpec
+    from cadrumo_client.commands.parameters import OptionSpec
 
     return tuple(
         parameter for parameter in root.parameters if isinstance(parameter, OptionSpec) and parameter.name == name
@@ -357,7 +357,7 @@ def is_introspection_only_invocation(ctx: typer.Context) -> bool:
     capture staged by :class:`CadrumoTyperGroup.invoke` (which works for both
     real-process and in-process invocations).
     """
-    from .command_suggestions import INVOCATION_REMAINDER_META_KEY
+    from cadrumo_client.commands.suggestions import INVOCATION_REMAINDER_META_KEY
 
     remainder = list(ctx.meta.get(INVOCATION_REMAINDER_META_KEY, ()))
     if _is_metadata_invocation(remainder):
@@ -401,7 +401,7 @@ def _verb_path_from_context(ctx: typer.Context) -> str | None:
     subcommand plus the unparsed remainder so prefix matching against
     :data:`BOOTSTRAP_EXEMPT_VERB_PATHS` continues to work.
     """
-    from .command_suggestions import INVOCATION_REMAINDER_META_KEY
+    from cadrumo_client.commands.suggestions import INVOCATION_REMAINDER_META_KEY
 
     captured = list(ctx.meta.get(INVOCATION_REMAINDER_META_KEY, ()))
     if captured:

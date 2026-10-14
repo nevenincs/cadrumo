@@ -34,7 +34,7 @@ from ...core.external_constants import OutputLanguage
 from ._modelo_cli_support import optional_decimal_option
 from ._modelo_payloads import CasillaObservationPayload, WorkPreviewMaritimeExemptionResult
 from .common import activate_subcommand_output_language, emit_envelope
-from .runtime_modelo_maritime_preview import preview_modelo_maritime_exemption
+from .operation_modelo_maritime_preview import preview_modelo_maritime_exemption
 
 
 def _parse_maritime_amounts(

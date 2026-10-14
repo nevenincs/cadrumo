@@ -15,6 +15,7 @@ from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect
 from ...core.time.clock import now
+from ...domain.buckets.event import BUCKET_ACTOR_LABEL_MAX_LENGTH
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.transactions.errors import TransactionValidationError
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
@@ -69,7 +70,7 @@ class LedgerResetReportProjection(BaseModel):
     removed_transaction_ids: _ReceiptIdentities = ()
     reset: bool = False
     dry_run: bool = False
-    actor: str = Field(min_length=1, max_length=64)
+    actor: str = Field(min_length=1, max_length=BUCKET_ACTOR_LABEL_MAX_LENGTH)
     reason: str = Field(max_length=_MAX_RECEIPT_REASON_LENGTH)
     cascaded_purchase_invoice_evidence_ids: _ReceiptIdentities = ()
     cascaded_attachment_ids: _ReceiptIdentities = ()

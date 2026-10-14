@@ -241,16 +241,18 @@ def test_access_is_exact_profile_and_requires_whole_profile_consent() -> None:
     assert foreign.value.reason is AccessDenialCode.PROFILE_MISMATCH
 
 
-def test_filing_record_list_is_admitted_on_the_mcp_frontend_without_a_commit_door() -> None:
+def test_filing_record_list_is_admitted_on_the_external_client_frontend_without_a_commit_door() -> None:
     _factory, _definition, registration, registry = _setup(_bundle(_record()))
     operation = cast(PinnedAuthorityOperation, object())
 
     resolved = resolve_operation_access(
         registry=registry,
         request=_request(),
-        context=_access_context(registration, operation=operation, frontend=OperationFrontendProjection.MCP),
+        context=_access_context(
+            registration, operation=operation, frontend=OperationFrontendProjection.EXTERNAL_CLIENT
+        ),
     )
-    assert resolved.request.frontend is OperationFrontendProjection.MCP
+    assert resolved.request.frontend is OperationFrontendProjection.EXTERNAL_CLIENT
     assert resolved.request.profile_id == _PROFILE
     assert AccessAction.COMMIT not in resolved.policy.actions
 

@@ -231,19 +231,19 @@ def _observe_functions(patch: pytest.MonkeyPatch, recorder: RuntimeBenchmarkReco
 
 def _observe_startup_functions(patch: pytest.MonkeyPatch, recorder: RuntimeBenchmarkRecorder) -> None:
     """Separate low-frequency synchronous launch, admission and CLI costs."""
-    from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-    from cadrumo.adapters.local_runtime.profile_worker import ProfileWorkerProcess
     from cadrumo.adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
     from cadrumo.entrypoints.cli.tests.cli_runner import cadrumo_click_command
-    from cadrumo.entrypoints.runtime.profile_login import ProfileWorkerHumanLogin
+    from cadrumo_client.transport.frontend_client import FrontendClient
+    from cadrumo_runtime.adapters.profile_worker import ProfileWorkerProcess
+    from cadrumo_runtime.host.profile_login import ProfileWorkerHumanLogin
 
     patch.setattr(
         ProfileWorkerProcess, "__init__", recorder.wrap(ProfileWorkerProcess.__init__, "startup.profile_worker")
     )
     patch.setattr(
-        RuntimeFrontendClient,
+        FrontendClient,
         "login_password",
-        recorder.wrap(RuntimeFrontendClient.login_password, "admission.frontend_password"),
+        recorder.wrap(FrontendClient.login_password, "admission.frontend_password"),
     )
     patch.setattr(
         ProfileWorkerHumanLogin,
@@ -253,15 +253,13 @@ def _observe_startup_functions(patch: pytest.MonkeyPatch, recorder: RuntimeBench
     _patch_function_aliases(patch, unlock_profile_custody, recorder.wrap(unlock_profile_custody, "custody.unlock"))
     _patch_function_aliases(patch, cadrumo_click_command, recorder.wrap(cadrumo_click_command, "cli.cached_command"))
     if sys.platform == "win32":
-        from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
-        from cadrumo.adapters.local_runtime.windows_process import WindowsProcessScope
+        from cadrumo_client.transport.windows import WindowsEndpoint
+        from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
 
         patch.setattr(
             WindowsProcessScope, "launch", recorder.wrap(WindowsProcessScope.launch, "startup.native_process_launch")
         )
-        patch.setattr(
-            WindowsRuntimeEndpoint, "connect", recorder.wrap(WindowsRuntimeEndpoint.connect, "startup.native_connect")
-        )
+        patch.setattr(WindowsEndpoint, "connect", recorder.wrap(WindowsEndpoint.connect, "startup.native_connect"))
 
 
 @contextmanager

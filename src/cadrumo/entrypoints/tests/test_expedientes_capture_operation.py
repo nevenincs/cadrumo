@@ -146,7 +146,7 @@ def _access_context(profile_id: UUID, contract: Any) -> OperationAccessContext:
         profile_id=profile_id,
         destination_id=uuid4(),
         action=AccessAction.SUBMIT,
-        frontend=OperationFrontendProjection.MCP,
+        frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
         contract=contract,
         published_authority=Availability.AVAILABLE,
     )

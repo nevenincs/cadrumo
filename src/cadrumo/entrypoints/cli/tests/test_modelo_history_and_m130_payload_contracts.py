@@ -96,7 +96,7 @@ def test_m130_totals_keep_their_string_wire_form() -> None:
         {"event_type": "not-an-event-type"},
         {"object_type": "not-an-object-type"},
         {"actor": ""},
-        {"actor": "z" * 100},
+        {"actor": "z" * 129},
         {"object_id": ""},
     ],
 )
@@ -113,6 +113,12 @@ def test_history_event_wire_form_is_unchanged() -> None:
     assert wire["event_type"] == "modelo.filed"
     assert wire["object_type"] == BucketEventObjectType.WORK_UNIT.value
     assert wire["occurred_at"].startswith("2026-04-01T09:00:00")
+
+
+def test_history_event_preserves_actor_at_persisted_boundary() -> None:
+    actor = "z" * 128
+    wire = ModeloLifecycleEventPayload.model_validate(_event(actor=actor)).model_dump(mode="json")
+    assert wire["actor"] == actor
 
 
 @pytest.mark.parametrize(

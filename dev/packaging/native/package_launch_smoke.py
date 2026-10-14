@@ -9,12 +9,6 @@ from contextlib import closing
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from cadrumo.adapters.local_runtime.boot_record import RuntimeBootRecord, read_runtime_boot_record
-from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
-from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
-from cadrumo.adapters.local_runtime.windows_native_io import owned_windows_handle
-from cadrumo.adapters.local_runtime.windows_process import WindowsOwnedProcess, WindowsProcessScope
-from cadrumo.application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.core.storage_environment import (
     ChildEnvironmentProfile,
     authority_root_setting_names,
@@ -23,6 +17,12 @@ from cadrumo.core.storage_environment import (
 )
 from cadrumo.core.type_guards import is_str_keyed_dict
 from cadrumo.domain.calculations.registry.authority_store import AUTHORITY_DESCRIPTOR_FILENAME, AuthorityDescriptor
+from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError
+from cadrumo_client.transport.framing import VerifiedConnection
+from cadrumo_client.transport.windows import WindowsEndpoint
+from cadrumo_client.transport.windows_native_io import owned_windows_handle
+from cadrumo_runtime.adapters.boot_record import RuntimeBootRecord, read_runtime_boot_record
+from cadrumo_runtime.adapters.windows_process import WindowsOwnedProcess, WindowsProcessScope
 
 from ..command_execution import run_command
 from .hashing import digest
@@ -113,8 +113,8 @@ def _health_facts(root: Path) -> dict[str, object]:
 def _require_health_running(process: WindowsOwnedProcess, root: Path, deadline: float) -> None:
     try:
         code = process.wait(timeout=0)
-    except RuntimeRefusalError as error:
-        if error.reason != RuntimeRefusalCode.DEADLINE_EXCEEDED:
+    except RefusalError as error:
+        if error.reason != RefusalCode.DEADLINE_EXCEEDED:
             raise
     else:
         facts = json.dumps(_health_facts(root), sort_keys=True)
@@ -146,8 +146,8 @@ def _recover_runtime(
     ):
         _require_health_running(process, root, deadline)
         time.sleep(0.05)
-    with closing(WindowsRuntimeEndpoint(storage_root=root)) as endpoint:
-        expected = RuntimeClientHello(
+    with closing(WindowsEndpoint(storage_root=root)) as endpoint:
+        expected = ClientHello(
             product_version=manifest["build"]["version"],
             storage_identity=endpoint.storage_identity,
             authority_generation=generation,
@@ -159,17 +159,15 @@ def _recover_runtime(
             try:
                 native = endpoint.connect(timeout=0.2, expected_image=package / "bin/cadrumo-runtime.exe")
                 try:
-                    wire = VerifiedRuntimeConnection(
-                        native, expected=expected, deadline=min(deadline, time.monotonic() + 2)
-                    )
+                    wire = VerifiedConnection(native, expected=expected, deadline=min(deadline, time.monotonic() + 2))
                 except BaseException:
                     native.close()
                     raise
-            except RuntimeRefusalError as error:
+            except RefusalError as error:
                 if error.reason not in {
-                    RuntimeRefusalCode.ENDPOINT_NOT_READY,
-                    RuntimeRefusalCode.CONNECTION_CLOSED,
-                    RuntimeRefusalCode.DEADLINE_EXCEEDED,
+                    RefusalCode.ENDPOINT_NOT_READY,
+                    RefusalCode.CONNECTION_CLOSED,
+                    RefusalCode.DEADLINE_EXCEEDED,
                 }:
                     raise
                 time.sleep(0.05)

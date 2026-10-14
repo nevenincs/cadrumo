@@ -1,5 +1,6 @@
 """PDF source identity is independent of authored manual structure coverage."""
 
+from dataclasses import replace
 from hashlib import sha256
 from pathlib import Path
 
@@ -47,4 +48,16 @@ def test_manual_source_still_requires_exact_bytes(tmp_path: Path, replacement: b
     path.parent.mkdir(parents=True)
     path.write_bytes(replacement)
     with pytest.raises(RegistryValidationError, match=r"byte count mismatch|sha256 mismatch"):
+        verify_source_file(tmp_path, source)
+
+
+@pytest.mark.parametrize("suffix", [".py", ".pyi", ".PY"])
+def test_declared_python_controls_are_refused_even_with_correct_content_identity(tmp_path: Path, suffix: str) -> None:
+    payload = b"source control code"
+    source = replace(_source(payload), corpus_path=f"corpus/control{suffix}")
+    path = tmp_path / source.corpus_path
+    path.parent.mkdir(parents=True)
+    path.write_bytes(payload)
+
+    with pytest.raises(RegistryValidationError, match="declares Python control code as corpus evidence"):
         verify_source_file(tmp_path, source)

@@ -1,6 +1,6 @@
 """No storage or custody handler translates away a subclass's retryability.
 
-``retryable`` is the instruction this CLI's operator -- an autonomous agent --
+``retryable`` is the instruction this CLI's operator -- an autonomous automation --
 acts on. Several error families publish one answer on a parent and the opposite
 on a child, deliberately: the subclassing exists so established handlers keep
 catching both. That same subclassing is what makes the answer easy to lose.
@@ -9,7 +9,7 @@ A handler that catches the PARENT and re-raises some other error type applies
 one answer to both cases. Registration did exactly that: it caught
 ``ProfileCustodyTransactionConflictError`` (retryable, a re-read wins) and
 translated it and its permanent ``ProfileCustodyDuplicateLabelError`` subclass
-into a single non-retryable refusal, so a transient loss told the agent the name
+into a single non-retryable refusal, so a transient loss told the automation the name
 it had just chosen was taken. It would not retry; it would rename a profile that
 did not exist.
 

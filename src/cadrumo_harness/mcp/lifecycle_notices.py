@@ -12,7 +12,7 @@ from __future__ import annotations
 from threading import Lock
 from typing import Any
 
-from cadrumo.application.runtime.session_events import RuntimeLifecycleNotice
+from cadrumo_client.contracts.session_events import LifecycleNotice
 
 
 class LifecycleNoticeBoard:
@@ -21,11 +21,11 @@ class LifecycleNoticeBoard:
     def __init__(self) -> None:
         """Start with nothing to tell."""
         self._guard = Lock()
-        self._notice: RuntimeLifecycleNotice | None = None
+        self._notice: LifecycleNotice | None = None
         self._owner: int | None = None
         self._told = False
 
-    def receive(self, owner: int, notice: RuntimeLifecycleNotice) -> None:
+    def receive(self, owner: int, notice: LifecycleNotice) -> None:
         """Keep a notice that arrived on the connection ``owner`` identifies; never blocks the transport."""
         with self._guard:
             self._notice, self._owner, self._told = notice, owner, False

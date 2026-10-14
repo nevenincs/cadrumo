@@ -81,7 +81,7 @@ impl Program {
             },
             Kind::Tui => Self {
                 executable: interpreter,
-                arguments: ["-m", "cadrumo.entrypoints.tui"]
+                arguments: ["-I", "-m", "cadrumo.entrypoints.tui"]
                     .into_iter()
                     .map(OsString::from)
                     .collect(),

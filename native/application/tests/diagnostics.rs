@@ -30,7 +30,14 @@ fn terminal_traffic_is_measured_without_retaining_screen_contents() {
     assert!(snapshot.output.is_empty());
     assert_eq!(snapshot.dropped_bytes, 0);
     assert_eq!(
-        snapshot.events.last().unwrap().status.as_ref().unwrap().terminal_bytes,
+        snapshot
+            .events
+            .last()
+            .unwrap()
+            .status
+            .as_ref()
+            .unwrap()
+            .terminal_bytes,
         8209
     );
 }

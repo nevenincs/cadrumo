@@ -12,58 +12,59 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.application.export.calculation_review_xlsx_operation import (
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.frontend_client import FrontendClient
+
+from .....application.export.calculation_review_xlsx_operation import (
     CALCULATION_REVIEW_XLSX_OPERATION_DEFINITION_ID,
     CalculationReviewXlsxRequest,
 )
-from cadrumo.application.modelo.export_projection import (
+from .....application.modelo.export_projection import (
     ModeloCalculationReportPublicReceipt,
     ModeloExportCompleteness,
     ModeloExportEvidenceStatus,
     ModeloExportPublicResultV3,
 )
-from cadrumo.application.modelo.m303_attestation_operation import (
+from .....application.modelo.m303_attestation_operation import (
     MODELO_WORK_M303_ATTESTATION_OPERATION_DEFINITION_ID,
     build_modelo_work_m303_attestation_definition,
     build_modelo_work_m303_attestation_registration,
 )
-from cadrumo.application.modelo.operation_definitions import (
+from .....application.modelo.operation_definitions import (
     MODELO_EXPORT_OPERATION_DEFINITION_ID,
     build_modelo_export_definition,
     build_modelo_export_registration,
 )
-from cadrumo.application.operations.frontend_projection import (
+from .....application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
     OperationPublicProjectionV1,
 )
-from cadrumo.application.operations.frontend_requests import (
+from .....application.operations.frontend_requests import (
     OperationObservationSuccessV1,
     OperationPublicEventPageV1,
 )
-from cadrumo.application.operations.persistence.replay import OperationReplayStatus
-from cadrumo.application.operations.public_period import PublicPeriod
-from cadrumo.application.operations.registry import OperationRegistry
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from cadrumo.core.calculation_report_format import CalculationReportDocumentFormat
-from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.core.modelo_export_artefact import ModeloExportArtefact
-from cadrumo.core.operations import (
+from .....application.operations.persistence.replay import OperationReplayStatus
+from .....application.operations.public_period import PublicPeriod
+from .....application.operations.registry import OperationRegistry
+from .....core.calculation_report_format import CalculationReportDocumentFormat
+from .....core.external_constants import OutputLanguage
+from .....core.modelo_export_artefact import ModeloExportArtefact
+from .....core.operations import (
     OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from cadrumo.core.payment_election import PaymentElection
-from cadrumo.core.period import Period
-from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
-from cadrumo.core.refund_election import RefundElection
-from cadrumo.entrypoints.tui.modelo import runtime_lifecycle
-from cadrumo.entrypoints.tui.modelo.lifecycle import (
+from .....core.payment_election import PaymentElection
+from .....core.period import Period
+from .....core.prior_domiciliation_election import PriorDomiciliationElection
+from .....core.refund_election import RefundElection
+from ...operations.runtime_controller import RuntimeOperationController
+from .. import runtime_lifecycle
+from ..lifecycle import (
     ModeloLifecycleActionUnavailableError,
     ModeloWorkspaceLifecycleDoor,
 )
-from cadrumo.entrypoints.tui.operations.runtime_controller import RuntimeOperationController
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -77,7 +78,7 @@ class _StartFailureController:
     operation_id = _OPERATION_ID
 
     async def start(self) -> None:
-        raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+        raise RefusalError(RefusalCode.CONNECTION_CLOSED)
 
 
 def test_lifecycle_start_transport_failure_keeps_submitted_identity_and_unknown_effect() -> None:
@@ -94,7 +95,7 @@ def test_lifecycle_start_transport_failure_keeps_submitted_identity_and_unknown_
     with pytest.raises(ModeloLifecycleActionUnavailableError) as raised:
         asyncio.run(door.calculate())
 
-    assert str(raised.value) == RuntimeRefusalCode.CONNECTION_CLOSED.value
+    assert str(raised.value) == RefusalCode.CONNECTION_CLOSED.value
     assert raised.value.context == {
         "operation_id": _OPERATION_ID,
         "effect": OperationEffect.UNKNOWN.value,
@@ -192,7 +193,7 @@ def _terminal_refused_observation() -> OperationObservationSuccessV1:
 class _AttestationController:
     operation_id = _OPERATION_ID
 
-    def __init__(self, *, start_error: RuntimeRefusalError | None = None) -> None:
+    def __init__(self, *, start_error: RefusalError | None = None) -> None:
         self.start_error = start_error
         self.started = False
         self.observation = _terminal_refused_observation()
@@ -228,13 +229,13 @@ def test_attestation_start_transport_failure_retains_canonical_reason_and_unknow
 ) -> None:
     session_id = uuid4()
     client, lifecycle = _attestation_inputs(session_id)
-    controller = _AttestationController(start_error=RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED))
+    controller = _AttestationController(start_error=RefusalError(RefusalCode.CONNECTION_CLOSED))
     _bind_controller_submit(monkeypatch, controller)
 
     with pytest.raises(ModeloLifecycleActionUnavailableError) as raised:
         asyncio.run(
             runtime_lifecycle._admit_attestation(
-                cast(RuntimeFrontendClient, client),
+                cast(FrontendClient, client),
                 lifecycle,
                 _NOW,
                 session_id,
@@ -242,7 +243,7 @@ def test_attestation_start_transport_failure_retains_canonical_reason_and_unknow
         )
 
     assert controller.started
-    assert str(raised.value) == RuntimeRefusalCode.CONNECTION_CLOSED.value
+    assert str(raised.value) == RefusalCode.CONNECTION_CLOSED.value
     assert raised.value.context == {
         "operation_id": _OPERATION_ID,
         "effect": OperationEffect.UNKNOWN.value,
@@ -260,7 +261,7 @@ def test_attestation_terminal_refusal_uses_registered_refusal_code_and_observed_
     with pytest.raises(ModeloLifecycleActionUnavailableError) as raised:
         asyncio.run(
             runtime_lifecycle._admit_attestation(
-                cast(RuntimeFrontendClient, client),
+                cast(FrontendClient, client),
                 lifecycle,
                 _NOW,
                 session_id,
@@ -378,7 +379,7 @@ def test_settled_export_result_is_read_through_the_runtime_reader() -> None:
 
 def test_settled_export_result_is_absent_without_a_readable_success() -> None:
     async def refusing_reader(_projection: OperationPublicProjectionV1) -> ModeloExportPublicResultV3:
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
 
     async def unreachable_reader(_projection: OperationPublicProjectionV1) -> ModeloExportPublicResultV3:
         raise AssertionError("a refused export has no result to read")

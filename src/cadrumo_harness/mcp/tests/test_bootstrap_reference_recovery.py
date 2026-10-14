@@ -9,7 +9,6 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import (
     AccessScope,
@@ -20,10 +19,15 @@ from cadrumo.application.user_profile.access_contracts import (
 )
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.core.time.clock import now
-from cadrumo_harness.mcp import runtime_adapter as mcp_runtime
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
-from cadrumo_harness.mcp.server import build_server
-from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
+from cadrumo_client.contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_harness.mcp.access_scope import surface_scope
+from cadrumo_harness.mcp.surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES
+
+from .. import runtime_adapter as mcp_runtime
+from ..runtime_adapter import RuntimeMcpAdapter
+from ..server import build_server
+from .session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -33,7 +37,7 @@ class _AdmittedClient:
 
     def __init__(self, profile_id: UUID) -> None:
         self.profile_id = profile_id
-        self.frontend = OperationFrontendProjection.MCP
+        self.frontend = OperationFrontendProjection.EXTERNAL_CLIENT
         self.session_id = uuid4()
         self.closed = False
         self._status = ProfileAccessStatus(
@@ -91,8 +95,15 @@ async def test_a_refused_configured_key_fences_every_private_route_and_offers_no
     calls: list[tuple[UUID, UUID, OperationFrontendProjection]] = []
 
     async def missing(
-        *, profile_id: UUID, credential_reference: UUID, frontend: OperationFrontendProjection
-    ) -> RuntimeFrontendClient:
+        *,
+        profile_id: UUID,
+        credential_reference: UUID,
+        frontend: OperationFrontendProjection,
+        timeout: float,
+        scope: AccessScope,
+    ) -> FrontendClient:
+        assert timeout == PROFILE_ADMISSION_TIMEOUT_SECONDS
+        assert scope == surface_scope(MCP_SURFACES[DEFAULT_MCP_SURFACE])
         calls.append((profile_id, credential_reference, frontend))
         raise AutomationCustodyError(failure)
 
@@ -100,7 +111,7 @@ async def test_a_refused_configured_key_fences_every_private_route_and_offers_no
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=None)
     try:
         await adapter.bootstrap_reference(reference)
-        assert calls == [(profile_id, reference, OperationFrontendProjection.MCP)]
+        assert calls == [(profile_id, reference, OperationFrontendProjection.EXTERNAL_CLIENT)]
         assert adapter.client is None
         async with connected_server_and_client_session(build_server(adapter)) as sdk:
             names = {tool.name for tool in (await sdk.list_tools()).tools}
@@ -148,15 +159,22 @@ async def test_a_configured_key_the_runtime_refused_admits_the_server_once_the_r
     opened: list[UUID] = []
 
     async def open_candidate(
-        *, profile_id: UUID, credential_reference: UUID, frontend: OperationFrontendProjection
-    ) -> RuntimeFrontendClient:
+        *,
+        profile_id: UUID,
+        credential_reference: UUID,
+        frontend: OperationFrontendProjection,
+        timeout: float,
+        scope: AccessScope,
+    ) -> FrontendClient:
+        assert timeout == PROFILE_ADMISSION_TIMEOUT_SECONDS
+        assert scope == surface_scope(MCP_SURFACES[DEFAULT_MCP_SURFACE])
         assert profile_id == candidate.profile_id
-        assert frontend is OperationFrontendProjection.MCP
+        assert frontend is OperationFrontendProjection.EXTERNAL_CLIENT
         assert credential_reference == reference
         opened.append(credential_reference)
         if len(opened) == 1:
             raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
-        return cast(RuntimeFrontendClient, candidate)
+        return cast(FrontendClient, candidate)
 
     monkeypatch.setattr(mcp_runtime, "open_installed_credential_client", open_candidate)
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=None)

@@ -1,14 +1,5 @@
-"""Shared fixtures for the dev-side repo-wide ratchet suite.
+"""Repo-wide ratchets use ``source_tree_ast`` from the root pytest plugin.
 
-The ratchets moved here from the package test tree still exercise the shipped
-source surface, so the package-root session fixture they were built on is
-re-imported rather than re-implemented. pytest registers fixture-marked
-objects found in any conftest namespace, so the import alone makes
-``source_tree_ast`` available to the tests in this directory.
+No fixture is forwarded here: repository-root plugin discovery exposes it to
+this tree alongside every other package test.
 """
-
-from __future__ import annotations
-
-from cadrumo.conftest import source_tree_ast
-
-__all__ = ["source_tree_ast"]

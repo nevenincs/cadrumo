@@ -86,7 +86,7 @@ def evidence_batch(
         sources.insert(0, directory)
     if not sources:
         raise bad(tr("cli.app.ledger.evidence.batch_source_required"))
-    from .runtime_ledger_evidence_ingestion import run_ledger_evidence_batch
+    from .operation_ledger_evidence_ingestion import run_ledger_evidence_batch
 
     text_mode = format_of(ctx) is not OutputFormat.JSON
     projection = run_ledger_evidence_batch(ctx, sources=tuple(sources), direction=kind)

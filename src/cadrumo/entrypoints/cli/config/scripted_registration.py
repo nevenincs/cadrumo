@@ -25,8 +25,8 @@ other: a command line is visible in the process table and in shell history.
 
 Recovery is optional and comes after the profile exists. At a console the
 verb asks once whether to set up a recovery code, defaulting to no; a
-machine caller is never asked and enrols later through
-``config profile recovery enable``. Either way the profile is already created
+machine caller is never asked and can use the authentication command for
+recovery enrollment later. Either way the profile is already created
 by the time the question is put, so declining costs nothing.
 """
 
@@ -37,12 +37,14 @@ from typing import TYPE_CHECKING, cast
 import typer
 from pydantic import SecretStr
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.recovery_handover import recovery_handover
+from cadrumo_client.commands.secure_input import MachineSecretPayload
+
 from ....core.i18n.render import tr
 from ....core.json_contract import Notice, NoticeSeverity
 from ....core.logging import get_logger
 from ..common import emit_envelope
-from ..errors import CliRefusedBoundaryError
-from .secure_input import MachineSecretPayload
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
@@ -55,8 +57,8 @@ if TYPE_CHECKING:
     from ....domain.user_profile.values import UserProfileFact
 
 
-def _runtime_object(value: object) -> object:
-    """Capture a credential before applying the cleanup boundary check."""
+def _opaque_value(value: object) -> object:
+    """Keep this cleanup reference explicit while returning the same value."""
     return value
 
 
@@ -74,7 +76,7 @@ def resolve_creation_passphrase(*, secrets_stdin: bool = False, secrets_fd: int 
     interactive terminal receives the no-echo prompt; a non-interactive caller
     must choose one of the explicit channels.
     """
-    from .secure_input import (
+    from cadrumo_client.commands.secure_input import (
         prompt_secret_no_echo,
         read_machine_secret_payload,
         select_machine_secret_channel,
@@ -107,7 +109,10 @@ def resolve_creation_passphrase(*, secrets_stdin: bool = False, secrets_fd: int 
 
 def _offer_recovery_at_console(*, machine_channel: bool) -> bool:
     """Ask a console operator whether to enrol recovery now; never ask a machine caller."""
-    from .secure_input import prompt_confirmation_on_controlling_terminal, terminal_can_prompt_for_secrets
+    from cadrumo_client.commands.secure_input import (
+        prompt_confirmation_on_controlling_terminal,
+        terminal_can_prompt_for_secrets,
+    )
 
     if machine_channel or not terminal_can_prompt_for_secrets():
         return False
@@ -131,15 +136,14 @@ def _run_scripted_profile_creation(
     from uuid import UUID
 
     from ....application.user_profile.recovery_custody import enroll_profile_recovery
-    from .recovery import recovery_handover
 
-    passphrase = _runtime_object(None)
+    passphrase = _opaque_value(None)
     try:
         resolved_passphrase = resolve_creation_passphrase(
             secrets_stdin=secrets_stdin,
             secrets_fd=secrets_fd,
         )
-        passphrase = _runtime_object(resolved_passphrase)
+        passphrase = _opaque_value(resolved_passphrase)
         outcome = register_profile(
             label=label,
             passphrase=resolved_passphrase,

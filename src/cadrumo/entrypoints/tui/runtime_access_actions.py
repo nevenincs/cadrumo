@@ -9,9 +9,10 @@ from uuid import UUID
 from textual.widget import Widget
 from textual.widgets import Input, Static
 
-from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ...adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
-from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
 from ...application.user_profile.access_contracts import AccessDenialCode
 from ...application.user_profile.access_projections import PublicAccessSession
 from ...application.user_profile.automation_lifecycle import AutomationDenialKind
@@ -53,7 +54,7 @@ _WidgetT = TypeVar("_WidgetT", bound=Widget)
 
 class _RuntimeAccessActionHost(Protocol):
     _busy: bool
-    _client: RuntimeFrontendClient
+    _client: FrontendClient
     _profile_id: UUID
     _session_id: UUID
     _resume_dispatched: bool
@@ -82,9 +83,7 @@ class _RuntimeAccessActionHost(Protocol):
 
     def _show_action_completion(self, acknowledgement: str | None) -> None: ...
 
-    async def _handle_refusal(
-        self, action: _Action, error: RuntimeFrontendRefusedError | RuntimeRefusalError
-    ) -> None: ...
+    async def _handle_refusal(self, action: _Action, error: FrontendRefusedError | RefusalError) -> None: ...
 
     def _handle_uncertain_failure(self, action: _Action) -> None: ...
 
@@ -118,7 +117,7 @@ class _RuntimeAccessActionsMixin:
             completed, acknowledgement = await self._dispatch_action(action)
             if completed:
                 self._show_action_completion(acknowledgement)
-        except (RuntimeFrontendRefusedError, RuntimeRefusalError) as error:
+        except (FrontendRefusedError, RefusalError) as error:
             await self._handle_refusal(action, error)
         except asyncio.CancelledError:
             self._handle_uncertain_failure(action)
@@ -162,7 +161,7 @@ class _RuntimeAccessActionsMixin:
             asyncio.to_thread(self._client.deny_automation, kind, target_id=target), task_name="tui-access-denial"
         )
         if denied.profile_id != self._profile_id:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         if self._active():
             self.query_one("#runtime-access-target", Input).value = ""
         return True, denial_acknowledgement(denied)
@@ -172,7 +171,7 @@ class _RuntimeAccessActionsMixin:
             asyncio.to_thread(self._client.lock), task_name="tui-current-session-lock"
         )
         if self._session_id not in locked.session_ids:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         acknowledgement = tr("tui.runtime_access.sessions_locked", session_ids=", ".join(map(str, locked.session_ids)))
         self._lose_access()
         return True, acknowledgement
@@ -204,7 +203,7 @@ class _RuntimeAccessActionsMixin:
             task_name="tui-profile-lock",
         )
         if denied.profile_id != self._profile_id:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         acknowledgement = denial_acknowledgement(denied)
         self._lose_access()
         return True, acknowledgement
@@ -230,12 +229,12 @@ class _RuntimeAccessActionsMixin:
             self.query_one("#runtime-access-status", Static).update(acknowledgement)
 
     async def _handle_refusal(
-        self: _RuntimeAccessActionHost, action: _Action, error: RuntimeFrontendRefusedError | RuntimeRefusalError
+        self: _RuntimeAccessActionHost, action: _Action, error: FrontendRefusedError | RefusalError
     ) -> None:
-        code = error.reason if isinstance(error, RuntimeFrontendRefusedError) else error.reason.value
+        code = error.reason if isinstance(error, FrontendRefusedError) else error.reason.value
         human_refusal = (
             action not in {"lock_current", "resume"}
-            and isinstance(error, RuntimeFrontendRefusedError)
+            and isinstance(error, FrontendRefusedError)
             and error.reason == AccessDenialCode.HUMAN_AUTHORITY_REQUIRED.value
         )
         if human_refusal and await self._retain_self_lock_after_human_refusal():
@@ -243,8 +242,7 @@ class _RuntimeAccessActionsMixin:
         elif action == "resume":
             self._resume_failed(
                 code=code,
-                uncertain=isinstance(error, RuntimeRefusalError)
-                or error.reason in {item.value for item in RuntimeRefusalCode},
+                uncertain=isinstance(error, RefusalError) or error.reason in {item.value for item in RefusalCode},
             )
         else:
             self._lose_access()
@@ -252,11 +250,11 @@ class _RuntimeAccessActionsMixin:
 
     def _handle_uncertain_failure(self: _RuntimeAccessActionHost, action: _Action) -> None:
         if action == "resume":
-            self._resume_failed(code=RuntimeRefusalCode.UNAVAILABLE.value, uncertain=True)
+            self._resume_failed(code=RefusalCode.UNAVAILABLE.value, uncertain=True)
 
     def _handle_unexpected_failure(self: _RuntimeAccessActionHost, action: _Action) -> None:
         if action == "resume":
-            self._resume_failed(code=RuntimeRefusalCode.UNAVAILABLE.value, uncertain=True)
+            self._resume_failed(code=RefusalCode.UNAVAILABLE.value, uncertain=True)
         else:
             self._lose_access()
             self._status("tui.runtime_access.access_lost")

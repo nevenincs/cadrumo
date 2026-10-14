@@ -1,4 +1,4 @@
-"""Registered-executor conformance scenario for the agent-facing typed ledger history."""
+"""Registered-executor conformance scenario for the automation-facing typed ledger history."""
 
 from __future__ import annotations
 

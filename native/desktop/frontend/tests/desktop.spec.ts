@@ -39,7 +39,7 @@ async function signInHost(
         // What the product reports a sign-out leaves standing: the saved
         // setting is on, and whether an issued key can still admit is a
         // separate answer.
-        agentAccessRemains: false as boolean | null,
+        automationAccessRemains: false as boolean | null,
         tuiStarts: 0,
         tuiCloses: 0,
         terminalStarts: [] as string[],
@@ -227,7 +227,7 @@ async function signInHost(
                 return {
                   remainingAccess: {
                     automationEnabled: true,
-                    agentAccessRemains: state.agentAccessRemains,
+                    automationAccessRemains: state.automationAccessRemains,
                     automationRevoked: false,
                   },
                 };
@@ -677,7 +677,7 @@ for (const remains of [false, null, true] as const)
     page: target,
   }) => {
     await signInHost(target);
-    await markSignedIn(target, { agentAccessRemains: remains });
+    await markSignedIn(target, { automationAccessRemains: remains });
     await expect(target.locator(".pane-agent")).toBeVisible();
     await target
       .getByRole("button", { name: label("desktop.titlebar.profile_menu") })

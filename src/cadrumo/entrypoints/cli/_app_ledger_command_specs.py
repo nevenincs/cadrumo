@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from cadrumo_client.commands.spec import CommandSpec
+
 from ._app_ledger_account_command_specs import LEDGER_ACCOUNT_COMMAND_SPECS
 from ._app_ledger_actividad_asset_command_specs import LEDGER_ACTIVIDAD_ASSET_COMMAND_SPECS
 from ._app_ledger_bienes_inversion_command_specs import LEDGER_BIENES_INVERSION_COMMAND_SPECS
@@ -21,7 +23,6 @@ from ._app_ledger_participation_command_specs import LEDGER_PARTICIPATION_COMMAN
 from ._app_ledger_prorrata_command_specs import LEDGER_PRORRATA_COMMAND_SPECS
 from ._app_ledger_ratios_command_specs import LEDGER_RATIOS_COMMAND_SPECS
 from ._app_ledger_rule_command_specs import LEDGER_RULE_COMMAND_SPECS
-from .command_spec import CommandSpec
 
 LEDGER_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     *LEDGER_FOUNDATION_COMMAND_SPECS,

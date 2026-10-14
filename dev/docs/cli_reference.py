@@ -20,7 +20,7 @@ registry (``schemas.rst``).
 
 The generator is documentation tooling.  It lives under ``dev/docs`` and
 introspects the production package from outside rather than being part of the
-``cadrumo`` runtime package.
+``cadrumo`` tax application package.
 
 Language pinning
 ----------------
@@ -60,7 +60,7 @@ from dev.product_environment import ambient_product_settings_removed
 from ._locale_chrome import chrome_anchor, docs_chrome, markup_page, same_wording
 
 if TYPE_CHECKING:
-    from cadrumo.entrypoints.cli.command_spec import CommandSpecNode
+    from cadrumo_client.commands.spec import CommandSpecNode
 
 #: Group-callback emit sites - keys registered under a group callback rather
 #: than a leaf command.  These are excluded from the per-command reference
@@ -211,8 +211,8 @@ def _rst_heading(text: str, char: str) -> str:
 def _render_graph_command(language: OutputLanguage, path: tuple[str, ...], spec: object) -> str:
     """Render one authored command specification without runtime tree inspection."""
     from cadrumo.core.i18n.render import tr
-    from cadrumo.entrypoints.cli.command_parameter_contracts import ArgumentSpec
-    from cadrumo.entrypoints.cli.command_spec import CommandSpec
+    from cadrumo_client.commands.parameters import ArgumentSpec
+    from cadrumo_client.commands.spec import CommandSpec
 
     if not isinstance(spec, CommandSpec):
         raise TypeError("CLI reference received a non-CommandSpec node")

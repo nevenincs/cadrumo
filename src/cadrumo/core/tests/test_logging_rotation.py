@@ -110,6 +110,6 @@ def test_file_records_use_the_published_line_format(tmp_path: Path) -> None:
         _logging_mod._configured = original_configured or True
     line = re.compile(
         r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z \[WARNING\] cadrumo\.tests\.format: format probe"
-        r' \| \{"process_id":\d+,"process_role":"python"\}'
+        r' \| \{"process_id":\d+,"process_role":"python","thread_id":\d+,"thread_name":"MainThread"\}'
     )
     assert any(line.fullmatch(entry) for entry in lines), lines

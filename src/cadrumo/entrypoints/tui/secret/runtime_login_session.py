@@ -7,18 +7,19 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from uuid import UUID
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo_client.transport.frontend_client import FrontendClient
+
 from ....core.async_cleanup import await_cancellation_complete
 
-type RuntimeClientOpener = Callable[[UUID], Awaitable[RuntimeFrontendClient]]
+type RuntimeClientOpener = Callable[[UUID], Awaitable[FrontendClient]]
 
 
 async def open_to_completion(
     opener: RuntimeClientOpener, profile_id: UUID
-) -> tuple[RuntimeFrontendClient, asyncio.CancelledError | None]:
+) -> tuple[FrontendClient, asyncio.CancelledError | None]:
     """Retain an acquired client even when the screen is cancelled during open."""
 
-    async def invoke() -> RuntimeFrontendClient:
+    async def invoke() -> FrontendClient:
         return await opener(profile_id)
 
     opening = asyncio.create_task(invoke(), name="tui-runtime-login-open")
@@ -57,7 +58,7 @@ class LoginCleanup:
 class ResumeAttemptState:
     """Track recovery progress so failures preserve the original refusal boundary."""
 
-    client: RuntimeFrontendClient | None = None
+    client: FrontendClient | None = None
     dispatched: bool = False
     completed: bool = False
     primary_error: BaseException | None = None
@@ -67,7 +68,7 @@ class ResumeAttemptState:
 class LoginAttemptState:
     """Track client custody and the primary error for one login attempt."""
 
-    client: RuntimeFrontendClient | None = None
+    client: FrontendClient | None = None
     transferred: bool = False
     primary_error: BaseException | None = None
     unsubscribe_notice: Callable[[], None] | None = None

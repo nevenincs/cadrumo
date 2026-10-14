@@ -13,6 +13,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.entrypoints.tests.modelo_operator_work_storage import SEEDED_AT, seeded_operator_work
+
 from ...application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
@@ -20,7 +22,6 @@ from ...application.modelo.caller_context import caller_context_calculation_inpu
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import validated_casilla_id
 from ...domain.modelos.calculation_revision_operator_layer import CalculationOperatorLayer
-from .modelo_operator_work_storage import SEEDED_AT, seeded_operator_work
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

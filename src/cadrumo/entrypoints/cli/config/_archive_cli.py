@@ -95,12 +95,13 @@ def archive_export(
 ) -> None:
     """Write the bound profile's capsule to a sealed archive."""
     _activate_subcommand_output_language(ctx, output_language)
+    from cadrumo_client.commands.payloads import ConfigProfileArchiveExportResult
+    from cadrumo_client.commands.profile_binding import bound_profile_client
+
     from ....application.user_profile.access_contracts import AccessDenialCode
     from ....application.user_profile.access_errors import ProfileAccessRefusedError
     from ....application.user_profile.archive_operation import ProfileArchiveExportRequest
-    from ..config_payloads import ConfigProfileArchiveExportResult
-    from ..runtime_profile_archive import run_profile_archive_export
-    from ..runtime_profile_binding import bound_profile_client
+    from ..operation_profile_archive import run_profile_archive_export
     from ._profile_support import resolve_profile_by_label
 
     _refuse_an_archive_target_the_writer_would_reject(output)
@@ -137,8 +138,9 @@ def archive_inspect(
 ) -> None:
     """Report an archive's plaintext header without decrypting it."""
     _activate_subcommand_output_language(ctx, output_language)
+    from cadrumo_client.commands.payloads import ConfigProfileArchiveInspectResult
+
     from ....application.user_profile.capsule_archive import inspect_profile_capsule_archive
-    from ..config_payloads import ConfigProfileArchiveInspectResult
 
     inspection = inspect_profile_capsule_archive(file)
 

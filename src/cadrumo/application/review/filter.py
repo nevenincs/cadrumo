@@ -492,7 +492,7 @@ class LedgerReviewFilterSpec(BaseModel):
             provided.
         import_id: Raw import-batch id if ``import=`` was provided.
             Identifier-shape validation lives on the
-            :class:`cadrumo.application.transactions` import surface.
+            :mod:`cadrumo.application.transactions` import surface.
     """
 
     model_config = _STRICT_FROZEN

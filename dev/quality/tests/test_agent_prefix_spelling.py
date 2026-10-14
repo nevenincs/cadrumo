@@ -86,14 +86,11 @@ _ALLOWED_FILES: Final[Mapping[str, str]] = {
     "native/application-environment.toml": (
         "the package declaration: the one file that names each packaged image's environment, the agent's included"
     ),
-    "src/cadrumo/application/agent_host/launch_environment.py": (
-        "the runtime's launch composer: names the gateway's launch slots and the names Cadrumo advertises to the agent"
+    "src/cadrumo_agent_service/host/launch_environment.py": (
+        "the service's launch composer: names the gateway's launch slots and the names Cadrumo advertises to the agent"
     ),
-    "src/cadrumo/application/agent_host/tests/test_launch_environment.py": (
+    "src/cadrumo_agent_service/host/tests/test_launch_environment.py": (
         "retired-name refusal fixture: the composer drops every agent name it receives and never emits a retired path"
-    ),
-    "src/cadrumo/entrypoints/runtime/tests/test_agent_host_runtime.py": (
-        "retired-name refusal fixture: the runtime's start fills exactly the gateway slots and never a retired path"
     ),
     "dev/packaging/native/tests/test_agent_image.py": (
         "package-side test of the agent image: asserts the names its profiles admit, refuse and type"
@@ -331,8 +328,8 @@ def test_every_allowed_file_and_the_generated_contract_may_spell_the_prefix(tmp_
     [
         "native/other/application-environment.toml",
         "native/application-environment.toml.bak",
-        "src/cadrumo/application/agent_host/launch_environment_copy.py",
-        "src/cadrumo/application/agent_host/other/launch_environment.py",
+        "src/cadrumo_agent_service/host/launch_environment_copy.py",
+        "src/cadrumo_agent_service/host/other/launch_environment.py",
         "native/manager/src/contract.rs",
         "native/generated/contract.toml",
         "dev/generated/contract.py",

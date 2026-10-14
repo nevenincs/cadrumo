@@ -52,7 +52,7 @@ def test_authority_refuses_real_m182_through_the_public_accessor() -> None:
     """
     authority = compile_validated_authority(bundled_path("registry", "aeat"), bundled_path())
     revision = authority.modelo("182").revisions["2025"]
-    assert revision.review_status is RevisionReviewStatus.AGENT_REVIEWED
+    assert revision.review_status is RevisionReviewStatus.AUTOMATION_REVIEWED
     assert revision.authority_grade is RegistryAuthorityGrade.APPLICABILITY
     legal_review_statuses = {str(ref): authority.catalogues.legal[ref].review_status for ref in revision.legal_refs}
     assert set(legal_review_statuses) == _M182_LEGACY_OPERATOR_REVIEWED_REFS | _M182_AMENDMENT_AGENT_REVIEWED_REFS
@@ -64,7 +64,7 @@ def test_authority_refuses_real_m182_through_the_public_accessor() -> None:
     assert {
         ref
         for ref, review_status in legal_review_statuses.items()
-        if review_status is RevisionReviewStatus.AGENT_REVIEWED
+        if review_status is RevisionReviewStatus.AUTOMATION_REVIEWED
     } == _M182_AMENDMENT_AGENT_REVIEWED_REFS
 
     # Through the PUBLIC accessor the revision is untouched, so it still declares
@@ -87,7 +87,7 @@ def test_authority_refuses_real_m182_through_the_public_accessor() -> None:
         # Agent review CLEARS the review gate -- see the sibling gate's docstring
         # for why demanding operator_reviewed was unreachable -- so M182 is
         # refused one gate later, for the reason that is actually true of it.
-        (RevisionReviewStatus.AGENT_REVIEWED, "agent-review", date(2026, 8, 1), r"declares no export layout"),
+        (RevisionReviewStatus.AUTOMATION_REVIEWED, "agent-review", date(2026, 8, 1), r"declares no export layout"),
     ),
 )
 def test_build_validated_snapshot_refuses_real_m182_non_operator_revision(

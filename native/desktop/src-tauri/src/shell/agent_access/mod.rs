@@ -1,6 +1,6 @@
 //! The keys the signed-in profile has issued to agents outside Cadrumo, as
 //! short-lived canonical CLI invocations of the sign-in view's own channel:
-//! the digest-verified `aeat`, its projected environment, its lanes, deadline
+//! the digest-verified runtime image, its projected environment, its lanes, deadline
 //! and output bound.
 //!
 //! Listing and revoking are the person's own acts, and the product refuses
@@ -13,7 +13,7 @@
 //! Issuing a key is not offered yet: the product does not yet have the form
 //! of it that one act of the person can complete, and the host will not
 //! stand in for the person's approval with a second process.
-mod wire;
+pub(crate) mod wire;
 
 use crate::shell::sign_in::{
     SignIn,
@@ -108,7 +108,7 @@ fn run_revoke(
 }
 
 fn command_of(sign_in: &SignIn, arguments: Vec<String>) -> Result<Command> {
-    let mut command = sign_in.cli()?.command();
+    let mut command = sign_in.runtime()?.command();
     command.args(arguments);
     Ok(command)
 }

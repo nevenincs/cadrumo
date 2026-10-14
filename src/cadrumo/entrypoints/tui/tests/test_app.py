@@ -11,8 +11,9 @@ from textual.pilot import Pilot
 from textual.screen import Screen
 from textual.widgets import Static
 
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+
 from ....application.overview.home import HomeProjectionV1, HomeSessionPosture
-from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....application.search.workbench import WorkbenchDestinationAdmissionState, WorkbenchSearchService
 from ....application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
 from ....core.errors.hierarchy import InternalInvariantError
@@ -483,7 +484,7 @@ async def test_sign_out_direct_action_recomposes_success_or_requires_fresh_admis
 
     async def complete() -> AccountRecomposeRequiredV1:
         if completion == "refusal":
-            raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+            raise RefusalError(RefusalCode.CONNECTION_CLOSED)
         return AccountRecomposeRequiredV1(
             reason=(
                 AccountRecomposeReasonV1.SIGNED_OUT if completion == "success" else AccountRecomposeReasonV1.CHANGE_USER

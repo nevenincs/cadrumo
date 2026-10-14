@@ -51,6 +51,9 @@ from uuid import UUID, uuid4
 import typer
 from pydantic import BaseModel
 
+from cadrumo_client.commands.profile_binding import require_profile_client
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+
 from ...application.flows.copy import register_copy_source
 from ...application.flows.definition import CopyRef, FlowChoice, FlowCondition, FlowDefinition, FlowPage, FlowSection
 from ...application.flows.engine import FlowState
@@ -71,7 +74,6 @@ from ...application.modelo.work_amend_contracts import (
     ModeloWorkAmendRequest,
 )
 from ...application.operations.public_scalar import PublicDecimal
-from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
@@ -87,9 +89,8 @@ from ._modelo_amend_wizard_payloads import AmendWizardCorrectedCasillaPayload, W
 from ._modelo_cli_support import bad_parameter_from_error, resolve_actor_option
 from ._modelo_rendering import filing_record_lines
 from .common import activate_subcommand_output_language, emit_envelope, no_active_profile_refusal
-from .runtime_modelo_amendment import read_modelo_work_amendment_context, run_modelo_work_amendment
-from .runtime_modelo_metadata import read_modelo_work_unit
-from .runtime_profile_binding import require_profile_client
+from .operation_modelo_amendment import read_modelo_work_amendment_context, run_modelo_work_amendment
+from .operation_modelo_metadata import read_modelo_work_unit
 
 if TYPE_CHECKING:
     from ...domain.modelos.filing_record import ModeloRecord
@@ -191,7 +192,7 @@ def run_modelo_work_amend_wizard(
     if not isinstance(context_projection, ModeloWorkAmendmentContextProjection) or _amendment_context_scope_invalid(
         context_projection, unit
     ):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     baseline = context_projection.record
     unit = context_projection.unit.to_work_unit()
     if baseline.external_evidence is None:
@@ -249,7 +250,7 @@ def run_modelo_work_amend_wizard(
     )
     amended = run_modelo_work_amendment(client, request, work_unit_id=unit.work_unit_id).projection
     if not isinstance(amended, ModeloWorkAmendPublicResultV2):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     _emit_amend_wizard_result(
         ctx,
         record=amended.record.to_record(),
@@ -265,7 +266,7 @@ def _baseline_values(context: ModeloWorkAmendmentContextProjection) -> dict[str,
     values: dict[str, Decimal] = {}
     for fact in context.calculation.casilla_values:
         if not isinstance(fact.value, PublicDecimal):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         values[fact.key] = Decimal(fact.value.decimal)
     return values
 

@@ -1392,7 +1392,7 @@ cli:
             des del magatzem local d'observacions abans d'exportar (resums anuals,
             arrossegament de trimestres anteriors, etc.)
           root_folder_required: No s'ha creat cap carpeta de Drive per a aquest perfil;
-            executa `aeat config google login` primer
+            executa `cadrumo-runtime config google login` primer
           snapshot_failure: No es pot construir la instantània de les definicions
             dels models per al model {modelo} ({period} {year}).
         push_help: Exporta el càlcul d'un model i període, tal com el fixen les definicions
@@ -1934,8 +1934,8 @@ cli:
         clear_help: Retirar la configuració d'apoderat
         configure:
           no_console_hint: 'La configuració interactiva de l''apoderament requereix
-            una consola. Configura''l de manera no interactiva amb: aeat config auth
-            apoderado configure --represented-nif NIF --scope SCOPE.'
+            una consola. Configura''l de manera no interactiva amb: cadrumo-runtime
+            config auth apoderado configure --represented-nif NIF --scope SCOPE.'
           represented_nif_help: NIF de la part representada
           scope_help: Tokens d'abast (es poden repetir)
           scope_required: 'No s''ha indicat cap àmbit. Afegeix --scope amb un o més
@@ -2028,7 +2028,7 @@ cli:
       status_summary_unconfigured: L'autenticació encara no està configurada.
       test_help: Comprovar la preparació d'autenticació local
       unknown_provider: 'Proveïdor d''autenticació desconegut: %{provider}. Executa
-        ''aeat config auth --help'' per veure els identificadors vàlids.'
+        ''cadrumo-runtime config auth --help'' per veure els identificadors vàlids.'
     check:
       available: disponible
       capability_label: Capacitat
@@ -2199,7 +2199,7 @@ cli:
         profile_unbound: No hi ha cap perfil actiu. Executa aeat config login NAME
           o indica --profile.
         scope_insufficient: L'accés concedit a Google no inclou els permisos necessaris.
-          Executa `aeat config google login` i accepta tots els permisos.
+          Executa `cadrumo-runtime config google login` i accepta tots els permisos.
         storage: 'No s''ha pogut accedir a l''emmagatzematge de Google Drive: {detail}'
         unsecured_mode: L'accés a Google està blocat mentre el magatzem de secrets
           funciona en mode no segur per a un perfil amb un NIF real.
@@ -2219,6 +2219,8 @@ cli:
       probe_read_only_help: Comprova Google Drive en mode només lectura
       status_help: Mostrar l'estat actual de la sessió OAuth de Google per al perfil
         actiu
+    help: Gestiona l’inici de sessió, l’accés al perfil i la configuració d’autenticació
+      local.
     list:
       help: Llistar tots els perfils registrats i marcar l'actiu
     login:
@@ -2445,7 +2447,7 @@ cli:
         status' per veure què falta.
       create_help: Crea un perfil protegit per una contrasenya. En un terminal ofereix
         després un codi de recuperació opcional; pots ometre'l o afegir-lo més tard
-        amb 'aeat config profile recovery enable'.
+        amb 'cadrumo-runtime config profile recovery enable'.
       create_login_required: El perfil '{profile}' s'ha creat, però encara no tens
         cap sessió oberta. Inicia la sessió amb l'ordre 'config login {profile}' per
         desbloquejar-ne les dades abans de continuar.

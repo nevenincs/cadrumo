@@ -2,21 +2,20 @@
 
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import (
+from cadrumo_client.commands.shared_contracts import (
+    ResultSchemaSpec,
+    SchemaState,
+    translation_key,
+)
+from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import (
+    Capability,
     CommandNodeKind,
     CommandWriteRoute,
     CommandWriteRouteValue,
-)
-
-from ..command_shared_contracts import (
-    Capability,
     PerformanceClass,
-    ResultSchemaSpec,
-    SchemaState,
     SideEffect,
-    translation_key,
 )
-from ..command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
 
 
 def _policy(

@@ -20,11 +20,12 @@ from textual.containers import Horizontal, VerticalScroll
 from textual.dom import DOMNode
 from textual.widgets import Button, Footer, Static
 
-from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ...adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from cadrumo_client.contracts.contracts import RefusalError
+from cadrumo_client.contracts.profile_access import status_admits_session
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
 from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
-from ...application.runtime.contracts import RuntimeRefusalError
-from ...application.runtime.profile_access import status_admits_session
 from ...application.user_profile.access_contracts import ProfileAccessStatus
 from ...application.user_profile.disclosure_paging import DisclosurePager
 from ...core.async_cleanup import await_cancellation_complete
@@ -43,7 +44,7 @@ from .secret.automation_requester import RuntimeAutomationRequesterScreen
 
 _STATUS_INTERVAL_SECONDS = 10.0
 type _LockAction = Literal["sign_out", "change_user"]
-type RestrictedRequesterFactory = Callable[[RuntimeFrontendClient], RuntimeAutomationRequesterScreen]
+type RestrictedRequesterFactory = Callable[[FrontendClient], RuntimeAutomationRequesterScreen]
 
 
 def _restricted_disclosures(status: ProfileAccessStatus, empty: str) -> str:
@@ -85,7 +86,7 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
 
     def __init__(
         self,
-        client: RuntimeFrontendClient,
+        client: FrontendClient,
         *,
         profile_label: str,
         operation_registry: Callable[[], OperationRegistry],
@@ -193,7 +194,7 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
                 and self._client.profile_id == self._profile_id
                 and self._client.session_id == self._session_id
             )
-        except (RuntimeFrontendRefusedError, RuntimeRefusalError):
+        except (FrontendRefusedError, RefusalError):
             return False
 
     def _status_is_current(self, status: ProfileAccessStatus) -> bool:
@@ -339,7 +340,7 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
                 asyncio.to_thread(self._disclosures.next_page, digest), task_name="tui-restricted-disclosures"
             )
             text = disclosure_page_text(page)
-        except (RuntimeFrontendRefusedError, RuntimeRefusalError):
+        except (FrontendRefusedError, RefusalError):
             # The list changed since the status counted it; the next status read pins the new one.
             text = tr("tui.restricted.disclosure_page_stale")
         if not self._cleared and not self._locking:

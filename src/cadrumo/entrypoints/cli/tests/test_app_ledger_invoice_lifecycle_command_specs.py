@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+
 from .._app_ledger_invoice_intake_command_specs import LEDGER_INVOICE_INTAKE_COMMAND_SPECS
 from .._app_ledger_invoice_lifecycle_command_specs import (
     _REQUIRED_INVOICE_ID_ARGUMENT,
@@ -16,7 +18,6 @@ from ..app_ledger_invoice_common_command_parameters import (
     INVOICE_LIFECYCLE_METADATA_OPTIONS,
     OPTIONAL_IVA_CATEGORY_OPTION,
 )
-from ..command_parameter_contracts import ArgumentSpec, OptionSpec
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

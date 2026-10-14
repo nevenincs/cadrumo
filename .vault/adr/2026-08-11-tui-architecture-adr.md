@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-architecture'
 date: '2026-08-11'
-modified: '2026-10-03'
+modified: '2026-10-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:f88f7b4503cd2308cb9a2f8bfc9e48f007b3eaba4c2daefe7c4bf16c94f323ba'
+body_hash: 'sha256:4e4077749003b78d840bdf83d1094f22abfbf056541f286cdc93e112d6991d0d'
 related:
   - '[[2026-08-11-tui-architecture-research]]'
   - '[[2026-08-11-tui-interface-research]]'
@@ -1554,3 +1554,7 @@ The existing terminal-projection service may resolve this distinct reference fro
 Frontend consumers explicitly opting into these explanations correlate the code and refused outcome with the observed terminal receipt and preserve operation identity, terminal condition and effect in their refusal presentation. Failure to retrieve or render detail must not discard the known refusal or effect, substitute success, trigger automatic replay or fall back to direct profile reads.
 
 The private journal and affected public definition contracts use existing current-only cutover rules. Old private shapes are rejected; affected nonterminal work must be drained before cutover, and no compatibility reader or migration shim is introduced. Acceptance covers code-only defaults, undeclared evidence rejection, real encrypted detail and sentinel confinement, exact correlation, post-refusal revocation/lock, unavailable or corrupt detail, preserved UNKNOWN effects, and refusal of unsupported private versions. This amendment does not establish that implementation or those checks have passed.
+
+### Amendment 2026-10-14: TUI belongs to the runtime host
+
+The production topology is amended: the installed Textual frontend now lives under `src/cadrumo_runtime/host/frontend/tui/` (`cadrumo_runtime.host.frontend.tui`) and the canonical launch is `cadrumo-runtime tui`. The runtime host owns and composes that frontend. The `cadrumo` tax application never imports `cadrumo_runtime`; host-side composition may consume inward Cadrumo services through their public APIs. References above to `cadrumo.entrypoints.tui`, its tests or launcher, and `aeat app tui` record the prior accepted placement and are superseded for current path, ownership, dependency direction, and launch only. Operation, profile, secret, flow, Modelo, and application contracts in this ADR remain in force.

@@ -10,6 +10,10 @@ from uuid import UUID
 import typer
 from pydantic import BaseModel
 
+from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
+from cadrumo_client.commands.registered_operation_errors import submitted_operation_error
+from cadrumo_client.contracts.contracts import RefusalCode
+
 from ...application.operations.public_scalar import PublicDecimal
 from ...application.prorrata_register.operation_requests import (
     PRORRATA_DECLARE_SECTOR_OPERATION_DEFINITION_ID,
@@ -38,7 +42,6 @@ from ...application.prorrata_register.projection_contracts import (
     ProrrataSectorDefinitionProjection,
     ProrrataSeedSourceProjection,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.prorrata_register import (
@@ -67,9 +70,7 @@ from ._prorrata_register_payloads import (
 from .common import active_bucket_id_or_refuse as _register_bucket_id
 from .common import emit_envelope
 from .errors import CliRefusedBoundaryError
-from .registered_operation_contracts import RegisteredOperationCompletion
-from .registered_operation_errors import submitted_operation_error
-from .runtime_ledger_prorrata_register import (
+from .operation_ledger_prorrata_register import (
     submit_prorrata_list,
     submit_prorrata_mutation,
     validate_prorrata_list_completion,
@@ -325,9 +326,9 @@ def _present_registered_operation[ProjectionT: BaseModel](
         raise
     except Exception as exc:
         code = (
-            RuntimeRefusalCode.INVALID_FRAME.value
+            RefusalCode.INVALID_FRAME.value
             if isinstance(exc, CliRefusedBoundaryError)
-            else RuntimeRefusalCode.UNAVAILABLE.value
+            else RefusalCode.UNAVAILABLE.value
         )
         raise submitted_operation_error(
             completed.operation_id,

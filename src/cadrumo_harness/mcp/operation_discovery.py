@@ -11,19 +11,19 @@ from collections.abc import Sequence
 from typing import Any
 from uuid import UUID
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
-from cadrumo.application.operations.mcp_surfaces import McpSurface
 from cadrumo.application.operations.person_acts import operation_is_persons_act
 from cadrumo.application.operations.registry import OperationPublicDefinitionDescriptionV1
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from cadrumo.application.runtime.deadline_budget import RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS
 from cadrumo.application.user_profile.access_contracts import AccessDenialCode
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
 from .operation_contract_cache import OperationContractCache
 from .operation_search import rank_operations
 from .protocol_contract import SEARCH_PAGE_DEFAULT, refusal_code
 from .runtime_admission import McpAdmission, require_exact_admitted_status
+from .surfaces import McpSurface
 
 # An operation outside the connection's surface or the session's scope is simply not offered, and
 # neither is a person's own act, which the runtime describes to no agent.
@@ -47,17 +47,17 @@ _UNAVAILABLE_OPERATION = frozenset(
         AccessDenialCode.ADMINISTRATION_DENIED.value,
         AccessDenialCode.DISCLOSURE_DENIED.value,
         AccessDenialCode.PERIOD_DENIED.value,
-        RuntimeRefusalCode.INVALID_FRAME.value,
+        RefusalCode.INVALID_FRAME.value,
     }
 )
 # Reading one contract is one exchange with the runtime, and an exchange cut short
 # by its deadline closes the connection and the session it holds. A search's own
 # budget is therefore checked between reads, and each read is bounded by itself.
-_CONTRACT_READ_SECONDS = RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS
+_CONTRACT_READ_SECONDS = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 
 
 def search_operations(
-    client: RuntimeFrontendClient,
+    client: FrontendClient,
     contracts: OperationContractCache,
     profile_id: UUID,
     args: dict[str, Any],
@@ -96,7 +96,7 @@ def _in_family(definition_id: str, family: str) -> bool:
 
 
 def _listed_page(
-    client: RuntimeFrontendClient,
+    client: FrontendClient,
     contracts: OperationContractCache,
     scope: list[str],
     cursor: str | None,
@@ -124,7 +124,7 @@ def _listed_page(
 
 
 def _ranked_page(
-    client: RuntimeFrontendClient,
+    client: FrontendClient,
     contracts: OperationContractCache,
     scope: list[str],
     query: str,
@@ -138,7 +138,7 @@ def _ranked_page(
     for definition_id in scope:
         # Contracts already read stay cached, so a retry resumes where this stopped.
         if time.monotonic() >= deadline:
-            raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
         description = _described(client, contracts, definition_id, unavailable)
         if description is not None:
             permitted.append(description)
@@ -158,14 +158,14 @@ def _offset(cursor: str | None) -> int:
 
 
 def _described(
-    client: RuntimeFrontendClient,
+    client: FrontendClient,
     contracts: OperationContractCache,
     definition_id: str,
     unavailable: list[dict[str, str]],
 ) -> OperationPublicDefinitionDescriptionV1 | None:
     try:
         return contracts.description(client, definition_id, deadline=time.monotonic() + _CONTRACT_READ_SECONDS)
-    except (RuntimeFrontendRefusedError, RuntimeRefusalError) as error:
+    except (FrontendRefusedError, RefusalError) as error:
         code = refusal_code(error)
         if code in _NOT_OFFERED:
             return None

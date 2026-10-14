@@ -5,7 +5,7 @@ for the read that sends the document to a hosted model, at every access a
 session can ask for. The read that stays here is granted the same policy on
 every frontend. The consent to an off-host read is the person's own act: it
 travels in the request, in the same fields on every frontend the person uses,
-and the agent's frontend is refused it.
+and the automation's frontend is refused it.
 """
 
 from __future__ import annotations
@@ -103,10 +103,12 @@ def test_a_read_is_granted_the_same_policy_on_every_frontend_that_may_ask_for_it
 
 
 @pytest.mark.parametrize(
-    "frontend", [OperationFrontendProjection.MCP, OperationFrontendProjection.AGENT_HOST], ids=lambda item: item.value
+    "frontend",
+    [OperationFrontendProjection.EXTERNAL_CLIENT, OperationFrontendProjection.INSTALLED_SERVICE],
+    ids=lambda item: item.value,
 )
 @pytest.mark.parametrize("action", _ACCESSES)
-def test_each_agents_frontend_is_refused_the_consent_to_an_off_host_read(
+def test_each_automation_frontend_is_refused_the_consent_to_an_off_host_read(
     action: AccessAction, frontend: OperationFrontendProjection
 ) -> None:
     with pytest.raises(ProfileAccessRefusedError) as refused:

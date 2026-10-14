@@ -19,6 +19,8 @@ from uuid import UUID
 import pytest
 import typer
 
+from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
+
 from ....application.ledger.actions_import import LedgerProviderID
 from ....application.ledger.import_operation import (
     MAX_LEDGER_IMPORT_FILES,
@@ -28,7 +30,6 @@ from ....application.ledger.import_operation import (
 from ....core.i18n.render import tr
 from ....core.operations import OperationEffect
 from .. import _ledger_import_cli
-from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

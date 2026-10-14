@@ -50,7 +50,10 @@ def sibling(rows):
 def test_installed_review_acceptance_cleanup_resolves_its_actual_screen() -> None:
     modules = {}
     for name, relative in (
-        ("cadrumo.entrypoints.tui.google_saved_review", "src/cadrumo/entrypoints/tui/google_saved_review.py"),
+        (
+            "cadrumo.entrypoints.tui.google_saved_review",
+            "src/cadrumo/entrypoints/tui/google_saved_review.py",
+        ),
         ("dev.acceptance.review.installed_google_review_tui", "dev/acceptance/review/installed_google_review_tui.py"),
     ):
         path = REPO_ROOT / relative

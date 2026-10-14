@@ -44,7 +44,7 @@ class ModeloWorkFileRequest(CredentialFreeOperationRequest):
     #: The operator this invocation acts as. The platform binds an actor at
     #: submission, never at composition, so baking one into a definition would
     #: make the production registry per-actor. A person's session records it
-    #: as sent; an agent's session records its own session label instead.
+    #: as sent; an automation's session records its own session label instead.
     actor: Annotated[str, Field(min_length=1, max_length=128)]
 
 

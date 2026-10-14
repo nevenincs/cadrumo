@@ -11,15 +11,16 @@ from __future__ import annotations
 import asyncio
 import time
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
 from ....application.auth.operation_definitions import (
     AUTH_CONFIGURE_OPERATION_DEFINITION_ID,
     AuthConfigureOperationRequest,
 )
 from ....application.auth.provider_configure_operation_access import AuthConfigurePublicResultV2
 from ....application.operations.schema_identity import OperationSchemaIdentityV1
-from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....core.errors.error_codes import declared_error_codes_by_qualname
 from ....core.errors.hierarchy import RecordedRegisteredError
 from ....core.operations import (
@@ -36,12 +37,10 @@ def _settlement_error(code: str, operation_id: object) -> Exception:
     """Carry a catalogued code's registered metadata; any other code stays a plain runtime refusal."""
     if any(error_code.code == code for error_code in declared_error_codes_by_qualname().values()):
         return RecordedRegisteredError(code, context={"operation_id": str(operation_id)})
-    return RuntimeFrontendRefusedError(code)
+    return FrontendRefusedError(code)
 
 
-async def _configure(
-    client: RuntimeFrontendClient, request: AuthConfigureOperationRequest
-) -> AuthConfigurePublicResultV2:
+async def _configure(client: FrontendClient, request: AuthConfigureOperationRequest) -> AuthConfigurePublicResultV2:
     session_id = client.session_id
     subject_ref = profile_operation_subject(str(client.profile_id))
     deadline = time.monotonic() + _TIMEOUT_SECONDS
@@ -81,12 +80,12 @@ async def _configure(
         or state.effect is not (OperationEffect.UPDATED if result.changed else OperationEffect.NONE)
         or client.session_id != session_id
     ):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     return result
 
 
 def configure_runtime_auth(
-    client: RuntimeFrontendClient, request: AuthConfigureOperationRequest
+    client: FrontendClient, request: AuthConfigureOperationRequest
 ) -> AuthConfigurePublicResultV2:
     """Submit and settle one configuration; call from a worker thread, never the UI loop."""
     return asyncio.run(_configure(client, request))

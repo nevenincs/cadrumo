@@ -1103,10 +1103,6 @@ def test_dev_installed_mcp_authenticate_fails_closed_for_an_unavailable_or_missi
     from importlib.metadata import version
     from uuid import uuid4
 
-    from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
-    from cadrumo.adapters.local_runtime.installation import runtime_installation
-    from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
-    from cadrumo.adapters.local_runtime.windows_process import WindowsProcessScope
     from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CLIENT_NAMESPACE
     from cadrumo.adapters.persistence.storage.custody.automation_store_composition import (
         installed_automation_secret_store,
@@ -1116,8 +1112,12 @@ def test_dev_installed_mcp_authenticate_fails_closed_for_an_unavailable_or_missi
     )
     from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import publish_test_profile_capsule
     from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-    from cadrumo.application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
     from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
+    from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError
+    from cadrumo_client.transport.framing import VerifiedConnection
+    from cadrumo_client.transport.installation import installation
+    from cadrumo_client.transport.windows import WindowsEndpoint
+    from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
 
     mcp_executable = Path(sysconfig.get_path("scripts")) / "cadrumo-mcp.exe"
     runtime_executable = Path(sysconfig.get_path("scripts")) / "cadrumo-runtime.exe"
@@ -1127,11 +1127,11 @@ def test_dev_installed_mcp_authenticate_fails_closed_for_an_unavailable_or_missi
     profile_id, credential_reference = uuid4(), uuid4()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root, ExitStack() as cleanup:
         storage_root.mkdir(parents=True, exist_ok=True)
-        endpoint = WindowsRuntimeEndpoint(storage_root=storage_root)
+        endpoint = WindowsEndpoint(storage_root=storage_root)
         cleanup.callback(endpoint.close)
         process_scope = WindowsProcessScope()
         cleanup.callback(process_scope.terminate, timeout=5)
-        runtime_installation(
+        installation(
             storage_root=storage_root,
             os_owner_id=endpoint.os_owner_id,
             storage_identity=endpoint.storage_identity,
@@ -1172,17 +1172,17 @@ def test_dev_installed_mcp_authenticate_fails_closed_for_an_unavailable_or_missi
         deadline = time.monotonic() + 30
         while True:
             try:
-                connection = VerifiedRuntimeConnection(
+                connection = VerifiedConnection(
                     endpoint.connect(timeout=0.2),
-                    expected=RuntimeClientHello(
+                    expected=ClientHello(
                         product_version=version("cadrumo"), storage_identity=endpoint.storage_identity
                     ),
                     deadline=deadline,
                 )
                 connection.close()
                 break
-            except RuntimeRefusalError as error:
-                if error.reason is not RuntimeRefusalCode.ENDPOINT_NOT_READY or time.monotonic() >= deadline:
+            except RefusalError as error:
+                if error.reason is not RefusalCode.ENDPOINT_NOT_READY or time.monotonic() >= deadline:
                     raise
                 time.sleep(0.05)
 

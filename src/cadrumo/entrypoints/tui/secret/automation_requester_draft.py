@@ -8,7 +8,8 @@ from uuid import UUID
 
 from textual.widgets import Checkbox, Input, Select, SelectionList
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo_client.transport.frontend_client import FrontendClient
+
 from ....application.operations.registry import OperationFrontendProjection
 from ....application.user_profile.access_contracts import AccessAction, DisclosureCategory
 from ....application.user_profile.automation_enrollment import EnrollmentKind
@@ -22,7 +23,7 @@ if TYPE_CHECKING:
 class RequesterDraftMixin:
     """Read UI selections and refuse every value outside registered choices."""
 
-    def _bound(self: RuntimeAutomationRequesterScreen, client: RuntimeFrontendClient) -> bool:
+    def _bound(self: RuntimeAutomationRequesterScreen, client: FrontendClient) -> bool:
         return (
             client.frontend is OperationFrontendProjection.TUI
             and client.profile_id == self._profile_id

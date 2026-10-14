@@ -21,8 +21,8 @@ from __future__ import annotations
 import pytest
 from pydantic import BaseModel, ConfigDict, SecretStr
 
-from ...errors import CliRefusedBoundaryError
-from ..secure_input import validate_secrets_payload
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.secure_input import validate_secrets_payload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

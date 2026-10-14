@@ -104,7 +104,9 @@ set(desktop_generated "${CADRUMO_PATH_DESKTOP_FRONTEND_GENERATED}")
 set(desktop_generator "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.cmake_build run --
   "${CADRUMO_DEV_PYTHON}" -B -m)
 file(GLOB_RECURSE desktop_chrome_inputs CONFIGURE_DEPENDS
-  "${CADRUMO_SOURCE_ROOT}/src/cadrumo/locales/*.yml" "${CADRUMO_SOURCE_ROOT}/dev/locales/*.py")
+  "${CADRUMO_SOURCE_ROOT}/src/cadrumo/locales/*.yml"
+  "${CADRUMO_SOURCE_ROOT}/src/cadrumo_agent_service/locales/*.yml"
+  "${CADRUMO_SOURCE_ROOT}/dev/locales/*.py")
 list(FILTER desktop_chrome_inputs EXCLUDE REGEX "/dev/locales/tests/")
 list(APPEND desktop_chrome_inputs "${CADRUMO_SOURCE_ROOT}/src/cadrumo/core/i18n/render.py"
   "${CADRUMO_SOURCE_ROOT}/dev/_paths.py")

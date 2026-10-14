@@ -143,7 +143,8 @@ dependencies = [
 [project.scripts]
 aeat = "cadrumo.entrypoints.cli.bootstrap:main"
 cadrumo-mcp = "cadrumo_harness.mcp.main:main"
-cadrumo-runtime = "cadrumo.entrypoints.runtime.bootstrap:main"
+cadrumo-runtime = "cadrumo_runtime.host.bootstrap:main"
+cadrumo-agent-service = "cadrumo_agent_service.main:main"
 
 [project.urls]
 Homepage = "https://github.com/nevenincs/cadrumo"
@@ -283,7 +284,10 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.sdist]
 only-include = [
   "src/cadrumo",
+  "src/cadrumo_client",
+  "src/cadrumo_runtime",
   "src/cadrumo_harness",
+  "src/cadrumo_agent_service",
   # The build hook that admits the published authority. It must travel in the
   # sdist: a wheel built from the sdist runs the same hook, and without the
   # hook module that rebuild would produce an authority-less wheel.
@@ -314,9 +318,21 @@ exclude = [
   "src/cadrumo/tests",
   "src/cadrumo/tests/**",
   "src/cadrumo_harness/tests",
+  "src/cadrumo_agent_service/tests",
   "src/cadrumo_harness/tests/**",
+  "src/cadrumo_agent_service/tests/**",
   "src/cadrumo_harness/**/tests",
+  "src/cadrumo_agent_service/**/tests",
   "src/cadrumo_harness/**/tests/**",
+  "src/cadrumo_agent_service/**/tests/**",
+  "src/cadrumo_client/tests",
+  "src/cadrumo_client/tests/**",
+  "src/cadrumo_client/**/tests",
+  "src/cadrumo_client/**/tests/**",
+  "src/cadrumo_runtime/tests",
+  "src/cadrumo_runtime/tests/**",
+  "src/cadrumo_runtime/**/tests",
+  "src/cadrumo_runtime/**/tests/**",
   "src/cadrumo/**/tests",
   "src/cadrumo/**/tests/**",
   # Pytest configuration is development-only, including package-root
@@ -324,7 +340,13 @@ exclude = [
   "src/cadrumo/conftest.py",
   "src/cadrumo/**/conftest.py",
   "src/cadrumo_harness/conftest.py",
+  "src/cadrumo_agent_service/conftest.py",
   "src/cadrumo_harness/**/conftest.py",
+  "src/cadrumo_agent_service/**/conftest.py",
+  "src/cadrumo_client/conftest.py",
+  "src/cadrumo_client/**/conftest.py",
+  "src/cadrumo_runtime/conftest.py",
+  "src/cadrumo_runtime/**/conftest.py",
   # Registry TOML, source manifests, and cached compiler receipts are
   # development authoring inputs.  A released product consumes exactly one
   # published authority artifact, so no authored registry tree may reach an
@@ -353,7 +375,13 @@ exclude = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/cadrumo", "src/cadrumo_harness"]
+packages = [
+  "src/cadrumo",
+  "src/cadrumo_client",
+  "src/cadrumo_runtime",
+  "src/cadrumo_harness",
+  "src/cadrumo_agent_service",
+]
 # Test modules and fixtures serve no installed consumer: the suites run from
 # the repo tree, and nothing in the wheel imports `cadrumo.tests` at module load.
 # This payload is shed from the distribution to bound its size.
@@ -363,15 +391,33 @@ exclude = [
   "src/cadrumo/**/tests",
   "src/cadrumo/**/tests/**",
   "src/cadrumo_harness/tests",
+  "src/cadrumo_agent_service/tests",
   "src/cadrumo_harness/tests/**",
+  "src/cadrumo_agent_service/tests/**",
   "src/cadrumo_harness/**/tests",
+  "src/cadrumo_agent_service/**/tests",
   "src/cadrumo_harness/**/tests/**",
+  "src/cadrumo_agent_service/**/tests/**",
+  "src/cadrumo_client/tests",
+  "src/cadrumo_client/tests/**",
+  "src/cadrumo_client/**/tests",
+  "src/cadrumo_client/**/tests/**",
+  "src/cadrumo_runtime/tests",
+  "src/cadrumo_runtime/tests/**",
+  "src/cadrumo_runtime/**/tests",
+  "src/cadrumo_runtime/**/tests/**",
   # Pytest configuration is development-only, including package-root
   # conftests that sit outside the excluded test directories.
   "src/cadrumo/conftest.py",
   "src/cadrumo/**/conftest.py",
   "src/cadrumo_harness/conftest.py",
+  "src/cadrumo_agent_service/conftest.py",
   "src/cadrumo_harness/**/conftest.py",
+  "src/cadrumo_agent_service/**/conftest.py",
+  "src/cadrumo_client/conftest.py",
+  "src/cadrumo_client/**/conftest.py",
+  "src/cadrumo_runtime/conftest.py",
+  "src/cadrumo_runtime/**/conftest.py",
   # The immutable published authority is the only registry payload a product
   # process may consume.  Its evidence projection is digest-verified inside the
   # same frame, so it needs no parallel corpus-quality or registry-source
@@ -423,7 +469,12 @@ include = [
   "src/cadrumo/py.typed",
   "src/cadrumo/core/external_constants.toml",
   "src/cadrumo/_data/local_runtime/**",
+  "src/cadrumo_client/py.typed",
+  "src/cadrumo_runtime/py.typed",
+  "src/cadrumo_runtime/_data/**",
   "src/cadrumo_harness/py.typed",
+  "src/cadrumo_agent_service/py.typed",
+  "src/cadrumo_agent_service/locales/**",
   "src/cadrumo_harness/_data/**",
 ]
 
@@ -711,6 +762,12 @@ convention = "google"
 "src/cadrumo/**/conftest.py" = ["S101", "D"]
 "src/cadrumo_harness/**/tests/**/*.py" = ["S101", "T20", "D", "E501"]
 "src/cadrumo_harness/**/conftest.py" = ["S101", "D"]
+"src/cadrumo_agent_service/**/tests/**/*.py" = ["S101", "T20", "D", "E501"]
+"src/cadrumo_agent_service/**/conftest.py" = ["S101", "D"]
+"src/cadrumo_client/**/tests/**/*.py" = ["S101", "T20", "D", "E501"]
+"src/cadrumo_client/**/conftest.py" = ["S101", "D"]
+"src/cadrumo_runtime/**/tests/**/*.py" = ["S101", "T20", "D", "E501"]
+"src/cadrumo_runtime/**/conftest.py" = ["S101", "D"]
 "conftest.py" = ["S101", "D"]
 # dev/docs/ holds contributor-only documentation tools and tests.
 "dev/docs/**/*.py" = ["T20", "D", "E402"]
@@ -1094,7 +1151,7 @@ ignore_missing_imports = true
 # The project's SECOND type checker, alongside ty. Two independent
 # implementations are deliberate: ty is the canonical checker across all of
 # `src` but is still pre-1.0, so a mature second opinion over the strict
-# domain + application subset catches what a young checker misses. pyrefly is
+# strict domain/application and relocated contract subset catches what a young checker misses. pyrefly is
 # a native binary, so unlike the pyright it replaces it drags in no JavaScript
 # runtime — the packaging lanes need nothing installed to run it.
 #
@@ -1112,7 +1169,16 @@ python_version = "3.13"
 # declared input, never the host it happens to run on.
 python_platform = "linux"
 search_path = ["src", ".", "stubs"]
-project_includes = ["src/cadrumo/domain", "src/cadrumo/application", "src/cadrumo/core", "src/cadrumo/adapters/outbound/llm"]
+project_includes = [
+    "src/cadrumo/domain",
+    "src/cadrumo/application",
+    "src/cadrumo/core",
+    "src/cadrumo/adapters/outbound/llm",
+    "src/cadrumo_client/contracts",
+    "src/cadrumo_client/contracts/command_ports.py",
+    "src/cadrumo_runtime/application",
+    "src/cadrumo_runtime/contracts",
+]
 # Tests are excluded from this checker, not overlooked. pyright reported zero
 # diagnostics across the test tree, so excluding it loses no signal that was
 # previously enforced, while pyrefly's stricter inference finds ~24 fixture
@@ -1129,7 +1195,16 @@ project_excludes = ["**/.[!/.]*", "**/tests/**"]
 # is the only honest one available: burn a tree down, THEN admit it permanently.
 # aeat-quality-gates bans baselines and ratchets, so a tree is never admitted
 # with errors outstanding and never carries a per-tree exemption.
-include = ["src/cadrumo/domain", "src/cadrumo/application", "src/cadrumo/core", "src/cadrumo/adapters/outbound/llm"]
+include = [
+    "src/cadrumo/domain",
+    "src/cadrumo/application",
+    "src/cadrumo/core",
+    "src/cadrumo/adapters/outbound/llm",
+    "src/cadrumo_client/contracts",
+    "src/cadrumo_client/contracts/command_ports.py",
+    "src/cadrumo_runtime/application",
+    "src/cadrumo_runtime/contracts",
+]
 exclude = ["**/tests"]
 extraPaths = ["src", "stubs"]
 pythonVersion = "3.13"
@@ -1163,7 +1238,10 @@ reportUnnecessaryIsInstance = "none"
 [tool.pytest.ini_options]
 testpaths = [
   "src/cadrumo",
+  "src/cadrumo_client",
+  "src/cadrumo_runtime",
   "src/cadrumo_harness",
+  "src/cadrumo_agent_service",
 ]
 pythonpath = ["src"]
 python_files = ["test_*.py"]
@@ -1225,7 +1303,7 @@ markers = [
 
 # ── Coverage (pytest-cov) ────────────────────────────────────────────────────
 [tool.coverage.run]
-source = ["src/cadrumo"]
+source = ["src/cadrumo", "src/cadrumo_client", "src/cadrumo_runtime"]
 branch = true
 omit = [
   "*/test_*.py",
@@ -1301,7 +1379,7 @@ exclude = 'tests|test_'
 # the dashboard tracks code that is plausibly dead in production paths.
 [tool.vulture]
 min_confidence = 80
-paths = ["src/cadrumo"]
+paths = ["src/cadrumo", "src/cadrumo_client", "src/cadrumo_runtime"]
 exclude = [
   "*/src/cadrumo/tests/*",
   "*\\src\\cadrumo\\tests\\*",

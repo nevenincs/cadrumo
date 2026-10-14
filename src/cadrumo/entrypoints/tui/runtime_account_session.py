@@ -6,23 +6,25 @@ import asyncio
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from ...adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from cadrumo_client.contracts.contracts import RefusalError
+from cadrumo_client.contracts.profile_access import status_admits_session
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
 from ...application.overview.home import HomeAccountSession, HomeSessionPosture
-from ...application.runtime.contracts import RuntimeRefusalError
-from ...application.runtime.profile_access import status_admits_session
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.operations import OperationEffect
 from ...core.time.clock import now
 from .account import AccountSessionExpiredError, AccountSessionReaderV1
 
 if TYPE_CHECKING:
-    from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
+    from cadrumo_client.transport.frontend_client import FrontendClient
+
     from ...application.operations.frontend_projection import OperationPublicProjectionV1
     from .operations.runtime_controller import RuntimeOperationController
 
 
 def runtime_account_session_reader(
-    client: RuntimeFrontendClient, *, profile_id: UUID, profile_label: str
+    client: FrontendClient, *, profile_id: UUID, profile_label: str
 ) -> AccountSessionReaderV1:
     """Pin one admitted lease; status checks neither refresh nor transfer it."""
     if client.profile_id != profile_id:
@@ -45,14 +47,14 @@ def runtime_account_session_reader(
 
 
 def read_runtime_account_session(
-    client: RuntimeFrontendClient, *, profile_id: UUID, session_id: UUID, profile_label: str
+    client: FrontendClient, *, profile_id: UUID, session_id: UUID, profile_label: str
 ) -> HomeAccountSession:
     """Observe an exact lease synchronously without extending its authority."""
     try:
         if client.profile_id != profile_id or client.session_id != session_id:
             raise AccountSessionExpiredError()
         status = client.status().status
-    except (RuntimeFrontendRefusedError, RuntimeRefusalError):
+    except (FrontendRefusedError, RefusalError):
         raise AccountSessionExpiredError() from None
     if (
         client.profile_id != profile_id

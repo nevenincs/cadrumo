@@ -6,7 +6,7 @@ the underlying stream uses the Windows default ``cp1252`` codec, even
 when :func:`cadrumo.core.errors.render_error_text` produces non-ASCII
 characters under the operator's configured language.
 
-Also pins that :func:`cadrumo.entrypoints.cli._stdio.configure_stdio_for_utf8`
+Also pins that :func:`cadrumo_client.commands.stdio.configure_stdio_for_utf8`
 emits bytes that are valid UTF-8 regardless of the ambient console code
 page, and that :func:`_set_windows_console_utf8` runs without error on
 all platforms (including non-Windows where it is a no-op).
@@ -18,9 +18,10 @@ import io
 
 import pytest
 
+from cadrumo_client.commands.stdio import _set_windows_console_utf8, configure_stdio_for_utf8
+
 from ....core.access_gate.errors import LiveSubmitForbiddenError
 from ....core.errors.error_codes import render_error_text
-from .._stdio import _set_windows_console_utf8, configure_stdio_for_utf8
 from ..errors import write_stderr
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

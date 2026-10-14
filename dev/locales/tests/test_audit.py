@@ -15,12 +15,13 @@ from cadrumo.core.product_identity import (
 )
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_typer_app
 
-from .._paths import DOCS_SRC_DIR, HARNESS_SRC_DIR, LOCALES_DIR, SRC_DIR
+from .._paths import LOCALE_SOURCE_EXTRA_DIRS, LOCALES_DIR, SRC_DIR
 from ..cli import app
 from ..errors import LocaleError
 from ..locale_tree import _flatten_leaf_values
 from ..locale_yaml import locale_catalogue_source
 from ..manager import LocaleManager
+from ..service_catalogues import SERVICE_LOCALES_DIR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -36,6 +37,18 @@ def _catalogue_source(locale: str) -> Path:
     if source is None:
         raise AssertionError(f"no committed catalogue found for locale {locale!r}")
     return source
+
+
+def _committed_leaf_values(manager: LocaleManager, locale: str) -> dict[str, str | None]:
+    """Read tax and service resources independently, preserving their distinct ownership."""
+    leaves = _flatten_leaf_values(manager.load_locale(_catalogue_source(locale)))
+    service_source = locale_catalogue_source(SERVICE_LOCALES_DIR, locale)
+    assert service_source is not None, f"no service catalogue found for locale {locale!r}"
+    service_manager = LocaleManager(src_dir=SERVICE_LOCALES_DIR.parent, locales_dir=SERVICE_LOCALES_DIR)
+    service_leaves = _flatten_leaf_values(service_manager.load_locale(service_source))
+    assert not leaves.keys() & service_leaves.keys(), f"{locale}: tax and service catalogue keys overlap"
+    leaves.update(service_leaves)
+    return leaves
 
 
 _LOCALES = ("ca", "en", "es", "hu")
@@ -101,7 +114,6 @@ _PROSE_KEYS = {
         "application.modelo.lifecycle.file_confirm_message",
         "application.modelo.work_form.finding_action.file_another_way",
         "application.storage.calc_sheets.review.labels.external_notes_notice",
-        "cli.app.agent.serve.agent_source_help",
         "cli.app.modelo.export.development_file_not_accepted",
         "cli.app.modelo.filing_record.import_help",
         "cli.app.modelo.work.amend_help",
@@ -122,9 +134,7 @@ _PROSE_KEYS = {
         "desktop.agent.approval_review_title",
         "desktop.agent.service_incompatible",
         "desktop.agent.service_runtime_unavailable",
-        "desktop.agent_keys.empty",
-        "desktop.agent_keys.lead",
-        "desktop.agent_keys.refused_outcome_unknown",
+        "desktop.automation_access.refused_outcome_unknown",
         "desktop.docs.frame_title",
         "desktop.docs.not_bundled",
         "desktop.logs.state_missing_detail",
@@ -220,7 +230,6 @@ _PROSE_KEYS = {
         "application.modelo.lifecycle.file_confirm_message",
         "application.modelo.work_form.finding_action.file_another_way",
         "application.storage.calc_sheets.review.labels.external_notes_notice",
-        "cli.app.agent.serve.agent_source_help",
         "cli.app.modelo.export.development_file_not_accepted",
         "cli.app.modelo.filing_record.import_help",
         "cli.app.modelo.work.amend_help",
@@ -239,9 +248,7 @@ _PROSE_KEYS = {
         "desktop.agent.approval_review_title",
         "desktop.agent.service_incompatible",
         "desktop.agent.service_runtime_unavailable",
-        "desktop.agent_keys.empty",
-        "desktop.agent_keys.lead",
-        "desktop.agent_keys.refused_outcome_unknown",
+        "desktop.automation_access.refused_outcome_unknown",
         "desktop.docs.frame_title",
         "desktop.docs.not_bundled",
         "desktop.logs.state_missing_detail",
@@ -335,7 +342,6 @@ _PROSE_KEYS = {
         "application.modelo.lifecycle.file_confirm_message",
         "application.modelo.work_form.finding_action.file_another_way",
         "application.storage.calc_sheets.review.labels.external_notes_notice",
-        "cli.app.agent.serve.agent_source_help",
         "cli.app.modelo.export.development_file_not_accepted",
         "cli.app.modelo.filing_record.import_help",
         "cli.app.modelo.work.amend_help",
@@ -356,9 +362,7 @@ _PROSE_KEYS = {
         "desktop.agent.approval_review_title",
         "desktop.agent.service_incompatible",
         "desktop.agent.service_runtime_unavailable",
-        "desktop.agent_keys.empty",
-        "desktop.agent_keys.lead",
-        "desktop.agent_keys.refused_outcome_unknown",
+        "desktop.automation_access.refused_outcome_unknown",
         "desktop.docs.frame_title",
         "desktop.docs.not_bundled",
         "desktop.logs.state_missing_detail",
@@ -462,7 +466,7 @@ _PROSE_KEYS = {
         "desktop.account.sign_out_hint",
         "desktop.agent.approval_review_title",
         "desktop.agent.service_runtime_unavailable",
-        "desktop.agent_keys.refused_outcome_unknown",
+        "desktop.automation_access.refused_outcome_unknown",
         "desktop.docs.frame_title",
         "desktop.docs.not_bundled",
         "desktop.logs.state_missing_detail",
@@ -734,7 +738,7 @@ def test_audit_accepts_matching_conversions_escaped_and_literal_braces(tmp_path:
 
 def test_committed_catalogues_pass_production_audit() -> None:
     """The shipped four-language catalogue is accepted by the real validator."""
-    manager = LocaleManager(src_dir=SRC_DIR, locales_dir=LOCALES_DIR, extra_src_dirs=(DOCS_SRC_DIR, HARNESS_SRC_DIR))
+    manager = LocaleManager(src_dir=SRC_DIR, locales_dir=LOCALES_DIR, extra_src_dirs=LOCALE_SOURCE_EXTRA_DIRS)
 
     result = manager.audit()
 
@@ -742,8 +746,8 @@ def test_committed_catalogues_pass_production_audit() -> None:
 
 
 def test_committed_catalogues_follow_contextual_product_identity_contract() -> None:
-    """Shipped locale values preserve prose, identity, CLI, machine, and authority referents."""
-    manager = LocaleManager(src_dir=SRC_DIR, locales_dir=LOCALES_DIR, extra_src_dirs=(DOCS_SRC_DIR, HARNESS_SRC_DIR))
+    """Tax and service resources preserve prose, identity, CLI, machine, and authority referents."""
+    manager = LocaleManager(src_dir=SRC_DIR, locales_dir=LOCALES_DIR, extra_src_dirs=LOCALE_SOURCE_EXTRA_DIRS)
 
     assert PRODUCT_IDENTITY.prose_name == "Cadrumo"
     assert PRODUCT_IDENTITY.display_name == "CADRUMO"
@@ -760,11 +764,7 @@ def test_committed_catalogues_follow_contextual_product_identity_contract() -> N
         # Filter them out, then prove the remainder is not a hollowed-out set: a
         # filter that swallowed everything would make the equality assertions pass
         # vacuously.
-        leaves = {
-            key: value
-            for key, value in _flatten_leaf_values(manager.load_locale(_catalogue_source(locale))).items()
-            if value is not None
-        }
+        leaves = {key: value for key, value in _committed_leaf_values(manager, locale).items() if value is not None}
         assert len(leaves) > 10_000, (
             f"{locale}: only {len(leaves)} non-null leaves survived filtering, so the product-identity "
             f"contract below would be asserted against a near-empty catalogue"
@@ -809,8 +809,7 @@ def test_committed_catalogues_carry_no_em_dash() -> None:
     manager = LocaleManager(src_dir=SRC_DIR, locales_dir=LOCALES_DIR)
     violations: list[str] = []
     for locale in _LOCALES:
-        leaves = manager.load_locale(_catalogue_source(locale))
-        for key, value in _flatten_leaf_values(leaves).items():
+        for key, value in _committed_leaf_values(manager, locale).items():
             if value is None or _EM_DASH not in value:
                 continue
             if (locale, key) in _EM_DASH_EXEMPT_KEYS:

@@ -8,7 +8,8 @@ from typing import NoReturn
 
 import pytest
 
-from .....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+
 from .. import oauth_callback
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -16,7 +17,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 def test_unavailable_desktop_refuses_before_listener_url_or_browser(monkeypatch: pytest.MonkeyPatch) -> None:
     def denied() -> None:
-        raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+        raise RefusalError(RefusalCode.UNAVAILABLE)
 
     def unexpected(*args: object, **kwargs: object) -> NoReturn:
         pytest.fail("unavailable desktop reached external-browser preparation")

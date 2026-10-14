@@ -221,7 +221,7 @@ def test_a_shortfall_coinciding_with_a_sectoral_rate_raises_the_soft_advisory() 
     made this row silent; the sectoral reason code makes it visible again
     WITHOUT asserting the certainty the unmatched advisory carries.
 
-    Keyed on the reason, not the prose: the operator is an autonomous agent that
+    Keyed on the reason, not the prose: the operator is an autonomous automation that
     routes on fields, so the two advisories must be separable structurally.
     """
     observations = _observations(_income_row("swift-fee-coincides-with-1pct", cash="2400.00"))

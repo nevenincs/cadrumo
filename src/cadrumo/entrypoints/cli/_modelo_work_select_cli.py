@@ -14,7 +14,7 @@ from .common import (
     emit_envelope,
     resolve_lifecycle_continuation_notice,
 )
-from .runtime_modelo_work_inventory import read_modelo_work_inventory
+from .operation_modelo_work_inventory import read_modelo_work_inventory
 
 __all__ = ["work_select"]
 

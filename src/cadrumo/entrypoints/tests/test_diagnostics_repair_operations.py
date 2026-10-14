@@ -73,7 +73,7 @@ _PROFILE = UUID("93939393-9393-4393-8393-939393939393")
 _SOUND_NAMESPACE = TEST_SESSION_LIFECYCLE_NAMESPACE.namespace
 _TORN_NAMESPACE = TEST_RUNTIME_PROFILE_NAMESPACE.namespace
 _SEEDED_PROGRESS_AT = datetime(2026, 4, 2, 9, 30, 11, tzinfo=UTC)
-_AGENT_CLIENT = UUID("a4a4a4a4-a4a4-44a4-84a4-a4a4a4a4a4a4")
+_AUTOMATION_CLIENT = UUID("a4a4a4a4-a4a4-44a4-84a4-a4a4a4a4a4a4")
 _OBSERVED = SiteHealthStatus(
     state=SiteHealthState.MANTENIMIENTO,
     evidence=SiteHealthEvidence(
@@ -321,7 +321,9 @@ def test_the_reset_describes_the_saved_progress_and_then_discards_it_under_the_s
 
     def caller(identity: OperationIdentity) -> OperationExecutionCaller:
         asked.append(identity)
-        return OperationExecutionCaller(frontend=frontend, session_kind=SessionKind.API_KEY, client_id=_AGENT_CLIENT)
+        return OperationExecutionCaller(
+            frontend=frontend, session_kind=SessionKind.API_KEY, client_id=_AUTOMATION_CLIENT
+        )
 
     definition = _definition(
         build_diagnostics_repair_operations(execution_caller_reader=caller),
@@ -361,10 +363,10 @@ def test_the_reset_describes_the_saved_progress_and_then_discards_it_under_the_s
     )
     assert gone
     assert reloaded.model_dump(exclude={"updated_at"}) == WorkflowState().model_dump(exclude={"updated_at"})
-    # The actor is attribution: an agent's reset is recorded as its session, and nothing else differs.
+    # The actor is attribution: an automation's reset is recorded as its session, and nothing else differs.
     expected_actor = (
-        f"agent:{frontend.value}.{SessionKind.API_KEY.value}.{_AGENT_CLIENT}"
-        if frontend in {OperationFrontendProjection.MCP, OperationFrontendProjection.AGENT_HOST}
+        f"automation:{frontend.value}.{SessionKind.API_KEY.value}.{_AUTOMATION_CLIENT}"
+        if frontend in {OperationFrontendProjection.EXTERNAL_CLIENT, OperationFrontendProjection.INSTALLED_SERVICE}
         else WORKFLOW_PROGRESS_RESET_ACTOR
     )
     assert actors == [expected_actor]

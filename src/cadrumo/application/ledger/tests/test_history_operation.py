@@ -340,7 +340,7 @@ def test_history_projection_requires_canonical_event_id_tie_order_across_anchors
 
 
 # ---------------------------------------------------------------------------
-# The agent-facing typed history
+# The automation-facing typed history
 # ---------------------------------------------------------------------------
 
 _EXPORT_PATH = r"C:\Users\synthetic-operator\Documents\exportes-privados\libro-2026.csv"

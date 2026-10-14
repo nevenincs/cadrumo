@@ -21,10 +21,11 @@ from textual.containers import ItemGrid, Vertical, VerticalScroll
 from textual.screen import Screen
 from textual.widgets import Button, Input, Select, Static, TextArea
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
-from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from ....application.runtime.deadline_budget import RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
 from ....core.async_cleanup import await_cancellation_complete
 from ....core.errors.error_codes import resolve_error_message
 from ....core.errors.hierarchy import CadrumoError
@@ -54,11 +55,11 @@ from .request_form import (
 from .run_result import receipt_text, result_pages, stopped_operation_text
 from .runtime_controller import RuntimeOperationController
 
-_CONTRACT_READ_SECONDS = RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS
+_CONTRACT_READ_SECONDS = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 _ACTION_MIN_COLUMN_WIDTH = 16
 _REPLAY_KEY_MAX_LENGTH = 256
 """The longest replay key the operation request model accepts."""
-_UNKNOWN_OUTCOME_CODES = frozenset({RuntimeRefusalCode.DEADLINE_EXCEEDED, RuntimeRefusalCode.CONNECTION_CLOSED})
+_UNKNOWN_OUTCOME_CODES = frozenset({RefusalCode.DEADLINE_EXCEEDED, RefusalCode.CONNECTION_CLOSED})
 """Transport outcomes that leave unknown whether the runtime recorded the submission."""
 
 
@@ -111,7 +112,7 @@ class OperationRunScreen(Screen[None]):
     #operation-run-actions Button { width: 1fr; margin: $cadrumo-space-0; }
     """)
 
-    def __init__(self, client: RuntimeFrontendClient, entry: OperationCatalogueEntryV1) -> None:
+    def __init__(self, client: FrontendClient, entry: OperationCatalogueEntryV1) -> None:
         """Bind the form to one admitted session and one registered operation."""
         super().__init__()
         self._client = client
@@ -406,7 +407,7 @@ class OperationRunScreen(Screen[None]):
 
     async def _submitted(
         self,
-        client: RuntimeFrontendClient,
+        client: FrontendClient,
         entry: OperationCatalogueEntryV1,
         payload: BaseModel,
         subject: str,
@@ -441,12 +442,12 @@ class OperationRunScreen(Screen[None]):
     @staticmethod
     def _failure_text(error: CadrumoError) -> str:
         message = resolve_error_message(error)
-        if isinstance(error, RuntimeRefusalError) and error.reason in _UNKNOWN_OUTCOME_CODES:
+        if isinstance(error, RefusalError) and error.reason in _UNKNOWN_OUTCOME_CODES:
             return f"{tr('tui.operations.run.unknown')}\n{message}"
-        if isinstance(error, RuntimeFrontendRefusedError) and error.request_faults:
+        if isinstance(error, FrontendRefusedError) and error.request_faults:
             # The runtime's request model refused a payload the form's own check let through.
             return "\n".join((message, *(request_fault_line(fault) for fault in error.request_faults)))
-        if isinstance(error, RuntimeFrontendRefusedError) and error.holder_operation_id is not None:
+        if isinstance(error, FrontendRefusedError) and error.holder_operation_id is not None:
             # A busy subject names the unsettled operation holding it, so the person can follow it.
             return f"{message}\n{tr('tui.operations.run.busy_holder', operation_id=error.holder_operation_id)}"
         return message

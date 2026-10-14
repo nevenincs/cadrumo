@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "target_sets": {
+    "cadrumo_agent_service": {
+      "kind": "python-module-names",
+      "source": {
+        "exclude_test_module_prefixes": [
+          "test_",
+          "_test_",
+          "conftest"
+        ],
+        "exclude_test_packages": true,
+        "package": "cadrumo_agent_service",
+        "source_root": "src/cadrumo_agent_service",
+        "subpackages": []
+      },
+      "targets": [
+        "cadrumo_agent_service",
+        "cadrumo_agent_service.adapters",
+        "cadrumo_agent_service.adapters.agent_diagnostics",
+        "cadrumo_agent_service.adapters.agent_process",
+        "cadrumo_agent_service.adapters.agent_programs",
+        "cadrumo_agent_service.adapters.agent_provider_catalog",
+        "cadrumo_agent_service.adapters.provider_catalog_metadata",
+        "cadrumo_agent_service.admin",
+        "cadrumo_agent_service.contracts",
+        "cadrumo_agent_service.host",
+        "cadrumo_agent_service.host.agent_hosts",
+        "cadrumo_agent_service.host.controller",
+        "cadrumo_agent_service.host.credential_frame",
+        "cadrumo_agent_service.host.development_fallback",
+        "cadrumo_agent_service.host.lane_root",
+        "cadrumo_agent_service.host.launch_environment",
+        "cadrumo_agent_service.host.launcher_protocol",
+        "cadrumo_agent_service.host.native_refusal",
+        "cadrumo_agent_service.host.store_lifecycle",
+        "cadrumo_agent_service.installed_client",
+        "cadrumo_agent_service.main",
+        "cadrumo_agent_service.providers",
+        "cadrumo_agent_service.providers.application",
+        "cadrumo_agent_service.providers.application.agent_credentials",
+        "cadrumo_agent_service.providers.application.catalog_source",
+        "cadrumo_agent_service.providers.application.contracts",
+        "cadrumo_agent_service.providers.application.ports",
+        "cadrumo_agent_service.providers.application.resolution",
+        "cadrumo_agent_service.providers.application.service",
+        "cadrumo_agent_service.providers.domain",
+        "cadrumo_agent_service.providers.domain.catalog",
+        "cadrumo_agent_service.providers.domain.record",
+        "cadrumo_agent_service.providers.persistence",
+        "cadrumo_agent_service.providers.persistence.store",
+        "cadrumo_agent_service.service"
+      ]
+    }
+  }
+}

@@ -25,7 +25,7 @@ from ._app_live_borrador_payloads import (
     Borrador100ViewResult,
 )
 from .common import emit_envelope
-from .runtime_live_borrador import import_borrador_100_for_cli, read_borrador_100_for_cli
+from .operation_live_borrador import import_borrador_100_for_cli, read_borrador_100_for_cli
 
 
 class _BorradorRow(TypedDict):

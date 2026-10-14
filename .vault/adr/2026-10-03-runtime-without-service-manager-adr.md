@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#runtime-without-service-manager'
 date: '2026-10-03'
-modified: '2026-10-13'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:b8c477723a0de72ad20503c9fe303a201d45215e0728f6ce07d81ed8f7f4eda3'
+body_hash: 'sha256:7c2b010e2fefba13aadda17b183641ba4bba8b839fdef33a36fdf339d48f3b38'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-adr]]"
   - "[[2026-09-26-mcp-purpose-authentication-profile-access-adr]]"
@@ -27,7 +27,7 @@ On 2026-10-03 the operator explicitly authorized amending the runtime and relate
 
 The existing runtime already has a standalone entrypoint and verified endpoint. Its sealed interpreter, single-owner exclusion, profile admission, custody and worker containment do not require runtime administration controls. Evidence is in 2026-09-26-mcp-purpose-authentication-reference and 2026-10-03-runtime-manager-architecture-research. Those records retain historical observations; they do not authorize management implementation.
 
-The code inspection identified management in `src/cadrumo/adapters/local_runtime/startup.py`, `runtime_manager_composition.py`, the platform manager adapters, CLI runtime commands, TUI management screens, and owner-control/status transport requests. Removing only registration would leave health management in place and would not implement the operator's instruction.
+The code inspection identified management in `src/cadrumo_client/transport/startup.py`, `runtime_manager_composition.py`, the platform manager adapters, CLI runtime commands, TUI management screens, and owner-control/status transport requests. Removing only registration would leave health management in place and would not implement the operator's instruction.
 
 ## Considered options
 

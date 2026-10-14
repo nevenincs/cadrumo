@@ -20,8 +20,6 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
 from cadrumo.application.auth.read_operation import build_auth_read_definition, build_auth_read_registration
 from cadrumo.application.operations.frontend_requests import OperationSubmissionReceiptV1
@@ -30,13 +28,6 @@ from cadrumo.application.operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionDescriptionV1,
     OperationRegistry,
-)
-from cadrumo.application.runtime.operation_access import (
-    RuntimeOperationAcknowledged,
-    RuntimeOperationControl,
-    RuntimeOperationObserve,
-    RuntimeOperationSubmit,
-    RuntimeOperationSubmitted,
 )
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
 from cadrumo.application.user_profile.operations import (
@@ -49,10 +40,20 @@ from cadrumo.application.user_profile.profile_operation_contracts import (
 )
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.request_faults import RequestFault
-from cadrumo_harness.mcp.protocol_contract import MCP_TOOL_CATALOGUE
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
-from cadrumo_harness.mcp.server import build_server
-from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
+from cadrumo_client.contracts.operation_access import (
+    OperationAcknowledged,
+    OperationControl,
+    OperationObserve,
+    OperationSubmit,
+    OperationSubmitted,
+)
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
+from ..protocol_contract import MCP_TOOL_CATALOGUE
+from ..runtime_adapter import RuntimeMcpAdapter
+from ..server import build_server
+from .session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -79,9 +80,9 @@ class _DecodingLease:
             ),
         )
         self.profile_id = profile_id
-        self.frontend = OperationFrontendProjection.MCP
+        self.frontend = OperationFrontendProjection.EXTERNAL_CLIENT
         self.session_id = uuid4()
-        self.accepted: list[RuntimeOperationSubmit] = []
+        self.accepted: list[OperationSubmit] = []
         self._refusal = refusal
 
     def describe(self, definition_id: str, *, deadline: float) -> OperationPublicDefinitionDescriptionV1:
@@ -91,20 +92,20 @@ class _DecodingLease:
     def operation(self, request: object, *, deadline: float) -> object:
         assert deadline > 0
         boot, connection = uuid4(), uuid4()
-        if isinstance(request, RuntimeOperationControl):
-            return RuntimeOperationAcknowledged(
+        if isinstance(request, OperationControl):
+            return OperationAcknowledged(
                 request_id=request.request_id,
                 runtime_boot_id=boot,
                 connection_id=connection,
                 operation_id=request.operation_id,
             )
-        assert isinstance(request, RuntimeOperationSubmit), request
+        assert isinstance(request, OperationSubmit), request
         try:
             self.registry.decode_request_payload(request.definition_id, request.payload_json)
         except (ValueError, TypeError):
-            raise RuntimeFrontendRefusedError(self._refusal) from None
+            raise FrontendRefusedError(self._refusal) from None
         self.accepted.append(request)
-        return RuntimeOperationSubmitted(
+        return OperationSubmitted(
             request_id=request.request_id,
             runtime_boot_id=boot,
             connection_id=connection,
@@ -116,7 +117,7 @@ class _DecodingLease:
 
 
 async def _execute(lease: _DecodingLease, definition_id: str, payload: dict[str, Any]) -> tuple[bool, dict[str, Any]]:
-    adapter = RuntimeMcpAdapter(profile_id=lease.profile_id, client=cast(RuntimeFrontendClient, lease))
+    adapter = RuntimeMcpAdapter(profile_id=lease.profile_id, client=cast(FrontendClient, lease))
     try:
         async with connected_server_and_client_session(build_server(adapter)) as sdk:
             called = await sdk.call_tool("execute", {"definition_id": definition_id, "payload": payload})
@@ -204,15 +205,15 @@ class _RefusingObservation(_DecodingLease):
 
     @override
     def operation(self, request: object, *, deadline: float) -> object:
-        if isinstance(request, RuntimeOperationObserve):
-            raise RuntimeFrontendRefusedError(AutomationCustodyCode.INVALID.value, request_faults=(self.reason,))
+        if isinstance(request, OperationObserve):
+            raise FrontendRefusedError(AutomationCustodyCode.INVALID.value, request_faults=(self.reason,))
         return super().operation(request, deadline=deadline)
 
 
 @pytest.mark.anyio
 async def test_a_refusal_of_any_tool_that_says_why_is_passed_on_with_its_faults() -> None:
     lease = _RefusingObservation(uuid4())
-    adapter = RuntimeMcpAdapter(profile_id=lease.profile_id, client=cast(RuntimeFrontendClient, lease))
+    adapter = RuntimeMcpAdapter(profile_id=lease.profile_id, client=cast(FrontendClient, lease))
     try:
         async with connected_server_and_client_session(build_server(adapter)) as sdk:
             called = await sdk.call_tool(

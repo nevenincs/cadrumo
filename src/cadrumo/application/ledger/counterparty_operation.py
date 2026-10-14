@@ -84,7 +84,7 @@ def _require_non_confirmation_action_fields(
 class LedgerCounterpartyRequest(BaseModel):
     """One exact-profile action with private counterparty input.
 
-    ``asserted_by`` is recorded as sent for a person's session. An agent's
+    ``asserted_by`` is recorded as sent for a person's session. An automation's
     session is recorded under its own session label, whatever the request
     carries; a confirmation must still supply it.
     """

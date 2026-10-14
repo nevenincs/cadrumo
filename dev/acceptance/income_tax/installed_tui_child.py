@@ -24,7 +24,6 @@ from pathlib import Path
 from typing import Any, Final, cast, overload
 
 from cadrumo.core.hashing import sha256_file
-from dev.first_party_source import PRODUCT_PACKAGE
 from dev.packaging.installed_wheel_binding import environment_interpreter
 from dev.product_environment import clean_product_env
 
@@ -106,26 +105,28 @@ def is_installed_product_origin(*, product_init: Path, workspace_root: Path) -> 
 
     A development harness may stay in the checkout so it can be changed and
     reviewed, but an installed acceptance claim is false if the product itself
-    imports from ``<checkout>/src/cadrumo``.
+    imports from any package under ``<checkout>/src``.
     """
     resolved_product = product_init.resolve()
-    source_package = (workspace_root.resolve() / PRODUCT_PACKAGE).resolve()
-    return not resolved_product.is_relative_to(source_package)
+    source_root = (workspace_root.resolve() / "src").resolve()
+    return not resolved_product.is_relative_to(source_root)
 
 
 def assert_installed_product_origin(*, workspace_root: Path) -> Path:
-    """Require the child interpreter to load ``cadrumo`` from site-packages."""
+    """Require both the tax package and its runtime-owned TUI to come from site-packages."""
     import cadrumo
+    import cadrumo_runtime
 
-    product_init = Path(cadrumo.__file__ or "").resolve()
-    if not product_init.exists() or not is_installed_product_origin(
-        product_init=product_init,
-        workspace_root=workspace_root,
-    ):
-        raise InstalledTuiChildError("installed TUI child imported cadrumo from the checkout source tree")
-    if "site-packages" not in {part.casefold() for part in product_init.parts}:
-        raise InstalledTuiChildError("installed TUI child product origin is not a site-packages wheel installation")
-    return product_init
+    for package in (cadrumo, cadrumo_runtime):
+        product_init = Path(package.__file__ or "").resolve()
+        if not product_init.is_file() or not is_installed_product_origin(
+            product_init=product_init,
+            workspace_root=workspace_root,
+        ):
+            raise InstalledTuiChildError("installed TUI child imported a product package from the checkout source tree")
+        if "site-packages" not in {part.casefold() for part in product_init.parts}:
+            raise InstalledTuiChildError("installed TUI child product origin is not a site-packages wheel installation")
+    return Path(cadrumo.__file__ or "").resolve()
 
 
 def installed_product_evidence(*, workspace_root: Path) -> InstalledProductEvidence:

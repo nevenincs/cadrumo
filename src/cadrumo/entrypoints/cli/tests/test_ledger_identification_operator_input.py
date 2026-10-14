@@ -19,25 +19,27 @@ on the model and nowhere an operator could reach:
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 
 import pytest
+from click.testing import Result
 
-from ._isolated_profile_storage_fixtures import recorded_fx_isolated_backend
-from ._ledger_corpus_support import (
+from ...tests.ledger_corpus_support import (
     _import_bbva,
     _invoke,
     load_active_catalogue,
 )
 from .ledger_cli import list_ledger_rows_via_cli as _list_rows
+from .profile_world_fixtures import recorded_fx_isolated_backend
 
 __all__ = ["recorded_fx_isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-def _intracom_row() -> dict[str, object]:
+def _intracom_row(invoke_cli: Callable[..., Result]) -> dict[str, object]:
     # The intra-community client row lives in the BBVA business account alone.
-    _import_bbva()
+    _import_bbva(invoke_cli=invoke_cli)
     rows = [row for row in _list_rows() if "cliente DE GmbH intracom" in row["description"]]
     assert rows, "corpus must contain a DE intracommunity client invoice"
     raw_row = rows[0]
@@ -45,8 +47,8 @@ def _intracom_row() -> dict[str, object]:
     return {str(key): value for key, value in raw_row.items()}
 
 
-def _intracom_transaction_id() -> str:
-    transaction_id = _intracom_row()["transaction_id"]
+def _intracom_transaction_id(invoke_cli: Callable[..., Result]) -> str:
+    transaction_id = _intracom_row(invoke_cli=invoke_cli)["transaction_id"]
     assert isinstance(transaction_id, str)
     return transaction_id
 
@@ -64,7 +66,7 @@ def _period_of(row: dict[str, object]) -> tuple[str, int]:
     return f"{(month - 1) // 3 + 1}T", year
 
 
-def _classify(transaction_id: str, *extra: str):
+def _classify(transaction_id: str, *extra: str, invoke_cli: Callable[..., Result]):
     return _invoke(
         [
             "app",
@@ -77,15 +79,16 @@ def _classify(transaction_id: str, *extra: str):
             "intra_community_supply",
             *extra,
         ],
+        invoke_cli=invoke_cli,
     )
 
 
-def test_the_operator_can_record_the_identification_and_it_persists() -> None:
+def test_the_operator_can_record_the_identification_and_it_persists(invoke_cli: Callable[..., Result]) -> None:
     """The option reaches the persisted record as a typed Member State."""
     from ....domain.iva.schema import EUMemberState
 
-    transaction_id = _intracom_transaction_id()
-    result = _classify(transaction_id, "--counterparty-identification-state", "de")
+    transaction_id = _intracom_transaction_id(invoke_cli=invoke_cli)
+    result = _classify(transaction_id, "--counterparty-identification-state", "de", invoke_cli=invoke_cli)
 
     assert result.exit_code == 0, result.output
     transaction = load_active_catalogue().get(transaction_id)
@@ -93,7 +96,9 @@ def test_the_operator_can_record_the_identification_and_it_persists() -> None:
     assert transaction.counterparty_identification_state == EUMemberState.from_registry("de")
 
 
-def test_recording_the_identification_leaves_the_establishment_axis_alone() -> None:
+def test_recording_the_identification_leaves_the_establishment_axis_alone(
+    invoke_cli: Callable[..., Result],
+) -> None:
     """The two axes are independent: writing one must not move the other.
 
     Deliberately reads the establishment axis off the record rather than
@@ -105,12 +110,12 @@ def test_recording_the_identification_leaves_the_establishment_axis_alone() -> N
     """
     from ....domain.iva.schema import EUMemberState
 
-    transaction_id = _intracom_transaction_id()
+    transaction_id = _intracom_transaction_id(invoke_cli=invoke_cli)
     before = load_active_catalogue().get(transaction_id)
     assert before is not None
     establishment_before = before.counterparty_eu_member_state
 
-    result = _classify(transaction_id, "--counterparty-identification-state", "de")
+    result = _classify(transaction_id, "--counterparty-identification-state", "de", invoke_cli=invoke_cli)
 
     assert result.exit_code == 0, result.output
     transaction = load_active_catalogue().get(transaction_id)
@@ -121,7 +126,7 @@ def test_recording_the_identification_leaves_the_establishment_axis_alone() -> N
     )
 
 
-def test_withholding_the_identification_is_reported_as_the_missing_fact() -> None:
+def test_withholding_the_identification_is_reported_as_the_missing_fact(invoke_cli: Callable[..., Result]) -> None:
     """The refusal path: preflight names the fact to record, not a bare rejection.
 
     Every other tax fact the readiness screen wants is supplied, so the
@@ -130,22 +135,17 @@ def test_withholding_the_identification_is_reported_as_the_missing_fact() -> Non
     the aggregation gate, which varies establishment across every value while
     the identification stays absent.
     """
-    row = _intracom_row()
-    transaction_id = _intracom_transaction_id()
+    row = _intracom_row(invoke_cli=invoke_cli)
+    transaction_id = _intracom_transaction_id(invoke_cli=invoke_cli)
     classified = _classify(
-        transaction_id,
-        "--taxable-base",
-        "3000.00",
-        "--iva-rate",
-        "0",
-        "--iva-amount",
-        "0",
+        transaction_id, "--taxable-base", "3000.00", "--iva-rate", "0", "--iva-amount", "0", invoke_cli=invoke_cli
     )
     assert classified.exit_code == 0, classified.output
 
     period, year = _period_of(row)
     report = _invoke(
         ["--format", "json", "app", "ledger", "preflight", "--period", period, "--year", str(year)],
+        invoke_cli=invoke_cli,
     )
     payload = json.loads(report.output)
     result = payload.get("result", payload)
@@ -164,7 +164,9 @@ def test_withholding_the_identification_is_reported_as_the_missing_fact() -> Non
     )
 
 
-def test_a_value_outside_the_member_state_catalogue_is_refused_with_the_accepted_set() -> None:
+def test_a_value_outside_the_member_state_catalogue_is_refused_with_the_accepted_set(
+    invoke_cli: Callable[..., Result],
+) -> None:
     """A parse failure lists the Member States rather than saying 'value invalid'.
 
     The option is typed as the closed enum at the Typer boundary precisely so
@@ -172,8 +174,8 @@ def test_a_value_outside_the_member_state_catalogue_is_refused_with_the_accepted
     a Member State code will guess, and a guessed identification is the fact
     this whole field exists to stop being invented.
     """
-    transaction_id = _intracom_transaction_id()
-    result = _classify(transaction_id, "--counterparty-identification-state", "zz")
+    transaction_id = _intracom_transaction_id(invoke_cli=invoke_cli)
+    result = _classify(transaction_id, "--counterparty-identification-state", "zz", invoke_cli=invoke_cli)
 
     assert result.exit_code != 0
     assert "de" in result.output and "es" in result.output, result.output

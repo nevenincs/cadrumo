@@ -11,8 +11,6 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import JsonValue
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
 from cadrumo.application.auth.read_operation import build_auth_read_definition, build_auth_read_registration
 from cadrumo.application.operations.error_detail import (
@@ -42,13 +40,6 @@ from cadrumo.application.operations.registry import (
     OperationRegistry,
 )
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
-from cadrumo.application.runtime.operation_access import RuntimeOperationObserve, RuntimeOperationObserved
-from cadrumo.application.runtime.projection_pages import (
-    PROJECTION_PAGE_BYTES,
-    ProjectionPage,
-    ProjectionPageRequest,
-    project_document_page,
-)
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.core.operations import (
     OperationEffect,
@@ -56,9 +47,19 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
-from cadrumo_harness.mcp.server import build_server
-from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
+from cadrumo_client.contracts.operation_access import OperationObserve, OperationObserved
+from cadrumo_client.contracts.projection_pages import (
+    PROJECTION_PAGE_BYTES,
+    ProjectionPage,
+    ProjectionPageRequest,
+    project_document_page,
+)
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
+from ..runtime_adapter import RuntimeMcpAdapter
+from ..server import build_server
+from .session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -80,7 +81,7 @@ def _result() -> OperationResultProjectionRequestV1:
 class _PageClient:
     def __init__(self, profile_id: UUID, *, document: dict[str, JsonValue] | None = None) -> None:
         self.profile_id = profile_id
-        self.frontend = OperationFrontendProjection.MCP
+        self.frontend = OperationFrontendProjection.EXTERNAL_CLIENT
         self.session_id = uuid4()
         self.calls: list[tuple[OperationResultProjectionRequestV1, ProjectionPageRequest]] = []
         self.deny_continuation = False
@@ -93,7 +94,7 @@ class _PageClient:
         assert deadline > 0
         self.calls.append((result, page))
         if page.offset and self.deny_continuation:
-            raise RuntimeFrontendRefusedError("grant_inactive")
+            raise FrontendRefusedError("grant_inactive")
         return project_document_page(self.document, page)
 
     def read_result_document(
@@ -110,7 +111,7 @@ class _PageClient:
 async def test_result_page_tool_retrieves_complete_bounded_public_projection() -> None:
     profile_id = uuid4()
     client = _PageClient(profile_id)
-    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     result = _result()
     try:
         async with connected_server_and_client_session(build_server(adapter)) as sdk:
@@ -168,7 +169,7 @@ async def test_result_page_marks_complete_typed_refusal_as_error_like_result() -
     profile_id = uuid4()
     document = _refusal_document()
     client = _PageClient(profile_id, document=document)
-    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     request = _result().model_dump(mode="json")
     try:
         async with connected_server_and_client_session(build_server(adapter)) as sdk:
@@ -228,7 +229,7 @@ async def test_result_page_does_not_infer_refusal_from_unverified_document_or_fr
 
     profile_id = uuid4()
     client = ReturnedPageClient(profile_id)
-    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     requested_page = ProjectionPageRequest(offset=offset, expected_digest=released.document_digest if offset else None)
     try:
         async with connected_server_and_client_session(build_server(adapter)) as sdk:
@@ -248,7 +249,7 @@ async def test_result_page_does_not_infer_refusal_from_unverified_document_or_fr
 async def test_result_page_refuses_malformed_continuation_before_dispatch() -> None:
     profile_id = uuid4()
     client = _PageClient(profile_id)
-    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
         refusal = await adapter.call(
             "result_page", {"result": _result().model_dump(mode="json"), "page": {"offset": PROJECTION_PAGE_BYTES}}
@@ -263,7 +264,7 @@ async def test_result_page_refuses_malformed_continuation_before_dispatch() -> N
 async def test_result_page_continuation_refusal_releases_no_page() -> None:
     profile_id = uuid4()
     client = _PageClient(profile_id)
-    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     result = _result()
     try:
         first = await adapter.call(
@@ -321,11 +322,11 @@ class _ObservedClient(_PageClient):
         super().__init__(profile_id)
         self.registry = registry
         self.refusal: OperationObservationRefusalCode | None = None
-        self.observations: list[RuntimeOperationObserve] = []
+        self.observations: list[OperationObserve] = []
         self.described: list[str] = []
         self.document_requests: list[OperationResultProjectionRequestV1] = []
 
-    def operation(self, request: RuntimeOperationObserve, *, deadline: float) -> RuntimeOperationObserved:
+    def operation(self, request: OperationObserve, *, deadline: float) -> OperationObserved:
         assert deadline > 0
         self.observations.append(request)
         observation: OperationObservationRefusalV1 | OperationObservationSuccessV1
@@ -333,7 +334,7 @@ class _ObservedClient(_PageClient):
             observation = OperationObservationRefusalV1(code=self.refusal, requested_version=None, diagnostic_ref=None)
         else:
             observation = self._settled()
-        return RuntimeOperationObserved(
+        return OperationObserved(
             request_id=request.request_id, runtime_boot_id=uuid4(), connection_id=uuid4(), observation=observation
         )
 
@@ -399,7 +400,7 @@ async def test_result_by_operation_id_alone_reads_what_the_full_request_reads() 
     profile_id = uuid4()
     registry = _auth_registry()
     client = _ObservedClient(profile_id, registry)
-    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     expected = _settled_request(registry)
     complete = expected.model_dump(mode="json")
     named = {"operation_id": expected.operation_id}
@@ -427,7 +428,7 @@ async def test_result_fills_only_what_the_caller_left_out() -> None:
     profile_id = uuid4()
     registry = _auth_registry()
     client = _ObservedClient(profile_id, registry)
-    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     expected = _settled_request(registry)
     try:
         await adapter.call("result", {"result": {"operation_id": expected.operation_id, "terminal_revision": 3}})
@@ -441,7 +442,7 @@ async def test_result_by_operation_id_reports_a_refused_observation_without_read
     profile_id = uuid4()
     client = _ObservedClient(profile_id, _auth_registry())
     client.refusal = OperationObservationRefusalCode.UNKNOWN_OPERATION
-    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
         refused = await adapter.call("result", {"result": {"operation_id": _observed_operation_id()}})
     finally:
@@ -454,7 +455,7 @@ async def test_result_by_operation_id_reports_a_refused_observation_without_read
 async def test_result_refuses_a_malformed_operation_id_before_observing() -> None:
     profile_id = uuid4()
     client = _ObservedClient(profile_id, _auth_registry())
-    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
         refused = await adapter.call("result", {"result": {"operation_id": "not-an-operation"}})
         missing = await adapter.call("result", {"result": {"terminal_revision": 4}})
@@ -498,7 +499,7 @@ class _StoppedClient(_ObservedClient):
         if result.result_schema != operation_error_detail_schema():
             return _not_successful()
         if self.detail == "denied":
-            raise RuntimeFrontendRefusedError("disclosure_denied")
+            raise FrontendRefusedError("disclosure_denied")
         if self.detail == "absent":
             unavailable = OperationResultProjectionRefusalV1(
                 code=OperationResultProjectionRefusalCode.RESULT_PROJECTION_UNAVAILABLE,
@@ -519,7 +520,7 @@ async def test_the_result_of_a_stopped_operation_carries_what_it_recorded_about_
     profile_id = uuid4()
     registry = _auth_registry()
     client = _StoppedClient(profile_id, registry, detail="recorded")
-    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     expected = _settled_request(registry)
     try:
         async with connected_server_and_client_session(build_server(adapter)) as sdk:
@@ -546,7 +547,7 @@ async def test_a_stopped_operation_with_no_readable_detail_leaves_only_its_refus
     profile_id = uuid4()
     registry = _auth_registry()
     client = _StoppedClient(profile_id, registry, detail=detail)
-    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
         stopped = await adapter.call("result", {"result": {"operation_id": _observed_operation_id()}})
     finally:
@@ -560,7 +561,7 @@ async def test_a_caller_that_asks_for_the_detail_itself_is_answered_by_one_read(
     profile_id = uuid4()
     registry = _auth_registry()
     client = _StoppedClient(profile_id, registry, detail="recorded")
-    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     named = {
         "operation_id": _observed_operation_id(),
         "result_schema": operation_error_detail_schema().model_dump(mode="json"),
@@ -579,7 +580,7 @@ async def test_a_refusal_that_is_not_about_the_operation_stopping_reads_no_detai
     profile_id = uuid4()
     client = _ObservedClient(profile_id, _auth_registry())
     client.document = _refusal_document()
-    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
         stale = await adapter.call("result", {"result": {"operation_id": _observed_operation_id()}})
     finally:

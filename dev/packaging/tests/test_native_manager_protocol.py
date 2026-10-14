@@ -14,14 +14,14 @@ from typing import Any
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from cadrumo.adapters.local_runtime.boot_record import (
+from cadrumo.core.hashing import reject_duplicate_json_members, reject_json_constant
+from cadrumo_client.contracts.contracts import ExitReason
+from cadrumo_runtime.adapters.boot_record import (
     decode_runtime_boot_record,
     encode_runtime_boot_record,
     runtime_boot_record_path,
 )
-from cadrumo.application.runtime.contracts import RuntimeExitReason
-from cadrumo.core.hashing import reject_duplicate_json_members, reject_json_constant
-from cadrumo.entrypoints.runtime.supervised_protocol import (
+from cadrumo_runtime.host.supervised_protocol import (
     MAX_LINE_BYTES,
     RuntimeAnnouncement,
     RuntimeStopping,
@@ -84,7 +84,7 @@ def test_every_stop_reason_has_a_canonical_vector() -> None:
         for line in _VECTORS["announcements"]["canonical"]
         if isinstance(announcement := _ANNOUNCEMENTS.validate_json(line, strict=True), RuntimeStopping)
     ]
-    assert reasons == list(RuntimeExitReason)
+    assert reasons == list(ExitReason)
 
 
 @pytest.mark.parametrize(

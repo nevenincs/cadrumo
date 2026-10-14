@@ -84,7 +84,7 @@ def test_shutdown_times_out_then_terminates_real_product_and_preserves_unrelated
                     import win32con
                     import win32event
 
-                    from cadrumo.adapters.local_runtime.windows_native_io import (
+                    from cadrumo_client.transport.windows_native_io import (
                         native_windows_call,
                         owned_windows_handle,
                     )

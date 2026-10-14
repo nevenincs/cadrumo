@@ -2,7 +2,7 @@
 
 The projection carries no fingerprint and no deletion witness. The runtime's
 reset acts reply with this same document, so a command and an act print one
-journal.
+journal. The :class:`OutputSchema` declares the public response shape.
 """
 
 from __future__ import annotations

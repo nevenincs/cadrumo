@@ -25,15 +25,15 @@ from textual.pilot import Pilot
 from textual.widgets import Button, DataTable, Link, Static
 
 import cadrumo
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from cadrumo.application.runtime.profile_access import status_admits_session
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.hashing import sha256_file
 from cadrumo.core.i18n.render import output_language
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.review_publication_labels import GoogleReviewLabels
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.profile_access import status_admits_session
+from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo.entrypoints.tui.app import CadrumoTuiApp
 from cadrumo.entrypoints.tui.declarations.grouped import GroupedDeclarationsScreen
 from cadrumo.entrypoints.tui.google_saved_review import GoogleSavedReviewModal, GoogleSavedReviewScreen
@@ -216,7 +216,7 @@ async def _reject_failed_prepublication(app: CadrumoTuiApp, output_dir: Path) ->
 
 
 async def run_google_saved_review_tui(
-    client: RuntimeFrontendClient,
+    client: FrontendClient,
     *,
     work_unit_id: str,
     calculation_revision_id: str,
@@ -232,7 +232,7 @@ async def run_google_saved_review_tui(
     supply its existing synthetic profile and a native-authenticated TUI lease.
     No replacement runtime, sign-in, recovery, consent or publication is retried.
     """
-    if not isinstance(client, RuntimeFrontendClient) or client.frontend is not OperationFrontendProjection.TUI:
+    if not isinstance(client, FrontendClient) or client.frontend is not OperationFrontendProjection.TUI:
         raise GoogleReviewTuiAcceptanceError("acceptance requires a real native TUI client")
     if seconds <= 0 or not work_unit_id or not re.fullmatch(r"[0-9a-f]{64}", calculation_revision_id):
         raise GoogleReviewTuiAcceptanceError("acceptance selection or deadline is invalid")
@@ -249,8 +249,8 @@ async def run_google_saved_review_tui(
     output_dir.mkdir(parents=True, exist_ok=False)
     deadline = monotonic() + seconds
 
-    async def no_recovery() -> RuntimeFrontendClient:
-        raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+    async def no_recovery() -> FrontendClient:
+        raise RefusalError(RefusalCode.UNAVAILABLE)
 
     root = RuntimeWorkbenchRoot(
         client,

@@ -30,7 +30,7 @@ from ._decimal_parsing import parse_decimal_amount, parse_optional_decimal_amoun
 from .common import active_bucket_id_or_refuse as _inventory_bucket_id
 from .common import emit_envelope
 from .ledger_business_payloads import InventoryClosingAuthorityRecordResult
-from .runtime_ledger_inventory import (
+from .operation_ledger_inventory import (
     add_inventory_movement,
     create_inventory_ledger,
     preview_inventory_valuation,

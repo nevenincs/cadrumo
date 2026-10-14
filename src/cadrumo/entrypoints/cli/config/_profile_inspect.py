@@ -17,14 +17,15 @@ from typing import TYPE_CHECKING
 
 import typer
 
-from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from cadrumo_client.commands.profile_binding import require_profile_client
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
 from ....core.errors.hierarchy import InternalInvariantError
 from ....core.external_constants import OutputLanguage as _OutputLanguage
 from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ..common import emit_envelope, no_active_profile_refusal
 from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
-from ..runtime_profile_binding import require_profile_client
-from .runtime_profile_view import project_profile_validate, project_profile_view
+from .operation_profile_view import project_profile_validate, project_profile_view
 
 if TYPE_CHECKING:
     from ....application.workflow.profile_bucket_models import ProfileBucketPointer as _ProfileBucketPointer
@@ -76,7 +77,7 @@ def config_profile_view(
             display_name=pointer.label,
             requested_output_language=output_language,
         )
-    except RuntimeFrontendRefusedError as refusal:
+    except FrontendRefusedError as refusal:
         raise _CliRefusedBoundaryError(context={"reason": refusal.reason}) from refusal
     emit_envelope(
         ctx,
@@ -145,7 +146,7 @@ def config_profile_validate(
             display_name=pointer.label,
             requested_output_language=output_language,
         )
-    except RuntimeFrontendRefusedError as refusal:
+    except FrontendRefusedError as refusal:
         raise _CliRefusedBoundaryError(context={"reason": refusal.reason}) from refusal
     emit_envelope(ctx, command="config.profile.validate", result=projected.result, lines=projected.lines)
     if projected.blocking:

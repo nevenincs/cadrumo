@@ -9,6 +9,8 @@ from typing import Literal
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.hashing import canonical_json_bytes
 from ...core.operations import OperationEffect
@@ -23,7 +25,6 @@ from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_payload, require_operation_profile
 from ..operations.refusal_evidence import OperationExecutorResult, OperationRefusalEvidence
-from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .bulk_import import import_invoices_from_rows, read_bulk_invoice_import_source
@@ -52,7 +53,7 @@ from .creation_wizard import create_invoice_via_wizard
 from .source_resolver import iva_category_for_operation_type
 
 _PERSON_FRONTEND_ACTOR = "cli"
-"""The audit label of an invoice a person's frontend enters; an agent's is derived from its session."""
+"""The audit label of an invoice a person's frontend enters; an automation's is derived from its session."""
 
 
 def _require_profile(
@@ -85,7 +86,7 @@ class InvoiceIntakeExecutor:
         """Run canonical intake and retain a receipt-correlated private outcome."""
         payload = _require_profile(request, context)
         # An invoice entered through the wizard carries no mark of who typed its
-        # amounts, so the creation event's actor is what tells an agent's entry
+        # amounts, so the creation event's actor is what tells an automation's entry
         # from the person's.
         actor = execution_actor_label(self._execution_caller_reader, context, supplied=_PERSON_FRONTEND_ACTOR)
         await context.events.phase(request.definition_id)

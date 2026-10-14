@@ -32,7 +32,7 @@ from ..service import set_classification
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("authority_operation")]
 
 _PERSON = ClassificationOrigin.PERSON
-_AGENT = ClassificationOrigin.AGENT
+_AUTOMATION = ClassificationOrigin.AUTOMATION
 _AUTOMATIC = ClassificationOrigin.AUTOMATIC
 
 
@@ -71,24 +71,24 @@ def _row(
 
 
 @pytest.mark.parametrize(
-    ("classified_by", "by_agent", "origin"),
+    ("classified_by", "by_automation", "origin"),
     [
         ("manual", False, _PERSON),
         ("llm:local-text:model", False, _PERSON),
         ("derived:iva-category", False, _PERSON),
-        ("manual", True, _AGENT),
-        ("llm:local-text:model", True, _AGENT),
-        ("derived:iva-category", True, _AGENT),
+        ("manual", True, _AUTOMATION),
+        ("llm:local-text:model", True, _AUTOMATION),
+        ("derived:iva-category", True, _AUTOMATION),
         ("rule:vendor-map", False, _AUTOMATIC),
         ("rule:vendor-map", True, _AUTOMATIC),
         ("auto", False, _AUTOMATIC),
     ],
 )
 def test_a_write_is_the_decision_of_whoever_ran_it_unless_a_rule_decided(
-    classified_by: str, by_agent: bool, origin: ClassificationOrigin
+    classified_by: str, by_automation: bool, origin: ClassificationOrigin
 ) -> None:
     """Typing, accepting a proposal and deriving figures are the runner's act; a rule's output is nobody's."""
-    assert written_classification_origin(by_agent=by_agent, classified_by=classified_by) is origin
+    assert written_classification_origin(by_automation=by_automation, classified_by=classified_by) is origin
 
 
 @pytest.mark.parametrize(
@@ -104,7 +104,7 @@ def test_a_write_is_the_decision_of_whoever_ran_it_unless_a_rule_decided(
 def test_a_classified_row_stored_without_an_origin_is_the_persons_unless_a_rule_or_the_pipeline_stamped_it(
     classified_by: str, origin: ClassificationOrigin
 ) -> None:
-    """No agent could classify a row before the origin was recorded, so the stamp alone settles it."""
+    """No automation could classify a row before the origin was recorded, so the stamp alone settles it."""
     stored = _row(BusinessClassification.BUSINESS, classified_by=classified_by)
 
     assert stored.classification_origin is None
@@ -123,11 +123,11 @@ def test_a_row_stored_before_the_origin_was_recorded_still_loads() -> None:
 
 
 def test_the_recorded_origin_round_trips_through_the_stored_form() -> None:
-    recorded = _row(BusinessClassification.BUSINESS, classified_by="manual", origin=_AGENT)
+    recorded = _row(BusinessClassification.BUSINESS, classified_by="manual", origin=_AUTOMATION)
 
     assert Transaction.model_validate_json(recorded.model_dump_json()) == recorded
     assert Transaction.model_validate(recorded.model_dump(mode="python")) == recorded
-    assert resolved_classification_origin(recorded) is _AGENT
+    assert resolved_classification_origin(recorded) is _AUTOMATION
 
 
 def test_an_unprocessed_row_is_nobodys_whatever_it_records() -> None:
@@ -143,8 +143,8 @@ def test_the_recorded_origin_wins_over_the_last_writers_stamp() -> None:
     assert resolved_classification_origin(restamped) is _AUTOMATIC
 
 
-@pytest.mark.parametrize("current_origin", [_PERSON, _AGENT, _AUTOMATIC])
-@pytest.mark.parametrize("written", [_PERSON, _AGENT, _AUTOMATIC])
+@pytest.mark.parametrize("current_origin", [_PERSON, _AUTOMATION, _AUTOMATIC])
+@pytest.mark.parametrize("written", [_PERSON, _AUTOMATION, _AUTOMATIC])
 def test_a_write_that_sets_no_tax_bearing_fact_keeps_the_origin_it_found(
     current_origin: ClassificationOrigin, written: ClassificationOrigin
 ) -> None:
@@ -158,7 +158,7 @@ def test_a_write_that_sets_no_tax_bearing_fact_keeps_the_origin_it_found(
     assert stamped.classification_origin is current_origin
 
 
-@pytest.mark.parametrize("current_origin", [_PERSON, _AGENT, _AUTOMATIC])
+@pytest.mark.parametrize("current_origin", [_PERSON, _AUTOMATION, _AUTOMATIC])
 def test_a_person_restating_what_the_row_carries_accepts_it_and_the_row_becomes_theirs(
     current_origin: ClassificationOrigin,
 ) -> None:
@@ -171,12 +171,12 @@ def test_a_person_restating_what_the_row_carries_accepts_it_and_the_row_becomes_
     assert stamped.classification_origin is _PERSON
 
 
-@pytest.mark.parametrize("current_origin", [_PERSON, _AGENT, _AUTOMATIC])
-@pytest.mark.parametrize("written", [_AGENT, _AUTOMATIC])
-def test_an_agent_or_a_rule_restating_what_the_row_carries_takes_nothing(
+@pytest.mark.parametrize("current_origin", [_PERSON, _AUTOMATION, _AUTOMATIC])
+@pytest.mark.parametrize("written", [_AUTOMATION, _AUTOMATIC])
+def test_automation_or_a_rule_restating_what_the_row_carries_takes_nothing(
     current_origin: ClassificationOrigin, written: ClassificationOrigin
 ) -> None:
-    """Otherwise an agent would take the person's row by submitting the classification it already has."""
+    """Otherwise an automation would take the person's row by submitting the classification it already has."""
     current = _row(BusinessClassification.BUSINESS, classified_by="manual", origin=current_origin)
 
     stamped = with_classification_origin(current, replaces=current, written=written, decided=True)
@@ -189,7 +189,7 @@ def test_a_write_that_changes_nothing_records_the_origin_an_older_row_was_read_a
     older = _row(BusinessClassification.BUSINESS, classified_by="rule:vendor-map")
     replacement = older.model_copy(update={"classified_by": "manual"})
 
-    stamped = with_classification_origin(replacement, replaces=older, written=_AGENT, decided=True)
+    stamped = with_classification_origin(replacement, replaces=older, written=_AUTOMATION, decided=True)
 
     assert stamped.classification_origin is _AUTOMATIC
 
@@ -227,7 +227,7 @@ def test_a_write_that_changes_nothing_records_the_origin_an_older_row_was_read_a
         "prorrata-sector",
     ],
 )
-@pytest.mark.parametrize("written", [_PERSON, _AGENT, _AUTOMATIC])
+@pytest.mark.parametrize("written", [_PERSON, _AUTOMATION, _AUTOMATIC])
 @pytest.mark.parametrize("decided", [False, True])
 def test_a_write_that_changes_a_tax_bearing_fact_records_who_wrote_it(
     change: dict[str, object], written: ClassificationOrigin, decided: bool
@@ -270,13 +270,13 @@ def test_a_first_classification_records_who_wrote_it_and_a_row_left_unprocessed_
         stamped = with_classification_origin(replacement, replaces=replaces, written=written, decided=True)
         return stamped.classification_origin
 
-    assert origin(classified, unprocessed, _AGENT) is _AGENT
+    assert origin(classified, unprocessed, _AUTOMATION) is _AUTOMATION
     assert origin(classified, None, _PERSON) is _PERSON
     assert origin(unprocessed, None, _PERSON) is None
     returned = _row(BusinessClassification.BUSINESS, classified_by="manual", origin=_PERSON).model_copy(
         update={"business_classification": BusinessClassification.NOT_YET_PROCESSED}
     )
-    assert origin(returned, classified, _AGENT) is None
+    assert origin(returned, classified, _AUTOMATION) is None
 
 
 def test_the_domain_write_records_who_accepted_and_only_a_person_takes_a_row_by_restating_it() -> None:
@@ -297,7 +297,7 @@ def test_the_domain_write_records_who_accepted_and_only_a_person_takes_a_row_by_
         row.transaction_id,
         classification=BusinessClassification.BUSINESS,
         classified_by="llm:local-text:model",
-        origin=_AGENT,
+        origin=_AUTOMATION,
         confidence=Decimal("0.9"),
     )
     changed = set_classification(
@@ -305,7 +305,7 @@ def test_the_domain_write_records_who_accepted_and_only_a_person_takes_a_row_by_
         row.transaction_id,
         classification=BusinessClassification.PERSONAL,
         classified_by="llm:local-text:model",
-        origin=_AGENT,
+        origin=_AUTOMATION,
         confidence=Decimal("0.9"),
     )
 
@@ -320,5 +320,5 @@ def test_the_domain_write_records_who_accepted_and_only_a_person_takes_a_row_by_
 
     assert accepted.transactions[row.transaction_id].classification_origin is _PERSON
     assert again.transactions[row.transaction_id].classification_origin is _PERSON
-    assert changed.transactions[row.transaction_id].classification_origin is _AGENT
+    assert changed.transactions[row.transaction_id].classification_origin is _AUTOMATION
     assert confirmed.transactions[row.transaction_id].classification_origin is _PERSON

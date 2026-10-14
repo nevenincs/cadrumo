@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo_client.commands.google_errors import google_refusal
+
 from .....adapters.outbound.google.errors import (
     GoogleAuthClientMetadataUnavailableError,
     GoogleAuthError,
@@ -17,7 +19,6 @@ from .....adapters.outbound.google.errors import (
 from .....adapters.outbound.storage.errors import OutboundStorageError
 from .....core.errors.error_codes import get_registered_error_code, resolve_error_message
 from .....core.i18n.render import tr
-from ..google_errors import google_refusal
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

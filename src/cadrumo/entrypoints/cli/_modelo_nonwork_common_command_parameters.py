@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Final
 
-from .command_parameter_contracts import ArgumentSpec, OptionSpec
-from .command_shared_contracts import (
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.shared_contracts import (
     FLAG_VALUE,
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,

@@ -14,7 +14,9 @@ from textual.binding import Binding
 from textual.screen import Screen
 from textual.widgets import Button, Link, Static
 
-from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.frontend_client import FrontendClient
+
 from ...application.export.google_review_operation_contracts import (
     GOOGLE_REVIEW_OPERATION_DEFINITION_ID,
     GOOGLE_REVIEW_RESPONSE_SCHEMA_BINDING,
@@ -33,7 +35,6 @@ from ...application.operations.frontend_requests import (
 )
 from ...application.operations.interactions import OperationResponseIntentValue
 from ...application.operations.registry import OperationFrontendProjection
-from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.errors.error_codes import resolve_error_message
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import OutputLanguage
@@ -70,7 +71,7 @@ def validate_saved_google_review(
         or ReadablePayloadCategory.CALCULATION not in review.payload_categories
         or not set(review.payload_categories) <= {ReadablePayloadCategory.CALCULATION, ReadablePayloadCategory.LEDGER}
     ):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
 
 
 class GoogleSavedReviewModal(OperationModal):
@@ -99,11 +100,11 @@ class GoogleSavedReviewModal(OperationModal):
             interaction.interaction.review_reference.review_projection_schema
             != GOOGLE_REVIEW_REVIEW_SCHEMA_BINDING.identity
         ):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         review = GoogleReviewProjection.model_validate_json(interaction.projection.model_dump_json())
         validate_saved_google_review(self._request, review, operation_id=self._controller.operation_id)
         if review.revision != interaction.interaction.revision:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         self._reviewed(review)
         return review
 
@@ -113,7 +114,7 @@ class GoogleSavedReviewModal(OperationModal):
         try:
             disclosure = self._disclosure()
         except (CadrumoError, ValueError):
-            self._runtime_access_lost(RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME))
+            self._runtime_access_lost(RefusalError(RefusalCode.INVALID_FRAME))
             return
         if disclosure is None:
             return
@@ -155,7 +156,7 @@ class GoogleSavedReviewModal(OperationModal):
         try:
             disclosure = self._disclosure()
         except (CadrumoError, ValueError):
-            self._runtime_access_lost(RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME))
+            self._runtime_access_lost(RefusalError(RefusalCode.INVALID_FRAME))
             return
         if disclosure is not None:
             await super()._send_response(intent=intent)
@@ -166,7 +167,7 @@ class GoogleSavedReviewScreen(Screen[None]):
 
     def __init__(
         self,
-        client: RuntimeFrontendClient,
+        client: FrontendClient,
         calculation_revision_id: CalculationRevisionId,
         *,
         filing_record_id: Hex64Str | None = None,
@@ -174,7 +175,7 @@ class GoogleSavedReviewScreen(Screen[None]):
         """Capture the profile/session and immutable calculation before any operation starts."""
         super().__init__()
         if client.frontend is not OperationFrontendProjection.TUI:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         self._client = client
         self._profile_id, self._session_id = client.profile_id, client.session_id
         self._request = GoogleReviewRequest(
@@ -204,7 +205,7 @@ class GoogleSavedReviewScreen(Screen[None]):
 
     def _require_session(self) -> None:
         if self._client.profile_id != self._profile_id or self._client.session_id != self._session_id:
-            raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+            raise RefusalError(RefusalCode.CONNECTION_CLOSED)
 
     def _notice(self, text: str) -> None:
         self.query_one("#saved-google-review-notice", Static).update(text)
@@ -212,7 +213,7 @@ class GoogleSavedReviewScreen(Screen[None]):
     def _record_review(self, review: GoogleReviewProjection) -> None:
         self._require_session()
         if self._review is not None and self._review != review:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         self._review = review
 
     async def _prepare(self) -> None:
@@ -228,7 +229,7 @@ class GoogleSavedReviewScreen(Screen[None]):
             self._controller = controller
             self._require_session()
             if await controller.start() != controller.operation_id:
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                raise RefusalError(RefusalCode.INVALID_FRAME)
             self._require_session()
         except CadrumoError as error:
             self._notice(resolve_error_message(error))
@@ -257,7 +258,7 @@ class GoogleSavedReviewScreen(Screen[None]):
             self._require_session()
             observed = await controller.observe(0, page_limit=1)
             if not isinstance(observed, OperationObservationSuccessV1):
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                raise RefusalError(RefusalCode.INVALID_FRAME)
             projection = observed.projection
             if (
                 projection.operation_id != controller.operation_id
@@ -265,15 +266,15 @@ class GoogleSavedReviewScreen(Screen[None]):
                 or projection.subject_ref != profile_operation_subject(str(self._profile_id))
                 or projection.effect is not OperationEffect.NONE
             ):
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                raise RefusalError(RefusalCode.INVALID_FRAME)
             if projection.lifecycle is OperationLifecycle.TERMINAL:
                 if rejection_sent and projection.terminal_condition is not OperationTerminalCondition.REFUSED:
-                    raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                    raise RefusalError(RefusalCode.INVALID_FRAME)
                 return rejection_sent
             pending = projection.pending_interaction
             if not rejection_sent and isinstance(pending, OperationReviewAvailableInteractionV1):
                 if pending.response_schema != GOOGLE_REVIEW_RESPONSE_SCHEMA_BINDING.identity:
-                    raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                    raise RefusalError(RefusalCode.INVALID_FRAME)
                 control = await controller.response_control(
                     interaction_id=pending.interaction_id, revision=pending.revision
                 )
@@ -284,7 +285,7 @@ class GoogleSavedReviewScreen(Screen[None]):
                     or (allowed.operation_id, allowed.interaction_id, allowed.revision)
                     != (controller.operation_id, pending.interaction_id, pending.revision)
                 ):
-                    raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                    raise RefusalError(RefusalCode.INVALID_FRAME)
                 self._require_session()
                 rejected = await control.reject(
                     OperationResponseRejectRequestV1(
@@ -300,7 +301,7 @@ class GoogleSavedReviewScreen(Screen[None]):
                     rejected.interaction_id,
                     rejected.response_action,
                 ) != (controller.operation_id, pending.interaction_id, "reject"):
-                    raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                    raise RefusalError(RefusalCode.INVALID_FRAME)
                 rejection_sent = True
                 continue
             if monotonic() >= deadline:
@@ -318,7 +319,7 @@ class GoogleSavedReviewScreen(Screen[None]):
             self._require_session()
             review = self._review
             if review is None or projection.effect not in {OperationEffect.NONE, OperationEffect.UPDATED}:
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                raise RefusalError(RefusalCode.INVALID_FRAME)
             result = await controller.read_settled_result(projection, GoogleReviewResult, result_version=1)
             self._require_session()
             if (
@@ -327,7 +328,7 @@ class GoogleSavedReviewScreen(Screen[None]):
                 or result.snapshot_digest != review.snapshot_digest
                 or result.root_folder_id != review.root_folder_id
             ):
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                raise RefusalError(RefusalCode.INVALID_FRAME)
         except CadrumoError as error:
             self._notice(resolve_error_message(error))
             return

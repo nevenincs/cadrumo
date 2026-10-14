@@ -10,7 +10,6 @@ import pytest
 import typer
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode
 from cadrumo.application.user_profile.censal_operation import CensalProfileBaseline
 from cadrumo.application.user_profile.censal_preview_operation import (
     CENSAL_PREVIEW_OPERATION_DEFINITION_ID,
@@ -18,10 +17,11 @@ from cadrumo.application.user_profile.censal_preview_operation import (
     CensalPreviewOperationResult,
 )
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from cadrumo.entrypoints.cli.config import runtime_censal_preview
+from cadrumo.entrypoints.cli.config import operation_censal_preview
 from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError
-from cadrumo.entrypoints.cli.registered_operation_contracts import RegisteredOperationCompletion
-from cadrumo.entrypoints.cli.registered_operation_deadlines import provider_login_settlement_seconds
+from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
+from cadrumo_client.commands.registered_operation_deadlines import provider_login_settlement_seconds
+from cadrumo_client.contracts.contracts import RefusalCode
 
 _PROFILE_ID = UUID("aa000000-0000-4000-8000-0000000000aa")
 _FOREIGN_PROFILE_ID = UUID("bb000000-0000-4000-8000-0000000000bb")
@@ -73,9 +73,9 @@ def _install_bridge(
             terminal_condition=OperationTerminalCondition.SUCCEEDED,
         )
 
-    monkeypatch.setattr(runtime_censal_preview, "bound_profile_client", bound_profile_client)
-    monkeypatch.setattr(runtime_censal_preview, "prepare_censal_review", prepare_censal_review)
-    monkeypatch.setattr(runtime_censal_preview, "run_registered_operation", run_registered_operation)
+    monkeypatch.setattr(operation_censal_preview, "bound_profile_client", bound_profile_client)
+    monkeypatch.setattr(operation_censal_preview, "prepare_censal_review", prepare_censal_review)
+    monkeypatch.setattr(operation_censal_preview, "run_registered_operation", run_registered_operation)
     return ctx, client, baseline, captured, projection
 
 
@@ -86,7 +86,7 @@ def test_preview_bridge_submits_prepared_baseline_under_exact_profile_subject(
 ) -> None:
     ctx, client, baseline, captured, projection = _install_bridge(monkeypatch, effect=effect)
 
-    preview = runtime_censal_preview.preview_censal_with_runtime(ctx)
+    preview = operation_censal_preview.preview_censal_operation(ctx)
 
     assert preview is projection
     assert captured["client"] is client
@@ -124,11 +124,11 @@ def test_preview_bridge_refuses_profile_or_effect_mismatch_with_operation_identi
     )
 
     with pytest.raises(CliRefusedBoundaryError) as refused:
-        runtime_censal_preview.preview_censal_with_runtime(ctx)
+        operation_censal_preview.preview_censal_operation(ctx)
 
     assert refused.value.context == {
         "operation_id": _OPERATION_ID,
-        "reason": RuntimeRefusalCode.INVALID_FRAME.value,
+        "reason": RefusalCode.INVALID_FRAME.value,
         "effect": effect.value,
         "terminal_condition": OperationTerminalCondition.SUCCEEDED.value,
     }
@@ -150,4 +150,4 @@ def test_preview_bridge_accepts_the_live_session_write_the_read_commits(
         effect=OperationEffect.UPDATED,
     )
 
-    assert runtime_censal_preview.preview_censal_with_runtime(ctx) is projection
+    assert operation_censal_preview.preview_censal_operation(ctx) is projection

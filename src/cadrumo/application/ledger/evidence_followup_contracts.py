@@ -1,7 +1,7 @@
 """Closed request, result, and profile capability contracts for evidence follow-up reads.
 
 The review view is a person's projection: it carries the draft's text as the
-document prints it. The review summary serves the same review to an agent with
+document prints it. The review summary serves the same review to an automation with
 every finding, status and amount, and with that text left out.
 """
 
@@ -386,7 +386,7 @@ class LedgerEvidenceReviewViewProjection(BaseModel):
         return self
 
 
-DRAFT_TEXT_FIELDS_WITHHELD_FROM_AGENTS: Final[tuple[str, ...]] = (
+DRAFT_TEXT_FIELDS_WITHHELD_FROM_AUTOMATION: Final[tuple[str, ...]] = (
     "supplier_tax_id",
     "supplier_name",
     "customer_tax_id",
@@ -409,7 +409,7 @@ DRAFT_TEXT_FIELDS_WITHHELD_FROM_AGENTS: Final[tuple[str, ...]] = (
 )
 """The draft fields whose value is text a reader took from the document.
 
-An unreviewed draft is third-party content. An agent is told which of these
+An unreviewed draft is third-party content. An automation is told which of these
 fields hold a value and never what the value is; the person reads it in the
 review view, and it becomes the person's own record on confirmation.
 """
@@ -531,7 +531,7 @@ class EvidenceReviewCountryWarningSummary(BaseModel):
 
 
 class LedgerEvidenceReviewSummaryProjection(BaseModel):
-    """One pending draft's review for an agent: findings, statuses and figures, no document text.
+    """One pending draft's review for an automation: findings, statuses and figures, no document text.
 
     Amounts, rates, closed classifications and the typed axes of every finding
     are released. Text a reader took from the document is not: the draft's
@@ -579,7 +579,7 @@ class LedgerEvidenceReviewSummaryProjection(BaseModel):
         blocker_ids = tuple(blocker.blocker_id for blocker in self.blockers)
         if len(set(blocker_ids)) != len(blocker_ids):
             raise ValueError("review summary repeats a blocker identity")
-        if any(name not in DRAFT_TEXT_FIELDS_WITHHELD_FROM_AGENTS for name in self.withheld_text_fields) or len(
+        if any(name not in DRAFT_TEXT_FIELDS_WITHHELD_FROM_AUTOMATION for name in self.withheld_text_fields) or len(
             set(self.withheld_text_fields)
         ) != len(self.withheld_text_fields):
             raise ValueError("review summary names a withheld field the draft does not hold as text")
@@ -587,10 +587,10 @@ class LedgerEvidenceReviewSummaryProjection(BaseModel):
 
     @classmethod
     def from_review_view(cls, view: LedgerEvidenceReviewViewProjection) -> Self:
-        """Reduce the person's complete review to what an agent may hold."""
+        """Reduce the person's complete review to what an automation may hold."""
         draft = view.draft
         withheld_fields = tuple(
-            name for name in DRAFT_TEXT_FIELDS_WITHHELD_FROM_AGENTS if getattr(draft, name) is not None
+            name for name in DRAFT_TEXT_FIELDS_WITHHELD_FROM_AUTOMATION if getattr(draft, name) is not None
         )
         fields = tuple(EvidenceReviewFieldSummary.from_provenance(row) for row in draft.provenance)
         discrepancies = tuple(EvidenceReviewDiscrepancySummary.from_discrepancy(row) for row in draft.discrepancies)
@@ -737,7 +737,7 @@ class LedgerEvidenceReviewSummaryExecutionResult(BaseModel):
 
 
 __all__ = [
-    "DRAFT_TEXT_FIELDS_WITHHELD_FROM_AGENTS",
+    "DRAFT_TEXT_FIELDS_WITHHELD_FROM_AUTOMATION",
     "LEDGER_EVIDENCE_ATTACHMENT_QUEUE_OPERATION_DEFINITION_ID",
     "LEDGER_EVIDENCE_ATTACHMENT_VIEW_OPERATION_DEFINITION_ID",
     "LEDGER_EVIDENCE_CONSENT_LIST_OPERATION_DEFINITION_ID",

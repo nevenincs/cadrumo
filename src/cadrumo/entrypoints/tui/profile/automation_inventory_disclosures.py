@@ -14,8 +14,9 @@ from uuid import UUID
 
 from textual.widgets import Button, Static
 
-from ....adapters.local_runtime.automation_inventory import read_automation_inventory
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo_client.transport.automation_inventory import read_automation_inventory
+from cadrumo_client.transport.frontend_client import FrontendClient
+
 from ....application.user_profile.access_contracts import DisclosurePage, DisclosurePageRequest
 from ....application.user_profile.disclosure_paging import DisclosurePager
 from ....core.async_cleanup import await_cancellation_complete
@@ -30,7 +31,7 @@ if TYPE_CHECKING:
 class InventoryDisclosureReader:
     """Read pages of one grant's or pending request's disclosures from the inventory."""
 
-    client: RuntimeFrontendClient
+    client: FrontendClient
     target_id: UUID
 
     def disclosure_page(self, request: DisclosurePageRequest, *, timeout: float = 60) -> DisclosurePage:

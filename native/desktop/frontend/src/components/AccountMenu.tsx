@@ -193,7 +193,8 @@ export function AccountMenu({
         {/* Only what the product says stands is said. The saved setting
             stays after a sign-out; whether a key can still admit is a
             separate answer, and null is no answer. */}
-        {account.remaining?.remainingAccess.agentAccessRemains === true && (
+        {account.remaining?.remainingAccess.automationAccessRemains ===
+          true && (
           <Alert icon={<Icon name="info" />}>
             {t("desktop.account.remaining_access")}
           </Alert>

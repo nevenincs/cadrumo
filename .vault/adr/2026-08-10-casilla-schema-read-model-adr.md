@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#casilla-schema'
 date: '2026-08-10'
-modified: '2026-08-15'
+modified: '2026-10-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:7f10dd6ecbde0a95b5bb61dfb3c9001395420a1716fb75543a4539d9605eda7a'
+body_hash: 'sha256:ca966307527aef9e5b8106cf8cbd95bce9731be400791afb11944cc8d024360f'
 related:
   - "[[2026-08-10-casilla-schema-research]]"
   - "[[2026-06-10-cli-envelope-notice-standardisation-adr]]"
@@ -61,3 +61,7 @@ Gains: one truthful record; the TUI review screen becomes a rendering exercise; 
 The defect that amendment closes was structural rather than a judgement call: **no step in the tui-architecture plan named this screen**, so the plan's own completion criterion demanded its removal while no row owned the move. That is how a plan and a tree drift apart while both look green. `W04.P10.S104` is now inserted in that plan - beside the peer relocations and ahead of the relocation-parity proof - to move the screen and its tests to `cadrumo.entrypoints.tui.modelo.view` as a read-only consumer of the public `application.modelo` facade and delete the legacy screen, exports and locale references in the same change. The interface ADR's precondition for creating that destination is satisfied: this campaign published `ModeloWorkReview` and closed on 2026-08-13.
 
 This record rules nothing about frontend topology, which is not its authority. It records only that the screen it produced is on loan to the legacy package until `W04.P10.S104` lands, and that the obligation is tracked by a row rather than by prose. A correction is noted for the next reader: an earlier version of this amendment declared the placement permanent and the relocation unreachable, on a mistaken reading that the TUI campaign had been cancelled. It had not been.
+
+### Amendment 2026-10-14: current TUI source ownership
+
+The placement and plan-row references above record the historical sibling-entrypoint decision and its sequencing. The installed Textual frontend now has its production root at `src/cadrumo_runtime/host/frontend/tui/` (`cadrumo_runtime.host.frontend.tui`) and launches through `cadrumo-runtime tui`; any current screen produced by this work belongs in that host-owned tree. `cadrumo` tax modules do not import `cadrumo_runtime`. This amendment updates physical source ownership and launch only; the read-model contract and the historical plan record remain intact.

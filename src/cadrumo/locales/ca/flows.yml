@@ -285,8 +285,8 @@ flows:
       cancel_button: Cancel·la
       confirm_button: Ja l'he anotat
       offer_consequence: 'Sense ell, una contrasenya oblidada vol dir que les dades
-        no es poden recuperar. També el pots configurar més tard amb: aeat config
-        profile recovery enable'
+        no es poden recuperar. També el pots configurar més tard amb: cadrumo-runtime
+        config profile recovery enable'
       offer_explanation: Un codi de recuperació et permet establir una contrasenya
         nova si l'oblides. Es mostra una sola vegada; anota'l i desa'l lluny d'aquest
         equip.

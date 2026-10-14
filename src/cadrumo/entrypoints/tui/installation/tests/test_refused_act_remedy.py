@@ -6,13 +6,14 @@ from uuid import uuid4
 
 import pytest
 
+from cadrumo_client.contracts.installation_requests import InstallationAct, InstallationRefused
+
 from .....application.operations.error_detail import OperationErrorDetailKind, OperationErrorDetailV1
 from .....application.operator_actions.models import PreconditionVerdict
 from .....application.operator_actions.preconditions import (
     no_action_precondition_verdict,
     profile_setup_incomplete_verdict,
 )
-from .....application.runtime.installation_requests import InstallationAct, RuntimeInstallationRefused
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import RecordedRegisteredError
 from .....core.i18n.render import tr
@@ -27,7 +28,7 @@ _CODE = "REFUSED_AUTH_CERTIFICATE_SOURCE_NOT_FOUND"
 
 
 def _refused_with(verdict: PreconditionVerdict | None) -> ActPresentation:
-    refusal = RuntimeInstallationRefused(
+    refusal = InstallationRefused(
         request_id=uuid4(),
         runtime_boot_id=uuid4(),
         connection_id=uuid4(),

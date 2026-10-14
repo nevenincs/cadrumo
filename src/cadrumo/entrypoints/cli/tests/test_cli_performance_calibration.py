@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from .cli_performance import PerformanceCalibrationPolicy, calibrate_cli_path
+from cadrumo.entrypoints.tests.cli_performance import PerformanceCalibrationPolicy, calibrate_cli_path
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

@@ -180,7 +180,7 @@ class LedgerRatiosSetExecutor:
     """Apply one ratio override using the existing serialized application service."""
 
     def __init__(self, *, execution_caller_reader: OperationExecutionCallerReader | None = None) -> None:
-        """Keep the reader that names the actor of an agent's execution."""
+        """Keep the reader that names the actor of an automation's execution."""
         self._execution_caller_reader = execution_caller_reader
 
     async def execute(
@@ -258,7 +258,7 @@ class LedgerRatiosUnsetExecutor:
     """Clear one exact-profile override and preserve the service's missing-value refusal."""
 
     def __init__(self, *, execution_caller_reader: OperationExecutionCallerReader | None = None) -> None:
-        """Keep the reader that names the actor of an agent's execution."""
+        """Keep the reader that names the actor of an automation's execution."""
         self._execution_caller_reader = execution_caller_reader
 
     async def execute(

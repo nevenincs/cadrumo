@@ -76,7 +76,7 @@ class OAuthToken(BaseModel):
 
 
 class OAuthMetadata(BaseModel):
-    """Audit fields surfaced by `aeat config google status`.
+    """Audit fields surfaced by `cadrumo-runtime config google status`.
 
     This is the non-secret companion record to
     :class:`adapters.outbound.google.records.OAuthToken`.

@@ -14,7 +14,9 @@ from textual.app import App
 from textual.pilot import Pilot
 from textual.widgets import Button, Static
 
-from .....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
 from .....application.operations.frontend_contracts import (
     OperationCancellationResultV1,
     OperationDetachResultV1,
@@ -38,7 +40,6 @@ from .....application.operations.frontend_requests import (
 from .....application.operations.interactions import OperationResponseIntent, OperationResponseIntentValue
 from .....application.operations.persistence.replay import OperationReplayStatus
 from .....application.operations.registry import OperationPublicContractSetV1
-from .....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from .....core.operations import OperationEffect, OperationLifecycle
 from ....operation_composition import build_production_operation_registry
 from ..controller_port import OperationResponseControlPort
@@ -149,10 +150,10 @@ class _Control:
         )
 
     async def apply(self, request: OperationResponseApplyRequestV1) -> OperationResponseMutationResultV1:
-        raise RuntimeFrontendRefusedError("profile_session_expired")
+        raise FrontendRefusedError("profile_session_expired")
 
     async def reject(self, request: OperationResponseRejectRequestV1) -> OperationResponseMutationResultV1:
-        raise RuntimeFrontendRefusedError("profile_session_expired")
+        raise FrontendRefusedError("profile_session_expired")
 
 
 class _Controller:
@@ -183,9 +184,9 @@ class _Controller:
         self.second_observe_started.set()
         await self.release_second_observe.wait()
         if self.failing_action == "transport":
-            raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+            raise RefusalError(RefusalCode.CONNECTION_CLOSED)
         if self.failing_action == "observe":
-            raise RuntimeFrontendRefusedError("profile_session_expired")
+            raise FrontendRefusedError("profile_session_expired")
         projection = self.observation.projection
         return OperationObservationSuccessV1(
             projection=projection,
@@ -217,10 +218,10 @@ class _Controller:
         return self.control
 
     async def cancel(self, *, expected_revision: int) -> OperationCancellationResultV1:
-        raise RuntimeFrontendRefusedError("profile_session_expired")
+        raise FrontendRefusedError("profile_session_expired")
 
     async def detach(self, *, expected_revision: int) -> OperationDetachResultV1:
-        raise RuntimeFrontendRefusedError("profile_session_expired")
+        raise FrontendRefusedError("profile_session_expired")
 
 
 class _Host(App[None]):

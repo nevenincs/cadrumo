@@ -6,17 +6,10 @@ import pytest
 from click import IntRange
 from typer.testing import CliRunner
 
-from cadrumo.application.operator_surface.command_ports import (
-    CommandNodeKind,
-    CommandWriteRoute,
-)
-
-from ....core.i18n.render import tr
-from .._command_runtime import _parameter, build_command_app
-from .._command_target import resolve_deferred_target
-from ..command_graph import CommandSpecGraph
-from ..command_parameter_contracts import ArgumentSpec, OptionSpec
-from ..command_shared_contracts import (
+from cadrumo_client.commands.compiler import build_command_app, compile_parameter
+from cadrumo_client.commands.graph import CommandSpecGraph
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.shared_contracts import (
     DeferredTarget,
     LazyBinding,
     ParameterConstraint,
@@ -26,7 +19,11 @@ from ..command_shared_contracts import (
     TranslationKey,
     ValueContract,
 )
-from ..command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.commands.target import resolve_deferred_target
+from cadrumo_client.contracts.command_ports import CommandNodeKind, CommandWriteRoute
+
+from ....core.i18n.render import tr
 from .command_runtime_support import build_command_subtree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -272,8 +269,8 @@ def test_runtime_materializes_shared_value_and_constraint_kwargs_for_arguments_a
         hidden=True,
         constraint=constraint,
     )
-    argument = _parameter(argument_spec).default
-    option = _parameter(option_spec).default
+    argument = compile_parameter(argument_spec).default
+    option = compile_parameter(option_spec).default
 
     for parameter, spec in ((argument, argument_spec), (option, option_spec)):
         assert spec.help_key is not None
@@ -310,7 +307,7 @@ def test_runtime_materializes_factory_defaults_for_arguments_and_options() -> No
         )
     )
     value = ValueContract(DeferredTarget("builtins", "str"))
-    argument = _parameter(
+    argument = compile_parameter(
         ArgumentSpec(
             name="item",
             value=value,
@@ -318,7 +315,7 @@ def test_runtime_materializes_factory_defaults_for_arguments_and_options() -> No
             help_key=None,
         )
     ).default
-    option = _parameter(
+    option = compile_parameter(
         OptionSpec(
             name="item",
             declarations=("--item",),
@@ -369,7 +366,7 @@ def test_runtime_materializes_and_exercises_option_only_hooks() -> None:
         is_flag=True,
         flag_value=True,
     )
-    materialized = _parameter(name_option).default
+    materialized = compile_parameter(name_option).default
     assert name_option.prompt_key is not None
     assert name_option.confirmation_prompt_key is not None
     assert materialized.param_decls == name_option.declarations

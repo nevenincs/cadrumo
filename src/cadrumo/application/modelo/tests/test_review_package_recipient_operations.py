@@ -404,7 +404,7 @@ def test_definitions_and_access_resolvers_are_exact_profile_and_profile_values()
     assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
 
 
-def test_recipient_list_is_admitted_on_the_mcp_frontend_without_a_commit_door() -> None:
+def test_recipient_list_is_admitted_on_the_external_client_frontend_without_a_commit_door() -> None:
     def registry_factory(*, bucket_id: str) -> RecipientFingerprintRegistryPorts:
         raise AssertionError(bucket_id)
 
@@ -422,12 +422,12 @@ def test_recipient_list_is_admitted_on_the_mcp_frontend_without_a_commit_door() 
             profile_id=_PROFILE,
             destination_id=uuid4(),
             action=AccessAction.SUBMIT,
-            frontend=OperationFrontendProjection.MCP,
+            frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
             contract=list_registration.contract,
             published_authority=Availability.AVAILABLE,
         ),
     )
-    assert resolved.request.frontend is OperationFrontendProjection.MCP
+    assert resolved.request.frontend is OperationFrontendProjection.EXTERNAL_CLIENT
     assert resolved.request.profile_id == _PROFILE
     assert AccessAction.COMMIT not in resolved.policy.actions
 

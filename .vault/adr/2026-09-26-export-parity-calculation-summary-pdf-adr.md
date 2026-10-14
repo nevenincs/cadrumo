@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#export-parity'
 date: '2026-09-26'
-modified: '2026-09-27'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:80eed8ec4a61481629a6b3b09cce8c5054203774aa3b60468ea3ee0f993d2ede'
+body_hash: 'sha256:db080e33d701e44add4cc2c3c710048bfb6650904218e4e10bbe2ffe08c02611'
 related:
   - "[[2026-09-26-export-parity-calculation-report-adr]]"
   - "[[2026-09-07-tuimodelo-export-destinations-adr]]"
@@ -27,7 +27,7 @@ The accepted calculation-report decision (`2026-09-26-export-parity-calculation-
 - One builder produces the report and serialisers add no content (`2026-09-26-export-parity-calculation-report-adr`); destinations are typed, capability-gated, no-clobber and shared by CLI and TUI (`2026-09-07-tuimodelo-export-destinations-adr`, `src/cadrumo/application/modelo/export_sink.py:53`).
 - The development mock software identity must be disclosed on every artefact that depends on it (`2026-09-26-export-parity-adr`).
 - The core dependency closure stays free of strong copyleft; new runtime reliance goes through a disclosed extra (`2026-07-12-license-posture-adr`).
-- The artefact family shares one visual language with the workbook and the TUI (`2026-06-03-modelo-export-visual-design-adr`, `src/cadrumo/entrypoints/tui/components/theme.py:29`).
+- The artefact family shares one visual language with the workbook and the TUI (`2026-06-03-modelo-export-visual-design-adr`, `src/cadrumo_runtime/host/frontend/tui/components/theme.py:29`).
 - Private data leaves the encrypted store only by explicit operator direction and in the minimum necessary form; document metadata is copied by indexers, mail previews and document stores well beyond the page itself.
 - Absent, zero and not-applicable remain distinct, and a local calculation is never presented as an official AEAT value.
 - A recipient usually has no Cadrumo; only the installation holding the store can prove the document matches its data.

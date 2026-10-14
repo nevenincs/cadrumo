@@ -9,7 +9,9 @@ from textual.app import ComposeResult
 from textual.screen import Screen
 from textual.widgets import Button, Static
 
-from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.frontend_client import FrontendClient
+
 from ...application.export.calculation_review_xlsx_operation import (
     CALCULATION_REVIEW_XLSX_OPERATION_DEFINITION_ID,
     CalculationReviewXlsxRequest,
@@ -21,7 +23,6 @@ from ...application.modelo.filing_record_view_operation import (
     ModeloFilingRecordViewProjection,
     ModeloFilingRecordViewRequest,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.errors.error_codes import resolve_error_message
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import OutputLanguage
@@ -36,7 +37,7 @@ from .operations.modal import OperationModal, OperationModalSettledOutcomeV1
 from .operations.runtime_controller import RuntimeOperationController
 
 
-async def read_filing_view(client: RuntimeFrontendClient, filing_record_id: str) -> ModeloFilingRecordViewProjection:
+async def read_filing_view(client: FrontendClient, filing_record_id: str) -> ModeloFilingRecordViewProjection:
     """Read one filing view through the workbench read path, at the view's current result version."""
     return await read_runtime_workbench_operation(
         client,
@@ -52,7 +53,7 @@ async def read_filing_view(client: RuntimeFrontendClient, filing_record_id: str)
 class HistoricalFilingExportScreen(Screen[None]):
     """Resolve one exact filing, then ask for an immutable review destination."""
 
-    def __init__(self, client: RuntimeFrontendClient, filing_record_id: str) -> None:
+    def __init__(self, client: FrontendClient, filing_record_id: str) -> None:
         """Retain the authenticated client and exact selected filing identity."""
         super().__init__()
         self._client = client
@@ -82,7 +83,7 @@ class HistoricalFilingExportScreen(Screen[None]):
                 or projection.record.filing_record_id != self._filing_record_id
                 or projection.historical_content.calculation_revision_id != projection.record.calculation_revision_id
             ):
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                raise RefusalError(RefusalCode.INVALID_FRAME)
             if projection.historical_content.availability != "available":
                 self._notice(tr("cli.app.modelo.filing_record.export_missing"))
                 return
@@ -145,7 +146,7 @@ class HistoricalFilingExportScreen(Screen[None]):
         try:
             result = await controller.read_settled_result(projection, CalculationReviewXlsxResult, result_version=1)
             if result.profile_id != self._client.profile_id or result.calculation_revision_id != revision_id:
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                raise RefusalError(RefusalCode.INVALID_FRAME)
         except CadrumoError as error:
             self._notice(resolve_error_message(error))
             return

@@ -9,8 +9,6 @@ from dataclasses import dataclass
 from typing import Any, Final, Protocol
 from uuid import UUID, uuid4
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.application.operations.frontend_requests import (
     OperationCancellationRequestV1,
     OperationDetachRequestV1,
@@ -20,7 +18,6 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResponseRejectRequestV1,
     OperationReviewProjectionRequestV1,
 )
-from cadrumo.application.operations.mcp_surfaces import McpSurface
 from cadrumo.application.operations.person_acts import operation_is_persons_act
 from cadrumo.application.operations.registry import (
     OperationPublicDefinitionContractV1,
@@ -31,23 +28,25 @@ from cadrumo.application.operations.subject_reference import (
     OperationSubjectReferenceV1,
     expected_operation_subject,
 )
-from cadrumo.application.operator_output.runtime_remedies import runtime_unavailable_remedy
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from cadrumo.application.runtime.deadline_budget import RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS
-from cadrumo.application.runtime.operation_access import (
-    RuntimeOperationAcknowledged,
-    RuntimeOperationControl,
-    RuntimeOperationFinancialInput,
-    RuntimeOperationManage,
-    RuntimeOperationObserve,
-    RuntimeOperationReview,
-    RuntimeOperationSubmit,
-    RuntimeOperationSubmitted,
-)
-from cadrumo.application.runtime.projection_pages import ProjectionPageRequest
+from cadrumo.application.operator_output.connection_remedies import connection_unavailable_remedy
 from cadrumo.application.user_profile.access_contracts import AccessDenialCode, DisclosurePageRequest
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
 from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
+from cadrumo_client.contracts.operation_access import (
+    OperationAcknowledged,
+    OperationControl,
+    OperationFinancialInput,
+    OperationManage,
+    OperationObserve,
+    OperationReview,
+    OperationSubmit,
+    OperationSubmitted,
+)
+from cadrumo_client.contracts.projection_pages import ProjectionPageRequest
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
 from .operation_contract_cache import OperationContractCache
 from .operation_discovery import search_operations
@@ -61,20 +60,21 @@ from .protocol_contract import (
 )
 from .result_request import resolve_result_request, stopped_operation_detail
 from .runtime_admission import NO_SESSION, AdmissionDenial, McpAdmission, status_on_surface
+from .surfaces import McpSurface
 
 #: One tool call's budget: its exchanges may wait as long as the runtime's single-exchange maximum.
-_TIMEOUT = RUNTIME_EXCHANGE_MAX_TIMEOUT_SECONDS
+_TIMEOUT = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 
 
 class _AdmittedConnection(Protocol):
     profile_id: UUID | None
-    client: RuntimeFrontendClient | None
+    client: FrontendClient | None
     admission: McpAdmission | None
     surface: McpSurface
     _admission_denial: AdmissionDenial | None
     _contracts: OperationContractCache
 
-    def _admitted(self) -> RuntimeFrontendClient: ...
+    def _admitted(self) -> FrontendClient: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -87,7 +87,7 @@ class _Binding:
     admission: McpAdmission
 
 
-type _ToolHandler = Callable[[RuntimeFrontendClient, _Binding, dict[str, Any], float], dict[str, Any]]
+type _ToolHandler = Callable[[FrontendClient, _Binding, dict[str, Any], float], dict[str, Any]]
 
 
 def call_admitted_operation(connection: _AdmittedConnection, name: str, args: dict[str, Any]) -> dict[str, Any]:
@@ -98,7 +98,7 @@ def call_admitted_operation(connection: _AdmittedConnection, name: str, args: di
     profile_id, admission = connection.profile_id, connection.admission
     if profile_id is None or admission is None:
         # A lease is held only for a bound profile and a known admission.
-        raise RuntimeFrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
+        raise FrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
     if name == "status":
         return _admitted_status(client, admission, connection.surface, args)
     deadline = time.monotonic() + _TIMEOUT
@@ -124,13 +124,13 @@ def _unauthenticated_status(connection: _AdmittedConnection) -> dict[str, Any]:
         reply.update(denial.facts())
     # Without a sign-in or a key nothing else answers, so status says what the agent is to do.
     code = AccessDenialCode.AUTHENTICATION_REQUIRED.value if denial is None else denial.code
-    if (remedy := runtime_unavailable_remedy(code) or sign_in_remedy(code, reply)) is not None and remedy:
+    if (remedy := connection_unavailable_remedy(code) or sign_in_remedy(code, reply)) is not None and remedy:
         reply["remedy"] = remedy
     return reply
 
 
 def _admitted_status(
-    client: RuntimeFrontendClient, admission: McpAdmission, surface: McpSurface, args: dict[str, Any]
+    client: FrontendClient, admission: McpAdmission, surface: McpSurface, args: dict[str, Any]
 ) -> dict[str, Any]:
     """Say how the held session was admitted, and its scope as the surface leaves it.
 
@@ -151,19 +151,17 @@ def _admitted_status(
     return reply
 
 
-def _search(client: RuntimeFrontendClient, binding: _Binding, args: dict[str, Any], deadline: float) -> dict[str, Any]:
+def _search(client: FrontendClient, binding: _Binding, args: dict[str, Any], deadline: float) -> dict[str, Any]:
     return search_operations(
         client, binding.contracts, binding.profile_id, args, deadline, binding.surface, admission=binding.admission
     )
 
 
-def _describe(
-    client: RuntimeFrontendClient, binding: _Binding, args: dict[str, Any], deadline: float
-) -> dict[str, Any]:
+def _describe(client: FrontendClient, binding: _Binding, args: dict[str, Any], deadline: float) -> dict[str, Any]:
     definition_id = args["definition_id"]
     if not binding.surface.admits(definition_id):
         # The runtime refuses the operation itself; this only answers as it would.
-        raise RuntimeFrontendRefusedError(AccessDenialCode.FRONTEND_DENIED.value)
+        raise FrontendRefusedError(AccessDenialCode.FRONTEND_DENIED.value)
     return described_reply(binding.contracts.description(client, definition_id, deadline=deadline, fresh=True))
 
 
@@ -196,7 +194,7 @@ def _operator_input_json_schema() -> dict[str, object]:
     return strict_model_json_schema(ModeloEditOperatorInputV2)
 
 
-def _execute(client: RuntimeFrontendClient, binding: _Binding, args: dict[str, Any], deadline: float) -> dict[str, Any]:
+def _execute(client: FrontendClient, binding: _Binding, args: dict[str, Any], deadline: float) -> dict[str, Any]:
     definition_id = args["definition_id"]
     description = binding.contracts.description(client, definition_id, deadline=deadline)
     contract = description.contract
@@ -210,9 +208,9 @@ def _execute(client: RuntimeFrontendClient, binding: _Binding, args: dict[str, A
         return {"outcome": "refused", "code": "invalid_request", "message": str(refused)}
     try:
         reply = client.operation(submission, deadline=deadline)
-        if not isinstance(reply, RuntimeOperationSubmitted):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-    except RuntimeFrontendRefusedError as refused:
+        if not isinstance(reply, OperationSubmitted):
+            raise RefusalError(RefusalCode.INVALID_FRAME)
+    except FrontendRefusedError as refused:
         if refused.request_faults:
             # The validators' own reasons, as the runtime returned them and the command line shows them.
             return {
@@ -229,12 +227,12 @@ def _execute(client: RuntimeFrontendClient, binding: _Binding, args: dict[str, A
             "faults": faults,
             "faults_cover": _FAULTS_COVER,
         }
-    except RuntimeRefusalError as error:
+    except RefusalError as error:
         return _unresolved_submission(error, submission.request_id, definition_id)
     except TimeoutError:
-        return _unresolved_submission(RuntimeRefusalCode.DEADLINE_EXCEEDED.value, submission.request_id, definition_id)
+        return _unresolved_submission(RefusalCode.DEADLINE_EXCEEDED.value, submission.request_id, definition_id)
     except OSError:
-        return _unresolved_submission(RuntimeRefusalCode.CONNECTION_CLOSED.value, submission.request_id, definition_id)
+        return _unresolved_submission(RefusalCode.CONNECTION_CLOSED.value, submission.request_id, definition_id)
     response: dict[str, Any] = {"outcome": "submitted", "receipt": public_value(reply.receipt)}
     if args.get("start", True):
         response["start"] = _start_submitted_operation(client, reply.receipt.operation_id, deadline)
@@ -248,7 +246,7 @@ _FAULTS_COVER: Final = (
 
 
 def _named_field_faults(
-    refused: RuntimeFrontendRefusedError, description: OperationPublicDefinitionDescriptionV1, payload: object
+    refused: FrontendRefusedError, description: OperationPublicDefinitionDescriptionV1, payload: object
 ) -> list[dict[str, Any]]:
     """Name the fields that explain why the runtime's request model refused a payload, where names do.
 
@@ -329,12 +327,12 @@ def _subject(reference: OperationSubjectReferenceV1, profile_id: UUID, args: dic
 
 
 def _submission(
-    client: RuntimeFrontendClient, contract: OperationPublicDefinitionContractV1, args: dict[str, Any]
-) -> RuntimeOperationSubmit | RuntimeOperationFinancialInput:
+    client: FrontendClient, contract: OperationPublicDefinitionContractV1, args: dict[str, Any]
+) -> OperationSubmit | OperationFinancialInput:
     """Build the submission the contract calls for: the registered request, or the typed operator input."""
     payload_json = json.dumps(args["payload"], ensure_ascii=False, separators=(",", ":"), allow_nan=False)
     if contract.transient_financial_operand is None:
-        return RuntimeOperationSubmit(
+        return OperationSubmit(
             request_id=uuid4(),
             profile_id=client.profile_id,
             session_id=client.session_id,
@@ -353,7 +351,7 @@ def _submission(
         )
     if "idempotency_key" in args:
         raise _ContractRefusedError("idempotency_key is not accepted with typed operator input")
-    return RuntimeOperationFinancialInput(
+    return OperationFinancialInput(
         request_id=uuid4(),
         profile_id=client.profile_id,
         session_id=client.session_id,
@@ -373,10 +371,10 @@ def _unresolved_submission(error: Exception | str, request_id: UUID, definition_
     }
 
 
-def _start_submitted_operation(client: RuntimeFrontendClient, operation_id: str, deadline: float) -> Any:
+def _start_submitted_operation(client: FrontendClient, operation_id: str, deadline: float) -> Any:
     try:
         acknowledgement = client.operation(
-            RuntimeOperationControl(
+            OperationControl(
                 action="operation_start",
                 request_id=uuid4(),
                 profile_id=client.profile_id,
@@ -385,20 +383,18 @@ def _start_submitted_operation(client: RuntimeFrontendClient, operation_id: str,
             ),
             deadline=deadline,
         )
-        if not isinstance(acknowledgement, RuntimeOperationAcknowledged):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        if not isinstance(acknowledgement, OperationAcknowledged):
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         return public_value(acknowledgement)
     except Exception as error:
         # Submission is already durable; a lost start reply must retain its receipt.
         return {"outcome": "unresolved", "code": refusal_code(error)}
 
 
-def _observe(
-    client: RuntimeFrontendClient, _binding: _Binding, args: dict[str, Any], deadline: float
-) -> dict[str, Any]:
+def _observe(client: FrontendClient, _binding: _Binding, args: dict[str, Any], deadline: float) -> dict[str, Any]:
     request = parse_model(OperationObservationRequestV1, args["observation"])
     reply = client.operation(
-        RuntimeOperationObserve(
+        OperationObserve(
             request_id=uuid4(),
             profile_id=client.profile_id,
             session_id=client.session_id,
@@ -409,7 +405,7 @@ def _observe(
     return {"outcome": "reply", "reply": public_value(reply)}
 
 
-def _result(client: RuntimeFrontendClient, binding: _Binding, args: dict[str, Any], deadline: float) -> dict[str, Any]:
+def _result(client: FrontendClient, binding: _Binding, args: dict[str, Any], deadline: float) -> dict[str, Any]:
     request = resolve_result_request(client, binding.contracts, args["result"], deadline)
     document = client.read_result_document(request, deadline=deadline)
     reply: dict[str, Any] = {"outcome": "reply", "document": document}
@@ -419,19 +415,17 @@ def _result(client: RuntimeFrontendClient, binding: _Binding, args: dict[str, An
     return reply
 
 
-def _result_page(
-    client: RuntimeFrontendClient, binding: _Binding, args: dict[str, Any], deadline: float
-) -> dict[str, Any]:
+def _result_page(client: FrontendClient, binding: _Binding, args: dict[str, Any], deadline: float) -> dict[str, Any]:
     request = resolve_result_request(client, binding.contracts, args["result"], deadline)
     page = parse_model(ProjectionPageRequest, args["page"])
     released = client.read_result_page(request, page, deadline=deadline)
     return {"outcome": "reply", "page": public_value(released)}
 
 
-def _review(client: RuntimeFrontendClient, _binding: _Binding, args: dict[str, Any], deadline: float) -> dict[str, Any]:
+def _review(client: FrontendClient, _binding: _Binding, args: dict[str, Any], deadline: float) -> dict[str, Any]:
     request = parse_model(OperationReviewProjectionRequestV1, args["review"])
     reply = client.operation(
-        RuntimeOperationReview(
+        OperationReview(
             request_id=uuid4(),
             profile_id=client.profile_id,
             session_id=client.session_id,
@@ -442,16 +436,14 @@ def _review(client: RuntimeFrontendClient, _binding: _Binding, args: dict[str, A
     return {"outcome": "reply", "reply": public_value(reply)}
 
 
-def _respond(
-    client: RuntimeFrontendClient, _binding: _Binding, args: dict[str, Any], deadline: float
-) -> dict[str, Any]:
+def _respond(client: FrontendClient, _binding: _Binding, args: dict[str, Any], deadline: float) -> dict[str, Any]:
     action = args["action"]
     if "reason_code" in args and action != "reject":
         raise ValueError("only rejection accepts a reason code")
     fields = _response_fields(client, args)
     request = _response_request(action, fields, args)
     reply = client.operation(
-        RuntimeOperationManage(
+        OperationManage(
             request_id=uuid4(),
             profile_id=client.profile_id,
             session_id=client.session_id,
@@ -462,7 +454,7 @@ def _respond(
     return {"outcome": "reply", "reply": public_value(reply)}
 
 
-def _response_fields(client: RuntimeFrontendClient, args: dict[str, Any]) -> dict[str, Any]:
+def _response_fields(client: FrontendClient, args: dict[str, Any]) -> dict[str, Any]:
     return {
         "operation_id": args["operation_id"],
         "interaction_id": args["interaction_id"],
@@ -482,9 +474,7 @@ def _response_request(action: str, fields: dict[str, Any], args: dict[str, Any])
     )
 
 
-def _control(
-    client: RuntimeFrontendClient, _binding: _Binding, args: dict[str, Any], deadline: float
-) -> dict[str, Any]:
+def _control(client: FrontendClient, _binding: _Binding, args: dict[str, Any], deadline: float) -> dict[str, Any]:
     action = args["action"]
     operation_id = args["operation_id"]
     if action in {"start", "resume"}:
@@ -495,12 +485,12 @@ def _control(
 
 
 def _control_start_or_resume(
-    client: RuntimeFrontendClient, action: str, operation_id: str, args: dict[str, Any], deadline: float
+    client: FrontendClient, action: str, operation_id: str, args: dict[str, Any], deadline: float
 ) -> Any:
     if "expected_revision" in args:
         raise ValueError("revision is not used by start or resume")
     return client.operation(
-        RuntimeOperationControl(
+        OperationControl(
             action="operation_start" if action == "start" else "operation_resume",
             request_id=uuid4(),
             profile_id=client.profile_id,
@@ -512,14 +502,14 @@ def _control_start_or_resume(
 
 
 def _control_cancel_or_detach(
-    client: RuntimeFrontendClient, action: str, operation_id: str, args: dict[str, Any], deadline: float
+    client: FrontendClient, action: str, operation_id: str, args: dict[str, Any], deadline: float
 ) -> Any:
     if "expected_revision" not in args:
         raise ValueError("cancel and detach require a revision")
     kind = OperationCancellationRequestV1 if action == "cancel" else OperationDetachRequestV1
     management = parse_model(kind, {"operation_id": operation_id, "expected_revision": args["expected_revision"]})
     return client.operation(
-        RuntimeOperationManage(
+        OperationManage(
             request_id=uuid4(),
             profile_id=client.profile_id,
             session_id=client.session_id,

@@ -26,7 +26,8 @@ from textual.app import App
 from textual.widget import Widget
 from textual.widgets import Button, DataTable, Input, Select
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo_client.transport.frontend_client import FrontendClient
+
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.login_interaction import ProfileLoginChoice
@@ -138,7 +139,7 @@ async def test_the_profile_surface_fits_every_terminal_width(tmp_path: Path, siz
 async def test_the_secret_surface_fits_every_terminal_width(size: tuple[int, int]) -> None:
     """The runtime login controls fit without acquiring any profile authority."""
 
-    async def must_not_open(_profile_id: UUID) -> RuntimeFrontendClient:
+    async def must_not_open(_profile_id: UUID) -> FrontendClient:
         raise AssertionError("the terminal-size proof never opens a runtime connection")
 
     screen = RuntimeLoginScreen(

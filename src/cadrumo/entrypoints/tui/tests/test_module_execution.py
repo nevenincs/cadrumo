@@ -61,6 +61,7 @@ async def _run_module_async(*, timeout: float, root: Path) -> tuple[int | None, 
     """Execute the module through the audited async process boundary."""
     process = await asyncio.create_subprocess_exec(
         sys.executable,
+        "-I",
         "-m",
         _MODULE,
         cwd=_REPO_ROOT,

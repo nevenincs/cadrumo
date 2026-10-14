@@ -1,7 +1,7 @@
 """The coordinates each reference read accepts, and the query a filled form makes.
 
 A read takes exactly the coordinates its command takes: the same filters, with
-the same ones required.
+the same ones required. Portal category choices come from :class:`PortalCategory`.
 """
 
 from __future__ import annotations

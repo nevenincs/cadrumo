@@ -1,4 +1,4 @@
-"""The revision snapshot read is admitted for MCP under the same persisted-revision scope as the other frontends."""
+"""The revision snapshot read is admitted for external client under the same persisted-revision scope as the other frontends."""
 
 from __future__ import annotations
 
@@ -50,7 +50,7 @@ def _unit() -> WorkUnit:
     )
 
 
-def test_revision_snapshot_is_admitted_on_the_mcp_frontend_without_a_commit_door(
+def test_revision_snapshot_is_admitted_on_the_external_client_frontend_without_a_commit_door(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     unit = _unit()
@@ -97,12 +97,12 @@ def test_revision_snapshot_is_admitted_on_the_mcp_frontend_without_a_commit_door
             profile_id=_PROFILE,
             destination_id=uuid4(),
             action=AccessAction.SUBMIT,
-            frontend=OperationFrontendProjection.MCP,
+            frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
             contract=registration.contract,
             published_authority=Availability.AVAILABLE,
             authority_operation=authority_operation,
         ),
     )
-    assert resolved.request.frontend is OperationFrontendProjection.MCP
+    assert resolved.request.frontend is OperationFrontendProjection.EXTERNAL_CLIENT
     assert resolved.request.periods == frozenset({_PERIOD})
     assert AccessAction.COMMIT not in resolved.policy.actions

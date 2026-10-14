@@ -20,9 +20,10 @@ from mcp.client.stdio import StdioServerParameters, stdio_client
 from mcp.types import LATEST_PROTOCOL_VERSION
 
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
-from cadrumo.application.operations.mcp_surfaces import MCP_SURFACES, McpSurfaceName
 from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
-from cadrumo_harness.mcp.protocol_contract import SIGN_IN_REMEDY
+
+from ..protocol_contract import SIGN_IN_REMEDY
+from ..surfaces import MCP_SURFACES, McpSurfaceName
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 

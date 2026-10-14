@@ -5,6 +5,7 @@ from __future__ import annotations
 from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from cadrumo_client.contracts.command_program import CommandProgram
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ..operator_actions.catalogue import ActionCatalogue, ActionCatalogueEntry
@@ -63,6 +64,7 @@ class LiveLeafInventoryRow(BaseModel):
 
     subject_leaf_key: str = Field(min_length=1)
     canonical_cli_path: tuple[str, ...]
+    program: CommandProgram = CommandProgram.AEAT
     alias_cli_paths: tuple[tuple[str, ...], ...] = ()
     provenance: str = Field(min_length=1)
 
@@ -396,7 +398,7 @@ def _index_live_leaves(
 ) -> dict[str, LiveLeafInventoryRow]:
     """Index leaves and record canonical or alias paths that resolve ambiguously."""
     indexed: dict[str, LiveLeafInventoryRow] = {}
-    path_owners: dict[tuple[str, ...], str] = {}
+    path_owners: dict[tuple[CommandProgram, tuple[str, ...]], str] = {}
     for row in rows:
         if row.subject_leaf_key in indexed:
             diagnostics.append(f"duplicate live leaf identity: {row.subject_leaf_key}")
@@ -404,11 +406,11 @@ def _index_live_leaves(
         if row.canonical_cli_path in row.alias_cli_paths:
             diagnostics.append(f"canonical CLI path is also an alias: {row.subject_leaf_key}")
         for path in (row.canonical_cli_path, *row.alias_cli_paths):
-            previous = path_owners.get(path)
+            previous = path_owners.get((row.program, path))
             if previous is not None:
                 diagnostics.append(f"ambiguous CLI path {' '.join(path)}: {previous} and {row.subject_leaf_key}")
                 continue
-            path_owners[path] = row.subject_leaf_key
+            path_owners[row.program, path] = row.subject_leaf_key
         indexed[row.subject_leaf_key] = row
     if not indexed:
         # The authority itself is missing, so every downstream projection would
@@ -702,16 +704,16 @@ def _index_reconciled_leaf_paths(
     *,
     key: str,
     leaf: ReconciledOperatorLeaf,
-    path_owners: dict[tuple[str, ...], str],
+    path_owners: dict[tuple[CommandProgram, tuple[str, ...]], str],
     diagnostics: list[str],
 ) -> None:
     live_leaf = leaf.live_leaf
     for path in (live_leaf.canonical_cli_path, *live_leaf.alias_cli_paths):
-        previous = path_owners.get(path)
+        previous = path_owners.get((live_leaf.program, path))
         if previous is not None:
             diagnostics.append(f"ambiguous reconciled CLI path {' '.join(path)}: {previous} and {key}")
             continue
-        path_owners[path] = key
+        path_owners[live_leaf.program, path] = key
 
 
 def _index_reconciled_schema_identities(
@@ -732,7 +734,7 @@ def _index_reconciled_leaf(
     *,
     leaf: ReconciledOperatorLeaf,
     indexed: dict[str, ReconciledOperatorLeaf],
-    path_owners: dict[tuple[str, ...], str],
+    path_owners: dict[tuple[CommandProgram, tuple[str, ...]], str],
     diagnostics: list[str],
 ) -> None:
     key = leaf.live_leaf.subject_leaf_key
@@ -750,7 +752,7 @@ def _index_reconciled_leaves(
     """Index reconciled leaves while rechecking identity and path uniqueness."""
     diagnostics: list[str] = []
     indexed: dict[str, ReconciledOperatorLeaf] = {}
-    path_owners: dict[tuple[str, ...], str] = {}
+    path_owners: dict[tuple[CommandProgram, tuple[str, ...]], str] = {}
     for leaf in reconciliation.leaves:
         _index_reconciled_leaf(
             leaf=leaf,

@@ -10,9 +10,10 @@ from typing import Any
 
 import pytest
 
+from cadrumo_client.commands.graph import CommandSpecGraph
+from cadrumo_client.commands.shared_contracts import DefaultKind, SchemaState
+
 from ..._root_command_specs import ROOT_COMMAND_SPECS
-from ...command_graph import CommandSpecGraph
-from ...command_shared_contracts import DefaultKind, SchemaState
 from ..command_specs import CONFIG_COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

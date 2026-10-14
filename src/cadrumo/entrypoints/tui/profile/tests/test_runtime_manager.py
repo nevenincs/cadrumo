@@ -11,15 +11,16 @@ from uuid import UUID, uuid4
 import pytest
 from textual.widgets import Button
 
-from .....adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from .....adapters.local_runtime.frontend_client_contracts import ProfileViewCollection, RuntimeFrontendRefusedError
-from .....adapters.local_runtime.profile_mutations import (
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError, ProfileViewCollection
+from cadrumo_client.transport.profile_mutations import (
     ProfileMutationCompletion,
     ProfileMutationRequest,
     ProfileMutationRunError,
 )
+
 from .....application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
-from .....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from .....application.user_profile.overview import ProfileOverview, ProfileSectionView
 from .....application.user_profile.profile_operation_contracts import (
     ProfileCompleteSetupOperationProjection,
@@ -60,7 +61,7 @@ _DIGEST = "a" * 64
 _OPERATION_ID = "b" * 64
 
 
-class _Client(RuntimeFrontendClient):
+class _Client(FrontendClient):
     """An exact-profile wire boundary with no local custody or operation behavior."""
 
     def __init__(
@@ -139,8 +140,8 @@ def _projection(request: ProfileMutationRequest, revision: int) -> ProfileMutati
 def _composition(
     client: _Client,
     *,
-    runner: Callable[[RuntimeFrontendClient, ProfileMutationRequest], ProfileMutationCompletion],
-    reader: Callable[[RuntimeFrontendClient, str, OutputLanguage], ProfileOverview],
+    runner: Callable[[FrontendClient, ProfileMutationRequest], ProfileMutationCompletion],
+    reader: Callable[[FrontendClient, str, OutputLanguage], ProfileOverview],
 ) -> RuntimeProfileManagerComposition:
     return RuntimeProfileManagerComposition(
         client,
@@ -164,16 +165,16 @@ async def test_onboarding_source_buttons_reach_the_runtime_handoff(
 
     async def handoff(request: AeatSyncOperationRequestV1, /) -> OperationControllerPort:
         requests.append(request)
-        raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+        raise RefusalError(RefusalCode.UNAVAILABLE)
 
     def compose(
-        subject: RuntimeFrontendClient, *, output_root: Path
+        subject: FrontendClient, *, output_root: Path
     ) -> tuple[AeatSyncOperationHandoffV1, OperationPublicContractSetV1 | None]:
         assert subject is client
         assert output_root
         return handoff, None
 
-    def refuse_mutation(subject: RuntimeFrontendClient, request: ProfileMutationRequest) -> ProfileMutationCompletion:
+    def refuse_mutation(subject: FrontendClient, request: ProfileMutationRequest) -> ProfileMutationCompletion:
         raise AssertionError("acquisition must use its own registered operation")
 
     monkeypatch.setattr(runtime_manager, "compose_runtime_aeat_sync_handoff", compose)
@@ -201,11 +202,11 @@ def test_every_write_door_carries_exact_dialog_cas_and_reads_authorized_overview
     calls: list[ProfileMutationRequest] = []
     reads: list[tuple[UUID, str, OutputLanguage]] = []
 
-    def reader(subject: RuntimeFrontendClient, label: str, language: OutputLanguage) -> ProfileOverview:
+    def reader(subject: FrontendClient, label: str, language: OutputLanguage) -> ProfileOverview:
         reads.append((subject.profile_id, label, language))
         return _overview(subject.profile_id, revision[0], label=label)
 
-    def run(_subject: RuntimeFrontendClient, request: ProfileMutationRequest) -> ProfileMutationCompletion:
+    def run(_subject: FrontendClient, request: ProfileMutationRequest) -> ProfileMutationCompletion:
         calls.append(request)
         revision[0] += 1
         return ProfileMutationCompletion(
@@ -266,11 +267,11 @@ def test_failed_mutation_does_not_read_again_and_preserves_original_run_error() 
     reads = [0]
     failure = ProfileMutationRunError(operation_id=_OPERATION_ID, code="refused")
 
-    def reader(subject: RuntimeFrontendClient, _label: str, _language: OutputLanguage) -> ProfileOverview:
+    def reader(subject: FrontendClient, _label: str, _language: OutputLanguage) -> ProfileOverview:
         reads[0] += 1
         return _overview(subject.profile_id, 4)
 
-    def run(_subject: RuntimeFrontendClient, _request: ProfileMutationRequest) -> ProfileMutationCompletion:
+    def run(_subject: FrontendClient, _request: ProfileMutationRequest) -> ProfileMutationCompletion:
         raise failure
 
     screen = _composition(client, runner=run, reader=reader).compose()
@@ -284,13 +285,13 @@ def test_post_commit_read_refusal_retains_settled_identity_and_effect() -> None:
     client = _Client(uuid4())
     reads = [0]
 
-    def reader(subject: RuntimeFrontendClient, _label: str, _language: OutputLanguage) -> ProfileOverview:
+    def reader(subject: FrontendClient, _label: str, _language: OutputLanguage) -> ProfileOverview:
         reads[0] += 1
         if reads[0] > 1:
-            raise RuntimeFrontendRefusedError("profile_view_unavailable")
+            raise FrontendRefusedError("profile_view_unavailable")
         return _overview(subject.profile_id, 4)
 
-    def run(_subject: RuntimeFrontendClient, request: ProfileMutationRequest) -> ProfileMutationCompletion:
+    def run(_subject: FrontendClient, request: ProfileMutationRequest) -> ProfileMutationCompletion:
         return ProfileMutationCompletion(
             operation_id=_OPERATION_ID,
             projection=_projection(request, 5),
@@ -311,10 +312,10 @@ def test_post_commit_read_refusal_retains_settled_identity_and_effect() -> None:
 async def test_completed_operation_without_refresh_reports_truthful_status(effect: OperationEffect) -> None:
     client = _Client(uuid4())
 
-    def reader(subject: RuntimeFrontendClient, _label: str, _language: OutputLanguage) -> ProfileOverview:
+    def reader(subject: FrontendClient, _label: str, _language: OutputLanguage) -> ProfileOverview:
         return _overview(subject.profile_id, 4)
 
-    def run(_subject: RuntimeFrontendClient, _request: ProfileMutationRequest) -> ProfileMutationCompletion:
+    def run(_subject: FrontendClient, _request: ProfileMutationRequest) -> ProfileMutationCompletion:
         raise AssertionError("status wording must not run a new operation")
 
     screen = _composition(client, runner=run, reader=reader).compose()
@@ -342,20 +343,20 @@ def test_retargeted_profile_or_changed_session_refuses_before_mutation() -> None
     client = _Client(uuid4())
     calls = [0]
 
-    def reader(subject: RuntimeFrontendClient, _label: str, _language: OutputLanguage) -> ProfileOverview:
+    def reader(subject: FrontendClient, _label: str, _language: OutputLanguage) -> ProfileOverview:
         return _overview(subject.profile_id, 4)
 
-    def run(_subject: RuntimeFrontendClient, _request: ProfileMutationRequest) -> ProfileMutationCompletion:
+    def run(_subject: FrontendClient, _request: ProfileMutationRequest) -> ProfileMutationCompletion:
         calls[0] += 1
         raise AssertionError("retargeted client reached the operation runner")
 
     screen = _composition(client, runner=run, reader=reader).compose()
     client._session_id = uuid4()
-    with pytest.raises(RuntimeFrontendRefusedError, match="session_inactive"):
+    with pytest.raises(FrontendRefusedError, match="session_inactive"):
         screen._persist_field("identity.legal_name", "No", 4, _DIGEST)
     client._session_id = None
     client._profile_id = uuid4()
-    with pytest.raises(RuntimeFrontendRefusedError, match="profile_mismatch"):
+    with pytest.raises(FrontendRefusedError, match="profile_mismatch"):
         screen._persist_field("identity.legal_name", "No", 4, _DIGEST)
     assert calls == [0]
 
@@ -363,10 +364,10 @@ def test_retargeted_profile_or_changed_session_refuses_before_mutation() -> None
 def test_plantilla_listing_uses_only_the_exact_authorized_facts_stream() -> None:
     client = _Client(uuid4())
 
-    def reader(subject: RuntimeFrontendClient, _label: str, _language: OutputLanguage) -> ProfileOverview:
+    def reader(subject: FrontendClient, _label: str, _language: OutputLanguage) -> ProfileOverview:
         return _overview(subject.profile_id, 4)
 
-    def run(_subject: RuntimeFrontendClient, _request: ProfileMutationRequest) -> ProfileMutationCompletion:
+    def run(_subject: FrontendClient, _request: ProfileMutationRequest) -> ProfileMutationCompletion:
         raise AssertionError("listing must not submit a mutation")
 
     screen = _composition(client, runner=run, reader=reader).compose()
@@ -378,18 +379,18 @@ def test_plantilla_listing_uses_only_the_exact_authorized_facts_stream() -> None
 def test_preloaded_manager_uses_exact_profile_without_reading_on_ui_thread() -> None:
     client = _Client(uuid4())
 
-    def reader(_subject: RuntimeFrontendClient, _label: str, _language: OutputLanguage) -> ProfileOverview:
+    def reader(_subject: FrontendClient, _label: str, _language: OutputLanguage) -> ProfileOverview:
         raise AssertionError("preloaded composition must not read")
 
-    def run(_subject: RuntimeFrontendClient, _request: ProfileMutationRequest) -> ProfileMutationCompletion:
+    def run(_subject: FrontendClient, _request: ProfileMutationRequest) -> ProfileMutationCompletion:
         raise AssertionError("composition must not write")
 
     composition = _composition(client, runner=run, reader=reader)
     overview = _overview(client.profile_id, 4)
     assert composition.compose_from_overview(overview).overview is overview
-    with pytest.raises(RuntimeRefusalError) as wrong_profile:
+    with pytest.raises(RefusalError) as wrong_profile:
         composition.compose_from_overview(_overview(uuid4(), 4))
-    assert wrong_profile.value.reason is RuntimeRefusalCode.INVALID_FRAME
+    assert wrong_profile.value.reason is RefusalCode.INVALID_FRAME
     client._session_id = uuid4()
-    with pytest.raises(RuntimeFrontendRefusedError, match="session_inactive"):
+    with pytest.raises(FrontendRefusedError, match="session_inactive"):
         composition.compose_from_overview(overview)

@@ -20,18 +20,18 @@ from importlib.resources import files
 from typing import cast
 from uuid import uuid4
 
-from cadrumo.adapters.local_runtime.linux_gnome_lock import GNOME_LOGIN_EXTENSION_UUID
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_path
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_runtime.adapters.linux_gnome_lock import GNOME_LOGIN_EXTENSION_UUID
 
 _FILES = ("extension.js", "metadata.json")
 _STAGING_PREFIX = "." + GNOME_LOGIN_EXTENSION_UUID + ".stage-"
 _MAX_BYTES = 65536
 
 
-def _refusal(reason: RuntimeRefusalCode = RuntimeRefusalCode.UNAVAILABLE) -> RuntimeRefusalError:
-    return RuntimeRefusalError(reason)
+def _refusal(reason: RefusalCode = RefusalCode.UNAVAILABLE) -> RefusalError:
+    return RefusalError(reason)
 
 
 def _directory_flags() -> int:
@@ -47,7 +47,7 @@ def _extensions_directory(*, create: bool) -> Generator[int]:
     uid = os.getuid()
     target = storage_path(StorageCategory.GNOME_EXTENSIONS)
     if not target.is_absolute() or ".." in target.parts:
-        raise _refusal(RuntimeRefusalCode.PEER_UNTRUSTED)
+        raise _refusal(RefusalCode.PEER_UNTRUSTED)
     descriptor = os.open("/", _directory_flags())
     try:
         for part in target.parts[1:]:
@@ -62,7 +62,7 @@ def _extensions_directory(*, create: bool) -> Generator[int]:
             observed = os.fstat(child)
             if observed.st_uid not in (0, uid) or observed.st_mode & 0o022:
                 os.close(child)
-                raise _refusal(RuntimeRefusalCode.PEER_UNTRUSTED)
+                raise _refusal(RefusalCode.PEER_UNTRUSTED)
             os.close(descriptor)
             descriptor = child
         yield descriptor
@@ -73,7 +73,7 @@ def _extensions_directory(*, create: bool) -> Generator[int]:
 def _packaged_files() -> dict[str, bytes]:
     result: dict[str, bytes] = {}
     for name in _FILES:
-        payload = files("cadrumo").joinpath("_data/local_runtime/gnome_login", name).read_bytes()
+        payload = files("cadrumo_runtime").joinpath("_data/gnome_login", name).read_bytes()
         if not 0 < len(payload) <= _MAX_BYTES:
             raise _refusal()
         result[name] = payload
@@ -99,7 +99,7 @@ def _require_private_directory(descriptor: int) -> None:
         raise _refusal()
     observed = os.fstat(descriptor)
     if not stat.S_ISDIR(observed.st_mode) or observed.st_uid != os.getuid() or stat.S_IMODE(observed.st_mode) != 0o700:
-        raise _refusal(RuntimeRefusalCode.PEER_UNTRUSTED)
+        raise _refusal(RefusalCode.PEER_UNTRUSTED)
 
 
 def _require_exact_files(directory: int, expected: dict[str, bytes]) -> None:
@@ -138,11 +138,11 @@ def _require_exact_file(directory: int, name: str, expected: bytes) -> None:
             or observed.st_nlink != 1
             or not 0 < observed.st_size <= _MAX_BYTES
         ):
-            raise _refusal(RuntimeRefusalCode.PEER_UNTRUSTED)
+            raise _refusal(RefusalCode.PEER_UNTRUSTED)
         with os.fdopen(os.dup(descriptor), "rb") as source:
             actual = source.read(_MAX_BYTES + 1)
         if actual != expected or _identity(os.fstat(descriptor)) != _identity(observed):
-            raise _refusal(RuntimeRefusalCode.VERSION_MISMATCH)
+            raise _refusal(RefusalCode.VERSION_MISMATCH)
     finally:
         os.close(descriptor)
 
@@ -175,7 +175,7 @@ def _check_parent_binding(parent: int) -> None:
     with _extensions_directory(create=False) as current:
         before, after = os.fstat(parent), os.fstat(current)
         if (before.st_dev, before.st_ino) != (after.st_dev, after.st_ino):
-            raise _refusal(RuntimeRefusalCode.PEER_UNTRUSTED)
+            raise _refusal(RefusalCode.PEER_UNTRUSTED)
 
 
 def _native_publish_directory(parent: int, staging: str) -> None:
@@ -189,7 +189,7 @@ def _native_publish_directory(parent: int, staging: str) -> None:
     result = rename(parent, staging.encode("ascii"), parent, GNOME_LOGIN_EXTENSION_UUID.encode("ascii"), 1)
     if result != 0:
         if ctypes.get_errno() == errno.EEXIST:
-            raise _refusal(RuntimeRefusalCode.VERSION_MISMATCH)
+            raise _refusal(RefusalCode.VERSION_MISMATCH)
         raise _refusal()
 
 
@@ -322,23 +322,23 @@ def run(arguments: list[str] | None = None) -> int:
     selected = parser.parse_args(arguments)
     try:
         if sys.platform != "linux":
-            raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+            raise RefusalError(RefusalCode.UNAVAILABLE)
         if selected.action == "inspect":
             result = "published" if inspect_gnome_login_producer() else "absent"
         else:
             result = "published" if install_gnome_login_producer() else "already_published"
         sys.stdout.write(result + "\n")
         return 0
-    except RuntimeRefusalError as refusal:
+    except RefusalError as refusal:
         sys.stderr.write(refusal.reason.value + "\n")
         return 2
     except OSError:
-        sys.stderr.write(RuntimeRefusalCode.UNAVAILABLE.value + "\n")
+        sys.stderr.write(RefusalCode.UNAVAILABLE.value + "\n")
         return 2
 
 
 if __name__ == "__main__":
     if not sys.flags.isolated:
-        sys.stderr.write(RuntimeRefusalCode.UNAVAILABLE.value + "\n")
+        sys.stderr.write(RefusalCode.UNAVAILABLE.value + "\n")
         raise SystemExit(2)
     raise SystemExit(run())

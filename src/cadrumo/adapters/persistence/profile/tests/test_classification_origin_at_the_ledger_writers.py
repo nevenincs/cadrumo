@@ -1,7 +1,7 @@
 """Every ledger writer records whose decision a classification is, and admits the same write under any label.
 
 The ledger actions run over real secure storage. A write recorded under an
-agent's session label is an agent's, because an agent's execution can record no
+automation's session label is an automation's, because an automation's execution can record no
 other label. Each action that sets or changes a classification, its share or a
 tax figure records who decided it; an action that changes none of them leaves
 the recorded origin as it found it, whatever stamp it leaves. The label and
@@ -36,7 +36,7 @@ from cadrumo.domain.transactions.classification_origin import ClassificationOrig
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionLifecycleState
 
 from .classification_origin_support import (
-    AGENT,
+    AUTOMATION,
     BUCKET_ID,
     PERSON,
     Ledger,
@@ -54,8 +54,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROPOSED_BY = "llm:local-text:synthetic"
 _ACTORS = pytest.mark.parametrize(
     ("actor", "origin"),
-    [(PERSON, ClassificationOrigin.PERSON), (AGENT, ClassificationOrigin.AGENT)],
-    ids=["person", "agent"],
+    [(PERSON, ClassificationOrigin.PERSON), (AUTOMATION, ClassificationOrigin.AUTOMATION)],
+    ids=["person", "automation"],
 )
 
 
@@ -183,13 +183,16 @@ def test_a_write_that_changes_no_classification_fact_restamps_the_row_and_keeps_
     del origin
     by_rule = add_row_classified_by_a_rule(ledger, description="classified by a rule")
     by_hand = add_row(ledger, description="classified by hand", classification=BusinessClassification.BUSINESS)
-    by_an_agent = add_row(
-        ledger, description="classified by an agent", actor=AGENT, classification=BusinessClassification.BUSINESS
+    by_automation = add_row(
+        ledger,
+        description="classified by an automation",
+        actor=AUTOMATION,
+        classification=BusinessClassification.BUSINESS,
     )
     expected = {
         by_rule: ClassificationOrigin.AUTOMATIC,
         by_hand: ClassificationOrigin.PERSON,
-        by_an_agent: ClassificationOrigin.AGENT,
+        by_automation: ClassificationOrigin.AUTOMATION,
     }
 
     for index, transaction_id in enumerate(expected):
@@ -208,12 +211,12 @@ def test_a_split_child_classified_in_the_split_records_who_ran_it_and_the_parent
     parent = add_row_classified_by_a_rule(ledger, description="classified by a rule")
     before = set(ledger.transactions.load().transactions)
 
-    _classified_split(ledger, parent, actor=AGENT)
+    _classified_split(ledger, parent, actor=AUTOMATION)
 
     rows = ledger.transactions.load().transactions
     children = [row for transaction_id, row in rows.items() if transaction_id not in before]
     assert len(children) == 2
-    assert {child.classification_origin for child in children} == {ClassificationOrigin.AGENT}
+    assert {child.classification_origin for child in children} == {ClassificationOrigin.AUTOMATION}
     assert rows[parent].lifecycle_state is TransactionLifecycleState.SPLIT
     assert rows[parent].classification_origin is ClassificationOrigin.AUTOMATIC
 
@@ -226,13 +229,13 @@ _WRITES_IN_PLACE: tuple[tuple[str, _Write], ...] = (
     ("exclude", _exclude),
 )
 _SPLITS: tuple[tuple[str, _Write], ...] = (("split", _split), ("classified-split", _classified_split))
-_DECIDED_BY = pytest.mark.parametrize("decided_by", ["person", "rule", "agent"])
+_DECIDED_BY = pytest.mark.parametrize("decided_by", ["person", "rule", "automation"])
 
 
 def _row_decided_by(ledger: Ledger, decided_by: str) -> str:
     if decided_by == "rule":
         return add_row_classified_by_a_rule(ledger, description="classified by a rule")
-    actor = PERSON if decided_by == "person" else AGENT
+    actor = PERSON if decided_by == "person" else AUTOMATION
     return add_row(
         ledger,
         description=f"classified by the {decided_by}",
@@ -275,8 +278,10 @@ def test_a_split_goes_through_under_either_label_and_the_parent_keeps_whose_deci
 
 
 @pytest.mark.parametrize("write", [_exclude, _split, _classified_split], ids=["exclude", "split", "classified-split"])
-@pytest.mark.parametrize("linked_by", [PERSON, AGENT], ids=["the-persons-attachment", "the-agents-attachment"])
-@pytest.mark.parametrize("actor", [PERSON, AGENT], ids=["person", "agent"])
+@pytest.mark.parametrize(
+    "linked_by", [PERSON, AUTOMATION], ids=["the-persons-attachment", "the-delegated clients-attachment"]
+)
+@pytest.mark.parametrize("actor", [PERSON, AUTOMATION], ids=["person", "automation"])
 def test_setting_aside_a_row_that_carries_a_document_goes_through_whoever_linked_it(
     ledger: Ledger, write: _Write, linked_by: str, actor: str
 ) -> None:
@@ -290,25 +295,31 @@ def test_setting_aside_a_row_that_carries_a_document_goes_through_whoever_linked
     assert ledger.row(row).attachment_ids
 
 
-@pytest.mark.parametrize("actor", [PERSON, AGENT], ids=["person", "agent"])
+@pytest.mark.parametrize("actor", [PERSON, AUTOMATION], ids=["person", "automation"])
 def test_a_detachment_removes_the_named_attachment_whoever_linked_it(ledger: Ledger, actor: str) -> None:
     row = add_row(ledger, description="unprocessed with two documents")
-    the_persons, the_agents = store_attachment(ledger, b"person"), store_attachment(ledger, b"agent")
+    the_persons, automation_attachment = store_attachment(ledger, b"person"), store_attachment(ledger, b"automation")
     attach_attachment(ledger, row, the_persons, actor=PERSON)
-    attach_attachment(ledger, row, the_agents, actor=AGENT)
+    attach_attachment(ledger, row, automation_attachment, actor=AUTOMATION)
 
     detach_manual_transaction_attachments(
         bucket_id=BUCKET_ID, transaction_id=row, actor=actor, attachment_ids=(the_persons,), ports=ledger.ports
     )
-    assert ledger.row(row).attachment_ids == (the_agents,)
+    assert ledger.row(row).attachment_ids == (automation_attachment,)
     detach_manual_transaction_attachments(
-        bucket_id=BUCKET_ID, transaction_id=row, actor=actor, attachment_ids=(the_agents,), ports=ledger.ports
+        bucket_id=BUCKET_ID,
+        transaction_id=row,
+        actor=actor,
+        attachment_ids=(automation_attachment,),
+        ports=ledger.ports,
     )
     assert ledger.row(row).attachment_ids == ()
 
 
-@pytest.mark.parametrize("actor", [PERSON, AGENT], ids=["person", "agent"])
-@pytest.mark.parametrize("first_linked_by", [PERSON, AGENT], ids=["linked-by-the-person", "linked-by-an-agent"])
+@pytest.mark.parametrize("actor", [PERSON, AUTOMATION], ids=["person", "automation"])
+@pytest.mark.parametrize(
+    "first_linked_by", [PERSON, AUTOMATION], ids=["linked-by-the-person", "linked-by-an-automation"]
+)
 def test_a_link_replaces_the_invoice_a_row_already_links_under_either_label(
     ledger: Ledger, actor: str, first_linked_by: str
 ) -> None:

@@ -675,7 +675,7 @@ export type SignOutResult = {
     /** Whether a key issued for an external agent can still admit. Keys do
      * not follow the sign-in, so this is true while one can. Null when the
      * product could not say. */
-    agentAccessRemains: boolean | null;
+    automationAccessRemains: boolean | null;
     automationRevoked: false;
   };
 };
@@ -707,6 +707,21 @@ export type ProfileCreateResult =
   { kind: "created"; name: string } | ({ kind: "refused" } & SignInRefusal);
 
 export interface HostCommands {
+  runtime_attendance_inventory: {
+    args: Authorized;
+    result: {
+      kind: "attendance_inventory";
+      candidates: import("../shell/host").AttendanceCandidate[];
+    };
+  };
+  runtime_attendance_decide: {
+    args: Authorized & { attendanceId: string; approve: boolean };
+    result: {
+      kind: "attendance_decided";
+      attendance_id: string;
+      approved: boolean;
+    };
+  };
   shell_window_action: {
     args: Authorized<{ action: WindowAction }>;
     result: null;

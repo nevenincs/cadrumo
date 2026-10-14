@@ -72,7 +72,7 @@ ANTHROPIC_EXTRA = OptionalExtra(extra="anthropic", import_name="anthropic", feat
 OFX_EXTRA = OptionalExtra(extra="ofx", import_name="ofxtools", feature="OFX/QFX bank-statement import")
 # Local-inference document reading (the gated outbound LLM adapter).
 # Registered here rather than hand-rolled outside the classifier like the
-# ``agent`` extra, so the doctor enumerates it and one refusal shape covers
+# ``automation`` extra, so the doctor enumerates it and one refusal shape covers
 # every inference boundary.
 #
 # **The probe target must be EXCLUSIVE to the extra, and that is why it is

@@ -3,8 +3,13 @@
 from __future__ import annotations
 
 if __name__ == "__main__":
-    import os
     import sys
+
+    if not sys.flags.isolated:
+        sys.stderr.write("error: start the TUI with python -I -m cadrumo.entrypoints.tui\n")
+        raise SystemExit(2)
+
+    import os
 
     # Before the first import that builds a pydantic model: pydantic otherwise
     # scans every installed distribution's entry points on that build, which
@@ -13,8 +18,9 @@ if __name__ == "__main__":
     # business seeing. ``setdefault`` leaves an operator's explicit value alone.
     os.environ.setdefault("PYDANTIC_DISABLE_PLUGINS", "__all__")
 
-    from ...adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
-    from ...application.runtime.contracts import RuntimeRefusalError
+    from cadrumo_client.contracts.contracts import RefusalError
+    from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
     from ...core.async_cleanup import AsyncResourceCleanupError
     from .launcher import TUI_MODULE_ARGUMENT_ERROR_EXIT_CODE, TuiModuleArgumentError, run_module
 
@@ -23,7 +29,7 @@ if __name__ == "__main__":
     except TuiModuleArgumentError as exc:
         sys.stderr.write(f"error: {exc}\n")
         raise SystemExit(TUI_MODULE_ARGUMENT_ERROR_EXIT_CODE) from None
-    except (RuntimeFrontendRefusedError, RuntimeRefusalError, AsyncResourceCleanupError) as exc:
+    except (FrontendRefusedError, RefusalError, AsyncResourceCleanupError) as exc:
         if not isinstance(exc, AsyncResourceCleanupError) and not any(
             isinstance(exc.__dict__.get(name), AsyncResourceCleanupError)
             for name in ("async_cleanup_error", "cleanup_error")

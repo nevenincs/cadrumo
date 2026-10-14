@@ -17,8 +17,10 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
 from ....application.modelo.casilla_help import ModeloCasillaHelpCardV1
 from ....application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from ....application.modelo.workbench_operations import (
@@ -28,11 +30,13 @@ from ....application.modelo.workbench_operations import (
     ModeloCasillaHelpRequest,
     ModeloWorkbenchFormRequest,
 )
-from ....application.modelo.workbench_projection import ModeloWorkbenchFormProjectionV1, restore_modelo_workbench_form
+from ....application.modelo.workbench_projection import (
+    ModeloWorkbenchFormProjectionV1,
+    restore_modelo_workbench_form,
+)
 from ....application.modelo.workbench_read import ModeloWorkbenchFormReadV1
 from ....application.operations.registry import OperationFrontendProjection
 from ....application.operations.schema_identity import OperationSchemaIdentityV1
-from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....core.casilla_id import CasillaId
 from ....core.external_constants import OutputLanguage
 from ....core.operations import OperationEffect, OperationTerminalCondition
@@ -42,7 +46,7 @@ _READ_TIMEOUT_SECONDS = 120.0
 
 
 async def read_runtime_workbench_operation[ResultT: BaseModel](
-    client: RuntimeFrontendClient,
+    client: FrontendClient,
     *,
     definition_id: str,
     subject_ref: str,
@@ -80,13 +84,13 @@ async def read_runtime_workbench_operation[ResultT: BaseModel](
         poll_seconds=0.02,
     )
     if state.terminal_condition is not OperationTerminalCondition.SUCCEEDED:
-        raise RuntimeFrontendRefusedError(
+        raise FrontendRefusedError(
             state.refusal_ref
             or state.failure_error_code
             or (state.terminal_condition.value if state.terminal_condition is not None else "operation_unavailable")
         )
     if state.effect is not OperationEffect.NONE:
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     return await controller.read_settled_result(state, result_type, result_version=result_version)
 
 
@@ -97,10 +101,10 @@ class RuntimeModeloWorkbenchSource:
     loop; each runs its own short-lived loop on that worker thread.
     """
 
-    def __init__(self, client: RuntimeFrontendClient, declaration: DeclarationsWorkspaceDeclarationRefV1) -> None:
+    def __init__(self, client: FrontendClient, declaration: DeclarationsWorkspaceDeclarationRefV1) -> None:
         """Pin the TUI session, its profile and the one declaration this workbench shows."""
         if client.frontend is not OperationFrontendProjection.TUI:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         self._client = client
         self._profile_id, self._session_id = client.profile_id, client.session_id
         self._work_unit_id = str(declaration.work_unit_id)
@@ -108,7 +112,7 @@ class RuntimeModeloWorkbenchSource:
 
     def _require_session(self) -> None:
         if self._client.session_id != self._session_id or self._client.profile_id != self._profile_id:
-            raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+            raise RefusalError(RefusalCode.CONNECTION_CLOSED)
 
     def read_form(self, language: OutputLanguage) -> ModeloWorkbenchFormReadV1:
         """Read the form and admit its edit baseline in the worker."""
@@ -126,7 +130,7 @@ class RuntimeModeloWorkbenchSource:
             )
         )
         if projection.profile_id != self._profile_id or projection.work_unit_id != self._work_unit_id:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         self._require_session()
         return restore_modelo_workbench_form(projection)
 
@@ -143,7 +147,7 @@ class RuntimeModeloWorkbenchSource:
         # Serialize until that read returns, sharing one queue/read deadline.
         deadline = time.monotonic() + _READ_TIMEOUT_SECONDS
         if not self._help_read_lock.acquire(timeout=max(0.0, deadline - time.monotonic())):
-            raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
         try:
             self._require_session()
             projection = asyncio.run(
@@ -169,7 +173,7 @@ class RuntimeModeloWorkbenchSource:
                 or projection.work_unit_id != self._work_unit_id
                 or projection.card.casilla_id != casilla_id
             ):
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                raise RefusalError(RefusalCode.INVALID_FRAME)
             self._require_session()
             return projection.card
         finally:

@@ -426,7 +426,7 @@ def test_registered_capture_supervises_guarded_writes_and_projects_only_safe_rec
                 profile_id=profile_id,
                 destination_id=uuid4(),
                 action=AccessAction.SUBMIT,
-                frontend=OperationFrontendProjection.MCP,
+                frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
                 contract=registration.contract,
                 published_authority=Availability.AVAILABLE,
                 authority_operation=authority,

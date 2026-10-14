@@ -11,8 +11,9 @@ from uuid import UUID, uuid4
 import pytest
 from textual.widgets import Button, Input, Select
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.frontend_client import FrontendClient
+
 from ....application.user_profile.login_interaction import ProfileLoginChoice
 from ..components.host import ScreenHostApp
 from ..components.status import PinnedStatusBar
@@ -35,9 +36,9 @@ class _OpeningDetector:
     def __init__(self) -> None:
         self.opened: list[UUID] = []
 
-    async def __call__(self, profile_id: UUID) -> RuntimeFrontendClient:
+    async def __call__(self, profile_id: UUID) -> FrontendClient:
         self.opened.append(profile_id)
-        raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+        raise RefusalError(RefusalCode.UNAVAILABLE)
 
 
 @pytest.mark.asyncio
@@ -79,9 +80,9 @@ async def test_profile_chooser_routes_current_selection_to_the_runtime_opener() 
     choices = _choices()
     opened: list[UUID] = []
 
-    async def open_client(profile_id: UUID) -> RuntimeFrontendClient:
+    async def open_client(profile_id: UUID) -> FrontendClient:
         opened.append(profile_id)
-        raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+        raise RefusalError(RefusalCode.UNAVAILABLE)
 
     screen = RuntimeLoginScreen(
         choices=choices, preselected=choices[0].profile_id, open_client=open_client, accept_handoff=lambda _: False

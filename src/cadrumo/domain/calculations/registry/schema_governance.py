@@ -3,7 +3,7 @@
 Every other conformance fact about the registry is DERIVED — coverage, grounding,
 classification coherence are all read back out of the tree. Authorship and signoff
 are not: who engineered a revision and who reviewed it are facts about people and
-agents, and nothing in the tree can compute them. They are therefore *declared*, on
+delegated clients, and nothing in the tree can compute them. They are therefore *declared*, on
 a stamp — ``engineered_by``, ``review_status``, ``reviewed_by``, ``reviewed_at``,
 and on an edition that inherits rows ``reviewed_against`` — and this module owns
 the rules that keep a declaration honest.

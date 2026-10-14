@@ -54,7 +54,7 @@ def test_shared_root_relocates_settings_and_relative_refinements(tmp_path: Path)
         assert settings.cadrumo_local_storage_root == root
         assert settings.cadrumo_log_dir == root / "diagnostics"
         assert settings.cadrumo_temp_dir == root / "tmp"
-        assert settings.cadrumo_runtime_socket_dir == root / "runtime"
+        assert settings.cadrumo_connection_socket_dir == root / "runtime"
         assert settings.cadrumo_playwright_browsers_dir == root / "components" / "playwright"
         assert storage_directory("CADRUMO_DEV_CACHE_ROOT", "development/cache") == root / "development" / "cache"
 
@@ -136,6 +136,12 @@ def test_location_settings_are_separate_from_development_tools() -> None:
         if location.override_policy is StorageOverridePolicy.OPERATOR_OVERRIDABLE
         and (location.settings_field is not None and location.settings_field)
     }
+    overridable.update(
+        location.environment_variable
+        for location in STORAGE_TAXONOMY.values()
+        if location.override_policy is StorageOverridePolicy.OPERATOR_OVERRIDABLE
+        and location.environment_variable is not None
+    )
     assert {"CADRUMO_LOCAL_STORAGE_ROOT", "CADRUMO_TEMP_DIR"} <= product
     assert product == overridable | {"CADRUMO_LOCAL_STORAGE_ROOT"}
     assert "CADRUMO_STORAGE_ROOT" not in product

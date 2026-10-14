@@ -46,7 +46,7 @@ All 20 assigned files were read in full across pages 1–9.
 - application/__init__.py (3 lines) (`src/cadrumo/application/__init__.py`)
 - _state_projection_readiness.py (24 lines) (`src/cadrumo/application/_state_projection_readiness.py`)
 - auth_credentials.py (34 lines) (`src/cadrumo/application/auth_credentials.py`)
-- bucket_deletion_contracts.py (34 lines) (`src/cadrumo/application/bucket_deletion_contracts.py`)
+- bucket_deletion_command_ports.py (34 lines) (`src/cadrumo/application/bucket_deletion_command_ports.py`)
 - bucket_event_projection.py (90 lines) (`src/cadrumo/application/bucket_event_projection.py`)
 - bucket_event_repository.py (52 lines) (`src/cadrumo/application/bucket_event_repository.py`)
 - cli_exception_preconditions.py (207 lines) (`src/cadrumo/application/cli_exception_preconditions.py`)

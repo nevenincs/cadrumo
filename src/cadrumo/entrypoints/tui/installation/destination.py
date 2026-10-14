@@ -15,8 +15,9 @@ from textual.binding import Binding
 from textual.screen import Screen
 from textual.widgets import DataTable, Static
 
-from ....adapters.local_runtime.installation_client import open_installed_installation_client
-from ....application.runtime.installation_requests import InstallationAct
+from cadrumo_client.contracts.installation_requests import InstallationAct
+from cadrumo_client.transport.installation_client import open_installed_installation_client
+
 from ....core.i18n.render import tr
 from ..components.account_chrome import AccountChromeScreen
 from ..components.theme import BASE_CSS, tokenised

@@ -85,8 +85,10 @@ fn published(site: &Site, origin: &str) -> Result<Published> {
 /// application is unaffected; the shell is told which state applies.
 pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
     let development = std::env::var_os(DEVELOPMENT_ROOT).filter(|_| tauri::is_dev());
-    let opened = available(launch, development)
-        .and_then(|site| site.map(|site| Ok((site, media::MediaTypes::declared()?))).transpose());
+    let opened = available(launch, development).and_then(|site| {
+        site.map(|site| Ok((site, media::MediaTypes::declared()?)))
+            .transpose()
+    });
     let state = match opened {
         Ok(Some((site, media))) => return serving(launch, site, media),
         Ok(None) if matches!(launch.docs, PackagedDocs::NotBundled) => Published::NotBundled,
@@ -108,7 +110,12 @@ fn available(launch: &Launch, development: Option<OsString>) -> Result<Option<Si
     };
     if development.as_ref().is_some_and(|value| !value.is_empty()) {
         let (root, manifest) = packaged.map_or_else(
-            || (launch.package_root.clone(), launch.package_root.join("manifest.json")),
+            || {
+                (
+                    launch.package_root.clone(),
+                    launch.package_root.join("manifest.json"),
+                )
+            },
             |docs| (docs.root.clone(), docs.manifest.clone()),
         );
         return open(&launch.package_root, &root, &manifest, development).map(Some);

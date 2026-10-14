@@ -73,7 +73,7 @@ class ModeloReconciliationPullRequest(CredentialFreeOperationRequest):
     command does. The evidence is named by the identifier the capture returned:
     ``snapshot_id`` from a receipt capture, ``observation_id`` from a filed
     declaration capture. ``actor`` is recorded as sent for a person's session.
-    An agent's session is recorded under its own session label, whatever the
+    An automation's session is recorded under its own session label, whatever the
     request carries.
     """
 

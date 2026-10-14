@@ -159,19 +159,19 @@ def test_access_is_bound_to_exact_profile_and_whole_history() -> None:
     assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
 
 
-def test_balance_read_is_admitted_on_the_mcp_frontend_without_a_commit_door() -> None:
+def test_balance_read_is_admitted_on_the_external_client_frontend_without_a_commit_door() -> None:
     _definition, registration = _definition_and_registration()
     context = OperationAccessContext(
         profile_id=_PROFILE,
         destination_id=uuid4(),
         action=AccessAction.SUBMIT,
-        frontend=OperationFrontendProjection.MCP,
+        frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
         contract=registration.contract,
         published_authority=Availability.AVAILABLE,
     )
 
     resolved = resolve_modelo_iva_wallet_balance_access(cast(OperationRequest[BaseModel], _request()), context)
-    assert resolved.request.frontend is OperationFrontendProjection.MCP
+    assert resolved.request.frontend is OperationFrontendProjection.EXTERNAL_CLIENT
     assert resolved.request.profile_id == _PROFILE
     assert resolved.request.period_independent
     assert AccessAction.COMMIT not in resolved.policy.actions

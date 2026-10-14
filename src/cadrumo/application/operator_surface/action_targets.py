@@ -2,22 +2,24 @@
 
 An operator is shown a recovery action by the canonical path of the command it
 targets. The command graph declares that path, and the command line reads it
-there. The runtime serves the same recovery actions to the terminal interface
-and to MCP without the command graph, so the facts of each action's target
+there. The owning host serves the same recovery actions to the terminal interface
+and to external client without the command graph, so the facts of each action's target
 leaf are recorded here: its path, its result schema, its required inputs and
 its write policy.
 
-The record is derived from the command graph and checked against it for every
-action in the catalogue, so a command that moves or changes its inputs fails
-that check until this record follows it. Reconciling a recorded leaf runs the
-same application reconciliation a leaf read from the graph runs, and the same
-projection then resolves the action against it.
+The record is checked against the command graph for every action the owning
+frontend serves, so a command that moves or changes its inputs fails that
+check until this record follows it. Executable ownership is shared metadata;
+the serialized action carries the executable together with its path.
 """
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
+
+from cadrumo_client.contracts.command_program import CommandProgram
 
 from .contract import get_operator_surface_contract
 from .manifest import (
@@ -55,7 +57,8 @@ class ActionTarget:
 
     Every recorded target is an exposed leaf with a mounted family, a result
     schema and an input schema, and has no alias path: an action cannot target
-    a leaf the reconciliation would have to excuse.
+    a leaf the reconciliation would have to excuse. ``cli_path`` is relative
+    to the executable declared by ``program``.
     """
 
     command_key: str
@@ -63,6 +66,7 @@ class ActionTarget:
     result_schema: str
     required_inputs: tuple[str, ...] = ()
     profile_bound_write: bool = False
+    program: CommandProgram = CommandProgram.AEAT
 
     @classmethod
     def of_leaf(cls, leaf: ReconciledOperatorLeaf) -> ActionTarget:
@@ -92,6 +96,7 @@ class ActionTarget:
             result_schema=result_schema.schema_name,
             required_inputs=input_schema.required_input_names,
             profile_bound_write=policy.classification == _PROFILE_BOUND_WRITE,
+            program=leaf.live_leaf.program,
         )
 
 
@@ -110,6 +115,7 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
         "config.auth.configure",
         ("config", "auth", "configure"),
         "AuthConfigurePayload",
+        program=CommandProgram.AUTHENTICATION,
         required_inputs=("provider",),
         profile_bound_write=True,
     ),
@@ -117,9 +123,16 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
         "config.auth.diagnostics.view",
         ("config", "auth", "diagnostics", "view"),
         "AuthDiagnosticsViewResult",
+        program=CommandProgram.AUTHENTICATION,
         required_inputs=("diagnostic_id",),
     ),
-    ActionTarget("config.auth.login", ("config", "auth", "login"), "AuthLoginPayload", profile_bound_write=True),
+    ActionTarget(
+        "config.auth.login",
+        ("config", "auth", "login"),
+        "AuthLoginPayload",
+        program=CommandProgram.AUTHENTICATION,
+        profile_bound_write=True,
+    ),
     ActionTarget("config.login", ("config", "login"), "ConfigLoginResult"),
     ActionTarget("config.logout", ("config", "logout"), "ConfigLogoutResult"),
     ActionTarget(
@@ -207,7 +220,12 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
 """One record for each command a catalogue action targets, ordered by command key."""
 
 
-def recorded_action_target_reconciliation(command_key: str, /) -> OperatorSurfaceReconciliation:
+def recorded_action_target_reconciliation(
+    command_key: str,
+    /,
+    *,
+    canonical_cli_path: tuple[str, ...] | None = None,
+) -> OperatorSurfaceReconciliation:
     """Reconcile the recorded leaf that owns ``command_key``.
 
     Raises:
@@ -216,11 +234,20 @@ def recorded_action_target_reconciliation(command_key: str, /) -> OperatorSurfac
     target = next((item for item in ACTION_TARGETS if item.command_key == command_key), None)
     if target is None:
         raise LookupError(f"unknown command schema identity: {command_key}")
+    if canonical_cli_path is None:
+        resolved_path = target.cli_path
+    else:
+        if not canonical_cli_path or canonical_cli_path[0] != target.program.executable_name:
+            raise ValueError(f"command graph executable contradicts recorded action target: {command_key}")
+        resolved_path = canonical_cli_path[1:]
+    if not resolved_path or resolved_path[-len(target.cli_path) :] != target.cli_path:
+        raise ValueError(f"command graph path contradicts recorded action target: {command_key}")
     return reconcile_operator_surface_inventory(
         live_leaves=(
             LiveLeafInventoryRow(
                 subject_leaf_key=command_key,
-                canonical_cli_path=target.cli_path,
+                canonical_cli_path=resolved_path,
+                program=target.program,
                 alias_cli_paths=(),
                 provenance=_PROVENANCE,
             ),
@@ -241,6 +268,10 @@ def recorded_action_target_reconciliation(command_key: str, /) -> OperatorSurfac
             )
             for family in get_operator_surface_contract().command_families
             if (family.root.value, family.child) == target.cli_path[:2]
+        ) if target.program is CommandProgram.AEAT else (
+            MountedFamilyInventoryRow(
+                root=target.cli_path[0], child=target.cli_path[1], provenance=_PROVENANCE
+            ),
         ),
         profile_policies=(
             ProfilePolicyInventoryRow(
@@ -256,10 +287,32 @@ def recorded_action_target_reconciliation(command_key: str, /) -> OperatorSurfac
     )
 
 
-def resolve_recorded_precondition_action(verdict: PreconditionVerdict, /) -> ResolvedPreconditionAction:
+def resolve_recorded_precondition_action(
+    verdict: PreconditionVerdict,
+    /,
+    *,
+    canonical_cli_path: Callable[[str], tuple[str, ...] | None] | None = None,
+) -> ResolvedPreconditionAction:
     """Resolve a verdict's recovery action against the recorded action targets.
 
-    This is the resolver of a process that holds no command graph. It names
-    the command the command line names for the same verdict.
+    A caller that owns a live command graph may supply its full canonical path
+    for each action. A caller without that graph uses the recorded owner and
+    path suffix, so cross-program remedies retain their actual executable.
     """
-    return resolve_precondition_action(verdict, target_reconciliation=recorded_action_target_reconciliation)
+    resolved_paths: dict[str, tuple[str, ...]] = {}
+
+    def reconcile(command_key: str, /) -> OperatorSurfaceReconciliation:
+        path = None if canonical_cli_path is None else canonical_cli_path(command_key)
+        target = next((item for item in ACTION_TARGETS if item.command_key == command_key), None)
+        if target is None:
+            raise LookupError(f"unknown command schema identity: {command_key}")
+        resolved_paths[command_key] = (target.program.executable_name, *target.cli_path) if path is None else path
+        return recorded_action_target_reconciliation(command_key, canonical_cli_path=path)
+
+    resolved = resolve_precondition_action(verdict, target_reconciliation=reconcile)
+    if resolved.action is None:
+        return resolved
+    action_path = resolved_paths.get(resolved.action.target_command_key)
+    if action_path is None:
+        return resolved
+    return resolved.model_copy(update={"action": resolved.action.model_copy(update={"cli_path": action_path})})

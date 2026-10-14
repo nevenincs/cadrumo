@@ -17,28 +17,24 @@ from uuid import uuid4
 import pytest
 from mcp.types import CallToolResult, TextContent
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
 from cadrumo.application.operations.frontend_requests import (
     OperationObservationRequestV1,
     OperationObservationSuccessV1,
 )
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
-from cadrumo_harness.mcp.protocol_contract import (
-    MCP_TOOL_CATALOGUE,
-    UNKNOWN_OUTCOME_MEMBER,
-    has_refusal,
-    unknown_outcome_instruction,
-)
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
-from cadrumo_harness.mcp.server import build_server
-from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
-from cadrumo_harness.mcp.tests.test_result_page_tool import _auth_registry, _observed_operation_id, _ObservedClient
+from cadrumo_client.contracts.contracts import RefusalCode
+from cadrumo_client.transport.frontend_client import FrontendClient
+
+from ..protocol_contract import MCP_TOOL_CATALOGUE, UNKNOWN_OUTCOME_MEMBER, has_refusal, unknown_outcome_instruction
+from ..runtime_adapter import RuntimeMcpAdapter
+from ..server import build_server
+from .session import connected_server_and_client_session
+from .test_result_page_tool import _auth_registry, _observed_operation_id, _ObservedClient
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
-_DEADLINE = RuntimeRefusalCode.DEADLINE_EXCEEDED.value
+_DEADLINE = RefusalCode.DEADLINE_EXCEEDED.value
 
 
 def _document(called: CallToolResult) -> dict[str, object]:
@@ -91,7 +87,7 @@ async def test_an_observation_of_an_unsettled_or_unknown_effect_says_so_and_is_n
     profile_id = uuid4()
     client = _UnsettledClient(profile_id, _auth_registry())
     client.lifecycle, client.condition, client.effect = lifecycle, condition, effect
-    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     request = OperationObservationRequestV1(operation_id=_observed_operation_id(), after_cursor=0, page_limit=10)
     try:
         async with connected_server_and_client_session(build_server(adapter)) as sdk:

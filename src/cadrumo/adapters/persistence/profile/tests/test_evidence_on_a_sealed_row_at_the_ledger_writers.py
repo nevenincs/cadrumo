@@ -39,7 +39,7 @@ from cadrumo.domain.transactions.enums import BusinessClassification
 from cadrumo.domain.transactions.errors import TransactionValidationError
 
 from .classification_origin_support import (
-    AGENT,
+    AUTOMATION,
     BUCKET_ID,
     PERSON,
     Ledger,
@@ -165,30 +165,36 @@ def test_an_identifier_of_only_whitespace_names_no_evidence_in_the_request() -> 
 
 @pytest.mark.parametrize("blank", ["", _BLANK])
 def test_a_blank_identifier_links_nothing_and_takes_no_row_at_the_writer(ledger: Ledger, blank: str) -> None:
-    by_an_agent = add_row(
-        ledger, description="classified by an agent", actor=AGENT, classification=BusinessClassification.BUSINESS
+    by_automation = add_row(
+        ledger,
+        description="classified by an automation",
+        actor=AUTOMATION,
+        classification=BusinessClassification.BUSINESS,
     )
     attachment = store_attachment(ledger, b"beside a blank identifier")
-    before = ledger.row(by_an_agent)
-    assert before.classification_origin is ClassificationOrigin.AGENT
+    before = ledger.row(by_automation)
+    assert before.classification_origin is ClassificationOrigin.AUTOMATION
 
-    _attach(ledger, by_an_agent, evidence=blank, attachments=(attachment,))
+    _attach(ledger, by_automation, evidence=blank, attachments=(attachment,))
 
-    after = ledger.row(by_an_agent)
+    after = ledger.row(by_automation)
     assert after.purchase_invoice_evidence_id is None
     assert after.attachment_ids == (attachment,)
-    assert after.classification_origin is ClassificationOrigin.AGENT
+    assert after.classification_origin is ClassificationOrigin.AUTOMATION
 
 
 @pytest.mark.parametrize("blank", ["", _BLANK])
 def test_a_blank_identifier_alone_is_refused_and_stores_nothing(ledger: Ledger, blank: str) -> None:
-    by_an_agent = add_row(
-        ledger, description="classified by an agent", actor=AGENT, classification=BusinessClassification.BUSINESS
+    by_automation = add_row(
+        ledger,
+        description="classified by an automation",
+        actor=AUTOMATION,
+        classification=BusinessClassification.BUSINESS,
     )
     before = ledger.stored()
 
     with pytest.raises(TransactionValidationError):
-        _attach(ledger, by_an_agent, evidence=blank)
+        _attach(ledger, by_automation, evidence=blank)
 
     assert ledger.stored() == before
 

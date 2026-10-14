@@ -570,7 +570,7 @@ async def _open_register_page(
     storage_state_path = session.storage_state_path
     if storage_state_path is None:
         raise SedeNavigationError(
-            "AeatSession has no persisted auth session; run `aeat config auth status` first",
+            "AeatSession has no persisted auth session; run `cadrumo-runtime config auth status` first",
             translated_message=tr("adapters.sede.errors.no_auth_session"),
         )
     from .....core.bucket_pointer import require_active_bucket_id
@@ -788,7 +788,7 @@ async def _open_register_form(
         )
         raise SedeNavigationError(
             f"declaraciones register did not load (final URL: {final_url!r}); "
-            "session likely expired — run `aeat config auth test` and retry",
+            "session likely expired — run `cadrumo-runtime config auth test` and retry",
             translated_message=tr("adapters.sede.errors.session_expired_nav_failed"),
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
             context=await _declarations_page_shape_context_from_page(

@@ -11,7 +11,7 @@ from .....application.user_profile.automation_custody_port import AutomationCust
 from .bucket_session import BucketSession
 
 if TYPE_CHECKING:
-    from .....application.runtime.profile_worker import ProfileWorkerIdentity
+    from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 
 
 @dataclass(frozen=True)

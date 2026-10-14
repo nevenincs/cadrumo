@@ -89,7 +89,7 @@ class StorageWritePolicyDecision(BaseModel):
     """Decision returned by the backend storage write-policy query.
 
     The CLI root converts refusing decisions into
-    :class:`~cadrumo.entrypoints.cli.errors.CliRefusedBoundaryError` instances;
+    :class:`~cadrumo_client.commands.errors.CliRefusedBoundaryError` instances;
     allowed decisions let dispatch continue toward the active-bucket session
     opener.
 

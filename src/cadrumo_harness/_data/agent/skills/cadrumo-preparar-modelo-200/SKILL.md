@@ -56,8 +56,10 @@ alongside Modelo 202 and Modelo 303 for a sociedad.
 Confirm these before you start. If one is missing, say what is missing and stop
 that step.
 
-- `status` shows a session (`sign_in` or `key`). With `none`, ask the person to
-  sign in to Cadrumo.
+- `status` shows an admitted session (`attended` or `key`). With `none`, ask
+  the person to hold a live Cadrumo session and review this server's exact
+  attendance request, or configure a separately reviewed key. A sign-in alone
+  does not grant this server access.
 - A profile is active and declares `entity_type = legal_entity`, its
   `legal_entity_form` (sl / sa / sal / sll / sociedad_civil_mercantil /
   cooperativa / sin_fines_lucrativos / other - it selects the tipo de gravamen

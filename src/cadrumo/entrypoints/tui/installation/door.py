@@ -15,25 +15,26 @@ from logging import WARNING
 
 from pydantic import SecretBytes
 
-from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError, frontend_failure_code
-from ....adapters.local_runtime.installation_client import (
-    InstallationSecretHolder,
-    RuntimeInstallationClient,
-    installation_passphrase_document,
-)
-from ....application.runtime.installation_requests import (
+from cadrumo_client.contracts.installation_requests import (
     InstallationActContract,
-    RuntimeInstallationActRequest,
-    RuntimeInstallationCompleted,
-    RuntimeInstallationFailed,
-    RuntimeInstallationRefused,
+    InstallationActRequest,
+    InstallationCompleted,
+    InstallationFailed,
+    InstallationRefused,
     installation_request_facts,
 )
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError, frontend_failure_code
+from cadrumo_client.transport.installation_client import (
+    InstallationClient,
+    InstallationSecretHolder,
+    installation_passphrase_document,
+)
+
 from ....core.async_cleanup import await_cancellation_complete
 from ....core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from ....core.logging import get_logger
 
-type InstallationClientOpener = Callable[[], Awaitable[RuntimeInstallationClient]]
+type InstallationClientOpener = Callable[[], Awaitable[InstallationClient]]
 """Open one verified connection that names no profile session."""
 
 _LOGGER = get_logger(__name__)
@@ -43,21 +44,21 @@ _LOGGER = get_logger(__name__)
 class ActCompleted:
     """The act ran to its end and answered with its own reply."""
 
-    reply: RuntimeInstallationCompleted
+    reply: InstallationCompleted
 
 
 @dataclass(frozen=True, slots=True)
 class ActRefused:
     """The act's handler stopped it with a registered error."""
 
-    reply: RuntimeInstallationRefused
+    reply: InstallationRefused
 
 
 @dataclass(frozen=True, slots=True)
 class ActFailed:
     """The act stopped on a fault the runtime gives no public facts about."""
 
-    reply: RuntimeInstallationFailed
+    reply: InstallationFailed
     may_have_changed_records: bool
 
 
@@ -84,7 +85,7 @@ type ActOutcome = ActCompleted | ActRefused | ActFailed | ActUnreachable | ActSe
 
 async def perform_act(
     open_client: InstallationClientOpener,
-    request: RuntimeInstallationActRequest,
+    request: InstallationActRequest,
     contract: InstallationActContract,
     *,
     passphrase: bytearray | None = None,
@@ -130,7 +131,7 @@ async def perform_act(
                 ),
                 task_name="tui-installation-act",
             )
-        except RuntimeFrontendRefusedError as error:
+        except FrontendRefusedError as error:
             if declined:
                 return ActSecretDeclined()
             # The runtime answered: it refused before the act ran.
@@ -143,14 +144,14 @@ async def perform_act(
         for buffer in (passphrase, secret):
             if buffer is not None:
                 buffer[:] = bytes(len(buffer))
-    if isinstance(settled, RuntimeInstallationRefused):
+    if isinstance(settled, InstallationRefused):
         return ActRefused(settled)
-    if isinstance(settled, RuntimeInstallationFailed):
+    if isinstance(settled, InstallationFailed):
         return ActFailed(settled, may_have_changed_records=changes_records)
     return ActCompleted(settled)
 
 
-async def _close(client: RuntimeInstallationClient) -> None:
+async def _close(client: InstallationClient) -> None:
     """Release the act's connection; a failed release cannot change how the act settled."""
     try:
         await await_cancellation_complete(asyncio.to_thread(client.close), task_name="tui-installation-close")

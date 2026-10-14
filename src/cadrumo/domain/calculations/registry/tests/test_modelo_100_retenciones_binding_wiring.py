@@ -3,7 +3,7 @@
 The credit belongs to the perceptor. Casilla 0596 (retenciones del trabajo) is
 therefore bound to the payee's own salary-certificate figure, and casilla 0597
 (retenciones de capital mobiliario) is keyed by the declarant until a typed
-per-payer evidence family carries it. Neither is fed by a withholding-agent
+per-payer evidence family carries it. Neither is fed by a withholding-automation
 return the declarant files for other people.
 
 Binding-to-casilla plumbing contract (not a formula derivation):

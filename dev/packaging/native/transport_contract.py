@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from cadrumo.core import runtime_transport as declaration
+from cadrumo.core import connection_transport as declaration
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 
 
@@ -19,7 +19,7 @@ def transport_section() -> dict[str, Any]:
     )
     return {
         "darwin_directory": PRODUCT_IDENTITY.python_package,
-        "path_limit": declaration.RUNTIME_SOCKET_PATH_LIMIT,
+        "path_limit": declaration.SOCKET_PATH_LIMIT,
         "manager_domain": declaration.MANAGER_SOCKET_DOMAIN,
         "manager_prefix": declaration.MANAGER_SOCKET_PREFIX,
         "manager_suffix": declaration.MANAGER_SOCKET_SUFFIX,

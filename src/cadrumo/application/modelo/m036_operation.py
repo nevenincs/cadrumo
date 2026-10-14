@@ -2,7 +2,7 @@
 
 The existing lifecycle service records an operator's prior external filing;
 these operations never file with AEAT. Full human results retain the existing
-receipt identifier and note. Agent queries contain closed lifecycle facts and
+receipt identifier and note. automation queries contain closed lifecycle facts and
 presence indicators, excluding those raw strings. The canonical declaration
 and event write remains one atomic persistence unit.
 """
@@ -142,7 +142,7 @@ class M036ReadProjection(BaseModel):
 
 
 class M036QueryProjection(BaseModel):
-    """Reviewed agent list/view with one immutable profile identity."""
+    """Reviewed automation list/view with one immutable profile identity."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
@@ -180,7 +180,7 @@ class M036ReadExecutionResult(BaseModel):
 
 
 class M036QueryExecutionResult(BaseModel):
-    """Encrypted agent retention already excludes raw human evidence."""
+    """Encrypted automation retention already excludes raw human evidence."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     projection: M036QueryProjection

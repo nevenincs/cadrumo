@@ -2,7 +2,7 @@
 
 ``aeat app modelo work revision`` and ``work observations`` both project a
 persisted :class:`CalculationRevision` through
-:func:`~cadrumo.entrypoints.cli.runtime_modelo_calculation.calculation_snapshot_payload`.
+:func:`~cadrumo.entrypoints.cli.operation_modelo_calculation.calculation_snapshot_payload`.
 They share the nested
 :class:`ObservationPayload`
 and

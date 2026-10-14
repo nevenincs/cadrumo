@@ -5,22 +5,15 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING, Final
 
-from cadrumo.application.operator_surface.command_ports import (
-    CommandNodeKind,
-    ProfileAuthenticationPosture,
-)
-
-from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
-from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
-from .._command_secret_contracts import (
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.secret_contracts import (
     MachineSecretChannelKind,
     MachineSecretFieldSpec,
     MachineSecretSpec,
     MachineSecretVariantSpec,
     RecoveryHandoffSpec,
 )
-from ..command_parameter_contracts import ArgumentSpec, OptionSpec
-from ..command_shared_contracts import (
+from cadrumo_client.commands.shared_contracts import (
     FLAG_VALUE,
     PATH_VALUE,
     TEXT_VALUE,
@@ -34,8 +27,15 @@ from ..command_shared_contracts import (
     SchemaState,
     ValueContract,
 )
-from ..command_shared_contracts import translation_key as _key
-from ..command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.commands.shared_contracts import translation_key as _key
+from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import (
+    CommandNodeKind,
+    ProfileAuthenticationPosture,
+)
+
+from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
+from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ._spec_policies import (
     BOOTSTRAP_DESTRUCTIVE,
     BOOTSTRAP_WRITE,
@@ -100,7 +100,6 @@ _HANDLER_MODULES: Final[dict[str, str]] = {
     "_profile_delete": "._profile_delete",
     "_profile_inspect": "._profile_inspect",
     "_profile_repeatable_row": "._profile_repeatable_row",
-    "recovery": ".recovery",
     "restore_cli": ".restore_cli",
 }
 
@@ -250,7 +249,7 @@ def _plantilla_media_leaf(
     )
 
 
-_PAYLOADS = "..config_payloads"
+_PAYLOADS = "cadrumo_client.commands.payloads"
 _PAYLOADS_ARCHIVE_RECONCILE = "._archive_reconcile_payloads"
 _PAYLOADS_ARCHIVE_PUSH = "._archive_push_payloads"
 _CONFIG = "..config"
@@ -476,34 +475,6 @@ _WIZARD_CREATE_PARAMETERS = (
         machine_secret_channel=MachineSecretChannelKind.FILE_DESCRIPTOR,
     ),
 )
-_RECOVERY_SECRET_OPTIONS = (
-    _option(
-        "secrets_stdin",
-        ("--secrets-stdin",),
-        FLAG_VALUE,
-        "cli.config.custody.secrets_stdin_help",
-        default=False,
-        flag=True,
-        machine_secret_channel=MachineSecretChannelKind.STDIN,
-    ),
-    _option(
-        "secrets_fd",
-        ("--secrets-fd",),
-        WHOLE_NUMBER_VALUE,
-        "cli.config.custody.secrets_fd_help",
-        machine_secret_channel=MachineSecretChannelKind.FILE_DESCRIPTOR,
-    ),
-)
-_RECOVERY_PASSPHRASE_SECRET = MachineSecretSpec(
-    (
-        MachineSecretVariantSpec(
-            "passphrase",
-            (MachineSecretFieldSpec("passphrase"),),
-            DeferredTarget(".recovery", "RecoveryEnableSecrets", __package__),
-        ),
-    )
-)
-
 PROFILE_COMMAND_SPECS = (
     _group("config_profile", "config", "profile", "cli.config.profile.help"),
     _group("config_profile_archive", "config_profile", "archive", "cli.config.profile.archive.help"),
@@ -801,78 +772,6 @@ PROFILE_COMMAND_SPECS = (
                 ),
             )
         ),
-    ),
-    _group("config_profile_recovery", "config_profile", "recovery", "cli.config.profile.recovery.help"),
-    _leaf(
-        "config_profile_recovery_enable",
-        "config_profile_recovery",
-        "enable",
-        "cli.config.profile.recovery.enable_help",
-        "recovery",
-        "profile_recovery_enable",
-        _PAYLOADS,
-        "ConfigProfileRecoveryResult",
-        ENCRYPTED_DESTRUCTIVE,
-        (
-            *_RECOVERY_SECRET_OPTIONS,
-            _option(
-                "recovery_handoff_fd",
-                ("--recovery-handoff-fd",),
-                WHOLE_NUMBER_VALUE,
-                "cli.config.profile.recovery.handoff_fd_help",
-            ),
-            _option(
-                "recovery_verification_fd",
-                ("--recovery-verification-fd",),
-                WHOLE_NUMBER_VALUE,
-                "cli.config.profile.recovery.verification_fd_help",
-            ),
-            _LANGUAGE,
-        ),
-        _RECOVERY_PASSPHRASE_SECRET,
-        recovery_handoff=RecoveryHandoffSpec(
-            handoff_parameter="recovery_handoff_fd",
-            handoff_direction="write",
-            verification_parameter="recovery_verification_fd",
-            verification_direction="read",
-            required_together=True,
-            json_fields=("recovery_code",),
-            maximum_bytes=8192,
-            strict_utf8_object=True,
-            duplicate_extra_missing_fields_refused=True,
-            descriptors_closed=True,
-            reserved_descriptors=(0, 1, 2),
-            descriptors_must_differ=True,
-            collides_with_parameters=("secrets_fd",),
-            windows_handle_bootstrap="cadrumo.entrypoints.cli._windows_profile_secret_bootstrap",
-        ),
-        profile_authentication=ProfileAuthenticationPosture.SELF_AUTHENTICATING,
-    ),
-    _leaf(
-        "config_profile_recovery_disable",
-        "config_profile_recovery",
-        "disable",
-        "cli.config.profile.recovery.disable_help",
-        "recovery",
-        "profile_recovery_disable",
-        _PAYLOADS,
-        "ConfigProfileRecoveryResult",
-        ENCRYPTED_DESTRUCTIVE,
-        (*_RECOVERY_SECRET_OPTIONS, _LANGUAGE),
-        _RECOVERY_PASSPHRASE_SECRET,
-        profile_authentication=ProfileAuthenticationPosture.SELF_AUTHENTICATING,
-    ),
-    _leaf(
-        "config_profile_recovery_status",
-        "config_profile_recovery",
-        "status",
-        "cli.config.profile.recovery.status_help",
-        "recovery",
-        "profile_recovery_status",
-        _PAYLOADS,
-        "ConfigProfileRecoveryStatusResult",
-        PROFILE_READ,
-        (_LANGUAGE,),
     ),
     _leaf(
         "config_profile_delete",

@@ -13,6 +13,7 @@ from ....core.hashing import content_hash_hex as _content_hash_hex
 from ....core.identity.digest import ContentDigest
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ....core.time.utc import UtcInstant
+from ...buckets.event import BUCKET_ACTOR_LABEL_MAX_LENGTH
 from ...identifiers import canonical_decimal_string as _canonical_decimal_string
 from .closing_foundations import (
     InventoryClosingAuthority,
@@ -37,7 +38,7 @@ class InventoryClosingAuthorityDecision(BaseModel):
     physical_observation_id: str | None = Field(default=None, min_length=1, max_length=128)
     physical_observation_fingerprint: ContentDigest | None = None
     reason: str = Field(min_length=1, max_length=512)
-    actor: str = Field(min_length=1, max_length=64)
+    actor: str = Field(min_length=1, max_length=BUCKET_ACTOR_LABEL_MAX_LENGTH)
     source_command: str = Field(min_length=1, max_length=128)
     decided_at: UtcInstant
     evidence: tuple[InventoryClosingDecisionEvidence, ...] = Field(min_length=1)

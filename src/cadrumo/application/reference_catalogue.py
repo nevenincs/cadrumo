@@ -5,7 +5,8 @@ the authentication providers and the representative scopes are public data that
 ships with the product. Each read here takes only the pinned authority
 operation it needs, reads no profile and no private state, and contacts no
 network, so the command line, the harness and the terminal interface answer the
-same question with the same typed projection and no session.
+same question with the same typed projection and no session. Portal reads
+return :class:`PortalMetadata` records filtered by :class:`PortalCategory`.
 
 Coordinates follow one rule for every registry read: a filing year is composed
 with a period token into one typed :class:`~cadrumo.core.period.Period`; a
@@ -507,7 +508,7 @@ def _portal_payload(metadata: PortalMetadata) -> PortalEntryPayload:
 
 
 def list_portals(*, category: PortalCategory | None = None, modelo: Modelo | None = None) -> PortalsListResult:
-    """List the local AEAT portal catalogue, optionally for one category or one modelo.
+    """List the local AEAT portal catalogue by :class:`PortalCategory` or modelo.
 
     Raises:
         PortalFilterConflictError: When both filters are given.

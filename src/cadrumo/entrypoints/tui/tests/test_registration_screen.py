@@ -32,11 +32,10 @@ from textual.screen import Screen
 from textual.widget import Widget
 from textual.widgets import Button, Input, Static
 
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+from ....adapters.persistence.storage.custody.recovery import PROFILE_CUSTODY_RECOVERY_FILENAME
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
-
-from ....adapters.persistence.storage.custody.recovery import PROFILE_CUSTODY_RECOVERY_FILENAME
 from ....adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.authentication import ProfileAuthenticationRefusedError

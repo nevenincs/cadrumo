@@ -8,9 +8,10 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo_client.contracts.profile_access import ProfileStatus
+from cadrumo_client.transport.frontend_client import FrontendClient
+
 from ....application.operations.registry import OperationFrontendProjection
-from ....application.runtime.profile_access import RuntimeProfileStatus
 from ....application.user_profile.access_contracts import (
     AccessDenialCode,
     AccessScope,
@@ -26,7 +27,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _TASK = "test-bound-session-status"
 
 
-class _Client(RuntimeFrontendClient):
+class _Client(FrontendClient):
     """A client whose identity and status reply the test sets directly."""
 
     def __init__(self) -> None:
@@ -43,10 +44,10 @@ class _Client(RuntimeFrontendClient):
         self._session_id = uuid4()
 
     @override
-    def status(self, *, timeout: float = 5) -> RuntimeProfileStatus:
+    def status(self, *, timeout: float = 5) -> ProfileStatus:
         if self.failure is not None:
             raise self.failure
-        return RuntimeProfileStatus(
+        return ProfileStatus(
             request_id=uuid4(),
             runtime_boot_id=uuid4(),
             connection_id=uuid4(),

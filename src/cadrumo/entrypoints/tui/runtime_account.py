@@ -5,10 +5,11 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING
 
-from ...adapters.local_runtime.profile_mutations import ProfileMutationRunError
-from ...adapters.local_runtime.profile_password_rotation import run_profile_password_rotation
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.profile_mutations import ProfileMutationRunError
+from cadrumo_client.transport.profile_password_rotation import run_profile_password_rotation
+
 from ...application.operations.registry import OperationFrontendProjection
-from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.credentials import assess_profile_password
 from ...core.operations import OperationEffect, OperationTerminalCondition
@@ -25,12 +26,13 @@ from .runtime_access_management import RecoveryClientOpener, RuntimeAccessManage
 from .secret.passphrase import PassphraseChangeAttempt, PassphraseChangeRefusal, PassphraseScreen
 
 if TYPE_CHECKING:
-    from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
+    from cadrumo_client.transport.frontend_client import FrontendClient
+
     from .secret.automation_requester import HumanAutomationRequesterFactory
 
 
 def compose_runtime_account_factories(
-    client: RuntimeFrontendClient,
+    client: FrontendClient,
     *,
     profile: AccountProfileFactoryV1,
     open_recovery_client: RecoveryClientOpener,
@@ -44,7 +46,7 @@ def compose_runtime_account_factories(
     grants are not changed by this session control.
     """
     if client.frontend is not OperationFrontendProjection.TUI:
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     profile_id, session_id = client.profile_id, client.session_id
 
     def require_binding() -> None:
@@ -53,7 +55,7 @@ def compose_runtime_account_factories(
             or client.session_id != session_id
             or client.frontend is not OperationFrontendProjection.TUI
         ):
-            raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+            raise RefusalError(RefusalCode.CONNECTION_CLOSED)
 
     def close_for(reason: AccountRecomposeReasonV1) -> AccountDirectSessionActionV1:
         async def complete() -> AccountRecomposeRequiredV1:
@@ -65,7 +67,7 @@ def compose_runtime_account_factories(
                 task_name="tui-runtime-account-close",
             )
             if session_id not in acknowledgement.session_ids:
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                raise RefusalError(RefusalCode.INVALID_FRAME)
             return AccountRecomposeRequiredV1(reason=reason)
 
         return AccountDirectSessionActionV1(complete=complete)
@@ -79,7 +81,7 @@ def compose_runtime_account_factories(
     def password() -> PassphraseScreen:
         require_binding()
 
-        async def open_fresh() -> RuntimeFrontendClient:
+        async def open_fresh() -> FrontendClient:
             return await open_recovery_client()
 
         def rotate(current: str, replacement: str, confirmation: str) -> PassphraseChangeAttempt:

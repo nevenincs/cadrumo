@@ -42,10 +42,16 @@ registry engine plus the real CLI envelope serializer produced.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from typing import Any
 
 import pytest
+from click.testing import Result
+from cadrumo_runtime.host.tests.frontend.cli.cli_runner import (
+    bind_public_cli_runner,
+    invoke_cached_cli,
+    operator_runtime_scope,
+)
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts,
@@ -53,9 +59,8 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
-from cadrumo.entrypoints.cli.tests.modelo_cli import create_modelo_work_unit_via_cli
 from cadrumo.tests.cli_envelope import parse_json_object, require_error_document, require_schema_envelope
+from cadrumo_runtime.host.tests.frontend.cli.modelo_cli import create_modelo_work_unit_via_cli
 
 from .._models import UnderDeclarationScenario
 from .._runner import check_under_declaration_scenario
@@ -72,14 +77,15 @@ _EXPECTED_LEGAL_REFS = ("ley-27-2014:art-10", "ley-27-2014:art-30")
 
 
 @pytest.fixture
-def runtime_profile(tmp_path: Any) -> Iterator[TestRuntimeProfile]:
+def runtime_profile(tmp_path: Any, run_cadrumo_cli: Callable[..., Result]) -> Iterator[TestRuntimeProfile]:
     """Real-session backend (real KEK/DEK, real SQLite per active bucket)."""
-    with isolated_cli_runtime_profile(
+    with bind_public_cli_runner(run_cadrumo_cli), isolated_cli_runtime_profile(
         tmp_path=tmp_path,
         bucket_id=_PROFILE_ID,
         label="Under-declaration golden-eval test profile",
     ) as profile:
-        yield profile
+        with operator_runtime_scope():
+            yield profile
 
 
 def _seed_legal_entity_profile(runtime_profile: TestRuntimeProfile) -> None:

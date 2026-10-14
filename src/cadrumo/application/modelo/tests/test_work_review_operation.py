@@ -257,7 +257,7 @@ def test_review_period_is_admitted_once_and_sealed_for_result(authority_operatio
     assert loads == ["load"]
 
 
-def test_work_review_is_admitted_on_the_mcp_frontend_without_a_commit_door(
+def test_work_review_is_admitted_on_the_external_client_frontend_without_a_commit_door(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     unit = _unit()
@@ -300,12 +300,12 @@ def test_work_review_is_admitted_on_the_mcp_frontend_without_a_commit_door(
             profile_id=_PROFILE,
             destination_id=uuid4(),
             action=AccessAction.SUBMIT,
-            frontend=OperationFrontendProjection.MCP,
+            frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
             contract=registration.contract,
             published_authority=Availability.AVAILABLE,
             authority_operation=authority_operation,
         ),
     )
-    assert resolved.request.frontend is OperationFrontendProjection.MCP
+    assert resolved.request.frontend is OperationFrontendProjection.EXTERNAL_CLIENT
     assert resolved.request.periods == frozenset({_PERIOD})
     assert AccessAction.COMMIT not in resolved.policy.actions

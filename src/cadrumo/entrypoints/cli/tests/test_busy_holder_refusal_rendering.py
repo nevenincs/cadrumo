@@ -8,9 +8,10 @@ from uuid import uuid4
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
-from ....adapters.local_runtime.frontend_operation_client import RuntimeOperationFrontend
-from ....application.runtime.profile_access import RuntimeAccessRefusal, RuntimeReply
+from cadrumo_client.contracts.profile_access import AccessRefusal, Reply
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_client.transport.frontend_operation_client import OperationFrontend
+
 from ....application.user_profile.access_contracts import AccessDenialCode
 from ....application.user_profile.access_errors import ProfileAccessRefusedError
 from ..errors import render_error_payload
@@ -20,15 +21,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _HOLDER = "ab" * 32
 
 
-def _received(code: AccessDenialCode, holder: str | None) -> RuntimeFrontendRefusedError:
+def _received(code: AccessDenialCode, holder: str | None) -> FrontendRefusedError:
     """Decode a runtime refusal from its wire bytes, as a client receives it."""
-    reply = RuntimeAccessRefusal(
+    reply = AccessRefusal(
         request_id=uuid4(), runtime_boot_id=uuid4(), connection_id=uuid4(), code=code, holder_operation_id=holder
     )
-    decoded = RuntimeReply.model_validate_json(reply.model_dump_json()).root
-    assert isinstance(decoded, RuntimeAccessRefusal)
-    with pytest.raises(RuntimeFrontendRefusedError) as raised:
-        RuntimeOperationFrontend._raise_wire_refusal(decoded)
+    decoded = Reply.model_validate_json(reply.model_dump_json()).root
+    assert isinstance(decoded, AccessRefusal)
+    with pytest.raises(FrontendRefusedError) as raised:
+        OperationFrontend._raise_wire_refusal(decoded)
     return raised.value
 
 
@@ -52,7 +53,7 @@ def test_a_refusal_that_names_no_holder_renders_no_holder_line() -> None:
 
 def test_no_other_refusal_can_name_a_holder() -> None:
     with pytest.raises(ValidationError, match="only a busy subject"):
-        RuntimeAccessRefusal(
+        AccessRefusal(
             request_id=uuid4(),
             runtime_boot_id=uuid4(),
             connection_id=uuid4(),

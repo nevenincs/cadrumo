@@ -73,7 +73,7 @@ msgstr "Necessites:"
 #: ../../how-to/authenticate-with-aeat.md:20
 msgid ""
 "an [active profile](profile-setup.md#what-the-active-profile-means). "
-"`aeat config auth configure` refuses with `No active profile.` until you "
+"`cadrumo-runtime config auth configure` refuses with `No active profile.` until you "
 "create one. Start the interactive wizard (it asks for your NIF or NIE; "
 "for a Spanish citizen, the NIF is the DNI number plus letter). It prompts"
 " for the profile passphrase and offers an optional recovery code once the"
@@ -94,11 +94,11 @@ msgstr ""
 
 #: ../../how-to/authenticate-with-aeat.md:32
 msgid ""
-"the `browser` extra, because `aeat config auth login` and every live read"
+"the `browser` extra, because `cadrumo-runtime config auth login` and every live read"
 " drive a browser. Install it with `pip install \"cadrumo[browser]\"`, or "
 "follow [Install Cadrumo](../workstation-setup.md)."
 msgstr ""
-"l'extra `browser`, perquè `aeat config auth login` i cada lectura en "
+"l'extra `browser`, perquè `cadrumo-runtime config auth login` i cada lectura en "
 "directe fan servir un navegador. Instal·la'l amb `pip install "
 "\"cadrumo[browser]\"` o segueix [Instal·la Cadrumo](../workstation-"
 "setup.md)."
@@ -173,11 +173,11 @@ msgstr ""
 #: ../../how-to/authenticate-with-aeat.md:70
 msgid ""
 "`certificate`: bind the passphrase to a registered certificate source "
-"with `aeat config auth certificate secret set`, or set the "
+"with `cadrumo-runtime config auth certificate secret set`, or set the "
 "`CADRUMO_CERTIFICATE_PASSWORD_SECRET` environment variable."
 msgstr ""
 "`certificate`: vincula la frase de contrasenya a un origen de certificat "
-"registrat amb `aeat config auth certificate secret set`, o defineix la "
+"registrat amb `cadrumo-runtime config auth certificate secret set`, o defineix la "
 "variable d'entorn `CADRUMO_CERTIFICATE_PASSWORD_SECRET`."
 
 #: ../../how-to/authenticate-with-aeat.md:73
@@ -323,11 +323,11 @@ msgstr "Gestiona diversos certificats"
 #: ../../how-to/authenticate-with-aeat.md:144
 msgid ""
 "If you act for several entities, register one certificate per entity. Do "
-"not reconfigure `aeat config auth configure --file` every time you "
+"not reconfigure `cadrumo-runtime config auth configure --file` every time you "
 "switch."
 msgstr ""
 "Si actues per a diverses entitats, registra un certificat per a "
-"cadascuna. No tornis a executar `aeat config auth configure --file` cada "
+"cadascuna. No tornis a executar `cadrumo-runtime config auth configure --file` cada "
 "cop que canvies."
 
 #: ../../how-to/authenticate-with-aeat.md:147
@@ -397,10 +397,10 @@ msgstr ""
 
 #: ../../how-to/authenticate-with-aeat.md:193
 msgid ""
-"Re-run `aeat config auth certificate check` to confirm the new expiry "
+"Re-run `cadrumo-runtime config auth certificate check` to confirm the new expiry "
 "date."
 msgstr ""
-"Torna a executar `aeat config auth certificate check` per confirmar la "
+"Torna a executar `cadrumo-runtime config auth certificate check` per confirmar la "
 "nova data de caducitat."
 
 #: ../../how-to/authenticate-with-aeat.md:196
@@ -565,15 +565,15 @@ msgstr "Mostra què hi ha registrat per al perfil actiu:"
 
 #: ../../how-to/authenticate-with-aeat.md:288
 msgid ""
-"`aeat config auth apoderado check` is the command for the live check, but"
+"`cadrumo-runtime config auth apoderado check` is the command for the live check, but"
 " the live check is not available. It refuses with `The live check of "
 "representatives is unavailable, or contact with the AEAT failed.` Use "
-"`aeat config auth apoderado status` for the offline configuration read."
+"`cadrumo-runtime config auth apoderado status` for the offline configuration read."
 msgstr ""
-"`aeat config auth apoderado check` és l'ordre de la comprovació en "
+"`cadrumo-runtime config auth apoderado check` és l'ordre de la comprovació en "
 "directe, però la comprovació en directe no està disponible. Es nega amb "
 "`The live check of representatives is unavailable, or contact with the "
-"AEAT failed.` Usa `aeat config auth apoderado status` per a la lectura de"
+"AEAT failed.` Usa `cadrumo-runtime config auth apoderado status` per a la lectura de"
 " la configuració fora de línia."
 
 #: ../../how-to/authenticate-with-aeat.md:290
@@ -607,11 +607,11 @@ msgstr "[Diagnostica i repara la teva configuració local](troubleshooting.md)"
 
 #: ../../how-to/authenticate-with-aeat.md:305
 msgid ""
-"Run `aeat config auth test` before each live-read task. Follow [Renew "
+"Run `cadrumo-runtime config auth test` before each live-read task. Follow [Renew "
 "your certificate before it expires](#renew-your-certificate-before-it-"
 "expires) when the command reports an expiry warning."
 msgstr ""
-"Executa `aeat config auth test` abans de cada tasca de lectura en "
+"Executa `cadrumo-runtime config auth test` abans de cada tasca de lectura en "
 "directe. Segueix [Renova el certificat abans que caduqui](#renew-your-"
 "certificate-before-it-expires) quan l'ordre informi d'un avís de "
 "caducitat."

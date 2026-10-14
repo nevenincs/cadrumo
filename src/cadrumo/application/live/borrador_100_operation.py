@@ -1,6 +1,6 @@
-"""Exact-profile borrador capture and separately authorized human/agent reads.
+"""Exact-profile borrador capture and separately authorized human/automation reads.
 
-The canonical snapshot service owns resolution and lifecycle transitions. Agent
+The canonical snapshot service owns resolution and lifecycle transitions. automation
 queries project binding values and coordinates, excluding source provenance and
 document prose. Each concrete lifecycle save obtains fresh commit authority;
 the existing multi-save lifecycle is not an atomic transaction.
@@ -387,7 +387,7 @@ def _capabilities(*, importing: bool) -> OperationCapabilities:
 def build_borrador_100_operation_definitions(
     factory: Borrador100OperationPortsFactory,
 ) -> tuple[OperationDefinition, ...]:
-    """Declare full human reads, safe agent queries and human local PDF import."""
+    """Declare full human reads, safe automation queries and human local PDF import."""
     reads = tuple(
         build_single_phase_definition(
             definition_id=definition_id,

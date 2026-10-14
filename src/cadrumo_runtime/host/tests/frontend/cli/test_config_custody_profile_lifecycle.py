@@ -1,0 +1,937 @@
+"""Real-entrypoint custody coverage for the profile lifecycle surface.
+
+The ``"buckets"`` literal below is not arbitrary
+injected values: the subprocess CLI harness sets no bucket-root or
+keystore-dir override, so ``tmp_path / "buckets"`` and
+``tmp_path / "keystore"`` check production's real DEFAULT-derived
+locations -- the on-disk shape the CLI must actually produce for the
+profile lifecycle to be filing-grade. Re-deriving either side from the
+taxonomy accessor would make the assertion agree unconditionally with
+the code path it exists to independently confirm.
+
+Profiles are registered in-process and the storage root is handed to the
+subprocess CLI. That is the only available shape rather than a convenience:
+credential registration is the sole creation door and it takes a passphrase
+as an argument, so no CLI verb -- and therefore no subprocess -- can mint a
+profile. CLI assertions run through the real console script. Keychainless
+human sign-out uses a password-authenticated native frontend connection;
+a fresh CLI connection requires a persisted receipt.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import json
+import subprocess
+from datetime import UTC, datetime
+from pathlib import Path
+from uuid import UUID
+
+import pytest
+
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.application.user_profile.profile_pointer import observe_active_profile_pointer
+from cadrumo.core.config import load_settings, override_settings
+from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
+from cadrumo.core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
+from cadrumo.tests.call_time_refusing_keyring import CALL_TIME_REFUSING_KEYRING
+from cadrumo.tests.inventory import REPO_ROOT
+from cadrumo.tests.os_keychain_hook import require_os_credential_store
+from cadrumo.tests.subprocess_cli import run_cadrumo_subprocess
+from cadrumo_client.contracts.sign_in import HumanSignedOut, SignInPresence
+from cadrumo_client.transport.installed_client import open_installed_client
+from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixture import native_profile_view_server
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+# The two ways a host cannot custody a session key: no usable backend at all,
+# and a backend that passes the usability probe and then refuses every call
+# with a non-keyring exception, as a Windows process without a logon session
+# does (error 1312). Both must degrade to the same typed, process-scoped login.
+_KEYCHAIN_REFUSALS = pytest.mark.parametrize(
+    "keychain_backend",
+    ["keyring.backends.fail.Keyring", CALL_TIME_REFUSING_KEYRING],
+    ids=["no-usable-backend", "call-time-logon-session-refusal"],
+)
+
+
+def _run_cadrumo(
+    storage_root: Path,
+    args: tuple[str, ...],
+    *,
+    passphrase: str | None = None,
+    extra_env: dict[str, str] | None = None,
+    stdin_payload: str | None = None,
+) -> subprocess.CompletedProcess[str]:
+    resolved_passphrase = passphrase or load_settings().cadrumo_dev_test_database_password.get_secret_value()
+    return run_cadrumo_subprocess(
+        args,
+        settings={
+            "cadrumo_local_storage_root": storage_root,
+            "cadrumo_secret_passphrase": resolved_passphrase,
+            "cadrumo_output_language": "en",
+        },
+        env_strip_prefixes=("AEAT_", "PYTEST_"),
+        extra_env=extra_env,
+        stdin_payload=stdin_payload,
+        timeout=None,
+    )
+
+
+def _combined_output(result: subprocess.CompletedProcess[str]) -> str:
+    return f"{result.stdout}\n{result.stderr}"
+
+
+def _register_profile(storage_root: Path, label: str, **facts: str) -> str:
+    """Register one profile in-process against ``storage_root``, and return its id.
+
+    Credential registration is the only creation door and it takes a passphrase
+    as an argument rather than a flag, so a subprocess cannot mint a profile.
+    The sanctioned shape is to create in-process and hand the storage root to
+    the child, which then reaches the profile through its own login.
+    """
+    with override_settings(
+        cadrumo_local_storage_root=storage_root,
+        cadrumo_secret_passphrase=load_settings().cadrumo_dev_test_database_password,
+        cadrumo_active_profile=None,
+    ):
+        profile_id = register_cli_profile(label=label, facts=facts)
+        # The seed runs in this pytest process, while the behaviour under test
+        # runs in a child. Release the parent's real SQLite engine so Windows
+        # observes the same process boundary as an operator's completed create
+        # command and can rename the capsule during deletion.
+        from cadrumo.adapters.persistence.storage.sql.engine import dispose_engine
+        from cadrumo.adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
+        from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
+
+        reset_test_profile_session()
+        dispose_engine()
+        ProfileCapsuleLifecycle().select(profile_id)
+        return profile_id
+
+
+def _assert_cli_logout_requires_human_proof(storage_root: Path) -> None:
+    """The real CLI must refuse a fresh connection without a shared receipt."""
+    selected = observe_active_profile_pointer(storage_root)
+    refused = _run_cadrumo(storage_root, ("--format", "json", "config", "logout"))
+    assert refused.returncode == 2, _combined_output(refused)
+    envelope = json.loads(refused.stderr)
+    assert envelope["status"] == "error"
+    assert envelope["error"]["code"] == "REFUSED_CLI_BOUNDARY"
+    assert envelope["error"]["context"]["reason"] == "absent"
+    assert observe_active_profile_pointer(storage_root) == selected
+
+
+def _sign_out_password_authenticated_connection(storage_root: Path, profile_id: str) -> HumanSignedOut:
+    """Exercise real keychainless sign-out on its own proven native connection."""
+    with override_settings(cadrumo_local_storage_root=storage_root):
+        proof = bytearray(load_settings().cadrumo_dev_test_database_password.get_secret_value(), "utf-8")
+        try:
+            with asyncio.run(
+                open_installed_client(profile_id=UUID(profile_id), frontend=OperationFrontendProjection.CLI)
+            ) as client:
+                admitted = client.login_password(proof, persist_receipt=False)
+                assert admitted.human_login is not None
+                assert not admitted.human_login.session_persisted
+                session_id = admitted.status.session_id
+                assert session_id is not None
+                signed_out = client.human_sign_out()
+                assert signed_out.profile_id == UUID(profile_id)
+                assert session_id in signed_out.session_ids
+                assert signed_out.receipt_removed
+                assert client.sign_in_status().status.presence is SignInPresence.ABSENT
+                return signed_out
+        finally:
+            proof[:] = bytes(len(proof))
+
+
+def test_logged_out_inactive_profile_delete_succeeds_through_real_root(tmp_path: Path) -> None:
+    """Only an explicitly deselected target can be deleted after proven human sign-out."""
+    profile_id = _register_profile(tmp_path, "delete-after-logout")
+
+    with native_profile_view_server(tmp_path):
+        _assert_cli_logout_requires_human_proof(tmp_path)
+        _sign_out_password_authenticated_connection(tmp_path, profile_id)
+        assert observe_active_profile_pointer(tmp_path).bucket_id == profile_id
+
+        # Human sign-out revokes access; the selected target remains protected.
+        still_selected = _run_cadrumo(
+            tmp_path,
+            ("--format", "json", "config", "profile", "delete", "delete-after-logout", "--yes"),
+        )
+        assert still_selected.returncode == 2, _combined_output(still_selected)
+        refusal = json.loads(still_selected.stderr)
+        assert refusal["error"]["code"] == "REFUSED_CLI_BOUNDARY"
+        assert refusal["error"]["context"] == {
+            "name": "delete-after-logout",
+            "profile_id": CLI_PROFILE_ID_PLACEHOLDER,
+        }
+        assert observe_active_profile_pointer(tmp_path).bucket_id == profile_id
+
+        replacement_id = _register_profile(tmp_path, "surviving-replacement")
+        assert observe_active_profile_pointer(tmp_path).bucket_id == replacement_id
+        deleted = _run_cadrumo(
+            tmp_path,
+            ("--format", "json", "config", "profile", "delete", "delete-after-logout", "--yes"),
+        )
+        assert deleted.returncode == 0, _combined_output(deleted)
+        envelope = json.loads(deleted.stdout)
+        assert envelope["status"] == "success"
+        assert envelope["result"]["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
+        assert envelope["result"]["display_name"] == "delete-after-logout"
+        assert envelope["result"]["deleted"] is True
+
+        listed = _run_cadrumo(tmp_path, ("--format", "json", "config", "profile", "list"))
+        assert listed.returncode == 0, _combined_output(listed)
+        assert [
+            (profile["name"], profile["active"]) for profile in json.loads(listed.stdout)["result"]["profiles"]
+        ] == [("surviving-replacement", True)]
+
+
+def test_active_profile_delete_still_refuses_through_real_root(tmp_path: Path) -> None:
+    """The leaf exemption never bypasses the exact active-pointer refusal."""
+    _register_profile(tmp_path, "keep-active")
+
+    deleted = _run_cadrumo(
+        tmp_path,
+        ("--format", "json", "config", "profile", "delete", "keep-active", "--yes"),
+    )
+    assert deleted.returncode != 0, _combined_output(deleted)
+    envelope = json.loads(deleted.stderr)
+    assert envelope["status"] == "error"
+    assert envelope["error"]["code"] == "REFUSED_CLI_BOUNDARY"
+    assert envelope["error"]["context"] == {
+        "name": "keep-active",
+        "profile_id": CLI_PROFILE_ID_PLACEHOLDER,
+    }
+
+    listed = _run_cadrumo(tmp_path, ("--format", "json", "config", "profile", "list"))
+    assert listed.returncode == 0, _combined_output(listed)
+    profiles = json.loads(listed.stdout)["result"]["profiles"]
+    assert [(profile["bucket_id"], profile["name"], profile["active"]) for profile in profiles] == [
+        ("<bucket-id>", "keep-active", True)
+    ]
+
+
+@pytest.mark.os_keychain  # cross-process resumption needs a minted acceleration receipt
+def test_registered_profile_custody_survives_logout_and_reopens_on_login(tmp_path: Path) -> None:
+    """Profile lifecycle is the custody surface; no legacy bootstrap command is reintroduced.
+
+    The profile is registered in-process and the storage root is handed to the
+    subprocess CLI, which is the only shape available: credential registration
+    takes a passphrase as an argument and no CLI verb creates a profile.
+
+    The file-fallback secret-store assertions this test carried (``master.key``
+    and ``master.kdf`` under the configured secret directory) were dropped
+    rather than moved. No live door writes that store any more -- a registered
+    profile's custody rides its own capsule envelope, and the whole lifecycle
+    below runs against a root that has no secrets directory at all -- so the
+    assertions described an artefact of the retired creation path, not a
+    property of custody.
+    """
+    require_os_credential_store()
+
+    _register_profile(
+        tmp_path,
+        "custody",
+        **{
+            "identity.tax_id": "12345678Z",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Custody Operator",
+            "identity.surnames": "Operator",
+            "activities.description": "design",
+            "iva.regime": "GENERAL",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+        },
+    )
+
+    bucket_dirs = scan_directory(tmp_path / "buckets", select=DirectoryEntryKind.DIRECTORIES)
+    assert len(bucket_dirs) == 1
+
+    # The plaintext bucket manifest this test used to read is retired: every
+    # resolution path projects committed custody capsules and none reads a
+    # manifest, so the label is asserted through the operator-facing listing,
+    # which is the surface an operator actually reconciles against.
+    listed = _run_cadrumo(tmp_path, ("config", "profile", "list"))
+    assert listed.returncode == 0, _combined_output(listed)
+    assert "custody" in listed.stdout
+
+    logged_out = _run_cadrumo(tmp_path, ("config", "logout"))
+    assert logged_out.returncode == 0, _combined_output(logged_out)
+    assert "logged_out_profile\tcustody" in logged_out.stdout
+
+    # Deliberately no passphrase channel: this is the os_keychain subject.
+    # The login must reopen the session by unwrapping its DEK under the
+    # keychain-custodied key, so handing it a passphrase here would prove
+    # only that a passphrase works and retire the resumption this covers.
+    switched = _run_cadrumo(tmp_path, ("config", "login", "custody"))
+    assert switched.returncode == 0, _combined_output(switched)
+    assert "active_profile\tcustody" in switched.stdout
+
+    # Deletion refuses while the profile is active -- a contract with its own
+    # coverage in this module -- so the reopened session is closed again first.
+    closed_again = _run_cadrumo(tmp_path, ("config", "logout"))
+    assert closed_again.returncode == 0, _combined_output(closed_again)
+
+    deleted = _run_cadrumo(tmp_path, ("config", "profile", "delete", "custody", "--yes"))
+    assert deleted.returncode == 0, _combined_output(deleted)
+    # ``deleted`` is the field that separates the confirmed run from the
+    # preflight posture the same schema serves, so it is what proves the
+    # capsule was destroyed rather than merely described.
+    assert "deleted\ttrue" in deleted.stdout
+
+    remaining = _run_cadrumo(tmp_path, ("--format", "json", "config", "profile", "list"))
+    assert remaining.returncode == 0, _combined_output(remaining)
+    assert json.loads(remaining.stdout)["result"]["profiles"] == []
+
+    retired = _run_cadrumo(tmp_path, ("config", "init", "--help"))
+    assert retired.returncode != 0
+    assert "config.init" not in _combined_output(retired)
+
+
+def test_profile_logout_is_the_only_strong_logout_before_switch(tmp_path: Path) -> None:
+    """Separate receipt-required CLI refusal from proven keychainless human sign-out."""
+
+    profile_id = _register_profile(
+        tmp_path,
+        "custody",
+        **{
+            "identity.tax_id": "12345678Z",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Custody Operator",
+            "identity.surnames": "Operator",
+            "activities.description": "design",
+            "iva.regime": "GENERAL",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+        },
+    )
+
+    with native_profile_view_server(tmp_path):
+        _assert_cli_logout_requires_human_proof(tmp_path)
+        _sign_out_password_authenticated_connection(tmp_path, profile_id)
+        assert observe_active_profile_pointer(tmp_path).bucket_id == profile_id
+
+        removed_lock = _run_cadrumo(tmp_path, ("config", "lock"))
+        assert removed_lock.returncode != 0
+        assert "No such command 'lock'" in _combined_output(removed_lock)
+
+        missing_default = _run_cadrumo(tmp_path, ("config", "login"))
+        assert missing_default.returncode != 0
+        assert "No passphrase channel is available" in _combined_output(missing_default)
+
+        passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
+        login_payload = json.dumps({"passphrase": passphrase})
+        switched_by_name = _run_cadrumo(
+            tmp_path,
+            ("config", "login", "custody", "--secrets-stdin"),
+            stdin_payload=login_payload,
+        )
+        assert switched_by_name.returncode == 0, _combined_output(switched_by_name)
+        assert "active_profile\tcustody" in switched_by_name.stdout
+
+        switched_default = _run_cadrumo(
+            tmp_path,
+            ("config", "login", "--secrets-stdin"),
+            stdin_payload=login_payload,
+        )
+        assert switched_default.returncode == 0, _combined_output(switched_default)
+        assert "active_profile\tcustody" in switched_default.stdout
+
+
+@pytest.mark.windows_only
+def test_config_passphrase_change_self_authenticates_without_a_keychain(tmp_path: Path) -> None:
+    """The rotation leaf proves custody itself and survives a failing keychain.
+
+    This is the root-gate regression: the command's current
+    passphrase is already the exact active profile's proof, so a keychain-free
+    process must reach the leaf rather than demand a separate root credential.
+    """
+    _register_profile(
+        tmp_path,
+        "custody",
+        **{
+            "identity.tax_id": "12345678Z",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Custody Operator",
+            "identity.surnames": "Operator",
+            "activities.description": "design",
+            "iva.regime": "GENERAL",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+        },
+    )
+    provisioning_passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
+    rotated_value = "correct horse battery staple"
+    failing_keychain = {"PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring"}
+
+    with native_profile_view_server(tmp_path):
+        changed = _run_cadrumo(
+            tmp_path,
+            ("config", "passphrase", "change", "--secrets-stdin"),
+            extra_env=failing_keychain,
+            stdin_payload=json.dumps(
+                {
+                    "current_passphrase": provisioning_passphrase,
+                    "new_passphrase": rotated_value,
+                    "new_passphrase_confirmation": rotated_value,
+                }
+            ),
+        )
+        assert changed.returncode == 0, _combined_output(changed)
+        assert "changed\tyes" in changed.stdout
+        assert provisioning_passphrase not in _combined_output(changed)
+        assert rotated_value not in _combined_output(changed)
+
+        refused_old_proof = _run_cadrumo(
+            tmp_path,
+            ("config", "passphrase", "change", "--secrets-stdin"),
+            extra_env=failing_keychain,
+            stdin_payload=json.dumps(
+                {
+                    "current_passphrase": provisioning_passphrase,
+                    "new_passphrase": "irrelevant replacement value",
+                    "new_passphrase_confirmation": "irrelevant replacement value",
+                }
+            ),
+        )
+        assert refused_old_proof.returncode == 2, _combined_output(refused_old_proof)
+
+        rotated_again = _run_cadrumo(
+            tmp_path,
+            ("config", "passphrase", "change", "--secrets-stdin"),
+            extra_env=failing_keychain,
+            stdin_payload=json.dumps(
+                {
+                    "current_passphrase": rotated_value,
+                    "new_passphrase": "second rotated passphrase value",
+                    "new_passphrase_confirmation": "second rotated passphrase value",
+                }
+            ),
+        )
+        assert rotated_again.returncode == 0, _combined_output(rotated_again)
+
+
+@_KEYCHAIN_REFUSALS
+def test_profile_root_secret_authenticates_keychain_free_read_in_process(tmp_path: Path, keychain_backend: str) -> None:
+    """A parsed resume-fallback leaf can authenticate and continue in one process."""
+    _register_profile(
+        tmp_path,
+        "custody",
+        **{
+            "identity.tax_id": "12345678Z",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Custody Operator",
+            "identity.surnames": "Operator",
+            "activities.description": "design",
+            "iva.regime": "GENERAL",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+        },
+    )
+    passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
+
+    with native_profile_view_server(tmp_path, keychain_backend=keychain_backend):
+        shown = _run_cadrumo(
+            tmp_path,
+            ("--profile-secrets-stdin", "config", "profile", "view", "custody"),
+            extra_env={"PYTHON_KEYRING_BACKEND": keychain_backend},
+            stdin_payload=json.dumps({"profile_passphrase": passphrase}),
+        )
+
+        assert shown.returncode == 0, _combined_output(shown)
+        assert "display_name\tcustody" in shown.stdout
+        assert "config.login.session_not_persisted" in shown.stdout
+        assert passphrase not in _combined_output(shown)
+
+        for command in (("config", "profile", "validate", "custody"), ("config", "profile", "history", "custody")):
+            result = _run_cadrumo(
+                tmp_path,
+                ("--profile-secrets-stdin", *command),
+                extra_env={"PYTHON_KEYRING_BACKEND": keychain_backend},
+                stdin_payload=json.dumps({"profile_passphrase": passphrase}),
+            )
+            assert result.returncode == 0, _combined_output(result)
+            assert passphrase not in _combined_output(result)
+
+
+@_KEYCHAIN_REFUSALS
+def test_keychain_free_root_login_notice_survives_a_real_leaf_refusal(tmp_path: Path, keychain_backend: str) -> None:
+    """A refusal after real Argon2 login carries the staged Notice on stderr."""
+    _register_profile(tmp_path, "custody")
+    passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
+
+    with native_profile_view_server(tmp_path, keychain_backend=keychain_backend):
+        refused = _run_cadrumo(
+            tmp_path,
+            (
+                "--format",
+                "json",
+                "--profile-secrets-stdin",
+                "app",
+                "ledger",
+                "view",
+                "transaction-does-not-exist",
+            ),
+            extra_env={"PYTHON_KEYRING_BACKEND": keychain_backend},
+            stdin_payload=json.dumps({"profile_passphrase": passphrase}),
+        )
+
+        output = _combined_output(refused)
+        assert refused.returncode != 0, output
+        envelope = json.loads(refused.stderr)
+        assert envelope["command"] == "ledger.view"
+        assert [notice["code"] for notice in envelope["notices"]] == ["config.login.session_not_persisted"]
+        assert passphrase not in output
+
+
+def test_keychain_free_root_login_notice_survives_callback_bad_parameter(tmp_path: Path) -> None:
+    """The Click control-flow funnel drains the Notice after real root login."""
+    _register_profile(tmp_path, "custody")
+    passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
+
+    with native_profile_view_server(tmp_path, keychain_backend="keyring.backends.fail.Keyring"):
+        refused = _run_cadrumo(
+            tmp_path,
+            (
+                "--format",
+                "json",
+                "--profile-secrets-stdin",
+                "config",
+                "profile",
+                "history",
+                "custody",
+                "--since",
+                "2026-02-01",
+                "--until",
+                "2026-01-01",
+            ),
+            extra_env={"PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring"},
+            stdin_payload=json.dumps({"profile_passphrase": passphrase}),
+        )
+
+        output = _combined_output(refused)
+        assert refused.returncode == 2, output
+        envelope = json.loads(refused.stderr)
+        assert [notice["code"] for notice in envelope["notices"]] == ["config.login.session_not_persisted"]
+        assert passphrase not in output
+
+
+def test_root_and_leaf_stdin_collision_refuses_before_fresh_tree_mutation(tmp_path: Path) -> None:
+    """Parsed cross-scope collision wins before profile lookup, reads, or setup writes."""
+    result = _run_cadrumo(
+        tmp_path,
+        ("--profile-secrets-stdin", "config", "passphrase", "change", "--secrets-stdin"),
+        stdin_payload="must-remain-unread",
+    )
+
+    output = _combined_output(result)
+    assert result.returncode == 2, output
+    assert "cannot carry both" in output.lower()
+    assert "json" not in output.lower()
+    assert not tmp_path.exists() or tuple(tmp_path.iterdir()) == ()
+
+
+@pytest.mark.parametrize("command", [("app",), ("config",), ("app", "diagnostics")])
+def test_terminal_introspection_groups_leave_a_fresh_root_state_free(tmp_path: Path, command: tuple[str, ...]) -> None:
+    result = _run_cadrumo(tmp_path, command)
+
+    assert result.returncode in {0, 2}, _combined_output(result)
+    assert not tmp_path.exists() or tuple(tmp_path.iterdir()) == ()
+
+
+def test_terminal_executable_group_preserves_root_secret_source_for_parsed_gate(
+    tmp_path: Path,
+) -> None:
+    result = _run_cadrumo(
+        tmp_path,
+        (
+            "--profile-secrets-stdin",
+            "app",
+            "quickfile",
+            "--modelo",
+            "303",
+            "--year",
+            "2025",
+            "--period",
+            "1T",
+        ),
+        stdin_payload="must-remain-unread",
+    )
+
+    output = _combined_output(result)
+    assert result.returncode == 2, output
+    assert "target" in output.lower()
+    assert "json" not in output.lower()
+
+
+def test_blank_explicit_profile_target_refuses_before_root_secret_read(tmp_path: Path) -> None:
+    _register_profile(tmp_path, "ambient")
+    result = _run_cadrumo(
+        tmp_path,
+        ("--profile-secrets-stdin", "config", "profile", "view", ""),
+        stdin_payload="must-remain-unread",
+    )
+
+    output = _combined_output(result)
+    assert result.returncode == 2, output
+    assert "json" not in output.lower()
+
+
+def test_self_authenticating_leaf_refuses_root_source_unread(tmp_path: Path) -> None:
+    result = _run_cadrumo(
+        tmp_path,
+        ("--profile-secrets-stdin", "config", "passphrase", "change"),
+        stdin_payload="must-remain-unread",
+    )
+
+    output = _combined_output(result)
+    assert result.returncode == 2, output
+    # The structured conditionality rather than the sentence: the prose that
+    # once carried the word "inapplicable" now says the same thing in other
+    # words, and it is localised, so pinning it pinned a translation.
+    assert '"not_applicable"' in output
+    # The subject of this case is that the payload is refused UNREAD, so the
+    # secret-shaped input must appear nowhere in what the command emitted.
+    assert "must-remain-unread" not in output
+    assert "json" not in output.lower()
+
+
+@pytest.mark.os_keychain
+def test_valid_resumed_session_refuses_root_source_unread(tmp_path: Path) -> None:
+    require_os_credential_store()
+    bucket_id = _register_profile(tmp_path, "custody")
+    passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
+    logged_in = _run_cadrumo(
+        tmp_path,
+        ("config", "login", "custody", "--secrets-stdin"),
+        stdin_payload=json.dumps({"passphrase": passphrase}),
+    )
+    assert logged_in.returncode == 0, _combined_output(logged_in)
+    from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import profile_session_path
+
+    assert profile_session_path(storage_root=tmp_path, profile_id=UUID(bucket_id)).is_file(), (
+        "the os_keychain lane requires a host backend that can persist the cross-process session"
+    )
+
+    refused = _run_cadrumo(
+        tmp_path,
+        ("--profile-secrets-stdin", "config", "profile", "view", "custody"),
+        stdin_payload="must-remain-unread",
+    )
+    output = _combined_output(refused)
+    assert refused.returncode == 2, output
+    assert "unused" in output.lower()
+    assert "json" not in output.lower()
+
+
+def test_passphrase_change_resolves_target_before_reading_machine_secrets(tmp_path: Path) -> None:
+    """An absent active target refuses without parsing the supplied payload."""
+    result = _run_cadrumo(
+        tmp_path,
+        ("config", "passphrase", "change", "--secrets-stdin"),
+        extra_env={"PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring"},
+        stdin_payload="not-json-and-must-remain-unread",
+    )
+    output = _combined_output(result)
+    assert result.returncode == 2, output
+    # "active profile" is a substring of "No active profile", so the old
+    # disjunction required only the weaker half -- and an output that named an
+    # active profile rather than its ABSENCE would have satisfied it.
+    assert "No active profile" in output
+    assert "JSON" not in output
+
+
+def test_config_help_exposes_first_class_custody_verbs(tmp_path: Path) -> None:
+    """The accepted custody verbs are mounted, and the retired ones are not.
+
+    ``login`` and ``logout`` are the canonical profile-session doors. Retired
+    spellings are asserted ABSENT in the same pass, because each cutover was a
+    deletion rather than a rename: an alias or a hidden registration would
+    satisfy a mounted-verb check while reinstating the door the ruling removed.
+
+    This list previously asserted ``recover`` and ``recovery`` were mounted
+    under ``config``. Both had been retired by an accepted ruling, so the
+    assertion outlived the decision it was written under and failed against a
+    tree that was correct -- the mirror of the repair that fixed gates
+    asserting removed verbs were absent. They are now checked in the retired
+    direction, which is the claim that is actually true and which still
+    catches a silent reinstatement. Optional recovery lives under the profile
+    subject as ``config profile recovery``, never at the ``config`` root.
+
+    ``passphrase change`` is the sole credential-rotation door. Its presence is
+    asserted beside login/logout while the older ambiguous custody spellings
+    remain physically absent.
+    """
+
+    for verb in ("login", "logout", "passphrase"):
+        help_result = _run_cadrumo(tmp_path, ("config", verb, "--help"))
+        assert help_result.returncode == 0, _combined_output(help_result)
+        assert verb in _combined_output(help_result)
+
+    for retired_verb in ("switch", "recover", "recovery"):
+        retired = _run_cadrumo(tmp_path, ("config", retired_verb, "--help"))
+        assert retired.returncode != 0, _combined_output(retired)
+        assert f"No such command '{retired_verb}'" in _combined_output(retired)
+
+
+def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: Path) -> None:
+    """CLI profile reads resolve explicit name, then --profile, then the pointer.
+
+    The environment holds no rung of this chain. A stale exported
+    ``CADRUMO_ACTIVE_PROFILE`` is carried through every invocation below
+    precisely to prove it is inert: selection comes from ``--profile`` or the
+    pointer file, never from the shell.
+    """
+
+    alpha_id = _register_profile(
+        tmp_path,
+        "alpha",
+        **{
+            "identity.tax_id": "12345678Z",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Alpha Operator",
+            "identity.surnames": "Operator",
+            "activities.description": "consulting",
+            "iva.regime": "GENERAL",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+        },
+    )
+    beta_id = _register_profile(
+        tmp_path,
+        "beta",
+        **{
+            "identity.tax_id": "87654321X",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Beta Operator",
+            "identity.surnames": "Operator",
+            "activities.description": "design",
+            "iva.regime": "GENERAL",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+        },
+    )
+
+    # The registration door returns the minted identity, so the ids are known
+    # without reading the retired plaintext bucket manifest.
+    # ``profile view`` does not render the manifest label across a process
+    # boundary, so selection is observed through a per-profile FACT instead.
+    # Alpha and Beta carry distinct ``identity.name`` values for exactly that
+    # purpose, and the assertion is the same claim: which profile resolved.
+    labels_by_id = {alpha_id: "alpha", beta_id: "beta"}
+    assert set(labels_by_id) == {
+        entry.name for entry in scan_directory(tmp_path / "buckets", select=DirectoryEntryKind.DIRECTORIES)
+    }
+
+    profile_secret_payload = json.dumps(
+        {"profile_passphrase": load_settings().cadrumo_dev_test_database_password.get_secret_value()}
+    )
+
+    def _run_authenticated(
+        args: tuple[str, ...],
+        *,
+        extra_env: dict[str, str] | None = None,
+    ) -> subprocess.CompletedProcess[str]:
+        return _run_cadrumo(
+            tmp_path,
+            ("--profile-secrets-stdin", *args),
+            extra_env=extra_env,
+            stdin_payload=profile_secret_payload,
+        )
+
+    with native_profile_view_server(tmp_path):
+        pointer_default = _run_authenticated(("config", "profile", "view"))
+        assert pointer_default.returncode == 0, _combined_output(pointer_default)
+        assert "identity.name\tBeta Operator" in pointer_default.stdout
+
+        # A set environment variable cannot displace the pointer: the pointer
+        # still selects beta even while the shell names alpha.
+        env_inert = _run_authenticated(
+            ("config", "profile", "view"),
+            extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
+        )
+        assert env_inert.returncode == 0, _combined_output(env_inert)
+        assert "identity.name\tBeta Operator" in env_inert.stdout
+
+        # The flag is the selection channel that does win over the pointer.
+        flag_default = _run_authenticated(("--profile", "alpha", "config", "profile", "view"))
+        assert flag_default.returncode == 0, _combined_output(flag_default)
+        assert "identity.name\tAlpha Operator" in flag_default.stdout
+
+        # An explicit NAME outranks ``--profile``. Explicit root authentication
+        # keeps custody availability constant, so the rendered profile identity
+        # directly proves which selector won: beta, not the alpha requested by the
+        # flag and environment. A precedence regression would render alpha.
+        explicit_name = _run_authenticated(
+            ("--profile", "alpha", "config", "profile", "view", "beta"),
+            extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
+        )
+        resolved_explicit_name = _combined_output(explicit_name)
+        assert explicit_name.returncode == 0, resolved_explicit_name
+        assert "display_name\tbeta" in resolved_explicit_name, resolved_explicit_name
+        assert "identity.name\tBeta Operator" in resolved_explicit_name, resolved_explicit_name
+        assert "display_name\talpha" not in resolved_explicit_name, resolved_explicit_name
+
+        explicit_root = _run_authenticated(
+            ("--profile", "alpha", "config", "profile", "view"),
+            extra_env={
+                "CADRUMO_ACTIVE_PROFILE": next(
+                    bucket_id for bucket_id, label in labels_by_id.items() if label == "beta"
+                ),
+            },
+        )
+        assert explicit_root.returncode == 0, _combined_output(explicit_root)
+        assert "identity.name\tAlpha Operator" in explicit_root.stdout
+
+        explicit_root_by_id = _run_authenticated(
+            ("--profile", alpha_id, "config", "profile", "view"),
+            extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
+        )
+        assert explicit_root_by_id.returncode == 0, _combined_output(explicit_root_by_id)
+        assert "identity.name\tAlpha Operator" in explicit_root_by_id.stdout
+
+        # Write-side precedence: configure-auth writes an
+        # ``AUTH_PROVIDER_CONFIGURED`` event into the resolved bucket's
+        # event history. The configure verb's stdout redacts the bucket id
+        # to a literal ``<profile-id>`` placeholder (security: bucket ids
+        # are sha256 fingerprints that must never reach stdout), so the
+        # stdout cannot distinguish alpha from beta. Each write therefore runs
+        # inside a recorded time window, and the two buckets' histories are read
+        # once at the end: every configure event must fall inside exactly one
+        # window, and that window's write must be the only one that bucket gained
+        # in it. Reading both histories after every write proved the same
+        # attribution with ten more processes.
+        write_windows: list[tuple[str, datetime, datetime]] = []
+
+        def _configure(
+            label: str,
+            prefix: tuple[str, ...],
+            extra_env: dict[str, str] | None = None,
+            *,
+            route: str = "app_request",
+        ) -> None:
+            opened = datetime.now(UTC)
+            result = _run_authenticated(
+                (*prefix, "config", "auth", "configure", "--provider", "clave_movil", "--clave-movil-route", route),
+                extra_env=extra_env,
+            )
+            closed = datetime.now(UTC)
+            assert result.returncode == 0, _combined_output(result)
+            assert "No active profile" not in _combined_output(result)
+            write_windows.append((label, opened, closed))
+
+        # Pointer-default precedence: pointer points at beta (last create wins).
+        _configure("pointer", ())
+        # The environment is INERT: a stale exported CADRUMO_ACTIVE_PROFILE naming
+        # alpha must not redirect the write, so it still lands in the pointer's
+        # beta. This is the write-side half of the retired env precedence, and it
+        # is asserted rather than deleted because a selection mechanism that
+        # silently redirected WRITES is the failure worth guarding against.
+        _configure("environment", (), extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id}, route="qr")
+        # Flag precedence: --profile IS the surviving override and does win.
+        _configure("flag", ("--profile", "alpha"), route="qr")
+        # The flag still decides even while a contradicting variable is exported:
+        # --profile names beta, the environment names alpha, and beta wins.
+        _configure("flag-over-environment", ("--profile", "beta"), extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id})
+
+        landed: dict[str, str] = {}
+        for bucket_id in (alpha_id, beta_id):
+            profile_name = labels_by_id[bucket_id]
+            result = _run_authenticated(
+                (
+                    "--profile",
+                    bucket_id,
+                    "config",
+                    "profile",
+                    "history",
+                    profile_name,
+                    "--event-type",
+                    "auth.provider.configured",
+                ),
+            )
+            assert result.returncode == 0, _combined_output(result)
+            assert f"profile\t{profile_name}" in result.stdout
+            assert f"bucket_id\t{bucket_id}" not in result.stdout
+            for line in result.stdout.splitlines():
+                if "\tauth.provider.configured\t" not in line:
+                    continue
+                occurred = datetime.fromisoformat(line.split("\t", 1)[0])
+                windows = [label for label, opened, closed in write_windows if opened <= occurred <= closed]
+                assert len(windows) == 1, f"{profile_name} event at {occurred} matches write windows {windows}"
+                assert windows[0] not in landed, f"the {windows[0]} write landed more than once"
+                landed[windows[0]] = profile_name
+
+        assert landed == {
+            "pointer": "beta",
+            "environment": "beta",
+            "flag": "alpha",
+            "flag-over-environment": "beta",
+        }, (
+            "the pointer default and a stale exported variable must write to beta, "
+            "and --profile must win over both; writes landed as "
+            f"{landed}"
+        )
+
+
+def test_profile_lifecycle_storage_spans_are_application_owned() -> None:
+    """CLI and wizard code delegate custody spans to application profile lifecycle operations."""
+
+    forbidden_tokens = (
+        "activate_master_key_provider",
+        "get_master_key_provider",
+        "_write_active_profile_pointer",
+        "_clear_active_profile_pointer",
+        "capture_active_profile_pointer",
+        "restore_active_profile_pointer",
+        "override_settings(cadrumo_active_profile",
+    )
+    # Whole packages, not two named files. This gate used to pin one module in
+    # each; when the wizard's command module was promoted to a public name the
+    # pin pointed at a path that no longer existed, and a relocation that
+    # happened to land on another existing file would have made it pass while
+    # scanning the wrong thing. Deriving the set means a module moved, renamed
+    # or added is covered without anyone remembering to extend a list.
+    scanned = [
+        path
+        for package in ("entrypoints/cli/config", "application/wizard")
+        for path in sorted((REPO_ROOT / "src" / "cadrumo" / package).rglob("*.py"))
+        if "tests" not in path.relative_to(REPO_ROOT).parts
+    ]
+
+    assert len(scanned) > 50, f"the custody-span scan collapsed to {len(scanned)} files; it would pass vacuously"
+
+    offenders = [
+        f"{path.relative_to(REPO_ROOT).as_posix()}: {token}"
+        for path in scanned
+        for token in forbidden_tokens
+        if token in path.read_text(encoding="utf-8")
+    ]
+
+    assert offenders == []

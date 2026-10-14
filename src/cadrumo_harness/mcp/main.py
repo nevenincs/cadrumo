@@ -35,20 +35,24 @@ def main() -> None:
     required_version = os.environ.get("CADRUMO_MCP_REQUIRED_VERSION")
     if required_version is not None and version("cadrumo") != required_version:
         parser.error("installed Cadrumo cohort does not match the required version")
-    from cadrumo.application.operations.mcp_surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES, mcp_surface
+    from .surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES, mcp_surface
 
     try:
         surface = mcp_surface(DEFAULT_MCP_SURFACE if args.surface is None else args.surface)
     except KeyError:
         known = ", ".join(sorted(MCP_SURFACES))
         parser.error(f"unknown surface {args.surface!r}; the surfaces this version serves are: {known}")
-    from cadrumo.core.logging import configure_logging
+    from cadrumo.core.logging import configure_logging, register_first_party_logger
 
+    register_first_party_logger("cadrumo_harness")
     configure_logging()
+    from cadrumo.core.diagnostic_log import diagnostic_process
+
     try:
         from .server import serve
 
-        serve(profile_id=args.profile_id, credential_reference=args.credential_reference, surface=surface)
+        with diagnostic_process("external_client"):
+            serve(profile_id=args.profile_id, credential_reference=args.credential_reference, surface=surface)
     except ModuleNotFoundError as error:
         if error.name != "mcp":
             raise

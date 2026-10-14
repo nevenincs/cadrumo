@@ -2,7 +2,7 @@
 
 ``aeat app ledger invoice wizard`` is the fallback entry point for
 when automated extraction (``ledger evidence extract`` / vision OCR) is
-unavailable or insufficient: the operator (an autonomous LLM agent that cannot
+unavailable or insufficient: the operator (an delegated operator that cannot
 answer an interactive prompt) supplies every invoice field as CLI options in
 one call. This module validates each field independently -- reusing the same
 authority-backed
@@ -700,7 +700,7 @@ def create_invoice_via_wizard(
         operation: Exact retained authority pin, or the ordinary bundled default.
         ports: Required catalogue-creation capabilities for the active bucket.
         actor: Identifier stamped on the creation audit event. It is what tells
-            an invoice an agent entered from one the person entered.
+            an invoice an automation entered from one the person entered.
 
     Returns:
         :class:`InvoiceWizardResult` naming the resolved invoice and whether

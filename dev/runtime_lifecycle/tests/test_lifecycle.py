@@ -9,16 +9,16 @@ from uuid import uuid4
 
 import pytest
 
-from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.application.operations.frontend_requests import (
     OperationPublicPhaseEventV1,
 )
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from cadrumo.application.runtime.profile_access import RuntimeAccessRefusal, RuntimeProfileLogin
-from cadrumo.application.runtime.sign_in import SignInPresence
 from cadrumo.application.user_profile.login_session import borrow_profile_receipt_key
 from cadrumo.application.user_profile.profile_pointer import observe_active_profile_pointer
 from cadrumo.core.operations import OperationLifecycle, OperationTerminalCondition
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.profile_access import AccessRefusal, ProfileLogin
+from cadrumo_client.contracts.sign_in import SignInPresence
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
 from ..client_probes import (
     _execute_read,
@@ -78,7 +78,7 @@ def test_login_logout_profile_switch_and_stale_receipt(harness: LifecycleHarness
         assert observer.client.sign_in_status().status.presence is SignInPresence.ABSENT
         forged = harness.connect(first.profile_id)
         refusal = forged.wire.login(
-            RuntimeProfileLogin(
+            ProfileLogin(
                 request_id=uuid4(),
                 profile_id=first.profile_id,
                 method="receipt",
@@ -87,7 +87,7 @@ def test_login_logout_profile_switch_and_stale_receipt(harness: LifecycleHarness
             stale_proof,
             deadline=time.monotonic() + 75,
         )
-        assert isinstance(refusal, RuntimeAccessRefusal)
+        assert isinstance(refusal, AccessRefusal)
         assert refusal.code.value in {"authentication_required", "credential_rejected", "custody_changed"}
         _read(b)
         b_session = b.client.session_id
@@ -134,13 +134,13 @@ def test_exact_runtime_crash_manager_recovery_and_operation_state(harness: Lifec
             assert time.monotonic() - started < 15, "Manager did not detect the exact terminated runtime"
             time.sleep(0.02)
         harness.metrics[f"failure_detection_{cycle}_seconds"] = time.monotonic() - started
-        with pytest.raises(RuntimeRefusalError) as stale:
+        with pytest.raises(RefusalError) as stale:
             _private_request(connection, old_session)
         assert stale.value.reason in {
-            RuntimeRefusalCode.CONNECTION_CLOSED,
-            RuntimeRefusalCode.UNAVAILABLE,
-            RuntimeRefusalCode.DEADLINE_EXCEEDED,
-            RuntimeRefusalCode.PEER_UNTRUSTED,
+            RefusalCode.CONNECTION_CLOSED,
+            RefusalCode.UNAVAILABLE,
+            RefusalCode.DEADLINE_EXCEEDED,
+            RefusalCode.PEER_UNTRUSTED,
         }
         recovered = harness.connect(profile.profile_id, after_boot=old_boot)
         harness.metrics[f"reconnect_{cycle}_seconds"] = time.monotonic() - started
@@ -188,7 +188,7 @@ def test_exact_runtime_crash_manager_recovery_and_operation_state(harness: Lifec
 def test_wrong_password_never_admits_private_work(harness: LifecycleHarness) -> None:
     profile = harness.create_profile("Lifecycle wrong password")
     rejected = harness.connect(profile.profile_id)
-    with pytest.raises(RuntimeFrontendRefusedError) as refusal:
+    with pytest.raises(FrontendRefusedError) as refusal:
         rejected.client.login_password(bytearray(secrets.token_urlsafe(32), "utf-8"))
     assert refusal.value.reason == "credential_rejected"
     assert rejected.client.sign_in_status().status.presence is SignInPresence.ABSENT
@@ -222,13 +222,13 @@ def test_manager_death_preserves_custody_and_successor_restores_verified_supervi
     ):
         assert time.monotonic() < deadline, "Replacement lacked verified readiness and restored control"
         time.sleep(0.05)
-    with pytest.raises(RuntimeRefusalError) as stale:
+    with pytest.raises(RefusalError) as stale:
         _private_request(live, stale_session)
     assert stale.value.reason in {
-        RuntimeRefusalCode.CONNECTION_CLOSED,
-        RuntimeRefusalCode.UNAVAILABLE,
-        RuntimeRefusalCode.DEADLINE_EXCEEDED,
-        RuntimeRefusalCode.PEER_UNTRUSTED,
+        RefusalCode.CONNECTION_CLOSED,
+        RefusalCode.UNAVAILABLE,
+        RefusalCode.DEADLINE_EXCEEDED,
+        RefusalCode.PEER_UNTRUSTED,
     }
     _refused(_private_request(recovered, uuid4()))
     recovered.client.resume_receipt()

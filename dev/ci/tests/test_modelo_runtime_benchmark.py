@@ -10,13 +10,13 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.adapters.local_runtime.profile_worker import ProfileWorkerProcess
 from cadrumo.adapters.persistence.storage.envelope.contract import Envelope
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from cadrumo.entrypoints.cli.tests import cli_runner
-from cadrumo.entrypoints.runtime.profile_login import ProfileWorkerHumanLogin
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_runtime.adapters.profile_worker import ProfileWorkerProcess
+from cadrumo_runtime.host.profile_login import ProfileWorkerHumanLogin
 
 from ..modelo_runtime_benchmark import (
     RuntimeBenchmarkRecorder,
@@ -130,7 +130,7 @@ def test_actual_catalogue_envelope_decode_is_unchanged_and_hooks_restore(tmp_pat
 def test_nested_runtime_observers_restore_after_actual_decode_failure(tmp_path: Path) -> None:
     original = vars(BaseModel)["model_validate_json"]
     original_worker_constructor = ProfileWorkerProcess.__init__
-    original_frontend_login = RuntimeFrontendClient.login_password
+    original_frontend_login = FrontendClient.login_password
     original_worker_login = ProfileWorkerHumanLogin.authenticate
     outer = RuntimeBenchmarkRecorder(tmp_path, role="parent")
     inner = RuntimeBenchmarkRecorder(tmp_path, role="worker")
@@ -139,18 +139,18 @@ def test_nested_runtime_observers_restore_after_actual_decode_failure(tmp_path: 
     with observe_runtime_boundaries(outer):
         outer_descriptor = vars(BaseModel)["model_validate_json"]
         outer_constructor = ProfileWorkerProcess.__init__
-        outer_frontend_login = RuntimeFrontendClient.login_password
+        outer_frontend_login = FrontendClient.login_password
         outer_worker_login = ProfileWorkerHumanLogin.authenticate
         with pytest.raises(ValidationError), observe_runtime_boundaries(inner):
             Envelope[CalculationRevisionCatalogue].model_validate_json(invalid_wire)
         assert vars(BaseModel)["model_validate_json"] is outer_descriptor
         assert ProfileWorkerProcess.__init__ is outer_constructor
-        assert RuntimeFrontendClient.login_password is outer_frontend_login
+        assert FrontendClient.login_password is outer_frontend_login
         assert ProfileWorkerHumanLogin.authenticate is outer_worker_login
 
     assert vars(BaseModel)["model_validate_json"] is original
     assert ProfileWorkerProcess.__init__ is original_worker_constructor
-    assert RuntimeFrontendClient.login_password is original_frontend_login
+    assert FrontendClient.login_password is original_frontend_login
     assert ProfileWorkerHumanLogin.authenticate is original_worker_login
     for recorder in (outer, inner):
         raw = recorder.path.read_bytes()

@@ -18,11 +18,12 @@ from typing import ClassVar, cast, override
 
 import pytest
 
+from cadrumo.tests.subprocess_cli import run_cadrumo_subprocess
+
 from ....application.provisioning_browser import required_browser_builds
 from ....application.provisioning_contracts import ProvisioningPreconditionCondition
 from ....core.model_catalogue import ModelRole, default_model_runtime_id
 from ....tests.loopback_llm import SilentLoopbackHandler, read_json_body, serving_loopback, write_json_response
-from .subprocess_cli import run_cadrumo_subprocess
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

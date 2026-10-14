@@ -592,8 +592,8 @@ def _resolve_provider_kind(
     """Resolve the provider this session should authenticate through.
 
     Delegates to :func:`resolve_active_provider_kind` so the live-read
-    bring-up reads the SAME selection ``aeat config auth configure``
-    persisted that ``aeat config auth login`` reads. Reading only
+    bring-up reads the SAME selection ``cadrumo-runtime config auth configure``
+    persisted that the authentication login command reads. Reading only
     :class:`Settings` here made the live path default to the certificate
     provider while the operator had configured another one, so the refusal
     named a certificate the operator had never chosen to use.

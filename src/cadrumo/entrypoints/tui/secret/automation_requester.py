@@ -13,7 +13,8 @@ from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.screen import ModalScreen
 from textual.widgets import Button, Checkbox, Input, Label, Select, SelectionList, Static
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo_client.transport.frontend_client import FrontendClient
+
 from ....application.operations.registry import OperationPublicContractSetV1
 from ....application.user_profile.access_contracts import GRANT_DEFAULT_VALIDITY, AccessAction
 from ....application.user_profile.automation_custody_port import AutomationSecretStore
@@ -78,10 +79,10 @@ class RuntimeAutomationRequesterScreen(
         profile_id: UUID,
         contracts: OperationPublicContractSetV1,
         secrets_store: AutomationSecretStore,
-        client: RuntimeFrontendClient | None = None,
+        client: FrontendClient | None = None,
         open_client: _requester_contracts.RequesterClientOpener | None = None,
         fresh_credential_client: _requester_contracts.FreshCredentialClientOpener | None = None,
-        reviewer_client: RuntimeFrontendClient | None = None,
+        reviewer_client: FrontendClient | None = None,
         journey_timeout: float = 300,
     ) -> None:
         """Pin requester and optional reviewer; decisions keep their own runtime proof."""
@@ -90,7 +91,7 @@ class RuntimeAutomationRequesterScreen(
         self._profile_id = profile_id
         self._client = client
         self._session_id = client.session_id if client is not None else None
-        self._owned_client: RuntimeFrontendClient | None = None
+        self._owned_client: FrontendClient | None = None
         self._open_client = open_client
         self._fresh_credential_client = fresh_credential_client
         self._reviewer_client = reviewer_client
@@ -292,7 +293,7 @@ class RuntimeAutomationRequesterScreen(
             self.dismiss(self._outcome)
 
 
-type HumanAutomationRequesterFactory = Callable[[RuntimeFrontendClient], RuntimeAutomationRequesterScreen]
+type HumanAutomationRequesterFactory = Callable[[FrontendClient], RuntimeAutomationRequesterScreen]
 
 
 __all__ = [

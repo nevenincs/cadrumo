@@ -5,6 +5,9 @@ from __future__ import annotations
 from decimal import Decimal
 from uuid import UUID
 
+from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
+from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
+
 from ...application.ledger.actions_common import display_decimal
 from ...application.ledger.classify_requests import (
     LedgerClassifyM210Options,
@@ -22,8 +25,6 @@ from ...application.ledger.transaction_projection import LedgerTransactionProjec
 from ...core.operations import OperationEffect, OperationTerminalCondition
 from ...domain.transactions.enums import BusinessClassification
 from .ledger_classify_fields import classification_selected_fields_match
-from .registered_operation_contracts import RegisteredOperationCompletion
-from .registered_operation_errors import invalid_completion_error
 
 
 def classification_fields_mismatch(

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.core.i18n.render import tr
+from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import tr
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

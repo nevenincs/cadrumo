@@ -236,7 +236,7 @@ class ProrrataListProjection(BaseModel):
 
 
 class ProrrataMutationProjection(BaseModel):
-    """Closed CLI/MCP/TUI projection for one prorrata mutation or its refusal."""
+    """Closed CLI/external client/TUI projection for one prorrata mutation or its refusal."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 

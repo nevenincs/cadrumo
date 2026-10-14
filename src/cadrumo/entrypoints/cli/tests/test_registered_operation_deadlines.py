@@ -10,16 +10,18 @@ from uuid import uuid4
 import pytest
 from pydantic import BaseModel, ConfigDict
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from cadrumo.application.runtime.operation_access import RuntimeOperationRequest
 from cadrumo.core.config import override_settings
-
-from ..registered_operation_contracts import RegisteredOperationProgress
-from ..registered_operation_deadlines import operation_settlement_deadline, provider_login_settlement_seconds
-from ..registered_operation_exchange import RegisteredOperationExchange
-from ..runtime_registered_operation import run_registered_operation
+from cadrumo_client.commands.registered_operation import run_registered_operation
+from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationProgress
+from cadrumo_client.commands.registered_operation_deadlines import (
+    operation_settlement_deadline,
+    provider_login_settlement_seconds,
+)
+from cadrumo_client.commands.registered_operation_exchange import RegisteredOperationExchange
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.operation_access import OperationRequest
+from cadrumo_client.transport.frontend_client import FrontendClient
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -38,7 +40,7 @@ class _Payload(BaseModel):
 
 def _exchange(deadline: float) -> RegisteredOperationExchange:
     return RegisteredOperationExchange(
-        cast("RuntimeFrontendClient", _UntouchableClient()),
+        cast("FrontendClient", _UntouchableClient()),
         uuid4(),
         uuid4(),
         OperationFrontendProjection.CLI,
@@ -51,17 +53,17 @@ def _exchange(deadline: float) -> RegisteredOperationExchange:
 @pytest.mark.parametrize("offset", [math.nan, math.inf, -math.inf, -1.0])
 def test_exchange_refuses_an_expired_or_non_finite_settlement_deadline_before_the_client(offset: float) -> None:
     deadline = offset if not math.isfinite(offset) else time.monotonic() + offset
-    with pytest.raises(RuntimeRefusalError) as refused:
-        _exchange(deadline)(cast("RuntimeOperationRequest", object()))
+    with pytest.raises(RefusalError) as refused:
+        _exchange(deadline)(cast("OperationRequest", object()))
 
-    assert refused.value.reason is RuntimeRefusalCode.DEADLINE_EXCEEDED
+    assert refused.value.reason is RefusalCode.DEADLINE_EXCEEDED
 
 
 @pytest.mark.parametrize("timeout", [math.nan, math.inf, -math.inf, 0.0, -1.0, 120.5])
 def test_per_exchange_timeout_outside_the_bound_is_refused_before_the_client(timeout: float) -> None:
     with pytest.raises(ValueError, match=r"^modelo operation timeout must be finite and at most 120 seconds$"):
         run_registered_operation(
-            cast("RuntimeFrontendClient", _UntouchableClient()),
+            cast("FrontendClient", _UntouchableClient()),
             _Payload(),
             definition_id="profile.synthetic",
             subject_ref="subject",

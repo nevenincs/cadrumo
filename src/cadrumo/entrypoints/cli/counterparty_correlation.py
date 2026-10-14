@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from uuid import UUID
 
+from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
+
 from ...application.ledger.counterparty_establishment import confirmed_counterparty_facts_key
 from ...application.ledger.counterparty_operation import (
     CounterpartyFactProjection,
@@ -11,7 +13,6 @@ from ...application.ledger.counterparty_operation import (
     LedgerCounterpartyResult,
 )
 from ...core.operations import OperationEffect, OperationTerminalCondition
-from .registered_operation_contracts import RegisteredOperationCompletion
 
 
 def counterparty_confirmation_shape_invalid(invalid: bool, result: LedgerCounterpartyResult) -> bool:

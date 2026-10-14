@@ -296,7 +296,7 @@ def previous_filing_observation_requirements(
     """
     accumulator = _PreviousFilingRequirementAccumulator()
     # Same closed vocabulary as
-    # :attr:`~cadrumo.domain.calculations.registry.DependencyClassificationDefinition.treatment`
+    # :attr:`~cadrumo.domain.calculations.registry.schema_revision_members.DependencyClassificationDefinition.treatment`
     # and :attr:`RegistryFoldRequirement.dependency_treatment`, which this
     # value ultimately feeds -- typed to match rather than widened to `str`.
     dependency_treatments_by_source = {

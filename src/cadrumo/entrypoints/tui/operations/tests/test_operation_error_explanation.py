@@ -10,37 +10,38 @@ from uuid import UUID
 
 import pytest
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.application.modelo.operation_definitions import (
+from cadrumo_client.transport.frontend_client import FrontendClient
+
+from .....application.modelo.operation_definitions import (
     MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
     build_modelo_work_calculate_definition,
     build_modelo_work_calculate_registration,
 )
-from cadrumo.application.operations.error_detail import (
+from .....application.operations.error_detail import (
     OperationErrorContextEntryV1,
     OperationErrorDetailKind,
     OperationErrorDetailV1,
     operation_error_detail_schema,
 )
-from cadrumo.application.operations.frontend_projection import (
+from .....application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
     OperationPublicProjectionV1,
 )
-from cadrumo.application.operations.frontend_requests import (
+from .....application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
-from cadrumo.application.operations.registry import (
+from .....application.operations.registry import (
     OperationFrontendProjection,
     OperationPublicContractSetV1,
     OperationPublicDefinitionContractV1,
 )
-from cadrumo.core.errors.error_codes import resolve_error_message
-from cadrumo.core.errors.hierarchy import RecordedRegisteredError
-from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
-from cadrumo.entrypoints.tui.operations.controller_port import OperationErrorDetailPort
-from cadrumo.entrypoints.tui.operations.refusal_explanation import operation_error_explanation
-from cadrumo.entrypoints.tui.operations.runtime_controller import RuntimeOperationController
+from .....core.errors.error_codes import resolve_error_message
+from .....core.errors.hierarchy import RecordedRegisteredError
+from .....core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
+from ..controller_port import OperationErrorDetailPort
+from ..refusal_explanation import operation_error_explanation
+from ..runtime_controller import RuntimeOperationController
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -135,9 +136,7 @@ class _DetailWire:
 
 
 def _controller(wire: _DetailWire) -> RuntimeOperationController:
-    return RuntimeOperationController(
-        client=cast(RuntimeFrontendClient, wire), operation_id=_OPERATION, session_id=_SESSION
-    )
+    return RuntimeOperationController(client=cast(FrontendClient, wire), operation_id=_OPERATION, session_id=_SESSION)
 
 
 def test_the_runtime_controller_reads_a_refused_operations_recorded_detail() -> None:

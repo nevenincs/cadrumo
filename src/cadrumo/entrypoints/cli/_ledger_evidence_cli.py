@@ -11,6 +11,10 @@ from uuid import UUID
 import typer
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
+from cadrumo_client.commands.registered_operation_errors import submitted_operation_error
+from cadrumo_client.contracts.contracts import RefusalCode
+
 from ...adapters.outbound.llm.consent import (
     OffHostEvidenceReadOutcome,
     classify_off_host_evidence_read,
@@ -36,7 +40,6 @@ from ...application.ledger.invoice_evidence_operation_dtos import (
     LabelReadingFallbackProjectionV1,
 )
 from ...application.operations.public_scalar import PublicDecimal
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.aggregation import IntracomOperationType
 from ...core.config_support import LLMProvider
 from ...core.confirmation_gate import ConfirmationBlockReason
@@ -58,16 +61,14 @@ from .ledger_business_payloads import (
     EvidenceRemoveResult,
     EvidenceUpdateResult,
 )
-from .registered_operation_contracts import RegisteredOperationCompletion
-from .registered_operation_errors import submitted_operation_error
-from .runtime_ledger_evidence_add import run_ledger_evidence_add
-from .runtime_ledger_evidence_followup import (
+from .operation_ledger_evidence_add import run_ledger_evidence_add
+from .operation_ledger_evidence_followup import (
     run_ledger_evidence_attachment_queue,
     run_ledger_evidence_attachment_view,
 )
-from .runtime_ledger_evidence_mutation import run_ledger_evidence_remove, run_ledger_evidence_update
-from .runtime_ledger_evidence_read import run_ledger_evidence_list, run_ledger_evidence_view
-from .runtime_ledger_invoice_evidence import (
+from .operation_ledger_evidence_mutation import run_ledger_evidence_remove, run_ledger_evidence_update
+from .operation_ledger_evidence_read import run_ledger_evidence_list, run_ledger_evidence_view
+from .operation_ledger_invoice_evidence import (
     submit_invoice_evidence_confirm,
     submit_invoice_evidence_extract,
 )
@@ -511,9 +512,9 @@ def _present_registered_evidence_operation[ProjectionT: BaseModel](
         raise
     except Exception as exc:
         code = (
-            RuntimeRefusalCode.INVALID_FRAME.value
+            RefusalCode.INVALID_FRAME.value
             if isinstance(exc, (CliRefusedBoundaryError, ValidationError))
-            else RuntimeRefusalCode.UNAVAILABLE.value
+            else RefusalCode.UNAVAILABLE.value
         )
         raise submitted_operation_error(
             completed.operation_id,

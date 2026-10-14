@@ -10,7 +10,8 @@ from pathlib import Path
 from threading import RLock
 from uuid import UUID
 
-from .....application.runtime.profile_worker import ProfileWorkerIdentity
+from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
+
 from .....application.user_profile.access_contracts import AccessDenialCode, AccessSession, SessionKind, SessionState
 from .....application.user_profile.access_errors import ProfileAccessRefusedError
 from .....application.user_profile.access_policy import intersect_scopes

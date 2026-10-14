@@ -12,12 +12,13 @@ from uuid import UUID, uuid4
 import pytest
 from textual.widgets import Button, Checkbox, Input, Select, SelectionList
 
-from cadrumo.adapters.local_runtime.enrollment_client import NativeEnrollmentClient
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from cadrumo.application.runtime.profile_access import RuntimeProfileStatus
-from cadrumo.application.user_profile.access_contracts import (
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.profile_access import ProfileStatus
+from cadrumo_client.transport.enrollment_client import NativeEnrollmentClient
+from cadrumo_client.transport.frontend_client import FrontendClient
+
+from .....application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
+from .....application.user_profile.access_contracts import (
     AccessAction,
     AccessScope,
     Availability,
@@ -25,24 +26,24 @@ from cadrumo.application.user_profile.access_contracts import (
     EffectiveScopeSummary,
     ProfileAccessStatus,
 )
-from cadrumo.application.user_profile.automation_custody_port import (
+from .....application.user_profile.automation_custody_port import (
     AutomationCustodyCode,
     AutomationCustodyError,
     AutomationSecretStore,
 )
-from cadrumo.application.user_profile.automation_enrollment import (
+from .....application.user_profile.automation_enrollment import (
     AutomationReceiptProjection,
     EnrollmentKind,
     EnrollmentStage,
 )
-from cadrumo.application.user_profile.operations import (
+from .....application.user_profile.operations import (
     build_user_profile_operation_definitions,
     build_user_profile_operation_registrations,
 )
-from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
-from cadrumo.entrypoints.tui.components.host import ScreenHostApp
-from cadrumo.entrypoints.tui.profile.automation_inventory import RuntimeAutomationInventoryScreen
-from cadrumo.entrypoints.tui.secret.automation_requester import RuntimeAutomationRequesterScreen
+from .....core.async_cleanup import AsyncResourceCleanupError, close_async_resources
+from ...components.host import ScreenHostApp
+from ...profile.automation_inventory import RuntimeAutomationInventoryScreen
+from ..automation_requester import RuntimeAutomationRequesterScreen
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -114,7 +115,7 @@ async def test_form_uses_registered_tui_choices_and_server_destination_only() ->
     profile_id = uuid4()
     opened: list[UUID] = []
 
-    async def open_client(target: UUID) -> RuntimeFrontendClient:
+    async def open_client(target: UUID) -> FrontendClient:
         opened.append(target)
         raise AssertionError("form must not open a client")
 
@@ -170,7 +171,7 @@ async def test_form_refuses_unlisted_operation_and_never_opens_client() -> None:
     profile_id = uuid4()
     calls: list[UUID] = []
 
-    async def open_client(target: UUID) -> RuntimeFrontendClient:
+    async def open_client(target: UUID) -> FrontendClient:
         calls.append(target)
         raise AssertionError("form must not open a client")
 
@@ -242,7 +243,7 @@ class _HeldEnrollment:
         return None
 
 
-class _OwnedRequesterClient(RuntimeFrontendClient):
+class _OwnedRequesterClient(FrontendClient):
     """Observe only frontend ownership around one already-prepared seam."""
 
     def __init__(self, profile_id: UUID, enrollment: _HeldEnrollment) -> None:
@@ -274,7 +275,7 @@ async def test_close_waits_for_submitted_delivery_before_closing_owned_client() 
     enrollment = _HeldEnrollment(profile_id)
     client = _OwnedRequesterClient(profile_id, enrollment)
 
-    async def open_client(target: UUID) -> RuntimeFrontendClient:
+    async def open_client(target: UUID) -> FrontendClient:
         assert target == profile_id
         return client
 
@@ -316,9 +317,9 @@ class _ReviewerClient(_OwnedRequesterClient):
     """Presentation status port; this fixture cannot approve runtime work."""
 
     @override
-    def status(self, *, timeout: float = 5) -> RuntimeProfileStatus:
+    def status(self, *, timeout: float = 5) -> ProfileStatus:
         assert timeout > 0
-        return RuntimeProfileStatus(
+        return ProfileStatus(
             request_id=uuid4(),
             runtime_boot_id=uuid4(),
             connection_id=uuid4(),
@@ -359,7 +360,7 @@ async def test_pending_delivery_allows_human_review_and_cancel_preserves_request
     requester = _OwnedRequesterClient(profile_id, enrollment)
     reviewer = _ReviewerClient(profile_id, enrollment)
 
-    async def open_client(target: UUID) -> RuntimeFrontendClient:
+    async def open_client(target: UUID) -> FrontendClient:
         assert target == profile_id
         return requester
 
@@ -414,7 +415,7 @@ async def test_review_bridge_refuses_retargeted_human_session() -> None:
     enrollment = _HeldEnrollment(profile_id)
     reviewer = _ReviewerClient(profile_id, enrollment)
 
-    async def open_client(_target: UUID) -> RuntimeFrontendClient:
+    async def open_client(_target: UUID) -> FrontendClient:
         raise AssertionError("request should not be submitted")
 
     screen = RuntimeAutomationRequesterScreen(
@@ -463,7 +464,7 @@ async def test_failed_fresh_admission_keeps_request_uncertain_and_cleanup_retrya
         @override
         def inspect(self, *, timeout: float) -> AutomationReceiptProjection:
             assert timeout > 0
-            raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+            raise RefusalError(RefusalCode.CONNECTION_CLOSED)
 
     class BorrowedClient(_OwnedRequesterClient):
         @override
@@ -481,7 +482,7 @@ async def test_failed_fresh_admission_keeps_request_uncertain_and_cleanup_retrya
     primary = asyncio.CancelledError() if cancelled else AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
     fresh_attempts = 0
 
-    def fresh_opener(target: UUID, received_reference: UUID, timeout: float) -> RuntimeFrontendClient:
+    def fresh_opener(target: UUID, received_reference: UUID, timeout: float) -> FrontendClient:
         nonlocal fresh_attempts
         assert target == profile_id and received_reference == reference
         assert timeout > 0
@@ -554,7 +555,7 @@ async def test_prepare_failure_cleanup_and_originating_owned_client_both_close_o
 
     client = PreparationFailureClient(profile_id, _HeldEnrollment(profile_id))
 
-    async def open_client(target: UUID) -> RuntimeFrontendClient:
+    async def open_client(target: UUID) -> FrontendClient:
         assert target == profile_id
         return client
 
@@ -595,7 +596,7 @@ async def test_returned_fresh_client_refusal_keeps_primary_and_retries_failed_cl
         @override
         def inspect(self, *, timeout: float) -> AutomationReceiptProjection:
             assert timeout > 0
-            raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+            raise RefusalError(RefusalCode.CONNECTION_CLOSED)
 
     class BorrowedClient(_OwnedRequesterClient):
         @override
@@ -627,7 +628,7 @@ async def test_returned_fresh_client_refusal_keeps_primary_and_retries_failed_cl
     fresh = FreshClient(profile_id, enrollment)
     fresh_attempts = 0
 
-    def fresh_opener(target: UUID, received_reference: UUID, timeout: float) -> RuntimeFrontendClient:
+    def fresh_opener(target: UUID, received_reference: UUID, timeout: float) -> FrontendClient:
         nonlocal fresh_attempts
         assert target == profile_id and received_reference == reference
         assert timeout > 0
@@ -679,7 +680,7 @@ async def test_unmount_caller_cancellation_drains_native_request_and_releases_ow
         enrollment = _HeldEnrollment(profile_id)
         client = _OwnedRequesterClient(profile_id, enrollment)
 
-        async def open_client(target: UUID) -> RuntimeFrontendClient:
+        async def open_client(target: UUID) -> FrontendClient:
             assert target == profile_id
             return client
 

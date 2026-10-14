@@ -32,6 +32,7 @@ from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 __all__ = [
     "BlockedReason",
     "CaptureBinding",
+    "CommandProgram",
     "ExpectAssertion",
     "FrameKind",
     "ParsedSequence",
@@ -98,6 +99,13 @@ BlockedDetail = Annotated[
 #: A JSON literal on the right-hand side of an ``@expect`` assertion — a quoted
 #: string, a number, a boolean, or null, parsed from the authored literal.
 ExpectLiteral = str | int | float | bool | None
+
+
+class CommandProgram(StrEnum):
+    """The installed command programs a sequence frame can invoke."""
+
+    AEAT = "aeat"
+    AUTHENTICATION = "cadrumo-runtime"
 
 
 class FrameKind(StrEnum):
@@ -249,7 +257,7 @@ class ExpectAssertion(BaseModel):
 class SequenceFrame(BaseModel):
     """One executed frame of a ``cli-sequence``.
 
-    ``argv`` is the shell-decomposed command (always leading with ``aeat``),
+    ``argv`` is the shell-decomposed command, leading with its command program,
     preserving any ``{name}`` placeholder tokens for the runner to interpolate.
     ``captures`` and ``expects`` are the annotations authored directly beneath
     the frame. ``placeholder_names`` lists every ``{name}`` referenced in
@@ -278,6 +286,11 @@ class SequenceFrame(BaseModel):
     blocked: BlockedReason | None = None
     source: Annotated[str, StringConstraints(min_length=1)]
     line_number: int = Field(ge=1)
+
+    @property
+    def program(self) -> CommandProgram:
+        """The command owner retained in the first authored argv token."""
+        return CommandProgram(self.argv[0])
 
 
 class ParsedSequence(BaseModel):

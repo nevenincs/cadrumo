@@ -55,6 +55,7 @@ export function ApprovalPrompt({
   description,
   options,
   onDecide,
+  title,
 }: {
   source: AgentApproval["source"];
   /** What would run, as the agent names it. */
@@ -66,6 +67,7 @@ export function ApprovalPrompt({
   /** The option the person chose. Without it, every option says it is not
    * available. */
   onDecide?: (optionId: string) => void;
+  title?: string;
 }) {
   const t = useStrings();
   const headingId = useId();
@@ -86,9 +88,10 @@ export function ApprovalPrompt({
         />
         <div className="grid min-w-0 gap-1">
           <h3 id={headingId} className="font-semibold text-foreground">
-            {source === "agent_tool"
-              ? t("desktop.agent.approval_tool_title")
-              : t("desktop.agent.approval_review_title")}
+            {title ??
+              (source === "agent_tool"
+                ? t("desktop.agent.approval_tool_title")
+                : t("desktop.agent.approval_review_title"))}
           </h3>
           {(toolCall || toolKind) && (
             <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">

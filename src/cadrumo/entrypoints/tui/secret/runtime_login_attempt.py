@@ -10,11 +10,12 @@ from logging import ERROR, INFO, WARNING
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.profile_access import ProfileStatus, status_admits_session
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
 from ....application.operations.registry import OperationFrontendProjection
-from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from ....application.runtime.profile_access import RuntimeProfileStatus, status_admits_session
 from ....application.user_profile.login_session import ProfileReceiptRefusedError
 from ....core.async_cleanup import (
     AsyncResourceCleanupError,
@@ -52,7 +53,7 @@ class RuntimeLoginAttemptMixin:
         self.notify(tr("common.manager.update_pending"), timeout=10)
 
     async def _close_untransferred(
-        self: RuntimeLoginScreen, client: RuntimeFrontendClient, *, primary_error: BaseException | None
+        self: RuntimeLoginScreen, client: FrontendClient, *, primary_error: BaseException | None
     ) -> None:
         """Keep each candidate in the existing pool until its native close succeeds."""
 
@@ -104,17 +105,17 @@ class RuntimeLoginAttemptMixin:
         method: RuntimeLoginMethod,
         proof: bytearray | None,
         reference: UUID | None,
-    ) -> tuple[RuntimeFrontendClient, asyncio.CancelledError | None]:
+    ) -> tuple[FrontendClient, asyncio.CancelledError | None]:
         if method is not RuntimeLoginMethod.API_REFERENCE:
             return await open_to_completion(self._open_client, profile_id)
         opener = self._open_credential_client
         if opener is None or reference is None or proof is not None:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
 
-        async def open_reference(selected: UUID) -> RuntimeFrontendClient:
+        async def open_reference(selected: UUID) -> FrontendClient:
             unsubscribe: Callable[[], None] | None = None
 
-            def connected(client: RuntimeFrontendClient) -> None:
+            def connected(client: FrontendClient) -> None:
                 nonlocal unsubscribe
                 unsubscribe = client.subscribe_lifecycle_notices(self._post_upgrade_notice)
 
@@ -131,24 +132,24 @@ class RuntimeLoginAttemptMixin:
 
     async def _login_status(
         self: RuntimeLoginScreen,
-        client: RuntimeFrontendClient,
+        client: FrontendClient,
         method: RuntimeLoginMethod,
         proof: bytearray | None,
         *,
         persist_receipt: bool = False,
-    ) -> RuntimeProfileStatus:
+    ) -> ProfileStatus:
         if method is RuntimeLoginMethod.API_REFERENCE:
             return await await_cancellation_complete(
                 asyncio.to_thread(client.status), task_name="tui-runtime-login-reference-status"
             )
         if method is RuntimeLoginMethod.RECEIPT:
             if proof is not None:
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                raise RefusalError(RefusalCode.INVALID_FRAME)
             return await await_cancellation_complete(
                 asyncio.to_thread(client.resume_receipt), task_name="tui-runtime-login-receipt"
             )
         if proof is None:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         exchange = (
             asyncio.to_thread(client.login_password, proof, persist_receipt=persist_receipt)
             if method is RuntimeLoginMethod.PASSWORD
@@ -161,8 +162,8 @@ class RuntimeLoginAttemptMixin:
         profile_id: UUID,
         label: str,
         method: RuntimeLoginMethod,
-        status: RuntimeProfileStatus,
-        client: RuntimeFrontendClient,
+        status: ProfileStatus,
+        client: FrontendClient,
     ) -> RuntimeLoginHandoff | None:
         access = status.status
         if (
@@ -259,9 +260,9 @@ class RuntimeLoginAttemptMixin:
             )
             self._password_first()
             return False
-        if isinstance(error, (RuntimeFrontendRefusedError, RuntimeRefusalError, ProfileReceiptRefusedError)):
-            code = error.reason if isinstance(error, RuntimeFrontendRefusedError) else error.reason.value
-            sign_in = error.sign_in if isinstance(error, RuntimeFrontendRefusedError) else None
+        if isinstance(error, (FrontendRefusedError, RefusalError, ProfileReceiptRefusedError)):
+            code = error.reason if isinstance(error, FrontendRefusedError) else error.reason.value
+            sign_in = error.sign_in if isinstance(error, FrontendRefusedError) else None
             if sign_in is not None:
                 code = sign_in.binding or sign_in.reason
             if isinstance(error, ProfileReceiptRefusedError) and error.binding is not None:
@@ -341,8 +342,8 @@ class RuntimeLoginAttemptMixin:
                     profile_id, label, method, proof, reference, state, persist_receipt=persist_receipt
                 )
             except (
-                RuntimeFrontendRefusedError,
-                RuntimeRefusalError,
+                FrontendRefusedError,
+                RefusalError,
                 ProfileReceiptRefusedError,
                 asyncio.CancelledError,
                 Exception,

@@ -33,8 +33,10 @@ person for approval.
 Confirm these before you start. If one is missing, say what is missing and stop
 that step.
 
-- `status` shows a session (`sign_in` or `key`). With `none`, ask the person to
-  sign in to Cadrumo.
+- `status` shows an admitted session (`attended` or `key`). With `none`, ask
+  the person to hold a live Cadrumo session and review this server's exact
+  attendance request, or configure a separately reviewed key. A sign-in alone
+  does not grant this server access.
 - A profile is active: `overview.status` (`aeat app overview status`) reports it.
 - The ledger for the quarter is built and classified, with incoming and outgoing
   business transactions imported, IRPF categories and any business-use ratios

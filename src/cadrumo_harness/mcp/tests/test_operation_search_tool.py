@@ -10,13 +10,8 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
-from cadrumo.application.auth.read_operation import (
-    build_auth_read_definition,
-    build_auth_read_registration,
-)
+from cadrumo.application.auth.read_operation import build_auth_read_definition, build_auth_read_registration
 from cadrumo.application.ledger.attachment_mutation_operation import (
     LEDGER_ATTACH_OPERATION_DEFINITION_ID,
     LEDGER_DETACH_OPERATION_DEFINITION_ID,
@@ -30,7 +25,6 @@ from cadrumo.application.operations.registry import (
     OperationPublicDefinitionDescriptionV1,
     OperationRegistry,
 )
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.user_profile.access_contracts import (
     AccessScope,
     AuthorityState,
@@ -39,14 +33,21 @@ from cadrumo.application.user_profile.access_contracts import (
     ProfileAccessStatus,
 )
 from cadrumo.core.time.clock import now
-from cadrumo_harness.mcp import admitted_operations
-from cadrumo_harness.mcp import runtime_adapter as mcp_runtime
-from cadrumo_harness.mcp.operation_contract_cache import OperationContractCache
-from cadrumo_harness.mcp.protocol_contract import SIGN_IN_REMEDY
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
-from cadrumo_harness.mcp.server import build_server
-from cadrumo_harness.mcp.tests.admitted_lease import public_descriptions
-from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_harness.mcp.access_scope import surface_scope
+from cadrumo_harness.mcp.surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES
+
+from .. import admitted_operations
+from .. import runtime_adapter as mcp_runtime
+from ..operation_contract_cache import OperationContractCache
+from ..protocol_contract import SIGN_IN_REMEDY
+from ..runtime_adapter import RuntimeMcpAdapter
+from ..server import build_server
+from .admitted_lease import public_descriptions
+from .session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -86,7 +87,7 @@ class _AdmittedClient:
         self.profile_id = profile_id
         self.failure = failure
         self.refusals = {} if refusals is None else refusals
-        self.frontend = OperationFrontendProjection.MCP
+        self.frontend = OperationFrontendProjection.EXTERNAL_CLIENT
         self.session_id = uuid4()
         self.registry = registry
         self.described: list[str] = []
@@ -126,11 +127,11 @@ class _AdmittedClient:
         assert deadline > 0
         self.described.append(definition_id)
         if self.failure is not None:
-            raise RuntimeFrontendRefusedError(self.failure)
+            raise FrontendRefusedError(self.failure)
         if definition_id == _DENIED_DEFINITION_ID:
-            raise RuntimeFrontendRefusedError("operation_denied")
+            raise FrontendRefusedError("operation_denied")
         if definition_id in self.refusals:
-            raise RuntimeFrontendRefusedError(self.refusals[definition_id])
+            raise FrontendRefusedError(self.refusals[definition_id])
         return self.registry.describe_public_definition(definition_id)
 
     def operation(self, request: object, *, deadline: float) -> NoReturn:
@@ -171,7 +172,7 @@ async def test_search_ranks_admitted_contracts_with_the_command_ranker(query: st
     profile_id = uuid4()
     registry = _registry()
     client = _AdmittedClient(profile_id, registry)
-    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
         async with connected_server_and_client_session(build_server(adapter)) as sdk:
             found = await sdk.call_tool("search", {"query": query})
@@ -201,7 +202,7 @@ async def test_search_without_query_lists_every_describable_admitted_contract(ar
     profile_id = uuid4()
     registry = _registry()
     client = _AdmittedClient(profile_id, registry)
-    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
         result = await adapter.call("search", args)
     finally:
@@ -214,7 +215,7 @@ async def test_search_without_query_lists_every_describable_admitted_contract(ar
 async def test_search_refuses_when_a_description_fails_for_a_reason_other_than_scope() -> None:
     profile_id = uuid4()
     client = _AdmittedClient(profile_id, _registry(), failure="session_expired")
-    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
         result = await adapter.call("search", {"query": "ledger"})
     finally:
@@ -237,7 +238,7 @@ class _SlowConnectionClient(_AdmittedClient):
 
     def _require_open(self) -> None:
         if self.cut:
-            raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+            raise RefusalError(RefusalCode.CONNECTION_CLOSED)
 
     @override
     def status(self) -> SimpleNamespace:
@@ -250,7 +251,7 @@ class _SlowConnectionClient(_AdmittedClient):
         time.sleep(self.read_seconds)
         if time.monotonic() > deadline:
             self.cut.append(definition_id)
-            raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
         return super().describe(definition_id, deadline=deadline)
 
 
@@ -261,14 +262,14 @@ async def test_a_search_out_of_time_keeps_the_session_and_resumes_from_what_it_r
     """A search longer than its budget refuses between reads, and a retry finishes from the cache."""
     profile_id = uuid4()
     client = _SlowConnectionClient(profile_id, _registry(), read_seconds=0.06)
-    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
         with monkeypatch.context() as budget:
             # Four contract reads cannot fit; the first read already reaches past the budget.
             budget.setattr(admitted_operations, "_TIMEOUT", 0.05)
             late = await adapter.call("search", {"query": "ledger"})
         assert client.cut == []
-        assert late == {"outcome": "refused", "code": RuntimeRefusalCode.DEADLINE_EXCEEDED.value}
+        assert late == {"outcome": "refused", "code": RefusalCode.DEADLINE_EXCEEDED.value}
         found = await adapter.call("search", {"query": "ledger"})
     finally:
         await adapter.close()
@@ -312,7 +313,7 @@ async def _all_pages(adapter: RuntimeMcpAdapter, args: dict[str, object]) -> lis
 async def test_search_pages_are_disjoint_and_cover_the_scope_in_stable_order(query: str, expected: list[str]) -> None:
     profile_id = uuid4()
     client = _AdmittedClient(profile_id, _registry())
-    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
         whole = await adapter.call("search", {"query": query})
         pages = await _all_pages(adapter, {"query": query, "limit": 1})
@@ -345,7 +346,7 @@ async def test_search_pages_are_disjoint_and_cover_the_scope_in_stable_order(que
 async def test_search_family_narrows_the_scope_before_any_contract_is_read(family: str, expected: list[str]) -> None:
     profile_id = uuid4()
     client = _AdmittedClient(profile_id, _registry())
-    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
         result = await adapter.call("search", {"family": family})
     finally:
@@ -371,7 +372,7 @@ async def test_search_family_narrows_the_scope_before_any_contract_is_read(famil
 async def test_search_refuses_malformed_paging_before_reading_any_contract(args: dict[str, object]) -> None:
     profile_id = uuid4()
     client = _AdmittedClient(profile_id, _registry())
-    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
         result = await adapter.call("search", args)
     finally:
@@ -392,7 +393,7 @@ async def test_search_reports_one_unavailable_operation_and_lists_the_rest(query
     profile_id = uuid4()
     refusals = {LEDGER_ATTACH_OPERATION_DEFINITION_ID: "backend_unavailable"}
     client = _AdmittedClient(profile_id, _registry(), refusals=refusals)
-    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
         result = await adapter.call("search", {"query": query})
     finally:
@@ -408,7 +409,7 @@ async def test_search_still_fails_whole_when_the_session_is_refused_for_one_oper
     profile_id = uuid4()
     refusals = {LEDGER_DETACH_OPERATION_DEFINITION_ID: "session_inactive"}
     client = _AdmittedClient(profile_id, _registry(), refusals=refusals)
-    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
         result = await adapter.call("search", {})
     finally:
@@ -421,7 +422,7 @@ async def test_search_still_fails_whole_when_the_session_is_refused_for_one_oper
 async def test_search_rows_carry_what_selects_an_operation_without_the_request_schema() -> None:
     profile_id = uuid4()
     client = _AdmittedClient(profile_id, _registry())
-    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
         result = await adapter.call("search", {})
     finally:
@@ -462,7 +463,7 @@ async def test_a_search_that_names_no_limit_returns_a_page_of_ten_and_the_rest_b
     in_scope = sorted(public_descriptions())
     assert len(in_scope) > 10, "too few operations to fill more than one page"
     client = _WideScopeClient(profile_id, in_scope)
-    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     listed: list[str] = []
     try:
         first = await adapter.call("search", {})
@@ -486,7 +487,7 @@ async def test_a_search_that_names_no_limit_returns_a_page_of_ten_and_the_rest_b
 async def test_search_and_execute_read_each_contract_once_per_session_while_describe_reads_afresh() -> None:
     profile_id = uuid4()
     client = _AdmittedClient(profile_id, _registry())
-    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
         await adapter.call("search", {})
         await adapter.call("search", {"query": "ledger"})
@@ -517,12 +518,19 @@ async def test_reauthentication_starts_a_fresh_description_cache(monkeypatch: py
     replacement = _AdmittedClient(profile_id, registry)
 
     async def admit(
-        *, profile_id: UUID, credential_reference: UUID, frontend: OperationFrontendProjection
-    ) -> RuntimeFrontendClient:
-        return cast(RuntimeFrontendClient, replacement)
+        *,
+        profile_id: UUID,
+        credential_reference: UUID,
+        frontend: OperationFrontendProjection,
+        timeout: float,
+        scope: AccessScope,
+    ) -> FrontendClient:
+        assert timeout == PROFILE_ADMISSION_TIMEOUT_SECONDS
+        assert scope == surface_scope(MCP_SURFACES[DEFAULT_MCP_SURFACE])
+        return cast(FrontendClient, replacement)
 
     monkeypatch.setattr(mcp_runtime, "open_installed_credential_client", admit)
-    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, original))
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, original))
     try:
         await adapter.call("search", {})
         await adapter.bootstrap_reference(uuid4())
@@ -542,7 +550,7 @@ def test_contract_cache_is_not_shared_across_sessions_or_profiles() -> None:
     other_profile = _AdmittedClient(uuid4(), registry)
     cache = OperationContractCache()
     for client in (first, first, other_session, other_session, other_profile, other_profile, first):
-        cache.description(cast(RuntimeFrontendClient, client), AUTH_READ_OPERATION_DEFINITION_ID, deadline=1.0)
+        cache.description(cast(FrontendClient, client), AUTH_READ_OPERATION_DEFINITION_ID, deadline=1.0)
     assert first.described == [AUTH_READ_OPERATION_DEFINITION_ID] * 2
     assert other_session.described == [AUTH_READ_OPERATION_DEFINITION_ID]
     assert other_profile.described == [AUTH_READ_OPERATION_DEFINITION_ID]
@@ -552,7 +560,7 @@ def test_contract_cache_reads_again_when_the_runtime_reports_another_digest() ->
     registry = _registry()
     client = _AdmittedClient(uuid4(), registry)
     cache = OperationContractCache()
-    reader = cast(RuntimeFrontendClient, client)
+    reader = cast(FrontendClient, client)
     definition_id = AUTH_READ_OPERATION_DEFINITION_ID
     current = registry.lookup_public_contract(definition_id).definition_contract_digest
     cache.description(reader, definition_id, deadline=1.0)
@@ -566,12 +574,12 @@ def test_contract_cache_forgets_an_operation_the_runtime_now_refuses() -> None:
     registry = _registry()
     client = _AdmittedClient(uuid4(), registry)
     cache = OperationContractCache()
-    reader = cast(RuntimeFrontendClient, client)
+    reader = cast(FrontendClient, client)
     definition_id = LEDGER_ATTACH_OPERATION_DEFINITION_ID
     cache.description(reader, definition_id, deadline=1.0)
     client.refusals[definition_id] = "operation_denied"
-    with pytest.raises(RuntimeFrontendRefusedError):
+    with pytest.raises(FrontendRefusedError):
         cache.description(reader, definition_id, deadline=1.0, fresh=True)
-    with pytest.raises(RuntimeFrontendRefusedError):
+    with pytest.raises(FrontendRefusedError):
         cache.description(reader, definition_id, deadline=1.0)
     assert client.described == [definition_id] * 3

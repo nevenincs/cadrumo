@@ -9,20 +9,21 @@ from typing import cast
 
 import pytest
 
-from cadrumo.application.operator_surface.command_ports import (
+from cadrumo_client.commands.compiler import refuse_declared_live_write
+from cadrumo_client.commands.spec import ExecutionPolicySpec
+from cadrumo_client.contracts.command_ports import (
+    Capability,
+    CommandCapabilityClass,
     CommandWriteRoute,
     CommandWriteRouteValue,
+    SideEffect,
 )
 
-from ....application.operator_surface.command_ports import CommandCapabilityClass
 from ....core.access_gate.errors import LiveSubmitForbiddenError
 from ....core.errors.error_codes import get_registered_error_code
 from .._command_policy import (
     CommandExecutionPolicy,
 )
-from .._command_runtime import refuse_declared_live_write
-from ..command_shared_contracts import Capability, SideEffect
-from ..command_spec import ExecutionPolicySpec
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -116,7 +117,7 @@ def test_a_declared_live_write_is_refused_at_dispatch() -> None:
     """A coherent ``live_write`` declaration is describable, never runnable.
 
     The declaration stays valid -- browser implies network, so the policy is
-    self-consistent and MCP can classify and block it -- but the dispatch seam
+    self-consistent and external client can classify and block it -- but the dispatch seam
     turns it into the access gate's permanent, registered refusal.
     """
     declared = ExecutionPolicySpec(

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#runtime-manager-architecture'
 date: '2026-10-04'
-modified: '2026-10-13'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:f5f427d62dd1c4cfc21d95a33647f5867d4c4ffc4072ab8a44314de7e068be2a'
+body_hash: 'sha256:6d1f141e3597df67215db32d44194d0e1dbdb627eb02382ff0b83d370c28ef94'
 related:
   - "[[2026-10-04-runtime-manager-architecture-requirements-research]]"
   - "[[2026-10-03-runtime-manager-architecture-research]]"
@@ -262,7 +262,7 @@ An adopted runtime has no heartbeat, so it cuts over only at the user's Restart 
 
 The user-facing name, and whether it is localized, is a *hypothesis* for the operator to confirm. Tray strings come from the locale catalogues.
 
-**Naming hygiene for the plan.** A routine plan step renames `src/cadrumo/adapters/local_runtime/manager_commands.py`, which only issues worker-containment commands, to `containment_commands.py`. The same step renames `NativeManagerCommand`, `ManagerCommandResult` and `run_manager_command_sync`, and updates `linux_worker_process.py`, `macos_worker_process.py` and their tests atomically. This keeps "manager" unambiguous.
+**Naming hygiene for the plan.** A routine plan step renames `src/cadrumo_client/transport/manager_commands.py`, which only issues worker-containment commands, to `containment_commands.py`. The same step renames `NativeManagerCommand`, `ManagerCommandResult` and `run_manager_command_sync`, and updates `linux_worker_process.py`, `macos_worker_process.py` and their tests atomically. This keeps "manager" unambiguous.
 
 **Acceptance obligations for the plan:**
 - fixture supervision: crash, hang, outside stop, witness loss, foreign, stale and forged boot records

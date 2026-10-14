@@ -7,10 +7,13 @@ only disagree about a file because they measure different named scopes, never
 because each spelled the convention its own way.
 
 Roots
-    :data:`PRODUCT_PACKAGE` is the tax-filing product. :data:`HARNESS_PACKAGE`
+    :data:`PRODUCT_PACKAGE` is the tax-filing application. Its neutral shared
+    and installed-host boundaries are :data:`CLIENT_PACKAGE` and
+    :data:`RUNTIME_PACKAGE`; :data:`PRODUCT_SOURCE_ROOTS` is their complete
+    application cohort. :data:`HARNESS_PACKAGE`
     is the separately shipped agent harness. :data:`DEVELOPMENT_TOOLING` builds
     and verifies them, and :data:`PACKAGING_HOOKS` holds the distribution build
-    hooks. :data:`FIRST_PARTY_ROOTS` names all four.
+    hooks. :data:`FIRST_PARTY_ROOTS` names all maintained roots.
 
 Named scopes
     An instrument measures every first-party root or a named subset, and the
@@ -19,14 +22,14 @@ Named scopes
     * :data:`FIRST_PARTY_ROOTS` -- complexity, and any detector whose subject
       may appear in any maintained code (the regulatory-prose parser channel),
       reads every root, tooling included.
-    * :data:`PRODUCT_PACKAGE` alone -- dead code, copy-paste and semantic
+    * :data:`PRODUCT_SOURCE_ROOTS` -- dead code, copy-paste and semantic
       duplication, and the stock security scan measure the shipped product.
       Development tooling exists to verify the product, so its debt would be
       misreported as product risk in those numbers.
     * :data:`DEPENDENCY_DECLARATION_ROOTS` -- the code whose third-party
       imports must be satisfied by declared, non-development dependencies: the
-      product, the harness, and the registry tooling that runs from its own
-      dependency group.
+      application cohort, harness, separate agent service, and registry
+      tooling that runs from its own dependency group.
 
 Classification
     The test surface is every module under a ``tests`` directory, every
@@ -49,14 +52,35 @@ from pathlib import PurePath, PurePosixPath
 from typing import Final
 
 PRODUCT_PACKAGE: Final[str] = "src/cadrumo"
+CLIENT_PACKAGE: Final[str] = "src/cadrumo_client"
+RUNTIME_PACKAGE: Final[str] = "src/cadrumo_runtime"
+PRODUCT_SOURCE_ROOTS: Final[tuple[str, ...]] = (PRODUCT_PACKAGE, CLIENT_PACKAGE, RUNTIME_PACKAGE)
 HARNESS_PACKAGE: Final[str] = "src/cadrumo_harness"
+SERVICE_PACKAGE: Final[str] = "src/cadrumo_agent_service"
+CLIENT_PACKAGE: Final[str] = "src/cadrumo_client"
+RUNTIME_PACKAGE: Final[str] = "src/cadrumo_runtime"
 DEVELOPMENT_TOOLING: Final[str] = "dev"
 PACKAGING_HOOKS: Final[str] = "packaging"
 
-FIRST_PARTY_ROOTS: Final[tuple[str, ...]] = (PRODUCT_PACKAGE, HARNESS_PACKAGE, DEVELOPMENT_TOOLING, PACKAGING_HOOKS)
+FIRST_PARTY_ROOTS: Final[tuple[str, ...]] = (
+    PRODUCT_PACKAGE,
+    CLIENT_PACKAGE,
+    RUNTIME_PACKAGE,
+    HARNESS_PACKAGE,
+    SERVICE_PACKAGE,
+    CLIENT_PACKAGE,
+    RUNTIME_PACKAGE,
+    DEVELOPMENT_TOOLING,
+    PACKAGING_HOOKS,
+)
 DEPENDENCY_DECLARATION_ROOTS: Final[tuple[str, ...]] = (
     PRODUCT_PACKAGE,
+    CLIENT_PACKAGE,
+    RUNTIME_PACKAGE,
     HARNESS_PACKAGE,
+    SERVICE_PACKAGE,
+    CLIENT_PACKAGE,
+    RUNTIME_PACKAGE,
     f"{DEVELOPMENT_TOOLING}/registry",
 )
 

@@ -91,7 +91,6 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.exchange_rate_provider import bind_exchange_rate_provider_factory
-from cadrumo.application.operator_surface.command_ports import ProfileAuthenticationPosture
 from cadrumo.application.user_profile.capsule_record import ProfileRecordSession
 from cadrumo.application.user_profile.custody_ports import create_profile_custody_registration_material
 from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
@@ -105,12 +104,14 @@ from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFac
 from cadrumo.entrypoints.cli.command_schema import command_registration_for_node
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli, semantic_cli_text
+from cadrumo_client.contracts.command_ports import ProfileAuthenticationPosture
 from dev._paths import REPO_ROOT
 
 from .errors import SequenceExecutionError
 from .receipt_fixture import requires_persistent_sign_in, sequence_receipt_store
 from .runtime_fixture import SANDBOX_INSTANT, sequence_runtime
 from .schema import (
+    CommandProgram,
     FrameKind,
     Identifier,
     JsonPath,
@@ -1198,7 +1199,7 @@ def _next_process_session_view() -> Generator[None]:
         yield
 
 
-def _invoke_frame(args: tuple[str, ...]) -> Result:
+def _invoke_frame(args: tuple[str, ...], *, program: CommandProgram) -> Result:
     """Invoke the cached CLI, retrying only on the transient registry-write race.
 
     The race exists only during local development, where concurrent
@@ -1216,7 +1217,7 @@ def _invoke_frame(args: tuple[str, ...]) -> Result:
     is_profile_delete = any(args[index : index + 3] == ("config", "profile", "delete") for index in range(len(args)))
     settings_context = override_settings(cadrumo_active_profile=None) if is_profile_delete else nullcontext()
     with settings_context, _next_process_session_view():
-        result = _invoke_authenticated_frame(args)
+        result = _invoke_authenticated_frame(args, program=program)
     if bool(os.environ.get("CI")):
         return result
     tries = 1
@@ -1227,13 +1228,22 @@ def _invoke_frame(args: tuple[str, ...]) -> Result:
     ):
         time.sleep(2)
         dispose_engine()
-        result = _invoke_authenticated_frame(args)
+        result = _invoke_authenticated_frame(args, program=program)
         tries += 1
     return result
 
 
-def _invoke_authenticated_frame(args: tuple[str, ...]) -> Result:
+def _invoke_authenticated_frame(args: tuple[str, ...], *, program: CommandProgram) -> Result:
     """Supply a fresh bounded password proof without replacing authored channels."""
+    if program is CommandProgram.AUTHENTICATION:
+        from cadrumo_runtime.commands.command_specs import RUNTIME_COMMAND_GRAPH
+        from cadrumo_runtime.commands.tests.config.runtime_cli import invoke_runtime_cli
+
+        graph = RUNTIME_COMMAND_GRAPH
+        invoke = invoke_runtime_cli
+    else:
+        graph = COMMAND_GRAPH
+        invoke = invoke_cached_cli
     explicit = {
         "--profile-secrets-stdin",
         "--profile-secrets-fd",
@@ -1243,16 +1253,16 @@ def _invoke_authenticated_frame(args: tuple[str, ...]) -> Result:
         "--secrets-fd",
     }
     if any(argument.split("=", 1)[0] in explicit for argument in args):
-        return invoke_cached_cli(list(args))
-    spec = COMMAND_GRAPH.resolve_invocation(args)
-    registration = None if spec is None else command_registration_for_node(COMMAND_GRAPH.node(spec.key))
+        return invoke(list(args))
+    spec = graph.resolve_invocation(args)
+    registration = None if spec is None else command_registration_for_node(graph.node(spec.key))
     if spec is not None and spec.key == "config_login":
         password = load_settings().cadrumo_dev_test_database_password.get_secret_value()
-        return invoke_cached_cli([*args, "--secrets-stdin"], input=json.dumps({"passphrase": password}))
+        return invoke([*args, "--secrets-stdin"], input=json.dumps({"passphrase": password}))
     if registration is None or registration.profile_authentication is not ProfileAuthenticationPosture.RESUME_FALLBACK:
-        return invoke_cached_cli(list(args))
+        return invoke(list(args))
     password = load_settings().cadrumo_dev_test_database_password.get_secret_value()
-    return invoke_cached_cli(["--profile-secrets-stdin", *args], input=json.dumps({"profile_passphrase": password}))
+    return invoke(["--profile-secrets-stdin", *args], input=json.dumps({"profile_passphrase": password}))
 
 
 def _execute_frame(
@@ -1267,7 +1277,7 @@ def _execute_frame(
     _record_frame_progress(sequence, frame, frame_index=frame_index, argv=argv)
     observer = _FRAME_OBSERVER.get()
     with observer(frame_index) if observer is not None else nullcontext():
-        result = _invoke_frame(argv[1:])
+        result = _invoke_frame(argv[1:], program=frame.program)
     # The runner records the two streams separately: ``Result.output`` under
     # this Click version is the COMBINED capture, so read the split
     # ``stdout``/``stderr`` properties — a refusal's error document (which

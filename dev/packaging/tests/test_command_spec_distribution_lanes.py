@@ -48,7 +48,7 @@ from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from cadrumo.core.i18n.render import lookup_translation_entry
 from cadrumo.core.json_contract import OutputRootSchema, OutputSchema
 from cadrumo.entrypoints.cli.main import cli_app
-from cadrumo.entrypoints.cli.command_shared_contracts import DeferredTarget
+from cadrumo_client.commands.shared_contracts import DeferredTarget
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from typer._click.core import Context as TyContext
 from typer.main import get_command
@@ -78,7 +78,7 @@ def live_command_paths(app):
     return paths
 
 def translation_keys(value):
-    from cadrumo.entrypoints.cli.command_shared_contracts import TranslationKey
+    from cadrumo_client.commands.shared_contracts import TranslationKey
     if isinstance(value, TranslationKey):
         return (value,)
     if dataclasses.is_dataclass(value) and not isinstance(value, type):
@@ -187,7 +187,7 @@ def _is_spec_export_name(name: str) -> bool:
 
 def _authored_spec_modules(checkout: Path) -> set[str]:
     cli_root = checkout / "src/cadrumo/entrypoints/cli"
-    modules = {"cadrumo/entrypoints/cli/command_spec.py", "cadrumo/entrypoints/cli/command_specs.py"}
+    modules = {"cadrumo_client/commands/spec.py", "cadrumo/entrypoints/cli/command_specs.py"}
     for path in cli_root.rglob("*.py"):
         tree = ast.parse(path.read_text(encoding="utf-8"))
         if any(

@@ -23,6 +23,7 @@
     "build_metadata": "data/build.json",
     "native_manifest": "data/native-modules.json",
     "package_manifest": "data/package-manifest.json",
+    "service_descriptors": "data/service-descriptors.json",
     "python_license": "docs/licenses/CPython.txt"
   },
   "stdlib_exclude": [
@@ -38,7 +39,8 @@
   "entrypoints": {
     "aeat": "CADRUMO command line",
     "cadrumo-mcp": "CADRUMO MCP server",
-    "cadrumo-runtime": "CADRUMO local runtime"
+    "cadrumo-runtime": "CADRUMO local runtime",
+    "cadrumo-agent-service": "CADRUMO agent service"
   },
   "bundled_images": {
     "cadrumo-agent": {

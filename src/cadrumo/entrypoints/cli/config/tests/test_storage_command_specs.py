@@ -7,7 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from ...command_parameter_contracts import OptionSpec
+from cadrumo_client.commands.parameters import OptionSpec
+
 from .._storage_command_specs import CONFIG_STORAGE_COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

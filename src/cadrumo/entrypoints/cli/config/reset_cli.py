@@ -6,13 +6,14 @@ from uuid import uuid4
 
 import typer
 
-from ....application.config_reset_documents import ConfigResetOperationPayload
-from ..common import emit_envelope
-from ..config_payloads import (
+from cadrumo_client.commands.payloads import (
     ConfigResetResumeResult,
     ConfigResetStartResult,
     ConfigResetStatusResult,
 )
+
+from ....application.config_reset_documents import ConfigResetOperationPayload
+from ..common import emit_envelope
 from ..errors import CliRefusedBoundaryError
 
 
@@ -99,19 +100,20 @@ def config_reset_start(
     With no runtime the reset runs in this process.
     """
     override_retention, reason = _require_yes_and_override(yes, override_retention, reason)
+    from cadrumo_client.contracts.installation_requests import ResetStartReply, ResetStartRequest
+
     from ....application.operations.registry import OperationFrontendProjection
-    from ....application.runtime.installation_requests import RuntimeResetStartReply, RuntimeResetStartRequest
-    from ..runtime_installation import run_installation_act_if_runtime
+    from ..operation_installation import run_installation_act_if_runtime
 
     reply = run_installation_act_if_runtime(
-        RuntimeResetStartRequest(
+        ResetStartRequest(
             request_id=uuid4(),
             frontend=OperationFrontendProjection.CLI,
             confirmed=True,
             acknowledge_retention_override=override_retention,
             retention_override_reason=reason,
         ),
-        RuntimeResetStartReply,
+        ResetStartReply,
     )
     if reply is not None:
         projection = reply.operation
@@ -163,10 +165,11 @@ def config_reset_resume(
 ) -> None:
     """Roll one exact incomplete journal forward, through the running runtime when there is one."""
     override_retention, reason = _require_yes_and_override(yes, override_retention, reason)
+    from cadrumo_client.contracts.installation_requests import ResetResumeReply, ResetResumeRequest
+
     from ....application.config_reset import ConfigResetRequestRefusedError, latest_incomplete_config_reset_id
     from ....application.operations.registry import OperationFrontendProjection
-    from ....application.runtime.installation_requests import RuntimeResetResumeReply, RuntimeResetResumeRequest
-    from ..runtime_installation import run_installation_act_if_runtime
+    from ..operation_installation import run_installation_act_if_runtime
 
     resolved_operation_id = operation_id
     if resolved_operation_id is None:
@@ -177,7 +180,7 @@ def config_reset_resume(
                 "no incomplete configuration reset operation is available to resume",
             ) from refusal
     reply = run_installation_act_if_runtime(
-        RuntimeResetResumeRequest(
+        ResetResumeRequest(
             request_id=uuid4(),
             frontend=OperationFrontendProjection.CLI,
             operation_id=resolved_operation_id,
@@ -185,7 +188,7 @@ def config_reset_resume(
             acknowledge_retention_override=override_retention,
             retention_override_reason=reason,
         ),
-        RuntimeResetResumeReply,
+        ResetResumeReply,
     )
     if reply is not None:
         projection = reply.operation

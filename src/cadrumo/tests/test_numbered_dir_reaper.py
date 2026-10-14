@@ -149,7 +149,7 @@ def test_a_running_sessions_directory_is_spared(tmp_path: Path) -> None:
     """The load-bearing guarantee: a live session's tmp_path tree is never taken.
 
     Dozens of pytest sessions share one numbered-directory root on this box --
-    several agents at once, each with xdist workers underneath -- and every one
+    several delegated clients at once, each with xdist workers underneath -- and every one
     of them runs this reaper at its own startup. A reaper that mistook a
     running session for a crashed one would delete the fixtures out from under
     a peer's tests mid-run, which is a far worse outcome than the disk pressure

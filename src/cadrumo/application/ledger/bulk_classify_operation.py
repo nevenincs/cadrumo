@@ -9,6 +9,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, ValidationError, model_validator
 
+from cadrumo_client.contracts.submission_payload import SUBMISSION_PAYLOAD_MAX_BYTES
+
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
@@ -26,7 +28,6 @@ from ..operations.profile_guard import require_operation_profile
 from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..runtime.submission_payload import SUBMISSION_PAYLOAD_MAX_BYTES
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -67,7 +68,7 @@ class LedgerBulkClassifyRequest(BaseModel):
     CSV rows remain governed by the canonical classification service. The
     operand is the classification table itself, never a path to one.
 
-    ``actor`` is recorded as sent for a person's session. An agent's session is
+    ``actor`` is recorded as sent for a person's session. An automation's session is
     recorded under its own session label, whatever the request carries.
     """
 

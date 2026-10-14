@@ -67,10 +67,16 @@ pub struct Supervised {
 pub fn start(
     command: Command,
     bearer: &str,
+    gateway_bearer: &str,
     signals: impl Fn(Signal) + Send + 'static,
     diagnostics: Arc<Diagnostics>,
 ) -> Result<Supervised> {
-    start_child(command, Some(bearer), signals, diagnostics)
+    start_child(
+        command,
+        Some((bearer, gateway_bearer)),
+        signals,
+        diagnostics,
+    )
 }
 
 /// Starts `command` contained, as [`start`] does. Without a bearer it is a
@@ -79,7 +85,7 @@ pub fn start(
 #[cfg(windows)]
 pub fn start_child(
     mut command: Command,
-    bearer: Option<&str>,
+    bearer: Option<(&str, &str)>,
     signals: impl Fn(Signal) + Send + 'static,
     diagnostics: Arc<Diagnostics>,
 ) -> Result<Supervised> {
@@ -136,10 +142,10 @@ pub fn start_child(
     supervised
         .threads
         .push(thread::spawn(move || discard(stderr)));
-    let Some(bearer) = bearer else {
+    let Some((bearer, gateway_bearer)) = bearer else {
         return Ok(supervised);
     };
-    let frame = launcher::bearer_frame(bearer);
+    let frame = launcher::bearer_frame(bearer, gateway_bearer);
     let written = supervised
         .stdin
         .as_mut()
@@ -161,7 +167,7 @@ pub fn start_child(
 #[cfg(not(windows))]
 pub fn start_child(
     _command: Command,
-    _bearer: Option<&str>,
+    _bearer: Option<(&str, &str)>,
     _signals: impl Fn(Signal) + Send + 'static,
     _diagnostics: Arc<Diagnostics>,
 ) -> Result<Supervised> {
@@ -309,7 +315,7 @@ pub(crate) mod tests {
         let seen = Arc::new(Mutex::new(Vec::new()));
         let sink = seen.clone();
         read_events(
-            &b"{\"event\":\"agent_ready\",\"gateway_port\":5000,\"agent_version\":\"1\",\"lane\":\"development\",\"workspace_root\":\"C:\\\\ws\"}\nnot json\n{\"event\":\"agent_stopped\",\"reason\":\"x\"}\n"[..],
+            &b"{\"event\":\"agent_ready\",\"gateway_port\":5000,\"agent_version\":\"1\",\"hosting_contract\":1,\"workspace_root\":\"C:\\\\ws\"}\nnot json\n{\"event\":\"agent_stopped\",\"reason\":\"x\"}\n"[..],
             move |signal| sink.lock().unwrap().push(signal),
         );
         assert_eq!(
@@ -366,10 +372,12 @@ pub(crate) mod tests {
     pub(crate) fn launcher_script(ignore_end: bool) -> String {
         format!(
             "$line = [Console]::In.ReadLine(); \
-             $bearer = ($line | ConvertFrom-Json).bearer; \
+             $frame = $line | ConvertFrom-Json; \
+             $bearer = $frame.bearer; \
+             if (-not $frame.gateway_bearer -or $frame.gateway_bearer -eq $bearer) {{ exit 1 }}; \
              $grandchild = Start-Process -PassThru -WindowStyle Hidden -FilePath $env:SystemRoot\\System32\\WindowsPowerShell\\v1.0\\powershell.exe -ArgumentList '-NoProfile','-Command','Start-Sleep -Seconds 120'; \
              [Console]::Error.WriteLine('grandchild ' + $grandchild.Id); \
-             [Console]::Out.WriteLine('{{\"event\":\"agent_ready\",\"gateway_port\":4000,\"agent_version\":\"' + $bearer.Length + '-' + $grandchild.Id + '\",\"lane\":\"development\",\"workspace_root\":\"C:\\\\lane\\\\ws\"}}'); \
+             [Console]::Out.WriteLine('{{\"event\":\"agent_ready\",\"gateway_port\":4000,\"agent_version\":\"' + $bearer.Length + '-' + $grandchild.Id + '\",\"hosting_contract\":1,\"workspace_root\":\"C:\\\\lane\\\\ws\"}}'); \
              [Console]::Out.Flush(); \
              {}",
             if ignore_end {
@@ -412,6 +420,7 @@ pub(crate) mod tests {
         let running = start(
             powershell(&launcher_script(false)),
             &bearer,
+            "synthetic-gateway-secret",
             move |signal| sink.lock().unwrap().push(signal),
             diagnostics.clone(),
         )
@@ -451,6 +460,7 @@ pub(crate) mod tests {
         let running = start(
             powershell(&launcher_script(true)),
             "bearer",
+            "synthetic-gateway-secret",
             move |signal| sink.lock().unwrap().push(signal),
             diagnostics.clone(),
         )
@@ -479,6 +489,7 @@ pub(crate) mod tests {
         let running = start(
             powershell(&launcher_script(true)),
             "bearer",
+            "synthetic-gateway-secret",
             move |signal| sink.lock().unwrap().push(signal),
             Arc::new(Diagnostics::default()),
         )

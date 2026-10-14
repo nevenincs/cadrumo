@@ -1,0 +1,87 @@
+"""``aeat app modelo work create`` decrypts the profile once for the whole command.
+
+The command runs the foral and applicability guards, the baseline and full
+readiness gates, the work-unit writer (which replays both gates) and, for
+Modelo 100, the filing-obligation advisory. Each of those used to decrypt the
+profile capsule on its own; the command now loads it once and hands it down.
+The count is taken on the real encrypted repository behind the real CLI.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Iterator
+from pathlib import Path
+from uuid import UUID
+
+import pytest
+
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
+from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
+from cadrumo.domain.calculations.registry.tests.published_authority import leased_profile_create_context
+from cadrumo.domain.user_profile.values import (
+    ProfileSetupState,
+    UserProfileFact,
+    UserProfileRecord,
+    create_user_profile_record,
+)
+
+from .modelo_cli import create_modelo_work_unit_via_cli
+from .runtime_profile_backend import runtime_cli_profile
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
+
+_LABEL = "Work create profile load count"
+
+
+@pytest.fixture
+def runtime_profile(tmp_path: Path, authority_operation: object) -> Iterator[TestRuntimeProfile]:
+    del authority_operation  # the record is created under the leased generation
+    with runtime_cli_profile(tmp_path=tmp_path, label=_LABEL) as profile:
+        record = create_user_profile_record(
+            profile_id=profile.bucket_id,
+            setup_state=ProfileSetupState.COMPLETE,
+            facts=(
+                UserProfileFact(path="identity.name", value="Marta"),
+                UserProfileFact(path="identity.surnames", value="Diaz Ortega"),
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+                UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="iva.m303_regime_composition", value="general"),
+                UserProfileFact(path="iva.redeme_enrolled", value=False),
+                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+                UserProfileFact(path="activities.description", value="economic activity"),
+                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                UserProfileFact(path="provenance.source", value="manual_cli"),
+                UserProfileFact(path="renta_taxpayer.birth_date", value="1985-06-15"),
+                UserProfileFact(path="renta_filing.declaration_type", value="1"),
+            ),
+            context=leased_profile_create_context(),
+        )
+        seed_test_profile_record(record, root=profile.storage_root, label=_LABEL)
+        yield profile
+
+
+@pytest.fixture
+def profile_loads(monkeypatch: pytest.MonkeyPatch) -> list[str]:
+    """Record every profile decrypt in the process, still performing it."""
+    loads: list[str] = []
+    real_load = ProfileRecordRepository.load
+
+    def counting_load(self: ProfileRecordRepository, profile_id: str | UUID) -> UserProfileRecord:
+        loads.append(str(profile_id))
+        return real_load(self, profile_id)
+
+    monkeypatch.setattr(ProfileRecordRepository, "load", counting_load)
+    return loads
+
+
+def test_work_create_decrypts_the_profile_once(runtime_profile: TestRuntimeProfile, profile_loads: list[str]) -> None:
+    create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
+
+    assert profile_loads == [runtime_profile.bucket_id]

@@ -26,7 +26,6 @@ _EXTERNAL_IDENTITY_TOKENS = {
     "adapters/inbound/einvoice/parsers.py": frozenset({"vat", "vatid"}),
     # A word printed on a foreign-language invoice, not a Cadrumo identifier.
     "application/ledger/invoice_label_vocabulary.py": frozenset({"vat"}),
-    "entrypoints/cli/config/tests/test_apoderado_scopes_payload.py": frozenset({"VAT"}),
 }
 _EXTERNAL_VAT_PROSE_VALUES = {
     "adapters/inbound/einvoice/parsers.py": frozenset({"vat"}),
@@ -57,7 +56,6 @@ _EXTERNAL_VAT_PROSE_VALUES = {
             "reduced vat rate 13,5%",
         },
     ),
-    "entrypoints/cli/config/tests/test_apoderado_scopes_payload.py": frozenset({"VAT"}),
     # The rendered English operator label for the Modelo 349 operator identifier.
     "entrypoints/tui/modelo/workbench/tests/test_workbench_finding_words.py": frozenset({"EU VAT number"}),
     "tests/fixtures/justificantes/_generate_modelo_390_english.py": frozenset(

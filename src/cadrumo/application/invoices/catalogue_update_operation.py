@@ -181,7 +181,7 @@ def build_invoice_update_definition(
     """Declare one durable, guarded update with honest uncertain effects.
 
     ``execution_caller_reader`` names the frontend and session that admitted an
-    execution, so an agent's correction event is recorded under its session's
+    execution, so an automation's correction event is recorded under its session's
     label.
     """
     return build_single_phase_definition(

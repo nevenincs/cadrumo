@@ -452,7 +452,7 @@ def _policy_decision(
 
 
 @pytest.mark.parametrize("consent", ["exact", "missing", "wrong_destination", "restricted_periods"])
-def test_mcp_report_result_uses_actual_disclosure_and_all_period_policy(consent: str) -> None:
+def test_external_client_report_result_uses_actual_disclosure_and_all_period_policy(consent: str) -> None:
     registry = _registry()
     destination = uuid4()
     contract = registry.lookup_public_contract(DIAGNOSTICS_READ_OPERATION_DEFINITION_ID)
@@ -468,7 +468,7 @@ def test_mcp_report_result_uses_actual_disclosure_and_all_period_policy(consent:
             profile_id=_PROFILE,
             destination_id=destination,
             action=AccessAction.RESULT,
-            frontend=OperationFrontendProjection.MCP,
+            frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
             contract=contract,
             published_authority=Availability.AVAILABLE,
             authority_operation=_PIN,
@@ -481,7 +481,7 @@ def test_mcp_report_result_uses_actual_disclosure_and_all_period_policy(consent:
             profile_id=_PROFILE,
             destination_id=destination,
             action=AccessAction.OBSERVE,
-            frontend=OperationFrontendProjection.MCP,
+            frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
             contract=contract,
             published_authority=Availability.AVAILABLE,
             authority_operation=_PIN,

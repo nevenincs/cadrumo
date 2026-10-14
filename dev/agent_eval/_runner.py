@@ -1,49 +1,24 @@
-"""Runner for the operator golden-task eval.
+"""Score Cadrumo acceptance scenarios against declared contracts and captured outcomes.
 
-Boundary posture: ``dev.agent_eval`` is a CONSUMER of the shipped surfaces, never
-a reach around them. Harness-owned material (skills, personas, operator rules)
-comes from its canonical ``cadrumo_harness`` defining modules; taxpayer- and
-application-state material comes from the real ``aeat`` CLI / MCP dispatch the
-caller performs; and this module imports nothing from ``cadrumo``'s adapters,
-application or entrypoints layers.
+Callers supply command keys, calculation observations, narration and confirmation
+verdicts, contradiction signals and observed profile-confirmation trajectories.
+The runner compares them with scenario expectations, application precondition
+contracts, registry declaration snapshots and harness-owned skill documents.
+External drivers perform the interactions that produce those observations;
+this module owns no agent, provider or model execution policy.
 
-Pure with respect to the CLI: the set of resolvable command keys is injected by
-the caller (the test wires it from the live CLI schema registry), so this module
-never imports the entrypoints layer. The registry snapshot it reads for the
-provenance and verification-contract dimensions is a pure registry read through
-its defining resource module and needs no profile or secret
-storage; it stays a direct read because no CLI verb projects a revision's
-``verification_expectations``, and the CLI-boundary half of the same question is
-already covered by the separate response-provenance dimension below. The
-response-provenance dimension follows the injection pattern: the caller
-dispatches a real ``modelo.work.calculate`` through the actual CLI/MCP command
-handling and passes the decoded JSON ``observations`` rows in; this module only
-asserts over the already-fetched rows and never dispatches the call itself. The
-narration-faithfulness dimension (eval-catalogue category 9) follows the
-identical pattern one layer further: the caller checks a narration against the
-captured calculate JSON and passes the per-step verdict in - this module
-never imports a transport layer and never runs the check itself. The
-confirmation-gate dimension (eval-catalogue category 8) follows the same pattern
-once more: the caller supplies a step's confirmation decision as a
-:class:`~dev.agent_eval._models.ConfirmationGateCheck`; this module never
-resolves a confirmation tier itself. The contradiction dimension
-(eval-catalogue category 4) follows the
-same pattern: the caller dispatches two independent real CLI/MCP invocations for
-the same target (a readiness-shaped signal and a second, legitimately-blocking
-signal) and passes in whether each reported ready / refused, plus a candidate
-ordered trajectory; this module never dispatches either call itself and never
-decides what counts as a mutating command (that closed set rides on the scenario,
-caller-declared). The active-profile-confirmation dimension (eval-catalogue category
-5) follows the same injection pattern once more: the caller dispatches a real ordered
-trajectory of CLI/MCP invocations (the active-profile confirmation command plus zero or
-more mutating commands) and passes the observed command-key sequence in; this module
-never dispatches any call itself and, like the contradiction dimension, never decides
-what counts as a mutating command (that closed set rides on the scenario).
+Recovery evaluation resolves application-owned actions through shared client
+command contracts and the actual tax/runtime command graphs. It invokes the
+owning public entrypoint only when the declared safety flags permit recovery,
+then scores the resulting envelope, exit code and retry. Authentication,
+operation authority, confirmation tiers and tax calculations remain with their
+owning product APIs.
 """
 
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -76,7 +51,9 @@ from ._models import (
 
 if TYPE_CHECKING:
     from cadrumo.application.operator_actions.models import PreconditionVerdict
-    from cadrumo.entrypoints.cli.command_parameter_contracts import ParameterSpec
+    from cadrumo_client.commands.graph import CommandSpecGraph
+    from cadrumo_client.commands.parameters import ParameterSpec
+    from cadrumo_client.contracts.command_program import CommandProgram
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -422,6 +399,10 @@ def _check_skill_consistency(scenario: GoldenScenario, failures: list[str]) -> b
     if skill_text is None:
         failures.append(f"skill '{scenario.skill_name}' not found among shipped skills")
         return False
+    # Markdown wraps a single cited command across lines without changing its
+    # words. Normalize only within each existing backtick span; do not merge
+    # separate citations or accept a missing trajectory verb.
+    skill_text = re.sub(r"`([^`]+)`", lambda match: "`" + " ".join(match[1].split()) + "`", skill_text)
     missing = [verb for verb in scenario.expected_trajectory if _cli_form(verb) not in skill_text]
     if not missing:
         return True
@@ -534,8 +515,6 @@ def _canonical_action_arguments(
     syntax.  This helper deliberately has no action- or command-specific branch.
     """
     from cadrumo.core.operator_action_enums import ActionArgumentStatus
-    from cadrumo.core.product_identity import PRODUCT_IDENTITY
-    from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 
     values: dict[str, object] = {}
     for binding in argument_bindings:
@@ -546,7 +525,8 @@ def _canonical_action_arguments(
             raise ValueError(f"canonical recovery has no concrete value for argument: {name}")
         values[name] = value
 
-    command = COMMAND_GRAPH.resolve_path((PRODUCT_IDENTITY.cli_executable, *cli_path))
+    program, path = _command_program_path(cli_path)
+    command = _command_graph(program).resolve_path((program.executable_name, *path))
     arguments: list[str] = []
     consumed: set[str] = set()
     for parameter in command.parameters:
@@ -564,11 +544,47 @@ def _invoke_canonical_cli(argv: Sequence[str]):
     # the one that accepts that tree without a cross-fork cast.
     from typer.testing import CliRunner
 
+    from cadrumo_client.contracts.command_program import CommandProgram
+
+    program, path = _command_program_path(tuple(argv))
+    if program is CommandProgram.AUTHENTICATION:
+        import io
+        from contextlib import redirect_stdout
+        from types import SimpleNamespace
+
+        from cadrumo_runtime.commands.main import main
+
+        output = io.StringIO()
+        with redirect_stdout(output):
+            exit_code = main(["--format", "json", *path])
+        return SimpleNamespace(exit_code=exit_code, output=output.getvalue())
     from cadrumo.entrypoints.cli.main import cli_app
 
     app = cli_app()
 
-    return CliRunner().invoke(app, ["--format", "json", *argv])
+    return CliRunner().invoke(app, ["--format", "json", *path])
+
+
+def _command_program_path(path: tuple[str, ...]) -> tuple[CommandProgram, tuple[str, ...]]:
+    """Use the resolver's declared executable; historical rootless tax paths remain tax paths."""
+    from cadrumo_client.contracts.command_program import CommandProgram
+
+    if path and path[0] in {program.executable_name for program in CommandProgram}:
+        return CommandProgram(path[0]), path[1:]
+    return CommandProgram.AEAT, path
+
+
+def _command_graph(program: CommandProgram) -> CommandSpecGraph:
+    """Read declarations from the executable's actual owning graph."""
+    from cadrumo_client.contracts.command_program import CommandProgram
+
+    if program is CommandProgram.AUTHENTICATION:
+        from cadrumo_runtime.commands.command_specs import RUNTIME_COMMAND_GRAPH
+
+        return RUNTIME_COMMAND_GRAPH
+    from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
+
+    return COMMAND_GRAPH
 
 
 def _decoded_envelope(output: str) -> Mapping[str, object] | None:
@@ -589,9 +605,8 @@ def _decoded_envelope(output: str) -> Mapping[str, object] | None:
 
 def _safe_to_execute(cli_path: tuple[str, ...]) -> bool:
     """Read recovery safety from the command graph's execution-policy authority."""
-    from cadrumo.entrypoints.cli.main import command_execution_policy_for_cli_path
-
-    policy = command_execution_policy_for_cli_path(cli_path)
+    program, path = _command_program_path(cli_path)
+    policy = _command_graph(program).resolve_path((program.executable_name, *path)).policy
     return not (policy.destructive or policy.handoff or policy.live_write)
 
 
@@ -1088,7 +1103,7 @@ def _append_recovery_parameter(
     parameter: ParameterSpec, values: dict[str, object], consumed: set[str], arguments: list[str]
 ) -> None:
     """Append recovery parameter."""
-    from cadrumo.entrypoints.cli.command_parameter_contracts import OptionSpec
+    from cadrumo_client.commands.parameters import OptionSpec
 
     name = parameter.name
     if name not in values:

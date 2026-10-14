@@ -37,7 +37,7 @@ class ModeloWorkRenameRequest(CredentialFreeOperationRequest):
     Credential-free by construction: a rename names a unit and a label, so the
     request carries nothing that would be unsafe to journal.
 
-    ``actor`` is recorded as sent for a person's session. An agent's session is
+    ``actor`` is recorded as sent for a person's session. An automation's session is
     recorded under its own session label, whatever the request carries.
     """
 
@@ -95,7 +95,7 @@ class ModeloWorkDiscardBaseline(BaseModel):
 class ModeloWorkDiscardRequest(CredentialFreeOperationRequest):
     """The approved unit and the reason recorded against its discard.
 
-    ``actor`` is recorded as sent for a person's session. An agent's session is
+    ``actor`` is recorded as sent for a person's session. An automation's session is
     recorded under its own session label, whatever the request carries.
     """
 

@@ -103,7 +103,11 @@ int main(int argc, char **argv) {
     paths[2] = interpreter;
     forwarded[0] = interpreter;
     forwarded[1] = "-c";
+#ifdef CADRUMO_FIXED_MODULE
+    forwarded[2] = "import " CADRUMO_FIXED_MODULE " as fixed; raise SystemExit(fixed.main())";
+#else
     forwarded[2] = "import _cadrumo_bootstrap; _cadrumo_bootstrap.run_entrypoint('" CADRUMO_ENTRYPOINT "')";
+#endif
     for (int i = 1; i < argc; ++i) forwarded[i + 2] = argv[i];
     result = run(argc + 2, forwarded, (const char **)paths, CADRUMO_DEVELOPMENT);
     free(forwarded);

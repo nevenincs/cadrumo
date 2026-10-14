@@ -15,15 +15,16 @@ from textual.timer import Timer
 from textual.widgets import Button, Input, Static
 from textual.worker import Worker, WorkerCancelled, WorkerError, WorkerFailed
 
-from ....adapters.local_runtime.automation_decision import (
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.automation_decision import (
     AutomationDecision,
     AutomationDecisionCompletion,
     run_automation_decision,
 )
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
 from ....application.operations.registry import OperationFrontendProjection
-from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....application.user_profile.access_contracts import AccessDenialCode
 from ....application.user_profile.automation_enrollment import AutomationReviewProjection
 from ....core.async_cleanup import await_cancellation_complete
@@ -54,7 +55,7 @@ class RuntimeAutomationDecisionScreen(ModalScreen[AutomationDecisionUiOutcome | 
 
     def __init__(
         self,
-        client: RuntimeFrontendClient,
+        client: FrontendClient,
         review: AutomationReviewProjection,
         *,
         decision: AutomationDecision,
@@ -65,11 +66,11 @@ class RuntimeAutomationDecisionScreen(ModalScreen[AutomationDecisionUiOutcome | 
         """Pin the exact displayed review and original human session."""
         super().__init__()
         if decision not in {"approve", "decline"}:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         if client.frontend is not OperationFrontendProjection.TUI:
-            raise RuntimeFrontendRefusedError(AccessDenialCode.FRONTEND_DENIED.value)
+            raise FrontendRefusedError(AccessDenialCode.FRONTEND_DENIED.value)
         if review.receipt.profile_id != client.profile_id:
-            raise RuntimeFrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
+            raise FrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
         self._client = client
         self._review: AutomationReviewProjection | None = review
         self._decision: AutomationDecision = decision

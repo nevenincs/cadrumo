@@ -1,6 +1,6 @@
 """A workflow run read releases exactly the detail fields listed for each variant.
 
-Run reads reach an MCP client, and the terminal detail of a run is copied into
+Run reads reach an external client client, and the terminal detail of a run is copied into
 a result that has no schema of its own for each variant. The projection copies
 only the fields listed for the variant, so a field a variant gains is held back
 until someone reads what it can carry and lists it. These tests put the real

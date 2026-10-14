@@ -24,7 +24,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Any, Final, Literal, override
 
-from pydantic import BeforeValidator, Field, SecretStr, ValidationInfo, field_validator, model_validator
+from pydantic import AliasChoices, BeforeValidator, Field, SecretStr, ValidationInfo, field_validator, model_validator
 from pydantic_settings import (
     BaseSettings,
     EnvSettingsSource,
@@ -66,7 +66,7 @@ from .storage_environment import (
     storage_mode,
     storage_root_override,
 )
-from .storage_taxonomy import STORAGE_ROOT_SETTINGS_FIELD
+from .storage_taxonomy import CONNECTION_SOCKET_DIRECTORY_ENVIRONMENT_VARIABLE, STORAGE_ROOT_SETTINGS_FIELD
 
 if TYPE_CHECKING:
     from .bucket_pointer import BucketPointer
@@ -138,7 +138,7 @@ class AuthorityRootSettings(BaseSettings):
     must not depend on the storage root or the active-profile pointer. Both of
     those refuse on a machine that still carries retired ``aeat`` state, and a
     :class:`Settings` construction resolves both; reading the authority root
-    through it would stop the command surface and the MCP server from starting
+    through it would stop the command surface and the external client server from starting
     on such a machine even though neither touches storage to describe itself.
 
     :class:`Settings` inherits the field, so the variable has one declaration
@@ -368,8 +368,12 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
     cadrumo_temp_dir: Path = Field(
         default=Path("tmp"), description="Application temporary files beneath the storage root."
     )
-    cadrumo_runtime_socket_dir: Path = Field(
-        default=Path("runtime"), description="Owner-only POSIX runtime sockets and locks beneath the storage root."
+    cadrumo_connection_socket_dir: Path = Field(
+        default=Path("runtime"),
+        validation_alias=AliasChoices(
+            CONNECTION_SOCKET_DIRECTORY_ENVIRONMENT_VARIABLE, "cadrumo_connection_socket_dir"
+        ),
+        description="Owner-only local connection sockets and locks beneath the storage root.",
     )
     cadrumo_playwright_browsers_dir: Path = Field(
         default=Path("components/playwright"),
@@ -974,8 +978,23 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
         been cut is still a field, but no environment variable reaches it,
         so listing it here would document a control that does nothing.
         """
-        names: set[str] = {name.upper() for name in cls.model_fields} | set(STORAGE_ROOT.precedence)
+        names = {
+            environment_name
+            for field_name in cls.model_fields
+            for environment_name in cls._environment_names_for_field(field_name)
+        } | set(STORAGE_ROOT.precedence)
         return names - _NON_ENVIRONMENT_SELECTION_NAMES
+
+    @classmethod
+    def _environment_names_for_field(cls, field_name: str) -> set[str]:
+        """Include each field's canonical name and explicit environment aliases."""
+        names = {field_name.upper()}
+        alias = cls.model_fields[field_name].validation_alias
+        if isinstance(alias, str):
+            names.add(alias.upper())
+        elif isinstance(alias, AliasChoices):
+            names.update(choice.upper() for choice in alias.choices if isinstance(choice, str))
+        return names
 
     @classmethod
     def storage_env_var_names(cls) -> frozenset[str]:
@@ -993,10 +1012,14 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
 
         names = {STORAGE_ROOT.variable}
         names.update(
-            location.settings_field.upper()
+            environment_name
             for location in STORAGE_TAXONOMY.values()
             if location.override_policy is StorageOverridePolicy.OPERATOR_OVERRIDABLE
             and (location.settings_field is not None and location.settings_field)
+            for environment_name in (
+                location.environment_variable or location.settings_field.upper(),
+                *cls._environment_names_for_field(location.settings_field),
+            )
         )
         return frozenset(names)
 
@@ -1018,7 +1041,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
     @field_validator(
         "cadrumo_token_dir",
         "cadrumo_temp_dir",
-        "cadrumo_runtime_socket_dir",
+        "cadrumo_connection_socket_dir",
         "cadrumo_playwright_browsers_dir",
         "cadrumo_ollama_models_dir",
         "cadrumo_ollama_home_dir",

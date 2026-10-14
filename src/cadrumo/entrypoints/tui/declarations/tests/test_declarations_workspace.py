@@ -18,8 +18,6 @@ from textual.screen import Screen
 from textual.widget import Widget
 from textual.widgets import Button, DataTable, Input, Static
 
-from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
-
 from .....application.modelo.declaration_summary import DeclarationSummary, DeclarationSummaryState
 from .....application.modelo.declaration_targets import DeclarationTarget, declaration_targets
 from .....application.modelo.declarations_workspace import project_declarations_workspace
@@ -56,6 +54,7 @@ from .....domain.modelos.filing_record import (
     ModeloRecordCatalogue,
     derive_filing_record_id,
 )
+from .....domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 from .....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ...components.host import ScreenHostApp
 from ...modelo.lifecycle import ModeloLifecycleActionUnavailableError

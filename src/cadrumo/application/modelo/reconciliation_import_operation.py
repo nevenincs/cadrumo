@@ -1,4 +1,4 @@
-"""Registered exact-profile import of local modelo reconciliation evidence."""
+"""Registered exact-profile import using a pinned :class:`RegistrySnapshot`."""
 
 from __future__ import annotations
 
@@ -112,7 +112,7 @@ _BucketSelector = Annotated[str, Field(min_length=1, max_length=128, pattern=r"\
 class ModeloReconciliationImportRequest(CredentialFreeOperationRequest):
     """Address one work unit and one local evidence file in an exact profile.
 
-    ``actor`` is recorded as sent for a person's session. An agent's session is
+    ``actor`` is recorded as sent for a person's session. An automation's session is
     recorded under its own session label, whatever the request carries.
     """
 
@@ -333,7 +333,7 @@ class HandleVerifiedEvidenceParser(ReconciliationEvidenceParserPort):
 
     @override
     def parse_justificante_bytes(self, source: bytes) -> Justificante:
-        """Parse bytes that never named a host path."""
+        """Parse bytes against a :class:`RegistrySnapshot` without naming a host path."""
         return self._parser.parse_justificante_bytes(source)
 
     @override
@@ -370,7 +370,7 @@ class HandleVerifiedEvidenceParser(ReconciliationEvidenceParserPort):
         period: str,
         registry_snapshot: RegistrySnapshot,
     ) -> ReconciliationDeclaracionObservation:
-        """Parse bytes that never named a host path."""
+        """Parse bytes against a :class:`RegistrySnapshot` without naming a host path."""
         return self._parser.parse_declaracion_bytes(
             source,
             modelo=modelo,

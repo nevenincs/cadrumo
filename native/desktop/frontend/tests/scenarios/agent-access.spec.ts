@@ -29,7 +29,7 @@ const settingsButton = (target: Page) =>
 
 const section = (target: Page) =>
   column(target).getByRole("region", {
-    name: label("desktop.agent_keys.title"),
+    name: label("desktop.automation_access.title"),
   });
 
 /** Opens the agent's settings, where the keys are the second section. */
@@ -44,7 +44,7 @@ const key = (target: Page, id: string) =>
     .getByRole("listitem")
     .filter({
       has: target.getByRole("heading", {
-        name: label("desktop.agent_keys.key_title", { id }),
+        name: label("desktop.automation_access.key_title", { id }),
       }),
     });
 
@@ -82,7 +82,7 @@ const NOWHERE = {
 
 const issueButton = (target: Page) =>
   section(target).getByRole("button", {
-    name: label("desktop.agent_keys.issue_submit"),
+    name: label("desktop.automation_access.issue_submit"),
   });
 
 test.beforeEach(async ({ page: target }) => {
@@ -100,37 +100,41 @@ test("each key says what it may do, when it was issued and last used, and where 
   await expect(section(target)).toBeVisible();
 
   const used = key(target, USED);
-  await expect(used).toContainText(label("desktop.agent_keys.standing_active"));
   await expect(used).toContainText(
-    label("desktop.agent_keys.scope_profile_values"),
+    label("desktop.automation_access.standing_active"),
   );
   await expect(used).toContainText(
-    label("desktop.agent_keys.scope_tax_values"),
+    label("desktop.automation_access.scope_profile_values"),
   );
   await expect(used).toContainText(
-    label("desktop.agent_keys.scope_all_operations"),
+    label("desktop.automation_access.scope_tax_values"),
+  );
+  await expect(used).toContainText(
+    label("desktop.automation_access.scope_all_operations"),
   );
   await expect(used).toContainText(/Issued .+ · Expires .+ · Last used .+/);
 
   // A key that never let an agent in says so, and does not read tax values.
   const unused = key(target, UNUSED);
-  await expect(unused).toContainText(label("desktop.agent_keys.never_used"));
   await expect(unused).toContainText(
-    label("desktop.agent_keys.scope_no_tax_values"),
+    label("desktop.automation_access.never_used"),
+  );
+  await expect(unused).toContainText(
+    label("desktop.automation_access.scope_no_tax_values"),
   );
 
   await expect(key(target, SUSPENDED)).toContainText(
-    label("desktop.agent_keys.standing_suspended"),
+    label("desktop.automation_access.standing_suspended"),
   );
   // A key past its end is expired whatever its grant says.
   await expect(key(target, EXPIRED)).toContainText(
-    label("desktop.agent_keys.standing_expired"),
+    label("desktop.automation_access.standing_expired"),
   );
   await expect(key(target, EXPIRED)).toContainText(/Expired /);
   // A revoked key is final: nothing to do with it.
   const revoked = key(target, REVOKED);
   await expect(revoked).toContainText(
-    label("desktop.agent_keys.standing_revoked"),
+    label("desktop.automation_access.standing_revoked"),
   );
   await expect(revoked.getByRole("button")).toHaveCount(0);
   await expect(revoked).not.toContainText(/Expires /);
@@ -144,10 +148,10 @@ test("one press issues a key and shows its reference once", async ({
     .getByRole("heading", { level: 4 })
     .count();
   const form = section(target).getByRole("form", {
-    name: label("desktop.agent_keys.issue"),
+    name: label("desktop.automation_access.issue"),
   });
   // Tax values are off until the person turns them on.
-  const tax = form.getByLabel(label("desktop.agent_keys.tax_values"));
+  const tax = form.getByLabel(label("desktop.automation_access.tax_values"));
   await expect(tax).not.toBeChecked();
   await tax.check();
   await expect(issueButton(target)).toBeEnabled();
@@ -155,13 +159,13 @@ test("one press issues a key and shows its reference once", async ({
 
   // The reference is shown at once: no step stood between the press and it.
   const reference = section(target).getByLabel(
-    label("desktop.agent_keys.reference_label"),
+    label("desktop.automation_access.reference_label"),
   );
   await expect(reference).toBeVisible();
   const shown = await reference.inputValue();
   expect(shown).toMatch(/^[0-9a-f-]{36}$/);
   await expect(section(target)).toContainText(
-    label("desktop.agent_keys.issued_once"),
+    label("desktop.automation_access.issued_once"),
   );
   expect((await calls(target)).filter((call) => /Issue/.test(call))).toEqual([
     "agentAccessIssue",
@@ -174,16 +178,16 @@ test("one press issues a key and shows its reference once", async ({
   await expect(
     section(target)
       .locator(".agent-key")
-      .filter({ hasText: label("desktop.agent_keys.scope_tax_values") }),
+      .filter({ hasText: label("desktop.automation_access.scope_tax_values") }),
   ).toHaveCount(3);
 
   // Copying asks the clipboard for the reference and nothing else.
   await section(target)
-    .getByRole("button", { name: label("desktop.agent_keys.copy") })
+    .getByRole("button", { name: label("desktop.automation_access.copy") })
     .click();
   await expect(
     section(target).getByRole("button", {
-      name: label("desktop.agent_keys.copied"),
+      name: label("desktop.automation_access.copied"),
     }),
   ).toBeVisible();
   // The host was asked for the reference's thirty-six characters, and its
@@ -194,11 +198,11 @@ test("one press issues a key and shows its reference once", async ({
 
   // Done brings the issuing choice back, with tax values off again.
   await section(target)
-    .getByRole("button", { name: label("desktop.agent_keys.done") })
+    .getByRole("button", { name: label("desktop.automation_access.done") })
     .click();
   await expect(reference).toHaveCount(0);
   await expect(
-    section(target).getByLabel(label("desktop.agent_keys.tax_values")),
+    section(target).getByLabel(label("desktop.automation_access.tax_values")),
   ).not.toBeChecked();
   await expect(issueButton(target)).toBeVisible();
 });
@@ -209,13 +213,13 @@ test("the reference is left nowhere once it is closed", async ({
   await open(target);
   await issueButton(target).click();
   const reference = section(target).getByLabel(
-    label("desktop.agent_keys.reference_label"),
+    label("desktop.automation_access.reference_label"),
   );
   const shown = await reference.inputValue();
   expect(shown).toMatch(/^[0-9a-f-]{36}$/);
 
   await section(target)
-    .getByRole("button", { name: label("desktop.agent_keys.done") })
+    .getByRole("button", { name: label("desktop.automation_access.done") })
     .click();
   await expect(reference).toHaveCount(0);
   // Not on the page, in its storage, its address or what the host was asked.
@@ -234,7 +238,9 @@ test("nothing asks for a password, and issuing needs no second approval", async 
 
   await issueButton(target).click();
   await expect(
-    section(target).getByLabel(label("desktop.agent_keys.reference_label")),
+    section(target).getByLabel(
+      label("desktop.automation_access.reference_label"),
+    ),
   ).toBeVisible();
   await expect(field).toHaveCount(0);
   await expect(section(target).getByRole("dialog")).toHaveCount(0);
@@ -248,32 +254,32 @@ test("a key is revoked only after the person confirms, and then has nothing left
   await open(target);
   const unused = key(target, UNUSED);
   await unused
-    .getByRole("button", { name: label("desktop.agent_keys.revoke") })
+    .getByRole("button", { name: label("desktop.automation_access.revoke") })
     .click();
   await expect(unused).toContainText(
-    label("desktop.agent_keys.revoke_confirm"),
+    label("desktop.automation_access.revoke_confirm"),
   );
   // Cancelling revokes nothing, and the host is not asked.
   await unused
-    .getByRole("button", { name: label("desktop.agent_keys.cancel") })
+    .getByRole("button", { name: label("desktop.automation_access.cancel") })
     .click();
   await expect(unused).toContainText(
-    label("desktop.agent_keys.standing_active"),
+    label("desktop.automation_access.standing_active"),
   );
   expect((await calls(target)).filter((call) => /Revoke/.test(call))).toEqual(
     [],
   );
 
   await unused
-    .getByRole("button", { name: label("desktop.agent_keys.revoke") })
+    .getByRole("button", { name: label("desktop.automation_access.revoke") })
     .click();
   await unused
     .getByRole("button", {
-      name: label("desktop.agent_keys.revoke_confirm_action"),
+      name: label("desktop.automation_access.revoke_confirm_action"),
     })
     .click();
   await expect(unused).toContainText(
-    label("desktop.agent_keys.standing_revoked"),
+    label("desktop.automation_access.standing_revoked"),
   );
   await expect(unused.getByRole("button")).toHaveCount(0);
   expect((await calls(target)).filter((call) => /Revoke/.test(call))).toEqual([
@@ -287,18 +293,18 @@ test("a revoked key whose stored copy is still being removed says so", async ({
   await open(target);
   const pending = key(target, CLEANUP);
   await pending
-    .getByRole("button", { name: label("desktop.agent_keys.revoke") })
+    .getByRole("button", { name: label("desktop.automation_access.revoke") })
     .click();
   await pending
     .getByRole("button", {
-      name: label("desktop.agent_keys.revoke_confirm_action"),
+      name: label("desktop.automation_access.revoke_confirm_action"),
     })
     .click();
   await expect(pending).toContainText(
-    label("desktop.agent_keys.standing_revoked"),
+    label("desktop.automation_access.standing_revoked"),
   );
   await expect(pending.getByRole("status")).toContainText(
-    label("desktop.agent_keys.cleanup_pending"),
+    label("desktop.automation_access.cleanup_pending"),
   );
 });
 

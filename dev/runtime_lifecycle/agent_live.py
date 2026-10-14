@@ -1,8 +1,8 @@
 """Be the person behind a live agent run on the built package, and judge its outcome independently.
 
-The agent side runs in cadrumo-agent: its package runner starts the package's
-own ``bin/cadrumo-agent`` gateway, with the package's ``cadrumo-mcp`` as the
-tool relay, and drives the turns. This driver never starts the agent and never
+The external agent's runner starts the manifest-verified bundled native gateway, with
+the package's ``cadrumo-mcp`` as the tool relay, and drives the turns.
+This driver never starts the agent and never
 holds its bearer. On a fresh, marked storage root it:
 
 - starts the package's ``cadrumo-runtime --configured-root`` and creates a
@@ -34,7 +34,7 @@ The exchange directory holds JSON files written whole, each by one side:
 - ``runner-receipt.json`` or ``runner-failed.json`` (runner): how the agent side
   ended.
 
-Run it with ``just verify-agent-live --package DIR``, then start cadrumo-agent's
+Run it with ``--package DIR``, then start the external agent's
 package runner on the exchange directory it prints. Exit 0 means every step
 held, 1 names the step that did not.
 """
@@ -42,14 +42,16 @@ held, 1 names the step that did not.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import shutil
+import sys
 import tempfile
 import threading
 import time
 from collections.abc import Generator, Mapping
-from contextlib import contextmanager, suppress
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Final
@@ -65,8 +67,8 @@ from .caller_owned_root import (
     require,
     run_cli,
 )
-from .live_sign_in import (
-    Holder,
+from .proof_support import (
+    ProcessIdentity,
     Profile,
     acceptance_failure,
     create_profile,
@@ -74,7 +76,9 @@ from .live_sign_in import (
     package_identity,
     started_processes,
     state_taxpayer,
+    verified_relay,
 )
+from .session_holder import RuntimeSessionHolder
 
 _PROFILE: Final = "agent-live-acceptance"
 _PROTOCOL: Final = 1
@@ -162,14 +166,9 @@ def stored_answers_disagree(given: Mapping[str, Mapping[str, str]], stored: list
     return differences
 
 
-def is_announced_relay(process_id: int, relay: Path, gateway: int | None) -> bool:
-    """Whether ``process_id`` is the package's relay running under the announced gateway."""
-    if gateway is None:
-        return False
-    with suppress(psutil.Error, OSError):
-        process = psutil.Process(process_id)
-        return Path(process.exe()).resolve() == relay and any(parent.pid == gateway for parent in process.parents())
-    return False
+def is_announced_relay(process_id: int, relay: Path, gateway: ProcessIdentity | None) -> bool:
+    """Check the selected gateway's retained kernel incarnation and relay lineage."""
+    return verified_relay(process_id, relay, gateway)
 
 
 @dataclass(slots=True)
@@ -217,7 +216,9 @@ class Exchange:
 
 
 @contextmanager
-def _attending(holder: Holder, relay: Path, gateway: Mapping[str, int | None]) -> Generator[list[int]]:
+def _attending(
+    holder: RuntimeSessionHolder, relay: Path, gateway: Mapping[str, ProcessIdentity | None]
+) -> Generator[list[int]]:
     """Approve, for the life of the block, each attendance ask from the announced gateway's relay."""
     stop = threading.Event()
     approved: list[int] = []
@@ -226,17 +227,31 @@ def _attending(holder: Holder, relay: Path, gateway: Mapping[str, int | None]) -
     def attend() -> None:
         while not stop.is_set():
             try:
-                ask = holder.event("attendance_request", seconds=1)
-            except AcceptanceError as refusal:
-                if "sent no attendance_request" in str(refusal):
-                    continue
+                inventory = holder.command("attendance_inventory")
+                require(inventory.get("kind") == "attendance_inventory", "runtime returned no attendance inventory")
+                candidates = inventory.get("candidates")
+                if not isinstance(candidates, list):
+                    raise AcceptanceError("runtime attendance inventory has no candidate list")
+                for ask in candidates:
+                    require(isinstance(ask, dict), "runtime attendance candidate is not an object")
+                    require(isinstance(ask.get("attendance_id"), str), "runtime candidate omitted its ask identity")
+                    process_id = ask.get("process_id")
+                    relay_ask = type(process_id) is int and is_announced_relay(
+                        process_id, relay, gateway.get("identity")
+                    )
+                    decision = holder.command(
+                        "attendance_decision", attendance_id=str(ask["attendance_id"]), approve=relay_ask
+                    )
+                    require(
+                        decision.get("kind") == "attendance_decided" and decision.get("approved") is relay_ask,
+                        "runtime attendance decision differs from the person's answer",
+                    )
+                    if relay_ask:
+                        approved.append(process_id)
+            except (AcceptanceError, OSError, ValueError) as refusal:
                 failures.append(str(refusal))
                 return
-            process_id = ask.get("process_id")
-            relay_ask = isinstance(process_id, int) and is_announced_relay(process_id, relay, gateway.get("pid"))
-            holder.decide(str(ask["attendance_id"]), approve=relay_ask)
-            if relay_ask:
-                approved.append(process_id)
+            stop.wait(_POLL_SECONDS)
 
     watcher = threading.Thread(target=attend, name="agent-live-attendance", daemon=True)
     watcher.start()
@@ -244,7 +259,8 @@ def _attending(holder: Holder, relay: Path, gateway: Mapping[str, int | None]) -
         yield approved
     finally:
         stop.set()
-        watcher.join(timeout=5)
+        watcher.join(timeout=35)
+        require(not watcher.is_alive(), "attendance observer did not release its holder exchange")
     require(not failures, f"attendance: {failures}")
 
 
@@ -262,23 +278,39 @@ def _ledger_text(programs: Programs, environment: Mapping[str, str], profile: Pr
     return json.dumps(envelope.get("result"), ensure_ascii=False)
 
 
-def _await_runner(exchange: Exchange, gateway: dict[str, int | None]) -> dict[str, Any]:
+def _await_runner(
+    exchange: Exchange, gateway: dict[str, ProcessIdentity | None], gateway_image: Path, gateway_digest: str
+) -> dict[str, Any]:
     """Serve the runner until it ends: note its gateway, answer its requests, return its receipt."""
     started = time.monotonic()
     while True:
         receipt, failed = exchange.ended()
         if failed is not None:
             raise AcceptanceError(f"the runner failed at {failed.get('stage')}: {failed.get('reason')}")
-        if gateway.get("pid") is None and (announced := exchange.gateway()) is not None:
-            require(isinstance(announced.get("pid"), int), f"gateway.json names no process: {announced}")
-            gateway["pid"] = announced["pid"]
+        if gateway.get("identity") is None and (announced := exchange.gateway()) is not None:
+            require(type(announced.get("pid")) is int, "gateway.json names no process")
+            identity = ProcessIdentity.capture(announced["pid"])
+            require(identity.image == gateway_image, "announced gateway differs from the selected executable")
+            require(
+                identity.birth >= (exchange.directory / "handoff.json").stat().st_mtime,
+                "announced gateway predates this invocation's handoff",
+            )
+            require(
+                hashlib.sha256(gateway_image.read_bytes()).hexdigest() == gateway_digest,
+                "announced gateway image differs from the packaged manifest",
+            )
+            require(
+                psutil.Process(identity.pid).username() == psutil.Process().username(),
+                "announced gateway belongs to another OS user",
+            )
+            gateway["identity"] = identity
             print(json.dumps({"step": "gateway_announced", "gateway_url": announced.get("gateway_url")}), flush=True)
         rejected = exchange.answer_pending()
         require(not rejected, f"a permission request offered no single allow-once option: {rejected}")
         if receipt is not None:
             return receipt
         elapsed = time.monotonic() - started
-        require(gateway.get("pid") is not None or elapsed < _GATEWAY_SECONDS, "the runner announced no gateway")
+        require(gateway.get("identity") is not None or elapsed < _GATEWAY_SECONDS, "the runner announced no gateway")
         require(elapsed < _RUN_SECONDS, "the runner never ended")
         time.sleep(_POLL_SECONDS)
 
@@ -304,6 +336,15 @@ def _judge(receipt: Mapping[str, Any], exchange: Exchange, root: Path, after: st
 def run(package: Path, scratch: Path) -> Receipt:
     """Serve one runner on a fresh root below ``scratch``."""
     programs = Programs.of(package)
+    gateway_image = package / "bin" / ("cadrumo-agent.exe" if sys.platform == "win32" else "cadrumo-agent")
+    manifest = json.loads((package / "data" / "package-manifest.json").read_text(encoding="utf-8"))
+    expected_digest = manifest.get("files", {}).get(gateway_image.relative_to(package).as_posix())
+    require(isinstance(expected_digest, str), "package manifest does not declare its bundled agent image")
+    require(not gateway_image.is_symlink() and gateway_image.is_file(), "bundled gateway image unavailable")
+    require(
+        hashlib.sha256(gateway_image.read_bytes()).hexdigest() == expected_digest,
+        "bundled gateway image differs from the package manifest",
+    )
     receipt = Receipt()
     receipt.record("artifact", **package_identity(package))
     root, secret_store, directory = scratch / "storage", scratch / "secrets", scratch / "exchange"
@@ -311,19 +352,24 @@ def run(package: Path, scratch: Path) -> Receipt:
     directory.mkdir()
     exchange = Exchange(directory)
     environment = consumer_environment(root, secret_store)
-    log = scratch / "processes.log"
-    profile = create_profile(programs, environment, _PROFILE, log)
+    profile = create_profile(programs, environment, _PROFILE)
     with caller_owned_runtime(programs, environment, scratch / "runtime-stderr.log") as runtime:
         receipt.record("runtime_ready", product_version=runtime.ready().get("product_version"))
-        profile = identify_profile(programs, environment, profile, log)
+        profile = identify_profile(programs, environment, profile)
         state_taxpayer(programs, environment, profile)
         before = _ledger_text(programs, environment, profile)
         require(_SCENARIO["ledger"]["description"] not in before, "the ledger already holds the scenario row")
-        holder = Holder(programs, environment, profile, log)
+        if profile.profile_id is None:
+            raise AcceptanceError("created profile has no verified identity")
+        holder = RuntimeSessionHolder(
+            programs.runtime,
+            profile_id=profile.profile_id,
+            environment=environment,
+            password=bytearray(profile.password, "utf-8"),
+        )
         try:
-            holder.event("held")
             receipt.record("signed_in_and_held")
-            gateway: dict[str, int | None] = {"pid": None}
+            gateway: dict[str, ProcessIdentity | None] = {"identity": None}
             with _attending(holder, programs.mcp, gateway) as approved:
                 write_whole(
                     directory / "handoff.json",
@@ -337,14 +383,13 @@ def run(package: Path, scratch: Path) -> Receipt:
                     },
                 )
                 receipt.record("exchange_ready", exchange=str(directory))
-                runner = _await_runner(exchange, gateway)
+                runner = _await_runner(exchange, gateway, gateway_image.resolve(strict=True), expected_digest)
                 after = _ledger_text(programs, environment, profile)
                 receipt.record("agent_judged", attended_relays=len(approved), **_judge(runner, exchange, root, after))
-            holder.close_input()
-            reason, exit_code = holder.finish()
-            require(reason == "input_closed" and exit_code == 0, f"holder: {reason} {exit_code}")
+            closed = holder.command("close")
+            require(closed.get("kind") == "session_closed", "runtime did not acknowledge held-session closure")
         finally:
-            holder.stop()
+            holder.close()
         stopped = runtime.stop()
         require(stopped == 64, f"runtime exit: {stopped}")
         receipt.record("runtime_stopped", exit_code=stopped)

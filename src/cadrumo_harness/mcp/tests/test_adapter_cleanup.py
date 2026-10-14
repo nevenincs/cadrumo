@@ -11,20 +11,16 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.adapters.local_runtime.runtime_frame_io import write_document
-from cadrumo.adapters.local_runtime.tests.test_enrollment_framing import MemoryChannel
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.runtime.contracts import (
-    RuntimeClientHello,
-    RuntimeRefusalCode,
-    RuntimeRefusalError,
-    RuntimeServerHello,
-)
-from cadrumo.application.runtime.profile_access import RuntimeSessionRequest
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
+from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError, ServerHello
+from cadrumo_client.contracts.profile_access import SessionRequest
+from cadrumo_client.transport.frame_io import write_document
+from cadrumo_client.transport.framing import VerifiedConnection
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_runtime.adapters.tests.test_enrollment_framing import MemoryChannel
+
+from ..runtime_adapter import RuntimeMcpAdapter
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -34,7 +30,7 @@ class _Client:
 
     def __init__(self, profile_id: UUID, *, blocked: bool = False, fail_once: bool = False) -> None:
         self.profile_id = profile_id
-        self.frontend = OperationFrontendProjection.MCP
+        self.frontend = OperationFrontendProjection.EXTERNAL_CLIENT
         self.close_calls = 0
         self.started = Event()
         self.release = Event()
@@ -58,10 +54,10 @@ def _adapter(retiring: _Client, admitted: _Client) -> RuntimeMcpAdapter:
     assert retiring.profile_id == admitted.profile_id
     adapter = RuntimeMcpAdapter(
         profile_id=admitted.profile_id,
-        client=cast(RuntimeFrontendClient, admitted),
+        client=cast(FrontendClient, admitted),
     )
     # A lease being let go, whose retirement the adapter still owns beside the admitted one.
-    adapter._retirement(cast(RuntimeFrontendClient, retiring))
+    adapter._retirement(cast(FrontendClient, retiring))
     return adapter
 
 
@@ -229,31 +225,29 @@ async def test_cleanup_retry_releases_the_canonical_client_channel_without_reope
     channel = FailingCloseChannel()
     peer = MemoryChannel()
     channel.pair(peer)
-    expected = RuntimeClientHello(product_version="test", storage_identity="a" * 64)
+    expected = ClientHello(product_version="test", storage_identity="a" * 64)
     deadline = time.monotonic() + 10
     write_document(
         peer,
-        RuntimeServerHello(
+        ServerHello(
             product_version=expected.product_version, storage_identity=expected.storage_identity, boot_id=uuid4()
         ),
         deadline=deadline,
     )
-    connection = VerifiedRuntimeConnection(channel, expected=expected, deadline=deadline)
-    client = RuntimeFrontendClient(connection, profile_id=uuid4(), frontend=OperationFrontendProjection.MCP)
+    connection = VerifiedConnection(channel, expected=expected, deadline=deadline)
+    client = FrontendClient(connection, profile_id=uuid4(), frontend=OperationFrontendProjection.EXTERNAL_CLIENT)
     adapter = RuntimeMcpAdapter(profile_id=client.profile_id, client=client)
     try:
         with pytest.raises(AsyncResourceCleanupError) as caught:
             await adapter.close()
         assert channel.close_calls == 1
         assert adapter.client is None
-        with pytest.raises(RuntimeRefusalError) as refused:
+        with pytest.raises(RefusalError) as refused:
             connection.session(
-                RuntimeSessionRequest(
-                    action="session_status", request_id=uuid4(), profile_id=uuid4(), session_id=uuid4()
-                ),
+                SessionRequest(action="session_status", request_id=uuid4(), profile_id=uuid4(), session_id=uuid4()),
                 deadline=time.monotonic() + 10,
             )
-        assert refused.value.reason is RuntimeRefusalCode.CONNECTION_CLOSED
+        assert refused.value.reason is RefusalCode.CONNECTION_CLOSED
         await caught.value.retry_cleanup()
         assert channel.close_calls == 2
         connection.close()

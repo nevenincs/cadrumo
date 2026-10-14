@@ -201,7 +201,7 @@ class Borrador100ReadProjection(BaseModel):
 
 
 class Borrador100QueryProjection(BaseModel):
-    """MCP-safe result schema with no provenance/document prose fields."""
+    """external client-safe result schema with no provenance/document prose fields."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID

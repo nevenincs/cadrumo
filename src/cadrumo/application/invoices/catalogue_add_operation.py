@@ -351,7 +351,7 @@ def build_invoice_add_definition(
     """Declare a durable, guarded add with honest uncertain effects.
 
     ``execution_caller_reader`` names the frontend and session that admitted an
-    execution, so an agent's creation event is recorded under its session's
+    execution, so an automation's creation event is recorded under its session's
     label.
     """
     return build_single_phase_definition(

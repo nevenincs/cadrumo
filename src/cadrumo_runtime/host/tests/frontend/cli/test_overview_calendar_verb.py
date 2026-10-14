@@ -1,0 +1,1020 @@
+"""CLI surface tests for ``aeat app overview calendar``."""
+
+from __future__ import annotations
+
+import json
+import sys
+from collections.abc import Iterator, Sequence
+from contextvars import ContextVar
+from datetime import UTC, date, datetime
+from pathlib import Path
+
+import pytest
+from click.testing import Result
+
+from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
+from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.application.live.expedientes import (
+    ExpedientesCapture,
+    ExpedientesService,
+)
+from cadrumo.application.live.expedientes_ports import ExpedientesDeclaration
+from cadrumo.application.live.notification_ports import NotificationsSnapshot, RemoteNotification
+from cadrumo.application.live.notifications import NotificationsService
+from cadrumo.application.overview.calendar import build_overview_calendar, shift_reason_statement
+from cadrumo.application.overview.calendar_models import OverviewCalendarRange
+from cadrumo.application.user_profile.projections import projection_for_taxpayer, record_to_values
+from cadrumo.application.workflow.persistence import workflow_state_repository
+from cadrumo.core.classification.policies import SensitivityClass
+from cadrumo.core.config import load_settings, override_settings
+from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
+from cadrumo.core.i18n.render import clear_output_language_cache
+from cadrumo.core.period import Period
+from cadrumo.core.time.clock import frozen_clock, now, today_madrid
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.published_authority import (
+    PublishedGovernedFactSource,
+    leased_profile_create_context,
+    published_supported_filing_years,
+)
+from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
+from cadrumo.domain.modelos.filing_repository import upsert_filing_record
+from cadrumo.domain.user_profile.values import ProfileSetupState, create_user_profile_record
+from cadrumo.entrypoints.adapter_composition import build_expedientes_ports
+from cadrumo.entrypoints.live_state_composition import compose_notifications_ports
+from cadrumo.entrypoints.overview_evidence_composition import live_censo_verified_profile_keys
+from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+
+from . import _overview_calendar_support
+from ._overview_calendar_support import (
+    _CALENDAR_GATING_FACT_OVERRIDES,
+    _SOURCE_URL,
+    PRIMARY_PROFILE_ID,
+    _justificante_metadata,
+    _modelo_record_with_external_justificante,
+    _stamp_calendar_enrolment_from_censo,
+)
+from ._overview_native_support import invoke_native_overview
+
+__all__ = ["_isolated_backend"]
+
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.windows_only,
+    pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
+    pytest.mark.usefixtures("authority_operation"),
+]
+
+_ACTIVE_NATIVE: ContextVar[NativeCliProfileFixture | None] = ContextVar("overview_calendar_native", default=None)
+
+
+@pytest.fixture(autouse=True)
+def _isolated_backend(tmp_path: Path) -> Iterator[None]:
+    """Keep the canonical seeded bucket while admitting its real credentialed worker."""
+    global PRIMARY_PROFILE_ID
+    with native_cli_profile_scope(tmp_path) as fixture:
+        fixture.register(
+            label="operator",
+            facts={**_CALENDAR_GATING_FACT_OVERRIDES, "identity.tax_id": "57964777Q"},
+        )
+        from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
+
+        resolved = str(ProfileCapsuleLifecycle().select("operator").profile_id)
+        previous = PRIMARY_PROFILE_ID
+        PRIMARY_PROFILE_ID = resolved
+        _overview_calendar_support.PRIMARY_PROFILE_ID = resolved
+        token = _ACTIVE_NATIVE.set(fixture)
+        try:
+            yield
+        finally:
+            _ACTIVE_NATIVE.reset(token)
+            PRIMARY_PROFILE_ID = previous
+            _overview_calendar_support.PRIMARY_PROFILE_ID = previous
+
+
+# The pipe-joined choice set, bracket-agnostic: Typer renders a Choice
+# metavar as `<es|en|ca|hu>` (older Typer used square brackets). Asserting
+# the joined choices without the enclosing bracket proves the full accepted
+# set is surfaced regardless of the bracket glyph.
+_OUTPUT_LANGUAGE_CHOICE_LIST = "|".join(SUPPORTED_OUTPUT_LANGUAGES)
+
+
+def _invoke(args: Sequence[str]) -> Result:
+    fixture = _ACTIVE_NATIVE.get()
+    if fixture is None:
+        raise AssertionError("calendar native fixture is not active")
+    return invoke_native_overview(fixture, args)
+
+
+_INVALID_CALENDAR_CLI_ARGS = (
+    pytest.param(["app", "overview", "calendar", "--to", "2026-03-31"], id="missing-from"),
+    pytest.param(["app", "overview", "calendar", "--from", "2026-01-01"], id="missing-to"),
+    pytest.param(
+        ["app", "overview", "calendar", "--from", "not-a-date", "--to", "2026-03-31"],
+        id="malformed-from-date",
+    ),
+)
+
+
+@pytest.mark.parametrize("args", _INVALID_CALENDAR_CLI_ARGS)
+def test_calendar_rejects_invalid_invocation(args: list[str]) -> None:
+    result = _invoke(args)
+    assert result.exit_code != 0, result.output
+
+
+def test_calendar_renders_entries_for_q1_window() -> None:
+    """A valid Q1 window over the minimal profile yields the entries
+    header lines plus zero-or-more entry rows. With profile incomplete
+    warnings present the verb still refuses without --allow-incomplete."""
+
+    result_strict = _invoke(
+        [
+            "app",
+            "overview",
+            "calendar",
+            "--from",
+            "2026-01-01",
+            "--to",
+            "2026-03-31",
+        ],
+    )
+    # Minimal profile triggers completeness warnings; strict mode refuses.
+    if result_strict.exit_code != 0:
+        result_lax = _invoke(
+            [
+                "app",
+                "overview",
+                "calendar",
+                "--from",
+                "2026-01-01",
+                "--to",
+                "2026-03-31",
+                "--allow-incomplete",
+            ],
+        )
+        assert result_lax.exit_code == 0, result_lax.output
+        assert "from\t2026-01-01" in result_lax.output
+        assert "to\t2026-03-31" in result_lax.output
+        assert "entries\t" in result_lax.output
+    else:
+        # Profile was complete (unusual for minimal profile) — strict
+        # mode rendered the calendar; assert the same anchors.
+        assert "from\t2026-01-01" in result_strict.output
+        assert "to\t2026-03-31" in result_strict.output
+
+
+def test_calendar_blocks_profile_derived_enrolment_without_live_censo() -> None:
+    result = _invoke(
+        [
+            "app",
+            "overview",
+            "calendar",
+            "--from",
+            "2026-01-01",
+            "--to",
+            "2026-03-31",
+        ],
+    )
+
+    assert result.exit_code != 0, result.output
+    assert "censo.enrolment_unverified" in result.output
+
+    lax = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "overview",
+            "calendar",
+            "--from",
+            "2026-01-01",
+            "--to",
+            "2026-03-31",
+            "--allow-incomplete",
+        ],
+    )
+    assert lax.exit_code == 0, lax.output
+    warnings = json.loads(lax.output)["result"]["warnings"]
+    censo_warning = next(warning for warning in warnings if warning["code"] == "censo.enrolment_unverified")
+    assert censo_warning["affected_modelos"]
+    entries = json.loads(lax.output)["result"]["entries"]
+    assert any(entry["censo_enrolment_state"] == "unverified" for entry in entries)
+
+
+def test_calendar_accepts_censo_stamped_enrolment() -> None:
+    _stamp_calendar_enrolment_from_censo()
+
+    result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "overview",
+            "calendar",
+            "--from",
+            "2026-01-01",
+            "--to",
+            "2026-03-31",
+            "--allow-incomplete",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)["result"]
+    warning_codes = {warning["code"] for warning in payload["warnings"]}
+    assert "censo.enrolment_unverified" not in warning_codes
+    assert payload["as_of"] == today_madrid().isoformat()
+    modelo_303 = next(entry for entry in payload["entries"] if entry["modelo"] == "303")
+    assert modelo_303["censo_enrolment_state"] == "verified"
+    assert modelo_303["closes_on"] <= modelo_303["adjusted_closes_on"]
+    assert modelo_303["shift_reason"]
+    assert modelo_303["evaluated_on"] == payload["as_of"]
+    assert "payment_cutoff_on" in modelo_303
+    assert "days_overdue" in modelo_303
+    assert "recovery_action" in modelo_303
+
+
+@pytest.mark.parametrize("year", PublishedGovernedFactSource().supported_filing_years().years)
+def test_calendar_json_preserves_exact_modelo_303_quarterly_coordinates(year: int) -> None:
+    """The real CLI must expose four, and only four, M303 quarterly rows for the year."""
+    result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "overview",
+            "calendar",
+            "--from",
+            f"{year}-01-01",
+            "--to",
+            f"{year + 1}-02-28",
+            "--allow-incomplete",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    entries = json.loads(result.output)["result"]["entries"]
+    coordinates = tuple(
+        (entry["modelo"], entry["period"])
+        for entry in entries
+        if entry["modelo"] == "303" and entry["period"].startswith(f"{year} ")
+    )
+
+    assert coordinates == tuple(("303", f"{year} {quarter}") for quarter in ("1T", "2T", "3T", "4T"))
+
+
+def test_calendar_states_that_no_aeat_history_was_ever_captured() -> None:
+    """A row's not-observed AEAT state is only meaningful beside the envelope's coverage statement."""
+    result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "overview",
+            "calendar",
+            "--from",
+            "2025-04-01",
+            "--to",
+            "2025-04-30",
+            "--allow-incomplete",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    notices = {notice["code"]: notice for notice in json.loads(result.output)["notices"]}
+    history = notices["overview.no_aeat_history"]
+    assert history["action"]["action"]["cli_path"] == ["app", "live", "filed", "pull-all"]
+
+
+def test_calendar_json_matches_application_coordinates_for_every_supported_year() -> None:
+    """Real CLI fleet parity consumes the canonical horizon and application projection."""
+    with frozen_clock(now()):
+        reference_today = today_madrid()
+        record = workflow_state_repository().load().active_profile_record()
+        with bundled_indexed_authority().operation() as operation:
+            raw_values = record_to_values(record, schema=operation.profile_schema()) if record is not None else None
+            profile = (
+                projection_for_taxpayer({})
+                if record is None
+                else projection_for_taxpayer(record, schema=operation.profile_decode_context().schema)
+            )
+        supported_years = published_supported_filing_years()
+        assert supported_years is not None
+
+        # One range covers every coordinate the test compares.  Invoking the
+        # complete CLI and calendar builder once avoids rebuilding the same
+        # registry schedules for every supported filing year.
+        from_date = date(min(supported_years.years), 1, 1)
+        to_date = date(max(supported_years.years) + 1, 12, 31)
+        result = _invoke(
+            [
+                "--format",
+                "json",
+                "app",
+                "overview",
+                "calendar",
+                "--from",
+                from_date.isoformat(),
+                "--to",
+                to_date.isoformat(),
+                "--allow-incomplete",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+
+        with bundled_indexed_authority().operation() as operation:
+            expected_calendar = build_overview_calendar(
+                profile,
+                OverviewCalendarRange(from_date=from_date, to_date=to_date),
+                operation=operation,
+                today=reference_today,
+                raw_values=raw_values,
+            )
+        entries = json.loads(result.output)["result"]["entries"]
+
+        for filing_year in supported_years.years:
+            expected = tuple(
+                (
+                    entry.modelo,
+                    str(entry.period),
+                    entry.adjusted_closes_on.isoformat(),
+                    entry.user_state.value,
+                )
+                for entry in expected_calendar.entries
+                if entry.period.filing_year == filing_year
+            )
+            actual = tuple(
+                (
+                    entry["modelo"],
+                    entry["period"],
+                    entry["adjusted_closes_on"],
+                    entry["user_state"],
+                )
+                for entry in entries
+                if entry["period"].startswith(f"{filing_year} ")
+            )
+
+            assert expected, filing_year
+            assert actual == expected, filing_year
+
+
+def test_calendar_text_localizes_shift_label_but_json_keeps_token() -> None:
+    supported_years = published_supported_filing_years()
+    assert supported_years is not None
+    window = [
+        "--output-language",
+        "en",
+        "--from",
+        date(min(supported_years.years), 1, 1).isoformat(),
+        "--to",
+        date(max(supported_years.years), 12, 31).isoformat(),
+        "--allow-incomplete",
+    ]
+    text_result = _invoke(["app", "overview", "calendar", *window])
+    assert text_result.exit_code == 0, text_result.output
+    rows = [line for line in text_result.output.splitlines() if line.startswith("303\t")]
+    assert rows
+    assert not any("\tshift=business_day" in line for line in rows)
+    # Any Modelo 303 row whose close falls on a business day of a published
+    # holiday calendar renders the localized label.
+    row = next(line for line in rows if "\tshift=Business day" in line)
+    period = row.split("\t")[1]
+
+    json_result = _invoke(["--format", "json", "app", "overview", "calendar", *window])
+    assert json_result.exit_code == 0, json_result.output
+    entries = json.loads(json_result.output)["result"]["entries"]
+    entry = next(entry for entry in entries if entry["modelo"] == "303" and entry["period"] == period)
+    detail = entry["detail_action"]
+    assert detail["action"]["action_id"] == "operator.overview.explain"
+    assert detail["action"]["cli_path"] == ["app", "overview", "explain"]
+    assert {binding["argument_name"]: binding["value"] for binding in detail["argument_bindings"]} == {
+        "modelo": "303",
+        "year": int(period.split()[0]),
+    }
+
+
+def test_calendar_shift_formatter_localizes_weekend_tokens() -> None:
+    with override_settings(cadrumo_output_language="ca"):
+        clear_output_language_cache()
+        try:
+            rendered = shift_reason_statement("sabado + Todos los Santos + domingo")
+        finally:
+            clear_output_language_cache()
+
+    assert rendered == "Dissabte + Todos los Santos + Diumenge"
+    assert "sabado" not in rendered
+    assert "domingo" not in rendered
+
+    with override_settings(cadrumo_output_language="es"):
+        clear_output_language_cache()
+        try:
+            accented = shift_reason_statement("sabado + business_day")
+        finally:
+            clear_output_language_cache()
+
+    assert accented == "Sábado + Día hábil"
+    assert "Sabado" not in accented
+    assert "Dia habil" not in accented
+
+
+def _store_corrupt_local_filing_evidence() -> None:
+    secure_object_repository_for_active_bucket().save(
+        namespace="cadrumo.outbound.aeat.sede.filed_declaration.observations",
+        object_key="corrupt-observation",
+        classification=SensitivityClass.FINANCIAL,
+        schema_version=1,
+        written_at=now(),
+        payload=b"not-json",
+    )
+
+
+_CORRUPT_LOCAL_EVIDENCE_CALENDAR_ARGS = (
+    pytest.param((), True, id="single-profile"),
+    pytest.param(("--all-profiles",), False, id="all-profiles"),
+)
+
+
+@pytest.mark.parametrize(("extra_args", "assert_degraded_notice"), _CORRUPT_LOCAL_EVIDENCE_CALENDAR_ARGS)
+def test_calendar_degrades_when_local_filing_evidence_store_is_unreadable(
+    extra_args: tuple[str, ...],
+    assert_degraded_notice: bool,
+) -> None:
+    """An unreadable local filing-evidence store degrades the calendar to a
+    schedule-only view rather than refusing it (commit 4adf391107): a
+    never-filed taxpayer must still be able to see what they owe.
+
+    The single-profile view surfaces the ``overview.calendar_filing_evidence_degraded``
+    WARNING notice; the ``--all-profiles`` view deliberately drops per-loader
+    degradation notices (see ``_overview_calendar_all_profiles``) since it
+    already degrades per profile and renders many calendars in one payload.
+    Either way the profile itself is never skipped — only an unreadable
+    *bucket* is skipped, not unreadable evidence within a readable one.
+    """
+    _store_corrupt_local_filing_evidence()
+
+    result = _invoke(
+        [
+            "app",
+            "overview",
+            "calendar",
+            "--from",
+            "2026-01-01",
+            "--to",
+            "2026-03-31",
+            "--allow-incomplete",
+            *extra_args,
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "profile_skipped" not in result.output
+    if assert_degraded_notice:
+        assert "overview.calendar_filing_evidence_degraded" in result.output
+
+
+def test_calendar_help_advertises_local_only() -> None:
+    """Help text must signal `local-only` so the operator cannot
+    mistake the verb for an AEAT-contacting probe."""
+
+    result = _invoke(["app", "overview", "calendar", "--help"])
+    assert result.exit_code == 0, result.output
+    assert "--output-language" in result.output
+    assert _OUTPUT_LANGUAGE_CHOICE_LIST in result.output
+    assert any(
+        token in result.output.lower() for token in ("local-only", "local;", "nunca", "mai contacta", "csak helyi")
+    ), result.output
+
+
+def test_calendar_output_language_applies_before_refusal_rendering() -> None:
+    result = _invoke(
+        [
+            "app",
+            "overview",
+            "calendar",
+            "--output-language",
+            "ca",
+            "--from",
+            "not-a-date",
+            "--to",
+            "2026-03-31",
+        ],
+    )
+
+    assert result.exit_code != 0, result.output
+    assert "No such option" not in result.output
+    assert "Format de data invàlid" in result.output
+    assert "Formato de fecha inválido" not in result.output
+
+
+def test_calendar_json_includes_local_live_snapshot_events() -> None:
+    ExpedientesService(ports=build_expedientes_ports(bucket_id=PRIMARY_PROFILE_ID)).capture(
+        bucket_id=PRIMARY_PROFILE_ID,
+        capture=ExpedientesCapture(
+            declarations=(
+                ExpedientesDeclaration(
+                    modelo="303",
+                    ejercicio=2025,
+                    period=Period.from_year_and_code(2025, "1T"),
+                    expediente_id="12345678901234567890",
+                    estado="ALTA",
+                    presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
+                ),
+            ),
+            captured_at=datetime(2025, 4, 15, 10, 0, tzinfo=UTC),
+            source_url="declarations:modelo=303:ejercicio=2025",
+            authenticated_identity="57964777Q",
+        ),
+    )
+    NotificationsService(ports=compose_notifications_ports(settings=load_settings())).capture(
+        bucket_id=PRIMARY_PROFILE_ID,
+        snapshot=NotificationsSnapshot(
+            rows=(
+                RemoteNotification(
+                    certificado_id="2596230606502",
+                    tipo="notificacion",
+                    concepto="Requerimiento censal",
+                    titular_nif="57964777Q",
+                    titular_nombre="Test S.L.",
+                    destinatario_nif="57964777Q",
+                    destinatario_nombre="Test S.L.",
+                    fecha_emision=date(2025, 4, 14),
+                    fecha_notificacion=None,
+                    leida=False,
+                    source_url=str(_SOURCE_URL),
+                ),
+                RemoteNotification(
+                    certificado_id="2699101808461",
+                    tipo="comunicacion",
+                    concepto="Comunicacion de otro contribuyente",
+                    titular_nif="B12345678",
+                    titular_nombre="Other S.L.",
+                    destinatario_nif="B12345678",
+                    destinatario_nombre="Other S.L.",
+                    fecha_emision=date(2025, 4, 14),
+                    fecha_notificacion=None,
+                    leida=True,
+                    source_url=str(_SOURCE_URL),
+                ),
+            ),
+            captured_at=datetime(2025, 4, 14, 10, 0, tzinfo=UTC),
+            source_url=str(_SOURCE_URL),
+        ),
+    )
+
+    result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "overview",
+            "calendar",
+            "--from",
+            "2025-04-01",
+            "--to",
+            "2025-04-30",
+            "--allow-incomplete",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    events = payload["result"]["events"]
+    assert {(event["event_type"], event["reference_id"]) for event in events} == {
+        ("filing", "12345678901234567890"),
+        ("message", "2596230606502"),
+    }
+    filing_event = next(event for event in events if event["reference_id"] == "12345678901234567890")
+    assert filing_event["aeat_submission_state"] == "submitted_observed"
+    assert filing_event["aeat_submitted_at"] == "2025-04-15T09:30:00Z"
+    assert filing_event["justificante_verified"] is False
+
+
+def test_calendar_strict_mode_refuses_unverified_aeat_filing() -> None:
+    _stamp_calendar_enrolment_from_censo()
+    ExpedientesService(ports=build_expedientes_ports(bucket_id=PRIMARY_PROFILE_ID)).capture(
+        bucket_id=PRIMARY_PROFILE_ID,
+        capture=ExpedientesCapture(
+            declarations=(
+                ExpedientesDeclaration(
+                    modelo="303",
+                    ejercicio=2025,
+                    period=Period.from_year_and_code(2025, "1T"),
+                    expediente_id="12345678901234567890",
+                    estado="ALTA",
+                    presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
+                ),
+            ),
+            captured_at=datetime(2025, 4, 15, 10, 0, tzinfo=UTC),
+            source_url="declarations:modelo=303:ejercicio=2025",
+            authenticated_identity="57964777Q",
+        ),
+    )
+
+    strict = _invoke(
+        [
+            "app",
+            "overview",
+            "calendar",
+            "--from",
+            "2025-04-01",
+            "--to",
+            "2025-04-30",
+        ],
+    )
+
+    assert strict.exit_code != 0, strict.output
+    assert "filing.justificante_unverified" in strict.output
+
+    lax = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "overview",
+            "calendar",
+            "--from",
+            "2025-04-01",
+            "--to",
+            "2025-04-30",
+            "--allow-incomplete",
+        ],
+    )
+    assert lax.exit_code == 0, lax.output
+    warnings = json.loads(lax.output)["result"]["warnings"]
+    warning = next(item for item in warnings if item["code"] == "filing.justificante_unverified")
+    assert warning["affected_modelos"] == ["303"]
+    fix_action = warning["fix_action"]
+    assert fix_action["action"]["action"]["action_id"] == "operator.live.filed.pull"
+    assert fix_action["action"]["cli_path"] == ["app", "live", "filed", "pull"]
+    assert {binding["argument_name"]: binding["value"] for binding in fix_action["argument_bindings"]} == {
+        "modelos": "303",
+        "year": 2025,
+        "period": "1T",
+    }
+
+
+def test_calendar_strict_mode_refuses_conflicting_aeat_evidence_references() -> None:
+    _stamp_calendar_enrolment_from_censo()
+    local_ref = "LOCAL-LIVE-CAPTURE-CSV"
+    remote_ref = "12345678901234567890"
+    record = _modelo_record_with_external_justificante(
+        csv=local_ref,
+        evidence_kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
+    )
+    with open_test_profile_session(PRIMARY_PROFILE_ID):
+        repo = ModeloRecordCatalogueRepository(bucket_id=PRIMARY_PROFILE_ID)
+        repo.save(upsert_filing_record(repo.load(), record))
+    ExpedientesService(ports=build_expedientes_ports(bucket_id=PRIMARY_PROFILE_ID)).capture(
+        bucket_id=PRIMARY_PROFILE_ID,
+        capture=ExpedientesCapture(
+            declarations=(
+                ExpedientesDeclaration(
+                    modelo="303",
+                    ejercicio=2025,
+                    period=Period.from_year_and_code(2025, "1T"),
+                    expediente_id=remote_ref,
+                    estado="ALTA",
+                    presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
+                ),
+            ),
+            captured_at=datetime(2025, 4, 15, 10, 0, tzinfo=UTC),
+            source_url="declarations:modelo=303:ejercicio=2025",
+            authenticated_identity="57964777Q",
+        ),
+    )
+
+    strict = _invoke(
+        [
+            "app",
+            "overview",
+            "calendar",
+            "--from",
+            "2025-04-01",
+            "--to",
+            "2025-04-30",
+        ],
+    )
+
+    assert strict.exit_code != 0, strict.output
+    assert "filing.aeat_evidence_conflict" in strict.output
+
+    lax_json = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "overview",
+            "calendar",
+            "--from",
+            "2025-04-01",
+            "--to",
+            "2025-04-30",
+            "--allow-incomplete",
+        ],
+    )
+    assert lax_json.exit_code == 0, lax_json.output
+    result = json.loads(lax_json.output)["result"]
+    entry = next(item for item in result["entries"] if item["modelo"] == "303" and item["period"] == "2025 1T")
+    assert entry["local_filing_state"] == "external_baseline_imported"
+    assert entry["aeat_submission_state"] == "accepted"
+    warning = next(item for item in result["warnings"] if item["code"] == "filing.aeat_evidence_conflict")
+    assert warning["affected_modelos"] == ["303"]
+    fix_action = warning["fix_action"]
+    assert fix_action["action"]["action"]["action_id"] == "operator.live.filed.pull"
+    assert fix_action["action"]["cli_path"] == ["app", "live", "filed", "pull"]
+    assert {binding["argument_name"]: binding["value"] for binding in fix_action["argument_bindings"]} == {
+        "modelos": "303",
+        "year": 2025,
+        "period": "1T",
+    }
+
+    lax_text = _invoke(
+        [
+            "app",
+            "overview",
+            "calendar",
+            "--from",
+            "2025-04-01",
+            "--to",
+            "2025-04-30",
+            "--allow-incomplete",
+        ],
+    )
+    assert lax_text.exit_code == 0, lax_text.output
+    assert f"aeat_conflict_refs={remote_ref},{local_ref}" in lax_text.output
+
+
+def test_calendar_all_profiles_strict_mode_refuses_conflicting_aeat_evidence_references() -> None:
+    _stamp_calendar_enrolment_from_censo()
+    local_ref = "LOCAL-LIVE-CAPTURE-CSV"
+    remote_ref = "12345678901234567890"
+    record = _modelo_record_with_external_justificante(
+        csv=local_ref,
+        evidence_kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
+    )
+    with open_test_profile_session(PRIMARY_PROFILE_ID):
+        repo = ModeloRecordCatalogueRepository(bucket_id=PRIMARY_PROFILE_ID)
+        repo.save(upsert_filing_record(repo.load(), record))
+    ExpedientesService(ports=build_expedientes_ports(bucket_id=PRIMARY_PROFILE_ID)).capture(
+        bucket_id=PRIMARY_PROFILE_ID,
+        capture=ExpedientesCapture(
+            declarations=(
+                ExpedientesDeclaration(
+                    modelo="303",
+                    ejercicio=2025,
+                    period=Period.from_year_and_code(2025, "1T"),
+                    expediente_id=remote_ref,
+                    estado="ALTA",
+                    presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
+                ),
+            ),
+            captured_at=datetime(2025, 4, 15, 10, 0, tzinfo=UTC),
+            source_url="declarations:modelo=303:ejercicio=2025",
+            authenticated_identity="57964777Q",
+        ),
+    )
+
+    strict = _invoke(
+        [
+            "app",
+            "overview",
+            "calendar",
+            "--from",
+            "2025-04-01",
+            "--to",
+            "2025-04-30",
+            "--all-profiles",
+        ],
+    )
+
+    assert strict.exit_code != 0, strict.output
+    assert "filing.aeat_evidence_conflict" in strict.output
+
+    lax = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "overview",
+            "calendar",
+            "--from",
+            "2025-04-01",
+            "--to",
+            "2025-04-30",
+            "--all-profiles",
+            "--allow-incomplete",
+        ],
+    )
+    assert lax.exit_code == 0, lax.output
+    # The all-profiles payload is a per-profile SUMMARY, so it reports that the
+    # profile carries a warning; the warning's own fields are read from the
+    # single-profile call below, which is where that detail now lives.
+    profile = json.loads(lax.output)["result"]["profiles"][0]
+    assert profile["warning_count"] >= 1, profile
+
+    single = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "overview",
+            "calendar",
+            "--from",
+            "2025-04-01",
+            "--to",
+            "2025-04-30",
+            "--allow-incomplete",
+        ],
+    )
+    assert single.exit_code == 0, single.output
+    warnings = json.loads(single.output)["result"]["warnings"]
+    warning = next(item for item in warnings if item["code"] == "filing.aeat_evidence_conflict")
+    assert warning["affected_modelos"] == ["303"]
+
+
+def test_calendar_strict_mode_refuses_imported_csv_register_without_justificante() -> None:
+    _stamp_calendar_enrolment_from_censo()
+    csv = "CSVREG-303-2025-1T"
+    record = _modelo_record_with_external_justificante(
+        csv=csv,
+        evidence_kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
+    )
+    with open_test_profile_session(PRIMARY_PROFILE_ID):
+        repo = ModeloRecordCatalogueRepository(bucket_id=PRIMARY_PROFILE_ID)
+        repo.save(upsert_filing_record(repo.load(), record))
+
+    strict = _invoke(
+        [
+            "app",
+            "overview",
+            "calendar",
+            "--from",
+            "2025-04-01",
+            "--to",
+            "2025-04-30",
+        ],
+    )
+
+    assert strict.exit_code != 0, strict.output
+    assert "filing.justificante_unverified" in strict.output
+
+    lax = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "overview",
+            "calendar",
+            "--from",
+            "2025-04-01",
+            "--to",
+            "2025-04-30",
+            "--allow-incomplete",
+        ],
+    )
+    assert lax.exit_code == 0, lax.output
+    result = json.loads(lax.output)["result"]
+    entry = next(item for item in result["entries"] if item["modelo"] == "303" and item["period"] == "2025 1T")
+    assert entry["local_filing_state"] == "external_baseline_imported"
+    assert entry["aeat_submission_state"] == "accepted"
+    assert entry["justificante_verified"] is False
+    warning = next(item for item in result["warnings"] if item["code"] == "filing.justificante_unverified")
+    assert warning["affected_modelos"] == ["303"]
+    fix_action = warning["fix_action"]
+    assert fix_action["action"]["action"]["action_id"] == "operator.live.filed.pull"
+    assert fix_action["action"]["cli_path"] == ["app", "live", "filed", "pull"]
+    assert {binding["argument_name"]: binding["value"] for binding in fix_action["argument_bindings"]} == {
+        "modelos": "303",
+        "year": 2025,
+        "period": "1T",
+    }
+
+
+def test_calendar_text_output_names_verified_aeat_evidence() -> None:
+    csv = "JUST3032025X1T7"
+    record = _modelo_record_with_external_justificante(csv=csv)
+    _stamp_calendar_enrolment_from_censo()
+    with open_test_profile_session(PRIMARY_PROFILE_ID):
+        repo = ModeloRecordCatalogueRepository(bucket_id=PRIMARY_PROFILE_ID)
+        repo.save(upsert_filing_record(repo.load(), record))
+        JustificanteRepository().save(_justificante_metadata(csv=csv, tax_id="57964777Q"))
+
+    result = _invoke(
+        [
+            "app",
+            "overview",
+            "calendar",
+            "--from",
+            "2025-04-01",
+            "--to",
+            "2025-04-30",
+            "--allow-incomplete",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    row = next(line for line in result.output.splitlines() if line.startswith("303\t2025 1T\t"))
+    assert "\tlocal=external_baseline_imported" in row
+    assert "\taeat=justificante_verified" in row
+    assert "\tjustificante=true" in row
+    assert "\tcenso_enrolment=verified" in row
+    assert f"\tlocal_record={record.filing_record_id}" in row
+    assert f"\taeat_ref={csv}" in row
+    assert "\taeat_submitted_at=2025-04-15T09:30:00+00:00" in row
+    assert "\taeat_kind=aeat_justificante_pdf" in row
+    assert f"\tverified_justificante_csv={csv}" in row
+    assert "\tevidence_source=modelo_filing_record" in row
+    event_row = next(line for line in result.output.splitlines() if line.startswith("event\tfiling\t2025-04-15\t"))
+    assert "\tmodelo_filing_record\t" in event_row
+    assert f"\t{record.filing_record_id}\t" in event_row
+    assert "\tmodelo=303" in event_row
+    assert "\tperiod=2025 1T" in event_row
+    assert "\tstatus=external_baseline_imported:vigente" in event_row
+    assert "\taeat=justificante_verified" in event_row
+    assert "\taeat_submitted_at=2025-04-15T09:30:00+00:00" in event_row
+    assert "\tjustificante=true" in event_row
+    assert f"\tverified_justificante_csv={csv}" in event_row
+
+
+def test_all_profiles_flag_iterates_every_registered_profile() -> None:
+    """--all-profiles iterates every registered profile.
+
+    Two profiles are registered; the flag must emit a `profile` header
+    line for each one. The test does not assert specific obligation rows
+    because the minimal fixture leaves the taxpayer model undeclared;
+    --allow-incomplete is required to get any output at all.
+    """
+
+    with open_test_profile_session("22222222-2222-4222-8222-222222222222"):
+        register_minimal_profile(profile_id="22222222-2222-4222-8222-222222222222", display_name="Second Operator")
+
+    result = _invoke(
+        [
+            "app",
+            "overview",
+            "calendar",
+            "--from",
+            "2026-01-01",
+            "--to",
+            "2026-03-31",
+            "--all-profiles",
+            "--allow-incomplete",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    # Both profile labels must appear in the output.
+    assert "operator" in result.output
+    assert "Second Operator" in result.output
+    # Output is structured with per-profile header lines.
+    profile_lines = [line for line in result.output.splitlines() if line.startswith("profile\t")]
+    assert len(profile_lines) == 2, f"expected 2 profile header lines, got: {result.output}"
+
+
+def test_operator_manual_censo_facts_are_never_treated_as_aeat_verified() -> None:
+    """Retirement guard: operator-entered censal facts (``config profile edit``,
+    stamped ``PROVENANCE_SOURCE_MANUAL_CLI``) are a non-official evidence tier and
+    must never be counted as AEAT-verified censo — the analog of
+    ``app_filing not in _OFFICIAL_SOURCE_KINDS``. With the live scrape retired,
+    nothing stamps the verified censo tags, so the verified-key set stays empty
+    for a hand-entered profile and the calendar keeps its unverified posture.
+    """
+    from cadrumo.application.user_profile.censo_sync import CENSO_SOURCE_TAG
+    from cadrumo.core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI
+    from cadrumo.domain.user_profile.values import UserProfileFact
+
+    verified_sources = {CENSO_SOURCE_TAG}
+    assert PROVENANCE_SOURCE_MANUAL_CLI not in verified_sources
+
+    record = create_user_profile_record(
+        context=leased_profile_create_context(),
+        setup_state=ProfileSetupState.COMPLETE,
+        profile_id="11111111-1111-4111-8111-111111111111",
+        facts=(
+            UserProfileFact(
+                path="activities.iae_epigraph",
+                value="861",
+                source=PROVENANCE_SOURCE_MANUAL_CLI,
+            ),
+            UserProfileFact(
+                path="iva.regime",
+                value="general",
+                source=CENSO_SOURCE_TAG,
+            ),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            UserProfileFact(path="iva.m303_regime_composition", value="general"),
+            UserProfileFact(path="iva.redeme_enrolled", value=False),
+            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+        ),
+    )
+
+    verified = live_censo_verified_profile_keys(record)
+    # The manual-cli fact is excluded; only a censo-stamped fact would count,
+    # proving the filter is the source-tag gate and not a vacuous empty return.
+    assert "activities.iae_epigraph" not in verified
+    assert verified == ("iva.regime",)

@@ -1,6 +1,6 @@
 """Real encrypted storage for proving that operator work survives edits and recalculation.
 
-Entrypoint tests consume this defining test-support module directly. It seeds
+Shared operator tests consume this defining test-support module directly. It seeds
 one complete synthetic taxpayer and one work unit through the production doors
 (profile capsule, ``create_work_unit``) and hands back the composed calculation
 ports, so a test drives the same calculation boundary, edit executor and
@@ -27,21 +27,21 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from ...adapters.persistence.storage.tests.profile_capsule_runtime import (
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts,
     seed_test_profile_record,
 )
-from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ...application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from ...application.modelo.calculation_action_ports import CalculationActionPorts
-from ...application.modelo.edit_admission import (
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from cadrumo.application.modelo.calculation_action_ports import CalculationActionPorts
+from cadrumo.application.modelo.edit_admission import (
     ModeloEditRenewalResultV1,
     admit_modelo_edit_baseline,
     renew_modelo_edit_baseline,
 )
-from ...application.modelo.edit_apply_contracts import ModeloEditApplySubmissionV1
-from ...application.modelo.edit_contract import ModeloEditMutationFamily
-from ...application.modelo.edit_models import (
+from cadrumo.application.modelo.edit_apply_contracts import ModeloEditApplySubmissionV1
+from cadrumo.application.modelo.edit_contract import ModeloEditMutationFamily
+from cadrumo.application.modelo.edit_models import (
     ModeloBindingEditIntentV1,
     ModeloEditAdmissionResultV1,
     ModeloEditAdmittedV1,
@@ -49,40 +49,40 @@ from ...application.modelo.edit_models import (
     ModeloEditSubmissionV1,
     ModeloScalarEditIntentV1,
 )
-from ...application.modelo.edit_operator_input import ModeloEditOperatorInputV2, prepare_modelo_edit_operand
-from ...application.modelo.edit_receipt_ports import ModeloEditReceiptRepositoryFactory
-from ...application.modelo.edit_transient_operand import modelo_edit_financial_operand
-from ...application.modelo.iva_wallet_seed import seed_iva_compensation_period_for_bucket
-from ...application.modelo.operation_definitions import (
+from cadrumo.application.modelo.edit_operator_input import ModeloEditOperatorInputV2, prepare_modelo_edit_operand
+from cadrumo.application.modelo.edit_receipt_ports import ModeloEditReceiptRepositoryFactory
+from cadrumo.application.modelo.edit_transient_operand import modelo_edit_financial_operand
+from cadrumo.application.modelo.iva_wallet_seed import seed_iva_compensation_period_for_bucket
+from cadrumo.application.modelo.operation_definitions import (
     MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
     MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
     ModeloEditApplyExecutor,
     ModeloWorkCalculateExecutor,
 )
-from ...application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
-from ...application.modelo.work_calculation_contracts import ModeloWorkCalculateRequest
-from ...application.modelo.work_lifecycle import create_work_unit
-from ...application.operations.models import OperationIdentity, OperationRequest, new_operation_id
-from ...application.operations.owner import OperationExecutorContext
-from ...application.operations.tests.financial_operand_delivery import deliver_financial_operand
-from ...application.operations.typed_financial_operand_context import BoundTypedFinancialOperandAccess
-from ...core.errors.hierarchy import CadrumoError
-from ...core.hashing import content_hash_hex
-from ...core.operations import OperationEffect
-from ...core.period import Period
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ...domain.modelos.calculation_revision import CalculationRevision
-from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
-from ...domain.modelos.work_unit import WorkUnit
-from ...domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from ..adapter_composition import (
+from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
+from cadrumo.application.modelo.work_calculation_contracts import ModeloWorkCalculateRequest
+from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.operations.models import OperationIdentity, OperationRequest, new_operation_id
+from cadrumo.application.operations.owner import OperationExecutorContext
+from cadrumo.application.operations.tests.financial_operand_delivery import deliver_financial_operand
+from cadrumo.application.operations.typed_financial_operand_context import BoundTypedFinancialOperandAccess
+from cadrumo.core.errors.hierarchy import CadrumoError
+from cadrumo.core.hashing import content_hash_hex
+from cadrumo.core.operations import OperationEffect
+from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.modelos.calculation_revision import CalculationRevision
+from cadrumo.domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
+from cadrumo.domain.modelos.work_unit import WorkUnit
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+from cadrumo.entrypoints.adapter_composition import (
     build_attachment_store,
     build_calculation_action_ports,
     build_modelo_edit_receipt_repository,
     build_modelo_iva_wallet_seed_ports,
     build_work_lifecycle_ports,
 )
-from ..operation_composition import build_production_operation_registry
+from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 
 SEEDED_AT = datetime(2026, 4, 2, 9, 0, tzinfo=UTC)
 _BUCKET_ID = "13000000-0000-4000-8000-000000000730"

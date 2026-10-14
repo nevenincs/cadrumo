@@ -69,9 +69,9 @@ def build_invoice_wizard_definition(
 ) -> OperationDefinition:
     """Enroll the all-fields typed invoice entry without substituting add.
 
-    Every field is stated up front and validated here, so an agent may make the
+    Every field is stated up front and validated here, so an automation may make the
     entry as a person does. ``execution_caller_reader`` names the frontend and
-    session that admitted an execution, so an agent's entry is recorded under
+    session that admitted an execution, so an automation's entry is recorded under
     its session's label.
     """
     return _definition(

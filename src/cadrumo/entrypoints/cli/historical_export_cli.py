@@ -8,7 +8,7 @@ import typer
 
 from ...core.i18n.render import tr
 from .calculation_review_cli import export_calculation_review_cli
-from .runtime_modelo_filing_record_view import read_modelo_filing_record_view
+from .operation_modelo_filing_record_view import read_modelo_filing_record_view
 
 
 def export_historical_filing_cli(

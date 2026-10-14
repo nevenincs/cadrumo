@@ -11,17 +11,16 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
-
 from ....core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER
+from ....domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from ....tests.cli_envelope import unwrap_cli_result as _json
-from ._cli_json_support import _json_object
-from ._cli_surface_support import (
+from ....tests.cli_json_support import _json_object
+from .profile_world_fixtures import cli_surface_isolated_backend
+from .scenario_support import (
     _active_bucket_id,
     _invoke,
     create_cli_surface_profile,
 )
-from ._strict_cli_fixture_support import cli_surface_isolated_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 

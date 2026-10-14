@@ -1,0 +1,611 @@
+"""Real POSIX endpoint ownership, native peers and bounded readiness exchange."""
+
+from __future__ import annotations
+
+import contextlib
+import os
+import socket
+import stat
+import struct
+import sys
+import tempfile
+import time
+from collections.abc import Iterator
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+from uuid import uuid4
+
+import pytest
+
+from cadrumo.core.config import load_settings
+from cadrumo.core.storage_environment import storage_directory
+from cadrumo.core.storage_materialization import ensure_storage_tree
+from cadrumo.tests.env_scope import derived_storage_settings
+from cadrumo_client.contracts.contracts import ClientHello, EndpointPresence, RefusalCode, RefusalError, ServerHello
+from cadrumo_client.transport import posix_endpoint
+from cadrumo_client.transport.frame_io import read_document
+from cadrumo_client.transport.framing import VerifiedConnection
+from cadrumo_client.transport.posix import posix_storage_identity
+from cadrumo_client.transport.posix_channel import PosixChannel
+from cadrumo_client.transport.posix_endpoint import PosixEndpoint
+from cadrumo_runtime.adapters.connection_handshake import accept_connection_handshake
+
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_inbound_adapter,
+    pytest.mark.skipif(sys.platform == "win32", reason="requires native POSIX peer credentials and flock"),
+]
+
+
+@pytest.fixture
+def namespace() -> Iterator[Path]:
+    # Unix socket path limits apply to the entire path, including pytest's name.
+    base = storage_directory("CADRUMO_RUNTIME_SOCKET_DIR", "runtime")
+    base.mkdir(parents=True, exist_ok=True, mode=0o700)
+    with tempfile.TemporaryDirectory(prefix="s-", dir=base) as root:
+        yield Path(root) / "ipc"
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="requires Linux O_PATH and procfs descriptor aliases")
+def test_socket_permissions_use_pinned_filesystem_inode(
+    tmp_path: Path, namespace: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    endpoint = PosixEndpoint(storage_root=tmp_path, namespace=namespace)
+    chmod = os.chmod
+    changed: list[str] = []
+
+    def pinned_chmod(path: str, mode: int) -> None:
+        assert path.startswith("/proc/self/fd/")
+        changed.append(path)
+        chmod(path, mode)
+
+    monkeypatch.setattr(posix_endpoint.os, "chmod", pinned_chmod)
+    try:
+        endpoint.listen()
+        assert len(changed) == 1
+        assert stat.S_IMODE(endpoint._path.lstat().st_mode) == 0o600
+        client = endpoint.connect()
+        server = endpoint.accept()
+        client.close()
+        server.close()
+    finally:
+        endpoint.close()
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="requires Linux O_PATH and procfs descriptor aliases")
+@pytest.mark.parametrize("substitute_before_pin", [True, False])
+def test_socket_chmod_substitution_never_changes_replacement(
+    tmp_path: Path, namespace: Path, monkeypatch: pytest.MonkeyPatch, substitute_before_pin: bool
+) -> None:
+    endpoint = PosixEndpoint(storage_root=tmp_path, namespace=namespace)
+    target = namespace / "untouched"
+    target.write_bytes(b"unrelated")
+    target.chmod(0o640)
+    original_open = os.open
+    original_chmod = os.chmod
+
+    def replace() -> None:
+        endpoint._path.unlink()
+        endpoint._path.symlink_to(target)
+
+    def intercepted_open(path: str, flags: int, mode: int = 0o777, *, dir_fd: int) -> int:
+        if sys.platform != "linux":
+            pytest.skip("requires Linux O_PATH")
+        if flags & os.O_PATH:
+            replace()
+        return original_open(path, flags, mode, dir_fd=dir_fd)
+
+    def intercepted_chmod(path: str, mode: int) -> None:
+        replace()
+        original_chmod(path, mode)
+
+    if substitute_before_pin:
+        monkeypatch.setattr(posix_endpoint.os, "open", intercepted_open)
+    else:
+        monkeypatch.setattr(posix_endpoint.os, "chmod", intercepted_chmod)
+    try:
+        with pytest.raises(RefusalError) as caught:
+            endpoint.listen()
+        assert caught.value.reason is RefusalCode.ENDPOINT_UNTRUSTED
+        assert stat.S_IMODE(target.stat().st_mode) == 0o640
+        assert target.read_bytes() == b"unrelated"
+        assert endpoint._path.is_symlink()
+    finally:
+        endpoint.close()
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="requires Linux O_PATH and procfs descriptor aliases")
+def test_missing_procfs_fails_closed_and_releases_endpoint(
+    tmp_path: Path, namespace: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    endpoint = PosixEndpoint(storage_root=tmp_path, namespace=namespace)
+
+    def unavailable(path: str, mode: int) -> None:
+        raise FileNotFoundError(path)
+
+    monkeypatch.setattr(posix_endpoint.os, "chmod", unavailable)
+    with pytest.raises(RefusalError) as caught:
+        endpoint.listen()
+    assert caught.value.reason is RefusalCode.ENDPOINT_UNTRUSTED
+    assert endpoint._listener is None
+    assert endpoint._lock_fd is None
+    assert not endpoint._path.exists()
+
+
+def test_root_aliases_converge_and_owner_lock_survives_client_disconnect(tmp_path: Path, namespace: Path) -> None:
+    alias = tmp_path / "alias"
+    root = tmp_path / "storage"
+    root.mkdir()
+    alias.symlink_to(root, target_is_directory=True)
+    assert posix_storage_identity(alias) == posix_storage_identity(root)
+    owner = PosixEndpoint(storage_root=root, namespace=namespace)
+    competitor = PosixEndpoint(storage_root=alias, namespace=namespace)
+    try:
+        owner.listen()
+        client = competitor.connect()
+        server = owner.accept()
+        assert client.peer.os_owner_id == server.peer.os_owner_id
+        assert client.peer.process_id == server.peer.process_id == os.getpid()
+        client.close()
+        server.close()
+        with pytest.raises(RefusalError) as caught:
+            competitor.listen()
+        assert caught.value.reason is RefusalCode.OWNER_BUSY
+    finally:
+        competitor.close()
+        owner.close()
+    replacement = PosixEndpoint(storage_root=root, namespace=namespace)
+    try:
+        replacement.listen()
+    finally:
+        replacement.close()
+
+
+def test_presence_is_absent_without_a_socket_and_held_while_an_owner_listens(tmp_path: Path, namespace: Path) -> None:
+    owner = PosixEndpoint(storage_root=tmp_path, namespace=namespace)
+    observer = PosixEndpoint(storage_root=tmp_path, namespace=namespace)
+    try:
+        before_listening = observer.presence()
+        owner.listen()
+        listening = observer.presence()
+        still_listening = observer.presence()
+    finally:
+        owner.close()
+    try:
+        released = observer.presence()
+    finally:
+        observer.close()
+
+    assert before_listening is EndpointPresence.ABSENT
+    assert listening is EndpointPresence.HELD
+    # The observation's own connection is closed at once and leaves the owner listening.
+    assert still_listening is EndpointPresence.HELD
+    assert released is EndpointPresence.ABSENT
+
+
+def test_presence_of_a_socket_that_outlived_its_owner_is_absent_only_where_a_refusal_proves_it(
+    tmp_path: Path, namespace: Path
+) -> None:
+    assert sys.platform != "win32"
+    observer = PosixEndpoint(storage_root=tmp_path, namespace=namespace)
+    path = namespace / (observer.storage_identity[:32] + ".sock")
+    abandoned = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    try:
+        abandoned.bind(str(path))
+        abandoned.close()
+        assert path.is_socket()
+        observed = observer.presence()
+    finally:
+        observer.close()
+
+    # Linux refuses a connection only when nobody listens; another kernel also refuses a full queue.
+    proved = sys.platform == "linux"
+    assert observed is (EndpointPresence.ABSENT if proved else EndpointPresence.INDETERMINATE)
+
+
+def test_presence_without_a_namespace_is_absent_and_creates_none(tmp_path: Path, namespace: Path) -> None:
+    observer = PosixEndpoint(storage_root=tmp_path, namespace=namespace, create_namespace=False)
+    try:
+        observed = observer.presence()
+    finally:
+        observer.close()
+
+    assert observed is EndpointPresence.ABSENT
+    assert not namespace.exists()
+
+
+@pytest.mark.parametrize("substitution", ["regular_file", "symlink", "live_socket", "stale_socket"])
+def test_endpoint_recovery_only_removes_proven_stale_owned_socket(
+    tmp_path: Path, namespace: Path, substitution: str
+) -> None:
+    if sys.platform == "win32":
+        pytest.skip("requires Unix sockets")
+    endpoint = PosixEndpoint(storage_root=tmp_path, namespace=namespace)
+    path = namespace / (endpoint.storage_identity[:32] + ".sock")
+    socket_owner: socket.socket | None = None
+    try:
+        if substitution == "regular_file":
+            path.write_bytes(b"unrelated")
+        elif substitution == "symlink":
+            target = tmp_path / "untouched"
+            target.write_bytes(b"unrelated")
+            path.symlink_to(target)
+        else:
+            socket_owner = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            socket_owner.bind(str(path))
+            if substitution == "live_socket":
+                socket_owner.listen(1)
+            else:
+                socket_owner.close()
+        if substitution == "stale_socket":
+            endpoint.listen()
+        else:
+            with pytest.raises(RefusalError):
+                endpoint.listen()
+            assert path.exists()
+            if substitution in {"regular_file", "symlink"}:
+                assert path.read_bytes() == b"unrelated"
+    finally:
+        endpoint.close()
+        if socket_owner is not None:
+            socket_owner.close()
+
+
+def test_namespace_permission_and_symlink_substitution_refused(tmp_path: Path, namespace: Path) -> None:
+    namespace.mkdir(mode=0o755)
+    with pytest.raises(RefusalError) as caught:
+        PosixEndpoint(storage_root=tmp_path, namespace=namespace)
+    assert caught.value.reason is RefusalCode.ENDPOINT_UNTRUSTED
+    namespace.rmdir()
+    namespace.symlink_to(tmp_path, target_is_directory=True)
+    with pytest.raises(RefusalError):
+        PosixEndpoint(storage_root=tmp_path, namespace=namespace)
+
+
+def test_materialized_storage_admits_a_real_private_endpoint(namespace: Path) -> None:
+    """Fresh public storage materialization produces a usable native namespace."""
+    root = namespace.parent / "state"
+    assert not root.exists()
+    with derived_storage_settings(root):
+        settings = load_settings()
+        ensure_storage_tree(settings)
+        runtime_namespace = settings.cadrumo_connection_socket_dir
+        assert stat.S_IMODE(runtime_namespace.stat().st_mode) == 0o700
+        endpoint = PosixEndpoint(storage_root=root, namespace=runtime_namespace)
+        try:
+            endpoint.listen()
+            client = endpoint.connect()
+            server = endpoint.accept()
+            try:
+                assert client.peer.os_owner_id == server.peer.os_owner_id
+                assert client.peer.process_id == server.peer.process_id == os.getpid()
+            finally:
+                client.close()
+                server.close()
+        finally:
+            endpoint.close()
+
+
+@pytest.mark.parametrize("explicit_override", [False, True])
+def test_materialization_preserves_an_insecure_namespace_for_native_refusal(
+    namespace: Path, explicit_override: bool
+) -> None:
+    """Provisioning never chmods a preexisting namespace into being trusted."""
+    root = namespace.parent / "state"
+    runtime_namespace = namespace if explicit_override else root / "runtime"
+    runtime_namespace.mkdir(parents=True, mode=0o755)
+    runtime_namespace.chmod(0o755)
+    sentinel = runtime_namespace / "operator-state"
+    sentinel.write_bytes(b"preserve")
+    with derived_storage_settings(root):
+        settings = load_settings()
+        if explicit_override:
+            settings = settings.model_copy(update={"cadrumo_connection_socket_dir": runtime_namespace})
+        ensure_storage_tree(settings)
+        assert stat.S_IMODE(runtime_namespace.stat().st_mode) == 0o755
+        assert sentinel.read_bytes() == b"preserve"
+        with pytest.raises(RefusalError) as refused:
+            PosixEndpoint(storage_root=root, namespace=runtime_namespace)
+        assert refused.value.reason is RefusalCode.ENDPOINT_UNTRUSTED
+
+
+@pytest.mark.parametrize("substitution", ["namespace", "socket"])
+def test_connect_refuses_incarnation_substitution_and_closes_before_protocol(
+    tmp_path: Path, namespace: Path, monkeypatch: pytest.MonkeyPatch, substitution: str
+) -> None:
+    if sys.platform == "win32":
+        pytest.skip("requires real Unix socket substitution")
+    endpoint = PosixEndpoint(storage_root=tmp_path, namespace=namespace)
+    path = namespace / (endpoint.storage_identity[:32] + ".sock")
+    attempted: list[socket.socket] = []
+    original_connect = socket.socket.connect
+    with contextlib.ExitStack() as resources:
+        resources.callback(endpoint.close)
+        endpoint.listen()
+        replacement = resources.enter_context(socket.socket(socket.AF_UNIX, socket.SOCK_STREAM))
+
+        def substitute_and_connect(sock: socket.socket, address: str) -> None:
+            assert address == str(path)
+            assert not attempted
+            attempted.append(sock)
+            if substitution == "namespace":
+                namespace.rename(namespace.with_name("displaced"))
+                namespace.mkdir(mode=0o700)
+            else:
+                path.rename(path.with_suffix(".displaced"))
+            replacement.bind(str(path))
+            replacement.listen(1)
+            original_connect(sock, address)
+
+        # Change only the transition timing; all socket operations, native
+        # peer identity and filesystem entries remain real.
+        monkeypatch.setattr(socket.socket, "connect", substitute_and_connect)
+        connected: PosixChannel | None = None
+        try:
+            with pytest.raises(RefusalError) as caught:
+                connected = endpoint.connect(timeout=1)
+            assert caught.value.reason is RefusalCode.ENDPOINT_UNTRUSTED
+            assert len(attempted) == 1 and attempted[0].fileno() == -1
+            replacement.settimeout(1)
+            accepted, _address = replacement.accept()
+            with accepted:
+                accepted.settimeout(1)
+                assert accepted.recv(1) == b"", "the replacement must receive no protocol or secret frame"
+            assert path.is_socket(), "refusal must preserve the replacement endpoint"
+        finally:
+            if connected is not None:
+                connected.close()
+
+
+@pytest.mark.parametrize("held_entry", ["owned_socket", "regular_file", "symlink"])
+def test_close_checks_socket_identity_in_held_namespace_only(tmp_path: Path, namespace: Path, held_entry: str) -> None:
+    endpoint = PosixEndpoint(storage_root=tmp_path, namespace=namespace)
+    name = endpoint.storage_identity[:32] + ".sock"
+    displaced = namespace.with_name("displaced")
+    try:
+        endpoint.listen()
+        owned = (namespace / name).lstat()
+        namespace.rename(displaced)
+        namespace.mkdir(mode=0o700)
+        held_path, replacement_path = displaced / name, namespace / name
+        if held_entry == "owned_socket":
+            replacement_path.write_bytes(b"synthetic replacement entry")
+        else:
+            # The absolute path now exposes the original socket inode, while
+            # the held directory contains an unrelated entry with that name.
+            held_path.rename(replacement_path)
+            if held_entry == "regular_file":
+                held_path.write_bytes(b"synthetic held entry")
+            else:
+                held_path.symlink_to(replacement_path)
+        held_before, replacement_before = held_path.lstat(), replacement_path.lstat()
+        endpoint.close()
+        if held_entry == "owned_socket":
+            assert not held_path.exists(), "the held namespace's owned socket must be removed"
+            assert replacement_path.read_bytes() == b"synthetic replacement entry"
+        else:
+            assert held_path.lstat().st_ino == held_before.st_ino
+            assert replacement_path.is_socket()
+            assert (replacement_before.st_dev, replacement_before.st_ino) == (owned.st_dev, owned.st_ino)
+            if held_entry == "regular_file":
+                assert held_path.read_bytes() == b"synthetic held entry"
+            else:
+                assert held_path.is_symlink() and held_path.readlink() == replacement_path
+        assert replacement_path.lstat().st_ino == replacement_before.st_ino
+    finally:
+        endpoint.close()
+
+
+def test_passive_endpoint_does_not_create_missing_namespace(tmp_path: Path, namespace: Path) -> None:
+    endpoint = PosixEndpoint(storage_root=tmp_path, namespace=namespace, create_namespace=False)
+    try:
+        assert not namespace.exists()
+        with pytest.raises(RefusalError) as caught:
+            endpoint.connect(timeout=0.1)
+        assert caught.value.reason is RefusalCode.ENDPOINT_NOT_READY
+        with pytest.raises(RefusalError) as caught:
+            endpoint.listen()
+        assert caught.value.reason is RefusalCode.UNAVAILABLE
+        assert not namespace.exists()
+    finally:
+        endpoint.close()
+    assert not namespace.exists()
+
+
+def test_passive_endpoint_verifies_namespace_created_after_construction(tmp_path: Path, namespace: Path) -> None:
+    passive = PosixEndpoint(storage_root=tmp_path, namespace=namespace, create_namespace=False)
+    owner = PosixEndpoint(storage_root=tmp_path, namespace=namespace)
+    try:
+        owner.listen()
+        client = passive.connect(timeout=1)
+        server = owner.accept(timeout=1)
+        client.close()
+        server.close()
+    finally:
+        passive.close()
+        owner.close()
+
+
+def test_passive_endpoint_refuses_symlink_without_replacing_target(tmp_path: Path, namespace: Path) -> None:
+    target = tmp_path / "untouched"
+    target.mkdir()
+    namespace.symlink_to(target, target_is_directory=True)
+    with pytest.raises(RefusalError) as caught:
+        PosixEndpoint(storage_root=tmp_path, namespace=namespace, create_namespace=False)
+    assert caught.value.reason is RefusalCode.ENDPOINT_UNTRUSTED
+    assert namespace.is_symlink() and target.is_dir()
+
+
+@pytest.mark.parametrize("substitution", ["symlink", "fifo", "public_file", "hardlink"])
+def test_lock_substitution_refuses_without_opening_or_replacing_target(
+    tmp_path: Path, namespace: Path, substitution: str
+) -> None:
+    if sys.platform == "win32":
+        pytest.skip("requires native POSIX filesystem protection")
+    endpoint = PosixEndpoint(storage_root=tmp_path, namespace=namespace)
+    lock = namespace / (endpoint.storage_identity[:32] + ".lock")
+    target = tmp_path / "untouched"
+    target.write_bytes(b"synthetic unrelated content")
+    if substitution == "symlink":
+        lock.symlink_to(target)
+    elif substitution == "fifo":
+        os.mkfifo(lock, 0o600)
+    elif substitution == "hardlink":
+        os.link(target, lock)
+    else:
+        lock.write_bytes(b"untrusted")
+        lock.chmod(0o644)
+    original = lock.lstat()
+    try:
+        with pytest.raises(RefusalError) as caught:
+            endpoint.listen()
+        assert caught.value.reason is RefusalCode.ENDPOINT_UNTRUSTED
+        assert lock.lstat().st_ino == original.st_ino
+        assert target.read_bytes() == b"synthetic unrelated content"
+    finally:
+        endpoint.close()
+
+
+def _identity(endpoint: PosixEndpoint, *, version: str = "test-cohort") -> ServerHello:
+    return ServerHello(product_version=version, storage_identity=endpoint.storage_identity, boot_id=uuid4())
+
+
+def test_readiness_precedes_distinct_secret_frame_and_consumes_client_buffer(tmp_path: Path, namespace: Path) -> None:
+    endpoint = PosixEndpoint(storage_root=tmp_path, namespace=namespace)
+    identity = _identity(endpoint)
+    expected = ClientHello(product_version=identity.product_version, storage_identity=identity.storage_identity)
+    sentinel = bytearray(b"synthetic-channel-secret")
+    received: list[bytes] = []
+
+    def serve() -> None:
+        channel = endpoint.accept()
+        try:
+            deadline = time.monotonic() + 5
+            accept_connection_handshake(channel, identity=identity, deadline=deadline)
+            header = channel.read_exact(5, deadline=deadline)
+            assert header[:1] == b"S"
+            received.append(channel.read_exact(struct.unpack("!I", header[1:])[0], deadline=deadline))
+        finally:
+            channel.close()
+
+    try:
+        endpoint.listen()
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            serving = pool.submit(serve)
+            connection = VerifiedConnection(endpoint.connect(), expected=expected, deadline=time.monotonic() + 5)
+            try:
+                assert connection.hello.boot_id == identity.boot_id
+                connection.send_secret(sentinel, deadline=time.monotonic() + 5)
+                assert not any(sentinel)
+                serving.result(timeout=6)
+            finally:
+                connection.close()
+        assert received == [b"synthetic-channel-secret"]
+    finally:
+        endpoint.close()
+
+
+def test_version_mismatch_closes_before_any_secret_frame(tmp_path: Path, namespace: Path) -> None:
+    endpoint = PosixEndpoint(storage_root=tmp_path, namespace=namespace)
+    identity = _identity(endpoint)
+    expected = ClientHello(product_version="incompatible", storage_identity=identity.storage_identity)
+
+    def serve() -> RefusalCode:
+        channel = endpoint.accept()
+        try:
+            with pytest.raises(RefusalError) as caught:
+                accept_connection_handshake(channel, identity=identity, deadline=time.monotonic() + 5)
+            return caught.value.reason
+        finally:
+            channel.close()
+
+    try:
+        endpoint.listen()
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            serving = pool.submit(serve)
+            with pytest.raises(RefusalError):
+                VerifiedConnection(endpoint.connect(), expected=expected, deadline=time.monotonic() + 5)
+            assert serving.result(timeout=6) is RefusalCode.VERSION_MISMATCH
+    finally:
+        endpoint.close()
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [b'{"kind":"client_hello","kind":"client_hello"}', b'{"unexpected":"synthetic-private-input"}', b"NaN"],
+)
+def test_malformed_frames_refuse_without_echoing_input(payload: bytes) -> None:
+    left, right = socket.socketpair()
+    channel = PosixChannel(left)
+    try:
+        right.sendall(b"J" + struct.pack("!I", len(payload)) + payload)
+        with pytest.raises(RefusalError) as caught:
+            read_document(channel, ClientHello, deadline=time.monotonic() + 1)
+        assert caught.value.reason is RefusalCode.INVALID_FRAME
+        assert "synthetic-private-input" not in str(caught.value)
+    finally:
+        channel.close()
+        right.close()
+
+
+@pytest.mark.skipif(not sys.platform.startswith("linux"), reason="reads the peer's program under its Linux pidfd")
+def test_the_peer_program_is_read_while_its_pidfd_pins_it() -> None:
+    left, right = socket.socketpair()
+    channel = PosixChannel(left)
+    try:
+        # A socket pair's peer is this process, so the kernel's own record of its program is the expected value.
+        assert channel.peer.process_id == os.getpid()
+        assert channel.peer.image_path == os.readlink("/proc/self/exe")
+    finally:
+        channel.close()
+        right.close()
+
+
+def test_oversize_is_refused_from_header_without_waiting_for_body() -> None:
+    left, right = socket.socketpair()
+    channel = PosixChannel(left)
+    try:
+        right.sendall(b"J" + struct.pack("!I", 65537))
+        with pytest.raises(RefusalError) as caught:
+            read_document(channel, ClientHello, deadline=time.monotonic() + 1)
+        assert caught.value.reason is RefusalCode.INVALID_FRAME
+    finally:
+        channel.close()
+        right.close()
+
+
+def test_deadline_bounds_partial_frame() -> None:
+    left, right = socket.socketpair()
+    channel = PosixChannel(left)
+    try:
+        right.sendall(b"J")
+        with pytest.raises(RefusalError) as caught:
+            read_document(channel, ClientHello, deadline=time.monotonic() + 0.05)
+        assert caught.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    finally:
+        channel.close()
+        with contextlib.suppress(OSError):
+            right.close()
+
+
+def test_configured_socket_directory_separates_runtime_and_workers(
+    tmp_path: Path,
+    namespace: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("CADRUMO_RUNTIME_SOCKET_DIR", str(namespace))
+    worker_id = uuid4()
+    owner = PosixEndpoint(storage_root=tmp_path)
+    worker = PosixEndpoint(storage_root=tmp_path, worker_namespace=worker_id)
+    contender = PosixEndpoint(storage_root=tmp_path, worker_namespace=worker_id)
+    try:
+        owner.listen()
+        worker.listen()
+        with pytest.raises(RefusalError) as caught:
+            contender.listen()
+        assert caught.value.reason is RefusalCode.OWNER_BUSY
+        assert len(tuple(namespace.glob("*.sock"))) == 2
+    finally:
+        contender.close()
+        worker.close()
+        owner.close()

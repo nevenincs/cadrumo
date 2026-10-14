@@ -158,13 +158,13 @@ class _Run:
         self.keep_reason: str | None = None
         """``harness_error`` or ``product_finding`` when this run's evidence must outlive its root."""
 
-    def open(self, profile_options: tuple[str, ...]) -> Person:
+    def open(self, profile_options: tuple[str, ...], *, require_native_custody: bool = False) -> Person:
         self.host.start()
         person = self.host.create_person(f"Live eval {uuid.uuid4().hex[:6]}")
         self.person = person
         if profile_options:
             self.host.state_profile(person, profile_options)
-        self.signed_in = self.host.sign_in(person)
+        self.signed_in = self.host.sign_in(person, require_native_custody=require_native_custody)
         return person
 
     def _settle(self, capture: Path, index: int, evidence: list[dict[str, Any]]) -> None:
@@ -242,6 +242,7 @@ def _drive(
     work_directory: Path,
     ambient: Mapping[str, str],
     between: Callable[[int], None] | None,
+    host: PackageHost,
     scripted: Callable[[RecordedTools], Awaitable[DriverReport]],
 ) -> DriverReport:
     """Run one session with the selected driver; ``between`` is the person's act before phase n."""
@@ -258,6 +259,7 @@ def _drive(
             work_directory=work_directory,
             ambient=ambient,
             between=between,
+            on_spawn=host.retain_invocation,
         )
 
     async def session() -> DriverReport:
@@ -285,7 +287,7 @@ def _work_run(
         exports.mkdir()
         export_path = exports / scenario.export_file
         command, arguments, environment = mcp_launch(run.host)
-        launch = McpLaunch(command, tuple(arguments), environment, run.run.path)
+        launch = McpLaunch(command, tuple(arguments), environment, run.run.path, run.host.retain_invocation)
         offered, live_write, handoff = _surface_and_leaves(run, launch)
         recorder = TrajectoryRecorder(
             scrubber=_scrubber(person, ambient),
@@ -321,6 +323,7 @@ def _work_run(
             work_directory=run.run.path,
             ambient=ambient,
             between=None,
+            host=run.host,
             scripted=scripted,
         )
         reading = read_oracle(run.host, person, scenario, export_path)
@@ -378,14 +381,14 @@ def _access_run(
     started = time.monotonic()
     run = _Run(identity, ambient)
     try:
-        person = run.open(load_scenario("modelo_130_dr130").profile_options())
+        person = run.open(load_scenario("modelo_130_dr130").profile_options(), require_native_custody=scenario.uses_key)
         reference = issue_key(run.host, person, scenario) if scenario.uses_key else None
         command, arguments, environment = mcp_launch(
             run.host,
             profile_id=person.profile_id if (reference is not None and reference) else None,
             credential_reference=reference,
         )
-        launch = McpLaunch(command, tuple(arguments), environment, run.run.path)
+        launch = McpLaunch(command, tuple(arguments), environment, run.run.path, run.host.retain_invocation)
         offered, live_write, _handoff = _surface_and_leaves(run, launch)
         recorder = TrajectoryRecorder(
             scrubber=_scrubber(person, ambient),
@@ -445,6 +448,7 @@ def _access_run(
             work_directory=run.run.path,
             ambient=ambient,
             between=between,
+            host=run.host,
             scripted=scripted,
         )
         fingerprints.append(fingerprint())

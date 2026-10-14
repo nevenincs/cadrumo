@@ -8,18 +8,20 @@ from typing import TYPE_CHECKING, Any, Never, Protocol
 
 import typer
 
-from ...application.operator_surface.command_ports import ProfileAuthenticationPosture
+from cadrumo_client.commands.spec import CommandSpec
+from cadrumo_client.contracts.command_ports import ProfileAuthenticationPosture
+
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.profile_session import ProfileSessionRefusalReason, ReceiptBindingRefusal
-from .command_spec import CommandSpec
 from .state_projection_support import authority_operation
 
 if TYPE_CHECKING:
-    from ...adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+    from cadrumo_client.commands.secure_input import MachineSecretSelection, ProfileSecretSelection
+    from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
     from ...application.user_profile.login_session import ProfileLoginOutcome
     from ...application.user_profile.session_admission import ProfileCredentialRequestV1
     from .common import RequestedCliLeaf
-    from .config.secure_input import MachineSecretSelection, ProfileSecretSelection
 
 
 class RootAuthenticator(Protocol):
@@ -88,10 +90,10 @@ def session_refusal_context(
     return context
 
 
-def raise_runtime_refusal(error: RuntimeFrontendRefusedError) -> Never:
-    """Carry a runtime sign-in refusal to the operator without collapsing it.
+def raise_connection_refusal(error: FrontendRefusedError) -> Never:
+    """Carry a connection sign-in refusal to the operator without collapsing it.
 
-    The runtime's code and context cross unchanged, so a reader of the
+    The service code and context cross unchanged, so a reader of the
     envelope sees the same facts; the message names the typed reason, and a
     throttle names the seconds left.
     """
@@ -109,7 +111,7 @@ def raise_runtime_refusal(error: RuntimeFrontendRefusedError) -> Never:
 
 
 def _common() -> Any:
-    """Resolve the already-initialized facade without a static runtime cycle."""
+    """Resolve the already-initialized facade without a static import cycle."""
     return import_module(".common", __package__)
 
 
@@ -217,9 +219,9 @@ def enforce_explicit_database_route(
     command_path: tuple[str, ...],
     target_bucket_id: str | None,
 ) -> None:
-    """Refuse an operator-pinned database URL before a runtime leaf admits a profile.
+    """Refuse an operator-pinned database URL before a profile-connection leaf admits a profile.
 
-    The runtime admission path owns its own no-active-profile refusal, and that
+    The profile-connection admission path owns its no-active-profile refusal, and that
     one is the better answer for a cold start: it separates an operator who has
     registered nothing from one who is merely logged out. It has no equivalent
     for an explicitly pinned ``cadrumo_database_url``. Creating or selecting a
@@ -229,7 +231,7 @@ def enforce_explicit_database_route(
     the runtime and local routes refuse the same pinned route the same way.
 
     Only that one decision is applied. The write policy's root-fallback branch
-    is deliberately left to the runtime path's richer refusal.
+    is deliberately left to the profile-connection path's richer refusal.
     """
     from ...application.storage_write_policy import StorageWritePolicyCode, inspect_storage_write_policy
 
@@ -290,7 +292,7 @@ def activate_profile_session(
     """Apply write policy and exact-target session proof from parsed authority.
 
     The authentication gate has already raised any refusal the arguments alone
-    settle, before this or any runtime route.
+    settle, before this or any profile-connection route.
     """
     from ...application.storage_write_policy import inspect_storage_write_policy
     from ...core.bucket_pointer import resolve_active_bucket_id
@@ -433,7 +435,7 @@ def _interactive_authentication(
     """
     if refusal not in {None, ProfileSessionRefusalReason.KEYRING_UNAVAILABLE}:
         return False
-    from .config.secure_input import terminal_can_prompt_for_secrets
+    from cadrumo_client.commands.secure_input import terminal_can_prompt_for_secrets
 
     if not terminal_can_prompt_for_secrets():
         return False
@@ -447,7 +449,7 @@ __all__ = [
     "activate_profile_session",
     "bind_profile_target",
     "normalize_ambient_profile",
-    "raise_runtime_refusal",
+    "raise_connection_refusal",
     "session_refusal_context",
     "session_refusal_translation_key",
 ]

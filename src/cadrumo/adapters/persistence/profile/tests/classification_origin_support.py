@@ -35,7 +35,7 @@ from .ledger_action_create_support import ledger_ports_for_test
 
 BUCKET_ID = "43434343-4343-4343-8343-434343434343"
 PERSON = "synthetic-person"
-AGENT = f"agent:mcp.attended.{UUID('5aa00000-0000-4000-8000-0000000000dd')}"
+AUTOMATION = f"automation:external-client.attended.{UUID('5aa00000-0000-4000-8000-0000000000dd')}"
 NOW_DATE = date(2025, 1, 21)
 PDF_BYTES = b"%PDF-1.7\n%\xe2\xe3\xcf\xd3\norigin-at-the-writers\n%%EOF\n"
 BUSINESS = BusinessClassification.BUSINESS

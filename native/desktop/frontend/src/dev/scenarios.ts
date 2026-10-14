@@ -44,7 +44,7 @@ export type Scenario = {
      * and no issued key can admit. */
     signOutAccess?: {
       automationEnabled: boolean | null;
-      agentAccessRemains: boolean | null;
+      automationAccessRemains: boolean | null;
     };
     /** The active profile's name; null when the host knows none. */
     profile?: string | null;
@@ -383,7 +383,7 @@ export const SCENARIOS: readonly Scenario[] = [
     signIn: {
       status: { ...signedOut, state: "present" },
       submit: { kind: "accept" },
-      signOutAccess: { automationEnabled: true, agentAccessRemains: true },
+      signOutAccess: { automationEnabled: true, automationAccessRemains: true },
     },
   },
   {

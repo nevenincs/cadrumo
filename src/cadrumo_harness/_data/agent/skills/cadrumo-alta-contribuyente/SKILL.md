@@ -34,9 +34,10 @@ still missing. No tax value is computed here.
    person said. `aeat config profile status` reports readiness and what the profile
    still lacks and the next authorized action; ask the person for the missing
    facts and record them as in step 2.
-4. If the work needs live AEAT reads, check access with
-   `aeat config auth status` and `aeat config auth test` (both read local state
-   only). The person configures the AEAT provider, certificate, key or grant and
+4. If the work needs live AEAT reads, ask the person to check access with
+   `cadrumo-runtime config auth status` and `cadrumo-runtime config auth test`
+   (both read local state only). The person configures the AEAT provider,
+   certificate, key or grant and
    enters any secret in Cadrumo, never in the conversation. State what is missing
    and wait.
 5. Confirm the workspace with `aeat app overview status` (operation

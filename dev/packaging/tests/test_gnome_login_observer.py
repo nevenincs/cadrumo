@@ -8,7 +8,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
 from .. import linux_gnome_installation as gnome_login_observer
 from ..command_execution import run_command
@@ -21,7 +21,7 @@ def test_development_script_refuses_nonisolated_interpreter_before_setup(tmp_pat
     result = run_command([sys.executable, str(script), "install"], cwd=tmp_path, timeout_seconds=None)
     assert result.returncode == 2
     assert result.stdout == ""
-    assert result.stderr == RuntimeRefusalCode.UNAVAILABLE.value + "\n"
+    assert result.stderr == RefusalCode.UNAVAILABLE.value + "\n"
     assert not tuple(tmp_path.iterdir())
 
 
@@ -31,7 +31,7 @@ def test_isolated_development_script_uses_installed_product_and_refuses_unsuppor
     result = run_command([sys.executable, "-I", str(script), "inspect"], cwd=tmp_path, timeout_seconds=None)
     assert result.returncode == 2
     assert result.stdout == ""
-    assert result.stderr == RuntimeRefusalCode.UNAVAILABLE.value + "\n"
+    assert result.stderr == RefusalCode.UNAVAILABLE.value + "\n"
     assert not tuple(tmp_path.iterdir())
 
 
@@ -100,7 +100,7 @@ def test_unsupported_host_refuses_before_native_setup(
     monkeypatch.setattr(gnome_login_observer, "install_gnome_login_producer", forbidden)
     assert gnome_login_observer.run(["install"]) == 2
     output = capsys.readouterr()
-    assert output.out == "" and output.err == RuntimeRefusalCode.UNAVAILABLE.value + "\n"
+    assert output.out == "" and output.err == RefusalCode.UNAVAILABLE.value + "\n"
 
 
 @pytest.mark.parametrize("native_failure", [False, True])
@@ -122,10 +122,10 @@ def test_native_setup_refusal_does_not_print_paths_or_claim_installation(
     def refuse() -> bool:
         if native_failure:
             raise OSError("private-path-or-host-details")
-        raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+        raise RefusalError(RefusalCode.PEER_UNTRUSTED)
 
     monkeypatch.setattr(gnome_login_observer, "install_gnome_login_producer", refuse)
     assert gnome_login_observer.run(["install"]) == 2
     output = capsys.readouterr()
-    expected = RuntimeRefusalCode.UNAVAILABLE if native_failure else RuntimeRefusalCode.PEER_UNTRUSTED
+    expected = RefusalCode.UNAVAILABLE if native_failure else RefusalCode.PEER_UNTRUSTED
     assert output.out == "" and output.err == expected.value + "\n"

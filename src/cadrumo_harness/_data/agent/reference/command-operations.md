@@ -1,7 +1,7 @@
 # Commands and the tools that do their work
 
 Generated from the record the command line publishes of its own commands, the
-registered operations each one can submit, the runtime requests each one
+registered operations each one can submit, the connection requests each one
 sends, and what serves the work a command does in its own process. Do not edit
 it by hand.
 
@@ -20,13 +20,15 @@ without its options and arguments.
   operation does the same work for you. `authority` takes the name shown as its
   `query`. A tool shown alone takes no such name.
 - `the person's act` in the third column means the command's work is the
-  person's own: signing in or out, locking, sessions, keys, passwords and other
+  person's own: signing in or out, profile creation, locking, sessions, keys, passwords and other
   secrets, recovery, and work outside this profile such as the profile list,
   storage, repair and resetting every profile. You cannot do it. Ask the person
   to do it in Cadrumo. An operation listed beside it that needs a secret, or
-  that administers keys, is refused to you as the person's act too.
+  that administers keys, is refused to you as the person's act too. For a command
+  with both a registered-operation mode and a sessionless file mode, this label
+  covers the latter; the operation's own contract decides its admission.
 - `none` in both columns means the command has no work to do for you: it
-  prints help, or it starts the terminal interface.
+  prints help. A missing declaration is not rendered as an empty route.
 - A command's options are not the operation's fields. Read the operation's
   input schema with `describe` and fill it from the same facts the options
   carry.
@@ -263,85 +265,42 @@ without its options and arguments.
 | `aeat app quickfile` | `modelo.quickfile` | none |
 | `aeat app review queue` | `app.review.queue` | none |
 | `aeat app review view` | `app.review.view` | none |
-| `aeat app tui` | none | none |
 | `aeat config` | none | none |
-| `aeat config auth apoderado check` | `auth.apoderado.check` | none |
-| `aeat config auth apoderado clear` | `auth.apoderado.clear` | none |
-| `aeat config auth apoderado configure` | `auth.apoderado.configure` | the person's act |
-| `aeat config auth apoderado scopes list` | none | `authority` `apoderado_scopes` |
-| `aeat config auth apoderado status` | `auth.apoderado.status` | none |
-| `aeat config auth certificate check` | `auth.certificate.source.check` | none |
-| `aeat config auth certificate list` | `auth.certificate.source.list` | none |
-| `aeat config auth certificate register` | `auth.certificate.source.register` | none |
-| `aeat config auth certificate remove` | `auth.certificate.source.remove` | none |
-| `aeat config auth certificate secret remove` | `auth.certificate.secret.remove` | none |
-| `aeat config auth certificate secret set` | `auth.certificate.secret.set` | the person's act |
-| `aeat config auth certificate select` | `auth.certificate.source.select` | none |
-| `aeat config auth configure` | `auth.provider.configure` | none |
-| `aeat config auth diagnostics list` | `auth.local-read` | none |
-| `aeat config auth diagnostics report` | `auth.diagnostics.phone-state-report` | none |
-| `aeat config auth diagnostics view` | `auth.local-read` | none |
-| `aeat config auth login` | `auth.session.acquire` | none |
-| `aeat config auth logout` | `auth.session.logout` | none |
-| `aeat config auth providers` | none | `authority` `auth_providers` |
-| `aeat config auth reset` | `auth.session.reset` | none |
-| `aeat config auth status` | `auth.local-read` | none |
-| `aeat config auth test` | `auth.local-read` | none |
 | `aeat config check` | `diagnostics.workstation.check` | none |
 | `aeat config collab recipient add` | `config.collab.recipient.add` | none |
 | `aeat config collab recipient list` | `config.collab.recipient.list` | none |
 | `aeat config collab recipient remove` | `config.collab.recipient.remove` | none |
 | `aeat config google folder organize` | `config.google.folder.organize` | none |
 | `aeat config google folder view` | `config.google.folder.view` | none |
-| `aeat config google login` | `config.google.login` | none |
-| `aeat config google logout` | `config.google.logout` | none |
 | `aeat config google probe` | `config.google.probe` | none |
-| `aeat config google status` | `config.google.status` | none |
 | `aeat config login` | none | the person's act |
 | `aeat config logout` | none | the person's act |
-| `aeat config passphrase change` | `auth.profile.passphrase-rotate` | the person's act |
-| `aeat config passphrase reset` | none | the person's act |
 | `aeat config profile add-row` | `user-profile.repeatable-row-mutation`, `user-profile.view` | none |
 | `aeat config profile archive export` | `profile.archive.export` | none |
 | `aeat config profile archive import` | none | the person's act |
 | `aeat config profile archive inspect` | none | the person's act |
 | `aeat config profile archive push` | `profile.archive.push` | none |
 | `aeat config profile archive reconcile` | `profile.archive.reconcile` | none |
-| `aeat config profile automation approve` | `user-profile.automation-approve`, `user-profile.automation-inventory` | the person's act |
-| `aeat config profile automation change` | none | the person's act |
-| `aeat config profile automation create` | none | the person's act |
-| `aeat config profile automation decline` | `user-profile.automation-decline`, `user-profile.automation-inventory` | the person's act |
-| `aeat config profile automation deny` | none | the person's act |
-| `aeat config profile automation disclosures` | `user-profile.automation-inventory` | the person's act |
-| `aeat config profile automation inspect` | `user-profile.automation-inventory` | the person's act |
-| `aeat config profile automation list` | `user-profile.automation-inventory` | the person's act |
 | `aeat config profile capabilities set` | `user-profile.field-mutation`, `user-profile.view` | none |
 | `aeat config profile capabilities view` | `user-profile.view` | none |
 | `aeat config profile censo import` | `user-profile.censo-file-import` | `execute` `user-profile.censo-certificate-import` |
 | `aeat config profile censo pull` | `user-profile.censo-prepare`, `user-profile.censo-preview`, `user-profile.censo-review` | none |
 | `aeat config profile censo show` | `user-profile.censo-prepare` | none |
 | `aeat config profile complete-setup` | `user-profile.complete-setup`, `user-profile.view` | none |
-| `aeat config profile create` | `user-profile.patch`, `user-profile.view` | none |
+| `aeat config profile create` | `user-profile.patch`, `user-profile.view` | the person's act |
 | `aeat config profile delete` | none | the person's act |
 | `aeat config profile descendiente` | `user-profile.descendants`, `user-profile.view` | none |
 | `aeat config profile descendiente add` | `user-profile.descendants`, `user-profile.view` | none |
 | `aeat config profile descendiente list` | `user-profile.view` | none |
 | `aeat config profile descendiente remove` | `user-profile.descendants`, `user-profile.view` | none |
-| `aeat config profile disclosures` | none | `status` |
 | `aeat config profile edit` | `user-profile.patch`, `user-profile.view` | none |
 | `aeat config profile edit-row` | `user-profile.repeatable-row-update`, `user-profile.view` | none |
 | `aeat config profile history` | `profile.history` | none |
 | `aeat config profile list` | none | the person's act |
-| `aeat config profile lock` | none | the person's act |
 | `aeat config profile plantilla-media list` | `user-profile.view` | none |
 | `aeat config profile plantilla-media remove` | `user-profile.plantilla-media`, `user-profile.view` | none |
 | `aeat config profile plantilla-media set` | `user-profile.plantilla-media`, `user-profile.view` | none |
-| `aeat config profile recovery disable` | none | the person's act |
-| `aeat config profile recovery enable` | none | the person's act |
-| `aeat config profile recovery status` | `user-profile.recovery.status` | none |
 | `aeat config profile remove-row` | `user-profile.repeatable-row-remove`, `user-profile.view` | none |
-| `aeat config profile resume` | none | the person's act |
-| `aeat config profile sessions` | none | the person's act |
 | `aeat config profile status` | `user-profile.view` | none |
 | `aeat config profile validate` | `user-profile.view` | none |
 | `aeat config profile view` | `user-profile.view` | none |
@@ -366,7 +325,6 @@ without its options and arguments.
 | `aeat config reset resume` | none | the person's act |
 | `aeat config reset start` | none | the person's act |
 | `aeat config reset status` | none | the person's act |
-| `aeat config sign-in-status` | none | the person's act |
 | `aeat config storage check` | none | the person's act |
 | `aeat config storage init` | none | the person's act |
 | `aeat config storage list` | none | the person's act |
@@ -379,7 +337,28 @@ These are registered operations too, and `search` finds them. No command
 submits them. One that does the work a command does in its own process is
 named in that command's row above.
 
+- `auth.apoderado.check`
+- `auth.apoderado.clear`
+- `auth.apoderado.configure`
+- `auth.apoderado.status`
+- `auth.certificate.secret.remove`
+- `auth.certificate.secret.set`
+- `auth.certificate.source.check`
+- `auth.certificate.source.list`
+- `auth.certificate.source.register`
+- `auth.certificate.source.remove`
+- `auth.certificate.source.select`
+- `auth.diagnostics.phone-state-report`
+- `auth.local-read`
+- `auth.profile.passphrase-rotate`
+- `auth.provider.configure`
+- `auth.session.acquire`
+- `auth.session.logout`
+- `auth.session.reset`
 - `browser-runtime.provision`
+- `config.google.login`
+- `config.google.logout`
+- `config.google.status`
 - `diagnostics.connectivity.probe`
 - `diagnostics.secure-objects.check`
 - `diagnostics.secure-objects.quarantine`
@@ -404,6 +383,9 @@ named in that command's row above.
 - `modelo.work.casilla_help`
 - `modelo.work.form`
 - `profile.history.timeline`
+- `user-profile.automation-approve`
+- `user-profile.automation-decline`
+- `user-profile.automation-inventory`
 - `user-profile.automation-renew`
 - `user-profile.automation-request`
 - `user-profile.automation-rotate`
@@ -411,4 +393,5 @@ named in that command's row above.
 - `user-profile.bundle-export`
 - `user-profile.censo-certificate-import`
 - `user-profile.recovery.revoke`
+- `user-profile.recovery.status`
 - `workbench.generation`

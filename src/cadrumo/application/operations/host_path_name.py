@@ -1,4 +1,4 @@
-"""The file name of a host path an operation recorded, for results an agent receives."""
+"""The file name of a host path an operation recorded, for results an automation receives."""
 
 from __future__ import annotations
 

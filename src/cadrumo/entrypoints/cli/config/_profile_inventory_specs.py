@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
-
-from ..command_parameter_contracts import OptionSpec
-from ..command_shared_contracts import (
+from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.shared_contracts import (
     DeferredTarget,
     LazyBinding,
     ParameterDefault,
@@ -14,7 +12,9 @@ from ..command_shared_contracts import (
     TranslationKey,
     ValueContract,
 )
-from ..command_spec import CommandSpec, InvocationSpec
+from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
+
 from ._spec_policies import CALCULATION_READ, PROFILE_READ
 
 _OUTPUT_LANGUAGE = ValueContract(DeferredTarget("....core.external_constants", "OutputLanguage", __package__))
@@ -58,7 +58,7 @@ PROFILE_INVENTORY_COMMAND_SPECS = (
         handler=LazyBinding.available(DeferredTarget(".profile_status_cli", "config_status", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("..config_payloads", "ConfigStatusResult", __package__),
+            target=DeferredTarget("cadrumo_client.commands.payloads", "ConfigStatusResult"),
             identity="config.profile.status",
         ),
         allow_unregistered_profile_diagnostic=True,

@@ -1,8 +1,9 @@
 """Typed ``--json`` payload schemas for ``aeat config profile history``.
 
-Split out of the cohesive sibling :mod:`config_payloads` so the append-only
-event history can carry the canonical bucket-event contract without growing that
-module.
+The former shared ``config_payloads`` module was split into focused siblings.
+The adjacent :mod:`cadrumo.entrypoints.cli._config_descendiente_payloads` owns
+the declared-descendant contract, leaving this module to carry append-only
+bucket history without coupling the payload families.
 
 The nested event row previously crossed the envelope as a bare
 ``dict[str, object]``, so an empty row, a bogus event type, or an unparseable

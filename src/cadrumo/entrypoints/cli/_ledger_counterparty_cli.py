@@ -66,7 +66,7 @@ from ._ledger_counterparty_payloads import (
 )
 from .common import active_bucket_id_or_refuse as _counterparty_bucket_id
 from .common import bad, emit_envelope
-from .runtime_counterparty import run_counterparty
+from .operation_counterparty import run_counterparty
 from .state_projection_support import authority_operation
 
 

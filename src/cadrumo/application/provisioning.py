@@ -530,7 +530,7 @@ def probe_hardware_profile(
     internals, so every branch of the profile and of
     :func:`assess_model_load_contention` is exercised against real model
     construction with real readings -- a test must never depend on this host's
-    actual device state, which changes minute to minute while an agent fleet
+    actual device state, which changes minute to minute while an automation fleet
     runs on it.
 
     Args:

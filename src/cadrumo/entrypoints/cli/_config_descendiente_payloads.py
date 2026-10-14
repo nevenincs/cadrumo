@@ -1,7 +1,9 @@
 """Typed ``--json`` payload schemas for the ``config profile descendiente`` family.
 
-Split out of the cohesive sibling :mod:`config_payloads` so the declared-descendant
-transport can carry the full canonical contract without growing that module.
+The former shared ``config_payloads`` module was split into focused siblings.
+Bucket-history schemas now live in
+:mod:`cadrumo.entrypoints.cli._config_bucket_history_payloads`, leaving this
+module to own declared-descendant transport and its full canonical contract.
 
 :class:`ProfileDescendientePayload` is a lossless projection of
 :class:`~cadrumo.domain.contribuyente.descendant.DescendantInfo`: every field the canonical

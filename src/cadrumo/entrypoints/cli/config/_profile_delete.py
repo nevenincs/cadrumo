@@ -45,9 +45,10 @@ from ..common import emit_envelope
 from ..errors import CliRefusedBoundaryError
 
 if TYPE_CHECKING:
+    from cadrumo_client.commands.payloads import ConfigProfileDeleteResult
+
     from ....application.bucket_maintenance.contracts import BucketDeletionAssessment
     from ....application.bucket_maintenance.deletion_preflight import ProfileDeletionPreflight
-    from ..config_payloads import ConfigProfileDeleteResult
 
 
 def _refused(preflight: ProfileDeletionPreflight) -> Exception | None:
@@ -118,22 +119,22 @@ def _destroy(assessment: BucketDeletionAssessment) -> str:
     """Delegate the complete existing transaction without holding client locks."""
     from uuid import UUID
 
-    from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
-    from .passphrase import _open_rotation_client
+    from cadrumo_client.commands.profile_binding import open_cli_profile_client
+    from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
     if assessment.fingerprint is None:
         raise CliRefusedBoundaryError("custody_changed")
-    client = _open_rotation_client(UUID(assessment.bucket_id))
+    client = open_cli_profile_client(UUID(assessment.bucket_id))
     try:
         try:
             completed = client.delete_profile(assessment.fingerprint)
-        except RuntimeFrontendRefusedError as error:
+        except FrontendRefusedError as error:
             raise CliRefusedBoundaryError(error.reason, context=error.context) from error
     except BaseException as primary:
         try:
             client.close()
         except Exception:
-            primary.add_note("Runtime connection cleanup did not complete.")
+            primary.add_note("Profile client cleanup did not complete.")
         raise
     else:
         client.close()
@@ -147,7 +148,7 @@ def _result_and_lines(
     completed_at: str | None,
 ) -> tuple[ConfigProfileDeleteResult, tuple[str, ...], tuple[Notice, ...]]:
     """Project one outcome onto the registered envelope and its text lines."""
-    from ..config_payloads import ConfigProfileDeleteResult
+    from cadrumo_client.commands.payloads import ConfigProfileDeleteResult
 
     fingerprint = assessment.fingerprint
     retention = assessment.retention

@@ -258,7 +258,7 @@ def _claim_names(location: StorageLocation) -> frozenset[str]:
     return frozenset(names)
 
 
-_CONSUMER_ROOTS = (SRC_CADRUMO,)
+_CONSUMER_ROOTS = (SRC_CADRUMO, SRC_CADRUMO.parent)
 
 
 @releases_parsed_sources

@@ -7,6 +7,8 @@ from uuid import UUID
 
 import typer
 
+from cadrumo_client.commands.profile_binding import bound_profile_client
+
 from ...application.modelo.quickfile import QuickfileStage, QuickfileStageStatus
 from ...application.modelo.quickfile_operation_contracts import (
     QuickfileCalculationInputs,
@@ -32,8 +34,7 @@ from ._modelo_cli_support import (
 )
 from ._modelo_rendering import verification_report_notices
 from .common import activate_subcommand_output_language, emit_envelope, resolve_cli_precondition_action
-from .runtime_profile_binding import bound_profile_client
-from .runtime_quickfile import run_quickfile
+from .operation_quickfile import run_quickfile
 
 
 def _resolve_period(*, modelo: str, year: int, period: str) -> Period:

@@ -9,6 +9,9 @@ from __future__ import annotations
 
 import typer
 
+from cadrumo_client.commands.registered_operation_errors import submitted_operation_error
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+
 from ...application.modelo.action_errors import CalculationRevisionStateError, VerificationReportNotFoundError
 from ...application.modelo.dependency_projection import DependencyCleanStateSnapshot, DependencyInventoryItemSnapshot
 from ...application.modelo.preconditions import build_modelo_work_file_unverified_revision_failure
@@ -20,7 +23,6 @@ from ...application.modelo.work_filing_contracts import (
     ModeloWorkFileRequest,
 )
 from ...application.modelo.work_verification_contracts import ModeloWorkVerifyPublicResultV2, ModeloWorkVerifyRequest
-from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
@@ -52,9 +54,8 @@ from ._modelo_rendering import (
     verification_report_payload,
 )
 from .common import activate_subcommand_output_language, emit_envelope
-from .registered_operation_errors import submitted_operation_error
-from .runtime_modelo_dependencies import read_modelo_dependencies
-from .runtime_modelo_verification import (
+from .operation_modelo_dependencies import read_modelo_dependencies
+from .operation_modelo_verification import (
     run_modelo_work_filing,
     run_modelo_work_verification,
     select_modelo_work_revision_for_cli,
@@ -218,7 +219,7 @@ def work_verify(
     )
     projection = completed.projection
     if not isinstance(projection, ModeloWorkVerifyPublicResultV2):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     verification = projection.verification.to_verification()
     report = verification.report
     report_payload = verification_report_payload(report, finding_preconditions=verification.finding_preconditions)
@@ -284,7 +285,7 @@ def work_dependencies(
         receipt = completed.completion
         raise submitted_operation_error(
             receipt.operation_id,
-            RuntimeRefusalCode.UNAVAILABLE.value,
+            RefusalCode.UNAVAILABLE.value,
             terminal_condition=receipt.terminal_condition,
             effect=receipt.effect,
             refusal_code=receipt.refusal_code,
@@ -360,7 +361,7 @@ def work_file(
     )
     projection = completion.projection
     if not isinstance(projection, ModeloWorkFilePublicResultV2):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     record = projection.record.to_record()
     result = WorkFileResult.model_validate(filing_record_payload(record).model_dump(mode="python"))
     lines = ["operation\tmodelo.work.file", *filing_record_lines(record)]

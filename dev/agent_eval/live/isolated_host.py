@@ -3,8 +3,9 @@
 The orchestrator here only starts processes and reads JSON. Every step that
 touches storage is the package's own code: the runtime installation record and
 the runtime launch run in :mod:`.package_host` under the copy's interpreter, and
-profile creation, sign-in, key issuance, locks and every oracle read run
-through the copy's ``bin/aeat.exe``. Secrets go to the command line only on its
+profile creation, sign-in and tax oracle reads use the copy's ``bin/aeat.exe``;
+authentication/access management use ``bin/cadrumo-runtime.exe``, and key issuance
+uses the package's SDK with a separate runtime approval. Secrets go to the command line only on its
 protected stdin channel, held in memory for the run and never written down.
 
 Every packaged process starts from an allow-listed environment. Nothing the
@@ -18,6 +19,7 @@ import json
 import os
 import secrets
 import shutil
+import threading
 import time
 import uuid
 from collections.abc import Mapping, Sequence
@@ -26,9 +28,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Final, Protocol
 
-from cadrumo.adapters.local_runtime.windows_process import WindowsProcessScope
 from cadrumo.core.profile_session import KeychainUnavailability
+from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
 from dev.packaging.command_execution import run_command
+from dev.runtime_lifecycle.caller_owned_root import AcceptanceError
+from dev.runtime_lifecycle.proof_support import ProcessIdentity, verified_relay
+from dev.runtime_lifecycle.session_holder import RuntimeSessionHolder
 
 from .capture import Scrubber
 from .outcome import UnavailableError
@@ -251,6 +256,10 @@ class PackageHost:
         self._resources = ExitStack()
         self.environment: dict[str, str] = {}
         self.ready: dict[str, Any] = {}
+        self._holder: RuntimeSessionHolder | None = None
+        self._attendance_stop: threading.Event | None = None
+        self._attendance_thread: threading.Thread | None = None
+        self._invocation: ProcessIdentity | None = None
 
     @property
     def python(self) -> Path:
@@ -261,6 +270,11 @@ class PackageHost:
     def cli_image(self) -> Path:
         """The copy's command line."""
         return self.package / "bin" / "aeat.exe"
+
+    @property
+    def runtime_image(self) -> Path:
+        """The copy's runtime authority command image."""
+        return self.package / "bin" / "cadrumo-runtime.exe"
 
     @property
     def mcp_image(self) -> Path:
@@ -338,6 +352,29 @@ class PackageHost:
         profile password for a profile-bound verb, on ``--profile-secrets-stdin``.
         Neither ever appears in the arguments, the environment or the result.
         """
+        return self._command(self.cli_image, arguments, secret=secret, profile_secret=profile_secret, timeout=timeout)
+
+    def runtime_cli(
+        self,
+        *arguments: str,
+        secret: Mapping[str, Any] | None = None,
+        profile_secret: str | None = None,
+        timeout: float = _CLI_SECONDS,
+    ) -> CliResult:
+        """Run authentication or access management through the package's runtime image."""
+        return self._command(
+            self.runtime_image, arguments, secret=secret, profile_secret=profile_secret, timeout=timeout
+        )
+
+    def _command(
+        self,
+        image: Path,
+        arguments: Sequence[str],
+        *,
+        secret: Mapping[str, Any] | None,
+        profile_secret: str | None,
+        timeout: float,
+    ) -> CliResult:
         if secret is not None and profile_secret is not None:
             raise ValueError("one protected channel per invocation")
         root_options: list[str] = ["--format", "json"]
@@ -349,10 +386,13 @@ class PackageHost:
         elif secret is not None:
             tail.append("--secrets-stdin")
             payload = dict(secret)
+        environment = dict(self.environment)
+        if image == self.runtime_image:
+            environment["CADRUMO_CLI_REVEAL_IDENTIFIERS"] = "true"
         completed = run_command(
-            [str(self.cli_image), *root_options, *tail],
+            [str(image), *root_options, *tail],
             cwd=self.root,
-            environment=self.environment,
+            environment=environment,
             timeout_seconds=timeout,
             errors="replace",
             input_text=None if payload is None else json.dumps(payload),
@@ -387,6 +427,37 @@ class PackageHost:
             )
         return result
 
+    def request_key(self, person: Person, categories: Sequence[str]) -> CliResult:
+        """Receive only the reference of a runtime-approved key from the packaged requester."""
+        request_out = self.run.control / "key-request.json"
+        request_out.unlink(missing_ok=True)
+        (delivered,) = self.package_python(
+            "request-key",
+            "--profile-id",
+            person.profile_id,
+            "--request-out",
+            str(request_out),
+            *(argument for category in categories for argument in ("--category", category)),
+        )
+        if delivered.get("event") != "key_delivered" or not isinstance(delivered.get("result"), dict):
+            raise RuntimeError("the packaged requester returned no protected delivery receipt")
+        return CliResult(
+            arguments=("request-key",), returncode=0, document={"status": "success", "result": delivered["result"]}
+        )
+
+    def requested_key(self, person: Person) -> dict[str, Any] | None:
+        """Observe the actual requester's nonsecret review identity before approval."""
+        path = self.run.control / "key-request.json"
+        if not path.exists():
+            return None
+        document = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(document, dict) or document.get("profile_id") != person.profile_id:
+            raise RuntimeError("the prepared SDK request belongs to another profile")
+        receipt = document.get("receipt")
+        if not isinstance(receipt, dict) or not isinstance(receipt.get("request_id"), str):
+            raise RuntimeError("the actual SDK requester omitted its safe review identity")
+        return receipt
+
     def create_person(self, name: str) -> Person:
         """Create a synthetic profile with a random password the agent never sees."""
         password = f"Live-eval-{secrets.token_urlsafe(24)}!"
@@ -412,15 +483,101 @@ class PackageHost:
             if not result.ok:
                 raise RuntimeError(f"{' '.join(arguments[:3])} refused: {'/'.join(result.error_tokens)}")
 
-    def sign_in(self, person: Person) -> CliResult:
-        """Sign the person in on the protected channel; a refused credential store is unavailable."""
-        result = self.cli("config", "login", secret={"passphrase": person.password})
-        classify_sign_in(result)
+    def sign_in(self, person: Person, *, require_native_custody: bool = False) -> CliResult:
+        """Hold the person's explicit proof; key scenarios separately require native custody."""
+        result: CliResult | None = None
+        if require_native_custody:
+            result = self.cli("config", "login", secret={"passphrase": person.password})
+            classify_sign_in(result)
+        self._stop_attendance()
+        holder = RuntimeSessionHolder(
+            self.runtime_image,
+            profile_id=uuid.UUID(person.profile_id),
+            environment=self.environment,
+            password=bytearray(person.password, "utf-8"),
+        )
+        self._holder = holder
+        self._resources.callback(holder.close)
+        observed = holder.command("status")
+        status = observed.get("status")
+        if (
+            observed.get("kind") != "profile_status"
+            or not isinstance(status, dict)
+            or status.get("session_id") != holder.identity["session_id"]
+            or status.get("profile_id") != person.profile_id
+            or status.get("credential_authenticated") is not True
+            or status.get("denial") is not None
+        ):
+            self._stop_attendance()
+            raise RuntimeError("the exact person's held session is not authoritative")
+        if result is None:
+            result = CliResult(
+                arguments=("session", "hold"),
+                returncode=0,
+                document={
+                    "status": "success",
+                    "result": {**observed, "idle_deadline": status["session_expires_at"], "session_persisted": False},
+                },
+            )
+        stop = threading.Event()
+        self._attendance_stop = stop
+
+        def attend() -> None:
+            while not stop.is_set():
+                try:
+                    inventory = holder.command("attendance_inventory")
+                    if inventory.get("kind") != "attendance_inventory":
+                        return
+                    candidates = inventory.get("candidates")
+                    if not isinstance(candidates, list):
+                        return
+                    for candidate in candidates:
+                        if not isinstance(candidate, dict) or not isinstance(candidate.get("attendance_id"), str):
+                            return
+                        approved = self._owned_relay(candidate.get("process_id"))
+                        decision = holder.command(
+                            "attendance_decision", attendance_id=candidate["attendance_id"], approve=approved
+                        )
+                        if decision.get("kind") != "attendance_decided" or decision.get("approved") is not approved:
+                            return
+                except (AcceptanceError, OSError, ValueError):
+                    return
+                stop.wait(0.25)
+
+        self._attendance_thread = threading.Thread(target=attend, name="live-person-attendance", daemon=True)
+        self._attendance_thread.start()
+        self._resources.callback(self._stop_attendance)
         return result
 
+    def retain_invocation(self, process_id: int) -> None:
+        """Capture the kernel incarnation supplied by the actual subprocess launch."""
+        self._invocation = ProcessIdentity.capture(process_id)
+
+    def _owned_relay(self, process_id: object) -> bool:
+        """Admit only a packaged relay under the current retained invocation."""
+        return verified_relay(process_id, self.mcp_image, self._invocation)
+
+    def _stop_attendance(self) -> None:
+        if self._attendance_stop is not None:
+            self._attendance_stop.set()
+        if self._attendance_thread is not None:
+            self._attendance_thread.join(timeout=35)
+            if self._attendance_thread.is_alive():
+                raise RuntimeError("the person's attendance observer did not settle")
+        self._attendance_stop, self._attendance_thread = None, None
+        if self._holder is not None:
+            self._holder.close()
+            self._holder = None
+
     def sign_out(self) -> CliResult:
-        """Sign the person out, as they would at a terminal."""
-        return self.cli("config", "logout")
+        """Sign the person out and release their exact held-session observer."""
+        result = self.cli("config", "logout")
+        self._stop_attendance()
+        return result
+
+    def release_held_session(self) -> None:
+        """Release the original holder after explicit lock or observed expiry."""
+        self._stop_attendance()
 
     def delete_stored_sign_in(self, person: Person) -> None:
         """Remove the profile's stored sign-in, both halves, through the package's own code."""
@@ -457,9 +614,9 @@ def _refused_for_want_of_a_kept_sign_in(document: Mapping[str, Any]) -> bool:
 def classify_sign_in(result: CliResult) -> None:
     """Turn a sign-in the credential store could not keep into ``unavailable``, never a pass.
 
-    A stored sign-in is the only door an agent may use besides a key, and both
-    need the platform credential store. A logon session the store refuses (an
-    SSH logon on Windows answers WinError 1312) cannot run the lane.
+    Key scenarios require native credential custody. A logon session the store
+    refuses (an SSH logon on Windows answers WinError 1312) cannot run them.
+    No-key connections use attendance under the separately held human session.
     """
     tokens = result.error_tokens
     keychain = _keychain_reasons(result.document)
@@ -510,8 +667,8 @@ def mcp_launch(
     """The packaged MCP server's command, arguments and allow-listed environment.
 
     With a key, the server is told the profile and the reference the person
-    configured; the key itself never appears. Without one it resumes the
-    person's sign-in.
+    configured; the key itself never appears. Without one it asks the exact
+    held person session for approval through runtime attendance.
     """
     arguments: list[str] = []
     if credential_reference is not None:

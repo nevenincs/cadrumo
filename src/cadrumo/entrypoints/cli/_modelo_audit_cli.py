@@ -14,7 +14,7 @@ def audit_view(
     bundle_id: str,
 ) -> None:
     """Render an evidence bundle's manifest and referenced record list."""
-    from .runtime_modelo_audit import read_modelo_audit_view
+    from .operation_modelo_audit import read_modelo_audit_view
 
     bundle = read_modelo_audit_view(ctx, bundle_id=bundle_id)
     bucket_id = bundle.bucket_id
@@ -58,8 +58,9 @@ def audit_check(
     bundle_id: str,
 ) -> None:
     """Re-verify the evidence bundle's integrity without mutating state."""
-    from .runtime_modelo_audit import check_modelo_audit
-    from .runtime_profile_binding import bound_profile_client
+    from cadrumo_client.commands.profile_binding import bound_profile_client
+
+    from .operation_modelo_audit import check_modelo_audit
 
     report = check_modelo_audit(ctx, bundle_id=bundle_id)
     bucket_id = str(bound_profile_client(ctx).profile_id)
@@ -95,7 +96,7 @@ def audit_export(
     force_incomplete: bool = False,
 ) -> None:
     """Write the evidence bundle as a ZIP archive to ``--output``."""
-    from .runtime_modelo_audit import export_modelo_audit
+    from .operation_modelo_audit import export_modelo_audit
 
     projection = export_modelo_audit(
         ctx,

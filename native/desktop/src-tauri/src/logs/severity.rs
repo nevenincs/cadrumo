@@ -188,7 +188,7 @@ mod tests {
         assert_eq!(
             python_level(
                 Some(Level::Info),
-                Some("cadrumo.adapters.local_runtime.server"),
+                Some("cadrumo_runtime.adapters.server"),
                 "runtime_startup phase=listener_listen transition=leave elapsed_seconds=0.008000",
                 &BTreeMap::new()
             ),
@@ -208,7 +208,7 @@ mod tests {
         assert_eq!(
             python_level(
                 Some(Level::Info),
-                Some("cadrumo.entrypoints.runtime.main"),
+                Some("cadrumo_runtime.host.main"),
                 "runtime_process_exited",
                 &normal
             ),

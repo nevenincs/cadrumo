@@ -14,7 +14,7 @@ primitive and through nothing else. The store is injected at the port the
 service already declares, wrapped so that what crossed the boundary can be
 read off directly rather than inferred from what landed on disk.
 
-**Idempotency.** This CLI's operator is an autonomous agent that retries, and
+**Idempotency.** This CLI's operator is an autonomous automation that retries, and
 the AEAT act behind one certificado was served once and cannot change. So a
 retry carrying the same document is a no-op returning what is already held,
 and a retry carrying anything different refuses rather than overwriting a

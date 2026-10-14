@@ -13,7 +13,7 @@ import shutil
 import subprocess
 import sys
 import time
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -85,6 +85,7 @@ def run_command(
     input_text: str | None = None,
     inherited_descriptors: Sequence[int] = (),
     inherit_output: bool = False,
+    on_spawn: Callable[[int], None] | None = None,
 ) -> CommandResult:
     """Run one command and retain its actual output, timestamps, and exit status.
 
@@ -97,6 +98,9 @@ def run_command(
     ``inherit_output`` gives the child this process's standard output and
     error instead of capturing them, so a long build step reports progress as
     it happens. The result then carries empty ``stdout`` and ``stderr``.
+
+    ``on_spawn`` observes the PID returned by this invocation's process creation;
+    a failing observer terminates the owned process instead of leaving it running.
     """
     if isinstance(argv, str):
         raise ValueError("command argv must be a sequence of arguments, not one string")
@@ -120,6 +124,7 @@ def run_command(
                 input_text=input_text,
                 inherited_descriptors=inherited_descriptors,
                 inherit_output=inherit_output,
+                on_spawn=on_spawn,
             ),
         )
     finally:
@@ -147,6 +152,7 @@ async def _run_process(
     input_text: str | None,
     inherited_descriptors: Sequence[int],
     inherit_output: bool = False,
+    on_spawn: Callable[[int], None] | None = None,
 ) -> tuple[int, str, str]:
     """Execute one explicit argv with bounded capture and optional input."""
     output = None if inherit_output else asyncio.subprocess.PIPE
@@ -162,6 +168,14 @@ async def _run_process(
     encoded_input = None if input_text is None else input_text.encode(UTF_8_ENCODING)
     communication = asyncio.create_task(process.communicate(encoded_input))
     try:
+        if on_spawn is not None:
+            try:
+                on_spawn(process.pid)
+            except BaseException:
+                await _terminate_tree(process)
+                communication.cancel()
+                await asyncio.gather(communication, return_exceptions=True)
+                raise
         stdout_bytes, stderr_bytes = await asyncio.wait_for(asyncio.shield(communication), timeout_seconds)
     except TimeoutError as exc:
         await _terminate_tree(process)

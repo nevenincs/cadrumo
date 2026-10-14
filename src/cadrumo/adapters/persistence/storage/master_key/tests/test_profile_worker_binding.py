@@ -8,9 +8,9 @@ from uuid import uuid4
 
 import pytest
 
-from cadrumo.application.runtime.profile_worker import ProfileWorkerIdentity
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
+from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 
 from ..bucket_session import BucketSession
 from ..profile_worker_binding import ProfileWorkerBindingOwner

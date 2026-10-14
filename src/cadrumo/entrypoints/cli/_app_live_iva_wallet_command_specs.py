@@ -1,6 +1,18 @@
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import (
+from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.shared_contracts import (
+    DeferredTarget,
+    LazyBinding,
+    ParameterConstraint,
+    ParameterDefault,
+    ResultSchemaSpec,
+    SchemaState,
+    ValueContract,
+)
+from cadrumo_client.commands.shared_contracts import translation_key as _key
+from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec
+from cadrumo_client.contracts.command_ports import (
     CommandNodeKind,
     CommandWriteRoute,
 )
@@ -19,18 +31,6 @@ from ._app_live_command_spec_support import (
     _REQUIRED_YEAR_TO_OPTION,
     NO_RESULT_SCHEMA,
 )
-from .command_parameter_contracts import OptionSpec
-from .command_shared_contracts import (
-    DeferredTarget,
-    LazyBinding,
-    ParameterConstraint,
-    ParameterDefault,
-    ResultSchemaSpec,
-    SchemaState,
-    ValueContract,
-)
-from .command_shared_contracts import translation_key as _key
-from .command_spec import CommandSpec, ExecutionPolicySpec
 
 LIVE_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(

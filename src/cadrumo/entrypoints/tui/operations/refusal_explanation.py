@@ -7,7 +7,6 @@ from ....application.operator_surface.action_targets import resolve_recorded_pre
 from ....core.errors.error_codes import declared_error_codes_by_qualname, resolve_error_message
 from ....core.errors.hierarchy import RecordedRegisteredError
 from ....core.i18n.render import tr
-from ....core.product_identity import PRODUCT_IDENTITY
 
 
 def public_refusal_explanation(code: str | None) -> str | None:
@@ -56,7 +55,7 @@ def recorded_remedy_line(detail: OperationErrorDetailV1 | None) -> str | None:
         return None
     if action is None or action.cli_path is None:
         return None
-    command = " ".join((PRODUCT_IDENTITY.cli_executable, *action.cli_path))
+    command = " ".join(action.cli_path)
     return tr("tui.operations.stopped.remedy_command", command=command)
 
 

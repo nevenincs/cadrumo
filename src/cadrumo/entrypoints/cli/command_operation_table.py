@@ -4,7 +4,7 @@ Generated from the command graph, the source of the command handlers and the
 operation registry. Do not edit it by hand. After a command, or what a command
 submits or sends, changes, write it again with::
 
-    python -m cadrumo.entrypoints.cli.tests.command_operation_derivation --runtime-requests
+    python -m dev.operation_contract_manifest.command_operation_derivation --connection-requests
 
 Each row pairs one executable command with one operation its handler can
 submit. The command is spelled by its operator path without the executable's
@@ -13,9 +13,9 @@ nothing has one row whose operation is ``None``: that it submits nothing is
 recorded, not left out. A group's rows describe the group's own callback and
 not the commands below it.
 
-A command can also reach the runtime by sending a request of the runtime's own
-door or an installation act. Those rows pair the command with the request's
-action, and a command that sends none has no such row.
+A command can also send a connection request or installation act. Those rows
+pair the command with the request action, and a command that sends none has no
+such row.
 
 The rows are an upper bound on one handler's reachable code. A command with
 several modes lists every operation any mode can submit and every request any
@@ -289,42 +289,15 @@ COMMAND_OPERATION_ROWS: Final[tuple[tuple[tuple[str, ...], str | None], ...]] = 
     (("app", "review", "view"), "app.review.view"),
     (("app", "tui"), None),
     (("config",), None),
-    (("config", "auth", "apoderado", "check"), "auth.apoderado.check"),
-    (("config", "auth", "apoderado", "clear"), "auth.apoderado.clear"),
-    (("config", "auth", "apoderado", "configure"), "auth.apoderado.configure"),
-    (("config", "auth", "apoderado", "scopes", "list"), None),
-    (("config", "auth", "apoderado", "status"), "auth.apoderado.status"),
-    (("config", "auth", "certificate", "check"), "auth.certificate.source.check"),
-    (("config", "auth", "certificate", "list"), "auth.certificate.source.list"),
-    (("config", "auth", "certificate", "register"), "auth.certificate.source.register"),
-    (("config", "auth", "certificate", "remove"), "auth.certificate.source.remove"),
-    (("config", "auth", "certificate", "secret", "remove"), "auth.certificate.secret.remove"),
-    (("config", "auth", "certificate", "secret", "set"), "auth.certificate.secret.set"),
-    (("config", "auth", "certificate", "select"), "auth.certificate.source.select"),
-    (("config", "auth", "configure"), "auth.provider.configure"),
-    (("config", "auth", "diagnostics", "list"), "auth.local-read"),
-    (("config", "auth", "diagnostics", "report"), "auth.diagnostics.phone-state-report"),
-    (("config", "auth", "diagnostics", "view"), "auth.local-read"),
-    (("config", "auth", "login"), "auth.session.acquire"),
-    (("config", "auth", "logout"), "auth.session.logout"),
-    (("config", "auth", "providers"), None),
-    (("config", "auth", "reset"), "auth.session.reset"),
-    (("config", "auth", "status"), "auth.local-read"),
-    (("config", "auth", "test"), "auth.local-read"),
     (("config", "check"), "diagnostics.workstation.check"),
     (("config", "collab", "recipient", "add"), "config.collab.recipient.add"),
     (("config", "collab", "recipient", "list"), "config.collab.recipient.list"),
     (("config", "collab", "recipient", "remove"), "config.collab.recipient.remove"),
     (("config", "google", "folder", "organize"), "config.google.folder.organize"),
     (("config", "google", "folder", "view"), "config.google.folder.view"),
-    (("config", "google", "login"), "config.google.login"),
-    (("config", "google", "logout"), "config.google.logout"),
     (("config", "google", "probe"), "config.google.probe"),
-    (("config", "google", "status"), "config.google.status"),
     (("config", "login"), None),
     (("config", "logout"), None),
-    (("config", "passphrase", "change"), "auth.profile.passphrase-rotate"),
-    (("config", "passphrase", "reset"), None),
     (("config", "profile", "add-row"), "user-profile.repeatable-row-mutation"),
     (("config", "profile", "add-row"), "user-profile.view"),
     (("config", "profile", "archive", "export"), "profile.archive.export"),
@@ -332,16 +305,6 @@ COMMAND_OPERATION_ROWS: Final[tuple[tuple[tuple[str, ...], str | None], ...]] = 
     (("config", "profile", "archive", "inspect"), None),
     (("config", "profile", "archive", "push"), "profile.archive.push"),
     (("config", "profile", "archive", "reconcile"), "profile.archive.reconcile"),
-    (("config", "profile", "automation", "approve"), "user-profile.automation-approve"),
-    (("config", "profile", "automation", "approve"), "user-profile.automation-inventory"),
-    (("config", "profile", "automation", "change"), None),
-    (("config", "profile", "automation", "create"), None),
-    (("config", "profile", "automation", "decline"), "user-profile.automation-decline"),
-    (("config", "profile", "automation", "decline"), "user-profile.automation-inventory"),
-    (("config", "profile", "automation", "deny"), None),
-    (("config", "profile", "automation", "disclosures"), "user-profile.automation-inventory"),
-    (("config", "profile", "automation", "inspect"), "user-profile.automation-inventory"),
-    (("config", "profile", "automation", "list"), "user-profile.automation-inventory"),
     (("config", "profile", "capabilities", "set"), "user-profile.field-mutation"),
     (("config", "profile", "capabilities", "set"), "user-profile.view"),
     (("config", "profile", "capabilities", "view"), "user-profile.view"),
@@ -362,26 +325,19 @@ COMMAND_OPERATION_ROWS: Final[tuple[tuple[tuple[str, ...], str | None], ...]] = 
     (("config", "profile", "descendiente", "list"), "user-profile.view"),
     (("config", "profile", "descendiente", "remove"), "user-profile.descendants"),
     (("config", "profile", "descendiente", "remove"), "user-profile.view"),
-    (("config", "profile", "disclosures"), None),
     (("config", "profile", "edit"), "user-profile.patch"),
     (("config", "profile", "edit"), "user-profile.view"),
     (("config", "profile", "edit-row"), "user-profile.repeatable-row-update"),
     (("config", "profile", "edit-row"), "user-profile.view"),
     (("config", "profile", "history"), "profile.history"),
     (("config", "profile", "list"), None),
-    (("config", "profile", "lock"), None),
     (("config", "profile", "plantilla-media", "list"), "user-profile.view"),
     (("config", "profile", "plantilla-media", "remove"), "user-profile.plantilla-media"),
     (("config", "profile", "plantilla-media", "remove"), "user-profile.view"),
     (("config", "profile", "plantilla-media", "set"), "user-profile.plantilla-media"),
     (("config", "profile", "plantilla-media", "set"), "user-profile.view"),
-    (("config", "profile", "recovery", "disable"), None),
-    (("config", "profile", "recovery", "enable"), None),
-    (("config", "profile", "recovery", "status"), "user-profile.recovery.status"),
     (("config", "profile", "remove-row"), "user-profile.repeatable-row-remove"),
     (("config", "profile", "remove-row"), "user-profile.view"),
-    (("config", "profile", "resume"), None),
-    (("config", "profile", "sessions"), None),
     (("config", "profile", "status"), "user-profile.view"),
     (("config", "profile", "validate"), "user-profile.view"),
     (("config", "profile", "view"), "user-profile.view"),
@@ -406,7 +362,6 @@ COMMAND_OPERATION_ROWS: Final[tuple[tuple[tuple[str, ...], str | None], ...]] = 
     (("config", "reset", "resume"), None),
     (("config", "reset", "start"), None),
     (("config", "reset", "status"), None),
-    (("config", "sign-in-status"), None),
     (("config", "storage", "check"), None),
     (("config", "storage", "init"), None),
     (("config", "storage", "list"), None),
@@ -416,7 +371,28 @@ COMMAND_OPERATION_ROWS: Final[tuple[tuple[tuple[str, ...], str | None], ...]] = 
 """One row for each executable command and each operation it can submit."""
 
 OPERATIONS_WITHOUT_COMMAND: Final[tuple[str, ...]] = (
+    "auth.apoderado.check",
+    "auth.apoderado.clear",
+    "auth.apoderado.configure",
+    "auth.apoderado.status",
+    "auth.certificate.secret.remove",
+    "auth.certificate.secret.set",
+    "auth.certificate.source.check",
+    "auth.certificate.source.list",
+    "auth.certificate.source.register",
+    "auth.certificate.source.remove",
+    "auth.certificate.source.select",
+    "auth.diagnostics.phone-state-report",
+    "auth.local-read",
+    "auth.profile.passphrase-rotate",
+    "auth.provider.configure",
+    "auth.session.acquire",
+    "auth.session.logout",
+    "auth.session.reset",
     "browser-runtime.provision",
+    "config.google.login",
+    "config.google.logout",
+    "config.google.status",
     "diagnostics.connectivity.probe",
     "diagnostics.secure-objects.check",
     "diagnostics.secure-objects.quarantine",
@@ -441,6 +417,9 @@ OPERATIONS_WITHOUT_COMMAND: Final[tuple[str, ...]] = (
     "modelo.work.casilla_help",
     "modelo.work.form",
     "profile.history.timeline",
+    "user-profile.automation-approve",
+    "user-profile.automation-decline",
+    "user-profile.automation-inventory",
     "user-profile.automation-renew",
     "user-profile.automation-request",
     "user-profile.automation-rotate",
@@ -448,11 +427,12 @@ OPERATIONS_WITHOUT_COMMAND: Final[tuple[str, ...]] = (
     "user-profile.bundle-export",
     "user-profile.censo-certificate-import",
     "user-profile.recovery.revoke",
+    "user-profile.recovery.status",
     "workbench.generation",
 )
 """Every registered operation no command submits."""
 
-COMMAND_RUNTIME_REQUEST_ROWS: Final[tuple[tuple[tuple[str, ...], str], ...]] = (
+COMMAND_CONNECTION_REQUEST_ROWS: Final[tuple[tuple[tuple[str, ...], str], ...]] = (
     (("config", "login"), "human_sign_out"),
     (("config", "login"), "profile_login"),
     (("config", "login"), "session_lock"),
@@ -463,33 +443,9 @@ COMMAND_RUNTIME_REQUEST_ROWS: Final[tuple[tuple[tuple[str, ...], str], ...]] = (
     (("config", "logout"), "session_lock"),
     (("config", "logout"), "session_refresh"),
     (("config", "logout"), "session_status"),
-    (("config", "passphrase", "change"), "profile_login"),
-    (("config", "passphrase", "reset"), "password_reset"),
-    (("config", "passphrase", "reset"), "password_reset_prepare"),
-    (("config", "profile", "automation", "change"), "enrollment_inspect"),
-    (("config", "profile", "automation", "change"), "enrollment_poll"),
-    (("config", "profile", "automation", "change"), "enrollment_prepare"),
-    (("config", "profile", "automation", "change"), "enrollment_reconcile"),
-    (("config", "profile", "automation", "change"), "enrollment_submit"),
-    (("config", "profile", "automation", "change"), "profile_login"),
-    (("config", "profile", "automation", "create"), "enrollment_inspect"),
-    (("config", "profile", "automation", "create"), "enrollment_poll"),
-    (("config", "profile", "automation", "create"), "enrollment_prepare"),
-    (("config", "profile", "automation", "create"), "enrollment_submit"),
-    (("config", "profile", "automation", "deny"), "automation_deny"),
     (("config", "profile", "delete"), "profile_delete"),
     (("config", "profile", "delete"), "profile_delete_prepare"),
-    (("config", "profile", "disclosures"), "session_disclosures"),
-    (("config", "profile", "lock"), "automation_deny"),
-    (("config", "profile", "lock"), "human_sign_out"),
-    (("config", "profile", "lock"), "session_lock"),
-    (("config", "profile", "lock"), "session_refresh"),
-    (("config", "profile", "lock"), "session_status"),
-    (("config", "profile", "resume"), "profile_recovery_prepare"),
-    (("config", "profile", "resume"), "profile_resume"),
-    (("config", "profile", "sessions"), "session_inventory"),
     (("config", "reset", "resume"), "reset_resume"),
     (("config", "reset", "start"), "reset_start"),
-    (("config", "sign-in-status"), "sign_in_status"),
 )
-"""One row for each executable command and each runtime request or installation act it can send."""
+"""One row for each executable command and each connection request or installation act it can send."""

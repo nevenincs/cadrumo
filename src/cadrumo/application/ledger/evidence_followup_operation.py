@@ -8,6 +8,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.confirmation_gate import ConfirmationBlockReason, ReviewAdvisoryKind
@@ -21,7 +23,6 @@ from ...domain.calculations.registry.governed_fact_scope import validating_gover
 from ...domain.iva.regime_legend import resolve_regime_legends
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
-from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .attachment_review import get_attachment_review_item, list_attachment_review_queue
@@ -544,7 +545,7 @@ class LedgerEvidenceReviewViewExecutor:
 
 
 class LedgerEvidenceReviewSummaryExecutor:
-    """Read one full draft review and retain only what an agent may hold of it."""
+    """Read one full draft review and retain only what an automation may hold of it."""
 
     def __init__(self, ports: LedgerEvidenceFollowupOperationPorts) -> None:
         """Bind the encrypted extraction-draft read capability."""

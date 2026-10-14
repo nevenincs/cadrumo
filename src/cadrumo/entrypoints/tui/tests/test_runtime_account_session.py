@@ -11,7 +11,8 @@ from uuid import uuid4
 
 import pytest
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo_client.transport.frontend_client import FrontendClient
+
 from ....application.overview.home import HomeAccountSession, HomeSessionPosture
 from ..account import AccountSessionExpiredError
 from ..app import CadrumoTuiApp
@@ -49,7 +50,7 @@ class _StatusClient:
 async def test_runtime_reader_checks_exact_session_off_ui_loop_without_touching_it() -> None:
     client = _StatusClient()
     reader = runtime_account_session_reader(
-        cast(RuntimeFrontendClient, client), profile_id=client.profile_id, profile_label="Current profile"
+        cast(FrontendClient, client), profile_id=client.profile_id, profile_label="Current profile"
     )
     loop_thread = threading.get_ident()
 

@@ -2,13 +2,8 @@
 
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import (
-    CommandNodeKind,
-    CommandWriteRoute,
-)
-
-from .command_parameter_contracts import OptionSpec
-from .command_shared_contracts import (
+from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.shared_contracts import (
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
     DeferredTarget,
@@ -19,8 +14,12 @@ from .command_shared_contracts import (
     SchemaState,
     ValueContract,
 )
-from .command_shared_contracts import translation_key as _key
-from .command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.commands.shared_contracts import translation_key as _key
+from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import (
+    CommandNodeKind,
+    CommandWriteRoute,
+)
 
 _READ = ExecutionPolicySpec(frozenset({"local-storage"}), frozenset({"none"}), "local-io", CommandWriteRoute.NONE)
 _PAYLOADS = "._diagnostics_payloads"

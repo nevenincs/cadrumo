@@ -4,11 +4,11 @@ A frontend process must bind the persistence and outbound adapters the
 application layer resolves through explicitly composed ports before it serves
 any work. That inventory is a property of the product, not of the frontend, so
 it is declared once here and entered by the CLI root and the TUI devtools
-fixture. The separately shipped MCP harness owns its independent composition
+fixture. The separately shipped external client harness owns its independent composition
 root and does not import this entrypoint module.
 
 An entrypoint that forgets this scope fails on every custody-touching verb,
-which is exactly the symptom that made the original MCP gap visible.
+which is exactly the symptom that made the original external client gap visible.
 
 Core types:
 :class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`,
@@ -1685,8 +1685,8 @@ def profile_free_adapter_composition() -> Generator[None]:
 
 
 @contextmanager
-def runtime_read_adapter_composition() -> Generator[ProfileAdapterComposition]:
-    """Bind frontend profile metadata while the runtime owns ledger persistence."""
+def connection_read_adapter_composition() -> Generator[ProfileAdapterComposition]:
+    """Bind profile metadata while connection-backed operations own ledger persistence."""
     from ..adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
     from ..core.redaction.tax_identity_admission import bind_tax_identity_admission
     from ..domain.calculations.registry.tax_identity_admission import RegistryTaxIdentityAdmission

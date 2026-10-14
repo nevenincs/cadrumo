@@ -17,6 +17,8 @@ from pathlib import Path
 from typing import Any, override
 from uuid import UUID
 
+from cadrumo_client.contracts.contracts import RefusalError
+
 from ..adapters.inbound.notificacion.document_reader import NotificationDocumentReader
 from ..adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from ..adapters.outbound.aeat.sede.declarations import (
@@ -124,7 +126,6 @@ from ..application.live.remote_state_models import (
 from ..application.live.remote_state_outcomes import evidence_ref
 from ..application.live.session import SessionWriteReporter, active_verified_session, ensure_live_authenticated_session
 from ..application.modelo.work_lifecycle_ports import WorkLifecyclePorts
-from ..application.runtime.contracts import RuntimeRefusalError
 from ..application.storage.sync_runs.records import SyncRunRecordRepositoryProtocol
 from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
@@ -931,7 +932,7 @@ async def _capture_one_iva_history_declaration(
                 capture_deferred_sede_observation(register, declaration),
                 timeout=capture_timeout,
             )
-        except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
+        except (ProfileAccessRefusedError, AutomationCustodyError, RefusalError):
             raise
         except (TimeoutError, CadrumoError, OSError) as exc:
             failures.append(

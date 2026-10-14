@@ -43,12 +43,13 @@ def repair_profile(
 
 def _emit_pointer_repair(ctx: typer.Context, *, clear_active: bool, confirmed: bool) -> None:
     """Repair a degraded active-profile pointer and emit the health result."""
+    from cadrumo_client.commands.payloads import RepairProfileResult
+
     from ....application.diagnostics_repair_documents import (
         profile_health_reference,
         profile_pointer_repair_document,
     )
     from ....application.workflow.profile_health import repair_active_profile_pointer
-    from ..config_payloads import RepairProfileResult
     from ..state_projection_support import authority_operation
 
     result = repair_active_profile_pointer(
@@ -85,11 +86,12 @@ def _emit_profile_record_status(ctx: typer.Context, pointer: ProfileBucketPointe
 
     A record that could not be read is reported and then exits with status 2.
     """
+    from cadrumo_client.commands.payloads import RepairProfileResult
+
     from ....application.diagnostics_repair_documents import profile_record_document
     from ....application.workflow.profile_health import ProfileHealthStatus
     from ....application.workflow.profile_repair import inspect_profile_record
     from ...diagnostics_repair_composition import read_session_profile_record
-    from ..config_payloads import RepairProfileResult
 
     inspection = inspect_profile_record(pointer, read_profile_record=read_session_profile_record)
     repair_payload = strict_round_trip(

@@ -3,14 +3,13 @@ tags:
   - '#adr'
   - '#claude-ecosystem-packaging'
 date: '2026-07-03'
-modified: '2026-10-12'
-body_hash: 'sha256:e15bef3a5f2793ace3508457f0bc15e7fffc30fe0203e6cc82b45dcdf1937ac0'
+modified: '2026-10-14'
+body_hash: 'sha256:96e94138ad6addce5cc160b7ef588d3cc0b68dfb879b84912bf76ea909482de3'
 related:
   - "[[2026-07-03-claude-ecosystem-packaging-research]]"
   - "[[2026-07-02-agent-harness-refoundation-adr]]"
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
 ---
-
 # `claude-ecosystem-packaging` adr: `Claude ecosystem plugin as the first product distribution` | (**status:** `accepted`)
 
 ## Current authority amendment (2026-07-15)
@@ -216,7 +215,7 @@ High-level layering (the plan owns steps and sequencing):
   object), `skills/` and `agents/` from the same authored source (agent
   frontmatter mapped to Claude fields — `tools`/`disallowedTools`, never the
   non-Claude `mode:`), `.mcp.json` declaring the stdio server as
-  `uvx --from cadrumo[agent]==<pinned> cadrumo-mcp` with
+  `uvx --from cadrumo==<pinned> cadrumo-mcp` with
   `"env": {"CADRUMO_MCP_PERSONA": "${user_config.persona}"}`, and a `userConfig`
   persona string option (server-side validation remains the refusal
   surface). `claude plugin validate --strict` becomes a packaging gate.
@@ -263,7 +262,7 @@ ruling (D4a) was later replaced by immutable tested-cohort OIDC promotion.
 **Gains.** A real product install path for the first time: a taxpayer
 installs one plugin and gets the assistant, the skills, and the safety gates;
 power users get `uvx --from cadrumo aeat` / `pip install cadrumo`; MCP clients
-install `cadrumo[agent]` and launch `cadrumo-mcp`. The
+install the declared Cadrumo cohort and launch the separate `cadrumo_harness` entrypoint `cadrumo-mcp`. The
 userdocs initiative unblocks with an honest connect story. The root wheel
 drops 171.8 → ~36 MB while both companion files remain mandatory parts of the
 installation cohort. The CONFIRM gate gains a
@@ -299,3 +298,7 @@ resource-resolution, and integrity decisions.
 ## Amendment 2026-10-12: gates withdrawn by parity
 
 Accepted under `2026-10-11-mcp-parity-full-parity-adr` and the 2026-10-12 amendment of `2026-07-02-agent-harness-refoundation-adr`. Of the safety rails this record carries over, never-live-submit is unchanged. The CONFIRM, faithfulness-block and persona gates of R6 are no longer product gates, so the CONFIRM hardening item does not make a human gate bypass-proof: a client confirmation annotation is a hint to the client and never authority. Packaging must not narrow what the MCP server serves below what the CLI can do.
+
+## Service boundary packaging amendment 2026-10-14
+
+Authorized by the user's explicit service/harness separation instruction. Harness code and authored material are owned by `src/cadrumo_harness` and the separate `cadrumo-mcp` entrypoint; current `pyproject.toml` ships them in the declared Cadrumo distribution cohort without a `cadrumo[agent]` extra. Native desktop-hosted agent service is separate `cadrumo-agent-service`; this plugin is no tax/runtime agent host. Earlier Considerations/Considered options using the optional extra remain historical option evaluation. Plugin/marketplace/data-cohort integrity and original dates/status survive.

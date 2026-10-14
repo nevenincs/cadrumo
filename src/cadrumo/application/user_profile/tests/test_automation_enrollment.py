@@ -77,7 +77,7 @@ def record() -> EnrollmentRecord:
 
 
 @pytest.mark.parametrize("field", ["client_id", "approved", "password", "dek", "api_key", "proof"])
-def test_agent_cannot_submit_identity_consent_or_secret_fields(record: EnrollmentRecord, field: str) -> None:
+def test_external_client_cannot_submit_identity_consent_or_secret_fields(record: EnrollmentRecord, field: str) -> None:
     data = {**record.proposal.model_dump(mode="json"), field: "UNTRUSTED-INPUT-SENTINEL"}
     with pytest.raises(ValidationError) as failure:
         EnrollmentProposal.model_validate_json(canonical_json_bytes(data))

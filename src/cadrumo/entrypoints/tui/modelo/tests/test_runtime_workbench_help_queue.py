@@ -10,12 +10,13 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from .....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.frontend_client import FrontendClient
+
 from .....application.modelo.casilla_help import ModeloCasillaHelpCardV1
 from .....application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from .....application.modelo.workbench_operations import ModeloCasillaHelpProjectionV1, ModeloCasillaHelpRequest
 from .....application.operations.registry import OperationFrontendProjection
-from .....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from .....core.casilla_id import validated_casilla_id
 from .....core.external_constants import OutputLanguage
 from .....core.period import Period
@@ -71,7 +72,7 @@ class _TransportBoundary:
         self.max_active = 0
         self.guard = Lock()
 
-    async def read(self, _client: RuntimeFrontendClient, **kwargs: object) -> ModeloCasillaHelpProjectionV1:
+    async def read(self, _client: FrontendClient, **kwargs: object) -> ModeloCasillaHelpProjectionV1:
         payload = kwargs["payload"]
         deadline = kwargs["deadline"]
         assert isinstance(payload, ModeloCasillaHelpRequest)
@@ -113,7 +114,7 @@ def _source(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(reads, "time", clock)
     monkeypatch.setattr(reads, "read_runtime_workbench_operation", transport.read)
     source = reads.RuntimeModeloWorkbenchSource(
-        cast(RuntimeFrontendClient, client),
+        cast(FrontendClient, client),
         DeclarationsWorkspaceDeclarationRefV1(
             work_unit_id=_WORK_UNIT,
             modelo="303",
@@ -179,7 +180,7 @@ def test_queued_help_rechecks_bound_identity(monkeypatch: pytest.MonkeyPatch, ch
             transport.release.set()
         outcomes = await asyncio.gather(first, second, return_exceptions=True)
         assert all(
-            isinstance(outcome, RuntimeRefusalError) and outcome.reason is RuntimeRefusalCode.CONNECTION_CLOSED
+            isinstance(outcome, RefusalError) and outcome.reason is RefusalCode.CONNECTION_CLOSED
             for outcome in outcomes
         )
 
@@ -213,9 +214,9 @@ def test_queue_timeout_never_starts_a_second_operation(monkeypatch: pytest.Monke
         first = asyncio.create_task(asyncio.to_thread(_help, source, "01"))
         await _reached(transport.entered)
         try:
-            with pytest.raises(RuntimeRefusalError) as raised:
+            with pytest.raises(RefusalError) as raised:
                 await asyncio.to_thread(_help, source, "02")
-            assert raised.value.reason is RuntimeRefusalCode.DEADLINE_EXCEEDED
+            assert raised.value.reason is RefusalCode.DEADLINE_EXCEEDED
             assert len(transport.calls) == 1
         finally:
             transport.release.set()

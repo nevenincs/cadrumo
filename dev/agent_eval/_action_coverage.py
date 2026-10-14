@@ -173,12 +173,12 @@ def production_leaf_condition_scenario_matrix() -> LeafConditionScenarioMatrix:
     """Build the current matrix from live CLI surface and production declarations."""
     from cadrumo.application.modelo.preconditions import MODELO_PRECONDITION_PROFILES
     from cadrumo.application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
-    from cadrumo.entrypoints.cli.operator_surface_reconciliation import current_operator_surface_reconciliation
+    from dev.operation_contract_manifest.operator_surface_reconciliation import current_program_action_reconciliation
 
     resolution = _resolve_manifest_action_profiles(
         profiles=MODELO_PRECONDITION_PROFILES,
         catalogue=OPERATOR_ACTION_CATALOGUE,
-        reconciliation=current_operator_surface_reconciliation(),
+        reconciliation=current_program_action_reconciliation(),
     )
     return leaf_condition_scenario_matrix(resolution)
 

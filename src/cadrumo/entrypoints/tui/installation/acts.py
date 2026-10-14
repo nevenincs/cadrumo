@@ -20,16 +20,17 @@ from uuid import UUID, uuid4
 from pydantic import ValidationError
 from pydantic.fields import FieldInfo
 
-from ....application.operations.registry import OperationFrontendProjection
-from ....application.runtime.installation_requests import (
+from cadrumo_client.contracts.installation_requests import (
     INSTALLATION_ACT_CONTRACTS,
     InstallationAct,
     InstallationActContract,
+    InstallationActRequest,
+    InstallationCompleted,
     InstallationHostPath,
-    RuntimeInstallationActRequest,
-    RuntimeInstallationCompleted,
     installation_request_facts,
 )
+
+from ....application.operations.registry import OperationFrontendProjection
 from ....core.errors.hierarchy import CadrumoError
 
 #: Members every request carries that the interface fills in itself.
@@ -190,7 +191,7 @@ class OfferedAct:
         """Whether no request for this act can change a record."""
         return not self.contract.facts.changes_records
 
-    def request(self, values: Mapping[str, object], *, confirmed: bool = False) -> RuntimeInstallationActRequest:
+    def request(self, values: Mapping[str, object], *, confirmed: bool = False) -> InstallationActRequest:
         """Build this act's request from the form's values.
 
         Args:
@@ -225,9 +226,9 @@ class OfferedAct:
         except ValidationError as error:
             named = tuple(dict.fromkeys(str(issue["loc"][0]) for issue in error.errors() if issue["loc"]))
             raise ActInputError(named or tuple(field.name for field in self.fields)) from None
-        return cast("RuntimeInstallationActRequest", request)
+        return cast("InstallationActRequest", request)
 
-    def changes_records(self, request: RuntimeInstallationActRequest) -> bool:
+    def changes_records(self, request: InstallationActRequest) -> bool:
         """Whether this exact request may change a record."""
         return installation_request_facts(request).changes_records
 
@@ -288,7 +289,7 @@ def offered_act(act: InstallationAct) -> OfferedAct:
     return offer_contract(INSTALLATION_ACT_CONTRACTS[act])
 
 
-def supplied_member(prerequisite: ActPrerequisite, reply: RuntimeInstallationCompleted) -> str:
+def supplied_member(prerequisite: ActPrerequisite, reply: InstallationCompleted) -> str:
     """Read the member a prerequisite's reply supplies, as the text the form would have held."""
     value = reply.model_dump(mode="json")[prerequisite.reply_member]
     if not isinstance(value, str):

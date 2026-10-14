@@ -51,10 +51,11 @@ import ast
 import re
 from collections.abc import Iterator
 from pathlib import Path
-from typing import cast
+from typing import TypeIs
 
-import click
 import pytest
+from typer._click.core import Command, Context
+from typer.core import TyperGroup
 
 from cadrumo.application.operator_surface.help import build_help_document, build_root_landing_report
 from cadrumo.application.operator_surface.help_models import HelpSurface
@@ -64,8 +65,6 @@ from cadrumo.core.json_contract import EnvelopeStatus
 from cadrumo.core.operator_action_enums import ActionEvidenceProvenance
 from cadrumo.entrypoints.cli.tests.live_command_validation import (
     command_option_names,
-    live_root_command,
-    live_root_option_names,
 )
 from dev._paths import REPO_ROOT
 from dev.agent_eval._action_coverage import LeafConditionScenario, production_leaf_condition_scenario_matrix
@@ -74,6 +73,8 @@ from dev.agent_eval._runner import check_exit_code_scenario
 from dev.locales.locale_nodes import LocaleNode
 from dev.locales.locale_yaml import locale_catalogue_source
 from dev.locales.manager import LocaleManager
+
+from ._real_cli_support import command_program_path, program_root_command
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -84,6 +85,11 @@ _AST_SCAN_ROOTS = (
     _PACKAGE_ROOT / "application",
     _PACKAGE_ROOT / "core" / "errors",
     _PACKAGE_ROOT / "entrypoints",
+    REPO_ROOT / "src" / "cadrumo_runtime" / "commands",
+    REPO_ROOT / "src" / "cadrumo_runtime" / "adapters",
+    REPO_ROOT / "src" / "cadrumo_runtime" / "application",
+    REPO_ROOT / "src" / "cadrumo_runtime" / "host",
+    REPO_ROOT / "src" / "cadrumo_client" / "commands",
 )
 
 # ``aeat`` + a root family + a run of kebab-case tokens. A token is lowercase
@@ -96,18 +102,15 @@ _AST_SCAN_ROOTS = (
 # citation from terminating prematurely on the ``borrador`` group.
 # ``an aeat app`` is ordinary prose about an AEAT web application, not an
 # operator invocation, so the article boundary is excluded explicitly.
-_CITATION_PATTERN = re.compile(r"(?<!an )\baeat (app|config)((?: (?:[a-z][a-z0-9-]*|\d{3}))*)")
+_CITATION_PATTERN = re.compile(
+    r"(?<!an )\b(?P<program>aeat|cadrumo-runtime) (?P<family>app|config|session|tui)"
+    r"(?P<path>(?: (?:[a-z][a-z0-9-]*|\d{3}))*)"
+)
 
 
-def _is_group(command: click.Command) -> bool:
-    """Return whether ``command`` is a structural group (not a runnable leaf).
-
-    ``list_commands`` is the structural group marker; the vendored TyperGroup
-    is not a guaranteed upstream ``click.Group`` subclass, so narrow by
-    interface rather than isinstance — an isinstance check silently treats
-    every group as a leaf (caught by ``test_scanner_flags_a_group_citation``).
-    """
-    return hasattr(command, "list_commands")
+def _is_group(command: Command) -> TypeIs[TyperGroup]:
+    """Narrow groups within the vendored Click family the compiler actually returns."""
+    return isinstance(command, TyperGroup)
 
 
 def _resolve_citation(tokens: tuple[str, ...]) -> tuple[str | None, bool]:
@@ -123,17 +126,17 @@ def _resolve_citation(tokens: tuple[str, ...]) -> tuple[str | None, bool]:
       which is NOT runnable verbatim — the operator must pick a child or be
       pointed at ``... --help``.
     """
-    command: click.Command = live_root_command()
-    context = click.Context(command, info_name="aeat")
+    program, tokens = command_program_path(tokens)
+    command: Command = program_root_command(program)
+    context = Context(command, info_name=program.value)
     for token in tokens:
         if not _is_group(command):
             # Already at a leaf; remaining tokens are argument values.
             return None, False
-        group = cast("click.Group", command)
-        subcommand = group.get_command(context, token)
+        subcommand = command.get_command(context, token)
         if subcommand is None:
             return token, False
-        context = click.Context(subcommand, info_name=token, parent=context)
+        context = Context(subcommand, info_name=token, parent=context)
         command = subcommand
     return None, _is_group(command)
 
@@ -145,7 +148,7 @@ def _resolve_citation(tokens: tuple[str, ...]) -> tuple[str | None, bool]:
 _OPTION_TOKEN_PATTERN = re.compile(r"(?<![\w-])(--[a-z][a-z0-9-]*|-[a-zA-Z])(?=[\s=.,;)\]'\"]|$)")
 
 
-def _resolve_leaf_command(tokens: tuple[str, ...]) -> click.Command | None:
+def _resolve_leaf_command(tokens: tuple[str, ...]) -> Command | None:
     """Return the deepest live command the verb tokens resolve to, or ``None``.
 
     Walks group-by-group exactly like :func:`_resolve_citation` but returns the
@@ -154,16 +157,16 @@ def _resolve_leaf_command(tokens: tuple[str, ...]) -> click.Command | None:
     the dead-token check already reports that as a failure, so option validity
     is only evaluated on a citation whose verb path is sound.
     """
-    command: click.Command = live_root_command()
-    context = click.Context(command, info_name="aeat")
+    program, tokens = command_program_path(tokens)
+    command: Command = program_root_command(program)
+    context = Context(command, info_name=program.value)
     for token in tokens:
         if not _is_group(command):
             return command
-        group = cast("click.Group", command)
-        subcommand = group.get_command(context, token)
+        subcommand = command.get_command(context, token)
         if subcommand is None:
             return None
-        context = click.Context(subcommand, info_name=token, parent=context)
+        context = Context(subcommand, info_name=token, parent=context)
         command = subcommand
     return command
 
@@ -208,13 +211,15 @@ def _iter_citations(text: str) -> Iterator[tuple[str, tuple[str, ...], bool, tup
         remainder = text[match.end() :]
         has_trailing_help = bool(re.match(r"\s+--help\b", remainder))
         cited_options = tuple(_cited_options_after(text, match.end()))
-        verb = match.group(1)
-        path_tokens = match.group(2)
+        program = match["program"]
+        verb = match["family"]
+        path_tokens = match["path"]
+        assert isinstance(program, str)
         assert isinstance(verb, str)
         assert isinstance(path_tokens, str)
         yield (
             match.group(0),
-            (verb, *path_tokens.split()),
+            (program, verb, *path_tokens.split()),
             has_trailing_help,
             cited_options,
         )
@@ -266,12 +271,14 @@ def _dead_citations_in(text: str, *, origin: str, require_runnable_leaf: bool = 
         if require_runnable_leaf and cited_options:
             command = _resolve_leaf_command(tokens)
             if command is not None and not _is_group(command):
-                valid_options = command_option_names(command) | live_root_option_names()
+                valid_options = command_option_names(command) | command_option_names(
+                    program_root_command(command_program_path(tokens)[0])
+                )
                 for option in cited_options:
                     if option not in valid_options:
                         failures.append(
                             f"{origin}: cites {cited!r} with option {option!r}, which is not a parameter of "
-                            f"'aeat {' '.join(tokens)}' (nor a root-global option)"
+                            f"'{' '.join(tokens)}' (nor a root-global option)"
                         )
     return failures
 
@@ -344,7 +351,7 @@ def _iter_landing_report_commands() -> Iterator[tuple[str, str]]:
 # A root-global option may precede the command family (``aeat --format json
 # config repair``), which the family-rooted citation grammar cannot parse. The
 # family token is where the tree walk begins, so the path is read from there.
-_COMMAND_FAMILY_PATTERN = re.compile(r"\b(app|config)\b")
+_COMMAND_FAMILY_PATTERN = re.compile(r"\b(app|config|session|tui)\b")
 
 
 def _advertised_command_failures(command: str, *, origin: str) -> list[str]:
@@ -359,6 +366,7 @@ def _advertised_command_failures(command: str, *, origin: str) -> list[str]:
     - it names no family at all (``aeat --version --detail``), so it is a bare
       root invocation and every option it cites must be a real root option.
     """
+    program, _path = command_program_path(tuple(command.split()))
     family = _COMMAND_FAMILY_PATTERN.search(command)
     if family is None:
         cited = _OPTION_TOKEN_PATTERN.findall(command)
@@ -367,7 +375,9 @@ def _advertised_command_failures(command: str, *, origin: str) -> list[str]:
                 f"{origin}: advertised command {command!r} names neither a command family nor a root "
                 "option, so nothing about it is checked against the live tree"
             ]
-        unknown = sorted(option for option in cited if option not in live_root_option_names())
+        unknown = sorted(
+            option for option in cited if option not in command_option_names(program_root_command(program))
+        )
         if not unknown:
             return []
         return [
@@ -375,7 +385,7 @@ def _advertised_command_failures(command: str, *, origin: str) -> list[str]:
             "does not declare"
         ]
 
-    path = f"aeat {command[family.start() :]}"
+    path = f"{program.value} {command[family.start() :]}"
     if _count_citations(path) == 0:
         return [
             f"{origin}: advertised command {command!r} yields no parseable citation, so it is "

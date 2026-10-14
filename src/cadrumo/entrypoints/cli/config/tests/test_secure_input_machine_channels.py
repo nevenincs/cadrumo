@@ -13,11 +13,10 @@ from operator import methodcaller
 import pytest
 from pydantic import BaseModel, SecretStr, ValidationError
 
-from cadrumo.entrypoints.cli.tests.subprocess_cli import as_bytes_completed_process
 from cadrumo.tests.audited_process import run_audited_process
-
-from ...errors import CliRefusedBoundaryError
-from ..secure_input import (
+from cadrumo.tests.subprocess_cli import as_bytes_completed_process
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.secure_input import (
     _MAX_SECRETS_BYTES,
     MachineSecretChannel,
     MachineSecretPayload,
@@ -185,12 +184,12 @@ def test_parser_refuses_missing_and_extra_fields_without_values(raw: bytes) -> N
 def _run_stdin_reader(payload: bytes) -> subprocess.CompletedProcess[bytes]:
     code = """
 from pydantic import SecretStr
-from cadrumo.entrypoints.cli.config.secure_input import (
+from cadrumo_client.commands.secure_input import (
     MachineSecretPayload,
     read_machine_secret_payload,
     select_machine_secret_channel,
 )
-from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 class Payload(MachineSecretPayload):
     passphrase: SecretStr
     passphrase_confirmation: SecretStr

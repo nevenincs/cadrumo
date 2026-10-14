@@ -376,13 +376,13 @@ def test_subordinate_cli_cannot_be_used_as_a_contributor_verdict() -> None:
         (
             "cli-to-tui",
             "cadrumo.entrypoints.cli.bad",
-            "from ..tui.feature import VALUE\n",
+            "from cadrumo.entrypoints.tui.feature import VALUE\n",
             ("cadrumo.entrypoints.tui.feature",),
         ),
         (
             "tui-to-cli",
             "cadrumo.entrypoints.tui.bad",
-            "from ..cli.feature import VALUE\n",
+            "from cadrumo.entrypoints.cli.feature import VALUE\n",
             ("cadrumo.entrypoints.cli.feature",),
         ),
         (

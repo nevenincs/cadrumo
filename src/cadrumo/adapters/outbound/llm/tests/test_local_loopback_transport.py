@@ -1,6 +1,6 @@
 """The local reader keeps a loopback request on this machine, whatever the environment says.
 
-An agent's document read is allowed only when the reader's endpoint is
+An automation's document read is allowed only when the reader's endpoint is
 loopback. These tests send real requests from the real adapter to real local
 servers, with proxy variables pointing at a recording server standing in for a
 proxy, and prove the request reaches the endpoint and not the proxy, and is not

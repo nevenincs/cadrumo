@@ -19,7 +19,7 @@ TUI_ROOT_MODULE: Final[str] = "cadrumo.entrypoints.tui"
 
 def tui_root_command(executable: str = sys.executable) -> list[str]:
     """Build the fixed child-process command for the independent TUI root."""
-    return [executable, "-m", TUI_ROOT_MODULE]
+    return [executable, "-I", "-m", TUI_ROOT_MODULE]
 
 
 async def _run_tui(command: list[str]) -> int:

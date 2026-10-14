@@ -6,6 +6,7 @@ from typing import TypedDict
 
 import pytest
 from pydantic import ValidationError
+from cadrumo_client.contracts.command_program import CommandProgram
 
 from ..errors import OperatorSurfaceContractError
 from ..manifest import (
@@ -227,6 +228,30 @@ def test_reconciliation_rejects_unmatched_duplicate_and_ambiguous_identities() -
         ),
     )
     with pytest.raises(OperatorSurfaceContractError, match="ambiguous CLI path"):
+        reconcile_operator_surface_inventory(**inventory)
+
+
+def test_equal_paths_belong_to_their_program_and_canonical_identities_remain_unique() -> None:
+    inventory = _complete_inventory()
+    first = inventory["live_leaves"][0]
+    other_key = "external.ledger.list"
+    second = first.model_copy(update={"subject_leaf_key": other_key, "program": CommandProgram.AUTHENTICATION})
+    inventory["live_leaves"] = (first, second)
+    inventory["result_schemas"] += (inventory["result_schemas"][0].model_copy(update={"subject_leaf_key": other_key}),)
+    inventory["input_schemas"] += (inventory["input_schemas"][0].model_copy(update={"subject_leaf_key": other_key}),)
+    inventory["profile_policies"] += (inventory["profile_policies"][0].model_copy(update={"subject_leaf_key": other_key}),)
+    inventory["surface_exposures"] += (inventory["surface_exposures"][0].model_copy(update={"subject_leaf_key": other_key}),)
+
+    report = reconcile_operator_surface_inventory(**inventory)
+    assert {leaf.live_leaf.program for leaf in report.leaves} == {CommandProgram.AEAT, CommandProgram.AUTHENTICATION}
+    assert {leaf.live_leaf.canonical_cli_path for leaf in report.leaves} == {first.canonical_cli_path}
+
+    inventory["live_leaves"] = (first, second.model_copy(update={"program": CommandProgram.AEAT}))
+    with pytest.raises(OperatorSurfaceContractError, match="ambiguous CLI path"):
+        reconcile_operator_surface_inventory(**inventory)
+
+    inventory["live_leaves"] = (first, second.model_copy(update={"subject_leaf_key": first.subject_leaf_key}))
+    with pytest.raises(OperatorSurfaceContractError, match="duplicate live leaf identity"):
         reconcile_operator_surface_inventory(**inventory)
 
 

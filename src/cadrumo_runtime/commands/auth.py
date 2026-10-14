@@ -1,0 +1,322 @@
+"""Base config auth CLI command surface."""
+
+from __future__ import annotations
+
+from pathlib import Path
+from typing import TYPE_CHECKING, Protocol
+
+import typer
+
+from cadrumo.application.auth.operator_results import AuthLogoutResult, AuthResetResult
+from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.i18n.render import tr
+from cadrumo.core.json_contract import strict_round_trip
+from cadrumo_client.commands.errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
+from cadrumo_client.commands.registered_operation_errors import submitted_operation_error
+from cadrumo_client.contracts.contracts import RefusalCode
+
+from .presentation import (
+    activate_subcommand_output_language as _activate_subcommand_output_language,
+)
+from .presentation import (
+    emit_envelope,
+    precondition_action_lines,
+    resolve_cli_precondition_action,
+)
+from .runtime_auth_teardown import run_auth_teardown
+
+if TYPE_CHECKING:
+    from cadrumo.application.auth.provider_configure_operation_access import AuthConfigurePublicResultV2
+    from cadrumo.application.operator_actions.models import PreconditionVerdict
+    from cadrumo.core.json_contract import ResolvedPreconditionAction
+
+
+def _auth_configure_lines(configure_result: AuthConfigurePublicResultV2) -> list[str]:
+    """Render the operator text dump for a completed auth configure.
+
+    Cl@ve Móvil is the only provider that binds a taxpayer identity, so its
+    three identity-readiness lines are emitted for that provider alone.
+    """
+    lines = [
+        f"provider\t{configure_result.provider}",
+        f"changed\t{configure_result.changed}",
+        f"certificate_file_provided\t{configure_result.certificate_file_provided}",
+        f"status\t{'configured' if configure_result.complete else 'incomplete'}",
+    ]
+    if not configure_result.complete:
+        verdict = configure_result.precondition_verdict
+        if verdict is not None:
+            lines.append(f"incomplete_condition\t{verdict.failed_condition_id}")
+    if configure_result.provider != "clave_movil":
+        return lines
+    lines.extend(
+        (
+            f"profile_tax_id\t{'present' if configure_result.profile_tax_id_present else 'missing'}",
+            f"clave_identity\t{'present' if configure_result.provider_identity_present else 'missing'}",
+            f"identity_alignment\t{configure_result.identity_alignment}",
+        ),
+    )
+    return lines
+
+
+def auth_providers(
+    ctx: typer.Context,
+    output_language: OutputLanguage | None = None,
+) -> None:
+    """List supported authentication providers from the backend catalogue."""
+    _activate_subcommand_output_language(ctx, output_language)
+    from cadrumo.application.reference_catalogue import list_auth_providers
+
+    result = list_auth_providers()
+    rows = [f"{provider.id}\t{provider.label}" for provider in result.providers]
+    emit_envelope(ctx, command="config.auth.providers", result=result, lines=tuple(rows))
+
+
+def auth_configure(
+    ctx: typer.Context,
+    provider: str,
+    clave_movil_route: str | None = None,
+    file: Path | None = None,
+    output_language: OutputLanguage | None = None,
+) -> None:
+    """Configure the active authentication provider."""
+    _activate_subcommand_output_language(ctx, output_language)
+    from .runtime_auth_configure import run_auth_configure
+
+    configure_result = run_auth_configure(
+        ctx, provider=provider, certificate_path=file, clave_movil_route=clave_movil_route
+    )
+    from cadrumo_client.commands.payloads import AuthConfigurePayload as _AuthConfigurePayload
+
+    precondition_action = (
+        resolve_cli_precondition_action(configure_result.precondition_verdict)
+        if configure_result.precondition_verdict is not None
+        else None
+    )
+    auth_configure_payload = _AuthConfigurePayload.from_result(
+        configure_result,
+        precondition_action=precondition_action,
+    )
+    lines = _auth_configure_lines(configure_result)
+    lines.extend(precondition_action_lines(precondition_action))
+    emit_envelope(ctx, command="config.auth.configure", result=auth_configure_payload, lines=lines)
+
+
+class _PreconditionBearingResult(Protocol):
+    @property
+    def active_profile_precondition_verdict(self) -> PreconditionVerdict | None: ...
+
+
+def _active_profile_precondition_action(result: _PreconditionBearingResult) -> ResolvedPreconditionAction | None:
+    """Resolve the active-profile precondition a read result carries, if any."""
+    verdict = result.active_profile_precondition_verdict
+    return resolve_cli_precondition_action(verdict) if verdict is not None else None
+
+
+def auth_status(
+    ctx: typer.Context,
+    provider: str | None = None,
+    output_language: OutputLanguage | None = None,
+) -> None:
+    """Show the configured local authentication state."""
+    _activate_subcommand_output_language(ctx, output_language)
+    from cadrumo_client.commands.payloads import AuthStatusPayload
+
+    from .runtime_auth_read import cli_auth_read
+
+    result = cli_auth_read(ctx, kind="status", provider=provider, output_language=output_language).status
+    if result is None:
+        raise _CliRefusedBoundaryError(context={"reason": "invalid_frame"})
+    precondition_action = _active_profile_precondition_action(result)
+    envelope_result = AuthStatusPayload.from_result(
+        result,
+        active_profile_precondition_action=precondition_action,
+    )
+    payload = envelope_result.model_dump(mode="json")
+    emit_envelope(
+        ctx,
+        command="config.auth.status",
+        result=envelope_result,
+        lines=(
+            _auth_status_summary_line(payload),
+            *(f"{key}\t{value}" for key, value in payload.items() if key != "active_profile_precondition_action"),
+            *precondition_action_lines(precondition_action),
+        ),
+    )
+
+
+def _auth_status_summary_line(payload: dict[str, object]) -> str:
+    """Return the localised operator verdict prepended to the status dump.
+
+    The tab-separated ``key`` / ``value`` lines mirror the JSON envelope and key
+    on stable field identifiers (``configured``, ``authenticated``,
+    ``available``, …), so they are deliberately kept as machine identifiers
+    rather than localised. This verdict line is the operator-facing prose that
+    the ``--language`` / ``--output-language`` flag localises, so the flag has a
+    visible effect on the ``status`` output.
+    """
+    if payload.get("authenticated") and payload.get("available"):
+        return tr(
+            "cli.config.auth.status_summary_ready",
+        )
+    if payload.get("configured"):
+        return tr(
+            "cli.config.auth.status_summary_configured",
+        )
+    return tr(
+        "cli.config.auth.status_summary_unconfigured",
+    )
+
+
+def auth_test(
+    ctx: typer.Context,
+    provider: str | None = None,
+    output_language: OutputLanguage | None = None,
+) -> None:
+    """Render auth readiness through the application-owned auth state."""
+    _activate_subcommand_output_language(ctx, output_language)
+    from cadrumo_client.commands.payloads import AuthTestPayload
+
+    from .runtime_auth_read import cli_auth_read
+
+    result = cli_auth_read(ctx, kind="test", provider=provider, output_language=output_language).test
+    if result is None:
+        raise _CliRefusedBoundaryError(context={"reason": "invalid_frame"})
+    precondition_action = _active_profile_precondition_action(result)
+    envelope_result = AuthTestPayload.from_test_result(
+        result,
+        active_profile_precondition_action=precondition_action,
+    )
+    payload = envelope_result.model_dump(mode="json")
+    emit_envelope(
+        ctx,
+        command="config.auth.test",
+        result=envelope_result,
+        lines=(
+            *(f"{key}\t{value}" for key, value in payload.items() if key != "active_profile_precondition_action"),
+            *precondition_action_lines(precondition_action),
+        ),
+    )
+
+
+def auth_login(
+    ctx: typer.Context,
+    provider: str | None = None,
+    fresh: bool = False,
+    reset_lock: bool = False,
+    output_language: OutputLanguage | None = None,
+) -> None:
+    """Acquire or verify a live AEAT session through the configured provider."""
+    _activate_subcommand_output_language(ctx, output_language)
+    from cadrumo_client.commands.payloads import AuthLoginPayload
+
+    from .runtime_auth_login import run_auth_login
+
+    result = run_auth_login(ctx, provider=provider, fresh=fresh, reset_lock=reset_lock)
+    payload = result.model_dump(mode="json")
+    envelope_result = AuthLoginPayload.model_validate_json(result.model_dump_json())
+    emit_envelope(
+        ctx,
+        command="config.auth.login",
+        result=envelope_result,
+        lines=tuple(f"{key}\t{value}" for key, value in payload.items()),
+    )
+
+
+def auth_logout(
+    ctx: typer.Context,
+    provider: str | None = None,
+    all_providers: bool = False,
+    output_language: OutputLanguage | None = None,
+) -> None:
+    """Terminate local auth sessions without removing provider configuration."""
+    _activate_subcommand_output_language(ctx, output_language)
+    completed = run_auth_teardown(
+        ctx,
+        kind="logout",
+        provider=provider,
+        all_providers=all_providers,
+        result_type=AuthLogoutResult,
+    )
+    from cadrumo_client.commands.payloads import AuthLogoutPayload
+
+    try:
+        result = completed.projection
+        payload = strict_round_trip(AuthLogoutPayload, result)
+        emit_envelope(
+            ctx,
+            command="config.auth.logout",
+            result=payload,
+            lines=(
+                f"bucket_id\t{result.bucket_id}",
+                f"providers\t{','.join(result.providers)}",
+                f"removed_sessions\t{result.removed_sessions}",
+                f"cleared_session_state\t{result.cleared_session_state}",
+            ),
+        )
+    except (typer.Exit, _CliRefusedBoundaryError):
+        raise
+    except Exception:
+        raise _teardown_presentation_error(completed) from None
+
+
+def auth_reset(
+    ctx: typer.Context,
+    provider: str | None = None,
+    all_providers: bool = False,
+    yes: bool = False,
+    output_language: OutputLanguage | None = None,
+) -> None:
+    """Remove local auth configuration and persisted provider state."""
+    _activate_subcommand_output_language(ctx, output_language)
+    if not yes:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.auth.reset_requires_yes",
+        )
+    completed = run_auth_teardown(
+        ctx,
+        kind="reset",
+        provider=provider,
+        all_providers=all_providers,
+        result_type=AuthResetResult,
+    )
+    from cadrumo_client.commands.payloads import AuthResetPayload
+
+    try:
+        result = completed.projection
+        payload = strict_round_trip(AuthResetPayload, result)
+        emit_envelope(
+            ctx,
+            command="config.auth.reset",
+            result=payload,
+            lines=tuple(f"{key}\t{value}" for key, value in result.model_dump(mode="json").items()),
+        )
+    except (typer.Exit, _CliRefusedBoundaryError):
+        raise
+    except Exception:
+        raise _teardown_presentation_error(completed) from None
+
+
+def _teardown_presentation_error(
+    completed: RegisteredOperationCompletion[AuthLogoutResult] | RegisteredOperationCompletion[AuthResetResult],
+) -> _CliRefusedBoundaryError:
+    """Keep the settled teardown receipt when local rendering fails."""
+    return submitted_operation_error(
+        completed.operation_id,
+        RefusalCode.UNAVAILABLE.value,
+        terminal_condition=completed.terminal_condition,
+        effect=completed.effect,
+        refusal_code=completed.refusal_code,
+    )
+
+
+__all__ = [
+    "auth_configure",
+    "auth_login",
+    "auth_logout",
+    "auth_providers",
+    "auth_reset",
+    "auth_status",
+    "auth_test",
+]

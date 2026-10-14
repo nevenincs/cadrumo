@@ -279,11 +279,15 @@ def test_a_module_execution_entrypoint_is_a_walk_root(result: UnreachableCodeRes
 
 
 def test_repository_discovers_its_module_execution_roots() -> None:
-    """The real tree's package and guarded module surfaces are derived."""
+    """Tax roots are derived independently of a sibling runtime's executable surface."""
+    from ..unreachable_tree import is_module_execution_surface
+
     spec = ShippedTreeSpec.from_repository(REPO_ROOT)
 
-    assert "cadrumo.entrypoints.tui.__main__" in spec.module_roots
+    assert spec.package == "cadrumo"
     assert "cadrumo.entrypoints.cli._windows_profile_secret_bootstrap" in spec.module_roots
+    assert "cadrumo.entrypoints.tui.__main__" not in spec.module_roots
+    assert is_module_execution_surface(REPO_ROOT / "src/cadrumo/entrypoints/tui/__main__.py")
 
 
 def test_module_execution_surface_requires_a_file_role_or_top_level_exact_guard(tmp_path: Path) -> None:
@@ -830,11 +834,10 @@ def test_repository_spec_reads_the_console_scripts_from_pyproject() -> None:
     spec = ShippedTreeSpec.from_repository(REPO_ROOT)
 
     assert spec.package == "cadrumo"
-    # `aeat` is the only console script the product declares; the full-screen
-    # session is reached through `aeat app tui`, which starts the module-execution
-    # surface below rather than a second console entry.
+    # Tax script roots and sibling consumer scripts retain separate ownership.
     assert "cadrumo.entrypoints.cli.bootstrap:main" in {entry.spec for entry in spec.entry_points}
-    assert "cadrumo.entrypoints.tui.__main__" in spec.module_roots
+    runtime = next(companion for companion in spec.companions if companion.package == "cadrumo_runtime")
+    assert "cadrumo_runtime.host.bootstrap:main" in {entry.spec for entry in runtime.entry_points}
     assert any(glob.endswith("tests/**") for glob in spec.exclude_globs)
     assert {corpus.label for corpus in spec.outside} == {"tests", "dev"}
     assert spec.data_globs
@@ -844,10 +847,10 @@ def test_extra_roots_join_the_declared_console_scripts() -> None:
     """A ``python -m`` surface can be admitted as a root for one run without editing packaging."""
     spec = ShippedTreeSpec.from_repository(
         REPO_ROOT,
-        extra_roots=("cadrumo.entrypoints.tui.components.form_screen:run_form_tui",),
+        extra_roots=("cadrumo.entrypoints.tui.launcher:run_module",),
     )
 
-    assert spec.entry_points[-1] == EntryPoint("cadrumo.entrypoints.tui.components.form_screen", "run_form_tui")
+    assert spec.entry_points[-1] == EntryPoint("cadrumo.entrypoints.tui.launcher", "run_module")
 
 
 def test_entry_point_parse_rejects_malformed_specs() -> None:

@@ -25,7 +25,6 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.application.runtime.profile_worker import ProfileWorkerIdentity
 from cadrumo.application.user_profile.access_contracts import (
     AccessAction,
     AccessDenialCode,
@@ -40,6 +39,7 @@ from cadrumo.application.user_profile.automation_custody_port import AutomationC
 from cadrumo.core.config import override_settings
 from cadrumo.core.time.clock import frozen_clock, now
 from cadrumo.tests.audited_process import run_audited_process
+from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 
 from ...bucket.errors import BucketLockedError
 from ...custody.capsule import load_committed_profile_password_material

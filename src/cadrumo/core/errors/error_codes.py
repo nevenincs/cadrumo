@@ -105,7 +105,7 @@ class ErrorCode(BaseModel):
     conflict; the identical restore could never have succeeded.
 
     "Retryable after the operator fixes something" is FALSE by this definition.
-    The agent cannot distinguish it from the transient case, and telling it to
+    The automation cannot distinguish it from the transient case, and telling it to
     retry is what produces the loop.
     """
     public_message_from_registry: bool = False
@@ -208,6 +208,56 @@ def _build_declared_code_map(rows: tuple[tuple[str, ErrorCode], ...]) -> Mapping
 
 
 _declared_code_map: Mapping[str, ErrorCode] | None = None
+
+
+def register_declared_error_codes(rows: Iterable[tuple[str, ErrorCode]]) -> None:
+    """Enroll an owning package's stable error declarations.
+
+    Most declarations are loaded from the core catalogue. A separately
+    packaged frontend can enroll its own rows before defining its exception
+    classes, including after the core catalogue has already been loaded.
+    Repeating the same rows is harmless; a conflicting qualname or reused
+    stable code is refused.
+    """
+    global _declared_code_map
+
+    declared = dict(declared_error_codes_by_qualname())
+    additions: list[tuple[str, ErrorCode]] = []
+    for qualname, code in rows:
+        if not isinstance(qualname, str) or not qualname or not isinstance(code, ErrorCode):
+            from .hierarchy import InternalInvariantError
+
+            raise InternalInvariantError("error-code declarations require a qualified name and ErrorCode")
+
+        existing = declared.get(qualname)
+        if existing is not None:
+            if existing != code:
+                from .hierarchy import InternalInvariantError
+
+                raise InternalInvariantError(f"conflicting ErrorCode declaration for {qualname!r}")
+            continue
+
+        owner = next((name for name, registered in declared.items() if registered.code == code.code), None)
+        if owner is not None:
+            from .hierarchy import InternalInvariantError
+
+            raise InternalInvariantError(f"ErrorCode {code.code!r} is already declared by {owner!r}")
+
+        registered = _ERROR_REGISTRY_MUTABLE.get(code.code)
+        if registered is not None:
+            from .hierarchy import InternalInvariantError
+
+            raise InternalInvariantError(f"ErrorCode {code.code!r} is already registered")
+
+        declared[qualname] = code
+        additions.append((qualname, code))
+
+    if not additions:
+        return
+
+    for _, code in additions:
+        register(code)
+    _declared_code_map = MappingProxyType(declared)
 
 
 def declared_error_codes_by_qualname() -> Mapping[str, ErrorCode]:
@@ -655,6 +705,7 @@ __all__ = [
     "get_registered_error_code_by_code",
     "public_error_context",
     "register",
+    "register_declared_error_codes",
     "render_error_json",
     "render_error_text",
     "resolve_error_message",

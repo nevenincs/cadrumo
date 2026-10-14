@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#application-sign-in'
 date: '2026-10-04'
-modified: '2026-10-12'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:bca20feb232bf2394ab540d97a86581a43f6bffbdaf4d34112e267adc1a654c1'
+body_hash: 'sha256:0b30a2123f51f9d5042d21acc19f46bd24fac91c5138437d879024381ccf5e10'
 related:
   - "[[2026-10-04-application-sign-in-reference]]"
   - "[[2026-09-26-mcp-purpose-authentication-profile-access-adr]]"
@@ -172,7 +172,7 @@ This record decides the sign-in model, its owner, its lifecycle and synchronizat
 
 **Desktop status.**
 - A new unauthenticated runtime `sign_in_status` request reports presence and deadlines only. It never resumes or extends.
-- It is exposed under its own CLI leaf, `aeat config sign-in-status`, for the desktop to read.
+- It is exposed under its own CLI leaf, `cadrumo-runtime config sign-in-status`, for the desktop to read.
 - It creates no profile host or worker and never reads the keychain.
 - It reports `present`, `absent` or `unknown`, evaluated against the generation, the bound login and the deadlines.
 
@@ -225,14 +225,13 @@ We will harden the human login receipt into the runtime-owned shared sign-in and
   - login sweep on positive evidence
   - extension on interactive submissions
   - `human_sign_out`
-  - the `sign_in_status` request
+  - the `sign_in_status` request and `cadrumo-runtime config sign-in-status` command
   - lock-down paths
   - a reason-carrying retire point and event frames with client-side demultiplexing
   - typed refusals
 - **CLI:**
   - interactive-terminal detection gates automatic resume
   - `config logout` invokes sign-out
-  - `config sign-in-status`
   - the legacy in-process paths are retired
 - **TUI:** automatic resume first, the "Stay signed in" opt-in, an event subscription that clears views, sign-out via the global operation, and "Lock this window".
 - **Desktop:** the sign-in view, the dedicated host command, typed refusal rendering, status refresh when the TUI exits and on focus, and a "Start Background Services" path when the runtime is unavailable. By the 2026-10-06 amendment: the profile list command, the named profile on the sign-in command, and the profile creation command.

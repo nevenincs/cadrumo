@@ -36,16 +36,16 @@ LOGGER = get_logger(__name__)
 ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
     RootSurface(
         name=RootSurfaceName.CONFIG,
-        purpose="profile lifecycle, bucket lifecycle, first-run state, auth, diagnostics, and durable configuration",
+        purpose=(
+            "profile lifecycle and direct login/logout, bucket lifecycle, first-run state, "
+            "diagnostics, and durable configuration"
+        ),
         owns_storage_maintenance=True,
         owns_operational_workflow=False,
         required_children=(
             "profile",
             "login",
-            "sign-in-status",
             "logout",
-            "passphrase",
-            "auth",
             "repair",
             "check",
             "provision",
@@ -101,33 +101,9 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
     MountedCommandFamily(
         domain=MountedCommandDomain.CUSTODY,
         root=RootSurfaceName.CONFIG,
-        child="sign-in-status",
-        operator_question="observe the active profile's human sign-in state without extending its session",
-        service_owner="cadrumo.application.user_profile",
-        mutability=OperatorMutability.READ_ONLY,
-    ),
-    MountedCommandFamily(
-        domain=MountedCommandDomain.CUSTODY,
-        root=RootSurfaceName.CONFIG,
         child="logout",
         operator_question="close the active taxpayer profile session and clear its pointer",
         service_owner="cadrumo.application.user_profile",
-        mutability=OperatorMutability.LOCAL_STATE_MUTATING,
-    ),
-    MountedCommandFamily(
-        domain=MountedCommandDomain.CUSTODY,
-        root=RootSurfaceName.CONFIG,
-        child="passphrase",
-        operator_question="rotate the profile custody passphrase after verifying the current one",
-        service_owner="cadrumo.application.user_profile",
-        mutability=OperatorMutability.LOCAL_STATE_MUTATING,
-    ),
-    MountedCommandFamily(
-        domain=MountedCommandDomain.AUTH,
-        root=RootSurfaceName.CONFIG,
-        child="auth",
-        operator_question="configure and inspect local authentication state for read-only AEAT access",
-        service_owner="cadrumo.application.auth",
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
     MountedCommandFamily(
@@ -172,7 +148,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         domain=MountedCommandDomain.GOOGLE,
         root=RootSurfaceName.CONFIG,
         child="google",
-        operator_question="configure Google account auth, Drive folder, and worksheet export mirror",
+        operator_question="configure the Drive folder and worksheet export mirror",
         service_owner="cadrumo.application.storage",
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),

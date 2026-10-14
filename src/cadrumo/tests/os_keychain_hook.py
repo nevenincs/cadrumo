@@ -11,7 +11,7 @@ live assertions and silencing one failure that was NOT the store. Per-case
 invocation keeps that from happening.
 
 The capability is a property of the LOGON SESSION, not of the dependency set.
-A headless CI runner and an agent's SSH network logon both select a real
+A headless CI runner and an automation's SSH network logon both select a real
 backend that then refuses every credential call, so no keychain-custodied
 secret can exist there at all and no code change closes the resulting red.
 Such a case is therefore skipped, under a warning that says it was not

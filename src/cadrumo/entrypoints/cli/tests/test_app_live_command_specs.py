@@ -9,7 +9,20 @@ from pathlib import Path
 import pytest
 from typer.main import get_command
 
-from cadrumo.application.operator_surface.command_ports import CommandWriteRoute
+from cadrumo_client.commands.graph import CommandSpecGraph
+from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.shared_contracts import (
+    BindingState,
+    DeferredTarget,
+    LazyBinding,
+    ParameterConstraint,
+    ParameterDefault,
+    ResultSchemaSpec,
+    SchemaState,
+    ValueContract,
+)
+from cadrumo_client.commands.spec import ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandWriteRoute
 
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .._app_live_borrador_command_specs import LIVE_BORRADOR_COMMAND_SPECS
@@ -46,19 +59,6 @@ from .._app_live_notifications_command_specs import (
 from .._app_live_portals_command_specs import LIVE_PORTALS_COMMAND_SPECS
 from .._app_live_verify_command_specs import _VERIFY_EXPECTED_OPTION, LIVE_VERIFY_COMMAND_SPECS
 from .._root_command_specs import ROOT_COMMAND_SPECS
-from ..command_graph import CommandSpecGraph
-from ..command_parameter_contracts import OptionSpec
-from ..command_shared_contracts import (
-    BindingState,
-    DeferredTarget,
-    LazyBinding,
-    ParameterConstraint,
-    ParameterDefault,
-    ResultSchemaSpec,
-    SchemaState,
-    ValueContract,
-)
-from ..command_spec import ExecutionPolicySpec, InvocationSpec
 from .command_runtime_support import build_command_subtree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

@@ -9,10 +9,11 @@ from uuid import UUID
 
 from textual.widgets import Input, Select
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
 from ....application.operations.registry import OperationFrontendProjection
-from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....core.async_cleanup import AsyncResourceCleanupError, await_cancellation_complete
 from ....core.i18n.render import tr
 from ..components.status import PinnedStatusBar
@@ -35,8 +36,8 @@ class RuntimeLoginRecoveryMixin:
 
     async def _open_recovery_client(
         self: RuntimeLoginScreen, profile_id: UUID
-    ) -> tuple[RuntimeFrontendClient, asyncio.CancelledError | None]:
-        async def open_recovery(selected: UUID) -> RuntimeFrontendClient:
+    ) -> tuple[FrontendClient, asyncio.CancelledError | None]:
+        async def open_recovery(selected: UUID) -> FrontendClient:
             try:
                 return await self._open_client(selected)
             except BaseException as error:
@@ -59,14 +60,14 @@ class RuntimeLoginRecoveryMixin:
         if not self._active():
             return
         if client.profile_id != profile_id or client.frontend is not OperationFrontendProjection.TUI:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         state.dispatched = True
         receipt = await await_cancellation_complete(
             asyncio.to_thread(client.recover_profile, proof, grants=grants),
             task_name="tui-runtime-profile-resume",
         )
         if receipt.profile_id != profile_id or receipt.reactivated_grants != grants:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         state.completed = True
         if self._active():
             self.query_one("#runtime-login-status", PinnedStatusBar).show_success(tr("tui.runtime_access.completed"))
@@ -74,13 +75,13 @@ class RuntimeLoginRecoveryMixin:
     def _show_resume_failure(
         self: RuntimeLoginScreen, profile_id: UUID, error: BaseException, *, dispatched: bool
     ) -> bool:
-        if isinstance(error, RuntimeFrontendRefusedError):
-            if dispatched and error.reason in {code.value for code in RuntimeRefusalCode}:
+        if isinstance(error, FrontendRefusedError):
+            if dispatched and error.reason in {code.value for code in RefusalCode}:
                 self._resume_unknown(profile_id, error.reason)
             else:
                 self._status_refused(error.reason)
             return False
-        if isinstance(error, RuntimeRefusalError):
+        if isinstance(error, RefusalError):
             if dispatched:
                 self._resume_unknown(profile_id, error.reason.value)
             else:
@@ -88,12 +89,12 @@ class RuntimeLoginRecoveryMixin:
             return False
         if isinstance(error, asyncio.CancelledError):
             if dispatched:
-                self._resume_unknown(profile_id, RuntimeRefusalCode.UNAVAILABLE.value)
+                self._resume_unknown(profile_id, RefusalCode.UNAVAILABLE.value)
             return True
         if dispatched:
-            self._resume_unknown(profile_id, RuntimeRefusalCode.UNAVAILABLE.value)
+            self._resume_unknown(profile_id, RefusalCode.UNAVAILABLE.value)
         else:
-            self._status_refused(RuntimeRefusalCode.UNAVAILABLE.value)
+            self._status_refused(RefusalCode.UNAVAILABLE.value)
         return False
 
     def _show_recovery_cleanup_failure(self: RuntimeLoginScreen, *, completed: bool) -> None:
@@ -101,9 +102,9 @@ class RuntimeLoginRecoveryMixin:
             return
         status = self.query_one("#runtime-login-status", PinnedStatusBar)
         if completed:
-            status.show_warning(f"{tr('tui.runtime_access.completed')} ({RuntimeRefusalCode.UNAVAILABLE.value})")
+            status.show_warning(f"{tr('tui.runtime_access.completed')} ({RefusalCode.UNAVAILABLE.value})")
         else:
-            self._status_refused(RuntimeRefusalCode.UNAVAILABLE.value)
+            self._status_refused(RefusalCode.UNAVAILABLE.value)
 
     async def _resume_attempt(
         self: RuntimeLoginScreen, profile_id: UUID, proof: bytearray, grants: frozenset[UUID]
@@ -113,7 +114,7 @@ class RuntimeLoginRecoveryMixin:
         try:
             try:
                 await self._perform_recovery(profile_id, proof, grants, state)
-            except (RuntimeFrontendRefusedError, RuntimeRefusalError, asyncio.CancelledError, Exception) as error:
+            except (FrontendRefusedError, RefusalError, asyncio.CancelledError, Exception) as error:
                 state.primary_error = error
                 if self._show_resume_failure(profile_id, error, dispatched=state.dispatched):
                     raise
@@ -145,7 +146,7 @@ class RuntimeLoginRecoveryMixin:
         if profile_id in self._uncertain_resumes:
             self.query_one("#runtime-login-resume-password", Input).value = ""
             self.query_one("#runtime-login-resume-grants", Input).value = ""
-            self._resume_unknown(profile_id, RuntimeRefusalCode.UNAVAILABLE.value)
+            self._resume_unknown(profile_id, RefusalCode.UNAVAILABLE.value)
             return None
         return profile_id
 

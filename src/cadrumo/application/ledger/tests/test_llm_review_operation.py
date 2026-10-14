@@ -300,7 +300,7 @@ def test_registration_binds_canonical_models_and_separate_response_authority(mod
             profile_id=_PROFILE,
             destination_id=uuid4(),
             action=action,
-            frontend=OperationFrontendProjection.MCP,
+            frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
             contract=registration.contract,
             published_authority=Availability.AVAILABLE,
         )
@@ -603,15 +603,19 @@ async def test_resume_routes_single_classification_split_and_audit_rejection(
 @pytest.mark.parametrize(
     ("frontend", "supplied", "recorded"),
     [
-        (OperationFrontendProjection.MCP, "typed by the caller", f"agent:mcp.human.{_SESSION_CLIENT}"),
-        (OperationFrontendProjection.MCP, None, f"agent:mcp.human.{_SESSION_CLIENT}"),
+        (
+            OperationFrontendProjection.EXTERNAL_CLIENT,
+            "typed by the caller",
+            f"automation:external-client.human.{_SESSION_CLIENT}",
+        ),
+        (OperationFrontendProjection.EXTERNAL_CLIENT, None, f"automation:external-client.human.{_SESSION_CLIENT}"),
         (OperationFrontendProjection.CLI, "typed by the caller", "typed by the caller"),
         (OperationFrontendProjection.TUI, None, str(_PROFILE)),
         (None, "typed by the caller", "typed by the caller"),
     ],
-    ids=["mcp-typed", "mcp-untyped", "cli-typed", "tui-untyped", "no-session-host"],
+    ids=["external_client-typed", "external_client-untyped", "cli-typed", "tui-untyped", "no-session-host"],
 )
-async def test_resume_records_the_session_label_for_an_agent_and_the_supplied_label_for_a_person(
+async def test_resume_records_the_session_label_for_automation_and_the_supplied_label_for_a_person(
     monkeypatch: pytest.MonkeyPatch,
     authority_operation: PinnedAuthorityOperation,
     frontend: OperationFrontendProjection | None,
@@ -907,8 +911,13 @@ def _session_host_for(frontend: OperationFrontendProjection) -> OperationExecuti
 
 _EVERY_FRONTEND = pytest.mark.parametrize(
     "frontend",
-    [OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP, None],
-    ids=["cli", "tui", "mcp", "unhosted"],
+    [
+        OperationFrontendProjection.CLI,
+        OperationFrontendProjection.TUI,
+        OperationFrontendProjection.EXTERNAL_CLIENT,
+        None,
+    ],
+    ids=["cli", "tui", "external_client", "unhosted"],
 )
 
 

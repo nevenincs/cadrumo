@@ -482,8 +482,8 @@ msgid "`{\"passphrase\": \"...\", \"passphrase_confirmation\": \"...\"}`"
 msgstr "`{\"passphrase\": \"...\", \"passphrase_confirmation\": \"...\"}`"
 
 #: ../../how-to/protect-data-access.md:149
-msgid "`aeat config passphrase change`"
-msgstr "`aeat config passphrase change`"
+msgid "`cadrumo-runtime config passphrase change`"
+msgstr "`cadrumo-runtime config passphrase change`"
 
 #: ../../how-to/protect-data-access.md:149
 #, python-brace-format
@@ -495,8 +495,8 @@ msgstr ""
 "\"new_passphrase_confirmation\": \"...\"}`"
 
 #: ../../how-to/protect-data-access.md:149
-msgid "`aeat config passphrase reset PROFILE`"
-msgstr "`aeat config passphrase reset PROFILE`"
+msgid "`cadrumo-runtime config passphrase reset PROFILE`"
+msgstr "`cadrumo-runtime config passphrase reset PROFILE`"
 
 #: ../../how-to/protect-data-access.md:149
 #, python-brace-format
@@ -512,16 +512,16 @@ msgid "`aeat config profile archive import`"
 msgstr "`aeat config profile archive import`"
 
 #: ../../how-to/protect-data-access.md:149
-msgid "`aeat config profile recovery enable`"
-msgstr "`aeat config profile recovery enable`"
+msgid "`cadrumo-runtime config profile recovery enable`"
+msgstr "`cadrumo-runtime config profile recovery enable`"
 
 #: ../../how-to/protect-data-access.md:149
-msgid "`aeat config profile recovery disable`"
-msgstr "`aeat config profile recovery disable`"
+msgid "`cadrumo-runtime config profile recovery disable`"
+msgstr "`cadrumo-runtime config profile recovery disable`"
 
 #: ../../how-to/protect-data-access.md:149
-msgid "`aeat config auth certificate secret set`"
-msgstr "`aeat config auth certificate secret set`"
+msgid "`cadrumo-runtime config auth certificate secret set`"
+msgstr "`cadrumo-runtime config auth certificate secret set`"
 
 #: ../../how-to/protect-data-access.md:149
 #, python-brace-format

@@ -9,7 +9,6 @@ from uuid import UUID
 
 import pytest
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
     OperationPublicProjectionV1,
@@ -40,21 +39,6 @@ from cadrumo.application.operations.registry import (
     OperationPublicContractSetV1,
     OperationPublicDefinitionContractV1,
 )
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode
-from cadrumo.application.runtime.operation_access import (
-    RuntimeOperationAcknowledged,
-    RuntimeOperationControl,
-    RuntimeOperationManage,
-    RuntimeOperationManaged,
-    RuntimeOperationObserve,
-    RuntimeOperationObserved,
-    RuntimeOperationProjected,
-    RuntimeOperationReply,
-    RuntimeOperationRequest,
-    RuntimeOperationReview,
-    RuntimeOperationSubmit,
-    RuntimeOperationSubmitted,
-)
 from cadrumo.application.user_profile.censal_operation import (
     CENSAL_OPERATION_DEFINITION_ID,
     CENSAL_REVIEW_PROJECTION_SCHEMA_BINDING,
@@ -72,8 +56,24 @@ from cadrumo.application.user_profile.censal_operation import (
 )
 from cadrumo.application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
-from cadrumo.entrypoints.cli.config.runtime_censal_review import review_censal_with_runtime
+from cadrumo.entrypoints.cli.config.operation_censal_review import review_censal_operation
 from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError
+from cadrumo_client.contracts.contracts import RefusalCode
+from cadrumo_client.contracts.operation_access import (
+    OperationAcknowledged,
+    OperationControl,
+    OperationManage,
+    OperationManaged,
+    OperationObserve,
+    OperationObserved,
+    OperationProjected,
+    OperationReply,
+    OperationRequest,
+    OperationReview,
+    OperationSubmit,
+    OperationSubmitted,
+)
+from cadrumo_client.transport.frontend_client import FrontendClient
 
 _PROFILE_ID = UUID("aa000000-0000-4000-8000-0000000000aa")
 _SESSION_ID = UUID("bb000000-0000-4000-8000-0000000000bb")
@@ -143,7 +143,7 @@ class _RuntimeClient:
         self.result_outcome_override = result_outcome_override
         self.result_fault = result_fault
         self.result_requests: list[OperationResultProjectionRequestV1] = []
-        self.requests: list[RuntimeOperationRequest] = []
+        self.requests: list[OperationRequest] = []
         self.contract_reads: list[str] = []
         self.response_action: str | None = None
         self.result_ref: str | None = None
@@ -189,46 +189,46 @@ class _RuntimeClient:
         )
         return json.loads(success.model_dump_json())
 
-    def operation(self, request: RuntimeOperationRequest, *, deadline: float) -> RuntimeOperationReply:
+    def operation(self, request: OperationRequest, *, deadline: float) -> OperationReply:
         assert deadline > 0
         assert request.profile_id == self.profile_id
         assert request.session_id == self.session_id
         self.requests.append(request)
 
-        if isinstance(request, RuntimeOperationSubmit):
+        if isinstance(request, OperationSubmit):
             assert request.definition_id == CENSAL_OPERATION_DEFINITION_ID
             assert request.subject_ref == str(self.profile_id)
             assert CensalOperationRequest.model_validate_json(request.payload_json).baseline.profile_id == str(
                 self.profile_id
             )
-            return RuntimeOperationSubmitted(
+            return OperationSubmitted(
                 request_id=request.request_id,
                 runtime_boot_id=_BOOT_ID,
                 connection_id=_CONNECTION_ID,
                 receipt=OperationSubmissionReceiptV1(operation_id=_OPERATION_ID, secret_requirement=None),
             )
 
-        if isinstance(request, RuntimeOperationControl):
+        if isinstance(request, OperationControl):
             assert request.action == "operation_start"
             assert request.operation_id == _OPERATION_ID
-            return RuntimeOperationAcknowledged(
+            return OperationAcknowledged(
                 request_id=request.request_id,
                 runtime_boot_id=_BOOT_ID,
                 connection_id=_CONNECTION_ID,
                 operation_id=_OPERATION_ID,
             )
 
-        if isinstance(request, RuntimeOperationObserve):
+        if isinstance(request, OperationObserve):
             assert request.observation.operation_id == _OPERATION_ID
             observation = self._observation(terminal=self.response_action is not None or self.refuse_before_review)
-            return RuntimeOperationObserved(
+            return OperationObserved(
                 request_id=request.request_id,
                 runtime_boot_id=_BOOT_ID,
                 connection_id=_CONNECTION_ID,
                 observation=observation,
             )
 
-        if isinstance(request, RuntimeOperationReview):
+        if isinstance(request, OperationReview):
             reference = request.review.reference
             assert reference.operation_id == _OPERATION_ID
             assert reference.review_projection_schema == CENSAL_REVIEW_PROJECTION_SCHEMA_BINDING.identity
@@ -237,7 +237,7 @@ class _RuntimeClient:
                 definition_contract_digest=self.public_contract.definition_contract_digest,
                 projection=self.review_projection,
             )
-            return RuntimeOperationProjected(
+            return OperationProjected(
                 request_id=request.request_id,
                 runtime_boot_id=_BOOT_ID,
                 connection_id=_CONNECTION_ID,
@@ -246,7 +246,7 @@ class _RuntimeClient:
                 document=json.loads(success.model_dump_json()),
             )
 
-        if isinstance(request, RuntimeOperationManage):
+        if isinstance(request, OperationManage):
             management = request.management
             if isinstance(management, (OperationResponseApplyRequestV1, OperationResponseRejectRequestV1)):
                 assert management.operation_id == _OPERATION_ID
@@ -268,7 +268,7 @@ class _RuntimeClient:
                     available=True,
                     permitted_intents=frozenset({OperationResponseIntent.APPLY, OperationResponseIntent.REJECT}),
                 )
-            return RuntimeOperationManaged(
+            return OperationManaged(
                 request_id=request.request_id,
                 runtime_boot_id=_BOOT_ID,
                 connection_id=_CONNECTION_ID,
@@ -405,8 +405,8 @@ def test_review_bridge_uses_exact_session_projection_and_terminal_decision(
     request = _request()
     seen_projection: list[CensalReviewProjectionV1] = []
 
-    result = review_censal_with_runtime(
-        cast(RuntimeFrontendClient, client),
+    result = review_censal_operation(
+        cast(FrontendClient, client),
         request,
         decide=lambda projection: seen_projection.append(projection) or apply,
     )
@@ -416,7 +416,7 @@ def test_review_bridge_uses_exact_session_projection_and_terminal_decision(
         exchange.profile_id == client.profile_id and exchange.session_id == client.session_id
         for exchange in client.requests
     )
-    submitted = next(exchange for exchange in client.requests if isinstance(exchange, RuntimeOperationSubmit))
+    submitted = next(exchange for exchange in client.requests if isinstance(exchange, OperationSubmit))
     assert submitted.subject_ref == str(client.profile_id)
     assert CensalOperationRequest.model_validate_json(submitted.payload_json) == request
     assert seen_projection == [client.review_projection]
@@ -428,7 +428,7 @@ def test_review_bridge_uses_exact_session_projection_and_terminal_decision(
     assert len(client.result_requests) == 1
     assert expected_outcome is (CensalOperationOutcome.APPLIED if result.applied else CensalOperationOutcome.REJECTED)
     terminal_observation = next(
-        exchange for exchange in reversed(client.requests) if isinstance(exchange, RuntimeOperationObserve)
+        exchange for exchange in reversed(client.requests) if isinstance(exchange, OperationObserve)
     )
     assert terminal_observation.profile_id == client.profile_id
     assert terminal_observation.session_id == client.session_id
@@ -438,7 +438,7 @@ def test_review_refusal_retains_submitted_operation_identity_and_effect() -> Non
     client = _RuntimeClient(refuse_before_review=True)
 
     with pytest.raises(CliRefusedBoundaryError) as refused:
-        review_censal_with_runtime(cast(RuntimeFrontendClient, client), _request(), decide=lambda _projection: True)
+        review_censal_operation(cast(FrontendClient, client), _request(), decide=lambda _projection: True)
 
     assert refused.value.context is not None
     assert refused.value.context["operation_id"] == _OPERATION_ID
@@ -448,7 +448,7 @@ def test_review_refusal_retains_submitted_operation_identity_and_effect() -> Non
 
 def test_review_rejection_preserves_an_earlier_provider_session_write() -> None:
     client = _RuntimeClient(terminal_effect_override=OperationEffect.UPDATED)
-    result = review_censal_with_runtime(cast(RuntimeFrontendClient, client), _request(), decide=lambda _review: False)
+    result = review_censal_operation(cast(FrontendClient, client), _request(), decide=lambda _review: False)
     assert not result.applied
     assert client.terminal_effect is OperationEffect.UPDATED
     assert len(client.result_requests) == 1
@@ -458,7 +458,7 @@ def test_review_rejection_preserves_an_earlier_provider_session_write() -> None:
 def test_review_result_release_refuses_mismatched_binding_or_denial_without_losing_terminal_truth(fault: str) -> None:
     client = _RuntimeClient(result_fault=fault)
     with pytest.raises(CliRefusedBoundaryError) as refused:
-        review_censal_with_runtime(cast(RuntimeFrontendClient, client), _request(), decide=lambda _review: True)
+        review_censal_operation(cast(FrontendClient, client), _request(), decide=lambda _review: True)
     assert len(client.result_requests) == 1
     assert refused.value.context is not None
     assert refused.value.context["operation_id"] == _OPERATION_ID
@@ -467,7 +467,7 @@ def test_review_result_release_refuses_mismatched_binding_or_denial_without_losi
     expected_reason = (
         OperationResultProjectionRefusalCode.RESULT_PROJECTION_UNAVAILABLE.value
         if fault == "refused"
-        else RuntimeRefusalCode.INVALID_FRAME.value
+        else RefusalCode.INVALID_FRAME.value
     )
     assert refused.value.context["reason"] == expected_reason
 
@@ -491,7 +491,7 @@ def test_review_refuses_a_terminal_effect_or_result_outcome_mismatch_with_identi
     )
 
     with pytest.raises(CliRefusedBoundaryError) as refused:
-        review_censal_with_runtime(cast(RuntimeFrontendClient, client), _request(), decide=lambda _review: apply)
+        review_censal_operation(cast(FrontendClient, client), _request(), decide=lambda _review: apply)
 
     assert refused.value.context is not None
     assert refused.value.context["operation_id"] == _OPERATION_ID

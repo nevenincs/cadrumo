@@ -9,6 +9,10 @@ from pathlib import Path
 
 import typer
 
+from cadrumo_client.commands.profile_binding import bound_profile_client
+from cadrumo_client.commands.registered_operation import run_registered_operation
+from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
+
 from ...application.export.calculation_review_xlsx_operation import (
     CALCULATION_REVIEW_XLSX_OPERATION_DEFINITION_ID,
     CalculationReviewXlsxRequest,
@@ -19,9 +23,6 @@ from ...core.i18n.render import output_language as active_output_language
 from ...core.json_contract import OutputSchema
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .common import emit_envelope
-from .registered_operation_errors import invalid_completion_error
-from .runtime_profile_binding import bound_profile_client
-from .runtime_registered_operation import run_registered_operation
 
 
 class CalculationReviewWorkbookResult(OutputSchema):

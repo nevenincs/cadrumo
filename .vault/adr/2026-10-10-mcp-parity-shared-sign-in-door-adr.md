@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#mcp-parity'
 date: '2026-10-10'
-modified: '2026-10-12'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:aa38bb99ac36e06896649b937336c7269399fb0808a016f689b06f35098e0dff'
+body_hash: 'sha256:c7f5240f792ad84eaf87b9c31744819112a2ca9baad3c6476bdbe737e9b49414'
 related:
   - "[[2026-10-10-mcp-parity-sign-in-doors-reference]]"
   - "[[2026-10-10-mcp-parity-parity-mechanism-options-research]]"
@@ -14,6 +14,7 @@ related:
   - "[[2026-09-26-mcp-purpose-authentication-profile-access-adr]]"
   - "[[2026-10-04-application-sign-in-adr]]"
 ---
+
 # `mcp-parity` adr: `The MCP server resumes the shared sign-in exactly as the command line and terminal interface do, with the enrolled key as the single exception` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -208,14 +209,14 @@ adding a parallel one.
 - The session does not last longer by itself, and today it cannot be renewed. A sign-in
   session's expiry is fixed when it is admitted, at the sooner of the sign-in's idle and
   absolute deadlines, and refresh exists only for a root key session
-  (`src/cadrumo/application/user_profile/session_authority_admission.py:346`, `:371`,
+  (`src/cadrumo_runtime/application/session_authority_admission.py:346`, `:371`,
   `:453-454`). The stored sign-in ends at the same instant, because nothing extends it
   after the password login that minted it
   (`2026-10-10-mcp-parity-sign-in-doors-reference`, section 14). At that idle deadline,
   15 minutes by default, the sign-in is over for every surface, the MCP server's session
   with it, and only a new password sign-in creates another. Starting an operation,
   delivering its secret and answering its review stay with the session that began them
-  (`src/cadrumo/entrypoints/runtime/operation_host.py:315-317`, `:372-388`, `:517-532`),
+  (`src/cadrumo_runtime/host/operation_host.py:315-317`, `:372-388`, `:517-532`),
   so an operation, its review and any approval of it settle within one sign-in. The key
   route's short lease is lengthened, not removed.
 - A useful MCP session inside Cadrumo therefore depends on the lifetime work of the

@@ -29,7 +29,7 @@ import json
 import sys
 from typer.testing import CliRunner
 from cadrumo.entrypoints.cli.main import cli_app
-from cadrumo.entrypoints.cli.command_spec import NON_LEAF_COMMAND_KINDS
+from cadrumo_client.commands.spec import NON_LEAF_COMMAND_KINDS
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 app = cli_app()
 

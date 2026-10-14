@@ -60,7 +60,7 @@ def test_fact_refuses_an_undeclared_source() -> None:
 
     message = str(raised.value)
     assert "not_a_declared_source" in message
-    # The refusal names the accepted set, so an operator or agent can act
+    # The refusal names the accepted set, so an operator or automation can act
     # on it rather than guessing what the schema would have taken.
     assert PROVENANCE_SOURCE_MANUAL_CLI in message
 

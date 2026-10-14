@@ -1,4 +1,4 @@
-"""One MCP connection's runtime adapter, admitted by the person's sign-in or a configured key."""
+"""One MCP connection's runtime adapter, admitted by held-person attendance or a configured key."""
 
 from __future__ import annotations
 
@@ -9,14 +9,8 @@ from threading import Event
 from typing import Any, TypeVar
 from uuid import UUID
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
-from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
-from cadrumo.adapters.local_runtime.runtime_credentials import open_installed_credential_client
-from cadrumo.application.operations.mcp_surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES, McpSurface
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.operator_output.runtime_remedies import runtime_unavailable_remedy
-from cadrumo.application.runtime.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS, RuntimeProfileStatus
+from cadrumo.application.operator_output.connection_remedies import connection_unavailable_remedy
 from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.core.async_cleanup import (
     AsyncCloseable,
@@ -24,7 +18,13 @@ from cadrumo.core.async_cleanup import (
     await_cancellation_complete,
     close_async_resources,
 )
+from cadrumo_client.contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS, ProfileStatus
+from cadrumo_client.transport.credentials import open_installed_credential_client
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_client.transport.installed_client import open_installed_client
 
+from .access_scope import surface_scope
 from .admitted_operations import call_admitted_operation
 from .authority_query import authority_query
 from .corpus_query import corpus_query
@@ -40,12 +40,10 @@ from .protocol_contract import (
     validate_tool_arguments,
 )
 from .runtime_admission import (
-    ATTENDABLE_REFUSALS,
     AdmissionDenial,
     McpAdmission,
     attend_held_sign_in,
     require_exact_admitted_status,
-    resume_shared_sign_in,
     selected_profile_id,
 )
 from .runtime_cleanup import (
@@ -55,6 +53,7 @@ from .runtime_cleanup import (
     preserve_cancellation_body_error,
     retain_cleanup_failure,
 )
+from .surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES, McpSurface
 
 WireResultT = TypeVar("WireResultT")
 
@@ -71,7 +70,7 @@ _SESSION_ENDED = frozenset(
 
 
 class RuntimeMcpAdapter:
-    """One MCP connection owns one admitted lease, from the person's sign-in or a key the person configured.
+    """One MCP connection owns one attended lease or a lease admitted by a configured key.
 
     It offers no way to sign in, to name or request a credential, or to act
     outside its profile: those are the person's acts in Cadrumo.
@@ -81,42 +80,36 @@ class RuntimeMcpAdapter:
         self,
         *,
         profile_id: UUID | None,
-        client: RuntimeFrontendClient | None,
+        client: FrontendClient | None,
         surface: McpSurface = MCP_SURFACES[DEFAULT_MCP_SURFACE],
-        resumes_sign_in: bool = False,
+        requests_attendance: bool = False,
     ) -> None:
         """Bind a protocol connection to its profile rule, its surface and an optional lease.
 
-        Without ``resumes_sign_in`` the connection serves an enrolled key:
-        ``profile_id`` names its one immutable profile, and only a key admits
-        it. With it the connection also asks the runtime to resume the
-        person's sign-in whenever a call needs the profile and no session is
-        held, and only for the installation's selected profile. A named
-        ``profile_id`` binds the connection, so the sign-in is resumed only
-        while that profile is the selected one. With none named, the
-        connection is bound to the profile of the first sign-in it resumes,
-        and from then on it is refused every call while another profile is
-        selected: an agent session never follows the person to another
-        profile.
+        Without ``requests_attendance``, only the configured enrolled key can
+        admit the named profile. With it, a call needing the profile requests
+        scoped attendance from its held human session. The exact human decision
+        admits this connection under that parent's finite lifetime. No person
+        receipt or password is presented by this external client.
 
-        The surface decides which tools answer and which operations search and
-        describe reveal. That is a convenience: every admission this adapter
-        opens names the surface to the runtime, which is what holds the
-        connection to it.
+        A named profile is served only while selected. An unnamed connection
+        binds to the first profile that attends it; later selection cannot move
+        its authority to another profile. The protocol surface projects a finite
+        operation/action ceiling into every runtime admission.
         """
-        if resumes_sign_in and client is not None:
-            raise ValueError("a connection that resumes the sign-in starts with no lease")
-        if not resumes_sign_in and profile_id is None:
+        if requests_attendance and client is not None:
+            raise ValueError("a connection requesting attendance starts with no lease")
+        if not requests_attendance and profile_id is None:
             raise ValueError("a connection that serves only an enrolled key names its profile")
         if client is not None and (
-            client.profile_id != profile_id or client.frontend is not OperationFrontendProjection.MCP
+            client.profile_id != profile_id or client.frontend is not OperationFrontendProjection.EXTERNAL_CLIENT
         ):
-            raise RuntimeFrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
+            raise FrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
         self.profile_id: UUID | None = profile_id
         self.client = client
         self.admission: McpAdmission | None = None if client is None else McpAdmission.KEY
         self.surface = surface
-        self._resumes_sign_in = resumes_sign_in
+        self._requests_attendance = requests_attendance
         self._named_profile_id = profile_id
         self._retired = Event()
         self._lock = asyncio.Lock()
@@ -141,7 +134,7 @@ class RuntimeMcpAdapter:
             except Exception as error:
                 self._admission_denial = AdmissionDenial.of(error)
 
-    def _retirement(self, client: RuntimeFrontendClient) -> AsyncCloseable:
+    def _retirement(self, client: FrontendClient) -> AsyncCloseable:
         identity = id(client)
         owner = self._retiring_resources.get(identity)
         if owner is None:
@@ -166,20 +159,14 @@ class RuntimeMcpAdapter:
 
                     self._retiring_resources[identity] = RuntimeAdmissionCleanup(failure, on_closed=released)
 
-    async def _open_reference_client(self, reference: UUID, *, profile_id: UUID) -> RuntimeFrontendClient:
+    async def _open_reference_client(self, reference: UUID, *, profile_id: UUID) -> FrontendClient:
         try:
-            if self.surface.narrows:
-                # A surface that narrows nothing is not named, so that
-                # admission is opened exactly as it is without a surface.
-                return await open_installed_credential_client(
-                    profile_id=profile_id,
-                    credential_reference=reference,
-                    frontend=OperationFrontendProjection.MCP,
-                    timeout=PROFILE_ADMISSION_TIMEOUT_SECONDS,
-                    surface=self.surface.name,
-                )
             return await open_installed_credential_client(
-                profile_id=profile_id, credential_reference=reference, frontend=OperationFrontendProjection.MCP
+                profile_id=profile_id,
+                credential_reference=reference,
+                frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
+                timeout=PROFILE_ADMISSION_TIMEOUT_SECONDS,
+                scope=surface_scope(self.surface),
             )
         except BaseException as error:
             self._retain_admission_cleanup(error)
@@ -188,9 +175,9 @@ class RuntimeMcpAdapter:
     async def _bound_profile(self) -> UUID:
         """Return the profile this connection acts for, following the selection only until it is bound.
 
-        Until a sign-in is first resumed the selection is read at every call,
+        Until attendance first admits the connection the selection is read at every call,
         as each command reads it, and with no profile selected nothing is
-        held. Once one is resumed the connection is bound to its profile.
+        held. Once attendance admits it the connection is bound to its profile.
         """
         if self._named_profile_id is not None:
             return self._named_profile_id
@@ -206,11 +193,11 @@ class RuntimeMcpAdapter:
         return profile_id
 
     async def _require_selected(self, profile_id: UUID) -> None:
-        """Let the person's sign-in serve a named profile only while it is the selected one.
+        """Retain attended authority for a named profile only while it is selected.
 
-        A sign-in is resumed for the profile the installation has selected and
-        for no other, so a lease resumed earlier is released once the
-        selection has moved on. A lease admitted by key is not held to this.
+        Attendance is requested for the selected profile only. Moving the
+        selection releases the earlier attended lease. Key leases are not
+        subject to this selection rule.
         """
         if self._named_profile_id is None or self.admission is McpAdmission.KEY:
             return
@@ -239,7 +226,7 @@ class RuntimeMcpAdapter:
         if client is not None:
             await self._retire_client(client, task_name=task_name)
 
-    def _watch(self, client: RuntimeFrontendClient) -> Event:
+    def _watch(self, client: FrontendClient) -> Event:
         """Have what the runtime tells this connection reach the next call.
 
         Its notice that the lease was retired sets a flag, and its lifecycle
@@ -257,8 +244,9 @@ class RuntimeMcpAdapter:
     async def _restore_key_session(self) -> None:
         """Authenticate a key session anew when the one held is retired, lost, or was refused.
 
-        The rule, which is the command line's: each command under a key
-        authenticates anew with the reference that admitted it.
+        A healthy connection retains its key session. Each call checks its
+        current status and grant; authentication with the launch reference is
+        repeated only after refusal, connection loss or session retirement.
 
         - A key session that is retired, or whose connection is lost, is let
           go and authenticated anew with the stored reference, at most once
@@ -281,7 +269,7 @@ class RuntimeMcpAdapter:
             self._admission_denial = AdmissionDenial.of(error)
 
     async def _hold_session(self) -> None:
-        """Hold a session for the bound profile, asking the runtime at most once to resume the sign-in.
+        """Hold a session for the bound profile, requesting scoped attendance under exact held-human approval.
 
         The runtime decides. Its refusal is kept as this connection's denial
         and no lease is held, so the call that follows answers with it.
@@ -292,8 +280,8 @@ class RuntimeMcpAdapter:
                 await self._release_lease(task_name="mcp-retired-session-close")
             await self._require_selected(profile_id)
             if self.client is None:
-                self.client, self._retired, self.admission = await self._open_signed_in_client(profile_id)
-                # Bound for its life to the profile of the sign-in it resumed.
+                self.client, self._retired, self.admission = await self._open_attended_client(profile_id)
+                # Bound for its life to the profile of its held-human attendance approval.
                 self._named_profile_id = profile_id
         except Exception as error:
             self._admission_denial = AdmissionDenial.of(error)
@@ -313,9 +301,9 @@ class RuntimeMcpAdapter:
             return False
 
         def renew() -> Event:
-            if not isinstance(client.request_attendance(), RuntimeProfileStatus):
+            if not isinstance(client.request_attendance(), ProfileStatus):
                 # Only a fresh ask waits for a decision; this connection's approval did not carry.
-                raise RuntimeFrontendRefusedError(AccessDenialCode.AUTHENTICATION_REQUIRED.value)
+                raise FrontendRefusedError(AccessDenialCode.AUTHENTICATION_REQUIRED.value)
             require_exact_admitted_status(client, profile_id=profile_id, admission=McpAdmission.ATTENDED)
             return self._watch(client)
 
@@ -325,21 +313,8 @@ class RuntimeMcpAdapter:
             return False
         return True
 
-    async def _open_signed_in_client(self, profile_id: UUID) -> tuple[RuntimeFrontendClient, Event, McpAdmission]:
-        """Resume the person's stored sign-in; with none to resume, ask the person holding it to admit this one."""
-        client = await self._open_unadmitted_client(profile_id, on_surface=True)
-
-        def resume() -> Event:
-            resume_shared_sign_in(client, profile_id=profile_id)
-            return self._watch(client)
-
-        try:
-            return client, await self._wire(resume), McpAdmission.SIGN_IN
-        except BaseException as error:
-            await self._retire_client(client, task_name="mcp-sign-in-resume-close", primary_error=error)
-            if not isinstance(error, RuntimeFrontendRefusedError) or error.reason not in ATTENDABLE_REFUSALS:
-                raise
-            refused = error
+    async def _open_attended_client(self, profile_id: UUID) -> tuple[FrontendClient, Event, McpAdmission]:
+        """Ask the person holding the exact profile to approve this scoped external connection."""
         attended = await self._open_unadmitted_client(profile_id, on_surface=True)
 
         def attend() -> Event:
@@ -350,14 +325,11 @@ class RuntimeMcpAdapter:
             return attended, await self._wire(attend), McpAdmission.ATTENDED
         except BaseException as error:
             await self._retire_client(attended, task_name="mcp-attendance-close", primary_error=error)
-            if isinstance(error, RuntimeFrontendRefusedError) and error.reason in ATTENDABLE_REFUSALS:
-                # Nobody admitted this connection: answer as the stored sign-in's refusal said.
-                raise refused from None
             raise
 
     async def _retire_client(
         self,
-        client: RuntimeFrontendClient,
+        client: FrontendClient,
         *,
         task_name: str,
         primary_error: BaseException | None = None,
@@ -403,7 +375,7 @@ class RuntimeMcpAdapter:
         if failures:
             raise failures[0]
 
-    def _admitted(self) -> RuntimeFrontendClient:
+    def _admitted(self) -> FrontendClient:
         if self.client is None:
             raise (self._admission_denial or AdmissionDenial(AccessDenialCode.AUTHENTICATION_REQUIRED.value)).refusal()
         return self.client
@@ -438,7 +410,7 @@ class RuntimeMcpAdapter:
             code = refusal_code(error)
             # A sign-in refusal keeps its reason, binding and wait, as the command line reports them.
             reply: dict[str, Any] = {"outcome": "refused", "code": code, **refusal_facts(error)}
-            if isinstance(error, RuntimeFrontendRefusedError) and error.request_faults:
+            if isinstance(error, FrontendRefusedError) and error.request_faults:
                 # The runtime said why, in a registered error's code and message; every tool passes that on.
                 reply["faults"] = [public_value(fault) for fault in error.request_faults]
             if self.client is not None and code in _SESSION_ENDED:
@@ -452,7 +424,7 @@ class RuntimeMcpAdapter:
             if code == AccessDenialCode.PERSON_ACT_REQUIRED.value:
                 # The runtime refused the person's own act; the agent is told to ask the person.
                 reply["remedy"] = PERSON_ACT_REMEDY
-            elif (remedy := runtime_unavailable_remedy(code)) is not None and remedy:
+            elif (remedy := connection_unavailable_remedy(code)) is not None and remedy:
                 reply["remedy"] = remedy
             elif self.client is None and (told := sign_in_remedy(code, reply)) is not None:
                 # Nothing admits this server: no live sign-in and no configured key.
@@ -460,25 +432,24 @@ class RuntimeMcpAdapter:
             return reply
 
     async def _hold_or_restore_session(self) -> None:
-        if self._resumes_sign_in:
+        if self._requests_attendance:
             await self._hold_session()
         else:
             await self._restore_key_session()
 
-    async def _open_unadmitted_client(self, profile_id: UUID, *, on_surface: bool = False) -> RuntimeFrontendClient:
+    async def _open_unadmitted_client(self, profile_id: UUID, *, on_surface: bool = False) -> FrontendClient:
         """Open a connection for one profile that holds no session yet."""
         try:
-            if on_surface and self.surface.narrows:
-                # Named as on the key route, so the runtime holds the lease to the same surface.
-                return await open_installed_runtime_client(
-                    profile_id=profile_id, frontend=OperationFrontendProjection.MCP, surface=self.surface.name
-                )
-            return await open_installed_runtime_client(profile_id=profile_id, frontend=OperationFrontendProjection.MCP)
+            return await open_installed_client(
+                profile_id=profile_id,
+                frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
+                scope=surface_scope(self.surface) if on_surface else None,
+            )
         except BaseException as error:
             self._retain_admission_cleanup(error)
             raise
 
-    async def _replace_lease(self, client: RuntimeFrontendClient, retired: Event, admission: McpAdmission) -> None:
+    async def _replace_lease(self, client: FrontendClient, retired: Event, admission: McpAdmission) -> None:
         """Hold a newly admitted connection and let go of the one it replaces."""
         old_client = self.client
         self.client, self._retired = client, retired

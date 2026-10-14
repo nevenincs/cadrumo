@@ -34,9 +34,10 @@ from typing import TypedDict
 import pytest
 from pydantic import TypeAdapter
 
-from ..command_spec import CommandSpec
+from cadrumo.entrypoints.tests.cli_performance import is_non_authoritative_artifact
+from cadrumo_client.commands.spec import CommandSpec
+
 from ..command_specs import COMMAND_GRAPH
-from .cli_performance import is_non_authoritative_artifact
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

@@ -1,4 +1,4 @@
-"""Revision discovery is admitted for MCP under the same scope rules as the other frontends."""
+"""Revision discovery is admitted for external client under the same scope rules as the other frontends."""
 
 from __future__ import annotations
 
@@ -88,7 +88,7 @@ def _context(
     )
 
 
-def test_revision_discovery_is_admitted_on_the_mcp_frontend_without_a_commit_door(
+def test_revision_discovery_is_admitted_on_the_external_client_frontend_without_a_commit_door(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     unit = _unit()
@@ -97,18 +97,18 @@ def test_revision_discovery_is_admitted_on_the_mcp_frontend_without_a_commit_doo
     whole_profile = resolve_operation_access(
         registry=registry,
         request=_request(None),
-        context=_context(registration, authority_operation, OperationFrontendProjection.MCP),
+        context=_context(registration, authority_operation, OperationFrontendProjection.EXTERNAL_CLIENT),
     )
     one_unit = resolve_operation_access(
         registry=registry,
         request=_request(unit.work_unit_id),
-        context=_context(registration, authority_operation, OperationFrontendProjection.MCP),
+        context=_context(registration, authority_operation, OperationFrontendProjection.EXTERNAL_CLIENT),
     )
 
-    assert whole_profile.request.frontend is OperationFrontendProjection.MCP
+    assert whole_profile.request.frontend is OperationFrontendProjection.EXTERNAL_CLIENT
     assert whole_profile.request.profile_id == _PROFILE
     assert whole_profile.request.period_independent and whole_profile.policy.requires_all_periods
-    assert one_unit.request.frontend is OperationFrontendProjection.MCP
+    assert one_unit.request.frontend is OperationFrontendProjection.EXTERNAL_CLIENT
     assert one_unit.request.periods == frozenset({_PERIOD})
     assert AccessAction.COMMIT not in whole_profile.policy.actions
     assert AccessAction.COMMIT not in one_unit.policy.actions

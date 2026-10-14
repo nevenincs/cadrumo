@@ -14,18 +14,19 @@ def scope_is_subset(child: AccessScope, parent: AccessScope) -> bool:
     category; a category grant narrows only a parent that grants the same
     category to the same destination, since no list proves a category whole.
     Operations follow the same rule: a listed operation narrows a parent that
-    lists it or grants every agent operation, and that grant narrows only a
+    lists it, and that grant narrows only a
     parent that grants it too.
     """
     return (
         all(parent.permits(item) for item in child.operations)
-        and (not child.all_agent_operations or parent.all_agent_operations)
         and child.actions <= parent.actions
         and all(parent.discloses(item) for item in child.disclosures)
         and child.disclosure_categories <= parent.disclosure_categories
         and (parent.periods is None or (child.periods is not None and child.periods <= parent.periods))
         and (not child.allow_period_independent or parent.allow_period_independent)
         and (not child.allow_delegation or parent.allow_delegation)
+        and (not child.allow_changes_records or parent.allow_changes_records)
+        and (not child.allow_network or parent.allow_network)
     )
 
 
@@ -34,7 +35,7 @@ def intersect_scopes(scopes: tuple[AccessScope, ...]) -> AccessScope:
 
     A listed disclosure survives when every scope lists it or grants its
     category, and a listed operation when every scope lists it or grants every
-    agent operation. Category and operation grants survive only where every
+    permitted operation. Category and operation grants survive only where every
     scope grants them, so intersecting with a resolved, listed scope leaves
     only listed permissions.
     """
@@ -65,5 +66,6 @@ def intersect_scopes(scopes: tuple[AccessScope, ...]) -> AccessScope:
         allow_period_independent=all(scope.allow_period_independent for scope in scopes),
         allow_delegation=all(scope.allow_delegation for scope in scopes),
         disclosure_categories=categories,
-        all_agent_operations=all(scope.all_agent_operations for scope in scopes),
+        allow_changes_records=all(scope.allow_changes_records for scope in scopes),
+        allow_network=all(scope.allow_network for scope in scopes),
     )

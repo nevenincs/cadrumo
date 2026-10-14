@@ -314,14 +314,14 @@ _SESSION_CLIENT = UUID("5aa00000-0000-4000-8000-0000000000dd")
 @pytest.mark.parametrize(
     ("frontend", "recorded"),
     [
-        (OperationFrontendProjection.MCP, f"agent:mcp.attended.{_SESSION_CLIENT}"),
+        (OperationFrontendProjection.EXTERNAL_CLIENT, f"automation:external-client.attended.{_SESSION_CLIENT}"),
         (OperationFrontendProjection.CLI, str(_PROFILE)),
         (OperationFrontendProjection.TUI, str(_PROFILE)),
         (None, str(_PROFILE)),
     ],
-    ids=["mcp", "cli", "tui", "no-session-host"],
+    ids=["external_client", "cli", "tui", "no-session-host"],
 )
-def test_each_source_is_staged_under_the_session_label_for_an_agent_and_the_profile_otherwise(
+def test_each_source_is_staged_under_the_session_label_for_automation_and_the_profile_otherwise(
     monkeypatch: pytest.MonkeyPatch,
     operation: PinnedAuthorityOperation,
     frontend: OperationFrontendProjection | None,

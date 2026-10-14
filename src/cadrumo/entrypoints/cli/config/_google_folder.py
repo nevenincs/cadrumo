@@ -4,15 +4,16 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from cadrumo_client.commands.google_configuration import run_google_configuration
+from cadrumo_client.commands.profile_binding import bound_profile_client
+
 from ....application.user_profile.google_configuration_operation_contracts import (
     GoogleFolderOrganizeRequest,
     GoogleFolderViewProjection,
     GoogleFolderViewRequest,
 )
 from ..common import emit_envelope
-from ..runtime_profile_binding import bound_profile_client
 from ._google_folder_payloads import GoogleFolderOrganizeResult, GoogleFolderViewResult
-from .runtime_google_configuration import run_google_configuration
 
 if TYPE_CHECKING:
     import typer
@@ -55,7 +56,7 @@ def google_folder_organize(ctx: typer.Context) -> None:
     )
     # The operation succeeds only after the exact root's placement is checked.
     if projection.root_folder_id is None:
-        from .google_configuration_refusals import google_invalid_frame
+        from cadrumo_client.commands.google_configuration_refusals import google_invalid_frame
 
         google_invalid_frame(operation_id="config.google.folder.organize")
     result = GoogleFolderOrganizeResult(

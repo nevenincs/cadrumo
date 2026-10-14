@@ -189,16 +189,19 @@ def test_the_audit_events_name_the_actor_that_set_and_cleared_an_override() -> N
             category=category,
             ratio=Decimal("0.60"),
             year=_YEAR,
-            actor="agent:mcp.attended.synthetic",
+            actor="automation:external-client.attended.synthetic",
             operation=operation,
         )
         clear_usage_ratio_override(
-            bucket_id=_BUCKET, category=category, actor="agent:mcp.attended.synthetic", operation=operation
+            bucket_id=_BUCKET,
+            category=category,
+            actor="automation:external-client.attended.synthetic",
+            operation=operation,
         )
         events = tuple(bucket_event_history_repository(bucket_id=_BUCKET).load().events.values())
 
     def actors(event_type: BucketEventType) -> list[str]:
         return sorted(event.actor for event in events if event.event_type is event_type)
 
-    assert actors(BucketEventType.LEDGER_RATIOS_SET) == ["agent:mcp.attended.synthetic", "operator"]
-    assert actors(BucketEventType.LEDGER_RATIOS_UNSET) == ["agent:mcp.attended.synthetic"]
+    assert actors(BucketEventType.LEDGER_RATIOS_SET) == ["automation:external-client.attended.synthetic", "operator"]
+    assert actors(BucketEventType.LEDGER_RATIOS_UNSET) == ["automation:external-client.attended.synthetic"]

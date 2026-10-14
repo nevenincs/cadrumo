@@ -18,6 +18,8 @@ from functools import cache
 from typing import cast
 
 import click
+from typer._click.core import Command
+from typer.core import TyperOption
 
 from .cli_runner import cadrumo_click_command
 
@@ -76,11 +78,11 @@ def resolve_path(tokens: tuple[str, ...]) -> ResolvedCommandPath:
     return ResolvedCommandPath(command=cmd, resolved_path=tuple(resolved))
 
 
-def command_option_names(cmd: click.Command) -> frozenset[str]:
+def command_option_names(cmd: click.Command | Command) -> frozenset[str]:
     """Long/short option strings (including ``--no-*`` secondaries) declared on ``cmd``."""
     names: set[str] = set()
     for param in cmd.params:
-        if getattr(param, "param_type_name", None) == "option":
+        if isinstance(param, click.Option | TyperOption):
             names.update(param.opts)
             names.update(param.secondary_opts)
     return frozenset(names)

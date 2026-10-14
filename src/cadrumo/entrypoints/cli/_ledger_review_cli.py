@@ -14,7 +14,7 @@ from ...application.review.filter import LedgerReviewFilterSpec
 from ...core.i18n.render import tr
 from ._ledger_support import ledger_cli_no_recovery
 from .common import emit_envelope
-from .runtime_ledger_review import read_ledger_review_for_cli
+from .operation_ledger_review import read_ledger_review_for_cli
 
 
 def ledger_review(

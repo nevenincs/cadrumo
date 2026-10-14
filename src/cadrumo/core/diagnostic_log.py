@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import json
 import logging
 import math
@@ -17,7 +16,7 @@ from uuid import uuid4
 
 type DiagnosticValue = str | int | float | bool | None
 type DiagnosticProcessRole = Literal[
-    "python", "tui", "runtime", "profile_worker", "agent_launcher", "agent_gateway", "agent_worker", "agent_cli"
+    "python", "tui", "runtime", "profile_worker", "extension_service", "external_client"
 ]
 
 _DIAGNOSTIC_ID: ContextVar[str | None] = ContextVar("cadrumo_diagnostic_id", default=None)
@@ -48,7 +47,7 @@ _LIFECYCLE_FIELDS = tuple(
             "status",
             "trace_id",
             "span_id",
-            "agent_sequence",
+            "external_sequence",
             "diagnostic_rejected_count",
             "cleanup_incomplete",
             "cleanup_error_type",
@@ -125,6 +124,8 @@ def diagnostic_scope(*, new: bool = False) -> Generator[str]:
 
 def stamp_diagnostic_record(record: logging.LogRecord) -> None:
     """Capture context when a record is made, including deferred records."""
+    import asyncio
+
     record.__dict__["_cadrumo_process_role"] = _process_role
     record.__dict__["_cadrumo_diagnostic_id"] = _DIAGNOSTIC_ID.get()
     try:
@@ -157,7 +158,7 @@ def diagnostic_event(
 ) -> None:
     """Emit safe scalar diagnostics without displacing an existing primary."""
     try:
-        outcome = fields.get("outcome") if fields else None
+        outcome = fields.get("outcome") if fields is not None else None
         failed = isinstance(outcome, str) and outcome in {"failed", "error", "unconfirmed"}
         failed = failed or event.endswith(("_failed", " failed"))
         if failed and (level is None or level < logging.ERROR):

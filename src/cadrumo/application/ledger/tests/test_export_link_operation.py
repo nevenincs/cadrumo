@@ -92,7 +92,7 @@ def subject(authority_operation: PinnedAuthorityOperation) -> Iterator[Subject]:
         yield Subject(authority_operation)
 
 
-def test_both_strict_public_contracts_compile_and_share_no_artifact_agent_purpose(subject: Subject) -> None:
+def test_both_strict_public_contracts_compile_and_share_no_artifact_automation_purpose(subject: Subject) -> None:
     definitions = tuple(
         sorted((_definition(subject, "link"), _definition(subject, "export")), key=lambda item: item.definition_id)
     )

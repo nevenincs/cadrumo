@@ -20,7 +20,7 @@ import json
 
 import pytest
 
-from ._modelo_empty_profile_fixture import _isolated_backend
+from .modelo_empty_profile_fixture import _isolated_backend
 
 __all__ = ["_isolated_backend"]
 

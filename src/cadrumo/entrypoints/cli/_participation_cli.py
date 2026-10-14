@@ -17,8 +17,8 @@ from typing import TYPE_CHECKING
 import typer
 
 from .common import emit_envelope, emit_help_text
-from .runtime_ledger_participation import read_ledger_participation_for_cli
-from .runtime_ledger_participation_rebuild import rebuild_ledger_participation_for_cli
+from .operation_ledger_participation import read_ledger_participation_for_cli
+from .operation_ledger_participation_rebuild import rebuild_ledger_participation_for_cli
 
 if TYPE_CHECKING:
     from ._ledger_payloads import LedgerTransactionParticipationEntryPayload

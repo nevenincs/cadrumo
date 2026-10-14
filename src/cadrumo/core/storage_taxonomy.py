@@ -204,6 +204,9 @@ beneath it. It is therefore the anchor rather than a member.
 _PROFILE_CAPSULE_ENVELOPE_LABEL = "profile-capsule.password-envelope"
 
 
+CONNECTION_SOCKET_DIRECTORY_ENVIRONMENT_VARIABLE: Final = "CADRUMO_RUNTIME_SOCKET_DIR"
+
+
 class StorageCategory(StrEnum):
     """Every application-chosen on-disk location, identified by scope and name.
 
@@ -216,7 +219,7 @@ class StorageCategory(StrEnum):
     TOKENS = "tokens"
     CHROMIUM_DATA = "chromium-data"
     TEMPORARY_FILES = "temporary-files"
-    RUNTIME_SOCKETS = "runtime-sockets"
+    CONNECTION_SOCKETS = "runtime-sockets"
     PLAYWRIGHT_BROWSERS = "playwright-browsers"
     OLLAMA_MODELS = "ollama-models"
     OLLAMA_HOME = "ollama-home"
@@ -280,7 +283,7 @@ class StorageCategory(StrEnum):
     LOCAL_READER_FITNESS_VERDICTS = "local-reader-fitness-verdicts"
 
     # ── Fixed layout: runtime-written records under ``.runtime/`` ───────────
-    # Distinct from ``RUNTIME_SOCKETS``: that directory holds POSIX endpoints;
+    # Distinct from ``CONNECTION_SOCKETS``: that directory holds POSIX endpoints;
     # these records sit beside the installation identity in ``.runtime/``.
     RUNTIME_BOOT_RECORD = "runtime-boot-record"
     RUNTIME_COORDINATION = "runtime-coordination"
@@ -342,6 +345,9 @@ class StorageLocation(BaseModel):
     New directories use the root's private mode; existing modes remain unchanged.
     """
 
+    environment_variable: str | None = None
+    """Explicit environment name when it remains stable across settings renames."""
+
     settings_field: str | None = None
     """Flat :class:`~core.config.Settings` attribute holding the resolved path.
 
@@ -363,7 +369,7 @@ class StorageLocation(BaseModel):
     """
 
     consumer_module: str | None = None
-    """Production module that consumes this location, relative to ``src/cadrumo``.
+    """Production consumer path, relative to ``src/cadrumo`` or package-qualified under ``src``.
 
     Names the module, and a structural gate verifies the claim: that module must
     contain a real reference to this member -- an attribute load of the bound

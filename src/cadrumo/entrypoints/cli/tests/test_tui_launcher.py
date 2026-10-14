@@ -40,7 +40,7 @@ def test_the_launched_command_resolves_the_tui_module() -> None:
 
 def test_the_launcher_builds_only_the_fixed_tui_root_module_command() -> None:
     """No subject, route, capability, or session result crosses this boundary."""
-    assert tui_root_command("/usr/bin/python3") == ["/usr/bin/python3", "-m", TUI_ROOT_MODULE]
+    assert tui_root_command("/usr/bin/python3") == ["/usr/bin/python3", "-I", "-m", TUI_ROOT_MODULE]
 
 
 def test_the_launcher_propagates_the_child_exit_status(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -57,4 +57,4 @@ def test_the_launcher_propagates_the_child_exit_status(monkeypatch: pytest.Monke
         launch_tui()
 
     assert raised.value.exit_code == 17
-    assert observed == [[sys.executable, "-m", TUI_ROOT_MODULE]]
+    assert observed == [[sys.executable, "-I", "-m", TUI_ROOT_MODULE]]

@@ -140,7 +140,7 @@ class M145CommunicationCreateRequest(BaseModel):
     """Sensitive create intent held only as a secure operation reference.
 
     The record it creates is a local draft in the ``created`` state. ``actor``
-    is recorded as sent for a person's session. An agent's session is recorded
+    is recorded as sent for a person's session. An automation's session is recorded
     under its own session label, whatever the request carries.
     """
 
@@ -207,7 +207,7 @@ class M145CommunicationValidateRequest(_M145RecordSelectionRequest):
 class M145CommunicationExportRequest(_M145RecordSelectionRequest):
     """Registry-layout export of one full record id or existing prefix.
 
-    ``actor`` is recorded as sent for a person's session. An agent's session is
+    ``actor`` is recorded as sent for a person's session. An automation's session is
     recorded under its own session label, whatever the request carries.
     """
 
@@ -217,7 +217,7 @@ class M145CommunicationExportRequest(_M145RecordSelectionRequest):
 class M145CommunicationMarkDeliveredRequest(_M145RecordSelectionRequest):
     """Mark one valid communication as delivered to its payer.
 
-    ``actor`` is recorded as sent for a person's session. An agent's session is
+    ``actor`` is recorded as sent for a person's session. An automation's session is
     recorded under its own session label, whatever the request carries.
     """
 
@@ -227,7 +227,7 @@ class M145CommunicationMarkDeliveredRequest(_M145RecordSelectionRequest):
 class M145CommunicationMarkCompletedRequest(_M145RecordSelectionRequest):
     """Mark one payer-delivered communication as locally completed.
 
-    ``actor`` is recorded as sent for a person's session. An agent's session is
+    ``actor`` is recorded as sent for a person's session. An automation's session is
     recorded under its own session label, whatever the request carries.
     """
 

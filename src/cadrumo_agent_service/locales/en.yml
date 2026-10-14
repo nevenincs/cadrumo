@@ -1,0 +1,242 @@
+desktop:
+  agent:
+    add_files: Add files
+    agent_replied: Agent replied
+    approval_allow_always: Allow
+    approval_allow_once: Allow once
+    approval_reject_always: Don't allow
+    approval_reject_once: Don't allow
+    approval_review_title: Review this before Cadrumo does it
+    approval_tool_title: The agent wants to use a tool
+    archive: Archive
+    archived_empty: Nothing archived
+    archived_toggle: Archived ({count})
+    attachments: Files for the next message
+    attachments_refused: 'Refused: {count}'
+    attachments_uploading: 'Uploading: {count}'
+    can_read_images: read images
+    can_read_pdfs: read PDFs
+    can_search_web: search the web
+    can_use_tools: use tools
+    can_write: write files
+    cancel: Cancel
+    capabilities: 'Can: {list}'
+    choose_model: Choose a model
+    choose_provider: Choose a provider
+    close_documents: Close the documents
+    collapse_members: Hide the files in {name}
+    condition_budget_exhausted: Budget used up
+    condition_credits_exhausted: Out of credits
+    condition_invalid_request: The provider rejected the request
+    condition_network_unreachable: The provider can't be reached
+    condition_provider_overloaded: The provider is overloaded
+    condition_throttled: The provider is limiting requests
+    condition_unauthenticated: Not authenticated with the provider
+    condition_unknown: Unknown cause
+    condition_usage_exhausted: Usage limit reached
+    consent_allow: Send to {provider}
+    consent_decline: Don't send
+    consent_items: What would be sent
+    consent_lead: To answer, {model} needs the content below. Sending it takes it
+      off this computer to {provider}.
+    consent_note: Nothing is sent until you choose. If you don't send it, it stays
+      on this computer.
+    consent_title: Send this to {provider}?
+    delete: Delete
+    delete_confirm: Delete “{title}” and its documents ({count})? This can't be undone.
+    delete_confirm_bare: Delete “{title}”? This can't be undone.
+    documents: Documents
+    documents_attached: 'In this conversation: {count}'
+    documents_empty: No documents in this conversation yet
+    documents_failed: 'Failed: {count}'
+    documents_review: 'Needs review: {count}'
+    drop_accepts: 'Accepted: {types}'
+    drop_hint: Hold {key} to drop
+    drop_release: Release to add the files
+    drop_release_multiple: Release to add {count} files
+    drop_release_single: Release to add 1 file
+    drop_title: Add to this conversation
+    effort: Effort
+    effort_default: Default
+    effort_high: High
+    effort_low: Low
+    effort_max: Max
+    effort_medium: Medium
+    effort_ultra: Ultra
+    effort_xhigh: Extra high
+    expand_members: Show the files in {name}
+    files_summary: 'Files: {count} · {size}'
+    hide: Hide the agent
+    history: History
+    history_empty: No conversations yet
+    history_no_match: No conversations match “{query}”.
+    lane_no_catalog: Models couldn't be listed
+    lane_not_admitted: Not allowed here
+    lane_not_configured: Not set up
+    lane_notice: 'Development lane: conversations are kept unencrypted on this test
+      storage. Use made-up data only.'
+    lane_signed_out: Not signed in
+    lane_unreachable: Can't be reached
+    members_multiple: '{count} files'
+    members_single: 1 file
+    message_label: Message
+    message_placeholder: Ask about a modelo, a deadline or your records
+    model: Model
+    model_written: This provider doesn't list its models. Write the model's id as
+      the provider names it.
+    more_files: +{count} more
+    new_conversation: New conversation
+    no_models: No models to choose from
+    no_provider: The agent has no provider it can use yet.
+    provider: Provider
+    questions_answer: Answer
+    questions_clear: Clear this answer
+    questions_control: 'An answer is one line: it can''t hold line breaks, tabs or
+      other control characters'
+    questions_decline: Don't answer
+    questions_invalid: Correct the answers marked first
+    questions_lead: Answer below, or write a message instead to answer in your own
+      words.
+    questions_missing: Answer every question not marked optional first
+    questions_optional: (optional)
+    questions_title: The agent needs a few answers
+    questions_too_long: This answer has {count} characters; {max} is the most
+    queued: Waiting to upload
+    ran_with: 'Ran with: {selection}'
+    ready: Ready
+    refused: Refused
+    remove_all: Remove all
+    remove_document: Remove {name}
+    remove_file: Remove {name}
+    reply_deleting: Being deleted
+    reply_failed: This reply didn't finish.
+    reply_in_progress: A reply is still in progress.
+    reply_queued: 'Messages waiting: {count}'
+    reply_reconciling: Reconciling…
+    reply_repair_needed: Needs repair
+    reply_stopping: Stopping…
+    resize: Resize the agent
+    restore: Restore
+    retry: Try again
+    role_context: Context
+    role_information: Information
+    role_label: Use as
+    role_ledger: Ledger data
+    row_documents: 'Documents: {count}'
+    search_history: Search conversations
+    send: Send
+    send_nothing: Write a message or add a file first
+    send_too_long: This message has {count} characters; {max} is the most
+    send_waiting: Wait until every file has uploaded
+    sent_files: Files sent with this message
+    service_absent: The agent isn't installed.
+    service_credential_missing: No key is set up for this provider.
+    service_failed: The agent stopped working.
+    service_incompatible: This version of the agent doesn't work with this Cadrumo.
+    service_root_unmarked: This test storage isn't marked as the agent's development
+      lane.
+    service_runtime_unavailable: Cadrumo's background service isn't running.
+    service_signed_out: Sign in to talk to the agent.
+    service_starting: Starting the agent…
+    service_stopped: The agent isn't running.
+    set_up_providers: Set up AI providers
+    settings: Agent settings
+    settings_label: 'Model and effort: {current}'
+    settings_title: Model settings
+    show: Show the agent
+    show_active: Show active
+    sign_in_first: Sign in to use the agent
+    status_extracting: Reading
+    status_failed: Failed
+    status_needs_review: Needs review
+    status_ready: Ready
+    status_skipped: Skipped
+    status_uploading: Uploading
+    stop: Stop
+    stopped: Stopped
+    tool_done: Done
+    tool_failed: Failed
+    tool_kind_delete: Deletes
+    tool_kind_edit: Edits
+    tool_kind_execute: Runs
+    tool_kind_fetch: Fetches
+    tool_kind_move: Moves
+    tool_kind_other: Other
+    tool_kind_read: Reads
+    tool_kind_search: Searches
+    tool_kind_switch_mode: Switches mode
+    tool_kind_think: Thinks
+    tool_pending: Pending
+    tool_running: Running
+    transcript: Conversation
+    transcript_empty: No messages yet
+    unavailable: Not available yet
+    uploading: Uploading
+    uploading_name: Uploading {name}
+    usage: 'Tokens: {input} in, {output} out'
+    waiting_on_you: Waiting for you
+    welcome_lead: Something tax related? Ask about a modelo or a deadline, or add
+      receipts, invoices and bank exports with +.
+    welcome_title: What are we working on today?
+    working: Working…
+    you_said: You said
+  pane:
+    agent: Agent
+    maximize_agent: Maximize the agent
+  providers:
+    add_key: Add key
+    base_url_default: Leave it empty to use {url}.
+    base_url_label: Base URL
+    base_url_required: 'Required: this provider has no default.'
+    cancel: Cancel
+    cli_installed_signed_in: Installed and signed in
+    cli_installed_signed_out: Installed, not signed in
+    cli_not_installed: Not installed
+    cli_unknown: Not checked yet
+    development_note: In this development build, a provider with no key of its own
+      uses the development environment's.
+    disable: Disable
+    disable_note: Disable stops Cadrumo from using a provider at all, not even with
+      a key it finds elsewhere.
+    disabled: 'Disabled: Cadrumo won''t use it until you add a key or reset it.'
+    key_label: '{provider} API key'
+    key_note: Paste it here. It's saved encrypted and never shown again.
+    lead: Keys are kept encrypted in this profile and are never shown again. Only
+      you can add, replace or remove them.
+    mode_provider_sign_in: Signed in through {provider}
+    mode_token: OAuth token saved in this profile
+    readiness_disabled: Disabled
+    readiness_missing: No key
+    readiness_not_verified: Saved, not used yet
+    readiness_ready: Ready
+    readiness_sign_in_required: Needs sign-in
+    readiness_unusable: Can't be used
+    reason_not_configured: It isn't set up yet.
+    reason_record_unreadable: Its saved settings can't be read. Add the key again.
+    reason_sign_in_with_provider_tool: Sign in with {provider}'s own app first.
+    refresh: Refresh
+    refused_base_url_rejected: That base URL can't be used.
+    refused_catalog_unavailable: Cadrumo couldn't read the agent's providers.
+    refused_invalid_key_format: That doesn't look like a key for this provider.
+    refused_not_signed_in: Sign in to change keys.
+    refused_person_act_required: Keys can only be changed by you, here.
+    refused_profile_locked: This profile is locked.
+    refused_revision_conflict: This changed somewhere else. The latest is shown; try
+      again.
+    refused_runtime_unavailable: The background runtime isn't running, so nothing
+      was read or changed. Check the background-services manager, then try again.
+    replace_key: Replace key
+    reset: Reset
+    reset_note: Reset forgets what was set for it, as if it had never been set up.
+    reset_note_development: Reset forgets what was set for it; in this development
+      build, the development environment's key is used again.
+    save: Save
+    saved_unread: Saved, but its status couldn't be read.
+    saving: Saving…
+    sign_in_only: Uses {provider}'s own sign-in. Cadrumo only shows whether it's available.
+    source_environment: Using the development environment's key
+    source_profile: Key saved in this profile
+    through: Through {url}
+    title: AI providers
+  rail:
+    agent: Agent

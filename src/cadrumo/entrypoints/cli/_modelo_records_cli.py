@@ -48,11 +48,11 @@ from ._modelo_rendering import (
     filing_record_lines,
 )
 from .common import emit_envelope, notice_lines
-from .runtime_modelo_filing_record_import import import_modelo_filing_record
-from .runtime_modelo_filing_record_list import read_modelo_filing_record_list
-from .runtime_modelo_filing_record_view import read_modelo_filing_record_view
-from .runtime_modelo_local_observation import clear_modelo_local_observation, record_modelo_local_observation
-from .runtime_modelo_verification_report_read import (
+from .operation_modelo_filing_record_import import import_modelo_filing_record
+from .operation_modelo_filing_record_list import read_modelo_filing_record_list
+from .operation_modelo_filing_record_view import read_modelo_filing_record_view
+from .operation_modelo_local_observation import clear_modelo_local_observation, record_modelo_local_observation
+from .operation_modelo_verification_report_read import (
     read_modelo_verification_report_list,
     read_modelo_verification_report_view,
 )

@@ -5,19 +5,20 @@ tags:
 date: '2026-10-14'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:01f577425bea8529ebe4dadb87d1c5d8ecf9670f1b90de48aab2f5cae62a8c45'
+body_hash: 'sha256:538fe8b8f2704d3e2c4750ba0ca02b3e6c8cf8c36bf03feca43107ae3cf2fdc2'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-profile-access-adr]]"
   - "[[2026-10-07-modelo-runtime-performance-audit]]"
   - "[[2026-10-13-startup-performance-audit]]"
 ---
+
 # `mcp-purpose-authentication` adr: `Renewable authority permits for executing operation stages` | (**status:** `rejected`)
 
 This record proposes an amendment to accepted `2026-09-26-mcp-purpose-authentication-profile-access-adr`. That record's accepted text is unchanged until this proposal is approved.
 
 ## Problem Statement
 
-Every executing stage of a registered operation, such as START or COMMIT, runs inside an authority permit the runtime grants the profile worker. The permit expires at the earlier of the lease's expiry and 30 seconds from its grant (`AUTHORITY_SECTION_MAXIMUM_SECONDS`, `src/cadrumo/application/runtime/worker_authorization.py:33`; `src/cadrumo/adapters/local_runtime/worker_authorization_lease.py:325-332`). A stage that has not released its permit by then is treated as an effect body of unknown state. The runtime contains it by ending the whole worker process (`src/cadrumo/adapters/local_runtime/worker_authorization.py:176-185`). Every other session and operation the worker holds ends with it, and the frontend receives `runtime_connection_closed` with effect unknown.
+Every executing stage of a registered operation, such as START or COMMIT, runs inside an authority permit the runtime grants the profile worker. The permit expires at the earlier of the lease's expiry and 30 seconds from its grant (`AUTHORITY_SECTION_MAXIMUM_SECONDS`, `src/cadrumo_runtime/contracts/worker_authorization.py:33`; `src/cadrumo_runtime/adapters/worker_authorization_lease.py:325-332`). A stage that has not released its permit by then is treated as an effect body of unknown state. The runtime contains it by ending the whole worker process (`src/cadrumo_runtime/adapters/worker_authorization.py:176-185`). Every other session and operation the worker holds ends with it, and the frontend receives `runtime_connection_closed` with effect unknown.
 
 Legitimate stages exceed 30 seconds on a loaded host. Docs-sequence runs on 2026-10-14 lost workers this way: a filing-spine calculation START went silent after 17:01:19 and its channel closed 32.9 s into the exchange, and a modelo-303 COMMIT died between its `deferred_false_begin` and `deferred_false_end` phases. The worker logged nothing, because it was terminated. `2026-10-07-modelo-runtime-performance-audit` records an annual verification body of 21.5 s on an unloaded host. `2026-10-13-startup-performance-audit` forbids widening deadlines to make slow paths pass, so the fixed cap cannot simply grow.
 
@@ -26,7 +27,7 @@ Legitimate stages exceed 30 seconds on a loaded host. Docs-sequence runs on 2026
 - "Every executing stage needs newly admitted authority" and leases are at most five minutes, clipped to parent and grant (`2026-09-26-mcp-purpose-authentication-profile-access-adr`). A stage must keep proving current authority; it must not hold a permit indefinitely.
 - Rule 00: ambiguous effects stay `UNKNOWN` or `SETTLING`; a timeout is not proof that a retry is safe; worker containment stays owned through settlement. Ending a worker mid-commit manufactures exactly that ambiguity.
 - Rule 12: the supervisor guards irreversible effects; revocation, lock and sign-out must still stop new effects promptly.
-- Only process containment proves an effect body in the worker has stopped (`src/cadrumo/adapters/local_runtime/worker_authorization.py:176-185`).
+- Only process containment proves an effect body in the worker has stopped (`src/cadrumo_runtime/adapters/worker_authorization.py:176-185`).
 - A worker that is hung or dead must still be contained within a bounded time.
 
 ## Considered options

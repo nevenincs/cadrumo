@@ -5,8 +5,8 @@ from __future__ import annotations
 import typer
 
 from .common import emit_envelope
-from .runtime_ledger_bienes_inversion import declare_bien_inversion as submit_bien_inversion_declaration
-from .runtime_ledger_bienes_inversion import read_bienes_inversion_register
+from .operation_ledger_bienes_inversion import declare_bien_inversion as submit_bien_inversion_declaration
+from .operation_ledger_bienes_inversion import read_bienes_inversion_register
 
 
 def bienes_inversion_declare(

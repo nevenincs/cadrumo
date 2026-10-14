@@ -10,9 +10,10 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.tests.subprocess_cli import run_subprocess_cli_harness
+
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....tests.os_keychain_hook import require_os_credential_store
-from .subprocess_cli import run_subprocess_cli_harness
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

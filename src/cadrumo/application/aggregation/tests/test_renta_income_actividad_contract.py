@@ -454,7 +454,7 @@ def test_a_revision_without_the_retenciones_binding_surfaces_the_lost_credit() -
     assert "declared_withheld_amount_sum" in advisories[0].message
     assert "300.00" in advisories[0].message, "the advisory must name the amount the taxpayer loses"
     # Attributed like every sibling diagnostic in this resolver's envelope, so
-    # an agent can trace the advisory to the source that raised it.
+    # an automation can trace the advisory to the source that raised it.
     assert advisories[0].resolver_id == "ledger_renta_income_aggregation"
     # The reason must NOT collapse into the row-keyed screen's: an operator has
     # to distinguish "no binding consumes this row" from "this row is consumed

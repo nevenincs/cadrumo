@@ -390,12 +390,12 @@ _SESSION_CLIENT = UUID("5aa00000-0000-4000-8000-0000000000dd")
 @pytest.mark.parametrize(
     ("frontend", "recorded"),
     [
-        (OperationFrontendProjection.MCP, f"agent:mcp.attended.{_SESSION_CLIENT}"),
+        (OperationFrontendProjection.EXTERNAL_CLIENT, f"automation:external-client.attended.{_SESSION_CLIENT}"),
         (OperationFrontendProjection.CLI, "typed by the caller"),
     ],
-    ids=["mcp", "cli"],
+    ids=["external_client", "cli"],
 )
-def test_the_recorded_actor_is_the_session_label_for_an_agent_and_the_typed_one_otherwise(
+def test_the_recorded_actor_is_the_session_label_for_automation_and_the_typed_one_otherwise(
     subject: BulkClassifySubject,
     transactions: tuple[Transaction, Transaction],
     frontend: OperationFrontendProjection,

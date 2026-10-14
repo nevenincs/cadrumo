@@ -43,7 +43,7 @@ from ...tests.cli_runner import invoke_cached_cli
 from .. import _censo_transport
 from .._censo_payloads import CensoFactPayload, CensoPullDivergencePayload, CensoPullResult
 from .._censo_review_cli import confirm_censal_review
-from ..runtime_censal_contracts import CensalRuntimeReviewResult
+from ..operation_censal_contracts import CensalReviewResult
 
 _live_app = cli_app()
 
@@ -390,7 +390,7 @@ def test_apply_routes_through_the_canonical_reviewed_operation() -> None:
     """The CLI apply branch prepares and reviews through its bound runtime."""
     source = inspect.getsource(_censo_transport.censo_pull)
     assert "prepare_censal_review(ctx)" in source
-    assert "review_censal_with_runtime(" in source
+    assert "review_censal_operation(" in source
     assert "bound_profile_client(ctx)" in source
     assert "confirm_censal_review" in source
     assert "apply_cotejo" not in source
@@ -427,7 +427,7 @@ def test_reviewed_apply_outcomes_render_the_registered_projection() -> None:
     )
 
     adopted, unchanged, divergences, source_url = _censo_transport._reviewed_pull_outcomes(
-        reviewed=CensalRuntimeReviewResult(projection=projection, applied=True),
+        reviewed=CensalReviewResult(projection=projection, applied=True),
         effective={
             "contact.postcode": EffectiveValue(value=" 28013 "),
             "contact.fiscal_address_cadastral_reference": EffectiveValue(value=None),

@@ -15,12 +15,14 @@ from textual.await_complete import AwaitComplete
 from textual.pilot import Pilot
 from textual.widgets import Button, Checkbox, Input, Select
 
-from .....adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from .....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from cadrumo_client.contracts.automation_lifecycle import AutomationResumeReceipt
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.profile_access import ProfileStatus
+from cadrumo_client.contracts.session_events import LifecycleNotice
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
 from .....application.operations.registry import OperationFrontendProjection
-from .....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from .....application.runtime.profile_access import RuntimeProfileStatus
-from .....application.runtime.session_events import RuntimeLifecycleNotice
 from .....application.user_profile.access_contracts import (
     AccessScope,
     AuthorityState,
@@ -28,7 +30,6 @@ from .....application.user_profile.access_contracts import (
     EffectiveScopeSummary,
     ProfileAccessStatus,
 )
-from .....application.user_profile.automation_lifecycle_service import AutomationResumeReceipt
 from .....application.user_profile.login_interaction import ProfileLoginChoice
 from .....application.user_profile.login_session import ProfileReceiptRefusedError
 from .....core.async_cleanup import AsyncResourceCleanupError, close_async_resources
@@ -51,27 +52,27 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 async def test_unavailable_login_shows_manager_remedy_without_retrying() -> None:
     attempts = 0
 
-    async def open_client(_profile_id: UUID) -> RuntimeFrontendClient:
+    async def open_client(_profile_id: UUID) -> FrontendClient:
         nonlocal attempts
         attempts += 1
-        raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+        raise RefusalError(RefusalCode.UNAVAILABLE)
 
     owner = _HandoffOwner()
     screen = RuntimeLoginScreen(choices=_choices(), open_client=open_client, accept_handoff=owner.accept)
     with override_settings(cadrumo_output_language="en"):
         async with _Host(screen).run_test(size=(120, 40)) as pilot:
             await pilot.pause()
-            screen._status_refused(RuntimeRefusalCode.UNAVAILABLE.value)
+            screen._status_refused(RefusalCode.UNAVAILABLE.value)
             status = screen.query_one("#runtime-login-status", PinnedStatusBar)
             assert "manager" in status.message and "runtime_unavailable" in status.message
             assert attempts == 0
 
 
-class _Client(RuntimeFrontendClient):
+class _Client(FrontendClient):
     """An explicit UI fault port; native admission has separate acceptance."""
 
     @override
-    def subscribe_lifecycle_notices(self, receive: Callable[[RuntimeLifecycleNotice], None]) -> Callable[[], None]:
+    def subscribe_lifecycle_notices(self, receive: Callable[[LifecycleNotice], None]) -> Callable[[], None]:
         return lambda: None
 
     def __init__(self, profile_id: UUID) -> None:
@@ -95,20 +96,20 @@ class _Client(RuntimeFrontendClient):
         self.close_calls = 0
         self.close_failures_remaining = 0
 
-    def _login_fault(self, proof: bytearray, *, api_key: bool) -> RuntimeProfileStatus:
+    def _login_fault(self, proof: bytearray, *, api_key: bool) -> ProfileStatus:
         self.proof_buffer = proof
         self.proof_before_wipe = bytes(proof)
         self.started.set()
         if not self.release.wait(5):
             raise TimeoutError("test login release was not signalled")
         if self.refuse:
-            raise RuntimeFrontendRefusedError("credential_rejected")
+            raise FrontendRefusedError("credential_rejected")
         return self._status(api_key=api_key)
 
-    def _status(self, *, api_key: bool) -> RuntimeProfileStatus:
+    def _status(self, *, api_key: bool) -> ProfileStatus:
         """Return only the synthetic admitted status for this fault port."""
         self._session_id = uuid4()
-        return RuntimeProfileStatus(
+        return ProfileStatus(
             request_id=uuid4(),
             runtime_boot_id=uuid4(),
             connection_id=uuid4(),
@@ -141,20 +142,18 @@ class _Client(RuntimeFrontendClient):
         )
 
     @override
-    def login_password(
-        self, secret: bytearray, *, timeout: float = 20, persist_receipt: bool = False
-    ) -> RuntimeProfileStatus:
+    def login_password(self, secret: bytearray, *, timeout: float = 20, persist_receipt: bool = False) -> ProfileStatus:
         self.persistence_requests.append(persist_receipt)
         self.password_calls += 1
         return self._login_fault(secret, api_key=False)
 
     @override
-    def login_api_key(self, secret: bytearray, *, timeout: float = 20) -> RuntimeProfileStatus:
+    def login_api_key(self, secret: bytearray, *, timeout: float = 20) -> ProfileStatus:
         self.api_calls += 1
         return self._login_fault(secret, api_key=True)
 
     @override
-    def resume_receipt(self, *, timeout: float = 20) -> RuntimeProfileStatus:
+    def resume_receipt(self, *, timeout: float = 20) -> ProfileStatus:
         """Model existing protected-receipt availability without an input secret."""
         self.receipt_calls += 1
         self.receipt_thread = get_ident()
@@ -166,7 +165,7 @@ class _Client(RuntimeFrontendClient):
         return self._status(api_key=False)
 
     @override
-    def status(self, *, timeout: float = 5) -> RuntimeProfileStatus:
+    def status(self, *, timeout: float = 5) -> ProfileStatus:
         """Inspect a synthetically preadmitted stored-reference connection."""
         self.status_calls += 1
         return self._status(api_key=True)
@@ -228,7 +227,7 @@ class _RecoveryClient(_Client):
         super().close()
 
 
-async def _failed_reference_admission(client: _Client, refusal: RuntimeFrontendRefusedError) -> RuntimeFrontendClient:
+async def _failed_reference_admission(client: _Client, refusal: FrontendRefusedError) -> FrontendClient:
     try:
         raise refusal
     except BaseException as error:
@@ -321,7 +320,7 @@ async def test_password_default_transfers_only_exact_selected_verified_client() 
     client = _Client(selected)
     opened: list[UUID] = []
 
-    async def open_client(profile_id: UUID) -> RuntimeFrontendClient:
+    async def open_client(profile_id: UUID) -> FrontendClient:
         opened.append(profile_id)
         return client
 
@@ -375,7 +374,7 @@ async def test_api_key_is_explicit_and_refusal_never_falls_back_to_password() ->
     second = _Client(profile_id)
     candidates = iter((first, second))
 
-    async def open_client(selected: UUID) -> RuntimeFrontendClient:
+    async def open_client(selected: UUID) -> FrontendClient:
         assert selected == profile_id
         return next(candidates)
 
@@ -413,12 +412,12 @@ async def test_stored_api_reference_uses_only_its_separate_opener_and_restricted
     client = _Client(selected)
     opened: list[tuple[UUID, UUID]] = []
 
-    async def open_client(_selected: UUID) -> RuntimeFrontendClient:
+    async def open_client(_selected: UUID) -> FrontendClient:
         raise AssertionError("stored-reference mode must not open the unadmitted proof path")
 
     async def open_reference(
-        profile_id: UUID, credential_reference: UUID, _on_connected: Callable[[RuntimeFrontendClient], None]
-    ) -> RuntimeFrontendClient:
+        profile_id: UUID, credential_reference: UUID, _on_connected: Callable[[FrontendClient], None]
+    ) -> FrontendClient:
         opened.append((profile_id, credential_reference))
         return client
 
@@ -464,14 +463,14 @@ async def test_stored_reference_refusal_does_not_open_other_proof_method() -> No
     selected = UUID(choices[0].profile_id)
     attempted: list[UUID] = []
 
-    async def open_client(_selected: UUID) -> RuntimeFrontendClient:
+    async def open_client(_selected: UUID) -> FrontendClient:
         raise AssertionError("stored-reference refusal must not fall back")
 
     async def open_reference(
-        profile_id: UUID, _reference: UUID, _on_connected: Callable[[RuntimeFrontendClient], None]
-    ) -> RuntimeFrontendClient:
+        profile_id: UUID, _reference: UUID, _on_connected: Callable[[FrontendClient], None]
+    ) -> FrontendClient:
         attempted.append(profile_id)
-        raise RuntimeFrontendRefusedError("credential_rejected")
+        raise FrontendRefusedError("credential_rejected")
 
     owner = _HandoffOwner()
     screen = RuntimeLoginScreen(
@@ -499,12 +498,12 @@ async def test_unmount_during_stored_reference_open_closes_after_open_settles() 
     client = _Client(UUID(choices[0].profile_id))
     started, release = asyncio.Event(), asyncio.Event()
 
-    async def open_client(_selected: UUID) -> RuntimeFrontendClient:
+    async def open_client(_selected: UUID) -> FrontendClient:
         raise AssertionError("stored-reference opening must not use the password path")
 
     async def open_reference(
-        _selected: UUID, _reference: UUID, _on_connected: Callable[[RuntimeFrontendClient], None]
-    ) -> RuntimeFrontendClient:
+        _selected: UUID, _reference: UUID, _on_connected: Callable[[FrontendClient], None]
+    ) -> FrontendClient:
         started.set()
         await release.wait()
         return client
@@ -538,7 +537,7 @@ async def test_explicit_receipt_resume_uses_no_supplied_proof_and_transfers_exac
     profile_id = UUID(choices[0].profile_id)
     client = _Client(profile_id)
 
-    async def open_client(selected: UUID) -> RuntimeFrontendClient:
+    async def open_client(selected: UUID) -> FrontendClient:
         assert selected == profile_id
         return client
 
@@ -585,7 +584,7 @@ async def test_receipt_refusal_keeps_manual_password_available(
     second = _Client(profile_id)
     candidates = iter((first, second))
 
-    async def open_client(selected: UUID) -> RuntimeFrontendClient:
+    async def open_client(selected: UUID) -> FrontendClient:
         assert selected == profile_id
         return next(candidates)
 
@@ -624,7 +623,7 @@ async def test_unmount_during_blocked_receipt_resume_owns_call_until_close() -> 
     client = _Client(UUID(choices[0].profile_id))
     client.release.clear()
 
-    async def open_client(_profile_id: UUID) -> RuntimeFrontendClient:
+    async def open_client(_profile_id: UUID) -> FrontendClient:
         return client
 
     owner = _HandoffOwner()
@@ -652,7 +651,7 @@ async def test_unmount_during_blocking_login_closes_only_after_call_settles() ->
     client = _Client(UUID(choices[0].profile_id))
     client.release.clear()
 
-    async def open_client(_profile_id: UUID) -> RuntimeFrontendClient:
+    async def open_client(_profile_id: UUID) -> FrontendClient:
         return client
 
     owner = _HandoffOwner()
@@ -682,7 +681,7 @@ async def test_unmount_during_open_closes_late_acquired_client_without_proof() -
     opening = asyncio.Event()
     release = asyncio.Event()
 
-    async def open_client(_profile_id: UUID) -> RuntimeFrontendClient:
+    async def open_client(_profile_id: UUID) -> FrontendClient:
         opening.set()
         await release.wait()
         return client
@@ -710,7 +709,7 @@ async def test_wrong_profile_opener_is_closed_before_any_proof_delivery() -> Non
     choices = _choices()
     foreign = _Client(uuid4())
 
-    async def open_client(_profile_id: UUID) -> RuntimeFrontendClient:
+    async def open_client(_profile_id: UUID) -> FrontendClient:
         return foreign
 
     owner = _HandoffOwner()
@@ -734,7 +733,7 @@ async def test_accepted_handoff_survives_failed_screen_dismissal() -> None:
     choices = _choices()
     client = _Client(UUID(choices[0].profile_id))
 
-    async def open_client(_profile_id: UUID) -> RuntimeFrontendClient:
+    async def open_client(_profile_id: UUID) -> FrontendClient:
         return client
 
     owner = _HandoffOwner()
@@ -758,7 +757,7 @@ async def test_real_screen_stack_without_accepting_owner_closes_client() -> None
     choices = _choices()
     client = _Client(UUID(choices[0].profile_id))
 
-    async def open_client(_profile_id: UUID) -> RuntimeFrontendClient:
+    async def open_client(_profile_id: UUID) -> FrontendClient:
         return client
 
     owner = _HandoffOwner(allow=False)
@@ -783,15 +782,15 @@ async def test_reference_refusal_retains_failed_owner_without_closing_later_hand
     failed = _Client(profile_id)
     failed.close_failures_remaining = 1
     admitted = _Client(profile_id)
-    refusal = RuntimeFrontendRefusedError("credential_rejected")
+    refusal = FrontendRefusedError("credential_rejected")
     attempts = 0
 
-    async def open_client(_profile_id: UUID) -> RuntimeFrontendClient:
+    async def open_client(_profile_id: UUID) -> FrontendClient:
         raise AssertionError("reference admission cannot fall back")
 
     async def open_reference(
-        _profile_id: UUID, _reference: UUID, _on_connected: Callable[[RuntimeFrontendClient], None]
-    ) -> RuntimeFrontendClient:
+        _profile_id: UUID, _reference: UUID, _on_connected: Callable[[FrontendClient], None]
+    ) -> FrontendClient:
         nonlocal attempts
         attempts += 1
         if attempts == 1:
@@ -837,15 +836,15 @@ async def test_repeated_cancellation_of_failed_reference_open_preserves_cleanup_
     profile_id = UUID(choices[0].profile_id)
     failed = _Client(profile_id)
     failed.close_failures_remaining = 1
-    refusal = RuntimeFrontendRefusedError("credential_rejected")
+    refusal = FrontendRefusedError("credential_rejected")
     started, release = asyncio.Event(), asyncio.Event()
 
-    async def open_client(_profile_id: UUID) -> RuntimeFrontendClient:
+    async def open_client(_profile_id: UUID) -> FrontendClient:
         raise AssertionError("reference admission cannot fall back")
 
     async def open_reference(
-        _profile_id: UUID, _reference: UUID, _on_connected: Callable[[RuntimeFrontendClient], None]
-    ) -> RuntimeFrontendClient:
+        _profile_id: UUID, _reference: UUID, _on_connected: Callable[[FrontendClient], None]
+    ) -> FrontendClient:
         started.set()
         await release.wait()
         return await _failed_reference_admission(failed, refusal)
@@ -883,15 +882,15 @@ async def test_unmount_during_failed_reference_open_drains_then_retries_cleanup(
     profile_id = UUID(choices[0].profile_id)
     failed = _Client(profile_id)
     failed.close_failures_remaining = 1
-    refusal = RuntimeFrontendRefusedError("credential_rejected")
+    refusal = FrontendRefusedError("credential_rejected")
     started, release = asyncio.Event(), asyncio.Event()
 
-    async def open_client(_profile_id: UUID) -> RuntimeFrontendClient:
+    async def open_client(_profile_id: UUID) -> FrontendClient:
         raise AssertionError("reference admission cannot fall back")
 
     async def open_reference(
-        _profile_id: UUID, _reference: UUID, _on_connected: Callable[[RuntimeFrontendClient], None]
-    ) -> RuntimeFrontendClient:
+        _profile_id: UUID, _reference: UUID, _on_connected: Callable[[FrontendClient], None]
+    ) -> FrontendClient:
         started.set()
         await release.wait()
         return await _failed_reference_admission(failed, refusal)
@@ -923,11 +922,11 @@ async def test_unmount_during_failed_reference_open_drains_then_retries_cleanup(
 
 @pytest.mark.asyncio
 async def test_returned_reference_status_refusal_keeps_primary_and_retries_failed_close() -> None:
-    refusal = RuntimeFrontendRefusedError("credential_rejected")
+    refusal = FrontendRefusedError("credential_rejected")
 
     class RefusingStatusClient(_Client):
         @override
-        def status(self, *, timeout: float = 5) -> RuntimeProfileStatus:
+        def status(self, *, timeout: float = 5) -> ProfileStatus:
             self.status_calls += 1
             raise refusal
 
@@ -935,12 +934,12 @@ async def test_returned_reference_status_refusal_keeps_primary_and_retries_faile
     client = RefusingStatusClient(UUID(choices[0].profile_id))
     client.close_failures_remaining = 1
 
-    async def open_client(_profile_id: UUID) -> RuntimeFrontendClient:
+    async def open_client(_profile_id: UUID) -> FrontendClient:
         raise AssertionError("reference admission cannot fall back")
 
     async def open_reference(
-        _profile_id: UUID, _reference: UUID, _on_connected: Callable[[RuntimeFrontendClient], None]
-    ) -> RuntimeFrontendClient:
+        _profile_id: UUID, _reference: UUID, _on_connected: Callable[[FrontendClient], None]
+    ) -> FrontendClient:
         return client
 
     owner = _HandoffOwner()
@@ -971,7 +970,7 @@ async def test_denied_handoff_failed_close_remains_owned_until_unmount_retry() -
     client = _Client(UUID(choices[0].profile_id))
     client.close_failures_remaining = 1
 
-    async def open_client(_profile_id: UUID) -> RuntimeFrontendClient:
+    async def open_client(_profile_id: UUID) -> FrontendClient:
         return client
 
     owner = _HandoffOwner(allow=False)
@@ -998,7 +997,7 @@ async def test_cancelled_returned_candidate_failed_close_preserves_cancellation_
     client.close_failures_remaining = 1
     client.release.clear()
 
-    async def open_client(_profile_id: UUID) -> RuntimeFrontendClient:
+    async def open_client(_profile_id: UUID) -> FrontendClient:
         return client
 
     owner = _HandoffOwner()
@@ -1033,7 +1032,7 @@ async def test_cold_profile_resume_stays_unadmitted_and_next_login_uses_fresh_cl
     selected = frozenset({uuid4(), uuid4()}) if select_grants else frozenset[UUID]()
     opened: list[UUID] = []
 
-    async def open_client(selected_profile: UUID) -> RuntimeFrontendClient:
+    async def open_client(selected_profile: UUID) -> FrontendClient:
         opened.append(selected_profile)
         return recovery if len(opened) == 1 else login
 
@@ -1077,7 +1076,7 @@ async def test_invalid_resume_grants_clear_proof_before_any_native_connection(se
     choices = _choices()
     opened = 0
 
-    async def open_client(_profile_id: UUID) -> RuntimeFrontendClient:
+    async def open_client(_profile_id: UUID) -> FrontendClient:
         nonlocal opened
         opened += 1
         raise AssertionError("invalid consent must not open native recovery")
@@ -1108,11 +1107,11 @@ async def test_invalid_resume_grants_clear_proof_before_any_native_connection(se
 async def test_resume_typed_refusal_preserves_failed_close_for_unmount_retry(code: str) -> None:
     choices = _choices()
     recovery = _RecoveryClient(UUID(choices[0].profile_id))
-    refusal = RuntimeFrontendRefusedError(code)
+    refusal = FrontendRefusedError(code)
     recovery.recovery_failure = refusal
     recovery.close_failures_remaining = 1
 
-    async def open_client(_profile_id: UUID) -> RuntimeFrontendClient:
+    async def open_client(_profile_id: UUID) -> FrontendClient:
         return recovery
 
     owner = _HandoffOwner()
@@ -1140,10 +1139,10 @@ async def test_resume_typed_refusal_preserves_failed_close_for_unmount_retry(cod
 async def test_resume_timeout_fences_mutation_replay_while_separate_login_remains_available() -> None:
     choices = _choices()
     recovery = _RecoveryClient(UUID(choices[0].profile_id))
-    recovery.recovery_failure = RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+    recovery.recovery_failure = RefusalError(RefusalCode.DEADLINE_EXCEEDED)
     opened = 0
 
-    async def open_client(_profile_id: UUID) -> RuntimeFrontendClient:
+    async def open_client(_profile_id: UUID) -> FrontendClient:
         nonlocal opened
         opened += 1
         return recovery
@@ -1172,7 +1171,7 @@ async def test_successful_resume_failed_close_keeps_outcome_and_retries_only_cle
     recovery = _RecoveryClient(UUID(choices[0].profile_id))
     recovery.close_failures_remaining = 1
 
-    async def open_client(_profile_id: UUID) -> RuntimeFrontendClient:
+    async def open_client(_profile_id: UUID) -> FrontendClient:
         return recovery
 
     owner = _HandoffOwner()
@@ -1194,12 +1193,12 @@ async def test_successful_resume_failed_close_keeps_outcome_and_retries_only_cle
 async def test_cancelled_resume_keeps_body_refusal_and_failed_close_until_unmount_retry() -> None:
     choices = _choices()
     recovery = _RecoveryClient(UUID(choices[0].profile_id))
-    refusal = RuntimeFrontendRefusedError("credential_rejected")
+    refusal = FrontendRefusedError("credential_rejected")
     recovery.recovery_failure = refusal
     recovery.close_failures_remaining = 1
     recovery.release.clear()
 
-    async def open_client(_profile_id: UUID) -> RuntimeFrontendClient:
+    async def open_client(_profile_id: UUID) -> FrontendClient:
         return recovery
 
     owner = _HandoffOwner()
@@ -1229,7 +1228,7 @@ async def test_unmount_during_resume_drains_native_call_before_failed_close_retr
     recovery.close_failures_remaining = 1
     recovery.release.clear()
 
-    async def open_client(_profile_id: UUID) -> RuntimeFrontendClient:
+    async def open_client(_profile_id: UUID) -> FrontendClient:
         return recovery
 
     owner = _HandoffOwner()
@@ -1256,7 +1255,7 @@ async def test_password_persistence_is_explicit_and_frozen_at_submission(persist
     choices = _choices()
     client = _Client(UUID(choices[0].profile_id))
 
-    async def open_client(profile_id: UUID) -> RuntimeFrontendClient:
+    async def open_client(profile_id: UUID) -> FrontendClient:
         assert profile_id == client.profile_id
         return client
 
@@ -1284,7 +1283,7 @@ async def test_persistence_choice_is_cleared_on_profile_and_proof_changes() -> N
     choices = _choices()
     client = _Client(UUID(choices[1].profile_id))
 
-    async def open_client(profile_id: UUID) -> RuntimeFrontendClient:
+    async def open_client(profile_id: UUID) -> FrontendClient:
         assert profile_id == client.profile_id
         return client
 

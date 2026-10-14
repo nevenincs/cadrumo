@@ -50,7 +50,7 @@ class ReviewQueueRow(BaseModel):
     since: UtcInstant
     """The originating review item's instant, carried under the same contract.
 
-    Every :class:`~cadrumo.application.review.ReviewItem` validates ``since``
+    Every :obj:`~cadrumo.application.review.models.ReviewItem` validates ``since``
     as UTC-aware, and this projection is the only thing between that record
     and the wire. Declared as a bare ``datetime`` it re-admitted the naive and
     non-UTC values the canonical queue refuses, and cross-source sorting is
@@ -61,7 +61,7 @@ class ReviewQueueRow(BaseModel):
     """Legal references (BOE permalinks or canonical IDs) justifying the finding.
 
     Populated for ``modelo_finding`` items from the underlying
-    :attr:`~cadrumo.domain.filing.ModeloValidationFinding.references_rules`.
+    :attr:`~cadrumo.domain.filing.schema.ModeloValidationFinding.references_rules`.
     Empty for transaction / invoice items where the obligation is not
     directly grounded in a registry legal reference.
     """

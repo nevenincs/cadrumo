@@ -1293,7 +1293,7 @@ cli:
             local observation store before exporting (annual roll-ups, prior-quarter
             carry-forward etc.)
           root_folder_required: No Drive folder has been created for this profile;
-            run `aeat config google login` first
+            run `cadrumo-runtime config google login` first
           snapshot_failure: Cannot build the snapshot of the modelo definitions for
             modelo {modelo} ({period} {year}).
         push_help: Export the calculation of a modelo and period, as set in the modelo
@@ -1816,8 +1816,8 @@ cli:
         clear_help: Retire the apoderado configuration
         configure:
           no_console_hint: 'Interactive apoderado configuration needs a console. Configure
-            non-interactively with: aeat config auth apoderado configure --represented-nif
-            NIF --scope SCOPE.'
+            non-interactively with: cadrumo-runtime config auth apoderado configure
+            --represented-nif NIF --scope SCOPE.'
           represented_nif_help: NIF of the represented party
           scope_help: Scope tokens (can be repeated)
           scope_required: 'No scope provided. Pass --scope with one or more of: %{codes}.'
@@ -1902,7 +1902,7 @@ cli:
       status_summary_ready: Authentication is configured and a live session is available.
       status_summary_unconfigured: Authentication is not configured yet.
       test_help: Check local authentication readiness
-      unknown_provider: 'Unknown authentication provider: %{provider}. Run ''aeat
+      unknown_provider: 'Unknown authentication provider: %{provider}. Run ''cadrumo-runtime
         config auth --help'' for valid ids.'
     check:
       available: available
@@ -2053,7 +2053,7 @@ cli:
           but this command was run non-interactively: {detail}'
         profile_unbound: No active profile. Run aeat config login NAME or pass --profile.
         scope_insufficient: The access granted for Google is missing required permissions.
-          Run `aeat config google login` and accept every permission.
+          Run `cadrumo-runtime config google login` and accept every permission.
         storage: 'Could not reach Google Drive storage: {detail}'
         unsecured_mode: Google access is blocked while the secret store runs in unsecured
           mode for a profile with a real NIF.
@@ -2070,6 +2070,7 @@ cli:
       probe_help: Probe the profile's Google Drive folder for read/write access
       probe_read_only_help: Probe Google Drive in read-only mode (no writes attempted)
       status_help: Show the current Google OAuth session state for the active profile
+    help: Manage sign-in, profile access and local authentication settings.
     list:
       help: List every registered profile and mark the active one
     login:
@@ -2275,8 +2276,8 @@ cli:
       create_guidance_unavailable: The profile was created successfully, but the next-step
         notices could not be prepared. Check 'config profile status' to see what remains.
       create_help: Create a profile protected by a passphrase. At a terminal it then
-        offers an optional recovery code; skip it, or add it later with 'aeat config
-        profile recovery enable'.
+        offers an optional recovery code; skip it, or add it later with 'cadrumo-runtime
+        config profile recovery enable'.
       create_login_required: Profile '{profile}' was created, but you do not have
         a session open on it yet. Sign in with the command 'config login {profile}'
         to unlock its data before continuing.

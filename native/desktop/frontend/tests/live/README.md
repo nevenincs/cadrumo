@@ -27,9 +27,9 @@ The lane:
 - creates a fresh, marked storage root under `build/acceptance`;
 - creates a synthetic profile through the package's `aeat` command line;
 - signs the profile in with the password on standard input;
-- stores your provider key into that profile with
-  `aeat config provider set --secrets-stdin`;
 - starts the desktop in a kill-on-close Job;
+- stores your provider key through the desktop's authenticated service
+  administration channel, using a separate bounded secret frame;
 - runs this project;
 - signs out and closes the window;
 - fails if any process it started is still running;

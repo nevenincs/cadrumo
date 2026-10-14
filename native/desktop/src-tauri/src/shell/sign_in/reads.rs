@@ -25,7 +25,11 @@ pub(super) struct Mutation<'a>(&'a Reads);
 
 impl Reads {
     pub(super) fn mutating(&self) -> bool {
-        self.active.lock().unwrap_or_else(|e| e.into_inner()).mutations != 0
+        self.active
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .mutations
+            != 0
     }
 
     pub(super) fn mutation(&self) -> Mutation<'_> {

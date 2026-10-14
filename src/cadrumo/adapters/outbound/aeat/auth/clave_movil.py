@@ -279,7 +279,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
             storage_state_path = self._storage_state_path()
             if not session_store.exists(storage_state_path):
                 raise AeatLoginAssertionError(
-                    "no persisted Cl@ve Móvil session; run `aeat config auth status` first",
+                    "no persisted Cl@ve Móvil session; run `cadrumo-runtime config auth status` first",
                     translated_message="adapters.auth.clave_movil.errors.no_persisted_session",
                 )
 
@@ -562,7 +562,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         if not raw:
             raise ClaveMovilConfigurationError(
                 f"{_CLAVE_MOVIL_DNI_NIE_ENV} is not set; set it to your DNI or NIE "
-                "before running `aeat config auth configure --provider clave_movil`.",
+                "before running `cadrumo-runtime config auth configure --provider clave_movil`.",
                 translated_message="adapters.auth.clave_movil.errors.dni_nie_not_set",
             )
         _classify_identity(raw)
@@ -775,7 +775,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         persisted = session_store.load(storage_state_path)
         if persisted is None:
             raise AeatLoginAssertionError(
-                "no persisted Cl@ve Móvil session; run `aeat config auth status` first",
+                "no persisted Cl@ve Móvil session; run `cadrumo-runtime config auth status` first",
                 translated_message="adapters.auth.clave_movil.errors.no_persisted_session",
             )
         return persisted

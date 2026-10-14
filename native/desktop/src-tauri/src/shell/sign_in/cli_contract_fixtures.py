@@ -10,9 +10,6 @@ import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
-from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from cadrumo.application.runtime.sign_in import SignInPresence, SignInStatus
 from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
 from cadrumo.application.user_profile.login_session import ProfileLoginThrottledError
@@ -24,13 +21,16 @@ from cadrumo.core.errors.error_codes import render_error_json
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.json_contract import EnvelopeStatus, Notice, NoticeSeverity, SchemaEnvelope
 from cadrumo.entrypoints.cli._modelo_rendering import advisory_notice
-from cadrumo.entrypoints.cli.config.custody_payloads import (
+from cadrumo.entrypoints.cli.config.profile_list_payloads import ConfigListResult, ProfilePointerPayload
+from cadrumo_client.commands.custody_payloads import (
     ConfigLoginResult,
     ConfigLogoutResult,
     ConfigSignInStatusResult,
 )
-from cadrumo.entrypoints.cli.config.profile_list_payloads import ConfigListResult, ProfilePointerPayload
-from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.sign_in import SignInPresence, SignInStatus
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
 
 def documents() -> dict[str, object]:
@@ -43,7 +43,7 @@ def documents() -> dict[str, object]:
         cases[name] = json.loads(render_error_json(error, command=f"config.{leaf}", active_profile="Test profile"))
 
     def frontend_failure(name: str, code: str, sign_in: SignInRefusal | None = None) -> None:
-        error = RuntimeFrontendRefusedError(code, sign_in=sign_in)
+        error = FrontendRefusedError(code, sign_in=sign_in)
         # config.custody._login_through_the_prompt forwards this exact context.
         failure(name, "login", CliRefusedBoundaryError(error.reason, context=error.context))
 
@@ -55,8 +55,8 @@ def documents() -> dict[str, object]:
     )
     frontend_failure("authentication-required", AccessDenialCode.AUTHENTICATION_REQUIRED.value)
     failure("direct-throttled", "login", ProfileLoginThrottledError(remaining_seconds=7))
-    failure("runtime-unavailable", "sign-in-status", RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE))
-    failure("runtime-untrusted", "sign-in-status", RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED))
+    failure("runtime-unavailable", "sign-in-status", RefusalError(RefusalCode.UNAVAILABLE))
+    failure("runtime-untrusted", "sign-in-status", RefusalError(RefusalCode.PEER_UNTRUSTED))
     failure("logout-refused", "logout", CliRefusedBoundaryError(context={"reason": "absent"}))
 
     for presence in SignInPresence:
@@ -98,7 +98,7 @@ def documents() -> dict[str, object]:
                 receipt_removed=True,
                 keychain_removed=True,
                 automation_enabled=automation,
-                agent_access_remains=automation,
+                automation_revoked=False,
             ),
         ).model_dump(mode="json")
     other = "22222222-2222-4222-8222-222222222222"

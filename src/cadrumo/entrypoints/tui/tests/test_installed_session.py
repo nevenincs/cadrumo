@@ -9,7 +9,8 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo_client.transport.frontend_client import FrontendClient
+
 from ....adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from ....application.operations.registry import OperationPublicContractSetV1, OperationRegistry
 from ....application.user_profile.automation_custody_port import AutomationSecretStore
@@ -101,10 +102,10 @@ def _session_callbacks(
             profile_id=cast(UUID, options["profile_id"]),
             contracts=cast(OperationPublicContractSetV1, options["contracts"]),
             secrets_store=cast(AutomationSecretStore, options["secrets_store"]),
-            client=cast(RuntimeFrontendClient | None, options.get("client")),
+            client=cast(FrontendClient | None, options.get("client")),
             open_client=cast(RequesterClientOpener | None, options.get("open_client")),
             fresh_credential_client=cast(FreshCredentialClientOpener | None, options.get("fresh_credential_client")),
-            reviewer_client=cast(RuntimeFrontendClient | None, options.get("reviewer_client")),
+            reviewer_client=cast(FrontendClient | None, options.get("reviewer_client")),
         )
         screens.append(screen)
         return screen
@@ -125,9 +126,9 @@ def _session_callbacks(
     class Root:
         def __init__(
             self,
-            bound: RuntimeFrontendClient,
+            bound: FrontendClient,
             *,
-            requester_factory: Callable[[RuntimeFrontendClient], RuntimeAutomationRequesterScreen],
+            requester_factory: Callable[[FrontendClient], RuntimeAutomationRequesterScreen],
             **_options: object,
         ) -> None:
             assert bound is client
@@ -141,9 +142,9 @@ def _session_callbacks(
     class Restricted:
         def __init__(
             self,
-            bound: RuntimeFrontendClient,
+            bound: FrontendClient,
             *,
-            requester_factory: Callable[[RuntimeFrontendClient], RuntimeAutomationRequesterScreen],
+            requester_factory: Callable[[FrontendClient], RuntimeAutomationRequesterScreen],
             **_options: object,
         ) -> None:
             assert bound is client
@@ -174,10 +175,10 @@ class _ObservedRequester(RuntimeAutomationRequesterScreen):
         profile_id: UUID,
         contracts: OperationPublicContractSetV1,
         secrets_store: AutomationSecretStore,
-        client: RuntimeFrontendClient | None = None,
+        client: FrontendClient | None = None,
         open_client: RequesterClientOpener | None = None,
         fresh_credential_client: FreshCredentialClientOpener | None = None,
-        reviewer_client: RuntimeFrontendClient | None = None,
+        reviewer_client: FrontendClient | None = None,
         journey_timeout: float = 300,
     ) -> None:
         super().__init__(

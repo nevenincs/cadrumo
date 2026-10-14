@@ -33,13 +33,13 @@ from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
 from ......domain.deadlines.models import IVARegime, TaxpayerProfile
 from ......domain.invoices.tests.catalogue_support import build_invoice_catalogue
-from ......tests.env_scope import ready_clave_settings
-from .....tests.modelo_349_invoice_facts import (
+from ......domain.invoices.tests.modelo_349_invoice_facts import (
     M349_EXPECTED_IMPORTE,
     M349_EXPECTED_OPERADORES,
     M349_INVOICES,
     intra_community_invoice,
 )
+from ......tests.env_scope import ready_clave_settings
 from .....tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
 from .....tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,

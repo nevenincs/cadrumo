@@ -65,7 +65,7 @@ from .google_configuration_result_projection import (
 # The two leaves that only report what this profile stored: the folder record
 # and the sign-in record. Neither contacts the provider, changes the stored
 # session or returns credential material, so they are the person's own data
-# and are served to an agent as well as to a person. They are declared and
+# and are served to an automation as well as to a person. They are declared and
 # admitted as reads: a session that holds no commit authority can run them.
 GOOGLE_STORED_RECORD_READ_DEFINITION_IDS = frozenset(
     {GOOGLE_FOLDER_VIEW_OPERATION_DEFINITION_ID, GOOGLE_STATUS_OPERATION_DEFINITION_ID}

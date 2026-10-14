@@ -1402,7 +1402,7 @@ cli:
             desde el almacén local de observaciones antes de exportar (resúmenes anuales,
             arrastre de trimestres anteriores, etc.)
           root_folder_required: No se ha creado ninguna carpeta de Drive para este
-            perfil; ejecuta `aeat config google login` primero
+            perfil; ejecuta `cadrumo-runtime config google login` primero
           snapshot_failure: No se puede construir la instantánea de las definiciones
             de los modelos para el modelo {modelo} ({period} {year}).
         push_help: Exporta el cálculo de un modelo y periodo, tal como lo fijan las
@@ -1947,8 +1947,8 @@ cli:
         clear_help: Retirar la configuración de apoderado
         configure:
           no_console_hint: 'La configuración interactiva del apoderamiento requiere
-            una consola. Configúralo de forma no interactiva con: aeat config auth
-            apoderado configure --represented-nif NIF --scope SCOPE.'
+            una consola. Configúralo de forma no interactiva con: cadrumo-runtime
+            config auth apoderado configure --represented-nif NIF --scope SCOPE.'
           represented_nif_help: NIF de la parte representada
           scope_help: Tokens de ámbito (se pueden repetir)
           scope_required: 'No se ha indicado ningún ámbito. Añade --scope con uno
@@ -2043,7 +2043,7 @@ cli:
       status_summary_unconfigured: La autenticación aún no está configurada.
       test_help: Comprobar la preparación de autenticación local
       unknown_provider: 'Proveedor de autenticación desconocido: %{provider}. Ejecuta
-        ''aeat config auth --help'' para ver los identificadores válidos.'
+        ''cadrumo-runtime config auth --help'' para ver los identificadores válidos.'
     check:
       available: disponible
       capability_label: Capacidad
@@ -2213,7 +2213,7 @@ cli:
         profile_unbound: No hay ningún perfil activo. Ejecuta aeat config login NAME
           o indica --profile.
         scope_insufficient: El acceso concedido a Google no incluye los permisos necesarios.
-          Ejecuta `aeat config google login` y acepta todos los permisos.
+          Ejecuta `cadrumo-runtime config google login` y acepta todos los permisos.
         storage: 'No se pudo acceder al almacenamiento de Google Drive: {detail}'
         unsecured_mode: El acceso a Google está bloqueado mientras el almacén de secretos
           funciona en modo no seguro para un perfil con un NIF real.
@@ -2232,6 +2232,8 @@ cli:
       probe_read_only_help: Comprueba Google Drive en modo solo lectura
       status_help: Mostrar el estado actual de la sesión OAuth de Google para el perfil
         activo
+    help: Gestiona el inicio de sesión, el acceso al perfil y la configuración de
+      autenticación local.
     list:
       help: Listar todos los perfiles registrados y marcar el activo
     login:
@@ -2461,7 +2463,7 @@ cli:
         profile status' para ver qué falta.
       create_help: Crea un perfil protegido por una contraseña. En un terminal ofrece
         después un código de recuperación opcional; puedes omitirlo o añadirlo más
-        tarde con 'aeat config profile recovery enable'.
+        tarde con 'cadrumo-runtime config profile recovery enable'.
       create_login_required: El perfil '{profile}' se ha creado, pero todavía no tienes
         una sesión abierta en él. Inicia sesión con el comando 'config login {profile}'
         para desbloquear sus datos antes de continuar.
