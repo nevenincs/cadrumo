@@ -19,6 +19,21 @@ const unknownStatus: SignInStatus = {
   refusal: null,
 };
 
+function sameStatus(left: SignInStatus | null, right: SignInStatus): boolean {
+  return (
+    left !== null &&
+    left.supported === right.supported &&
+    left.state === right.state &&
+    left.active_profile === right.active_profile &&
+    left.runtimeAvailable === right.runtimeAvailable &&
+    left.refusal?.code === right.refusal?.code &&
+    left.refusal?.retryAfterSeconds === right.refusal?.retryAfterSeconds &&
+    left.refusal?.operation === right.refusal?.operation &&
+    left.refusal?.ioKind === right.refusal?.ioKind &&
+    left.refusal?.osCode === right.refusal?.osCode
+  );
+}
+
 function refusalFrom(error: unknown): SignInRefusal {
   const seconds = (error as Partial<SignInRefusal> | null)?.retryAfterSeconds;
   const failure = error as Partial<HostFailure> | null;
@@ -438,7 +453,6 @@ export function useSignIn(host: Host) {
           return;
         }
         if (submitting.current) return;
-        invalidate();
         const next =
           signal.kind === "sign-in-state"
             ? signal.status
@@ -447,6 +461,16 @@ export function useSignIn(host: Host) {
                 runtimeAvailable: false,
                 refusal: refusalFrom(signal.error),
               };
+        // The observer may deliver the same snapshot as the explicit read
+        // while its profile list is still pending. Keep that read and the
+        // person's selection; a changed snapshot still fences both.
+        if (
+          signal.kind === "sign-in-state" &&
+          !statusReadFailed.current &&
+          sameStatus(latestStatus.current, next)
+        )
+          return;
+        invalidate();
         statusReadFailed.current = signal.kind === "sign-in-observation-failed";
         latestStatus.current = next;
         setStatus(next);

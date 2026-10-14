@@ -292,7 +292,6 @@ def activate_profile_session(
     The authentication gate has already raised any refusal the arguments alone
     settle, before this or any runtime route.
     """
-    from ...adapters.persistence.storage.master_key.active_session import active_bucket_session_serves
     from ...application.storage_write_policy import inspect_storage_write_policy
     from ...core.bucket_pointer import resolve_active_bucket_id
 
@@ -313,6 +312,8 @@ def activate_profile_session(
         return
     if _posture_skips_session(posture):
         return
+    from ...adapters.persistence.storage.master_key.active_session import active_bucket_session_serves
+
     if _activate_existing_profile_session(
         ctx,
         bucket_id=bucket_id,

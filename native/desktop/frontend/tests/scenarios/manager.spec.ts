@@ -233,6 +233,25 @@ async function observedClock(page: Page) {
   await page.clock.pauseAt(time);
 }
 
+test("identical observations preserve pending and completed profile reads", async ({
+  page,
+}) => {
+  await observedClock(page);
+  await page.goto(
+    "/scenarios.html?scenario=account-duplicate-observation&latency=1000",
+  );
+  await expect.poll(() => calls(page, "profiles")).toBe(1);
+  await page.clock.runFor(200);
+  expect(await calls(page, "profiles")).toBe(1);
+  await page.clock.runFor(2000);
+  expect(await calls(page, "profiles")).toBe(1);
+  expect(await calls(page, "signInStatus")).toBe(1);
+  await expect(page.locator("form.create-profile")).toBeVisible();
+  // A refusal change is significant even when presence/profile are equal.
+  await page.clock.runFor(400);
+  expect(await calls(page, "profiles")).toBe(2);
+});
+
 test("supervisor loss gates signed-in views without focus and ready waits for fresh authentication", async ({
   page,
 }) => {

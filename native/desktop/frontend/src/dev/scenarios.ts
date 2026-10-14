@@ -144,6 +144,44 @@ const base = {
 export const SCENARIOS: readonly Scenario[] = [
   {
     ...base,
+    id: "account-duplicate-observation",
+    title: "Duplicate account observation",
+    summary:
+      "Matching observations preserve a pending profile list; changed refusals still refresh it.",
+    signIn: {
+      status: signedOut,
+      profile: null,
+      submit: { kind: "accept" },
+    },
+    profiles: "none",
+    supervision: {
+      initial: { state: "ready", failure: null },
+      events: [
+        ...[100, 1500].map((afterMs, index) => ({
+          afterMs,
+          signIn: {
+            kind: "sign-in-state" as const,
+            revision: index + 1,
+            status: { ...signedOut, active_profile: null },
+          },
+        })),
+        {
+          afterMs: 2500,
+          signIn: {
+            kind: "sign-in-state",
+            revision: 3,
+            status: {
+              ...signedOut,
+              active_profile: null,
+              refusal: { code: "THROTTLED", retryAfterSeconds: 10 },
+            },
+          },
+        },
+      ],
+    },
+  },
+  {
+    ...base,
     id: "manager-observed-recovery",
     title: "Observed supervisor recovery",
     summary:

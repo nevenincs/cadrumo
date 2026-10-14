@@ -10,7 +10,6 @@ from uuid import UUID
 import typer
 from pydantic import SecretStr
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....core.json_contract import Notice, NoticeSeverity
@@ -18,6 +17,7 @@ from ..common import activate_subcommand_output_language as _activate_subcommand
 from ..common import emit_envelope
 
 if TYPE_CHECKING:
+    from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
     from ....application.user_profile.login_session import ProfileLoginOutcome
 
 
@@ -319,9 +319,6 @@ def config_sign_in_status(
 ) -> None:
     """Observe the active profile without borrowing proof or extending sign-in."""
     _activate_subcommand_output_language(ctx, output_language)
-    from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
-
-    from ....application.operations.registry import OperationFrontendProjection
     from ....application.runtime.sign_in import SignInPresence, SignInStatus
     from ....application.user_profile.profile_pointer import observe_active_profile_pointer
     from .custody_payloads import ConfigSignInStatusResult
@@ -329,6 +326,9 @@ def config_sign_in_status(
     captured = observe_active_profile_pointer()
     status = SignInStatus(presence=SignInPresence.ABSENT)
     if captured.bucket_id is not None:
+        from ....adapters.local_runtime.runtime_client import open_installed_runtime_client
+        from ....application.operations.registry import OperationFrontendProjection
+
         client = asyncio.run(
             open_installed_runtime_client(profile_id=UUID(captured.bucket_id), frontend=OperationFrontendProjection.CLI)
         )

@@ -42,6 +42,8 @@ from io import StringIO
 
 sys.path.insert(0, sys.argv[1])
 blocked = {
+    'cadrumo.adapters.local_runtime.runtime_client',
+    'cadrumo.adapters.local_runtime.frontend_client',
     'cadrumo.application.provisioning',
     'cadrumo.application.workflow.profile_health',
     'cadrumo.application.workflow.run_models',
