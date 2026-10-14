@@ -10,7 +10,6 @@ caches or persists a secret.
 
 from __future__ import annotations
 
-import hashlib
 import time
 
 from ...adapters.local_runtime.runtime_frame_io import write_document, write_secret
@@ -32,6 +31,7 @@ from ...application.runtime.profile_worker import (
 from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ...core.config import load_settings
 from ...core.errors.hierarchy import CadrumoError
+from ...core.hashing import sha256_hex
 from ...core.logging import get_logger
 from ...core.storage_environment import storage_mode
 from ...domain.provider_settings.catalog import ProviderConsumer, load_provider_catalog
@@ -106,5 +106,5 @@ def _resolve(
         finally:
             wipe(secret)
     # The generation names which settings each provider resolved from; it never sees a key.
-    generation = hashlib.sha256("\n".join(["cadrumo.agent-credentials.v1", *states]).encode()).hexdigest()
+    generation = sha256_hex("\n".join(["cadrumo.agent-credentials.v1", *states]).encode())
     return tuple(credentials), tuple(unset), generation
