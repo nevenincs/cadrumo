@@ -11,7 +11,7 @@ related:
   - "[[2026-10-07-modelo-runtime-performance-audit]]"
   - "[[2026-10-13-startup-performance-audit]]"
 ---
-# `mcp-purpose-authentication` adr: `Renewable authority permits for executing operation stages` | (**status:** `proposed`)
+# `mcp-purpose-authentication` adr: `Renewable authority permits for executing operation stages` | (**status:** `rejected`)
 
 This record proposes an amendment to accepted `2026-09-26-mcp-purpose-authentication-profile-access-adr`. That record's accepted text is unchanged until this proposal is approved.
 
