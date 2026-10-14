@@ -112,6 +112,8 @@ def native(monkeypatch: pytest.MonkeyPatch) -> _Native:
         ),
     )
     monkeypatch.setattr(windows_process, "_launch_in_job", port.launch)
+    # The synthetic Job lists PIDs with no process objects behind them; only the active count is observed here.
+    monkeypatch.setattr(windows_process, "_retain_job_members", lambda job: ())
     return port
 
 

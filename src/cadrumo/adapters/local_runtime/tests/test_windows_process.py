@@ -137,6 +137,34 @@ async def test_close_terminates_grandchild_even_when_direct_child_exited(tmp_pat
             win32api.CloseHandle(handle)
 
 
+def test_terminate_returns_only_after_every_member_process_object_is_signaled(tmp_path: Path) -> None:
+    """The Job's active count reaches zero before its members are signaled, so it alone cannot end termination."""
+    import win32api
+    import win32event
+
+    scope = WindowsProcessScope()
+    handles: list[int] = []
+    try:
+        for _ in range(4):
+            scope.launch(
+                executable=native_python(),
+                arguments=("-c", "import time; time.sleep(30)"),
+                directory=tmp_path,
+                environment={"SYSTEMROOT": os.environ["SYSTEMROOT"]},
+            )
+        members = scope.active_process_ids()
+        assert len(members) >= 4
+        handles.extend(win32api.OpenProcess(0x100000, False, pid) for pid in members)
+        assert all(win32event.WaitForSingleObject(handle, 0) == win32event.WAIT_TIMEOUT for handle in handles)
+        scope.terminate()
+        # A zero wait: termination returned, so every member has stopped, not merely left the count.
+        assert all(win32event.WaitForSingleObject(handle, 0) == win32event.WAIT_OBJECT_0 for handle in handles)
+    finally:
+        scope.terminate()
+        for handle in handles:
+            win32api.CloseHandle(handle)
+
+
 @pytest.mark.asyncio
 async def test_abrupt_owner_death_closes_job_without_graceful_callbacks(tmp_path: Path) -> None:
     import win32api

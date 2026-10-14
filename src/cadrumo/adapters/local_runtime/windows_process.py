@@ -606,13 +606,105 @@ def _require_launch_environment(arguments: Sequence[str], environment: Mapping[s
 
 
 def _terminate_windows_job(job: int, deadline: float) -> None:
-    """Observe this exact Job empty after native termination within the original budget."""
+    """Observe this exact Job empty and its members' process objects signaled within the original budget.
+
+    The kernel removes an exiting process from its Job's active count before
+    the process object is signaled and its handle table is gone, so an empty
+    count alone does not prove that a member has stopped. Each member present
+    before termination is retained by handle and waited on as well. A process
+    created between that snapshot and termination is ended by the same native
+    termination and counted out, but only the count observes it.
+    """
     import win32job
 
     terminate_job = cast("Callable[[int, int], None]", win32job.TerminateJobObject)
     query_job = cast("Callable[[int, int], object]", win32job.QueryInformationJobObject)
-    terminate_job(job, 1)
-    while cast("dict[str, object]", query_job(job, win32job.JobObjectBasicAccountingInformation))["ActiveProcesses"]:
-        if time.monotonic() >= deadline:
+    try:
+        members = _retain_job_members(job)
+    except BaseException:
+        # The members still end; termination stays unproven and the caller keeps the Job for a retry.
+        terminate_job(job, 1)
+        raise
+    try:
+        terminate_job(job, 1)
+        while cast("dict[str, object]", query_job(job, win32job.JobObjectBasicAccountingInformation))[
+            "ActiveProcesses"
+        ]:
+            if time.monotonic() >= deadline:
+                raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+            time.sleep(min(0.01, max(0, deadline - time.monotonic())))
+        _await_job_members(members, deadline)
+    finally:
+        _release_job_members(members)
+
+
+def _await_job_members(members: tuple[NativeWindowsHandle, ...], deadline: float) -> None:
+    """Wait for each retained member's process object to be signaled before the deadline."""
+    if not members:
+        return
+    import win32event
+
+    for member in members:
+        remaining = max(0.0, deadline - time.monotonic())
+        result = win32event.WaitForSingleObject(int(member), min(0xFFFFFFFE, math.ceil(remaining * 1000)))
+        if result == win32event.WAIT_TIMEOUT:
             raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
-        time.sleep(min(0.01, max(0, deadline - time.monotonic())))
+        if result != win32event.WAIT_OBJECT_0:
+            raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+
+
+def _release_job_members(members: tuple[NativeWindowsHandle, ...]) -> None:
+    """Close every retained member handle; these handles are observation only and own nothing."""
+    failures: list[BaseException] = []
+    for member in members:
+        try:
+            member.Close()
+        except BaseException as error:
+            failures.append(error)
+    if failures:
+        raise failures[0]
+
+
+def _retain_job_members(job: int) -> tuple[NativeWindowsHandle, ...]:
+    """Open a waitable handle on every current member, confirmed in this Job so a reused PID is never waited on."""
+    if sys.platform != "win32":
+        raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+    import pywintypes
+    import win32api
+    import win32job
+
+    query_job = cast("Callable[[int, int], object]", win32job.QueryInformationJobObject)
+    listed: object = query_job(job, win32job.JobObjectBasicProcessIdList)
+    if not isinstance(listed, tuple):
+        raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    observe = kernel.IsProcessInJob
+    observe.argtypes = (wintypes.HANDLE, wintypes.HANDLE, ctypes.POINTER(wintypes.BOOL))
+    observe.restype = wintypes.BOOL
+    retained: list[NativeWindowsHandle] = []
+    try:
+        for pid in cast("tuple[object, ...]", listed):
+            if not isinstance(pid, int) or pid <= 0:
+                raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+            try:
+                # SYNCHRONIZE | PROCESS_QUERY_LIMITED_INFORMATION: wait on it and ask its Job, nothing more.
+                opened = native_windows_call(win32api, "OpenProcess", 0x00100000 | 0x00001000, False, pid)
+            except pywintypes.error as error:
+                if error.winerror == 87:
+                    # ERROR_INVALID_PARAMETER: this member has already exited and its PID is free.
+                    continue
+                raise
+            handle = owned_windows_handle(opened)
+            belongs = wintypes.BOOL()
+            if not observe(int(handle), job, ctypes.byref(belongs)):
+                handle.Close()
+                raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+            if belongs.value:
+                retained.append(handle)
+            else:
+                handle.Close()
+    except BaseException:
+        for handle in retained:
+            handle.Close()
+        raise
+    return tuple(retained)
