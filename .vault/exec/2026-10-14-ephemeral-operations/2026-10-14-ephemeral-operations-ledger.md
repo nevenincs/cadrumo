@@ -5,7 +5,7 @@ tags:
 date: '2026-10-14'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:e220c2fbbced4a9aa89aea3c5a93abc89b8798b50c31b90720715149daba3e69'
+body_hash: 'sha256:bc1d6b2384cf3f349179f176b93491274cef3c3c16b3ce090204881d978c5e9e'
 related:
   - "[[2026-10-14-ephemeral-operations-plan]]"
 ---
@@ -120,6 +120,15 @@ related:
 - `S09` `verify:` `pytest -m '' operations suites plus runtime frontend-client, ephemeral-view, lapse-sweep, provenance tests` -> `pass`
 - `S09` `verify:` `ruff check, ruff format` -> `pass`
 - `S09` `by:` `vaultspec-high-executor`
+- `S10` `M` `src/cadrumo/entrypoints/runtime/tests/test_frontend_client.py`
+- `S10` `M` `src/cadrumo/entrypoints/runtime/tests/test_ephemeral_profile_view.py`
+- `S10` `verify:` `pytest -m '' test_frontend_client.py test_ephemeral_profile_view.py -n 2` -> `pass`
+- `S10` `verify:` `pytest -m '' dev/docs/sequences/tests/test_runner.py::test_sequence_profile_view_uses_fresh_runtime_proof_and_exact_profile -n 2` -> `pass`
+- `S10` `verify:` `just check-operation-contract-manifest` -> `pass`
+- `S10` `verify:` `just check-types` -> `fail`
+- `S10` `verify:` `just check-import-boundaries` -> `fail`
+- `S10` `verify:` `ruff check, ruff format` -> `pass`
+- `S10` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -132,3 +141,6 @@ related:
 - `S09` S09 Lock and human sign-out retire sessions but do not end the profile worker (ProfileWorkerCustody.retire keeps the process pinned), so the worker clears settled ephemeral results when its last session retires
 - `S09` S09 `test_installed_worker_uses_native_guards_for_real_profile_mutation` failed once under -n 4 (worker connection closed at submit) and once under -n 2 (5 s observe deadline); it passes alone, and this Step does not touch the recorded mutation path
 - `S09` S09 `test_durability_router.py` carries only ruff formatting left over from S08
+- `S10` S10 just check-types reports 1 ty diagnostic in `dev/packaging/native/tests/test_environment_conformance.py` from another session; none in this plan's files
+- `S10` S10 just check-import-boundaries kept all 15 contracts with zero hard findings and every module loading, but reported unavailable because other sessions changed the source tree while it ran
+- `S10` S10 The worker-loss test lives in `test_ephemeral_profile_view.py` beside the other worker-level ephemeral tests

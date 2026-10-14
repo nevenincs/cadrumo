@@ -23,6 +23,7 @@ from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.contracts import RuntimeClientHello
+from cadrumo.application.runtime.operation_access import RuntimeOperationSubmit, RuntimeOperationSubmitted
 from cadrumo.application.user_profile.access_contracts import (
     AccessDenialCode,
     Availability,
@@ -30,13 +31,19 @@ from cadrumo.application.user_profile.access_contracts import (
     OsLockState,
     OsLoginContext,
 )
+from cadrumo.application.user_profile.profile_operation_contracts import (
+    PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
+    ProfileFieldMutationOperationRequest,
+)
 from cadrumo.application.user_profile.view_operation import (
     PROFILE_VIEW_OPERATION_DEFINITION_ID,
     ProfileViewOperationRequest,
     ProfileViewPageKind,
 )
+from cadrumo.core.operations import profile_operation_subject
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_location
+from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 
 from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
@@ -95,6 +102,7 @@ def test_verified_frontend_clients_collect_complete_profile_view_streams(tmp_pat
             running = pool.submit(server.serve)
             try:
                 assert server.ready.wait(3)
+                recorded_id: str | None = None
                 for frontend, streams in (
                     (OperationFrontendProjection.CLI, (ProfileViewPageKind.FACTS, ProfileViewPageKind.ISSUES)),
                     (OperationFrontendProjection.TUI, (ProfileViewPageKind.OVERVIEW,)),
@@ -130,11 +138,35 @@ def test_verified_frontend_clients_collect_complete_profile_view_streams(tmp_pat
                             assert all(page.next_cursor == following.cursor for page, following in pairwise(pages))
                         if frontend is OperationFrontendProjection.TUI:
                             assert len(collection.items(ProfileViewPageKind.OVERVIEW)) > 0
+                        else:
+                            # Positive control: a recorded operation admitted in the same run is journaled.
+                            recorded = client.operation(
+                                RuntimeOperationSubmit(
+                                    request_id=uuid4(),
+                                    profile_id=profile_id,
+                                    session_id=client.session_id,
+                                    definition_id=PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
+                                    subject_ref=profile_operation_subject(str(profile_id)),
+                                    payload_json=ProfileFieldMutationOperationRequest(
+                                        profile_id=profile_id,
+                                        expected_revision=collection.record_revision,
+                                        expected_content_digest=collection.content_digest,
+                                        path=PROFILE_OUTPUT_LANGUAGE_PATH,
+                                        value="es",
+                                    ).model_dump_json(),
+                                ),
+                                deadline=time.monotonic() + 30,
+                            )
+                            assert isinstance(recorded, RuntimeOperationSubmitted)
+                            recorded_id = recorded.receipt.operation_id
                         client.lock()
-                # Every page read is ephemeral: none of them left a row in the profile's operation journal.
+                # Every page read is ephemeral: none of them left a row in the profile's operation journal,
+                # while the recorded operation from the same run did.
                 journal = root / storage_location(StorageCategory.OPERATION_JOURNAL).subpath
-                rows = [path for path in journal.glob("*.json")] if journal.is_dir() else []
-                assert not [path for path in rows if PROFILE_VIEW_OPERATION_DEFINITION_ID in path.read_text("utf-8")]
+                rows = {path.name: path.read_text("utf-8") for path in journal.glob("*.json")}
+                assert recorded_id is not None and f"{recorded_id}.json" in rows
+                assert PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID in rows[f"{recorded_id}.json"]
+                assert not [name for name, text in rows.items() if PROFILE_VIEW_OPERATION_DEFINITION_ID in text]
             finally:
                 stop.set()
                 running.result(timeout=15)

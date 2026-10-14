@@ -5,7 +5,7 @@ from __future__ import annotations
 import sys
 import time
 from pathlib import Path
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
 from pydantic import BaseModel
@@ -40,6 +40,8 @@ from cadrumo.application.user_profile.view_operation import (
     ProfileViewPageKind,
 )
 from cadrumo.core.operations import OperationTerminalCondition, profile_operation_subject
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_location
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 
 from .test_profile_worker_operations import BoundaryAuthority
@@ -211,3 +213,31 @@ def test_a_delivered_view_result_is_forgotten_and_an_unread_one_ends_with_the_la
         finally:
             worker.close()
             worker.settle()
+
+
+def test_a_worker_ended_during_an_ephemeral_read_leaves_its_successor_answering_unknown(tmp_path: Path) -> None:
+    with worker_profiles(tmp_path) as profiles:
+        root, ((identity, key), _) = profiles
+        profile_id = identity.binding.profile_id
+        authority = BoundaryAuthority(deny_commit=False)
+        worker = ProfileWorkerProcess(identity, storage_root=root, authorization=authority)
+        try:
+            session = _session(identity)
+            worker.install(session, bytearray(key))
+            reading = worker.submit(session.session_id, _view_request(profile_id), frontend=_FRONTEND).receipt
+            worker.start(session.session_id, reading.operation_id, frontend=_FRONTEND)
+        finally:
+            # Ended without waiting for the read: whatever it reached dies with the process.
+            worker.close()
+            worker.settle()
+        journal = root / storage_location(StorageCategory.OPERATION_JOURNAL).subpath
+        assert not (journal.is_dir() and any(reading.operation_id in path.name for path in journal.iterdir()))
+        successor_identity = changed(identity, worker_id=uuid4(), runtime_boot_id=uuid4())
+        successor = ProfileWorkerProcess(successor_identity, storage_root=root, authorization=authority)
+        try:
+            fresh = _session(successor_identity)
+            successor.install(fresh, bytearray(key))
+            assert _unknown(successor, fresh, reading.operation_id)
+        finally:
+            successor.close()
+            successor.settle()

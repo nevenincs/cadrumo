@@ -8,7 +8,7 @@ related:
   - '[[2026-08-11-tui-architecture-adr]]'
 modified: '2026-10-14'
 body_schema: body-v2
-body_hash: 'sha256:67674dc69b70f8cdb3f7a30c5df271c20dcca69493593db0f7dbe0fb14d928dc'
+body_hash: 'sha256:47bbac9618f3280c1a8b33b302fd71bbbd8e9b2c62709ea90c6aa0dc56a60f56'
 ---
 
 <!-- LINK RULES:
@@ -132,7 +132,7 @@ Decision coverage: `2026-08-11-tui-architecture-adr` D5 governs. No new costly d
 - [x] `S07` - Fix plan-close review finding shared-operand-eviction: count each content-addressed ephemeral operand's owners so evicting one operation never removes an operand another still references, proven by two identical reads and eviction of the older; `src/cadrumo/adapters/persistence/operations/ephemeral_store.py, src/cadrumo/adapters/persistence/operations/tests/test_ephemeral_store.py`.
 - [x] `S08` - Fix plan-close review finding unsettled-ephemeral-tracking: keep ephemeral operations out of the runtime host's lapsed-owner sweep, and add the sweep to the zero journal-lock proof; `src/cadrumo/entrypoints/runtime/operation_host.py, src/cadrumo/entrypoints/runtime/tests`.
 - [x] `S09` - Fix plan-close review finding decrypted-result-retention: release a settled ephemeral operation once its result has been read and after an age bound, and clear the store when the worker's last session locks or signs out if the worker outlives it; `src/cadrumo/adapters/persistence/operations/ephemeral_store.py, src/cadrumo/adapters/persistence/operations/durability_router.py, src/cadrumo/adapters/persistence/operations/tests`.
-- [ ] `S10` - Fix plan-close review lows: give the profile-view journal assertion a positive control from a recorded operation in the same run, and prove a worker ended during an ephemeral read answers unknown_operation through the runtime; `src/cadrumo/entrypoints/runtime/tests/test_frontend_client.py`.
+- [x] `S10` - Fix plan-close review lows: give the profile-view journal assertion a positive control from a recorded operation in the same run, and prove a worker ended during an ephemeral read answers unknown_operation through the runtime; `src/cadrumo/entrypoints/runtime/tests/test_frontend_client.py`.
 
 <!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or
 `L4`) determines the structure under this section:
