@@ -24,6 +24,7 @@ pub enum Refusal {
     RevisionConflict,
     CommittedReadbackFailed,
     CatalogUnavailable,
+    RuntimeUnavailable,
     PersonActRequired,
     Unknown,
 }
@@ -113,6 +114,7 @@ pub enum Reason {
     RevisionConflict,
     CommittedReadbackFailed,
     CatalogUnavailable,
+    RuntimeUnavailable,
     PersonActRequired,
     Unknown,
     NotConfigured,
@@ -493,6 +495,7 @@ mod tests {
             "revision_conflict",
             "committed_readback_failed",
             "catalog_unavailable",
+            "runtime_unavailable",
             "person_act_required",
             "unknown",
         ] {
@@ -555,9 +558,19 @@ mod tests {
             failed(changed(row("catalog_unavailable"), "alpha_api")),
             json!({"code": "catalog_unavailable"})
         );
+        // No runtime took the request: the command line's own preflight and the
+        // provider bridge both name it with the same closed code.
+        assert_eq!(
+            failed(status(row("runtime_unavailable"))),
+            json!({"code": "runtime_unavailable"})
+        );
+        assert_eq!(
+            failed(changed(row("runtime_unavailable"), "alpha_api")),
+            json!({"code": "runtime_unavailable"})
+        );
         // A code the contract does not list is not guessed at.
         for code in [
-            "runtime_unavailable",
+            "runtime_draining",
             "THROTTLED",
             "ERROR_CALCULATIONS_REGISTRY",
         ] {

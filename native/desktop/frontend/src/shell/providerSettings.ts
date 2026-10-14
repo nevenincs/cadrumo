@@ -61,6 +61,7 @@ export type ProviderSettingsRefusal =
   | "revision_conflict"
   | "committed_readback_failed"
   | "catalog_unavailable"
+  | "runtime_unavailable"
   | "person_act_required"
   | "unknown";
 

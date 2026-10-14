@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:69b463efeb0a45aac3fbc94f35b612ebcd7a15601e15051fc3743cf4b9e487b0'
+body_hash: 'sha256:5e5ec5123832a2cbf424d771c227d2238eeadd6fa484b8ce848821c3b6474617'
 related:
   - "[[2026-10-13-provider-settings-plan]]"
 ---
@@ -62,6 +62,39 @@ related:
 - `S08` `verify:` `just check-import-boundaries (15/15 contracts kept, 0 findings; run flagged unavailable: source changed mid-run)` -> `pass`
 - `S08` `verify:` `just check-types (3 diagnostics in dev/packaging/native owned by another session; none in S08 files)` -> `fail`
 - `S08` `by:` `implementation-high`
+- `S04` `A` `src/cadrumo/domain/provider_settings/catalog.py`
+- `S04` `A` `src/cadrumo/domain/provider_settings/record.py`
+- `S04` `A` `src/cadrumo/domain/provider_settings/tests/test_catalog.py`
+- `S04` `A` `src/cadrumo/domain/provider_settings/tests/test_record.py`
+- `S04` `A` `src/cadrumo/_data/provider_settings/catalog.toml`
+- `S21` `M` `agent api/app.py`
+- `S21` `M` `agent control/worker_management.py`
+- `S21` `M` `agent worker/app.py`
+- `S21` `M` `agent providers/provider_readiness.py`
+- `S09` `M` `src/cadrumo/application/provider_settings/contracts.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/config/runtime_provider_settings.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/config/tests/test_provider_cli.py`
+- `S09` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S09` `M` `src/cadrumo/locales/en/cli.yml`
+- `S09` `M` `src/cadrumo/locales/es/cli.yml`
+- `S09` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S09` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S09` `M` `native/desktop/src-tauri/src/shell/provider_settings/wire.rs`
+- `S09` `M` `native/desktop/frontend/src/shell/providerSettings.ts`
+- `S09` `M` `native/desktop/frontend/src/components/settings/ProviderSettings.tsx`
+- `S09` `M` `dev/locales/desktop_chrome.py`
+- `S09` `M` `src/cadrumo/locales/en/common.yml`
+- `S09` `M` `src/cadrumo/locales/es/common.yml`
+- `S09` `M` `src/cadrumo/locales/ca/common.yml`
+- `S09` `M` `src/cadrumo/locales/hu/common.yml`
+- `S09` `M` `.vault/reference/2026-10-13-provider-settings-desktop-contract-reference.md`
+- `S09` `M` `.vault/plan/2026-10-13-provider-settings-plan.md`
+- `S09` `verify:` `pytest src/cadrumo/entrypoints/cli/config/tests/test_provider_cli.py src/cadrumo/entrypoints/tests/test_operation_contract_manifest.py -n0 -m '' (35)` -> `pass`
+- `S09` `verify:` `python -m dev.operation_contract_manifest.generate --check` -> `pass`
+- `S09` `verify:` `tauri.mjs test-unit shell::provider_settings with a fresh contract and scratch CARGO_TARGET_DIR (26)` -> `pass`
+- `S09` `verify:` `frontend tsc --noEmit, eslint and prettier on the changed files` -> `pass`
+- `S09` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py (16)` -> `pass`
+- `S09` `by:` `implementation-high`
 
 ## Notes
 
@@ -71,3 +104,6 @@ related:
 - `S08` provider ids stay free text validated by the agent's declared catalog; no provider list added
 - `S08` regenerating `command_operation_table.py` also dropped 285 stale `profile_login` runtime-request rows the live derivation no longer yields; the join test passes with the regenerated table
 - `S08` CLI reference and cli-tree.json are gitignored build outputs; nothing committed to regenerate
+- `S04` rows recorded retroactively on 2026-10-14 from git history; the Step was closed without a ledger row; landed in acd546f3a1; the committed catalog copy was later replaced by the run-time agent declaration in 26934b4841
+- `S21` rows recorded retroactively on 2026-10-14 from git history; the Step was closed without a ledger row; coordination Step whose changes were made by BUILD2 in the cadrumo-agent repository, outside this repository's history; paths are the Step's declared scope
+- `S09` bridge, locale and manifest parts of the `runtime_unavailable` code landed inside checkpoint 7fa669db8b; the contract reference now states the run-time lane declaration instead of a provider table

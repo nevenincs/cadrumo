@@ -978,6 +978,9 @@ desktop:
     refused_profile_locked: Ez a profil zárolva van.
     refused_revision_conflict: Ez máshol megváltozott. A legfrissebb látható; próbáld
       újra.
+    refused_runtime_unavailable: A háttérszolgáltatás nem fut, így semmit sem olvastunk
+      be, és semmi sem változott. Ellenőrizd a háttérszolgáltatás-kezelőt, majd próbáld
+      újra.
     replace_key: Kulcs cseréje
     reset: Visszaállítás
     reset_note: A visszaállítás elfelejti, amit beállítottál, mintha soha nem lett

@@ -464,6 +464,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.providers.refused_person_act_required",
         "desktop.providers.refused_profile_locked",
         "desktop.providers.refused_revision_conflict",
+        "desktop.providers.refused_runtime_unavailable",
         "desktop.providers.replace_key",
         "desktop.providers.reset",
         "desktop.providers.reset_note",

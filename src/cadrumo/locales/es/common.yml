@@ -991,6 +991,9 @@ desktop:
     refused_profile_locked: Este perfil está bloqueado.
     refused_revision_conflict: Esto ha cambiado en otro sitio. Se muestra lo último;
       vuelve a intentarlo.
+    refused_runtime_unavailable: El servicio en segundo plano no está en marcha, así
+      que no se ha leído ni cambiado nada. Comprueba el gestor de servicios en segundo
+      plano y vuelve a intentarlo.
     replace_key: Sustituir clave
     reset: Restablecer
     reset_note: Restablecer olvida lo que se configuró, como si nunca se hubiera configurado.

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#provider-settings'
 date: '2026-10-13'
-modified: '2026-10-13'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:75ab4abedd0078351c9ac0488ebc31212f72f7e2e494d21898ac417b3418a640'
+body_hash: 'sha256:c29f1815600aa42e6238d5a4793792bceef9a355dae5f97b0ccfff5dc6f9ef5a'
 related:
   - "[[2026-10-13-provider-settings-reference]]"
   - "[[2026-10-11-mcp-parity-full-parity-adr]]"

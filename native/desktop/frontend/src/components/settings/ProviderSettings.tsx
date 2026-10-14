@@ -71,6 +71,8 @@ function refusalWords(t: Translate, code: string): string {
       return t("desktop.providers.refused_revision_conflict");
     case "catalog_unavailable":
       return t("desktop.providers.refused_catalog_unavailable");
+    case "runtime_unavailable":
+      return t("desktop.providers.refused_runtime_unavailable");
     case "person_act_required":
       return t("desktop.providers.refused_person_act_required");
     default:

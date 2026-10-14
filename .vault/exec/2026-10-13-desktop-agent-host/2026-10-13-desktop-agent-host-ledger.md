@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#desktop-agent-host'
 date: '2026-10-13'
-modified: '2026-10-13'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:955bda59c0e915cf98a5d8f8e2d5afe54e796af5f98db53475f793837c89e69a'
+body_hash: 'sha256:12a2219f67f61ade42b91c1dfb62169f14cb9c978c047b1e91cffd56a1c93d55'
 related:
   - "[[2026-10-13-desktop-agent-host-plan]]"
 ---
@@ -45,6 +45,12 @@ related:
 - `S04` `verify:` `npx tsc --noEmit` -> `pass`
 - `S04` `verify:` `npx eslint src/shell/tauriHost.ts src/ipc/contract.ts` -> `pass`
 - `S04` `by:` `implementation-engineer`
+- `S05` `A` `native/desktop/frontend/tests/live/attach.live.ts`
+- `S05` `A` `native/desktop/frontend/tests/live/fixture.ts`
+- `S05` `A` `native/desktop/frontend/tests/live/playwright.config.ts`
+- `S05` `A` `native/desktop/frontend/tests/live/tsconfig.json`
+- `S05` `A` `native/desktop/frontend/tests/live/README.md`
+- `S06` `M` `justfile`
 
 ## Notes
 
@@ -55,3 +61,5 @@ related:
 - `S04` Full test-unit: 262 passed, 1 failed: `manager::tests::repeated_helpers_remain_settled_and_report_measured_latency` timed out in the full run on a heavily loaded host and passed alone and with the manager tests alone; this Step changed no code it runs
 - `S04` Mapped to agentSession.ts as committed in acd546f3a1; the contract v2 rework is pending, so the Step stays open
 - `S04` Conversation-keyed commands, send and history refuse with typed codes: the launcher reports no conversation workspace, and the gateway returns no person turn id and keeps no turn order
+- `S05` rows recorded retroactively on 2026-10-14 from git history; the Step was closed without a ledger row; landed in acd546f3a1 and 9e256e3a41
+- `S06` rows recorded retroactively on 2026-10-14 from git history; the Step was closed without a ledger row; the desktop-agent-live recipe landed in acd546f3a1

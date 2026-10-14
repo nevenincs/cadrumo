@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#provider-settings'
 date: '2026-10-13'
-modified: '2026-10-13'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:f19e42da6558fe621698f6ca95e54cdcd3bf227fda9c240b05cb127c507b2043'
+body_hash: 'sha256:586eb93aa5ccacfdd025cc37172b93862ca031ad2c477ad20b080afecf6b1ae1'
 related:
   - "[[2026-10-13-provider-settings-adr]]"
 ---
@@ -43,47 +43,33 @@ One read lists every provider. `development` says whether the environment fallba
 
 ```json
 {"development": false, "providers": [
-  {"id": "claude_api", "provider": "claude", "transport": "api", "display_name": "Claude",
+  {"id": "example_api", "provider": "example", "transport": "api", "display_name": "Example",
    "auth_kind": "api_key", "consumers": ["assistant"], "mode": "key", "available": true,
    "source": "profile", "readiness": "not_verified", "reason": null, "cli_state": null,
    "base_url": null, "default_base_url": null, "revision": "<64 hex>"}
 ]}
 ```
 
-There is one entry per cadrumo-agent lane, generated from cadrumo-agent's own source (`dev/provider_catalog/generate.py`, checked by `just check-provider-catalog`):
-
-| id | provider | transport | display_name | auth_kind |
-|---|---|---|---|---|
-| claude_api | claude | api | Claude | api_key |
-| claude_cli | claude | cli | Claude | oauth_token_or_provider_sign_in |
-| codex_api | codex | api | Codex | api_key |
-| codex_cli | codex | cli | Codex | provider_sign_in_only |
-| antigravity_cli | antigravity | cli | Antigravity | provider_sign_in_only |
-| kimi_cli | kimi | cli | Kimi Code | api_key |
-| zai_cli | zai | cli | Z.ai | api_key_with_base_url |
-| zhipu_cli | zhipu | cli | Zhipu AI | api_key_with_base_url |
-| deepseek_cli | deepseek | cli | DeepSeek | api_key_with_base_url |
-| moonshot_cli | moonshot | cli | Moonshot AI | api_key_with_base_url |
-| minimax_cli | minimax | cli | MiniMax | api_key_with_base_url |
-| qwen_cli | qwen | cli | Qwen (Alibaba Model Studio) | api_key_with_base_url |
+There is one entry per lane cadrumo-agent declares. Cadrumo keeps no list of providers or lanes: the profile worker runs the agent's offline declaration (`providers --declared --json`) at run time (`src/cadrumo/adapters/local_runtime/agent_provider_catalog.py`), and the commands take a provider id as text that only this declaration settles. When the agent cannot report its lanes, every command refuses with `catalog_unavailable`. The ids, names and default URLs above are an invented example.
 
 - `id`: `<provider>_<transport>`, matching `^[a-z][a-z0-9_]{0,39}$`; the commands take it.
 - `provider`: cadrumo-agent's identity; every lane of an identity carries the same `provider` and `display_name`, the product name. The webview adds the transport and the icon.
 - `transport`: `api` | `cli`.
+- `auth_kind`: `api_key` | `api_key_with_base_url` | `provider_sign_in_only`, as cadrumo-agent declares each lane.
 - `consumers`: `assistant` only; provider keys serve cadrumo-agent's lanes, not Cadrumo's own features.
 - `mode`: `key` | `oauth_token` | `provider_sign_in` | `disabled` | `unset`.
 - `source`: `profile` | `environment` | `none`; `environment` appears only when `development` is true, for a lane whose record is unset.
 - `readiness`: `ready` | `not_verified` | `missing` | `disabled` | `sign_in_required` | `unusable`.
 - `reason`: `null` when ready, else a closed code from the refusal list below or `not_configured`, `turned_off`, `sign_in_with_provider_tool`, `record_unreadable`.
 - `cli_state`: for `cli` lanes `installed_signed_in` | `installed_signed_out` | `not_installed` | `unknown`; `null` for `api` lanes. Every `cli` lane reports `unknown` until a safe check exists; show it as not checked, never as not installed.
-- `base_url`: present only when the person stored one. `default_base_url`: the catalogue default, a hint and never a stored value; `qwen_cli` has none.
+- `base_url`: present only when the person stored one. `default_base_url`: the lane's declared default, a hint and never a stored value; absent where the agent declares none.
 - `revision`: the guard every change sends back.
 
 No field ever carries a secret, a fragment of one, or a value derived from one.
 
 ## Change results and refusals
 
-A successful change returns the provider's new status entry. A refusal returns `{"refused": "<code>"}` with one of:
+A successful change returns the provider's new status entry as the envelope's `result`. A refusal is an error envelope whose `error.context.reason` is one of the codes below; a refused change that the runtime had already taken also carries `error.context.operation_id`:
 
 - `not_signed_in`: no signed-in profile.
 - `profile_locked`: the profile is locked.

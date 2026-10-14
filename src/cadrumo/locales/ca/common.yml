@@ -985,6 +985,9 @@ desktop:
     refused_profile_locked: Aquest perfil està bloquejat.
     refused_revision_conflict: Això ha canviat en un altre lloc. Es mostra el més
       recent; torna-ho a provar.
+    refused_runtime_unavailable: El servei en segon pla no està en marxa, així que
+      no s'ha llegit ni canviat res. Comprova el gestor de serveis en segon pla i
+      torna-ho a provar.
     replace_key: Substitueix la clau
     reset: Restableix
     reset_note: Restablir oblida el que s'hi havia configurat, com si mai no s'hagués

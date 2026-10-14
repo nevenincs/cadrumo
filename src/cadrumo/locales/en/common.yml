@@ -959,6 +959,8 @@ desktop:
     refused_profile_locked: This profile is locked.
     refused_revision_conflict: This changed somewhere else. The latest is shown; try
       again.
+    refused_runtime_unavailable: The background runtime isn't running, so nothing
+      was read or changed. Check the background-services manager, then try again.
     replace_key: Replace key
     reset: Reset
     reset_note: Reset forgets what was set for it, as if it had never been set up.
