@@ -709,7 +709,14 @@ class TestSandboxEvictsBoundBucketSession:
         result_frame = follower.result_frame
         assert result_frame.exit_code == 0
         assert result_frame.envelope is not None
-        assert result_frame.envelope["status"] == "success"
+        # The sandbox pins the credential vault absent, so the follower's own
+        # per-command sign-in is not persisted and says so; nothing else is noted.
+        assert result_frame.envelope["status"] == "warning"
+        notices = result_frame.envelope["notices"]
+        assert isinstance(notices, list)
+        assert [notice["code"] for notice in notices if isinstance(notice, dict)] == [
+            "config.login.session_not_persisted"
+        ]
 
 
 class TestLiveAeatRefusal:
