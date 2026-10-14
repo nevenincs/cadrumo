@@ -28,6 +28,9 @@ from cadrumo.core.storage_environment import ChildEnvironmentProfile, child_envi
 from cadrumo.domain.calculations.registry.authority_location import published_authority_generation
 from dev.packaging.command_execution import run_command
 
+_REVEAL_IDENTIFIERS = "CADRUMO_CLI_REVEAL_IDENTIFIERS"
+"""The command line's operator opt-in to print the identifiers its output otherwise hides."""
+
 
 @dataclass(frozen=True, repr=False)
 class Profile:
@@ -191,14 +194,22 @@ class LifecycleHarness:
         secret: dict[str, str] | None = None,
         profile_secret: str | None = None,
         expect_success: bool = True,
+        reveal_identifiers: bool = False,
     ) -> dict[str, Any]:
-        """Invoke the package CLI with secrets on stdin and bounded process wait."""
+        """Invoke the package CLI with secrets on stdin and bounded process wait.
+
+        Command output hides identifiers. ``reveal_identifiers`` sets the operator's
+        opt-in the package admits for the command line, for a result whose identifier
+        the caller must use, such as the reference an agent is launched with.
+        """
         if secret is not None and profile_secret is not None:
             raise ValueError("CLI leaf and root profile secret inputs cannot share stdin")
         profile_arguments = () if profile_secret is None else ("--profile-secrets-stdin",)
         if profile_secret is not None:
             secret = {"profile_passphrase": profile_secret}
         environment = child_environment(ChildEnvironmentProfile.STRICT, self.root)
+        if reveal_identifiers:
+            environment[_REVEAL_IDENTIFIERS] = "1"
         payload = None if secret is None else bytearray(json.dumps(secret), "utf-8")
         try:
             result = run_command(

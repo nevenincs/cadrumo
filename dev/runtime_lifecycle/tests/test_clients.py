@@ -83,6 +83,12 @@ async def test_packaged_client_authentication_and_profile_scope(harness: Lifecyc
                 harness.cli, "login", "Client A", "--secrets-stdin", secret={"passphrase": first.password}
             )
             reference = await asyncio.to_thread(issue_key, harness, first)
+            # The person signs out of A while it is the signed-in profile.
+            key_profile_human = harness.connect(first.profile_id)
+            await asyncio.to_thread(key_profile_human.client.resume_receipt)
+            signed_out_of_a = await asyncio.to_thread(key_profile_human.client.human_sign_out)
+            # The key the person issued for A is not tied to the sign-in, and the report says so.
+            assert signed_out_of_a.agent_access_remains is True
             await asyncio.to_thread(
                 harness.cli, "login", "Client B", "--secrets-stdin", secret={"passphrase": second.password}
             )
@@ -96,11 +102,6 @@ async def test_packaged_client_authentication_and_profile_scope(harness: Lifecyc
                 ClientSession(key_reader, key_writer, read_timeout_seconds=90)
             )
             await key_mcp.initialize()
-            key_profile_human = harness.connect(first.profile_id)
-            await asyncio.to_thread(key_profile_human.client.resume_receipt)
-            signed_out_of_a = await asyncio.to_thread(key_profile_human.client.human_sign_out)
-            # The key the person issued for A is not tied to the sign-in, and the report says so.
-            assert signed_out_of_a.agent_access_remains is True
             await _mcp_read(key_mcp, first)
             # The agent reads and changes A's own values while no person is signed in to A.
             await mcp_edit_profile(key_mcp, first, path="identity.name", previous=None, value="Lifecycle Agent")

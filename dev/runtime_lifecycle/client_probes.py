@@ -464,14 +464,16 @@ def _refused(reply: object) -> None:
 def issue_key(harness: LifecycleHarness, profile: Profile) -> UUID:
     """Issue one profile's key as the person does, returning the reference an agent is launched with.
 
-    The person runs ``config profile automation create --use agent`` for the
-    selected profile and approves the request from a signed-in connection. The
-    agent never takes part: it is started with the reference.
+    The person, signed in to the selected profile, runs ``config profile
+    automation create --use agent`` under that sign-in and approves the request
+    from a signed-in connection. The command reads no profile secret, since the
+    sign-in already serves it. The agent never takes part: it is started with
+    the reference.
     """
     deadline = time.monotonic() + 120
     with ThreadPoolExecutor(max_workers=1) as pool:
         creating = pool.submit(
-            harness.cli, "profile", "automation", "create", "--use", "agent", profile_secret=profile.password
+            harness.cli, "profile", "automation", "create", "--use", "agent", reveal_identifiers=True
         )
         human = harness.connect(profile.profile_id)
         human.client.resume_receipt()
