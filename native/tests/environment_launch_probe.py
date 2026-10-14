@@ -185,7 +185,8 @@ def read_contract(package: Path, document: Mapping[str, Any]) -> Contract:
         if invocation["image"] == name
     ]
     gateways = {profile for profile, literals in invocations if literals == tuple(GATEWAY_ARGUMENTS)}
-    workers = {profile["name"] for profile in own} - gateways
+    # The worker is the other profile that admits the agent's prefix; the provider catalog's admits none.
+    workers = {profile["name"] for profile in own if profile["prefix"]} - gateways
     if len(gateways) != 1 or len(workers) != 1:
         selected = {
             profile["name"]: [lit for chosen, lit in invocations if chosen == profile["name"]] for profile in own
@@ -219,6 +220,8 @@ def read_contract(package: Path, document: Mapping[str, Any]) -> Contract:
     others = set().union(*(admitted(profile) for profile in profiles.values() if profile["image"] != name))
     pinned = {document["root"]["variable"], section["pins"]["authority"]["name"], *section["pins"]["temporary"]}
     agent_only = set().union(*(admitted(profile) for profile in own)) - others - pinned
+    # A name under the agent's prefix that no profile lists, which only the prefix admits.
+    agent_only.add(f"{profiles[gateway_name]['prefix']}LAUNCH_PROBE_SETTING")
     return Contract(
         package=package,
         document=document,

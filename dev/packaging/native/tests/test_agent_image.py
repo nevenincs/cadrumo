@@ -1,4 +1,4 @@
-"""The bundled agent image: declared by the package, built from the interpreter host, admitting six invocations."""
+"""The bundled agent image: declared by the package, built from the interpreter host, admitting seven invocations."""
 
 from __future__ import annotations
 
@@ -60,7 +60,7 @@ def _revision_option(flag: str, slot: str) -> dict[str, object]:
 
 
 _MODULE = ("-m", "cadrumo_agent.cli.main")
-# The six invocations the image admits and the profile each selects, written out independently of the file.
+# The seven invocations the image admits and the profile each selects, written out independently of the file.
 _INVOCATIONS = [
     ("agent-gateway", _literals(*_MODULE, "serve")),
     (
@@ -78,11 +78,12 @@ _INVOCATIONS = [
     ),
     ("agent-gateway", _literals(*_MODULE, "version", "--json")),
     ("agent-worker", _literals("-m", "cadrumo_agent.worker")),
+    ("agent-providers", _literals(*_MODULE, "providers", "--declared", "--json")),
 ]
 
 
 @pytest.mark.parametrize("target", ["windows-x86-64", "linux-x86-64"])
-def test_the_contract_compiles_exactly_the_six_invocations_of_the_agent_image(tmp_path: Path, target: str) -> None:
+def test_the_contract_compiles_exactly_the_seven_invocations_of_the_agent_image(tmp_path: Path, target: str) -> None:
     generate(REPO_ROOT, tmp_path, target=target)
     section = json.loads((tmp_path / "contract.json").read_text(encoding="utf-8"))["application_environment"]
     generated = (tmp_path / "contract.rs").read_text(encoding="utf-8")
@@ -97,11 +98,12 @@ def test_the_contract_compiles_exactly_the_six_invocations_of_the_agent_image(tm
     assert invocations == _INVOCATIONS
     profiles = {profile["name"]: profile for profile in section["profiles"]}
     assert all(profile["invoked"] for profile in profiles.values() if profile["image"] == _AGENT)
-    # The store and version invocations run in the gateway's environment, so they select its profile and
-    # the image has exactly two profiles: no copy of the gateway's environment can drift from it.
+    # The store and version invocations run in the gateway's environment, so they select its profile: no
+    # copy of the gateway's environment can drift from it. The provider catalog has its own minimal profile.
     assert {name for name, profile in profiles.items() if profile["image"] == _AGENT} == {
         "agent-gateway",
         "agent-worker",
+        "agent-providers",
     }
     assert generated.count('LaunchInvocation { profile: "agent-gateway"') == 5
     assert 'LaunchArgument { literal: None, option: Some("--expect-from"), slot: Some("expected_from"), ' in generated
@@ -114,11 +116,16 @@ def test_the_contract_compiles_exactly_the_six_invocations_of_the_agent_image(tm
     ):
         for profile in profiles.values():
             assert retired not in [*profile["operator"], *profile["pass"], *(slot["name"] for slot in profile["slots"])]
+            # A profile that admits the agent's prefix refuses each of them by name.
+            assert (retired in profile["prefix_refused"]) == bool(profile["prefix"]), (retired, profile["name"])
         assert retired not in section["names"]
 
 
-def test_agent_names_reach_only_the_agent_image_and_the_worker_token_none() -> None:
-    section = compile_section(load(REPO_ROOT), load_layout("windows-x86-64"))
+def test_agent_names_reach_the_gateway_and_worker_by_prefix_and_no_other_profile() -> None:
+    declaration = load(REPO_ROOT)
+    section = compile_section(declaration, load_layout("windows-x86-64"))
+    by_prefix = {profile["name"] for profile in section["profiles"] if profile["prefix"]}
+    assert by_prefix == {"agent-gateway", "agent-worker"}
     for profile in section["profiles"]:
         admitted = [
             *profile["base"],
@@ -129,8 +136,15 @@ def test_agent_names_reach_only_the_agent_image_and_the_worker_token_none() -> N
         agent_names = [name for name in admitted if name.startswith("CADRUMO_AGENT_")]
         if profile["image"] != _AGENT:
             assert agent_names == [], profile["name"]
-        # The worker's IPC token travels on its standard input; no profile admits it by name.
-        assert "CADRUMO_AGENT_INTERNAL_TOKEN" not in admitted, profile["name"]
+        # No profile lists an agent setting, provider or credential: the prefix admits them, or nothing does.
+        assert [name for name in profile["pass"] if name.startswith("CADRUMO_AGENT_")] == [], profile["name"]
+        assert profile["prefix"] in {"", "CADRUMO_AGENT_"}, profile["name"]
+    # The worker's IPC token travels on its standard input; the file names no credential to admit or refuse.
+    assert not [name for name in section["names"] if name.endswith("_TOKEN")]
+    providers = next(profile for profile in section["profiles"] if profile["name"] == "agent-providers")
+    assert (providers["slots"], providers["pins"], providers["prefix"], providers["fixed"]) == ([], [], "", [])
+    assert providers["base"] == list(declaration.base["windows"]["system"])
+    assert providers["package_path"]
     gateway = next(profile for profile in section["profiles"] if profile["name"] == "agent-gateway")
     assert {slot["name"]: slot["kind"] for slot in gateway["slots"]} == {
         "CADRUMO_LOCAL_STORAGE_ROOT": "directory",
@@ -139,7 +153,6 @@ def test_agent_names_reach_only_the_agent_image_and_the_worker_token_none() -> N
         "CADRUMO_AGENT_WORKER_PORT": "port",
         "CADRUMO_AGENT_HOSTED_RELAY_EXECUTABLE": "executable",
     }
-    assert {"CADRUMO_AGENT_DEVELOPMENT_TOOL_SERVER", "CADRUMO_AGENT_PROVIDER_PROOF_POLICY"} <= set(gateway["pass"])
     # The gateway and its worker each receive their parent's storage root as an optional slot
     # they do not pin, which carries it on to the relay the worker starts. A slot is admitted
     # by its kind alone: whoever the caller is, the compiled slot names no parent.
@@ -158,8 +171,8 @@ def test_agent_names_reach_only_the_agent_image_and_the_worker_token_none() -> N
 
 def test_only_an_image_that_does_not_pin_its_root_may_take_it_as_a_slot() -> None:
     planted = _SOURCE.replace(
-        'pins = ["temporary", "authority"]\npass = ["CADRUMO_AGENT_DEVELOPMENT_TOOL_SERVER"',
-        'pins = true\npass = ["CADRUMO_AGENT_DEVELOPMENT_TOOL_SERVER"',
+        'pins = ["temporary", "authority"]\nagent_names = true',
+        "pins = true\nagent_names = true",
         1,
     )
     assert planted != _SOURCE
@@ -181,6 +194,56 @@ def test_the_declaration_refuses_an_agent_name_outside_the_agent_image() -> None
     assert declared != _SOURCE
     with pytest.raises(ApplicationEnvironmentError, match="never_admitted"):
         parse(declared)
+
+
+_GATEWAY_PINS = 'pins = ["temporary", "authority"]\nagent_names = true'
+
+
+def _without_the_agent_table() -> str:
+    """Drop the agent table, from its header to the end of its never-admitted list."""
+    start = _SOURCE.index("\n[agent]\n")
+    end = _SOURCE.index("]\n", _SOURCE.index("never_admitted", start)) + len("]\n")
+    return _SOURCE[:start] + _SOURCE[end:]
+
+
+@pytest.mark.parametrize(
+    ("planted", "message"),
+    [
+        pytest.param(
+            _SOURCE.replace(
+                '[profiles.python]\nimage = "python"\n',
+                '[profiles.python]\nimage = "python"\nagent_names = true\n',
+                1,
+            ),
+            "outside the cadrumo-agent image",
+            id="prefix-outside-the-agent-image",
+        ),
+        pytest.param(
+            _SOURCE.replace(_GATEWAY_PINS, 'pins = ["temporary", "authority"]\nagent_names = "yes"', 1),
+            "boolean",
+            id="prefix-switch-not-a-boolean",
+        ),
+        pytest.param(
+            _SOURCE.replace(
+                'CADRUMO_AGENT_PORT = { kind = "port", role = "slot" }\n',
+                'CADRUMO_AGENT_PORT = { kind = "port", role = "slot" }\n'
+                'CADRUMO_AGENT_LISTED = { kind = "text", role = "pass" }\n',
+                1,
+            ).replace(_GATEWAY_PINS, _GATEWAY_PINS + '\npass = ["CADRUMO_AGENT_LISTED"]', 1),
+            "admits them by prefix only",
+            id="listed-agent-name",
+        ),
+        pytest.param(
+            _without_the_agent_table(),
+            "has no agent table",
+            id="prefix-without-an-agent-table",
+        ),
+    ],
+)
+def test_the_declaration_admits_agent_names_by_the_prefix_alone(planted: str, message: str) -> None:
+    assert planted != _SOURCE
+    with pytest.raises(ApplicationEnvironmentError, match=message):
+        parse(planted)
 
 
 @pytest.fixture

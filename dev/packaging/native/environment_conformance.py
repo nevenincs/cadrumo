@@ -193,8 +193,20 @@ def _admitted(profile: Mapping[str, Any]) -> set[str]:
     }
 
 
+def _admits_by_prefix(reference: Reference, profile: Mapping[str, Any], name: str) -> bool:
+    prefix = profile["prefix"]
+    refused = {_fold(reference, other) for other in profile["prefix_refused"]}
+    folded = _fold(reference, name)
+    return bool(prefix) and folded.startswith(prefix) and len(name) > len(prefix) and folded not in refused
+
+
 def check_agent(reference: Reference, runtime: Mapping[str, Any], agent: Mapping[str, Any] | None) -> list[Finding]:
-    """Hold the agent image's names to the bundled agent's own settings, credentials and worker handover."""
+    """Hold the agent image's names to the bundled agent's own settings, credentials and worker handover.
+
+    The gateway and worker admit the agent's names by its prefix, so no agent setting is listed:
+    what is compared is the prefix, the contract version, the declared slots, the names never
+    admitted, and that every name the gateway writes for its worker reaches the worker.
+    """
     check = "agent-names"
     if agent is None:
         return [Finding(check, "bundled agent", "is not installed in the interpreter under test")]
@@ -226,19 +238,28 @@ def check_agent(reference: Reference, runtime: Mapping[str, Any], agent: Mapping
                 )
     gateway = gateway_profile(reference, runtime["gateway_arguments"])
     profiles = [profile for profile in reference.section["profiles"] if profile["image"] == declared["image"]]
-    worker = [profile for profile in profiles if gateway is not None and profile["name"] != gateway["name"]]
+    # A credential is never a name the package declares; one the prefix admits meets the agent's own refusals.
     for profile in profiles:
-        for name in sorted(_admitted(profile) & set(agent["credentials"])):
-            if profile not in worker:
-                findings.append(Finding(check, name, f"is a credential the agent holds, admitted to {profile['name']}"))
+        findings.extend(
+            Finding(check, name, f"is a credential the agent holds, declared for {profile['name']}")
+            for name in sorted(_admitted(profile) & set(agent["credentials"]))
+        )
     writes = set(agent["worker_environment_writes"])
     if not writes:
         findings.append(Finding(check, "worker handover", "found no environment the gateway writes for its worker"))
+    worker = [
+        profile
+        for profile in profiles
+        if gateway is not None and profile["name"] != gateway["name"] and profile["prefix"]
+    ]
+    if gateway is not None and not worker:
+        findings.append(Finding(check, "worker handover", "no agent profile but the gateway's admits the prefix"))
     for profile in worker:
-        admitted = {*profile["pass"], *(slot["name"] for slot in profile["slots"])}
+        slots = {slot["name"] for slot in profile["slots"]}
         findings.extend(
             Finding(check, name, f"the gateway writes it for its worker, which {profile['name']} does not admit")
-            for name in sorted(writes - admitted)
+            for name in sorted(writes)
+            if name not in slots and name not in profile["pass"] and not _admits_by_prefix(reference, profile, name)
         )
     return findings
 

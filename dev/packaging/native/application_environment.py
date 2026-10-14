@@ -124,7 +124,7 @@ class ApplicationEnvironment:
     path_external: str
     windows_system: tuple[str, tuple[str, ...]]
     posix_system: tuple[str, ...]
-    profiles: Mapping[str, Mapping[str, Any]]
+    profiles: Mapping[str, dict[str, Any]]
     invocations: tuple[Invocation, ...]
     temporary_member: Mapping[str, Any]
     host_classes: Mapping[str, Any]
@@ -335,7 +335,12 @@ def _profiles(
         if not _PROFILE.fullmatch(profile):
             raise _fail(f"profile name is not a lowercase hyphenated identifier: {profile!r}")
         entry = _table(item, where)
-        _keys(entry, where, {"image", "base", "pins", "path"}, {"base_groups", "operator", "pass", "fixed", "slots"})
+        _keys(
+            entry,
+            where,
+            {"image", "base", "pins", "path"},
+            {"base_groups", "operator", "pass", "fixed", "slots", "agent_names"},
+        )
         if not isinstance(entry["image"], str) or not _PROFILE.fullmatch(entry["image"]):
             raise _fail(f"{where} image is malformed")
         if entry["base"] not in {"groups", "inherit"} or entry["path"] not in {"package", "inherit"}:
@@ -375,13 +380,17 @@ def _profiles(
             _keys(slot, f"{where}.slots[{index}]", {"name", "required"})
             name = slot["name"]
             # The storage root is a slot where a parent hands its own root to an image that does not pin it.
-            admitted = names.get(name, {}).get("role") == "slot" or (name == root_variable and "root" not in pins)
+            role = names.get(name, {}).get("role")
+            admitted = role == "slot" or (name == root_variable and "root" not in pins)
             if not admitted or not isinstance(slot["required"], bool):
                 raise _fail(f"{where}.slots[{index}] must name a declared slot and whether it is required")
             slots.append(LaunchSlot(name=name, kind=names[name]["kind"], required=slot["required"]))
         defined = [*operator, *passed, *(value.name for value in fixed), *(slot.name for slot in slots)]
         if len(defined) != len(set(defined)):
             raise _fail(f"{where} admits or sets one name twice")
+        agent_names = entry.get("agent_names", False)
+        if not isinstance(agent_names, bool):
+            raise _fail(f"{where}.agent_names must be a boolean")
         profiles[profile] = {
             "image": entry["image"],
             "inherit": inherit,
@@ -392,6 +401,9 @@ def _profiles(
             "fixed": fixed,
             "slots": tuple(slots),
             "package_path": entry["path"] == "package",
+            "agent_names": agent_names,
+            "prefix": "",
+            "prefix_refused": (),
         }
     return profiles
 
@@ -660,8 +672,13 @@ def channel_directory(root: Mapping[str, Any], channel: str) -> str:
     return f"{names['product_directory']}{names['separator']}{channel}"
 
 
-def _agent(raw: object, names: Mapping[str, Mapping[str, str]], profiles: Mapping[str, Mapping[str, Any]]) -> None:
-    """Hold the agent's names to the agent image: no other profile admits or sets them."""
+def _agent(raw: object, names: Mapping[str, Mapping[str, str]], profiles: Mapping[str, dict[str, Any]]) -> None:
+    """Hold the agent's names to the agent image and compile its prefix admission.
+
+    No other profile admits or sets a name under the agent's prefix. An agent-image profile
+    with ``agent_names`` admits every name under the prefix except the never-admitted ones,
+    so it lists none of them by name; a declared slot keeps its kind validation.
+    """
     entry = _table(raw, "agent")
     _keys(entry, "agent", {"image", "prefix", "hosting_contract", "never_admitted"})
     image, prefix = entry["image"], entry["prefix"]
@@ -676,6 +693,12 @@ def _agent(raw: object, names: Mapping[str, Mapping[str, str]], profiles: Mappin
         spelled += [value.name for value in declared["fixed"]]
         if declared["image"] != image and any(name.startswith(prefix) for name in spelled):
             raise _fail(f"profiles.{profile} admits an agent name outside the {image} image")
+        if declared["agent_names"] and declared["image"] != image:
+            raise _fail(f"profiles.{profile} admits the agent's names outside the {image} image")
+        if declared["image"] == image and any(name.startswith(prefix) for name in declared["pass"]):
+            raise _fail(f"profiles.{profile} lists an agent name; the agent image admits them by prefix only")
+        if declared["agent_names"]:
+            declared["prefix"], declared["prefix_refused"] = prefix, never
 
 
 def _text_table(raw: object, where: str) -> dict[str, str]:
@@ -789,6 +812,8 @@ def parse(text: str) -> ApplicationEnvironment:
     profiles = _profiles(document["profiles"], names, groups, root["variable"])
     if "agent" in document:
         _agent(document["agent"], names, profiles)
+    elif any(entry["agent_names"] for entry in profiles.values()):
+        raise _fail("a profile admits the agent's names, and the declaration has no agent table")
     invocations = _invocations(document.get("invocations", []))
     native_host = _native_host(document["native_host"])
     for invocation in invocations:
@@ -899,6 +924,8 @@ def compile_section(declaration: ApplicationEnvironment, layout: Mapping[str, An
                 "pins": list(entry["pins"]),
                 "operator": list(entry["operator"]),
                 "pass": list(entry["pass"]),
+                "prefix": entry["prefix"],
+                "prefix_refused": list(entry["prefix_refused"]),
                 "fixed": [fixed(value) for value in entry["fixed"]],
                 "slots": [{"name": slot.name, "kind": slot.kind, "required": slot.required} for slot in entry["slots"]],
                 "package_path": entry["package_path"],
@@ -997,6 +1024,8 @@ def rust_lines(section: Mapping[str, Any]) -> list[str]:
         "    pub pins: &'static [&'static str],",
         "    pub operator: &'static [&'static str],",
         "    pub pass: &'static [&'static str],",
+        "    pub prefix: &'static str,",
+        "    pub prefix_refused: &'static [&'static str],",
         "    pub fixed: &'static [LaunchFixed],",
         "    pub slots: &'static [LaunchSlot],",
         "    pub package_path: bool,",
@@ -1055,6 +1084,8 @@ def rust_lines(section: Mapping[str, Any]) -> list[str]:
             f"inherit: {str(profile['inherit']).lower()}, invoked: {str(profile['invoked']).lower()}, "
             f"base: {_rust_strings(profile['base'])}, pins: {_rust_strings(profile['pins'])}, "
             f"operator: {_rust_strings(profile['operator'])}, pass: {_rust_strings(profile['pass'])}, "
+            f"prefix: {_rust_string(profile['prefix'])}, "
+            f"prefix_refused: {_rust_strings(profile['prefix_refused'])}, "
             f"fixed: &[{fixed}], slots: &[{slots}], package_path: {str(profile['package_path']).lower()} }},"
         )
     lines.append("];")
@@ -1228,6 +1259,13 @@ def reference_define(
         value = get(name)
         if value is not None:
             put(name, value)
+    prefix = profile["prefix"]
+    if prefix:
+        fold = str.upper if folded else str
+        kept_out = {fold(name) for name in (*profile["prefix_refused"], *(slot.name for slot in profile["slots"]))}
+        for key in list(ambient):
+            if fold(key).startswith(prefix) and len(key) > len(prefix) and fold(key) not in kept_out:
+                put(key, ambient[key])
     package_path = path_type(package)
     pins = profile["pins"]
     if "root" in pins:

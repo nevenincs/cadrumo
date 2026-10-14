@@ -432,32 +432,40 @@ The image has no default profile. It admits the invocations declared in its
 invocation table in `native/application-environment.toml`, each selecting its own
 profile, and refuses any other module, verb, `-c` or script before Python starts. The
 table includes the gateway, which runs the agent's command-line module with `serve`,
-the worker, which runs the agent's worker module, and four store and version
+the worker, which runs the agent's worker module, four store and version
 invocations of the command-line module: `stores-state`, `setup`, `migrate` with its
-optional `--expect-from` and `--expect-head` revision assertions, and `version --json`.
+optional `--expect-from` and `--expect-head` revision assertions, and `version --json`,
+and the agent's declared provider catalog, `providers --declared --json`.
 The store and version invocations run in the gateway's environment, take no port and
 no credential and start no gateway, so they select the `agent-gateway` profile
-rather than a copy of it. The profiles `agent-gateway` and `agent-worker` name what
-each receives.
+rather than a copy of it. The provider catalog needs no gateway, home, port or
+credential and creates and reads no state, so its own profile, `agent-providers`,
+takes the operating-system `system` group, the package's `PATH` and nothing else: no
+name under the agent's prefix, no launch parameter and no pin. The profiles
+`agent-gateway`, `agent-worker` and `agent-providers` name what each receives.
 
 - **The agent's settings.** The agent reads its settings only from its process
-  environment. The package admits the names under the agent's environment prefix
-  to this image's profiles and to no other: the generic `python` image and every
-  other profile drop the whole prefix. The package never admits the agent's
-  settings-file variable or the two retired hosted program-path variables; the file's
-  `agent` table lists them with the prefix and the agent's hosting-contract version.
-  The host does not decide hosted versus non-hosted policy: the agent's own
-  refusals apply to what the profiles admit. No profile admits a credential to the
-  gateway or the worker; the agent's credentials and the worker's internal token
-  travel only on standard input.
+  environment. The `agent-gateway` and `agent-worker` profiles admit every name
+  under the agent's environment prefix, which the file's `agent` table declares
+  with the agent's hosting-contract version, instead of a list of names: the package
+  keeps no list of the agent's settings, providers or lanes. The generic `python`
+  image and every other profile drop the whole prefix. The `agent` table's
+  never-admitted names are dropped by every profile, in any letter case on Windows:
+  the agent's settings-file variable and the two retired hosted program-path
+  variables. A refusal line names a variable and never carries its value. The host
+  does not decide hosted versus non-hosted policy and does not judge which admitted
+  name is a credential: the agent's own refusals apply to what the profiles admit,
+  including its refusal of a hosted start whose environment names a credential. The
+  file names no credential; the agent's credentials and the worker's internal token
+  travel on standard input.
 - **Launch parameters.** The gateway takes the storage root, the hosted root, the
-  gateway and worker ports and the relay program as optional launch parameters. The
-  worker takes the same parameters and the settings the gateway writes for it:
-  its gateway address, host, lifetime identifier and generation. Both profiles pass the agent's
-  development-tool-server switch and provider proof policy from their parent.
-  Neither profile pins the storage root, so the root a parent hands the gateway
-  reaches the worker and the relay the worker starts. Both pin the temporary
-  variables and the authority root.
+  gateway and worker ports and the relay program as optional launch parameters,
+  each checked by its kind; the prefix admission never bypasses that check. The
+  worker takes the same parameters, and the settings the gateway writes for it
+  (its gateway address, host, lifetime identifier and generation) reach it by the
+  prefix. Neither profile pins the storage root, so the root a parent hands the
+  gateway reaches the worker and the relay the worker starts. Both pin the
+  temporary variables and the authority root.
 - **Search path.** Both profiles take the package's `PATH` composition, so the agent
   finds `aeat`, `cadrumo-mcp` and the bundled `python` beside the system directory.
   They do not admit `CADRUMO_EXTERNAL_BIN_DIRS`.
@@ -476,8 +484,11 @@ disagreement. Its comparisons are:
 
 - each name and kind the package declares for the command line, against the
   command line's settings;
-- each agent name, the prefix and the hosting-contract version, against the bundled
-  agent's settings, its credentials and the settings its gateway writes for its worker;
+- the agent's prefix and hosting-contract version, each declared agent launch
+  parameter, and the never-admitted names, against the bundled agent's settings
+  and settings-file variable; that no declared name is one of the agent's
+  credentials; and that every setting the gateway writes for its worker reaches
+  the worker, by a launch parameter or by the prefix;
 - the gateway's launch parameters, against exactly what the runtime's composer
   writes, and the fixed agent and relay paths the runtime reads;
 - the native-host exit range, the refusal status and the refusal codes, against the
@@ -494,7 +505,8 @@ profile does not declare is refused with the closed refusal line, that a hosted
 gateway reaches the agent's own refusal `hosted_lane_unproven` (or
 `agent_ready` once a proof of the agent's hosted lane exists), that the worker reports the port it
 bound, and that the generic `python` image clears every name only the agent image
-admits, sets the declared `PATH` and pins the root to the command line's default.
+admits, an unlisted name under the agent's prefix included, sets the declared `PATH`
+and pins the root to the command line's default.
 The agent's names are read from the contract and from the installed agent, never
 spelled in the probe.
 

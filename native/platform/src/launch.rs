@@ -2,6 +2,7 @@
 //!
 //! An image passes nothing it does not declare: the profile names the operating-system
 //! base it takes from its caller, the operator settings and pass-through names it admits,
+//! the name prefix it admits whole (the bundled agent's, less its never-admitted names),
 //! the launch parameters a parent may supply, the package facts it sets, and its `PATH`.
 
 use crate::{
@@ -270,6 +271,30 @@ fn admits(profile: &LaunchProfile, name: &str) -> bool {
     profile.operator.contains(&name) || profile.pass.contains(&name)
 }
 
+/// Whether `key` is a name the profile admits by its prefix: longer than the prefix,
+/// not never-admitted, and not a launch parameter, which keeps its kind validation.
+fn admitted_by_prefix(profile: &LaunchProfile, key: &OsStr) -> bool {
+    let Some(name) = key.to_str() else {
+        return false;
+    };
+    let carries = if cfg!(windows) {
+        name.to_uppercase().starts_with(profile.prefix)
+    } else {
+        name.starts_with(profile.prefix)
+    };
+    !profile.prefix.is_empty()
+        && carries
+        && name.len() > profile.prefix.len()
+        && !profile
+            .prefix_refused
+            .iter()
+            .any(|refused| name_matches(key, refused))
+        && !profile
+            .slots
+            .iter()
+            .any(|slot| name_matches(key, slot.name))
+}
+
 fn search_path(
     profile: &LaunchProfile,
     package: &Path,
@@ -353,8 +378,8 @@ pub fn define_environment(
             None => {}
         }
     }
-    // Later entries win: base, operator settings, pass-through names, host pins,
-    // package fixed values, then launch parameters.
+    // Later entries win: base, operator settings, pass-through names, names under the
+    // admitted prefix, host pins, package fixed values, then launch parameters.
     let mut defined: Vec<(&str, OsString)> = Vec::new();
     for name in profile
         .base
@@ -364,6 +389,13 @@ pub fn define_environment(
     {
         if let Some(value) = lookup(ambient, name) {
             defined.push((name, value));
+        }
+    }
+    for (key, value) in ambient {
+        if admitted_by_prefix(profile, key)
+            && let Some(name) = key.to_str()
+        {
+            defined.push((name, value.clone()));
         }
     }
     let mut directories = Vec::new();
@@ -762,6 +794,156 @@ mod tests {
                 ),
                 "{arguments:?}"
             );
+        }
+    }
+
+    fn agent_ambient(prefix: &str, extra: &[(String, &str)]) -> Vec<(OsString, OsString)> {
+        let mut ambient = vec![
+            (OsString::from(system_name()), OsString::from("C:\\Windows")),
+            (
+                OsString::from(format!("{prefix}UNLISTED_LANE_SETTING")),
+                OsString::from("crosses"),
+            ),
+            (
+                OsString::from("UNDECLARED_PROVIDER_KEY"),
+                OsString::from("dropped"),
+            ),
+        ];
+        ambient.extend(
+            extra
+                .iter()
+                .map(|(name, value)| (OsString::from(name), OsString::from(value))),
+        );
+        ambient
+    }
+
+    #[test]
+    fn the_gateway_and_worker_admit_every_prefixed_name_but_the_never_admitted_ones() {
+        let scratch = Scratch::new("agent-prefix");
+        let gateway = select("cadrumo-agent", &agent_arguments(&["serve"])).unwrap();
+        let worker = select(
+            "cadrumo-agent",
+            &["-m", "cadrumo_agent.worker"].map(OsString::from),
+        )
+        .unwrap();
+        for profile in [gateway, worker] {
+            let prefix = profile.prefix;
+            assert!(
+                !prefix.is_empty() && !profile.prefix_refused.is_empty(),
+                "{}",
+                profile.name
+            );
+            assert!(
+                profile.pass.is_empty(),
+                "{} lists no agent name",
+                profile.name
+            );
+            let refused: Vec<(String, &str)> = profile
+                .prefix_refused
+                .iter()
+                .map(|name| ((*name).to_owned(), "dropped"))
+                .collect();
+            let mut extra = refused.clone();
+            // Windows compares names without case; POSIX keeps a lower-case spelling out.
+            let folded = format!("{prefix}FOLDED_SETTING").to_lowercase();
+            extra.push((folded.clone(), "folded"));
+            extra.push((prefix.to_owned(), "a bare prefix is no name"));
+            let defined = define_environment(
+                profile,
+                &agent_ambient(prefix, &extra),
+                &scratch.0,
+                &fixed_root(scratch.0.clone()),
+            )
+            .unwrap();
+            let environment = &defined.environment;
+            assert_eq!(
+                get(environment, &format!("{prefix}UNLISTED_LANE_SETTING")).unwrap(),
+                "crosses",
+                "{}",
+                profile.name
+            );
+            assert_eq!(
+                get(environment, &folded).is_some(),
+                cfg!(windows),
+                "{}",
+                profile.name
+            );
+            for (name, _) in &refused {
+                assert!(
+                    get(environment, name).is_none(),
+                    "{} admits {name}",
+                    profile.name
+                );
+                assert!(
+                    get(environment, &name.to_lowercase()).is_none(),
+                    "{} admits {name}",
+                    profile.name
+                );
+            }
+            assert!(get(environment, prefix).is_none());
+            assert!(get(environment, "UNDECLARED_PROVIDER_KEY").is_none());
+        }
+    }
+
+    #[test]
+    fn a_prefixed_launch_parameter_keeps_its_kind_check_and_its_refusal_names_no_value() {
+        let scratch = Scratch::new("agent-prefix-slot");
+        let gateway = select("cadrumo-agent", &agent_arguments(&["serve"])).unwrap();
+        let port = gateway
+            .slots
+            .iter()
+            .find(|slot| slot.kind == "port")
+            .unwrap()
+            .name;
+        let secret = "S3CRET-NOT-A-PORT";
+        let refused = define_environment(
+            gateway,
+            &agent_ambient(gateway.prefix, &[(port.to_owned(), secret)]),
+            &scratch.0,
+            &fixed_root(scratch.0.clone()),
+        );
+        let Err(DefineError::Refused(refusal)) = refused else {
+            panic!("a malformed port is refused: {refused:?}");
+        };
+        assert_eq!(refusal, LaunchRefusal::Malformed(port));
+        assert!(!refusal.line().contains(secret));
+        assert!(!format!("{refusal:?}").contains(secret));
+    }
+
+    #[test]
+    fn the_declared_provider_catalog_takes_the_system_base_only() {
+        let scratch = Scratch::new("agent-providers");
+        let arguments = agent_arguments(&["providers", "--declared", "--json"]);
+        let profile = select("cadrumo-agent", &arguments).unwrap();
+        assert!(profile.prefix.is_empty() && profile.slots.is_empty() && profile.pins.is_empty());
+        let gateway = select("cadrumo-agent", &agent_arguments(&["serve"])).unwrap();
+        let mut extra: Vec<(String, &str)> = gateway
+            .slots
+            .iter()
+            .map(|slot| (slot.name.to_owned(), "0"))
+            .collect();
+        extra.push(("CADRUMO_LOG_LEVEL".to_owned(), "DEBUG"));
+        let defined = define_environment(
+            profile,
+            &agent_ambient(gateway.prefix, &extra),
+            &scratch.0,
+            &fixed_root(scratch.0.clone()),
+        )
+        .unwrap();
+        let names: Vec<String> = defined
+            .environment
+            .iter()
+            .map(|(name, _)| name.to_string_lossy().to_uppercase())
+            .collect();
+        assert_eq!(names, [system_name().to_owned(), "PATH".to_owned()]);
+        assert!(defined.directories.is_empty());
+        for near in [
+            &["providers"][..],
+            &["providers", "--declared"],
+            &["providers", "--json", "--declared"],
+            &["providers", "--declared", "--json", "extra"],
+        ] {
+            assert_eq!(agent_selects(&agent_arguments(near)), None, "{near:?}");
         }
     }
 

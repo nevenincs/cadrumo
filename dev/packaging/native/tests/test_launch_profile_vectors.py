@@ -129,10 +129,60 @@ def test_vectors_admit_each_store_and_version_invocation_with_the_gateways_slots
             assert vector["arguments"][:2] == ["-m", "cadrumo_agent.cli.main"]
             # The hosted root, both ports, the relay and the storage root all arrive, as for serve.
             assert set(vector["environment"]) >= _AGENT_SLOTS, vector["name"]
-            # What the gateway never admits does not arrive under these arguments either.
-            assert not {"CADRUMO_AGENT_ENV_FILE", "CADRUMO_AGENT_INTERNAL_TOKEN", "ANTHROPIC_API_KEY"} & set(
-                vector["environment"]
-            )
+            # What the gateway never admits does not arrive under these arguments either, and a name
+            # under the agent's prefix that the declaration does not list does.
+            never = set(_DECLARATION.profiles["agent-gateway"]["prefix_refused"])
+            assert never & set(vector["ambient"]), vector["name"]
+            assert not (never | {"ANTHROPIC_API_KEY"}) & set(vector["environment"]), vector["name"]
+            assert _unlisted_agent_names(vector["environment"]), vector["name"]
+
+
+def _unlisted_agent_names(environment: Mapping[str, str]) -> set[str]:
+    """Return the names under the agent's prefix that the declaration names nowhere."""
+    return {
+        name
+        for name in environment
+        if name.upper().startswith("CADRUMO_AGENT_") and name.upper() not in _DECLARATION.names
+    }
+
+
+def test_vectors_admit_the_agent_prefix_whole_except_the_never_admitted_names_on_both_families() -> None:
+    for family in ("windows", "posix"):
+        for profile in ("agent-gateway", "agent-worker"):
+            vectors = [
+                vector
+                for vector in _DECLARATION.launch_vectors
+                if vector["platform"] == family and vector["profile"] == profile
+            ]
+            # Some vector of each profile carries an unlisted agent name through, so no list decides it.
+            assert any(_unlisted_agent_names(vector["environment"]) for vector in vectors), (family, profile)
+            never = {name.upper() for name in _DECLARATION.profiles[profile]["prefix_refused"]}
+            for vector in vectors:
+                assert not never & {name.upper() for name in vector["environment"]}, vector["name"]
+
+
+def test_vectors_give_the_declared_provider_catalog_the_system_base_only_on_both_families() -> None:
+    arguments = ["-m", "cadrumo_agent.cli.main", "providers", "--declared", "--json"]
+    for family in ("windows", "posix"):
+        admitted = [
+            vector
+            for vector in _DECLARATION.launch_vectors
+            if vector["platform"] == family and vector["arguments"] == arguments
+        ]
+        assert [vector["profile"] for vector in admitted] == ["agent-providers"], family
+        vector = admitted[0]
+        system = {name.upper() for name in _DECLARATION.base[family]["system"]}
+        assert any(name.startswith("CADRUMO_") for name in vector["ambient"]), vector["name"]
+        assert {name.upper() for name in vector["environment"]} <= system, vector["name"]
+        refused = [
+            candidate["arguments"]
+            for candidate in _DECLARATION.launch_vectors
+            if candidate["platform"] == family
+            and candidate["image"] == _AGENT
+            and candidate["refusal"] is not None
+            and candidate["arguments"][2:3] == ["providers"]
+        ]
+        assert refused, family
 
 
 def test_vectors_refuse_each_other_arrangement_of_the_agent_invocations_on_both_families() -> None:
@@ -208,6 +258,23 @@ def test_the_python_reading_admits_exactly_the_declared_option_patterns(family: 
 
 
 def test_the_replay_detects_a_planted_disagreement() -> None:
+    providers = dict(next(vector for vector in _DECLARATION.launch_vectors if vector["profile"] == "agent-providers"))
+    planted_agent = next(name for name in providers["ambient"] if name.startswith("CADRUMO_AGENT_"))
+    providers["environment"] = {**providers["environment"], planted_agent: providers["ambient"][planted_agent]}
+    assert _replay(_DECLARATION, providers)
+    gateway = dict(
+        next(
+            vector
+            for vector in _DECLARATION.launch_vectors
+            if vector["profile"] == "agent-gateway"
+            and set(vector["ambient"]) & set(_DECLARATION.profiles["agent-gateway"]["prefix_refused"])
+        )
+    )
+    never = next(
+        name for name in gateway["ambient"] if name in _DECLARATION.profiles["agent-gateway"]["prefix_refused"]
+    )
+    gateway["environment"] = {**gateway["environment"], never: gateway["ambient"][never]}
+    assert _replay(_DECLARATION, gateway)
     vector = dict(next(vector for vector in _DECLARATION.launch_vectors if vector["profile"] == "python"))
     vector["environment"] = {**vector["environment"], "CADRUMO_AGENT_PORT": "0"}
     assert _replay(_DECLARATION, vector)

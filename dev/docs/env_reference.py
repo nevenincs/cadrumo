@@ -175,6 +175,9 @@ def _passed_text(declaration: ApplicationEnvironment, profile: Mapping[str, Any]
         parts.append(f"the name groups {_list_in_words([f'`{group}`' for group in groups])}")
     if singles:
         parts.append(f"the names {_list_in_words([f'`{name}`' for name in singles])}")
+    if profile["prefix"]:
+        refused = _list_in_words([f"`{name}`" for name in profile["prefix_refused"]])
+        parts.append(f"every name that starts with `{profile['prefix']}` except {refused}")
     return " and ".join(parts) if parts else "nothing beyond its operating-system groups"
 
 

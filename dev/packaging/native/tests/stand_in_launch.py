@@ -250,10 +250,12 @@ def build(directory: Path, target: str, contract: dict[str, Any]) -> StandIn:
     native.mkdir(parents=True)
     for image in ("python", "cadrumo-mcp", *layout["bundled_images"]):
         (native / f"{image}{suffix}").write_bytes(b"")
-    declared = contract["application_environment"]["names"]
+    # The stand-in agent spells its settings as the agent does: its prefix, which the contract carries, and the
+    # setting's name. The contract lists none of them but the gateway's launch parameters.
+    prefix = next(profile["prefix"] for profile in contract["application_environment"]["profiles"] if profile["prefix"])
 
     def spelled(field: str) -> str:
-        return str(next(name for name in declared if name.endswith("_" + field.upper())))
+        return f"{prefix}{field.upper()}"
 
     agent_names = {
         field: spelled(field)

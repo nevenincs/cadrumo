@@ -272,6 +272,12 @@ def test_the_agent_only_names_are_the_ones_no_other_image_admits(stand_in: Stand
     declared = stand_in.contract["application_environment"]
     root = stand_in.contract["root"]["variable"]
     assert stand_in.agent_names["hosted_root"] in contract.agent_only_names
+    # A name only the agent's prefix admits is planted too, so a host that lists names is caught.
+    prefix = contract.gateway["prefix"]
+    assert prefix and any(
+        name.startswith(prefix) and name not in declared["names"] for name in contract.agent_only_names
+    )
+    assert contract.worker["prefix"] == prefix
     assert root not in contract.agent_only_names
     assert not contract.agent_only_names & set(declared["pins"]["temporary"])
     for profile in declared["profiles"]:

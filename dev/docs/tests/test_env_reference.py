@@ -162,6 +162,22 @@ def test_every_name_a_profile_admits_is_on_its_section_of_the_page() -> None:
         assert f"`{profile['image']}`" in section
 
 
+def test_a_profile_that_admits_a_prefix_states_it_and_the_names_it_never_admits() -> None:
+    """The page names the prefix a profile admits whole and each name it keeps out."""
+    declaration = _declaration()
+    page = render_environment_reference()
+    prefixed = {name: profile for name, profile in declaration.profiles.items() if profile["prefix"]}
+    assert prefixed, "no profile admits a prefix; this gate would pass over an empty page"
+    for name, profile in prefixed.items():
+        section = _profile_text(page, name)
+        assert f"every name that starts with `{profile['prefix']}` except" in section, name
+        missing = [refused for refused in profile["prefix_refused"] if f"`{refused}`" not in section]
+        assert not missing, f"profile {name} never admits {missing}; its section omits them"
+    for name, profile in declaration.profiles.items():
+        if not profile["prefix"]:
+            assert "every name that starts with" not in _profile_text(page, name), name
+
+
 def test_every_name_group_and_refusal_is_listed_once_on_the_page() -> None:
     """Groups, operating-system names, the refusal status and every refusal code are stated."""
     declaration = _declaration()

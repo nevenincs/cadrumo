@@ -70,9 +70,10 @@ def _conforming_agent(reference: Reference, runtime: dict[str, Any]) -> dict[str
     worker = next(
         profile
         for profile in reference.section["profiles"]
-        if profile["image"] == declared["image"] and profile["name"] != gateway["name"]
+        if profile["image"] == declared["image"] and profile["name"] != gateway["name"] and profile["prefix"]
     )
-    admitted = [*worker["pass"], *(slot["name"] for slot in worker["slots"])]
+    # The gateway writes its slots and settings of its own for the worker; the prefix admits the latter.
+    admitted = [*(slot["name"] for slot in worker["slots"]), f"{worker['prefix']}WORKER_GENERATION"]
     return {
         "prefix": declared["prefix"],
         "hosting_contract": declared["hosting_contract"],
@@ -81,7 +82,8 @@ def _conforming_agent(reference: Reference, runtime: dict[str, Any]) -> dict[str
             for name, entry in reference.declaration.names.items()
             if name.startswith(declared["prefix"])
         },
-        "credentials": [name for name in worker["pass"] if name.endswith("INTERNAL_TOKEN")],
+        # A credential the agent accepts under its prefix, which the prefix admits and no profile declares.
+        "credentials": [f"{worker['prefix']}SAMPLE_TOKEN"],
         "settings_file_variable": next(name for name in declared["never_admitted"] if name.endswith("ENV_FILE")),
         "worker_environment_writes": sorted(admitted),
     }
@@ -320,6 +322,11 @@ _PLANTED_AGENTS: list[tuple[str, Callable[[dict[str, Any]], None], str]] = [
     (
         "worker-write-unadmitted",
         lambda agent: agent["worker_environment_writes"].append("UNADMITTED_NAME"),
+        "does not admit",
+    ),
+    (
+        "worker-write-never-admitted",
+        lambda agent: agent["worker_environment_writes"].append(agent["settings_file_variable"]),
         "does not admit",
     ),
     (
