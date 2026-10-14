@@ -144,6 +144,7 @@ _LOCAL_READS: Final = (
     "overview.prepare",
     "overview.status",
     "profile.history",
+    "provider-settings.status",
     "profile.history.timeline",
     "user-profile.censo-prepare",
     "user-profile.recovery.status",
@@ -277,6 +278,9 @@ _LOCAL_WRITES: Final = (
     # builds local objects only and opens no browser or session.
     "modelo.work.verify",
     "profile.archive.export",
+    "provider-settings.remove",
+    "provider-settings.reset",
+    "provider-settings.set",
     "user-profile.automation-approve",
     "user-profile.automation-decline",
     "user-profile.automation-inventory",
