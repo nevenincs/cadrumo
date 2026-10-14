@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:811acc22aae1fbce58a4bd2d0352ff81cd0d9811af447e32112383826e235f93'
+body_hash: 'sha256:6774e8b327cdcf30c139642a35018f594c4cd01cfb74bb2edf66a4ceb22722dc'
 related:
   - "[[2026-10-13-canonical-environment-plan]]"
 ---
@@ -417,6 +417,9 @@ related:
 - `S14` `verify:` `pytest -m integration dev/runtime_lifecycle/tests/test_lifecycle.py -k profile_switch (staged Debug app)` -> `pass`
 - `S14` `M` `dev/runtime_lifecycle/tests/test_clients.py`
 - `S14` `verify:` `pytest -m integration dev/runtime_lifecycle/tests/test_clients.py (MCP binding steps; test continues to issue_key)` -> `pass`
+- `S14` `M` `dev/runtime_lifecycle/harness.py`
+- `S14` `M` `dev/runtime_lifecycle/client_probes.py`
+- `S14` `verify:` `pytest -m integration dev/runtime_lifecycle/tests/test_clients.py (staged Debug app)` -> `pass`
 
 ## Notes
 
@@ -476,3 +479,4 @@ related:
 - `S20` S20's source changes landed in commits made by other sessions before this Step's own commit: f55bed830e carried `profile_worker.py,` `worker_environment.py,` `test_worker_storage_environment.py` and `test_worker_provider_catalog.py,` and 3c4ec939fd carried the declaration, generator, `test_agent_image.py,` CONTRACT.md and the environment reference. 11deccf0d7 holds the ledger, the plan check and the type fix to `test_worker_provider_catalog.py.` f55bed830e also carries another session's runtime changes `(profile_host,` `profile_connection_*,` `test_agent_host_runtime),` which are not S20's.
 - `S14` Correction eb7a653215: once the KDF fix let bundle.runtime-lifecycle reach profile switching, `test_login_logout_profile_switch_and_stale_receipt` read through A after signing in to B; per 2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr constraint 6 a sign-in to B signs A out, so the test now expects A refused and measures sign-out on B. Agent results on stage from cadrumo-agent 1315871 are real; agent locks resynced in 0d0beb7cdf.
 - `S14` Correction 3f9c7db2ff: the MCP harness binds at the first resumed sign-in `(runtime_adapter.py` `_hold_session),` as 2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr constraint 5 rules; the client test reused one server for A then B. Now one server per sign-in. The test then stops at `issue_key:` config profile automation create --use agent refused `REFUSED_CLI_BOUNDARY` (credential admission, outside this worker's scope).
+- `S14` Correction c5fcc72716: `issue_key` passed --profile-secrets-stdin to config profile automation create while the sign-in served it (refused `profile_secrets_unused,` `_profile_session_gate.py:271)` and read `credential_reference` from output that hides identifiers without `CADRUMO_CLI_REVEAL_IDENTIFIERS;` harness.cli gains `reveal_identifiers.` The key section signs A out while A is signed in (constraint 6).
