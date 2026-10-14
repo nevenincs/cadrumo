@@ -2679,6 +2679,49 @@ cli:
       validate_name_help: Etiqueta opcional del perfil a validar; por defecto el perfil
         activo.
       view_help: Mostrar los hechos de un perfil (por defecto el perfil activo)
+    provider:
+      base_url_help: Guarda esta URL base https con la clave en lugar de la predeterminada
+        del proveedor.
+      clear_base_url_help: Descarta la URL base guardada y vuelve a usar la predeterminada
+        del proveedor.
+      expected_revision_help: La revisión que indicó tu última lectura del estado
+        para este proveedor; si el proveedor ha cambiado desde entonces, se rechaza
+        el cambio.
+      help: Gestiona las credenciales de los proveedores de modelos que usa el agente
+        en este perfil.
+      provider_id_help: El identificador del proveedor tal como lo declara cadrumo-agent;
+        ejecuta `aeat config provider status` para verlos.
+      refused:
+        base_url_rejected: 'Se ha rechazado la URL base: este proveedor no admite
+          ninguna, no es una URL https, o este proveedor necesita una y no quedaría
+          ninguna guardada. No se ha cambiado nada.'
+        catalog_unavailable: cadrumo-agent no ha podido indicar sus proveedores, así
+          que no hay nada que leer ni cambiar. Comprueba que el agente está instalado.
+        committed_readback_failed: El cambio se ha guardado, pero no se ha podido
+          volver a leer. Lee el estado antes de volver a cambiar este proveedor.
+        invalid_key_format: Eso no tiene la forma de una clave de proveedor. No se
+          ha guardado nada.
+        not_signed_in: Inicia sesión en este perfil antes de gestionar sus proveedores.
+        person_act_required: Solo tú puedes cambiar la credencial de un proveedor,
+          desde la línea de comandos o la interfaz de terminal. Un agente no puede.
+        profile_locked: Este perfil está bloqueado o su sesión ha terminado. Vuelve
+          a iniciar sesión y reinténtalo.
+        revision_conflict: Este proveedor ha cambiado desde tu lectura del estado.
+          Vuelve a leer el estado y envía la revisión que indique.
+        unknown: Se ha rechazado la solicitud. Comprueba el identificador del proveedor
+          con `aeat config provider status` y que este proveedor admite una clave.
+          No se ha cambiado nada.
+      remove_help: 'Desactiva un proveedor: se descarta su clave guardada y no se
+        usa para él ninguna clave del entorno de desarrollo.'
+      reset_help: Devuelve un proveedor al estado sin configurar. En una compilación
+        de desarrollo vuelve a aplicarse su clave del entorno; si no, sigue sin estar
+        disponible hasta que guardes una clave.
+      secret_prompt: Clave del proveedor
+      set_help: Guarda o sustituye la clave de un proveedor. La clave se lee de la
+        entrada estándar o de una solicitud sin eco, nunca de un argumento, y el proveedor
+        no la comprueba hasta su primer uso.
+      status_help: Muestra todos los proveedores que declara cadrumo-agent, con su
+        estado enmascarado y la revisión que debe devolver un cambio.
     provision:
       browser:
         help: Descarga la versión del navegador que abre la automatización de la AEAT.

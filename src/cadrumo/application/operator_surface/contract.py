@@ -52,6 +52,7 @@ ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
             "google",
             "reset",
             "collab",
+            "provider",
         ),
     ),
     RootSurface(
@@ -190,6 +191,17 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         child="collab",
         operator_question="register trusted review-package recipients by verified public-key fingerprint",
         service_owner="cadrumo.application.modelo",
+        mutability=OperatorMutability.LOCAL_STATE_MUTATING,
+    ),
+    MountedCommandFamily(
+        domain=MountedCommandDomain.AGENT,
+        root=RootSurfaceName.CONFIG,
+        child="provider",
+        operator_question=(
+            "read the masked status of the model providers cadrumo-agent declares, and set, remove or reset "
+            "a provider credential in the signed-in profile"
+        ),
+        service_owner="cadrumo.application.provider_settings",
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
     MountedCommandFamily(

@@ -2658,6 +2658,50 @@ cli:
       validate_name_help: Etiqueta opcional del perfil a validar; per defecte el perfil
         actiu.
       view_help: Mostrar els fets d'un perfil (per defecte el perfil actiu)
+    provider:
+      base_url_help: Desa aquesta URL base https amb la clau en lloc de la predeterminada
+        del proveïdor.
+      clear_base_url_help: Descarta la URL base desada i torna a fer servir la predeterminada
+        del proveïdor.
+      expected_revision_help: La revisió que va indicar la teva última lectura de
+        l'estat per a aquest proveïdor; si el proveïdor ha canviat des de llavors,
+        es rebutja el canvi.
+      help: Gestiona les credencials dels proveïdors de models que fa servir l'agent
+        en aquest perfil.
+      provider_id_help: L'identificador del proveïdor tal com el declara cadrumo-agent;
+        executa `aeat config provider status` per veure'ls.
+      refused:
+        base_url_rejected: 'S''ha rebutjat la URL base: aquest proveïdor no n''admet
+          cap, no és una URL https, o aquest proveïdor en necessita una i no en quedaria
+          cap de desada. No s''ha canviat res.'
+        catalog_unavailable: cadrumo-agent no ha pogut indicar els seus proveïdors,
+          així que no hi ha res per llegir ni canviar. Comprova que l'agent està instal·lat.
+        committed_readback_failed: El canvi s'ha desat, però no s'ha pogut tornar
+          a llegir. Llegeix l'estat abans de tornar a canviar aquest proveïdor.
+        invalid_key_format: Això no té la forma d'una clau de proveïdor. No s'ha desat
+          res.
+        not_signed_in: Inicia la sessió en aquest perfil abans de gestionar-ne els
+          proveïdors.
+        person_act_required: Només tu pots canviar la credencial d'un proveïdor, des
+          de la línia d'ordres o la interfície de terminal. Un agent no pot.
+        profile_locked: Aquest perfil està bloquejat o la seva sessió ha acabat. Torna
+          a iniciar la sessió i torna-ho a provar.
+        revision_conflict: Aquest proveïdor ha canviat des de la teva lectura de l'estat.
+          Torna a llegir l'estat i envia la revisió que indiqui.
+        unknown: S'ha rebutjat la sol·licitud. Comprova l'identificador del proveïdor
+          amb `aeat config provider status` i que aquest proveïdor admet una clau.
+          No s'ha canviat res.
+      remove_help: 'Desactiva un proveïdor: se''n descarta la clau desada i no s''hi
+        fa servir cap clau de l''entorn de desenvolupament.'
+      reset_help: Torna un proveïdor a l'estat sense configurar. En una compilació
+        de desenvolupament torna a aplicar-se la seva clau de l'entorn; si no, continua
+        sense estar disponible fins que hi desis una clau.
+      secret_prompt: Clau del proveïdor
+      set_help: Desa o substitueix la clau d'un proveïdor. La clau es llegeix de l'entrada
+        estàndard o d'una sol·licitud sense eco, mai d'un argument, i el proveïdor
+        no la comprova fins al primer ús.
+      status_help: Mostra tots els proveïdors que declara cadrumo-agent, amb el seu
+        estat emmascarat i la revisió que ha de tornar un canvi.
     provision:
       browser:
         help: Descarrega la versió del navegador que obre l'automatització de l'AEAT.

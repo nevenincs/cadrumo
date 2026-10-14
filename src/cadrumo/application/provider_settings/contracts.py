@@ -16,6 +16,7 @@ from typing import Annotated
 from pydantic import BaseModel, Field, StringConstraints
 
 from ...core.hex import is_hex64
+from ...core.json_contract import OutputSchema
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.provider_settings.catalog import ProviderAuthKind, ProviderConsumer, ProviderId, ProviderTransport
 
@@ -83,10 +84,8 @@ class CliState(StrEnum):
     UNKNOWN = "unknown"
 
 
-class ProviderStatusEntry(BaseModel):
+class ProviderStatusEntry(OutputSchema):
     """Masked status of one provider."""
-
-    model_config = _STRICT_FROZEN
 
     id: ProviderId
     """The lane id every change addresses."""
@@ -109,10 +108,8 @@ class ProviderStatusEntry(BaseModel):
     revision: ProviderSettingsRevision
 
 
-class ProviderSettingsStatus(BaseModel):
+class ProviderSettingsStatus(OutputSchema):
     """Masked status of every catalogued provider, in catalog order."""
-
-    model_config = _STRICT_FROZEN
 
     development: bool
     """Whether this is a development build, where an unset key may come from the environment."""

@@ -346,6 +346,10 @@ without its options and arguments.
 | `aeat config profile status` | `user-profile.view` | none |
 | `aeat config profile validate` | `user-profile.view` | none |
 | `aeat config profile view` | `user-profile.view` | none |
+| `aeat config provider remove` | `provider-settings.remove` | the person's act |
+| `aeat config provider reset` | `provider-settings.reset` | the person's act |
+| `aeat config provider set` | `provider-settings.set` | the person's act |
+| `aeat config provider status` | `provider-settings.status` | none |
 | `aeat config provision browser` | none | `execute` `browser-runtime.provision` |
 | `aeat config provision install` | none | `execute` `local-reader.provision` |
 | `aeat config provision load` | none | `execute` `local-reader.provision` |

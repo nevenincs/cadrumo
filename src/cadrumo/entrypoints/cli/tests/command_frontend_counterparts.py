@@ -193,6 +193,7 @@ _SIGN_IN: Final = "it signs the person in or out, locks a session or reads the s
 _SESSIONS: Final = "it lists or denies the profile's sessions and keys, which is the person's administration of access"
 _KEYS: Final = "it requests, approves, declines, changes or lists an automation key, which only the person issues"
 _TYPED_BY_THE_PERSON: Final = "it takes a password or another secret, which only the person types"
+_PROVIDER_CREDENTIAL: Final = "it sets, removes or resets a model provider's credential, which only the person manages"
 _INSTALLATION: Final = (
     "it does installation work that belongs to no single profile, outside the profile an agent works in"
 )
@@ -293,6 +294,9 @@ PERSON_ACT_COMMANDS: Final[Mapping[CliPath, PersonAct]] = MappingProxyType(
         ),
         ("config", "profile", "resume"): PersonAct(_TYPED_BY_THE_PERSON),
         ("config", "profile", "sessions"): PersonAct(_SESSIONS),
+        ("config", "provider", "remove"): PersonAct(_PROVIDER_CREDENTIAL),
+        ("config", "provider", "reset"): PersonAct(_PROVIDER_CREDENTIAL),
+        ("config", "provider", "set"): PersonAct(_PROVIDER_CREDENTIAL),
         ("config", "reset", "resume"): PersonAct(_INSTALLATION),
         ("config", "reset", "start"): PersonAct(_INSTALLATION),
         ("config", "sign-in-hold"): PersonAct(_SIGN_IN),

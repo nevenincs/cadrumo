@@ -185,6 +185,7 @@ def test_machine_secret_and_profile_authentication_metadata_matches_live_project
         ("aeat", "config", "profile", "recovery", "disable"),
         ("aeat", "config", "profile", "archive", "import"),
         ("aeat", "config", "auth", "certificate", "secret", "set"),
+        ("aeat", "config", "provider", "set"),
     }
 
     root = resolve_command_path(cli_tree, "aeat")

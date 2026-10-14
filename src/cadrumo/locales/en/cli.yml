@@ -2475,6 +2475,45 @@ cli:
       validate_name_help: Optional profile label to validate; defaults to the active
         profile.
       view_help: Show one profile's facts (defaults to the active profile)
+    provider:
+      base_url_help: Store this https base URL with the key instead of the provider's
+        default.
+      clear_base_url_help: Drop the stored base URL and use the provider's default
+        again.
+      expected_revision_help: The revision your last status read reported for this
+        provider; if the provider changed since then, the change is refused.
+      help: Manage the model-provider credentials the agent uses in this profile.
+      provider_id_help: The provider id as cadrumo-agent declares it; run `aeat config
+        provider status` to see them.
+      refused:
+        base_url_rejected: 'The base URL was refused: this provider takes none, it
+          is not an https URL, or this provider needs one and none would be stored.
+          Nothing was changed.'
+        catalog_unavailable: cadrumo-agent could not report its providers, so there
+          is nothing to read or change. Check that the agent is installed.
+        committed_readback_failed: The change was saved, but reading it back failed.
+          Read the status before you change this provider again.
+        invalid_key_format: That is not in a form a provider key can take. Nothing
+          was stored.
+        not_signed_in: Sign in to this profile before you manage its providers.
+        person_act_required: Only you can change a provider credential, from the command
+          line or the terminal interface. An agent cannot.
+        profile_locked: This profile is locked or its session has ended. Sign in again
+          and retry.
+        revision_conflict: This provider changed since your status read. Read the
+          status again and send the revision it reports.
+        unknown: The request was refused. Check the provider id against `aeat config
+          provider status` and that this provider takes a key. Nothing was changed.
+      remove_help: 'Turn a provider off: its stored key is dropped and no development
+        environment key is used for it.'
+      reset_help: Return a provider to unset. In a development build its environment
+        key applies again; otherwise it stays unavailable until you set a key.
+      secret_prompt: Provider key
+      set_help: Store or replace a provider's key. The key is read from standard input
+        or a prompt that does not echo, never from an argument, and the provider does
+        not check it until its first use.
+      status_help: List every provider cadrumo-agent declares, with its masked status
+        and the revision a change must send back.
     provision:
       browser:
         help: Download the Chromium build that AEAT browser automation launches. Does
