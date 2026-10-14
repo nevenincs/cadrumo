@@ -12,7 +12,7 @@ from mcp.client.stdio import StdioServerParameters, stdio_client
 from cadrumo.core.storage_environment import ChildEnvironmentProfile, child_environment
 
 from ..client_probes import _call, _mcp_read, _mcp_refuse_profile, _tui, issue_key, mcp_edit_profile
-from ..harness import LifecycleHarness
+from ..harness import LifecycleHarness, Profile
 
 pytestmark = [
     pytest.mark.integration,
@@ -22,6 +22,13 @@ pytestmark = [
     pytest.mark.os_keychain,
     pytest.mark.external_tool,
 ]
+
+
+async def _signed_in_reads(harness: LifecycleHarness, profile: Profile, label: str) -> None:
+    """The command line and the TUI read the profile the person just signed in to."""
+    view = (await asyncio.to_thread(harness.cli, "profile", "view", profile_secret=profile.password))["result"]
+    assert view["display_name"] == label
+    await asyncio.to_thread(_tui, harness, profile, admitted=True)
 
 
 @pytest.mark.anyio
@@ -39,27 +46,37 @@ async def test_packaged_client_authentication_and_profile_scope(harness: Lifecyc
     )
     with (
         (harness.root / "mcp.stderr").open("w", encoding="utf-8") as errors,
+        (harness.root / "mcp-b.stderr").open("w", encoding="utf-8") as b_errors,
         (harness.root / "mcp-key.stderr").open("w", encoding="utf-8") as key_errors,
     ):
         async with (
             stdio_client(parameters, errlog=errors) as (reader, writer),
             ClientSession(reader, writer, read_timeout_seconds=90) as mcp,
+            AsyncExitStack() as b_stack,
             AsyncExitStack() as key_stack,
         ):
             await mcp.initialize()
             await _call(mcp, "describe", {"definition_id": "auth.local-read"}, admitted=False)
-            # The default MCP connection follows the human selector without enrollment or a password.
-            for profile, other, label in ((first, second, "Client A"), (second, first, "Client B")):
-                await asyncio.to_thread(
-                    harness.cli, "login", label, "--secrets-stdin", secret={"passphrase": profile.password}
-                )
-                view = (await asyncio.to_thread(harness.cli, "profile", "view", profile_secret=profile.password))[
-                    "result"
-                ]
-                assert view["display_name"] == label
-                await asyncio.to_thread(_tui, harness, profile, admitted=True)
-                await _mcp_read(mcp, profile)
-                await _mcp_refuse_profile(mcp, other)
+            # A server without a key is bound to the profile of the first sign-in it resumes,
+            # with no enrollment or password, and keeps that profile for its whole life.
+            await asyncio.to_thread(
+                harness.cli, "login", "Client A", "--secrets-stdin", secret={"passphrase": first.password}
+            )
+            await _signed_in_reads(harness, first, "Client A")
+            await _mcp_read(mcp, first)
+            await _mcp_refuse_profile(mcp, second)
+            await asyncio.to_thread(
+                harness.cli, "login", "Client B", "--secrets-stdin", secret={"passphrase": second.password}
+            )
+            await _signed_in_reads(harness, second, "Client B")
+            # Once another profile is signed in the server bound to A refuses every call;
+            # the person starts a new agent session, which binds to B.
+            await _call(mcp, "describe", {"definition_id": "auth.local-read"}, admitted=False)
+            b_reader, b_writer = await b_stack.enter_async_context(stdio_client(parameters, errlog=b_errors))
+            mcp = await b_stack.enter_async_context(ClientSession(b_reader, b_writer, read_timeout_seconds=90))
+            await mcp.initialize()
+            await _mcp_read(mcp, second)
+            await _mcp_refuse_profile(mcp, first)
             # The person issues a key for A on the command line; the agent only receives its
             # reference at launch and stays pinned to A while the human selector is B.
             await asyncio.to_thread(
