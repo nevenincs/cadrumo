@@ -46,6 +46,7 @@ from ...application.user_profile.access_contracts import (
 )
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.automation_custody_port import (
+    AutomationCustodyCode,
     AutomationCustodyError,
     AutomationCustodySnapshot,
 )
@@ -305,8 +306,9 @@ class ProfileConnectionSessionMixin:
         deletion, retired = host.revoke_human_sign_in()
         try:
             agent_access_remains: bool | None = _issued_key_can_admit(host.store.snapshot(), now())
-        except AutomationCustodyError:
-            agent_access_remains = None
+        except AutomationCustodyError as error:
+            # A profile that never published automation control has issued no key; any other failure is unknown.
+            agent_access_remains = False if error.reason is AutomationCustodyCode.MISSING else None
         self._retired(retired)
         return RuntimeHumanSignedOut(
             request_id=request.request_id,
