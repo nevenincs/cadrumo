@@ -3,2502 +3,413 @@ tags:
   - '#exec'
   - '#mcp-parity'
 date: '2026-10-10'
-modified: '2026-10-13'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:d448d246974def6df005b18ee24e1a88830196cf7e9dc45ba490857aec035af1'
+body_hash: 'sha256:12fcef356ff41a35ccac6c508edb8467b8e71fd0e229456a8f6b73bedc9d0d3a'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
-
 # `mcp-parity` ledger
 
 ## Changes
 
-- `S10` `M` `src/cadrumo_harness/_data/agent/README.md`
-- `S10` `M` `src/cadrumo_harness/_data/agent/personas/cadrumo-classifier.md`
-- `S10` `M` `src/cadrumo_harness/_data/agent/personas/cadrumo-coordinator.md`
-- `S10` `M` `src/cadrumo_harness/_data/agent/personas/cadrumo-ledger-groomer.md`
-- `S10` `M` `src/cadrumo_harness/_data/agent/personas/cadrumo-modelo-preparer.md`
-- `S10` `M` `src/cadrumo_harness/_data/agent/personas/cadrumo-onboarding.md`
-- `S10` `M` `src/cadrumo_harness/_data/agent/personas/cadrumo-reconciler.md`
-- `S10` `M` `src/cadrumo_harness/_data/agent/personas/cadrumo-verifier.md`
-- `S10` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-lifecycle-ordering.md`
-- `S10` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-operating-rules.md`
-- `S10` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-orientation-routing.md`
-- `S10` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-safety-handoff.md`
-- `S10` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-alta-contribuyente/SKILL.md`
-- `S10` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-exportar-declaracion/SKILL.md`
-- `S10` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-llevar-libro/SKILL.md`
-- `S10` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-100/SKILL.md`
-- `S10` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-111/SKILL.md`
-- `S10` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-115/SKILL.md`
-- `S10` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-130/SKILL.md`
-- `S10` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-131/SKILL.md`
-- `S10` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-180/SKILL.md`
-- `S10` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-190/SKILL.md`
-- `S10` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-193/SKILL.md`
-- `S10` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-200/SKILL.md`
-- `S10` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-202/SKILL.md`
-- `S10` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-303/SKILL.md`
-- `S10` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-309/SKILL.md`
-- `S10` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-322/SKILL.md`
-- `S10` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-349/SKILL.md`
-- `S10` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-353/SKILL.md`
-- `S10` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-369/SKILL.md`
-- `S10` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-390/SKILL.md`
-- `S10` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-rectificar-declaracion/SKILL.md`
-- `S10` `verify:` `pytest dev/agent_eval/tests/test_rule_surface_conformance.py -n0 -m "unit or integration"` -> `pass`
-- `S10` `verify:` `pytest src/cadrumo_harness/tests/test_skill_applies_when.py src/cadrumo_harness/tests/test_harness_data_ships.py -n0 -m "unit or integration"` -> `pass`
+- `S10` `summary:` `Plan status=checked; original change rows: M 33; distinct path cells: 33. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo_harness/_data=33
+  Representative paths: src/cadrumo_harness/_data/agent/README.md
+- `S10` `verify:` `Archived historical verification rows: pass=2; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S10` `by:` `vaultspec-standard-executor`
-- `S04` `M` `src/cadrumo/application/user_profile/automation_operations.py`
-- `S04` `M` `src/cadrumo/application/export/google_operation.py`
-- `S04` `M` `src/cadrumo/application/local_reader_operation.py`
-- `S04` `M` `src/cadrumo/application/user_profile/operations.py`
-- `S04` `M` `src/cadrumo/application/user_profile/tests/test_automation_inventory_operation.py`
-- `S04` `M` `src/cadrumo/application/user_profile/tests/test_bundle_export_access.py`
-- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_google_operation.py`
-- `S04` `M` `src/cadrumo/adapters/persistence/operations/tests/test_local_reader_operation.py`
-- `S04` `M` `docs/technical/articles/027-local-reader-provisioning-workstation-health-and-application-contracts.md`
-- `S04` `verify:` `pytest (13 covering test files) -n0 -m "(unit or integration) and not perf ..."` -> `pass`
-- `S04` `verify:` `ruff check` -> `pass`
-- `S04` `verify:` `ruff format --check` -> `pass`
-- `S04` `verify:` `ty check --python-platform linux` -> `pass`
-- `S04` `verify:` `registry dump before and after: exactly seven definitions lost MCP` -> `pass`
+- `S04` `summary:` `Plan status=checked; original change rows: M 9; distinct path cells: 9. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/application=6, docs/technical=1,
+  src/cadrumo/adapters=1, src/cadrumo/entrypoints=1
+  Representative paths: src/cadrumo/application/user_profile/automation_operations.py;
+  docs/technical/articles/027-local-reader-provisioning-workstation-health-and-application-contracts.md
+- `S04` `verify:` `Archived historical verification rows: pass=5; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S04` `by:` `vaultspec-standard-executor`
-- `S08` `M` `src/cadrumo_harness/mcp/admitted_operations.py`
-- `S08` `M` `src/cadrumo_harness/mcp/protocol_contract.py`
-- `S08` `M` `src/cadrumo_harness/mcp/runtime_adapter.py`
-- `S08` `M` `src/cadrumo_harness/mcp/tests/test_operation_search_tool.py`
-- `S08` `M` `src/cadrumo_harness/mcp/tests/test_result_page_tool.py`
-- `S08` `A` `src/cadrumo_harness/mcp/operation_contract_cache.py`
-- `S08` `A` `src/cadrumo_harness/mcp/operation_discovery.py`
-- `S08` `A` `src/cadrumo_harness/mcp/result_request.py`
-- `S08` `verify:` `pytest src/cadrumo_harness/mcp/tests src/cadrumo_harness/tests -n0 (188 tests)` -> `pass`
-- `S08` `verify:` `ruff check` -> `pass`
-- `S08` `verify:` `ruff format --check` -> `pass`
-- `S08` `verify:` `ty check --python-platform linux` -> `pass`
+- `S08` `summary:` `Plan status=checked; original change rows: M 6, A 3; distinct path cells: 9. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo_harness/mcp=8,
+  src/cadrumo_harness/_data=1
+  Representative paths: src/cadrumo_harness/mcp/admitted_operations.py;
+  src/cadrumo_harness/_data/agent/rules/cadrumo-operator-operating-rules.md
+- `S08` `verify:` `Archived historical verification rows: pass=5; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S08` `by:` `vaultspec-standard-executor`
-- `S08` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-operating-rules.md`
-- `S08` `verify:` `pytest dev/agent_eval/tests/test_rule_surface_conformance.py and harness data tests -n0 (14 tests)` -> `pass`
-- `S01` `A` `src/cadrumo/application/operations/mcp_admission.py`
-- `S01` `A` `src/cadrumo/entrypoints/tests/test_operation_mcp_admission.py`
-- `S01` `A` `src/cadrumo/application/operations/tests/test_mcp_admission.py`
-- `S01` `verify:` `pytest test_operation_mcp_admission.py test_mcp_admission.py test_operation_catalogue.py -n0 (47 tests)` -> `pass`
-- `S01` `verify:` `ruff check` -> `pass`
-- `S01` `verify:` `ruff format --check` -> `pass`
-- `S01` `verify:` `ty check --python-platform linux` -> `pass`
-- `S01` `verify:` `basedpyright and pyrefly on mcp_admission.py` -> `pass`
-- `S01` `verify:` `just check-import-boundaries` -> `fail`
+- `S01` `summary:` `Plan status=checked; original change rows: A 5, M 5; distinct path cells: 8. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/application=4, src/cadrumo/entrypoints=3,
+  .vault/audit=1
+  Representative paths: src/cadrumo/application/operations/mcp_admission.py;
+  src/cadrumo/entrypoints/tests/test_operation_mcp_admission.py
+- `S01` `verify:` `Archived historical verification rows: fail=1, pass=15; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S01` `by:` `vaultspec-high-executor`
-- `S07` `A` `src/cadrumo/core/path_confinement.py`
-- `S07` `A` `src/cadrumo/core/tests/test_path_confinement.py`
-- `S07` `M` `src/cadrumo/application/modelo/reconciliation_import_operation.py`
-- `S07` `M` `src/cadrumo/application/live/filed_history_operation.py`
-- `S07` `M` `src/cadrumo/application/live/filed_single_capture_operation.py`
-- `S07` `M` `src/cadrumo/application/live/filed_bulk_capture_operation.py`
-- `S07` `M` `src/cadrumo/application/live/filed_source_capture_operation.py`
-- `S07` `M` `src/cadrumo/application/live/iva_wallet_history_capture_operation.py`
-- `S07` `M` `src/cadrumo/application/live/iva_remote_state_capture_operation.py`
-- `S07` `M` `src/cadrumo/application/live/tests/test_provider_capture_preparation.py`
-- `S07` `M` `src/cadrumo/entrypoints/tests/test_modelo_reconciliation_import_operation.py`
-- `S07` `M` `.vault/reference/2026-10-10-mcp-parity-admitted-surface-defects-reference.md`
-- `S07` `verify:` `pytest test_path_confinement.py test_provider_capture_preparation.py test_modelo_reconciliation_import_operation.py -n0 (36 tests)` -> `pass`
-- `S07` `verify:` `pytest test_registered_executor_conformance.py -k reconcile/filed/iva-wallet (20 tests)` -> `pass`
-- `S07` `verify:` `pytest src/cadrumo/application/live/tests -k capture/filed/wallet (117 tests)` -> `pass`
-- `S07` `verify:` `ruff check` -> `pass`
-- `S07` `verify:` `ruff format --check` -> `pass`
-- `S07` `verify:` `ty check --python-platform linux` -> `pass`
+- `S07` `summary:` `Plan status=checked; original change rows: A 2, M 10; distinct path cells: 12. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/application=8, src/cadrumo/core=2,
+  .vault/reference=1, src/cadrumo/entrypoints=1
+  Representative paths: src/cadrumo/application/modelo/reconciliation_import_operation.py;
+  src/cadrumo/core/path_confinement.py
+- `S07` `verify:` `Archived historical verification rows: pass=6; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S07` `by:` `vaultspec-high-executor`
-- `S15` `M` `src/cadrumo/adapters/persistence/storage/master_key/profile_worker_custody.py`
-- `S15` `A` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_profile_worker_custody_lease_window.py`
-- `S15` `M` `.vault/reference/2026-10-10-mcp-parity-sign-in-doors-reference.md`
-- `S15` `verify:` `pytest test_profile_worker_custody_lease_window.py -n0 (4 tests)` -> `pass`
-- `S15` `verify:` `pytest master_key neighbours: bucket session, absolute cap, idle timeout, worker binding (45 tests)` -> `pass`
-- `S15` `verify:` `pytest runtime: lease retirement, human login receipt, worker settlement (12 tests)` -> `pass`
-- `S15` `verify:` `ruff check` -> `pass`
-- `S15` `verify:` `ruff format --check` -> `pass`
-- `S15` `verify:` `ty check --python-platform linux` -> `pass`
+- `S15` `summary:` `Plan status=checked; original change rows: M 2, A 1; distinct path cells: 3. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/adapters=2, .vault/reference=1
+  Representative paths:
+  src/cadrumo/adapters/persistence/storage/master_key/profile_worker_custody.py;
+  .vault/reference/2026-10-10-mcp-parity-sign-in-doors-reference.md
+- `S15` `verify:` `Archived historical verification rows: pass=6; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S15` `by:` `vaultspec-high-executor`
-- `S05` `M` `src/cadrumo/application/user_profile/operation_access_policy.py`
-- `S05` `M` `src/cadrumo/application/user_profile/profile_operation_access.py`
-- `S05` `M` `src/cadrumo/application/user_profile/tests/test_profile_operation_access.py`
-- `S05` `M` `src/cadrumo/application/user_profile/tests/test_bundle_export_access.py`
-- `S05` `A` `src/cadrumo/application/user_profile/tests/test_submission_commit_scope.py`
-- `S05` `A` `src/cadrumo/entrypoints/runtime/tests/test_submission_commit_admission.py`
-- `S05` `verify:` `pytest user_profile access tests: commit scope, profile operation access, bundle export, access policy (204 tests)` -> `pass`
-- `S05` `verify:` `pytest runtime: submission commit admission, scope resolution, execution authority (23 tests)` -> `pass`
-- `S05` `verify:` `pytest ledger remove and reset, key authentication, justificante verbs (15 tests)` -> `pass`
-- `S05` `verify:` `pytest executor conformance, MCP admission, operation catalogue (356 tests)` -> `pass`
-- `S05` `verify:` `pytest src/cadrumo/application/user_profile/tests src/cadrumo/entrypoints/runtime/tests -n4 (1033 passed, 18 failed)` -> `fail`
-- `S05` `verify:` `ruff check` -> `pass`
-- `S05` `verify:` `ruff format --check` -> `pass`
-- `S05` `verify:` `ty check --python-platform linux` -> `pass`
+- `S05` `summary:` `Plan status=checked; original change rows: M 4, A 2; distinct path cells: 6. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/application=5, src/cadrumo/entrypoints=1
+  Representative paths: src/cadrumo/application/user_profile/operation_access_policy.py;
+  src/cadrumo/entrypoints/runtime/tests/test_submission_commit_admission.py
+- `S05` `verify:` `Archived historical verification rows: fail=1, pass=7; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S05` `by:` `vaultspec-high-executor`
-- `S09` `A` `src/cadrumo/application/operator_surface/command_operations.py`
-- `S09` `A` `src/cadrumo/entrypoints/cli/command_operation_table.py`
-- `S09` `A` `src/cadrumo/entrypoints/tests/source_tree_support.py`
-- `S09` `A` `src/cadrumo/entrypoints/cli/tests/_operation_submission_flow_support.py`
-- `S09` `A` `src/cadrumo/entrypoints/cli/tests/command_operation_derivation.py`
-- `S09` `A` `src/cadrumo/entrypoints/cli/tests/test_command_operation_join.py`
-- `S09` `A` `src/cadrumo/application/operator_surface/tests/test_command_operations.py`
-- `S09` `M` `src/cadrumo/entrypoints/cli/operator_surface_reconciliation.py`
-- `S09` `M` `src/cadrumo/entrypoints/cli/main.py`
-- `S09` `M` `src/cadrumo/entrypoints/tests/test_operation_catalogue.py`
-- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_command_surface_beside_retired_state.py`
-- `S09` `M` `src/cadrumo/entrypoints/tests/test_operation_mcp_admission.py`
-- `S09` `verify:` `pytest test_command_operation_join.py test_command_operations.py -n0 (42 tests)` -> `pass`
-- `S09` `verify:` `pytest test_operation_catalogue.py test_operation_mcp_admission.py -n0 (33 tests)` -> `pass`
-- `S09` `verify:` `pytest src/cadrumo/application/operator_surface/tests (32 tests)` -> `pass`
-- `S09` `verify:` `ruff check` -> `pass`
-- `S09` `verify:` `ruff format --check` -> `pass`
-- `S09` `verify:` `ty check --python-platform linux` -> `pass`
+- `S09` `summary:` `Plan status=checked; original change rows: A 7, M 5; distinct path cells: 12. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/entrypoints=10, src/cadrumo/application=2
+  Representative paths: src/cadrumo/entrypoints/cli/command_operation_table.py;
+  src/cadrumo/application/operator_surface/command_operations.py
+- `S09` `verify:` `Archived historical verification rows: pass=6; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S09` `by:` `vaultspec-high-executor`
-- `S27` `M` `src/cadrumo/application/ledger/ratios_operation.py`
-- `S27` `M` `src/cadrumo/application/ledger/rule_operation.py`
-- `S27` `M` `src/cadrumo/application/operations/mcp_admission.py`
-- `S27` `M` `src/cadrumo/application/ledger/tests/test_ratios_operation.py`
-- `S27` `M` `src/cadrumo/application/ledger/tests/test_rule_operation.py`
-- `S27` `verify:` `pytest test_ratios_operation.py test_rule_operation.py test_mcp_admission.py -n0 (51 tests)` -> `pass`
-- `S27` `verify:` `pytest test_operation_mcp_admission.py test_operation_catalogue.py -n0 (33 tests)` -> `pass`
-- `S27` `verify:` `pytest test_registered_executor_conformance.py -k ratios/rule (8 tests)` -> `pass`
-- `S27` `verify:` `ruff check` -> `pass`
-- `S27` `verify:` `ruff format --check` -> `pass`
-- `S27` `verify:` `ty check --python-platform linux` -> `pass`
+- `S27` `summary:` `Plan status=checked; original change rows: M 5; distinct path cells: 5. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/application=5
+  Representative paths: src/cadrumo/application/ledger/ratios_operation.py
+- `S27` `verify:` `Archived historical verification rows: pass=6; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S27` `by:` `vaultspec-standard-executor`
-- `S06` `A` `src/cadrumo/application/operations/mcp_surfaces.py`
-- `S06` `A` `src/cadrumo/application/operations/tests/test_mcp_surfaces.py`
-- `S06` `A` `src/cadrumo/application/user_profile/tests/test_session_surface_lease.py`
-- `S06` `A` `src/cadrumo/entrypoints/tests/test_operation_mcp_surfaces.py`
-- `S06` `A` `src/cadrumo/entrypoints/runtime/tests/test_login_surface.py`
-- `S06` `A` `src/cadrumo/adapters/local_runtime/tests/test_login_surface_frame.py`
-- `S06` `A` `src/cadrumo_harness/mcp/tests/test_surface_tools.py`
-- `S06` `M` `src/cadrumo/application/user_profile/operation_access_policy.py`
-- `S06` `M` `src/cadrumo/application/user_profile/session_authority_admission.py`
-- `S06` `M` `src/cadrumo/application/runtime/profile_access.py`
-- `S06` `M` `src/cadrumo/adapters/local_runtime/runtime_frame_io.py`
-- `S06` `M` `src/cadrumo/adapters/local_runtime/frontend_client.py`
-- `S06` `M` `src/cadrumo/adapters/local_runtime/runtime_client.py`
-- `S06` `M` `src/cadrumo/adapters/local_runtime/runtime_credentials.py`
-- `S06` `M` `src/cadrumo/entrypoints/runtime/profile_connection_admission.py`
-- `S06` `M` `src/cadrumo/entrypoints/runtime/profile_connection_sessions.py`
-- `S06` `M` `src/cadrumo/entrypoints/runtime/profile_connection_operations.py`
-- `S06` `M` `src/cadrumo_harness/mcp/main.py`
-- `S06` `M` `src/cadrumo_harness/mcp/server.py`
-- `S06` `M` `src/cadrumo_harness/mcp/runtime_adapter.py`
-- `S06` `M` `src/cadrumo_harness/mcp/admitted_operations.py`
-- `S06` `M` `src/cadrumo_harness/mcp/operation_discovery.py`
-- `S06` `M` `src/cadrumo/adapters/local_runtime/tests/test_runtime_credential_admission_budget.py`
-- `S06` `M` `src/cadrumo/adapters/local_runtime/tests/test_runtime_credentials_cleanup.py`
-- `S06` `M` `docs/how-to/connect-an-agent.md`
-- `S06` `M` `docs/technical/articles/187-filing-skills-and-the-mcp-operator-harness.md`
-- `S06` `M` `dev/smoke/smoke_check.py`
-- `S06` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
-- `S06` `M` `src/cadrumo/application/user_profile/access_contracts.py`
-- `S06` `M` `src/cadrumo/entrypoints/runtime/profile_host.py`
-- `S06` `M` `dev/quality/metadata/import_load_targets.json`
-- `S06` `verify:` `pytest surfaces, session lease, access policy, commit scope (108 tests)` -> `pass`
-- `S06` `verify:` `pytest entrypoint surfaces, admission, catalogue (45 tests)` -> `pass`
-- `S06` `verify:` `pytest runtime login surface, submission admission, receipt login, sign-in refusals, login lifecycle (53 tests)` -> `pass`
-- `S06` `verify:` `pytest local runtime frames and credential fakes (20 tests)` -> `pass`
-- `S06` `verify:` `pytest src/cadrumo_harness (207 tests)` -> `pass`
-- `S06` `verify:` `pytest src/cadrumo/application/user_profile/tests src/cadrumo/application/runtime -n4 (763 tests)` -> `pass`
-- `S06` `verify:` `ruff check` -> `pass`
-- `S06` `verify:` `ruff format --check on the files of this Step` -> `pass`
-- `S06` `verify:` `ty check --python-platform linux` -> `pass`
+- `S06` `summary:` `Plan status=checked; original change rows: A 7, M 27; distinct path cells: 34. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/adapters=7, src/cadrumo/application=7,
+  src/cadrumo/entrypoints=6, src/cadrumo_harness/mcp=6, docs/locales/*=3, dev/quality=2,
+  dev/smoke=1, docs/how-to=1, docs/technical=1
+  Representative paths: src/cadrumo/adapters/local_runtime/tests/test_login_surface_frame.py;
+  src/cadrumo/application/operations/mcp_surfaces.py
+- `S06` `verify:` `Archived historical verification rows: pass=10, fail=1; latest recorded outcome=fail; summary only, not a fresh run.` -> `fail`
 - `S06` `by:` `vaultspec-high-executor`
-- `S06` `M` `docs/locales/es/LC_MESSAGES/how-to/connect-an-agent.po`
-- `S06` `M` `docs/locales/ca/LC_MESSAGES/how-to/connect-an-agent.po`
-- `S06` `M` `docs/locales/hu/LC_MESSAGES/how-to/connect-an-agent.po`
-- `S06` `verify:` `catalogue entries for the new paragraph: present, not fuzzy, not empty, tokens preserved in es, ca, hu` -> `pass`
-- `S06` `verify:` `pytest dev/docs/tests -k locale/i18n/catalog/translation/po (179 passed, 5 failed)` -> `fail`
-- `S29` `M` `src/cadrumo/application/ledger/evidence_followup_registration.py`
-- `S29` `M` `src/cadrumo/application/ledger/tests/test_evidence_followup_operation.py`
-- `S29` `A` `src/cadrumo/entrypoints/tests/test_ledger_evidence_mcp_frontends.py`
-- `S29` `M` `src/cadrumo/application/operations/mcp_admission.py`
-- `S29` `verify:` `pytest evidence follow-up and read operation tests (66 tests)` -> `pass`
-- `S29` `verify:` `pytest admission, surfaces, catalogue, evidence frontends (86 tests)` -> `pass`
-- `S29` `verify:` `pytest executor conformance for the touched families (66 tests)` -> `pass`
-- `S29` `verify:` `registry comparison: only intended operations gained MCP, none lost the command line or terminal interface` -> `pass`
-- `S29` `verify:` `ruff check` -> `pass`
-- `S29` `verify:` `ruff format --check` -> `pass`
-- `S29` `verify:` `ty check --python-platform linux` -> `pass`
+- `S29` `summary:` `Plan status=checked; original change rows: M 3, A 1; distinct path cells: 4. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/application=3, src/cadrumo/entrypoints=1
+  Representative paths: src/cadrumo/application/ledger/evidence_followup_registration.py;
+  src/cadrumo/entrypoints/tests/test_ledger_evidence_mcp_frontends.py
+- `S29` `verify:` `Archived historical verification rows: pass=7; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S29` `by:` `vaultspec-standard-executor`
-- `S28` `A` `src/cadrumo/application/modelo/tests/test_calculation_detail_projection.py`
-- `S28` `A` `src/cadrumo/application/modelo/tests/test_metadata_read_operation.py`
-- `S28` `A` `src/cadrumo/application/modelo/tests/test_revision_inventory_operation.py`
-- `S28` `A` `src/cadrumo/application/modelo/tests/test_revision_snapshot_operation.py`
-- `S28` `M` `src/cadrumo/application/modelo/calculation_projection.py`
-- `S28` `M` `src/cadrumo/application/modelo/dependency_operation.py`
-- `S28` `M` `src/cadrumo/application/modelo/filing_record_list_operation.py`
-- `S28` `M` `src/cadrumo/application/modelo/filing_selection_operation.py`
-- `S28` `M` `src/cadrumo/application/modelo/iva_wallet_balance_operation.py`
-- `S28` `M` `src/cadrumo/application/modelo/maritime_preview_operation.py`
-- `S28` `M` `src/cadrumo/application/modelo/metadata_read_operation.py`
-- `S28` `M` `src/cadrumo/application/modelo/review_package_recipient_operations.py`
-- `S28` `M` `src/cadrumo/application/modelo/revision_inventory_operation.py`
-- `S28` `M` `src/cadrumo/application/modelo/revision_selection_operation.py`
-- `S28` `M` `src/cadrumo/application/modelo/revision_snapshot_operation.py`
-- `S28` `M` `src/cadrumo/application/modelo/taxation_comparison_operation.py`
-- `S28` `M` `src/cadrumo/application/modelo/tests/test_dependency_operation.py`
-- `S28` `M` `src/cadrumo/application/modelo/tests/test_filing_record_list_operation.py`
-- `S28` `M` `src/cadrumo/application/modelo/tests/test_filing_selection_operation.py`
-- `S28` `M` `src/cadrumo/application/modelo/tests/test_iva_wallet_balance_operation.py`
-- `S28` `M` `src/cadrumo/application/modelo/tests/test_maritime_preview_operation.py`
-- `S28` `M` `src/cadrumo/application/modelo/tests/test_review_package_recipient_operations.py`
-- `S28` `M` `src/cadrumo/application/modelo/tests/test_revision_selection_operation.py`
-- `S28` `M` `src/cadrumo/application/modelo/tests/test_taxation_comparison_operation.py`
-- `S28` `M` `src/cadrumo/application/modelo/tests/test_verification_report_read_operation.py`
-- `S28` `M` `src/cadrumo/application/modelo/tests/test_work_inventory_operation.py`
-- `S28` `M` `src/cadrumo/application/modelo/tests/test_work_review_operation.py`
-- `S28` `M` `src/cadrumo/application/modelo/verification_report_read_operation.py`
-- `S28` `M` `src/cadrumo/application/modelo/work_inventory_operation.py`
-- `S28` `M` `src/cadrumo/application/modelo/work_review_operation.py`
-- `S28` `M` `src/cadrumo/application/workflow/resume_operation.py`
-- `S28` `M` `src/cadrumo/application/workflow/run_read_operation.py`
-- `S28` `M` `src/cadrumo/application/workflow/tests/test_resume_operation.py`
-- `S28` `M` `src/cadrumo/application/workflow/tests/test_run_read_operation.py`
-- `S28` `M` `src/cadrumo/application/operations/mcp_admission.py`
-- `S28` `M` `src/cadrumo/entrypoints/tests/test_operation_mcp_admission.py`
-- `S28` `verify:` `pytest eighteen modelo and workflow operation test files (129 tests)` -> `pass`
-- `S28` `verify:` `pytest admission, surfaces, catalogue (86 tests)` -> `pass`
-- `S28` `verify:` `pytest executor conformance for the touched families (66 tests)` -> `pass`
-- `S28` `verify:` `registry comparison: only intended operations gained MCP, none lost the command line or terminal interface` -> `pass`
-- `S28` `verify:` `ruff check` -> `pass`
-- `S28` `verify:` `ruff format --check` -> `pass`
-- `S28` `verify:` `ty check --python-platform linux` -> `pass`
+- `S28` `summary:` `Plan status=checked; original change rows: A 4, M 32; distinct path cells: 36. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/application=35, src/cadrumo/entrypoints=1
+  Representative paths: src/cadrumo/application/modelo/tests/test_calculation_detail_projection.py;
+  src/cadrumo/entrypoints/tests/test_operation_mcp_admission.py
+- `S28` `verify:` `Archived historical verification rows: pass=7; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S28` `by:` `vaultspec-standard-executor`
-- `S02` `M` `src/cadrumo/application/invoices/catalogue_remove_operation.py`
-- `S02` `M` `src/cadrumo/application/invoices/tests/test_catalogue_remove_operation.py`
-- `S02` `M` `src/cadrumo/application/auth/operation_definitions.py`
-- `S02` `M` `src/cadrumo/application/auth/teardown_operation_access.py`
-- `S02` `M` `src/cadrumo/application/auth/tests/test_operation_definitions.py`
-- `S02` `M` `src/cadrumo/application/ledger/own_account_operation.py`
-- `S02` `M` `src/cadrumo/application/ledger/tests/test_own_account_operation.py`
-- `S02` `M` `src/cadrumo/application/modelo/m360_solicitud_operation.py`
-- `S02` `M` `src/cadrumo/application/modelo/tests/test_m360_solicitud_operation.py`
-- `S02` `M` `src/cadrumo/application/prorrata_register/registered_operations.py`
-- `S02` `M` `src/cadrumo/entrypoints/tests/test_operation_mcp_admission.py`
-- `S02` `verify:` `pytest admission, surfaces, catalogue (73 tests)` -> `pass`
-- `S02` `verify:` `pytest touched operation and access tests (520 tests)` -> `pass`
-- `S02` `verify:` `pytest executor conformance for the touched families (75 tests)` -> `pass`
-- `S02` `verify:` `pytest neighbouring suites: user_profile, prorrata, auth, invoices, harness (1592 tests)` -> `pass`
-- `S02` `verify:` `registry comparison: six definitions lost MCP, none lost the command line or terminal interface` -> `pass`
-- `S02` `verify:` `ruff check` -> `pass`
-- `S02` `verify:` `ruff format --check` -> `pass`
-- `S02` `verify:` `ty check --python-platform linux` -> `pass`
+- `S02` `summary:` `Plan status=checked; original change rows: M 11; distinct path cells: 11. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/application=10, src/cadrumo/entrypoints=1
+  Representative paths: src/cadrumo/application/invoices/catalogue_remove_operation.py;
+  src/cadrumo/entrypoints/tests/test_operation_mcp_admission.py
+- `S02` `verify:` `Archived historical verification rows: pass=8; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S02` `by:` `vaultspec-high-executor`
-- `S03` `M` `src/cadrumo/application/user_profile/profile_operation_access.py`
-- `S03` `M` `src/cadrumo/application/user_profile/tests/test_profile_operation_access.py`
-- `S03` `M` `src/cadrumo/application/user_profile/censal_operation.py`
-- `S03` `M` `src/cadrumo/entrypoints/tests/test_censal_access_policy.py`
-- `S03` `M` `src/cadrumo/entrypoints/runtime/tests/test_response_scope.py`
-- `S03` `M` `src/cadrumo/application/operations/mcp_admission.py`
-- `S03` `verify:` `pytest admission, surfaces, catalogue (73 tests)` -> `pass`
-- `S03` `verify:` `pytest touched operation and access tests (520 tests)` -> `pass`
-- `S03` `verify:` `pytest executor conformance for the touched families (75 tests)` -> `pass`
-- `S03` `verify:` `pytest neighbouring suites: user_profile, prorrata, auth, invoices, harness (1592 tests)` -> `pass`
-- `S03` `verify:` `registry comparison: six definitions lost MCP, none lost the command line or terminal interface` -> `pass`
-- `S03` `verify:` `ruff check` -> `pass`
-- `S03` `verify:` `ruff format --check` -> `pass`
-- `S03` `verify:` `ty check --python-platform linux` -> `pass`
+- `S03` `summary:` `Plan status=checked; original change rows: M 6; distinct path cells: 6. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/application=4, src/cadrumo/entrypoints=2
+  Representative paths: src/cadrumo/application/user_profile/profile_operation_access.py;
+  src/cadrumo/entrypoints/tests/test_censal_access_policy.py
+- `S03` `verify:` `Archived historical verification rows: pass=8; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S03` `by:` `vaultspec-high-executor`
-- `S12` `M` `src/cadrumo/entrypoints/runtime/profile_connection_admission.py`
-- `S12` `A` `src/cadrumo/entrypoints/runtime/tests/stored_sign_in_runtime.py`
-- `S12` `A` `src/cadrumo/entrypoints/runtime/tests/test_login_methods.py`
-- `S12` `M` `src/cadrumo/entrypoints/runtime/tests/test_receipt_login.py`
-- `S12` `verify:` `pytest runtime sign-in tests (49 tests)` -> `pass`
-- `S12` `verify:` `ruff check` -> `pass`
-- `S12` `verify:` `ruff format --check` -> `pass`
-- `S12` `verify:` `ty check --python-platform linux` -> `pass`
-- `S12` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S12` `summary:` `Plan status=checked; original change rows: M 2, A 2; distinct path cells: 4. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/entrypoints=4
+  Representative paths: src/cadrumo/entrypoints/runtime/profile_connection_admission.py
+- `S12` `verify:` `Archived historical verification rows: pass=5; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S12` `by:` `vaultspec-high-executor`
-- `S13` `M` `src/cadrumo_harness/mcp/runtime_adapter.py`
-- `S13` `M` `src/cadrumo_harness/mcp/runtime_admission.py`
-- `S13` `M` `src/cadrumo_harness/mcp/main.py`
-- `S13` `M` `src/cadrumo_harness/mcp/server.py`
-- `S13` `M` `src/cadrumo_harness/mcp/admitted_operations.py`
-- `S13` `M` `src/cadrumo_harness/mcp/operation_discovery.py`
-- `S13` `M` `src/cadrumo_harness/mcp/protocol_contract.py`
-- `S13` `M` `src/cadrumo/application/user_profile/session_authority_admission.py`
-- `S13` `M` `src/cadrumo/application/user_profile/tests/test_session_surface_lease.py`
-- `S13` `A` `src/cadrumo_harness/mcp/tests/test_installed_sign_in_resume.py`
-- `S13` `A` `src/cadrumo_harness/mcp/tests/test_internal_failure_refusal.py`
-- `S13` `M` `src/cadrumo_harness/mcp/tests/test_bootstrap_reference_recovery.py`
-- `S13` `M` `src/cadrumo_harness/mcp/tests/test_installed_stdio.py`
-- `S13` `M` `src/cadrumo_harness/mcp/tests/test_runtime_authority.py`
-- `S13` `M` `src/cadrumo_harness/mcp/tests/test_runtime_manager_remedy.py`
-- `S13` `M` `src/cadrumo_harness/mcp/tests/test_runtime_protocol.py`
-- `S13` `M` `src/cadrumo/entrypoints/tests/test_operation_mcp_admission.py`
-- `S13` `M` `dev/packaging/tests/test_installed_oracles.py`
-- `S13` `M` `dev/agent_eval/tests/test_installed_mcp_first_enrollment.py`
-- `S13` `M` `docs/how-to/connect-an-agent.md`
-- `S13` `M` `docs/workstation-setup.md`
-- `S13` `M` `docs/technical/articles/187-filing-skills-and-the-mcp-operator-harness.md`
-- `S13` `M` `docs/technical/topics/runtime-tui-and-agent-harness.md`
-- `S13` `M` `src/cadrumo_harness/_workspace.py`
-- `S13` `M` `src/cadrumo_harness/_data/agent/README.md`
-- `S13` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-operating-rules.md`
-- `S13` `verify:` `pytest harness suite (241 tests)` -> `pass`
-- `S13` `verify:` `pytest admission, operations and user_profile suites (1498 tests)` -> `pass`
-- `S13` `verify:` `pytest harness data and rule conformance (30 tests)` -> `pass`
-- `S13` `verify:` `pytest fresh-process sign-in resume` -> `pass`
-- `S13` `verify:` `ruff check` -> `pass`
-- `S13` `verify:` `ruff format --check` -> `pass`
-- `S13` `verify:` `ty check --python-platform linux` -> `pass`
+- `S13` `summary:` `Plan status=checked; original change rows: M 24, A 2; distinct path cells: 26. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo_harness/mcp=14, docs/technical=2,
+  src/cadrumo/application=2, src/cadrumo_harness/_data=2, dev/agent_eval=1, dev/packaging=1,
+  docs/how-to=1, docs/workstation-setup.md=1, src/cadrumo/entrypoints=1,
+  src/cadrumo_harness/_workspace.py=1
+  Representative paths: src/cadrumo_harness/mcp/runtime_adapter.py;
+  docs/technical/articles/187-filing-skills-and-the-mcp-operator-harness.md
+- `S13` `verify:` `Archived historical verification rows: pass=7; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S13` `by:` `vaultspec-high-executor`
-- `S14` `M` `src/cadrumo_harness/mcp/runtime_adapter.py`
-- `S14` `A` `src/cadrumo_harness/mcp/tests/test_sign_in_resume.py`
-- `S14` `A` `src/cadrumo/entrypoints/runtime/tests/test_mcp_sign_in_adapter.py`
-- `S14` `verify:` `pytest harness suite (241 tests)` -> `pass`
-- `S14` `verify:` `pytest runtime sign-in tests (49 tests)` -> `pass`
+- `S14` `summary:` `Plan status=checked; original change rows: M 1, A 2; distinct path cells: 3. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo_harness/mcp=2, src/cadrumo/entrypoints=1
+  Representative paths: src/cadrumo_harness/mcp/runtime_adapter.py;
+  src/cadrumo/entrypoints/runtime/tests/test_mcp_sign_in_adapter.py
+- `S14` `verify:` `Archived historical verification rows: pass=2; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S14` `by:` `vaultspec-high-executor`
-- `S17` `M` `src/cadrumo/entrypoints/runtime/profile_connection_sessions.py`
-- `S17` `A` `src/cadrumo/entrypoints/runtime/tests/test_mcp_sign_in_door.py`
-- `S17` `verify:` `pytest runtime sign-in tests (49 tests)` -> `pass`
-- `S17` `verify:` `ruff check` -> `pass`
-- `S17` `verify:` `ty check --python-platform linux` -> `pass`
+- `S17` `summary:` `Plan status=checked; original change rows: M 1, A 1; distinct path cells: 2. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/entrypoints=2
+  Representative paths: src/cadrumo/entrypoints/runtime/profile_connection_sessions.py
+- `S17` `verify:` `Archived historical verification rows: pass=3; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S17` `by:` `vaultspec-high-executor`
-- `S16` `M` `src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt.py`
-- `S16` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_supplied_human_receipt.py`
-- `S16` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_acceleration_receipt_sign_in_binding.py`
-- `S16` `M` `src/cadrumo/entrypoints/runtime/profile_login.py`
-- `S16` `M` `src/cadrumo/application/user_profile/login_session.py`
-- `S16` `M` `src/cadrumo/application/user_profile/login_session_port.py`
-- `S16` `verify:` `pytest custody receipt and login-session adapter tests (62 tests)` -> `pass`
-- `S16` `verify:` `pytest runtime receipt and sign-in tests (46 tests)` -> `pass`
-- `S16` `verify:` `ruff check` -> `pass`
-- `S16` `verify:` `ruff format --check` -> `pass`
-- `S16` `verify:` `ty check --python-platform linux` -> `pass`
+- `S16` `summary:` `Plan status=checked; original change rows: M 6; distinct path cells: 6. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/adapters=3, src/cadrumo/application=2,
+  src/cadrumo/entrypoints=1
+  Representative paths: src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt.py;
+  src/cadrumo/application/user_profile/login_session.py
+- `S16` `verify:` `Archived historical verification rows: pass=5; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S16` `by:` `vaultspec-standard-executor`
-- `S11` `M` `src/cadrumo/application/operations/mcp_admission.py`
-- `S11` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-lifecycle-ordering.md`
-- `S11` `verify:` `pytest harness data and rule conformance (30 tests)` -> `pass`
-- `S11` `verify:` `ruff check` -> `pass`
-- `S46` `M` `src/cadrumo/application/ledger/evidence_read_operation.py`
-- `S46` `M` `src/cadrumo/application/ledger/evidence_followup_contracts.py`
-- `S46` `M` `src/cadrumo/application/ledger/evidence_followup_operation.py`
-- `S46` `M` `src/cadrumo/application/ledger/evidence_followup_registration.py`
-- `S46` `M` `src/cadrumo/application/ledger/history_operation.py`
-- `S46` `M` `src/cadrumo/application/ledger/invoice_evidence_readiness_operation.py`
-- `S46` `M` `src/cadrumo/application/modelo/filing_record_view_operation.py`
-- `S46` `M` `src/cadrumo/application/modelo/historical_filing_projection.py`
-- `S46` `M` `src/cadrumo/application/user_profile/google_configuration_executor.py`
-- `S46` `M` `src/cadrumo/application/user_profile/google_configuration_operation.py`
-- `S46` `M` `src/cadrumo/application/user_profile/history_contracts.py`
-- `S46` `M` `src/cadrumo/application/user_profile/history_operation.py`
-- `S46` `M` `src/cadrumo/application/operations/mcp_admission.py`
-- `S46` `M` `src/cadrumo/entrypoints/operation_composition.py`
-- `S46` `M` `src/cadrumo/entrypoints/cli/command_operation_table.py`
-- `S46` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_filing_record_view.py`
-- `S46` `M` `src/cadrumo/entrypoints/tui/historical_export.py`
-- `S46` `M` `src/cadrumo/entrypoints/tui/modelo/runtime_workbench_reads.py`
-- `S46` `A` `src/cadrumo/application/ledger/tests/test_evidence_query_operation.py`
-- `S46` `A` `src/cadrumo/application/ledger/tests/test_invoice_evidence_readiness_agent_access.py`
-- `S46` `A` `src/cadrumo/application/user_profile/tests/test_google_stored_record_reads_agent_access.py`
-- `S46` `A` `src/cadrumo/application/user_profile/tests/test_history_timeline_operation.py`
-- `S46` `A` `src/cadrumo/entrypoints/tests/conformance_ledger_evidence_agent_support.py`
-- `S46` `A` `src/cadrumo/entrypoints/tests/conformance_ledger_history_support.py`
-- `S46` `verify:` `pytest evidence, history and Google read tests (244 tests)` -> `pass`
-- `S46` `verify:` `pytest modelo, composition, CLI and TUI tests for the touched reads (98 tests)` -> `pass`
-- `S46` `verify:` `pytest census and registry (663 tests)` -> `pass`
-- `S46` `verify:` `pytest executor conformance for the touched families (37 tests)` -> `pass`
-- `S46` `verify:` `pytest harness and command join (275 tests)` -> `pass`
-- `S46` `verify:` `ruff check` -> `pass`
-- `S46` `verify:` `ruff format --check` -> `pass`
-- `S46` `verify:` `ty check --python-platform linux` -> `pass`
-- `S46` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S11` `summary:` `Plan status=checked; original change rows: M 2; distinct path cells: 2. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/application=1,
+  src/cadrumo_harness/_data=1
+  Representative paths: src/cadrumo/application/operations/mcp_admission.py;
+  src/cadrumo_harness/_data/agent/rules/cadrumo-operator-lifecycle-ordering.md
+- `S11` `verify:` `Archived historical verification rows: pass=2; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
+- `S46` `summary:` `Plan status=checked; original change rows: M 18, A 6; distinct path cells: 24. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/application=17, src/cadrumo/entrypoints=7
+  Representative paths: src/cadrumo/application/ledger/evidence_read_operation.py;
+  src/cadrumo/entrypoints/operation_composition.py
+- `S46` `verify:` `Archived historical verification rows: pass=9; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S46` `by:` `vaultspec-high-executor`
-- `S37` `A` `src/cadrumo/application/operations/execution_actor.py`
-- `S37` `A` `src/cadrumo/application/operations/tests/test_execution_actor.py`
-- `S37` `A` `src/cadrumo/application/modelo/tests/test_calculation_replaced_head.py`
-- `S37` `A` `src/cadrumo/entrypoints/tests/test_modelo_work_mcp_admission.py`
-- `S37` `M` `src/cadrumo/application/modelo/operation_definitions.py`
-- `S37` `M` `src/cadrumo/application/modelo/work_create_operation.py`
-- `S37` `M` `src/cadrumo/application/modelo/work_calculation_contracts.py`
-- `S37` `M` `src/cadrumo/application/modelo/work_change_contracts.py`
-- `S37` `M` `src/cadrumo/application/modelo/metadata_operation_access.py`
-- `S37` `M` `src/cadrumo/application/modelo/wizard_attempt_operation.py`
-- `S37` `M` `src/cadrumo/application/operations/mcp_admission.py`
-- `S37` `M` `src/cadrumo/entrypoints/operation_composition.py`
-- `S37` `M` `src/cadrumo/entrypoints/runtime/operation_host.py`
-- `S37` `M` `src/cadrumo/entrypoints/runtime/operation_authority.py`
-- `S37` `M` `src/cadrumo/entrypoints/runtime/tests/test_operation_scope_resolution.py`
-- `S37` `M` `src/cadrumo/entrypoints/tests/test_operation_mcp_admission.py`
-- `S37` `M` `src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py`
-- `S37` `M` `src/cadrumo/entrypoints/tests/test_lifecycle_operation_composition.py`
-- `S37` `M` `src/cadrumo/application/modelo/tests/test_lifecycle_operation_conformance.py`
-- `S37` `M` `dev/quality/metadata/import_load_targets.json`
-- `S37` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
-- `S37` `M` `.vault/adr/2026-10-10-mcp-parity-admission-rulings-adr.md`
-- `S37` `verify:` `pytest new actor, replaced-head, admission and caller tests (32 tests)` -> `pass`
-- `S37` `verify:` `pytest registered executor conformance (326 tests)` -> `pass`
-- `S37` `verify:` `pytest census and registry (637 tests)` -> `pass`
-- `S37` `verify:` `pytest touched lifecycle, CLI and TUI suites (143 of 151 tests)` -> `pass`
-- `S37` `verify:` `ruff check` -> `pass`
-- `S37` `verify:` `ruff format --check` -> `pass`
-- `S37` `verify:` `ty check --python-platform linux` -> `pass`
-- `S37` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S37` `summary:` `Plan status=checked; original change rows: A 6, M 40; distinct path cells: 44. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/application=27,
+  src/cadrumo/entrypoints=14, dev/quality=2, .vault/adr=1
+  Representative paths: src/cadrumo/application/operations/execution_actor.py;
+  src/cadrumo/entrypoints/tests/test_modelo_work_mcp_admission.py
+- `S37` `verify:` `Archived historical verification rows: pass=33; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S37` `by:` `vaultspec-high-executor`
-- `S38` `M` `src/cadrumo/application/modelo/operation_definitions.py`
-- `S38` `M` `src/cadrumo/application/modelo/work_verification_contracts.py`
-- `S38` `M` `src/cadrumo/application/operations/mcp_admission.py`
-- `S38` `verify:` `pytest registered executor conformance (326 tests)` -> `pass`
-- `S38` `verify:` `pytest census and registry (637 tests)` -> `pass`
+- `S38` `summary:` `Plan status=checked; original change rows: M 3; distinct path cells: 3. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/application=3
+  Representative paths: src/cadrumo/application/modelo/operation_definitions.py
+- `S38` `verify:` `Archived historical verification rows: pass=2; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S38` `by:` `vaultspec-high-executor`
-- `S45` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
-- `S45` `M` `src/cadrumo/adapters/local_runtime/tests/test_operation_process_scope.py`
-- `S45` `M` `src/cadrumo/adapters/outbound/aeat/browser/tests/test_real_resource_lifecycle.py`
-- `S45` `M` `src/cadrumo/adapters/persistence/operations/tests/test_cancellation_cleanup.py`
-- `S45` `M` `src/cadrumo/adapters/persistence/operations/tests/test_deadline_settlement.py`
-- `S45` `M` `src/cadrumo/adapters/persistence/operations/tests/test_ephemeral_secret_submission.py`
-- `S45` `M` `src/cadrumo/adapters/persistence/operations/tests/test_executor_contract.py`
-- `S45` `M` `src/cadrumo/adapters/persistence/operations/tests/test_failure_custody_settlement.py`
-- `S45` `M` `src/cadrumo/adapters/persistence/operations/tests/test_observation.py`
-- `S45` `M` `src/cadrumo/adapters/persistence/operations/tests/test_projection_services.py`
-- `S45` `M` `src/cadrumo/adapters/persistence/operations/tests/test_restart_reconciliation.py`
-- `S45` `M` `src/cadrumo/adapters/persistence/operations/tests/test_supervisor.py`
-- `S45` `M` `src/cadrumo/adapters/persistence/operations/tests/test_supervisor_lifecycle.py`
-- `S45` `M` `src/cadrumo/adapters/persistence/operations/tests/test_supervisor_replay.py`
-- `S45` `M` `src/cadrumo/adapters/persistence/operations/tests/test_typed_financial_operation.py`
-- `S45` `M` `src/cadrumo/application/actividad_asset/registered_operations.py`
-- `S45` `M` `src/cadrumo/application/auth/apoderado_operation.py`
-- `S45` `M` `src/cadrumo/application/auth/certificate_secret_operation.py`
-- `S45` `M` `src/cadrumo/application/auth/certificate_source_operation.py`
-- `S45` `M` `src/cadrumo/application/auth/diagnostic_report_operation.py`
-- `S45` `M` `src/cadrumo/application/auth/operation_definitions.py`
-- `S45` `M` `src/cadrumo/application/auth/read_operation.py`
-- `S45` `M` `src/cadrumo/application/bienes_inversion/registered_operation.py`
-- `S45` `M` `src/cadrumo/application/diagnostics_operation.py`
-- `S45` `M` `src/cadrumo/application/export/calculation_review_xlsx_operation.py`
-- `S45` `M` `src/cadrumo/application/export/google_operation.py`
-- `S45` `M` `src/cadrumo/application/export/google_review_operation.py`
-- `S45` `M` `src/cadrumo/application/invoices/catalogue_add_operation.py`
-- `S45` `M` `src/cadrumo/application/invoices/catalogue_intake_operation.py`
-- `S45` `M` `src/cadrumo/application/invoices/catalogue_read_operation.py`
-- `S45` `M` `src/cadrumo/application/invoices/catalogue_remove_operation.py`
-- `S45` `M` `src/cadrumo/application/invoices/catalogue_update_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/add_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/allocate_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/attachment_mutation_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/bulk_classify_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/check_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/classify_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/evidence_add_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/evidence_followup_registration.py`
-- `S45` `M` `src/cadrumo/application/ledger/evidence_ingestion_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/evidence_mutation_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/evidence_read_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/export_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/history_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/import_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/invoice_evidence_confirm_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/invoice_evidence_extract_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/invoice_evidence_readiness_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/lifecycle_mutation_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/list_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/llm_diagnostics_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/merge_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/own_account_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/participation_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/participation_rebuild_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/preflight_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/ratios_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/remove_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/reset_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/review_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/rule_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/split_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/status_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/track_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/update_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/view_operation.py`
-- `S45` `M` `src/cadrumo/application/live/borrador_100_operation.py`
-- `S45` `M` `src/cadrumo/application/live/iva_wallet_history_operation.py`
-- `S45` `M` `src/cadrumo/application/live/live_operation_registration.py`
-- `S45` `M` `src/cadrumo/application/local_reader_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/aggregate_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/amendment_context_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/audit_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/calculation_report_verification_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/dependency_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/filing_record_import_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/filing_record_list_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/filing_record_view_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/filing_selection_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/history_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/history_timeline_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/invoice_withholding_capture_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/iva_wallet_balance_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/iva_wallet_correction_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/iva_wallet_override_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/iva_wallet_seed_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/lifecycle_history_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/local_observation_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/m036_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/m145_communication_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/m303_attestation_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/m360_solicitud_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/maritime_preview_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/mcp_query_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/metadata_read_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/modelo_spreadsheet_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/operation_definitions.py`
-- `S45` `M` `src/cadrumo/application/modelo/projection_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/query_read_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/quickfile_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/reconciliation_export_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/reconciliation_list_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/review_package_exchange_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/review_package_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/review_package_recipient_operations.py`
-- `S45` `M` `src/cadrumo/application/modelo/revision_inventory_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/revision_selection_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/revision_snapshot_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/taxation_comparison_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/tests/test_edit_admission.py`
-- `S45` `M` `src/cadrumo/application/modelo/tests/test_lifecycle_operation_conformance.py`
-- `S45` `M` `src/cadrumo/application/modelo/verification_report_read_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/wizard_attempt_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/wizard_context_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/work_create_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/work_inventory_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/work_review_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/workbench_operations.py`
-- `S45` `M` `src/cadrumo/application/operations/_registry_contracts.py`
-- `S45` `M` `src/cadrumo/application/operations/operation_definition.py`
-- `S45` `M` `src/cadrumo/application/operations/registry.py`
-- `S45` `M` `src/cadrumo/application/operations/tests/test_operation_definition.py`
-- `S45` `M` `src/cadrumo/application/operations/tests/test_public_contracts.py`
-- `S45` `M` `src/cadrumo/application/operations/tests/test_refusal_evidence.py`
-- `S45` `M` `src/cadrumo/application/operations/tests/test_registry.py`
-- `S45` `M` `src/cadrumo/application/overview/pipeline_operation.py`
-- `S45` `M` `src/cadrumo/application/overview/read_operation.py`
-- `S45` `M` `src/cadrumo/application/prorrata_register/registered_operations.py`
-- `S45` `M` `src/cadrumo/application/review/read_registration.py`
-- `S45` `M` `src/cadrumo/application/user_profile/archive_operation.py`
-- `S45` `M` `src/cadrumo/application/user_profile/automation_operations.py`
-- `S45` `M` `src/cadrumo/application/user_profile/censal_file_import_operation.py`
-- `S45` `M` `src/cadrumo/application/user_profile/censal_operation.py`
-- `S45` `M` `src/cadrumo/application/user_profile/censal_prepare_operation.py`
-- `S45` `M` `src/cadrumo/application/user_profile/censal_preview_operation.py`
-- `S45` `M` `src/cadrumo/application/user_profile/google_configuration_operation.py`
-- `S45` `M` `src/cadrumo/application/user_profile/history_operation.py`
-- `S45` `M` `src/cadrumo/application/user_profile/operations.py`
-- `S45` `M` `src/cadrumo/application/user_profile/recovery_status_operation.py`
-- `S45` `M` `src/cadrumo/application/workbench_generation_operation.py`
-- `S45` `M` `src/cadrumo/application/workflow/resume_operation.py`
-- `S45` `M` `src/cadrumo/application/workflow/run_read_operation.py`
-- `S45` `M` `src/cadrumo/application/workstation_check_operation.py`
-- `S45` `M` `src/cadrumo/entrypoints/runtime/tests/test_operation_scope_resolution.py`
-- `S45` `M` `src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py`
-- `S45` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-orientation-routing.md`
-- `S45` `M` `src/cadrumo_harness/mcp/admitted_operations.py`
-- `S45` `M` `src/cadrumo_harness/mcp/protocol_contract.py`
-- `S45` `M` `src/cadrumo_harness/mcp/tests/test_operation_search_tool.py`
-- `S45` `A` `src/cadrumo/application/operations/subject_reference.py`
-- `S45` `A` `src/cadrumo/application/operations/tests/test_subject_reference.py`
-- `S45` `A` `src/cadrumo/entrypoints/tests/test_operation_subject_binding.py`
-- `S45` `A` `src/cadrumo_harness/mcp/tests/test_execute_subject_tool.py`
-- `S45` `M` `src/cadrumo/application/modelo/edit_contract.py`
-- `S45` `M` `src/cadrumo_harness/mcp/tests/test_submission_uncertainty.py`
-- `S45` `M` `src/cadrumo/application/inventory/registered_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/counterparty_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/link_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/llm_review_operation.py`
-- `S45` `M` `src/cadrumo/application/ledger/operator_iva_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/reconciliation_import_operation.py`
-- `S45` `M` `src/cadrumo/application/modelo/reconciliation_pull_operation.py`
-- `S45` `M` `dev/quality/metadata/import_load_targets.json`
-- `S45` `verify:` `pytest per-definition subject binding through real resolvers and executors (271 tests)` -> `pass`
-- `S45` `verify:` `pytest registered executor conformance on derived subjects (327 tests)` -> `pass`
-- `S45` `verify:` `pytest application suite (11051 of 11055 tests)` -> `pass`
-- `S45` `verify:` `pytest entrypoint suite (1431 of 1438 tests)` -> `pass`
-- `S45` `verify:` `pytest harness suite (263 tests)` -> `pass`
-- `S45` `verify:` `pytest operations, persistence and runtime scope tests (1074 of 1076 tests)` -> `pass`
-- `S45` `verify:` `ruff check (158 files)` -> `pass`
-- `S45` `verify:` `ruff format --check (158 files)` -> `pass`
-- `S45` `verify:` `ty check --python-platform linux (158 files)` -> `pass`
-- `S45` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S45` `summary:` `Plan status=checked; original change rows: M 160, A 4; distinct path cells: 164. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/application=139, src/cadrumo/adapters=14,
+  src/cadrumo_harness/mcp=5, src/cadrumo/entrypoints=3, dev/quality=2, src/cadrumo_harness/_data=1
+  Representative paths: src/cadrumo/application/actividad_asset/registered_operations.py;
+  src/cadrumo/adapters/local_runtime/tests/test_operation_process_scope.py
+- `S45` `verify:` `Archived historical verification rows: pass=10; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S45` `by:` `vaultspec-high-executor`
-- `S37` `M` `src/cadrumo/application/inventory/registered_executor.py`
-- `S37` `M` `src/cadrumo/application/inventory/registered_operation.py`
-- `S37` `M` `src/cadrumo/application/inventory/registered_requests.py`
-- `S37` `M` `src/cadrumo/application/ledger/counterparty_operation.py`
-- `S37` `M` `src/cadrumo/application/ledger/link_operation.py`
-- `S37` `M` `src/cadrumo/application/ledger/llm_review_contracts.py`
-- `S37` `M` `src/cadrumo/application/ledger/llm_review_execution.py`
-- `S37` `M` `src/cadrumo/application/ledger/llm_review_operation.py`
-- `S37` `M` `src/cadrumo/application/ledger/operator_iva_contracts.py`
-- `S37` `M` `src/cadrumo/application/ledger/operator_iva_operation.py`
-- `S37` `M` `src/cadrumo/application/ledger/tests/test_llm_review_operation.py`
-- `S37` `M` `src/cadrumo/application/modelo/reconciliation_import_operation.py`
-- `S37` `M` `src/cadrumo/application/modelo/reconciliation_pull_operation.py`
-- `S37` `M` `src/cadrumo/entrypoints/tests/conformance_ledger_export_link_support.py`
-- `S37` `M` `src/cadrumo/entrypoints/tests/test_operation_composition.py`
-- `S37` `A` `src/cadrumo/entrypoints/tests/test_operation_actor_label_by_frontend.py`
-- `S37` `verify:` `pytest actor label by frontend, review, inventory and reconciliation tests (185 tests with the census files)` -> `pass`
-- `S37` `verify:` `pytest registered executor conformance (327 tests)` -> `pass`
-- `S37` `verify:` `ruff check` -> `pass`
-- `S37` `verify:` `ruff format --check` -> `pass`
-- `S37` `verify:` `ty check --python-platform linux` -> `pass`
-- `S37` `by:` `vaultspec-standard-executor`
-- `S30` `M` `src/cadrumo/application/ledger/classify_patch.py`
-- `S30` `M` `src/cadrumo/application/ledger/classify_requests.py`
-- `S30` `M` `src/cadrumo/application/ledger/ledger_add_command.py`
-- `S30` `M` `src/cadrumo/application/ledger/ledger_add_contracts.py`
-- `S30` `M` `src/cadrumo/application/ledger/update_contracts.py`
-- `S30` `M` `src/cadrumo/application/ledger/update_operation.py`
-- `S30` `M` `src/cadrumo/domain/transactions/irpf_categories.py`
-- `S30` `M` `src/cadrumo/entrypoints/cli/_ledger.py`
-- `S30` `M` `src/cadrumo/entrypoints/cli/common.py`
-- `S30` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_validation_paths.py`
-- `S30` `A` `src/cadrumo/application/ledger/tests/ledger_input_rule_support.py`
-- `S30` `A` `src/cadrumo/application/ledger/tests/test_add_operation_input_rules.py`
-- `S30` `A` `src/cadrumo/application/ledger/tests/test_classify_operation_input_rules.py`
-- `S30` `A` `src/cadrumo/application/ledger/tests/test_update_operation_input_rules.py`
-- `S30` `verify:` `pytest ledger, invoices, operations, inventory and transaction-domain suites (3007 tests)` -> `pass`
-- `S30` `verify:` `pytest profile persistence suite (2252 tests)` -> `pass`
-- `S30` `verify:` `pytest entrypoint suite including executor conformance (2055 of 2062 tests)` -> `pass`
-- `S30` `verify:` `pytest harness suite (250 tests)` -> `pass`
-- `S30` `verify:` `ruff check (61 files)` -> `pass`
-- `S30` `verify:` `ruff format --check (61 files)` -> `pass`
-- `S30` `verify:` `ty check --python-platform linux (61 files)` -> `pass`
-- `S30` `verify:` `basedpyright on the changed production files` -> `pass`
-- `S30` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S30` `summary:` `Plan status=checked; original change rows: M 24, A 4; distinct path cells: 25. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/application=12,
+  src/cadrumo/entrypoints=8, docs/locales/*=3, docs/how-to=1, src/cadrumo/domain=1
+  Representative paths: src/cadrumo/application/ledger/classify_patch.py;
+  src/cadrumo/entrypoints/cli/_ledger.py
+- `S30` `verify:` `Archived historical verification rows: pass=19; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S30` `by:` `vaultspec-high-executor`
-- `S32` `M` `src/cadrumo/application/ledger/bulk_classify_operation.py`
-- `S32` `M` `src/cadrumo/application/ledger/tests/test_bulk_classify_operation.py`
-- `S32` `A` `src/cadrumo/entrypoints/tests/test_ledger_classification_actor_by_frontend.py`
-- `S32` `M` `src/cadrumo/application/operations/mcp_admission.py`
-- `S32` `M` `src/cadrumo/entrypoints/operation_composition.py`
-- `S32` `M` `src/cadrumo/entrypoints/tests/test_operation_mcp_admission.py`
-- `S32` `verify:` `pytest ledger, invoices, operations, inventory and transaction-domain suites (3007 tests)` -> `pass`
-- `S32` `verify:` `pytest profile persistence suite (2252 tests)` -> `pass`
-- `S32` `verify:` `pytest entrypoint suite including executor conformance (2055 of 2062 tests)` -> `pass`
-- `S32` `verify:` `pytest harness suite (250 tests)` -> `pass`
-- `S32` `verify:` `ruff check (61 files)` -> `pass`
-- `S32` `verify:` `ruff format --check (61 files)` -> `pass`
-- `S32` `verify:` `ty check --python-platform linux (61 files)` -> `pass`
-- `S32` `verify:` `basedpyright on the changed production files` -> `pass`
-- `S32` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S32` `summary:` `Plan status=retired; original change rows: M 9, A 1; distinct path cells: 9. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/application=6, src/cadrumo/entrypoints=3
+  Representative paths: src/cadrumo/application/ledger/bulk_classify_operation.py;
+  src/cadrumo/entrypoints/tests/test_ledger_classification_actor_by_frontend.py
+- `S32` `verify:` `Archived historical verification rows: pass=19; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S32` `by:` `vaultspec-high-executor`
-- `S33` `M` `src/cadrumo/application/ledger/ratios_operation.py`
-- `S33` `M` `src/cadrumo/application/ledger/ratios.py`
-- `S33` `M` `src/cadrumo/application/ledger/rule_operation.py`
-- `S33` `M` `src/cadrumo/application/ledger/rule_contracts.py`
-- `S33` `M` `src/cadrumo/application/ledger/tests/test_ratios_operation.py`
-- `S33` `M` `src/cadrumo/application/ledger/tests/test_rule_operation.py`
-- `S33` `M` `src/cadrumo/adapters/persistence/profile/tests/test_usage_ratio_workflow.py`
-- `S33` `M` `src/cadrumo/application/operations/mcp_admission.py`
-- `S33` `M` `src/cadrumo/entrypoints/operation_composition.py`
-- `S33` `M` `src/cadrumo/entrypoints/tests/test_operation_mcp_admission.py`
-- `S33` `verify:` `pytest ledger, invoices, operations, inventory and transaction-domain suites (3007 tests)` -> `pass`
-- `S33` `verify:` `pytest profile persistence suite (2252 tests)` -> `pass`
-- `S33` `verify:` `pytest entrypoint suite including executor conformance (2055 of 2062 tests)` -> `pass`
-- `S33` `verify:` `pytest harness suite (250 tests)` -> `pass`
-- `S33` `verify:` `ruff check (61 files)` -> `pass`
-- `S33` `verify:` `ruff format --check (61 files)` -> `pass`
-- `S33` `verify:` `ty check --python-platform linux (61 files)` -> `pass`
-- `S33` `verify:` `basedpyright on the changed production files` -> `pass`
-- `S33` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S33` `summary:` `Plan status=checked; original change rows: M 10; distinct path cells: 10. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/application=7, src/cadrumo/entrypoints=2,
+  src/cadrumo/adapters=1
+  Representative paths: src/cadrumo/application/ledger/ratios_operation.py;
+  src/cadrumo/entrypoints/operation_composition.py
+- `S33` `verify:` `Archived historical verification rows: pass=9; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S33` `by:` `vaultspec-high-executor`
-- `S34` `M` `src/cadrumo/application/ledger/attachment_mutation_operation.py`
-- `S34` `A` `src/cadrumo/entrypoints/tests/test_ledger_row_mutation_mcp_admission.py`
-- `S34` `M` `src/cadrumo/application/operations/mcp_admission.py`
-- `S34` `M` `src/cadrumo/entrypoints/operation_composition.py`
-- `S34` `M` `src/cadrumo/entrypoints/tests/test_operation_mcp_admission.py`
-- `S34` `verify:` `pytest ledger, invoices, operations, inventory and transaction-domain suites (3007 tests)` -> `pass`
-- `S34` `verify:` `pytest profile persistence suite (2252 tests)` -> `pass`
-- `S34` `verify:` `pytest entrypoint suite including executor conformance (2055 of 2062 tests)` -> `pass`
-- `S34` `verify:` `pytest harness suite (250 tests)` -> `pass`
-- `S34` `verify:` `ruff check (61 files)` -> `pass`
-- `S34` `verify:` `ruff format --check (61 files)` -> `pass`
-- `S34` `verify:` `ty check --python-platform linux (61 files)` -> `pass`
-- `S34` `verify:` `basedpyright on the changed production files` -> `pass`
-- `S34` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S34` `summary:` `Plan status=checked; original change rows: M 4, A 1; distinct path cells: 5. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/entrypoints=3, src/cadrumo/application=2
+  Representative paths: src/cadrumo/entrypoints/tests/test_ledger_row_mutation_mcp_admission.py;
+  src/cadrumo/application/ledger/attachment_mutation_operation.py
+- `S34` `verify:` `Archived historical verification rows: pass=9; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S34` `by:` `vaultspec-high-executor`
-- `S35` `M` `src/cadrumo/application/ledger/split_operation.py`
-- `S35` `M` `src/cadrumo/application/ledger/lifecycle_contracts.py`
-- `S35` `M` `src/cadrumo/application/ledger/lifecycle_mutation_operation.py`
-- `S35` `M` `src/cadrumo/application/ledger/lifecycle_projections.py`
-- `S35` `M` `src/cadrumo/application/ledger/actions_lifecycle.py`
-- `S35` `M` `src/cadrumo/application/ledger/tests/test_lifecycle_mutation_operation.py`
-- `S35` `M` `src/cadrumo/application/ledger/tests/test_split_operation.py`
-- `S35` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_split.py`
-- `S35` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_lifecycle_native.py`
-- `S35` `M` `src/cadrumo/entrypoints/tests/ledger_lifecycle_operation_test_support.py`
-- `S35` `M` `src/cadrumo/application/operations/mcp_admission.py`
-- `S35` `M` `src/cadrumo/entrypoints/operation_composition.py`
-- `S35` `M` `src/cadrumo/entrypoints/tests/test_operation_mcp_admission.py`
-- `S35` `M` `src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py`
-- `S35` `verify:` `pytest ledger, invoices, operations, inventory and transaction-domain suites (3007 tests)` -> `pass`
-- `S35` `verify:` `pytest profile persistence suite (2252 tests)` -> `pass`
-- `S35` `verify:` `pytest entrypoint suite including executor conformance (2055 of 2062 tests)` -> `pass`
-- `S35` `verify:` `pytest harness suite (250 tests)` -> `pass`
-- `S35` `verify:` `ruff check (61 files)` -> `pass`
-- `S35` `verify:` `ruff format --check (61 files)` -> `pass`
-- `S35` `verify:` `ty check --python-platform linux (61 files)` -> `pass`
-- `S35` `verify:` `basedpyright on the changed production files` -> `pass`
-- `S35` `verify:` `lint-imports (15 contracts)` -> `pass`
-- `S35` `by:` `vaultspec-high-executor`
-- `S42` `M` `src/cadrumo/application/ledger/evidence_mutation_operation.py`
-- `S42` `M` `src/cadrumo/application/ledger/evidence_followup_operation.py`
-- `S42` `M` `src/cadrumo/application/ledger/invoice_evidence_extract_operation.py`
-- `S42` `M` `src/cadrumo/application/ledger/participation_rebuild_operation.py`
-- `S42` `M` `src/cadrumo/application/invoices/catalogue_intake_operation.py`
-- `S42` `M` `src/cadrumo/application/invoices/catalogue_intake_executor.py`
-- `S42` `M` `src/cadrumo/application/invoices/creation_wizard.py`
-- `S42` `M` `src/cadrumo/application/operations/execution_actor.py`
-- `S42` `M` `src/cadrumo/application/operations/tests/test_execution_actor.py`
-- `S42` `M` `src/cadrumo/entrypoints/cli/_ledger_evidence_cli.py`
-- `S42` `M` `src/cadrumo/entrypoints/cli/runtime_ledger_invoice_evidence.py`
-- `S42` `M` `src/cadrumo/entrypoints/tui/runtime_evidence.py`
-- `S42` `M` `src/cadrumo/application/invoices/tests/test_catalogue_intake_operation.py`
-- `S42` `M` `src/cadrumo/application/ledger/tests/test_evidence_mutation_operation.py`
-- `S42` `M` `src/cadrumo/application/ledger/tests/test_invoice_evidence_executor_effects.py`
-- `S42` `M` `src/cadrumo/application/ledger/tests/test_participation_rebuild_operation.py`
-- `S42` `A` `src/cadrumo/application/ledger/tests/test_invoice_evidence_extract_agent_access.py`
-- `S42` `M` `src/cadrumo/entrypoints/tests/test_ledger_evidence_mcp_frontends.py`
-- `S42` `A` `src/cadrumo/entrypoints/tests/test_ledger_evidence_invoice_mcp_admission.py`
-- `S42` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_invoice_evidence.py`
-- `S42` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_evidence.py`
-- `S42` `M` `src/cadrumo/application/operations/mcp_admission.py`
-- `S42` `M` `src/cadrumo/entrypoints/operation_composition.py`
-- `S42` `M` `src/cadrumo/entrypoints/tests/test_operation_mcp_admission.py`
-- `S42` `verify:` `pytest ledger, invoices, operations, inventory and transaction-domain suites (3007 tests)` -> `pass`
-- `S42` `verify:` `pytest profile persistence suite (2252 tests)` -> `pass`
-- `S42` `verify:` `pytest entrypoint suite including executor conformance (2055 of 2062 tests)` -> `pass`
-- `S42` `verify:` `pytest harness suite (250 tests)` -> `pass`
-- `S42` `verify:` `ruff check (61 files)` -> `pass`
-- `S42` `verify:` `ruff format --check (61 files)` -> `pass`
-- `S42` `verify:` `ty check --python-platform linux (61 files)` -> `pass`
-- `S42` `verify:` `basedpyright on the changed production files` -> `pass`
-- `S42` `verify:` `lint-imports (15 contracts)` -> `pass`
-- `S42` `by:` `vaultspec-high-executor`
-- `S44` `M` `src/cadrumo/application/modelo/local_observation_operation.py`
-- `S44` `M` `src/cadrumo/application/modelo/local_observation_contracts.py`
-- `S44` `M` `src/cadrumo/application/modelo/m145_communication_operation.py`
-- `S44` `M` `src/cadrumo/application/modelo/m145_communication_execution.py`
-- `S44` `M` `src/cadrumo/application/modelo/m145_communication_contracts.py`
-- `S44` `M` `src/cadrumo/application/modelo/tests/test_local_observation_operation.py`
-- `S44` `M` `src/cadrumo/application/modelo/tests/test_m145_communication_operation.py`
-- `S44` `A` `src/cadrumo/entrypoints/tests/test_modelo_local_records_mcp_admission.py`
-- `S44` `M` `.vault/adr/2026-10-10-mcp-parity-admission-rulings-adr.md`
-- `S44` `M` `src/cadrumo/application/operations/mcp_admission.py`
-- `S44` `M` `src/cadrumo/entrypoints/operation_composition.py`
-- `S44` `M` `src/cadrumo/entrypoints/tests/test_operation_mcp_admission.py`
-- `S44` `verify:` `pytest ledger, invoices, operations, auth, workflow and touched modelo suites (3112 tests)` -> `pass`
-- `S44` `verify:` `pytest profile persistence lifecycle, merge, restore and split tests (131 tests)` -> `pass`
-- `S44` `verify:` `pytest entrypoint suite including executor conformance and the surface policies (2172 of 2179 tests)` -> `pass`
-- `S44` `verify:` `pytest harness suite (250 tests)` -> `pass`
-- `S44` `verify:` `pytest touched command tests (51 tests)` -> `pass`
-- `S44` `verify:` `ruff check (37 files)` -> `pass`
-- `S44` `verify:` `ruff format --check (37 files)` -> `pass`
-- `S44` `verify:` `ty check --python-platform linux (37 files)` -> `pass`
-- `S44` `verify:` `basedpyright on the changed production files` -> `pass`
-- `S44` `verify:` `lint-imports (15 contracts)` -> `pass`
-- `S44` `by:` `vaultspec-high-executor`
-- `S01` `M` `src/cadrumo/application/workflow/run_projection.py`
-- `S01` `A` `src/cadrumo/application/workflow/tests/test_run_projection_released_fields.py`
-- `S01` `M` `src/cadrumo/entrypoints/tests/test_operation_mcp_surfaces.py`
-- `S01` `A` `src/cadrumo/entrypoints/tests/test_operation_mcp_surface_policies.py`
-- `S01` `M` `.vault/audit/2026-10-11-mcp-parity-audit.md`
-- `S01` `M` `src/cadrumo/application/operations/mcp_admission.py`
-- `S01` `M` `src/cadrumo/entrypoints/tests/test_operation_mcp_admission.py`
-- `S01` `verify:` `pytest ledger, invoices, operations, auth, workflow and touched modelo suites (3112 tests)` -> `pass`
-- `S01` `verify:` `pytest profile persistence lifecycle, merge, restore and split tests (131 tests)` -> `pass`
-- `S01` `verify:` `pytest entrypoint suite including executor conformance and the surface policies (2172 of 2179 tests)` -> `pass`
-- `S01` `verify:` `pytest harness suite (250 tests)` -> `pass`
-- `S01` `verify:` `pytest touched command tests (51 tests)` -> `pass`
-- `S01` `verify:` `ruff check (37 files)` -> `pass`
-- `S01` `verify:` `ruff format --check (37 files)` -> `pass`
-- `S01` `verify:` `ty check --python-platform linux (37 files)` -> `pass`
-- `S01` `verify:` `basedpyright on the changed production files` -> `pass`
-- `S01` `verify:` `lint-imports (15 contracts)` -> `pass`
-- `S42` `A` `src/cadrumo/application/ledger/agent_reader_locality.py`
-- `S42` `A` `src/cadrumo/application/operations/host_path_name.py`
-- `S42` `A` `src/cadrumo/application/modelo/reconciliation_source_reference.py`
-- `S42` `M` `src/cadrumo/application/ledger/llm_review_execution.py`
-- `S42` `M` `src/cadrumo/application/ledger/evidence_read_operation.py`
-- `S42` `M` `src/cadrumo/application/modelo/reconciliation_import_operation.py`
-- `S42` `M` `src/cadrumo/application/modelo/reconciliation_list_operation.py`
-- `S42` `M` `src/cadrumo/application/modelo/reconciliation_pull_operation.py`
-- `S42` `M` `src/cadrumo/application/auth/auth_read_contracts.py`
-- `S42` `M` `src/cadrumo/application/auth/read_operation.py`
-- `S42` `M` `src/cadrumo/application/ledger/tests/test_llm_review_operation.py`
-- `S42` `A` `src/cadrumo/application/auth/tests/test_auth_read_agent_result.py`
-- `S42` `M` `src/cadrumo/application/modelo/tests/test_reconciliation_list_operation.py`
-- `S42` `A` `src/cadrumo/entrypoints/tests/test_modelo_reconciliation_agent_results.py`
-- `S42` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
-- `S42` `M` `dev/quality/metadata/import_load_targets.json`
-- `S42` `verify:` `pytest ledger, invoices, operations, auth, workflow and touched modelo suites (3112 tests)` -> `pass`
-- `S42` `verify:` `pytest profile persistence lifecycle, merge, restore and split tests (131 tests)` -> `pass`
-- `S42` `verify:` `pytest entrypoint suite including executor conformance and the surface policies (2172 of 2179 tests)` -> `pass`
-- `S42` `verify:` `pytest harness suite (250 tests)` -> `pass`
-- `S42` `verify:` `pytest touched command tests (51 tests)` -> `pass`
-- `S42` `verify:` `ruff check (37 files)` -> `pass`
-- `S42` `verify:` `ruff format --check (37 files)` -> `pass`
-- `S42` `verify:` `ty check --python-platform linux (37 files)` -> `pass`
-- `S42` `verify:` `basedpyright on the changed production files` -> `pass`
-- `S42` `verify:` `lint-imports (15 contracts)` -> `pass`
-- `S35` `A` `src/cadrumo/adapters/persistence/profile/tests/test_actions_lifecycle_restore_merge.py`
-- `S35` `verify:` `pytest ledger, invoices, operations, auth, workflow and touched modelo suites (3112 tests)` -> `pass`
-- `S35` `verify:` `pytest profile persistence lifecycle, merge, restore and split tests (131 tests)` -> `pass`
-- `S35` `verify:` `pytest entrypoint suite including executor conformance and the surface policies (2172 of 2179 tests)` -> `pass`
-- `S35` `verify:` `pytest harness suite (250 tests)` -> `pass`
-- `S35` `verify:` `pytest touched command tests (51 tests)` -> `pass`
-- `S35` `verify:` `ruff check (37 files)` -> `pass`
-- `S35` `verify:` `ruff format --check (37 files)` -> `pass`
-- `S35` `verify:` `ty check --python-platform linux (37 files)` -> `pass`
-- `S35` `verify:` `basedpyright on the changed production files` -> `pass`
-- `S35` `verify:` `lint-imports (15 contracts)` -> `pass`
-- `S37` `M` `src/cadrumo/application/invoices/catalogue_add_operation.py`
-- `S37` `M` `src/cadrumo/application/invoices/catalogue_update_operation.py`
-- `S37` `M` `src/cadrumo/application/ledger/bulk_classify_operation.py`
-- `S37` `M` `src/cadrumo/entrypoints/tests/test_operation_actor_label_by_frontend.py`
-- `S37` `M` `src/cadrumo/entrypoints/tests/test_ledger_classification_actor_by_frontend.py`
-- `S37` `verify:` `pytest ledger, invoices, operations, auth, workflow and touched modelo suites (3112 tests)` -> `pass`
-- `S37` `verify:` `pytest profile persistence lifecycle, merge, restore and split tests (131 tests)` -> `pass`
-- `S37` `verify:` `pytest entrypoint suite including executor conformance and the surface policies (2172 of 2179 tests)` -> `pass`
-- `S37` `verify:` `pytest harness suite (250 tests)` -> `pass`
-- `S37` `verify:` `pytest touched command tests (51 tests)` -> `pass`
-- `S37` `verify:` `ruff check (37 files)` -> `pass`
-- `S37` `verify:` `ruff format --check (37 files)` -> `pass`
-- `S37` `verify:` `ty check --python-platform linux (37 files)` -> `pass`
-- `S37` `verify:` `basedpyright on the changed production files` -> `pass`
-- `S37` `verify:` `lint-imports (15 contracts)` -> `pass`
-- `S37` `by:` `vaultspec-high-executor`
-- `S19` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_sign_in_adapter.py`
-- `S19` `M` `src/cadrumo/entrypoints/runtime/tests/stored_sign_in_runtime.py`
-- `S19` `verify:` `pytest sign-in door, adapter, login-method, resume and fresh-process tests (92 tests)` -> `pass`
-- `S19` `verify:` `ruff check` -> `pass`
-- `S19` `verify:` `ruff format --check` -> `pass`
-- `S19` `verify:` `ty check --python-platform linux` -> `pass`
-- `S19` `by:` `vaultspec-standard-executor`
-- `S42` `M` `src/cadrumo/adapters/outbound/llm/providers/local.py`
-- `S42` `M` `src/cadrumo/application/ledger/agent_reader_locality.py`
-- `S42` `M` `src/cadrumo/application/ledger/history_operation.py`
-- `S42` `M` `src/cadrumo/application/operations/access_resolution.py`
-- `S42` `M` `src/cadrumo/application/operations/provenance.py`
-- `S42` `M` `src/cadrumo/application/provisioning_host.py`
-- `S42` `M` `src/cadrumo/application/tests/test_provisioning_host.py`
-- `S42` `M` `src/cadrumo/application/user_profile/profile_operation_access.py`
-- `S42` `M` `src/cadrumo/entrypoints/runtime/operation_authority.py`
-- `S42` `A` `src/cadrumo/adapters/outbound/llm/tests/test_local_loopback_transport.py`
-- `S42` `A` `src/cadrumo/core/loopback_endpoint.py`
-- `S42` `A` `src/cadrumo/core/tests/test_loopback_endpoint.py`
-- `S42` `A` `src/cadrumo/entrypoints/runtime/tests/test_operation_admitting_frontend_release.py`
-- `S42` `verify:` `pytest model adapter directory (656 tests)` -> `pass`
-- `S42` `verify:` `pytest ledger, invoices, operations, inventory, auth, application and core suites (5838 collected, the failures of this work fixed and re-run)` -> `pass`
-- `S42` `verify:` `pytest runtime tests without the supervised ones (400 of 409 tests)` -> `pass`
-- `S42` `verify:` `pytest entrypoint suite including executor conformance (2188 of 2195 tests)` -> `pass`
-- `S42` `verify:` `pytest harness suite (250 tests)` -> `pass`
-- `S42` `verify:` `ruff check (30 files)` -> `pass`
-- `S42` `verify:` `ruff format --check (30 files)` -> `pass`
-- `S42` `verify:` `ty check --python-platform linux (30 files)` -> `pass`
-- `S42` `verify:` `basedpyright on the changed production files` -> `pass`
-- `S42` `verify:` `lint-imports (15 contracts)` -> `pass`
-- `S32` `M` `src/cadrumo/application/ledger/actions_classification.py`
-- `S32` `M` `src/cadrumo/application/ledger/classify_patch.py`
-- `S32` `M` `src/cadrumo/application/ledger/classify_requests.py`
-- `S32` `M` `src/cadrumo/entrypoints/tests/test_ledger_classification_actor_by_frontend.py`
-- `S32` `verify:` `pytest model adapter directory (656 tests)` -> `pass`
-- `S32` `verify:` `pytest ledger, invoices, operations, inventory, auth, application and core suites (5838 collected, the failures of this work fixed and re-run)` -> `pass`
-- `S32` `verify:` `pytest runtime tests without the supervised ones (400 of 409 tests)` -> `pass`
-- `S32` `verify:` `pytest entrypoint suite including executor conformance (2188 of 2195 tests)` -> `pass`
-- `S32` `verify:` `pytest harness suite (250 tests)` -> `pass`
-- `S32` `verify:` `ruff check (30 files)` -> `pass`
-- `S32` `verify:` `ruff format --check (30 files)` -> `pass`
-- `S32` `verify:` `ty check --python-platform linux (30 files)` -> `pass`
-- `S32` `verify:` `basedpyright on the changed production files` -> `pass`
-- `S32` `verify:` `lint-imports (15 contracts)` -> `pass`
-- `S35` `M` `src/cadrumo/entrypoints/tests/test_ledger_row_mutation_mcp_admission.py`
-- `S35` `verify:` `pytest model adapter directory (656 tests)` -> `pass`
-- `S35` `verify:` `pytest ledger, invoices, operations, inventory, auth, application and core suites (5838 collected, the failures of this work fixed and re-run)` -> `pass`
-- `S35` `verify:` `pytest runtime tests without the supervised ones (400 of 409 tests)` -> `pass`
-- `S35` `verify:` `pytest entrypoint suite including executor conformance (2188 of 2195 tests)` -> `pass`
-- `S35` `verify:` `pytest harness suite (250 tests)` -> `pass`
-- `S35` `verify:` `ruff check (30 files)` -> `pass`
-- `S35` `verify:` `ruff format --check (30 files)` -> `pass`
-- `S35` `verify:` `ty check --python-platform linux (30 files)` -> `pass`
-- `S35` `verify:` `basedpyright on the changed production files` -> `pass`
-- `S35` `verify:` `lint-imports (15 contracts)` -> `pass`
-- `S37` `M` `src/cadrumo/entrypoints/tests/test_ledger_row_mutation_mcp_admission.py`
-- `S37` `M` `src/cadrumo/entrypoints/tests/test_modelo_work_mcp_admission.py`
-- `S37` `A` `src/cadrumo/entrypoints/tests/test_operation_mcp_attribution_census.py`
-- `S37` `verify:` `pytest model adapter directory (656 tests)` -> `pass`
-- `S37` `verify:` `pytest ledger, invoices, operations, inventory, auth, application and core suites (5838 collected, the failures of this work fixed and re-run)` -> `pass`
-- `S37` `verify:` `pytest runtime tests without the supervised ones (400 of 409 tests)` -> `pass`
-- `S37` `verify:` `pytest entrypoint suite including executor conformance (2188 of 2195 tests)` -> `pass`
-- `S37` `verify:` `pytest harness suite (250 tests)` -> `pass`
-- `S37` `verify:` `ruff check (30 files)` -> `pass`
-- `S37` `verify:` `ruff format --check (30 files)` -> `pass`
-- `S37` `verify:` `ty check --python-platform linux (30 files)` -> `pass`
-- `S37` `verify:` `basedpyright on the changed production files` -> `pass`
-- `S37` `verify:` `lint-imports (15 contracts)` -> `pass`
-- `S30` `M` `src/cadrumo/application/ledger/tests/test_add_operation_input_rules.py`
-- `S30` `M` `src/cadrumo/application/ledger/tests/test_allocate_operation.py`
-- `S30` `M` `src/cadrumo/application/ledger/tests/test_bulk_classify_operation.py`
-- `S30` `M` `src/cadrumo/application/ledger/tests/test_classify_operation_input_rules.py`
-- `S30` `M` `src/cadrumo/application/ledger/tests/test_update_operation_input_rules.py`
-- `S30` `M` `src/cadrumo/entrypoints/cli/_decimal_parsing.py`
-- `S30` `M` `src/cadrumo/entrypoints/cli/_ledger_llm_cli.py`
-- `S30` `M` `src/cadrumo/entrypoints/cli/tests/test_common_decimal_parser.py`
-- `S30` `M` `src/cadrumo/entrypoints/tui/ledger/classification.py`
-- `S30` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_ledger_classification_iva.py`
-- `S30` `M` `docs/how-to/classify-transactions.md`
-- `S30` `M` `docs/locales/ca/LC_MESSAGES/how-to/classify-transactions.po`
-- `S30` `M` `docs/locales/es/LC_MESSAGES/how-to/classify-transactions.po`
-- `S30` `M` `docs/locales/hu/LC_MESSAGES/how-to/classify-transactions.po`
-- `S30` `verify:` `pytest ledger, invoices, operations, inventory, transaction-domain, core and model-adapter suites (5604 of 5606 tests)` -> `pass`
-- `S30` `verify:` `pytest profile persistence and SQL storage suites (2467 tests)` -> `pass`
-- `S30` `verify:` `pytest entrypoint suite including executor conformance (2207 of 2214 tests)` -> `pass`
-- `S30` `verify:` `pytest harness suite (250 tests)` -> `pass`
-- `S30` `verify:` `pytest touched command-line and terminal-interface tests (294 of 295 tests)` -> `pass`
-- `S30` `verify:` `ruff check (43 files)` -> `pass`
-- `S30` `verify:` `ruff format --check (43 files)` -> `pass`
-- `S30` `verify:` `ty check --python-platform linux (43 files)` -> `pass`
-- `S30` `verify:` `basedpyright on the changed production files` -> `pass`
-- `S30` `verify:` `lint-imports (15 contracts)` -> `pass`
-- `S35` `M` `src/cadrumo/application/ledger/actions_manual.py`
-- `S35` `M` `src/cadrumo/application/ledger/actions_split_merge.py`
-- `S35` `M` `src/cadrumo/application/ledger/attachment_mutation_operation.py`
-- `S35` `M` `src/cadrumo/application/ledger/link_operation.py`
-- `S35` `M` `src/cadrumo/application/ledger/llm_classification.py`
-- `S35` `M` `src/cadrumo/application/ledger/llm_review_execution.py`
-- `S35` `M` `src/cadrumo/application/ledger/operator_iva_operation.py`
-- `S35` `M` `src/cadrumo/application/ledger/tests/test_llm_review_operation.py`
-- `S35` `M` `src/cadrumo/application/operations/execution_actor.py`
-- `S35` `M` `src/cadrumo/domain/transactions/models.py`
-- `S35` `M` `src/cadrumo/domain/transactions/service.py`
-- `S35` `M` `src/cadrumo/domain/transactions/tests/test_catalogue.py`
-- `S35` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_llm_diagnostics.py`
-- `S35` `M` `src/cadrumo/entrypoints/tests/test_operation_actor_label_by_frontend.py`
-- `S35` `M` `src/cadrumo/entrypoints/tests/test_operation_mcp_attribution_census.py`
-- `S35` `A` `src/cadrumo/adapters/persistence/profile/tests/test_classification_origin_at_the_ledger_writers.py`
-- `S35` `A` `src/cadrumo/application/ledger/agent_row_guard.py`
-- `S35` `A` `src/cadrumo/application/ledger/tests/test_llm_review_persons_row.py`
-- `S35` `A` `src/cadrumo/domain/transactions/classification_origin.py`
-- `S35` `A` `src/cadrumo/domain/transactions/tests/test_classification_origin.py`
-- `S35` `A` `src/cadrumo/entrypoints/tests/ledger_persons_work_test_support.py`
-- `S35` `A` `src/cadrumo/entrypoints/tests/test_ledger_persons_work_mcp_guard.py`
-- `S35` `verify:` `pytest ledger, invoices, operations, inventory, transaction-domain, core and model-adapter suites (5604 of 5606 tests)` -> `pass`
-- `S35` `verify:` `pytest profile persistence and SQL storage suites (2467 tests)` -> `pass`
-- `S35` `verify:` `pytest entrypoint suite including executor conformance (2207 of 2214 tests)` -> `pass`
-- `S35` `verify:` `pytest harness suite (250 tests)` -> `pass`
-- `S35` `verify:` `pytest touched command-line and terminal-interface tests (294 of 295 tests)` -> `pass`
-- `S35` `verify:` `ruff check (43 files)` -> `pass`
-- `S35` `verify:` `ruff format --check (43 files)` -> `pass`
-- `S35` `verify:` `ty check --python-platform linux (43 files)` -> `pass`
-- `S35` `verify:` `basedpyright on the changed production files` -> `pass`
-- `S35` `verify:` `lint-imports (15 contracts)` -> `pass`
-- `S35` `M` `src/cadrumo/application/ledger/actions_classification.py`
-- `S35` `M` `src/cadrumo/application/ledger/actions_common.py`
-- `S35` `M` `src/cadrumo/application/ledger/agent_row_guard.py`
-- `S35` `M` `src/cadrumo/application/ledger/tests/test_llm_review_persons_row.py`
-- `S35` `M` `src/cadrumo/domain/transactions/classification_origin.py`
-- `S35` `M` `src/cadrumo/domain/transactions/tests/test_classification_origin.py`
-- `S35` `M` `src/cadrumo/entrypoints/tests/ledger_persons_work_test_support.py`
-- `S35` `M` `src/cadrumo/entrypoints/tests/test_ledger_persons_work_mcp_guard.py`
-- `S35` `M` `src/cadrumo/locales/ca/common.yml`
-- `S35` `M` `src/cadrumo/locales/en/common.yml`
-- `S35` `M` `src/cadrumo/locales/es/common.yml`
-- `S35` `M` `src/cadrumo/locales/hu/common.yml`
-- `S35` `A` `src/cadrumo/adapters/persistence/profile/tests/test_person_takes_a_classification_at_the_ledger_writers.py`
-- `S35` `A` `src/cadrumo/application/ledger/tests/test_classification_decision_fields_are_complete.py`
-- `S35` `verify:` `pytest ledger, invoices, operations, inventory, modelo, aggregation and transaction-domain suites (7054 of 7058 tests)` -> `pass`
-- `S35` `verify:` `pytest profile persistence suite (2350 tests)` -> `pass`
-- `S35` `verify:` `pytest entrypoint suite including executor conformance (2224 of 2231 tests, two re-run alone)` -> `pass`
-- `S35` `verify:` `pytest harness suite (250 tests)` -> `pass`
-- `S35` `verify:` `pytest touched command-line and terminal-interface tests (245 of 246 tests)` -> `pass`
-- `S35` `verify:` `ruff check (17 files)` -> `pass`
-- `S35` `verify:` `ruff format --check (17 files)` -> `pass`
-- `S35` `verify:` `ty check --python-platform linux (17 files)` -> `pass`
-- `S35` `verify:` `basedpyright on the changed production files` -> `pass`
-- `S35` `verify:` `lint-imports (15 contracts)` -> `pass`
-- `S35` `M` `.vault/audit/2026-10-11-mcp-parity-audit.md`
-- `S35` `M` `src/cadrumo/adapters/persistence/profile/tests/test_classification_origin_at_the_ledger_writers.py`
-- `S35` `M` `src/cadrumo/application/ledger/tests/test_classification_decision_fields_are_complete.py`
-- `S35` `A` `src/cadrumo/adapters/persistence/profile/tests/test_confirmation_keeps_a_sealed_row_at_the_ledger_writers.py`
-- `S35` `verify:` `pytest ledger, invoices, operations, aggregation and transaction-domain suites (4548 tests)` -> `pass`
-- `S35` `verify:` `pytest profile persistence suite (2365 tests)` -> `pass`
-- `S35` `verify:` `pytest entrypoint suite including executor conformance (2225 of 2232 tests)` -> `pass`
-- `S35` `verify:` `pytest touched command-line tests (62 of 63 tests, two re-run alone)` -> `pass`
-- `S35` `verify:` `ruff check (11 files)` -> `pass`
-- `S35` `verify:` `ruff format --check (11 files)` -> `pass`
-- `S35` `verify:` `ty check --python-platform linux (11 files)` -> `pass`
-- `S35` `verify:` `basedpyright on the changed production files` -> `pass`
-- `S35` `verify:` `lint-imports (15 contracts)` -> `pass`
-- `S35` `M` `src/cadrumo/adapters/persistence/profile/tests/test_confirmation_keeps_a_sealed_row_at_the_ledger_writers.py`
-- `S35` `M` `src/cadrumo/adapters/persistence/profile/tests/test_person_takes_a_classification_at_the_ledger_writers.py`
-- `S35` `A` `src/cadrumo/adapters/persistence/profile/tests/classification_origin_support.py`
-- `S35` `A` `src/cadrumo/adapters/persistence/profile/tests/test_evidence_on_a_sealed_row_at_the_ledger_writers.py`
-- `S35` `verify:` `pytest ledger, aggregation, transaction-domain, profile persistence and the ledger guard and catalogue files (6102 tests)` -> `pass`
-- `S35` `verify:` `ruff check` -> `pass`
-- `S35` `verify:` `ruff format --check` -> `pass`
-- `S35` `verify:` `ty check --python-platform linux` -> `pass`
+- `S35` `summary:` `Plan status=checked; original change rows: M 47, A 13; distinct path cells: 50. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/application=22,
+  src/cadrumo/entrypoints=12, src/cadrumo/adapters=6, src/cadrumo/domain=5, src/cadrumo/locales=4,
+  .vault/audit=1
+  Representative paths: src/cadrumo/application/ledger/split_operation.py;
+  src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_split.py
+- `S35` `verify:` `Archived historical verification rows: pass=62; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S35` `by:` `vaultspec-standard-executor`
-- `S47` `D` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_180/files/01-180-orden-hap-1732-2014-actualizado-por-orden-hfp-1284-2023-de-28-de-noviembre-251-kb-pdf.pdf.corpus_text.json`
-- `S47` `D` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_182/files/03-182-orden-eha-3021-2007-actualizado-por-orden-hfp-1351-2021-de-1-de-diciembre.pdf.corpus_text.json`
-- `S47` `D` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_184/files/01-184-ejercicio-2025-y-siguientes-modificados-por-orden-hac-1430-2025-de-3-de-diciembre-365-kb.pdf.corpus_text.json`
-- `S47` `D` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_184/files/02-184-orden-hap-2250-2015-actualizado-por-orden-hfp-1284-2023-de-28-de-noviembre-263-kb-pdf.pdf.corpus_text.json`
-- `S47` `D` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_189/files/02-189-orden-eha-3481-2008-de-1-de-diciembre-actualizada-por-la-orden-hfp-115-2022-de-23-de-febrero.pdf.corpus_text.json`
-- `S47` `D` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_190/files/01-190-orden-eha-3127-2009-de-10-de-noviembre-actualizada-por-orden-hac-1431-2025-de-3-de-dicie.pdf.corpus_text.json`
-- `S47` `D` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_190/files/03-190-orden-eha-3127-2009-de-10-de-noviembre-actualizada-por-orden-hac-1432-2024-de-11-de-dici.pdf.corpus_text.json`
-- `S47` `D` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_190/files/04-190-orden-eha-3127-2009-de-10-de-noviembre-actualizada-por-orden-hfp-1286-2023-de-28-de-novi.pdf.corpus_text.json`
-- `S47` `D` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_193/files/01-193-orden-eha-3377-2011-actualizado-por-orden-hac-1430-2025-de-3-de-diciembre-357-kb-pdf.pdf.corpus_text.json`
-- `S47` `D` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_193/files/02-193-orden-eha-3377-2011-actualizado-por-orden-hac-1504-2024-de-26-de-diciembre-352-kb-pdf.pdf.corpus_text.json`
-- `S47` `D` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_347/files/01-347-ejercicio-2025-y-siguientes-modificados-por-orden-hac-1431-2025-de-3-de-diciembre-332-kb.pdf.corpus_text.json`
-- `S47` `D` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_349/files/01-349-orden-hac-174-2020-de-4-de-febrero-ejercicio-2020-y-siguientes-894-kb-pdf.pdf.corpus_text.json`
-- `S47` `M` `src/cadrumo/_data/registry/aeat/legal/atribucion-rentas.toml`
-- `S47` `M` `src/cadrumo/_data/registry/aeat/legal/irpf.toml`
-- `S47` `M` `src/cadrumo/_data/registry/aeat/legal/is.toml`
-- `S47` `M` `src/cadrumo/_data/registry/aeat/legal/iva.toml`
-- `S47` `M` `src/cadrumo/_data/registry/aeat/legal/modelo-182.toml`
-- `S47` `M` `src/cadrumo/_data/registry/aeat/legal/modelo-189.toml`
-- `S47` `M` `src/cadrumo/_data/registry/aeat/legal/operaciones-terceros.toml`
-- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2024/revision.toml`
-- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2022/extraction_profiles/0001-declarations.toml`
-- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2025-y-siguientes/casillas/0001-declarations.toml`
-- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/casillas/0001-declarations.toml`
-- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/extraction_profiles/0001-declarations.toml`
-- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/casillas/0001-declarations.toml`
-- `S47` `M` `src/cadrumo/adapters/inbound/declaracion/tests/test_parser_synthetic_fixtures_m184.py`
-- `S47` `M` `src/cadrumo/adapters/inbound/declaracion/tests/test_parser_synthetic_fixtures_m347.py`
-- `S47` `M` `src/cadrumo/adapters/outbound/aeat/browser/tests/test_real_resource_lifecycle.py`
-- `S47` `M` `src/cadrumo/adapters/persistence/operations/tests/test_cancellation_cleanup.py`
-- `S47` `M` `src/cadrumo/adapters/persistence/operations/tests/test_deadline_settlement.py`
-- `S47` `M` `src/cadrumo/adapters/persistence/operations/tests/test_ephemeral_secret_submission.py`
-- `S47` `M` `src/cadrumo/adapters/persistence/operations/tests/test_executor_contract.py`
-- `S47` `M` `src/cadrumo/adapters/persistence/operations/tests/test_failure_custody_settlement.py`
-- `S47` `M` `src/cadrumo/adapters/persistence/operations/tests/test_local_reader_operation.py`
-- `S47` `M` `src/cadrumo/adapters/persistence/operations/tests/test_observation.py`
-- `S47` `M` `src/cadrumo/adapters/persistence/operations/tests/test_projection_services.py`
-- `S47` `M` `src/cadrumo/adapters/persistence/operations/tests/test_restart_reconciliation.py`
-- `S47` `M` `src/cadrumo/adapters/persistence/operations/tests/test_supervisor.py`
-- `S47` `M` `src/cadrumo/adapters/persistence/operations/tests/test_supervisor_lifecycle.py`
-- `S47` `M` `src/cadrumo/adapters/persistence/operations/tests/test_supervisor_replay.py`
-- `S47` `M` `src/cadrumo/adapters/persistence/operations/tests/test_typed_financial_operation.py`
-- `S47` `M` `src/cadrumo/application/actividad_asset/registered_operations.py`
-- `S47` `M` `src/cadrumo/application/aeat_sync/_workspace_projection.py`
-- `S47` `M` `src/cadrumo/application/aeat_sync/workspace_reader.py`
-- `S47` `M` `src/cadrumo/application/bienes_inversion/registered_operation.py`
-- `S47` `M` `src/cadrumo/application/operations/_registry_contracts.py`
-- `S47` `M` `src/cadrumo/application/operations/access_resolution.py`
-- `S47` `M` `src/cadrumo/application/operations/execution_actor.py`
-- `S47` `D` `src/cadrumo/application/operations/mcp_admission.py`
-- `S47` `M` `src/cadrumo/application/operations/mcp_surfaces.py`
-- `S47` `M` `src/cadrumo/application/operations/operation_definition.py`
-- `S47` `M` `src/cadrumo/application/operations/registry.py`
-- `S47` `M` `src/cadrumo/application/operations/tests/test_access_resolution.py`
-- `S47` `M` `src/cadrumo/application/operations/tests/test_execution_actor.py`
-- `S47` `D` `src/cadrumo/application/operations/tests/test_mcp_admission.py`
-- `S47` `M` `src/cadrumo/application/operations/tests/test_mcp_surfaces.py`
-- `S47` `M` `src/cadrumo/application/operations/tests/test_operation_definition.py`
-- `S47` `M` `src/cadrumo/application/operations/tests/test_public_contracts.py`
-- `S47` `M` `src/cadrumo/application/operations/tests/test_refusal_evidence.py`
-- `S47` `M` `src/cadrumo/application/operations/tests/test_registry.py`
-- `S47` `M` `src/cadrumo/application/operations/tests/test_subject_reference.py`
-- `S47` `M` `src/cadrumo/application/overview/pipeline_operation.py`
-- `S47` `M` `src/cadrumo/application/overview/read_operation.py`
-- `S47` `M` `src/cadrumo/application/review/read_registration.py`
-- `S47` `M` `src/cadrumo/application/tests/test_diagnostics_operation.py`
-- `S47` `M` `src/cadrumo/application/tests/test_workbench_generation_operation.py`
-- `S47` `M` `src/cadrumo/application/tests/test_workstation_check_operation.py`
-- `S47` `M` `src/cadrumo/entrypoints/cli/_ledger_evidence_cli.py`
-- `S47` `M` `src/cadrumo/entrypoints/cli/_ledger_import_cli.py`
-- `S47` `M` `src/cadrumo/entrypoints/cli/config/google_consent_admission.py`
-- `S47` `M` `src/cadrumo/entrypoints/cli/config/runtime_censal_projection.py`
-- `S47` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_censal_review.py`
-- `S47` `M` `src/cadrumo/entrypoints/cli/registered_operation_admission.py`
-- `S47` `M` `src/cadrumo/entrypoints/cli/runtime_ledger_import.py`
-- `S47` `M` `src/cadrumo/entrypoints/cli/runtime_registered_operation.py`
-- `S47` `M` `src/cadrumo/entrypoints/cli/tests/test_catalogue_invoice_bulk_import.py`
-- `S47` `M` `src/cadrumo/entrypoints/cli/tests/test_google_operation.py`
-- `S47` `D` `src/cadrumo/entrypoints/cli/tests/test_import_directory_ordering.py`
-- `S47` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_import_folder_partial_success.py`
-- `S47` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_notice_action_conformance.py`
-- `S47` `M` `src/cadrumo/entrypoints/cli/tests/test_registered_operation_secret.py`
-- `S47` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_llm.py`
-- `S47` `M` `src/cadrumo/entrypoints/operation_composition.py`
-- `S47` `M` `src/cadrumo/entrypoints/tests/test_censal_access_policy.py`
-- `S47` `M` `src/cadrumo/entrypoints/tests/test_filed_read_operation.py`
-- `S47` `M` `src/cadrumo/entrypoints/tests/test_google_review_enrollment.py`
-- `S47` `M` `src/cadrumo/entrypoints/tests/test_iva_remote_state_capture_operation.py`
-- `S47` `M` `src/cadrumo/entrypoints/tests/test_iva_wallet_history_capture_operation.py`
-- `S47` `M` `src/cadrumo/entrypoints/tests/test_notifications_read_operation.py`
-- `S47` `M` `src/cadrumo/entrypoints/tests/test_operation_actor_label_by_frontend.py`
-- `S47` `M` `src/cadrumo/entrypoints/tests/test_operation_catalogue.py`
-- `S47` `M` `src/cadrumo/entrypoints/tests/test_operation_composition.py`
-- `S47` `D` `src/cadrumo/entrypoints/tests/test_operation_mcp_admission.py`
-- `S47` `M` `src/cadrumo/entrypoints/tests/test_operation_mcp_attribution_census.py`
-- `S47` `M` `src/cadrumo/entrypoints/tests/test_operation_mcp_surface_policies.py`
-- `S47` `M` `src/cadrumo/entrypoints/tests/test_operation_mcp_surfaces.py`
-- `S47` `M` `src/cadrumo/entrypoints/tests/test_operation_subject_binding.py`
-- `S47` `M` `src/cadrumo/entrypoints/tui/aeat_sync/controller.py`
-- `S47` `M` `src/cadrumo/entrypoints/tui/aeat_sync/runtime_handoff.py`
-- `S47` `M` `src/cadrumo/entrypoints/tui/operations/tests/test_runtime_controller_session_swap.py`
-- `S47` `M` `src/cadrumo/entrypoints/tui/runtime_evidence.py`
-- `S47` `M` `src/cadrumo/entrypoints/tui/secret/automation_requester_setup.py`
-- `S47` `M` `src/cadrumo/entrypoints/tui/secret/tests/test_automation_requester.py`
-- `S47` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_workbench_native.py`
-- `S47` `M` `src/cadrumo/tests/fixtures/justificantes/_generate_misc_b.py`
-- `S47` `A` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_180/files/01-180-orden-hap-1732-2014-actualizado-por-orden.pdf.corpus_text.json`
-- `S47` `A` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_182/files/03-182-orden-eha-3021-2007-actualizado-por-orden.pdf.corpus_text.json`
-- `S47` `A` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_184/files/01-184-ejercicio-2025-y-siguientes-modificados-p.pdf.corpus_text.json`
-- `S47` `A` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_184/files/02-184-orden-hap-2250-2015-actualizado-por-orden.pdf.corpus_text.json`
-- `S47` `A` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_189/files/02-189-orden-eha-3481-2008-de-1-de-diciembre-act.pdf.corpus_text.json`
-- `S47` `verify:` `pytest application, transaction-domain, core and model-adapter suites (14223 of 14248 tests)` -> `pass`
-- `S47` `verify:` `pytest persistence, operations and local-runtime suites (3553 of 3557 tests)` -> `pass`
-- `S47` `verify:` `pytest entrypoint suite including executor conformance and the parity tests (2550 of 2558 tests)` -> `pass`
-- `S47` `verify:` `pytest harness suite (270 tests)` -> `pass`
-- `S47` `verify:` `pytest runtime suite without the supervised tests (415 of 424 tests)` -> `pass`
-- `S47` `verify:` `pytest terminal-interface suite (2235 of 2250 tests)` -> `pass`
-- `S47` `verify:` `pytest command-line suite (5440 of 6031 tests)` -> `pass`
-- `S47` `verify:` `lint-imports (15 contracts)` -> `pass`
-- `S47` `verify:` `just check-style` -> `pass`
-- `S47` `verify:` `just check-types (no finding in this work)` -> `pass`
+- `S42` `summary:` `Plan status=checked; original change rows: M 42, A 11; distinct path cells: 52. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/application=34,
+  src/cadrumo/entrypoints=12, dev/quality=2, src/cadrumo/adapters=2, src/cadrumo/core=2
+  Representative paths: src/cadrumo/application/ledger/evidence_mutation_operation.py;
+  src/cadrumo/entrypoints/cli/_ledger_evidence_cli.py
+- `S42` `verify:` `Archived historical verification rows: pass=29; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
+- `S42` `by:` `vaultspec-high-executor`
+- `S44` `summary:` `Plan status=checked; original change rows: M 11, A 1; distinct path cells: 12. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/application=8, src/cadrumo/entrypoints=3,
+  .vault/adr=1
+  Representative paths: src/cadrumo/application/modelo/local_observation_operation.py;
+  src/cadrumo/entrypoints/tests/test_modelo_local_records_mcp_admission.py
+- `S44` `verify:` `Archived historical verification rows: pass=10; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
+- `S44` `by:` `vaultspec-high-executor`
+- `S19` `summary:` `Plan status=checked; original change rows: M 2; distinct path cells: 2. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/entrypoints=2
+  Representative paths: src/cadrumo/entrypoints/runtime/tests/test_mcp_sign_in_adapter.py
+- `S19` `verify:` `Archived historical verification rows: pass=4; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
+- `S19` `by:` `vaultspec-standard-executor`
+- `S47` `summary:` `Plan status=checked; original change rows: D 16, M 90, A 20; distinct path cells: 126. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/entrypoints=42, src/cadrumo/_data=37,
+  src/cadrumo/application=29, src/cadrumo/adapters=16, .vault/plan=1, src/cadrumo/tests=1
+  Representative paths: src/cadrumo/entrypoints/cli/_ledger_evidence_cli.py;
+  src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_180/files/01-180-orden-hap-1732-2014-actualizado-por-orden-hfp-1284-2023-de-28-de-noviembre-251-kb-pdf.pdf.corpus_text.json
+- `S47` `verify:` `Archived historical verification rows: pass=10; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S47` `by:` `vaultspec-high-executor`
-- `S47` `A` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_190/files/01-190-orden-eha-3127-2009-de-10-de-noviembre-ac.pdf.corpus_text.json`
-- `S47` `A` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_190/files/03-190-orden-eha-3127-2009-de-10-de-noviembre-ac.pdf.corpus_text.json`
-- `S47` `A` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_190/files/04-190-orden-eha-3127-2009-de-10-de-noviembre-ac.pdf.corpus_text.json`
-- `S47` `A` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_193/files/01-193-orden-eha-3377-2011-actualizado-por-orden.pdf.corpus_text.json`
-- `S47` `A` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_193/files/02-193-orden-eha-3377-2011-actualizado-por-orden.pdf.corpus_text.json`
-- `S47` `A` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_347/files/01-347-ejercicio-2025-y-siguientes-modificados-p.pdf.corpus_text.json`
-- `S47` `A` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_349/files/01-349-orden-hac-174-2020-de-4-de-febrero-ejerci.pdf.corpus_text.json`
-- `S47` `A` `src/cadrumo/application/operations/mcp_surface_facts.py`
-- `S47` `A` `src/cadrumo/application/operations/tests/test_mcp_surface_facts.py`
-- `S47` `A` `src/cadrumo/application/tests/test_local_reader_operation_access.py`
-- `S47` `A` `src/cadrumo/entrypoints/cli/tests/test_ledger_import_plan_refusals.py`
-- `S47` `A` `src/cadrumo/entrypoints/tests/test_operation_frontend_parity.py`
-- `S47` `A` `src/cadrumo/entrypoints/tests/test_operation_frontend_source_scan.py`
-- `S47` `A` `src/cadrumo/entrypoints/tests/test_operation_no_tax_agency_write.py`
-- `S47` `A` `src/cadrumo/entrypoints/tests/test_operation_surface_facts.py`
-- `S48` `M` `src/cadrumo/adapters/persistence/profile/tests/test_classification_origin_at_the_ledger_writers.py`
-- `S48` `M` `src/cadrumo/adapters/persistence/profile/tests/test_confirmation_keeps_a_sealed_row_at_the_ledger_writers.py`
-- `S48` `M` `src/cadrumo/adapters/persistence/profile/tests/test_person_takes_a_classification_at_the_ledger_writers.py`
-- `S48` `M` `src/cadrumo/application/inventory/registered_operation.py`
-- `S48` `M` `src/cadrumo/application/invoices/bulk_import.py`
-- `S48` `M` `src/cadrumo/application/invoices/catalogue_add_operation.py`
-- `S48` `M` `src/cadrumo/application/invoices/catalogue_intake_contracts.py`
-- `S48` `M` `src/cadrumo/application/invoices/catalogue_intake_executor.py`
-- `S48` `M` `src/cadrumo/application/invoices/catalogue_intake_operation.py`
-- `S48` `M` `src/cadrumo/application/invoices/catalogue_read_operation.py`
-- `S48` `M` `src/cadrumo/application/invoices/catalogue_remove_operation.py`
-- `S48` `M` `src/cadrumo/application/invoices/catalogue_update_operation.py`
-- `S48` `M` `src/cadrumo/application/invoices/tests/test_catalogue_add_operation.py`
-- `S48` `M` `src/cadrumo/application/invoices/tests/test_catalogue_intake_operation.py`
-- `S48` `M` `src/cadrumo/application/invoices/tests/test_catalogue_remove_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/actions_lifecycle.py`
-- `S48` `M` `src/cadrumo/application/ledger/actions_manual.py`
-- `S48` `M` `src/cadrumo/application/ledger/actions_split_merge.py`
-- `S48` `M` `src/cadrumo/application/ledger/add_operation.py`
-- `S48` `D` `src/cadrumo/application/ledger/agent_reader_locality.py`
-- `S48` `D` `src/cadrumo/application/ledger/agent_row_guard.py`
-- `S48` `M` `src/cadrumo/application/ledger/allocate_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/attachment_mutation_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/bulk_classify_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/check_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/classify_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/counterparty_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/evidence_add_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/evidence_followup_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/evidence_followup_registration.py`
-- `S48` `M` `src/cadrumo/application/ledger/evidence_ingestion_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/evidence_mutation_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/evidence_read_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/export_link_operation_ports.py`
-- `S48` `M` `src/cadrumo/application/ledger/export_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/history_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/import_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/invoice_evidence_confirm_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/invoice_evidence_extract_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/invoice_evidence_readiness_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/ledger_add_command.py`
-- `S48` `M` `src/cadrumo/application/ledger/lifecycle_mutation_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/link_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/list_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/llm_classification.py`
-- `S48` `M` `src/cadrumo/application/ledger/llm_diagnostics_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/llm_review_execution.py`
-- `S48` `M` `src/cadrumo/application/ledger/llm_review_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/merge_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/operator_iva_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/own_account_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/participation_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/participation_rebuild_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/preflight_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/ratios_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/remove_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/reset_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/review_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/rule_contracts.py`
-- `S48` `M` `src/cadrumo/application/ledger/rule_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/split_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/status_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/tests/test_allocate_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/tests/test_bulk_classify_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/tests/test_classification_decision_fields_are_complete.py`
-- `S48` `M` `src/cadrumo/application/ledger/tests/test_evidence_followup_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/tests/test_evidence_ingestion_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/tests/test_evidence_mutation_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/tests/test_evidence_query_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/tests/test_export_link_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/tests/test_history_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/tests/test_import_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/tests/test_invoice_evidence_executor_effects.py`
-- `S48` `D` `src/cadrumo/application/ledger/tests/test_invoice_evidence_extract_agent_access.py`
-- `S48` `M` `src/cadrumo/application/ledger/tests/test_invoice_evidence_readiness_agent_access.py`
-- `S48` `M` `src/cadrumo/application/ledger/tests/test_llm_diagnostics_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/tests/test_llm_review_operation.py`
-- `S48` `D` `src/cadrumo/application/ledger/tests/test_llm_review_persons_row.py`
-- `S48` `M` `src/cadrumo/application/ledger/tests/test_merge_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/tests/test_own_account_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/tests/test_participation_rebuild_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/tests/test_ratios_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/tests/test_rule_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/tests/test_split_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/track_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/update_operation.py`
-- `S48` `M` `src/cadrumo/application/ledger/view_operation.py`
-- `S48` `M` `src/cadrumo/application/prorrata_register/registered_operations.py`
-- `S48` `M` `src/cadrumo/domain/transactions/classification_origin.py`
-- `S48` `M` `src/cadrumo/domain/transactions/tests/test_classification_origin.py`
-- `S48` `D` `src/cadrumo/entrypoints/tests/ledger_persons_work_test_support.py`
-- `S48` `M` `src/cadrumo/entrypoints/tests/test_ledger_classification_actor_by_frontend.py`
-- `S48` `M` `src/cadrumo/entrypoints/tests/test_ledger_evidence_invoice_mcp_admission.py`
-- `S48` `D` `src/cadrumo/entrypoints/tests/test_ledger_evidence_mcp_frontends.py`
-- `S48` `D` `src/cadrumo/entrypoints/tests/test_ledger_persons_work_mcp_guard.py`
-- `S48` `M` `src/cadrumo/entrypoints/tests/test_ledger_row_mutation_mcp_admission.py`
-- `S48` `A` `src/cadrumo/application/ledger/tests/test_invoice_evidence_extract_frontend_parity.py`
-- `S48` `A` `src/cadrumo/entrypoints/tests/ledger_frontend_parity_test_support.py`
-- `S48` `A` `src/cadrumo/entrypoints/tests/test_ledger_file_imports_submitted_directly.py`
-- `S48` `A` `src/cadrumo/entrypoints/tests/test_ledger_persons_work_frontend_parity.py`
-- `S48` `A` `src/cadrumo/entrypoints/tests/test_ledger_write_actor_by_frontend.py`
-- `S48` `verify:` `pytest application, transaction-domain, core and model-adapter suites (14223 of 14248 tests)` -> `pass`
-- `S48` `verify:` `pytest persistence, operations and local-runtime suites (3553 of 3557 tests)` -> `pass`
-- `S48` `verify:` `pytest entrypoint suite including executor conformance and the parity tests (2550 of 2558 tests)` -> `pass`
-- `S48` `verify:` `pytest harness suite (270 tests)` -> `pass`
-- `S48` `verify:` `pytest runtime suite without the supervised tests (415 of 424 tests)` -> `pass`
-- `S48` `verify:` `pytest terminal-interface suite (2235 of 2250 tests)` -> `pass`
-- `S48` `verify:` `pytest command-line suite (5440 of 6031 tests)` -> `pass`
-- `S48` `verify:` `lint-imports (15 contracts)` -> `pass`
-- `S48` `verify:` `just check-style` -> `pass`
-- `S48` `verify:` `just check-types (no finding in this work)` -> `pass`
+- `S48` `summary:` `Plan status=checked; original change rows: M 89, D 7, A 5; distinct path cells: 101. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/application=86,
+  src/cadrumo/entrypoints=10, src/cadrumo/adapters=3, src/cadrumo/domain=2
+  Representative paths: src/cadrumo/application/inventory/registered_operation.py;
+  src/cadrumo/entrypoints/tests/ledger_persons_work_test_support.py
+- `S48` `verify:` `Archived historical verification rows: pass=10; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S48` `by:` `vaultspec-high-executor`
-- `S49` `M` `src/cadrumo/application/diagnostics_operation.py`
-- `S49` `M` `src/cadrumo/application/export/calculation_review_xlsx_operation.py`
-- `S49` `M` `src/cadrumo/application/export/google_operation.py`
-- `S49` `M` `src/cadrumo/application/export/google_review_operation.py`
-- `S49` `M` `src/cadrumo/application/export/tests/test_google_review_operation.py`
-- `S49` `M` `src/cadrumo/application/live/borrador_100_operation.py`
-- `S49` `M` `src/cadrumo/application/live/iva_wallet_history_operation.py`
-- `S49` `M` `src/cadrumo/application/live/live_operation_registration.py`
-- `S49` `M` `src/cadrumo/application/live/tests/test_borrador_100_operation.py`
-- `S49` `M` `src/cadrumo/application/local_reader_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/aggregate_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/amendment_context_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/audit_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/calculation_report_verification_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/dependency_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/edit_contract.py`
-- `S49` `M` `src/cadrumo/application/modelo/filing_record_import_contracts.py`
-- `S49` `M` `src/cadrumo/application/modelo/filing_record_import_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/filing_record_list_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/filing_record_view_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/filing_selection_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/history_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/history_timeline_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/invoice_withholding_capture_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/iva_wallet_balance_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/iva_wallet_correction_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/iva_wallet_override_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/iva_wallet_seed_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/lifecycle_history_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/local_observation_contracts.py`
-- `S49` `M` `src/cadrumo/application/modelo/local_observation_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/m036_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/m145_communication_contracts.py`
-- `S49` `M` `src/cadrumo/application/modelo/m145_communication_execution.py`
-- `S49` `M` `src/cadrumo/application/modelo/m145_communication_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/m303_attestation_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/m360_solicitud_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/maritime_preview_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/mcp_query_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/metadata_operation_access.py`
-- `S49` `M` `src/cadrumo/application/modelo/metadata_read_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/modelo_spreadsheet_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/operation_definitions.py`
-- `S49` `M` `src/cadrumo/application/modelo/projection_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/query_read_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/quickfile_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/quickfile_operation_contracts.py`
-- `S49` `M` `src/cadrumo/application/modelo/reconciliation_export_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/reconciliation_import_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/reconciliation_list_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/reconciliation_pull_operation.py`
-- `S49` `D` `src/cadrumo/application/modelo/reconciliation_source_reference.py`
-- `S49` `M` `src/cadrumo/application/modelo/review_package_exchange_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/review_package_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/review_package_recipient_operations.py`
-- `S49` `M` `src/cadrumo/application/modelo/revision_inventory_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/revision_selection_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/revision_snapshot_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/taxation_comparison_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/tests/test_aggregate_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/tests/test_audit_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/tests/test_calculation_report_verification_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/tests/test_dependency_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/tests/test_edit_admission.py`
-- `S49` `M` `src/cadrumo/application/modelo/tests/test_filing_record_list_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/tests/test_filing_record_view_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/tests/test_filing_selection_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/tests/test_history_timeline_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/tests/test_invoice_withholding_capture_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/tests/test_iva_wallet_balance_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/tests/test_lifecycle_operation_conformance.py`
-- `S49` `M` `src/cadrumo/application/modelo/tests/test_local_observation_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/tests/test_m036_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/tests/test_m145_communication_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/tests/test_m360_solicitud_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/tests/test_maritime_preview_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/tests/test_mcp_query_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/tests/test_metadata_read_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/tests/test_modelo_spreadsheet_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/tests/test_projection_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/tests/test_quickfile_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/tests/test_reconciliation_list_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/tests/test_review_package_exchange_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/tests/test_review_package_recipient_operations.py`
-- `S49` `M` `src/cadrumo/application/modelo/tests/test_revision_inventory_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/tests/test_revision_selection_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/tests/test_revision_snapshot_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/tests/test_taxation_comparison_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/tests/test_verification_report_read_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/tests/test_work_inventory_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/tests/test_work_review_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/verification_report_read_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/wizard_attempt_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/wizard_context_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/work_amend_contracts.py`
-- `S49` `M` `src/cadrumo/application/modelo/work_calculation_contracts.py`
-- `S49` `M` `src/cadrumo/application/modelo/work_change_contracts.py`
-- `S49` `M` `src/cadrumo/application/modelo/work_create_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/work_export_contracts.py`
-- `S49` `M` `src/cadrumo/application/modelo/work_filing_contracts.py`
-- `S49` `M` `src/cadrumo/application/modelo/work_inventory_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/work_review_operation.py`
-- `S49` `M` `src/cadrumo/application/modelo/workbench_operations.py`
-- `S49` `M` `src/cadrumo/application/workbench_generation_operation.py`
-- `S49` `M` `src/cadrumo/application/workflow/resume_operation.py`
-- `S49` `M` `src/cadrumo/application/workflow/run_read_operation.py`
-- `S49` `M` `src/cadrumo/application/workflow/tests/test_resume_operation.py`
-- `S49` `M` `src/cadrumo/application/workflow/tests/test_run_read_operation.py`
-- `S49` `M` `src/cadrumo/application/workstation_check_operation.py`
-- `S49` `M` `src/cadrumo/entrypoints/tests/test_modelo_local_records_mcp_admission.py`
-- `S49` `verify:` `pytest application, transaction-domain, core and model-adapter suites (14223 of 14248 tests)` -> `pass`
-- `S49` `verify:` `pytest persistence, operations and local-runtime suites (3553 of 3557 tests)` -> `pass`
-- `S49` `verify:` `pytest entrypoint suite including executor conformance and the parity tests (2550 of 2558 tests)` -> `pass`
-- `S49` `verify:` `pytest harness suite (270 tests)` -> `pass`
-- `S49` `verify:` `pytest runtime suite without the supervised tests (415 of 424 tests)` -> `pass`
-- `S49` `verify:` `pytest terminal-interface suite (2235 of 2250 tests)` -> `pass`
-- `S49` `verify:` `pytest command-line suite (5440 of 6031 tests)` -> `pass`
-- `S49` `verify:` `lint-imports (15 contracts)` -> `pass`
-- `S49` `verify:` `just check-style` -> `pass`
-- `S49` `verify:` `just check-types (no finding in this work)` -> `pass`
+- `S49` `summary:` `Plan status=checked; original change rows: M 110, D 2, A 1; distinct path cells: 113. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/application=109,
+  src/cadrumo/entrypoints=4
+  Representative paths: src/cadrumo/application/diagnostics_operation.py;
+  src/cadrumo/entrypoints/tests/test_modelo_local_records_mcp_admission.py
+- `S49` `verify:` `Archived historical verification rows: pass=10; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S49` `by:` `vaultspec-high-executor`
-- `S49` `D` `src/cadrumo/entrypoints/tests/test_modelo_reconciliation_agent_results.py`
-- `S49` `M` `src/cadrumo/entrypoints/tests/test_modelo_work_mcp_admission.py`
-- `S49` `A` `src/cadrumo/entrypoints/tests/test_modelo_reconciliation_frontend_parity.py`
-- `S50` `M` `dev/agent_eval/tests/test_authenticated_mcp_runtime.py`
-- `S50` `M` `dev/agent_eval/tests/test_installed_borrador_stdio.py`
-- `S50` `M` `dev/agent_eval/tests/test_installed_m036_stdio.py`
-- `S50` `M` `dev/agent_eval/tests/test_modelo_projection_mcp_runtime.py`
-- `S50` `M` `dev/agent_eval/tests/test_modelo_query_reads_mcp_runtime.py`
-- `S50` `M` `dev/agent_eval/tests/test_runtime_automation_grant_lock_parity.py`
-- `S50` `M` `src/cadrumo/adapters/local_runtime/automation_decision.py`
-- `S50` `M` `src/cadrumo/adapters/local_runtime/automation_inventory.py`
-- `S50` `M` `src/cadrumo/adapters/local_runtime/frontend_client.py`
-- `S50` `M` `src/cadrumo/adapters/local_runtime/frontend_operation_client.py`
-- `S50` `M` `src/cadrumo/adapters/local_runtime/modelo_metadata.py`
-- `S50` `M` `src/cadrumo/adapters/local_runtime/runtime_client.py`
-- `S50` `M` `src/cadrumo/adapters/local_runtime/tests/test_automation_inventory.py`
-- `S50` `M` `src/cadrumo/adapters/local_runtime/tests/test_operation_process_scope.py`
-- `S50` `M` `src/cadrumo/application/auth/apoderado_operation.py`
-- `S50` `M` `src/cadrumo/application/auth/auth_read_contracts.py`
-- `S50` `M` `src/cadrumo/application/auth/certificate_secret_operation.py`
-- `S50` `M` `src/cadrumo/application/auth/certificate_source_operation.py`
-- `S50` `M` `src/cadrumo/application/auth/diagnostic_report_operation.py`
-- `S50` `M` `src/cadrumo/application/auth/operation_definitions.py`
-- `S50` `M` `src/cadrumo/application/auth/passphrase_operation_access.py`
-- `S50` `M` `src/cadrumo/application/auth/provider_configure_operation_access.py`
-- `S50` `M` `src/cadrumo/application/auth/read_operation.py`
-- `S50` `M` `src/cadrumo/application/auth/session_acquire_operation_access.py`
-- `S50` `M` `src/cadrumo/application/auth/teardown_operation_access.py`
-- `S50` `M` `src/cadrumo/application/auth/tests/test_apoderado_operation.py`
-- `S50` `D` `src/cadrumo/application/auth/tests/test_auth_read_agent_result.py`
-- `S50` `M` `src/cadrumo/application/auth/tests/test_certificate_source_operation.py`
-- `S50` `M` `src/cadrumo/application/auth/tests/test_diagnostic_report_operation.py`
-- `S50` `M` `src/cadrumo/application/auth/tests/test_operation_definitions.py`
-- `S50` `M` `src/cadrumo/application/auth/tests/test_passphrase_operation_access.py`
-- `S50` `M` `src/cadrumo/application/auth/tests/test_provider_configure_operation_access.py`
-- `S50` `M` `src/cadrumo/application/auth/tests/test_session_acquire_operation_access.py`
-- `S50` `M` `src/cadrumo/application/user_profile/archive_operation.py`
-- `S50` `M` `src/cadrumo/application/user_profile/automation_operations.py`
-- `S50` `M` `src/cadrumo/application/user_profile/censal_file_import_operation.py`
-- `S50` `M` `src/cadrumo/application/user_profile/censal_operation.py`
-- `S50` `M` `src/cadrumo/application/user_profile/censal_prepare_operation.py`
-- `S50` `M` `src/cadrumo/application/user_profile/censal_preview_operation.py`
-- `S50` `M` `src/cadrumo/application/user_profile/google_configuration_operation.py`
-- `S50` `M` `src/cadrumo/application/user_profile/history_contracts.py`
-- `S50` `M` `src/cadrumo/application/user_profile/history_operation.py`
-- `S50` `M` `src/cadrumo/application/user_profile/operation_access_policy.py`
-- `S50` `M` `src/cadrumo/application/user_profile/operations.py`
-- `S50` `M` `src/cadrumo/application/user_profile/profile_operation_access.py`
-- `S50` `M` `src/cadrumo/application/user_profile/recovery_status_operation.py`
-- `S50` `M` `src/cadrumo/application/user_profile/tests/test_archive_operation.py`
-- `S50` `M` `src/cadrumo/application/user_profile/tests/test_automation_inventory_operation.py`
-- `S50` `M` `src/cadrumo/application/user_profile/tests/test_bundle_export_access.py`
-- `S50` `M` `src/cadrumo/application/user_profile/tests/test_google_configuration_operation.py`
-- `S50` `M` `src/cadrumo/application/user_profile/tests/test_google_stored_record_reads_agent_access.py`
-- `S50` `M` `src/cadrumo/application/user_profile/tests/test_history_operation.py`
-- `S50` `M` `src/cadrumo/application/user_profile/tests/test_history_timeline_operation.py`
-- `S50` `M` `src/cadrumo/application/user_profile/tests/test_profile_operation_access.py`
-- `S50` `M` `src/cadrumo/entrypoints/runtime/bootstrap_delete.py`
-- `S50` `M` `src/cadrumo/entrypoints/runtime/bootstrap_reset.py`
-- `S50` `M` `src/cadrumo/entrypoints/runtime/operation_authority.py`
-- `S50` `M` `src/cadrumo/entrypoints/runtime/operation_host.py`
-- `S50` `M` `src/cadrumo/entrypoints/runtime/profile_connection_access.py`
-- `S50` `M` `src/cadrumo/entrypoints/runtime/profile_connection_admission.py`
-- `S50` `M` `src/cadrumo/entrypoints/runtime/profile_connection_operations.py`
-- `S50` `M` `src/cadrumo/entrypoints/runtime/profile_connection_sessions.py`
-- `S50` `M` `src/cadrumo/entrypoints/runtime/tests/test_lifecycle_notices.py`
-- `S50` `M` `src/cadrumo/entrypoints/runtime/tests/test_login_methods.py`
-- `S50` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_sign_in_door.py`
-- `S50` `M` `src/cadrumo/entrypoints/runtime/tests/test_operation_admitting_frontend_release.py`
-- `S50` `M` `src/cadrumo/entrypoints/runtime/tests/test_operation_scope_resolution.py`
-- `S50` `M` `src/cadrumo/entrypoints/runtime/tests/test_operation_secret.py`
-- `S50` `M` `src/cadrumo/entrypoints/runtime/tests/test_receipt_login.py`
-- `S50` `M` `src/cadrumo_harness/mcp/admitted_operations.py`
-- `S50` `M` `src/cadrumo_harness/mcp/operation_discovery.py`
-- `S50` `M` `src/cadrumo_harness/mcp/protocol_contract.py`
-- `S50` `M` `src/cadrumo_harness/mcp/runtime_adapter.py`
-- `S50` `M` `src/cadrumo_harness/mcp/runtime_admission.py`
-- `S50` `M` `src/cadrumo_harness/mcp/tests/test_authentication_handover.py`
-- `S50` `M` `src/cadrumo_harness/mcp/tests/test_bootstrap_reference_recovery.py`
-- `S50` `M` `src/cadrumo_harness/mcp/tests/test_operation_search_tool.py`
-- `S50` `M` `src/cadrumo_harness/mcp/tests/test_runtime_protocol.py`
-- `S50` `M` `src/cadrumo_harness/mcp/tests/test_sign_in_resume.py`
-- `S50` `M` `src/cadrumo_harness/mcp/tests/test_surface_tools.py`
-- `S50` `A` `src/cadrumo/application/auth/tests/test_auth_read_certificate_path.py`
-- `S50` `A` `src/cadrumo/entrypoints/runtime/tests/test_mcp_password_session_acts.py`
-- `S50` `A` `src/cadrumo/entrypoints/runtime/tests/test_mcp_session_and_secret_tools.py`
-- `S50` `A` `src/cadrumo_harness/mcp/lifecycle_notices.py`
-- `S50` `A` `src/cadrumo_harness/mcp/session_acts.py`
-- `S50` `A` `src/cadrumo_harness/mcp/tests/test_execute_typed_input_tool.py`
-- `S50` `A` `src/cadrumo_harness/mcp/tests/test_lifecycle_notice_tool.py`
-- `S50` `verify:` `pytest application, transaction-domain, core and model-adapter suites (14223 of 14248 tests)` -> `pass`
-- `S50` `verify:` `pytest persistence, operations and local-runtime suites (3553 of 3557 tests)` -> `pass`
-- `S50` `verify:` `pytest entrypoint suite including executor conformance and the parity tests (2550 of 2558 tests)` -> `pass`
-- `S50` `verify:` `pytest harness suite (270 tests)` -> `pass`
-- `S50` `verify:` `pytest runtime suite without the supervised tests (415 of 424 tests)` -> `pass`
-- `S50` `verify:` `pytest terminal-interface suite (2235 of 2250 tests)` -> `pass`
-- `S50` `verify:` `pytest command-line suite (5440 of 6031 tests)` -> `pass`
-- `S50` `verify:` `lint-imports (15 contracts)` -> `pass`
-- `S50` `verify:` `just check-style` -> `pass`
-- `S50` `verify:` `just check-types (no finding in this work)` -> `pass`
+- `S50` `summary:` `Plan status=checked; original change rows: M 79, D 1, A 7; distinct path cells: 87. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/application=41,
+  src/cadrumo/entrypoints=17, src/cadrumo_harness/mcp=15, src/cadrumo/adapters=8, dev/agent_eval=6
+  Representative paths: src/cadrumo/application/auth/apoderado_operation.py;
+  src/cadrumo/entrypoints/runtime/bootstrap_delete.py
+- `S50` `verify:` `Archived historical verification rows: pass=10; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S50` `by:` `vaultspec-high-executor`
-- `S51` `M` `docs/how-to/connect-an-agent.md`
-- `S51` `M` `docs/locales/ca/LC_MESSAGES/how-to/connect-an-agent.po`
-- `S51` `M` `docs/locales/es/LC_MESSAGES/how-to/connect-an-agent.po`
-- `S51` `M` `docs/locales/hu/LC_MESSAGES/how-to/connect-an-agent.po`
-- `S51` `M` `docs/technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md`
-- `S51` `M` `src/cadrumo_harness/_data/agent/README.md`
-- `S51` `M` `src/cadrumo_harness/_data/agent/personas/cadrumo-coordinator.md`
-- `S51` `M` `src/cadrumo_harness/_data/agent/personas/cadrumo-ledger-groomer.md`
-- `S51` `M` `src/cadrumo_harness/_data/agent/personas/cadrumo-onboarding.md`
-- `S51` `M` `src/cadrumo_harness/_data/agent/personas/cadrumo-verifier.md`
-- `S51` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-envelope-reading.md`
-- `S51` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-lifecycle-ordering.md`
-- `S51` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-operating-rules.md`
-- `S51` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-orientation-routing.md`
-- `S51` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-safety-handoff.md`
-- `S51` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-exportar-declaracion/SKILL.md`
-- `S51` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-llevar-libro/SKILL.md`
-- `S51` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-100/SKILL.md`
-- `S51` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-111/SKILL.md`
-- `S51` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-115/SKILL.md`
-- `S51` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-130/SKILL.md`
-- `S51` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-131/SKILL.md`
-- `S51` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-180/SKILL.md`
-- `S51` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-190/SKILL.md`
-- `S51` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-193/SKILL.md`
-- `S51` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-200/SKILL.md`
-- `S51` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-202/SKILL.md`
-- `S51` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-303/SKILL.md`
-- `S51` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-309/SKILL.md`
-- `S51` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-322/SKILL.md`
-- `S51` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-349/SKILL.md`
-- `S51` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-353/SKILL.md`
-- `S51` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-369/SKILL.md`
-- `S51` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-390/SKILL.md`
-- `S51` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-rectificar-declaracion/SKILL.md`
-- `S51` `verify:` `pytest application, transaction-domain, core and model-adapter suites (14223 of 14248 tests)` -> `pass`
-- `S51` `verify:` `pytest persistence, operations and local-runtime suites (3553 of 3557 tests)` -> `pass`
-- `S51` `verify:` `pytest entrypoint suite including executor conformance and the parity tests (2550 of 2558 tests)` -> `pass`
-- `S51` `verify:` `pytest harness suite (270 tests)` -> `pass`
-- `S51` `verify:` `pytest runtime suite without the supervised tests (415 of 424 tests)` -> `pass`
-- `S51` `verify:` `pytest terminal-interface suite (2235 of 2250 tests)` -> `pass`
-- `S51` `verify:` `pytest command-line suite (5440 of 6031 tests)` -> `pass`
-- `S51` `verify:` `lint-imports (15 contracts)` -> `pass`
-- `S51` `verify:` `just check-style` -> `pass`
-- `S51` `verify:` `just check-types (no finding in this work)` -> `pass`
+- `S51` `summary:` `Plan status=checked; original change rows: M 35; distinct path cells: 35. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo_harness/_data=30, docs/locales/*=3,
+  docs/how-to=1, docs/technical=1
+  Representative paths: src/cadrumo_harness/_data/agent/README.md;
+  docs/locales/ca/LC_MESSAGES/how-to/connect-an-agent.po
+- `S51` `verify:` `Archived historical verification rows: pass=10; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S51` `by:` `vaultspec-high-executor`
-- `S47` `M` `.vault/plan/2026-10-10-mcp-parity-plan.md`
-- `S52` `A` `src/cadrumo/application/runtime/installation_requests.py`
-- `S52` `A` `src/cadrumo/application/runtime/tests/test_installation_requests.py`
-- `S52` `A` `src/cadrumo/entrypoints/runtime/installation_door.py`
-- `S52` `A` `src/cadrumo/entrypoints/runtime/installation_composition.py`
-- `S52` `A` `src/cadrumo/entrypoints/runtime/tests/installation_runtime.py`
-- `S52` `A` `src/cadrumo/entrypoints/runtime/tests/test_installation_door.py`
-- `S52` `A` `src/cadrumo/entrypoints/runtime/tests/test_installation_runtime.py`
-- `S52` `A` `src/cadrumo/adapters/local_runtime/installation_client.py`
-- `S52` `A` `src/cadrumo/adapters/local_runtime/installation_frame_io.py`
-- `S52` `A` `src/cadrumo/entrypoints/cli/runtime_installation.py`
-- `S52` `A` `src/cadrumo/entrypoints/cli/tests/test_runtime_installation.py`
-- `S52` `A` `src/cadrumo/entrypoints/cli/tests/test_command_runtime_requests.py`
-- `S52` `M` `src/cadrumo/application/runtime/profile_access.py`
-- `S52` `M` `src/cadrumo/adapters/local_runtime/server_connection_handling.py`
-- `S52` `M` `src/cadrumo/entrypoints/runtime/profile_connections.py`
-- `S52` `M` `src/cadrumo/application/operator_surface/command_operations.py`
-- `S52` `M` `src/cadrumo/application/operator_surface/tests/test_command_operations.py`
-- `S52` `M` `src/cadrumo/entrypoints/cli/tests/command_operation_derivation.py`
-- `S52` `verify:` `pytest installation requests, door, runtime, command-line submitter and command join (112 tests)` -> `pass`
-- `S52` `verify:` `ty check on the six new modules` -> `pass`
-- `S52` `verify:` `ruff check on the six new modules` -> `pass`
+- `S52` `summary:` `Plan status=checked; original change rows: A 12, M 6; distinct path cells: 18. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/entrypoints=10,
+  src/cadrumo/application=5, src/cadrumo/adapters=3
+  Representative paths: src/cadrumo/entrypoints/runtime/installation_door.py;
+  src/cadrumo/application/runtime/installation_requests.py
+- `S52` `verify:` `Archived historical verification rows: pass=3; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S52` `by:` `vaultspec-high-executor`
-- `S57` `A` `src/cadrumo/application/reference_catalogue.py`
-- `S57` `A` `src/cadrumo/application/reference_catalogue_contracts.py`
-- `S57` `A` `src/cadrumo/application/tests/test_reference_catalogue.py`
-- `S57` `A` `src/cadrumo/application/tests/test_apoderado_scopes_payload.py`
-- `S57` `D` `src/cadrumo/entrypoints/cli/config/tests/test_apoderado_scopes_payload.py`
-- `S57` `A` `src/cadrumo/entrypoints/tests/test_reference_catalogue_parity.py`
-- `S57` `M` `src/cadrumo_harness/mcp/authority_query.py`
-- `S57` `M` `src/cadrumo_harness/mcp/protocol_contract.py`
-- `S57` `M` `src/cadrumo_harness/mcp/tests/test_runtime_authority.py`
-- `S57` `M` `src/cadrumo/entrypoints/cli/_modelo_discovery_cli.py`
-- `S57` `M` `src/cadrumo/entrypoints/cli/_modelo_discovery_rendering.py`
-- `S57` `M` `src/cadrumo/entrypoints/cli/_ledger_read_cli.py`
-- `S57` `M` `src/cadrumo/entrypoints/cli/_app_live_portals_cli.py`
-- `S57` `D` `src/cadrumo/entrypoints/cli/_app_live_portals_payloads.py`
-- `S57` `D` `src/cadrumo/entrypoints/cli/_modelo_support_matrix_payloads.py`
-- `S57` `M` `src/cadrumo/entrypoints/cli/_app_ledger_foundation_command_specs.py`
-- `S57` `M` `src/cadrumo/entrypoints/cli/_app_live_portals_command_specs.py`
-- `S57` `M` `src/cadrumo/entrypoints/cli/_ledger_payloads.py`
-- `S57` `M` `src/cadrumo/entrypoints/cli/_modelo_nonwork_calculations_command_specs.py`
-- `S57` `M` `src/cadrumo/entrypoints/cli/_modelo_nonwork_discovery_command_specs.py`
-- `S57` `M` `src/cadrumo/entrypoints/cli/_modelo_payloads.py`
-- `S57` `M` `src/cadrumo/entrypoints/cli/modelo_aux_payloads.py`
-- `S57` `M` `src/cadrumo/entrypoints/cli/config_payloads.py`
-- `S57` `M` `src/cadrumo/entrypoints/cli/config/_auth.py`
-- `S57` `M` `src/cadrumo/entrypoints/cli/config/_auth_command_specs.py`
-- `S57` `M` `src/cadrumo/entrypoints/cli/config/_apoderado.py`
-- `S57` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_describe_payload_parity.py`
-- `S57` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_support_matrix_verb.py`
-- `S57` `verify:` `pytest reference catalogue, its parity test, the authority tool and the two command tests (131 tests)` -> `pass`
-- `S57` `verify:` `ty check on the service, its contracts and the authority query` -> `pass`
-- `S57` `verify:` `ruff check on the same three modules` -> `pass`
+- `S57` `summary:` `Plan status=checked; original change rows: A 5, D 3, M 20; distinct path cells: 28. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/entrypoints=21,
+  src/cadrumo/application=4, src/cadrumo_harness/mcp=3
+  Representative paths: src/cadrumo/entrypoints/cli/config/tests/test_apoderado_scopes_payload.py;
+  src/cadrumo/application/reference_catalogue.py
+- `S57` `verify:` `Archived historical verification rows: pass=3; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S57` `by:` `vaultspec-high-executor`
-- `S53` `M` `src/cadrumo/application/local_reader_contracts.py`
-- `S53` `M` `src/cadrumo/application/local_reader_provisioning.py`
-- `S53` `M` `src/cadrumo/application/local_reader_operation.py`
-- `S53` `A` `src/cadrumo/application/local_reader_status_operation.py`
-- `S53` `A` `src/cadrumo/application/local_reader_report.py`
-- `S53` `A` `src/cadrumo/application/browser_runtime_operation.py`
-- `S53` `M` `src/cadrumo/application/provisioning_host.py`
-- `S53` `M` `src/cadrumo/application/runtime/worker_authorization.py`
-- `S53` `M` `src/cadrumo/application/tests/test_local_reader_operation_access.py`
-- `S53` `M` `src/cadrumo/adapters/local_runtime/worker_authorization.py`
-- `S53` `M` `src/cadrumo/adapters/local_runtime/worker_authorization_lease.py`
-- `S53` `M` `src/cadrumo/adapters/local_runtime/profile_worker.py`
-- `S53` `A` `src/cadrumo/adapters/outbound/model_runtime/tests/__init__.py`
-- `S53` `A` `src/cadrumo/adapters/outbound/model_runtime/tests/runtime_server_owner_start_fixture.py`
-- `S53` `A` `src/cadrumo/adapters/outbound/model_runtime/tests/runtime_server_spawn_fixture.py`
-- `S53` `A` `src/cadrumo/adapters/outbound/model_runtime/tests/test_runtime_server_containment.py`
-- `S53` `M` `src/cadrumo/adapters/persistence/operations/tests/test_local_reader_operation.py`
-- `S53` `A` `src/cadrumo/adapters/persistence/operations/tests/local_reader_operation_support.py`
-- `S53` `A` `src/cadrumo/adapters/persistence/operations/tests/test_local_reader_read_operations.py`
-- `S53` `A` `src/cadrumo/adapters/persistence/operations/tests/test_browser_runtime_operation.py`
-- `S53` `A` `src/cadrumo/entrypoints/local_reader_operation_composition.py`
-- `S53` `M` `src/cadrumo/entrypoints/runtime/operation_authority.py`
-- `S53` `M` `src/cadrumo/entrypoints/cli/config/provision_cli.py`
-- `S53` `A` `src/cadrumo/entrypoints/cli/tests/provision_rendering_support.py`
-- `S53` `A` `src/cadrumo/entrypoints/cli/tests/test_provision_operation_parity.py`
-- `S53` `verify:` `pytest provisioning operations, access and server containment (131 tests)` -> `pass`
-- `S53` `verify:` `pytest worker authorization and provisioning (96 tests)` -> `pass`
-- `S53` `verify:` `pytest provisioning commands with the 19 parity cases (92 tests)` -> `pass`
-- `S53` `verify:` `ruff, format and ty on the 25 files` -> `pass`
-- `S53` `verify:` `pytest executor conformance, frontend parity, surface facts, subject binding and the operations package (1554 of 1556; the two are the session-expiry and key-derivation limits the suite hits under load)` -> `pass`
+- `S53` `summary:` `Plan status=checked; original change rows: M 12, A 13; distinct path cells: 25. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/adapters=11, src/cadrumo/application=9,
+  src/cadrumo/entrypoints=5
+  Representative paths: src/cadrumo/adapters/local_runtime/worker_authorization.py;
+  src/cadrumo/application/local_reader_contracts.py
+- `S53` `verify:` `Archived historical verification rows: pass=5; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S53` `by:` `vaultspec-high-executor`
-- `S54` `M` `src/cadrumo/entrypoints/cli/common.py`
-- `S54` `D` `src/cadrumo/entrypoints/cli/config/_profile_readiness.py`
-- `S54` `M` `src/cadrumo/entrypoints/cli/config/_repair_cli.py`
-- `S54` `M` `src/cadrumo/entrypoints/cli/config/_repair_profile.py`
-- `S54` `M` `src/cadrumo/entrypoints/cli/config/connectivity_rendering.py`
-- `S54` `M` `src/cadrumo/entrypoints/tests/test_operation_no_tax_agency_write.py`
-- `S54` `A` `src/cadrumo/application/connectivity_probe.py`
-- `S54` `A` `src/cadrumo/application/diagnostics_repair.py`
-- `S54` `A` `src/cadrumo/application/diagnostics_repair_documents.py`
-- `S54` `A` `src/cadrumo/application/diagnostics_repair_operations.py`
-- `S54` `A` `src/cadrumo/application/operator_surface/action_targets.py`
-- `S54` `A` `src/cadrumo/application/operator_surface/precondition_action.py`
-- `S54` `A` `src/cadrumo/application/workflow/profile_repair.py`
-- `S54` `A` `src/cadrumo/entrypoints/cli/tests/test_recorded_action_targets.py`
-- `S54` `A` `src/cadrumo/entrypoints/diagnostics_repair_composition.py`
-- `S54` `A` `src/cadrumo/entrypoints/runtime/installation_repair.py`
-- `S54` `A` `src/cadrumo/entrypoints/runtime/tests/test_installation_repair.py`
-- `S54` `A` `src/cadrumo/entrypoints/tests/test_diagnostics_repair_command_parity.py`
-- `S54` `A` `src/cadrumo/entrypoints/tests/test_diagnostics_repair_operations.py`
-- `S54` `verify:` `pytest act families through the real runtime door (164), their operations and application tests (117), and the storage, reset, repair, archive, recovery, censo and profile commands (129 of 131; the two waited 3 s for the native test server under load)` -> `pass`
+- `S54` `summary:` `Plan status=checked; original change rows: M 5, D 1, A 13; distinct path cells: 19. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/entrypoints=12, src/cadrumo/application=7
+  Representative paths: src/cadrumo/entrypoints/cli/common.py;
+  src/cadrumo/application/connectivity_probe.py
+- `S54` `verify:` `Archived historical verification rows: pass=1; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S54` `by:` `vaultspec-high-executor`
-- `S55` `M` `src/cadrumo/adapters/local_runtime/installation_client.py`
-- `S55` `M` `src/cadrumo/application/config_reset.py`
-- `S55` `M` `src/cadrumo/application/storage_management/models.py`
-- `S55` `M` `src/cadrumo/application/storage_management/tests/test_inventory_and_tree.py`
-- `S55` `M` `src/cadrumo/application/tests/test_config_reset.py`
-- `S55` `M` `src/cadrumo/core/errors/registry/_application_part1.py`
-- `S55` `M` `src/cadrumo/entrypoints/cli/config/_storage_command_specs.py`
-- `S55` `M` `src/cadrumo/entrypoints/cli/config/reset_cli.py`
-- `S55` `M` `src/cadrumo/entrypoints/cli/config/storage_cli.py`
-- `S55` `D` `src/cadrumo/entrypoints/cli/config/storage_payloads.py`
-- `S55` `M` `src/cadrumo/entrypoints/cli/config_payloads.py`
-- `S55` `M` `src/cadrumo/entrypoints/cli/runtime_installation.py`
-- `S55` `M` `src/cadrumo/entrypoints/cli/tests/test_cli_payload_constraint_authority.py`
-- `S55` `M` `src/cadrumo/entrypoints/cli/tests/test_config_reset_payload_contract.py`
-- `S55` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_installation.py`
-- `S55` `A` `src/cadrumo/application/config_reset_documents.py`
-- `S55` `A` `src/cadrumo/application/storage_management/documents.py`
-- `S55` `A` `src/cadrumo/entrypoints/runtime/installation_reset.py`
-- `S55` `A` `src/cadrumo/entrypoints/runtime/installation_storage.py`
-- `S55` `A` `src/cadrumo/entrypoints/runtime/tests/installation_registered_runtime.py`
-- `S55` `A` `src/cadrumo/entrypoints/runtime/tests/test_installation_reset.py`
-- `S55` `A` `src/cadrumo/entrypoints/runtime/tests/test_installation_storage.py`
-- `S55` `verify:` `pytest act families through the real runtime door (164), their operations and application tests (117), and the storage, reset, repair, archive, recovery, censo and profile commands (129 of 131; the two waited 3 s for the native test server under load)` -> `pass`
+- `S55` `summary:` `Plan status=checked; original change rows: M 37, D 1, A 8; distinct path cells: 42. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/entrypoints=25, src/cadrumo/adapters=8,
+  src/cadrumo/application=8, src/cadrumo/core=1
+  Representative paths: src/cadrumo/entrypoints/cli/config/_storage_command_specs.py;
+  src/cadrumo/adapters/local_runtime/installation_client.py
+- `S55` `verify:` `Archived historical verification rows: pass=7; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S55` `by:` `vaultspec-high-executor`
-- `S56` `M` `src/cadrumo/application/runtime/installation_requests.py`
-- `S56` `M` `src/cadrumo/application/runtime/tests/test_installation_requests.py`
-- `S56` `M` `src/cadrumo/application/user_profile/archive_operation.py`
-- `S56` `M` `src/cadrumo/application/user_profile/capsule_archive.py`
-- `S56` `M` `src/cadrumo/application/user_profile/censal_file_import_operation.py`
-- `S56` `M` `src/cadrumo/application/user_profile/profile_summary.py`
-- `S56` `M` `src/cadrumo/entrypoints/cli/_profile_authentication_contract.py`
-- `S56` `M` `src/cadrumo/entrypoints/cli/_profile_authentication_gate.py`
-- `S56` `M` `src/cadrumo/entrypoints/cli/config/_archive_cli.py`
-- `S56` `M` `src/cadrumo/entrypoints/cli/config/_censo_transport.py`
-- `S56` `M` `src/cadrumo/entrypoints/cli/config/_profile_delete.py`
-- `S56` `M` `src/cadrumo/entrypoints/cli/config/profile_list_cli.py`
-- `S56` `M` `src/cadrumo/entrypoints/cli/config/restore_cli.py`
-- `S56` `M` `src/cadrumo/entrypoints/cli/runtime_profile_admission.py`
-- `S56` `M` `src/cadrumo/entrypoints/runtime/tests/installation_runtime.py`
-- `S56` `M` `src/cadrumo/entrypoints/runtime/tests/test_installation_door.py`
-- `S56` `M` `src/cadrumo/entrypoints/runtime/tests/test_installation_runtime.py`
-- `S56` `A` `src/cadrumo/application/bucket_maintenance/deletion_preflight.py`
-- `S56` `A` `src/cadrumo/application/operator_output/result_document.py`
-- `S56` `A` `src/cadrumo/application/user_profile/censal_certificate_operation.py`
-- `S56` `A` `src/cadrumo/application/user_profile/recovery_revoke_operation.py`
-- `S56` `A` `src/cadrumo/application/user_profile/tests/test_profile_listing.py`
-- `S56` `A` `src/cadrumo/application/user_profile/tests/test_recovery_revoke_operation.py`
-- `S56` `A` `src/cadrumo/entrypoints/cli/config/tests/test_profile_delete_preflight_parity.py`
-- `S56` `A` `src/cadrumo/entrypoints/runtime/installation_profiles.py`
-- `S56` `A` `src/cadrumo/entrypoints/runtime/tests/installation_profile_support.py`
-- `S56` `A` `src/cadrumo/entrypoints/runtime/tests/test_installation_profiles.py`
-- `S56` `A` `src/cadrumo/entrypoints/tests/command_line_rendering.py`
-- `S56` `A` `src/cadrumo/entrypoints/tests/profile_operation_supervisor.py`
-- `S56` `A` `src/cadrumo/entrypoints/tests/test_censal_certificate_file_operation.py`
-- `S56` `A` `src/cadrumo/entrypoints/tests/test_profile_archive_export_target_refusals.py`
-- `S56` `A` `src/cadrumo/entrypoints/tests/test_recovery_revoke_operation.py`
-- `S56` `verify:` `pytest act families through the real runtime door (164), their operations and application tests (117), and the storage, reset, repair, archive, recovery, censo and profile commands (129 of 131; the two waited 3 s for the native test server under load)` -> `pass`
+- `S56` `summary:` `Plan status=checked; original change rows: M 17, A 15; distinct path cells: 32. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/entrypoints=20,
+  src/cadrumo/application=12
+  Representative paths: src/cadrumo/entrypoints/cli/_profile_authentication_contract.py;
+  src/cadrumo/application/runtime/installation_requests.py
+- `S56` `verify:` `Archived historical verification rows: pass=1; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S56` `by:` `vaultspec-high-executor`
-- `S58` `M` `src/cadrumo/application/live/filed_data_capture.py`
-- `S58` `M` `src/cadrumo/application/live/filed_observation_ports.py`
-- `S58` `M` `src/cadrumo/application/live/filed_single_capture_operation.py`
-- `S58` `M` `src/cadrumo/application/live/remote_state_models.py`
-- `S58` `M` `src/cadrumo/application/modelo/calculation_report_verification_operation.py`
-- `S58` `M` `src/cadrumo/application/modelo/reconciliation_pull_operation.py`
-- `S58` `M` `src/cadrumo/application/modelo/tests/test_calculation_report_verification_operation.py`
-- `S58` `M` `src/cadrumo/entrypoints/cli/_modelo_review_package_cli.py`
-- `S58` `M` `src/cadrumo/entrypoints/cli/_modelo_work_report_cli.py`
-- `S58` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_calculation_report_verify.py`
-- `S58` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_filed_single.py`
-- `S58` `M` `src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py`
-- `S58` `A` `src/cadrumo/application/modelo/review_package_verification_files.py`
-- `S58` `A` `src/cadrumo/entrypoints/cli/tests/test_modelo_reconcile_pull_parity.py`
-- `S58` `A` `src/cadrumo/entrypoints/cli/tests/test_modelo_work_report_verify_parity.py`
-- `S58` `A` `src/cadrumo/entrypoints/runtime/installation_artefacts.py`
-- `S58` `A` `src/cadrumo/entrypoints/runtime/tests/test_installation_artefacts.py`
-- `S58` `A` `src/cadrumo/entrypoints/tests/test_modelo_reconciliation_sequence.py`
-- `S58` `verify:` `pytest act families through the real runtime door (164), their operations and application tests (117), and the storage, reset, repair, archive, recovery, censo and profile commands (129 of 131; the two waited 3 s for the native test server under load)` -> `pass`
+- `S58` `summary:` `Plan status=checked; original change rows: M 12, A 6; distinct path cells: 18. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/entrypoints=10, src/cadrumo/application=8
+  Representative paths: src/cadrumo/entrypoints/cli/_modelo_review_package_cli.py;
+  src/cadrumo/application/live/filed_data_capture.py
+- `S58` `verify:` `Archived historical verification rows: pass=1; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S58` `by:` `vaultspec-high-executor`
-- `S60` `M` `src/cadrumo/entrypoints/tui/app.py`
-- `S60` `M` `src/cadrumo/entrypoints/tui/installed_session.py`
-- `S60` `M` `src/cadrumo/entrypoints/tui/navigation.py`
-- `S60` `M` `src/cadrumo/entrypoints/tui/operations/interactions.py`
-- `S60` `M` `src/cadrumo/entrypoints/tui/operations/modal.py`
-- `S60` `M` `src/cadrumo/entrypoints/tui/operations/refusal_explanation.py`
-- `S60` `M` `src/cadrumo/entrypoints/tui/operations/runtime_controller.py`
-- `S60` `M` `src/cadrumo/entrypoints/tui/runtime_admission.py`
-- `S60` `M` `src/cadrumo/entrypoints/tui/runtime_session.py`
-- `S60` `M` `src/cadrumo/entrypoints/tui/runtime_workbench.py`
-- `S60` `M` `src/cadrumo/entrypoints/tui/search.py`
-- `S60` `M` `src/cadrumo/entrypoints/tui/secret/registration.py`
-- `S60` `M` `src/cadrumo/entrypoints/tui/secret/runtime_login.py`
-- `S60` `M` `src/cadrumo/entrypoints/tui/secret/runtime_login_form.py`
-- `S60` `M` `src/cadrumo/entrypoints/tui/tests/test_installed_session.py`
-- `S60` `M` `src/cadrumo/entrypoints/tui/tests/test_navigation.py`
-- `S60` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_session.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/installation/__init__.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/installation/act_screen.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/installation/acts.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/installation/area_factory.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/installation/destination.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/installation/door.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/installation/recovery_handover.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/installation/rendering.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/installation/tests/__init__.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/installation/tests/runtime_support.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/installation/tests/test_acts.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/installation/tests/test_installation_area.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/installation/tests/test_reached_before_sign_in.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/installation/tests/test_recovery_enrolment.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/installation/tests/test_refused_act_remedy.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/installation/texts.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/operations/catalogue.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/operations/destination.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/operations/palette.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/operations/request_form.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/operations/run_result.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/operations/run_screen.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/operations/tests/test_modal_pending_input_and_choice.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/operations/tests/test_operation_catalogue.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/operations/tests/test_operation_label_coverage.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/operations/tests/test_request_form.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/operations/tests/test_run_result.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/reference/__init__.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/reference/destination.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/reference/filters.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/reference/read_screen.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/reference/reads.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/reference/tests/__init__.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/reference/tests/test_reference_area.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/reference/tests/test_reference_reads.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/reference/texts.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/reference/views.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/tests/test_installation_reference_wording.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/tests/test_operations_destination_native.py`
-- `S60` `A` `src/cadrumo/entrypoints/tui/tests/test_runtime_restricted_destinations_native.py`
-- `S60` `M` `src/cadrumo/locales/en/common.yml`
-- `S60` `M` `src/cadrumo/locales/es/common.yml`
-- `S60` `M` `src/cadrumo/locales/ca/common.yml`
-- `S60` `M` `src/cadrumo/locales/hu/common.yml`
-- `S60` `verify:` `pytest terminal-interface operations (118), installation (35), reference and wording (56), session, navigation, search and app (95), restricted destinations and secret display on a real runtime (6)` -> `pass`
-- `S60` `verify:` `ruff, format and ty on the touched files` -> `pass`
-- `S60` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S60` `summary:` `Plan status=checked; original change rows: M 30, A 40; distinct path cells: 66. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/entrypoints=60, src/cadrumo/locales=4,
+  dev/acceptance=1, dev/tui=1
+  Representative paths: src/cadrumo/entrypoints/tui/app.py; src/cadrumo/locales/en/common.yml
+- `S60` `verify:` `Archived historical verification rows: pass=10; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S60` `by:` `vaultspec-high-executor`
-- `S59` `M` `docs/how-to/connect-an-agent.md`
-- `S59` `M` `docs/locales/ca/LC_MESSAGES/how-to/connect-an-agent.po`
-- `S59` `M` `docs/locales/es/LC_MESSAGES/how-to/connect-an-agent.po`
-- `S59` `M` `docs/locales/hu/LC_MESSAGES/how-to/connect-an-agent.po`
-- `S59` `M` `src/cadrumo/application/operations/mcp_surfaces.py`
-- `S59` `M` `src/cadrumo/application/user_profile/recovery_custody.py`
-- `S59` `M` `src/cadrumo_harness/mcp/runtime_cleanup.py`
-- `S59` `M` `src/cadrumo_harness/mcp/session_acts.py`
-- `S59` `A` `src/cadrumo/entrypoints/runtime/tests/test_mcp_installation_tool.py`
-- `S59` `A` `src/cadrumo_harness/mcp/held_secrets.py`
-- `S59` `A` `src/cadrumo_harness/mcp/installation_acts.py`
-- `S59` `A` `src/cadrumo_harness/mcp/tests/test_held_secrets.py`
-- `S59` `A` `src/cadrumo_harness/mcp/tests/test_installation_tool.py`
-- `S59` `verify:` `pytest harness tool and package suites on the lane (452, 3 deselected for the credential store)` -> `pass`
-- `S59` `verify:` `pytest the six runtime MCP test files against the real runtime (43)` -> `pass`
-- `S59` `verify:` `pytest rule surface conformance (7)` -> `pass`
-- `S59` `verify:` `pytest audit operation and audit verbs (28)` -> `pass`
-- `S59` `verify:` `ruff, format, ty on the changed files` -> `pass`
-- `S59` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S59` `summary:` `Plan status=checked; original change rows: M 8, A 5; distinct path cells: 13. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo_harness/mcp=6, docs/locales/*=3,
+  src/cadrumo/application=2, docs/how-to=1, src/cadrumo/entrypoints=1
+  Representative paths: src/cadrumo_harness/mcp/runtime_cleanup.py;
+  docs/locales/ca/LC_MESSAGES/how-to/connect-an-agent.po
+- `S59` `verify:` `Archived historical verification rows: pass=6; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S59` `by:` `vaultspec-high-executor`
-- `S62` `M` `src/cadrumo/application/modelo/audit_operation.py`
-- `S62` `M` `src/cadrumo/application/modelo/tests/test_audit_operation.py`
-- `S62` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_audit.py`
-- `S62` `M` `src/cadrumo_harness/_data/agent/README.md`
-- `S62` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-envelope-reading.md`
-- `S62` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-operating-rules.md`
-- `S62` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-orientation-routing.md`
-- `S62` `M` `src/cadrumo_harness/_workspace.py`
-- `S62` `M` `src/cadrumo_harness/mcp/admitted_operations.py`
-- `S62` `M` `src/cadrumo_harness/mcp/main.py`
-- `S62` `M` `src/cadrumo_harness/mcp/protocol_contract.py`
-- `S62` `M` `src/cadrumo_harness/mcp/result_request.py`
-- `S62` `M` `src/cadrumo_harness/mcp/runtime_adapter.py`
-- `S62` `M` `src/cadrumo_harness/mcp/server.py`
-- `S62` `M` `src/cadrumo_harness/mcp/tests/session.py`
-- `S62` `M` `src/cadrumo_harness/mcp/tests/test_execute_typed_input_tool.py`
-- `S62` `M` `src/cadrumo_harness/mcp/tests/test_installed_stdio.py`
-- `S62` `M` `src/cadrumo_harness/mcp/tests/test_result_page_tool.py`
-- `S62` `M` `src/cadrumo_harness/mcp/tests/test_submission_uncertainty.py`
-- `S62` `M` `src/cadrumo_harness/resources.py`
-- `S62` `M` `src/cadrumo_harness/tests/test_harness_data_ships.py`
-- `S62` `M` `src/cadrumo_harness/tests/test_plugin_workspace.py`
-- `S62` `M` `src/cadrumo_harness/tests/test_workspace.py`
-- `S62` `A` `src/cadrumo/entrypoints/runtime/tests/test_mcp_secret_by_reference.py`
-- `S62` `A` `src/cadrumo_harness/_data/agent/reference/command-operations.md`
-- `S62` `A` `src/cadrumo_harness/mcp/payload_vocabulary.py`
-- `S62` `A` `src/cadrumo_harness/mcp/tests/test_describe_payload_vocabulary.py`
-- `S62` `A` `src/cadrumo_harness/mcp/tests/test_execute_request_faults.py`
-- `S62` `A` `src/cadrumo_harness/mcp/tests/test_handshake_free_revision.py`
-- `S62` `A` `src/cadrumo_harness/mcp/tests/test_installed_secret_by_reference.py`
-- `S62` `A` `src/cadrumo_harness/mcp/tests/test_secret_by_reference.py`
-- `S62` `A` `src/cadrumo_harness/mcp/tests/test_tool_annotations.py`
-- `S62` `A` `src/cadrumo_harness/mcp/tests/test_unknown_outcome_results.py`
-- `S62` `verify:` `pytest harness tool and package suites on the lane (452, 3 deselected for the credential store)` -> `pass`
-- `S62` `verify:` `pytest the six runtime MCP test files against the real runtime (43)` -> `pass`
-- `S62` `verify:` `pytest rule surface conformance (7)` -> `pass`
-- `S62` `verify:` `pytest audit operation and audit verbs (28)` -> `pass`
-- `S62` `verify:` `ruff, format, ty on the changed files` -> `pass`
-- `S62` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S62` `summary:` `Plan status=checked; original change rows: M 30, A 11; distinct path cells: 40. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo_harness/mcp=25,
+  src/cadrumo_harness/_data=5, src/cadrumo/entrypoints=3, src/cadrumo_harness/tests=3,
+  src/cadrumo/application=2, src/cadrumo_harness/_workspace.py=1, src/cadrumo_harness/resources.py=1
+  Representative paths: src/cadrumo_harness/mcp/admitted_operations.py;
+  src/cadrumo_harness/_data/agent/README.md
+- `S62` `verify:` `Archived historical verification rows: pass=13; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S62` `by:` `vaultspec-high-executor`
-- `S39` `A` `src/cadrumo/entrypoints/tests/test_declaration_through_mcp_equals_command_line.py`
-- `S39` `A` `src/cadrumo/entrypoints/cli/tests/command_operation_reference.py`
-- `S39` `A` `src/cadrumo/entrypoints/cli/tests/test_command_operation_reference.py`
-- `S39` `M` `src/cadrumo_harness/_data/agent/README.md`
-- `S39` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-orientation-routing.md`
-- `S39` `M` `src/cadrumo_harness/_workspace.py`
-- `S39` `verify:` `pytest executor conformance matrix (335 of 336; the one hit a socket buffer limit under load and passes alone)` -> `pass`
-- `S39` `verify:` `pytest the seven parity suites and surface facts (703 of 704; the one a session expiry under load, passes alone)` -> `pass`
-- `S39` `verify:` `pytest application operations (647), installation runtime tests (107), command table, runtime request and counterpart tests (73)` -> `pass`
-- `S39` `verify:` `pytest declaration through MCP equals command line, alone (2)` -> `pass`
-- `S39` `verify:` `pytest dev/quality (217 of 219; the two are a document privacy check on vault paths and the dependency declaration gate, neither from this work)` -> `pass`
-- `S39` `verify:` `lint-imports (15 contracts)` -> `pass`
-- `S39` `verify:` `just check-style` -> `pass`
+- `S39` `summary:` `Plan status=checked; original change rows: A 3, M 4; distinct path cells: 6. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/entrypoints=3,
+  src/cadrumo_harness/_data=2, src/cadrumo_harness/_workspace.py=1
+  Representative paths:
+  src/cadrumo/entrypoints/tests/test_declaration_through_mcp_equals_command_line.py;
+  src/cadrumo_harness/_data/agent/README.md
+- `S39` `verify:` `Archived historical verification rows: pass=14; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S39` `by:` `vaultspec-high-executor`
-- `S61` `M` `dev/quality/metadata/application_entrypoint_modules.json`
-- `S61` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
-- `S61` `M` `dev/quality/metadata/import_load_targets.cadrumo_harness.json`
-- `S61` `M` `src/cadrumo/application/diagnostics_repair_documents.py`
-- `S61` `M` `src/cadrumo/application/operations/mcp_surface_facts.py`
-- `S61` `M` `src/cadrumo/application/reference_catalogue.py`
-- `S61` `M` `src/cadrumo/application/reference_catalogue_contracts.py`
-- `S61` `M` `src/cadrumo/entrypoints/cli/command_operation_table.py`
-- `S61` `M` `src/cadrumo/entrypoints/cli/operator_surface_reconciliation.py`
-- `S61` `M` `src/cadrumo/entrypoints/cli/tests/_operation_submission_flow_support.py`
-- `S61` `M` `src/cadrumo/entrypoints/cli/tests/command_operation_derivation.py`
-- `S61` `M` `src/cadrumo/entrypoints/cli/tests/test_command_operation_join.py`
-- `S61` `M` `src/cadrumo/entrypoints/cli/tests/test_command_runtime_requests.py`
-- `S61` `M` `src/cadrumo/entrypoints/diagnostics_repair_composition.py`
-- `S61` `M` `src/cadrumo/entrypoints/operation_composition.py`
-- `S61` `M` `src/cadrumo/entrypoints/runtime/installation_composition.py`
-- `S61` `M` `src/cadrumo/entrypoints/runtime/operation_host.py`
-- `S61` `M` `src/cadrumo/entrypoints/runtime/session_owner.py`
-- `S61` `M` `src/cadrumo/entrypoints/runtime/tests/installation_registered_runtime.py`
-- `S61` `M` `src/cadrumo/entrypoints/tests/conformance_families.py`
-- `S61` `M` `src/cadrumo/entrypoints/tests/conformance_family_contract.py`
-- `S61` `M` `src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py`
-- `S61` `M` `src/cadrumo/entrypoints/tui/tests/test_operations_destination_native.py`
-- `S61` `A` `src/cadrumo/application/operations/tests/test_mcp_surface_pins.py`
-- `S61` `A` `src/cadrumo/application/tests/test_reference_catalogue_contracts.py`
-- `S61` `A` `src/cadrumo/entrypoints/cli/tests/command_frontend_counterparts.py`
-- `S61` `A` `src/cadrumo/entrypoints/cli/tests/test_command_frontend_parity.py`
-- `S61` `A` `src/cadrumo/entrypoints/runtime/tests/test_installation_production_composition.py`
-- `S61` `A` `src/cadrumo/entrypoints/tests/conformance_diagnostics_repair_support.py`
-- `S61` `A` `src/cadrumo/entrypoints/tests/conformance_local_reader_support.py`
-- `S61` `A` `src/cadrumo/entrypoints/tests/conformance_profile_custody_support.py`
-- `S61` `M` `src/cadrumo/entrypoints/runtime/profile_host.py`
-- `S61` `M` `dev/quality/metadata/import_load_targets.json`
-- `S61` `verify:` `pytest executor conformance matrix (335 of 336; the one hit a socket buffer limit under load and passes alone)` -> `pass`
-- `S61` `verify:` `pytest the seven parity suites and surface facts (703 of 704; the one a session expiry under load, passes alone)` -> `pass`
-- `S61` `verify:` `pytest application operations (647), installation runtime tests (107), command table, runtime request and counterpart tests (73)` -> `pass`
-- `S61` `verify:` `pytest declaration through MCP equals command line, alone (2)` -> `pass`
-- `S61` `verify:` `pytest dev/quality (217 of 219; the two are a document privacy check on vault paths and the dependency declaration gate, neither from this work)` -> `pass`
-- `S61` `verify:` `lint-imports (15 contracts)` -> `pass`
-- `S61` `verify:` `just check-style` -> `pass`
+- `S61` `summary:` `Plan status=checked; original change rows: M 32, A 11; distinct path cells: 41. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/entrypoints=27,
+  src/cadrumo/application=6, dev/quality=5, dev/harness_data=3
+  Representative paths: src/cadrumo/entrypoints/cli/command_operation_table.py;
+  src/cadrumo/application/diagnostics_repair_documents.py
+- `S61` `verify:` `Archived historical verification rows: pass=14; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S61` `by:` `vaultspec-high-executor`
-- `S63` `M` `dev/agent_eval/tests/test_authenticated_mcp_runtime.py`
-- `S63` `M` `dev/agent_eval/tests/test_installed_failed_reference_stdio.py`
-- `S63` `M` `dev/agent_eval/tests/test_installed_mcp_autonomous_reconnect.py`
-- `S63` `M` `dev/agent_eval/tests/test_installed_mcp_tui_grant_parity.py`
-- `S63` `M` `dev/agent_eval/tests/test_mcp_revocation_runtime.py`
-- `S63` `M` `dev/agent_eval/tests/test_mcp_runtime_authority.py`
-- `S63` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
-- `S63` `M` `dev/quality/metadata/import_load_targets.cadrumo_harness.json`
-- `S63` `M` `docs/how-to/connect-an-agent.md`
-- `S63` `M` `docs/locales/ca/LC_MESSAGES/how-to/connect-an-agent.po`
-- `S63` `M` `docs/locales/es/LC_MESSAGES/how-to/connect-an-agent.po`
-- `S63` `M` `docs/locales/hu/LC_MESSAGES/how-to/connect-an-agent.po`
-- `S63` `M` `src/cadrumo/adapters/local_runtime/frontend_client_contracts.py`
-- `S63` `M` `src/cadrumo/adapters/local_runtime/frontend_operation_client.py`
-- `S63` `M` `src/cadrumo/adapters/local_runtime/profile_worker_transport.py`
-- `S63` `M` `src/cadrumo/application/reference_catalogue.py`
-- `S63` `M` `src/cadrumo/application/runtime/profile_access.py`
-- `S63` `M` `src/cadrumo/application/runtime/profile_worker.py`
-- `S63` `M` `src/cadrumo/application/tests/test_reference_catalogue.py`
-- `S63` `M` `src/cadrumo/application/user_profile/automation_custody_port.py`
-- `S63` `M` `src/cadrumo/entrypoints/cli/registered_operation_errors.py`
-- `S63` `M` `src/cadrumo/entrypoints/runtime/operation_host.py`
-- `S63` `M` `src/cadrumo/entrypoints/runtime/profile_connection_operations.py`
-- `S63` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_sign_in_adapter.py`
-- `S63` `M` `src/cadrumo/entrypoints/runtime/worker_operation_requests.py`
-- `S63` `M` `src/cadrumo/entrypoints/tui/operations/run_screen.py`
-- `S63` `M` `src/cadrumo_harness/_data/agent/README.md`
-- `S63` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-operating-rules.md`
-- `S63` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-orientation-routing.md`
-- `S63` `M` `src/cadrumo_harness/mcp/admitted_operations.py`
-- `S63` `M` `src/cadrumo_harness/mcp/operation_discovery.py`
-- `S63` `M` `src/cadrumo_harness/mcp/protocol_contract.py`
-- `S63` `M` `src/cadrumo_harness/mcp/runtime_adapter.py`
-- `S63` `M` `src/cadrumo_harness/mcp/tests/test_authentication_handover.py`
-- `S63` `M` `src/cadrumo_harness/mcp/tests/test_bootstrap_reference_recovery.py`
-- `S63` `M` `src/cadrumo_harness/mcp/tests/test_execute_request_faults.py`
-- `S63` `M` `src/cadrumo_harness/mcp/tests/test_execute_subject_tool.py`
-- `S63` `M` `src/cadrumo_harness/mcp/tests/test_handshake_free_revision.py`
-- `S63` `M` `src/cadrumo_harness/mcp/tests/test_installed_secret_by_reference.py`
-- `S63` `M` `src/cadrumo_harness/mcp/tests/test_installed_sign_in_resume.py`
-- `S63` `M` `src/cadrumo_harness/mcp/tests/test_installed_stdio.py`
-- `S63` `M` `src/cadrumo_harness/mcp/tests/test_lifecycle_notice_tool.py`
-- `S63` `M` `src/cadrumo_harness/mcp/tests/test_operation_search_tool.py`
-- `S63` `M` `src/cadrumo_harness/mcp/tests/test_runtime_manager_remedy.py`
-- `S63` `M` `src/cadrumo_harness/mcp/tests/test_runtime_protocol.py`
-- `S63` `M` `src/cadrumo_harness/mcp/tests/test_sign_in_resume.py`
-- `S63` `M` `src/cadrumo_harness/tests/test_harness_data_ships.py`
-- `S63` `M` `src/cadrumo_harness/tests/test_plugin_workspace.py`
-- `S63` `M` `src/cadrumo_harness/tests/test_workspace.py`
-- `S63` `A` `src/cadrumo/application/runtime/tests/test_request_fault_refusals.py`
-- `S63` `A` `src/cadrumo/core/request_faults.py`
-- `S63` `A` `src/cadrumo/core/tests/test_request_faults.py`
-- `S63` `A` `src/cadrumo/entrypoints/cli/tests/test_request_fault_rendering.py`
-- `S63` `A` `src/cadrumo/entrypoints/runtime/tests/test_mcp_operation_discovery.py`
-- `S63` `A` `src/cadrumo/entrypoints/runtime/tests/test_mcp_request_faults.py`
-- `S63` `A` `src/cadrumo/entrypoints/tests/operation_contract_document.py`
-- `S63` `A` `src/cadrumo/entrypoints/tests/test_operation_contract_document.py`
-- `S63` `A` `src/cadrumo/entrypoints/tui/tests/test_operation_run_request_faults.py`
-- `S63` `A` `src/cadrumo_harness/_data/operation_contracts/app.jsonl`
-- `S63` `A` `src/cadrumo_harness/_data/operation_contracts/auth.jsonl`
-- `S63` `A` `src/cadrumo_harness/_data/operation_contracts/browser-runtime.jsonl`
-- `S63` `A` `src/cadrumo_harness/_data/operation_contracts/config.jsonl`
-- `S63` `A` `src/cadrumo_harness/_data/operation_contracts/diagnostics.jsonl`
-- `S63` `A` `src/cadrumo_harness/_data/operation_contracts/export.jsonl`
-- `S63` `A` `src/cadrumo_harness/_data/operation_contracts/ledger.jsonl`
-- `S63` `A` `src/cadrumo_harness/_data/operation_contracts/live.jsonl`
-- `S63` `A` `src/cadrumo_harness/_data/operation_contracts/local-reader.jsonl`
-- `S63` `A` `src/cadrumo_harness/_data/operation_contracts/modelo.jsonl`
-- `S63` `A` `src/cadrumo_harness/_data/operation_contracts/overview.jsonl`
-- `S63` `A` `src/cadrumo_harness/_data/operation_contracts/profile.jsonl`
-- `S63` `A` `src/cadrumo_harness/_data/operation_contracts/user-profile.jsonl`
-- `S63` `A` `src/cadrumo_harness/_data/operation_contracts/workbench.jsonl`
-- `S63` `A` `src/cadrumo_harness/_data/operation_contracts/workflow.jsonl`
-- `S63` `A` `src/cadrumo_harness/mcp/public_operation_discovery.py`
-- `S63` `A` `src/cadrumo_harness/mcp/tests/test_public_operation_discovery.py`
-- `S63` `M` `dev/quality/metadata/import_load_targets.json`
-- `S63` `verify:` `pytest harness tool and package suites (467, 3 skipped for the credential store)` -> `pass`
-- `S63` `verify:` `pytest the seven runtime MCP test files against the real runtime (40)` -> `pass`
-- `S63` `verify:` `pytest gate and parity set (826 of 827; the one hit a socket buffer limit and passes alone)` -> `pass`
-- `S63` `verify:` `pytest declaration through MCP equals command line, alone (2)` -> `pass`
-- `S63` `verify:` `pytest runtime installation tests (107) and terminal-interface installation tests (35)` -> `pass`
-- `S63` `verify:` `pytest request fault units and reference catalogue (59)` -> `pass`
-- `S63` `verify:` `lint-imports (15 contracts)` -> `pass`
-- `S63` `verify:` `ruff, format and ty on the 51 files` -> `pass`
+- `S63` `summary:` `Plan status=checked; original change rows: M 75, A 30, D 2; distinct path cells: 99. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/entrypoints=21,
+  src/cadrumo_harness/mcp=19, src/cadrumo_harness/_data=18, src/cadrumo/application=15,
+  dev/agent_eval=6, dev/quality=3, docs/locales/*=3, src/cadrumo/adapters=3, src/cadrumo/core=3,
+  src/cadrumo_harness/tests=3, docs/technical=2, src/cadrumo/domain=2, docs/how-to=1
+  Representative paths: src/cadrumo/entrypoints/cli/registered_operation_errors.py;
+  src/cadrumo_harness/mcp/admitted_operations.py
+- `S63` `verify:` `Archived historical verification rows: pass=31; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S63` `by:` `vaultspec-high-executor`
-- `S55` `M` `src/cadrumo/adapters/local_runtime/posix_endpoint.py`
-- `S55` `M` `src/cadrumo/adapters/local_runtime/runtime_verified_transport.py`
-- `S55` `M` `src/cadrumo/adapters/local_runtime/tests/test_framing.py`
-- `S55` `M` `src/cadrumo/adapters/local_runtime/tests/test_posix.py`
-- `S55` `M` `src/cadrumo/adapters/local_runtime/tests/test_server.py`
-- `S55` `M` `src/cadrumo/adapters/local_runtime/tests/test_windows.py`
-- `S55` `M` `src/cadrumo/adapters/local_runtime/windows.py`
-- `S55` `M` `src/cadrumo/application/runtime/contracts.py`
-- `S55` `M` `src/cadrumo/application/runtime/installation_requests.py`
-- `S55` `M` `src/cadrumo/entrypoints/runtime/installation_door.py`
-- `S55` `M` `src/cadrumo/entrypoints/runtime/installation_profiles.py`
-- `S55` `M` `src/cadrumo/entrypoints/runtime/installation_repair.py`
-- `S55` `M` `src/cadrumo/entrypoints/runtime/installation_reset.py`
-- `S55` `M` `src/cadrumo/entrypoints/runtime/installation_storage.py`
-- `S55` `M` `src/cadrumo/entrypoints/runtime/profile_connection_admission.py`
-- `S55` `M` `src/cadrumo/entrypoints/runtime/tests/installation_runtime.py`
-- `S55` `M` `src/cadrumo/entrypoints/runtime/tests/test_installation_door.py`
-- `S55` `M` `src/cadrumo/entrypoints/runtime/tests/test_installation_reset.py`
-- `S55` `M` `src/cadrumo/entrypoints/runtime/tests/test_installation_storage.py`
-- `S55` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_installation_tool.py`
-- `S55` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_binding_retirement.py`
-- `S55` `M` `src/cadrumo/entrypoints/tui/installation/rendering.py`
-- `S55` `M` `src/cadrumo/entrypoints/tui/installation/tests/runtime_support.py`
-- `S55` `A` `src/cadrumo/entrypoints/tui/installation/tests/test_failed_act_outcome.py`
-- `S55` `verify:` `pytest runtime installation and binding retirement tests, serial (129)` -> `pass`
-- `S55` `verify:` `pytest command-line installation submitter (7), reset and storage commands (18), reset and storage application tests (33)` -> `pass`
-- `S55` `verify:` `pytest local runtime endpoint, framing and transport tests (118, 11 skipped by platform) and the POSIX presence selection on Linux through WSL (11)` -> `pass`
-- `S55` `verify:` `pytest terminal-interface installation tests (38)` -> `pass`
-- `S55` `verify:` `lint-imports (15 contracts)` -> `pass`
-- `S55` `verify:` `ruff, format and ty on the 25 files` -> `pass`
-- `S39` `M` `src/cadrumo/entrypoints/tests/test_declaration_through_mcp_equals_command_line.py`
-- `S39` `verify:` `pytest harness tool and package suites (478, 3 skipped for the credential store)` -> `pass`
-- `S39` `verify:` `pytest terminal-interface composition root, session, navigation, app, native destinations and operations tests (197, then the two installed-session cases fixed and 18 re-run)` -> `pass`
-- `S39` `verify:` `pytest runtime MCP secret, installation tool, request faults, contract document and validator message tests (50)` -> `pass`
-- `S39` `verify:` `pytest request validator suites after the wording fixes (349)` -> `pass`
-- `S39` `verify:` `pytest command counterpart, command operation and contract tests (792 of 797; four ledger import locale cases answer a local runtime refusal and one crash funnel case finds no traceback, neither path changed here)` -> `pass`
-- `S39` `verify:` `lint-imports (15 contracts)` -> `pass`
-- `S39` `verify:` `ruff, format and ty on the 94 files` -> `pass`
-- `S60` `M` `dev/acceptance/review/installed_google_review_tui.py`
-- `S60` `M` `dev/tui/harness/sequences.py`
-- `S60` `M` `src/cadrumo/entrypoints/tui/declarations/tests/test_declarations_installed_create.py`
-- `S60` `M` `src/cadrumo/entrypoints/tui/operations/catalogue.py`
-- `S60` `M` `src/cadrumo/entrypoints/tui/operations/run_screen.py`
-- `S60` `M` `src/cadrumo/entrypoints/tui/operations/tests/test_operation_catalogue.py`
-- `S60` `M` `src/cadrumo/entrypoints/tui/tests/test_operations_destination_native.py`
-- `S60` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_reference_login.py`
-- `S60` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_workbench_native.py`
-- `S60` `verify:` `pytest harness tool and package suites (478, 3 skipped for the credential store)` -> `pass`
-- `S60` `verify:` `pytest terminal-interface composition root, session, navigation, app, native destinations and operations tests (197, then the two installed-session cases fixed and 18 re-run)` -> `pass`
-- `S60` `verify:` `pytest runtime MCP secret, installation tool, request faults, contract document and validator message tests (50)` -> `pass`
-- `S60` `verify:` `pytest request validator suites after the wording fixes (349)` -> `pass`
-- `S60` `verify:` `pytest command counterpart, command operation and contract tests (792 of 797; four ledger import locale cases answer a local runtime refusal and one crash funnel case finds no traceback, neither path changed here)` -> `pass`
-- `S60` `verify:` `lint-imports (15 contracts)` -> `pass`
-- `S60` `verify:` `ruff, format and ty on the 94 files` -> `pass`
-- `S61` `M` `src/cadrumo/entrypoints/cli/tests/command_frontend_counterparts.py`
-- `S61` `M` `src/cadrumo/entrypoints/cli/tests/command_operation_reference.py`
-- `S61` `M` `src/cadrumo/entrypoints/cli/tests/test_command_frontend_parity.py`
-- `S61` `M` `src/cadrumo/entrypoints/cli/tests/test_command_operation_reference.py`
-- `S61` `M` `src/cadrumo/entrypoints/tests/operation_contract_document.py`
-- `S61` `M` `src/cadrumo/entrypoints/tests/test_operation_contract_document.py`
-- `S61` `A` `dev/harness_data/__init__.py`
-- `S61` `A` `dev/harness_data/command_operation_reference.py`
-- `S61` `A` `dev/harness_data/operation_contract_document.py`
-- `S61` `M` `dev/quality/metadata/import_load_targets.dev.json`
-- `S61` `verify:` `pytest harness tool and package suites (478, 3 skipped for the credential store)` -> `pass`
-- `S61` `verify:` `pytest terminal-interface composition root, session, navigation, app, native destinations and operations tests (197, then the two installed-session cases fixed and 18 re-run)` -> `pass`
-- `S61` `verify:` `pytest runtime MCP secret, installation tool, request faults, contract document and validator message tests (50)` -> `pass`
-- `S61` `verify:` `pytest request validator suites after the wording fixes (349)` -> `pass`
-- `S61` `verify:` `pytest command counterpart, command operation and contract tests (792 of 797; four ledger import locale cases answer a local runtime refusal and one crash funnel case finds no traceback, neither path changed here)` -> `pass`
-- `S61` `verify:` `lint-imports (15 contracts)` -> `pass`
-- `S61` `verify:` `ruff, format and ty on the 94 files` -> `pass`
-- `S62` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_installation_tool.py`
-- `S62` `M` `src/cadrumo_harness/mcp/held_secrets.py`
-- `S62` `M` `src/cadrumo_harness/mcp/installation_acts.py`
-- `S62` `M` `src/cadrumo_harness/mcp/session_acts.py`
-- `S62` `M` `src/cadrumo_harness/mcp/tests/test_held_secrets.py`
-- `S62` `M` `src/cadrumo_harness/mcp/tests/test_installation_tool.py`
-- `S62` `M` `src/cadrumo_harness/mcp/tests/test_secret_by_reference.py`
-- `S62` `A` `src/cadrumo_harness/mcp/tests/held_secret_support.py`
-- `S62` `verify:` `pytest harness tool and package suites (478, 3 skipped for the credential store)` -> `pass`
-- `S62` `verify:` `pytest terminal-interface composition root, session, navigation, app, native destinations and operations tests (197, then the two installed-session cases fixed and 18 re-run)` -> `pass`
-- `S62` `verify:` `pytest runtime MCP secret, installation tool, request faults, contract document and validator message tests (50)` -> `pass`
-- `S62` `verify:` `pytest request validator suites after the wording fixes (349)` -> `pass`
-- `S62` `verify:` `pytest command counterpart, command operation and contract tests (792 of 797; four ledger import locale cases answer a local runtime refusal and one crash funnel case finds no traceback, neither path changed here)` -> `pass`
-- `S62` `verify:` `lint-imports (15 contracts)` -> `pass`
-- `S62` `verify:` `ruff, format and ty on the 94 files` -> `pass`
-- `S63` `M` `src/cadrumo/application/actividad_asset/activity_asset_contracts.py`
-- `S63` `M` `src/cadrumo/application/diagnostics_read_contracts.py`
-- `S63` `M` `src/cadrumo/application/export/google_operation.py`
-- `S63` `M` `src/cadrumo/application/ledger/evidence_mutation_operation.py`
-- `S63` `M` `src/cadrumo/application/ledger/own_account_operation.py`
-- `S63` `M` `src/cadrumo/application/ledger/update_contracts.py`
-- `S63` `M` `src/cadrumo/application/live/iva_remote_state_capture_operation.py`
-- `S63` `M` `src/cadrumo/application/modelo/filing_record_import_contracts.py`
-- `S63` `M` `src/cadrumo/application/modelo/query_read_contracts.py`
-- `S63` `M` `src/cadrumo/core/parsing/dates.py`
-- `S63` `M` `src/cadrumo/domain/calculations/registry/tax_id_format.py`
-- `S63` `M` `src/cadrumo/domain/renta/actividad_asset/election.py`
-- `S63` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_request_faults.py`
-- `S63` `A` `src/cadrumo/entrypoints/tests/request_validator_message_scan.py`
-- `S63` `A` `src/cadrumo/entrypoints/tests/test_request_validator_messages_quote_no_value.py`
-- `S63` `verify:` `pytest harness tool and package suites (478, 3 skipped for the credential store)` -> `pass`
-- `S63` `verify:` `pytest terminal-interface composition root, session, navigation, app, native destinations and operations tests (197, then the two installed-session cases fixed and 18 re-run)` -> `pass`
-- `S63` `verify:` `pytest runtime MCP secret, installation tool, request faults, contract document and validator message tests (50)` -> `pass`
-- `S63` `verify:` `pytest request validator suites after the wording fixes (349)` -> `pass`
-- `S63` `verify:` `pytest command counterpart, command operation and contract tests (792 of 797; four ledger import locale cases answer a local runtime refusal and one crash funnel case finds no traceback, neither path changed here)` -> `pass`
-- `S63` `verify:` `lint-imports (15 contracts)` -> `pass`
-- `S63` `verify:` `ruff, format and ty on the 94 files` -> `pass`
-- `S63` `M` `docs/technical/articles/171-cli-period-registered-operation-and-ledger-bridges.md`
-- `S63` `M` `docs/technical/topics/runtime-tui-and-agent-harness.md`
-- `S63` `M` `src/cadrumo/application/runtime/tests/test_request_fault_refusals.py`
-- `S63` `M` `src/cadrumo/core/request_faults.py`
-- `S63` `M` `src/cadrumo/core/tests/test_request_faults.py`
-- `S63` `M` `src/cadrumo/entrypoints/cli/tests/test_request_fault_rendering.py`
-- `S63` `D` `src/cadrumo/entrypoints/tests/request_validator_message_scan.py`
-- `S63` `D` `src/cadrumo/entrypoints/tests/test_request_validator_messages_quote_no_value.py`
-- `S63` `M` `src/cadrumo/entrypoints/tui/operations/request_form.py`
-- `S63` `M` `src/cadrumo/entrypoints/tui/operations/tests/test_request_form.py`
-- `S63` `M` `src/cadrumo/entrypoints/tui/tests/test_operation_run_request_faults.py`
-- `S63` `verify:` `pytest command-line discovery defects (30)` -> `pass`
-- `S63` `verify:` `pytest the restored modules' tests, eighteen files and directories (311)` -> `pass`
-- `S63` `verify:` `pytest fault carrier, rendering and form tests (41) and the runtime fault tests serially (5)` -> `pass`
-- `S63` `verify:` `pytest harness tool suite and two command-line files (449 of 450, 3 skipped; the one waited on a runtime endpoint under parallel load and passes alone)` -> `pass`
-- `S63` `verify:` `lint-imports (15 contracts)` -> `pass`
-- `S63` `verify:` `ruff, format, ty on the 29 files; basedpyright and pyrefly on the request-fault module` -> `pass`
-- `S63` `M` `src/cadrumo/entrypoints/runtime/operation_authority.py`
-- `S63` `M` `src/cadrumo/entrypoints/runtime/tests/test_submission_stream_native.py`
-- `S63` `verify:` `pytest runtime request fault tests (6), native submission stream (3) and modelo metadata history (1), each serially` -> `pass`
-- `S63` `verify:` `pytest seven authority and host files and the frontend source scan (32)` -> `pass`
-- `S63` `verify:` `lint-imports (15 contracts)` -> `pass`
-- `S63` `verify:` `ruff, format, ty, basedpyright and pyrefly on the four files` -> `pass`
-- `S63` `M` `src/cadrumo/entrypoints/runtime/tests/test_operation_scope_resolution.py`
-- `S63` `A` `src/cadrumo/entrypoints/runtime/tests/test_worker_outlives_refused_reads.py`
-- `S63` `A` `src/cadrumo/entrypoints/runtime/tests/test_worker_read_refusal.py`
-- `S63` `verify:` `pytest runtime request fault tests and the four added or changed files, serially (46)` -> `pass`
-- `S63` `verify:` `pytest authority, host and frontend source scan (23); projection pages (5), submission stream (3), modelo metadata (2), profile connections (4), each alone` -> `pass`
-- `S63` `verify:` `pytest application operations (647)` -> `pass`
-- `S63` `verify:` `pytest harness tool suite and the two carrier files (461, 3 skipped for the credential store)` -> `pass`
-- `S63` `verify:` `lint-imports (15 contracts)` -> `pass`
-- `S63` `verify:` `ruff, format and ty on the eleven files; pyrefly on the seven production files` -> `pass`
-- `S64` `M` `dev/agent_eval/tests/test_authenticated_mcp_runtime.py`
-- `S64` `M` `dev/agent_eval/tests/test_installed_authenticated_stdio.py`
-- `S64` `M` `dev/agent_eval/tests/test_installed_failed_reference_stdio.py`
-- `S64` `M` `dev/agent_eval/tests/test_installed_linux_refusal_stdio.py`
-- `S64` `M` `dev/agent_eval/tests/test_installed_mcp_first_enrollment.py`
-- `S64` `M` `dev/agent_eval/tests/test_mcp_frontend_session_lock_parity.py`
-- `S64` `M` `dev/agent_eval/tests/test_mcp_revocation_runtime.py`
-- `S64` `M` `dev/agent_eval/tests/test_modelo_projection_mcp_runtime.py`
-- `S64` `M` `dev/agent_eval/tests/test_modelo_query_reads_mcp_runtime.py`
-- `S64` `M` `dev/packaging/tests/test_installed_oracles.py`
-- `S64` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
-- `S64` `M` `dev/quality/metadata/import_load_targets.cadrumo_harness.json`
-- `S64` `M` `src/cadrumo/application/operations/mcp_surfaces.py`
-- `S64` `M` `src/cadrumo/application/operations/tests/test_mcp_surface_pins.py`
-- `S64` `M` `src/cadrumo/entrypoints/cli/tests/command_frontend_counterparts.py`
-- `S64` `M` `src/cadrumo/entrypoints/cli/tests/command_operation_reference.py`
-- `S64` `M` `src/cadrumo/entrypoints/cli/tests/test_command_frontend_parity.py`
-- `S64` `M` `src/cadrumo/entrypoints/cli/tests/test_command_operation_reference.py`
-- `S64` `D` `src/cadrumo/entrypoints/runtime/tests/test_mcp_installation_tool.py`
-- `S64` `D` `src/cadrumo/entrypoints/runtime/tests/test_mcp_password_session_acts.py`
-- `S64` `D` `src/cadrumo/entrypoints/runtime/tests/test_mcp_secret_by_reference.py`
-- `S64` `D` `src/cadrumo/entrypoints/runtime/tests/test_mcp_session_and_secret_tools.py`
-- `S64` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_sign_in_adapter.py`
-- `S64` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_sign_in_refusal_facts.py`
-- `S64` `M` `src/cadrumo/entrypoints/tests/test_operation_no_tax_agency_write.py`
-- `S64` `M` `src/cadrumo_harness/_data/agent/reference/command-operations.md`
-- `S64` `M` `src/cadrumo_harness/mcp/admitted_operations.py`
-- `S64` `D` `src/cadrumo_harness/mcp/held_secrets.py`
-- `S64` `D` `src/cadrumo_harness/mcp/installation_acts.py`
-- `S64` `M` `src/cadrumo_harness/mcp/main.py`
-- `S64` `M` `src/cadrumo_harness/mcp/protocol_contract.py`
-- `S64` `M` `src/cadrumo_harness/mcp/public_operation_discovery.py`
-- `S64` `M` `src/cadrumo_harness/mcp/runtime_adapter.py`
-- `S64` `M` `src/cadrumo_harness/mcp/runtime_admission.py`
-- `S64` `M` `src/cadrumo_harness/mcp/server.py`
-- `S64` `D` `src/cadrumo_harness/mcp/session_acts.py`
-- `S64` `D` `src/cadrumo_harness/mcp/tests/held_secret_support.py`
-- `S64` `M` `src/cadrumo_harness/mcp/tests/test_adapter_cleanup.py`
-- `S64` `M` `src/cadrumo_harness/mcp/tests/test_authentication_handover.py`
-- `S64` `M` `src/cadrumo_harness/mcp/tests/test_bootstrap_reference_recovery.py`
-- `S64` `M` `src/cadrumo_harness/mcp/tests/test_execute_typed_input_tool.py`
-- `S64` `M` `src/cadrumo_harness/mcp/tests/test_handover_cleanup.py`
-- `S64` `M` `src/cadrumo_harness/mcp/tests/test_handshake_free_revision.py`
-- `S64` `D` `src/cadrumo_harness/mcp/tests/test_held_secrets.py`
-- `S64` `D` `src/cadrumo_harness/mcp/tests/test_installation_tool.py`
-- `S64` `D` `src/cadrumo_harness/mcp/tests/test_installed_secret_by_reference.py`
-- `S64` `M` `src/cadrumo_harness/mcp/tests/test_installed_stdio.py`
-- `S64` `M` `src/cadrumo_harness/mcp/tests/test_lifecycle_notice_tool.py`
-- `S64` `M` `src/cadrumo_harness/mcp/tests/test_operation_search_tool.py`
-- `S64` `M` `src/cadrumo_harness/mcp/tests/test_runtime_protocol.py`
-- `S64` `D` `src/cadrumo_harness/mcp/tests/test_secret_by_reference.py`
-- `S64` `M` `src/cadrumo_harness/mcp/tests/test_surface_tools.py`
-- `S64` `M` `src/cadrumo_harness/mcp/tests/test_tool_annotations.py`
-- `S64` `M` `src/cadrumo_harness/mcp/tests/test_unknown_outcome_results.py`
-- `S64` `A` `src/cadrumo/application/operations/person_acts.py`
-- `S64` `A` `src/cadrumo/entrypoints/runtime/tests/test_mcp_no_credential_acts.py`
-- `S64` `M` `dev/quality/metadata/import_load_targets.json`
-- `S64` `verify:` `pytest src/cadrumo_harness -m 'unit or integration'` -> `pass`
-- `S64` `verify:` `pytest runtime tests -k mcp` -> `pass`
-- `S64` `verify:` `pytest cli parity, reference, entrypoints and operations tests` -> `pass`
-- `S64` `verify:` `ruff check and format` -> `pass`
-- `S64` `verify:` `ty check on touched files` -> `pass`
-- `S65` `M` `src/cadrumo/entrypoints/runtime/profile_connection_operations.py`
-- `S65` `M` `src/cadrumo/entrypoints/runtime/tests/test_automation_decision_client.py`
-- `S65` `M` `src/cadrumo/entrypoints/runtime/tests/test_automation_enrollment.py`
-- `S65` `M` `src/cadrumo/entrypoints/runtime/tests/test_installation_artefacts.py`
-- `S65` `M` `src/cadrumo/entrypoints/runtime/tests/test_installation_door.py`
-- `S65` `M` `src/cadrumo/entrypoints/runtime/tests/test_installation_production_composition.py`
-- `S65` `M` `src/cadrumo/entrypoints/runtime/tests/test_installation_profiles.py`
-- `S65` `M` `src/cadrumo/entrypoints/runtime/tests/test_installation_repair.py`
-- `S65` `M` `src/cadrumo/entrypoints/runtime/tests/test_installation_reset.py`
-- `S65` `M` `src/cadrumo/entrypoints/runtime/tests/test_installation_runtime.py`
-- `S65` `M` `src/cadrumo/entrypoints/runtime/tests/test_installation_storage.py`
-- `S65` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_frontend_person_acts.py`
-- `S65` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_sign_in_door.py`
-- `S65` `M` `src/cadrumo/entrypoints/tests/test_operation_mcp_surfaces.py`
-- `S65` `M` `src/cadrumo/application/user_profile/access_contracts.py`
-- `S65` `M` `src/cadrumo/application/user_profile/operation_access_policy.py`
-- `S65` `M` `src/cadrumo/entrypoints/runtime/bootstrap_delete.py`
-- `S65` `M` `src/cadrumo/entrypoints/runtime/bootstrap_reset.py`
-- `S65` `M` `src/cadrumo/entrypoints/runtime/installation_door.py`
-- `S65` `M` `src/cadrumo/entrypoints/runtime/profile_connection_access.py`
-- `S65` `M` `src/cadrumo/entrypoints/runtime/profile_connection_admission.py`
-- `S65` `M` `src/cadrumo/entrypoints/runtime/profile_connection_sessions.py`
-- `S65` `M` `src/cadrumo/entrypoints/runtime/profile_connections.py`
-- `S65` `M` `src/cadrumo/entrypoints/tests/test_operation_frontend_source_scan.py`
-- `S65` `M` `src/cadrumo_harness/mcp/protocol_contract.py`
-- `S65` `M` `src/cadrumo_harness/mcp/runtime_adapter.py`
-- `S65` `A` `src/cadrumo/entrypoints/runtime/profile_connection_person_acts.py`
-- `S65` `verify:` `pytest runtime person-act, sign-in door, installation and automation suites` -> `pass`
-- `S65` `verify:` `pytest operation surfaces, catalogue, frontend scan, user_profile, auth and harness` -> `pass`
-- `S65` `verify:` `ruff check and format` -> `pass`
-- `S65` `verify:` `ty check on touched files` -> `pass`
-- `S66` `M` `src/cadrumo/entrypoints/runtime/profile_connection_sessions.py`
-- `S66` `M` `src/cadrumo/entrypoints/runtime/sign_in_sweep.py`
-- `S66` `M` `src/cadrumo/application/user_profile/login_session.py`
-- `S66` `A` `src/cadrumo/entrypoints/runtime/tests/test_one_signed_in_profile.py`
-- `S66` `M` `src/cadrumo/entrypoints/runtime/tests/test_runtime_password_rotation.py`
-- `S66` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_connections.py`
-- `S66` `M` `src/cadrumo/entrypoints/runtime/tests/test_optional_automation_custody.py`
-- `S66` `verify:` `pytest test_one_signed_in_profile and test_runtime_password_rotation` -> `pass`
-- `S66` `verify:` `pytest runtime suite rerun at -n 2` -> `fail`
-- `S66` `verify:` `ruff check and format` -> `pass`
-- `S66` `verify:` `ty check on touched files` -> `pass`
-- `S67` `M` `dev/agent_eval/tests/test_installed_failed_reference_stdio.py`
-- `S67` `M` `dev/agent_eval/tests/test_installed_linux_refusal_stdio.py`
-- `S67` `D` `dev/harness_data/operation_contract_document.py`
-- `S67` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_operation_discovery.py`
-- `S67` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_sign_in_adapter.py`
-- `S67` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_sign_in_refusal_facts.py`
-- `S67` `D` `src/cadrumo/entrypoints/tests/operation_contract_document.py`
-- `S67` `D` `src/cadrumo/entrypoints/tests/test_operation_contract_document.py`
-- `S67` `D` `src/cadrumo_harness/_data/operation_contracts/app.jsonl`
-- `S67` `D` `src/cadrumo_harness/_data/operation_contracts/auth.jsonl`
-- `S67` `D` `src/cadrumo_harness/_data/operation_contracts/browser-runtime.jsonl`
-- `S67` `D` `src/cadrumo_harness/_data/operation_contracts/config.jsonl`
-- `S67` `D` `src/cadrumo_harness/_data/operation_contracts/diagnostics.jsonl`
-- `S67` `D` `src/cadrumo_harness/_data/operation_contracts/export.jsonl`
-- `S67` `D` `src/cadrumo_harness/_data/operation_contracts/ledger.jsonl`
-- `S67` `D` `src/cadrumo_harness/_data/operation_contracts/live.jsonl`
-- `S67` `D` `src/cadrumo_harness/_data/operation_contracts/local-reader.jsonl`
-- `S67` `D` `src/cadrumo_harness/_data/operation_contracts/modelo.jsonl`
-- `S67` `D` `src/cadrumo_harness/_data/operation_contracts/overview.jsonl`
-- `S67` `D` `src/cadrumo_harness/_data/operation_contracts/profile.jsonl`
-- `S67` `D` `src/cadrumo_harness/_data/operation_contracts/user-profile.jsonl`
-- `S67` `D` `src/cadrumo_harness/_data/operation_contracts/workbench.jsonl`
-- `S67` `D` `src/cadrumo_harness/_data/operation_contracts/workflow.jsonl`
-- `S67` `M` `src/cadrumo_harness/mcp/admitted_operations.py`
-- `S67` `M` `src/cadrumo_harness/mcp/protocol_contract.py`
-- `S67` `D` `src/cadrumo_harness/mcp/public_operation_discovery.py`
-- `S67` `M` `src/cadrumo_harness/mcp/runtime_adapter.py`
-- `S67` `M` `src/cadrumo_harness/mcp/runtime_admission.py`
-- `S67` `M` `src/cadrumo_harness/mcp/tests/test_authentication_handover.py`
-- `S67` `M` `src/cadrumo_harness/mcp/tests/test_corpus_search_tool.py`
-- `S67` `M` `src/cadrumo_harness/mcp/tests/test_handshake_free_revision.py`
-- `S67` `M` `src/cadrumo_harness/mcp/tests/test_installed_sign_in_resume.py`
-- `S67` `M` `src/cadrumo_harness/mcp/tests/test_installed_stdio.py`
-- `S67` `M` `src/cadrumo_harness/mcp/tests/test_lifecycle_notice_tool.py`
-- `S67` `M` `src/cadrumo_harness/mcp/tests/test_operation_search_tool.py`
-- `S67` `D` `src/cadrumo_harness/mcp/tests/test_public_operation_discovery.py`
-- `S67` `M` `src/cadrumo_harness/mcp/tests/test_runtime_authority.py`
-- `S67` `M` `src/cadrumo_harness/mcp/tests/test_runtime_manager_remedy.py`
-- `S67` `M` `src/cadrumo_harness/mcp/tests/test_runtime_protocol.py`
-- `S67` `M` `src/cadrumo_harness/mcp/tests/test_sign_in_resume.py`
-- `S67` `M` `src/cadrumo_harness/tests/test_harness_data_ships.py`
-- `S67` `M` `src/cadrumo_harness/tests/test_plugin_workspace.py`
-- `S67` `M` `src/cadrumo_harness/tests/test_workspace.py`
-- `S67` `A` `src/cadrumo_harness/mcp/tests/admitted_lease.py`
-- `S67` `M` `dev/quality/metadata/import_load_targets.cadrumo_harness.json`
-- `S67` `M` `dev/quality/metadata/import_load_targets.json`
-- `S67` `M` `dev/quality/metadata/import_load_targets.dev.json`
-- `S67` `verify:` `pytest src/cadrumo_harness -m 'unit or integration'` -> `pass`
-- `S67` `verify:` `pytest runtime MCP sign-in adapter, refusal facts, discovery and sign-in door` -> `pass`
-- `S67` `verify:` `ruff check and format` -> `pass`
-- `S67` `verify:` `ty check on touched files` -> `pass`
-- `S69` `M` `docs/how-to/connect-an-agent.md`
-- `S69` `M` `docs/how-to/protect-data-access.md`
-- `S69` `M` `docs/how-to/troubleshooting.md`
-- `S69` `M` `docs/locales/ca/LC_MESSAGES/how-to/connect-an-agent.po`
-- `S69` `M` `docs/locales/ca/LC_MESSAGES/how-to/protect-data-access.po`
-- `S69` `M` `docs/locales/ca/LC_MESSAGES/how-to/troubleshooting.po`
-- `S69` `M` `docs/locales/ca/LC_MESSAGES/reference/import-export-and-evidence.po`
-- `S69` `M` `docs/locales/es/LC_MESSAGES/how-to/connect-an-agent.po`
-- `S69` `M` `docs/locales/es/LC_MESSAGES/how-to/protect-data-access.po`
-- `S69` `M` `docs/locales/es/LC_MESSAGES/how-to/troubleshooting.po`
-- `S69` `M` `docs/locales/es/LC_MESSAGES/reference/import-export-and-evidence.po`
-- `S69` `M` `docs/locales/hu/LC_MESSAGES/how-to/connect-an-agent.po`
-- `S69` `M` `docs/locales/hu/LC_MESSAGES/how-to/protect-data-access.po`
-- `S69` `M` `docs/locales/hu/LC_MESSAGES/how-to/troubleshooting.po`
-- `S69` `M` `docs/locales/hu/LC_MESSAGES/reference/import-export-and-evidence.po`
-- `S69` `M` `docs/reference/import-export-and-evidence.md`
-- `S69` `M` `docs/technical/architecture.md`
-- `S69` `M` `docs/technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md`
-- `S69` `M` `docs/technical/articles/187-filing-skills-and-the-mcp-operator-harness.md`
-- `S69` `M` `docs/technical/assessments/product-capability-map.md`
-- `S69` `M` `docs/technical/topics/runtime-tui-and-agent-harness.md`
-- `S69` `M` `src/cadrumo_harness/_data/agent/README.md`
-- `S69` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-envelope-reading.md`
-- `S69` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-operating-rules.md`
-- `S69` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-orientation-routing.md`
-- `S69` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-safety-handoff.md`
-- `S69` `verify:` `pytest src/cadrumo_harness/tests` -> `pass`
-- `S69` `verify:` `pytest dev/docs/tests drift, localization and message format` -> `fail`
-- `S69` `M` `src/cadrumo_harness/mcp/protocol_contract.py`
-- `S69` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_sign_in_refusal_facts.py`
-- `S65` `M` `src/cadrumo_harness/mcp/operation_discovery.py`
-- `S65` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_operation_discovery.py`
-- `S65` `A` `src/cadrumo/entrypoints/runtime/tests/test_mcp_attended_adapter.py`
-- `S65` `verify:` `pytest test_mcp_attended_adapter.py test_mcp_operation_discovery.py` -> `pass`
-- `S70` `M` `src/cadrumo_harness/mcp/runtime_adapter.py`
-- `S70` `M` `src/cadrumo_harness/mcp/tests/test_authentication_handover.py`
-- `S70` `M` `src/cadrumo_harness/mcp/tests/test_operation_search_tool.py`
-- `S70` `A` `src/cadrumo/entrypoints/runtime/tests/test_mcp_one_signed_in_profile.py`
-- `S70` `verify:` `pytest MCP real-runtime set` -> `pass`
-- `S70` `verify:` `pytest src/cadrumo_harness` -> `pass`
-- `S65` `M` `src/cadrumo/application/operations/person_acts.py`
-- `S65` `M` `src/cadrumo/application/ledger/invoice_evidence_extract_operation.py`
-- `S65` `M` `src/cadrumo/application/ledger/tests/test_invoice_evidence_extract_frontend_parity.py`
-- `S65` `M` `src/cadrumo/entrypoints/tests/test_operation_frontend_parity.py`
-- `S65` `A` `src/cadrumo/entrypoints/runtime/tests/test_mcp_off_host_consent.py`
-- `S65` `M` `docs/how-to/connect-an-agent.md`
-- `S65` `M` `docs/locales/es/LC_MESSAGES/how-to/connect-an-agent.po`
-- `S65` `M` `docs/locales/ca/LC_MESSAGES/how-to/connect-an-agent.po`
-- `S65` `M` `docs/locales/hu/LC_MESSAGES/how-to/connect-an-agent.po`
-- `S65` `verify:` `pytest test_mcp_off_host_consent.py` -> `pass`
-- `S65` `verify:` `pytest test_operation_frontend_parity.py` -> `pass`
-- `S64` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_no_credential_acts.py`
-- `S64` `verify:` `pytest src/cadrumo_harness` -> `pass`
-- `S18` `M` `.vault/adr/2026-10-04-application-sign-in-adr.md`
-- `S18` `verify:` `vault check all` -> `pass`
-- `S71` `M` `dev/acceptance/income_tax/tests/test_installed_tui_child.py`
-- `S71` `M` `dev/quality/metadata/import_load_targets.json`
-- `S71` `M` `src/cadrumo/adapters/local_runtime/frontend_client.py`
-- `S71` `M` `src/cadrumo/adapters/local_runtime/runtime_profile_transport.py`
-- `S71` `M` `src/cadrumo/adapters/local_runtime/server_connection_handling.py`
-- `S71` `M` `src/cadrumo/adapters/local_runtime/tests/test_framing.py`
-- `S71` `M` `src/cadrumo/adapters/local_runtime/tests/test_worker_lease_transfer.py`
-- `S71` `M` `src/cadrumo/application/runtime/profile_access.py`
-- `S71` `M` `src/cadrumo/application/runtime/tests/test_status_admits_session.py`
-- `S71` `M` `src/cadrumo/application/user_profile/access_contracts.py`
-- `S71` `M` `src/cadrumo/application/user_profile/access_projections.py`
-- `S71` `M` `src/cadrumo/application/user_profile/session_authority_access.py`
-- `S71` `M` `src/cadrumo/entrypoints/cli/_profile_authentication_gate.py`
-- `S71` `M` `src/cadrumo/entrypoints/cli/command_operation_table.py`
-- `S71` `M` `src/cadrumo/entrypoints/cli/config/runtime_access_management.py`
-- `S71` `M` `src/cadrumo/entrypoints/cli/config/runtime_access_management_payloads.py`
-- `S71` `M` `src/cadrumo/entrypoints/cli/config/runtime_access_management_specs.py`
-- `S71` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_access_management.py`
-- `S71` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_login.py`
-- `S71` `M` `src/cadrumo/entrypoints/cli/tests/command_frontend_counterparts.py`
-- `S71` `M` `src/cadrumo/entrypoints/runtime/profile_connection_sessions.py`
-- `S71` `M` `src/cadrumo/entrypoints/runtime/tests/stored_sign_in_runtime.py`
-- `S71` `M` `src/cadrumo/entrypoints/runtime/tests/test_automation_approval.py`
-- `S71` `A` `src/cadrumo/entrypoints/runtime/tests/test_disclosure_summary.py`
-- `S71` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_sign_in_door.py`
-- `S71` `A` `src/cadrumo/entrypoints/tui/disclosure_pages.py`
-- `S71` `M` `src/cadrumo/entrypoints/tui/profile/tests/test_automation_inventory.py`
-- `S71` `M` `src/cadrumo/entrypoints/tui/runtime_session.py`
-- `S71` `M` `src/cadrumo/entrypoints/tui/secret/tests/test_automation_requester.py`
-- `S71` `M` `src/cadrumo/entrypoints/tui/secret/tests/test_runtime_login.py`
-- `S71` `M` `src/cadrumo/entrypoints/tui/tests/test_bound_session.py`
-- `S71` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_access_management.py`
-- `S71` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_admission.py`
-- `S71` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_session.py`
-- `S71` `M` `src/cadrumo/locales/ca/cli.yml`
-- `S71` `M` `src/cadrumo/locales/ca/common.yml`
-- `S71` `M` `src/cadrumo/locales/en/cli.yml`
-- `S71` `M` `src/cadrumo/locales/en/common.yml`
-- `S71` `M` `src/cadrumo/locales/es/cli.yml`
-- `S71` `M` `src/cadrumo/locales/es/common.yml`
-- `S71` `M` `src/cadrumo/locales/hu/cli.yml`
-- `S71` `M` `src/cadrumo/locales/hu/common.yml`
-- `S71` `M` `src/cadrumo_harness/_data/agent/README.md`
-- `S71` `M` `src/cadrumo_harness/_data/agent/reference/command-operations.md`
-- `S71` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-orientation-routing.md`
-- `S71` `M` `src/cadrumo_harness/mcp/admitted_operations.py`
-- `S71` `M` `src/cadrumo_harness/mcp/protocol_contract.py`
-- `S71` `M` `src/cadrumo_harness/mcp/tests/admitted_lease.py`
-- `S71` `M` `src/cadrumo_harness/mcp/tests/test_authentication_handover.py`
-- `S71` `M` `src/cadrumo_harness/mcp/tests/test_bootstrap_reference_recovery.py`
-- `S71` `M` `src/cadrumo_harness/mcp/tests/test_operation_search_tool.py`
-- `S71` `M` `src/cadrumo_harness/mcp/tests/test_runtime_protocol.py`
-- `S71` `M` `src/cadrumo_harness/mcp/tests/test_sign_in_resume.py`
-- `S71` `M` `src/cadrumo_harness/mcp/tests/test_surface_tools.py`
-- `S71` `verify:` `pytest runtime/tests/test_disclosure_summary.py real runtime CLI TUI MCP` -> `pass`
-- `S71` `verify:` `pytest tui/tests/test_runtime_session.py` -> `pass`
-- `S71` `verify:` `pytest local_runtime/tests/test_framing.py test_worker_lease_transfer.py` -> `pass`
-- `S71` `verify:` `ruff check and format, ty on touched files` -> `pass`
-- `S71` `verify:` `pytest src/cadrumo_harness` -> `fail`
-- `S71` `verify:` `pytest runtime sign-in suites` -> `fail`
-- `S71` `verify:` `pytest CLI and TUI access suites` -> `fail`
-- `S71` `verify:` `just check-import-boundaries` -> `fail`
-- `S71` `A` `src/cadrumo/application/user_profile/disclosure_paging.py`
-- `S71` `M` `src/cadrumo/entrypoints/tui/disclosure_pages.py`
-- `S71` `R` `src/cadrumo/entrypoints/runtime/tests/test_disclosure_summary.py` -> `src/cadrumo/entrypoints/tests/test_disclosure_summary.py`
-- `S71` `verify:` `pytest entrypoints/tests/test_disclosure_summary.py test_runtime_session.py test_command_frontend_parity.py test_command_operation_reference.py` -> `pass`
-- `S71` `verify:` `ruff and ty on moved files` -> `pass`
-- `S71` `verify:` `just check-import-boundaries` -> `fail`
-- `S72` `A` `src/cadrumo/application/user_profile/automation_agent_key.py`
-- `S72` `A` `src/cadrumo/application/user_profile/tests/test_automation_agent_key.py`
-- `S72` `A` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_agent_key.py`
-- `S72` `A` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_agent_key_native.py`
-- `S72` `A` `src/cadrumo_harness/mcp/tests/agent_key_reads.py`
-- `S72` `M` `src/cadrumo/application/user_profile/access_contracts.py`
-- `S72` `M` `src/cadrumo/application/user_profile/access_policy.py`
-- `S72` `M` `src/cadrumo/application/user_profile/automation_administration.py`
-- `S72` `M` `src/cadrumo/application/user_profile/automation_administration_service.py`
-- `S72` `M` `src/cadrumo/application/user_profile/automation_enrollment.py`
-- `S72` `M` `src/cadrumo/entrypoints/runtime/profile_host.py`
-- `S72` `M` `src/cadrumo/entrypoints/cli/config/runtime_automation_request.py`
-- `S72` `M` `src/cadrumo/entrypoints/cli/config/runtime_access_management_specs.py`
-- `S72` `M` `src/cadrumo/entrypoints/cli/_profile_authentication_gate.py`
-- `S72` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_create.py`
-- `S72` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_attended_adapter.py`
-- `S72` `M` `src/cadrumo/entrypoints/tui/secret/automation_requester.py`
-- `S72` `M` `src/cadrumo/entrypoints/tui/secret/automation_requester_draft.py`
-- `S72` `M` `src/cadrumo/entrypoints/tui/secret/automation_requester_contracts.py`
-- `S72` `M` `src/cadrumo/locales/en/cli.yml`
-- `S72` `M` `src/cadrumo/locales/es/cli.yml`
-- `S72` `M` `src/cadrumo/locales/ca/cli.yml`
-- `S72` `M` `src/cadrumo/locales/hu/cli.yml`
-- `S72` `M` `src/cadrumo/locales/en/common.yml`
-- `S72` `M` `src/cadrumo/locales/es/common.yml`
-- `S72` `M` `src/cadrumo/locales/ca/common.yml`
-- `S72` `M` `src/cadrumo/locales/hu/common.yml`
-- `S72` `M` `docs/how-to/connect-an-agent.md`
-- `S72` `M` `docs/locales/es/LC_MESSAGES/how-to/connect-an-agent.po`
-- `S72` `M` `docs/locales/ca/LC_MESSAGES/how-to/connect-an-agent.po`
-- `S72` `M` `docs/locales/hu/LC_MESSAGES/how-to/connect-an-agent.po`
-- `S72` `M` `src/cadrumo_harness/_data/agent/README.md`
-- `S72` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-operating-rules.md`
-- `S72` `M` `.vault/adr/2026-09-26-mcp-purpose-authentication-profile-access-adr.md`
-- `S72` `M` `.vault/adr/2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr.md`
-- `S72` `verify:` `ruff check, ruff format --check, ty on 19 touched files` -> `pass`
-- `S72` `verify:` `just check-types` -> `pass`
-- `S72` `verify:` `pytest cli/config, user_profile, custody, tui/secret, tui/profile (2110 passed, 140 skipped)` -> `pass`
-- `S72` `verify:` `pytest test_runtime_automation_agent_key (CLI-issued agent key: MCP read, patch, field and row edits read back, out-of-category refused, revocation)` -> `pass`
-- `S72` `verify:` `pytest test_mcp_attended_adapter edit round trip` -> `pass`
-- `S72` `verify:` `pytest test_runtime_automation_agent_key_native: skipped, credential store refuses this logon (WinError 1312)` -> `pass`
-- `S72` `verify:` `pytest mcp harness, runtime, cli suites (3379 passed, 2 failed in config sign-in-hold surfaces, not this Step)` -> `fail`
-- `S72` `verify:` `just check-import-boundaries: contracts 15/15 kept; verdict failed on test-scoped findings elsewhere and a tree changed during the run` -> `fail`
-- `S72` `A` `src/cadrumo/entrypoints/tui/profile/automation_inventory_disclosures.py`
-- `S72` `M` `src/cadrumo/application/user_profile/automation_agent_key.py`
-- `S72` `M` `src/cadrumo/application/user_profile/automation_operations.py`
-- `S72` `M` `src/cadrumo/application/user_profile/tests/test_automation_agent_key.py`
-- `S72` `M` `src/cadrumo/adapters/local_runtime/automation_inventory.py`
-- `S72` `M` `src/cadrumo/adapters/local_runtime/tests/test_automation_decision.py`
-- `S72` `M` `src/cadrumo/entrypoints/cli/command_operation_table.py`
-- `S72` `M` `src/cadrumo/entrypoints/cli/config/runtime_access_management.py`
-- `S72` `M` `src/cadrumo/entrypoints/cli/config/runtime_access_management_payloads.py`
-- `S72` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_agent_key.py`
-- `S72` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_decision.py`
-- `S72` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_list.py`
-- `S72` `M` `src/cadrumo/entrypoints/cli/tests/command_frontend_counterparts.py`
-- `S72` `M` `src/cadrumo/entrypoints/tui/profile/automation_inventory.py`
-- `S72` `M` `src/cadrumo/entrypoints/tui/profile/automation_inventory_decisions.py`
-- `S72` `M` `src/cadrumo/entrypoints/tui/profile/automation_inventory_details.py`
-- `S72` `M` `src/cadrumo/entrypoints/tui/profile/automation_inventory_view.py`
-- `S72` `M` `src/cadrumo/entrypoints/tui/profile/tests/test_automation_inventory.py`
-- `S72` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_access_management.py`
-- `S72` `M` `src/cadrumo/entrypoints/cli/tests/command_operation_derivation.py`
-- `S72` `M` `src/cadrumo_harness/_data/agent/reference/command-operations.md`
-- `S72` `verify:` `ruff, ruff format --check, ty on 28 touched files` -> `pass`
-- `S72` `verify:` `test_runtime_automation_agent_key both cases incl. ten agent keys listed, paged and revoked (3 consecutive passes)` -> `pass`
-- `S72` `verify:` `pytest cli/config, user_profile, custody, automation_decision, tui/secret, tui/profile (2121 passed, 140 skipped; the 2 access-management failures then fixed and rerun)` -> `pass`
-- `S72` `verify:` `pytest mcp harness, harness, runtime, cli (3377 passed; join failures fixed and rerun; 2 remaining in config sign-in-hold surfaces, owned by tui-b3)` -> `fail`
-- `S72` `verify:` `just check-types: 26 ty diagnostics, none in this Step's files` -> `fail`
-- `S73` `M` `dev/agent_eval/live/access.py`
-- `S73` `M` `dev/agent_eval/live/lane.py`
-- `S73` `M` `dev/agent_eval/live/isolated_host.py`
-- `S73` `M` `dev/agent_eval/tests/test_live_access.py`
-- `S73` `verify:` `pytest-live-access-lane-host` -> `pass`
-- `S73` `verify:` `ruff-format-ty` -> `pass`
+- `S64` `summary:` `Plan status=checked; original change rows: M 44, D 12, A 2; distinct path cells: 57. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo_harness/mcp=28,
+  src/cadrumo/entrypoints=12, dev/agent_eval=9, dev/quality=3, src/cadrumo/application=3,
+  dev/packaging=1, src/cadrumo_harness/_data=1
+  Representative paths: src/cadrumo_harness/mcp/admitted_operations.py;
+  src/cadrumo/entrypoints/cli/tests/command_frontend_counterparts.py
+- `S64` `verify:` `Archived historical verification rows: pass=6; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
+- `S65` `summary:` `Plan status=checked; original change rows: M 36, A 3; distinct path cells: 39. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/entrypoints=27,
+  src/cadrumo/application=5, docs/locales/*=3, src/cadrumo_harness/mcp=3, docs/how-to=1
+  Representative paths: src/cadrumo/entrypoints/runtime/profile_connection_operations.py;
+  src/cadrumo/application/user_profile/access_contracts.py
+- `S65` `verify:` `Archived historical verification rows: pass=7; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
+- `S66` `summary:` `Plan status=checked; original change rows: M 6, A 1; distinct path cells: 7. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/entrypoints=6, src/cadrumo/application=1
+  Representative paths: src/cadrumo/entrypoints/runtime/profile_connection_sessions.py;
+  src/cadrumo/application/user_profile/login_session.py
+- `S66` `verify:` `Archived historical verification rows: fail=1, pass=3; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
+- `S67` `summary:` `Plan status=checked; original change rows: M 26, D 20, A 1; distinct path cells: 47. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo_harness/mcp=18,
+  src/cadrumo_harness/_data=15, src/cadrumo/entrypoints=5, dev/quality=3,
+  src/cadrumo_harness/tests=3, dev/agent_eval=2, dev/harness_data=1
+  Representative paths: src/cadrumo_harness/mcp/admitted_operations.py;
+  src/cadrumo_harness/_data/operation_contracts/app.jsonl
+- `S67` `verify:` `Archived historical verification rows: pass=4; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
+- `S69` `summary:` `Plan status=checked; original change rows: M 28; distinct path cells: 28. Detailed paths remain in archive.`
+  Affected path families (unique path counts): docs/locales/*=12, docs/technical=5,
+  src/cadrumo_harness/_data=5, docs/how-to=3, docs/reference=1, src/cadrumo/entrypoints=1,
+  src/cadrumo_harness/mcp=1
+  Representative paths: docs/locales/ca/LC_MESSAGES/how-to/connect-an-agent.po;
+  docs/technical/architecture.md
+- `S69` `verify:` `Archived historical verification rows: pass=1, fail=1; latest recorded outcome=fail; summary only, not a fresh run.` -> `fail`
+- `S70` `summary:` `Plan status=checked; original change rows: M 3, A 1; distinct path cells: 4. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo_harness/mcp=3, src/cadrumo/entrypoints=1
+  Representative paths: src/cadrumo_harness/mcp/runtime_adapter.py;
+  src/cadrumo/entrypoints/runtime/tests/test_mcp_one_signed_in_profile.py
+- `S70` `verify:` `Archived historical verification rows: pass=2; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
+- `S18` `summary:` `Plan status=checked; original change rows: M 1; distinct path cells: 1. Detailed paths remain in archive.`
+  Affected path families (unique path counts): .vault/adr=1
+  Representative paths: .vault/adr/2026-10-04-application-sign-in-adr.md
+- `S18` `verify:` `Archived historical verification rows: pass=1; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
+- `S71` `summary:` `Plan status=checked; original change rows: M 53, A 3, R 1; distinct path cells: 56. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/entrypoints=23,
+  src/cadrumo_harness/mcp=9, src/cadrumo/locales=8, src/cadrumo/application=6,
+  src/cadrumo/adapters=5, src/cadrumo_harness/_data=3, dev/acceptance=1, dev/quality=1
+  Representative paths: src/cadrumo/entrypoints/cli/_profile_authentication_gate.py;
+  src/cadrumo_harness/mcp/admitted_operations.py
+- `S71` `verify:` `Archived historical verification rows: pass=6, fail=5; latest recorded outcome=fail; summary only, not a fresh run.` -> `fail`
+- `S72` `summary:` `Plan status=checked; original change rows: A 6, M 50; distinct path cells: 53. Detailed paths remain in archive.`
+  Affected path families (unique path counts): src/cadrumo/entrypoints=25,
+  src/cadrumo/application=8, src/cadrumo/locales=8, docs/locales/*=3, src/cadrumo_harness/_data=3,
+  .vault/adr=2, src/cadrumo/adapters=2, docs/how-to=1, src/cadrumo_harness/mcp=1
+  Representative paths:
+  src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_agent_key.py;
+  src/cadrumo/application/user_profile/automation_agent_key.py
+- `S72` `verify:` `Archived historical verification rows: pass=9, fail=4; latest recorded outcome=fail; summary only, not a fresh run.` -> `fail`
+- `S73` `summary:` `Plan status=checked; original change rows: M 4; distinct path cells: 4. Detailed paths remain in archive.`
+  Affected path families (unique path counts): dev/agent_eval=4
+  Representative paths: dev/agent_eval/live/access.py
+- `S73` `verify:` `Archived historical verification rows: pass=2; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 
 ## Notes
+
+- Summary semantics: `summary:` labels preserve Step coverage, while the parser reports zero native path-change rows. Original operation and domain counts appear above; exact path-per-row history and verification commands are in `<local-archive>/markdown-originals-2026-10-14.tar.gz` (manifest: `<temp>/cadrumo-markdown-condensation-2026-10-14/manifest.json`).
+
 
 - `S08` The subject-reference form could not be stated from inside the harness and moved to its own Step. One existing result-page test was already failing at HEAD on a stale page-size literal and is corrected here.
 - `S01` The import-boundary gate fails for reasons outside this Step: two private cross-package findings under dev/packaging and a stale generated module inventory; all 15 contracts are kept and no chain involves these files. The inventory entries for the new modules are regenerated in a separate commit. Twelve MCP-listed operations are not proven through their real resolver and are pinned in a named set; the no-submission assertion covers what operations, tools and commands declare and cannot see executor or adapter behaviour.
