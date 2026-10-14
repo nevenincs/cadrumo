@@ -7,9 +7,9 @@ import importlib.metadata
 import json
 import os
 import shutil
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from contextlib import nullcontext
-from pathlib import Path, PurePosixPath
+from pathlib import Path, PurePath, PurePosixPath
 from typing import Any
 
 from packaging.utils import canonicalize_name
@@ -147,6 +147,33 @@ def native_assembly_layout(contract: dict[str, Any], provenance: Mapping[str, An
     return projected
 
 
+def _shortest_first(parts: list[str]) -> tuple[int, list[str]]:
+    return len(parts), parts
+
+
+def import_surface(name: str, recorded: Iterable[PurePath | str]) -> str:
+    """Return the shortest importable module a distribution's RECORD lists, to smoke-import it.
+
+    RECORD paths are POSIX by specification, but some wheels (ormsgpack's) write
+    Windows separators, so either separator delimits a path.
+    """
+    candidates: list[list[str]] = []
+    for member in recorded:
+        path = PurePosixPath(str(member).replace("\\", "/"))
+        parts = list(path.parts)
+        if path.suffix != ".py" or any(p in {"tests", "test", "__main__.py"} for p in parts):
+            continue
+        parts[-1] = path.stem
+        if parts[-1] == "__init__":
+            parts.pop()
+        if parts and all(p.isidentifier() for p in parts):
+            candidates.append(parts)
+    if not candidates:
+        raise ValueError(f"No reviewed Python import surface for distribution {name}")
+    selected: list[str] = min(candidates, key=_shortest_first)
+    return ".".join(selected)
+
+
 def assemble(
     python: Path,
     dependencies: Path | None,
@@ -220,20 +247,7 @@ def assemble(
         if name in contract["smoke_modules"]:
             smoke_modules[name] = contract["smoke_modules"][name]
             continue
-        candidates = []
-        for member in distribution.files or ():
-            parts = list(member.parts)
-            if member.suffix != ".py" or any(p in {"tests", "test", "__main__.py"} for p in parts):
-                continue
-            parts[-1] = member.stem
-            if parts[-1] == "__init__":
-                parts.pop()
-            if parts and all(p.isidentifier() for p in parts):
-                candidates.append(parts)
-        if not candidates:
-            raise ValueError(f"No reviewed Python import surface for distribution {name}")
-        selected = min(candidates, key=lambda parts: (len(parts), parts))
-        smoke_modules[name] = [".".join(selected)]
+        smoke_modules[name] = [import_surface(name, distribution.files or ())]
     lib = root / layout["stdlib"]
     lib.parent.mkdir(parents=True, exist_ok=True)
     packages = root / layout["packages"]
