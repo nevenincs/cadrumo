@@ -91,11 +91,12 @@ impl LogSourceState {
 pub struct LogSourceStates {
     pub python: LogSourceState,
     pub manager: LogSourceState,
+    pub host: LogSourceState,
 }
 
 impl LogSourceStates {
     fn same(&self, other: &Self) -> bool {
-        self.python.same(&other.python) && self.manager.same(&other.manager)
+        self.python.same(&other.python) && self.manager.same(&other.manager) && self.host.same(&other.host)
     }
 }
 
@@ -233,6 +234,12 @@ impl Aggregate {
             bytes: bytes + digits(self.next_seq),
         });
         self.next_seq += 1;
+    }
+
+    pub fn lost(&mut self, count: u64) {
+        for subscriber in &mut self.subscribers {
+            subscriber.dropped += count;
+        }
     }
 
     /// Empties the ring; sequence numbers keep increasing.
@@ -375,6 +382,7 @@ mod tests {
         };
         LogSourceStates {
             python: state.clone(),
+            host: state.clone(),
             manager: state,
         }
     }

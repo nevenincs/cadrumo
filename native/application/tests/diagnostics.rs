@@ -65,6 +65,7 @@ fn rotation_bounds_files_and_capture_reports_discarded_bytes() {
             lifecycle: None,
             webview_failure: None,
             helper_timing: None,
+            service: None,
         })
         .unwrap();
     }

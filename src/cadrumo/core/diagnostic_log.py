@@ -154,6 +154,7 @@ def diagnostic_timing_event(
             logger,
             event,
             fields={**(fields or {}), "phase_monotonic_ns": observed},
+            level=logging.DEBUG,
             primary_error=primary_error,
         )
     except Exception:

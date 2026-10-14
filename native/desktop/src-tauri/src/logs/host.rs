@@ -2,11 +2,8 @@
 //!
 //! Only `Diagnostics` events are read. Captured process output, which can hold
 //! terminal bytes, is never requested from the snapshot.
-use super::{
-    format::Level,
-    record::{Entry, ProcessRef},
-};
-use cadrumo_application::diagnostics::{DiagnosticSource, Diagnostics, Event, EventKind};
+use super::{format::Level, record::{Entry, ProcessRef, LogSourceState, SourceKind}};
+use cadrumo_application::diagnostics::{DiagnosticSource, Diagnostics, Event};
 use serde::Serialize;
 use serde_json::Value;
 use std::collections::BTreeMap;
@@ -21,21 +18,44 @@ const LOGGER: &str = "desktop";
 #[derive(Default)]
 pub struct HostEvents {
     after: u64,
+    pub dropped: u64,
 }
 
 impl HostEvents {
     pub fn poll(&mut self, diagnostics: &Diagnostics) -> Vec<Entry> {
         // A cursor past every output chunk keeps captured output out.
         let events = diagnostics.snapshot(u64::MAX).events;
-        let fresh = events
+        let mut fresh: Vec<Entry> = events
             .iter()
             .filter(|event| event.sequence > self.after)
             .map(entry)
             .collect();
+        if let Some(first) = events.iter().find(|event| event.sequence > self.after) {
+            let omitted = first.sequence.saturating_sub(self.after + 1);
+            if omitted != 0 {
+                self.dropped += omitted;
+                let mut gap = entry(first);
+                gap.level = Some(Level::Warning);
+                gap.message = format!("host_log_gap: {omitted} records are no longer retained");
+                gap.process = Some(ProcessRef { role: LOGGER.into(), pid: first.host_pid });
+                gap.context = BTreeMap::from([("dropped_records".into(), Value::from(omitted))]);
+                fresh.insert(0, gap);
+            }
+        }
         if let Some(last) = events.last() {
             self.after = last.sequence;
         }
         fresh
+    }
+}
+
+pub fn source(diagnostics: &Diagnostics) -> LogSourceState {
+    let snapshot = diagnostics.snapshot(u64::MAX);
+    LogSourceState {
+        kind: if snapshot.log_failure.is_some() { SourceKind::Unreadable } else { SourceKind::Available },
+        detail: snapshot.paths.map_or_else(|| "desktop diagnostics (memory)".into(), |paths| paths.current.display().to_string()),
+        failure: snapshot.log_failure,
+        rejected: 0,
     }
 }
 
@@ -121,7 +141,25 @@ pub(super) fn entry(event: &Event) -> Entry {
             context.insert(name.into(), elapsed.map_or(Value::Null, Value::from));
         }
     }
+    if let Some(fact) = event.service {
+        let encoded = serde_json::to_value(fact).expect("closed service fact serializes");
+        for (key, value) in encoded.as_object().expect("service fact is an object") {
+            context.insert(format!("service_{key}"), value.clone());
+        }
+        if let cadrumo_application::diagnostics::service::ServiceFact::AgentReady { gateway_port, .. } = fact {
+            context.insert("endpoint_transport".into(), Value::from("http"));
+            context.insert("endpoint_host".into(), Value::from("127.0.0.1"));
+            context.insert("endpoint_port".into(), Value::from(gateway_port));
+        }
+    }
     let mut message = token(event.kind);
+    if let Some(fact) = event.service {
+        let encoded = serde_json::to_value(fact).expect("closed service fact serializes");
+        message = encoded["event"].as_str().unwrap_or("service_event").to_owned();
+        if let cadrumo_application::diagnostics::service::ServiceFact::AgentReady { gateway_port, .. } = fact {
+            message.push_str(&format!(" at http://127.0.0.1:{gateway_port}"));
+        }
+    }
     if let Some(fact) = event.lifecycle {
         let encoded = serde_json::to_value(fact).expect("closed lifecycle fact serializes");
         if let Some(name) = encoded["event"].as_str() {
@@ -159,19 +197,7 @@ pub(super) fn entry(event: &Event) -> Entry {
             failure.message
         ));
     }
-    let level = match event.kind {
-        EventKind::Failure => Level::Error,
-        EventKind::ChildTerminated => Level::Warning,
-        EventKind::ChildExited
-            if event
-                .status
-                .as_ref()
-                .is_some_and(|status| status.exit_code != Some(0)) =>
-        {
-            Level::Warning
-        }
-        _ => Level::Info,
-    };
+    let level = super::severity::level(event);
     Entry {
         source,
         timestamp: utc(event.timestamp_ms),
@@ -261,6 +287,7 @@ fn utc(epoch_ms: u64) -> String {
 mod tests {
     use super::*;
     use cadrumo_application::{
+        diagnostics::EventKind,
         diagnostics::helper::{HelperKind, HelperOutcome, HelperTiming},
         error::application::{ApplicationError, ErrorCode, Operation},
         process::status::{ProcessPhase, ProcessRole, Stream},
@@ -364,7 +391,7 @@ mod tests {
         let second = host.poll(&diagnostics);
         assert_eq!(second.len(), 2);
         assert_eq!(second[0].message, "child_exited: tui pid 4242, exit code 3");
-        assert_eq!(second[0].level, Some(Level::Warning));
+        assert_eq!(second[0].level, Some(Level::Error));
         assert_eq!(
             second[0].process,
             Some(ProcessRef {
@@ -391,7 +418,10 @@ mod tests {
         for pid in 0..600 {
             diagnostics.start(pid, ProcessRole::Cli);
         }
-        assert_eq!(host.poll(&diagnostics).len(), 512);
+        let records = host.poll(&diagnostics);
+        assert_eq!(records.len(), 513);
+        assert_eq!(records[0].level, Some(Level::Warning));
+        assert!(records[0].context["dropped_records"].as_u64().unwrap() > 0);
         diagnostics.start(9_999, ProcessRole::Cli);
         let fresh = host.poll(&diagnostics);
         assert_eq!(fresh.len(), 1);
@@ -421,7 +451,10 @@ mod tests {
         for _ in 0..600 {
             diagnostics.host_outcome(HostStage::Manager, HostOutcome::AlreadyRunning);
         }
-        assert_eq!(host.poll(&diagnostics).len(), 512);
+        let records = host.poll(&diagnostics);
+        assert_eq!(records.len(), 513);
+        assert_eq!(records[0].level, Some(Level::Warning));
+        assert!(records[0].context["dropped_records"].as_u64().unwrap() > 0);
         diagnostics.host_outcome(HostStage::Manager, HostOutcome::AlreadyRunning);
         assert_eq!(host.poll(&diagnostics).len(), 1);
     }

@@ -453,7 +453,7 @@ def test_timing_observations_are_bounded_and_keep_only_scalar_diagnostic_context
     caplog: pytest.LogCaptureFixture, observed: int
 ) -> None:
     logger = get_logger("cadrumo.tests.timing_bounds")
-    with caplog.at_level(logging.INFO, logger=logger.name), diagnostic_scope(new=True) as identifier:
+    with caplog.at_level(logging.DEBUG, logger=logger.name), diagnostic_scope(new=True) as identifier:
         diagnostic_timing_event(
             logger,
             "synthetic_timing",
@@ -469,6 +469,7 @@ def test_timing_observations_are_bounded_and_keep_only_scalar_diagnostic_context
         assert records == []
         return
     assert len(records) == 1
+    assert records[0].levelno == logging.DEBUG
     _, context = _context(records[0])
     assert context["phase_monotonic_ns"] == observed
     assert context["diagnostic_id"] == identifier
@@ -550,7 +551,7 @@ async def test_timed_task_scopes_cross_threads_and_restore_the_parent_after_fail
                 raise ValueError("synthetic task failure")
             return identifier
 
-    with caplog.at_level(logging.INFO, logger=logger.name), diagnostic_scope(new=True) as parent:
+    with caplog.at_level(logging.DEBUG, logger=logger.name), diagnostic_scope(new=True) as parent:
         results = await asyncio.gather(observe(1, fail=False), observe(2, fail=True), return_exceptions=True)
         diagnostic_timing_event(logger, "synthetic_timing", clock=lambda: 100)
     records = [record for record in caplog.records if record.name == logger.name]

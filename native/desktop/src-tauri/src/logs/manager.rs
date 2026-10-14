@@ -28,6 +28,7 @@ struct WireEvent {
     outcome: Option<HostOutcome>,
     host_exit_code: Option<i32>,
     lifecycle: Option<LifecycleFact>,
+    service: Option<cadrumo_application::diagnostics::service::ServiceFact>,
 }
 
 #[derive(Deserialize)]
@@ -150,6 +151,7 @@ pub(super) fn parse(line: &[u8]) -> Option<Entry> {
         lifecycle: wire.lifecycle,
         webview_failure: None,
         helper_timing: None,
+        service: wire.service,
     });
     if let Some(kind) = io_kind {
         field(&mut entry.context, "io_kind", kind);

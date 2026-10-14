@@ -1,6 +1,7 @@
 pub mod helper;
 pub mod lifecycle;
 pub mod logging;
+pub mod service;
 pub mod webview;
 
 use crate::{
@@ -8,6 +9,7 @@ use crate::{
         helper::HelperTiming,
         lifecycle::LifecycleFact,
         logging::{LogFile, LogPaths},
+        service::ServiceFact,
         webview::WebviewFailure,
     },
     error::application::{ApplicationError, ErrorCode, Operation, Result},
@@ -34,6 +36,7 @@ pub enum EventKind {
     ChildExited,
     ChildTerminated,
     HelperTiming,
+    ServiceEvent,
     Failure,
     HostStopped,
 }
@@ -58,6 +61,7 @@ pub enum HostStage {
     Package,
     Session,
     Supervision,
+    Agent,
 }
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -93,6 +97,8 @@ pub struct Event {
     pub webview_failure: Option<WebviewFailure>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub helper_timing: Option<HelperTiming>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub service: Option<ServiceFact>,
 }
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -127,6 +133,7 @@ struct Context {
     lifecycle: Option<LifecycleFact>,
     webview_failure: Option<WebviewFailure>,
     helper_timing: Option<HelperTiming>,
+    service: Option<ServiceFact>,
 }
 #[derive(Default)]
 pub struct Diagnostics {
@@ -220,6 +227,7 @@ impl Diagnostics {
             lifecycle: context.lifecycle,
             webview_failure: context.webview_failure,
             helper_timing: context.helper_timing,
+            service: context.service,
         };
         if let Some(file) = &state.file
             && let Err(error) = file.append(&event)
@@ -241,6 +249,12 @@ impl Diagnostics {
                 helper_timing: Some(fact),
                 ..Context::default()
             },
+        );
+    }
+    pub fn service(&self, process: Option<u64>, fact: ServiceFact) {
+        self.record(
+            EventKind::ServiceEvent, process, None,
+            Context { service: Some(fact), ..Context::default() },
         );
     }
     pub fn failure(&self, error: ApplicationError) {

@@ -12,12 +12,14 @@ mod format;
 mod host;
 mod manager;
 mod record;
+mod severity;
 mod tail;
 #[cfg(test)]
 mod tests;
 mod timestamp;
 
 use crate::{app::Commands, environment::Launch, shell::channel::Deliveries};
+pub use format::Level;
 use cadrumo_application::{
     diagnostics::Diagnostics,
     error::application::{ApplicationError, ErrorCode, Operation, Result},
@@ -67,6 +69,7 @@ pub struct LogHub {
     file: PathBuf,
     manager_file: PathBuf,
     refusal: Option<ApplicationError>,
+    diagnostics: Arc<Diagnostics>,
 }
 
 /// The poller's side: the tail and the host events, read on its own thread.
@@ -96,6 +99,7 @@ impl LogHub {
         let shared = Arc::new(Shared {
             inner: Mutex::new(Inner {
                 aggregate: Aggregate::new(LogSourceStates {
+                    host: host::source(&diagnostics),
                     python: state,
                     manager: LogSourceState {
                         kind: SourceKind::Missing,
@@ -115,6 +119,7 @@ impl LogHub {
             file: log_file,
             manager_file: manager_log_file,
             refusal: tail.refusal(),
+            diagnostics: diagnostics.clone(),
         };
         let poller = Poller {
             shared,
@@ -140,6 +145,7 @@ impl LogHub {
             )
         };
         let states = polled.unwrap_or_else(|| LogSourceStates {
+            host: host::source(&self.diagnostics),
             python: match &self.refusal {
                 Some(refusal) => LogSourceState {
                     kind: SourceKind::Unreadable,
@@ -247,7 +253,8 @@ impl Poller {
             for record in prepared {
                 inner.aggregate.push(record);
             }
-            inner.aggregate.states = LogSourceStates { python, manager };
+            inner.aggregate.lost(std::mem::take(&mut self.host.dropped));
+            inner.aggregate.states = LogSourceStates { python, manager, host: host::source(&self.diagnostics) };
             inner.polled = true;
             inner.aggregate.deliver(now)
         };

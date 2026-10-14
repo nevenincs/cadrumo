@@ -12,6 +12,7 @@ pub enum ProcessRole {
     SignIn,
     ManagerDispatch,
     Cli,
+    AgentLauncher,
     Tui,
     /// The packaged interpreter as an interactive REPL.
     Repl,
