@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:806c225657783158d87157d6b14742838526b7d232a9fcc52a059ff9f12d642d'
+body_hash: 'sha256:1d38e4b1a565ec6105285bd58761f348f1bff644c841c21a75a09c7aa8190485'
 related:
   - "[[2026-10-13-canonical-environment-plan]]"
 ---
@@ -469,3 +469,4 @@ related:
 - `S10` Correction 6cbd5360b5: S10 (43962530ae) dropped the health smoke's received filter, so the STRICT child relayed the developer `CADRUMO_AUTHORITY_ROOT` `(dev/_paths.py:62)` into cadrumo.exe and manager.rs:737 refused it as an override `(environment_failed` at stage manager). Health environment now excludes authority-root settings; scratch under the storage root.
 - `S13` Correction 8b57d0a1f6: conformance scratch tree moved under the storage root's temporary directory.
 - `S14` Correction (Windows base part in 3de38e77d8, hosted lane in cfee396b4a): per 2026-10-04-canonical-environment-adr the Windows host takes its base from `FOLDERID_LocalAppData,` not LOCALAPPDATA, so the probe no longer relocates it on Windows. Probe now expects `hosted_lane_unproven` (agent owner). Agent setup still fails: CheckpointSchemaError at checkpoint-identity, caused by native/agent lock bundling langgraph-checkpoint-sqlite 3.1.2 against the agent's 3.1.1 schema pin; reported to orchestrator, provisional.
+- `S20` S20's source changes landed in commits made by other sessions before this Step's own commit: f55bed830e carried `profile_worker.py,` `worker_environment.py,` `test_worker_storage_environment.py` and `test_worker_provider_catalog.py,` and 3c4ec939fd carried the declaration, generator, `test_agent_image.py,` CONTRACT.md and the environment reference. 11deccf0d7 holds the ledger, the plan check and the type fix to `test_worker_provider_catalog.py.` f55bed830e also carries another session's runtime changes `(profile_host,` `profile_connection_*,` `test_agent_host_runtime),` which are not S20's.
