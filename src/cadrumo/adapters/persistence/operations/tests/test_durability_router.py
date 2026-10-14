@@ -17,10 +17,22 @@ from cadrumo.application.operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
+from cadrumo.application.operations.frontend_requests import (
+    OperationObservationRefusalCode,
+    OperationObservationRefusalV1,
+    OperationObservationRequestV1,
+    OperationObservationSuccessV1,
+    OperationResultProjectionRefusalCode,
+    OperationResultProjectionRefusalV1,
+    OperationResultProjectionRequestV1,
+    OperationResultProjectionSuccessV1,
+)
 from cadrumo.application.operations.models import CredentialFreeOperationRequest, OperationRequest
+from cadrumo.application.operations.observation import OperationObservationService
 from cadrumo.application.operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.persistence.journal import OperationObservationUnknownOperationError
+from cadrumo.application.operations.projection_services import OperationResultProjectionService
 from cadrumo.application.operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -164,3 +176,75 @@ async def test_only_the_recorded_operation_reaches_the_journal_root(tmp_path: Pa
         assert not persistence.routes_ephemeral(recorded_id)
     finally:
         await supervisor.shutdown()
+
+
+def _router(storage_root: Path) -> DurabilityRoutedOperationPersistence:
+    journal = OperationJournalRepository(storage_root=storage_root)
+    return DurabilityRoutedOperationPersistence(
+        journal=journal,
+        event_stream=journal,
+        reader=journal,
+        leases=OperationLeaseFilesystemRepository(storage_root=storage_root),
+        operands=EphemeralOperationStore(),
+    )
+
+
+@pytest.mark.asyncio
+async def test_frontends_read_an_ephemeral_result_and_after_its_process_ends_learn_it_is_unknown(
+    tmp_path: Path,
+) -> None:
+    storage_root = tmp_path / "synthetic-state"
+    registry = _registry()
+    persistence = _router(storage_root)
+    supervisor = OperationSupervisor(
+        registry=registry,
+        authority_operation=unread_authority_operation(),
+        journal=persistence,
+        event_stream=persistence,
+        leases=persistence,
+        operands=persistence,
+        owner_id="1" * 64,
+        lease_token_factory=lambda: "2" * 64,
+        clock=lambda: datetime.now(UTC),
+        lease_duration=timedelta(minutes=1),
+        ephemeral=persistence,
+    )
+    try:
+        operation_id = await supervisor.submit(
+            OperationRequest[BaseModel](definition_id=_EPHEMERAL, subject_ref="synthetic", payload=_Request())
+        )
+        await supervisor.start(operation_id)
+        terminal = await asyncio.wait_for(supervisor.settled(operation_id), timeout=10)
+    finally:
+        await supervisor.shutdown()
+    contract = registry.lookup_public_contract(_EPHEMERAL)
+    assert contract.result_schema is not None
+    observe = OperationObservationRequestV1(operation_id=operation_id, after_cursor=0, page_limit=32)
+    result = OperationResultProjectionRequestV1(
+        operation_id=operation_id,
+        terminal_revision=terminal.revision,
+        definition_contract_digest=contract.definition_contract_digest,
+        result_schema=contract.result_schema,
+    )
+
+    observed = await OperationObservationService(reader=persistence, registry=registry).observe(observe)
+    assert isinstance(observed, OperationObservationSuccessV1), observed
+    assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
+    released = await OperationResultProjectionService(
+        reader=persistence, registry=registry, operands=persistence
+    ).resolve(result, _Result)
+    assert isinstance(released, OperationResultProjectionSuccessV1), released
+    assert released.projection == _Result(definition_id=_EPHEMERAL)
+
+    # The worker ends: a fresh process starts over its durable journal, which never held the read.
+    restarted = _router(storage_root)
+    lost = await OperationObservationService(reader=restarted, registry=registry).observe(observe)
+    assert (
+        isinstance(lost, OperationObservationRefusalV1)
+        and lost.code is OperationObservationRefusalCode.UNKNOWN_OPERATION
+    )
+    refused = await OperationResultProjectionService(reader=restarted, registry=registry, operands=restarted).resolve(
+        result, _Result
+    )
+    assert isinstance(refused, OperationResultProjectionRefusalV1)
+    assert refused.code is OperationResultProjectionRefusalCode.UNKNOWN_OPERATION

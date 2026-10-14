@@ -5,7 +5,7 @@ tags:
 date: '2026-10-14'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:b0006b127af08b20f2776a6d052e3a4eff26fdf5ebcea0cc14baccca19844748'
+body_hash: 'sha256:d57d4db9eb425b8e16ea821507dbb5cc101228e59f7682ea04127def0a676204'
 related:
   - "[[2026-10-14-ephemeral-operations-plan]]"
 ---
@@ -59,7 +59,12 @@ related:
 - `S02` `M` `dev/quality/metadata/import_load_targets.json`
 - `S02` `verify:` `pytest src/cadrumo/application/operations src/cadrumo/adapters/persistence/operations` -> `pass`
 - `S02` `by:` `vaultspec-high-executor`
+- `S03` `M` `src/cadrumo/adapters/persistence/operations/tests/test_durability_router.py`
+- `S03` `M` `.vault/plan/2026-10-14-ephemeral-operations-plan.md`
+- `S03` `verify:` `pytest src/cadrumo/adapters/persistence/operations/tests/test_durability_router.py` -> `pass`
+- `S03` `by:` `vaultspec-high-executor`
 
 ## Notes
 
 - `S02` 4 failures in `test_execution_authority.py` and `test_failure_custody_settlement.py` fail identically on HEAD without this Step (caplog record assertions); not caused here
+- `S03` Plan correction: no change to `worker_operation_requests.py` or `_projection_read.py` was needed; both services read through the composed router
