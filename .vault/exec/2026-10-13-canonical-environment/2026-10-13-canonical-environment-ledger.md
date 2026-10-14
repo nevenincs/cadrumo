@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:a4330363e90e197a079350568fc9837e1b589f8050850a761170c492e6e7fa86'
+body_hash: 'sha256:62cfcf08a286f17106bd3c0aaab0ade5399fcc43524c3a9ed6826d9f444c2da3'
 related:
   - "[[2026-10-13-canonical-environment-plan]]"
 ---
@@ -274,6 +274,15 @@ related:
 - `S13` `verify:` `uv run --no-sync ruff check and format --check on the touched files` -> `pass`
 - `S13` `verify:` `uv run --no-sync pytest dev/quality/tests/test_no_git_cli.py` -> `pass`
 - `S13` `by:` `implementation-engineer-standard`
+- `S14` `A` `native/tests/environment_launch_probe.py`
+- `S14` `A` `dev/packaging/native/tests/stand_in_launch.py`
+- `S14` `A` `dev/packaging/native/tests/test_environment_launch_probe.py`
+- `S14` `M` `native/cmake/Packaging.cmake`
+- `S14` `verify:` `uv run --no-sync pytest dev/packaging/native/tests/test_environment_launch_probe.py (33 cases against a stand-in host and agent)` -> `pass`
+- `S14` `verify:` `just check-types` -> `pass`
+- `S14` `verify:` `uv run --no-sync ruff check and format --check on the touched files` -> `pass`
+- `S14` `verify:` `uv run --no-sync pytest dev/quality/tests/test_no_git_cli.py` -> `pass`
+- `S14` `by:` `implementation-engineer-standard`
 
 ## Notes
 
@@ -308,3 +317,8 @@ related:
 - `S13` The check was run against the real checkout (command line, runtime, composer) and against the real bundled agent's settings read from the cadrumo-agent checkout (129 settings, 7 worker handover writes): both agree with the declaration, so no drift was found. No CTest run: bundle.environment-conformance is registered but needs a built bundle, which waits on the registry republish and the build owner.
 - `S13` Finding, not changed: the command line's Settings validator anchors a relative `CADRUMO_LOG_DIR` beneath the storage root exactly as the desktop's `member_path` does, but a rooted value without a drive or a drive-relative value is rewritten (C:rooted becomes `<root>/rooted)` by `src/cadrumo/core/_config_validation.py:138` and :146, while `resolve_storage_path` `(storage_environment.py:527)` and the desktop (native/platform/src/storage.rs:554-564) refuse it with `non_absolute_pin.` The desktop half has no shared vector, so the check pins only the agreeing relative case.
 - `S13` Finding, not changed: `dev/packaging/native/application_environment.py` does not keep the declaration's `[agent]` table (prefix, `hosting_contract,` `never_admitted)` on ApplicationEnvironment, so the conformance check reads that table from the TOML text itself.
+- `S14` PENDING, real package run: bundle.environment-launch and bundle.environment-conformance are registered but have not run. They need a built bundle, which waits on the registry republish and the build owner (just test-native-bundle Debug). The probe's logic was exercised against a stand-in host and agent, and once against the real cadrumo-agent checkout through the stand-in host: undeclared invocation, the hosted gateway refusal `hosted_tool_server_unproven` after the agent's own setup step, the worker's `worker_bound` line, and the generic interpreter's cleared names, PATH and pinned root all passed.
+- `S14` PENDING, behind the agent's proofs: `agent_ready` and the worker re-execution check (the gateway's child is the agent image run as the worker invocation, which shows sys.executable is the image and sys.frozen is unset) cannot be reached while the gateway refuses as unproven. The probe accepts `agent_ready,` then reads the gateway's process tree with psutil; that branch is covered by the stand-in only.
+- `S14` Deviation from the plan row: the probe does not call cadrumo-agent stores-state through the agent image. The image admits only the gateway and worker invocations, and the declaration's own vector names stores-state as an undeclared invocation it refuses (exit 125). The probe makes the synthetic hosted root's stores current by running the agent's setup step in the generic interpreter, since a hosted serve refuses `hosted_stores_mismatch` before it reaches `hosted_tool_server_unproven;` that refusal is reported as a set-up error.
+- `S14` Open question for the orchestrator: no route admitted by the package runs the agent's setup or migrate steps on a hosted root, so the runtime's hosted start will refuse `hosted_stores_mismatch` until something sets up the stores; the plan and the ADR do not say who does.
+- `S14` The PATH check covers the generic interpreter image only: it is the one image that runs caller code to report its environment. The agent images are covered by the launch-profile vectors.
