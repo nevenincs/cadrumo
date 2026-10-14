@@ -2,8 +2,10 @@
 
 Run with the profile named by ``CADRUMO_ACTIVE_PROFILE``. It builds the real
 MCP server over the real runtime adapter, which signs in the only way the
-relay knows, and drives it through the MCP SDK's memory transport. It prints
-one JSON line with the admission the server reports.
+relay knows, and drives it through the MCP SDK's memory transport. Like the
+installed ``cadrumo-mcp``, it is the root of its own process, so it binds the
+profile-persistence ports a resumed sign-in reads its receipt through before
+the adapter runs. It prints one JSON line with the admission the server reports.
 """
 
 from __future__ import annotations
@@ -13,6 +15,7 @@ import json
 import os
 from uuid import UUID
 
+from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
 from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_harness.mcp.server import build_server
 from cadrumo_harness.mcp.tests.agent_key_reads import edit_profile_and_read_back
@@ -34,7 +37,8 @@ async def _relay(profile_id: UUID) -> dict[str, object]:
 
 def main() -> None:
     """Relay once for the active profile and print what it was admitted as."""
-    result = asyncio.run(_relay(UUID(os.environ["CADRUMO_ACTIVE_PROFILE"])))
+    with composed_profile_persistence_ports():
+        result = asyncio.run(_relay(UUID(os.environ["CADRUMO_ACTIVE_PROFILE"])))
     print(json.dumps(result, default=str))
 
 
