@@ -367,6 +367,22 @@ class ProfileWorkerOperationHost:
         if registry.lookup_public_contract(definition_id).durability is not OperationDurability.EPHEMERAL:
             self._unsettled.add(operation_id)
 
+    def release_delivered_result(self, operation_id: OperationId) -> None:
+        """Forget an ephemeral operation once its whole result has been written to its reader.
+
+        Its result is decrypted profile data in plain memory; a reader that
+        needs it again reads the profile again, which has no effect.
+        """
+        services = self._services
+        if services is not None:
+            services.release_ephemeral_result(operation_id)
+
+    def forget_settled_ephemeral(self) -> None:
+        """Forget every settled ephemeral result: the worker outlives its last session, its reads do not."""
+        services = self._services
+        if services is not None:
+            services.forget_settled_ephemeral()
+
     async def _settle_lapsed_operations(self) -> None:
         """Settle every operation whose owner stopped renewing its lease and whose grace has passed.
 

@@ -113,7 +113,11 @@ async def _handle_custody_control(context: _WorkerControl, request: object) -> _
     if isinstance(request, ProfileWorkerRetireRequest):
         context.human.discard(request.session_id)
         context.custody.retire(request.session_id)
-        context.uploads.expire(live_sessions=context.custody.live_sessions())
+        live_sessions = context.custody.live_sessions()
+        context.uploads.expire(live_sessions=live_sessions)
+        if not live_sessions:
+            # Locking or signing out ends the last session but not this worker.
+            context.operations.forget_settled_ephemeral()
         return "status"
     if isinstance(request, ProfileWorkerHumanBindingRequest):
         receipt, pending = context.human.bind(

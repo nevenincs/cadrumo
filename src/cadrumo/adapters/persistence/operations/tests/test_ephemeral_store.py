@@ -284,3 +284,86 @@ async def test_evicting_the_older_of_two_identical_reads_keeps_the_result_the_ne
         assert not store.holds_operand(newer_receipt.result_ref)
     finally:
         await supervisor.shutdown()
+
+
+class _Monotonic:
+    """A monotonic clock the test advances; the store reads nothing else from it."""
+
+    def __init__(self) -> None:
+        self.seconds = 1000.0
+
+    def __call__(self) -> float:
+        return self.seconds
+
+
+async def _settled_reads(supervisor: OperationSupervisor, *pages: int) -> list[str]:
+    settled = []
+    for page in pages:
+        operation_id = await supervisor.submit(_request(page))
+        await supervisor.start(operation_id)
+        await asyncio.wait_for(supervisor.settled(operation_id), timeout=10)
+        settled.append(operation_id)
+    return settled
+
+
+@pytest.mark.asyncio
+async def test_a_settled_read_is_forgotten_once_older_than_its_lifetime() -> None:
+    clock = _Monotonic()
+    store, reader = EphemeralOperationStore(settled_lifetime=timedelta(minutes=2), clock=clock), _Reader()
+    reader.release.set()
+    supervisor = _supervisor(store, reader)
+    try:
+        (older,) = await _settled_reads(supervisor, 1)
+        clock.seconds += 90
+        (newer,) = await _settled_reads(supervisor, 2)
+        clock.seconds += 31
+        with pytest.raises(OperationObservationUnknownOperationError):
+            await store.read_observation(older, 0, limit=8)
+        assert (await store.read_observation(newer, 0, limit=8)).snapshot.lifecycle is OperationLifecycle.TERMINAL
+        clock.seconds += 90
+        assert not store.holds(newer)
+    finally:
+        await supervisor.shutdown()
+
+
+@pytest.mark.asyncio
+async def test_a_released_read_and_its_result_are_forgotten_at_once() -> None:
+    store, reader = EphemeralOperationStore(), _Reader()
+    reader.release.set()
+    supervisor = _supervisor(store, reader)
+    try:
+        operation_id = await supervisor.submit(_request(3))
+        # Owned operands go with the record; this one stands for the read's result.
+        result = await store.operands_for(operation_id).put(_Result(page=33), written_at=datetime.now(UTC))
+        await supervisor.start(operation_id)
+        await asyncio.wait_for(supervisor.settled(operation_id), timeout=10)
+        (kept,) = await _settled_reads(supervisor, 4)
+        store.release_settled(operation_id)
+        with pytest.raises(OperationObservationUnknownOperationError):
+            await store.read_observation(operation_id, 0, limit=8)
+        assert not store.holds_operand(result)
+        assert store.holds(kept)
+    finally:
+        await supervisor.shutdown()
+
+
+@pytest.mark.asyncio
+async def test_forgetting_settled_reads_keeps_one_still_running() -> None:
+    store, reader = EphemeralOperationStore(), _Reader()
+    reader.release.set()
+    supervisor = _supervisor(store, reader)
+    try:
+        (settled,) = await _settled_reads(supervisor, 6)
+        reader.release, reader.entered = asyncio.Event(), asyncio.Event()
+        running = await supervisor.submit(_request(5))
+        await supervisor.start(running)
+        await asyncio.wait_for(reader.entered.wait(), timeout=10)
+        store.forget_settled()
+        assert not store.holds(settled)
+        assert (await store.load(running)).lifecycle is OperationLifecycle.RUNNING
+        reader.release.set()
+        terminal = await asyncio.wait_for(supervisor.settled(running), timeout=10)
+        assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
+    finally:
+        reader.release.set()
+        await supervisor.shutdown()

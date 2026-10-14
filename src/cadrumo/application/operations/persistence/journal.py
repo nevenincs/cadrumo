@@ -521,6 +521,14 @@ class OperationEphemeralRouting(Protocol):
         """Forget a registered operation whose admission stopped before its record was created."""
         ...
 
+    def release_ephemeral(self, operation_id: OperationId) -> None:
+        """Forget a settled ephemeral operation whose reader has received its whole result."""
+        ...
+
+    def forget_settled_ephemeral(self) -> None:
+        """Forget every settled ephemeral operation, once no session remains to read one."""
+        ...
+
     def operands_for(self, operation_id: OperationId) -> OperationSecureReferenceStore:
         """The operand store one ephemeral operation writes through."""
         ...

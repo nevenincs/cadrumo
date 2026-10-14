@@ -8,7 +8,7 @@ related:
   - '[[2026-08-11-tui-architecture-adr]]'
 modified: '2026-10-14'
 body_schema: body-v2
-body_hash: 'sha256:df7739eacb0a67e6347b5762ae3f1343b44f7995f4d825074a6229e8e11fb50b'
+body_hash: 'sha256:67674dc69b70f8cdb3f7a30c5df271c20dcca69493593db0f7dbe0fb14d928dc'
 ---
 
 <!-- LINK RULES:
@@ -131,7 +131,7 @@ Decision coverage: `2026-08-11-tui-architecture-adr` D5 governs. No new costly d
 - [x] `S06` - Fix plan-close review finding provenance-durable-write: register an operation's durability before any operand write and route admission provenance and opted-in error detail through the operation's own operand store, proven by zero operation secure-object rows after an ephemeral read through the runtime; `src/cadrumo/application/operations/_supervisor_submission.py, src/cadrumo/application/operations/_supervisor_execution.py, src/cadrumo/entrypoints/runtime/tests/test_frontend_client.py`.
 - [x] `S07` - Fix plan-close review finding shared-operand-eviction: count each content-addressed ephemeral operand's owners so evicting one operation never removes an operand another still references, proven by two identical reads and eviction of the older; `src/cadrumo/adapters/persistence/operations/ephemeral_store.py, src/cadrumo/adapters/persistence/operations/tests/test_ephemeral_store.py`.
 - [x] `S08` - Fix plan-close review finding unsettled-ephemeral-tracking: keep ephemeral operations out of the runtime host's lapsed-owner sweep, and add the sweep to the zero journal-lock proof; `src/cadrumo/entrypoints/runtime/operation_host.py, src/cadrumo/entrypoints/runtime/tests`.
-- [ ] `S09` - Fix plan-close review finding decrypted-result-retention: release a settled ephemeral operation once its result has been read and after an age bound, and clear the store when the worker's last session locks or signs out if the worker outlives it; `src/cadrumo/adapters/persistence/operations/ephemeral_store.py, src/cadrumo/adapters/persistence/operations/durability_router.py, src/cadrumo/adapters/persistence/operations/tests`.
+- [x] `S09` - Fix plan-close review finding decrypted-result-retention: release a settled ephemeral operation once its result has been read and after an age bound, and clear the store when the worker's last session locks or signs out if the worker outlives it; `src/cadrumo/adapters/persistence/operations/ephemeral_store.py, src/cadrumo/adapters/persistence/operations/durability_router.py, src/cadrumo/adapters/persistence/operations/tests`.
 - [ ] `S10` - Fix plan-close review lows: give the profile-view journal assertion a positive control from a recorded operation in the same run, and prove a worker ended during an ephemeral read answers unknown_operation through the runtime; `src/cadrumo/entrypoints/runtime/tests/test_frontend_client.py`.
 
 <!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or

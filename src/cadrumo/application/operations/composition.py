@@ -159,6 +159,17 @@ class OperationComposedServices:
     _shutdown: Callable[[], Awaitable[OperationDrainResult]]
     _drain: Callable[[timedelta], Awaitable[OperationDrainResult]]
     _inventory: Callable[[OperationId | None, OperationInventoryLimit], Awaitable[OperationRecoveryInventoryPage]]
+    _ephemeral: OperationEphemeralRouting | None
+
+    def release_ephemeral_result(self, operation_id: OperationId) -> None:
+        """Forget an ephemeral operation once its whole result has reached its reader; others are untouched."""
+        if self._ephemeral is not None:
+            self._ephemeral.release_ephemeral(operation_id)
+
+    def forget_settled_ephemeral(self) -> None:
+        """Forget every settled ephemeral operation once no session remains that could read one."""
+        if self._ephemeral is not None:
+            self._ephemeral.forget_settled_ephemeral()
 
     async def shutdown(self) -> OperationDrainResult:
         """Close within the default bound and report remaining ownership."""
@@ -305,6 +316,7 @@ def compose_operation_services(
         _shutdown=shutdown,
         _drain=drain,
         _inventory=inventory,
+        _ephemeral=ephemeral,
     )
 
 

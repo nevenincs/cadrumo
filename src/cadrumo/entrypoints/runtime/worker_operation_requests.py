@@ -15,7 +15,11 @@ from ...adapters.local_runtime.runtime_frame_io import read_document, read_secre
 from ...adapters.local_runtime.runtime_transport_cleanup import close_runtime_transport_after_failure
 from ...adapters.local_runtime.worker_lease_transfer import read_worker_lease
 from ...adapters.local_runtime.worker_transport import WorkerChannel
-from ...application.operations.frontend_requests import OperationResponseControlRequestV1
+from ...application.operations.frontend_requests import (
+    OperationResponseControlRequestV1,
+    OperationResultProjectionRequestV1,
+)
+from ...application.operations.models import OperationId
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.operation_access import operation_management_action
 from ...application.runtime.profile_worker import (
@@ -43,7 +47,7 @@ from ...application.runtime.profile_worker import (
     ProfileWorkerSubmitRequest,
     ProfileWorkerUploadAccepted,
 )
-from ...application.runtime.projection_pages import project_document_page
+from ...application.runtime.projection_pages import PROJECTION_PAGE_BYTES, project_document_page
 from ...application.runtime.submission_payload import FinancialOperandInputDescriptor
 from ...application.user_profile.access_contracts import AccessAction, AccessDenialCode
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
@@ -396,6 +400,22 @@ async def _serve_read(channel: WorkerChannel, operations: ProfileWorkerOperation
         if refusal is None:
             raise
         raise refusal from None
+    delivered = _delivered_result(request, reply)
+    if delivered is not None:
+        operations.release_delivered_result(delivered)
+
+
+def _delivered_result(request: _ReadRequest, reply: BaseModel) -> OperationId | None:
+    """Name the operation whose whole settled result this written reply completed, if any."""
+    if not isinstance(request, ProfileWorkerProjectRequest | ProfileWorkerProjectPageRequest):
+        return None
+    if not isinstance(request.projection, OperationResultProjectionRequestV1):
+        return None
+    if isinstance(reply, ProfileWorkerProjectionPage) and (
+        reply.page.offset + PROJECTION_PAGE_BYTES < reply.page.total_bytes
+    ):
+        return None
+    return request.projection.operation_id
 
 
 @asynccontextmanager

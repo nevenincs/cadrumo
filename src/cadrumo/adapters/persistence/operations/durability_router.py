@@ -91,6 +91,14 @@ class DurabilityRoutedOperationPersistence(
         self._ephemeral.forget_unadmitted(operation_id)
 
     @override
+    def release_ephemeral(self, operation_id: OperationId) -> None:
+        self._ephemeral.release_settled(operation_id)
+
+    @override
+    def forget_settled_ephemeral(self) -> None:
+        self._ephemeral.forget_settled()
+
+    @override
     def operands_for(self, operation_id: OperationId) -> OperationSecureReferenceStore:
         return self._ephemeral.operands_for(operation_id)
 

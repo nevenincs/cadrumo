@@ -5,7 +5,7 @@ tags:
 date: '2026-10-14'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:cb1a739fe789bee626c4732bf4eec178e47ea11ae04fd75d8a74c1ccf63875bf'
+body_hash: 'sha256:e220c2fbbced4a9aa89aea3c5a93abc89b8798b50c31b90720715149daba3e69'
 related:
   - "[[2026-10-14-ephemeral-operations-plan]]"
 ---
@@ -105,6 +105,21 @@ related:
 - `S08` `verify:` `pytest -m '' src/cadrumo/adapters/persistence/operations plus runtime host, settlement, authority-release and ephemeral-view tests` -> `pass`
 - `S08` `verify:` `ruff check, ruff format` -> `pass`
 - `S08` `by:` `vaultspec-high-executor`
+- `S09` `M` `src/cadrumo/adapters/persistence/operations/ephemeral_store.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/operations/durability_router.py`
+- `S09` `M` `src/cadrumo/application/operations/persistence/journal.py`
+- `S09` `M` `src/cadrumo/application/operations/composition.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/operation_host.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/worker_service.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/worker_operation_requests.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/operations/tests/test_ephemeral_store.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/operations/tests/test_durability_router.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/tests/test_ephemeral_profile_view.py`
+- `S09` `verify:` `pytest -m '' test_ephemeral_store.py` -> `pass`
+- `S09` `verify:` `pytest -m '' test_ephemeral_profile_view.py (delivered-and-lock test fails with release disabled)` -> `pass`
+- `S09` `verify:` `pytest -m '' operations suites plus runtime frontend-client, ephemeral-view, lapse-sweep, provenance tests` -> `pass`
+- `S09` `verify:` `ruff check, ruff format` -> `pass`
+- `S09` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -114,3 +129,6 @@ related:
 - `S06` S06 Code landed in operator checkpoint 7fa669db8b (and the `_supervisor_execution.py` hunk in 1d03ee6f71); this Step's commit carries the ledger and Step close
 - `S06` S06 `test_profile_operation_families_have_one_secure_registered_definition_each` failed since S04 (09a9d2cecf) because the view is credential-free; corrected to assert the view's ephemeral contract
 - `S06` S06 just check-types reports 3 ty diagnostics in `test_failed_sandbox_logs.py` and `test_provider_cli.py` from other sessions; none in this plan's files
+- `S09` S09 Lock and human sign-out retire sessions but do not end the profile worker (ProfileWorkerCustody.retire keeps the process pinned), so the worker clears settled ephemeral results when its last session retires
+- `S09` S09 `test_installed_worker_uses_native_guards_for_real_profile_mutation` failed once under -n 4 (worker connection closed at submit) and once under -n 2 (5 s observe deadline); it passes alone, and this Step does not touch the recorded mutation path
+- `S09` S09 `test_durability_router.py` carries only ruff formatting left over from S08

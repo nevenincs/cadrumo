@@ -48,6 +48,7 @@ from .routed_operation_support import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_outbound_adapter]
 
+
 @pytest.mark.asyncio
 async def test_only_the_recorded_operation_reaches_the_journal_root(tmp_path: Path) -> None:
     storage_root = tmp_path / "synthetic-state"
@@ -77,7 +78,9 @@ async def test_only_the_recorded_operation_reaches_the_journal_root(tmp_path: Pa
         settled = {}
         for definition_id in (EPHEMERAL_DEFINITION_ID, RECORDED_DEFINITION_ID):
             operation_id = await supervisor.submit(
-                OperationRequest[BaseModel](definition_id=definition_id, subject_ref="synthetic", payload=SyntheticRequest())
+                OperationRequest[BaseModel](
+                    definition_id=definition_id, subject_ref="synthetic", payload=SyntheticRequest()
+                )
             )
             await supervisor.start(operation_id)
             settled[definition_id] = await asyncio.wait_for(supervisor.settled(operation_id), timeout=10)
@@ -85,7 +88,9 @@ async def test_only_the_recorded_operation_reaches_the_journal_root(tmp_path: Pa
             assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED, definition_id
             receipt = terminal.terminal_receipt
             assert receipt is not None and receipt.result_ref is not None
-            assert await persistence.resolve(receipt.result_ref, SyntheticResult) == SyntheticResult(definition_id=definition_id)
+            assert await persistence.resolve(receipt.result_ref, SyntheticResult) == SyntheticResult(
+                definition_id=definition_id
+            )
             observed = await persistence.read_observation(terminal.identity.operation_id, 0, limit=64)
             assert observed.snapshot == terminal
         ephemeral_id = settled[EPHEMERAL_DEFINITION_ID].identity.operation_id
@@ -135,7 +140,9 @@ async def test_frontends_read_an_ephemeral_result_and_after_its_process_ends_lea
     )
     try:
         operation_id = await supervisor.submit(
-            OperationRequest[BaseModel](definition_id=EPHEMERAL_DEFINITION_ID, subject_ref="synthetic", payload=SyntheticRequest())
+            OperationRequest[BaseModel](
+                definition_id=EPHEMERAL_DEFINITION_ID, subject_ref="synthetic", payload=SyntheticRequest()
+            )
         )
         await supervisor.start(operation_id)
         terminal = await asyncio.wait_for(supervisor.settled(operation_id), timeout=10)
@@ -210,7 +217,9 @@ async def test_an_ephemeral_read_takes_the_journal_lock_zero_times_and_a_recorde
         for definition_id in (EPHEMERAL_DEFINITION_ID, RECORDED_DEFINITION_ID):
             before = len(acquisitions)
             operation_id = await supervisor.submit(
-                OperationRequest[BaseModel](definition_id=definition_id, subject_ref="synthetic", payload=SyntheticRequest())
+                OperationRequest[BaseModel](
+                    definition_id=definition_id, subject_ref="synthetic", payload=SyntheticRequest()
+                )
             )
             await supervisor.start(operation_id)
             await asyncio.wait_for(supervisor.settled(operation_id), timeout=10)
@@ -231,7 +240,9 @@ async def test_an_abandoned_admission_leaves_neither_routing_nor_operands(tmp_pa
         SyntheticResult(definition_id=EPHEMERAL_DEFINITION_ID), written_at=datetime.now(UTC)
     )
     assert persistence.routes_ephemeral(operation_id)
-    assert await persistence.resolve(reference, SyntheticResult) == SyntheticResult(definition_id=EPHEMERAL_DEFINITION_ID)
+    assert await persistence.resolve(reference, SyntheticResult) == SyntheticResult(
+        definition_id=EPHEMERAL_DEFINITION_ID
+    )
 
     persistence.abandon_ephemeral(operation_id)
 

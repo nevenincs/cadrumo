@@ -5,15 +5,21 @@ conceal, so its lifecycle lives only as long as the process that runs it. This
 store keeps that lifecycle under the same ports and transition rules as the
 durable journal, without a lock file, a journal file or an encrypted operand
 row. Each operation's lease is its own: two ephemeral operations of one
-definition and subject never contend. A record lost with its process, or
-evicted once enough later operations have settled, reads as an unknown
-operation.
+definition and subject never contend.
+
+A settled operation's result is decrypted profile data held in plain memory,
+so its lifetime is bounded: it is forgotten once its reader has received the
+result, once it is older than :data:`EPHEMERAL_SETTLED_LIFETIME`, once enough
+later operations have settled, or when no session of the profile remains. A
+record lost with its process or forgotten here reads as an unknown operation.
 """
 
 from __future__ import annotations
 
+import time
 from collections import OrderedDict
-from datetime import datetime
+from collections.abc import Callable
+from datetime import datetime, timedelta
 from threading import Lock
 from typing import override
 
@@ -60,6 +66,13 @@ from .journal import OperationReplayRequest, observation_materialization_from_re
 EPHEMERAL_SETTLED_RETENTION = 256
 """How many settled ephemeral operations stay readable before the oldest is forgotten."""
 
+EPHEMERAL_SETTLED_LIFETIME = timedelta(minutes=2)
+"""How long a settled ephemeral operation stays readable when nobody reads its result.
+
+Twice the longest a frontend waits for a whole profile view, so an unread page
+outlives every reader still entitled to it, and nothing longer.
+"""
+
 
 class EphemeralOperationStore(
     OperationJournal,
@@ -70,14 +83,28 @@ class EphemeralOperationStore(
 ):
     """Process-lifetime journal, lease and operand ports for ephemeral operations."""
 
-    def __init__(self, *, settled_retention: int = EPHEMERAL_SETTLED_RETENTION) -> None:
-        """Start empty; nothing here outlives the process."""
+    def __init__(
+        self,
+        *,
+        settled_retention: int = EPHEMERAL_SETTLED_RETENTION,
+        settled_lifetime: timedelta = EPHEMERAL_SETTLED_LIFETIME,
+        clock: Callable[[], float] = time.monotonic,
+    ) -> None:
+        """Start empty; nothing here outlives the process.
+
+        ``clock`` reads monotonic seconds; settled operations age by it.
+        """
         if settled_retention < 1:
             raise ValueError("ephemeral settled retention must be positive")
+        if settled_lifetime <= timedelta(0):
+            raise ValueError("ephemeral settled lifetime must be positive")
         self._settled_retention = settled_retention
+        self._settled_lifetime = settled_lifetime.total_seconds()
+        self._clock = clock
         self._lock = Lock()
         self._records: dict[OperationId, OperationJournalRecord] = {}
-        self._settled: OrderedDict[OperationId, None] = OrderedDict()
+        # Settled operations in settlement order, each with the clock reading it settled at.
+        self._settled: OrderedDict[OperationId, float] = OrderedDict()
         self._leases: dict[OperationId, OperationOwnerLease] = {}
         self._operands: dict[ContentDigest, bytes] = {}
         self._operand_owners: dict[OperationId, set[ContentDigest]] = {}
@@ -89,6 +116,7 @@ class EphemeralOperationStore(
     def holds(self, operation_id: OperationId) -> bool:
         """Whether this store holds the operation's record or its lease."""
         with self._lock:
+            self._forget_aged()
             return operation_id in self._records or operation_id in self._leases
 
     # Journal -------------------------------------------------------------
@@ -96,6 +124,7 @@ class EphemeralOperationStore(
     @override
     async def load(self, operation_id: OperationId) -> OperationPersistedSnapshot:
         with self._lock:
+            self._forget_aged()
             return self._record(operation_id).snapshot
 
     @override
@@ -156,11 +185,22 @@ class EphemeralOperationStore(
         with self._lock:
             self._advance(snapshot, expected_revision=expected_revision, lease=lease)
             del self._leases[snapshot.operation_id]
-            self._settled[snapshot.operation_id] = None
+            self._settled[snapshot.operation_id] = self._clock()
+            self._forget_aged()
             while len(self._settled) > self._settled_retention:
-                forgotten, _ = self._settled.popitem(last=False)
-                self._records.pop(forgotten, None)
-                self._forget_operands(forgotten)
+                self._forget(next(iter(self._settled)))
+
+    def release_settled(self, operation_id: OperationId) -> None:
+        """Forget a settled operation now: its reader has received its whole result."""
+        with self._lock:
+            if operation_id in self._settled:
+                self._forget(operation_id)
+
+    def forget_settled(self) -> None:
+        """Forget every settled operation; one still running settles and is kept as before."""
+        with self._lock:
+            for operation_id in tuple(self._settled):
+                self._forget(operation_id)
 
     def forget_unadmitted(self, operation_id: OperationId) -> None:
         """Drop the lease and operands of an operation whose record was never created."""
@@ -180,6 +220,7 @@ class EphemeralOperationStore(
     ) -> OperationReplayPage:
         request = OperationReplayRequest(cursor=cursor, limit=limit)
         with self._lock:
+            self._forget_aged()
             record = self._records.get(operation_id)
         if record is None:
             return OperationReplayPage(
@@ -200,6 +241,7 @@ class EphemeralOperationStore(
     ) -> OperationObservationMaterialization:
         request = OperationReplayRequest(cursor=after_cursor, limit=limit)
         with self._lock:
+            self._forget_aged()
             record = self._records.get(operation_id)
         if record is None:
             raise OperationObservationUnknownOperationError(operation_id)
@@ -356,6 +398,7 @@ class EphemeralOperationStore(
     def holds_operand(self, reference: ContentDigest) -> bool:
         """Whether this store holds the operand at ``reference``."""
         with self._lock:
+            self._forget_aged()
             return reference in self._operands
 
     @override
@@ -365,6 +408,7 @@ class EphemeralOperationStore(
         operand_type: type[OperandT],
     ) -> OperandT:
         with self._lock:
+            self._forget_aged()
             payload = self._operands.get(reference)
         if payload is None:
             raise RepositoryError("operation secure reference is absent")
@@ -376,6 +420,21 @@ class EphemeralOperationStore(
             raise RepositoryError("operation secure reference payload does not match requested operand type") from exc
 
     # Internals -----------------------------------------------------------
+
+    def _forget_aged(self) -> None:
+        """Forget settled operations older than the lifetime; the caller holds the lock."""
+        oldest_kept = self._clock() - self._settled_lifetime
+        while self._settled:
+            operation_id, settled_at = next(iter(self._settled.items()))
+            if settled_at > oldest_kept:
+                return
+            self._forget(operation_id)
+
+    def _forget(self, operation_id: OperationId) -> None:
+        """Forget one settled operation's record and operands; the caller holds the lock."""
+        self._settled.pop(operation_id, None)
+        self._records.pop(operation_id, None)
+        self._forget_operands(operation_id)
 
     def _forget_operands(self, operation_id: OperationId) -> None:
         for reference in self._operand_owners.pop(operation_id, set()):
@@ -453,4 +512,4 @@ def _require_lease_matches(snapshot: OperationPersistedSnapshot, lease: Operatio
         raise RepositoryError("operation lease does not match the persisted snapshot conflict scope")
 
 
-__all__ = ["EPHEMERAL_SETTLED_RETENTION", "EphemeralOperationStore"]
+__all__ = ["EPHEMERAL_SETTLED_LIFETIME", "EPHEMERAL_SETTLED_RETENTION", "EphemeralOperationStore"]

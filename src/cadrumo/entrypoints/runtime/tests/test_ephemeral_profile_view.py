@@ -20,13 +20,17 @@ from cadrumo.adapters.persistence.storage.runtime_repository import secure_objec
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import OPERATION_SECURE_REFERENCE_NAMESPACE
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.application.operations.frontend_requests import (
+    OperationObservationRefusalCode,
+    OperationObservationRefusalV1,
     OperationObservationRequestV1,
     OperationObservationSuccessV1,
+    OperationResultProjectionRequestV1,
 )
 from cadrumo.application.operations.models import OperationId, OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.profile_worker import ProfileWorkerIdentity
-from cadrumo.application.user_profile.access_contracts import AccessSession
+from cadrumo.application.user_profile.access_contracts import AccessDenialCode, AccessSession
+from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.profile_operation_contracts import ProfileFieldMutationOperationRequest
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
@@ -151,3 +155,59 @@ def test_an_ephemeral_read_writes_no_operation_operand_row_while_a_recorded_one_
             worker.settle()
     assert after_read == baseline, (baseline, after_read)
     assert after_recorded > after_read, (after_read, after_recorded)
+
+
+def _unknown(worker: ProfileWorkerProcess, session: AccessSession, operation_id: OperationId) -> bool:
+    request = OperationObservationRequestV1(operation_id=operation_id, after_cursor=0, page_limit=32)
+    try:
+        observation = worker.observe(session.session_id, request, frontend=_FRONTEND).observation
+    except ProfileAccessRefusedError as refused:
+        return refused.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+    return (
+        isinstance(observation, OperationObservationRefusalV1)
+        and observation.code is OperationObservationRefusalCode.UNKNOWN_OPERATION
+    )
+
+
+def test_a_delivered_view_result_is_forgotten_and_an_unread_one_ends_with_the_last_session(tmp_path: Path) -> None:
+    with worker_profiles(tmp_path) as profiles:
+        root, ((identity, key), _) = profiles
+        profile_id = identity.binding.profile_id
+        worker = ProfileWorkerProcess(identity, storage_root=root, authorization=BoundaryAuthority(deny_commit=False))
+        try:
+            session = _session(identity)
+            worker.install(session, bytearray(key))
+            contract = worker.describe(session.session_id, PROFILE_VIEW_OPERATION_DEFINITION_ID).contract
+            assert contract.result_schema is not None
+            delivered = _run(worker, session, _view_request(profile_id))
+            terminal = worker.observe(
+                session.session_id,
+                OperationObservationRequestV1(operation_id=delivered, after_cursor=0, page_limit=32),
+                frontend=_FRONTEND,
+            ).observation
+            assert isinstance(terminal, OperationObservationSuccessV1)
+            projected = worker.project(
+                session.session_id,
+                OperationResultProjectionRequestV1(
+                    operation_id=delivered,
+                    terminal_revision=terminal.projection.revision,
+                    definition_contract_digest=contract.definition_contract_digest,
+                    result_schema=contract.result_schema,
+                ),
+                frontend=_FRONTEND,
+            )
+            assert projected.document["outcome"] == "success"
+            # The reader has its whole result: the decrypted page is gone from the worker.
+            assert _unknown(worker, session, delivered)
+
+            unread = _run(worker, session, _view_request(profile_id))
+            assert not _unknown(worker, session, unread)
+            # Locking ends the last session; the worker lives on, its unread result does not.
+            worker.retire(session.session_id)
+            assert worker.status().sessions == ()
+            successor = _session(identity)
+            worker.install(successor, bytearray(key))
+            assert _unknown(worker, successor, unread)
+        finally:
+            worker.close()
+            worker.settle()
