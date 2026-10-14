@@ -20,6 +20,8 @@ from pydantic import BaseModel
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import changed, lease, worker_profiles
 from cadrumo.adapters.local_runtime.worker_authorization_client import WorkerAuthorizationClient
 from cadrumo.adapters.local_runtime.worker_authorization_lease import WorkerAuthorizationLease
+from cadrumo.adapters.persistence.storage.master_key import active_session, profile_worker_custody
+from cadrumo.adapters.persistence.storage.master_key.profile_worker_binding import ProfileWorkerBindingOwner
 from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
 from cadrumo.application.auth.operation_definitions import (
     PROFILE_ROTATION_OPERATION_DEFINITION_ID,
@@ -144,8 +146,12 @@ def _registry() -> OperationRegistry:
 def _authority(
     tmp_path: Path,
 ) -> Generator[tuple[ProfileWorkerOperationAuthority, HeldPermitClient, OperationIdentity, WitnessCustody]]:
-    with profile_adapter_composition(), worker_profiles(tmp_path) as profiles:
+    with profile_adapter_composition(), worker_profiles(tmp_path) as profiles, pytest.MonkeyPatch.context() as patch:
         root, ((worker, key), _) = profiles
+        # The worker's binding is single-assignment for its process, and this test's process lives on.
+        isolated = ProfileWorkerBindingOwner()
+        patch.setattr(profile_worker_custody, "profile_worker_binding", isolated)
+        patch.setattr(active_session, "profile_worker_binding", isolated)
         with override_settings(cadrumo_local_storage_root=root, cadrumo_active_profile=str(worker.binding.profile_id)):
             custody = WitnessCustody(worker, storage_root=root)
             original = lease(worker)
