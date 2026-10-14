@@ -199,10 +199,10 @@ export const FIXTURE_CONVERSATIONS: AgentConversationRecord[] = [
   },
 ];
 
-const CLAUDE_API: AgentRanWith = {
-  provider: "claude",
+const ALPHA_API: AgentRanWith = {
+  provider: "alpha",
   transport: "api",
-  provider_display_name: "Claude",
+  provider_display_name: "Example Alpha",
   model: "fixture-deep",
   model_display_name: "Fixture Deep",
   effort: "high",
@@ -247,7 +247,7 @@ export const FIXTURE_RUNS: Record<string, FixtureRun[]> = {
           status: "failed",
         },
       ],
-      selection: CLAUDE_API,
+      selection: ALPHA_API,
       usage: { input_tokens: 18_240, output_tokens: 1_310 },
     },
     {
@@ -260,7 +260,7 @@ export const FIXTURE_RUNS: Record<string, FixtureRun[]> = {
         ),
       ]),
       tools: [],
-      selection: CLAUDE_API,
+      selection: ALPHA_API,
       usage: { input_tokens: 21_050, output_tokens: 640 },
     },
   ],

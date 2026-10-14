@@ -88,8 +88,8 @@ export const SecondLaneOfOneProvider: Story = {
   name: "Open, the second lane of a provider",
   args: {
     start: {
-      providerId: "codex",
-      wayId: "codex/cli",
+      providerId: "beta",
+      wayId: "beta/cli",
       modelId: "fixture-tiered",
       effort: "medium",
     },
@@ -101,8 +101,8 @@ export const NoEffortChosen: Story = {
   name: "Open, the provider's own effort",
   args: {
     start: {
-      providerId: "claude",
-      wayId: "claude/api",
+      providerId: "alpha",
+      wayId: "alpha/api",
       modelId: "fixture-deep",
       effort: undefined,
     },
@@ -114,8 +114,8 @@ export const ModelWithoutEfforts: Story = {
   name: "Open, model without efforts",
   args: {
     start: {
-      providerId: "claude",
-      wayId: "claude/api",
+      providerId: "alpha",
+      wayId: "alpha/api",
       modelId: "fixture-plain",
       effort: undefined,
     },
@@ -126,7 +126,7 @@ export const ModelWithoutEfforts: Story = {
 export const WrittenModel: Story = {
   name: "Open, a provider that lists no models",
   args: {
-    start: { providerId: "deepseek", wayId: "deepseek/cli", modelId: "" },
+    start: { providerId: "gateway", wayId: "gateway/cli", modelId: "" },
   },
   play: opened,
 };

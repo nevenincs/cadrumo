@@ -587,9 +587,9 @@ test.describe("a conversation composed from its runs", () => {
 
 test.describe("what a conversation's replies served about themselves", () => {
   const ran = {
-    provider: "claude",
+    provider: "alpha",
     transport: "api",
-    provider_display_name: "Claude",
+    provider_display_name: "Example Alpha",
     model: "m",
     model_display_name: "Fixture Deep",
     effort: "high",
@@ -615,7 +615,7 @@ test.describe("what a conversation's replies served about themselves", () => {
       t,
     );
     expect(facts).toEqual({
-      ranWith: "Ran with: Claude, Fixture Deep, High",
+      ranWith: "Ran with: Example Alpha, Fixture Deep, High",
       usage: "Tokens: 3,500 in, 500 out",
     });
   });
@@ -632,16 +632,16 @@ test.describe("what a conversation's replies served about themselves", () => {
       [
         reply("r1", "completed", {
           selection: {
-            provider: "deepseek",
+            provider: "gateway",
             transport: "cli",
-            model: "deepseek-x",
+            model: "gateway-x",
           },
         }),
       ],
       "en",
       t,
     );
-    expect(facts.ranWith).toBe("Ran with: deepseek, deepseek-x");
+    expect(facts.ranWith).toBe("Ran with: gateway, gateway-x");
   });
 });
 

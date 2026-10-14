@@ -178,7 +178,7 @@ const FAILED: TranscriptItem[] = [
     id: "e2",
     state: "failed",
     text: "There are eleven invoices from September. Eight of them",
-    failureReason: "The connection to Anthropic was lost.",
+    failureReason: "The connection to Example Alpha was lost.",
   },
 ];
 
@@ -311,7 +311,7 @@ export const InColumn: Story = {
         >
           <AgentHeader
             title="IVA del tercer trimestre"
-            subtitle="Opus 5.5 · High"
+            subtitle="Fixture Deep · High"
           />
           <Transcript {...args} locale={locale} />
           <div className="shrink-0 p-3 pt-0">

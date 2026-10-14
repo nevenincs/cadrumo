@@ -6,16 +6,77 @@ import type {
   AgentProviderCatalog,
   AgentProviderLane,
 } from "../../shell/agentSession";
-import { DECLARED_LANES, type DeclaredLane } from "./agentLanes.generated";
 
 // A provider catalog in the shape cadrumo-agent serves it, for the scenario
-// host. Which lanes there are, each one's provider, transport, name,
-// execution mode and a gateway's declared efforts are generated from
-// cadrumo-agent (agentLanes.generated.ts). What follows is made up, because
-// cadrumo-agent only learns it on a host at run time: each lane's health, so
-// that every way a lane can be held back is shown, and the models of a lane
-// that lists them. Every such model is named "Fixture ..." and takes the
-// efforts written here, not any real model's.
+// host. Cadrumo keeps no list of the agent's providers: every provider, lane
+// and model here is made up for this host, named "Example ..." or
+// "Fixture ...", and a real desktop reads the catalog from the running agent.
+// The lanes below cover each way a lane can differ (a catalog or a declared
+// model list, an API or a program, held back or free). Each lane's health,
+// so that every way a lane can be held back is shown, and the models of a
+// lane that lists them are written here too.
+
+/** What the made-up agent states of one lane. */
+type DeclaredLane = Pick<
+  AgentProviderLane,
+  | "provider_id"
+  | "transport"
+  | "display_name"
+  | "execution_mode"
+  | "executable"
+  | "model_source"
+> & {
+  catalog_revision: string | null;
+  native_controls: NonNullable<AgentProviderLane["catalog"]["native_controls"]>;
+};
+
+const CAPABILITIES: AgentLaneCapability[] = [
+  "tool_access",
+  "writing",
+  "web_retrieval",
+  "image_reading",
+  "pdf_reading",
+];
+
+const declare = (
+  provider_id: string,
+  transport: "api" | "cli",
+  model_source: "catalog" | "declared",
+  native_controls: DeclaredLane["native_controls"] = [],
+): DeclaredLane => ({
+  provider_id,
+  transport,
+  display_name: `Example ${provider_id[0]?.toUpperCase()}${provider_id.slice(1)}`,
+  execution_mode: `example-${transport}`,
+  executable: true,
+  model_source,
+  catalog_revision: model_source === "declared" ? "declared" : null,
+  native_controls,
+});
+
+const DECLARED_LANES: readonly DeclaredLane[] = [
+  declare("gamma", "cli", "catalog"),
+  declare("alpha", "api", "catalog"),
+  declare("alpha", "cli", "catalog"),
+  declare("beta", "api", "catalog"),
+  declare("beta", "cli", "catalog"),
+  declare("gateway", "cli", "declared", [
+    {
+      control_id: "effort",
+      kind: "thought_level",
+      display_name: "Effort",
+      options: [{ option_id: "max", display_name: "max", description: null }],
+      default_option_id: null,
+      description: null,
+    },
+  ]),
+  declare("delta", "cli", "catalog"),
+  declare("relay", "cli", "declared"),
+  declare("epsilon", "cli", "declared"),
+  declare("zeta", "cli", "declared"),
+  declare("eta", "cli", "declared"),
+  declare("theta", "cli", "declared"),
+];
 
 const CHECKED = "2026-10-13T08:00:00Z";
 
@@ -112,7 +173,7 @@ type Fixture = {
 /** What this fixture makes up, by lane. A lane not listed has nothing made up
  * but a gateway's key, which is not set. */
 const FIXTURES: Record<string, Fixture> = {
-  "claude/api": {
+  "alpha/api": {
     models: [
       {
         entry_id: "fixture-deep",
@@ -130,15 +191,15 @@ const FIXTURES: Record<string, Fixture> = {
     ],
     proven: ["tool_access", "web_retrieval", "pdf_reading"],
   },
-  "claude/cli": { held: "signedOut" },
+  "alpha/cli": { held: "signedOut" },
   // The compatible API contract advertises no efforts or controls.
-  "codex/api": {
+  "beta/api": {
     models: [
       { entry_id: "fixture-coder", display_name: "Fixture Coder", efforts: [] },
       { entry_id: "fixture-chat", display_name: "Fixture Chat", efforts: [] },
     ],
   },
-  "codex/cli": {
+  "beta/cli": {
     recommended: "fixture-ultra",
     models: [
       {
@@ -168,13 +229,13 @@ const FIXTURES: Record<string, Fixture> = {
     ],
     proven: ["tool_access"],
   },
-  "antigravity/cli": { held: "unreachable" },
-  "kimi/cli": { held: "notConfigured" },
+  "gamma/cli": { held: "unreachable" },
+  "delta/cli": { held: "notConfigured" },
   // The one gateway whose key is set: its models are written, not listed.
-  "deepseek/cli": {},
+  "gateway/cli": {},
 };
 
-const KEYED = new Set(["deepseek/cli"]);
+const KEYED = new Set(["gateway/cli"]);
 
 function lane(declared: DeclaredLane): AgentProviderLane {
   const key = `${declared.provider_id}/${declared.transport}`;
@@ -210,9 +271,13 @@ function lane(declared: DeclaredLane): AgentProviderLane {
         ...(fixture.extraControls ?? []),
       ],
     },
-    capability_proofs: declared.capability_proofs.map((proof) => ({
-      ...proof,
-      state: fixture.proven?.includes(proof.capability) ? "proven" : "unproven",
+    capability_proofs: CAPABILITIES.map((capability) => ({
+      capability,
+      entry:
+        capability === "tool_access" || capability === "writing"
+          ? "example"
+          : null,
+      state: fixture.proven?.includes(capability) ? "proven" : "unproven",
     })),
   };
 }

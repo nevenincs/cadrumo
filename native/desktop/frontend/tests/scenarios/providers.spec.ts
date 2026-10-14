@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { DECLARED_SETTINGS_LANES } from "../../src/dev/fixtures/agentLanes.generated";
+import { FIXTURE_SETTINGS_LANES } from "../../src/dev/providerSettingsFixture";
 import { label } from "../support/strings";
 
 // The agent's settings: the signed-in profile's model providers, one card
@@ -32,8 +32,8 @@ const lane = (target: Page, id: string) =>
   settings(target).locator(`[data-lane="${id}"]`);
 
 const nameOf = (id: string) =>
-  DECLARED_SETTINGS_LANES.find((declared) => declared.id === id)
-    ?.display_name ?? id;
+  FIXTURE_SETTINGS_LANES.find((declared) => declared.id === id)?.display_name ??
+  id;
 
 async function openSettings(target: Page) {
   await settingsButton(target).click();
@@ -105,12 +105,12 @@ test("each lane is one card, named as the catalog names it, with its provider's 
   await open(target);
   await openSettings(target);
 
-  // One card for each lane cadrumo-agent has, and every one of them is its
+  // One card for each lane the catalog has, and every one of them is its
   // provider's: its name is the catalog's and its mark is the provider's.
   await expect(settings(target).locator("[data-lane]")).toHaveCount(
-    DECLARED_SETTINGS_LANES.length,
+    FIXTURE_SETTINGS_LANES.length,
   );
-  for (const declared of DECLARED_SETTINGS_LANES) {
+  for (const declared of FIXTURE_SETTINGS_LANES) {
     const card = lane(target, declared.id);
     await expect(card).toHaveCount(1);
     await expect(card.getByRole("heading", { level: 4 })).toHaveText(
@@ -119,19 +119,14 @@ test("each lane is one card, named as the catalog names it, with its provider's 
     const mark = card.locator("[data-slot=provider-mark]");
     await expect(mark).toHaveCount(1);
     await expect(mark).toHaveAttribute("data-provider", declared.provider);
-    await expect(mark).toHaveAttribute("data-mark", "own");
+    await expect(mark).toHaveAttribute("data-mark", "none");
   }
 
-  // Claude and Codex are each two cards of the same name. Neither is also
-  // listed under the name of the company behind its API.
-  for (const name of ["Claude", "Codex"])
+  // Example Alpha and Example Beta are each two cards of the same name.
+  for (const name of ["Example Alpha", "Example Beta"])
     await expect(
       settings(target).getByRole("heading", { level: 4, name, exact: true }),
     ).toHaveCount(2);
-  for (const name of ["Anthropic", "OpenAI"])
-    await expect(settings(target).getByRole("heading", { name })).toHaveCount(
-      0,
-    );
 
   // Nothing here is a switch, a card of its own for a kind of access, or
   // words of ours about how a lane is reached: only what each lane is, where
@@ -153,7 +148,7 @@ test("a lane with an app says in plain words where it stands, and the API lane s
   await open(target);
   await openSettings(target);
   await expect(settings(target).locator("[data-lane]")).toHaveCount(
-    DECLARED_SETTINGS_LANES.length,
+    FIXTURE_SETTINGS_LANES.length,
   );
   const cards = await settings(target)
     .locator("[data-lane]")
@@ -165,7 +160,7 @@ test("a lane with an app says in plain words where it stands, and the API lane s
     );
   // The backend has no safe check yet of a provider's app: it says so, and
   // never that an app is missing.
-  for (const declared of DECLARED_SETTINGS_LANES) {
+  for (const declared of FIXTURE_SETTINGS_LANES) {
     const text = cards.find((card) => card.id === declared.id)?.text ?? "";
     if (declared.transport === "cli") {
       expect(text, declared.id).toContain(
@@ -189,36 +184,36 @@ test("a key is saved from the agent's settings and never kept anywhere", async (
 }) => {
   await open(target);
   await openSettings(target);
-  const claude = lane(target, "claude_api");
-  await expect(claude).toContainText(
+  const alpha = lane(target, "alpha_api");
+  await expect(alpha).toContainText(
     label("desktop.providers.readiness_missing"),
   );
   // Save waits for a key, and the field offers none of its own.
-  await claude
+  await alpha
     .getByRole("button", { name: label("desktop.providers.add_key") })
     .click();
-  const field = claude.getByLabel(/^Claude /);
+  const field = alpha.getByLabel(/^Example Alpha /);
   await expect(field).toHaveAttribute("type", "password");
   await expect(field).not.toHaveAttribute("placeholder", /.+/);
   await expect(
-    claude.getByRole("button", { name: label("desktop.providers.save") }),
+    alpha.getByRole("button", { name: label("desktop.providers.save") }),
   ).toBeDisabled();
   await field.fill(FAKE_KEY);
-  await claude
+  await alpha
     .getByRole("button", { name: label("desktop.providers.save") })
     .click();
 
-  await expect(claude).toContainText(
+  await expect(alpha).toContainText(
     label("desktop.providers.readiness_not_verified"),
   );
-  await expect(claude).toContainText(label("desktop.providers.source_profile"));
+  await expect(alpha).toContainText(label("desktop.providers.source_profile"));
   await expect(
-    claude.getByRole("button", {
+    alpha.getByRole("button", {
       name: label("desktop.providers.replace_key"),
     }),
   ).toBeVisible();
   // The other lane of the same provider is not changed by it.
-  await expect(lane(target, "claude_cli")).not.toContainText(
+  await expect(lane(target, "alpha_cli")).not.toContainText(
     label("desktop.providers.readiness_not_verified"),
   );
   // Nowhere a key could be left behind holds it.
@@ -231,23 +226,23 @@ test("a key that is refused or replaced is not kept either", async ({
   await open(target);
   await openSettings(target);
   const refused = "not a key";
-  await saveKey(target, "codex_api", refused);
-  await expect(lane(target, "codex_api").getByRole("alert")).toHaveText(
+  await saveKey(target, "beta_api", refused);
+  await expect(lane(target, "beta_api").getByRole("alert")).toHaveText(
     label("desktop.providers.refused_invalid_key_format"),
   );
-  await expect(lane(target, "codex_api")).toContainText(
+  await expect(lane(target, "beta_api")).toContainText(
     label("desktop.providers.readiness_missing"),
   );
   expect(await traces(target, refused)).toEqual(NO_TRACE);
 
-  await saveKey(target, "codex_api", FAKE_KEY);
-  await expect(lane(target, "codex_api")).toContainText(
+  await saveKey(target, "beta_api", FAKE_KEY);
+  await expect(lane(target, "beta_api")).toContainText(
     label("desktop.providers.readiness_not_verified"),
   );
   const replacement = "FAKE-KEY-replacement-0001";
-  await saveKey(target, "codex_api", replacement);
+  await saveKey(target, "beta_api", replacement);
   await expect(
-    lane(target, "codex_api").getByRole("button", {
+    lane(target, "beta_api").getByRole("button", {
       name: label("desktop.providers.replace_key"),
     }),
   ).toBeVisible();
@@ -261,35 +256,37 @@ test("a gateway takes its address, and one with no default needs it", async ({
   await open(target);
   await openSettings(target);
   // With a default, the address may be left empty.
-  const gateway = DECLARED_SETTINGS_LANES.find(
-    (declared) => declared.provider === "deepseek",
+  const gateway = FIXTURE_SETTINGS_LANES.find(
+    (declared) => declared.provider === "gateway",
   );
   expect(gateway?.default_base_url).toBeTruthy();
-  await expect(lane(target, "deepseek_cli")).toContainText(
+  await expect(lane(target, "gateway_cli")).toContainText(
     gateway?.default_base_url ?? "",
   );
   // Without one, Save waits for it too.
-  const qwenName = nameOf("qwen_cli");
-  const qwen = lane(target, "qwen_cli");
-  await qwen
+  const relayName = nameOf("relay_cli");
+  const relay = lane(target, "relay_cli");
+  await relay
     .getByRole("button", { name: label("desktop.providers.add_key") })
     .click();
-  await qwen.getByLabel(/^Qwen /).fill(FAKE_KEY);
-  const save = qwen.getByRole("button", {
+  await relay.getByLabel(/^Example Relay /).fill(FAKE_KEY);
+  const save = relay.getByRole("button", {
     name: label("desktop.providers.save"),
   });
   await expect(save).toBeDisabled();
-  await qwen
+  await relay
     .getByLabel(label("desktop.providers.base_url_label"))
     .fill("http://plain.gateway.example");
   await save.click();
-  await expect(qwen.getByRole("alert")).toHaveText(
+  await expect(relay.getByRole("alert")).toHaveText(
     label("desktop.providers.refused_base_url_rejected"),
   );
-  expect(qwenName).toBeTruthy();
-  await saveKey(target, "qwen_cli", FAKE_KEY, "https://qwen.gateway.example");
-  await expect(qwen).toContainText(
-    label("desktop.providers.through", { url: "https://qwen.gateway.example" }),
+  expect(relayName).toBeTruthy();
+  await saveKey(target, "relay_cli", FAKE_KEY, "https://relay.gateway.example");
+  await expect(relay).toContainText(
+    label("desktop.providers.through", {
+      url: "https://relay.gateway.example",
+    }),
   );
   expect(await traces(target, FAKE_KEY)).toEqual(NO_TRACE);
 });
@@ -299,21 +296,21 @@ test("a lane is disabled and reset by the person alone", async ({
 }) => {
   await open(target);
   await openSettings(target);
-  const kimi = lane(target, "kimi_cli");
-  await kimi
+  const delta = lane(target, "delta_cli");
+  await delta
     .getByRole("button", { name: label("desktop.providers.disable") })
     .click();
-  await expect(kimi).toContainText(
+  await expect(delta).toContainText(
     label("desktop.providers.readiness_disabled"),
   );
-  await kimi
+  await delta
     .getByRole("button", { name: label("desktop.providers.reset") })
     .click();
-  await expect(kimi).toContainText(
+  await expect(delta).toContainText(
     label("desktop.providers.readiness_missing"),
   );
   // A lane that signs in on its own offers no key to change.
-  await expect(lane(target, "codex_cli").getByRole("button")).toHaveCount(0);
+  await expect(lane(target, "beta_cli").getByRole("button")).toHaveCount(0);
 });
 
 test("without a profile signed in here, the agent and its settings are not offered and nothing is asked", async ({

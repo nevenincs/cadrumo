@@ -93,7 +93,7 @@ test("a message goes when it is sent, and its reply streams in once", async ({
   ).toBeVisible();
   // What the agent served of the reply: what it ran with and its tokens.
   await expect(replyFacts(target)).toHaveText([
-    "Ran with: Claude, Fixture Deep",
+    "Ran with: Example Alpha, Fixture Deep",
     /^Tokens: [\d,]+ in, [\d,]+ out$/,
   ]);
 
@@ -304,7 +304,7 @@ test("a conversation of several runs shows each message once, the tools before t
   ]);
   // What the replies ran with and the tokens they used, all of them counted.
   await expect(replyFacts(target)).toHaveText([
-    "Ran with: Claude, Fixture Deep, High",
+    "Ran with: Example Alpha, Fixture Deep, High",
     "Tokens: 39,290 in, 1,950 out",
   ]);
 });
@@ -581,10 +581,6 @@ test("each catalog lane is one entry of the list with its provider's mark", asyn
   await expect(options.locator("[data-slot=provider-mark]")).toHaveCount(
     lanes.length,
   );
-  // Neither Claude nor Codex is listed a second time under the name of the
-  // company behind its API.
-  for (const name of ["Anthropic", "OpenAI"])
-    await expect(options.filter({ hasText: name })).toHaveCount(0);
   for (const lane of lanes) {
     const entry = target.locator(
       `[role=option][data-way="${lane.provider_id}/${lane.transport}"]`,
@@ -601,7 +597,7 @@ test("each catalog lane is one entry of the list with its provider's mark", asyn
   await expect(target.locator("[role=option][aria-disabled=true]")).toHaveCount(
     lanes.filter((lane) => !lane.health.selectable).length,
   );
-  await expect(options.filter({ hasText: nameOf("kimi") })).toContainText(
+  await expect(options.filter({ hasText: nameOf("delta") })).toContainText(
     label("desktop.agent.lane_not_configured"),
   );
 });
@@ -612,28 +608,28 @@ test("a provider's separate catalog lanes each offer their own models", async ({
   scenarioOnly("the providers are the scenario host's catalog");
   await open(target);
   const settings = await openSettings(target);
-  await expect(providerBox(settings)).toContainText(nameOf("claude"));
+  await expect(providerBox(settings)).toContainText(nameOf("alpha"));
   await providerBox(settings).click();
-  const held = target.locator('[role=option][data-way="claude/cli"]');
+  const held = target.locator('[role=option][data-way="alpha/cli"]');
   await expect(held).toHaveAttribute("aria-disabled", "true");
   await expect(held).toContainText(label("desktop.agent.lane_signed_out"));
   await target.keyboard.press("Escape");
-  // Codex runs both ways, with models of their own.
-  await chooseLane(target, settings, "codex/api");
+  // Example Beta runs both ways, with models of their own.
+  await chooseLane(target, settings, "beta/api");
   await expect(modelBox(settings).locator("option")).toHaveText([
     "Fixture Coder",
     "Fixture Chat",
   ]);
-  await chooseLane(target, settings, "codex/cli");
+  await chooseLane(target, settings, "beta/cli");
   await expect(modelBox(settings).locator("option")).toHaveText([
     "Fixture Tiered",
     "Fixture Ultra",
   ]);
   // The composer names the provider and the model it is on.
   await expect(settingsButton(target).first()).toHaveAccessibleName(
-    new RegExp(`${escaped(nameOf("codex"))}, Fixture Ultra`),
+    new RegExp(`${escaped(nameOf("beta"))}, Fixture Ultra`),
   );
-  await chooseLane(target, settings, "deepseek/cli");
+  await chooseLane(target, settings, "gateway/cli");
   await expect(settings.getByRole("radiogroup")).toHaveCount(0);
 });
 
@@ -674,11 +670,11 @@ test("the efforts offered follow the model chosen", async ({
   // One that takes none has no effort to choose.
   await modelBox(settings).selectOption("fixture-plain");
   await expect(effortBox(settings)).toHaveCount(0);
-  // Another provider's models take their own: Codex over its API takes none,
+  // Another provider's models take their own: Example Beta over its API takes none,
   // over its app it takes these.
-  await chooseLane(target, settings, "codex/api");
+  await chooseLane(target, settings, "beta/api");
   await expect(effortBox(settings)).toHaveCount(0);
-  await chooseLane(target, settings, "codex/cli");
+  await chooseLane(target, settings, "beta/cli");
   await expect(modelBox(settings)).toHaveValue("fixture-ultra");
   await expect(efforts).toHaveText(
     words("desktop.agent.effort_high", "desktop.agent.effort_ultra"),
@@ -718,7 +714,7 @@ test("a provider that lists no models is given the model's id, and sends only wi
   scenarioOnly("the providers are the scenario host's catalog");
   await open(target);
   const settings = await openSettings(target);
-  await chooseLane(target, settings, "deepseek/cli");
+  await chooseLane(target, settings, "gateway/cli");
   const model = settings.getByRole("textbox", {
     name: label("desktop.agent.model"),
   });

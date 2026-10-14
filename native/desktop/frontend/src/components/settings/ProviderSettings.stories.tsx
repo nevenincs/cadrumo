@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ComponentProps } from "react";
-import { DECLARED_SETTINGS_LANES } from "@/dev/fixtures/agentLanes.generated";
+import { FIXTURE_SETTINGS_LANES } from "@/dev/providerSettingsFixture";
 import { ProviderSettings } from "./ProviderSettings";
 import type { ProviderStatus } from "./types";
 
-// Appearance only: the lanes cadrumo-agent declares, grouped by provider, in
-// each state they can be in. Which lanes there are and what each takes come
-// from cadrumo-agent; where each stands is made up. Saving, disabling and
+// Appearance only: the made-up lanes of the scenario host, grouped by
+// provider, in each state they can be in. Cadrumo lists no real providers:
+// the lanes and where each stands are made up. Saving, disabling and
 // resetting do nothing here, and no key is stored or shown.
 
 type Args = ComponentProps<typeof ProviderSettings>;
@@ -15,35 +15,35 @@ const NOOP = () => undefined;
 
 /** Where each made-up lane stands; the rest have nothing set. */
 const STANDING: Record<string, Partial<ProviderStatus>> = {
-  claude_api: { mode: "key", readiness: "ready", source: "profile" },
-  claude_cli: {
+  alpha_api: { mode: "key", readiness: "ready", source: "profile" },
+  alpha_cli: {
     mode: "provider_sign_in",
     readiness: "ready",
     source: "profile",
     cliState: "installed_signed_in",
   },
-  codex_api: { mode: "key", readiness: "not_verified", source: "profile" },
-  codex_cli: {
+  beta_api: { mode: "key", readiness: "not_verified", source: "profile" },
+  beta_cli: {
     mode: "provider_sign_in",
     readiness: "sign_in_required",
     reason: "sign_in_with_provider_tool",
     cliState: "installed_signed_out",
   },
-  antigravity_cli: {
+  gamma_cli: {
     readiness: "unusable",
     reason: "not_configured",
     cliState: "not_installed",
   },
-  kimi_cli: { mode: "disabled", readiness: "disabled", cliState: "unknown" },
-  qwen_cli: {
+  delta_cli: { mode: "disabled", readiness: "disabled", cliState: "unknown" },
+  relay_cli: {
     mode: "key",
     readiness: "unusable",
     source: "profile",
-    baseUrl: "https://gateway.example/qwen",
+    baseUrl: "https://gateway.example/relay",
   },
 };
 
-export const PROVIDERS: ProviderStatus[] = DECLARED_SETTINGS_LANES.map(
+export const PROVIDERS: ProviderStatus[] = FIXTURE_SETTINGS_LANES.map(
   (lane): ProviderStatus => ({
     id: lane.id,
     provider: lane.provider,
@@ -95,16 +95,16 @@ export const Development: Story = {
 };
 
 export const Saving: Story = {
-  args: { busyId: "claude_api" },
+  args: { busyId: "alpha_api" },
 };
 
 export const Outcomes: Story = {
   name: "Saved but unread, and refused",
   args: {
     outcomes: {
-      codex_api: { kind: "saved_unread" },
-      qwen_cli: { kind: "refused", code: "base_url_rejected" },
-      kimi_cli: { kind: "refused", code: "revision_conflict" },
+      beta_api: { kind: "saved_unread" },
+      relay_cli: { kind: "refused", code: "base_url_rejected" },
+      delta_cli: { kind: "refused", code: "revision_conflict" },
     },
   },
 };

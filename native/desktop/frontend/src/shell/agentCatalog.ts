@@ -25,15 +25,10 @@ import type { Translate } from "./strings";
 // list the person chooses from has a row for each lane, named as the lane is
 // (`display_name`). The person is never shown the transport. Both are served
 // explicitly by cadrumo-agent's ProviderCatalogResponse
-// (api/schemas/provider_catalog.py), from the lane's own definitions:
-// ExecutionLane.provider and ExecutionLane.transport (graph/enums.py) map the
-// lanes `anthropic` and `openai` to the products Claude and Codex over the API
-// (ProviderTransport.API) and every other lane over its command-line app
-// (ProviderTransport.CLI), and the product's name is the registry's
-// ProviderDescriptor.display_name (providers/registry.py), the same on each of
-// its lanes. A service that predates this serves the lanes by their private
-// ids with no transport; those cannot be told apart from the products without
-// a table of cadrumo-agent's lane ids, so such a lane is not offered and the
+// (api/schemas/provider_catalog.py), from the lane's own definitions. A
+// service that predates this serves the lanes by their private ids with no
+// transport; those cannot be told apart without a table of cadrumo-agent's
+// lane ids, which Cadrumo does not keep, so such a lane is not offered and the
 // column says the service is incompatible.
 //
 // A lane is a way into one model list, and the pair (provider, transport) is

@@ -16,7 +16,7 @@ const meta = {
   },
   args: {
     title: "IVA del tercer trimestre",
-    subtitle: "Opus 5.5 · High",
+    subtitle: "Fixture Deep · High",
     documentCount: 4,
     onNewConversation: NOOP,
     onToggleHistory: NOOP,

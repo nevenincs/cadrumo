@@ -1,15 +1,15 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { PROVIDER_MARKS } from "../../src/components/agent/providerIcons";
 import { FIXTURE_CATALOG } from "../../src/dev/fixtures/agentCatalog";
-import { DECLARED_SETTINGS_LANES } from "../../src/dev/fixtures/agentLanes.generated";
+import { FIXTURE_SETTINGS_LANES } from "../../src/dev/providerSettingsFixture";
 import { agentColumn as column, ask, settled } from "../support/agent";
 import { label } from "../support/strings";
 
 // The agent's provider list: a list of lanes, each with its provider's own
 // mark and the name cadrumo-agent's catalog gives it, and nothing that lets a
 // person pick "how" a provider is reached. A provider the catalog serves two
-// lanes for (Claude and Codex) is two entries; the one chosen is the lane the
-// next message runs on, and its models and efforts are that lane's own.
+// lanes for (Example Alpha and Example Beta) is two entries; the one chosen is
+// the lane the next message runs on, and its models and efforts are that
+// lane's own.
 
 // The smallest side a control may have under a finger, less the rounding of a
 // rem length to device pixels.
@@ -141,22 +141,13 @@ test("the list has one entry for each lane, each with its provider's own mark, a
     expect(row?.text, wayOf(served)).toBe(served.display_name + (why ?? ""));
     expect(row?.disabled, wayOf(served)).toBe(why !== null);
     expect(row?.marks, wayOf(served)).toEqual([
-      { provider: served.provider_id, kind: "own", tag: "svg" },
+      // Cadrumo holds no artwork: every provider gets the neutral ring.
+      { provider: served.provider_id, kind: "none", tag: "span" },
     ]);
   }
-  // Every provider the catalog names has artwork of its own: none falls back
-  // to the neutral ring.
-  for (const served of lanes)
-    expect(Object.keys(PROVIDER_MARKS), served.provider_id).toContain(
-      served.provider_id,
-    );
-
-  // Claude and Codex are each listed twice under the same name, and neither
-  // under the name of the company behind its API.
-  for (const name of ["Claude", "Codex"])
+  // Example Alpha and Example Beta are each listed twice under the same name.
+  for (const name of ["Example Alpha", "Example Beta"])
     expect(rows.filter((row) => row.text.startsWith(name))).toHaveLength(2);
-  for (const name of ["Anthropic", "OpenAI"])
-    await expect(options.filter({ hasText: name })).toHaveCount(0);
   // Those the catalog holds back stay in the list, disabled.
   await expect(target.locator("[role=option][aria-disabled=true]")).toHaveCount(
     lanes.filter((served) => !served.health.selectable).length,
@@ -213,48 +204,44 @@ test("choosing an entry chooses its lane, and a message goes with that lane's tr
     };
   };
 
-  // The program entry of Codex: its own models, and a message goes by the
+  // The program entry of Example Beta: its own models, and a message goes by the
   // transport the catalog gives that lane.
   let settings = await openSettings(target);
-  await chooseLane(target, settings, "codex/cli");
-  await expect(providerBox(settings)).toHaveText("Codex");
+  await chooseLane(target, settings, "beta/cli");
+  await expect(providerBox(settings)).toHaveText("Example Beta");
   await expect(modelBox(settings).locator("option")).toHaveText(
-    laneOf("codex/cli").catalog.models?.map((held) => held.display_name) ?? [],
+    laneOf("beta/cli").catalog.models?.map((held) => held.display_name) ?? [],
   );
   await target.keyboard.press("Escape");
   await ask(target, "Primera");
   await expect.poll(() => sentSelections(target)).toHaveLength(1);
-  expect((await sentSelections(target)).at(-1)).toEqual(
-    startsWith("codex/cli"),
-  );
-  expect(startsWith("codex/cli").transport).toBe("cli");
+  expect((await sentSelections(target)).at(-1)).toEqual(startsWith("beta/cli"));
+  expect(startsWith("beta/cli").transport).toBe("cli");
   await settled(target);
 
   // The other entry of the same name: another lane, with models of its own.
   settings = await openSettings(target);
-  await chooseLane(target, settings, "codex/api");
+  await chooseLane(target, settings, "beta/api");
   await expect(modelBox(settings).locator("option")).toHaveText(
-    laneOf("codex/api").catalog.models?.map((held) => held.display_name) ?? [],
+    laneOf("beta/api").catalog.models?.map((held) => held.display_name) ?? [],
   );
   await target.keyboard.press("Escape");
   await ask(target, "Segunda");
   await expect.poll(() => sentSelections(target)).toHaveLength(2);
-  expect((await sentSelections(target)).at(-1)).toEqual(
-    startsWith("codex/api"),
-  );
-  expect(startsWith("codex/api").transport).toBe("api");
+  expect((await sentSelections(target)).at(-1)).toEqual(startsWith("beta/api"));
+  expect(startsWith("beta/api").transport).toBe("api");
   await settled(target);
 
   // The entry the column starts on goes by its own.
   settings = await openSettings(target);
-  await chooseLane(target, settings, "claude/api");
+  await chooseLane(target, settings, "alpha/api");
   await target.keyboard.press("Escape");
   await ask(target, "Tercera");
   await expect.poll(() => sentSelections(target)).toHaveLength(3);
   expect((await sentSelections(target)).at(-1)).toEqual(
-    startsWith("claude/api"),
+    startsWith("alpha/api"),
   );
-  expect(startsWith("claude/api").transport).toBe("api");
+  expect(startsWith("alpha/api").transport).toBe("api");
 });
 
 test("a held entry cannot be chosen, and says why", async ({
@@ -272,7 +259,7 @@ test("a held entry cannot be chosen, and says why", async ({
   }
   // Closing the list leaves the lane in use as it was.
   await target.keyboard.press("Escape");
-  await expect(providerBox(settings)).toContainText("Claude");
+  await expect(providerBox(settings)).toContainText("Example Alpha");
   await expect(modelBox(settings)).toHaveValue("fixture-deep");
 });
 
@@ -286,29 +273,29 @@ test("the efforts offered follow the model of the lane chosen", async ({
     laneOf(way).catalog.models?.find((held) => held.entry_id === model)
       ?.efforts ?? [];
 
-  // Codex by its program: the lane's recommended model takes its efforts.
-  await chooseLane(target, settings, "codex/cli");
+  // Example Beta by its program: the lane's recommended model takes its efforts.
+  await chooseLane(target, settings, "beta/cli");
   await expect(modelBox(settings)).toHaveValue("fixture-ultra");
   await expect(efforts).toHaveText(
-    effortWords(takes("codex/cli", "fixture-ultra")),
+    effortWords(takes("beta/cli", "fixture-ultra")),
   );
   await modelBox(settings).selectOption("fixture-tiered");
   await expect(efforts).toHaveText(
-    effortWords(takes("codex/cli", "fixture-tiered")),
+    effortWords(takes("beta/cli", "fixture-tiered")),
   );
   // The same name by its other entry: its models take none.
-  await chooseLane(target, settings, "codex/api");
+  await chooseLane(target, settings, "beta/api");
   await expect(effortBox(settings)).toHaveCount(0);
-  // Claude's models take their own, and one of them none.
-  await chooseLane(target, settings, "claude/api");
+  // Example Alpha's models take their own, and one of them none.
+  await chooseLane(target, settings, "alpha/api");
   await expect(modelBox(settings)).toHaveValue("fixture-deep");
   await expect(efforts).toHaveText([
     label("desktop.agent.effort_default"),
-    ...effortWords(takes("claude/api", "fixture-deep")),
+    ...effortWords(takes("alpha/api", "fixture-deep")),
   ]);
   await modelBox(settings).selectOption("fixture-quick");
   await expect(efforts).toHaveText(
-    effortWords(takes("claude/api", "fixture-quick")),
+    effortWords(takes("alpha/api", "fixture-quick")),
   );
   await modelBox(settings).selectOption("fixture-plain");
   await expect(effortBox(settings)).toHaveCount(0);
@@ -333,7 +320,7 @@ test("no “CLI” appears in the agent column, the list or the settings", async
   await open(target);
   const settings = await openSettings(target);
   // The lane that runs a program: the very one the old wording was for.
-  await chooseLane(target, settings, "codex/cli");
+  await chooseLane(target, settings, "beta/cli");
   const said = [
     ...(await wording(settings)),
     ...(await column(target).evaluate((node) => [
@@ -353,14 +340,14 @@ test("no “CLI” appears in the agent column, the list or the settings", async
   });
   await expect(providers).toBeVisible();
   await expect(providers.locator("[data-lane]")).toHaveCount(
-    DECLARED_SETTINGS_LANES.length,
+    FIXTURE_SETTINGS_LANES.length,
   );
   said.push(...(await wording(providers)));
 
   // What was read is the whole of what a person is shown there.
   const everything = said.join(" ");
   for (const shown of [
-    "Zhipu AI",
+    "Example Relay",
     label("desktop.providers.title"),
     label("desktop.providers.cli_unknown"),
     label("desktop.agent.lane_not_configured"),
@@ -386,11 +373,8 @@ function luminance(colour: string): number {
   return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
 }
 
-const rgb = (hex: string) =>
-  `rgb(${parseInt(hex.slice(1, 3), 16)}, ${parseInt(hex.slice(3, 5), 16)}, ${parseInt(hex.slice(5, 7), 16)})`;
-
 for (const mode of ["light", "dark", "forced colours"] as const) {
-  test(`a mark follows the text colour of the list, and keeps a provider's own only where it has one (${mode})`, async ({
+  test(`a mark follows the text colour of the list (${mode})`, async ({
     page: target,
   }) => {
     await target.emulateMedia({
@@ -414,21 +398,11 @@ for (const mode of ["light", "dark", "forced colours"] as const) {
       }),
     );
     expect(marks).toHaveLength(lanes.length);
-    for (const mark of marks) {
-      const pieces = PROVIDER_MARKS[mark.provider] ?? [];
-      expect(mark.fills, mark.provider).toHaveLength(pieces.length);
-      pieces.forEach((piece, index) => {
-        const fill = mark.fills[index];
-        // A piece without a colour of its own, and every piece in a window
-        // with forced colours, is drawn in the text colour.
-        if (piece.accent === undefined || mode === "forced colours")
-          expect(fill, mark.provider).toBe(mark.text);
-        else expect(fill, mark.provider).toBe(rgb(piece.accent));
-      });
-    }
+    // The ring has no drawn pieces, so nothing carries a colour of its own.
+    for (const mark of marks) expect(mark.fills, mark.provider).toEqual([]);
     // The text colour is the theme's: dark ink on the light list, light on
     // the dark one, so a mark drawn in it can be seen on either.
-    const plain = marks.find((mark) => mark.provider === "codex");
+    const plain = marks.find((mark) => mark.provider === "beta");
     if (mode === "light")
       expect(luminance(plain?.text ?? ""), mode).toBeLessThan(0.3);
     if (mode === "dark")
@@ -540,11 +514,11 @@ for (const width of [390, 520]) {
       expect(await overflowing(target)).toBe(false);
 
       // A tap on an entry that can be chosen chooses it.
-      await entry(target, "codex/cli").scrollIntoViewIfNeeded();
-      await entry(target, "codex/cli").tap();
-      await expect(providerBox(settings)).toHaveText("Codex");
+      await entry(target, "beta/cli").scrollIntoViewIfNeeded();
+      await entry(target, "beta/cli").tap();
+      await expect(providerBox(settings)).toHaveText("Example Beta");
       await expect(modelBox(settings).locator("option")).toHaveText(
-        laneOf("codex/cli").catalog.models?.map((held) => held.display_name) ??
+        laneOf("beta/cli").catalog.models?.map((held) => held.display_name) ??
           [],
       );
       expect(await overflowing(target)).toBe(false);

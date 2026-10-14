@@ -40,20 +40,21 @@ The lane:
 Exit 0 means every spec passed and both checks were clean, 1 means a failure,
 and 3 means a prerequisite is absent.
 
-The lane reads your key only from its own environment, as
-`CADRUMO_LLM_CLAUDE_API_KEY`, and exits 3 naming that variable when it is
-unset. It writes the key once to the set command's standard input. The key is
+The lane takes `--provider ID` and reads your key only from its own
+environment, as `CADRUMO_LLM_<ID>_API_KEY`, with the id in upper case. It exits
+3 naming that variable when it is unset. It writes the key once to the set command's standard input. The key is
 never placed on a command line, in a file, a log or another process's
 environment.
 
 Options, passed as `just desktop-agent-live <options>`:
 
-| Option          | Meaning                                                      |
-| --------------- | ------------------------------------------------------------ |
-| `--attach-only` | Run only the attachment check, `attach.live.ts`              |
-| `--served`      | Load the shell from `just dev`, with hot reload              |
-| `--keep`        | Keep the run directory after a pass                          |
-| `-- <args>`     | Pass the remaining arguments to Playwright, such as `-g ...` |
+| Option          | Meaning                                                                        |
+| --------------- | ------------------------------------------------------------------------------ |
+| `--provider ID` | Use the provider with this id; its key is read from `CADRUMO_LLM_<ID>_API_KEY` |
+| `--attach-only` | Run only the attachment check, `attach.live.ts`                                |
+| `--served`      | Load the shell from `just dev`, with hot reload                                |
+| `--keep`        | Keep the run directory after a pass                                            |
+| `-- <args>`     | Pass the remaining arguments to Playwright, such as `-g ...`                   |
 
 `--served` uses a second test host. Its shell is the development server's
 address, so a change to the shell needs no rebuild while the Rust host, the

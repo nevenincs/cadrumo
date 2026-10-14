@@ -46,7 +46,7 @@ function Column({
           title={
             body === "welcome" ? "New conversation" : "IVA del tercer trimestre"
           }
-          subtitle="Opus 5.5 · High"
+          subtitle="Fixture Deep · High"
           documentCount={
             body === "welcome" ? attachments.length : DOCUMENTS.length
           }
@@ -78,8 +78,8 @@ function Column({
             {body === "consent" ? (
               <div className="flex min-h-0 flex-1 flex-col justify-end p-3">
                 <ConsentPrompt
-                  providerName="Anthropic"
-                  modelName="Opus 5.5"
+                  providerName="Example Alpha"
+                  modelName="Fixture Deep"
                   contentItems={[
                     { id: "message", label: "Your message" },
                     {

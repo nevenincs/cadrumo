@@ -18,8 +18,8 @@ const meta = {
     docs: { description: { component: REVIEW_NOTE } },
   },
   args: {
-    providerName: "Anthropic",
-    modelName: "Opus 5.5",
+    providerName: "Example Alpha",
+    modelName: "Fixture Deep",
     contentItems: [
       { id: "message", label: "Your message" },
       {
