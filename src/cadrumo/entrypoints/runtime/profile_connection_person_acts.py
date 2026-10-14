@@ -56,12 +56,15 @@ class ProfileConnectionPersonActMixin:
     def _refuse_agent_tree_person_access(
         self: RuntimeProfileConnections,
         context: RuntimeConnectionContext,
-        frontend: OperationFrontendProjection,
         *,
+        persons_frontend: bool,
         method: str | None = None,
     ) -> None:
-        """Refuse a person's frontend, or the person's own sign-in, to a peer inside a hosted agent's tree."""
-        if (is_persons_frontend(frontend) or method in {"password", "receipt"}) and self._agent_tree_peer(context):
+        """Refuse a person's frontend, or the person's own sign-in, to a peer inside a hosted agent's tree.
+
+        The caller, an admission door, says whether the login names a person's frontend.
+        """
+        if (persons_frontend or method in {"password", "receipt"}) and self._agent_tree_peer(context):
             raise ProfileAccessRefusedError(AccessDenialCode.PERSON_ACT_REQUIRED)
 
     def _connection_frontend(

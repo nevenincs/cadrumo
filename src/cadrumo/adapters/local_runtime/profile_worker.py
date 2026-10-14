@@ -20,6 +20,7 @@ from ...application.runtime.worker_authorization import WorkerAuthorizationOwner
 from ...core.async_cleanup import AsyncResourceCleanupError
 from ...core.storage_environment import ChildEnvironmentProfile, child_environment
 from ...core.time.clock import now
+from .agent_programs import PACKAGE_AGENT_VARIABLE
 from .framing import accept_runtime_handshake
 from .linux_worker_process import LinuxOwnedProcess, LinuxProcessScope
 from .macos_worker_process import MacosOwnedProcess, MacosProcessScope
@@ -269,12 +270,19 @@ def _worker_launch_environment(*, storage_root: Path) -> dict[str, str]:
     """Pin the storage root and keep operator storage controls across the isolated worker boundary.
 
     POSIX workers start from a fixed noncredential environment; Windows workers
-    keep the ambient environment minus the declared cleared classes.
+    keep the ambient environment minus the declared cleared classes. The agent
+    image's location, which the runtime's own image fixes, is relayed unchanged
+    when the runtime has one: the worker's provider settings ask that agent for
+    its catalog, and without it they refuse as unavailable.
     """
     posix_base = {"PATH": "/usr/bin:/bin", "LANG": "C", "LC_ALL": "C"}
-    return child_environment(
+    environment = child_environment(
         ChildEnvironmentProfile.OPERATOR,
         storage_root,
         base=None if sys.platform == "win32" else posix_base,
         sys_platform=sys.platform,
     )
+    agent_image = os.environ.get(PACKAGE_AGENT_VARIABLE)
+    if agent_image is not None:
+        environment[PACKAGE_AGENT_VARIABLE] = agent_image
+    return environment

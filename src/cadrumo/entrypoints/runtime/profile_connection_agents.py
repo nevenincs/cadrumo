@@ -210,7 +210,7 @@ class ProfileConnectionAgentMixin:
             connection = self._connections.get(context.connection_id)
             host = None if connection is None else self._profiles.get(connection.profile_id)
             others = tuple(item for profile_id, item in self._profiles.items() if profile_id != request.profile_id)
-        if connection is not None and connection.frontend is not OperationFrontendProjection.AGENT_HOST:
+        if connection is not None and not connection.serves_agents:
             # Only the agent host's own frontend serves an agent; every other frontend is refused outright.
             return RuntimeAccessRefusal(
                 request_id=request.request_id,
@@ -353,19 +353,14 @@ class ProfileConnectionAgentMixin:
 
         Its identity is its membership of the tree's job, which the kernel
         reports; no key, no person's decision and no stored sign-in admits it.
-        It is admitted only on the MCP frontend, and only as an attended child
-        of the owning lease, so it takes no person's act and ends with that
-        lease. A proof it presents is read and discarded unexamined: the
+        Whatever frontend it names, it is admitted as the MCP frontend, and
+        only as an attended child of the owning lease, so it takes no person's
+        act and ends with that lease. A proof it presents is read and discarded unexamined: the
         person's stored sign-in is never resumed for it.
         """
         self._validate_login_request(request)
         owner = self._agent_tree_owner(context)
-        if (
-            owner is None
-            or request.frontend is not OperationFrontendProjection.MCP
-            or request.method != "receipt"
-            or request.profile_id != owner.profile_id
-        ):
+        if owner is None or request.method != "receipt" or request.profile_id != owner.profile_id:
             raise ProfileAccessRefusedError(AccessDenialCode.PERSON_ACT_REQUIRED)
         surface = self._login_surface(request)
         write_document(
@@ -387,7 +382,7 @@ class ProfileConnectionAgentMixin:
         observed = login.observe(credential_facilities=Availability.UNAVAILABLE)
         if not observed.active or observed.os_owner_id != context.peer.os_owner_id:
             raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
-        connection = ProfileConnection(
+        tree_connection = ProfileConnection(
             context,
             login,
             holder.client_id,
@@ -400,9 +395,9 @@ class ProfileConnectionAgentMixin:
             with self._guard:
                 if not self._admitting():
                     raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
-                self._connections[context.connection_id] = connection
+                self._connections[context.connection_id] = tree_connection
                 self._logins[login.login_id] = login
-            return self._attend_agent_tree(connection, host, owner, request.request_id)
+            return self._attend_agent_tree(tree_connection, host, owner, request.request_id)
 
     def _attend_agent_tree(
         self: RuntimeProfileConnections,

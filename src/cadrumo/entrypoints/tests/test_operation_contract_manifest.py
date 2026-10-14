@@ -157,4 +157,9 @@ async def test_reading_every_contract_imports_no_operation_handler_module() -> N
     assert set(after_one_group) <= {group_module, handler_module}
 
 
-_PLATFORM_VARIABLES = frozenset({"SYSTEMROOT", "WINDIR", "SYSTEMDRIVE", "PATH", "COMSPEC", "USERNAME", "USERDOMAIN"})
+# Importing core logging resolves the home directory it masks in log lines: Windows reads it from USERPROFILE,
+# else HOMEDRIVE and HOMEPATH, and POSIX from HOME before the password database.
+_PLATFORM_VARIABLES = frozenset(
+    {"SYSTEMROOT", "WINDIR", "SYSTEMDRIVE", "PATH", "COMSPEC", "USERNAME", "USERDOMAIN"}
+    | {"USERPROFILE", "HOMEDRIVE", "HOMEPATH", "HOME"}
+)

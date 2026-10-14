@@ -8,6 +8,8 @@ from types import SimpleNamespace
 import pytest
 
 from .. import profile_worker
+from ..agent_programs import PACKAGE_AGENT_VARIABLE
+from ..worker_environment import worker_path_environment_names
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -60,3 +62,22 @@ def test_windows_worker_keeps_the_packaged_cache_pin_and_drops_credentials(
     assert not any("OPENAI_API_KEY" in name for name in environment)
     # A setting of this command line that is not a location stays with the runtime.
     assert "CADRUMO_LOG_LEVEL" not in environment
+
+
+@pytest.mark.parametrize("platform", ["linux", "win32"])
+def test_the_worker_receives_the_agent_location_the_runtime_holds_and_no_other(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, platform: str
+) -> None:
+    monkeypatch.setattr(profile_worker, "sys", SimpleNamespace(platform=platform))
+    image = tmp_path / "package" / "bin" / "agent-image"
+    monkeypatch.setenv(PACKAGE_AGENT_VARIABLE, str(image))
+
+    environment = profile_worker._worker_launch_environment(storage_root=tmp_path / "worker-storage")
+
+    assert environment[PACKAGE_AGENT_VARIABLE] == str(image)
+    # The POSIX containment and its guardian keep only the worker's declared names; this is one.
+    assert PACKAGE_AGENT_VARIABLE in worker_path_environment_names()
+    monkeypatch.delenv(PACKAGE_AGENT_VARIABLE)
+    assert PACKAGE_AGENT_VARIABLE not in profile_worker._worker_launch_environment(
+        storage_root=tmp_path / "worker-storage"
+    )

@@ -438,7 +438,14 @@ def test_a_program_the_agent_starts_is_refused_the_persons_sign_in_and_acts(
         attempts = [login for login in runtime.profiles.logins if login.frontend is OperationFrontendProjection.CLI]
         assert {login.method for login in attempts} >= {"receipt"}, attempts
         assert runtime.stored_sign_in() is not None
-        assert {lease.session_id for lease in runtime.leases()} == {session_id}
+        # Naming the command line won it nothing: whatever it was admitted as is an attended child of the
+        # agent's own lease, no wider than it, and the sign-out it asked for was refused as the person's act.
+        assert "person_act_required" in json.dumps(result), result
+        agent_lease = runtime.lease(session_id)
+        for lease in runtime.leases():
+            if lease.session_id != session_id:
+                assert lease.parent_session_id == session_id, lease
+                assert lease.scope.operations <= agent_lease.scope.operations, lease
         # A process outside the agent's job is admitted as before, and the agent's own session is untouched.
         _person, person_session = _session(runtime, OperationFrontendProjection.CLI)
         assert person_session != session_id

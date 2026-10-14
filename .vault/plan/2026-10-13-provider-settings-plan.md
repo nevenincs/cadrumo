@@ -34,6 +34,8 @@ Authorization basis, all first-hand from the owner on 2026-10-13:
 
 The handover does not authorize commits: "Do not commit or push unless separately requested". This plan grants none. Commits, pushes, real-profile mutation and entering a real provider key each need a separate request.
 
+Operator authorized executing P02.S07-S08 on 2026-10-14.
+
 The plan is governed by `2026-10-13-provider-settings-adr`, which P01.S01 records together with its in-place amendments to `2026-10-11-mcp-parity-full-parity-adr`, `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr` and `2026-10-04-canonical-environment-adr`. Custody, session and profile-state authority stay with the August successor records.
 
 Two records belong to another session and are not edited here: `2026-10-12-desktop-agent-host-adr` and `2026-10-13-desktop-agent-host-live-lane-adr`, both proposed. Both agree with the new ADR's standard-input rule; the live-lane record withdrew its environment hand-off. The cadrumo-agent repository is outside this assignment, so S02 and S03 stay open until that author acts.

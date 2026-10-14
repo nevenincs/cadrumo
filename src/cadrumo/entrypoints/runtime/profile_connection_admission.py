@@ -10,6 +10,7 @@ from ...adapters.local_runtime.installation import runtime_installation
 from ...adapters.persistence.storage.custody.automation_profile import current_automation_profile_binding
 from ...adapters.persistence.storage.custody.automation_store import AutomationControlStore
 from ...application.operations.mcp_surfaces import McpSurfaceName, mcp_surface
+from ...application.operations.person_acts import is_persons_frontend
 from ...application.operations.registry import OperationFrontendProjection
 from ...application.runtime.access_management import (
     RuntimeAutomationDeny,
@@ -160,11 +161,14 @@ class ProfileConnectionAdmissionMixin:
     ) -> tuple[ProfileConnection, RuntimeProfileHost]:
         self._validate_login_request(request)
         # A process of a hosted agent's tree never signs in as the person, whatever frontend it names.
-        self._refuse_agent_tree_person_access(context, request.frontend, method=request.method)
+        self._refuse_agent_tree_person_access(
+            context, persons_frontend=is_persons_frontend(request.frontend), method=request.method
+        )
         if request.method == "password":
             # Signing in by password is the person's act, never an agent's.
             self._require_persons_frontend(request.frontend)
-        if request.frontend is OperationFrontendProjection.AGENT_HOST and request.method != "receipt":
+        agent_host = request.frontend is OperationFrontendProjection.AGENT_HOST
+        if agent_host and request.method != "receipt":
             # The agent host is admitted only by resuming the person's stored sign-in.
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         surface = self._login_surface(request)
@@ -172,6 +176,8 @@ class ProfileConnectionAdmissionMixin:
         host = self._host(request.profile_id, context)
         with host.guard:
             self._prepare_profile_login(connection, host, context, request)
+            # Recorded here, where the agent host is admitted, so the agent door checks this fact alone.
+            connection.serves_agents = agent_host
         return connection, host
 
     @staticmethod

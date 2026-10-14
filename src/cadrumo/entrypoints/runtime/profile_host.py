@@ -112,6 +112,8 @@ class ProfileConnection:
     recovery_generation: int | None = None
     bootstrap_digest: str | None = None
     surface: McpSurfaceName | None = None
+    serves_agents: bool = False
+    """Admitted as the agent host, the one connection that may start the profile's agent."""
 
 
 @dataclass(frozen=True)

@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 from ...application.operations.mcp_surfaces import McpSurfaceName, mcp_surface
+from ...application.operations.person_acts import is_persons_frontend
 from ...application.operations.registry import OperationFrontendProjection
 from ...application.runtime.attendance import (
     ATTENDANCE_PENDING_LIMIT,
@@ -91,7 +92,9 @@ class ProfileConnectionAttendanceMixin:
             return AccessDenied(code=AccessDenialCode.AUTHENTICATION_REQUIRED)
         if request.action == "attendance_status":
             return self._attendance_status(context, host, request)
-        connection = self._attendance_connection(context, channel, request, surface)
+        connection = self._attendance_connection(
+            context, channel, request, surface, persons_frontend=is_persons_frontend(request.frontend)
+        )
         with host.guard:
             if not self._admitting():
                 raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
@@ -144,6 +147,8 @@ class ProfileConnectionAttendanceMixin:
         channel: RuntimeByteChannel,
         request: RuntimeAttendanceAsk,
         surface: McpSurfaceName | None,
+        *,
+        persons_frontend: bool,
     ) -> ProfileConnection:
         """Register the asking connection with its kernel-observed login; a reused one must match exactly."""
         with self._guard:
@@ -159,7 +164,7 @@ class ProfileConnectionAttendanceMixin:
                 raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
             return previous
         # A process of a hosted agent's tree is attended only as an agent, never on a person's frontend.
-        self._refuse_agent_tree_person_access(context, request.frontend)
+        self._refuse_agent_tree_person_access(context, persons_frontend=persons_frontend)
         login = self._capture(channel)
         observed = login.observe(credential_facilities=Availability.UNAVAILABLE)
         if not observed.active or observed.os_owner_id != context.peer.os_owner_id:
