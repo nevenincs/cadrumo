@@ -226,7 +226,8 @@ def test_refresh_and_idle_expiry_release_only_the_affected_leases(profiles) -> N
         while worker.status().sessions and time.monotonic() < deadline:
             time.sleep(0.1)
         assert not worker.status().sessions
-        with pytest.raises(AutomationCustodyError):
+        # A lease whose lifetime ran out ended its session; nothing it presents is wrong.
+        with pytest.raises(ProfileAccessRefusedError) as expired:
             worker.refresh(
                 changed(
                     refreshed,
@@ -235,6 +236,7 @@ def test_refresh_and_idle_expiry_release_only_the_affected_leases(profiles) -> N
                     expires_at=now() + timedelta(seconds=30),
                 )
             )
+        assert expired.value.reason is AccessDenialCode.SESSION_EXPIRED
     finally:
         worker.close()
 
