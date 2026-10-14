@@ -9,8 +9,9 @@ frontend shows and what a consumer receives cannot disagree:
 3. For the assistant, a provider-sign-in choice selects the provider's own CLI
    sign-in. It never erases a stored key, which extraction keeps using.
 4. A stored key or token wins over the environment.
-5. An unset credential falls back to the provider's named Cadrumo setting in
-   development storage mode only. Installed builds have no environment path.
+5. An unset credential falls back to the process environment value constructed
+   from the provider id (``CADRUMO_LLM_<ID>_API_KEY``) in development storage
+   mode only. Installed builds have no environment path.
 
 The resolver's result carries the secret. It is for in-process consumers
 (extraction, the hosted-agent controller) and never for frontend output.
@@ -18,12 +19,12 @@ The resolver's result carries the secret. It is for in-process consumers
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from enum import StrEnum
 from typing import Final
 
 from pydantic import BaseModel, SecretStr
 
-from ...core.config import Settings
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG as _STRICT_FROZEN_HIDDEN_INPUT
@@ -31,7 +32,6 @@ from ...core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from ...core.storage_environment import StorageMode
 from ...domain.provider_settings.catalog import (
     ProviderAuthKind,
-    ProviderCatalog,
     ProviderCatalogEntry,
     ProviderConsumer,
     ProviderId,
@@ -52,6 +52,8 @@ from .contracts import (
     ProviderStatusReason,
 )
 from .ports import (
+    ProviderCatalogSource,
+    ProviderCatalogUnavailableError,
     ProviderRecordRead,
     ProviderSettingsStore,
     StoredProviderRecord,
@@ -70,6 +72,7 @@ class ProviderCredentialUnavailableReason(StrEnum):
     NOT_SIGNED_IN = "not_signed_in"
     PROFILE_LOCKED = "profile_locked"
     UNKNOWN_PROVIDER = "unknown_provider"
+    CATALOG_UNAVAILABLE = "catalog_unavailable"
     CONSUMER_NOT_SUPPORTED = "consumer_not_supported"
     PROVIDER_DISABLED = "provider_disabled"
     CREDENTIAL_MISSING = "credential_missing"
@@ -140,24 +143,26 @@ def read_revision(read: ProviderRecordRead) -> str:
     return ABSENT_SECURE_OBJECT_REVISION_ID
 
 
-def _environment_secret(entry: ProviderCatalogEntry, settings: Settings, storage_mode: StorageMode) -> SecretStr | None:
+def _environment_secret(
+    entry: ProviderCatalogEntry, environment: Mapping[str, str], storage_mode: StorageMode
+) -> SecretStr | None:
     """Return the development fallback secret, or ``None`` outside development."""
-    if storage_mode is not StorageMode.DEVELOPMENT or entry.development_setting is None:
+    if storage_mode is not StorageMode.DEVELOPMENT or not entry.auth_kind.accepts_direct_credential:
         return None
     if entry.auth_kind.accepts_base_url and entry.default_base_url is None:
         # The environment carries no gateway URL, so such a key could reach nothing.
         return None
-    value = getattr(settings, entry.development_setting, None)
-    if not isinstance(value, SecretStr) or not value.get_secret_value().strip():
+    value = environment.get(entry.development_variable)
+    if value is None or not value.strip():
         return None
-    return value
+    return SecretStr(value)
 
 
 def status_entry(
     entry: ProviderCatalogEntry,
     read: ProviderRecordRead,
     *,
-    settings: Settings,
+    environment: Mapping[str, str],
     storage_mode: StorageMode,
     cli_state: CliState | None,
 ) -> ProviderStatusEntry:
@@ -165,7 +170,7 @@ def status_entry(
     mode = provider_mode(read)
     stored = read.record if isinstance(read, StoredProviderRecord) else None
     available, source, readiness, reason = _availability(
-        entry, read, mode, settings=settings, storage_mode=storage_mode
+        entry, read, mode, environment=environment, storage_mode=storage_mode
     )
     return ProviderStatusEntry(
         id=entry.id,
@@ -191,7 +196,7 @@ def _availability(
     read: ProviderRecordRead,
     mode: ProviderSettingsMode,
     *,
-    settings: Settings,
+    environment: Mapping[str, str],
     storage_mode: StorageMode,
 ) -> tuple[bool, ProviderCredentialSource, ProviderReadiness, ProviderStatusReason | None]:
     none = ProviderCredentialSource.NONE
@@ -203,7 +208,7 @@ def _availability(
         return True, none, ProviderReadiness.SIGN_IN_REQUIRED, ProviderStatusReason.SIGN_IN_WITH_PROVIDER_TOOL
     if mode in {ProviderSettingsMode.KEY, ProviderSettingsMode.OAUTH}:
         return True, ProviderCredentialSource.PROFILE, ProviderReadiness.NOT_VERIFIED, None
-    if _environment_secret(entry, settings, storage_mode) is not None:
+    if _environment_secret(entry, environment, storage_mode) is not None:
         return (
             True,
             ProviderCredentialSource.ENVIRONMENT,
@@ -226,19 +231,23 @@ class ProviderCredentialResolver:
         self,
         *,
         store: ProviderSettingsStore,
-        catalog: ProviderCatalog,
-        settings: Settings,
+        catalog_source: ProviderCatalogSource,
+        environment: Mapping[str, str],
         storage_mode: StorageMode,
     ) -> None:
         """Bind the resolver to one profile's store and the process's storage mode."""
         self._store = store
-        self._catalog = catalog
-        self._settings = settings
+        self._catalog_source = catalog_source
+        self._environment = environment
         self._storage_mode = storage_mode
 
     def resolve(self, provider_id: str, consumer: ProviderConsumer) -> ProviderCredentialResolution:
         """Return the effective credential, the sign-in choice, or a typed unavailability."""
-        entry = self._catalog.entry(provider_id)
+        try:
+            catalog = self._catalog_source.catalog()
+        except ProviderCatalogUnavailableError:
+            return _unavailable(provider_id, consumer, ProviderCredentialUnavailableReason.CATALOG_UNAVAILABLE)
+        entry = catalog.entry(provider_id)
         if entry is None:
             return _unavailable(provider_id, consumer, ProviderCredentialUnavailableReason.UNKNOWN_PROVIDER)
         if not entry.serves(consumer):
@@ -277,7 +286,7 @@ class ProviderCredentialResolver:
                 source=ProviderCredentialSource.PROFILE,
                 generation=record.generation,
             )
-        secret = _environment_secret(entry, self._settings, self._storage_mode)
+        secret = _environment_secret(entry, self._environment, self._storage_mode)
         if secret is None:
             return _unavailable(entry.id, consumer, ProviderCredentialUnavailableReason.CREDENTIAL_MISSING)
         return ResolvedDirectCredential(

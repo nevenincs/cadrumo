@@ -17,7 +17,7 @@ from pydantic import BaseModel
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG as _STRICT_FROZEN_HIDDEN_INPUT
-from ...domain.provider_settings.catalog import ProviderId
+from ...domain.provider_settings.catalog import ProviderCatalog, ProviderId
 from ...domain.provider_settings.record import ProviderSettingsRecord
 
 
@@ -84,6 +84,41 @@ class StoreGenerations(BaseModel):
     provider_settings: Hex64Str
 
 
+class ProviderCatalogUnavailableReason(StrEnum):
+    """Why cadrumo-agent could not report its providers."""
+
+    AGENT_NOT_FOUND = "agent_not_found"
+    AGENT_FAILED = "agent_failed"
+    AGENT_TIMED_OUT = "agent_timed_out"
+    CATALOG_MALFORMED = "catalog_malformed"
+
+
+class ProviderCatalogUnavailableError(Exception):
+    """cadrumo-agent did not report a usable provider catalog; carries only a closed reason."""
+
+    def __init__(self, reason: ProviderCatalogUnavailableReason) -> None:
+        """Keep the closed reason."""
+        super().__init__(reason.value)
+        self.reason = reason
+
+
+class ProviderCatalogSource(Protocol):
+    """Where the provider catalog comes from: cadrumo-agent, at run time.
+
+    There is no stored copy to fall back on. An agent that cannot report its
+    providers makes provider settings unavailable.
+    """
+
+    def catalog(self) -> ProviderCatalog:
+        """Return the catalog the agent reports.
+
+        Raises:
+            ProviderCatalogUnavailableError: When the agent cannot be run or its
+                document is refused.
+        """
+        ...
+
+
 class ProviderSettingsStore(Protocol):
     """Encrypted per-profile provider-settings records for one admitted profile."""
 
@@ -110,6 +145,9 @@ class ProviderSettingsStore(Protocol):
 
 __all__ = [
     "AbsentProviderRecord",
+    "ProviderCatalogSource",
+    "ProviderCatalogUnavailableError",
+    "ProviderCatalogUnavailableReason",
     "ProviderRecordRead",
     "ProviderSettingsStore",
     "StoreGenerations",

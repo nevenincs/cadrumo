@@ -70,6 +70,16 @@ _WINDOWS_NAMES: Final = frozenset(
 _POSIX_NAMES: Final = frozenset({"HOME", "USER", "LOGNAME", "LANG", "LC_ALL", "LC_CTYPE", "TZ", "PATH"})
 
 
+def system_environment(received: Mapping[str, str], *, sys_platform: str | None = None) -> dict[str, str]:
+    """Return only the allow-listed operating-system values of ``received``; none can carry a credential."""
+    platform = sys.platform if sys_platform is None else sys_platform
+    names = _WINDOWS_NAMES if platform == "win32" else _POSIX_NAMES
+    if platform == "win32":
+        folded = {name.upper(): value for name, value in received.items()}
+        return {name: folded[name] for name in names if name in folded}
+    return {name: received[name] for name in names if name in received}
+
+
 def agent_launch_environment(
     *,
     storage_root: Path,
@@ -86,12 +96,7 @@ def agent_launch_environment(
     every process the agent starts, the relay included.
     """
     platform = sys.platform if sys_platform is None else sys_platform
-    names = _WINDOWS_NAMES if platform == "win32" else _POSIX_NAMES
-    if platform == "win32":
-        folded = {name.upper(): value for name, value in received.items()}
-        base = {name: folded[name] for name in names if name in folded}
-    else:
-        base = {name: received[name] for name in names if name in received}
+    base = system_environment(received, sys_platform=platform)
     environment = child_environment(
         ChildEnvironmentProfile.STRICT, storage_root, received=received, base=base, sys_platform=platform
     )

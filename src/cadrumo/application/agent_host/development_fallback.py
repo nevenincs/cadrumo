@@ -10,14 +10,15 @@ installed build the precedence has no environment path, so nothing resolves.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import override
 
-from ...core.config import Settings
 from ...core.storage_environment import StorageMode
-from ...domain.provider_settings.catalog import ProviderConsumer, load_provider_catalog
+from ...domain.provider_settings.catalog import ProviderConsumer
 from ...domain.provider_settings.record import ProviderSettingsRecord
 from ..provider_settings.ports import (
     AbsentProviderRecord,
+    ProviderCatalogSource,
     ProviderRecordRead,
     ProviderSettingsStore,
     StoreRefusal,
@@ -48,10 +49,14 @@ class _UnsetRecords(ProviderSettingsStore):
 
 
 def development_fallback(
-    provider_id: str, *, settings: Settings, storage_mode: StorageMode
+    provider_id: str,
+    *,
+    catalog_source: ProviderCatalogSource,
+    environment: Mapping[str, str],
+    storage_mode: StorageMode,
 ) -> ResolvedDirectCredential | None:
     """Return the assistant credential the fallback supplies for an unset provider, or ``None``."""
     resolved = ProviderCredentialResolver(
-        store=_UnsetRecords(), catalog=load_provider_catalog(), settings=settings, storage_mode=storage_mode
+        store=_UnsetRecords(), catalog_source=catalog_source, environment=environment, storage_mode=storage_mode
     ).resolve(provider_id, ProviderConsumer.ASSISTANT)
     return resolved if isinstance(resolved, ResolvedDirectCredential) else None

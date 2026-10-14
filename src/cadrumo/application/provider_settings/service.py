@@ -18,19 +18,16 @@ service; it holds no frontend or transport concern.
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import datetime
 from enum import StrEnum
 
 from pydantic import SecretStr
 
-from ...core.config import Settings
 from ...core.storage_environment import StorageMode
 from ...core.time.clock import now
 from ...domain.provider_settings.catalog import (
     CliProgram,
-    ProviderAuthKind,
-    ProviderCatalog,
     ProviderCatalogEntry,
     ProviderConsumer,
     validate_https_base_url,
@@ -55,6 +52,8 @@ from .contracts import (
     is_provider_settings_revision,
 )
 from .ports import (
+    ProviderCatalogSource,
+    ProviderCatalogUnavailableError,
     ProviderRecordRead,
     ProviderSettingsStore,
     StoredProviderRecord,
@@ -86,23 +85,27 @@ class ProviderSettingsService:
         self,
         *,
         store: ProviderSettingsStore,
-        catalog: ProviderCatalog,
-        settings: Settings,
+        catalog_source: ProviderCatalogSource,
+        environment: Mapping[str, str],
         storage_mode: StorageMode,
         clock: Callable[[], datetime] = now,
         cli_state_probe: Callable[[CliProgram], CliState] | None = None,
     ) -> None:
         """Bind the service to one profile's store and the process's storage mode."""
         self._store = store
-        self._catalog = catalog
-        self._settings = settings
+        self._catalog_source = catalog_source
+        self._environment = environment
         self._storage_mode = storage_mode
         self._clock = clock
         self._cli_state_probe = cli_state_probe
 
     def status(self) -> ProviderSettingsStatus | ProviderSettingsRefusal:
         """Return masked status of every catalogued provider, or a typed refusal."""
-        reads = self._store.read(self._catalog.provider_ids)
+        try:
+            catalog = self._catalog_source.catalog()
+        except ProviderCatalogUnavailableError:
+            return _refused(ProviderSettingsRefusalCode.CATALOG_UNAVAILABLE)
+        reads = self._store.read(catalog.provider_ids)
         if isinstance(reads, StoreRefusal):
             return _refusal_for_store(reads.code)
         return ProviderSettingsStatus(
@@ -111,11 +114,11 @@ class ProviderSettingsService:
                 status_entry(
                     entry,
                     read,
-                    settings=self._settings,
+                    environment=self._environment,
                     storage_mode=self._storage_mode,
                     cli_state=self._cli_state(entry),
                 )
-                for entry, read in zip(self._catalog.providers, reads, strict=True)
+                for entry, read in zip(catalog.providers, reads, strict=True)
             ),
         )
 
@@ -136,9 +139,9 @@ class ProviderSettingsService:
         up without a URL. A provider-sign-in choice for the assistant is
         preserved while the key is stored for direct use.
         """
-        entry = self._catalog.entry(provider_id)
-        if entry is None:
-            return _refused(ProviderSettingsRefusalCode.UNKNOWN)
+        entry = self._lane(provider_id)
+        if isinstance(entry, ProviderSettingsRefusal):
+            return entry
         if not entry.auth_kind.accepts_direct_credential:
             return _refused(ProviderSettingsRefusalCode.UNKNOWN)
         if credential_secret_refusal(secret.get_secret_value()) is not None:
@@ -151,11 +154,6 @@ class ProviderSettingsService:
         stored_base_url = _resolved_base_url(current, base_url)
         if stored_base_url is None and entry.auth_kind.accepts_base_url and entry.default_base_url is None:
             return _refused(ProviderSettingsRefusalCode.BASE_URL_REJECTED)
-        kind = (
-            CredentialKind.OAUTH
-            if entry.auth_kind is ProviderAuthKind.OAUTH_OR_PROVIDER_SIGN_IN
-            else CredentialKind.API_KEY
-        )
         previous = current.record if isinstance(current, StoredProviderRecord) else None
         assistant_auth = (
             previous.assistant_auth
@@ -166,7 +164,7 @@ class ProviderSettingsService:
             entry,
             assistant_auth=assistant_auth,
             credential_state=CredentialState.CONFIGURED,
-            credential=ProviderCredential(kind=kind, secret=secret, base_url=stored_base_url),
+            credential=ProviderCredential(kind=CredentialKind.API_KEY, secret=secret, base_url=stored_base_url),
         )
         return self._commit(entry, record, expected_revision)
 
@@ -178,9 +176,9 @@ class ProviderSettingsService:
         expected_revision: str,
     ) -> ProviderSettingsActionResult:
         """Choose how the assistant authenticates, leaving any stored credential intact."""
-        entry = self._catalog.entry(provider_id)
-        if entry is None:
-            return _refused(ProviderSettingsRefusalCode.UNKNOWN)
+        entry = self._lane(provider_id)
+        if isinstance(entry, ProviderSettingsRefusal):
+            return entry
         if not entry.serves(ProviderConsumer.ASSISTANT):
             return _refused(ProviderSettingsRefusalCode.UNKNOWN)
         if choice is AssistantAuthChoice.PROVIDER_SIGN_IN and not entry.auth_kind.accepts_provider_sign_in:
@@ -201,9 +199,9 @@ class ProviderSettingsService:
 
     def remove_credential(self, provider_id: str, *, expected_revision: str) -> ProviderSettingsActionResult:
         """Persist ``disabled``: the stored credential is dropped and no fallback applies."""
-        entry = self._catalog.entry(provider_id)
-        if entry is None:
-            return _refused(ProviderSettingsRefusalCode.UNKNOWN)
+        entry = self._lane(provider_id)
+        if isinstance(entry, ProviderSettingsRefusal):
+            return entry
         current = self._current(entry, expected_revision)
         if isinstance(current, ProviderSettingsRefusal):
             return current
@@ -221,9 +219,9 @@ class ProviderSettingsService:
         It also clears an unreadable record, guarded by the revision status
         reported for it.
         """
-        entry = self._catalog.entry(provider_id)
-        if entry is None:
-            return _refused(ProviderSettingsRefusalCode.UNKNOWN)
+        entry = self._lane(provider_id)
+        if isinstance(entry, ProviderSettingsRefusal):
+            return entry
         if not is_provider_settings_revision(expected_revision):
             return _refused(ProviderSettingsRefusalCode.REVISION_CONFLICT)
         refusal = self._store.delete(entry.id, expected_revision=expected_revision)
@@ -233,6 +231,14 @@ class ProviderSettingsService:
         if isinstance(reads, StoreRefusal) or isinstance(reads[0], StoredProviderRecord | UnreadableProviderRecord):
             return _refused(ProviderSettingsRefusalCode.COMMITTED_READBACK_FAILED)
         return self._accepted(entry, reads[0])
+
+    def _lane(self, provider_id: str) -> ProviderCatalogEntry | ProviderSettingsRefusal:
+        """Return the lane the agent reports under ``provider_id``, or the refusal that stopped the lookup."""
+        try:
+            entry = self._catalog_source.catalog().entry(provider_id)
+        except ProviderCatalogUnavailableError:
+            return _refused(ProviderSettingsRefusalCode.CATALOG_UNAVAILABLE)
+        return _refused(ProviderSettingsRefusalCode.UNKNOWN) if entry is None else entry
 
     def _current(
         self,
@@ -287,18 +293,19 @@ class ProviderSettingsService:
 
     def _cli_state(self, entry: ProviderCatalogEntry) -> CliState | None:
         """Return a cli lane's program state; ``unknown`` until a safe probe is supplied."""
-        if entry.cli_program is None:
+        if not entry.cli_programs:
             return None
         if self._cli_state_probe is None:
             return CliState.UNKNOWN
-        return self._cli_state_probe(entry.cli_program)
+        # The lane's primary program is the first the agent lists.
+        return self._cli_state_probe(entry.cli_programs[0])
 
     def _accepted(self, entry: ProviderCatalogEntry, read: ProviderRecordRead) -> ProviderSettingsActionAccepted:
         return ProviderSettingsActionAccepted(
             entry=status_entry(
                 entry,
                 read,
-                settings=self._settings,
+                environment=self._environment,
                 storage_mode=self._storage_mode,
                 cli_state=self._cli_state(entry),
             ),

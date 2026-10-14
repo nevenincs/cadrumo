@@ -653,8 +653,6 @@
         "dev.packaging.uv_constraints",
         "dev.packaging.wheel_metadata",
         "dev.product_environment",
-        "dev.provider_catalog",
-        "dev.provider_catalog.generate",
         "dev.quality",
         "dev.quality.cyclic_gc",
         "dev.quality.data_files",

@@ -26,16 +26,6 @@ from .controller import AgentHostError, AgentHostRefusal
 LAUNCHER_LANE: Final = "development"
 """The one lane this launcher serves today: an agent run from its source tree."""
 
-HOSTED_ASSISTANT_PROVIDERS: Final[tuple[str, ...]] = ("claude_api", "claude_cli")
-"""The catalog lanes hosting contract 1 admits for a hosted gateway: Claude by key and by token.
-
-cadrumo-agent's hosting contract owns this list; listing a lane in the
-profile's settings does not widen it. Only these lanes' credentials are ever
-resolved for the frame, and only an API key is written into it, keyed by the
-catalog's ``agent_credential_id``: a lane's token or provider-owned sign-in
-contributes nothing.
-"""
-
 
 class AgentLauncherRefusal(StrEnum):
     """The launcher protocol's closed refusal codes."""

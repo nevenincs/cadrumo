@@ -30,6 +30,7 @@ from ...application.runtime.worker_authorization import AUTHORITY_SECTION_MAXIMU
 from ...application.user_profile.access_contracts import AccessDenialCode, AccessSession
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.automation_custody_port import AutomationCustodyError
+from ...domain.provider_settings.catalog import ProviderCatalog
 from .linux_worker_process import LinuxProcessScope
 from .macos_worker_process import MacosProcessScope
 from .profile_worker_lifetime import ProfileWorkerNativeLifetime
@@ -162,7 +163,7 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
             self.close(deadline=deadline)
 
     def agent_credentials(
-        self, session_id: UUID, providers: tuple[str, ...]
+        self, session_id: UUID, catalog: ProviderCatalog
     ) -> tuple[ProfileWorkerAgentCredentials, bytearray]:
         """Resolve the hosted assistant's credentials under one live session.
 
@@ -170,7 +171,7 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
         in that order; the caller owns and wipes the buffer.
         """
         request = ProfileWorkerRequest(
-            ProfileWorkerAgentCredentialsRequest(request_id=uuid4(), session_id=session_id, providers=providers)
+            ProfileWorkerAgentCredentialsRequest(request_id=uuid4(), session_id=session_id, catalog=catalog)
         )
         deadline = time.monotonic() + _CONTROL_EXCHANGE_SECONDS
         material = bytearray()

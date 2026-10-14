@@ -12,6 +12,7 @@ from ...core.hex import Hex64Str
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.request_faults import MAX_REQUEST_FAULTS, RequestFault
+from ...domain.provider_settings.catalog import ProviderCatalog
 from ..operations.frontend_requests import (
     OperationObservationRequestV1,
     OperationObservationResultV1,
@@ -300,7 +301,7 @@ class ProfileWorkerManageRequest(BaseModel):
 class ProfileWorkerAgentCredentialsRequest(BaseModel):
     """Resolve the hosted assistant's credentials under one live exact-profile session.
 
-    The reply names the providers and their nonsecret base URLs; the secrets
+    The reply names the lanes and their nonsecret base URLs; the secrets
     follow on one protected frame on the same private control pipe.
     """
 
@@ -308,7 +309,8 @@ class ProfileWorkerAgentCredentialsRequest(BaseModel):
     action: Literal["agent_credentials"] = "agent_credentials"
     request_id: UUID
     session_id: UUID
-    providers: Annotated[tuple[Annotated[str, Field(pattern=r"^[a-z][a-z0-9_-]{0,63}$")], ...], Field(max_length=8)]
+    catalog: ProviderCatalog
+    """The provider catalog the runtime obtained from the agent; the lanes whose credential the frame carries."""
 
 
 class ProfileWorkerRequest(
@@ -532,8 +534,8 @@ class ProfileWorkerAgentCredentials(BaseModel):
     identity: ProfileWorkerIdentity
     request_id: UUID
     generation: Hex64Str
-    credentials: Annotated[tuple[ProfileWorkerAgentCredential, ...], Field(max_length=8)]
-    unset: Annotated[tuple[Annotated[str, Field(pattern=r"^[a-z][a-z0-9_-]{0,63}$")], ...], Field(max_length=8)] = ()
+    credentials: Annotated[tuple[ProfileWorkerAgentCredential, ...], Field(max_length=64)]
+    unset: Annotated[tuple[Annotated[str, Field(pattern=r"^[a-z][a-z0-9_-]{0,63}$")], ...], Field(max_length=64)] = ()
 
 
 class ProfileWorkerReply(

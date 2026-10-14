@@ -7,9 +7,10 @@ wipes after writing the standard-input frame. Providers the assistant reaches
 through their own CLI sign-in carry no credential and are left out of the
 frame, as are providers with nothing configured or turned off.
 
-Each key is keyed in the frame by cadrumo-agent's own provider identity, the
-name its hosting contract accepts. Only key-bearing lanes are carried; a
-provider's own sign-in token never enters the frame.
+Each credential is keyed in the frame by the id cadrumo-agent declares for its
+lane in the provider catalog the agent reports. Every lane that declares one is
+carried, with no Cadrumo-side filter; a provider-owned sign-in never enters the
+frame.
 
 Generations are observed without touching the session's idle time, so the
 controller can poll them to decide whether a running agent is still current.
@@ -19,7 +20,7 @@ from __future__ import annotations
 
 from typing import override
 
-from ...domain.provider_settings.catalog import ProviderAuthKind, ProviderCatalog, ProviderConsumer
+from ...domain.provider_settings.catalog import ProviderConsumer
 from ..agent_host.controller import (
     AgentCredentialSource,
     AgentGenerations,
@@ -28,7 +29,7 @@ from ..agent_host.controller import (
     ResolvedAgentCredentials,
 )
 from ..agent_host.credential_frame import AgentCredential, wipe
-from .ports import ProviderSettingsStore
+from .ports import ProviderCatalogSource, ProviderCatalogUnavailableError, ProviderSettingsStore
 from .resolution import (
     ProviderCredentialResolver,
     ProviderCredentialUnavailable,
@@ -36,7 +37,6 @@ from .resolution import (
     ResolvedDirectCredential,
 )
 
-_FRAMED_KINDS = frozenset({ProviderAuthKind.API_KEY, ProviderAuthKind.API_KEY_WITH_BASE_URL})
 _SIGNED_OUT_REASONS = frozenset(
     {ProviderCredentialUnavailableReason.NOT_SIGNED_IN, ProviderCredentialUnavailableReason.PROFILE_LOCKED},
 )
@@ -51,7 +51,7 @@ _SKIPPED_REASONS = frozenset(
 
 
 class ProviderSettingsAgentCredentialSource(AgentCredentialSource):
-    """Resolve every usable assistant key for one admitted profile, keyed by cadrumo-agent's provider identity.
+    """Resolve every usable assistant credential for one admitted profile, keyed by the agent's credential id.
 
     A provider whose record is unset with no fallback, turned off or unreadable
     is left out of the frame; its status says why. Only a profile that is not
@@ -63,16 +63,12 @@ class ProviderSettingsAgentCredentialSource(AgentCredentialSource):
         *,
         store: ProviderSettingsStore,
         resolver: ProviderCredentialResolver,
-        catalog: ProviderCatalog,
+        catalog_source: ProviderCatalogSource,
     ) -> None:
         """Bind the source to one profile's store and resolver."""
         self._store = store
         self._resolver = resolver
-        self._agent_lanes = tuple(
-            (entry.id, entry.provider)
-            for entry in catalog.providers
-            if entry.auth_kind in _FRAMED_KINDS and entry.serves(ProviderConsumer.ASSISTANT)
-        )
+        self._catalog_source = catalog_source
 
     @override
     def resolve_for_agent(self) -> ResolvedAgentCredentials:
@@ -87,12 +83,21 @@ class ProviderSettingsAgentCredentialSource(AgentCredentialSource):
         before = self.current_generations()
         if before is None:
             raise AgentHostError(AgentHostRefusal.SIGNED_OUT)
+        try:
+            catalog = self._catalog_source.catalog()
+        except ProviderCatalogUnavailableError as error:
+            raise AgentHostError(AgentHostRefusal.CREDENTIALS_UNAVAILABLE) from error
+        agent_lanes = tuple(
+            (entry.id, entry.agent_credential_id)
+            for entry in catalog.providers
+            if entry.agent_credential_id is not None
+        )
         credentials: dict[str, AgentCredential] = {}
         try:
-            for lane_id, provider in self._agent_lanes:
+            for lane_id, credential_id in agent_lanes:
                 resolution = self._resolver.resolve(lane_id, ProviderConsumer.ASSISTANT)
                 if isinstance(resolution, ResolvedDirectCredential):
-                    credentials[provider] = AgentCredential(
+                    credentials[credential_id] = AgentCredential(
                         secret=bytearray(resolution.secret.get_secret_value().encode("utf-8")),
                         base_url=resolution.base_url,
                     )

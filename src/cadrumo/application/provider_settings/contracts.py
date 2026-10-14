@@ -128,6 +128,8 @@ class ProviderSettingsRefusalCode(StrEnum):
     BASE_URL_REJECTED = "base_url_rejected"
     REVISION_CONFLICT = "revision_conflict"
     COMMITTED_READBACK_FAILED = "committed_readback_failed"
+    CATALOG_UNAVAILABLE = "catalog_unavailable"
+    """cadrumo-agent could not report its providers, so there is nothing to read or change."""
     PERSON_ACT_REQUIRED = "person_act_required"
     """Produced at dispatch for a frontend that may not change credentials, never by the service."""
     UNKNOWN = "unknown"
