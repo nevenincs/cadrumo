@@ -49,6 +49,7 @@ from cadrumo.application.agent_host.controller import AgentHostError, AgentHostR
 from cadrumo.application.agent_host.launch_environment import (
     ADVERTISED_VARIABLES,
     AGENT_SLOTS,
+    DIAGNOSTIC_VARIABLES,
     HOSTED_ROOT_VARIABLE,
     PROGRAM_AEAT_VARIABLE,
     PROGRAM_PYTHON_VARIABLE,
@@ -180,8 +181,10 @@ def test_the_agent_starts_with_its_key_only_on_its_frame_and_stops_with_the_pers
         assert launch["arguments"] == ["-m", "cadrumo_agent.cli.main", "serve"]
         # The agent and every process it starts, the relay included, inherit the pinned storage root.
         assert Path(environment[STORAGE_ROOT.variable]).resolve() == runtime.root.resolve()
-        # Of the agent's names the runtime supplies only the gateway's slots and what Cadrumo advertises.
-        assert {name for name in environment if name.startswith("CADRUMO_AGENT_")} == AGENT_SLOTS | ADVERTISED_VARIABLES
+        # Of the agent's names the runtime supplies only the gateway's slots, what Cadrumo advertises and
+        # the agent's diagnostic level.
+        supplied = AGENT_SLOTS | ADVERTISED_VARIABLES | DIAGNOSTIC_VARIABLES
+        assert {name for name in environment if name.startswith("CADRUMO_AGENT_")} == supplied
         assert not set(_RETIRED_PROGRAM_VARIABLES) & set(environment)
         assert Path(environment[TOOL_SERVER_VARIABLE]) == _RELAY
         assert Path(environment[PROGRAM_AEAT_VARIABLE]) == _AEAT
@@ -338,7 +341,9 @@ def test_a_development_source_tree_runs_the_gateway_invocation_from_its_own_envi
         assert PROGRAM_AEAT_VARIABLE not in environment
         assert PROGRAM_PYTHON_VARIABLE not in environment
         advertised = ADVERTISED_VARIABLES - {PROGRAM_AEAT_VARIABLE, PROGRAM_PYTHON_VARIABLE}
-        assert {name for name in environment if name.startswith("CADRUMO_AGENT_")} == AGENT_SLOTS | advertised
+        assert {
+            name for name in environment if name.startswith("CADRUMO_AGENT_")
+        } == AGENT_SLOTS | advertised | DIAGNOSTIC_VARIABLES
 
 
 _CONTROLLER_LOGGER = "cadrumo.application.agent_host.controller"

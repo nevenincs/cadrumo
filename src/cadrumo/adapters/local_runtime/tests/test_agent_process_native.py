@@ -289,12 +289,13 @@ def test_gateway_and_worker_logs_from_contained_processes_join_application_feed(
     """Exercise the real job, pipe drain and file follower with a separate worker PID."""
     import time
 
+    hosted_root = str(tmp_path / "agent")
     environment = dict(fixture_environment())
-    environment[HOSTED_ROOT_VARIABLE] = str(tmp_path / "agent")
+    environment[HOSTED_ROOT_VARIABLE] = hosted_root
     caplog.set_level(logging.DEBUG)
     process = WindowsAgentProcessLauncher().launch(
         executable=native_python(),
-        arguments=fixture_arguments(_FIXTURE, "diagnostics", str(tmp_path)),
+        arguments=fixture_arguments(_FIXTURE, "diagnostics", str(tmp_path), hosted_root),
         directory=tmp_path,
         environment=environment,
     )
