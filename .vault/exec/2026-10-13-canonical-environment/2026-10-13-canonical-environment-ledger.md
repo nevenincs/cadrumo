@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:26f67b3b2ec641b4e772d2b7fe57e45f119f535df7bea45d64ed5f81249fb7a4'
+body_hash: 'sha256:94c1037f90a146fd8ab4a8bbaf3a54cd5cdaf698775e5dfae8b42324f2854458'
 related:
   - "[[2026-10-13-canonical-environment-plan]]"
 ---
@@ -338,6 +338,16 @@ related:
 - `S18` `verify:` `pytest dev/quality/tests/test_agent_prefix_spelling.py test_no_git_cli.py` -> `pass`
 - `S18` `verify:` `pytest -m '' src/cadrumo/entrypoints/runtime src/cadrumo/application/runtime` -> `fail`
 - `S18` `by:` `vaultspec-high-executor`
+- `S13` `M` `src/cadrumo/core/_config_validation.py`
+- `S13` `M` `src/cadrumo/core/storage_environment.py`
+- `S13` `M` `dev/packaging/native/storage_vectors.py`
+- `S13` `M` `dev/packaging/native/generate.py`
+- `S13` `A` `dev/packaging/native/tests/test_storage_member_vectors.py`
+- `S13` `M` `dev/packaging/tests/test_native_storage_environment_contract.py`
+- `S13` `M` `native/platform/src/conformance_tests.rs`
+- `S13` `verify:` `pytest dev/packaging/native/tests/test_storage_member_vectors.py dev/packaging/tests/test_native_storage_environment_contract.py` -> `pass`
+- `S13` `verify:` `cargo test --lib (native/platform, scratch contract)` -> `pass`
+- `S13` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -387,3 +397,4 @@ related:
 - `S18` Refusals: newer stores and an `api_version` other than v1 map to `agent_service_incompatible;` every other store failure maps to `agent_service_failed.` The desktop's closed launcher set is unchanged. Worst-case start time can now exceed the frontend's 120 s agent start bound `(frontend_client.py` `AGENT_START_TIMEOUT_SECONDS),` outside this Step's write scope.
 - `S18` Store invocations run before the bearer secret frame is read, under the profile's reservation and a per-profile preparing hold that refuses any other start of the profile until the sequence ends, so no second start can migrate or clear a partial copy concurrently.
 - `S18` Full entrypoints/runtime -m '' run: 20 failed, 4 errors, 1039 passed; a rerun of the failed set gave 16 failed, 9 passed, 4 errors with a shifting set. Failures are `runtime_deadline_exceeded` and `connection_closed` in sign-in, automation, grant, provenance, submission-stream and projection tests that do not reach the agent store code; `test_mcp_sign_in_adapter` fails on `agent_access_remains` (issued-key check) in both runs. Not shown pre-existing: no baseline run was possible without changing the shared checkout.
+- `S13` Correction (commit 29611372c0): the CLI settings validator re-anchored drive-relative and rooted-without-drive member overrides (C:rooted, `\rooted)` that `resolve_storage_path` and the native platform refuse with `non_absolute_pin;` both Python paths now share one refusal, and authored storage member vectors are replayed by the CLI settings, the Python resolver and the native platform member resolver.
